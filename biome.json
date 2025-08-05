@@ -37,6 +37,9 @@
   },
   "linter": {
     "enabled": true,
+    "domains": {
+      "next": "none"
+    },
     "rules": {
       "recommended": true,
       "correctness": {
@@ -47,13 +50,10 @@
           "level": "warn",
           "fix": "safe",
           "options": {
-            "functions": [
-              "clsx",
-              "cva",
-              "cn"
-            ]
+            "functions": ["clsx", "cva", "cn"]
           }
-        }
+        },
+        "noUnknownAtRule": "off"
       },
       "style": {
         "noParameterAssign": "error",
@@ -74,7 +74,5 @@
       "quoteStyle": "double"
     }
   },
-  "extends": [
-    "ultracite"
-  ]
+  "extends": ["ultracite"]
 }
