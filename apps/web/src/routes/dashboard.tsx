@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import Loader from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
@@ -25,7 +26,11 @@ function RouteComponent() {
 	}, [session, isPending, navigate]);
 
 	if (isPending) {
-		return <div>Loading...</div>;
+		return (
+			<div className="h-screen">
+				<Loader />
+			</div>
+		);
 	}
 
 	return (

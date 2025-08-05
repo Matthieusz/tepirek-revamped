@@ -52,7 +52,13 @@ function RootDocument() {
 			</head>
 			<body>
 				<div className="grid h-svh grid-rows-[auto_1fr]">
-					{isFetching ? <Loader /> : <Outlet />}
+					{isFetching ? (
+						<div className="h-screen">
+							<Loader />
+						</div>
+					) : (
+						<Outlet />
+					)}
 				</div>
 				<Toaster richColors />
 				<TanStackRouterDevtools position="bottom-left" />
