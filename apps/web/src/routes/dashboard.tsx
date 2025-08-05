@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
@@ -31,6 +33,26 @@ function RouteComponent() {
 			<h1>Dashboard</h1>
 			<p>Welcome {session?.user.name}</p>
 			<p>privateData: {privateData.data?.message}</p>
+			<Button
+				onClick={async () => {
+					await authClient.signOut({
+						fetchOptions: {
+							onSuccess: () => {
+								toast.success("Logged out successfully");
+								navigate({
+									to: "/",
+								});
+							},
+							onError: (error) => {
+								toast.error(error.error.message || error.error.statusText);
+							},
+						},
+					});
+				}}
+				variant={"default"}
+			>
+				Log out
+			</Button>
 		</div>
 	);
 }
