@@ -17,7 +17,7 @@ export const heroBet = pgTable("hero_bet", {
 	heroId: integer("hero_id")
 		.notNull()
 		.references(() => hero.id, { onDelete: "cascade" }),
-	userId: integer("user_id")
+	userId: text("user_id")
 		.notNull()
 		.references(() => user.id, { onDelete: "cascade" }),
 	amount: integer("amount").notNull(),
@@ -29,7 +29,7 @@ export const heroBetMember = pgTable("hero_bet_member", {
 	heroBetId: integer("hero_bet_id")
 		.notNull()
 		.references(() => heroBet.id, { onDelete: "cascade" }),
-	userId: integer("user_id")
+	userId: text("user_id")
 		.notNull()
 		.references(() => user.id, { onDelete: "cascade" }),
 	points: integer("points").notNull(),
@@ -38,7 +38,7 @@ export const heroBetMember = pgTable("hero_bet_member", {
 
 export const userStats = pgTable("user_stats", {
 	id: serial("id").primaryKey(),
-	userId: integer("user_id")
+	userId: text("user_id")
 		.notNull()
 		.references(() => user.id, { onDelete: "cascade" }),
 	eventId: integer("event_id")
