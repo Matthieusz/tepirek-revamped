@@ -1,11 +1,22 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { toast } from "sonner";
+import { AppSidebar } from "@/components/app-sidebar";
 import Loader from "@/components/loader";
-import { Button } from "@/components/ui/button";
+import {
+	Breadcrumb,
+	BreadcrumbItem,
+	BreadcrumbLink,
+	BreadcrumbList,
+	BreadcrumbPage,
+	BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
+import {
+	SidebarInset,
+	SidebarProvider,
+	SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
-import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard")({
 	component: RouteComponent,
@@ -14,8 +25,6 @@ export const Route = createFileRoute("/dashboard")({
 function RouteComponent() {
 	const navigate = Route.useNavigate();
 	const { data: session, isPending } = authClient.useSession();
-
-	const privateData = useQuery(orpc.privateData.queryOptions());
 
 	useEffect(() => {
 		if (!(session || isPending)) {
@@ -34,30 +43,40 @@ function RouteComponent() {
 	}
 
 	return (
-		<div>
-			<h1>Dashboard</h1>
-			<p>Welcome {session?.user.name}</p>
-			<p>privateData: {privateData.data?.message}</p>
-			<Button
-				onClick={async () => {
-					await authClient.signOut({
-						fetchOptions: {
-							onSuccess: () => {
-								toast.success("Logged out successfully");
-								navigate({
-									to: "/",
-								});
-							},
-							onError: (error) => {
-								toast.error(error.error.message || error.error.statusText);
-							},
-						},
-					});
-				}}
-				variant={"default"}
-			>
-				Log out
-			</Button>
-		</div>
+		<SidebarProvider>
+			<AppSidebar />
+			<SidebarInset>
+				<header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+					<div className="flex items-center gap-2 px-4">
+						<SidebarTrigger className="-ml-1" />
+						<Separator
+							className="mr-2 data-[orientation=vertical]:h-4"
+							orientation="vertical"
+						/>
+						<Breadcrumb>
+							<BreadcrumbList>
+								<BreadcrumbItem className="hidden md:block">
+									<BreadcrumbLink href="#">
+										Building Your Application
+									</BreadcrumbLink>
+								</BreadcrumbItem>
+								<BreadcrumbSeparator className="hidden md:block" />
+								<BreadcrumbItem>
+									<BreadcrumbPage>Data Fetching</BreadcrumbPage>
+								</BreadcrumbItem>
+							</BreadcrumbList>
+						</Breadcrumb>
+					</div>
+				</header>
+				<div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+					<div className="grid auto-rows-min gap-4 md:grid-cols-3">
+						<div className="aspect-video rounded-xl bg-muted/50" />
+						<div className="aspect-video rounded-xl bg-muted/50" />
+						<div className="aspect-video rounded-xl bg-muted/50" />
+					</div>
+					<div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+				</div>
+			</SidebarInset>
+		</SidebarProvider>
 	);
 }

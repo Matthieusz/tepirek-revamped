@@ -57,7 +57,9 @@ function RootDocument() {
 							<Loader />
 						</div>
 					) : (
-						<Outlet />
+						<div className="h-screen">
+							<Outlet />
+						</div>
 					)}
 				</div>
 				<Toaster richColors />
