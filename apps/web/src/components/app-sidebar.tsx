@@ -1,22 +1,19 @@
+import { useNavigate } from "@tanstack/react-router";
 import {
-	AudioWaveform,
-	BookOpen,
-	Bot,
-	Command,
-	Frame,
-	GalleryVerticalEnd,
-	// biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
-	Map,
-	PieChart,
-	Settings2,
-	SquareTerminal,
+	Brain,
+	Calculator,
+	CalendarCheck,
+	Gavel,
+	ListChecks,
+	LogOut,
+	Settings,
+	User,
+	Users,
 } from "lucide-react";
 import type * as React from "react";
-
+import { toast } from "sonner";
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
-import { NavUser } from "@/components/nav-user";
-import { TeamSwitcher } from "@/components/team-switcher";
 import {
 	Sidebar,
 	SidebarContent,
@@ -24,113 +21,70 @@ import {
 	SidebarHeader,
 	SidebarRail,
 } from "@/components/ui/sidebar";
+import { authClient } from "@/lib/auth-client";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Button } from "./ui/button";
 
 // This is sample data.
 const data = {
-	user: {
-		name: "shadcn",
-		email: "m@example.com",
-		avatar: "/avatars/shadcn.jpg",
-	},
-	teams: [
-		{
-			name: "Acme Inc",
-			logo: GalleryVerticalEnd,
-			plan: "Enterprise",
-		},
-		{
-			name: "Acme Corp.",
-			logo: AudioWaveform,
-			plan: "Startup",
-		},
-		{
-			name: "Evil Corp.",
-			logo: Command,
-			plan: "Free",
-		},
-	],
 	navMain: [
 		{
-			title: "Playground",
+			title: "Eventy",
 			url: "#",
-			icon: SquareTerminal,
-			isActive: true,
+			icon: CalendarCheck,
 			items: [
 				{
-					title: "History",
+					title: "Lista eventów",
 					url: "#",
 				},
 				{
-					title: "Starred",
+					title: "Lista herosów",
 					url: "#",
 				},
 				{
-					title: "Settings",
+					title: "Dodaj obstawienie",
+					url: "#",
+				},
+				{
+					title: "Historia",
+					url: "#",
+				},
+				{
+					title: "Ranking",
 					url: "#",
 				},
 			],
 		},
 		{
-			title: "Models",
+			title: "Licytacje",
 			url: "#",
-			icon: Bot,
+			icon: Gavel,
 			items: [
 				{
-					title: "Genesis",
+					title: "Broni głównych",
 					url: "#",
 				},
 				{
-					title: "Explorer",
+					title: "Broni pomocniczych",
 					url: "#",
 				},
 				{
-					title: "Quantum",
+					title: "Bibelotów",
 					url: "#",
 				},
 			],
 		},
 		{
-			title: "Documentation",
+			title: "Squad Builder",
 			url: "#",
-			icon: BookOpen,
+			icon: Users,
 			items: [
 				{
-					title: "Introduction",
+					title: "Utwórz nową drużynę",
 					url: "#",
 				},
 				{
-					title: "Get Started",
-					url: "#",
-				},
-				{
-					title: "Tutorials",
-					url: "#",
-				},
-				{
-					title: "Changelog",
-					url: "#",
-				},
-			],
-		},
-		{
-			title: "Settings",
-			url: "#",
-			icon: Settings2,
-			items: [
-				{
-					title: "General",
-					url: "#",
-				},
-				{
-					title: "Team",
-					url: "#",
-				},
-				{
-					title: "Billing",
-					url: "#",
-				},
-				{
-					title: "Limits",
+					title: "Zarządzaj drużynami",
 					url: "#",
 				},
 			],
@@ -138,35 +92,99 @@ const data = {
 	],
 	projects: [
 		{
-			name: "Design Engineering",
+			name: "Kalkulator ulepy",
 			url: "#",
-			icon: Frame,
+			icon: Calculator,
 		},
 		{
-			name: "Sales & Marketing",
+			name: "Kalkulator odw",
 			url: "#",
-			icon: PieChart,
+			icon: Calculator,
 		},
 		{
-			name: "Travel",
+			name: "Kalkulator lista",
 			url: "#",
-			icon: Map,
+			icon: Calculator,
+		},
+		{
+			name: "Lista zadań",
+			url: "#",
+			icon: ListChecks,
+		},
+		{
+			name: "Umiejętności",
+			url: "#",
+			icon: Brain,
+		},
+		{
+			name: "Lista graczy",
+			url: "#",
+			icon: Users,
+		},
+		{
+			name: "Profil",
+			url: "#",
+			icon: User,
+		},
+		{
+			name: "Ustawienia",
+			url: "#",
+			icon: Settings,
 		},
 	],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+	const navigate = useNavigate();
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
-				<TeamSwitcher teams={data.teams} />
+				<div className="flex items-center gap-2">
+					<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+						<User className="size-4" />
+					</div>
+					<div className="grid flex-1 text-left text-sm leading-tight">
+						<span className="truncate font-medium">Gildia Złodziei</span>
+						<span className="truncate text-xs">v1.0</span>
+					</div>
+				</div>
 			</SidebarHeader>
 			<SidebarContent>
 				<NavMain items={data.navMain} />
 				<NavProjects projects={data.projects} />
 			</SidebarContent>
 			<SidebarFooter>
-				<NavUser user={data.user} />
+				<div className="flex items-center gap-2 p-2">
+					<Avatar className="h-8 w-8 rounded-lg">
+						<AvatarImage alt="User avatar" src="test" />
+						<AvatarFallback className="rounded-lg">CN</AvatarFallback>
+					</Avatar>
+					<div className="grid flex-1 text-left text-sm leading-tight">
+						<span className="truncate font-medium">test</span>
+						<span className="truncate text-xs">test</span>
+					</div>
+					<Button
+						onClick={() =>
+							authClient.signOut({
+								fetchOptions: {
+									onSuccess: () => {
+										toast.success("Logout successful");
+										navigate({
+											to: "/",
+										});
+									},
+									onError: (error) => {
+										toast.error(error.error.message || error.error.statusText);
+									},
+								},
+							})
+						}
+						size="icon"
+						variant="destructive"
+					>
+						<LogOut className="size-4" />
+					</Button>
+				</div>
 			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>
