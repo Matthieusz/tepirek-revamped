@@ -44,7 +44,7 @@ export function AddEventModal({ trigger, onEventAdded }: AddEventModalProps) {
 		onSubmit: async ({ value }) => {
 			try {
 				if (!date) {
-					toast.error("Please select an end date");
+					toast.error("Wybierz datę końcową eventu!");
 					return;
 				}
 
@@ -54,7 +54,9 @@ export function AddEventModal({ trigger, onEventAdded }: AddEventModalProps) {
 				});
 
 				toast.success("Event utworzony pomyślnie");
-				queryClient.invalidateQueries({ queryKey: orpc.event.getAll.queryKey() });
+				queryClient.invalidateQueries({
+					queryKey: orpc.event.getAll.queryKey(),
+				});
 				setOpen(false);
 				onEventAdded?.();
 				form.reset();
