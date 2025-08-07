@@ -15,4 +15,18 @@ export const auth = betterAuth({
 	},
 	secret: process.env.BETTER_AUTH_SECRET,
 	baseURL: process.env.BETTER_AUTH_URL,
+	user: {
+		additionalFields: {
+			role: {
+				type: "string",
+				default: "user",
+				required: true,
+			},
+			verified: {
+				type: "boolean",
+				default: false,
+				required: true,
+			},
+		},
+	},
 });
