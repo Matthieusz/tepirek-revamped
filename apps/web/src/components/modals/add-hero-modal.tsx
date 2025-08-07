@@ -93,9 +93,9 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
 					}}
 				>
 					<DialogHeader>
-						<DialogTitle>Dodaj nowego bohatera</DialogTitle>
+						<DialogTitle>Dodaj nowego herosa</DialogTitle>
 						<DialogDescription>
-							Utwórz nowego bohatera do wybranego eventu.
+							Utwórz nowego herosa do wybranego eventu.
 						</DialogDescription>
 					</DialogHeader>
 					<div className="grid gap-4 py-4">
@@ -103,7 +103,7 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
 							<form.Field name="name">
 								{(field) => (
 									<div className="grid gap-1.5">
-										<Label htmlFor={field.name}>Nazwa bohatera</Label>
+										<Label htmlFor={field.name}>Nazwa herosa</Label>
 										<Input
 											id={field.name}
 											name={field.name}
@@ -187,7 +187,7 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
 									}
 									type="submit"
 								>
-									{state.isSubmitting ? "Tworzenie..." : "Utwórz bohatera"}
+									{state.isSubmitting ? "Tworzenie..." : "Utwórz herosa"}
 								</Button>
 							)}
 						</form.Subscribe>
