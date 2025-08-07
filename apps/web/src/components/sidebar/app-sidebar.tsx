@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 import type * as React from "react";
 import { toast } from "sonner";
-import { NavMain } from "@/components/nav-main";
-import { NavProjects } from "@/components/nav-projects";
+import { NavMain } from "@/components/sidebar/nav-main";
+import { NavProjects } from "@/components/sidebar/nav-projects";
 import {
 	Sidebar,
 	SidebarContent,
@@ -22,9 +22,9 @@ import {
 	SidebarRail,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton";
 
 // This is sample data.
 const data = {
