@@ -1,4 +1,10 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	isMatch,
+	Link,
+	Outlet,
+	useMatches,
+} from "@tanstack/react-router";
 import { useEffect } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import Loader from "@/components/loader";
@@ -7,7 +13,6 @@ import {
 	BreadcrumbItem,
 	BreadcrumbLink,
 	BreadcrumbList,
-	BreadcrumbPage,
 	BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
@@ -25,6 +30,18 @@ export const Route = createFileRoute("/dashboard")({
 function RouteComponent() {
 	const navigate = Route.useNavigate();
 	const { data: session, isPending } = authClient.useSession();
+	const matches = useMatches();
+
+	const matchesWithCrumbs = matches.filter((match) =>
+		isMatch(match, "loaderData.crumb")
+	);
+
+	const items = matchesWithCrumbs.map(({ pathname, loaderData }) => {
+		return {
+			href: pathname,
+			label: loaderData?.crumb,
+		};
+	});
 
 	useEffect(() => {
 		if (!(session || isPending)) {
@@ -56,12 +73,18 @@ function RouteComponent() {
 						<Breadcrumb>
 							<BreadcrumbList>
 								<BreadcrumbItem className="hidden md:block">
-									<BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+									<Link to="/dashboard">
+										<BreadcrumbLink>Dashboard</BreadcrumbLink>
+									</Link>
 								</BreadcrumbItem>
-								<BreadcrumbSeparator className="hidden md:block" />
-								<BreadcrumbItem>
-									<BreadcrumbPage>Test</BreadcrumbPage>
-								</BreadcrumbItem>
+								{items.map((item) => (
+									<BreadcrumbItem key={item.href}>
+										<BreadcrumbSeparator className="hidden md:block" />
+										<Link className="breadcrumb-link" to={item.href}>
+											{item.label}
+										</Link>
+									</BreadcrumbItem>
+								))}
 							</BreadcrumbList>
 						</Breadcrumb>
 					</div>

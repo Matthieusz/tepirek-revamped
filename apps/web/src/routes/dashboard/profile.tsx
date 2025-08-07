@@ -1,9 +1,12 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/dashboard/profile')({
-  component: RouteComponent,
-})
+export const Route = createFileRoute("/dashboard/profile")({
+	component: RouteComponent,
+	loader: () => ({
+		crumb: "Profil",
+	}),
+});
 
 function RouteComponent() {
-  return <div>Hello "/dashboard/profile"!</div>
+	return <div>Hello "/dashboard/profile"!</div>;
 }
