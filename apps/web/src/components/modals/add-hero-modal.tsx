@@ -62,19 +62,19 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
 					eventId: Number.parseInt(value.eventId, 10),
 				});
 
-				toast.success("Bohater utworzony pomyślnie");
+				toast.success("Heros utworzony pomyślnie");
 				queryClient.invalidateQueries({
 					queryKey: orpc.heroes.getAll.queryKey(),
 				});
 				setOpen(false);
 				form.reset();
 			} catch (_) {
-				toast.error("Nie udało się utworzyć bohatera");
+				toast.error("Nie udało się utworzyć herosa");
 			}
 		},
 		validators: {
 			onSubmit: z.object({
-				name: z.string().min(1, "Nazwa bohatera jest wymagana"),
+				name: z.string().min(1, "Nazwa herosa jest wymagana"),
 				image: z.string().optional(),
 				eventId: z.string().min(1, "Wybierz event"),
 			}),
@@ -109,7 +109,7 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
 											name={field.name}
 											onBlur={field.handleBlur}
 											onChange={(e) => field.handleChange(e.target.value)}
-											placeholder="Wprowadź nazwę bohatera"
+											placeholder="Wprowadź nazwę herosa"
 											value={field.state.value}
 										/>
 										{field.state.meta.errors.map((error) => (
