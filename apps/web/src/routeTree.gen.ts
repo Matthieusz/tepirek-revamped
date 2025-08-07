@@ -29,10 +29,24 @@ import { Route as DashboardEventsHeroesRouteImport } from './routes/dashboard/ev
 import { Route as DashboardCalculatorUlepaRouteImport } from './routes/dashboard/calculator/ulepa'
 import { Route as DashboardCalculatorOdwRouteImport } from './routes/dashboard/calculator/odw'
 import { Route as DashboardCalculatorListRouteImport } from './routes/dashboard/calculator/list'
-import { Route as DashboardAuctionsSupportRouteImport } from './routes/dashboard/auctions/support'
-import { Route as DashboardAuctionsMainRouteImport } from './routes/dashboard/auctions/main'
-import { Route as DashboardAuctionsBibelotsRouteImport } from './routes/dashboard/auctions/bibelots'
+import { Route as DashboardAuctionsSupportRouteRouteImport } from './routes/dashboard/auctions/support/route'
+import { Route as DashboardAuctionsMainRouteRouteImport } from './routes/dashboard/auctions/main/route'
+import { Route as DashboardAuctionsBibelotsRouteRouteImport } from './routes/dashboard/auctions/bibelots/route'
+import { Route as DashboardAuctionsSupportIndexRouteImport } from './routes/dashboard/auctions/support/index'
+import { Route as DashboardAuctionsMainIndexRouteImport } from './routes/dashboard/auctions/main/index'
 import { Route as DashboardEventsBetsAddRouteImport } from './routes/dashboard/events/bets.add'
+import { Route as DashboardAuctionsSupportWarriorRouteImport } from './routes/dashboard/auctions/support/warrior'
+import { Route as DashboardAuctionsSupportTrackerRouteImport } from './routes/dashboard/auctions/support/tracker'
+import { Route as DashboardAuctionsSupportPaladinRouteImport } from './routes/dashboard/auctions/support/paladin'
+import { Route as DashboardAuctionsSupportMageRouteImport } from './routes/dashboard/auctions/support/mage'
+import { Route as DashboardAuctionsSupportHunterRouteImport } from './routes/dashboard/auctions/support/hunter'
+import { Route as DashboardAuctionsSupportBladeDancerRouteImport } from './routes/dashboard/auctions/support/blade-dancer'
+import { Route as DashboardAuctionsMainWarriorRouteImport } from './routes/dashboard/auctions/main/warrior'
+import { Route as DashboardAuctionsMainTrackerRouteImport } from './routes/dashboard/auctions/main/tracker'
+import { Route as DashboardAuctionsMainPaladinRouteImport } from './routes/dashboard/auctions/main/paladin'
+import { Route as DashboardAuctionsMainMageRouteImport } from './routes/dashboard/auctions/main/mage'
+import { Route as DashboardAuctionsMainHunterRouteImport } from './routes/dashboard/auctions/main/hunter'
+import { Route as DashboardAuctionsMainBladeDancerRouteImport } from './routes/dashboard/auctions/main/blade-dancer'
 
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
@@ -137,28 +151,113 @@ const DashboardCalculatorListRoute = DashboardCalculatorListRouteImport.update({
   path: '/calculator/list',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardAuctionsSupportRoute =
-  DashboardAuctionsSupportRouteImport.update({
+const DashboardAuctionsSupportRouteRoute =
+  DashboardAuctionsSupportRouteRouteImport.update({
     id: '/auctions/support',
     path: '/auctions/support',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardAuctionsMainRoute = DashboardAuctionsMainRouteImport.update({
-  id: '/auctions/main',
-  path: '/auctions/main',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardAuctionsBibelotsRoute =
-  DashboardAuctionsBibelotsRouteImport.update({
+const DashboardAuctionsMainRouteRoute =
+  DashboardAuctionsMainRouteRouteImport.update({
+    id: '/auctions/main',
+    path: '/auctions/main',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardAuctionsBibelotsRouteRoute =
+  DashboardAuctionsBibelotsRouteRouteImport.update({
     id: '/auctions/bibelots',
     path: '/auctions/bibelots',
     getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardAuctionsSupportIndexRoute =
+  DashboardAuctionsSupportIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardAuctionsSupportRouteRoute,
+  } as any)
+const DashboardAuctionsMainIndexRoute =
+  DashboardAuctionsMainIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardAuctionsMainRouteRoute,
   } as any)
 const DashboardEventsBetsAddRoute = DashboardEventsBetsAddRouteImport.update({
   id: '/events/bets/add',
   path: '/events/bets/add',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardAuctionsSupportWarriorRoute =
+  DashboardAuctionsSupportWarriorRouteImport.update({
+    id: '/warrior',
+    path: '/warrior',
+    getParentRoute: () => DashboardAuctionsSupportRouteRoute,
+  } as any)
+const DashboardAuctionsSupportTrackerRoute =
+  DashboardAuctionsSupportTrackerRouteImport.update({
+    id: '/tracker',
+    path: '/tracker',
+    getParentRoute: () => DashboardAuctionsSupportRouteRoute,
+  } as any)
+const DashboardAuctionsSupportPaladinRoute =
+  DashboardAuctionsSupportPaladinRouteImport.update({
+    id: '/paladin',
+    path: '/paladin',
+    getParentRoute: () => DashboardAuctionsSupportRouteRoute,
+  } as any)
+const DashboardAuctionsSupportMageRoute =
+  DashboardAuctionsSupportMageRouteImport.update({
+    id: '/mage',
+    path: '/mage',
+    getParentRoute: () => DashboardAuctionsSupportRouteRoute,
+  } as any)
+const DashboardAuctionsSupportHunterRoute =
+  DashboardAuctionsSupportHunterRouteImport.update({
+    id: '/hunter',
+    path: '/hunter',
+    getParentRoute: () => DashboardAuctionsSupportRouteRoute,
+  } as any)
+const DashboardAuctionsSupportBladeDancerRoute =
+  DashboardAuctionsSupportBladeDancerRouteImport.update({
+    id: '/blade-dancer',
+    path: '/blade-dancer',
+    getParentRoute: () => DashboardAuctionsSupportRouteRoute,
+  } as any)
+const DashboardAuctionsMainWarriorRoute =
+  DashboardAuctionsMainWarriorRouteImport.update({
+    id: '/warrior',
+    path: '/warrior',
+    getParentRoute: () => DashboardAuctionsMainRouteRoute,
+  } as any)
+const DashboardAuctionsMainTrackerRoute =
+  DashboardAuctionsMainTrackerRouteImport.update({
+    id: '/tracker',
+    path: '/tracker',
+    getParentRoute: () => DashboardAuctionsMainRouteRoute,
+  } as any)
+const DashboardAuctionsMainPaladinRoute =
+  DashboardAuctionsMainPaladinRouteImport.update({
+    id: '/paladin',
+    path: '/paladin',
+    getParentRoute: () => DashboardAuctionsMainRouteRoute,
+  } as any)
+const DashboardAuctionsMainMageRoute =
+  DashboardAuctionsMainMageRouteImport.update({
+    id: '/mage',
+    path: '/mage',
+    getParentRoute: () => DashboardAuctionsMainRouteRoute,
+  } as any)
+const DashboardAuctionsMainHunterRoute =
+  DashboardAuctionsMainHunterRouteImport.update({
+    id: '/hunter',
+    path: '/hunter',
+    getParentRoute: () => DashboardAuctionsMainRouteRoute,
+  } as any)
+const DashboardAuctionsMainBladeDancerRoute =
+  DashboardAuctionsMainBladeDancerRouteImport.update({
+    id: '/blade-dancer',
+    path: '/blade-dancer',
+    getParentRoute: () => DashboardAuctionsMainRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -172,9 +271,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/skills': typeof DashboardSkillsRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRoute
-  '/dashboard/auctions/main': typeof DashboardAuctionsMainRoute
-  '/dashboard/auctions/support': typeof DashboardAuctionsSupportRoute
+  '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRouteRoute
+  '/dashboard/auctions/main': typeof DashboardAuctionsMainRouteRouteWithChildren
+  '/dashboard/auctions/support': typeof DashboardAuctionsSupportRouteRouteWithChildren
   '/dashboard/calculator/list': typeof DashboardCalculatorListRoute
   '/dashboard/calculator/odw': typeof DashboardCalculatorOdwRoute
   '/dashboard/calculator/ulepa': typeof DashboardCalculatorUlepaRoute
@@ -184,7 +283,21 @@ export interface FileRoutesByFullPath {
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
   '/dashboard/squad-builder/create': typeof DashboardSquadBuilderCreateRoute
   '/dashboard/squad-builder/manage': typeof DashboardSquadBuilderManageRoute
+  '/dashboard/auctions/main/blade-dancer': typeof DashboardAuctionsMainBladeDancerRoute
+  '/dashboard/auctions/main/hunter': typeof DashboardAuctionsMainHunterRoute
+  '/dashboard/auctions/main/mage': typeof DashboardAuctionsMainMageRoute
+  '/dashboard/auctions/main/paladin': typeof DashboardAuctionsMainPaladinRoute
+  '/dashboard/auctions/main/tracker': typeof DashboardAuctionsMainTrackerRoute
+  '/dashboard/auctions/main/warrior': typeof DashboardAuctionsMainWarriorRoute
+  '/dashboard/auctions/support/blade-dancer': typeof DashboardAuctionsSupportBladeDancerRoute
+  '/dashboard/auctions/support/hunter': typeof DashboardAuctionsSupportHunterRoute
+  '/dashboard/auctions/support/mage': typeof DashboardAuctionsSupportMageRoute
+  '/dashboard/auctions/support/paladin': typeof DashboardAuctionsSupportPaladinRoute
+  '/dashboard/auctions/support/tracker': typeof DashboardAuctionsSupportTrackerRoute
+  '/dashboard/auctions/support/warrior': typeof DashboardAuctionsSupportWarriorRoute
   '/dashboard/events/bets/add': typeof DashboardEventsBetsAddRoute
+  '/dashboard/auctions/main/': typeof DashboardAuctionsMainIndexRoute
+  '/dashboard/auctions/support/': typeof DashboardAuctionsSupportIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -197,9 +310,7 @@ export interface FileRoutesByTo {
   '/dashboard/skills': typeof DashboardSkillsRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard': typeof DashboardIndexRoute
-  '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRoute
-  '/dashboard/auctions/main': typeof DashboardAuctionsMainRoute
-  '/dashboard/auctions/support': typeof DashboardAuctionsSupportRoute
+  '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRouteRoute
   '/dashboard/calculator/list': typeof DashboardCalculatorListRoute
   '/dashboard/calculator/odw': typeof DashboardCalculatorOdwRoute
   '/dashboard/calculator/ulepa': typeof DashboardCalculatorUlepaRoute
@@ -209,7 +320,21 @@ export interface FileRoutesByTo {
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
   '/dashboard/squad-builder/create': typeof DashboardSquadBuilderCreateRoute
   '/dashboard/squad-builder/manage': typeof DashboardSquadBuilderManageRoute
+  '/dashboard/auctions/main/blade-dancer': typeof DashboardAuctionsMainBladeDancerRoute
+  '/dashboard/auctions/main/hunter': typeof DashboardAuctionsMainHunterRoute
+  '/dashboard/auctions/main/mage': typeof DashboardAuctionsMainMageRoute
+  '/dashboard/auctions/main/paladin': typeof DashboardAuctionsMainPaladinRoute
+  '/dashboard/auctions/main/tracker': typeof DashboardAuctionsMainTrackerRoute
+  '/dashboard/auctions/main/warrior': typeof DashboardAuctionsMainWarriorRoute
+  '/dashboard/auctions/support/blade-dancer': typeof DashboardAuctionsSupportBladeDancerRoute
+  '/dashboard/auctions/support/hunter': typeof DashboardAuctionsSupportHunterRoute
+  '/dashboard/auctions/support/mage': typeof DashboardAuctionsSupportMageRoute
+  '/dashboard/auctions/support/paladin': typeof DashboardAuctionsSupportPaladinRoute
+  '/dashboard/auctions/support/tracker': typeof DashboardAuctionsSupportTrackerRoute
+  '/dashboard/auctions/support/warrior': typeof DashboardAuctionsSupportWarriorRoute
   '/dashboard/events/bets/add': typeof DashboardEventsBetsAddRoute
+  '/dashboard/auctions/main': typeof DashboardAuctionsMainIndexRoute
+  '/dashboard/auctions/support': typeof DashboardAuctionsSupportIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -224,9 +349,9 @@ export interface FileRoutesById {
   '/dashboard/skills': typeof DashboardSkillsRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRoute
-  '/dashboard/auctions/main': typeof DashboardAuctionsMainRoute
-  '/dashboard/auctions/support': typeof DashboardAuctionsSupportRoute
+  '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRouteRoute
+  '/dashboard/auctions/main': typeof DashboardAuctionsMainRouteRouteWithChildren
+  '/dashboard/auctions/support': typeof DashboardAuctionsSupportRouteRouteWithChildren
   '/dashboard/calculator/list': typeof DashboardCalculatorListRoute
   '/dashboard/calculator/odw': typeof DashboardCalculatorOdwRoute
   '/dashboard/calculator/ulepa': typeof DashboardCalculatorUlepaRoute
@@ -236,7 +361,21 @@ export interface FileRoutesById {
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
   '/dashboard/squad-builder/create': typeof DashboardSquadBuilderCreateRoute
   '/dashboard/squad-builder/manage': typeof DashboardSquadBuilderManageRoute
+  '/dashboard/auctions/main/blade-dancer': typeof DashboardAuctionsMainBladeDancerRoute
+  '/dashboard/auctions/main/hunter': typeof DashboardAuctionsMainHunterRoute
+  '/dashboard/auctions/main/mage': typeof DashboardAuctionsMainMageRoute
+  '/dashboard/auctions/main/paladin': typeof DashboardAuctionsMainPaladinRoute
+  '/dashboard/auctions/main/tracker': typeof DashboardAuctionsMainTrackerRoute
+  '/dashboard/auctions/main/warrior': typeof DashboardAuctionsMainWarriorRoute
+  '/dashboard/auctions/support/blade-dancer': typeof DashboardAuctionsSupportBladeDancerRoute
+  '/dashboard/auctions/support/hunter': typeof DashboardAuctionsSupportHunterRoute
+  '/dashboard/auctions/support/mage': typeof DashboardAuctionsSupportMageRoute
+  '/dashboard/auctions/support/paladin': typeof DashboardAuctionsSupportPaladinRoute
+  '/dashboard/auctions/support/tracker': typeof DashboardAuctionsSupportTrackerRoute
+  '/dashboard/auctions/support/warrior': typeof DashboardAuctionsSupportWarriorRoute
   '/dashboard/events/bets/add': typeof DashboardEventsBetsAddRoute
+  '/dashboard/auctions/main/': typeof DashboardAuctionsMainIndexRoute
+  '/dashboard/auctions/support/': typeof DashboardAuctionsSupportIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -264,7 +403,21 @@ export interface FileRouteTypes {
     | '/dashboard/events/ranking'
     | '/dashboard/squad-builder/create'
     | '/dashboard/squad-builder/manage'
+    | '/dashboard/auctions/main/blade-dancer'
+    | '/dashboard/auctions/main/hunter'
+    | '/dashboard/auctions/main/mage'
+    | '/dashboard/auctions/main/paladin'
+    | '/dashboard/auctions/main/tracker'
+    | '/dashboard/auctions/main/warrior'
+    | '/dashboard/auctions/support/blade-dancer'
+    | '/dashboard/auctions/support/hunter'
+    | '/dashboard/auctions/support/mage'
+    | '/dashboard/auctions/support/paladin'
+    | '/dashboard/auctions/support/tracker'
+    | '/dashboard/auctions/support/warrior'
     | '/dashboard/events/bets/add'
+    | '/dashboard/auctions/main/'
+    | '/dashboard/auctions/support/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -278,8 +431,6 @@ export interface FileRouteTypes {
     | '/dashboard/tasks'
     | '/dashboard'
     | '/dashboard/auctions/bibelots'
-    | '/dashboard/auctions/main'
-    | '/dashboard/auctions/support'
     | '/dashboard/calculator/list'
     | '/dashboard/calculator/odw'
     | '/dashboard/calculator/ulepa'
@@ -289,7 +440,21 @@ export interface FileRouteTypes {
     | '/dashboard/events/ranking'
     | '/dashboard/squad-builder/create'
     | '/dashboard/squad-builder/manage'
+    | '/dashboard/auctions/main/blade-dancer'
+    | '/dashboard/auctions/main/hunter'
+    | '/dashboard/auctions/main/mage'
+    | '/dashboard/auctions/main/paladin'
+    | '/dashboard/auctions/main/tracker'
+    | '/dashboard/auctions/main/warrior'
+    | '/dashboard/auctions/support/blade-dancer'
+    | '/dashboard/auctions/support/hunter'
+    | '/dashboard/auctions/support/mage'
+    | '/dashboard/auctions/support/paladin'
+    | '/dashboard/auctions/support/tracker'
+    | '/dashboard/auctions/support/warrior'
     | '/dashboard/events/bets/add'
+    | '/dashboard/auctions/main'
+    | '/dashboard/auctions/support'
   id:
     | '__root__'
     | '/'
@@ -315,7 +480,21 @@ export interface FileRouteTypes {
     | '/dashboard/events/ranking'
     | '/dashboard/squad-builder/create'
     | '/dashboard/squad-builder/manage'
+    | '/dashboard/auctions/main/blade-dancer'
+    | '/dashboard/auctions/main/hunter'
+    | '/dashboard/auctions/main/mage'
+    | '/dashboard/auctions/main/paladin'
+    | '/dashboard/auctions/main/tracker'
+    | '/dashboard/auctions/main/warrior'
+    | '/dashboard/auctions/support/blade-dancer'
+    | '/dashboard/auctions/support/hunter'
+    | '/dashboard/auctions/support/mage'
+    | '/dashboard/auctions/support/paladin'
+    | '/dashboard/auctions/support/tracker'
+    | '/dashboard/auctions/support/warrior'
     | '/dashboard/events/bets/add'
+    | '/dashboard/auctions/main/'
+    | '/dashboard/auctions/support/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -472,22 +651,36 @@ declare module '@tanstack/react-router' {
       id: '/dashboard/auctions/support'
       path: '/auctions/support'
       fullPath: '/dashboard/auctions/support'
-      preLoaderRoute: typeof DashboardAuctionsSupportRouteImport
+      preLoaderRoute: typeof DashboardAuctionsSupportRouteRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/auctions/main': {
       id: '/dashboard/auctions/main'
       path: '/auctions/main'
       fullPath: '/dashboard/auctions/main'
-      preLoaderRoute: typeof DashboardAuctionsMainRouteImport
+      preLoaderRoute: typeof DashboardAuctionsMainRouteRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/auctions/bibelots': {
       id: '/dashboard/auctions/bibelots'
       path: '/auctions/bibelots'
       fullPath: '/dashboard/auctions/bibelots'
-      preLoaderRoute: typeof DashboardAuctionsBibelotsRouteImport
+      preLoaderRoute: typeof DashboardAuctionsBibelotsRouteRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/auctions/support/': {
+      id: '/dashboard/auctions/support/'
+      path: '/'
+      fullPath: '/dashboard/auctions/support/'
+      preLoaderRoute: typeof DashboardAuctionsSupportIndexRouteImport
+      parentRoute: typeof DashboardAuctionsSupportRouteRoute
+    }
+    '/dashboard/auctions/main/': {
+      id: '/dashboard/auctions/main/'
+      path: '/'
+      fullPath: '/dashboard/auctions/main/'
+      preLoaderRoute: typeof DashboardAuctionsMainIndexRouteImport
+      parentRoute: typeof DashboardAuctionsMainRouteRoute
     }
     '/dashboard/events/bets/add': {
       id: '/dashboard/events/bets/add'
@@ -496,8 +689,146 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardEventsBetsAddRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/auctions/support/warrior': {
+      id: '/dashboard/auctions/support/warrior'
+      path: '/warrior'
+      fullPath: '/dashboard/auctions/support/warrior'
+      preLoaderRoute: typeof DashboardAuctionsSupportWarriorRouteImport
+      parentRoute: typeof DashboardAuctionsSupportRouteRoute
+    }
+    '/dashboard/auctions/support/tracker': {
+      id: '/dashboard/auctions/support/tracker'
+      path: '/tracker'
+      fullPath: '/dashboard/auctions/support/tracker'
+      preLoaderRoute: typeof DashboardAuctionsSupportTrackerRouteImport
+      parentRoute: typeof DashboardAuctionsSupportRouteRoute
+    }
+    '/dashboard/auctions/support/paladin': {
+      id: '/dashboard/auctions/support/paladin'
+      path: '/paladin'
+      fullPath: '/dashboard/auctions/support/paladin'
+      preLoaderRoute: typeof DashboardAuctionsSupportPaladinRouteImport
+      parentRoute: typeof DashboardAuctionsSupportRouteRoute
+    }
+    '/dashboard/auctions/support/mage': {
+      id: '/dashboard/auctions/support/mage'
+      path: '/mage'
+      fullPath: '/dashboard/auctions/support/mage'
+      preLoaderRoute: typeof DashboardAuctionsSupportMageRouteImport
+      parentRoute: typeof DashboardAuctionsSupportRouteRoute
+    }
+    '/dashboard/auctions/support/hunter': {
+      id: '/dashboard/auctions/support/hunter'
+      path: '/hunter'
+      fullPath: '/dashboard/auctions/support/hunter'
+      preLoaderRoute: typeof DashboardAuctionsSupportHunterRouteImport
+      parentRoute: typeof DashboardAuctionsSupportRouteRoute
+    }
+    '/dashboard/auctions/support/blade-dancer': {
+      id: '/dashboard/auctions/support/blade-dancer'
+      path: '/blade-dancer'
+      fullPath: '/dashboard/auctions/support/blade-dancer'
+      preLoaderRoute: typeof DashboardAuctionsSupportBladeDancerRouteImport
+      parentRoute: typeof DashboardAuctionsSupportRouteRoute
+    }
+    '/dashboard/auctions/main/warrior': {
+      id: '/dashboard/auctions/main/warrior'
+      path: '/warrior'
+      fullPath: '/dashboard/auctions/main/warrior'
+      preLoaderRoute: typeof DashboardAuctionsMainWarriorRouteImport
+      parentRoute: typeof DashboardAuctionsMainRouteRoute
+    }
+    '/dashboard/auctions/main/tracker': {
+      id: '/dashboard/auctions/main/tracker'
+      path: '/tracker'
+      fullPath: '/dashboard/auctions/main/tracker'
+      preLoaderRoute: typeof DashboardAuctionsMainTrackerRouteImport
+      parentRoute: typeof DashboardAuctionsMainRouteRoute
+    }
+    '/dashboard/auctions/main/paladin': {
+      id: '/dashboard/auctions/main/paladin'
+      path: '/paladin'
+      fullPath: '/dashboard/auctions/main/paladin'
+      preLoaderRoute: typeof DashboardAuctionsMainPaladinRouteImport
+      parentRoute: typeof DashboardAuctionsMainRouteRoute
+    }
+    '/dashboard/auctions/main/mage': {
+      id: '/dashboard/auctions/main/mage'
+      path: '/mage'
+      fullPath: '/dashboard/auctions/main/mage'
+      preLoaderRoute: typeof DashboardAuctionsMainMageRouteImport
+      parentRoute: typeof DashboardAuctionsMainRouteRoute
+    }
+    '/dashboard/auctions/main/hunter': {
+      id: '/dashboard/auctions/main/hunter'
+      path: '/hunter'
+      fullPath: '/dashboard/auctions/main/hunter'
+      preLoaderRoute: typeof DashboardAuctionsMainHunterRouteImport
+      parentRoute: typeof DashboardAuctionsMainRouteRoute
+    }
+    '/dashboard/auctions/main/blade-dancer': {
+      id: '/dashboard/auctions/main/blade-dancer'
+      path: '/blade-dancer'
+      fullPath: '/dashboard/auctions/main/blade-dancer'
+      preLoaderRoute: typeof DashboardAuctionsMainBladeDancerRouteImport
+      parentRoute: typeof DashboardAuctionsMainRouteRoute
+    }
   }
 }
+
+interface DashboardAuctionsMainRouteRouteChildren {
+  DashboardAuctionsMainBladeDancerRoute: typeof DashboardAuctionsMainBladeDancerRoute
+  DashboardAuctionsMainHunterRoute: typeof DashboardAuctionsMainHunterRoute
+  DashboardAuctionsMainMageRoute: typeof DashboardAuctionsMainMageRoute
+  DashboardAuctionsMainPaladinRoute: typeof DashboardAuctionsMainPaladinRoute
+  DashboardAuctionsMainTrackerRoute: typeof DashboardAuctionsMainTrackerRoute
+  DashboardAuctionsMainWarriorRoute: typeof DashboardAuctionsMainWarriorRoute
+  DashboardAuctionsMainIndexRoute: typeof DashboardAuctionsMainIndexRoute
+}
+
+const DashboardAuctionsMainRouteRouteChildren: DashboardAuctionsMainRouteRouteChildren =
+  {
+    DashboardAuctionsMainBladeDancerRoute:
+      DashboardAuctionsMainBladeDancerRoute,
+    DashboardAuctionsMainHunterRoute: DashboardAuctionsMainHunterRoute,
+    DashboardAuctionsMainMageRoute: DashboardAuctionsMainMageRoute,
+    DashboardAuctionsMainPaladinRoute: DashboardAuctionsMainPaladinRoute,
+    DashboardAuctionsMainTrackerRoute: DashboardAuctionsMainTrackerRoute,
+    DashboardAuctionsMainWarriorRoute: DashboardAuctionsMainWarriorRoute,
+    DashboardAuctionsMainIndexRoute: DashboardAuctionsMainIndexRoute,
+  }
+
+const DashboardAuctionsMainRouteRouteWithChildren =
+  DashboardAuctionsMainRouteRoute._addFileChildren(
+    DashboardAuctionsMainRouteRouteChildren,
+  )
+
+interface DashboardAuctionsSupportRouteRouteChildren {
+  DashboardAuctionsSupportBladeDancerRoute: typeof DashboardAuctionsSupportBladeDancerRoute
+  DashboardAuctionsSupportHunterRoute: typeof DashboardAuctionsSupportHunterRoute
+  DashboardAuctionsSupportMageRoute: typeof DashboardAuctionsSupportMageRoute
+  DashboardAuctionsSupportPaladinRoute: typeof DashboardAuctionsSupportPaladinRoute
+  DashboardAuctionsSupportTrackerRoute: typeof DashboardAuctionsSupportTrackerRoute
+  DashboardAuctionsSupportWarriorRoute: typeof DashboardAuctionsSupportWarriorRoute
+  DashboardAuctionsSupportIndexRoute: typeof DashboardAuctionsSupportIndexRoute
+}
+
+const DashboardAuctionsSupportRouteRouteChildren: DashboardAuctionsSupportRouteRouteChildren =
+  {
+    DashboardAuctionsSupportBladeDancerRoute:
+      DashboardAuctionsSupportBladeDancerRoute,
+    DashboardAuctionsSupportHunterRoute: DashboardAuctionsSupportHunterRoute,
+    DashboardAuctionsSupportMageRoute: DashboardAuctionsSupportMageRoute,
+    DashboardAuctionsSupportPaladinRoute: DashboardAuctionsSupportPaladinRoute,
+    DashboardAuctionsSupportTrackerRoute: DashboardAuctionsSupportTrackerRoute,
+    DashboardAuctionsSupportWarriorRoute: DashboardAuctionsSupportWarriorRoute,
+    DashboardAuctionsSupportIndexRoute: DashboardAuctionsSupportIndexRoute,
+  }
+
+const DashboardAuctionsSupportRouteRouteWithChildren =
+  DashboardAuctionsSupportRouteRoute._addFileChildren(
+    DashboardAuctionsSupportRouteRouteChildren,
+  )
 
 interface DashboardRouteRouteChildren {
   DashboardPlayerListRoute: typeof DashboardPlayerListRoute
@@ -506,9 +837,9 @@ interface DashboardRouteRouteChildren {
   DashboardSkillsRoute: typeof DashboardSkillsRoute
   DashboardTasksRoute: typeof DashboardTasksRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
-  DashboardAuctionsBibelotsRoute: typeof DashboardAuctionsBibelotsRoute
-  DashboardAuctionsMainRoute: typeof DashboardAuctionsMainRoute
-  DashboardAuctionsSupportRoute: typeof DashboardAuctionsSupportRoute
+  DashboardAuctionsBibelotsRouteRoute: typeof DashboardAuctionsBibelotsRouteRoute
+  DashboardAuctionsMainRouteRoute: typeof DashboardAuctionsMainRouteRouteWithChildren
+  DashboardAuctionsSupportRouteRoute: typeof DashboardAuctionsSupportRouteRouteWithChildren
   DashboardCalculatorListRoute: typeof DashboardCalculatorListRoute
   DashboardCalculatorOdwRoute: typeof DashboardCalculatorOdwRoute
   DashboardCalculatorUlepaRoute: typeof DashboardCalculatorUlepaRoute
@@ -528,9 +859,10 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSkillsRoute: DashboardSkillsRoute,
   DashboardTasksRoute: DashboardTasksRoute,
   DashboardIndexRoute: DashboardIndexRoute,
-  DashboardAuctionsBibelotsRoute: DashboardAuctionsBibelotsRoute,
-  DashboardAuctionsMainRoute: DashboardAuctionsMainRoute,
-  DashboardAuctionsSupportRoute: DashboardAuctionsSupportRoute,
+  DashboardAuctionsBibelotsRouteRoute: DashboardAuctionsBibelotsRouteRoute,
+  DashboardAuctionsMainRouteRoute: DashboardAuctionsMainRouteRouteWithChildren,
+  DashboardAuctionsSupportRouteRoute:
+    DashboardAuctionsSupportRouteRouteWithChildren,
   DashboardCalculatorListRoute: DashboardCalculatorListRoute,
   DashboardCalculatorOdwRoute: DashboardCalculatorOdwRoute,
   DashboardCalculatorUlepaRoute: DashboardCalculatorUlepaRoute,

@@ -1,20 +1,8 @@
-import {
-	createFileRoute,
-	isMatch,
-	Link,
-	Outlet,
-	useMatches,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { AppSidebar } from "@/components/app-sidebar";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 import Loader from "@/components/loader";
-import {
-	Breadcrumb,
-	BreadcrumbItem,
-	BreadcrumbLink,
-	BreadcrumbList,
-	BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import {
 	SidebarInset,
@@ -25,23 +13,14 @@ import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/dashboard")({
 	component: RouteComponent,
+	loader: () => ({
+		crumb: "Dashboard",
+	}),
 });
 
 function RouteComponent() {
 	const navigate = Route.useNavigate();
 	const { data: session, isPending } = authClient.useSession();
-	const matches = useMatches();
-
-	const matchesWithCrumbs = matches.filter((match) =>
-		isMatch(match, "loaderData.crumb")
-	);
-
-	const items = matchesWithCrumbs.map(({ pathname, loaderData }) => {
-		return {
-			href: pathname,
-			label: loaderData?.crumb,
-		};
-	});
 
 	useEffect(() => {
 		if (!(session || isPending)) {
@@ -70,23 +49,7 @@ function RouteComponent() {
 							className="mr-2 data-[orientation=vertical]:h-4"
 							orientation="vertical"
 						/>
-						<Breadcrumb>
-							<BreadcrumbList>
-								<BreadcrumbItem className="hidden md:block">
-									<Link to="/dashboard">
-										<BreadcrumbLink>Dashboard</BreadcrumbLink>
-									</Link>
-								</BreadcrumbItem>
-								{items.map((item) => (
-									<BreadcrumbItem key={item.href}>
-										<BreadcrumbSeparator className="hidden md:block" />
-										<Link className="hover:text-foreground" to={item.href}>
-											{item.label}
-										</Link>
-									</BreadcrumbItem>
-								))}
-							</BreadcrumbList>
-						</Breadcrumb>
+						<BreadcrumbNav />
 					</div>
 				</header>
 				<div className="container flex h-full w-full overflow-hidden px-6 py-2">

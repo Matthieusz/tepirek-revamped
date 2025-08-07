@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+
+const RouteComponent = () => <Outlet />;
 
 export const Route = createFileRoute("/dashboard/auctions/support")({
 	component: RouteComponent,
@@ -6,7 +8,3 @@ export const Route = createFileRoute("/dashboard/auctions/support")({
 		crumb: "Bronie pomocnicze",
 	}),
 });
-
-function RouteComponent() {
-	return <div>Hello "/dashboard/auctions/support"!</div>;
-}
