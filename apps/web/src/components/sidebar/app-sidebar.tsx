@@ -13,7 +13,7 @@ import {
 import type * as React from "react";
 import { toast } from "sonner";
 import { NavMain } from "@/components/sidebar/nav-main";
-import { NavProjects } from "@/components/sidebar/nav-projects";
+import { NavOther } from "@/components/sidebar/nav-other";
 import {
 	Sidebar,
 	SidebarContent,
@@ -26,7 +26,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 
-// This is sample data.
 const data = {
 	navMain: [
 		{
@@ -154,14 +153,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			</SidebarHeader>
 			<SidebarContent>
 				<NavMain items={data.navMain} />
-				<NavProjects projects={data.projects} />
+				<NavOther projects={data.projects} />
 			</SidebarContent>
 			<SidebarFooter>
-				<div className="flex items-center gap-2 p-2">
+				<div className="flex items-center gap-4 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-4">
 					{isPending ? (
 						<>
 							<Skeleton className="h-8 w-8 rounded-lg" />
-							<div className="grid flex-1 gap-1 text-left text-sm leading-tight">
+							<div className="grid flex-1 gap-1 text-left text-sm leading-tight group-data-[state=collapsed]:hidden">
 								<Skeleton className="h-4 w-24 rounded" />
 								<Skeleton className="h-3 w-32 rounded" />
 							</div>
@@ -170,15 +169,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					) : (
 						<>
 							<Avatar className="h-8 w-8 rounded-lg">
-								<AvatarImage alt="User avatar" src="test" />
+								<AvatarImage
+									alt="User avatar"
+									src={session?.user.image ?? undefined}
+								/>
 								<AvatarFallback>
-									<img
-										alt="default-avatar"
-										src="../../../public/default-avatar.webp"
-									/>
+									<img alt="default-avatar" src="/default-avatar.webp" />
 								</AvatarFallback>
 							</Avatar>
-							<div className="grid flex-1 text-left text-sm leading-tight">
+							<div className="grid flex-1 text-left text-sm leading-tight group-data-[state=collapsed]:hidden">
 								<span className="truncate font-medium">
 									{session?.user.name}
 								</span>
@@ -189,7 +188,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 									authClient.signOut({
 										fetchOptions: {
 											onSuccess: () => {
-												toast.success("Logout successful");
+												toast.success("Wylogowano pomyślnie");
 												navigate({
 													to: "/",
 												});
