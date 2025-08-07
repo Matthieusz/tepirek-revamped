@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns/format";
-import { Plus } from "lucide-react";
+import { Plus, Power, Trash2 } from "lucide-react";
 import { AddEventModal } from "@/components/modals/add-event-modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -84,6 +84,7 @@ function RouteComponent() {
 										}}
 										variant="ghost"
 									>
+										<Power />
 										{event.active ? "Dezaktywuj" : "Aktywuj"}
 									</Button>
 									<Button
@@ -102,6 +103,7 @@ function RouteComponent() {
 										}}
 										variant="destructive"
 									>
+										<Trash2 />
 										Usuń
 									</Button>
 								</TableCell>
