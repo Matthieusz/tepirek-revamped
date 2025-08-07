@@ -23,6 +23,7 @@ export function NavProjects({
 					<SidebarMenuItem key={item.name}>
 						<SidebarMenuButton asChild>
 							<Link preload="intent" to={item.url}>
+								<item.icon className="h-4 w-4" />
 								{item.name}
 							</Link>
 						</SidebarMenuButton>
