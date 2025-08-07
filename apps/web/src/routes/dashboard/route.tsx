@@ -89,7 +89,7 @@ function RouteComponent() {
 						</Breadcrumb>
 					</div>
 				</header>
-				<div>
+				<div className="container flex h-full w-full overflow-hidden px-6 py-2">
 					<Outlet />
 				</div>
 			</SidebarInset>
