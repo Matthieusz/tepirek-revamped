@@ -12,8 +12,27 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodosRouteImport } from './routes/todos'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardTasksRouteImport } from './routes/dashboard/tasks'
+import { Route as DashboardSkillsRouteImport } from './routes/dashboard/skills'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
+import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
+import { Route as DashboardPlayerListRouteImport } from './routes/dashboard/player-list'
+import { Route as DashboardSquadBuilderManageRouteImport } from './routes/dashboard/squad-builder/manage'
+import { Route as DashboardSquadBuilderCreateRouteImport } from './routes/dashboard/squad-builder/create'
+import { Route as DashboardEventsRankingRouteImport } from './routes/dashboard/events/ranking'
+import { Route as DashboardEventsListRouteImport } from './routes/dashboard/events/list'
+import { Route as DashboardEventsHistoryRouteImport } from './routes/dashboard/events/history'
+import { Route as DashboardEventsHeroesRouteImport } from './routes/dashboard/events/heroes'
+import { Route as DashboardCalculatorUlepaRouteImport } from './routes/dashboard/calculator/ulepa'
+import { Route as DashboardCalculatorOdwRouteImport } from './routes/dashboard/calculator/odw'
+import { Route as DashboardCalculatorListRouteImport } from './routes/dashboard/calculator/list'
+import { Route as DashboardAuctionsSupportRouteImport } from './routes/dashboard/auctions/support'
+import { Route as DashboardAuctionsMainRouteImport } from './routes/dashboard/auctions/main'
+import { Route as DashboardAuctionsBibelotsRouteImport } from './routes/dashboard/auctions/bibelots'
+import { Route as DashboardEventsBetsAddRouteImport } from './routes/dashboard/events/bets.add'
 
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
@@ -30,7 +49,7 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
+const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
@@ -40,40 +59,268 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardTasksRoute = DashboardTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardSkillsRoute = DashboardSkillsRouteImport.update({
+  id: '/skills',
+  path: '/skills',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardProfileRoute = DashboardProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardPlayerListRoute = DashboardPlayerListRouteImport.update({
+  id: '/player-list',
+  path: '/player-list',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardSquadBuilderManageRoute =
+  DashboardSquadBuilderManageRouteImport.update({
+    id: '/squad-builder/manage',
+    path: '/squad-builder/manage',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSquadBuilderCreateRoute =
+  DashboardSquadBuilderCreateRouteImport.update({
+    id: '/squad-builder/create',
+    path: '/squad-builder/create',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardEventsRankingRoute = DashboardEventsRankingRouteImport.update({
+  id: '/events/ranking',
+  path: '/events/ranking',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardEventsListRoute = DashboardEventsListRouteImport.update({
+  id: '/events/list',
+  path: '/events/list',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardEventsHistoryRoute = DashboardEventsHistoryRouteImport.update({
+  id: '/events/history',
+  path: '/events/history',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardEventsHeroesRoute = DashboardEventsHeroesRouteImport.update({
+  id: '/events/heroes',
+  path: '/events/heroes',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardCalculatorUlepaRoute =
+  DashboardCalculatorUlepaRouteImport.update({
+    id: '/calculator/ulepa',
+    path: '/calculator/ulepa',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardCalculatorOdwRoute = DashboardCalculatorOdwRouteImport.update({
+  id: '/calculator/odw',
+  path: '/calculator/odw',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardCalculatorListRoute = DashboardCalculatorListRouteImport.update({
+  id: '/calculator/list',
+  path: '/calculator/list',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardAuctionsSupportRoute =
+  DashboardAuctionsSupportRouteImport.update({
+    id: '/auctions/support',
+    path: '/auctions/support',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardAuctionsMainRoute = DashboardAuctionsMainRouteImport.update({
+  id: '/auctions/main',
+  path: '/auctions/main',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardAuctionsBibelotsRoute =
+  DashboardAuctionsBibelotsRouteImport.update({
+    id: '/auctions/bibelots',
+    path: '/auctions/bibelots',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardEventsBetsAddRoute = DashboardEventsBetsAddRouteImport.update({
+  id: '/events/bets/add',
+  path: '/events/bets/add',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/todos': typeof TodosRoute
+  '/dashboard/player-list': typeof DashboardPlayerListRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/skills': typeof DashboardSkillsRoute
+  '/dashboard/tasks': typeof DashboardTasksRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRoute
+  '/dashboard/auctions/main': typeof DashboardAuctionsMainRoute
+  '/dashboard/auctions/support': typeof DashboardAuctionsSupportRoute
+  '/dashboard/calculator/list': typeof DashboardCalculatorListRoute
+  '/dashboard/calculator/odw': typeof DashboardCalculatorOdwRoute
+  '/dashboard/calculator/ulepa': typeof DashboardCalculatorUlepaRoute
+  '/dashboard/events/heroes': typeof DashboardEventsHeroesRoute
+  '/dashboard/events/history': typeof DashboardEventsHistoryRoute
+  '/dashboard/events/list': typeof DashboardEventsListRoute
+  '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
+  '/dashboard/squad-builder/create': typeof DashboardSquadBuilderCreateRoute
+  '/dashboard/squad-builder/manage': typeof DashboardSquadBuilderManageRoute
+  '/dashboard/events/bets/add': typeof DashboardEventsBetsAddRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/todos': typeof TodosRoute
+  '/dashboard/player-list': typeof DashboardPlayerListRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/skills': typeof DashboardSkillsRoute
+  '/dashboard/tasks': typeof DashboardTasksRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRoute
+  '/dashboard/auctions/main': typeof DashboardAuctionsMainRoute
+  '/dashboard/auctions/support': typeof DashboardAuctionsSupportRoute
+  '/dashboard/calculator/list': typeof DashboardCalculatorListRoute
+  '/dashboard/calculator/odw': typeof DashboardCalculatorOdwRoute
+  '/dashboard/calculator/ulepa': typeof DashboardCalculatorUlepaRoute
+  '/dashboard/events/heroes': typeof DashboardEventsHeroesRoute
+  '/dashboard/events/history': typeof DashboardEventsHistoryRoute
+  '/dashboard/events/list': typeof DashboardEventsListRoute
+  '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
+  '/dashboard/squad-builder/create': typeof DashboardSquadBuilderCreateRoute
+  '/dashboard/squad-builder/manage': typeof DashboardSquadBuilderManageRoute
+  '/dashboard/events/bets/add': typeof DashboardEventsBetsAddRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/todos': typeof TodosRoute
+  '/dashboard/player-list': typeof DashboardPlayerListRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/skills': typeof DashboardSkillsRoute
+  '/dashboard/tasks': typeof DashboardTasksRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRoute
+  '/dashboard/auctions/main': typeof DashboardAuctionsMainRoute
+  '/dashboard/auctions/support': typeof DashboardAuctionsSupportRoute
+  '/dashboard/calculator/list': typeof DashboardCalculatorListRoute
+  '/dashboard/calculator/odw': typeof DashboardCalculatorOdwRoute
+  '/dashboard/calculator/ulepa': typeof DashboardCalculatorUlepaRoute
+  '/dashboard/events/heroes': typeof DashboardEventsHeroesRoute
+  '/dashboard/events/history': typeof DashboardEventsHistoryRoute
+  '/dashboard/events/list': typeof DashboardEventsListRoute
+  '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
+  '/dashboard/squad-builder/create': typeof DashboardSquadBuilderCreateRoute
+  '/dashboard/squad-builder/manage': typeof DashboardSquadBuilderManageRoute
+  '/dashboard/events/bets/add': typeof DashboardEventsBetsAddRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/login' | '/signup' | '/todos'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/signup'
+    | '/todos'
+    | '/dashboard/player-list'
+    | '/dashboard/profile'
+    | '/dashboard/settings'
+    | '/dashboard/skills'
+    | '/dashboard/tasks'
+    | '/dashboard/'
+    | '/dashboard/auctions/bibelots'
+    | '/dashboard/auctions/main'
+    | '/dashboard/auctions/support'
+    | '/dashboard/calculator/list'
+    | '/dashboard/calculator/odw'
+    | '/dashboard/calculator/ulepa'
+    | '/dashboard/events/heroes'
+    | '/dashboard/events/history'
+    | '/dashboard/events/list'
+    | '/dashboard/events/ranking'
+    | '/dashboard/squad-builder/create'
+    | '/dashboard/squad-builder/manage'
+    | '/dashboard/events/bets/add'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/login' | '/signup' | '/todos'
-  id: '__root__' | '/' | '/dashboard' | '/login' | '/signup' | '/todos'
+  to:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/todos'
+    | '/dashboard/player-list'
+    | '/dashboard/profile'
+    | '/dashboard/settings'
+    | '/dashboard/skills'
+    | '/dashboard/tasks'
+    | '/dashboard'
+    | '/dashboard/auctions/bibelots'
+    | '/dashboard/auctions/main'
+    | '/dashboard/auctions/support'
+    | '/dashboard/calculator/list'
+    | '/dashboard/calculator/odw'
+    | '/dashboard/calculator/ulepa'
+    | '/dashboard/events/heroes'
+    | '/dashboard/events/history'
+    | '/dashboard/events/list'
+    | '/dashboard/events/ranking'
+    | '/dashboard/squad-builder/create'
+    | '/dashboard/squad-builder/manage'
+    | '/dashboard/events/bets/add'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/signup'
+    | '/todos'
+    | '/dashboard/player-list'
+    | '/dashboard/profile'
+    | '/dashboard/settings'
+    | '/dashboard/skills'
+    | '/dashboard/tasks'
+    | '/dashboard/'
+    | '/dashboard/auctions/bibelots'
+    | '/dashboard/auctions/main'
+    | '/dashboard/auctions/support'
+    | '/dashboard/calculator/list'
+    | '/dashboard/calculator/odw'
+    | '/dashboard/calculator/ulepa'
+    | '/dashboard/events/heroes'
+    | '/dashboard/events/history'
+    | '/dashboard/events/list'
+    | '/dashboard/events/ranking'
+    | '/dashboard/squad-builder/create'
+    | '/dashboard/squad-builder/manage'
+    | '/dashboard/events/bets/add'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRoute
+  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   TodosRoute: typeof TodosRoute
@@ -106,7 +353,7 @@ declare module '@tanstack/react-router' {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
+      preLoaderRoute: typeof DashboardRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -116,12 +363,193 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/tasks': {
+      id: '/dashboard/tasks'
+      path: '/tasks'
+      fullPath: '/dashboard/tasks'
+      preLoaderRoute: typeof DashboardTasksRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/skills': {
+      id: '/dashboard/skills'
+      path: '/skills'
+      fullPath: '/dashboard/skills'
+      preLoaderRoute: typeof DashboardSkillsRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/profile': {
+      id: '/dashboard/profile'
+      path: '/profile'
+      fullPath: '/dashboard/profile'
+      preLoaderRoute: typeof DashboardProfileRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/player-list': {
+      id: '/dashboard/player-list'
+      path: '/player-list'
+      fullPath: '/dashboard/player-list'
+      preLoaderRoute: typeof DashboardPlayerListRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/squad-builder/manage': {
+      id: '/dashboard/squad-builder/manage'
+      path: '/squad-builder/manage'
+      fullPath: '/dashboard/squad-builder/manage'
+      preLoaderRoute: typeof DashboardSquadBuilderManageRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/squad-builder/create': {
+      id: '/dashboard/squad-builder/create'
+      path: '/squad-builder/create'
+      fullPath: '/dashboard/squad-builder/create'
+      preLoaderRoute: typeof DashboardSquadBuilderCreateRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/events/ranking': {
+      id: '/dashboard/events/ranking'
+      path: '/events/ranking'
+      fullPath: '/dashboard/events/ranking'
+      preLoaderRoute: typeof DashboardEventsRankingRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/events/list': {
+      id: '/dashboard/events/list'
+      path: '/events/list'
+      fullPath: '/dashboard/events/list'
+      preLoaderRoute: typeof DashboardEventsListRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/events/history': {
+      id: '/dashboard/events/history'
+      path: '/events/history'
+      fullPath: '/dashboard/events/history'
+      preLoaderRoute: typeof DashboardEventsHistoryRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/events/heroes': {
+      id: '/dashboard/events/heroes'
+      path: '/events/heroes'
+      fullPath: '/dashboard/events/heroes'
+      preLoaderRoute: typeof DashboardEventsHeroesRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/calculator/ulepa': {
+      id: '/dashboard/calculator/ulepa'
+      path: '/calculator/ulepa'
+      fullPath: '/dashboard/calculator/ulepa'
+      preLoaderRoute: typeof DashboardCalculatorUlepaRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/calculator/odw': {
+      id: '/dashboard/calculator/odw'
+      path: '/calculator/odw'
+      fullPath: '/dashboard/calculator/odw'
+      preLoaderRoute: typeof DashboardCalculatorOdwRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/calculator/list': {
+      id: '/dashboard/calculator/list'
+      path: '/calculator/list'
+      fullPath: '/dashboard/calculator/list'
+      preLoaderRoute: typeof DashboardCalculatorListRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/auctions/support': {
+      id: '/dashboard/auctions/support'
+      path: '/auctions/support'
+      fullPath: '/dashboard/auctions/support'
+      preLoaderRoute: typeof DashboardAuctionsSupportRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/auctions/main': {
+      id: '/dashboard/auctions/main'
+      path: '/auctions/main'
+      fullPath: '/dashboard/auctions/main'
+      preLoaderRoute: typeof DashboardAuctionsMainRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/auctions/bibelots': {
+      id: '/dashboard/auctions/bibelots'
+      path: '/auctions/bibelots'
+      fullPath: '/dashboard/auctions/bibelots'
+      preLoaderRoute: typeof DashboardAuctionsBibelotsRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/events/bets/add': {
+      id: '/dashboard/events/bets/add'
+      path: '/events/bets/add'
+      fullPath: '/dashboard/events/bets/add'
+      preLoaderRoute: typeof DashboardEventsBetsAddRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
   }
 }
 
+interface DashboardRouteRouteChildren {
+  DashboardPlayerListRoute: typeof DashboardPlayerListRoute
+  DashboardProfileRoute: typeof DashboardProfileRoute
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
+  DashboardSkillsRoute: typeof DashboardSkillsRoute
+  DashboardTasksRoute: typeof DashboardTasksRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardAuctionsBibelotsRoute: typeof DashboardAuctionsBibelotsRoute
+  DashboardAuctionsMainRoute: typeof DashboardAuctionsMainRoute
+  DashboardAuctionsSupportRoute: typeof DashboardAuctionsSupportRoute
+  DashboardCalculatorListRoute: typeof DashboardCalculatorListRoute
+  DashboardCalculatorOdwRoute: typeof DashboardCalculatorOdwRoute
+  DashboardCalculatorUlepaRoute: typeof DashboardCalculatorUlepaRoute
+  DashboardEventsHeroesRoute: typeof DashboardEventsHeroesRoute
+  DashboardEventsHistoryRoute: typeof DashboardEventsHistoryRoute
+  DashboardEventsListRoute: typeof DashboardEventsListRoute
+  DashboardEventsRankingRoute: typeof DashboardEventsRankingRoute
+  DashboardSquadBuilderCreateRoute: typeof DashboardSquadBuilderCreateRoute
+  DashboardSquadBuilderManageRoute: typeof DashboardSquadBuilderManageRoute
+  DashboardEventsBetsAddRoute: typeof DashboardEventsBetsAddRoute
+}
+
+const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardPlayerListRoute: DashboardPlayerListRoute,
+  DashboardProfileRoute: DashboardProfileRoute,
+  DashboardSettingsRoute: DashboardSettingsRoute,
+  DashboardSkillsRoute: DashboardSkillsRoute,
+  DashboardTasksRoute: DashboardTasksRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardAuctionsBibelotsRoute: DashboardAuctionsBibelotsRoute,
+  DashboardAuctionsMainRoute: DashboardAuctionsMainRoute,
+  DashboardAuctionsSupportRoute: DashboardAuctionsSupportRoute,
+  DashboardCalculatorListRoute: DashboardCalculatorListRoute,
+  DashboardCalculatorOdwRoute: DashboardCalculatorOdwRoute,
+  DashboardCalculatorUlepaRoute: DashboardCalculatorUlepaRoute,
+  DashboardEventsHeroesRoute: DashboardEventsHeroesRoute,
+  DashboardEventsHistoryRoute: DashboardEventsHistoryRoute,
+  DashboardEventsListRoute: DashboardEventsListRoute,
+  DashboardEventsRankingRoute: DashboardEventsRankingRoute,
+  DashboardSquadBuilderCreateRoute: DashboardSquadBuilderCreateRoute,
+  DashboardSquadBuilderManageRoute: DashboardSquadBuilderManageRoute,
+  DashboardEventsBetsAddRoute: DashboardEventsBetsAddRoute,
+}
+
+const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
+  DashboardRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DashboardRoute: DashboardRoute,
+  DashboardRouteRoute: DashboardRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   TodosRoute: TodosRoute,

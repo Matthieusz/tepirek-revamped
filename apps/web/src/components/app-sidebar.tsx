@@ -24,6 +24,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
+import { Skeleton } from "./ui/skeleton";
 
 // This is sample data.
 const data = {
@@ -35,23 +36,23 @@ const data = {
 			items: [
 				{
 					title: "Lista eventów",
-					url: "#",
+					url: "/dashboard/events/list",
 				},
 				{
 					title: "Lista herosów",
-					url: "#",
+					url: "/dashboard/events/heroes",
 				},
 				{
 					title: "Dodaj obstawienie",
-					url: "#",
+					url: "/dashboard/events/bets/add",
 				},
 				{
 					title: "Historia",
-					url: "#",
+					url: "/dashboard/events/history",
 				},
 				{
 					title: "Ranking",
-					url: "#",
+					url: "/dashboard/events/ranking",
 				},
 			],
 		},
@@ -62,15 +63,15 @@ const data = {
 			items: [
 				{
 					title: "Broni głównych",
-					url: "#",
+					url: "/dashboard/auctions/main",
 				},
 				{
 					title: "Broni pomocniczych",
-					url: "#",
+					url: "/dashboard/auctions/support",
 				},
 				{
 					title: "Bibelotów",
-					url: "#",
+					url: "/dashboard/auctions/bibelots",
 				},
 			],
 		},
@@ -81,54 +82,55 @@ const data = {
 			items: [
 				{
 					title: "Utwórz nową drużynę",
-					url: "#",
+					url: "/dashboard/squad-builder/create",
 				},
 				{
 					title: "Zarządzaj drużynami",
-					url: "#",
+					url: "/dashboard/squad-builder/manage",
 				},
+			],
+		},
+		{
+			title: "Kalkulatory",
+			url: "#",
+			icon: Calculator,
+			items: [
+				{
+					title: "Ulepy",
+					url: "/dashboard/calculator/ulepa",
+				},
+				{
+					title: "Odwiązania",
+					url: "/dashboard/calculator/odw",
+				},
+				{ title: "Lista", url: "/dashboard/calculator/list" },
 			],
 		},
 	],
 	projects: [
 		{
-			name: "Kalkulator ulepy",
-			url: "#",
-			icon: Calculator,
-		},
-		{
-			name: "Kalkulator odw",
-			url: "#",
-			icon: Calculator,
-		},
-		{
-			name: "Kalkulator lista",
-			url: "#",
-			icon: Calculator,
-		},
-		{
 			name: "Lista zadań",
-			url: "#",
+			url: "/dashboard/tasks",
 			icon: ListChecks,
 		},
 		{
 			name: "Umiejętności",
-			url: "#",
+			url: "/dashboard/skills",
 			icon: Brain,
 		},
 		{
 			name: "Lista graczy",
-			url: "#",
+			url: "/dashboard/player-list",
 			icon: Users,
 		},
 		{
 			name: "Profil",
-			url: "#",
+			url: "/dashboard/profile",
 			icon: User,
 		},
 		{
 			name: "Ustawienia",
-			url: "#",
+			url: "/dashboard/settings",
 			icon: Settings,
 		},
 	],
@@ -136,6 +138,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const navigate = useNavigate();
+	const { data: session, isPending } = authClient.useSession();
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
@@ -155,35 +158,52 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			</SidebarContent>
 			<SidebarFooter>
 				<div className="flex items-center gap-2 p-2">
-					<Avatar className="h-8 w-8 rounded-lg">
-						<AvatarImage alt="User avatar" src="test" />
-						<AvatarFallback className="rounded-lg">CN</AvatarFallback>
-					</Avatar>
-					<div className="grid flex-1 text-left text-sm leading-tight">
-						<span className="truncate font-medium">test</span>
-						<span className="truncate text-xs">test</span>
-					</div>
-					<Button
-						onClick={() =>
-							authClient.signOut({
-								fetchOptions: {
-									onSuccess: () => {
-										toast.success("Logout successful");
-										navigate({
-											to: "/",
-										});
-									},
-									onError: (error) => {
-										toast.error(error.error.message || error.error.statusText);
-									},
-								},
-							})
-						}
-						size="icon"
-						variant="destructive"
-					>
-						<LogOut className="size-4" />
-					</Button>
+					{isPending ? (
+						<>
+							<Skeleton className="h-8 w-8 rounded-lg" />
+							<div className="grid flex-1 gap-1 text-left text-sm leading-tight">
+								<Skeleton className="h-4 w-24 rounded" />
+								<Skeleton className="h-3 w-32 rounded" />
+							</div>
+							<Skeleton className="h-8 w-8 rounded-lg" />
+						</>
+					) : (
+						<>
+							<Avatar className="h-8 w-8 rounded-lg">
+								<AvatarImage alt="User avatar" src="test" />
+								<AvatarFallback className="rounded-lg">TEST</AvatarFallback>
+							</Avatar>
+							<div className="grid flex-1 text-left text-sm leading-tight">
+								<span className="truncate font-medium">
+									{session?.user.name}
+								</span>
+								<span className="truncate text-xs">{session?.user.email}</span>
+							</div>
+							<Button
+								onClick={() =>
+									authClient.signOut({
+										fetchOptions: {
+											onSuccess: () => {
+												toast.success("Logout successful");
+												navigate({
+													to: "/",
+												});
+											},
+											onError: (error) => {
+												toast.error(
+													error.error.message || error.error.statusText
+												);
+											},
+										},
+									})
+								}
+								size="icon"
+								variant="destructive"
+							>
+								<LogOut className="size-4" />
+							</Button>
+						</>
+					)}
 				</div>
 			</SidebarFooter>
 			<SidebarRail />

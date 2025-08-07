@@ -1,8 +1,7 @@
+import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-
 import {
 	SidebarGroup,
-	SidebarGroupLabel,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
@@ -19,15 +18,13 @@ export function NavProjects({
 }) {
 	return (
 		<SidebarGroup className="group-data-[collapsible=icon]:hidden">
-			<SidebarGroupLabel>Inne</SidebarGroupLabel>
 			<SidebarMenu>
 				{projects.map((item) => (
 					<SidebarMenuItem key={item.name}>
 						<SidebarMenuButton asChild>
-							<a href={item.url}>
-								<item.icon />
-								<span>{item.name}</span>
-							</a>
+							<Link preload="intent" to={item.url}>
+								{item.name}
+							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				))}
