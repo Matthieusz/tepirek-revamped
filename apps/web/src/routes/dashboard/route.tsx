@@ -16,6 +16,13 @@ export const Route = createFileRoute("/dashboard")({
 	loader: () => ({
 		crumb: "Dashboard",
 	}),
+	errorComponent: () => (
+		<div className="flex h-full items-center justify-center">
+			<p className="text-gray-500 text-lg">
+				Wystąpił błąd podczas ładowania strony.
+			</p>
+		</div>
+	),
 });
 
 function RouteComponent() {
@@ -32,7 +39,7 @@ function RouteComponent() {
 
 	if (isPending) {
 		return (
-			<div className="h-screen">
+			<div className="h-full">
 				<Loader />
 			</div>
 		);
