@@ -44,9 +44,10 @@ function RouteComponent() {
 				<Table>
 					<TableHeader>
 						<TableRow>
+							<TableHead className="w-[100px]">ID</TableHead>
 							<TableHead className="w-[200px]">Nazwa</TableHead>
-							<TableHead className="w-[200px]">Wygląd</TableHead>
-							<TableHead className="w-[100px]">Event</TableHead>
+							<TableHead className="w-[100px]">Wygląd</TableHead>
+							<TableHead className="w-[120px]">Event</TableHead>
 							{session?.user.role === "admin" && (
 								<TableHead className="w-[75px] text-center">Akcje</TableHead>
 							)}
@@ -54,6 +55,7 @@ function RouteComponent() {
 					</TableHeader>
 					{heroes.data?.map((hero) => (
 						<TableRow key={hero.id}>
+							<TableCell>{hero.id}</TableCell>
 							<TableCell>{hero.name}</TableCell>
 							<TableCell>
 								{hero.image ? (

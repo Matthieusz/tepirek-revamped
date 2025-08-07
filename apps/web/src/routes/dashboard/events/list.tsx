@@ -46,6 +46,7 @@ function RouteComponent() {
 				<Table>
 					<TableHeader>
 						<TableRow>
+							<TableHead className="w-[100px]">ID</TableHead>
 							<TableHead className="w-[200px]">Nazwa</TableHead>
 							<TableHead className="w-[200px]">Data zakończenia</TableHead>
 							<TableHead className="w-[100px]">Aktywne</TableHead>
@@ -56,6 +57,7 @@ function RouteComponent() {
 					</TableHeader>
 					{events.data?.map((event) => (
 						<TableRow key={event.id}>
+							<TableCell>{event.id}</TableCell>
 							<TableCell>{event.name}</TableCell>
 							<TableCell>
 								{format(new Date(event.endTime), "dd-MM-yyyy")}
