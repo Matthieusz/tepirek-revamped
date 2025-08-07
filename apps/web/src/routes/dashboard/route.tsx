@@ -80,7 +80,7 @@ function RouteComponent() {
 								{items.map((item) => (
 									<BreadcrumbItem key={item.href}>
 										<BreadcrumbSeparator className="hidden md:block" />
-										<Link className="breadcrumb-link" to={item.href}>
+										<Link className="hover:text-foreground" to={item.href}>
 											{item.label}
 										</Link>
 									</BreadcrumbItem>
