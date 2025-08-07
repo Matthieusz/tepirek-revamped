@@ -1,2 +1,4 @@
 node_modules
 .turbo
+apps/server/src/db/migrations
+apps/server/src/db/migrations/meta/_journal.json
