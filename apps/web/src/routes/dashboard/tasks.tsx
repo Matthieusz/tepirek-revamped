@@ -72,7 +72,7 @@ function TasksRoute() {
 						<Input
 							disabled={createMutation.isPending}
 							onChange={(e) => setNewTodoText(e.target.value)}
-							placeholder="Add a new task..."
+							placeholder="Dodaj nowe zadanie..."
 							value={newTodoText}
 						/>
 						<Button
@@ -82,7 +82,7 @@ function TasksRoute() {
 							{createMutation.isPending ? (
 								<Loader2 className="h-4 w-4 animate-spin" />
 							) : (
-								"Add"
+								"Dodaj"
 							)}
 						</Button>
 					</form>
