@@ -17,14 +17,14 @@ export function NavProjects({
 	}[];
 }) {
 	return (
-		<SidebarGroup className="group-data-[collapsible=icon]:hidden">
+		<SidebarGroup>
 			<SidebarMenu>
 				{projects.map((item) => (
 					<SidebarMenuItem key={item.name}>
-						<SidebarMenuButton asChild>
+						<SidebarMenuButton asChild tooltip={item.name}>
 							<Link preload="intent" to={item.url}>
 								<item.icon className="h-4 w-4" />
-								{item.name}
+								<span>{item.name}</span>
 							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
