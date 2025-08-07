@@ -171,7 +171,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 						<>
 							<Avatar className="h-8 w-8 rounded-lg">
 								<AvatarImage alt="User avatar" src="test" />
-								<AvatarFallback className="rounded-lg">TEST</AvatarFallback>
+								<AvatarFallback>
+									<img
+										alt="default-avatar"
+										src="../../../public/default-avatar.webp"
+									/>
+								</AvatarFallback>
 							</Avatar>
 							<div className="grid flex-1 text-left text-sm leading-tight">
 								<span className="truncate font-medium">
