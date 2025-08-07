@@ -162,7 +162,7 @@ export function AddEventModal({ trigger, onEventAdded }: AddEventModalProps) {
 									disabled={!state.canSubmit || state.isSubmitting}
 									type="submit"
 								>
-									{state.isSubmitting ? "Creating..." : "Create Event"}
+									{state.isSubmitting ? "Tworzenie..." : "Utwórz event"}
 								</Button>
 							)}
 						</form.Subscribe>
