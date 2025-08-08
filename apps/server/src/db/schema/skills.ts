@@ -1,4 +1,5 @@
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
+import { user } from "./auth";
 
 export const range = pgTable("range", {
 	id: serial("id").primaryKey(),
@@ -16,6 +17,10 @@ export const skills = pgTable("skills", {
 		.notNull(),
 	rangeId: integer("range_id")
 		.references(() => range.id)
+		.notNull(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => user.id)
 		.notNull(),
 });
 

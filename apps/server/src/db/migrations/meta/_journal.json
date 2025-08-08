@@ -57,6 +57,13 @@
       "when": 1754646051084,
       "tag": "0007_wide_dragon_lord",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1754652298622,
+      "tag": "0008_windy_naoko",
+      "breakpoints": true
     }
   ]
 }
