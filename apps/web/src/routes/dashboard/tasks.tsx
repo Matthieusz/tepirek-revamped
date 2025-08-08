@@ -59,7 +59,7 @@ function TasksRoute() {
 	};
 
 	return (
-		<div className="mx-auto w-full max-w-md py-10">
+		<div className="w-full max-w-md py-10">
 			<Card>
 				<CardHeader>
 					<CardTitle>Lista zadań</CardTitle>
