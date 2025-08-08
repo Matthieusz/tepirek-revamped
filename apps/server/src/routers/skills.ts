@@ -97,4 +97,10 @@ export const skillsRouter = {
 				userId: context.session.user.id,
 			});
 		}),
+
+	deleteSkill: protectedProcedure
+		.input(z.object({ id: z.number() }))
+		.handler(async ({ input }) => {
+			return await db.delete(skills).where(eq(skills.id, input.id));
+		}),
 };

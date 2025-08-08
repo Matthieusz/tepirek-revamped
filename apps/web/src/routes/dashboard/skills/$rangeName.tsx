@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import Loader from "@/components/loader";
 import { AddSkillModal } from "@/components/modals/add-skill-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,7 +15,8 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { orpc } from "@/utils/orpc";
+import { authClient } from "@/lib/auth-client";
+import { orpc, queryClient } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/skills/$rangeName")({
 	loader: async ({ params }) => {
@@ -55,6 +57,7 @@ function RangeDetails() {
 	}
 
 	const currentRange = range.data;
+	const { data: session } = authClient.useSession();
 
 	type SkillRecord = {
 		id: number;
@@ -100,16 +103,17 @@ function RangeDetails() {
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead className="w-64">Nazwa zestawu</TableHead>
 										<TableHead className="w-24">Link</TableHead>
 										<TableHead className="w-32">Mistrzostwo?</TableHead>
 										<TableHead className="w-40">Dodano przez</TableHead>
+										{session?.user.role === "admin" && (
+											<TableHead className="w-20">Akcje</TableHead>
+										)}
 									</TableRow>
 								</TableHeader>
 								<TableBody>
 									{skillsGrouped[profession.id]?.map((skill) => (
 										<TableRow key={skill.id}>
-											<TableCell>{skill.name}</TableCell>
 											<TableCell>
 												<a
 													className="text-primary underline"
@@ -117,7 +121,7 @@ function RangeDetails() {
 													rel="noopener noreferrer"
 													target="_blank"
 												>
-													Link
+													{skill.name}
 												</a>
 											</TableCell>
 											<TableCell>{skill.mastery ? "Tak" : "Nie"}</TableCell>
@@ -135,6 +139,38 @@ function RangeDetails() {
 													<span>{skill.addedBy}</span>
 												</div>
 											</TableCell>
+											{session?.user.role === "admin" && (
+												<TableCell>
+													<Button
+														onClick={() => {
+															if (!confirm("Usunąć ten zestaw?")) {
+																return;
+															}
+															orpc.skills.deleteSkill
+																.call({ id: skill.id })
+																.then(() => {
+																	toast.success("Usunięto zestaw");
+																})
+																.catch(() => {
+																	toast.error("Błąd podczas usuwania");
+																})
+																.finally(() => {
+																	queryClient.invalidateQueries({
+																		queryKey:
+																			orpc.skills.getSkillsByRange.queryKey({
+																				input: { rangeId: currentRange.id },
+																			}),
+																	});
+																});
+														}}
+														size="sm"
+														type="button"
+														variant="destructive"
+													>
+														Usuń
+													</Button>
+												</TableCell>
+											)}
 										</TableRow>
 									))}
 									{!skillsGrouped[profession.id]?.length && (
