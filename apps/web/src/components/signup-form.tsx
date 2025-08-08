@@ -38,6 +38,8 @@ export function SignUpForm({
 					name: value.name,
 					email: value.email,
 					password: value.password,
+					role: "user",
+					verified: false,
 				},
 				{
 					onSuccess: () => {
