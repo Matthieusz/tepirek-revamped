@@ -1,4 +1,4 @@
-import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
 export const range = pgTable("range", {
@@ -11,7 +11,7 @@ export const range = pgTable("range", {
 export const skills = pgTable("skills", {
 	id: serial("id").primaryKey(),
 	name: text("name").notNull(),
-	description: text("description").notNull(),
+	mastery: boolean("mastery").notNull(),
 	professionId: integer("profession_id")
 		.references(() => professions.id)
 		.notNull(),
