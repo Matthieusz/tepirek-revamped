@@ -11,6 +11,7 @@ export const range = pgTable("range", {
 export const skills = pgTable("skills", {
 	id: serial("id").primaryKey(),
 	name: text("name").notNull(),
+	link: text("link").notNull(),
 	mastery: boolean("mastery").notNull(),
 	professionId: integer("profession_id")
 		.references(() => professions.id)
