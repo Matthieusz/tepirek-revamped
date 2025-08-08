@@ -156,7 +156,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				<NavOther projects={data.projects} />
 			</SidebarContent>
 			<SidebarFooter>
-				<div className="flex items-center gap-4 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-4">
+				<div className="flex items-center gap-2 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-4">
 					{isPending ? (
 						<>
 							<Skeleton className="h-8 w-8 rounded-lg" />
