@@ -1,6 +1,7 @@
 import { protectedProcedure, publicProcedure } from "../lib/orpc";
 import { eventRouter } from "./event";
 import { heroesRouter } from "./heroes";
+import { skillsRouter } from "./skills";
 import { todoRouter } from "./todo";
 
 export const appRouter = {
@@ -16,5 +17,6 @@ export const appRouter = {
 	todo: todoRouter,
 	event: eventRouter,
 	heroes: heroesRouter,
+	skills: skillsRouter,
 };
 export type AppRouter = typeof appRouter;
