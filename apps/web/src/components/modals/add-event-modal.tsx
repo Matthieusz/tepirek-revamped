@@ -28,10 +28,9 @@ import { orpc } from "@/utils/orpc";
 
 interface AddEventModalProps {
 	trigger: React.ReactNode;
-	onEventAdded?: () => void;
 }
 
-export function AddEventModal({ trigger, onEventAdded }: AddEventModalProps) {
+export function AddEventModal({ trigger }: AddEventModalProps) {
 	const [open, setOpen] = useState(false);
 	const [date, setDate] = useState<Date>();
 	const queryClient = useQueryClient();
@@ -58,7 +57,6 @@ export function AddEventModal({ trigger, onEventAdded }: AddEventModalProps) {
 					queryKey: orpc.event.getAll.queryKey(),
 				});
 				setOpen(false);
-				onEventAdded?.();
 				form.reset();
 				setDate(undefined);
 			} catch (_) {
@@ -101,7 +99,7 @@ export function AddEventModal({ trigger, onEventAdded }: AddEventModalProps) {
 											name={field.name}
 											onBlur={field.handleBlur}
 											onChange={(e) => field.handleChange(e.target.value)}
-											placeholder="Enter event name"
+											placeholder="Wpisz nazwę eventu"
 											value={field.state.value}
 										/>
 										{field.state.meta.errors.map((error) => (
@@ -129,7 +127,7 @@ export function AddEventModal({ trigger, onEventAdded }: AddEventModalProps) {
 													variant="outline"
 												>
 													<CalendarIcon className="mr-2 h-4 w-4" />
-													{date ? format(date, "PPP") : "Select a date"}
+													{date ? format(date, "PPP") : "Wybierz datę"}
 												</Button>
 											</PopoverTrigger>
 											<PopoverContent className="w-auto p-0">
