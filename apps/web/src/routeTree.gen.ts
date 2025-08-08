@@ -15,12 +15,14 @@ import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardTasksRouteImport } from './routes/dashboard/tasks'
-import { Route as DashboardSkillsRouteImport } from './routes/dashboard/skills'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
 import { Route as DashboardPlayerListRouteImport } from './routes/dashboard/player-list'
+import { Route as DashboardSkillsRouteRouteImport } from './routes/dashboard/skills/route'
+import { Route as DashboardSkillsIndexRouteImport } from './routes/dashboard/skills/index'
 import { Route as DashboardSquadBuilderManageRouteImport } from './routes/dashboard/squad-builder/manage'
 import { Route as DashboardSquadBuilderCreateRouteImport } from './routes/dashboard/squad-builder/create'
+import { Route as DashboardSkillsRangeNameRouteImport } from './routes/dashboard/skills/$rangeName'
 import { Route as DashboardEventsRankingRouteImport } from './routes/dashboard/events/ranking'
 import { Route as DashboardEventsListRouteImport } from './routes/dashboard/events/list'
 import { Route as DashboardEventsHistoryRouteImport } from './routes/dashboard/events/history'
@@ -77,11 +79,6 @@ const DashboardTasksRoute = DashboardTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardSkillsRoute = DashboardSkillsRouteImport.update({
-  id: '/skills',
-  path: '/skills',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -97,6 +94,16 @@ const DashboardPlayerListRoute = DashboardPlayerListRouteImport.update({
   path: '/player-list',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardSkillsRouteRoute = DashboardSkillsRouteRouteImport.update({
+  id: '/skills',
+  path: '/skills',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardSkillsIndexRoute = DashboardSkillsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardSkillsRouteRoute,
+} as any)
 const DashboardSquadBuilderManageRoute =
   DashboardSquadBuilderManageRouteImport.update({
     id: '/squad-builder/manage',
@@ -108,6 +115,12 @@ const DashboardSquadBuilderCreateRoute =
     id: '/squad-builder/create',
     path: '/squad-builder/create',
     getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSkillsRangeNameRoute =
+  DashboardSkillsRangeNameRouteImport.update({
+    id: '/$rangeName',
+    path: '/$rangeName',
+    getParentRoute: () => DashboardSkillsRouteRoute,
   } as any)
 const DashboardEventsRankingRoute = DashboardEventsRankingRouteImport.update({
   id: '/events/ranking',
@@ -258,10 +271,10 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/dashboard/skills': typeof DashboardSkillsRouteRouteWithChildren
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
-  '/dashboard/skills': typeof DashboardSkillsRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRouteRoute
@@ -274,8 +287,10 @@ export interface FileRoutesByFullPath {
   '/dashboard/events/history': typeof DashboardEventsHistoryRoute
   '/dashboard/events/list': typeof DashboardEventsListRoute
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
+  '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRoute
   '/dashboard/squad-builder/create': typeof DashboardSquadBuilderCreateRoute
   '/dashboard/squad-builder/manage': typeof DashboardSquadBuilderManageRoute
+  '/dashboard/skills/': typeof DashboardSkillsIndexRoute
   '/dashboard/auctions/main/blade-dancer': typeof DashboardAuctionsMainBladeDancerRoute
   '/dashboard/auctions/main/hunter': typeof DashboardAuctionsMainHunterRoute
   '/dashboard/auctions/main/mage': typeof DashboardAuctionsMainMageRoute
@@ -299,7 +314,6 @@ export interface FileRoutesByTo {
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
-  '/dashboard/skills': typeof DashboardSkillsRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRouteRoute
@@ -310,8 +324,10 @@ export interface FileRoutesByTo {
   '/dashboard/events/history': typeof DashboardEventsHistoryRoute
   '/dashboard/events/list': typeof DashboardEventsListRoute
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
+  '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRoute
   '/dashboard/squad-builder/create': typeof DashboardSquadBuilderCreateRoute
   '/dashboard/squad-builder/manage': typeof DashboardSquadBuilderManageRoute
+  '/dashboard/skills': typeof DashboardSkillsIndexRoute
   '/dashboard/auctions/main/blade-dancer': typeof DashboardAuctionsMainBladeDancerRoute
   '/dashboard/auctions/main/hunter': typeof DashboardAuctionsMainHunterRoute
   '/dashboard/auctions/main/mage': typeof DashboardAuctionsMainMageRoute
@@ -334,10 +350,10 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/dashboard/skills': typeof DashboardSkillsRouteRouteWithChildren
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
-  '/dashboard/skills': typeof DashboardSkillsRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRouteRoute
@@ -350,8 +366,10 @@ export interface FileRoutesById {
   '/dashboard/events/history': typeof DashboardEventsHistoryRoute
   '/dashboard/events/list': typeof DashboardEventsListRoute
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
+  '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRoute
   '/dashboard/squad-builder/create': typeof DashboardSquadBuilderCreateRoute
   '/dashboard/squad-builder/manage': typeof DashboardSquadBuilderManageRoute
+  '/dashboard/skills/': typeof DashboardSkillsIndexRoute
   '/dashboard/auctions/main/blade-dancer': typeof DashboardAuctionsMainBladeDancerRoute
   '/dashboard/auctions/main/hunter': typeof DashboardAuctionsMainHunterRoute
   '/dashboard/auctions/main/mage': typeof DashboardAuctionsMainMageRoute
@@ -375,10 +393,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/signup'
+    | '/dashboard/skills'
     | '/dashboard/player-list'
     | '/dashboard/profile'
     | '/dashboard/settings'
-    | '/dashboard/skills'
     | '/dashboard/tasks'
     | '/dashboard/'
     | '/dashboard/auctions/bibelots'
@@ -391,8 +409,10 @@ export interface FileRouteTypes {
     | '/dashboard/events/history'
     | '/dashboard/events/list'
     | '/dashboard/events/ranking'
+    | '/dashboard/skills/$rangeName'
     | '/dashboard/squad-builder/create'
     | '/dashboard/squad-builder/manage'
+    | '/dashboard/skills/'
     | '/dashboard/auctions/main/blade-dancer'
     | '/dashboard/auctions/main/hunter'
     | '/dashboard/auctions/main/mage'
@@ -416,7 +436,6 @@ export interface FileRouteTypes {
     | '/dashboard/player-list'
     | '/dashboard/profile'
     | '/dashboard/settings'
-    | '/dashboard/skills'
     | '/dashboard/tasks'
     | '/dashboard'
     | '/dashboard/auctions/bibelots'
@@ -427,8 +446,10 @@ export interface FileRouteTypes {
     | '/dashboard/events/history'
     | '/dashboard/events/list'
     | '/dashboard/events/ranking'
+    | '/dashboard/skills/$rangeName'
     | '/dashboard/squad-builder/create'
     | '/dashboard/squad-builder/manage'
+    | '/dashboard/skills'
     | '/dashboard/auctions/main/blade-dancer'
     | '/dashboard/auctions/main/hunter'
     | '/dashboard/auctions/main/mage'
@@ -450,10 +471,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/signup'
+    | '/dashboard/skills'
     | '/dashboard/player-list'
     | '/dashboard/profile'
     | '/dashboard/settings'
-    | '/dashboard/skills'
     | '/dashboard/tasks'
     | '/dashboard/'
     | '/dashboard/auctions/bibelots'
@@ -466,8 +487,10 @@ export interface FileRouteTypes {
     | '/dashboard/events/history'
     | '/dashboard/events/list'
     | '/dashboard/events/ranking'
+    | '/dashboard/skills/$rangeName'
     | '/dashboard/squad-builder/create'
     | '/dashboard/squad-builder/manage'
+    | '/dashboard/skills/'
     | '/dashboard/auctions/main/blade-dancer'
     | '/dashboard/auctions/main/hunter'
     | '/dashboard/auctions/main/mage'
@@ -536,13 +559,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardTasksRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/skills': {
-      id: '/dashboard/skills'
-      path: '/skills'
-      fullPath: '/dashboard/skills'
-      preLoaderRoute: typeof DashboardSkillsRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
     '/dashboard/settings': {
       id: '/dashboard/settings'
       path: '/settings'
@@ -564,6 +580,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPlayerListRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/skills': {
+      id: '/dashboard/skills'
+      path: '/skills'
+      fullPath: '/dashboard/skills'
+      preLoaderRoute: typeof DashboardSkillsRouteRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/skills/': {
+      id: '/dashboard/skills/'
+      path: '/'
+      fullPath: '/dashboard/skills/'
+      preLoaderRoute: typeof DashboardSkillsIndexRouteImport
+      parentRoute: typeof DashboardSkillsRouteRoute
+    }
     '/dashboard/squad-builder/manage': {
       id: '/dashboard/squad-builder/manage'
       path: '/squad-builder/manage'
@@ -577,6 +607,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/squad-builder/create'
       preLoaderRoute: typeof DashboardSquadBuilderCreateRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/skills/$rangeName': {
+      id: '/dashboard/skills/$rangeName'
+      path: '/$rangeName'
+      fullPath: '/dashboard/skills/$rangeName'
+      preLoaderRoute: typeof DashboardSkillsRangeNameRouteImport
+      parentRoute: typeof DashboardSkillsRouteRoute
     }
     '/dashboard/events/ranking': {
       id: '/dashboard/events/ranking'
@@ -756,6 +793,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface DashboardSkillsRouteRouteChildren {
+  DashboardSkillsRangeNameRoute: typeof DashboardSkillsRangeNameRoute
+  DashboardSkillsIndexRoute: typeof DashboardSkillsIndexRoute
+}
+
+const DashboardSkillsRouteRouteChildren: DashboardSkillsRouteRouteChildren = {
+  DashboardSkillsRangeNameRoute: DashboardSkillsRangeNameRoute,
+  DashboardSkillsIndexRoute: DashboardSkillsIndexRoute,
+}
+
+const DashboardSkillsRouteRouteWithChildren =
+  DashboardSkillsRouteRoute._addFileChildren(DashboardSkillsRouteRouteChildren)
+
 interface DashboardAuctionsMainRouteRouteChildren {
   DashboardAuctionsMainBladeDancerRoute: typeof DashboardAuctionsMainBladeDancerRoute
   DashboardAuctionsMainHunterRoute: typeof DashboardAuctionsMainHunterRoute
@@ -811,10 +861,10 @@ const DashboardAuctionsSupportRouteRouteWithChildren =
   )
 
 interface DashboardRouteRouteChildren {
+  DashboardSkillsRouteRoute: typeof DashboardSkillsRouteRouteWithChildren
   DashboardPlayerListRoute: typeof DashboardPlayerListRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
-  DashboardSkillsRoute: typeof DashboardSkillsRoute
   DashboardTasksRoute: typeof DashboardTasksRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardAuctionsBibelotsRouteRoute: typeof DashboardAuctionsBibelotsRouteRoute
@@ -833,10 +883,10 @@ interface DashboardRouteRouteChildren {
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardSkillsRouteRoute: DashboardSkillsRouteRouteWithChildren,
   DashboardPlayerListRoute: DashboardPlayerListRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
-  DashboardSkillsRoute: DashboardSkillsRoute,
   DashboardTasksRoute: DashboardTasksRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardAuctionsBibelotsRouteRoute: DashboardAuctionsBibelotsRouteRoute,

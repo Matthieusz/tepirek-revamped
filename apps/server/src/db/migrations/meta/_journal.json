@@ -36,6 +36,20 @@
       "when": 1754581762245,
       "tag": "0004_heavy_maestro",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1754639269753,
+      "tag": "0005_mixed_ink",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1754641904777,
+      "tag": "0006_young_blizzard",
+      "breakpoints": true
     }
   ]
 }
