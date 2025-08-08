@@ -3,6 +3,7 @@ import { eventRouter } from "./event";
 import { heroesRouter } from "./heroes";
 import { skillsRouter } from "./skills";
 import { todoRouter } from "./todo";
+import { userRouter } from "./user";
 
 export const appRouter = {
 	healthCheck: publicProcedure.handler(() => {
@@ -18,5 +19,6 @@ export const appRouter = {
 	event: eventRouter,
 	heroes: heroesRouter,
 	skills: skillsRouter,
+	user: userRouter,
 };
 export type AppRouter = typeof appRouter;

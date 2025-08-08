@@ -8,5 +8,5 @@ export const Route = createFileRoute("/dashboard/settings")({
 });
 
 function RouteComponent() {
-	return <div>Hello "/dashboard/settings"!</div>;
+	return <div>WIP</div>;
 }
