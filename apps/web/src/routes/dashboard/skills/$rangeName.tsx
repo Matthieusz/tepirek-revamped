@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import Loader from "@/components/loader";
 import { AddSkillModal } from "@/components/modals/add-skill-modal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -62,6 +63,8 @@ function RangeDetails() {
 		mastery: boolean;
 		professionId: number;
 		professionName: string;
+		addedBy: string;
+		addedByImage: string | null;
 	};
 	const skillsGrouped: Record<number, SkillRecord[]> = {};
 	const skillsData = (skillsByRange.data || []) as SkillRecord[];
@@ -100,6 +103,7 @@ function RangeDetails() {
 										<TableHead className="w-64">Nazwa zestawu</TableHead>
 										<TableHead className="w-24">Link</TableHead>
 										<TableHead className="w-32">Mistrzostwo?</TableHead>
+										<TableHead className="w-40">Dodano przez</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -117,11 +121,25 @@ function RangeDetails() {
 												</a>
 											</TableCell>
 											<TableCell>{skill.mastery ? "Tak" : "Nie"}</TableCell>
+											<TableCell>
+												<div className="flex items-center gap-2">
+													<Avatar className="size-6">
+														<AvatarImage
+															alt={skill.addedBy}
+															src={skill.addedByImage || undefined}
+														/>
+														<AvatarFallback>
+															{skill.addedBy?.slice(0, 2).toUpperCase()}
+														</AvatarFallback>
+													</Avatar>
+													<span>{skill.addedBy}</span>
+												</div>
+											</TableCell>
 										</TableRow>
 									))}
 									{!skillsGrouped[profession.id]?.length && (
 										<TableRow>
-											<TableCell className="text-muted-foreground" colSpan={3}>
+											<TableCell className="text-muted-foreground" colSpan={4}>
 												Brak umiejętności
 											</TableCell>
 										</TableRow>

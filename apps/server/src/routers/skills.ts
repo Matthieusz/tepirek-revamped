@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import z from "zod";
 import { db } from "@/db";
+import { user } from "@/db/schema/auth";
 import { professions, range, skills } from "@/db/schema/skills";
 import { protectedProcedure } from "@/lib/orpc";
 
@@ -24,9 +25,12 @@ export const skillsRouter = {
 					mastery: skills.mastery,
 					professionId: professions.id,
 					professionName: professions.name,
+					addedBy: user.name,
+					addedByImage: user.image,
 				})
 				.from(skills)
 				.innerJoin(professions, eq(professions.id, skills.professionId))
+				.innerJoin(user, eq(user.id, skills.userId))
 				.where(eq(skills.rangeId, input.rangeId));
 		}),
 
