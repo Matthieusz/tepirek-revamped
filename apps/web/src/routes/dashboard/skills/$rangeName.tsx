@@ -33,6 +33,7 @@ export const Route = createFileRoute("/dashboard/skills/$rangeName")({
 
 function RangeDetails() {
 	const { rangeName } = Route.useParams();
+	const { data: session } = authClient.useSession();
 	const range = useQuery(
 		orpc.skills.getRangeBySlug.queryOptions({ input: { slug: rangeName } })
 	);
@@ -57,7 +58,6 @@ function RangeDetails() {
 	}
 
 	const currentRange = range.data;
-	const { data: session } = authClient.useSession();
 
 	type SkillRecord = {
 		id: number;
