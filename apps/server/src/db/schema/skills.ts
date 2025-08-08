@@ -22,5 +22,4 @@ export const skills = pgTable("skills", {
 export const professions = pgTable("professions", {
 	id: serial("id").primaryKey(),
 	name: text("name").notNull(),
-	description: text("description").notNull(),
 });
