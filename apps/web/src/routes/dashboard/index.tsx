@@ -14,10 +14,7 @@ function RouteComponent() {
 			<p className="font-semibold text-xl">
 				Witam na stronie klanowej Gildii Złodziei
 			</p>
-			<p className="text-gray-700">
-				Cała nawigacja jest dostępna w panelu po lewej stronie
-			</p>
-			<h2 className="font-semibold text-xl">Ogłoszenia: </h2>
+			<h2 className="mt-8 font-semibold text-2xl">Ogłoszenia: </h2>
 		</div>
 	);
 }
