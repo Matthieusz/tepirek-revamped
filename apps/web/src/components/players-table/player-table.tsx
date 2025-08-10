@@ -33,7 +33,7 @@ export function PlayerTable<TData, TValue>({
 
 	return (
 		<>
-			<div className="overflow-hidden rounded-md border">
+			<div className="overflow-hidden">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
