@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
@@ -59,11 +59,9 @@ function TasksRoute() {
 	};
 
 	return (
-		<div className="w-full max-w-md py-10">
+		<div className="w-full max-w-md">
+			<h1 className="mb-8 font-bold text-3xl">Lista zadań</h1>
 			<Card>
-				<CardHeader>
-					<CardTitle>Lista zadań</CardTitle>
-				</CardHeader>
 				<CardContent>
 					<form
 						className="mb-6 flex items-center space-x-2"
