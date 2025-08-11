@@ -19,6 +19,7 @@ import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settin
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
 import { Route as DashboardPlayerListRouteImport } from './routes/dashboard/player-list'
 import { Route as DashboardSkillsRouteRouteImport } from './routes/dashboard/skills/route'
+import { Route as DashboardAuctionsRouteRouteImport } from './routes/dashboard/auctions/route'
 import { Route as DashboardSkillsIndexRouteImport } from './routes/dashboard/skills/index'
 import { Route as DashboardSquadBuilderManageRouteImport } from './routes/dashboard/squad-builder/manage'
 import { Route as DashboardSquadBuilderCreateRouteImport } from './routes/dashboard/squad-builder/create'
@@ -99,6 +100,11 @@ const DashboardSkillsRouteRoute = DashboardSkillsRouteRouteImport.update({
   path: '/skills',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardAuctionsRouteRoute = DashboardAuctionsRouteRouteImport.update({
+  id: '/auctions',
+  path: '/auctions',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardSkillsIndexRoute = DashboardSkillsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -160,21 +166,21 @@ const DashboardCalculatorListRoute = DashboardCalculatorListRouteImport.update({
 } as any)
 const DashboardAuctionsSupportRouteRoute =
   DashboardAuctionsSupportRouteRouteImport.update({
-    id: '/auctions/support',
-    path: '/auctions/support',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/support',
+    path: '/support',
+    getParentRoute: () => DashboardAuctionsRouteRoute,
   } as any)
 const DashboardAuctionsMainRouteRoute =
   DashboardAuctionsMainRouteRouteImport.update({
-    id: '/auctions/main',
-    path: '/auctions/main',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/main',
+    path: '/main',
+    getParentRoute: () => DashboardAuctionsRouteRoute,
   } as any)
 const DashboardAuctionsBibelotsRouteRoute =
   DashboardAuctionsBibelotsRouteRouteImport.update({
-    id: '/auctions/bibelots',
-    path: '/auctions/bibelots',
-    getParentRoute: () => DashboardRouteRoute,
+    id: '/bibelots',
+    path: '/bibelots',
+    getParentRoute: () => DashboardAuctionsRouteRoute,
   } as any)
 const DashboardAuctionsSupportIndexRoute =
   DashboardAuctionsSupportIndexRouteImport.update({
@@ -271,6 +277,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/dashboard/auctions': typeof DashboardAuctionsRouteRouteWithChildren
   '/dashboard/skills': typeof DashboardSkillsRouteRouteWithChildren
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -311,6 +318,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/dashboard/auctions': typeof DashboardAuctionsRouteRouteWithChildren
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -350,6 +358,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/dashboard/auctions': typeof DashboardAuctionsRouteRouteWithChildren
   '/dashboard/skills': typeof DashboardSkillsRouteRouteWithChildren
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -393,6 +402,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/signup'
+    | '/dashboard/auctions'
     | '/dashboard/skills'
     | '/dashboard/player-list'
     | '/dashboard/profile'
@@ -433,6 +443,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/dashboard/auctions'
     | '/dashboard/player-list'
     | '/dashboard/profile'
     | '/dashboard/settings'
@@ -471,6 +482,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/signup'
+    | '/dashboard/auctions'
     | '/dashboard/skills'
     | '/dashboard/player-list'
     | '/dashboard/profile'
@@ -587,6 +599,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSkillsRouteRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/auctions': {
+      id: '/dashboard/auctions'
+      path: '/auctions'
+      fullPath: '/dashboard/auctions'
+      preLoaderRoute: typeof DashboardAuctionsRouteRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/skills/': {
       id: '/dashboard/skills/'
       path: '/'
@@ -666,24 +685,24 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/auctions/support': {
       id: '/dashboard/auctions/support'
-      path: '/auctions/support'
+      path: '/support'
       fullPath: '/dashboard/auctions/support'
       preLoaderRoute: typeof DashboardAuctionsSupportRouteRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardAuctionsRouteRoute
     }
     '/dashboard/auctions/main': {
       id: '/dashboard/auctions/main'
-      path: '/auctions/main'
+      path: '/main'
       fullPath: '/dashboard/auctions/main'
       preLoaderRoute: typeof DashboardAuctionsMainRouteRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardAuctionsRouteRoute
     }
     '/dashboard/auctions/bibelots': {
       id: '/dashboard/auctions/bibelots'
-      path: '/auctions/bibelots'
+      path: '/bibelots'
       fullPath: '/dashboard/auctions/bibelots'
       preLoaderRoute: typeof DashboardAuctionsBibelotsRouteRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      parentRoute: typeof DashboardAuctionsRouteRoute
     }
     '/dashboard/auctions/support/': {
       id: '/dashboard/auctions/support/'
@@ -793,19 +812,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface DashboardSkillsRouteRouteChildren {
-  DashboardSkillsRangeNameRoute: typeof DashboardSkillsRangeNameRoute
-  DashboardSkillsIndexRoute: typeof DashboardSkillsIndexRoute
-}
-
-const DashboardSkillsRouteRouteChildren: DashboardSkillsRouteRouteChildren = {
-  DashboardSkillsRangeNameRoute: DashboardSkillsRangeNameRoute,
-  DashboardSkillsIndexRoute: DashboardSkillsIndexRoute,
-}
-
-const DashboardSkillsRouteRouteWithChildren =
-  DashboardSkillsRouteRoute._addFileChildren(DashboardSkillsRouteRouteChildren)
-
 interface DashboardAuctionsMainRouteRouteChildren {
   DashboardAuctionsMainBladeDancerRoute: typeof DashboardAuctionsMainBladeDancerRoute
   DashboardAuctionsMainHunterRoute: typeof DashboardAuctionsMainHunterRoute
@@ -860,16 +866,47 @@ const DashboardAuctionsSupportRouteRouteWithChildren =
     DashboardAuctionsSupportRouteRouteChildren,
   )
 
+interface DashboardAuctionsRouteRouteChildren {
+  DashboardAuctionsBibelotsRouteRoute: typeof DashboardAuctionsBibelotsRouteRoute
+  DashboardAuctionsMainRouteRoute: typeof DashboardAuctionsMainRouteRouteWithChildren
+  DashboardAuctionsSupportRouteRoute: typeof DashboardAuctionsSupportRouteRouteWithChildren
+}
+
+const DashboardAuctionsRouteRouteChildren: DashboardAuctionsRouteRouteChildren =
+  {
+    DashboardAuctionsBibelotsRouteRoute: DashboardAuctionsBibelotsRouteRoute,
+    DashboardAuctionsMainRouteRoute:
+      DashboardAuctionsMainRouteRouteWithChildren,
+    DashboardAuctionsSupportRouteRoute:
+      DashboardAuctionsSupportRouteRouteWithChildren,
+  }
+
+const DashboardAuctionsRouteRouteWithChildren =
+  DashboardAuctionsRouteRoute._addFileChildren(
+    DashboardAuctionsRouteRouteChildren,
+  )
+
+interface DashboardSkillsRouteRouteChildren {
+  DashboardSkillsRangeNameRoute: typeof DashboardSkillsRangeNameRoute
+  DashboardSkillsIndexRoute: typeof DashboardSkillsIndexRoute
+}
+
+const DashboardSkillsRouteRouteChildren: DashboardSkillsRouteRouteChildren = {
+  DashboardSkillsRangeNameRoute: DashboardSkillsRangeNameRoute,
+  DashboardSkillsIndexRoute: DashboardSkillsIndexRoute,
+}
+
+const DashboardSkillsRouteRouteWithChildren =
+  DashboardSkillsRouteRoute._addFileChildren(DashboardSkillsRouteRouteChildren)
+
 interface DashboardRouteRouteChildren {
+  DashboardAuctionsRouteRoute: typeof DashboardAuctionsRouteRouteWithChildren
   DashboardSkillsRouteRoute: typeof DashboardSkillsRouteRouteWithChildren
   DashboardPlayerListRoute: typeof DashboardPlayerListRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardTasksRoute: typeof DashboardTasksRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
-  DashboardAuctionsBibelotsRouteRoute: typeof DashboardAuctionsBibelotsRouteRoute
-  DashboardAuctionsMainRouteRoute: typeof DashboardAuctionsMainRouteRouteWithChildren
-  DashboardAuctionsSupportRouteRoute: typeof DashboardAuctionsSupportRouteRouteWithChildren
   DashboardCalculatorListRoute: typeof DashboardCalculatorListRoute
   DashboardCalculatorOdwRoute: typeof DashboardCalculatorOdwRoute
   DashboardCalculatorUlepaRoute: typeof DashboardCalculatorUlepaRoute
@@ -883,16 +920,13 @@ interface DashboardRouteRouteChildren {
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardAuctionsRouteRoute: DashboardAuctionsRouteRouteWithChildren,
   DashboardSkillsRouteRoute: DashboardSkillsRouteRouteWithChildren,
   DashboardPlayerListRoute: DashboardPlayerListRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardTasksRoute: DashboardTasksRoute,
   DashboardIndexRoute: DashboardIndexRoute,
-  DashboardAuctionsBibelotsRouteRoute: DashboardAuctionsBibelotsRouteRoute,
-  DashboardAuctionsMainRouteRoute: DashboardAuctionsMainRouteRouteWithChildren,
-  DashboardAuctionsSupportRouteRoute:
-    DashboardAuctionsSupportRouteRouteWithChildren,
   DashboardCalculatorListRoute: DashboardCalculatorListRoute,
   DashboardCalculatorOdwRoute: DashboardCalculatorOdwRoute,
   DashboardCalculatorUlepaRoute: DashboardCalculatorUlepaRoute,
