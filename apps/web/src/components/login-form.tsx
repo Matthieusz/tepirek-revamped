@@ -160,13 +160,8 @@ export function LoginForm({
 									onClick={async () => {
 										await authClient.signIn.social({
 											provider: "discord",
+											callbackURL: `${window.location.origin}/waiting-room`,
 											fetchOptions: {
-												onSuccess: () => {
-													navigate({
-														to: "/dashboard",
-													});
-													toast.success("Login successful");
-												},
 												onError: (error) => {
 													toast.error(
 														error.error.message || error.error.statusText

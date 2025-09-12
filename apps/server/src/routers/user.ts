@@ -1,10 +1,47 @@
 import { eq } from "drizzle-orm";
 import z from "zod";
 import { db } from "@/db";
-import { user } from "@/db/schema/auth";
+import { account, user } from "@/db/schema/auth";
 import { protectedProcedure } from "@/lib/orpc";
 
 export const userRouter = {
+	validateDiscordGuild: protectedProcedure
+		.input(
+			z.object({
+				accessToken: z.string().min(1),
+			})
+		)
+		.handler(async ({ input }) => {
+			const response = await fetch("https://discord.com/api/users/@me/guilds", {
+				headers: {
+					Authorization: `Bearer ${input.accessToken}`,
+				},
+			});
+			if (!response.ok) {
+				return { valid: false };
+			}
+			const guildId = process.env.DISCORD_SERVER_ID;
+			const guilds = await response.json();
+			if (Array.isArray(guilds)) {
+				return {
+					valid: guilds.some((guild: { id: string }) => guild.id === guildId),
+				};
+			}
+			return { valid: false };
+		}),
+	verifySelf: protectedProcedure.handler(async ({ context }) => {
+		return await db
+			.update(user)
+			.set({ verified: true, updatedAt: new Date() })
+			.where(eq(user.id, context.session.user.id));
+	}),
+	getDiscordAccessToken: protectedProcedure.handler(async ({ context }) => {
+		const rows = await db
+			.select({ accessToken: account.accessToken })
+			.from(account)
+			.where(eq(account.userId, context.session.user.id));
+		return rows[0]?.accessToken ?? null;
+	}),
 	getMe: protectedProcedure.handler(async ({ context }) => {
 		const [row] = await db
 			.select()

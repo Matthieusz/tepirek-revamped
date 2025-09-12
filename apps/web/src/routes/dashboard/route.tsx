@@ -35,6 +35,11 @@ function RouteComponent() {
 				to: "/login",
 			});
 		}
+		if (session?.user.verified === false) {
+			navigate({
+				to: "/waiting-room",
+			});
+		}
 	}, [session, isPending, navigate]);
 
 	if (isPending) {

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WaitingRoomRouteImport } from './routes/waiting-room'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
@@ -33,7 +34,6 @@ import { Route as DashboardCalculatorOdwRouteImport } from './routes/dashboard/c
 import { Route as DashboardCalculatorListRouteImport } from './routes/dashboard/calculator/list'
 import { Route as DashboardAuctionsSupportRouteRouteImport } from './routes/dashboard/auctions/support/route'
 import { Route as DashboardAuctionsMainRouteRouteImport } from './routes/dashboard/auctions/main/route'
-import { Route as DashboardAuctionsBibelotsRouteRouteImport } from './routes/dashboard/auctions/bibelots/route'
 import { Route as DashboardAuctionsSupportIndexRouteImport } from './routes/dashboard/auctions/support/index'
 import { Route as DashboardAuctionsMainIndexRouteImport } from './routes/dashboard/auctions/main/index'
 import { Route as DashboardEventsBetsAddRouteImport } from './routes/dashboard/events/bets.add'
@@ -50,6 +50,11 @@ import { Route as DashboardAuctionsMainMageRouteImport } from './routes/dashboar
 import { Route as DashboardAuctionsMainHunterRouteImport } from './routes/dashboard/auctions/main/hunter'
 import { Route as DashboardAuctionsMainBladeDancerRouteImport } from './routes/dashboard/auctions/main/blade-dancer'
 
+const WaitingRoomRoute = WaitingRoomRouteImport.update({
+  id: '/waiting-room',
+  path: '/waiting-room',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -176,12 +181,6 @@ const DashboardAuctionsMainRouteRoute =
     path: '/main',
     getParentRoute: () => DashboardAuctionsRouteRoute,
   } as any)
-const DashboardAuctionsBibelotsRouteRoute =
-  DashboardAuctionsBibelotsRouteRouteImport.update({
-    id: '/bibelots',
-    path: '/bibelots',
-    getParentRoute: () => DashboardAuctionsRouteRoute,
-  } as any)
 const DashboardAuctionsSupportIndexRoute =
   DashboardAuctionsSupportIndexRouteImport.update({
     id: '/',
@@ -277,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/waiting-room': typeof WaitingRoomRoute
   '/dashboard/auctions': typeof DashboardAuctionsRouteRouteWithChildren
   '/dashboard/skills': typeof DashboardSkillsRouteRouteWithChildren
   '/dashboard/player-list': typeof DashboardPlayerListRoute
@@ -284,7 +284,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRouteRoute
   '/dashboard/auctions/main': typeof DashboardAuctionsMainRouteRouteWithChildren
   '/dashboard/auctions/support': typeof DashboardAuctionsSupportRouteRouteWithChildren
   '/dashboard/calculator/list': typeof DashboardCalculatorListRoute
@@ -318,13 +317,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/waiting-room': typeof WaitingRoomRoute
   '/dashboard/auctions': typeof DashboardAuctionsRouteRouteWithChildren
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard': typeof DashboardIndexRoute
-  '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRouteRoute
   '/dashboard/calculator/list': typeof DashboardCalculatorListRoute
   '/dashboard/calculator/odw': typeof DashboardCalculatorOdwRoute
   '/dashboard/calculator/ulepa': typeof DashboardCalculatorUlepaRoute
@@ -358,6 +357,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/waiting-room': typeof WaitingRoomRoute
   '/dashboard/auctions': typeof DashboardAuctionsRouteRouteWithChildren
   '/dashboard/skills': typeof DashboardSkillsRouteRouteWithChildren
   '/dashboard/player-list': typeof DashboardPlayerListRoute
@@ -365,7 +365,6 @@ export interface FileRoutesById {
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/dashboard/auctions/bibelots': typeof DashboardAuctionsBibelotsRouteRoute
   '/dashboard/auctions/main': typeof DashboardAuctionsMainRouteRouteWithChildren
   '/dashboard/auctions/support': typeof DashboardAuctionsSupportRouteRouteWithChildren
   '/dashboard/calculator/list': typeof DashboardCalculatorListRoute
@@ -402,6 +401,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/signup'
+    | '/waiting-room'
     | '/dashboard/auctions'
     | '/dashboard/skills'
     | '/dashboard/player-list'
@@ -409,7 +409,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/tasks'
     | '/dashboard/'
-    | '/dashboard/auctions/bibelots'
     | '/dashboard/auctions/main'
     | '/dashboard/auctions/support'
     | '/dashboard/calculator/list'
@@ -443,13 +442,13 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/waiting-room'
     | '/dashboard/auctions'
     | '/dashboard/player-list'
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard/tasks'
     | '/dashboard'
-    | '/dashboard/auctions/bibelots'
     | '/dashboard/calculator/list'
     | '/dashboard/calculator/odw'
     | '/dashboard/calculator/ulepa'
@@ -482,6 +481,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/signup'
+    | '/waiting-room'
     | '/dashboard/auctions'
     | '/dashboard/skills'
     | '/dashboard/player-list'
@@ -489,7 +489,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/tasks'
     | '/dashboard/'
-    | '/dashboard/auctions/bibelots'
     | '/dashboard/auctions/main'
     | '/dashboard/auctions/support'
     | '/dashboard/calculator/list'
@@ -525,10 +524,18 @@ export interface RootRouteChildren {
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  WaitingRoomRoute: typeof WaitingRoomRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/waiting-room': {
+      id: '/waiting-room'
+      path: '/waiting-room'
+      fullPath: '/waiting-room'
+      preLoaderRoute: typeof WaitingRoomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -697,13 +704,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAuctionsMainRouteRouteImport
       parentRoute: typeof DashboardAuctionsRouteRoute
     }
-    '/dashboard/auctions/bibelots': {
-      id: '/dashboard/auctions/bibelots'
-      path: '/bibelots'
-      fullPath: '/dashboard/auctions/bibelots'
-      preLoaderRoute: typeof DashboardAuctionsBibelotsRouteRouteImport
-      parentRoute: typeof DashboardAuctionsRouteRoute
-    }
     '/dashboard/auctions/support/': {
       id: '/dashboard/auctions/support/'
       path: '/'
@@ -867,14 +867,12 @@ const DashboardAuctionsSupportRouteRouteWithChildren =
   )
 
 interface DashboardAuctionsRouteRouteChildren {
-  DashboardAuctionsBibelotsRouteRoute: typeof DashboardAuctionsBibelotsRouteRoute
   DashboardAuctionsMainRouteRoute: typeof DashboardAuctionsMainRouteRouteWithChildren
   DashboardAuctionsSupportRouteRoute: typeof DashboardAuctionsSupportRouteRouteWithChildren
 }
 
 const DashboardAuctionsRouteRouteChildren: DashboardAuctionsRouteRouteChildren =
   {
-    DashboardAuctionsBibelotsRouteRoute: DashboardAuctionsBibelotsRouteRoute,
     DashboardAuctionsMainRouteRoute:
       DashboardAuctionsMainRouteRouteWithChildren,
     DashboardAuctionsSupportRouteRoute:
@@ -948,6 +946,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  WaitingRoomRoute: WaitingRoomRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
