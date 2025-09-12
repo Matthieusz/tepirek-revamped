@@ -1,4 +1,6 @@
 import { protectedProcedure, publicProcedure } from "../lib/orpc";
+import { announcementRouter } from "./announcement";
+import { auctionRouter } from "./auction";
 import { eventRouter } from "./event";
 import { heroesRouter } from "./heroes";
 import { skillsRouter } from "./skills";
@@ -20,5 +22,7 @@ export const appRouter = {
 	heroes: heroesRouter,
 	skills: skillsRouter,
 	user: userRouter,
+	auction: auctionRouter,
+	announcement: announcementRouter,
 };
 export type AppRouter = typeof appRouter;
