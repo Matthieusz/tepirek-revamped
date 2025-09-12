@@ -148,7 +148,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			<SidebarHeader>
 				<div className="flex items-center gap-2">
 					<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-						<User className="size-4" />
+						<img alt="Logo" className="rounded-md" src="/favicon.ico" />
 					</div>
 					<div className="grid flex-1 text-left text-sm leading-tight">
 						<span className="truncate font-medium">Gildia Złodziei</span>
