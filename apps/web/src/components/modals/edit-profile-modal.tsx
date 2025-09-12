@@ -23,23 +23,11 @@ interface EditProfileModalProps {
 }
 
 const schema = z.object({
-	name: z.string().min(2, "Imię jest wymagane"),
+	name: z
+		.string()
+		.min(2, "Imię jest wymagane")
+		.max(24, "Maksymalna długość to 24 znaki"),
 });
-
-const getErrorMessage = (e: unknown): string => {
-	if (typeof e === "string") {
-		return e;
-	}
-	if (
-		e &&
-		typeof e === "object" &&
-		"message" in e &&
-		typeof (e as { message: unknown }).message === "string"
-	) {
-		return (e as { message: string }).message;
-	}
-	return String(e);
-};
 
 export function EditProfileModal({
 	trigger,
@@ -99,13 +87,12 @@ export function EditProfileModal({
 											value={field.state.value}
 										/>
 										{field.state.meta.errors.map((e) => {
-											const msg = getErrorMessage(e);
 											return (
 												<p
 													className="text-red-500 text-sm"
-													key={`${field.name}-${msg}`}
+													key={`${field.name}-${e?.message}`}
 												>
-													{msg}
+													{e?.message}
 												</p>
 											);
 										})}
