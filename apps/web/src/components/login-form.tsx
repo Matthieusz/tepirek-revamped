@@ -48,7 +48,7 @@ export function LoginForm({
 						navigate({
 							to: "/dashboard",
 						});
-						toast.success("Login successful");
+						toast.success("Zalogowano pomyślnie");
 					},
 					onError: (error) => {
 						toast.error(error.error.message || error.error.statusText);
@@ -58,8 +58,8 @@ export function LoginForm({
 		},
 		validators: {
 			onSubmit: z.object({
-				email: z.email("Invalid email address"),
-				password: z.string().min(8, "Password must be at least 8 characters"),
+				email: z.email("Nieprawidłowy adres e-mail"),
+				password: z.string().min(8, "Hasło musi mieć co najmniej 8 znaków"),
 			}),
 		},
 	});
@@ -76,9 +76,9 @@ export function LoginForm({
 		<div className={cn("flex flex-col gap-6", className)} {...props}>
 			<Card>
 				<CardHeader>
-					<CardTitle>Login to your account</CardTitle>
+					<CardTitle>Zaloguj się do swojego konta</CardTitle>
 					<CardDescription>
-						Enter your email below to login to your account
+						Wprowadź swój adres e-mail poniżej, aby zalogować się na swoje konto
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -121,7 +121,7 @@ export function LoginForm({
 								<form.Field name="password">
 									{(field) => (
 										<div className="grid gap-3">
-											<Label htmlFor={field.name}>Password</Label>
+											<Label htmlFor={field.name}>Hasło</Label>
 											<Input
 												id={field.name}
 												name={field.name}
@@ -151,7 +151,7 @@ export function LoginForm({
 											disabled={!state.canSubmit || state.isSubmitting}
 											type="submit"
 										>
-											{state.isSubmitting ? "Submitting..." : "Login"}
+											{state.isSubmitting ? "Wysyłanie..." : "Zaloguj się"}
 										</Button>
 									)}
 								</form.Subscribe>
@@ -172,17 +172,17 @@ export function LoginForm({
 									}}
 									variant="outline"
 								>
-									Login with Discord
+									Zaloguj się używając Discorda
 								</Button>
 							</div>
 						</div>
 						<div className="mt-4 text-center text-sm">
-							Don&apos;t have an account?{" "}
+							Nie masz konta?{" "}
 							<Link
 								className="text-primary underline underline-offset-4"
 								to={"/signup"}
 							>
-								Sign up
+								Zarejestruj się
 							</Link>
 						</div>
 					</form>
@@ -191,7 +191,7 @@ export function LoginForm({
 			<Button variant={"ghost"}>
 				<Link className="flex items-center gap-2" to={"/"}>
 					<ArrowLeft />
-					Go back to home
+					Powrót do strony głównej
 				</Link>
 			</Button>
 		</div>

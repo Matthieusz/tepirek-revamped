@@ -46,7 +46,7 @@ export function SignUpForm({
 						navigate({
 							to: "/dashboard",
 						});
-						toast.success("Sign up successful");
+						toast.success("Zarejestrowano pomyślnie");
 					},
 					onError: (error) => {
 						toast.error(error.error.message || error.error.statusText);
@@ -56,9 +56,9 @@ export function SignUpForm({
 		},
 		validators: {
 			onSubmit: z.object({
-				name: z.string().min(2, "Name must be at least 2 characters"),
-				email: z.email("Invalid email address"),
-				password: z.string().min(8, "Password must be at least 8 characters"),
+				name: z.string().min(2, "Nazwa musi mieć conajmniej 2 znaki"),
+				email: z.email("Nieprawidłowy adres e-mail"),
+				password: z.string().min(8, "Hasło musi mieć co najmniej 8 znaków"),
 			}),
 		},
 	});
@@ -75,9 +75,9 @@ export function SignUpForm({
 		<div className={cn("flex flex-col gap-6", className)} {...props}>
 			<Card>
 				<CardHeader>
-					<CardTitle>Login to your account</CardTitle>
+					<CardTitle>Utwórz konto</CardTitle>
 					<CardDescription>
-						Enter your email below to login to your account
+						Wprowadź swój adres e-mail poniżej, aby utworzyć konto
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -93,7 +93,7 @@ export function SignUpForm({
 								<form.Field name="name">
 									{(field) => (
 										<div className="grid gap-3">
-											<Label htmlFor={field.name}>Name</Label>
+											<Label htmlFor={field.name}>Nazwa</Label>
 											<Input
 												id={field.name}
 												name={field.name}
@@ -147,7 +147,7 @@ export function SignUpForm({
 								<form.Field name="password">
 									{(field) => (
 										<div className="grid gap-3">
-											<Label htmlFor={field.name}>Password</Label>
+											<Label htmlFor={field.name}>Hasło</Label>
 											<Input
 												id={field.name}
 												name={field.name}
@@ -177,7 +177,7 @@ export function SignUpForm({
 											disabled={!state.canSubmit || state.isSubmitting}
 											type="submit"
 										>
-											{state.isSubmitting ? "Submitting..." : "Sign Up"}
+											{state.isSubmitting ? "Wysyłanie..." : "Utwórz konto"}
 										</Button>
 									)}
 								</form.Subscribe>
@@ -198,17 +198,17 @@ export function SignUpForm({
 									}}
 									variant="outline"
 								>
-									Login with Discord
+									Zaloguj się używając Discorda
 								</Button>
 							</div>
 						</div>
 						<div className="mt-4 text-center text-sm">
-							Already have an account?{" "}
+							Masz konto?{" "}
 							<Link
 								className="text-primary underline underline-offset-4"
 								to={"/login"}
 							>
-								Login
+								Zaloguj się
 							</Link>
 						</div>
 					</form>
@@ -217,7 +217,7 @@ export function SignUpForm({
 			<Button variant={"ghost"}>
 				<Link className="flex items-center gap-2" to={"/"}>
 					<ArrowLeft />
-					Go back to home
+					Powrót do strony głównej
 				</Link>
 			</Button>
 		</div>

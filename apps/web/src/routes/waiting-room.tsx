@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+import { Loader2, LogOut } from "lucide-react";
 import { useEffect } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
@@ -48,11 +50,39 @@ function RouteComponent() {
 	}, [session, isPending, accessToken, navigate, refetchSession]);
 
 	return (
-		<div className="flex h-screen items-center justify-center gap-4">
-			<Loader2 className="animate-spin" />
-			<h1 className="font-bold text-2xl">
-				Poczekaj na weryfikację przez admina...
-			</h1>
+		<div className="flex h-screen flex-col items-center justify-center gap-12">
+			<div className="flex items-center gap-4">
+				<Loader2 className="mt-1 animate-spin" />
+				<h1 className="font-bold text-2xl">
+					Poczekaj na weryfikację przez admina i odśwież stronę
+				</h1>
+			</div>
+			<div className="flex items-center gap-4">
+				<p>
+					Zalogowano jako: <strong>{session?.user.name}</strong>
+				</p>
+				<Button
+					onClick={() =>
+						authClient.signOut({
+							fetchOptions: {
+								onSuccess: () => {
+									toast.success("Wylogowano pomyślnie");
+									navigate({
+										to: "/",
+									});
+								},
+								onError: (error) => {
+									toast.error(error.error.message || error.error.statusText);
+								},
+							},
+						})
+					}
+					size="default"
+					variant="destructive"
+				>
+					<LogOut className="size-4" /> Wyloguj się
+				</Button>
+			</div>
 		</div>
 	);
 }
