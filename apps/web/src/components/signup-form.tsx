@@ -99,7 +99,7 @@ export function SignUpForm({
 												name={field.name}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
-												placeholder="John Doe"
+												placeholder="Marco Artenius"
 												required
 												type="text"
 												value={field.state.value}
