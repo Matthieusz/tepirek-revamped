@@ -53,6 +53,16 @@ function RouteComponent() {
 							)}
 						</TableRow>
 					</TableHeader>
+					{!heroes.data || heroes.data.length === 0 ? (
+						<TableRow>
+							<TableCell
+								className="text-center"
+								colSpan={session?.user.role === "admin" ? 5 : 4}
+							>
+								Brak herosów
+							</TableCell>
+						</TableRow>
+					) : null}
 					{heroes.data?.map((hero) => (
 						<TableRow key={hero.id}>
 							<TableCell>{hero.id}</TableCell>

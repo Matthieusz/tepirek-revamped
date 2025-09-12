@@ -55,6 +55,16 @@ function RouteComponent() {
 							)}
 						</TableRow>
 					</TableHeader>
+					{!events.data || events.data.length === 0 ? (
+						<TableRow>
+							<TableCell
+								className="text-center"
+								colSpan={session?.user.role === "admin" ? 5 : 4}
+							>
+								Brak eventów
+							</TableCell>
+						</TableRow>
+					) : null}
 					{events.data?.map((event) => (
 						<TableRow key={event.id}>
 							<TableCell>{event.id}</TableCell>
