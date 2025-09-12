@@ -14,6 +14,7 @@ export function NavOther({
 		name: string;
 		url: string;
 		icon: LucideIcon;
+		disabled?: boolean;
 	}[];
 }) {
 	return (
@@ -21,12 +22,22 @@ export function NavOther({
 			<SidebarMenu>
 				{projects.map((item) => (
 					<SidebarMenuItem key={item.name}>
-						<SidebarMenuButton asChild tooltip={item.name}>
-							<Link preload="intent" to={item.url}>
+						{item.disabled ? (
+							<SidebarMenuButton
+								className="cursor-not-allowed opacity-50"
+								tooltip={item.name}
+							>
 								<item.icon className="h-4 w-4" />
 								<span>{item.name}</span>
-							</Link>
-						</SidebarMenuButton>
+							</SidebarMenuButton>
+						) : (
+							<SidebarMenuButton asChild tooltip={item.name}>
+								<Link preload="intent" to={item.url}>
+									<item.icon className="h-4 w-4" />
+									<span>{item.name}</span>
+								</Link>
+							</SidebarMenuButton>
+						)}
 					</SidebarMenuItem>
 				))}
 			</SidebarMenu>

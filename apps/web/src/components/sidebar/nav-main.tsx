@@ -23,9 +23,11 @@ export function NavMain({
 		url: string;
 		icon?: LucideIcon;
 		isActive?: boolean;
+		disabled?: boolean;
 		items?: {
 			title: string;
 			url: string;
+			disabled?: boolean;
 		}[];
 	}[];
 }) {
@@ -41,7 +43,12 @@ export function NavMain({
 					>
 						<SidebarMenuItem>
 							<CollapsibleTrigger asChild>
-								<SidebarMenuButton tooltip={item.title}>
+								<SidebarMenuButton
+									className={
+										item.disabled ? "cursor-not-allowed opacity-50" : undefined
+									}
+									tooltip={item.title}
+								>
 									{item.icon && <item.icon />}
 									<span>{item.title}</span>
 									<ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -52,7 +59,16 @@ export function NavMain({
 									{item.items?.map((subItem) => (
 										<SidebarMenuSubItem key={subItem.title}>
 											<SidebarMenuSubButton asChild>
-												<Link preload="intent" to={subItem.url}>
+												<Link
+													className={
+														subItem.disabled
+															? "cursor-not-allowed opacity-50"
+															: undefined
+													}
+													disabled={!!subItem.disabled}
+													preload="intent"
+													to={subItem.url}
+												>
 													{subItem.title}
 												</Link>
 											</SidebarMenuSubButton>

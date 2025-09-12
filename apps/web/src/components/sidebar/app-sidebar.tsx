@@ -78,14 +78,17 @@ const data = {
 			title: "Squad Builder",
 			url: "#",
 			icon: Users,
+			disabled: true,
 			items: [
 				{
 					title: "Utwórz nową drużynę",
 					url: "/dashboard/squad-builder/create",
+					disabled: true,
 				},
 				{
 					title: "Zarządzaj drużynami",
 					url: "/dashboard/squad-builder/manage",
+					disabled: true,
 				},
 			],
 		},
@@ -101,8 +104,9 @@ const data = {
 				{
 					title: "Odwiązania",
 					url: "/dashboard/calculator/odw",
+					disabled: true,
 				},
-				{ title: "Lista", url: "/dashboard/calculator/list" },
+				{ title: "Lista", url: "/dashboard/calculator/list", disabled: true },
 			],
 		},
 	],
@@ -131,6 +135,7 @@ const data = {
 			name: "Ustawienia",
 			url: "/dashboard/settings",
 			icon: Settings,
+			disabled: true,
 		},
 	],
 };
