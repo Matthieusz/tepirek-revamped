@@ -62,13 +62,6 @@ const baseColumns: ColumnDef<Player>[] = [
 		},
 	},
 	{
-		accessorKey: "verified",
-		header: "Zweryfikowany",
-		cell: ({ row }) => {
-			return row.getValue("verified") ? "Tak" : "Nie";
-		},
-	},
-	{
 		accessorKey: "createdAt",
 		header: "Utworzono",
 		cell: ({ row }) => {
