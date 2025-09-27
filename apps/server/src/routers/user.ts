@@ -49,6 +49,9 @@ export const userRouter = {
 			.where(eq(user.id, context.session.user.id));
 		return row ?? null;
 	}),
+	getSession: protectedProcedure.handler(({ context }) => {
+		return context.session;
+	}),
 	list: protectedProcedure.handler(async () => {
 		return await db.select().from(user);
 	}),
@@ -69,7 +72,6 @@ export const userRouter = {
 				.where(eq(user.id, context.session.user.id));
 			return updated ?? null;
 		}),
-	// Admin: toggle verified status
 	setVerified: protectedProcedure
 		.input(
 			z.object({
@@ -91,7 +93,6 @@ export const userRouter = {
 				.where(eq(user.id, input.userId));
 			return updated ?? null;
 		}),
-	// Admin: promote/demote role
 	setRole: protectedProcedure
 		.input(
 			z.object({
