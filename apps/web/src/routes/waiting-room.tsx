@@ -9,9 +9,7 @@ export const Route = createFileRoute("/waiting-room")({
 	async beforeLoad({ context }) {
 		const { queryClient } = context;
 		try {
-			const user = await queryClient.ensureQueryData(
-				orpc.user.getMe.queryOptions()
-			);
+			const user = await queryClient.fetchQuery(orpc.user.getMe.queryOptions());
 			if (!user) {
 				throw redirect({ to: "/login" });
 			}

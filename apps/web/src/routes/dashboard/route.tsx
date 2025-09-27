@@ -30,17 +30,17 @@ function RouteComponent() {
 	const { data: session, isPending } = authClient.useSession();
 
 	useEffect(() => {
-		if (!(session || isPending)) {
+		if (!session) {
 			navigate({
 				to: "/login",
 			});
 		}
-		if (session?.user.verified === false) {
+		if (!session?.user.verified) {
 			navigate({
 				to: "/waiting-room",
 			});
 		}
-	}, [session, isPending, navigate]);
+	}, [session, navigate]);
 
 	if (isPending) {
 		return (
