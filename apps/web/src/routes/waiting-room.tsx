@@ -26,7 +26,7 @@ export const Route = createFileRoute("/waiting-room")({
 			const user = await queryClient.ensureQueryData(
 				orpc.user.getMe.queryOptions()
 			);
-			const accessToken = await queryClient.ensureQueryData(
+			const accessToken = await queryClient.fetchQuery(
 				orpc.user.getDiscordAccessToken.queryOptions()
 			);
 			if (user && !user.verified && accessToken) {
