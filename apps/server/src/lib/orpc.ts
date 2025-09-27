@@ -7,7 +7,9 @@ export const publicProcedure = o;
 
 const requireAuth = o.middleware(async ({ context, next }) => {
 	if (!context.session?.user) {
-		throw new ORPCError("UNAUTHORIZED");
+		throw new ORPCError("UNAUTHORIZED", {
+			message: "Użytkownik niezalogowany",
+		});
 	}
 	return await next({
 		context: {

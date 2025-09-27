@@ -9,7 +9,7 @@ import type { appRouter } from "../../../server/src/routers/index";
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
 		onError: (error) => {
-			toast.error(`Error: ${error.message}`, {
+			toast.error(`Błąd: ${error.message}`, {
 				action: {
 					label: "retry",
 					onClick: () => {
