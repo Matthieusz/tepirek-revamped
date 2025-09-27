@@ -9,11 +9,13 @@ export const Route = createFileRoute("/waiting-room")({
 	async beforeLoad({ context }) {
 		const { queryClient } = context;
 		try {
-			const user = await queryClient.fetchQuery(orpc.user.getMe.queryOptions());
-			if (!user) {
+			const session = await queryClient.fetchQuery(
+				orpc.user.getSession.queryOptions()
+			);
+			if (!session.user) {
 				throw redirect({ to: "/login" });
 			}
-			if (user.verified) {
+			if (session.user.verified) {
 				throw redirect({ to: "/dashboard" });
 			}
 		} catch {
@@ -23,13 +25,13 @@ export const Route = createFileRoute("/waiting-room")({
 	async loader({ context }) {
 		const { queryClient } = context;
 		try {
-			const user = await queryClient.ensureQueryData(
-				orpc.user.getMe.queryOptions()
+			const session = await queryClient.ensureQueryData(
+				orpc.user.getSession.queryOptions()
 			);
 			const accessToken = await queryClient.fetchQuery(
 				orpc.user.getDiscordAccessToken.queryOptions()
 			);
-			if (user && !user.verified && accessToken) {
+			if (session.user && !session.user.verified && accessToken) {
 				const result = await orpc.user.validateDiscordGuild.call({
 					accessToken,
 				});

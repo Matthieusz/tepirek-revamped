@@ -42,13 +42,6 @@ export const userRouter = {
 			.where(eq(account.userId, context.session.user.id));
 		return rows[0]?.accessToken ?? null;
 	}),
-	getMe: protectedProcedure.handler(async ({ context }) => {
-		const [row] = await db
-			.select()
-			.from(user)
-			.where(eq(user.id, context.session.user.id));
-		return row ?? null;
-	}),
 	getSession: protectedProcedure.handler(({ context }) => {
 		return context.session;
 	}),
