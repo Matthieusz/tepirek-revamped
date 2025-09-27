@@ -1,53 +1,56 @@
-import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Loader2, LogOut } from "lucide-react";
-import { useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/waiting-room")({
-	component: RouteComponent,
-});
-
-function RouteComponent() {
-	const navigate = Route.useNavigate();
-	const {
-		data: session,
-		isPending,
-		refetch: refetchSession,
-	} = authClient.useSession();
-	const accessToken = useQuery(
-		orpc.user.getDiscordAccessToken.queryOptions()
-	).data;
-
-	useEffect(() => {
-		async function handleVerification() {
-			if (!(session || isPending)) {
-				navigate({
-					to: "/login",
-				});
-				return;
+	async beforeLoad({ context }) {
+		const { queryClient } = context;
+		try {
+			const user = await queryClient.ensureQueryData(
+				orpc.user.getMe.queryOptions()
+			);
+			if (!user) {
+				throw redirect({ to: "/login" });
 			}
-			if (session?.user.verified === true) {
-				navigate({
-					to: "/dashboard",
-				});
-				return;
+			if (user.verified) {
+				throw redirect({ to: "/dashboard" });
 			}
-			if (session?.user.verified === false && accessToken) {
+		} catch {
+			throw redirect({ to: "/login" });
+		}
+	},
+	async loader({ context }) {
+		const { queryClient } = context;
+		try {
+			const user = await queryClient.ensureQueryData(
+				orpc.user.getMe.queryOptions()
+			);
+			const accessToken = await queryClient.ensureQueryData(
+				orpc.user.getDiscordAccessToken.queryOptions()
+			);
+			if (user && !user.verified && accessToken) {
 				const result = await orpc.user.validateDiscordGuild.call({
 					accessToken,
 				});
 				if (result?.valid) {
 					await orpc.user.verifySelf.call();
-					refetchSession();
+					throw redirect({ to: "/dashboard" });
 				}
 			}
+		} catch {
+			throw redirect({ to: "/login" });
 		}
-		handleVerification();
-	}, [session, isPending, accessToken, navigate, refetchSession]);
+		return null;
+	},
+	component: RouteComponent,
+});
+
+function RouteComponent() {
+	const navigate = Route.useNavigate();
+	const { data: session } = authClient.useSession();
 
 	return (
 		<div className="flex h-screen flex-col items-center justify-center gap-12">
@@ -78,6 +81,7 @@ function RouteComponent() {
 						})
 					}
 					size="default"
+					type="button"
 					variant="destructive"
 				>
 					<LogOut className="size-4" /> Wyloguj się
