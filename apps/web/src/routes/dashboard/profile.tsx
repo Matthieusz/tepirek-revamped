@@ -11,7 +11,6 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/profile")({
@@ -22,12 +21,8 @@ export const Route = createFileRoute("/dashboard/profile")({
 });
 
 function RouteComponent() {
-	const { data: session } = authClient.useSession();
-	const me = useQuery({
-		...orpc.user.getMe.queryOptions(),
-		enabled: !!session,
-	});
-	const user = me.data;
+	const currentUser = useQuery(orpc.user.getSession.queryOptions());
+	const user = currentUser.data?.user;
 	return (
 		<div className="flex w-[450px] flex-col gap-6 overflow-auto py-4">
 			<Card>
@@ -51,7 +46,7 @@ function RouteComponent() {
 					</div>
 					{user ? (
 						<EditProfileModal
-							defaultName={user.name}
+							defaultName={user.name as string}
 							trigger={
 								<Button size="sm" variant="outline">
 									<Edit className="mr-2 size-4" /> Edytuj profil

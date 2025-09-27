@@ -46,7 +46,9 @@ export function EditProfileModal({
 					name: value.name,
 				});
 				toast.success("Profil zaktualizowany");
-				queryClient.invalidateQueries({ queryKey: orpc.user.getMe.queryKey() });
+				queryClient.invalidateQueries({
+					queryKey: orpc.user.getSession.queryKey(),
+				});
 				setOpen(false);
 			} catch (_) {
 				toast.error("Nie udało się zaktualizować profilu");
