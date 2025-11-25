@@ -1,25 +1,25 @@
 import { useNavigate } from "@tanstack/react-router";
 import {
-	Brain,
-	Calculator,
-	CalendarCheck,
-	Gavel,
-	ListChecks,
-	LogOut,
-	Settings,
-	User,
-	Users,
+  Brain,
+  Calculator,
+  CalendarCheck,
+  Gavel,
+  ListChecks,
+  LogOut,
+  Settings,
+  User,
+  Users,
 } from "lucide-react";
 import type * as React from "react";
 import { toast } from "sonner";
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavOther } from "@/components/sidebar/nav-other";
 import {
-	Sidebar,
-	SidebarContent,
-	SidebarFooter,
-	SidebarHeader,
-	SidebarRail,
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarRail,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -27,195 +27,195 @@ import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 
 const data = {
-	navMain: [
-		{
-			title: "Eventy",
-			url: "#",
-			icon: CalendarCheck,
-			items: [
-				{
-					title: "Lista eventów",
-					url: "/dashboard/events/list",
-				},
-				{
-					title: "Lista herosów",
-					url: "/dashboard/events/heroes",
-				},
-				{
-					title: "Dodaj obstawienie",
-					url: "/dashboard/events/bets/add",
-				},
-				{
-					title: "Historia",
-					url: "/dashboard/events/history",
-				},
-				{
-					title: "Ranking",
-					url: "/dashboard/events/ranking",
-				},
-			],
-		},
-		{
-			title: "Licytacje",
-			url: "#",
-			icon: Gavel,
-			items: [
-				{
-					title: "Broni głównych",
-					url: "/dashboard/auctions/main",
-				},
-				{
-					title: "Broni pomocniczych",
-					url: "/dashboard/auctions/support",
-				},
-				{
-					title: "Bibelotów",
-					url: "/dashboard/auctions/bibelots",
-				},
-			],
-		},
-		{
-			title: "Squad Builder",
-			url: "#",
-			icon: Users,
-			disabled: true,
-			items: [
-				{
-					title: "Utwórz nową drużynę",
-					url: "/dashboard/squad-builder/create",
-					disabled: true,
-				},
-				{
-					title: "Zarządzaj drużynami",
-					url: "/dashboard/squad-builder/manage",
-					disabled: true,
-				},
-			],
-		},
-		{
-			title: "Kalkulatory",
-			url: "#",
-			icon: Calculator,
-			items: [
-				{
-					title: "Ulepy",
-					url: "/dashboard/calculator/ulepa",
-				},
-				{
-					title: "Odwiązania",
-					url: "/dashboard/calculator/odw",
-					disabled: true,
-				},
-				{ title: "Lista", url: "/dashboard/calculator/list", disabled: true },
-			],
-		},
-	],
-	projects: [
-		{
-			name: "Lista zadań",
-			url: "/dashboard/tasks",
-			icon: ListChecks,
-		},
-		{
-			name: "Umiejętności",
-			url: "/dashboard/skills",
-			icon: Brain,
-		},
-		{
-			name: "Lista graczy",
-			url: "/dashboard/player-list",
-			icon: Users,
-		},
-		{
-			name: "Profil",
-			url: "/dashboard/profile",
-			icon: User,
-		},
-		{
-			name: "Ustawienia",
-			url: "/dashboard/settings",
-			icon: Settings,
-			disabled: true,
-		},
-	],
+  navMain: [
+    {
+      title: "Eventy",
+      url: "#",
+      icon: CalendarCheck,
+      items: [
+        {
+          title: "Lista eventów",
+          url: "/dashboard/events/list",
+        },
+        {
+          title: "Lista herosów",
+          url: "/dashboard/events/heroes",
+        },
+        {
+          title: "Dodaj obstawienie",
+          url: "/dashboard/events/bets/add",
+        },
+        {
+          title: "Historia",
+          url: "/dashboard/events/history",
+        },
+        {
+          title: "Ranking",
+          url: "/dashboard/events/ranking",
+        },
+      ],
+    },
+    {
+      title: "Licytacje",
+      url: "#",
+      icon: Gavel,
+      items: [
+        {
+          title: "Broni głównych",
+          url: "/dashboard/auctions/main",
+        },
+        {
+          title: "Broni pomocniczych",
+          url: "/dashboard/auctions/support",
+        },
+        {
+          title: "Bibelotów",
+          url: "/dashboard/auctions/bibelots",
+        },
+      ],
+    },
+    {
+      title: "Squad Builder",
+      url: "#",
+      icon: Users,
+      disabled: true,
+      items: [
+        {
+          title: "Utwórz nową drużynę",
+          url: "/dashboard/squad-builder/create",
+          disabled: true,
+        },
+        {
+          title: "Zarządzaj drużynami",
+          url: "/dashboard/squad-builder/manage",
+          disabled: true,
+        },
+      ],
+    },
+    {
+      title: "Kalkulatory",
+      url: "#",
+      icon: Calculator,
+      items: [
+        {
+          title: "Ulepy",
+          url: "/dashboard/calculator/ulepa",
+        },
+        {
+          title: "Odwiązania",
+          url: "/dashboard/calculator/odw",
+          disabled: true,
+        },
+        { title: "Lista", url: "/dashboard/calculator/list", disabled: true },
+      ],
+    },
+  ],
+  projects: [
+    {
+      name: "Lista zadań",
+      url: "/dashboard/tasks",
+      icon: ListChecks,
+    },
+    {
+      name: "Umiejętności",
+      url: "/dashboard/skills",
+      icon: Brain,
+    },
+    {
+      name: "Lista graczy",
+      url: "/dashboard/player-list",
+      icon: Users,
+    },
+    {
+      name: "Profil",
+      url: "/dashboard/profile",
+      icon: User,
+    },
+    {
+      name: "Ustawienia",
+      url: "/dashboard/settings",
+      icon: Settings,
+      disabled: true,
+    },
+  ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-	const navigate = useNavigate();
-	const { data: session, isPending } = authClient.useSession();
-	return (
-		<Sidebar collapsible="icon" {...props}>
-			<SidebarHeader>
-				<div className="flex items-center gap-2">
-					<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-						<img alt="Logo" className="rounded-md" src="/favicon.ico" />
-					</div>
-					<div className="grid flex-1 text-left text-sm leading-tight">
-						<span className="truncate font-medium">Gildia Złodziei</span>
-						<span className="truncate text-xs">v1.0</span>
-					</div>
-				</div>
-			</SidebarHeader>
-			<SidebarContent>
-				<NavMain items={data.navMain} />
-				<NavOther projects={data.projects} />
-			</SidebarContent>
-			<SidebarFooter>
-				<div className="flex items-center gap-2 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-4">
-					{isPending ? (
-						<>
-							<Skeleton className="h-8 w-8 rounded-lg" />
-							<div className="grid flex-1 gap-1 text-left text-sm leading-tight group-data-[state=collapsed]:hidden">
-								<Skeleton className="h-4 w-24 rounded" />
-								<Skeleton className="h-3 w-32 rounded" />
-							</div>
-							<Skeleton className="h-8 w-8 rounded-lg" />
-						</>
-					) : (
-						<>
-							<Avatar className="h-8 w-8 rounded-lg">
-								<AvatarImage
-									alt="User avatar"
-									src={session?.user.image ?? undefined}
-								/>
-								<AvatarFallback>
-									<img alt="default-avatar" src="/default-avatar.webp" />
-								</AvatarFallback>
-							</Avatar>
-							<div className="grid flex-1 text-left text-sm leading-tight group-data-[state=collapsed]:hidden">
-								<span className="truncate font-medium">
-									{session?.user.name}
-								</span>
-								<span className="truncate text-xs">{session?.user.email}</span>
-							</div>
-							<Button
-								onClick={() =>
-									authClient.signOut({
-										fetchOptions: {
-											onSuccess: () => {
-												toast.success("Wylogowano pomyślnie");
-												navigate({
-													to: "/",
-												});
-											},
-											onError: (error) => {
-												toast.error(
-													error.error.message || error.error.statusText
-												);
-											},
-										},
-									})
-								}
-								size="icon"
-								variant="destructive"
-							>
-								<LogOut className="size-4" />
-							</Button>
-						</>
-					)}
-				</div>
-			</SidebarFooter>
-			<SidebarRail />
-		</Sidebar>
-	);
+  const navigate = useNavigate();
+  const { data: session, isPending } = authClient.useSession();
+  return (
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader>
+        <div className="flex items-center gap-2">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+            <img alt="Logo" className="rounded-md" src="/favicon.ico" />
+          </div>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-medium">Gildia Złodziei</span>
+            <span className="truncate text-xs">v1.0</span>
+          </div>
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <NavMain items={data.navMain} />
+        <NavOther projects={data.projects} />
+      </SidebarContent>
+      <SidebarFooter>
+        <div className="flex items-center gap-2 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-4">
+          {isPending ? (
+            <>
+              <Skeleton className="h-8 w-8 rounded-lg" />
+              <div className="grid flex-1 gap-1 text-left text-sm leading-tight group-data-[state=collapsed]:hidden">
+                <Skeleton className="h-4 w-24 rounded" />
+                <Skeleton className="h-3 w-32 rounded" />
+              </div>
+              <Skeleton className="h-8 w-8 rounded-lg" />
+            </>
+          ) : (
+            <>
+              <Avatar className="h-8 w-8 rounded-lg">
+                <AvatarImage
+                  alt="User avatar"
+                  src={session?.user.image ?? undefined}
+                />
+                <AvatarFallback>
+                  <img alt="default-avatar" src="/default-avatar.webp" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight group-data-[state=collapsed]:hidden">
+                <span className="truncate font-medium">
+                  {session?.user.name}
+                </span>
+                <span className="truncate text-xs">{session?.user.email}</span>
+              </div>
+              <Button
+                onClick={() =>
+                  authClient.signOut({
+                    fetchOptions: {
+                      onSuccess: () => {
+                        toast.success("Wylogowano pomyślnie");
+                        navigate({
+                          to: "/",
+                        });
+                      },
+                      onError: (error) => {
+                        toast.error(
+                          error.error.message || error.error.statusText
+                        );
+                      },
+                    },
+                  })
+                }
+                size="icon"
+                variant="destructive"
+              >
+                <LogOut className="size-4" />
+              </Button>
+            </>
+          )}
+        </div>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
+  );
 }

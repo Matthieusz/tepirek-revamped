@@ -19,11 +19,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
-  },
-  "references": [
-    {
-      "path": "../server"
-    }
-  ]
+    },
+    "strictNullChecks": true
+  }
 }
