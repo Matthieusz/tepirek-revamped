@@ -5,10 +5,8 @@ import {
   HeadContent,
   Outlet,
   Scripts,
-  useRouterState,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import Loader from "@/components/loader";
 import { Toaster } from "@/components/ui/sonner";
 import type { orpc } from "@/utils/orpc";
 import appCss from "../index.css?url";
@@ -47,8 +45,6 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 });
 
 function RootDocument() {
-  const isFetching = useRouterState({ select: (s) => s.isLoading });
-
   return (
     <html className="dark" lang="en">
       <head>
@@ -56,15 +52,7 @@ function RootDocument() {
       </head>
       <body>
         <div className="grid h-svh grid-rows-[auto_1fr]">
-          {isFetching ? (
-            <div className="h-screen">
-              <Loader />
-            </div>
-          ) : (
-            <div className="h-screen">
-              <Outlet />
-            </div>
-          )}
+          <Outlet />
         </div>
         <Toaster richColors />
         <TanStackRouterDevtools position="bottom-right" />
