@@ -108,97 +108,120 @@ function RangeDetails() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-4">
-        <h1 className="font-bold text-3xl">{range.data.name}</h1>
+    <div className="mx-auto w-full max-w-6xl space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="mb-1 font-bold text-2xl tracking-tight">
+            {range.data.name}
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Zestawy umiejętności dla poziomu {currentRange.level}
+          </p>
+        </div>
         <AddSkillModal
           defaultRangeId={currentRange.id}
           trigger={
-            <Button type="button" variant="default">
-              <Plus />
-              Dodaj zestaw umiejętności
+            <Button size="sm" type="button">
+              <Plus className="h-4 w-4" />
+              Dodaj zestaw
             </Button>
           }
         />
       </div>
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {professionsQuery.data?.map((profession) => (
-          <Card className="overflow-hidden" key={profession.id}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-base">{profession.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-24">Link</TableHead>
-                    <TableHead className="w-32">Mistrzostwo?</TableHead>
-                    <TableHead className="w-40">Dodano przez</TableHead>
-                    {session.role === "admin" && (
-                      <TableHead className="w-20">Akcje</TableHead>
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {skillsGrouped[profession.id]?.map((skill) => (
-                    <TableRow key={skill.id}>
-                      <TableCell>
-                        <a
-                          className="text-primary underline"
-                          href={skill.link}
-                          rel="noopener noreferrer"
-                          target="_blank"
-                        >
-                          {skill.name}
-                        </a>
-                      </TableCell>
-                      <TableCell>{skill.mastery ? "Tak" : "Nie"}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="size-6">
-                            <AvatarImage
-                              alt={skill.addedBy}
-                              src={skill.addedByImage || undefined}
-                            />
-                            <AvatarFallback>
-                              {skill.addedBy?.slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>{skill.addedBy}</span>
-                        </div>
-                      </TableCell>
-                      {session.role === "admin" && (
-                        <TableCell>
-                          <Button
-                            onClick={() =>
-                              setSkillToDelete({
-                                id: skill.id,
-                                name: skill.name,
-                                rangeId: currentRange.id,
-                              })
-                            }
-                            size="sm"
-                            type="button"
-                            variant="destructive"
-                          >
-                            Usuń
-                          </Button>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                  {!skillsGrouped[profession.id]?.length && (
-                    <TableRow>
-                      <TableCell className="text-muted-foreground" colSpan={4}>
-                        Brak umiejętności
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {professionsQuery.data?.map((profession) => {
+          const skills = skillsGrouped[profession.id] ?? [];
+          return (
+            <Card key={profession.id}>
+              <CardHeader className="pb-3">
+                <CardTitle className="font-medium text-sm">
+                  {profession.name}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {skills.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Link</TableHead>
+                        <TableHead className="w-20">Mistrz</TableHead>
+                        <TableHead className="w-28">Autor</TableHead>
+                        {session.role === "admin" && (
+                          <TableHead className="w-16" />
+                        )}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {skills.map((skill) => (
+                        <TableRow key={skill.id}>
+                          <TableCell>
+                            <a
+                              className="text-primary hover:underline"
+                              href={skill.link}
+                              rel="noopener noreferrer"
+                              target="_blank"
+                            >
+                              {skill.name}
+                            </a>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={
+                                skill.mastery
+                                  ? "text-green-500"
+                                  : "text-muted-foreground"
+                              }
+                            >
+                              {skill.mastery ? "Tak" : "Nie"}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1.5">
+                              <Avatar className="size-5">
+                                <AvatarImage
+                                  alt={skill.addedBy}
+                                  src={skill.addedByImage || undefined}
+                                />
+                                <AvatarFallback className="text-xs">
+                                  {skill.addedBy?.slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="truncate text-xs">
+                                {skill.addedBy}
+                              </span>
+                            </div>
+                          </TableCell>
+                          {session.role === "admin" && (
+                            <TableCell>
+                              <Button
+                                onClick={() =>
+                                  setSkillToDelete({
+                                    id: skill.id,
+                                    name: skill.name,
+                                    rangeId: currentRange.id,
+                                  })
+                                }
+                                size="sm"
+                                type="button"
+                                variant="ghost"
+                              >
+                                Usuń
+                              </Button>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p className="py-4 text-center text-muted-foreground text-sm">
+                    Brak zestawów
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <AlertDialog

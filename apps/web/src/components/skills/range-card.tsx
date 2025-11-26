@@ -59,41 +59,43 @@ export function RangeCard({ range, className }: RangeCardProps) {
 
   return (
     <>
-      <Card className={cn("relative", className)}>
+      <Card className={cn("flex h-full flex-col", className)}>
         <Link
-          className="flex flex-col no-underline focus:outline-none"
+          className="flex flex-1 flex-col no-underline focus:outline-none"
           params={{ rangeName: slugify(range.name) }}
           to="/dashboard/skills/$rangeName"
         >
-          <CardHeader className="mb-4">
-            <CardTitle className="flex items-center gap-2">
-              <span>{range.name}</span>
-            </CardTitle>
+          <CardHeader>
+            <CardTitle className="text-lg">{range.name}</CardTitle>
             <CardDescription>Level: {range.level}</CardDescription>
           </CardHeader>
-          {range.image && (
-            <CardContent className="flex flex-col items-center">
+          <CardContent className="flex flex-1 items-center justify-center">
+            {range.image ? (
               <img
                 alt={range.name}
-                className="h-36 rounded-md object-fit"
-                height={144}
+                className="h-40 w-40 rounded-md object-contain"
+                height={160}
                 src={range.image}
-                width={144}
+                width={160}
               />
-            </CardContent>
-          )}
+            ) : (
+              <div className="flex h-40 w-40 items-center justify-center rounded-md bg-muted">
+                <span className="text-muted-foreground text-sm">Brak obrazu</span>
+              </div>
+            )}
+          </CardContent>
         </Link>
         {session?.user.role === "admin" && (
-          <div className="px-6">
+          <div className="mt-auto p-4 pt-0">
             <Button
               className="w-full"
               onClick={() => setShowDeleteDialog(true)}
-              size="default"
+              size="sm"
               type="button"
               variant="destructive"
             >
               <Trash2 className="h-4 w-4" />
-              Usuń przedział
+              Usuń
             </Button>
           </div>
         )}

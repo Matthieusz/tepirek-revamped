@@ -21,25 +21,38 @@ function RouteComponent() {
   );
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-4">
-        <h1 className="font-bold text-3xl">Lista przedziałów</h1>
+    <div className="mx-auto w-full max-w-6xl space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="mb-1 font-bold text-2xl tracking-tight">
+            Lista przedziałów
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Przeglądaj zestawy umiejętności według poziomów postaci.
+          </p>
+        </div>
         {session.role === "admin" && (
           <AddRangeModal
             trigger={
-              <Button>
-                <Plus />
+              <Button size="sm">
+                <Plus className="h-4 w-4" />
                 Dodaj przedział
               </Button>
             }
           />
         )}
       </div>
-      {isPending ? (
-        <CardGridSkeleton count={10} />
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          {ranges?.map((range) => (
+      {isPending && <CardGridSkeleton count={10} />}
+      {!isPending && ranges?.length === 0 && (
+        <div className="rounded-lg border border-dashed p-8 text-center">
+          <p className="text-muted-foreground">
+            Brak przedziałów do wyświetlenia.
+          </p>
+        </div>
+      )}
+      {!isPending && ranges && ranges.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {ranges.map((range) => (
             <RangeCard key={range.id} range={range} />
           ))}
         </div>
