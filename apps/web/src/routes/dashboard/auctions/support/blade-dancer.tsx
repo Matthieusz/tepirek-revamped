@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ComingSoon } from "@/components/coming-soon";
 
 export const Route = createFileRoute(
   "/dashboard/auctions/support/blade-dancer"
@@ -10,5 +11,5 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  return <div>Hello "/dashboard/auctions/support/blade-dancer"!</div>;
+  return <ComingSoon feature="Licytacje wsparcia - Tancerz Ostrzy" />;
 }

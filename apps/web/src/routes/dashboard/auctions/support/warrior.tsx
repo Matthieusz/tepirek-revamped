@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ComingSoon } from "@/components/coming-soon";
 
 export const Route = createFileRoute("/dashboard/auctions/support/warrior")({
   component: RouteComponent,
@@ -8,5 +9,5 @@ export const Route = createFileRoute("/dashboard/auctions/support/warrior")({
 });
 
 function RouteComponent() {
-  return <div>Hello "/dashboard/auctions/support/warrior"!</div>;
+  return <ComingSoon feature="Licytacje wsparcia - Wojownik" />;
 }

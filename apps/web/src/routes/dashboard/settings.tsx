@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ComingSoon } from "@/components/coming-soon";
 
 export const Route = createFileRoute("/dashboard/settings")({
   component: RouteComponent,
@@ -8,5 +9,5 @@ export const Route = createFileRoute("/dashboard/settings")({
 });
 
 function RouteComponent() {
-  return <div>WIP</div>;
+  return <ComingSoon feature="Ustawienia" />;
 }

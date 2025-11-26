@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ComingSoon } from "@/components/coming-soon";
 
 export const Route = createFileRoute("/dashboard/squad-builder/manage")({
   component: RouteComponent,
@@ -8,5 +9,5 @@ export const Route = createFileRoute("/dashboard/squad-builder/manage")({
 });
 
 function RouteComponent() {
-  return <div>Hello "/dashboard/squad-builder/manage-squads"!</div>;
+  return <ComingSoon feature="Zarządzanie drużynami" />;
 }

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ComingSoon } from "@/components/coming-soon";
 
 export const Route = createFileRoute("/dashboard/events/bets/add")({
   component: RouteComponent,
@@ -8,5 +9,5 @@ export const Route = createFileRoute("/dashboard/events/bets/add")({
 });
 
 function RouteComponent() {
-  return <div>Hello "/dashboard/events/bets/add"!</div>;
+  return <ComingSoon feature="Dodawanie obstawień" />;
 }

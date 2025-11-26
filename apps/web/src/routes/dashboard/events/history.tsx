@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ComingSoon } from "@/components/coming-soon";
 
 export const Route = createFileRoute("/dashboard/events/history")({
   component: RouteComponent,
   staticData: {
-    crumb: "Historia obstawięń",
+    crumb: "Historia obstawień",
   },
 });
 
 function RouteComponent() {
-  return <div>Hello "/dashboard/events/history"!</div>;
+  return <ComingSoon feature="Historia obstawień" />;
 }

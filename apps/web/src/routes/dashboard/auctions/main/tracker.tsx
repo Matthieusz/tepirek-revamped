@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ComingSoon } from "@/components/coming-soon";
 
 export const Route = createFileRoute("/dashboard/auctions/main/tracker")({
   component: RouteComponent,
@@ -8,5 +9,5 @@ export const Route = createFileRoute("/dashboard/auctions/main/tracker")({
 });
 
 function RouteComponent() {
-  return <div>Hello "/dashboard/auctions/main/tracker"!</div>;
+  return <ComingSoon feature="Licytacje - Tropiciel" />;
 }

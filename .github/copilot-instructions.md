@@ -64,6 +64,56 @@ export const Route = createFileRoute("/dashboard")({
 });
 ```
 
+### Auth Guards (apps/web/src/lib/auth-guard.ts)
+
+```typescript
+// Use centralized auth guards - DO NOT duplicate auth logic
+import {
+  requireAuth,
+  requireVerified,
+  requireUnverified,
+} from "@/lib/auth-guard";
+
+// For routes requiring login only
+beforeLoad: async () => requireAuth();
+
+// For dashboard routes (login + email verified)
+beforeLoad: async () => requireVerified();
+
+// For waiting-room (login + email NOT verified)
+beforeLoad: async () => requireUnverified();
+```
+
+### Context Inheritance
+
+```typescript
+// Parent route passes session to children
+// apps/web/src/routes/dashboard/route.tsx
+beforeLoad: async () => {
+  const session = await requireVerified();
+  return { session: session.user }; // Available to all child routes
+},
+  // Child routes access session via context - NO duplicate API calls
+  function RouteComponent() {
+    const { session } = Route.useRouteContext();
+    // session is already available, no need to fetch again
+  };
+```
+
+### Loading States
+
+```typescript
+// Always handle isPending state with skeletons
+import { TableSkeleton, CardGridSkeleton } from "@/components/ui/skeleton";
+
+function RouteComponent() {
+  const { data, isPending } = useQuery(orpc.user.list.queryOptions());
+
+  if (isPending) return <TableSkeleton rows={5} />;
+  // render data...
+}
+```
+
 ### Auth Client Usage
 
 ```typescript
