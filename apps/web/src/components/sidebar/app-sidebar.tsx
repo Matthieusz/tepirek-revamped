@@ -104,7 +104,6 @@ const data = {
         {
           title: "Odwiązania",
           url: "/dashboard/calculator/odw",
-          disabled: true,
         },
         { title: "Lista", url: "/dashboard/calculator/list" },
       ],
