@@ -106,7 +106,7 @@ const data = {
           url: "/dashboard/calculator/odw",
           disabled: true,
         },
-        { title: "Lista", url: "/dashboard/calculator/list", disabled: true },
+        { title: "Lista", url: "/dashboard/calculator/list" },
       ],
     },
   ],
