@@ -23,6 +23,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { formatDateTime } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/")({
@@ -122,16 +123,7 @@ function RouteComponent() {
               <CardFooter className="justify-between text-muted-foreground text-sm">
                 <div>
                   <span className="font-semibold">Data dodania:</span>{" "}
-                  {new Date(announcement.createdAt).toLocaleDateString(
-                    "pl-PL",
-                    {
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }
-                  )}
+                  {formatDateTime(announcement.createdAt)}
                 </div>
                 {session.role === "admin" && (
                   <Button

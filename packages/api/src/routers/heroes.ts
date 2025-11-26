@@ -2,12 +2,12 @@ import { db } from "@tepirek-revamped/db";
 import { hero } from "@tepirek-revamped/db/schema/bet";
 import { eq } from "drizzle-orm";
 import z from "zod";
-import { protectedProcedure } from "../index";
+import { adminProcedure, protectedProcedure } from "../index";
 
 export const heroesRouter = {
   getAll: protectedProcedure.handler(async () => await db.select().from(hero)),
 
-  create: protectedProcedure
+  create: adminProcedure
     .input(
       z.object({
         name: z.string().min(1),
@@ -24,7 +24,7 @@ export const heroesRouter = {
         })
     ),
 
-  delete: protectedProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.number() }))
     .handler(
       async ({ input }) => await db.delete(hero).where(eq(hero.id, input.id))

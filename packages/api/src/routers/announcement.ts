@@ -3,7 +3,7 @@ import { announcement } from "@tepirek-revamped/db/schema/announcement";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import z from "zod";
-import { protectedProcedure } from "../index";
+import { adminProcedure, protectedProcedure } from "../index";
 
 export const announcementRouter = {
   getAll: protectedProcedure.handler(
@@ -24,7 +24,7 @@ export const announcementRouter = {
         .leftJoin(user, eq(announcement.userId, user.id))
   ),
 
-  create: protectedProcedure
+  create: adminProcedure
     .input(
       z.object({ title: z.string().min(1), description: z.string().min(1) })
     )
@@ -38,7 +38,7 @@ export const announcementRouter = {
         })
     ),
 
-  delete: protectedProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.number() }))
     .handler(
       async ({ input }) =>

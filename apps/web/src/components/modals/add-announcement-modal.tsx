@@ -72,9 +72,9 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
           }}
         >
           <DialogHeader>
-            <DialogTitle>Dodaj nowy event</DialogTitle>
+            <DialogTitle>Dodaj nowe ogłoszenie</DialogTitle>
             <DialogDescription>
-              Utwórz nowy event z nazwą i datą końcową.
+              Utwórz nowe ogłoszenie z tytułem i opisem.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

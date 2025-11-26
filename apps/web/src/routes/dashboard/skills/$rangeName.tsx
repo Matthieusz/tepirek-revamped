@@ -97,18 +97,8 @@ function RangeDetails() {
 
   const currentRange = range.data;
 
-  type SkillRecord = {
-    id: number;
-    name: string;
-    link: string;
-    mastery: boolean;
-    professionId: number;
-    professionName: string;
-    addedBy: string;
-    addedByImage: string | null;
-  };
-  const skillsGrouped: Record<number, SkillRecord[]> = {};
-  const skillsData = (skillsByRange.data || []) as SkillRecord[];
+  const skillsData = skillsByRange.data ?? [];
+  const skillsGrouped: Record<number, typeof skillsData> = {};
   for (const s of skillsData) {
     const key = s.professionId;
     if (!skillsGrouped[key]) {

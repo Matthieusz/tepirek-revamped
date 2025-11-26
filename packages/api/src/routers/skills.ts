@@ -3,7 +3,7 @@ import { user } from "@tepirek-revamped/db/schema/auth";
 import { professions, range, skills } from "@tepirek-revamped/db/schema/skills";
 import { eq } from "drizzle-orm";
 import z from "zod";
-import { protectedProcedure } from "../index";
+import { adminProcedure, protectedProcedure } from "../index";
 
 export const skillsRouter = {
   getAllRanges: protectedProcedure.handler(
@@ -56,7 +56,7 @@ export const skillsRouter = {
       return null;
     }),
 
-  createRange: protectedProcedure
+  createRange: adminProcedure
     .input(
       z.object({
         level: z.number().min(1).max(300),
@@ -73,7 +73,7 @@ export const skillsRouter = {
         })
     ),
 
-  deleteRange: protectedProcedure
+  deleteRange: adminProcedure
     .input(z.object({ id: z.number() }))
     .handler(
       async ({ input }) => await db.delete(range).where(eq(range.id, input.id))
