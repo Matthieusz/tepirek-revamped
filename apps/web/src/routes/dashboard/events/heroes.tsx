@@ -11,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/events/heroes")({
@@ -22,7 +21,7 @@ export const Route = createFileRoute("/dashboard/events/heroes")({
 });
 
 function RouteComponent() {
-  const { data: session } = authClient.useSession();
+  const { session } = Route.useRouteContext();
   const { data: heroes, isPending } = useQuery(
     orpc.heroes.getAll.queryOptions()
   );
@@ -44,7 +43,7 @@ function RouteComponent() {
     <div className="flex flex-col gap-4">
       <div className="flex gap-4">
         <h1 className="font-bold text-3xl">Lista herosów</h1>
-        {session?.user.role === "admin" && (
+        {session.role === "admin" && (
           <AddHeroModal
             trigger={
               <Button>
@@ -63,7 +62,7 @@ function RouteComponent() {
               <TableHead className="w-[200px]">Nazwa</TableHead>
               <TableHead className="w-[100px]">Wygląd</TableHead>
               <TableHead className="w-[120px]">Event</TableHead>
-              {session?.user.role === "admin" && (
+              {session.role === "admin" && (
                 <TableHead className="w-[75px] text-center">Akcje</TableHead>
               )}
             </TableRow>
@@ -72,7 +71,7 @@ function RouteComponent() {
             <TableRow>
               <TableCell
                 className="text-center"
-                colSpan={session?.user.role === "admin" ? 5 : 4}
+                colSpan={session.role === "admin" ? 5 : 4}
               >
                 Brak herosów
               </TableCell>
@@ -97,7 +96,7 @@ function RouteComponent() {
                 {events?.find((event) => event.id === hero.eventId)?.name ||
                   "Brak eventu"}
               </TableCell>
-              {session?.user.role === "admin" && (
+              {session.role === "admin" && (
                 <TableCell>
                   <Button
                     onClick={() => {

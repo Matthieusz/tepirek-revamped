@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { buildPlayerColumns } from "@/components/players-table/columns";
 import { PlayerTable } from "@/components/players-table/player-table";
 import { TableSkeleton } from "@/components/ui/skeleton";
-import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/player-list")({
@@ -14,12 +13,12 @@ export const Route = createFileRoute("/dashboard/player-list")({
 });
 
 function RouteComponent() {
+  const { session } = Route.useRouteContext();
   const { data: playersData = [], isPending } = useQuery(
     orpc.user.list.queryOptions()
   );
-  const { data: session } = authClient.useSession();
-  const isAdmin = session?.user.role === "admin";
-  const cols = buildPlayerColumns(Boolean(isAdmin));
+  const isAdmin = session.role === "admin";
+  const cols = buildPlayerColumns(isAdmin);
 
   if (isPending) {
     return (

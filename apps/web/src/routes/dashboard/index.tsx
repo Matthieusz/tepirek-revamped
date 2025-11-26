@@ -11,7 +11,6 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
-import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/")({
@@ -22,7 +21,7 @@ export const Route = createFileRoute("/dashboard/")({
 });
 
 function RouteComponent() {
-  const { data: session } = authClient.useSession();
+  const { session } = Route.useRouteContext();
   const { data: announcements, isPending } = useQuery(
     orpc.announcement.getAll.queryOptions()
   );
@@ -30,13 +29,13 @@ function RouteComponent() {
 
   return (
     <div className="leading-loose">
-      <h1 className="font-bold text-3xl">Hej, {session?.user?.name} 🥳</h1>
+      <h1 className="font-bold text-3xl">Hej, {session.name} 🥳</h1>
       <p className="font-semibold text-xl">
         Witam na stronie klanowej Gildii Złodziei
       </p>
       <div className="mt-8 flex items-center gap-4">
         <h2 className="font-semibold text-2xl">Ogłoszenia: </h2>
-        {session?.user.role === "admin" && (
+        {session.role === "admin" && (
           <AddAnnouncementModal
             trigger={
               <Button>
@@ -98,7 +97,7 @@ function RouteComponent() {
                     }
                   )}
                 </div>
-                {session?.user.role === "admin" && (
+                {session.role === "admin" && (
                   <Button
                     aria-label="Usuń ogłoszenie"
                     onClick={async () => {

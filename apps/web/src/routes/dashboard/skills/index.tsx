@@ -5,7 +5,6 @@ import { AddRangeModal } from "@/components/modals/add-range-modal";
 import { RangeCard } from "@/components/skills/range-card";
 import { Button } from "@/components/ui/button";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
-import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/skills/")({
@@ -16,7 +15,7 @@ export const Route = createFileRoute("/dashboard/skills/")({
 });
 
 function RouteComponent() {
-  const { data: session } = authClient.useSession();
+  const { session } = Route.useRouteContext();
   const { data: ranges, isPending } = useQuery(
     orpc.skills.getAllRanges.queryOptions()
   );
@@ -25,7 +24,7 @@ function RouteComponent() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-4">
         <h1 className="font-bold text-3xl">Lista przedziałów</h1>
-        {session?.user.role === "admin" && (
+        {session.role === "admin" && (
           <AddRangeModal
             trigger={
               <Button>

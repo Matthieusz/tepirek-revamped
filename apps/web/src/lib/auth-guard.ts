@@ -2,6 +2,12 @@ import { isRedirect, redirect } from "@tanstack/react-router";
 import { getUser } from "@/functions/get-user";
 
 export type AuthSession = Awaited<ReturnType<typeof getUser>>;
+export type AuthUser = NonNullable<AuthSession>["user"];
+
+/** Context type returned by dashboard route's beforeLoad */
+export type DashboardRouteContext = {
+  session: AuthUser;
+};
 
 /**
  * Requires user to be authenticated.

@@ -8,7 +8,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { authClient } from "@/lib/auth-client";
 import { requireVerified } from "@/lib/auth-guard";
 
 export const Route = createFileRoute("/dashboard")({
@@ -37,16 +36,6 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function RouteComponent() {
-  const { data: session, isPending } = authClient.useSession();
-
-  if (isPending || !session) {
-    return (
-      <div className="h-full">
-        <Loader />
-      </div>
-    );
-  }
-
   return (
     <SidebarProvider>
       <AppSidebar />

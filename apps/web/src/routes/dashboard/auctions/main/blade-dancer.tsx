@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import AuctionTable from "@/components/auction-table";
-import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/auctions/main/blade-dancer")({
@@ -31,8 +30,8 @@ async function handleAuctionSignup(
 }
 
 function RouteComponent() {
-  const { data: session } = authClient.useSession();
-  const userId = session?.user.id ?? null;
+  const { session } = Route.useRouteContext();
+  const userId = session.id;
   return (
     <div>
       <h1 className="mb-4 font-bold text-3xl">

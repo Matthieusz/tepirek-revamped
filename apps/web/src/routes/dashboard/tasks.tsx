@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 export const Route = createFileRoute("/dashboard/tasks")({
   component: TasksRoute,
@@ -16,8 +15,8 @@ export const Route = createFileRoute("/dashboard/tasks")({
 });
 
 function TasksRoute() {
+  const { session } = Route.useRouteContext();
   const [newTodoText, setNewTodoText] = useState("");
-  const { data: session } = authClient.useSession();
 
   const todos = useQuery(orpc.todo.getAll.queryOptions());
   const createMutation = useMutation(
@@ -45,8 +44,8 @@ function TasksRoute() {
 
   const handleAddTodo = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newTodoText.trim() && session?.user.id) {
-      createMutation.mutate({ text: newTodoText, userId: session.user.id });
+    if (newTodoText.trim() && session.id) {
+      createMutation.mutate({ text: newTodoText, userId: session.id });
     }
   };
 

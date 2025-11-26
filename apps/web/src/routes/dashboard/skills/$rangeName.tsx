@@ -15,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { authClient } from "@/lib/auth-client";
 import { orpc, queryClient } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/skills/$rangeName")({
@@ -33,7 +32,7 @@ export const Route = createFileRoute("/dashboard/skills/$rangeName")({
 
 function RangeDetails() {
   const { rangeName } = Route.useParams();
-  const { data: session } = authClient.useSession();
+  const { session } = Route.useRouteContext();
   const range = useQuery(
     orpc.skills.getRangeBySlug.queryOptions({ input: { slug: rangeName } })
   );
@@ -106,7 +105,7 @@ function RangeDetails() {
                     <TableHead className="w-24">Link</TableHead>
                     <TableHead className="w-32">Mistrzostwo?</TableHead>
                     <TableHead className="w-40">Dodano przez</TableHead>
-                    {session?.user.role === "admin" && (
+                    {session.role === "admin" && (
                       <TableHead className="w-20">Akcje</TableHead>
                     )}
                   </TableRow>
@@ -139,7 +138,7 @@ function RangeDetails() {
                           <span>{skill.addedBy}</span>
                         </div>
                       </TableCell>
-                      {session?.user.role === "admin" && (
+                      {session.role === "admin" && (
                         <TableCell>
                           <Button
                             onClick={() => {
