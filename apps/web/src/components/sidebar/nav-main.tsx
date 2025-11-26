@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/collapsible";
 import {
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -36,6 +37,9 @@ export function NavMain({
 
   return (
     <SidebarGroup>
+      <SidebarGroupLabel className="text-muted-foreground text-xs">
+        Menu
+      </SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
           const isGroupActive = item.items?.some((subItem) =>
@@ -53,15 +57,15 @@ export function NavMain({
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton
                     className={cn(
+                      "transition-colors",
                       item.disabled && "cursor-not-allowed opacity-50",
-                      isGroupActive &&
-                        "bg-sidebar-accent text-sidebar-accent-foreground"
+                      isGroupActive && "bg-accent font-medium"
                     )}
                     tooltip={item.title}
                   >
-                    {item.icon && <item.icon />}
+                    {item.icon && <item.icon className="size-4" />}
                     <span>{item.title}</span>
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
@@ -77,15 +81,23 @@ export function NavMain({
                           <SidebarMenuSubButton asChild isActive={!!isActive}>
                             <Link
                               className={cn(
+                                "transition-colors",
                                 subItem.disabled &&
                                   "cursor-not-allowed opacity-50",
-                                isActive &&
-                                  "before:-left-2 before:-translate-y-1/2 relative before:absolute before:top-1/2 before:h-4 before:w-1 before:rounded-full before:bg-primary"
+                                isActive && "font-medium text-primary"
                               )}
                               disabled={!!subItem.disabled}
                               preload="intent"
                               to={subItem.url}
                             >
+                              <span
+                                className={cn(
+                                  "mr-2 size-1.5 rounded-full",
+                                  isActive
+                                    ? "bg-primary"
+                                    : "bg-muted-foreground/30"
+                                )}
+                              />
                               {subItem.title}
                             </Link>
                           </SidebarMenuSubButton>

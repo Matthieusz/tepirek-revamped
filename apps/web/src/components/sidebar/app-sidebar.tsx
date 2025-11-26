@@ -4,6 +4,7 @@ import {
   Calculator,
   CalendarCheck,
   Gavel,
+  HeartIcon,
   ListChecks,
   LogOut,
   Settings,
@@ -144,50 +145,78 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: session, isPending } = authClient.useSession();
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <div className="flex items-center gap-2">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <img alt="Logo" className="rounded-md" src="/favicon.ico" />
+      <SidebarHeader className="border-sidebar-border border-b">
+        <div className="flex items-center gap-3 py-1.5">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary/10">
+            <img
+              alt="Logo"
+              className="size-6 rounded"
+              height={24}
+              src="/favicon.ico"
+              width={24}
+            />
           </div>
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-medium">Gildia Złodziei</span>
-            <span className="truncate text-xs">v1.0</span>
+          <div className="grid flex-1 text-left leading-tight group-data-[state=collapsed]:hidden">
+            <span className="truncate font-semibold text-sm">
+              Gildia Złodziei
+            </span>
+            <span className="truncate text-muted-foreground text-xs">
+              Panel klanowy
+            </span>
           </div>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="px-2 group-data-[state=collapsed]:px-0">
         <NavMain items={data.navMain} />
         <NavOther projects={data.projects} />
       </SidebarContent>
-      <SidebarFooter>
-        <div className="flex items-center gap-2 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-4">
+      <div className="mx-3 mb-3 rounded-lg bg-muted/50 px-3 py-2 group-data-[state=collapsed]:hidden">
+        <p className="text-center text-muted-foreground text-xs">
+          Made with{" "}
+          <HeartIcon className="inline size-3.5 fill-red-500 text-red-500" /> by{" "}
+          <span className="font-medium text-foreground hover:underline">
+            <a
+              href="https://github.com/Matthieusz"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              informati
+            </a>
+          </span>
+        </p>
+      </div>
+      <SidebarFooter className="border-sidebar-border border-t">
+        <div className="flex items-center gap-3 px-1 py-1.5 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-3 group-data-[state=collapsed]:py-2">
           {isPending ? (
             <>
-              <Skeleton className="h-8 w-8 rounded-lg" />
-              <div className="grid flex-1 gap-1 text-left text-sm leading-tight group-data-[state=collapsed]:hidden">
+              <Skeleton className="size-8 rounded-lg" />
+              <div className="grid flex-1 gap-1.5 text-left leading-tight group-data-[state=collapsed]:hidden">
                 <Skeleton className="h-4 w-24 rounded" />
                 <Skeleton className="h-3 w-32 rounded" />
               </div>
-              <Skeleton className="h-8 w-8 rounded-lg" />
+              <Skeleton className="size-8 rounded-lg" />
             </>
           ) : (
             <>
-              <Avatar className="h-8 w-8 rounded-lg">
+              <Avatar className="size-8 rounded-lg">
                 <AvatarImage
                   alt="User avatar"
                   src={session?.user.image ?? undefined}
                 />
-                <AvatarFallback>
-                  <img alt="default-avatar" src="/default-avatar.webp" />
+                <AvatarFallback className="rounded-lg text-xs">
+                  {session?.user.name?.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight group-data-[state=collapsed]:hidden">
-                <span className="truncate font-medium">
+              <div className="grid flex-1 text-left leading-tight group-data-[state=collapsed]:hidden">
+                <span className="truncate font-medium text-sm">
                   {session?.user.name}
                 </span>
-                <span className="truncate text-xs">{session?.user.email}</span>
+                <span className="truncate text-muted-foreground text-xs">
+                  {session?.user.email}
+                </span>
               </div>
               <Button
+                className="group-data-[state=collapsed]:size-8"
                 onClick={() =>
                   authClient.signOut({
                     fetchOptions: {
