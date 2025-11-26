@@ -101,11 +101,6 @@ const baseColumns: ColumnDef<Player>[] = [
     cell: ({ row }) => row.getValue("name"),
   },
   {
-    accessorKey: "email",
-    header: "Email",
-    cell: ({ row }) => row.getValue("email"),
-  },
-  {
     accessorKey: "role",
     header: "Rola",
     cell: ({ row }) => row.getValue("role"),
