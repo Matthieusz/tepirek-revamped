@@ -85,7 +85,7 @@ function RouteComponent() {
         <div>
           <h1 className="mb-1 font-bold text-2xl tracking-tight">Herosi</h1>
           <p className="text-muted-foreground text-sm">
-            Zarządzaj herosami dostępnymi w eventach.
+            Zarządzaj herosami dostępnymi na eventach.
           </p>
         </div>
         {session.role === "admin" && (
