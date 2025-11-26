@@ -84,7 +84,7 @@ export function NavMain({
                                 "transition-colors",
                                 subItem.disabled &&
                                   "cursor-not-allowed opacity-50",
-                                isActive && "font-medium text-primary"
+                                isActive && "text-primary"
                               )}
                               disabled={!!subItem.disabled}
                               preload="intent"
@@ -92,7 +92,7 @@ export function NavMain({
                             >
                               <span
                                 className={cn(
-                                  "mr-2 size-1.5 rounded-full",
+                                  "mr-2 size-1 rounded-full",
                                   isActive
                                     ? "bg-primary"
                                     : "bg-muted-foreground/30"
