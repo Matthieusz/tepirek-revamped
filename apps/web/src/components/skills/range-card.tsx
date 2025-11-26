@@ -80,7 +80,9 @@ export function RangeCard({ range, className }: RangeCardProps) {
               />
             ) : (
               <div className="flex h-40 w-40 items-center justify-center rounded-md bg-muted">
-                <span className="text-muted-foreground text-sm">Brak obrazu</span>
+                <span className="text-muted-foreground text-sm">
+                  Brak obrazu
+                </span>
               </div>
             )}
           </CardContent>
