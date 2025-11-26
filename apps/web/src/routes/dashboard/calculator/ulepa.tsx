@@ -41,15 +41,10 @@ type RarityFactor = {
  * Values are derived from game mechanics
  */
 const GAME_CONSTANTS = {
-  /** Base upgrade cost for "ulepszony" (enhanced) items per level */
   ENHANCED_LEVEL_MULTIPLIER: 150,
-  /** Fixed base cost component for "ulepszony" items */
   ENHANCED_BASE_COST: 27_000,
-  /** Base upgrade cost component for standard rarity items */
   STANDARD_BASE_COST: 180,
-  /** Extraction returns 75% of total upgrade points invested */
   EXTRACTION_RATE: 0.75,
-  /** Default item level (common end-game level) */
   DEFAULT_ITEM_LEVEL: 280,
 } as const;
 
@@ -64,16 +59,16 @@ const rarityFactors: Record<Rarity, RarityFactor> = {
 const rarityColors: Record<Rarity, string> = {
   zwykły: "text-gray-400",
   unikatowy: "text-yellow-500",
-  heroiczny: "text-purple-500",
-  ulepszony: "text-blue-500",
+  heroiczny: "text-blue-500",
+  ulepszony: "text-red-500",
   legendarny: "text-orange-500",
 };
 
 const rarityBgColors: Record<Rarity, string> = {
   zwykły: "bg-gray-500/10 border-gray-500/20",
   unikatowy: "bg-yellow-500/10 border-yellow-500/20",
-  heroiczny: "bg-purple-500/10 border-purple-500/20",
-  ulepszony: "bg-blue-500/10 border-blue-500/20",
+  heroiczny: "bg-blue-500/10 border-blue-500/20",
+  ulepszony: "bg-red-500/10 border-red-500/20",
   legendarny: "bg-orange-500/10 border-orange-500/20",
 };
 
@@ -89,6 +84,23 @@ const clampLevel = (n: number): number => {
     return MIN_LEVEL;
   }
   return Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, v));
+};
+
+/**
+ * Formats gold amount in compact notation
+ */
+const formatGold = (amount: number): string => {
+  const value = Math.floor(amount);
+  if (value >= 1_000_000_000) {
+    return `${(value / 1_000_000_000).toLocaleString("pl-PL", { maximumFractionDigits: 1 })}mld`;
+  }
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toLocaleString("pl-PL", { maximumFractionDigits: 1 })}m`;
+  }
+  if (value >= 1000) {
+    return `${(value / 1000).toLocaleString("pl-PL", { maximumFractionDigits: 1 })}k`;
+  }
+  return value.toLocaleString("pl-PL");
 };
 
 const formSchema = z.object({
@@ -159,6 +171,8 @@ function RouteComponent() {
     cumulativeCosts: number[];
     totalUpgradeCost: number;
     total75Percent: number;
+    upgradeGoldCost: number;
+    extractionGoldCost: number;
     itemLevel: number;
     itemRarity: Rarity;
   } | null>(null);
@@ -179,11 +193,20 @@ function RouteComponent() {
         0
       );
       const total75Percent = totalUpgradeCost * GAME_CONSTANTS.EXTRACTION_RATE;
+      // Gold cost for upgrading to +5: (10 * lvl + 1300) * lvl * upgrade_gold_factor
+      const upgradeGoldCost =
+        (10 * value.itemLevel + 1300) *
+        value.itemLevel *
+        rarityFactors[value.itemRarity].upgradeGoldFactor;
+      // Extraction gold cost: 60 * total_upgrade_points (based on 100% points invested)
+      const extractionGoldCost = 60 * totalUpgradeCost;
       setResult({
         differentialCosts,
         cumulativeCosts: upgradeCosts,
         totalUpgradeCost,
         total75Percent,
+        upgradeGoldCost,
+        extractionGoldCost,
         itemLevel: value.itemLevel,
         itemRarity: value.itemRarity,
       });
@@ -191,7 +214,7 @@ function RouteComponent() {
   });
 
   return (
-    <div className="mx-auto min-w-2xl max-w-4xl space-y-6">
+    <div className="mx-auto w-full max-w-4xl space-y-6">
       <div>
         <h1 className="mb-2 font-bold text-2xl tracking-tight">
           Kalkulator ulepy
@@ -357,6 +380,24 @@ function RouteComponent() {
                     {Math.floor(result.totalUpgradeCost).toLocaleString(
                       "pl-PL"
                     )}
+                  </span>
+                </div>
+              </div>
+              <div className="grid gap-3 border-t pt-4">
+                <div className="flex items-center justify-between rounded-lg bg-yellow-500/10 p-3">
+                  <span className="text-muted-foreground text-sm">
+                    Koszt ulepszenia do +5
+                  </span>
+                  <span className="font-semibold text-lg text-yellow-600">
+                    {formatGold(result.upgradeGoldCost)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-yellow-500/10 p-3">
+                  <span className="text-muted-foreground text-sm">
+                    Koszt ekstrakcji
+                  </span>
+                  <span className="font-semibold text-lg text-yellow-600">
+                    {formatGold(result.extractionGoldCost)}
                   </span>
                 </div>
               </div>
