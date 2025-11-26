@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Sword, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AddHeroModal } from "@/components/modals/add-hero-modal";
@@ -15,9 +15,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
+  TableBody,
   TableCell,
   TableHead,
   TableHeader,
@@ -65,9 +67,12 @@ function RouteComponent() {
 
   if (isPending) {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="flex gap-4">
-          <h1 className="font-bold text-3xl">Lista herosów</h1>
+      <div className="mx-auto w-full max-w-4xl space-y-6">
+        <div>
+          <h1 className="mb-1 font-bold text-2xl tracking-tight">Herosi</h1>
+          <p className="text-muted-foreground text-sm">
+            Zarządzaj herosami dostępnymi na eventach.
+          </p>
         </div>
         <TableSkeleton rows={5} />
       </div>
@@ -75,82 +80,103 @@ function RouteComponent() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex gap-4">
-        <h1 className="font-bold text-3xl">Lista herosów</h1>
+    <div className="mx-auto w-full max-w-4xl space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="mb-1 font-bold text-2xl tracking-tight">Herosi</h1>
+          <p className="text-muted-foreground text-sm">
+            Zarządzaj herosami dostępnymi w eventach.
+          </p>
+        </div>
         {session.role === "admin" && (
           <AddHeroModal
             trigger={
-              <Button>
-                <Plus />
+              <Button size="sm">
+                <Plus className="h-4 w-4" />
                 Dodaj herosa
               </Button>
             }
           />
         )}
       </div>
-      <div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[100px]">ID</TableHead>
-              <TableHead className="w-[200px]">Nazwa</TableHead>
-              <TableHead className="w-[100px]">Wygląd</TableHead>
-              <TableHead className="w-[120px]">Event</TableHead>
-              {session.role === "admin" && (
-                <TableHead className="w-[75px] text-center">Akcje</TableHead>
-              )}
-            </TableRow>
-          </TableHeader>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Sword className="h-4 w-4" />
+            Lista herosów
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           {!heroes || heroes.length === 0 ? (
-            <TableRow>
-              <TableCell
-                className="text-center"
-                colSpan={session.role === "admin" ? 5 : 4}
-              >
-                Brak herosów
-              </TableCell>
-            </TableRow>
-          ) : null}
-          {heroes?.map((hero) => (
-            <TableRow key={hero.id}>
-              <TableCell>{hero.id}</TableCell>
-              <TableCell>{hero.name}</TableCell>
-              <TableCell>
-                {hero.image ? (
-                  <img
-                    alt={hero.name}
-                    className="h-16 w-12 object-cover"
-                    height={64}
-                    src={`//${hero.image}`}
-                    width={48}
-                  />
-                ) : (
-                  "Brak obrazu"
-                )}
-              </TableCell>
-              <TableCell>
-                {events?.find((event) => event.id === hero.eventId)?.name ||
-                  "Brak eventu"}
-              </TableCell>
-              {session.role === "admin" && (
-                <TableCell>
-                  <Button
-                    onClick={() =>
-                      setHeroToDelete({ id: hero.id, name: hero.name })
-                    }
-                    type="button"
-                    variant="destructive"
-                  >
-                    <Trash2 />
-                    Usuń
-                  </Button>
-                </TableCell>
-              )}
-            </TableRow>
-          ))}
-        </Table>
-      </div>
+            <div className="rounded-lg border border-dashed py-8 text-center">
+              <Sword className="mx-auto h-8 w-8 text-muted-foreground" />
+              <p className="mt-2 text-muted-foreground text-sm">
+                Brak herosów do wyświetlenia
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-16">#</TableHead>
+                  <TableHead className="w-20">Wygląd</TableHead>
+                  <TableHead>Nazwa</TableHead>
+                  <TableHead className="w-32">Event</TableHead>
+                  {session.role === "admin" && (
+                    <TableHead className="w-20 text-right">Akcje</TableHead>
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {heroes.map((hero, index) => (
+                  <TableRow key={hero.id}>
+                    <TableCell className="text-muted-foreground">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell>
+                      {hero.image ? (
+                        <img
+                          alt={hero.name}
+                          className="h-12 w-10 rounded object-cover"
+                          height={48}
+                          src={`//${hero.image}`}
+                          width={40}
+                        />
+                      ) : (
+                        <div className="flex h-12 w-10 items-center justify-center rounded bg-muted">
+                          <Sword className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{hero.name}</TableCell>
+                    <TableCell>
+                      <span className="text-muted-foreground text-sm">
+                        {events?.find((event) => event.id === hero.eventId)
+                          ?.name || "Brak"}
+                      </span>
+                    </TableCell>
+                    {session.role === "admin" && (
+                      <TableCell className="text-right">
+                        <Button
+                          onClick={() =>
+                            setHeroToDelete({ id: hero.id, name: hero.name })
+                          }
+                          size="sm"
+                          type="button"
+                          variant="ghost"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       <AlertDialog
         onOpenChange={(open) => !open && setHeroToDelete(null)}

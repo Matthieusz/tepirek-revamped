@@ -1,7 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns/format";
-import { Plus, Power, Trash2 } from "lucide-react";
+import {
+  Calendar,
+  CheckCircle2,
+  Plus,
+  Power,
+  Trash2,
+  XCircle,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AddEventModal } from "@/components/modals/add-event-modal";
@@ -16,9 +23,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
+  TableBody,
   TableCell,
   TableHead,
   TableHeader,
@@ -86,9 +95,14 @@ function RouteComponent() {
 
   if (isPending) {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="flex gap-4">
-          <h1 className="font-bold text-3xl">Lista eventów</h1>
+      <div className="mx-auto w-full max-w-4xl space-y-6">
+        <div>
+          <h1 className="mb-1 font-bold text-2xl tracking-tight">
+            Lista eventów
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Zarządzaj eventami w grze.
+          </p>
         </div>
         <TableSkeleton rows={5} />
       </div>
@@ -96,86 +110,124 @@ function RouteComponent() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex gap-4">
-        <h1 className="font-bold text-3xl">Lista eventów</h1>
+    <div className="mx-auto w-full max-w-4xl space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="mb-1 font-bold text-2xl tracking-tight">
+            Lista eventów
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Zarządzaj eventami w grze.
+          </p>
+        </div>
         {session.role === "admin" && (
           <AddEventModal
             trigger={
-              <Button>
-                <Plus />
+              <Button size="sm">
+                <Plus className="h-4 w-4" />
                 Dodaj event
               </Button>
             }
           />
         )}
       </div>
-      <div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[100px]">ID</TableHead>
-              <TableHead className="w-[200px]">Nazwa</TableHead>
-              <TableHead className="w-[200px]">Data zakończenia</TableHead>
-              <TableHead className="w-[100px]">Aktywne</TableHead>
-              {session.role === "admin" && (
-                <TableHead className="w-[150px] text-center">Akcje</TableHead>
-              )}
-            </TableRow>
-          </TableHeader>
+
+      {/* Table */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Calendar className="h-4 w-4" />
+            Eventy
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           {!events || events.length === 0 ? (
-            <TableRow>
-              <TableCell
-                className="text-center"
-                colSpan={session.role === "admin" ? 5 : 4}
-              >
-                Brak eventów
-              </TableCell>
-            </TableRow>
-          ) : null}
-          {events?.map((event) => (
-            <TableRow key={event.id}>
-              <TableCell>{event.id}</TableCell>
-              <TableCell>{event.name}</TableCell>
-              <TableCell>
-                {format(new Date(event.endTime), "dd-MM-yyyy")}
-              </TableCell>
-              <TableCell>{event.active ? "Tak" : "Nie"}</TableCell>
-              {session.role === "admin" && (
-                <TableCell className="flex items-center justify-center gap-2">
-                  <Button
-                    onClick={() =>
-                      setEventAction({
-                        id: event.id,
-                        name: event.name,
-                        type: "toggle",
-                        active: event.active,
-                      })
-                    }
-                    variant="ghost"
-                  >
-                    <Power />
-                    {event.active ? "Dezaktywuj" : "Aktywuj"}
-                  </Button>
-                  <Button
-                    onClick={() =>
-                      setEventAction({
-                        id: event.id,
-                        name: event.name,
-                        type: "delete",
-                      })
-                    }
-                    variant="destructive"
-                  >
-                    <Trash2 />
-                    Usuń
-                  </Button>
-                </TableCell>
-              )}
-            </TableRow>
-          ))}
-        </Table>
-      </div>
+            <div className="rounded-lg border border-dashed py-8 text-center">
+              <Calendar className="mx-auto h-8 w-8 text-muted-foreground" />
+              <p className="mt-2 text-muted-foreground text-sm">
+                Brak eventów do wyświetlenia
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-16">#</TableHead>
+                  <TableHead>Nazwa</TableHead>
+                  <TableHead className="w-40">Data zakończenia</TableHead>
+                  <TableHead className="w-24">Status</TableHead>
+                  {session.role === "admin" && (
+                    <TableHead className="w-48 text-right">Akcje</TableHead>
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {events.map((event, index) => (
+                  <TableRow key={event.id}>
+                    <TableCell className="text-muted-foreground">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className="font-medium">{event.name}</TableCell>
+                    <TableCell>
+                      {format(new Date(event.endTime), "dd.MM.yyyy")}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center gap-1 text-sm ${
+                          event.active
+                            ? "text-green-500"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {event.active ? (
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        ) : (
+                          <XCircle className="h-3.5 w-3.5" />
+                        )}
+                        {event.active ? "Aktywny" : "Nieaktywny"}
+                      </span>
+                    </TableCell>
+                    {session.role === "admin" && (
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            onClick={() =>
+                              setEventAction({
+                                id: event.id,
+                                name: event.name,
+                                type: "toggle",
+                                active: event.active ?? false,
+                              })
+                            }
+                            size="sm"
+                            variant="ghost"
+                          >
+                            <Power className="h-4 w-4" />
+                            {event.active ? "Wyłącz" : "Włącz"}
+                          </Button>
+                          <Button
+                            onClick={() =>
+                              setEventAction({
+                                id: event.id,
+                                name: event.name,
+                                type: "delete",
+                              })
+                            }
+                            size="sm"
+                            variant="ghost"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       <AlertDialog
         onOpenChange={(open) => !open && setEventAction(null)}
