@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, isRedirect, redirect } from "@tanstack/react-router";
 import { Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,10 @@ export const Route = createFileRoute("/waiting-room")({
       if (session.user.verified) {
         throw redirect({ to: "/dashboard" });
       }
-    } catch {
+    } catch (error) {
+      if (isRedirect(error)) {
+        throw error;
+      }
       throw redirect({ to: "/login" });
     }
   },
@@ -36,7 +39,10 @@ export const Route = createFileRoute("/waiting-room")({
           throw redirect({ to: "/dashboard" });
         }
       }
-    } catch {
+    } catch (error) {
+      if (isRedirect(error)) {
+        throw error;
+      }
       throw redirect({ to: "/login" });
     }
     return null;
