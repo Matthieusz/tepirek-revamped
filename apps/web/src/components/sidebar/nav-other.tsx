@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useMatchRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import {
   SidebarGroup,
@@ -17,29 +17,39 @@ export function NavOther({
     disabled?: boolean;
   }[];
 }) {
+  const matchRoute = useMatchRoute();
+
   return (
     <SidebarGroup>
       <SidebarMenu>
-        {projects.map((item) => (
-          <SidebarMenuItem key={item.name}>
-            {item.disabled ? (
-              <SidebarMenuButton
-                className="cursor-not-allowed opacity-50"
-                tooltip={item.name}
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.name}</span>
-              </SidebarMenuButton>
-            ) : (
-              <SidebarMenuButton asChild tooltip={item.name}>
-                <Link preload="intent" to={item.url}>
+        {projects.map((item) => {
+          const isActive = matchRoute({ to: item.url, fuzzy: true });
+
+          return (
+            <SidebarMenuItem key={item.name}>
+              {item.disabled ? (
+                <SidebarMenuButton
+                  className="cursor-not-allowed opacity-50"
+                  tooltip={item.name}
+                >
                   <item.icon className="h-4 w-4" />
                   <span>{item.name}</span>
-                </Link>
-              </SidebarMenuButton>
-            )}
-          </SidebarMenuItem>
-        ))}
+                </SidebarMenuButton>
+              ) : (
+                <SidebarMenuButton
+                  asChild
+                  isActive={!!isActive}
+                  tooltip={item.name}
+                >
+                  <Link preload="intent" to={item.url}>
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.name}</span>
+                  </Link>
+                </SidebarMenuButton>
+              )}
+            </SidebarMenuItem>
+          );
+        })}
       </SidebarMenu>
     </SidebarGroup>
   );
