@@ -62,7 +62,7 @@ export function LoginForm({
 
   if (isPending) {
     return (
-      <div className="h-screen">
+      <div className="flex min-h-[400px] items-center justify-center">
         <Loader />
       </div>
     );
