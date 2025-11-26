@@ -171,7 +171,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavOther projects={data.projects} />
       </SidebarContent>
       <div className="mx-3 mb-3 rounded-lg bg-muted/50 px-3 py-2 group-data-[state=collapsed]:hidden">
-        <p className="text-center text-muted-foreground text-xs">
+        <p className="flex items-center justify-center gap-1 text-muted-foreground text-xs">
           Made with{" "}
           <HeartIcon className="inline size-3.5 fill-red-500 text-red-500" /> by{" "}
           <span className="font-medium text-foreground hover:underline">
