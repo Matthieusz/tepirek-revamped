@@ -4,6 +4,7 @@ import { format } from "date-fns/format";
 import { Plus, Power, Trash2 } from "lucide-react";
 import { AddEventModal } from "@/components/modals/add-event-modal";
 import { Button } from "@/components/ui/button";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableCell,
@@ -23,8 +24,22 @@ export const Route = createFileRoute("/dashboard/events/list")({
 
 function RouteComponent() {
   const { data: session } = authClient.useSession();
-  const events = useQuery(orpc.event.getAll.queryOptions());
+  const { data: events, isPending } = useQuery(
+    orpc.event.getAll.queryOptions()
+  );
   const queryClient = useQueryClient();
+
+  if (isPending) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex gap-4">
+          <h1 className="font-bold text-3xl">Lista eventów</h1>
+        </div>
+        <TableSkeleton rows={5} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-4">
@@ -53,7 +68,7 @@ function RouteComponent() {
               )}
             </TableRow>
           </TableHeader>
-          {!events.data || events.data.length === 0 ? (
+          {!events || events.length === 0 ? (
             <TableRow>
               <TableCell
                 className="text-center"
@@ -63,7 +78,7 @@ function RouteComponent() {
               </TableCell>
             </TableRow>
           ) : null}
-          {events.data?.map((event) => (
+          {events?.map((event) => (
             <TableRow key={event.id}>
               <TableCell>{event.id}</TableCell>
               <TableCell>{event.name}</TableCell>

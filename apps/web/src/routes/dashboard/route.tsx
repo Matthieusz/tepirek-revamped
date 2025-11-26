@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 import Loader from "@/components/loader";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
@@ -8,8 +8,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { getUser } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
+import { requireVerified } from "@/lib/auth-guard";
 
 export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
@@ -17,20 +17,7 @@ export const Route = createFileRoute("/dashboard")({
     crumb: "Dashboard",
   },
   beforeLoad: async () => {
-    const session = await getUser();
-
-    if (!session?.user) {
-      throw redirect({
-        to: "/login",
-      });
-    }
-
-    if (!session.user.verified) {
-      throw redirect({
-        to: "/waiting-room",
-      });
-    }
-
+    const session = await requireVerified();
     return {
       session: session.user,
     };

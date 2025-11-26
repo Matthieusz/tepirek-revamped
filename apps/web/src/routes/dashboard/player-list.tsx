@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { buildPlayerColumns } from "@/components/players-table/columns";
 import { PlayerTable } from "@/components/players-table/player-table";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
@@ -13,10 +14,27 @@ export const Route = createFileRoute("/dashboard/player-list")({
 });
 
 function RouteComponent() {
-  const { data: playersData = [] } = useQuery(orpc.user.list.queryOptions());
+  const { data: playersData = [], isPending } = useQuery(
+    orpc.user.list.queryOptions()
+  );
   const { data: session } = authClient.useSession();
   const isAdmin = session?.user.role === "admin";
   const cols = buildPlayerColumns(Boolean(isAdmin));
+
+  if (isPending) {
+    return (
+      <div className="flex flex-col gap-8 xl:flex-row">
+        <div className="flex-1">
+          <h2 className="mb-2 font-bold text-lg">Zweryfikowani</h2>
+          <TableSkeleton rows={5} />
+        </div>
+        <div className="flex-1">
+          <h2 className="mb-2 font-bold text-lg">Niezweryfikowani</h2>
+          <TableSkeleton rows={3} />
+        </div>
+      </div>
+    );
+  }
 
   type Player = (typeof playersData)[number];
   const verifiedPlayers = playersData.filter(

@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2 } from "lucide-react";
 import { AddHeroModal } from "@/components/modals/add-hero-modal";
 import { Button } from "@/components/ui/button";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableCell,
@@ -22,9 +23,23 @@ export const Route = createFileRoute("/dashboard/events/heroes")({
 
 function RouteComponent() {
   const { data: session } = authClient.useSession();
-  const heroes = useQuery(orpc.heroes.getAll.queryOptions());
-  const events = useQuery(orpc.event.getAll.queryOptions());
+  const { data: heroes, isPending } = useQuery(
+    orpc.heroes.getAll.queryOptions()
+  );
+  const { data: events } = useQuery(orpc.event.getAll.queryOptions());
   const queryClient = useQueryClient();
+
+  if (isPending) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex gap-4">
+          <h1 className="font-bold text-3xl">Lista herosów</h1>
+        </div>
+        <TableSkeleton rows={5} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-4">
@@ -53,7 +68,7 @@ function RouteComponent() {
               )}
             </TableRow>
           </TableHeader>
-          {!heroes.data || heroes.data.length === 0 ? (
+          {!heroes || heroes.length === 0 ? (
             <TableRow>
               <TableCell
                 className="text-center"
@@ -63,7 +78,7 @@ function RouteComponent() {
               </TableCell>
             </TableRow>
           ) : null}
-          {heroes.data?.map((hero) => (
+          {heroes?.map((hero) => (
             <TableRow key={hero.id}>
               <TableCell>{hero.id}</TableCell>
               <TableCell>{hero.name}</TableCell>
@@ -79,8 +94,8 @@ function RouteComponent() {
                 )}
               </TableCell>
               <TableCell>
-                {events.data?.find((event) => event.id === hero.eventId)
-                  ?.name || "Brak eventu"}
+                {events?.find((event) => event.id === hero.eventId)?.name ||
+                  "Brak eventu"}
               </TableCell>
               {session?.user.role === "admin" && (
                 <TableCell>

@@ -43,7 +43,9 @@ const defaultValues: AddHeroModal = {
 export function AddHeroModal({ trigger }: AddHeroModalProps) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
-  const events = useQuery(orpc.event.getAll.queryOptions());
+  const { data: events, isPending: eventsLoading } = useQuery(
+    orpc.event.getAll.queryOptions()
+  );
 
   const form = useForm({
     defaultValues: {
@@ -158,14 +160,20 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
                         <SelectValue placeholder="Wybierz event" />
                       </SelectTrigger>
                       <SelectContent>
-                        {events.data?.map((event) => (
-                          <SelectItem
-                            key={event.id}
-                            value={event.id.toString()}
-                          >
-                            {event.name}
+                        {eventsLoading ? (
+                          <SelectItem disabled value="loading">
+                            Ładowanie...
                           </SelectItem>
-                        ))}
+                        ) : (
+                          events?.map((event) => (
+                            <SelectItem
+                              key={event.id}
+                              value={event.id.toString()}
+                            >
+                              {event.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     {field.state.meta.errors.map((error) => (
@@ -183,7 +191,7 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
               {(state) => (
                 <Button
                   disabled={
-                    !state.canSubmit || state.isSubmitting || events.isLoading
+                    !state.canSubmit || state.isSubmitting || eventsLoading
                   }
                   type="submit"
                 >

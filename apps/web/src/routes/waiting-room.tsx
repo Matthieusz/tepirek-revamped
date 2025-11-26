@@ -2,35 +2,21 @@ import { createFileRoute, isRedirect, redirect } from "@tanstack/react-router";
 import { Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { getUser } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
+import { requireUnverified } from "@/lib/auth-guard";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/waiting-room")({
   async beforeLoad() {
-    try {
-      const session = await getUser();
-      if (!session?.user) {
-        throw redirect({ to: "/login" });
-      }
-      if (session.user.verified) {
-        throw redirect({ to: "/dashboard" });
-      }
-    } catch (error) {
-      if (isRedirect(error)) {
-        throw error;
-      }
-      throw redirect({ to: "/login" });
-    }
+    await requireUnverified();
   },
   async loader({ context }) {
     const { queryClient } = context;
-    const session = await getUser();
     try {
       const accessToken = await queryClient.fetchQuery(
         orpc.user.getDiscordAccessToken.queryOptions()
       );
-      if (session?.user && !session.user.verified && accessToken) {
+      if (accessToken) {
         const result = await orpc.user.validateDiscordGuild.call({
           accessToken,
         });
@@ -43,7 +29,7 @@ export const Route = createFileRoute("/waiting-room")({
       if (isRedirect(error)) {
         throw error;
       }
-      throw redirect({ to: "/login" });
+      // Discord validation failed, stay on waiting room
     }
     return null;
   },

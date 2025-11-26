@@ -10,6 +10,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import { CardGridSkeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
@@ -22,7 +23,9 @@ export const Route = createFileRoute("/dashboard/")({
 
 function RouteComponent() {
   const { data: session } = authClient.useSession();
-  const announcements = useQuery(orpc.announcement.getAll.queryOptions());
+  const { data: announcements, isPending } = useQuery(
+    orpc.announcement.getAll.queryOptions()
+  );
   const queryClient = useQueryClient();
 
   return (
@@ -44,11 +47,17 @@ function RouteComponent() {
           />
         )}
       </div>
-      {!announcements.data || announcements.data.length === 0 ? (
+      {isPending && (
+        <div className="mt-4">
+          <CardGridSkeleton count={3} />
+        </div>
+      )}
+      {!isPending && (!announcements || announcements.length === 0) && (
         <p className="mt-4 text-muted-foreground">Brak ogłoszeń</p>
-      ) : (
+      )}
+      {!isPending && announcements && announcements.length > 0 && (
         <div className="mt-4 flex flex-col items-center gap-8">
-          {announcements.data.map((announcement) => (
+          {announcements.map((announcement) => (
             <Card
               className="mx-auto w-full min-w-xl max-w-4xl border border-muted bg-background shadow-lg"
               key={announcement.id}
