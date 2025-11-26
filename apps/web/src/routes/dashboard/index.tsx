@@ -66,8 +66,6 @@ function RouteComponent() {
     },
   });
 
-  const announcementCount = announcements?.length ?? 0;
-
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
       {/* Welcome Section */}
