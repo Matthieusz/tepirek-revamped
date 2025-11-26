@@ -59,8 +59,12 @@ export function AddEventModal({ trigger }: AddEventModalProps) {
         setOpen(false);
         form.reset();
         setDate(undefined);
-      } catch (_) {
-        toast.error("Nie udało się utworzyć eventu");
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Nie udało się utworzyć eventu";
+        toast.error(message);
       }
     },
     validators: {

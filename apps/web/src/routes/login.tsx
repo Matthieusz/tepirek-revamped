@@ -1,7 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { LoginForm } from "@/components/login-form";
+import { getUser } from "@/functions/get-user";
 
 export const Route = createFileRoute("/login")({
+  beforeLoad: async () => {
+    const session = await getUser();
+    if (session?.user) {
+      throw redirect({ to: "/dashboard" });
+    }
+  },
   component: RouteComponent,
 });
 

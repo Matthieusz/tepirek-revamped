@@ -44,8 +44,12 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
         });
         setOpen(false);
         form.reset();
-      } catch (_) {
-        toast.error("Nie udało się utworzyć ogłoszenia");
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Nie udało się utworzyć ogłoszenia";
+        toast.error(message);
       }
     },
     validators: {

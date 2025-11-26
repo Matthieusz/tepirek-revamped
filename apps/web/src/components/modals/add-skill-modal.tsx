@@ -66,11 +66,19 @@ export function AddSkillModal({
           rangeId: defaultRangeId,
         });
         toast.success("Zestaw utworzony");
-        queryClient.invalidateQueries();
+        queryClient.invalidateQueries({
+          queryKey: orpc.skills.getSkillsByRange.queryKey({
+            input: { rangeId: defaultRangeId },
+          }),
+        });
         setOpen(false);
         form.reset();
-      } catch (_) {
-        toast.error("Nie udało się utworzyć zestawu");
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Nie udało się utworzyć zestawu";
+        toast.error(message);
       }
     },
     validators: {

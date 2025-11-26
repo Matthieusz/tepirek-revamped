@@ -50,8 +50,12 @@ export function EditProfileModal({
           queryKey: orpc.user.getSession.queryKey(),
         });
         setOpen(false);
-      } catch (_) {
-        toast.error("Nie udało się zaktualizować profilu");
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Nie udało się zaktualizować profilu";
+        toast.error(message);
       }
     },
     validators: {

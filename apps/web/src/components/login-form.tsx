@@ -1,7 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { useEffect } from "react";
 import { toast } from "sonner";
 import z from "zod";
 import { Button } from "@/components/ui/button";
@@ -26,12 +25,7 @@ export function LoginForm({
   const navigate = useNavigate({
     from: "/",
   });
-  const { isPending, data: session } = authClient.useSession();
-  useEffect(() => {
-    if (session) {
-      navigate({ to: "/dashboard" });
-    }
-  }, [session, navigate]);
+  const { isPending } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {

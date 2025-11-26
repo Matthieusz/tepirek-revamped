@@ -70,8 +70,12 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
         });
         setOpen(false);
         form.reset();
-      } catch (_) {
-        toast.error("Nie udało się utworzyć herosa");
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Nie udało się utworzyć herosa";
+        toast.error(message);
       }
     },
     validators: {

@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -17,12 +17,15 @@ export const Route = createFileRoute("/dashboard/tasks")({
 function TasksRoute() {
   const { session } = Route.useRouteContext();
   const [newTodoText, setNewTodoText] = useState("");
+  const queryClient = useQueryClient();
 
   const todos = useQuery(orpc.todo.getAll.queryOptions());
   const createMutation = useMutation(
     orpc.todo.create.mutationOptions({
       onSuccess: () => {
-        todos.refetch();
+        queryClient.invalidateQueries({
+          queryKey: orpc.todo.getAll.queryKey(),
+        });
         setNewTodoText("");
       },
     })
@@ -30,14 +33,18 @@ function TasksRoute() {
   const toggleMutation = useMutation(
     orpc.todo.toggle.mutationOptions({
       onSuccess: () => {
-        todos.refetch();
+        queryClient.invalidateQueries({
+          queryKey: orpc.todo.getAll.queryKey(),
+        });
       },
     })
   );
   const deleteMutation = useMutation(
     orpc.todo.delete.mutationOptions({
       onSuccess: () => {
-        todos.refetch();
+        queryClient.invalidateQueries({
+          queryKey: orpc.todo.getAll.queryKey(),
+        });
       },
     })
   );

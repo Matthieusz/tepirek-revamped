@@ -55,8 +55,12 @@ export function AddRangeModal({ trigger }: AddEventModalProps) {
         });
         setOpen(false);
         form.reset();
-      } catch (_) {
-        toast.error("Nie udało się utworzyć przedziału");
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Nie udało się utworzyć przedziału";
+        toast.error(message);
       }
     },
     validators: {
