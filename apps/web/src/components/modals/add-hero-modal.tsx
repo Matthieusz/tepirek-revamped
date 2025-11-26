@@ -24,9 +24,9 @@ import {
 } from "@/components/ui/select";
 import { orpc } from "@/utils/orpc";
 
-interface AddHeroModalProps {
+type AddHeroModalProps = {
   trigger: React.ReactNode;
-}
+};
 
 type AddHeroModal = {
   name: string;

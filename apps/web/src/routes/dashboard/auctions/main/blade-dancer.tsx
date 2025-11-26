@@ -9,13 +9,21 @@ export const Route = createFileRoute("/dashboard/auctions/main/blade-dancer")({
   },
 });
 
-async function handleAuctionSignup(
-  value: number,
-  type: "main" | "support",
-  round: 1 | 2 | 3 | 4,
-  colIdx: 1 | 2 | 3,
-  userId: string | null
-) {
+type AuctionSignupParams = {
+  value: number;
+  type: "main" | "support";
+  round: 1 | 2 | 3 | 4;
+  colIdx: 1 | 2 | 3;
+  userId: string | null;
+};
+
+async function handleAuctionSignup({
+  value,
+  type,
+  round,
+  colIdx,
+  userId,
+}: AuctionSignupParams) {
   if (!userId) {
     return;
   }
@@ -39,14 +47,8 @@ function RouteComponent() {
       </h1>
       <AuctionTable
         columns={["Fizyczna", "GR", "Trucizna"]}
-        onCellClick={(value: number, round: number, colIdx: number) => {
-          handleAuctionSignup(
-            value,
-            "main",
-            round as 1 | 2 | 3 | 4,
-            colIdx as 1 | 2 | 3,
-            userId
-          );
+        onCellClick={(value, round, colIdx) => {
+          handleAuctionSignup({ value, type: "main", round, colIdx, userId });
         }}
       />
     </div>

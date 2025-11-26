@@ -15,10 +15,27 @@ import {
 
 type Rarity = "zwykły" | "unikatowy" | "heroiczny" | "ulepszony" | "legendarny";
 
-interface RarityFactor {
+type RarityFactor = {
   upgradeRarityFactor: number;
   upgradeGoldFactor: number;
-}
+};
+
+/**
+ * Game constants for upgrade calculations
+ * Values are derived from game mechanics
+ */
+const GAME_CONSTANTS = {
+  /** Base upgrade cost for "ulepszony" (enhanced) items per level */
+  ENHANCED_LEVEL_MULTIPLIER: 150,
+  /** Fixed base cost component for "ulepszony" items */
+  ENHANCED_BASE_COST: 27_000,
+  /** Base upgrade cost component for standard rarity items */
+  STANDARD_BASE_COST: 180,
+  /** Extraction returns 75% of total upgrade points invested */
+  EXTRACTION_RATE: 0.75,
+  /** Default item level (common end-game level) */
+  DEFAULT_ITEM_LEVEL: 280,
+} as const;
 
 const rarityFactors: Record<Rarity, RarityFactor> = {
   zwykły: { upgradeRarityFactor: 1, upgradeGoldFactor: 1 },
@@ -28,6 +45,7 @@ const rarityFactors: Record<Rarity, RarityFactor> = {
   legendarny: { upgradeRarityFactor: 1000, upgradeGoldFactor: 60 },
 };
 
+/** Multipliers for each upgrade level (1-5) - index 0 is unused */
 const upgradeLevelFactors = [0.0, 1.0, 2.1, 3.4, 5.0, 7.0];
 
 const MIN_LEVEL = 1;
@@ -68,10 +86,15 @@ function calculateUpgradePoints(lvl: number, rarity: Rarity): number[] {
   for (let n = 1; n <= 5; n++) {
     let cost: number;
     if (rarity === "ulepszony") {
-      cost = upgradeLevelFactors[n] * (150 * level + 27_000);
+      cost =
+        upgradeLevelFactors[n] *
+        (GAME_CONSTANTS.ENHANCED_LEVEL_MULTIPLIER * level +
+          GAME_CONSTANTS.ENHANCED_BASE_COST);
     } else {
       cost =
-        factors.upgradeRarityFactor * upgradeLevelFactors[n] * (180 + level);
+        factors.upgradeRarityFactor *
+        upgradeLevelFactors[n] *
+        (GAME_CONSTANTS.STANDARD_BASE_COST + level);
     }
     upgradeCosts.push(cost);
   }
@@ -107,7 +130,7 @@ function RouteComponent() {
 
   const form = useForm({
     defaultValues: {
-      itemLevel: 280,
+      itemLevel: GAME_CONSTANTS.DEFAULT_ITEM_LEVEL,
       itemRarity: "legendarny" as Rarity,
     },
     onSubmit: ({ value }) => {
@@ -120,7 +143,7 @@ function RouteComponent() {
         (sum, cost) => sum + cost,
         0
       );
-      const total75Percent = totalUpgradeCost * 0.75;
+      const total75Percent = totalUpgradeCost * GAME_CONSTANTS.EXTRACTION_RATE;
       setResult({ differentialCosts, totalUpgradeCost, total75Percent });
     },
   });

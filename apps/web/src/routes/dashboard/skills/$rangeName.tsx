@@ -1,9 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import Loader from "@/components/loader";
 import { AddSkillModal } from "@/components/modals/add-skill-modal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,9 +41,17 @@ export const Route = createFileRoute("/dashboard/skills/$rangeName")({
   component: RangeDetails,
 });
 
+type SkillToDelete = {
+  id: number;
+  name: string;
+  rangeId: number;
+} | null;
+
 function RangeDetails() {
   const { rangeName } = Route.useParams();
   const { session } = Route.useRouteContext();
+  const [skillToDelete, setSkillToDelete] = useState<SkillToDelete>(null);
+
   const range = useQuery(
     orpc.skills.getRangeBySlug.queryOptions({ input: { slug: rangeName } })
   );
@@ -47,6 +66,26 @@ function RangeDetails() {
         })
       : { queryKey: ["skills", rangeName, "empty"], queryFn: async () => [] }
   );
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await orpc.skills.deleteSkill.call({ id });
+    },
+    onSuccess: () => {
+      toast.success("Usunięto zestaw");
+      if (skillToDelete?.rangeId) {
+        queryClient.invalidateQueries({
+          queryKey: orpc.skills.getSkillsByRange.queryKey({
+            input: { rangeId: skillToDelete.rangeId },
+          }),
+        });
+      }
+      setSkillToDelete(null);
+    },
+    onError: () => {
+      toast.error("Błąd podczas usuwania");
+    },
+  });
 
   if (range.isLoading) {
     return <Loader />;
@@ -141,27 +180,13 @@ function RangeDetails() {
                       {session.role === "admin" && (
                         <TableCell>
                           <Button
-                            onClick={() => {
-                              if (!confirm("Usunąć ten zestaw?")) {
-                                return;
-                              }
-                              orpc.skills.deleteSkill
-                                .call({ id: skill.id })
-                                .then(() => {
-                                  toast.success("Usunięto zestaw");
-                                })
-                                .catch(() => {
-                                  toast.error("Błąd podczas usuwania");
-                                })
-                                .finally(() => {
-                                  queryClient.invalidateQueries({
-                                    queryKey:
-                                      orpc.skills.getSkillsByRange.queryKey({
-                                        input: { rangeId: currentRange.id },
-                                      }),
-                                  });
-                                });
-                            }}
+                            onClick={() =>
+                              setSkillToDelete({
+                                id: skill.id,
+                                name: skill.name,
+                                rangeId: currentRange.id,
+                              })
+                            }
                             size="sm"
                             type="button"
                             variant="destructive"
@@ -185,6 +210,34 @@ function RangeDetails() {
           </Card>
         ))}
       </div>
+
+      <AlertDialog
+        onOpenChange={(open) => !open && setSkillToDelete(null)}
+        open={skillToDelete !== null}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Usunąć ten zestaw?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Zestaw "{skillToDelete?.name}" zostanie trwale usunięty. Tej
+              operacji nie można cofnąć.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              Anuluj
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteMutation.isPending}
+              onClick={() =>
+                skillToDelete && deleteMutation.mutate(skillToDelete.id)
+              }
+            >
+              {deleteMutation.isPending ? "Usuwanie..." : "Usuń"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

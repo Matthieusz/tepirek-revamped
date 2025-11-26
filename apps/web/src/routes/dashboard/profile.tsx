@@ -30,7 +30,12 @@ function RouteComponent() {
           <Avatar className="size-20 rounded-lg">
             <AvatarImage alt="Avatar" src={user?.image ?? undefined} />
             <AvatarFallback>
-              <img alt="default-avatar" src="/default-avatar.webp" />
+              <img
+                alt="default-avatar"
+                height={80}
+                src="/default-avatar.webp"
+                width={80}
+              />
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-1 flex-col gap-1">

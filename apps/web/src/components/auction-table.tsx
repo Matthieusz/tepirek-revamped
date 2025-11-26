@@ -9,13 +9,16 @@ import {
   TableRow,
 } from "./ui/table";
 
-export interface AuctionTableProps {
-  columns?: string[];
-  onCellClick?: (rowValue: number, round: number, colIndex: number) => void;
-}
+type Round = 1 | 2 | 3 | 4;
+type Column = 1 | 2 | 3;
 
-const rounds = [1, 2, 3, 4];
-const roundLabels: Record<number, string> = {
+export type AuctionTableProps = {
+  columns?: string[];
+  onCellClick?: (rowValue: number, round: Round, colIndex: Column) => void;
+};
+
+const rounds: Round[] = [1, 2, 3, 4];
+const roundLabels: Record<Round, string> = {
   1: "Pierwsza",
   2: "Druga",
   3: "Trzecia",
@@ -58,20 +61,23 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
               <TableCell className="whitespace-nowrap border px-4 py-2 text-center">
                 {roundLabels[round]}
               </TableCell>
-              {columns.map((col: string, colIdx: number) => (
-                <TableCell
-                  className="border px-2 py-2 text-center"
-                  key={`${value}-${round}-${col}`}
-                >
-                  <Button
-                    onClick={() => onCellClick?.(value, round, colIdx + 1)}
-                    size="sm"
-                    variant="outline"
+              {columns.map((col: string, colIdx: number) => {
+                const column = (colIdx + 1) as Column;
+                return (
+                  <TableCell
+                    className="border px-2 py-2 text-center"
+                    key={`${value}-${round}-${col}`}
                   >
-                    Zapisz się
-                  </Button>
-                </TableCell>
-              ))}
+                    <Button
+                      onClick={() => onCellClick?.(value, round, column)}
+                      size="sm"
+                      variant="outline"
+                    >
+                      Zapisz się
+                    </Button>
+                  </TableCell>
+                );
+              })}
             </TableRow>
           ))
         )}

@@ -1,7 +1,19 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { AddHeroModal } from "@/components/modals/add-hero-modal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
@@ -20,13 +32,36 @@ export const Route = createFileRoute("/dashboard/events/heroes")({
   },
 });
 
+type HeroToDelete = {
+  id: number;
+  name: string;
+} | null;
+
 function RouteComponent() {
   const { session } = Route.useRouteContext();
+  const [heroToDelete, setHeroToDelete] = useState<HeroToDelete>(null);
   const { data: heroes, isPending } = useQuery(
     orpc.heroes.getAll.queryOptions()
   );
   const { data: events } = useQuery(orpc.event.getAll.queryOptions());
   const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: async (heroId: number) => {
+      await orpc.heroes.delete.call({ id: heroId });
+    },
+    onSuccess: () => {
+      toast.success("Heros został usunięty");
+      queryClient.invalidateQueries({
+        queryKey: orpc.heroes.getAll.queryKey(),
+      });
+      setHeroToDelete(null);
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : "Wystąpił błąd";
+      toast.error(message);
+    },
+  });
 
   if (isPending) {
     return (
@@ -85,8 +120,10 @@ function RouteComponent() {
                 {hero.image ? (
                   <img
                     alt={hero.name}
-                    className="h-16 w-12"
+                    className="h-16 w-12 object-cover"
+                    height={64}
                     src={`//${hero.image}`}
+                    width={48}
                   />
                 ) : (
                   "Brak obrazu"
@@ -99,19 +136,9 @@ function RouteComponent() {
               {session.role === "admin" && (
                 <TableCell>
                   <Button
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          `Czy na pewno chcesz usunąć event "${hero.name}"?`
-                        )
-                      ) {
-                        orpc.heroes.delete.call({ id: hero.id }).then(() => {
-                          queryClient.invalidateQueries({
-                            queryKey: orpc.heroes.getAll.queryKey(),
-                          });
-                        });
-                      }
-                    }}
+                    onClick={() =>
+                      setHeroToDelete({ id: hero.id, name: hero.name })
+                    }
                     type="button"
                     variant="destructive"
                   >
@@ -124,6 +151,36 @@ function RouteComponent() {
           ))}
         </Table>
       </div>
+
+      <AlertDialog
+        onOpenChange={(open) => !open && setHeroToDelete(null)}
+        open={heroToDelete !== null}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Czy na pewno chcesz usunąć herosa?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Heros "{heroToDelete?.name}" zostanie trwale usunięty. Tej
+              operacji nie można cofnąć.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              Anuluj
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteMutation.isPending}
+              onClick={() =>
+                heroToDelete && deleteMutation.mutate(heroToDelete.id)
+              }
+            >
+              {deleteMutation.isPending ? "Usuwanie..." : "Usuń"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

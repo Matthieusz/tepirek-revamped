@@ -1,7 +1,19 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { AddAnnouncementModal } from "@/components/modals/add-announcement-modal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,12 +32,36 @@ export const Route = createFileRoute("/dashboard/")({
   },
 });
 
+type AnnouncementToDelete = {
+  id: number;
+  title: string;
+} | null;
+
 function RouteComponent() {
   const { session } = Route.useRouteContext();
+  const [announcementToDelete, setAnnouncementToDelete] =
+    useState<AnnouncementToDelete>(null);
   const { data: announcements, isPending } = useQuery(
     orpc.announcement.getAll.queryOptions()
   );
   const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await orpc.announcement.delete.call({ id });
+    },
+    onSuccess: () => {
+      toast.success("Ogłoszenie zostało usunięte");
+      queryClient.invalidateQueries({
+        queryKey: orpc.announcement.getAll.queryKey(),
+      });
+      setAnnouncementToDelete(null);
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : "Wystąpił błąd";
+      toast.error(message);
+    },
+  });
 
   return (
     <div className="leading-loose">
@@ -100,20 +136,12 @@ function RouteComponent() {
                 {session.role === "admin" && (
                   <Button
                     aria-label="Usuń ogłoszenie"
-                    onClick={async () => {
-                      if (
-                        window.confirm(
-                          "Czy na pewno chcesz usunąć to ogłoszenie?"
-                        )
-                      ) {
-                        await orpc.announcement.delete.call({
-                          id: announcement.id,
-                        });
-                        queryClient.invalidateQueries({
-                          queryKey: orpc.announcement.getAll.queryKey(),
-                        });
-                      }
-                    }}
+                    onClick={() =>
+                      setAnnouncementToDelete({
+                        id: announcement.id,
+                        title: announcement.title,
+                      })
+                    }
                     size="sm"
                     variant="destructive"
                   >
@@ -125,6 +153,37 @@ function RouteComponent() {
           ))}
         </div>
       )}
+
+      <AlertDialog
+        onOpenChange={(open) => !open && setAnnouncementToDelete(null)}
+        open={announcementToDelete !== null}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Czy na pewno chcesz usunąć ogłoszenie?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Ogłoszenie "{announcementToDelete?.title}" zostanie trwale
+              usunięte. Tej operacji nie można cofnąć.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              Anuluj
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteMutation.isPending}
+              onClick={() =>
+                announcementToDelete &&
+                deleteMutation.mutate(announcementToDelete.id)
+              }
+            >
+              {deleteMutation.isPending ? "Usuwanie..." : "Usuń"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

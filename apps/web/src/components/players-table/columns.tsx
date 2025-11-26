@@ -59,8 +59,8 @@ const baseColumns: ColumnDef<Player>[] = [
       let date: Date | null = null;
       if (raw instanceof Date) {
         date = raw;
-      } else if (raw) {
-        date = new Date(raw as string);
+      } else if (typeof raw === "string" || typeof raw === "number") {
+        date = new Date(raw);
       }
       if (!date || Number.isNaN(date.getTime())) {
         return "";
@@ -79,8 +79,8 @@ const baseColumns: ColumnDef<Player>[] = [
       let date: Date | null = null;
       if (raw instanceof Date) {
         date = raw;
-      } else if (raw) {
-        date = new Date(raw as string);
+      } else if (typeof raw === "string" || typeof raw === "number") {
+        date = new Date(raw);
       }
       if (!date || Number.isNaN(date.getTime())) {
         return "";
@@ -99,7 +99,7 @@ function actionsColumn(): ColumnDef<Player> {
     header: "Akcje",
     cell: ({ row }) => {
       const queryClient = useQueryClient();
-      const player = row.original as Player;
+      const player = row.original;
       const toggleVerified = useMutation({
         mutationFn: async () =>
           await orpc.user.setVerified.call({
