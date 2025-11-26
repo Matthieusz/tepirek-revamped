@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/events/ranking")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Ranking",
-  }),
+  },
 });
 
 function RouteComponent() {

@@ -2,6 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/auctions/main/")({
   component: RouteComponent,
+  staticData: {
+    crumb: "Przegląd",
+  },
 });
 
 function RouteComponent() {

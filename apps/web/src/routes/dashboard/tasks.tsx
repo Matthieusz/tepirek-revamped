@@ -10,9 +10,9 @@ import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 export const Route = createFileRoute("/dashboard/tasks")({
   component: TasksRoute,
-  loader: () => ({
+  staticData: {
     crumb: "Zadania",
-  }),
+  },
 });
 
 function TasksRoute() {

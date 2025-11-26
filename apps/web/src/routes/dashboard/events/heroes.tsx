@@ -15,9 +15,9 @@ import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/events/heroes")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Herosi",
-  }),
+  },
 });
 
 function RouteComponent() {

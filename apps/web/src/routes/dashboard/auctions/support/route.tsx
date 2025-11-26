@@ -4,7 +4,7 @@ const RouteComponent = () => <Outlet />;
 
 export const Route = createFileRoute("/dashboard/auctions/support")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Bronie pomocnicze",
-  }),
+  },
 });

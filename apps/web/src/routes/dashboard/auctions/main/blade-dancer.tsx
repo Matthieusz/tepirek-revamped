@@ -5,9 +5,9 @@ import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/auctions/main/blade-dancer")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Tancerz Ostrzy",
-  }),
+  },
 });
 
 async function handleAuctionSignup(

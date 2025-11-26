@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/auctions/main/tracker")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Tropiciel",
-  }),
+  },
 });
 
 function RouteComponent() {

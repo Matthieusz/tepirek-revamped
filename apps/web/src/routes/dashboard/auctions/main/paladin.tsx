@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/auctions/main/paladin")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Paladyn",
-  }),
+  },
 });
 
 function RouteComponent() {

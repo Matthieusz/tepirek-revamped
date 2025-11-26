@@ -312,6 +312,9 @@ importers:
       '@tepirek-revamped/config':
         specifier: workspace:*
         version: link:../config
+      '@types/pg':
+        specifier: ^8.15.5
+        version: 8.15.5
 
   packages/auth:
     dependencies:

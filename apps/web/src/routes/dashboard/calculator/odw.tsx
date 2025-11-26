@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/calculator/odw")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Kalkulator odwiązania",
-  }),
+  },
 });
 
 function RouteComponent() {

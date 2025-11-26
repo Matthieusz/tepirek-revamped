@@ -2,9 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/auctions/support/")({
   component: RouteComponent,
-  loader: () => ({
-    crumb: "Bronie pomocnicze",
-  }),
+  staticData: {
+    crumb: "Przegląd",
+  },
 });
 
 function RouteComponent() {

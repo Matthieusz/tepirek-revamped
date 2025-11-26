@@ -4,9 +4,9 @@ export const Route = createFileRoute(
   "/dashboard/auctions/support/blade-dancer"
 )({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Tancerz Ostrzy",
-  }),
+  },
 });
 
 function RouteComponent() {

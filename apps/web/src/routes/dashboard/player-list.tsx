@@ -7,9 +7,9 @@ import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/player-list")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Lista graczy",
-  }),
+  },
 });
 
 function RouteComponent() {

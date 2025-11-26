@@ -9,6 +9,9 @@ import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/skills/")({
   component: RouteComponent,
+  staticData: {
+    crumb: "Lista przedziałów",
+  },
 });
 
 function RouteComponent() {

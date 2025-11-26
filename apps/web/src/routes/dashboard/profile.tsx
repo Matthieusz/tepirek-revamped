@@ -15,9 +15,9 @@ import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/profile")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Profil",
-  }),
+  },
 });
 
 function RouteComponent() {

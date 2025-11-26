@@ -13,6 +13,9 @@ import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
+  staticData: {
+    crumb: "Dashboard",
+  },
   beforeLoad: async () => {
     const session = await getUser();
 
@@ -32,9 +35,6 @@ export const Route = createFileRoute("/dashboard")({
       session: session.user,
     };
   },
-  loader: () => ({
-    crumb: "Dashboard",
-  }),
   pendingComponent: () => (
     <div className="h-full">
       <Loader />

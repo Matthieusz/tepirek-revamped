@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/calculator/list")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Kalkulator lista",
-  }),
+  },
 });
 
 function RouteComponent() {

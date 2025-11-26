@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/squad-builder/create")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Tworzenie nowej drużyny",
-  }),
+  },
 });
 
 function RouteComponent() {

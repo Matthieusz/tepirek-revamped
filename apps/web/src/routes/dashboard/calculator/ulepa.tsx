@@ -93,9 +93,9 @@ function calculateDifferentialCosts(upgradeCosts: number[]): number[] {
 
 export const Route = createFileRoute("/dashboard/calculator/ulepa")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Kalkulator ulepy",
-  }),
+  },
 });
 
 function RouteComponent() {

@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/events/bets/add")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Dodaj obstawienie",
-  }),
+  },
 });
 
 function RouteComponent() {

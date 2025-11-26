@@ -4,7 +4,7 @@ const RouteComponent = () => <Outlet />;
 
 export const Route = createFileRoute("/dashboard/skills")({
   component: RouteComponent,
-  loader: () => ({
+  staticData: {
     crumb: "Umiejętności",
-  }),
+  },
 });
