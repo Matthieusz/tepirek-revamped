@@ -1,8 +1,16 @@
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute } from "@tanstack/react-router";
+import { Calculator, Sparkles, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -12,6 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Rarity = "zwykły" | "unikatowy" | "heroiczny" | "ulepszony" | "legendarny";
 
@@ -43,6 +59,22 @@ const rarityFactors: Record<Rarity, RarityFactor> = {
   heroiczny: { upgradeRarityFactor: 100, upgradeGoldFactor: 30 },
   ulepszony: { upgradeRarityFactor: -1, upgradeGoldFactor: 40 },
   legendarny: { upgradeRarityFactor: 1000, upgradeGoldFactor: 60 },
+};
+
+const rarityColors: Record<Rarity, string> = {
+  zwykły: "text-gray-400",
+  unikatowy: "text-yellow-500",
+  heroiczny: "text-purple-500",
+  ulepszony: "text-blue-500",
+  legendarny: "text-orange-500",
+};
+
+const rarityBgColors: Record<Rarity, string> = {
+  zwykły: "bg-gray-500/10 border-gray-500/20",
+  unikatowy: "bg-yellow-500/10 border-yellow-500/20",
+  heroiczny: "bg-purple-500/10 border-purple-500/20",
+  ulepszony: "bg-blue-500/10 border-blue-500/20",
+  legendarny: "bg-orange-500/10 border-orange-500/20",
 };
 
 /** Multipliers for each upgrade level (1-5) - index 0 is unused */
@@ -124,13 +156,16 @@ export const Route = createFileRoute("/dashboard/calculator/ulepa")({
 function RouteComponent() {
   const [result, setResult] = useState<{
     differentialCosts: number[];
+    cumulativeCosts: number[];
     totalUpgradeCost: number;
     total75Percent: number;
+    itemLevel: number;
+    itemRarity: Rarity;
   } | null>(null);
 
   const form = useForm({
     defaultValues: {
-      itemLevel: GAME_CONSTANTS.DEFAULT_ITEM_LEVEL,
+      itemLevel: GAME_CONSTANTS.DEFAULT_ITEM_LEVEL as number,
       itemRarity: "legendarny" as Rarity,
     },
     onSubmit: ({ value }) => {
@@ -144,137 +179,258 @@ function RouteComponent() {
         0
       );
       const total75Percent = totalUpgradeCost * GAME_CONSTANTS.EXTRACTION_RATE;
-      setResult({ differentialCosts, totalUpgradeCost, total75Percent });
+      setResult({
+        differentialCosts,
+        cumulativeCosts: upgradeCosts,
+        totalUpgradeCost,
+        total75Percent,
+        itemLevel: value.itemLevel,
+        itemRarity: value.itemRarity,
+      });
     },
   });
 
   return (
-    <div className="max-w-xl lg:w-full">
-      <h1 className="mb-4 font-bold text-2xl">Kalkulator ulepy</h1>
-      <p className="mb-6 text-muted-foreground">
-        Oblicz koszty ulepszenia przedmiotu na podstawie poziomu i rzadkości.
-      </p>
-      <form
-        className="grid gap-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-      >
-        <div className="grid grid-cols-2 gap-4">
-          <form.Field
-            name="itemLevel"
-            validators={{
-              onChange: ({ value }) => {
-                const parsed = formSchema.shape.itemLevel.safeParse(value);
-                return parsed.success
-                  ? undefined
-                  : parsed.error.issues[0]?.message;
-              },
-            }}
-          >
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="itemLevel">Poziom przedmiotu</Label>
-                <Input
-                  aria-describedby="itemLevel-error"
-                  aria-invalid={!!field.state.meta.errors}
-                  id="itemLevel"
-                  max={MAX_LEVEL}
-                  min={MIN_LEVEL}
-                  onChange={(e) => field.handleChange(Number(e.target.value))}
-                  type="number"
-                  value={field.state.value}
-                />
-                {field.state.meta.errors && (
-                  <div
-                    className="text-destructive text-sm"
-                    id="itemLevel-error"
+    <div className="mx-auto min-w-2xl max-w-4xl space-y-6">
+      <div>
+        <h1 className="mb-2 font-bold text-2xl tracking-tight">
+          Kalkulator ulepy
+        </h1>
+        <p className="text-muted-foreground">
+          Oblicz koszty ulepszenia przedmiotu na podstawie poziomu i rzadkości.
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Input Form Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calculator className="h-5 w-5" />
+              Parametry przedmiotu
+            </CardTitle>
+            <CardDescription>
+              Wprowadź poziom i wybierz rzadkość przedmiotu
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form
+              className="grid gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                form.handleSubmit();
+              }}
+            >
+              <form.Field
+                name="itemLevel"
+                validators={{
+                  onChange: ({ value }) => {
+                    const parsed = formSchema.shape.itemLevel.safeParse(value);
+                    return parsed.success
+                      ? undefined
+                      : parsed.error.issues[0]?.message;
+                  },
+                }}
+              >
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor="itemLevel">Poziom przedmiotu</Label>
+                    <Input
+                      aria-describedby="itemLevel-error"
+                      aria-invalid={
+                        field.state.meta.errors &&
+                        field.state.meta.errors.length > 0
+                      }
+                      id="itemLevel"
+                      max={MAX_LEVEL}
+                      min={MIN_LEVEL}
+                      onChange={(e) =>
+                        field.handleChange(Number(e.target.value))
+                      }
+                      type="number"
+                      value={field.state.value}
+                    />
+                    {field.state.meta.errors &&
+                      field.state.meta.errors.length > 0 && (
+                        <div
+                          className="text-destructive text-sm"
+                          id="itemLevel-error"
+                        >
+                          {field.state.meta.errors[0]}
+                        </div>
+                      )}
+                  </div>
+                )}
+              </form.Field>
+              <form.Field
+                name="itemRarity"
+                validators={{
+                  onChange: ({ value }) => {
+                    const parsed = formSchema.shape.itemRarity.safeParse(value);
+                    return parsed.success
+                      ? undefined
+                      : parsed.error.issues[0]?.message;
+                  },
+                }}
+              >
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor="itemRarity">Rzadkość przedmiotu</Label>
+                    <Select
+                      onValueChange={(val) => field.handleChange(val as Rarity)}
+                      value={field.state.value}
+                    >
+                      <SelectTrigger id="itemRarity">
+                        <SelectValue placeholder="Wybierz rzadkość" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(rarityFactors) as Rarity[]).map(
+                          (rarity) => (
+                            <SelectItem key={rarity} value={rarity}>
+                              <span
+                                className={`font-medium ${rarityColors[rarity]}`}
+                              >
+                                {rarity.charAt(0).toUpperCase() +
+                                  rarity.slice(1)}
+                              </span>
+                            </SelectItem>
+                          )
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {field.state.meta.errors &&
+                      field.state.meta.errors.length > 0 && (
+                        <div className="text-destructive text-sm">
+                          {field.state.meta.errors[0]}
+                        </div>
+                      )}
+                  </div>
+                )}
+              </form.Field>
+              <form.Subscribe
+                selector={(state) => [state.canSubmit, state.isSubmitting]}
+              >
+                {([canSubmit, isSubmitting]) => (
+                  <Button
+                    className="w-full"
+                    disabled={!canSubmit || isSubmitting}
+                    type="submit"
                   >
-                    {field.state.meta.errors}
-                  </div>
+                    {isSubmitting ? "Obliczanie..." : "Oblicz koszty"}
+                  </Button>
                 )}
+              </form.Subscribe>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Extraction Results Card */}
+        {result && (
+          <Card className={`border-2 ${rarityBgColors[result.itemRarity]}`}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles
+                  className={`h-5 w-5 ${rarityColors[result.itemRarity]}`}
+                />
+                Ekstrakcja
+              </CardTitle>
+              <CardDescription>
+                Punkty ulepszenia możliwe do odzyskania
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+                  <span className="text-muted-foreground text-sm">
+                    Normalna ekstrakcja (75%)
+                  </span>
+                  <span className="font-semibold text-lg">
+                    {Math.floor(result.total75Percent).toLocaleString("pl-PL")}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
+                  <span className="font-medium text-sm">
+                    Pełna ekstrakcja (100%)
+                  </span>
+                  <span className="font-bold text-lg text-primary">
+                    {Math.floor(result.totalUpgradeCost).toLocaleString(
+                      "pl-PL"
+                    )}
+                  </span>
+                </div>
               </div>
-            )}
-          </form.Field>
-          <form.Field
-            name="itemRarity"
-            validators={{
-              onChange: ({ value }) => {
-                const parsed = formSchema.shape.itemRarity.safeParse(value);
-                return parsed.success
-                  ? undefined
-                  : parsed.error.issues[0]?.message;
-              },
-            }}
-          >
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="itemRarity">Rzadkość przedmiotu</Label>
-                <Select
-                  onValueChange={(val) => field.handleChange(val as Rarity)}
-                  value={field.state.value}
-                >
-                  <SelectTrigger id="itemRarity">
-                    <SelectValue placeholder="Wybierz rzadkość" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.keys(rarityFactors).map((rarity) => (
-                      <SelectItem key={rarity} value={rarity}>
-                        {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {field.state.meta.errors && (
-                  <div className="text-destructive text-sm">
-                    {field.state.meta.errors}
-                  </div>
-                )}
-              </div>
-            )}
-          </form.Field>
-        </div>
-        <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting]}
-        >
-          {([canSubmit, isSubmitting]) => (
-            <Button disabled={!canSubmit || isSubmitting} type="submit">
-              {isSubmitting ? "..." : "Oblicz"}
-            </Button>
-          )}
-        </form.Subscribe>
-      </form>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Upgrade Costs Table */}
       {result && (
-        <div className="mt-4 w-[550px] space-y-4">
-          <div>
-            <h3 className="mb-2 font-semibold">
-              Ilość potrzebna do ulepszenia przedmiotu o poziomie{" "}
-              {form.state.values.itemLevel} ({form.state.values.itemRarity}):
-            </h3>
-            <ul className="list-inside list-disc">
-              {result.differentialCosts.map((cost: number, index: number) => (
-                <li
-                  key={`upgrade-cost-${form.state.values.itemLevel}-${form.state.values.itemRarity}-${cost}`}
-                >
-                  +{index + 1}: {cost.toLocaleString()} punktów ulepszenia
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h3 className="mb-2 font-semibold">Ekstrakcja:</h3>
-            <p>
-              Normalna (75%): {result.total75Percent.toLocaleString()} punktów
-              ulepszenia
-            </p>
-            <p>
-              Całkowita (100%): {result.totalUpgradeCost.toLocaleString()}{" "}
-              punktów ulepszenia
-            </p>
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Koszty ulepszenia
+            </CardTitle>
+            <CardDescription>
+              Przedmiot poziom{" "}
+              <span className="font-semibold">{result.itemLevel}</span> (
+              <span
+                className={`font-semibold ${rarityColors[result.itemRarity]}`}
+              >
+                {result.itemRarity}
+              </span>
+              )
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-24">Poziom</TableHead>
+                  <TableHead>Koszt (per poziom)</TableHead>
+                  <TableHead>Łącznie (kumulatywnie)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {result.differentialCosts.map((cost, idx) => {
+                  const level = idx + 1;
+                  return (
+                    <TableRow key={`upgrade-level-${level}`}>
+                      <TableCell>
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary text-sm">
+                          +{level}
+                        </span>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {Math.floor(cost).toLocaleString("pl-PL")} pkt
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {Math.floor(result.cumulativeCosts[idx]).toLocaleString(
+                          "pl-PL"
+                        )}{" "}
+                        pkt
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                <TableRow className="border-t-2 bg-muted/30">
+                  <TableCell>
+                    <span className="font-semibold">Suma</span>
+                  </TableCell>
+                  <TableCell className="font-bold text-primary">
+                    {Math.floor(result.totalUpgradeCost).toLocaleString(
+                      "pl-PL"
+                    )}{" "}
+                    pkt
+                  </TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
