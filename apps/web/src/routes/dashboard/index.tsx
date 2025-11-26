@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Trash } from "lucide-react";
+import { Calendar, Megaphone, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AddAnnouncementModal } from "@/components/modals/add-announcement-modal";
@@ -19,9 +19,11 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardFooter,
+  CardDescription,
   CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
 import { formatDateTime } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
@@ -64,87 +66,119 @@ function RouteComponent() {
     },
   });
 
+  const announcementCount = announcements?.length ?? 0;
+
   return (
-    <div className="leading-loose">
-      <h1 className="font-bold text-3xl">Hej, {session.name} 🥳</h1>
-      <p className="font-semibold text-xl">
-        Witam na stronie klanowej Gildii Złodziei
-      </p>
-      <div className="mt-8 flex items-center gap-4">
-        <h2 className="font-semibold text-2xl">Ogłoszenia: </h2>
-        {session.role === "admin" && (
-          <AddAnnouncementModal
-            trigger={
-              <Button>
-                <Plus />
-                Dodaj ogłoszenie
-              </Button>
-            }
-          />
-        )}
-      </div>
-      {isPending && (
-        <div className="mt-4">
-          <CardGridSkeleton count={3} />
+    <div className="mx-auto w-full max-w-4xl space-y-6">
+      {/* Welcome Section */}
+      <Card className="border-none bg-linear-to-r from-primary/10 to-primary/5">
+        <CardHeader>
+          <CardTitle className="text-2xl">Witaj, {session.name}! 👋</CardTitle>
+          <CardDescription className="text-base">
+            Strona klanowa Gildii Złodziei — sprawdź najnowsze ogłoszenia.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
+      {/* Announcements Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="mb-1 font-bold text-xl tracking-tight">
+              Ogłoszenia
+            </h2>
+          </div>
+          {session.role === "admin" && (
+            <AddAnnouncementModal
+              trigger={
+                <Button size="sm">
+                  <Plus className="h-4 w-4" />
+                  Dodaj ogłoszenie
+                </Button>
+              }
+            />
+          )}
         </div>
-      )}
-      {!isPending && (!announcements || announcements.length === 0) && (
-        <p className="mt-4 text-muted-foreground">Brak ogłoszeń</p>
-      )}
-      {!isPending && announcements && announcements.length > 0 && (
-        <div className="mt-4 flex flex-col items-center gap-8">
-          {announcements.map((announcement) => (
-            <Card
-              className="mx-auto w-full min-w-xl max-w-4xl border border-muted bg-background shadow-lg"
-              key={announcement.id}
-            >
-              <div className="relative">
-                <CardHeader className="flex items-center justify-between">
-                  <h2 className="font-bold text-2xl">{announcement.title}</h2>
-                  <div className="flex items-center gap-2">
-                    <p className="text-muted-foreground">
-                      {announcement.user?.name ?? announcement.user?.id}
-                    </p>
-                    <Avatar>
-                      <AvatarImage
-                        alt={announcement.user?.name ?? "Avatar"}
-                        src={announcement.user?.image ?? undefined}
-                      />
-                      <AvatarFallback>
-                        {announcement.user?.name?.charAt(0) ?? "?"}
-                      </AvatarFallback>
-                    </Avatar>
+
+        {isPending && <CardGridSkeleton count={3} />}
+
+        {!isPending && (!announcements || announcements.length === 0) && (
+          <Card>
+            <CardContent className="py-12">
+              <div className="text-center">
+                <Megaphone className="mx-auto h-10 w-10 text-muted-foreground" />
+                <p className="mt-3 text-muted-foreground">
+                  Brak ogłoszeń do wyświetlenia
+                </p>
+                {session.role === "admin" && (
+                  <p className="mt-1 text-muted-foreground text-sm">
+                    Dodaj pierwsze ogłoszenie powyżej
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {!isPending && announcements && announcements.length > 0 && (
+          <div className="space-y-4">
+            {announcements.map((announcement) => (
+              <Card key={announcement.id}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">
+                        {announcement.title}
+                      </CardTitle>
+                      <div className="mt-2 flex items-center gap-3 text-muted-foreground text-sm">
+                        <div className="flex items-center gap-1.5">
+                          <Avatar className="size-5">
+                            <AvatarImage
+                              alt={announcement.user?.name ?? "Avatar"}
+                              src={announcement.user?.image ?? undefined}
+                            />
+                            <AvatarFallback className="text-xs">
+                              {announcement.user?.name?.charAt(0) ?? "?"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>
+                            {announcement.user?.name ?? announcement.user?.id}
+                          </span>
+                        </div>
+                        <Separator className="h-4" orientation="vertical" />
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5" />
+                          <span>{formatDateTime(announcement.createdAt)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {session.role === "admin" && (
+                      <Button
+                        aria-label="Usuń ogłoszenie"
+                        onClick={() =>
+                          setAnnouncementToDelete({
+                            id: announcement.id,
+                            title: announcement.title,
+                          })
+                        }
+                        size="sm"
+                        variant="ghost"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </CardHeader>
-              </div>
-              <CardContent className="text-base">
-                {announcement.description}
-              </CardContent>
-              <CardFooter className="justify-between text-muted-foreground text-sm">
-                <div>
-                  <span className="font-semibold">Data dodania:</span>{" "}
-                  {formatDateTime(announcement.createdAt)}
-                </div>
-                {session.role === "admin" && (
-                  <Button
-                    aria-label="Usuń ogłoszenie"
-                    onClick={() =>
-                      setAnnouncementToDelete({
-                        id: announcement.id,
-                        title: announcement.title,
-                      })
-                    }
-                    size="sm"
-                    variant="destructive"
-                  >
-                    <Trash /> Usuń
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      )}
+                <CardContent>
+                  <p className="whitespace-pre-wrap text-muted-foreground text-sm leading-relaxed">
+                    {announcement.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
 
       <AlertDialog
         onOpenChange={(open) => !open && setAnnouncementToDelete(null)}
