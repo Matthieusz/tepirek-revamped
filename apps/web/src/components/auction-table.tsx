@@ -43,16 +43,16 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
           ))}
         </TableRow>
       </TableHeader>
-      <TableBody>
-        {rowValues.flatMap((value) =>
-          rounds.map((round, roundIdx) => (
+      {rowValues.map((value) => (
+        <TableBody className="group border-t" key={value}>
+          {rounds.map((round, roundIdx) => (
             <TableRow
-              className={`group ${roundIdx === 0 ? "border-t" : ""}text-center transition-colors hover:bg-muted/70`}
+              className="text-center transition-colors hover:bg-muted/70"
               key={`${value}-${round}`}
             >
               {roundIdx === 0 ? (
                 <TableCell
-                  className="cursor-pointer transition-colors group-hover:bg-accent/60"
+                  className="border-r bg-card font-semibold text-xl transition-colors group-hover:bg-accent/60"
                   rowSpan={4}
                 >
                   {value}
@@ -79,9 +79,9 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
                 );
               })}
             </TableRow>
-          ))
-        )}
-      </TableBody>
+          ))}
+        </TableBody>
+      ))}
     </Table>
   </div>
 );
