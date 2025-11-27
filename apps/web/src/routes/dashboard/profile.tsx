@@ -10,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/profile")({
@@ -22,29 +21,6 @@ export const Route = createFileRoute("/dashboard/profile")({
 
 function RouteComponent() {
   const { session } = Route.useRouteContext();
-
-  if (isPending) {
-    return (
-      <div className="w-full max-w-lg space-y-6">
-        <div>
-          <Skeleton className="mb-1 h-8 w-32" />
-          <Skeleton className="h-4 w-48" />
-        </div>
-        <Card>
-          <CardHeader className="items-center pb-2">
-            <Skeleton className="size-24 rounded-full" />
-            <Skeleton className="mt-4 h-6 w-32" />
-            <Skeleton className="h-4 w-48" />
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full max-w-lg space-y-6">
