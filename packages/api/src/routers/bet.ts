@@ -156,6 +156,7 @@ export const betRouter = {
           heroId: heroBet.heroId,
           heroName: hero.name,
           heroImage: hero.image,
+          heroLevel: hero.level,
           eventId: hero.eventId,
           createdBy: heroBet.createdBy,
           createdByName: user.name,

@@ -251,7 +251,12 @@ function RouteComponent() {
             <Card className="overflow-hidden" key={bet.id}>
               <CardContent>
                 {/* Hero Name at Top Left */}
-                <p className="mb-3 font-semibold">{bet.heroName}</p>
+                <div className="justify-baseline flex gap-2">
+                  <p className="mb-3 font-semibold">{bet.heroName}</p>
+                  <p className="text-muted-foreground">
+                    Level: {bet.heroLevel}
+                  </p>
+                </div>
                 <div className="flex items-center gap-4">
                   {/* Hero Image */}
                   {bet.heroImage ? (
