@@ -116,10 +116,11 @@ function RouteComponent() {
       lastPage.pagination.hasMore ? lastPage.pagination.page + 1 : undefined,
   });
 
-  const filteredHeroes =
+  const filteredHeroes = (
     selectedEventId === "all"
       ? heroes
-      : heroes?.filter((h) => h.eventId?.toString() === selectedEventId);
+      : heroes?.filter((h) => h.eventId?.toString() === selectedEventId)
+  )?.sort((a, b) => a.level - b.level);
 
   // Flatten pages into single array of bets
   const allBets = betsData?.pages.flatMap((page) => page.items) ?? [];
@@ -159,7 +160,7 @@ function RouteComponent() {
     });
 
   const calculatePointsPerMember = (memberCount: number) =>
-    (POINTS_PER_HERO / memberCount).toFixed(2);
+    Math.floor((POINTS_PER_HERO / memberCount) * 100) / 100;
 
   const isPending = betsLoading || eventsLoading || heroesLoading;
 
@@ -198,20 +199,27 @@ function RouteComponent() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Wszystkie eventy</SelectItem>
-              {events?.map((event) => {
-                const IconComponent = EVENT_ICON_MAP[event.icon || "calendar"];
-                return (
-                  <SelectItem key={event.id} value={event.id.toString()}>
-                    <div className="flex items-center gap-2">
-                      <IconComponent
-                        className="h-4 w-4"
-                        style={{ color: event.color || undefined }}
-                      />
-                      <span>{event.name}</span>
-                    </div>
-                  </SelectItem>
-                );
-              })}
+              {[...(events || [])]
+                .sort(
+                  (a, b) =>
+                    new Date(b.endTime).getTime() -
+                    new Date(a.endTime).getTime()
+                )
+                .map((event) => {
+                  const IconComponent =
+                    EVENT_ICON_MAP[event.icon || "calendar"];
+                  return (
+                    <SelectItem key={event.id} value={event.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <IconComponent
+                          className="h-4 w-4"
+                          style={{ color: event.color || undefined }}
+                        />
+                        <span>{event.name}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
             </SelectContent>
           </Select>
 

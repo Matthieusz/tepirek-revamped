@@ -143,10 +143,11 @@ export function DistributeGoldModal({
 
   const { data: heroes } = useQuery(orpc.heroes.getAll.queryOptions());
 
-  const filteredHeroes =
+  const filteredHeroes = (
     eventId === "all"
       ? heroes
-      : heroes?.filter((h) => h.eventId?.toString() === eventId);
+      : heroes?.filter((h) => h.eventId?.toString() === eventId)
+  )?.sort((a, b) => a.level - b.level);
 
   // Get hero stats when a specific hero is selected
   const { data: heroStats, isPending: heroStatsPending } = useQuery({
@@ -249,21 +250,27 @@ export function DistributeGoldModal({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Wszystkie eventy</SelectItem>
-                  {events?.map((event) => {
-                    const IconComponent =
-                      EVENT_ICON_MAP[event.icon || "calendar"];
-                    return (
-                      <SelectItem key={event.id} value={event.id.toString()}>
-                        <div className="flex items-center gap-2">
-                          <IconComponent
-                            className="h-4 w-4"
-                            style={{ color: event.color || undefined }}
-                          />
-                          <span>{event.name}</span>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
+                  {[...(events || [])]
+                    .sort(
+                      (a, b) =>
+                        new Date(b.endTime).getTime() -
+                        new Date(a.endTime).getTime()
+                    )
+                    .map((event) => {
+                      const IconComponent =
+                        EVENT_ICON_MAP[event.icon || "calendar"];
+                      return (
+                        <SelectItem key={event.id} value={event.id.toString()}>
+                          <div className="flex items-center gap-2">
+                            <IconComponent
+                              className="h-4 w-4"
+                              style={{ color: event.color || undefined }}
+                            />
+                            <span>{event.name}</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                 </SelectContent>
               </Select>
             </div>
