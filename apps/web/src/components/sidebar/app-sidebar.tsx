@@ -64,14 +64,17 @@ const data = {
       title: "Licytacje",
       url: "#",
       icon: Gavel,
+      disabled: true,
       items: [
         {
           title: "Broni głównych",
           url: "/dashboard/auctions/main",
+          disabled: true,
         },
         {
           title: "Broni pomocniczych",
           url: "/dashboard/auctions/support",
+          disabled: true,
         },
       ],
     },
