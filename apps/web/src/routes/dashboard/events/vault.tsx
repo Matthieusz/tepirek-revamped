@@ -193,7 +193,7 @@ function RouteComponent() {
       {/* Next to receive payment - highlighted */}
       {nextToPay && (
         <Card className="border-2 border-green-500/50 bg-green-500/5">
-          <CardContent className="py-4">
+          <CardContent>
             <div className="mb-2 flex items-center justify-center gap-2">
               <span className="font-semibold text-green-600 text-sm dark:text-green-400">
                 Następny do wypłaty
@@ -271,7 +271,7 @@ function RouteComponent() {
               className="transition-all hover:bg-accent/50"
               key={player.userId}
             >
-              <CardContent className="px-4 py-3">
+              <CardContent className="px-4">
                 <div className="flex items-center gap-4">
                   {/* Position */}
                   <div className="flex w-8 shrink-0 items-center justify-center">
@@ -338,7 +338,7 @@ function RouteComponent() {
               className="bg-muted/30 opacity-60 transition-all hover:opacity-100"
               key={player.userId}
             >
-              <CardContent className="px-4 py-3">
+              <CardContent className="px-4">
                 <div className="flex items-center gap-4">
                   {/* Check icon */}
                   <div className="flex w-8 shrink-0 items-center justify-center">
