@@ -65,7 +65,7 @@ export const userStats = pgTable(
       .notNull()
       .default("0"),
     bets: integer("bets").notNull().default(0),
-    earnings: numeric("earnings", { precision: 10, scale: 2 })
+    earnings: numeric("earnings", { precision: 20, scale: 2 })
       .notNull()
       .default("0"),
   },

@@ -137,7 +137,7 @@ function RouteComponent() {
   // Calculate points preview
   const pointsPerMember =
     selectedUserIds.length > 0
-      ? (POINTS_PER_HERO / selectedUserIds.length).toFixed(2)
+      ? Math.floor((POINTS_PER_HERO / selectedUserIds.length) * 100) / 100
       : "0.00";
 
   const handleUserToggle = (userId: string, currentUserIds: string[]) => {

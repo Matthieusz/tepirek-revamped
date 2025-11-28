@@ -24,7 +24,9 @@ export const betRouter = {
     .handler(async ({ input, context }) => {
       const { heroId, userIds } = input;
       const memberCount = userIds.length;
-      const pointsPerMember = (POINTS_PER_HERO / memberCount).toFixed(2);
+      const pointsPerMember = Math.floor(
+        ((POINTS_PER_HERO / memberCount) * 100) / 100
+      ).toFixed(2);
 
       // Get the hero to find the eventId
       const [heroData] = await db
@@ -328,8 +330,24 @@ export const betRouter = {
     }),
 
   getRanking: protectedProcedure
-    .input(z.object({ eventId: z.number().optional() }))
+    .input(
+      z.object({
+        eventId: z.number().optional(),
+        heroId: z.number().optional(),
+      })
+    )
     .handler(async ({ input }) => {
+      // Build where conditions
+      const conditions: SQL[] = [];
+      if (input.eventId) {
+        conditions.push(eq(userStats.eventId, input.eventId));
+      }
+      if (input.heroId) {
+        conditions.push(eq(userStats.heroId, input.heroId));
+      }
+      const whereClause =
+        conditions.length > 0 ? and(...conditions) : undefined;
+
       // Aggregate stats per user (across all heroes in the event or all events)
       const baseQuery = db
         .select({
@@ -344,17 +362,118 @@ export const betRouter = {
         })
         .from(userStats)
         .innerJoin(user, eq(userStats.userId, user.id))
+        .where(whereClause)
         .groupBy(userStats.userId, user.name, user.image)
         .orderBy(desc(sql`SUM(${userStats.points})`));
 
-      if (input.eventId) {
-        const ranking = await baseQuery.where(
-          eq(userStats.eventId, input.eventId)
-        );
-        return ranking;
-      }
-
       const ranking = await baseQuery;
       return ranking;
+    }),
+
+  getHeroStats: protectedProcedure
+    .input(z.object({ heroId: z.number() }))
+    .handler(async ({ input }) => {
+      // Get total bets and points for a specific hero
+      const [stats] = await db
+        .select({
+          totalBets: sql<number>`COALESCE(SUM(${userStats.bets}), 0)`.as(
+            "total_bets"
+          ),
+          totalPoints: sql<string>`COALESCE(SUM(${userStats.points}), '0')`.as(
+            "total_points"
+          ),
+        })
+        .from(userStats)
+        .where(eq(userStats.heroId, input.heroId));
+
+      // Get hero info
+      const [heroInfo] = await db
+        .select({
+          id: hero.id,
+          name: hero.name,
+          pointWorth: hero.pointWorth,
+        })
+        .from(hero)
+        .where(eq(hero.id, input.heroId));
+
+      return {
+        heroId: input.heroId,
+        heroName: heroInfo?.name ?? "Unknown",
+        currentPointWorth: heroInfo?.pointWorth ?? 0,
+        totalBets: Number(stats?.totalBets ?? 0),
+        totalPoints: Number.parseFloat(stats?.totalPoints ?? "0"),
+      };
+    }),
+
+  distributeGold: adminProcedure
+    .input(z.object({ heroId: z.number(), goldAmount: z.number().positive() }))
+    .handler(async ({ input }) => {
+      const { heroId, goldAmount } = input;
+
+      // Get hero info and eventId
+      const [heroData] = await db
+        .select({ eventId: hero.eventId, name: hero.name })
+        .from(hero)
+        .where(eq(hero.id, heroId));
+
+      if (!heroData) {
+        throw new Error("Hero not found");
+      }
+
+      // Get all user stats for this hero
+      const heroUserStats = await db
+        .select({
+          id: userStats.id,
+          userId: userStats.userId,
+          points: userStats.points,
+        })
+        .from(userStats)
+        .where(eq(userStats.heroId, heroId));
+
+      if (heroUserStats.length === 0) {
+        throw new Error("No bets found for this hero");
+      }
+
+      // Calculate total points for this hero
+      const totalPoints = heroUserStats.reduce(
+        (sum, stat) => sum + Number.parseFloat(stat.points),
+        0
+      );
+
+      if (totalPoints <= 0) {
+        throw new Error("Total points must be greater than 0");
+      }
+
+      // Calculate point worth: goldAmount / totalPoints
+      const pointWorth = goldAmount / totalPoints;
+
+      // Update earnings for each user based on their points
+      for (const stat of heroUserStats) {
+        const userPoints = Number.parseFloat(stat.points);
+        const userEarnings = (userPoints * pointWorth).toFixed(2);
+
+        await db
+          .update(userStats)
+          .set({
+            earnings: userEarnings,
+          })
+          .where(eq(userStats.id, stat.id));
+      }
+
+      // Update hero's pointWorth for reference
+      await db
+        .update(hero)
+        .set({ pointWorth: Math.round(pointWorth) })
+        .where(eq(hero.id, heroId));
+
+      return {
+        success: true,
+        heroId,
+        heroName: heroData.name,
+        goldAmount,
+        totalPoints,
+        pointWorth,
+        usersUpdated: heroUserStats.length,
+      };
     }),
 };

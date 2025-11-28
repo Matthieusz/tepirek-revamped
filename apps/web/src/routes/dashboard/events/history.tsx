@@ -181,7 +181,7 @@ function RouteComponent() {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="mb-1 font-bold text-2xl tracking-tight">
             Historia obstawień
@@ -190,10 +190,10 @@ function RouteComponent() {
             Przeglądaj wszystkie utworzone obstawienia.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
           {/* Event Select */}
           <Select onValueChange={setSelectedEventId} value={selectedEventId}>
-            <SelectTrigger className="w-44">
+            <SelectTrigger className="w-full sm:w-44">
               <SelectValue placeholder="Wybierz event" />
             </SelectTrigger>
             <SelectContent>
@@ -217,7 +217,7 @@ function RouteComponent() {
 
           {/* Hero Select */}
           <Select onValueChange={setSelectedHeroId} value={selectedHeroId}>
-            <SelectTrigger className="w-44">
+            <SelectTrigger className="w-full sm:w-44">
               <SelectValue placeholder="Wybierz herosa" />
             </SelectTrigger>
             <SelectContent>
@@ -231,8 +231,6 @@ function RouteComponent() {
           </Select>
         </div>
       </div>
-
-      {/* Filters Row */}
 
       {allBets.length === 0 ? (
         <Card>
@@ -248,53 +246,16 @@ function RouteComponent() {
       ) : (
         <div className="grid gap-4">
           {allBets.map((bet) => (
-            <Card className="overflow-hidden" key={bet.id}>
-              <CardContent>
-                {/* Hero Name at Top Left */}
-                <div className="justify-baseline flex gap-2">
-                  <p className="mb-3 font-semibold">{bet.heroName}</p>
-                  <p className="text-muted-foreground">
-                    Level: {bet.heroLevel}
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  {/* Hero Image */}
-                  {bet.heroImage ? (
-                    <img
-                      alt={bet.heroName}
-                      className="h-16 w-14 shrink-0 rounded-lg object-contain"
-                      height={64}
-                      src={bet.heroImage}
-                      width={56}
-                    />
-                  ) : (
-                    <div className="flex h-16 w-14 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <Sword className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                  )}
-
-                  {/* Players Section */}
-                  <div className="flex flex-1 flex-wrap items-center justify-center gap-2">
-                    {bet.members.map((member) => (
-                      <div
-                        className="flex items-center gap-2 rounded-full border bg-muted/30 py-1 pr-3 pl-1"
-                        key={member.userId}
-                      >
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage
-                            alt={member.userName}
-                            src={member.userImage || undefined}
-                          />
-                          <AvatarFallback className="text-xs">
-                            <User className="h-3 w-3" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm">{member.userName}</span>
-                      </div>
-                    ))}
+            <Card className="overflow-hidden p-0" key={bet.id}>
+              <CardContent className="p-4">
+                {/* Header: Hero Name, Level, and Delete Button */}
+                <div className="mb-3 flex items-start justify-between gap-2">
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <p className="font-semibold">{bet.heroName}</p>
+                    <p className="text-muted-foreground text-sm">
+                      Level: {bet.heroLevel}
+                    </p>
                   </div>
-
-                  {/* Points and Actions */}
                   <div className="flex shrink-0 items-center gap-2">
                     <Badge variant="secondary">
                       {calculatePointsPerMember(bet.memberCount)} pkt/os
@@ -317,8 +278,49 @@ function RouteComponent() {
                   </div>
                 </div>
 
+                {/* Main content: Hero Image and Players */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  {/* Hero Image */}
+                  {bet.heroImage ? (
+                    <img
+                      alt={bet.heroName}
+                      className="mx-auto h-20 w-16 shrink-0 rounded-lg object-contain sm:mx-0 sm:h-16 sm:w-14"
+                      height={80}
+                      src={bet.heroImage}
+                      width={64}
+                    />
+                  ) : (
+                    <div className="mx-auto flex h-20 w-16 shrink-0 items-center justify-center rounded-lg bg-muted sm:mx-0 sm:h-16 sm:w-14">
+                      <Sword className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  )}
+
+                  {/* Players Section */}
+                  <div className="flex flex-1 flex-wrap items-center justify-center gap-2 sm:justify-start">
+                    {bet.members.map((member) => (
+                      <div
+                        className="flex items-center gap-1.5 rounded-full border bg-muted/30 py-1 pr-2.5 pl-1 sm:gap-2 sm:pr-3"
+                        key={member.userId}
+                      >
+                        <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
+                          <AvatarImage
+                            alt={member.userName}
+                            src={member.userImage || undefined}
+                          />
+                          <AvatarFallback className="text-xs">
+                            <User className="h-3 w-3" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs sm:text-sm">
+                          {member.userName}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Footer with Creator and Date */}
-                <div className="mt-3 flex items-center justify-between border-t pt-3 text-muted-foreground text-xs">
+                <div className="mt-3 flex flex-col gap-2 border-t pt-3 text-muted-foreground text-xs sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-2">
                     <span>Dodane przez:</span>
                     <div className="flex items-center gap-1.5">

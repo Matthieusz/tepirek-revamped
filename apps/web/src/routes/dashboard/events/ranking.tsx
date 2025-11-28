@@ -1,18 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import {
   Cake,
   Calendar,
+  Coins,
   Egg,
   Ghost,
-  Settings2,
   Snowflake,
   Sun,
   Trophy,
   User,
 } from "lucide-react";
 import { useState } from "react";
+import { DistributeGoldModal } from "@/components/modals/distribute-gold-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,6 +26,8 @@ import {
 } from "@/components/ui/select";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
 import { orpc } from "@/utils/orpc";
+
+const routeApi = getRouteApi("/dashboard");
 
 const EVENT_ICON_MAP: Record<string, LucideIcon> = {
   egg: Egg,
@@ -43,6 +46,7 @@ export const Route = createFileRoute("/dashboard/events/ranking")({
 });
 
 function RouteComponent() {
+  const { session } = routeApi.useRouteContext();
   const [selectedEventId, setSelectedEventId] = useState<string>("all");
   const [selectedHeroId, setSelectedHeroId] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"points" | "bets" | "gold">("points");
@@ -62,6 +66,10 @@ function RouteComponent() {
           selectedEventId === "all"
             ? undefined
             : Number.parseInt(selectedEventId, 10),
+        heroId:
+          selectedHeroId === "all"
+            ? undefined
+            : Number.parseInt(selectedHeroId, 10),
       },
     })
   );
@@ -108,15 +116,14 @@ function RouteComponent() {
     if (sortBy === "bets") {
       return (b.totalBets || 0) - (a.totalBets || 0);
     }
-    // gold - placeholder calculation
-    const goldA = Math.floor(
-      Number.parseFloat(a.totalPoints || "0") * 5_000_000
+    // Sort by actual earnings
+    return (
+      Number.parseFloat(b.totalEarnings || "0") -
+      Number.parseFloat(a.totalEarnings || "0")
     );
-    const goldB = Math.floor(
-      Number.parseFloat(b.totalPoints || "0") * 5_000_000
-    );
-    return goldB - goldA;
   });
+
+  const isAdmin = session?.role === "admin";
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -125,11 +132,19 @@ function RouteComponent() {
       </h1>
 
       {/* Filters Row */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Settings Icon */}
-        <Button className="shrink-0" size="icon" variant="outline">
-          <Settings2 className="h-4 w-4" />
-        </Button>
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+        {/* Gold Distribution Button - Admin Only */}
+        {isAdmin && (
+          <DistributeGoldModal
+            selectedEventId={selectedEventId}
+            selectedHeroId={selectedHeroId}
+            trigger={
+              <Button className="shrink-0" size="icon" variant="outline">
+                <Coins className="h-4 w-4 text-yellow-500" />
+              </Button>
+            }
+          />
+        )}
 
         {/* Event Select */}
         <Select onValueChange={setSelectedEventId} value={selectedEventId}>
@@ -171,7 +186,7 @@ function RouteComponent() {
         </Select>
 
         {/* Sort Buttons */}
-        <div className="ml-auto flex items-center gap-1">
+        <div className="flex items-center justify-start gap-1 sm:ml-auto">
           <Button
             onClick={() => setSortBy("points")}
             size="sm"
@@ -212,9 +227,7 @@ function RouteComponent() {
       ) : (
         <div className="space-y-2">
           {sortedRanking.map((player, index) => {
-            const goldPlaceholder = Math.floor(
-              Number.parseFloat(player.totalPoints || "0") * 5_000_000
-            );
+            const earnings = Number.parseFloat(player.totalEarnings || "0");
             const rankIcon = getRankIcon(index + 1);
 
             return (
@@ -275,7 +288,9 @@ function RouteComponent() {
                       <div className="w-28 text-center">
                         <p className="text-muted-foreground text-xs">Zarobek</p>
                         <p className="font-mono font-semibold">
-                          {goldPlaceholder.toLocaleString("pl-PL")}
+                          {earnings.toLocaleString("pl-PL", {
+                            maximumFractionDigits: 0,
+                          })}
                         </p>
                       </div>
                     </div>
