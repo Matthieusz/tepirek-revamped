@@ -101,7 +101,7 @@ function RouteComponent() {
         <h1 className="text-center font-bold text-3xl tracking-tight">
           Ranking graczy
         </h1>
-        <CardGridSkeleton count={6} />
+        <CardGridSkeleton count={6} variant="ranking" />
       </div>
     );
   }

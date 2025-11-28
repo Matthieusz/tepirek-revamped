@@ -175,7 +175,7 @@ function RouteComponent() {
             Przeglądaj wszystkie utworzone obstawienia.
           </p>
         </div>
-        <CardGridSkeleton count={6} />
+        <CardGridSkeleton count={6} variant="bet" />
       </div>
     );
   }

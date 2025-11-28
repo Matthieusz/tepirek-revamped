@@ -149,7 +149,7 @@ function RouteComponent() {
         <h1 className="text-center font-bold text-3xl tracking-tight">
           Skarbiec
         </h1>
-        <CardGridSkeleton count={6} />
+        <CardGridSkeleton count={6} variant="vault" />
       </div>
     );
   }
