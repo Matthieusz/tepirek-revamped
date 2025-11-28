@@ -28,37 +28,31 @@ const professions = [
     name: "Tropiciel",
     to: "/dashboard/auctions/main/tracker",
     icon: Target,
-    description: "Precyzyjny łowca z dystansu",
   },
   {
     name: "Paladyn",
     to: "/dashboard/auctions/main/paladin",
     icon: Shield,
-    description: "Obrońca i wsparcie drużyny",
   },
   {
     name: "Mag",
     to: "/dashboard/auctions/main/mage",
     icon: Wand2,
-    description: "Władca magicznych mocy",
   },
   {
     name: "Łowca",
     to: "/dashboard/auctions/main/hunter",
     icon: Crosshair,
-    description: "Mistrz pułapek i zwierząt",
   },
   {
     name: "Tancerz Ostrzy",
     to: "/dashboard/auctions/main/blade-dancer",
     icon: Swords,
-    description: "Wirtuoz walki wręcz",
   },
   {
     name: "Wojownik",
     to: "/dashboard/auctions/main/warrior",
     icon: Axe,
-    description: "Nieustraszony na polu bitwy",
   },
 ] as const;
 
@@ -84,7 +78,7 @@ function RouteComponent() {
 
       {/* Profession Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {professions.map(({ name, to, icon: Icon, description }) => (
+        {professions.map(({ name, to, icon: Icon }) => (
           <Link key={to} to={to}>
             <Card className="group h-full transition-colors hover:border-primary/50 hover:bg-accent/50">
               <CardHeader>
@@ -95,7 +89,6 @@ function RouteComponent() {
                   <ChevronRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <CardTitle className="text-lg">{name}</CardTitle>
-                <CardDescription>{description}</CardDescription>
               </CardHeader>
             </Card>
           </Link>

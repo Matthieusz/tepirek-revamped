@@ -73,10 +73,6 @@ const data = {
           title: "Broni pomocniczych",
           url: "/dashboard/auctions/support",
         },
-        {
-          title: "Bibelotów",
-          url: "/dashboard/auctions/bibelots",
-        },
       ],
     },
     {
