@@ -54,6 +54,10 @@ const data = {
           title: "Ranking",
           url: "/dashboard/events/ranking",
         },
+        {
+          title: "Skarbiec",
+          url: "/dashboard/events/vault",
+        },
       ],
     },
     {

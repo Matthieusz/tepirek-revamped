@@ -1,4 +1,5 @@
 import {
+  boolean,
   integer,
   numeric,
   pgTable,
@@ -68,6 +69,7 @@ export const userStats = pgTable(
     earnings: numeric("earnings", { precision: 20, scale: 2 })
       .notNull()
       .default("0"),
+    paidOut: boolean("paid_out").notNull().default(false),
   },
   (table) => [unique().on(table.userId, table.eventId, table.heroId)]
 );

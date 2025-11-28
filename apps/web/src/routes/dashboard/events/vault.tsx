@@ -1,0 +1,403 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
+import type { LucideIcon } from "lucide-react";
+import {
+  Cake,
+  Calendar,
+  Check,
+  Coins,
+  Egg,
+  Ghost,
+  Snowflake,
+  Sun,
+  User,
+  Vault as VaultIcon,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { orpc } from "@/utils/orpc";
+
+const routeApi = getRouteApi("/dashboard");
+
+const EVENT_ICON_MAP: Record<string, LucideIcon> = {
+  egg: Egg,
+  sun: Sun,
+  ghost: Ghost,
+  cake: Cake,
+  snowflake: Snowflake,
+  calendar: Calendar,
+};
+
+export const Route = createFileRoute("/dashboard/events/vault")({
+  component: RouteComponent,
+  staticData: {
+    crumb: "Skarbiec",
+  },
+});
+
+function RouteComponent() {
+  const { session } = routeApi.useRouteContext();
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: events, isPending: eventsLoading } = useQuery(
+    orpc.event.getAll.queryOptions()
+  );
+
+  // Get the oldest event with unpaid users
+  const { data: oldestUnpaidEventId, isPending: oldestUnpaidLoading } =
+    useQuery(orpc.bet.getOldestUnpaidEvent.queryOptions());
+
+  // Auto-select the oldest unpaid event on initial load
+  useEffect(() => {
+    if (hasInitialized || oldestUnpaidLoading) {
+      return;
+    }
+    if (oldestUnpaidEventId === undefined) {
+      return;
+    }
+
+    if (oldestUnpaidEventId !== null) {
+      setSelectedEventId(oldestUnpaidEventId.toString());
+    } else {
+      setSelectedEventId("all");
+    }
+    setHasInitialized(true);
+  }, [oldestUnpaidEventId, oldestUnpaidLoading, hasInitialized]);
+
+  const effectiveEventId = selectedEventId ?? "all";
+
+  const { data: vault, isPending: vaultLoading } = useQuery({
+    ...orpc.bet.getVault.queryOptions({
+      input: {
+        eventId:
+          effectiveEventId === "all"
+            ? undefined
+            : Number.parseInt(effectiveEventId, 10),
+      },
+    }),
+    enabled: hasInitialized,
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({
+      userId,
+      paidOut,
+    }: {
+      userId: string;
+      paidOut: boolean;
+    }) => {
+      await orpc.bet.togglePaidOut.call({
+        userId,
+        eventId:
+          effectiveEventId === "all"
+            ? undefined
+            : Number.parseInt(effectiveEventId, 10),
+        paidOut,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: orpc.bet.getVault.queryKey({
+          input: {
+            eventId:
+              effectiveEventId === "all"
+                ? undefined
+                : Number.parseInt(effectiveEventId, 10),
+          },
+        }),
+      });
+      queryClient.invalidateQueries({
+        queryKey: orpc.bet.getOldestUnpaidEvent.queryKey(),
+      });
+      toast.success("Status wypłaty zaktualizowany");
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : "Wystąpił błąd";
+      toast.error(message);
+    },
+  });
+
+  const isAdmin = session?.role === "admin";
+  const isPending =
+    eventsLoading || vaultLoading || oldestUnpaidLoading || !hasInitialized;
+
+  // Find the next person to receive money (first unpaid user)
+  const nextToPay = vault?.find((v) => !v.paidOut);
+
+  // Separate paid and unpaid users
+  const unpaidUsers = vault?.filter((v) => !v.paidOut) || [];
+  const paidUsers = vault?.filter((v) => v.paidOut) || [];
+
+  if (isPending) {
+    return (
+      <div className="mx-auto w-full max-w-4xl space-y-6">
+        <h1 className="text-center font-bold text-3xl tracking-tight">
+          Skarbiec
+        </h1>
+        <CardGridSkeleton count={6} />
+      </div>
+    );
+  }
+
+  const sortedEvents = [...(events || [])].sort(
+    (a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime()
+  );
+
+  return (
+    <div className="mx-auto w-full max-w-4xl space-y-6">
+      <h1 className="text-center font-bold text-3xl tracking-tight">
+        Skarbiec
+      </h1>
+
+      {/* Event Filter */}
+      <div className="flex justify-center">
+        <Select onValueChange={setSelectedEventId} value={effectiveEventId}>
+          <SelectTrigger className="w-56">
+            <SelectValue placeholder="Wybierz event" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Wszystkie eventy</SelectItem>
+            {sortedEvents.map((event) => {
+              const IconComponent = EVENT_ICON_MAP[event.icon || "calendar"];
+              return (
+                <SelectItem key={event.id} value={event.id.toString()}>
+                  <div className="flex items-center gap-2">
+                    <IconComponent
+                      className="h-4 w-4"
+                      style={{ color: event.color || undefined }}
+                    />
+                    <span>{event.name}</span>
+                  </div>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Next to receive payment - highlighted */}
+      {nextToPay && (
+        <Card className="border-2 border-green-500/50 bg-green-500/5">
+          <CardContent className="py-4">
+            <div className="mb-2 flex items-center justify-center gap-2">
+              <span className="font-semibold text-green-600 text-sm dark:text-green-400">
+                Następny do wypłaty
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-12 w-12 border-2 border-green-500">
+                  <AvatarImage
+                    alt={nextToPay.userName}
+                    src={nextToPay.userImage || undefined}
+                  />
+                  <AvatarFallback>
+                    <User className="h-6 w-6" />
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-bold text-lg">{nextToPay.userName}</p>
+                  <p className="font-mono text-muted-foreground">
+                    {(
+                      Math.floor(
+                        Number.parseFloat(nextToPay.totalEarnings || "0") /
+                          1_000_000
+                      ) * 1_000_000
+                    ).toLocaleString("pl-PL", {
+                      maximumFractionDigits: 0,
+                    })}{" "}
+                    złota
+                  </p>
+                </div>
+              </div>
+              {isAdmin && (
+                <Button
+                  disabled={toggleMutation.isPending}
+                  onClick={() =>
+                    toggleMutation.mutate({
+                      userId: nextToPay.userId,
+                      paidOut: true,
+                    })
+                  }
+                  size="sm"
+                  variant="default"
+                >
+                  <Check className="mr-2 h-4 w-4" />
+                  Oznacz jako wypłacone
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty state */}
+      {(!vault || vault.length === 0) && (
+        <Card>
+          <CardContent className="py-8">
+            <div className="text-center">
+              <VaultIcon className="mx-auto h-8 w-8 text-muted-foreground" />
+              <p className="mt-2 text-muted-foreground text-sm">
+                Brak graczy z zarobkami powyżej 100 000 000 złota
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Unpaid users list */}
+      {unpaidUsers.length > 1 && (
+        <div className="space-y-2">
+          <h2 className="font-semibold text-lg">
+            Do wypłaty ({unpaidUsers.length})
+          </h2>
+          {unpaidUsers.slice(1).map((player, index) => (
+            <Card
+              className="transition-all hover:bg-accent/50"
+              key={player.userId}
+            >
+              <CardContent className="px-4 py-3">
+                <div className="flex items-center gap-4">
+                  {/* Position */}
+                  <div className="flex w-8 shrink-0 items-center justify-center">
+                    <span className="font-medium text-muted-foreground">
+                      {index + 2}
+                    </span>
+                  </div>
+                  {/* Avatar */}
+                  <Avatar className="h-10 w-10 shrink-0 border border-border">
+                    <AvatarImage
+                      alt={player.userName}
+                      src={player.userImage || undefined}
+                    />
+                    <AvatarFallback>
+                      <User className="h-5 w-5" />
+                    </AvatarFallback>
+                  </Avatar>
+                  {/* Name */}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{player.userName}</p>
+                  </div>
+                  {/* Earnings */}
+                  <div className="flex items-center gap-2">
+                    <Coins className="h-4 w-4 text-yellow-500" />
+                    <p className="font-mono font-semibold">
+                      {(
+                        Math.floor(
+                          Number.parseFloat(player.totalEarnings || "0") /
+                            1_000_000
+                        ) * 1_000_000
+                      ).toLocaleString("pl-PL", {
+                        maximumFractionDigits: 0,
+                      })}
+                    </p>
+                  </div>
+                  {/* Checkbox for admin */}
+                  {isAdmin && (
+                    <Checkbox
+                      checked={player.paidOut}
+                      disabled={toggleMutation.isPending}
+                      onCheckedChange={(checked) =>
+                        toggleMutation.mutate({
+                          userId: player.userId,
+                          paidOut: !!checked,
+                        })
+                      }
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Paid users list */}
+      {paidUsers.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="font-semibold text-lg text-muted-foreground">
+            Wypłacone ({paidUsers.length})
+          </h2>
+          {paidUsers.map((player) => (
+            <Card
+              className="bg-muted/30 opacity-60 transition-all hover:opacity-100"
+              key={player.userId}
+            >
+              <CardContent className="px-4 py-3">
+                <div className="flex items-center gap-4">
+                  {/* Check icon */}
+                  <div className="flex w-8 shrink-0 items-center justify-center">
+                    <Check className="h-5 w-5 text-green-500" />
+                  </div>
+
+                  {/* Avatar */}
+                  <Avatar className="h-10 w-10 shrink-0 border border-border">
+                    <AvatarImage
+                      alt={player.userName}
+                      src={player.userImage || undefined}
+                    />
+                    <AvatarFallback>
+                      <User className="h-5 w-5" />
+                    </AvatarFallback>
+                  </Avatar>
+
+                  {/* Name */}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{player.userName}</p>
+                  </div>
+
+                  {/* Earnings */}
+                  <div className="flex items-center gap-2">
+                    <Coins className="h-4 w-4 text-yellow-500" />
+                    <p className="font-mono font-semibold">
+                      {(
+                        Math.floor(
+                          Number.parseFloat(player.totalEarnings || "0") /
+                            1_000_000
+                        ) * 1_000_000
+                      ).toLocaleString("pl-PL", {
+                        maximumFractionDigits: 0,
+                      })}
+                    </p>
+                  </div>
+
+                  {/* Badge */}
+                  <Badge variant="secondary">Wypłacone</Badge>
+
+                  {/* Checkbox for admin to undo */}
+                  {isAdmin && (
+                    <Checkbox
+                      checked={player.paidOut}
+                      disabled={toggleMutation.isPending}
+                      onCheckedChange={(checked) =>
+                        toggleMutation.mutate({
+                          userId: player.userId,
+                          paidOut: !!checked,
+                        })
+                      }
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

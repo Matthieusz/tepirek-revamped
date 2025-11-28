@@ -6,6 +6,7 @@ import {
   heroBetMember,
   userStats,
 } from "@tepirek-revamped/db/schema/bet";
+import { event } from "@tepirek-revamped/db/schema/event";
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
@@ -476,4 +477,80 @@ export const betRouter = {
         usersUpdated: heroUserStats.length,
       };
     }),
+
+  getVault: protectedProcedure
+    .input(z.object({ eventId: z.number().optional() }))
+    .handler(async ({ input }) => {
+      const MIN_EARNINGS = 100_000_000; // 100 million minimum
+
+      // Build where conditions
+      const conditions: SQL[] = [];
+      if (input.eventId) {
+        conditions.push(eq(userStats.eventId, input.eventId));
+      }
+
+      const whereClause =
+        conditions.length > 0 ? and(...conditions) : undefined;
+
+      // Aggregate earnings per user (across heroes in the event)
+      const vault = await db
+        .select({
+          userId: userStats.userId,
+          userName: user.name,
+          userImage: user.image,
+          totalEarnings: sql<string>`SUM(${userStats.earnings})`.as(
+            "total_earnings"
+          ),
+          paidOut: sql<boolean>`BOOL_AND(${userStats.paidOut})`.as("paid_out"),
+        })
+        .from(userStats)
+        .innerJoin(user, eq(userStats.userId, user.id))
+        .where(whereClause)
+        .groupBy(userStats.userId, user.name, user.image)
+        .having(sql`SUM(${userStats.earnings}) >= ${MIN_EARNINGS}`)
+        .orderBy(desc(sql`SUM(${userStats.earnings})`));
+
+      return vault;
+    }),
+
+  togglePaidOut: adminProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        eventId: z.number().optional(),
+        paidOut: z.boolean(),
+      })
+    )
+    .handler(async ({ input }) => {
+      const conditions: SQL[] = [eq(userStats.userId, input.userId)];
+      if (input.eventId) {
+        conditions.push(eq(userStats.eventId, input.eventId));
+      }
+
+      await db
+        .update(userStats)
+        .set({ paidOut: input.paidOut })
+        .where(and(...conditions));
+
+      return { success: true };
+    }),
+
+  getOldestUnpaidEvent: protectedProcedure.handler(async () => {
+    const MIN_EARNINGS = 100_000_000;
+
+    // Find the oldest event that has at least one user with unpaid earnings >= MIN_EARNINGS
+    const result = await db
+      .select({
+        eventId: userStats.eventId,
+      })
+      .from(userStats)
+      .innerJoin(event, eq(userStats.eventId, event.id))
+      .where(eq(userStats.paidOut, false))
+      .groupBy(userStats.eventId, event.endTime)
+      .having(sql`SUM(${userStats.earnings}) >= ${MIN_EARNINGS}`)
+      .orderBy(sql`${event.endTime} ASC`)
+      .limit(1);
+
+    return result[0]?.eventId ?? null;
+  }),
 };
