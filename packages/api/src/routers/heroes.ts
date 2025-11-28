@@ -12,6 +12,7 @@ export const heroesRouter = {
       z.object({
         name: z.string().min(1),
         image: z.string().min(1).optional(),
+        level: z.number().min(1).max(300).default(1),
         eventId: z.number(),
       })
     )
@@ -20,6 +21,7 @@ export const heroesRouter = {
         await db.insert(hero).values({
           name: input.name,
           image: input.image || null,
+          level: input.level,
           eventId: input.eventId,
         })
     ),

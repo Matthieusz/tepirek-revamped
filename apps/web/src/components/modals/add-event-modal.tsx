@@ -1,7 +1,14 @@
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+import {
+  Cake,
+  Calendar as CalendarIcon,
+  Egg,
+  Ghost,
+  Snowflake,
+  Sun,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -26,13 +33,36 @@ import {
 import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
-interface AddEventModalProps {
+type AddEventModalProps = {
   trigger: React.ReactNode;
-}
+};
+
+const EVENT_ICONS = [
+  { id: "egg", name: "Wielkanoc", icon: Egg },
+  { id: "sun", name: "Wakacje", icon: Sun },
+  { id: "ghost", name: "Halloween", icon: Ghost },
+  { id: "cake", name: "Urodziny", icon: Cake },
+  { id: "snowflake", name: "Gwiazdka", icon: Snowflake },
+  { id: "calendar", name: "Inne", icon: CalendarIcon },
+] as const;
+
+const EVENT_COLORS = [
+  { id: "#22c55e", name: "Zielony" },
+  { id: "#eab308", name: "Żółty" },
+  { id: "#f97316", name: "Pomarańczowy" },
+  { id: "#ef4444", name: "Czerwony" },
+  { id: "#8b5cf6", name: "Fioletowy" },
+  { id: "#6366f1", name: "Indygo" },
+  { id: "#3b82f6", name: "Niebieski" },
+  { id: "#06b6d4", name: "Cyjan" },
+  { id: "#ec4899", name: "Różowy" },
+] as const;
 
 export function AddEventModal({ trigger }: AddEventModalProps) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date>();
+  const [selectedIcon, setSelectedIcon] = useState("calendar");
+  const [selectedColor, setSelectedColor] = useState("#6366f1");
   const queryClient = useQueryClient();
 
   const form = useForm({
@@ -49,6 +79,8 @@ export function AddEventModal({ trigger }: AddEventModalProps) {
 
         await orpc.event.create.call({
           name: value.name,
+          icon: selectedIcon,
+          color: selectedColor,
           endTime: date.toISOString(),
         });
 
@@ -59,6 +91,8 @@ export function AddEventModal({ trigger }: AddEventModalProps) {
         setOpen(false);
         form.reset();
         setDate(undefined);
+        setSelectedIcon("calendar");
+        setSelectedColor("#6366f1");
       } catch (error) {
         const message =
           error instanceof Error
@@ -115,6 +149,58 @@ export function AddEventModal({ trigger }: AddEventModalProps) {
                 )}
               </form.Field>
             </div>
+
+            {/* Icon Selection */}
+            <div className="grid gap-2">
+              <Label>Ikona eventu</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {EVENT_ICONS.map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <button
+                      className={cn(
+                        "flex flex-col items-center gap-1 rounded-lg border p-3 transition-all hover:bg-muted/50",
+                        selectedIcon === item.id
+                          ? "border-primary bg-primary/5 ring-2 ring-primary"
+                          : "border-border"
+                      )}
+                      key={item.id}
+                      onClick={() => setSelectedIcon(item.id)}
+                      type="button"
+                    >
+                      <IconComponent
+                        className="h-5 w-5"
+                        style={{ color: selectedColor }}
+                      />
+                      <span className="text-xs">{item.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Color Selection */}
+            <div className="grid gap-2">
+              <Label>Kolor przewodni</Label>
+              <div className="flex flex-wrap gap-2">
+                {EVENT_COLORS.map((color) => (
+                  <button
+                    className={cn(
+                      "h-8 w-8 rounded-full border-2 transition-all",
+                      selectedColor === color.id
+                        ? "scale-110 border-foreground"
+                        : "border-transparent"
+                    )}
+                    key={color.id}
+                    onClick={() => setSelectedColor(color.id)}
+                    style={{ backgroundColor: color.id }}
+                    title={color.name}
+                    type="button"
+                  />
+                ))}
+              </div>
+            </div>
+
             <div className="grid gap-2">
               <form.Field name="endTime">
                 {(field) => (

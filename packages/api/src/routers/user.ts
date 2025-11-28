@@ -5,6 +5,9 @@ import z from "zod";
 import { protectedProcedure } from "../index";
 
 export const userRouter = {
+  getVerified: protectedProcedure.handler(async () =>
+    db.select().from(user).where(eq(user.verified, true))
+  ),
   validateDiscordGuild: protectedProcedure
     .input(
       z.object({

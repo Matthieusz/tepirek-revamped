@@ -8,11 +8,20 @@ export const eventRouter = {
   getAll: protectedProcedure.handler(async () => await db.select().from(event)),
 
   create: adminProcedure
-    .input(z.object({ name: z.string().min(1), endTime: z.iso.datetime() }))
+    .input(
+      z.object({
+        name: z.string().min(1),
+        icon: z.string().min(1).default("calendar"),
+        color: z.string().min(1).default("#6366f1"),
+        endTime: z.iso.datetime(),
+      })
+    )
     .handler(
       async ({ input }) =>
         await db.insert(event).values({
           name: input.name,
+          icon: input.icon,
+          color: input.color,
           endTime: new Date(input.endTime),
         })
     ),

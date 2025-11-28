@@ -2,10 +2,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns/format";
 import {
+  Cake,
   Calendar,
   CheckCircle2,
+  Egg,
+  Ghost,
   Plus,
   Power,
+  Snowflake,
+  Sun,
   Trash2,
   XCircle,
 } from "lucide-react";
@@ -34,6 +39,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { orpc } from "@/utils/orpc";
+
+const EVENT_ICON_MAP = {
+  egg: Egg,
+  sun: Sun,
+  ghost: Ghost,
+  cake: Cake,
+  snowflake: Snowflake,
+  calendar: Calendar,
+} as const;
 
 export const Route = createFileRoute("/dashboard/events/list")({
   component: RouteComponent,
@@ -153,6 +167,7 @@ function RouteComponent() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-16">#</TableHead>
+                  <TableHead className="w-16">Ikona</TableHead>
                   <TableHead>Nazwa</TableHead>
                   <TableHead className="w-40">Data zakończenia</TableHead>
                   <TableHead className="w-24">Status</TableHead>
@@ -162,67 +177,85 @@ function RouteComponent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {events.map((event, index) => (
-                  <TableRow key={event.id}>
-                    <TableCell className="text-muted-foreground">
-                      {index + 1}
-                    </TableCell>
-                    <TableCell className="font-medium">{event.name}</TableCell>
-                    <TableCell>
-                      {format(new Date(event.endTime), "dd.MM.yyyy")}
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`inline-flex items-center gap-1 text-sm ${
-                          event.active
-                            ? "text-green-500"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {event.active ? (
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                        ) : (
-                          <XCircle className="h-3.5 w-3.5" />
-                        )}
-                        {event.active ? "Aktywny" : "Nieaktywny"}
-                      </span>
-                    </TableCell>
-                    {session.role === "admin" && (
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            onClick={() =>
-                              setEventAction({
-                                id: event.id,
-                                name: event.name,
-                                type: "toggle",
-                                active: event.active ?? false,
-                              })
-                            }
-                            size="sm"
-                            variant="ghost"
-                          >
-                            <Power className="h-4 w-4" />
-                            {event.active ? "Wyłącz" : "Włącz"}
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              setEventAction({
-                                id: event.id,
-                                name: event.name,
-                                type: "delete",
-                              })
-                            }
-                            size="sm"
-                            variant="ghost"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                {events.map((event, index) => {
+                  const IconComponent =
+                    EVENT_ICON_MAP[event.icon as keyof typeof EVENT_ICON_MAP] ||
+                    Calendar;
+                  return (
+                    <TableRow key={event.id}>
+                      <TableCell className="text-muted-foreground">
+                        {index + 1}
+                      </TableCell>
+                      <TableCell>
+                        <div
+                          className="flex h-8 w-8 items-center justify-center rounded-lg"
+                          style={{ backgroundColor: `${event.color}20` }}
+                        >
+                          <IconComponent
+                            className="h-4 w-4"
+                            style={{ color: event.color }}
+                          />
                         </div>
                       </TableCell>
-                    )}
-                  </TableRow>
-                ))}
+                      <TableCell className="font-medium">
+                        {event.name}
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(event.endTime), "dd.MM.yyyy")}
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center gap-1 text-sm ${
+                            event.active
+                              ? "text-green-500"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {event.active ? (
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          ) : (
+                            <XCircle className="h-3.5 w-3.5" />
+                          )}
+                          {event.active ? "Aktywny" : "Nieaktywny"}
+                        </span>
+                      </TableCell>
+                      {session.role === "admin" && (
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              onClick={() =>
+                                setEventAction({
+                                  id: event.id,
+                                  name: event.name,
+                                  type: "toggle",
+                                  active: event.active ?? false,
+                                })
+                              }
+                              size="sm"
+                              variant="ghost"
+                            >
+                              <Power className="h-4 w-4" />
+                              {event.active ? "Wyłącz" : "Włącz"}
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setEventAction({
+                                  id: event.id,
+                                  name: event.name,
+                                  type: "delete",
+                                })
+                              }
+                              size="sm"
+                              variant="ghost"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

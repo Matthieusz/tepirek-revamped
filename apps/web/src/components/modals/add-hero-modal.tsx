@@ -31,12 +31,14 @@ type AddHeroModalProps = {
 type AddHeroModal = {
   name: string;
   image?: string;
+  level: string;
   eventId: string;
 };
 
 const defaultValues: AddHeroModal = {
   name: "",
   image: "",
+  level: "1",
   eventId: "",
 };
 
@@ -61,6 +63,7 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
         await orpc.heroes.create.call({
           name: value.name,
           image: value.image || undefined,
+          level: Number.parseInt(value.level, 10),
           eventId: Number.parseInt(value.eventId, 10),
         });
 
@@ -82,6 +85,7 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
       onSubmit: z.object({
         name: z.string().min(1, "Nazwa herosa jest wymagana"),
         image: z.string().optional(),
+        level: z.string().min(1, "Poziom jest wymagany"),
         eventId: z.string().min(1, "Wybierz event"),
       }),
     },
@@ -140,6 +144,31 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="Wprowadź URL obrazka"
+                      value={field.state.value}
+                    />
+                    {field.state.meta.errors.map((error) => (
+                      <p className="text-red-500 text-sm" key={error?.message}>
+                        {error?.message}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </form.Field>
+            </div>
+            <div className="grid gap-2">
+              <form.Field name="level">
+                {(field) => (
+                  <div className="grid gap-1.5">
+                    <Label htmlFor={field.name}>Poziom</Label>
+                    <Input
+                      id={field.name}
+                      max={300}
+                      min={1}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="Wprowadź poziom"
+                      type="number"
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (

@@ -122,6 +122,7 @@ function RouteComponent() {
                   <TableHead className="w-16">#</TableHead>
                   <TableHead className="w-20">Wygląd</TableHead>
                   <TableHead>Nazwa</TableHead>
+                  <TableHead className="w-20 text-center">Poziom</TableHead>
                   <TableHead className="w-32">Event</TableHead>
                   {session.role === "admin" && (
                     <TableHead className="w-20 text-right">Akcje</TableHead>
@@ -138,9 +139,9 @@ function RouteComponent() {
                       {hero.image ? (
                         <img
                           alt={hero.name}
-                          className="h-12 w-10 rounded object-cover"
+                          className="h-12 w-10 rounded object-contain"
                           height={48}
-                          src={`//${hero.image}`}
+                          src={hero.image}
                           width={40}
                         />
                       ) : (
@@ -150,6 +151,9 @@ function RouteComponent() {
                       )}
                     </TableCell>
                     <TableCell className="font-medium">{hero.name}</TableCell>
+                    <TableCell className="text-center">
+                      <span className="font-medium">{hero.level}</span>
+                    </TableCell>
                     <TableCell>
                       <span className="text-muted-foreground text-sm">
                         {events?.find((event) => event.id === hero.eventId)
