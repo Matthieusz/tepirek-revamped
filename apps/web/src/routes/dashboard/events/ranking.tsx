@@ -241,7 +241,7 @@ function RouteComponent() {
                 className="overflow-hidden transition-all hover:bg-accent/50"
                 key={player.userId}
               >
-                <CardContent className="px-4 py-3">
+                <CardContent className="px-4">
                   <div className="flex items-center gap-4">
                     {/* Rank Icon or Number */}
                     <div className="flex w-8 shrink-0 items-center justify-center">
