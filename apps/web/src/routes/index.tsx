@@ -56,7 +56,7 @@ function HomeComponent() {
 
         {/* Status Card */}
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader>
             <CardTitle className="font-medium text-sm">Status API</CardTitle>
           </CardHeader>
           <CardContent>
