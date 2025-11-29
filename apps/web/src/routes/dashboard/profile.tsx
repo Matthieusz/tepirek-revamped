@@ -34,20 +34,20 @@ function RouteComponent() {
       <Card>
         <CardHeader className="items-center pb-2">
           <Avatar className="size-24">
-            <AvatarImage alt="Avatar" src={session.image ?? undefined} />
+            <AvatarImage alt="Avatar" src={session.user.image ?? undefined} />
             <AvatarFallback className="text-2xl">
-              {session.name?.slice(0, 2).toUpperCase()}
+              {session.user.name?.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <CardTitle className="mt-4 text-xl">{session.name}</CardTitle>
-          <CardDescription>{session.email}</CardDescription>
+          <CardTitle className="mt-4 text-xl">{session.user.name}</CardTitle>
+          <CardDescription>{session.user.email}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
             <Mail className="h-4 w-4 text-muted-foreground" />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Email</p>
-              <p className="font-medium text-sm">{session.email}</p>
+              <p className="font-medium text-sm">{session.user.email}</p>
             </div>
           </div>
 
@@ -55,7 +55,9 @@ function RouteComponent() {
             <Shield className="h-4 w-4 text-muted-foreground" />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Rola</p>
-              <p className="font-medium text-sm capitalize">{session.role}</p>
+              <p className="font-medium text-sm capitalize">
+                {session.user.role}
+              </p>
             </div>
           </div>
 
@@ -66,10 +68,10 @@ function RouteComponent() {
               <p className="font-medium text-sm">
                 <span
                   className={
-                    session.verified ? "text-green-500" : "text-yellow-500"
+                    session.user.verified ? "text-green-500" : "text-yellow-500"
                   }
                 >
-                  {session.verified ? "Zweryfikowany" : "Oczekujący"}
+                  {session.user.verified ? "Zweryfikowany" : "Oczekujący"}
                 </span>
               </p>
             </div>
@@ -80,14 +82,16 @@ function RouteComponent() {
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Dołączono</p>
               <p className="font-medium text-sm">
-                {session.createdAt ? formatDate(session.createdAt) : "—"}
+                {session.user.createdAt
+                  ? formatDate(session.user.createdAt)
+                  : "—"}
               </p>
             </div>
           </div>
 
           {session && (
             <EditProfileModal
-              defaultName={session.name as string}
+              defaultName={session.user.name as string}
               trigger={
                 <Button className="mt-2 w-full" variant="outline">
                   <Edit className="h-4 w-4" />

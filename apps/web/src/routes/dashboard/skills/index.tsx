@@ -31,7 +31,7 @@ function RouteComponent() {
             Przeglądaj zestawy umiejętności według poziomów postaci.
           </p>
         </div>
-        {session.role === "admin" && (
+        {session.user.role === "admin" && (
           <AddRangeModal
             trigger={
               <Button size="sm">
@@ -53,7 +53,7 @@ function RouteComponent() {
       {!isPending && ranges && ranges.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {ranges.map((range) => (
-            <RangeCard key={range.id} range={range} />
+            <RangeCard key={range.id} range={range} session={session.user} />
           ))}
         </div>
       )}

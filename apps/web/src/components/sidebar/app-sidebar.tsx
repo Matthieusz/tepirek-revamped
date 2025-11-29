@@ -23,9 +23,9 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
+import type { AuthSession } from "@/lib/auth-guard";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
-import { Skeleton } from "../ui/skeleton";
 
 const data = {
   navMain: [
@@ -143,9 +143,13 @@ const data = {
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  session: AuthSession;
+};
+
+export function AppSidebar({ session, ...props }: AppSidebarProps) {
   const navigate = useNavigate();
-  const { data: session, isPending } = authClient.useSession();
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="border-sidebar-border border-b">
@@ -190,60 +194,45 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </div>
       <SidebarFooter className="border-sidebar-border border-t">
         <div className="flex items-center gap-3 px-1 py-1.5 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-3 group-data-[state=collapsed]:py-2">
-          {isPending ? (
-            <>
-              <Skeleton className="size-8 rounded-lg" />
-              <div className="grid flex-1 gap-1.5 text-left leading-tight group-data-[state=collapsed]:hidden">
-                <Skeleton className="h-4 w-24 rounded" />
-                <Skeleton className="h-3 w-32 rounded" />
-              </div>
-              <Skeleton className="size-8 rounded-lg" />
-            </>
-          ) : (
-            <>
-              <Avatar className="size-8 rounded-lg">
-                <AvatarImage
-                  alt="User avatar"
-                  src={session?.user.image ?? undefined}
-                />
-                <AvatarFallback className="rounded-lg text-xs">
-                  {session?.user.name?.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left leading-tight group-data-[state=collapsed]:hidden">
-                <span className="truncate font-medium text-sm">
-                  {session?.user.name}
-                </span>
-                <span className="truncate text-muted-foreground text-xs">
-                  {session?.user.email}
-                </span>
-              </div>
-              <Button
-                className="group-data-[state=collapsed]:size-8"
-                onClick={() =>
-                  authClient.signOut({
-                    fetchOptions: {
-                      onSuccess: () => {
-                        toast.success("Wylogowano pomyślnie");
-                        navigate({
-                          to: "/",
-                        });
-                      },
-                      onError: (error) => {
-                        toast.error(
-                          error.error.message || error.error.statusText
-                        );
-                      },
-                    },
-                  })
-                }
-                size="icon"
-                variant="destructive"
-              >
-                <LogOut className="size-4" />
-              </Button>
-            </>
-          )}
+          <Avatar className="size-8 rounded-lg">
+            <AvatarImage
+              alt="User avatar"
+              src={session?.user.image ?? undefined}
+            />
+            <AvatarFallback className="rounded-lg text-xs">
+              {session?.user.name?.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="grid flex-1 text-left leading-tight group-data-[state=collapsed]:hidden">
+            <span className="truncate font-medium text-sm">
+              {session?.user.name}
+            </span>
+            <span className="truncate text-muted-foreground text-xs">
+              {session?.user.email}
+            </span>
+          </div>
+          <Button
+            className="group-data-[state=collapsed]:size-8"
+            onClick={() =>
+              authClient.signOut({
+                fetchOptions: {
+                  onSuccess: () => {
+                    toast.success("Wylogowano pomyślnie");
+                    navigate({
+                      to: "/",
+                    });
+                  },
+                  onError: (error) => {
+                    toast.error(error.error.message || error.error.statusText);
+                  },
+                },
+              })
+            }
+            size="icon"
+            variant="destructive"
+          >
+            <LogOut className="size-4" />
+          </Button>
         </div>
       </SidebarFooter>
       <SidebarRail />

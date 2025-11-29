@@ -25,7 +25,7 @@ function RouteComponent() {
   const { data: playersData = [], isPending } = useQuery(
     orpc.user.list.queryOptions()
   );
-  const isAdmin = session.role === "admin";
+  const isAdmin = session.user.role === "admin";
   const cols = buildPlayerColumns(isAdmin);
 
   type Player = (typeof playersData)[number];

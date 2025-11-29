@@ -71,7 +71,9 @@ function RouteComponent() {
       {/* Welcome Section */}
       <Card className="border-none bg-linear-to-r from-primary/10 to-primary/5">
         <CardHeader>
-          <CardTitle className="text-2xl">Witaj, {session.name}! 👋</CardTitle>
+          <CardTitle className="text-2xl">
+            Witaj, {session.user.name}! 👋
+          </CardTitle>
           <CardDescription className="text-base">
             Strona klanowa Gildii Złodziei — sprawdź najnowsze ogłoszenia.
           </CardDescription>
@@ -86,7 +88,7 @@ function RouteComponent() {
               Ogłoszenia
             </h2>
           </div>
-          {session.role === "admin" && (
+          {session.user.role === "admin" && (
             <AddAnnouncementModal
               trigger={
                 <Button size="sm">
@@ -108,7 +110,7 @@ function RouteComponent() {
                 <p className="mt-3 text-muted-foreground">
                   Brak ogłoszeń do wyświetlenia
                 </p>
-                {session.role === "admin" && (
+                {session.user.role === "admin" && (
                   <p className="mt-1 text-muted-foreground text-sm">
                     Dodaj pierwsze ogłoszenie powyżej
                   </p>
@@ -150,7 +152,7 @@ function RouteComponent() {
                         </div>
                       </div>
                     </div>
-                    {session.role === "admin" && (
+                    {session.user.role === "admin" && (
                       <Button
                         aria-label="Usuń ogłoszenie"
                         onClick={() =>

@@ -21,7 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { authClient } from "@/lib/auth-client";
+import type { AuthUser } from "@/lib/auth-guard";
 import { cn, slugify } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
@@ -32,11 +32,11 @@ type RangeCardProps = {
     level: number;
     image: string | null;
   };
+  session: AuthUser;
   className?: string;
 };
 
-export function RangeCard({ range, className }: RangeCardProps) {
-  const { data: session } = authClient.useSession();
+export function RangeCard({ range, session, className }: RangeCardProps) {
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -87,7 +87,7 @@ export function RangeCard({ range, className }: RangeCardProps) {
             )}
           </CardContent>
         </Link>
-        {session?.user.role === "admin" && (
+        {session?.role === "admin" && (
           <div className="mt-auto p-4 pt-0">
             <Button
               className="w-full"
