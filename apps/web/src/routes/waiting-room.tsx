@@ -1,5 +1,7 @@
-import { createFileRoute, isRedirect, redirect } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { Clock, Loader2, LogOut, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,35 +19,47 @@ export const Route = createFileRoute("/waiting-room")({
   async beforeLoad() {
     await requireUnverified();
   },
-  async loader({ context }) {
-    const { queryClient } = context;
-    try {
-      const accessToken = await queryClient.fetchQuery(
-        orpc.user.getDiscordAccessToken.queryOptions()
-      );
-      if (accessToken) {
+  component: RouteComponent,
+});
+
+function RouteComponent() {
+  const router = useRouter();
+  const navigate = Route.useNavigate();
+  const { data: session } = authClient.useSession();
+  const [isValidating, setIsValidating] = useState(false);
+
+  // Fetch Discord access token
+  const { data: accessToken } = useQuery(
+    orpc.user.getDiscordAccessToken.queryOptions()
+  );
+
+  // Validate Discord guild membership on mount and when access token is available
+  useEffect(() => {
+    async function validateAndRedirect() {
+      if (!accessToken || isValidating) {
+        return;
+      }
+
+      setIsValidating(true);
+      try {
         const result = await orpc.user.validateDiscordGuild.call({
           accessToken,
         });
         if (result?.valid) {
           await orpc.user.verifySelf.call();
-          throw redirect({ to: "/dashboard" });
+          await router.invalidate();
+          navigate({ to: "/dashboard" });
         }
+      } catch (error) {
+        // Discord validation failed, stay on waiting room
+        console.error("Discord validation failed:", error);
+      } finally {
+        setIsValidating(false);
       }
-    } catch (error) {
-      if (isRedirect(error)) {
-        throw error;
-      }
-      // Discord validation failed, stay on waiting room
     }
-    return null;
-  },
-  component: RouteComponent,
-});
 
-function RouteComponent() {
-  const navigate = Route.useNavigate();
-  const { data: session } = authClient.useSession();
+    validateAndRedirect();
+  }, [accessToken, isValidating, navigate, router]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8">
