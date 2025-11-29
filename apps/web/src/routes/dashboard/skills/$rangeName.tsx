@@ -167,7 +167,7 @@ function RangeDetails() {
                         <TableHead>Link</TableHead>
                         <TableHead className="w-20">Mistrz</TableHead>
                         <TableHead className="w-28">Autor</TableHead>
-                        {session.role === "admin" && (
+                        {session.user.role === "admin" && (
                           <TableHead className="w-16" />
                         )}
                       </TableRow>
@@ -212,7 +212,7 @@ function RangeDetails() {
                               </span>
                             </div>
                           </TableCell>
-                          {session.role === "admin" && (
+                          {session.user.role === "admin" && (
                             <TableCell>
                               <Button
                                 onClick={() =>
