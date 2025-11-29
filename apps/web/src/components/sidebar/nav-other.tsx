@@ -50,7 +50,7 @@ export function NavOther({
                   isActive={!!isActive}
                   tooltip={item.name}
                 >
-                  <Link preload="intent" to={item.url}>
+                  <Link to={item.url}>
                     <item.icon className="size-4" />
                     <span>{item.name}</span>
                   </Link>

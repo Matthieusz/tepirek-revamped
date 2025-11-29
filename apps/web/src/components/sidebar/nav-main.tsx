@@ -87,7 +87,6 @@ export function NavMain({
                                 isActive && "text-primary"
                               )}
                               disabled={!!subItem.disabled}
-                              preload="intent"
                               to={subItem.url}
                             >
                               <span
