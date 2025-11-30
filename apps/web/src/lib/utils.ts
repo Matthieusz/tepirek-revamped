@@ -1,3 +1,7 @@
+export function isAdmin(session: { user?: { role?: string } }): boolean {
+  return session?.user?.role === "admin";
+}
+
 import { type ClassValue, clsx } from "clsx";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";

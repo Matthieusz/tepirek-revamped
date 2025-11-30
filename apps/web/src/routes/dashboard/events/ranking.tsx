@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 const routeApi = getRouteApi("/dashboard");
@@ -124,7 +125,7 @@ function RouteComponent() {
     );
   });
 
-  const isAdmin = session.user.role === "admin";
+  const isAdminUser = isAdmin(session);
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -135,7 +136,7 @@ function RouteComponent() {
       {/* Filters Row */}
       <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
         {/* Gold Distribution Button - Admin Only */}
-        {isAdmin && (
+        {isAdminUser && (
           <DistributeGoldModal
             selectedEventId={selectedEventId}
             selectedHeroId={selectedHeroId}

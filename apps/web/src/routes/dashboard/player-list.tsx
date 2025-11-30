@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TableSkeleton } from "@/components/ui/skeleton";
+import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/player-list")({
@@ -25,8 +26,8 @@ function RouteComponent() {
   const { data: playersData = [], isPending } = useQuery(
     orpc.user.list.queryOptions()
   );
-  const isAdmin = session.user.role === "admin";
-  const cols = buildPlayerColumns(isAdmin);
+  const isAdminUser = isAdmin(session);
+  const cols = buildPlayerColumns(isAdminUser);
 
   type Player = (typeof playersData)[number];
   const verifiedPlayers = playersData.filter(

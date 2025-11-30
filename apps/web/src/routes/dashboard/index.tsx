@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/")({
@@ -48,6 +48,8 @@ function RouteComponent() {
     orpc.announcement.getAll.queryOptions()
   );
   const queryClient = useQueryClient();
+
+  const isAdminUser = isAdmin(session);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -88,7 +90,7 @@ function RouteComponent() {
               Ogłoszenia
             </h2>
           </div>
-          {session.user.role === "admin" && (
+          {isAdminUser && (
             <AddAnnouncementModal
               trigger={
                 <Button size="sm">
@@ -110,7 +112,7 @@ function RouteComponent() {
                 <p className="mt-3 text-muted-foreground">
                   Brak ogłoszeń do wyświetlenia
                 </p>
-                {session.user.role === "admin" && (
+                {isAdminUser && (
                   <p className="mt-1 text-muted-foreground text-sm">
                     Dodaj pierwsze ogłoszenie powyżej
                   </p>
@@ -152,7 +154,7 @@ function RouteComponent() {
                         </div>
                       </div>
                     </div>
-                    {session.user.role === "admin" && (
+                    {isAdminUser && (
                       <Button
                         aria-label="Usuń ogłoszenie"
                         onClick={() =>

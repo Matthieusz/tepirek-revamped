@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 const EVENT_ICON_MAP = {
@@ -78,6 +79,8 @@ function RouteComponent() {
   const { data: verifiedUsers, isPending: usersLoading } = useQuery(
     orpc.user.getVerified.queryOptions()
   );
+
+  const isAdminUser = isAdmin(session);
 
   const form = useForm({
     defaultValues: {
@@ -282,7 +285,7 @@ function RouteComponent() {
     );
   };
 
-  if (session.user.role !== "admin") {
+  if (isAdminUser) {
     return (
       <div className="mx-auto w-full max-w-4xl space-y-6">
         <div>

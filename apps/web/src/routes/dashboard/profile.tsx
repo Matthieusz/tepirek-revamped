@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatDate } from "@/lib/utils";
+import { formatDate, isAdmin } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/profile")({
   component: RouteComponent,
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/dashboard/profile")({
 
 function RouteComponent() {
   const { session } = Route.useRouteContext();
+  const isAdminUser = isAdmin(session);
 
   return (
     <div className="w-full max-w-lg space-y-6">
@@ -56,7 +57,7 @@ function RouteComponent() {
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Rola</p>
               <p className="font-medium text-sm capitalize">
-                {session.user.role}
+                {isAdminUser ? "admin" : "user"}
               </p>
             </div>
           </div>

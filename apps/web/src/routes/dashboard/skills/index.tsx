@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
+import { AddProfessionModal } from "@/components/modals/add-profession-modal";
 import { AddRangeModal } from "@/components/modals/add-range-modal";
 import { RangeCard } from "@/components/skills/range-card";
 import { Button } from "@/components/ui/button";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/skills/")({
@@ -20,6 +22,8 @@ function RouteComponent() {
     orpc.skills.getAllRanges.queryOptions()
   );
 
+  const isAdminUser = isAdmin(session);
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
       <div className="flex items-center justify-between">
@@ -31,15 +35,25 @@ function RouteComponent() {
             Przeglądaj zestawy umiejętności według poziomów postaci.
           </p>
         </div>
-        {session.user.role === "admin" && (
-          <AddRangeModal
-            trigger={
-              <Button size="sm">
-                <Plus className="h-4 w-4" />
-                Dodaj przedział
-              </Button>
-            }
-          />
+        {isAdminUser && (
+          <div>
+            <AddProfessionModal
+              trigger={
+                <Button className="mr-2" size="sm">
+                  <Plus className="h-4 w-4" />
+                  Dodaj profesję
+                </Button>
+              }
+            />
+            <AddRangeModal
+              trigger={
+                <Button size="sm">
+                  <Plus className="h-4 w-4" />
+                  Dodaj przedział
+                </Button>
+              }
+            />
+          </div>
         )}
       </div>
       {isPending && <CardGridSkeleton count={10} variant="range" />}

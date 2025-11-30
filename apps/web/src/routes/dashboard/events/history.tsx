@@ -45,6 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 const EVENT_ICON_MAP: Record<string, LucideIcon> = {
@@ -86,6 +87,8 @@ function RouteComponent() {
   const { data: heroes, isPending: heroesLoading } = useQuery(
     orpc.heroes.getAll.queryOptions()
   );
+
+  const isAdminUser = isAdmin(session);
 
   // Server-side paginated bets query
   const {
@@ -268,7 +271,7 @@ function RouteComponent() {
                     <Badge variant="secondary">
                       {calculatePointsPerMember(bet.memberCount)} pkt/os
                     </Badge>
-                    {session.user.role === "admin" && (
+                    {isAdminUser && (
                       <Button
                         onClick={() =>
                           setBetToDelete({

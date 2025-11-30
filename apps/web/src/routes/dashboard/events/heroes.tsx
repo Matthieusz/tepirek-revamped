@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/events/heroes")({
@@ -47,6 +48,8 @@ function RouteComponent() {
   );
   const { data: events } = useQuery(orpc.event.getAll.queryOptions());
   const queryClient = useQueryClient();
+
+  const isAdminUser = isAdmin(session);
 
   const deleteMutation = useMutation({
     mutationFn: async (heroId: number) => {
@@ -88,7 +91,7 @@ function RouteComponent() {
             Zarządzaj herosami dostępnymi na eventach.
           </p>
         </div>
-        {session.user.role === "admin" && (
+        {isAdminUser && (
           <AddHeroModal
             trigger={
               <Button size="sm">
@@ -124,7 +127,7 @@ function RouteComponent() {
                   <TableHead>Nazwa</TableHead>
                   <TableHead className="w-20 text-center">Poziom</TableHead>
                   <TableHead className="w-32">Event</TableHead>
-                  {session.user.role === "admin" && (
+                  {isAdminUser && (
                     <TableHead className="w-20 text-right">Akcje</TableHead>
                   )}
                 </TableRow>
@@ -160,7 +163,7 @@ function RouteComponent() {
                           ?.name || "Brak"}
                       </span>
                     </TableCell>
-                    {session.user.role === "admin" && (
+                    {isAdminUser && (
                       <TableCell className="text-right">
                         <Button
                           onClick={() =>

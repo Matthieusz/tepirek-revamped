@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 const routeApi = getRouteApi("/dashboard");
@@ -132,7 +133,7 @@ function RouteComponent() {
     },
   });
 
-  const isAdmin = session.user.role === "admin";
+  const isAdminUser = isAdmin(session);
   const isPending =
     eventsLoading || vaultLoading || oldestUnpaidLoading || !hasInitialized;
 
@@ -225,7 +226,7 @@ function RouteComponent() {
                   </p>
                 </div>
               </div>
-              {isAdmin && (
+              {isAdminUser && (
                 <Button
                   disabled={toggleMutation.isPending}
                   onClick={() =>
@@ -308,7 +309,7 @@ function RouteComponent() {
                     </p>
                   </div>
                   {/* Checkbox for admin */}
-                  {isAdmin && (
+                  {isAdminUser && (
                     <Checkbox
                       checked={player.paidOut}
                       disabled={toggleMutation.isPending}
@@ -380,7 +381,7 @@ function RouteComponent() {
                   <Badge variant="secondary">Wypłacone</Badge>
 
                   {/* Checkbox for admin to undo */}
-                  {isAdmin && (
+                  {isAdminUser && (
                     <Checkbox
                       checked={player.paidOut}
                       disabled={toggleMutation.isPending}

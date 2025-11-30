@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { isAdmin } from "@/lib/utils";
 import { orpc, queryClient } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/skills/$rangeName")({
@@ -51,6 +52,8 @@ function RangeDetails() {
   const { rangeName } = Route.useParams();
   const { session } = Route.useRouteContext();
   const [skillToDelete, setSkillToDelete] = useState<SkillToDelete>(null);
+
+  const isAdminUser = isAdmin(session);
 
   const range = useQuery(
     orpc.skills.getRangeBySlug.queryOptions({ input: { slug: rangeName } })
@@ -167,9 +170,7 @@ function RangeDetails() {
                         <TableHead>Link</TableHead>
                         <TableHead className="w-20">Mistrz</TableHead>
                         <TableHead className="w-28">Autor</TableHead>
-                        {session.user.role === "admin" && (
-                          <TableHead className="w-16" />
-                        )}
+                        {isAdminUser && <TableHead className="w-16" />}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -212,7 +213,7 @@ function RangeDetails() {
                               </span>
                             </div>
                           </TableCell>
-                          {session.user.role === "admin" && (
+                          {isAdminUser && (
                             <TableCell>
                               <Button
                                 onClick={() =>
