@@ -73,6 +73,19 @@ export const skillsRouter = {
         })
     ),
 
+  createProfession: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(2),
+      })
+    )
+    .handler(
+      async ({ input }) =>
+        await db.insert(professions).values({
+          name: input.name,
+        })
+    ),
+
   deleteRange: adminProcedure
     .input(z.object({ id: z.number() }))
     .handler(

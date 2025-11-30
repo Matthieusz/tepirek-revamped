@@ -25,11 +25,11 @@ import {
 } from "@/components/ui/select";
 import { orpc } from "@/utils/orpc";
 
-interface AddSkillModalProps {
+type AddSkillModalProps = {
   trigger: React.ReactNode;
   defaultRangeId: number;
   defaultProfessionId?: number;
-}
+};
 
 const defaultValues = {
   name: "",
