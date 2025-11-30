@@ -40,6 +40,13 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         href: "/favicon.ico",
       },
     ],
+    scripts: [
+      {
+        src: "https://analytics.informati.dev/script.js",
+        defer: true,
+        "data-website-id": "d990bb55-d976-46af-a0d3-65352afecef5",
+      },
+    ],
   }),
 
   component: RootDocument,
