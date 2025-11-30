@@ -282,7 +282,7 @@ function RouteComponent() {
     );
   };
 
-  if (session.role !== "admin") {
+  if (session.user.role !== "admin") {
     return (
       <div className="mx-auto w-full max-w-4xl space-y-6">
         <div>

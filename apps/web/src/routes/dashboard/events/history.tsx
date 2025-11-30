@@ -268,7 +268,7 @@ function RouteComponent() {
                     <Badge variant="secondary">
                       {calculatePointsPerMember(bet.memberCount)} pkt/os
                     </Badge>
-                    {session.role === "admin" && (
+                    {session.user.role === "admin" && (
                       <Button
                         onClick={() =>
                           setBetToDelete({

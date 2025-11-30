@@ -124,7 +124,7 @@ function RouteComponent() {
     );
   });
 
-  const isAdmin = session?.role === "admin";
+  const isAdmin = session.user.role === "admin";
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">

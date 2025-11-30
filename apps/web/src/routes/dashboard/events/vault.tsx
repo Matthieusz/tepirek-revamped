@@ -132,7 +132,7 @@ function RouteComponent() {
     },
   });
 
-  const isAdmin = session?.role === "admin";
+  const isAdmin = session.user.role === "admin";
   const isPending =
     eventsLoading || vaultLoading || oldestUnpaidLoading || !hasInitialized;
 

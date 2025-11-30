@@ -88,7 +88,7 @@ function RouteComponent() {
             Zarządzaj herosami dostępnymi na eventach.
           </p>
         </div>
-        {session.role === "admin" && (
+        {session.user.role === "admin" && (
           <AddHeroModal
             trigger={
               <Button size="sm">
@@ -124,7 +124,7 @@ function RouteComponent() {
                   <TableHead>Nazwa</TableHead>
                   <TableHead className="w-20 text-center">Poziom</TableHead>
                   <TableHead className="w-32">Event</TableHead>
-                  {session.role === "admin" && (
+                  {session.user.role === "admin" && (
                     <TableHead className="w-20 text-right">Akcje</TableHead>
                   )}
                 </TableRow>
@@ -160,7 +160,7 @@ function RouteComponent() {
                           ?.name || "Brak"}
                       </span>
                     </TableCell>
-                    {session.role === "admin" && (
+                    {session.user.role === "admin" && (
                       <TableCell className="text-right">
                         <Button
                           onClick={() =>

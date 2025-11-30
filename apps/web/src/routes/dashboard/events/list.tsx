@@ -134,7 +134,7 @@ function RouteComponent() {
             Zarządzaj eventami w grze.
           </p>
         </div>
-        {session.role === "admin" && (
+        {session.user.role === "admin" && (
           <AddEventModal
             trigger={
               <Button size="sm">
@@ -171,7 +171,7 @@ function RouteComponent() {
                   <TableHead>Nazwa</TableHead>
                   <TableHead className="w-40">Data zakończenia</TableHead>
                   <TableHead className="w-24">Status</TableHead>
-                  {session.role === "admin" && (
+                  {session.user.role === "admin" && (
                     <TableHead className="w-48 text-right">Akcje</TableHead>
                   )}
                 </TableRow>
@@ -219,7 +219,7 @@ function RouteComponent() {
                           {event.active ? "Aktywny" : "Nieaktywny"}
                         </span>
                       </TableCell>
-                      {session.role === "admin" && (
+                      {session.user.role === "admin" && (
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button
