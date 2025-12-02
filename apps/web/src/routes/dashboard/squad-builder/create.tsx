@@ -201,7 +201,7 @@ function RouteComponent() {
                       id="squad-name"
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="np. Główny team, Elite squad..."
+                      placeholder="np. drimtim"
                       value={field.state.value}
                     />
                   </div>
