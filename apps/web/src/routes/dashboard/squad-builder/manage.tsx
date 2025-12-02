@@ -664,7 +664,6 @@ function ShareSquadDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [canEdit, setCanEdit] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
 
@@ -710,12 +709,10 @@ function ShareSquadDialog({
       orpc.squad.shareSquad.call({
         squadId,
         userId: selectedUserId,
-        canEdit,
       }),
     onSuccess: () => {
       toast.success("Squad udostępniony");
       setSelectedUserId("");
-      setCanEdit(false);
       queryClient.invalidateQueries({
         queryKey: orpc.squad.getSquadDetails.queryKey({
           input: { id: squadId },
@@ -816,17 +813,6 @@ function ShareSquadDialog({
             </ScrollArea>
           </div>
 
-          {/* Can edit toggle */}
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div className="space-y-0.5">
-              <Label className="font-medium">Pozwól na edycję</Label>
-              <p className="text-muted-foreground text-xs">
-                Użytkownik będzie mógł modyfikować skład
-              </p>
-            </div>
-            <Switch checked={canEdit} onCheckedChange={setCanEdit} />
-          </div>
-
           {/* Existing shares */}
           {squadDetails?.shares && squadDetails.shares.length > 0 && (
             <div className="space-y-2">
@@ -854,13 +840,8 @@ function ShareSquadDialog({
                       <p className="truncate font-medium text-sm">
                         {share.userName}
                       </p>
-                      <p className="text-muted-foreground text-xs">
+                      <p className="truncate text-muted-foreground text-xs">
                         {share.userEmail}
-                        {share.canEdit && (
-                          <Badge className="ml-2" variant="secondary">
-                            Może edytować
-                          </Badge>
-                        )}
                       </p>
                     </div>
                     <Button

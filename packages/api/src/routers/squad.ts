@@ -43,7 +43,6 @@ const createSquadSchema = z.object({
 const shareSquadSchema = z.object({
   squadId: z.number(),
   userId: z.string().min(1),
-  canEdit: z.boolean().default(false),
 });
 
 const updateSquadSchema = z.object({
@@ -505,17 +504,15 @@ export const squadRouter = {
         .limit(1);
 
       if (existing.length > 0) {
-        await db
-          .update(squadShare)
-          .set({ canEdit: input.canEdit })
-          .where(eq(squadShare.id, existing[0]?.id ?? 0));
-      } else {
-        await db.insert(squadShare).values({
-          squadId: input.squadId,
-          sharedWithUserId: targetUserId ?? "",
-          canEdit: input.canEdit,
-        });
+        // Share already exists, nothing to update
+        return { success: true };
       }
+
+      await db.insert(squadShare).values({
+        squadId: input.squadId,
+        sharedWithUserId: targetUserId ?? "",
+        canEdit: false,
+      });
 
       return { success: true };
     }),
