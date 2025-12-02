@@ -32,7 +32,7 @@ function HomeComponent() {
       <div className="w-full max-w-md space-y-6">
         {/* Hero Card */}
         <Card className="border-none bg-linear-to-br from-primary/15 via-primary/5 to-transparent">
-          <CardHeader className="text-center">
+          <CardHeader className="mb-3 text-center">
             <CardTitle className="text-3xl">Tepirek Revamped ⚔️</CardTitle>
             <CardDescription className="text-base">
               Strona klanowa Gildii Złodziei

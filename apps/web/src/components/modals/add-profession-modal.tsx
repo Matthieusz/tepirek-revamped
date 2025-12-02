@@ -53,7 +53,6 @@ export function AddProfessionModal({ trigger }: AddProfessionModalProps) {
     validators: {
       onSubmit: z.object({
         name: z.string().min(1, "Nazwa jest wymagana"),
-        description: z.string().min(1, "Opis jest wymagany"),
       }),
     },
   });
