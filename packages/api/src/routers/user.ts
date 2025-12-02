@@ -107,4 +107,49 @@ export const userRouter = {
         .where(eq(user.id, input.userId));
       return updated ?? null;
     }),
+  updateUserName: protectedProcedure
+    .input(
+      z.object({
+        userId: z.string().min(1),
+        name: z.string().min(2),
+      })
+    )
+    .handler(async ({ input, context }) => {
+      if (context.session.user.role !== "admin") {
+        throw new Error("FORBIDDEN");
+      }
+      await db
+        .update(user)
+        .set({ name: input.name, updatedAt: new Date() })
+        .where(eq(user.id, input.userId));
+      const [updated] = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, input.userId));
+      return updated ?? null;
+    }),
+  deleteUser: protectedProcedure
+    .input(
+      z.object({
+        userId: z.string().min(1),
+      })
+    )
+    .handler(async ({ input, context }) => {
+      if (context.session.user.role !== "admin") {
+        throw new Error("FORBIDDEN");
+      }
+      // Check if user is unverified before deleting
+      const [targetUser] = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, input.userId));
+      if (!targetUser) {
+        throw new Error("Użytkownik nie istnieje");
+      }
+      if (targetUser.verified) {
+        throw new Error("Nie można usunąć zweryfikowanego użytkownika");
+      }
+      await db.delete(user).where(eq(user.id, input.userId));
+      return { success: true };
+    }),
 };
