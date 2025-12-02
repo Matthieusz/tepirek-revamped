@@ -82,17 +82,18 @@ const data = {
       title: "Squad Builder",
       url: "#",
       icon: Users,
-      disabled: true,
       items: [
+        {
+          title: "Zarządzaj kontami",
+          url: "/dashboard/squad-builder/accounts",
+        },
         {
           title: "Utwórz nową drużynę",
           url: "/dashboard/squad-builder/create",
-          disabled: true,
         },
         {
           title: "Zarządzaj drużynami",
           url: "/dashboard/squad-builder/manage",
-          disabled: true,
         },
       ],
     },

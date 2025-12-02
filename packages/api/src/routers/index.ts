@@ -5,6 +5,7 @@ import { betRouter } from "./bet";
 import { eventRouter } from "./event";
 import { heroesRouter } from "./heroes";
 import { skillsRouter } from "./skills";
+import { squadRouter } from "./squad";
 import { todoRouter } from "./todo";
 import { userRouter } from "./user";
 
@@ -22,5 +23,6 @@ export const appRouter = {
   auction: auctionRouter,
   announcement: announcementRouter,
   bet: betRouter,
+  squad: squadRouter,
 };
 export type AppRouter = typeof appRouter;

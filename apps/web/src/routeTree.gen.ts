@@ -24,6 +24,7 @@ import { Route as DashboardAuctionsRouteRouteImport } from './routes/dashboard/a
 import { Route as DashboardSkillsIndexRouteImport } from './routes/dashboard/skills/index'
 import { Route as DashboardSquadBuilderManageRouteImport } from './routes/dashboard/squad-builder/manage'
 import { Route as DashboardSquadBuilderCreateRouteImport } from './routes/dashboard/squad-builder/create'
+import { Route as DashboardSquadBuilderAccountsRouteImport } from './routes/dashboard/squad-builder/accounts'
 import { Route as DashboardSkillsRangeNameRouteImport } from './routes/dashboard/skills/$rangeName'
 import { Route as DashboardEventsVaultRouteImport } from './routes/dashboard/events/vault'
 import { Route as DashboardEventsRankingRouteImport } from './routes/dashboard/events/ranking'
@@ -126,6 +127,12 @@ const DashboardSquadBuilderCreateRoute =
   DashboardSquadBuilderCreateRouteImport.update({
     id: '/squad-builder/create',
     path: '/squad-builder/create',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSquadBuilderAccountsRoute =
+  DashboardSquadBuilderAccountsRouteImport.update({
+    id: '/squad-builder/accounts',
+    path: '/squad-builder/accounts',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardSkillsRangeNameRoute =
@@ -301,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
   '/dashboard/events/vault': typeof DashboardEventsVaultRoute
   '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRoute
+  '/dashboard/squad-builder/accounts': typeof DashboardSquadBuilderAccountsRoute
   '/dashboard/squad-builder/create': typeof DashboardSquadBuilderCreateRoute
   '/dashboard/squad-builder/manage': typeof DashboardSquadBuilderManageRoute
   '/dashboard/skills/': typeof DashboardSkillsIndexRoute
@@ -340,6 +348,7 @@ export interface FileRoutesByTo {
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
   '/dashboard/events/vault': typeof DashboardEventsVaultRoute
   '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRoute
+  '/dashboard/squad-builder/accounts': typeof DashboardSquadBuilderAccountsRoute
   '/dashboard/squad-builder/create': typeof DashboardSquadBuilderCreateRoute
   '/dashboard/squad-builder/manage': typeof DashboardSquadBuilderManageRoute
   '/dashboard/skills': typeof DashboardSkillsIndexRoute
@@ -384,6 +393,7 @@ export interface FileRoutesById {
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
   '/dashboard/events/vault': typeof DashboardEventsVaultRoute
   '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRoute
+  '/dashboard/squad-builder/accounts': typeof DashboardSquadBuilderAccountsRoute
   '/dashboard/squad-builder/create': typeof DashboardSquadBuilderCreateRoute
   '/dashboard/squad-builder/manage': typeof DashboardSquadBuilderManageRoute
   '/dashboard/skills/': typeof DashboardSkillsIndexRoute
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/dashboard/events/ranking'
     | '/dashboard/events/vault'
     | '/dashboard/skills/$rangeName'
+    | '/dashboard/squad-builder/accounts'
     | '/dashboard/squad-builder/create'
     | '/dashboard/squad-builder/manage'
     | '/dashboard/skills/'
@@ -468,6 +479,7 @@ export interface FileRouteTypes {
     | '/dashboard/events/ranking'
     | '/dashboard/events/vault'
     | '/dashboard/skills/$rangeName'
+    | '/dashboard/squad-builder/accounts'
     | '/dashboard/squad-builder/create'
     | '/dashboard/squad-builder/manage'
     | '/dashboard/skills'
@@ -511,6 +523,7 @@ export interface FileRouteTypes {
     | '/dashboard/events/ranking'
     | '/dashboard/events/vault'
     | '/dashboard/skills/$rangeName'
+    | '/dashboard/squad-builder/accounts'
     | '/dashboard/squad-builder/create'
     | '/dashboard/squad-builder/manage'
     | '/dashboard/skills/'
@@ -644,6 +657,13 @@ declare module '@tanstack/react-router' {
       path: '/squad-builder/create'
       fullPath: '/dashboard/squad-builder/create'
       preLoaderRoute: typeof DashboardSquadBuilderCreateRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/squad-builder/accounts': {
+      id: '/dashboard/squad-builder/accounts'
+      path: '/squad-builder/accounts'
+      fullPath: '/dashboard/squad-builder/accounts'
+      preLoaderRoute: typeof DashboardSquadBuilderAccountsRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/skills/$rangeName': {
@@ -932,6 +952,7 @@ interface DashboardRouteRouteChildren {
   DashboardEventsListRoute: typeof DashboardEventsListRoute
   DashboardEventsRankingRoute: typeof DashboardEventsRankingRoute
   DashboardEventsVaultRoute: typeof DashboardEventsVaultRoute
+  DashboardSquadBuilderAccountsRoute: typeof DashboardSquadBuilderAccountsRoute
   DashboardSquadBuilderCreateRoute: typeof DashboardSquadBuilderCreateRoute
   DashboardSquadBuilderManageRoute: typeof DashboardSquadBuilderManageRoute
   DashboardEventsBetsAddRoute: typeof DashboardEventsBetsAddRoute
@@ -953,6 +974,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardEventsListRoute: DashboardEventsListRoute,
   DashboardEventsRankingRoute: DashboardEventsRankingRoute,
   DashboardEventsVaultRoute: DashboardEventsVaultRoute,
+  DashboardSquadBuilderAccountsRoute: DashboardSquadBuilderAccountsRoute,
   DashboardSquadBuilderCreateRoute: DashboardSquadBuilderCreateRoute,
   DashboardSquadBuilderManageRoute: DashboardSquadBuilderManageRoute,
   DashboardEventsBetsAddRoute: DashboardEventsBetsAddRoute,

@@ -42,15 +42,4 @@ export const auth = betterAuth({
       },
     },
   },
-  advanced: {
-    crossSubDomainCookies: {
-      enabled: true,
-      domain: ".informati.dev",
-    },
-    defaultCookieAttributes: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      sameSite: "none",
-    },
-  },
 });

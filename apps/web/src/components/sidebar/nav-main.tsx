@@ -89,14 +89,6 @@ export function NavMain({
                               disabled={!!subItem.disabled}
                               to={subItem.url}
                             >
-                              <span
-                                className={cn(
-                                  "mr-2 size-1 rounded-full",
-                                  isActive
-                                    ? "bg-primary"
-                                    : "bg-muted-foreground/30"
-                                )}
-                              />
                               {subItem.title}
                             </Link>
                           </SidebarMenuSubButton>
