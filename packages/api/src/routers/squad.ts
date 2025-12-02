@@ -42,8 +42,16 @@ const createSquadSchema = z.object({
 
 const shareSquadSchema = z.object({
   squadId: z.number(),
-  userEmail: z.email(),
+  userId: z.string().min(1),
   canEdit: z.boolean().default(false),
+});
+
+const updateSquadSchema = z.object({
+  id: z.number(),
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
+  isPublic: z.boolean(),
+  memberIds: z.array(z.number()).max(10),
 });
 
 function assertUserId(userId: string | undefined): asserts userId is string {
@@ -295,6 +303,7 @@ export const squadRouter = {
           odUserId: user.id,
           userName: user.name,
           userEmail: user.email,
+          userImage: user.image,
         })
         .from(squadShare)
         .innerJoin(user, eq(squadShare.sharedWithUserId, user.id))
@@ -382,6 +391,84 @@ export const squadRouter = {
       return { success: true };
     }),
 
+  updateSquad: protectedProcedure
+    .input(updateSquadSchema)
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+      assertUserId(userId);
+
+      // Verify ownership
+      const existingSquad = await db
+        .select()
+        .from(squad)
+        .where(and(eq(squad.id, input.id), eq(squad.userId, userId)))
+        .limit(1);
+
+      if (existingSquad.length === 0) {
+        throw new Error("Squad nie istnieje lub nie jesteś jego właścicielem");
+      }
+
+      const squadWorld = existingSquad[0]?.world;
+
+      // Validate members if provided
+      if (input.memberIds.length > 0) {
+        const characters = await db
+          .select({
+            id: character.id,
+            world: character.world,
+          })
+          .from(character)
+          .innerJoin(gameAccount, eq(character.gameAccountId, gameAccount.id))
+          .where(
+            and(
+              inArray(character.id, input.memberIds),
+              eq(gameAccount.userId, userId)
+            )
+          );
+
+        if (characters.length !== input.memberIds.length) {
+          throw new Error(
+            "Niektóre postacie nie istnieją lub nie należą do Ciebie"
+          );
+        }
+
+        const wrongWorld = characters.filter(
+          (c) => c.world.toLowerCase() !== squadWorld?.toLowerCase()
+        );
+        if (wrongWorld.length > 0) {
+          throw new Error(
+            "Wszystkie postacie muszą być z tego samego świata co squad"
+          );
+        }
+      }
+
+      // Update squad
+      await db
+        .update(squad)
+        .set({
+          name: input.name,
+          description: input.description,
+          isPublic: input.isPublic,
+          updatedAt: new Date(),
+        })
+        .where(eq(squad.id, input.id));
+
+      // Delete existing members and re-add
+      await db.delete(squadMember).where(eq(squadMember.squadId, input.id));
+
+      if (input.memberIds.length > 0) {
+        const memberValues = input.memberIds.map((charId, idx) => ({
+          squadId: input.id,
+          characterId: charId,
+          position: idx + 1,
+        }));
+
+        await db.insert(squadMember).values(memberValues);
+      }
+
+      return { success: true };
+    }),
+
   // === Squad Sharing ===
 
   shareSquad: protectedProcedure
@@ -400,17 +487,7 @@ export const squadRouter = {
         throw new Error("Squad nie istnieje lub nie jesteś jego właścicielem");
       }
 
-      const targetUser = await db
-        .select()
-        .from(user)
-        .where(eq(user.email, input.userEmail))
-        .limit(1);
-
-      if (targetUser.length === 0) {
-        throw new Error("Użytkownik o podanym emailu nie istnieje");
-      }
-
-      const targetUserId = targetUser[0]?.id;
+      const targetUserId = input.userId;
 
       if (targetUserId === userId) {
         throw new Error("Nie możesz udostępnić squadu samemu sobie");

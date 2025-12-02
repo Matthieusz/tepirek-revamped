@@ -5,13 +5,15 @@ import {
   Globe,
   Lock,
   MoreHorizontal,
+  Pencil,
   Plus,
   Search,
   Share2,
   Trash2,
   Users,
+  X,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -23,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +35,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -49,7 +53,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -57,7 +64,27 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getProfessionColor, professionNames } from "@/lib/margonem-parser";
+import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
+
+type VerifiedUser = {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+};
+
+type Character = {
+  id: number;
+  nick: string;
+  level: number;
+  profession: string;
+  professionName: string;
+  world: string;
+  avatarUrl: string | null;
+  guildName: string | null;
+  gameAccountName: string;
+};
 
 type Squad = {
   id: number;
@@ -70,6 +97,15 @@ type Squad = {
   isOwner: boolean;
   canEdit: boolean;
   ownerName: string | null;
+};
+
+type SquadShare = {
+  id: number;
+  canEdit: boolean;
+  odUserId: string;
+  userName: string;
+  userEmail: string;
+  userImage: string | null;
 };
 
 type SquadMember = {
@@ -94,9 +130,11 @@ type SquadDetails = {
   world: string;
   isPublic: boolean;
   isOwner: boolean;
+  userId: string;
   createdAt: Date;
   updatedAt: Date;
   members: SquadMember[];
+  shares: SquadShare[];
 };
 
 export const Route = createFileRoute("/dashboard/squad-builder/manage")({
@@ -239,6 +277,7 @@ function SquadCard({ squad }: { squad: Squad }) {
   const [showDetails, setShowDetails] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
@@ -297,6 +336,10 @@ function SquadCard({ squad }: { squad: Squad }) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edytuj
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setShowShareDialog(true)}>
                     <Share2 className="mr-2 h-4 w-4" />
                     Udostępnij
@@ -360,6 +403,11 @@ function SquadCard({ squad }: { squad: Squad }) {
 
       {squad.isOwner && (
         <>
+          <EditSquadDialog
+            onOpenChange={setShowEditDialog}
+            open={showEditDialog}
+            squad={squad}
+          />
           <ShareSquadDialog
             onOpenChange={setShowShareDialog}
             open={showShareDialog}
@@ -615,57 +663,469 @@ function ShareSquadDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [email, setEmail] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [canEdit, setCanEdit] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
+
+  const { data: verifiedUsers } = useQuery({
+    ...orpc.user.getVerified.queryOptions(),
+    enabled: open,
+  }) as { data: VerifiedUser[] | undefined };
+
+  const { data: squadDetails } = useQuery({
+    ...orpc.squad.getSquadDetails.queryOptions({ input: { id: squadId } }),
+    enabled: open,
+  }) as { data: SquadDetails | undefined };
+
+  // Filter out users who already have access
+  const availableUsers = useMemo(() => {
+    if (!verifiedUsers) {
+      return [];
+    }
+    if (!squadDetails) {
+      return [];
+    }
+    const sharedUserIds = squadDetails.shares?.map((s) => s.odUserId) ?? [];
+    return verifiedUsers.filter(
+      (u) => !sharedUserIds.includes(u.id) && u.id !== squadDetails.userId
+    );
+  }, [verifiedUsers, squadDetails]);
+
+  // Filter users by search query
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return availableUsers;
+    }
+    const query = searchQuery.toLowerCase();
+    return availableUsers.filter(
+      (u) =>
+        u.name.toLowerCase().includes(query) ||
+        u.email.toLowerCase().includes(query)
+    );
+  }, [availableUsers, searchQuery]);
 
   const shareMutation = useMutation({
     mutationFn: () =>
       orpc.squad.shareSquad.call({
         squadId,
-        userEmail: email,
-        canEdit: false,
+        userId: selectedUserId,
+        canEdit,
       }),
     onSuccess: () => {
       toast.success("Squad udostępniony");
-      setEmail("");
+      setSelectedUserId("");
+      setCanEdit(false);
       queryClient.invalidateQueries({
         queryKey: orpc.squad.getSquadDetails.queryKey({
           input: { id: squadId },
         }),
       });
-      onOpenChange(false);
+      queryClient.invalidateQueries({
+        queryKey: orpc.squad.getMySquads.queryKey(),
+      });
     },
     onError: (error) => {
       toast.error(error.message || "Nie udało się udostępnić squadu");
     },
   });
 
+  const removeShareMutation = useMutation({
+    mutationFn: (shareId: number) =>
+      orpc.squad.removeSquadShare.call({ shareId }),
+    onSuccess: () => {
+      toast.success("Usunięto udostępnienie");
+      queryClient.invalidateQueries({
+        queryKey: orpc.squad.getSquadDetails.queryKey({
+          input: { id: squadId },
+        }),
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Nie udało się usunąć udostępnienia");
+    },
+  });
+
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Udostępnij squad</DialogTitle>
           <DialogDescription>
-            Podaj email użytkownika, któremu chcesz udostępnić squad "
-            {squadName}"
+            Wybierz użytkownika, któremu chcesz udostępnić squad "{squadName}"
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4">
+        <div className="space-y-4 py-4">
+          {/* User search and selector */}
           <div className="space-y-2">
-            <Label htmlFor="share-email">Email użytkownika</Label>
+            <Label>Wybierz użytkownika</Label>
+            <div className="relative">
+              <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-8"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Szukaj użytkownika..."
+                value={searchQuery}
+              />
+            </div>
+            <ScrollArea className="h-[180px] rounded-md border">
+              <div className="space-y-1 p-2">
+                {filteredUsers.length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground text-sm">
+                    {availableUsers.length === 0
+                      ? "Brak dostępnych użytkowników"
+                      : "Nie znaleziono użytkowników"}
+                  </div>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <button
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg border p-2 text-left transition-all",
+                        selectedUserId === user.id
+                          ? "border-primary bg-primary/5"
+                          : "border-transparent hover:bg-accent/50"
+                      )}
+                      key={user.id}
+                      onClick={() => setSelectedUserId(user.id)}
+                      type="button"
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.image ?? undefined} />
+                        <AvatarFallback>
+                          {user.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                            .slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-sm">
+                          {user.name}
+                        </p>
+                        <p className="truncate text-muted-foreground text-xs">
+                          {user.email}
+                        </p>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+
+          {/* Can edit toggle */}
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="space-y-0.5">
+              <Label className="font-medium">Pozwól na edycję</Label>
+              <p className="text-muted-foreground text-xs">
+                Użytkownik będzie mógł modyfikować skład
+              </p>
+            </div>
+            <Switch checked={canEdit} onCheckedChange={setCanEdit} />
+          </div>
+
+          {/* Existing shares */}
+          {squadDetails?.shares && squadDetails.shares.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">
+                Aktualnie udostępnione ({squadDetails.shares.length})
+              </Label>
+              <div className="space-y-2">
+                {squadDetails.shares.map((share) => (
+                  <div
+                    className="flex items-center gap-3 rounded-lg border bg-muted/30 p-2"
+                    key={share.id}
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={share.userImage ?? undefined} />
+                      <AvatarFallback>
+                        {share.userName
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium text-sm">
+                        {share.userName}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {share.userEmail}
+                        {share.canEdit && (
+                          <Badge className="ml-2" variant="secondary">
+                            Może edytować
+                          </Badge>
+                        )}
+                      </p>
+                    </div>
+                    <Button
+                      disabled={removeShareMutation.isPending}
+                      onClick={() => removeShareMutation.mutate(share.id)}
+                      size="icon"
+                      variant="ghost"
+                    >
+                      <X className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)} variant="outline">
+            Zamknij
+          </Button>
+          <Button
+            disabled={!selectedUserId || shareMutation.isPending}
+            onClick={() => shareMutation.mutate()}
+          >
+            Udostępnij
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditSquadDialog({
+  squad,
+  open,
+  onOpenChange,
+}: {
+  squad: Squad;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const queryClient = useQueryClient();
+  const [name, setName] = useState(squad.name);
+  const [description, setDescription] = useState(squad.description || "");
+  const [isPublic, setIsPublic] = useState(squad.isPublic);
+  const [selectedCharacterIds, setSelectedCharacterIds] = useState<number[]>(
+    []
+  );
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Load squad details to get current members
+  const { data: details, isPending: detailsLoading } = useQuery({
+    ...orpc.squad.getSquadDetails.queryOptions({ input: { id: squad.id } }),
+    enabled: open,
+  }) as { data: SquadDetails | undefined; isPending: boolean };
+
+  // Load characters for the squad's world
+  const { data: characters, isPending: charactersLoading } = useQuery({
+    ...orpc.squad.getMyCharacters.queryOptions({
+      input: { world: squad.world },
+    }),
+    enabled: open,
+  }) as { data: Character[] | undefined; isPending: boolean };
+
+  // Initialize selected characters from details
+  useMemo(() => {
+    if (details?.members && selectedCharacterIds.length === 0) {
+      setSelectedCharacterIds(details.members.map((m) => m.characterId));
+    }
+  }, [details, selectedCharacterIds.length]);
+
+  // Filter characters by search
+  const filteredCharacters = useMemo(() => {
+    if (!characters) {
+      return [];
+    }
+    if (!searchQuery) {
+      return characters;
+    }
+    return characters.filter(
+      (c) =>
+        c.nick.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.gameAccountName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [characters, searchQuery]);
+
+  const toggleCharacter = (characterId: number) => {
+    setSelectedCharacterIds((prev) => {
+      if (prev.includes(characterId)) {
+        return prev.filter((id) => id !== characterId);
+      }
+      if (prev.length >= 10) {
+        toast.error("Squad może mieć maksymalnie 10 postaci");
+        return prev;
+      }
+      return [...prev, characterId];
+    });
+  };
+
+  const updateMutation = useMutation({
+    mutationFn: () =>
+      orpc.squad.updateSquad.call({
+        id: squad.id,
+        name,
+        description: description || undefined,
+        isPublic,
+        memberIds: selectedCharacterIds,
+      }),
+    onSuccess: () => {
+      toast.success("Squad zaktualizowany");
+      queryClient.invalidateQueries({
+        queryKey: orpc.squad.getMySquads.queryKey(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: orpc.squad.getSquadDetails.queryKey({
+          input: { id: squad.id },
+        }),
+      });
+      onOpenChange(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Nie udało się zaktualizować squadu");
+    },
+  });
+
+  const selectedCharacters = characters?.filter((c) =>
+    selectedCharacterIds.includes(c.id)
+  );
+
+  return (
+    <Dialog onOpenChange={onOpenChange} open={open}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Edytuj squad</DialogTitle>
+          <DialogDescription>
+            Świat: {squad.world.charAt(0).toUpperCase() + squad.world.slice(1)}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          {/* Name */}
+          <div className="space-y-2">
+            <Label htmlFor="edit-name">Nazwa squadu *</Label>
             <Input
-              id="share-email"
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && email) {
-                  shareMutation.mutate();
-                }
-              }}
-              placeholder="user@example.com"
-              type="email"
-              value={email}
+              id="edit-name"
+              onChange={(e) => setName(e.target.value)}
+              placeholder="np. drimtim"
+              value={name}
             />
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="edit-description">Opis</Label>
+            <Textarea
+              className="min-h-20"
+              id="edit-description"
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Krótki opis squadu..."
+              value={description}
+            />
+          </div>
+
+          {/* Public toggle */}
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                {isPublic ? (
+                  <Globe className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Lock className="h-4 w-4 text-amber-500" />
+                )}
+                <Label className="font-medium">
+                  {isPublic ? "Publiczny" : "Prywatny"}
+                </Label>
+              </div>
+              <p className="text-muted-foreground text-xs">
+                {isPublic
+                  ? "Każdy może zobaczyć ten squad"
+                  : "Tylko Ty i osoby, którym udostępnisz"}
+              </p>
+            </div>
+            <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+          </div>
+
+          {/* Character selection */}
+          <div className="space-y-2">
+            <Label>Skład drużyny ({selectedCharacterIds.length}/10)</Label>
+
+            {/* Selected characters badges */}
+            {selectedCharacters && selectedCharacters.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {selectedCharacters.map((char) => (
+                  <Badge
+                    className="cursor-pointer"
+                    key={char.id}
+                    onClick={() => toggleCharacter(char.id)}
+                    variant="secondary"
+                  >
+                    {char.nick}
+                    <span className="ml-1 opacity-60">×</span>
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Search */}
+            <div className="relative">
+              <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Szukaj postaci..."
+                value={searchQuery}
+              />
+            </div>
+
+            {/* Character list */}
+            {(detailsLoading || charactersLoading) && (
+              <div className="space-y-2">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            )}
+            {!(detailsLoading || charactersLoading) && (
+              <ScrollArea className="h-[200px] rounded-md border">
+                <div className="space-y-1 p-2">
+                  {filteredCharacters.map((char) => (
+                    <button
+                      className={cn(
+                        "flex w-full cursor-pointer items-center gap-3 rounded-lg border p-2 text-left transition-all",
+                        selectedCharacterIds.includes(char.id)
+                          ? "border-primary bg-primary/5"
+                          : "border-transparent hover:bg-accent/50"
+                      )}
+                      key={char.id}
+                      onClick={() => toggleCharacter(char.id)}
+                      type="button"
+                    >
+                      <Checkbox
+                        checked={selectedCharacterIds.includes(char.id)}
+                        onCheckedChange={() => toggleCharacter(char.id)}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate font-medium text-sm">
+                            {char.nick}
+                          </span>
+                          <Badge
+                            className={`${getProfessionColor(char.profession)} text-xs`}
+                            variant="outline"
+                          >
+                            {char.professionName}
+                          </Badge>
+                        </div>
+                        <div className="text-muted-foreground text-xs">
+                          Lvl {char.level} • {char.gameAccountName}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
           </div>
         </div>
 
@@ -674,10 +1134,14 @@ function ShareSquadDialog({
             Anuluj
           </Button>
           <Button
-            disabled={!email || shareMutation.isPending}
-            onClick={() => shareMutation.mutate()}
+            disabled={
+              !name ||
+              selectedCharacterIds.length === 0 ||
+              updateMutation.isPending
+            }
+            onClick={() => updateMutation.mutate()}
           >
-            Udostępnij
+            Zapisz zmiany
           </Button>
         </DialogFooter>
       </DialogContent>
