@@ -13,8 +13,9 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ErrorBoundary } from "@/components/error-boundary";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,14 +64,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useDebounce } from "@/hooks/use-debounce";
 import { getProfessionColor, professionNames } from "@/lib/margonem-parser";
+import { parseLevel, professionAbbreviations } from "@/lib/squad-utils";
 import { cn } from "@/lib/utils";
-import type {
-  Squad,
-  SquadDetails,
-  SquadMember,
-  VerifiedUser,
-} from "@/types/squad";
+import type { Squad, SquadMember } from "@/types/squad";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/squad-builder/manage")({
@@ -82,130 +80,133 @@ export const Route = createFileRoute("/dashboard/squad-builder/manage")({
 
 function RouteComponent() {
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const { data: squads, isPending: squadsLoading } = useQuery(
     orpc.squad.getMySquads.queryOptions()
-  ) as { data: Squad[] | undefined; isPending: boolean };
+  );
 
-  // Filter squads by search query
+  // Filter squads by search query (using debounced value)
   const filteredSquads = squads?.filter(
     (s) =>
-      searchQuery === "" ||
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.world.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      debouncedSearchQuery === "" ||
+      s.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      s.world.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      s.description?.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
   );
 
   const ownedSquads = filteredSquads?.filter((s) => s.isOwner) ?? [];
   const sharedSquads = filteredSquads?.filter((s) => !s.isOwner) ?? [];
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="font-bold text-3xl">Twoje drużyny</h1>
-          <p className="text-muted-foreground">
-            Przeglądaj i zarządzaj swoimi squadami
-          </p>
+    <ErrorBoundary>
+      <div className="container mx-auto py-6">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="font-bold text-3xl">Twoje drużyny</h1>
+            <p className="text-muted-foreground">
+              Przeglądaj i zarządzaj swoimi squadami
+            </p>
+          </div>
+          <Button asChild>
+            <Link to="/dashboard/squad-builder/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Nowy squad
+            </Link>
+          </Button>
         </div>
-        <Button asChild>
-          <Link to="/dashboard/squad-builder/create">
-            <Plus className="mr-2 h-4 w-4" />
-            Nowy squad
-          </Link>
-        </Button>
-      </div>
 
-      {/* Search bar */}
-      <div className="relative mb-6">
-        <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
-        <Input
-          className="pl-9"
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Szukaj po nazwie, świecie lub opisie..."
-          value={searchQuery}
-        />
-      </div>
-
-      {squadsLoading && (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <Skeleton className="h-48" />
-          <Skeleton className="h-48" />
-          <Skeleton className="h-48" />
+        {/* Search bar */}
+        <div className="relative mb-6">
+          <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            className="pl-9"
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Szukaj po nazwie, świecie lub opisie..."
+            value={searchQuery}
+          />
         </div>
-      )}
-      {!squadsLoading &&
-        ownedSquads.length === 0 &&
-        sharedSquads.length === 0 &&
-        !searchQuery && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <Users className="mb-4 h-12 w-12 text-muted-foreground/50" />
-              <h3 className="mb-2 font-semibold text-lg">Brak squadów</h3>
-              <p className="mb-4 text-center text-muted-foreground">
-                Nie masz jeszcze żadnych squadów. Utwórz pierwszy!
-              </p>
-              <Button asChild>
-                <Link to="/dashboard/squad-builder/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Utwórz squad
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      {!squadsLoading &&
-        ownedSquads.length === 0 &&
-        sharedSquads.length === 0 &&
-        searchQuery && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <Search className="mb-4 h-12 w-12 text-muted-foreground/50" />
-              <h3 className="mb-2 font-semibold text-lg">Brak wyników</h3>
-              <p className="mb-4 text-center text-muted-foreground">
-                Nie znaleziono squadów pasujących do "{searchQuery}"
-              </p>
-              <Button onClick={() => setSearchQuery("")} variant="outline">
-                Wyczyść wyszukiwanie
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      {!squadsLoading &&
-        (ownedSquads.length > 0 || sharedSquads.length > 0) && (
-          <div className="space-y-8">
-            {/* Własne squady */}
-            {ownedSquads.length > 0 && (
-              <section>
-                <h2 className="mb-4 flex items-center gap-2 font-semibold text-xl">
-                  <Users className="h-5 w-5" />
-                  Twoje squady ({ownedSquads.length})
-                </h2>
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {ownedSquads.map((squad) => (
-                    <SquadCard key={squad.id} squad={squad} />
-                  ))}
-                </div>
-              </section>
-            )}
 
-            {/* Udostępnione squady */}
-            {sharedSquads.length > 0 && (
-              <section>
-                <h2 className="mb-4 flex items-center gap-2 font-semibold text-xl">
-                  <Share2 className="h-5 w-5" />
-                  Udostępnione Ci ({sharedSquads.length})
-                </h2>
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {sharedSquads.map((squad) => (
-                    <SquadCard key={squad.id} squad={squad} />
-                  ))}
-                </div>
-              </section>
-            )}
+        {squadsLoading && (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <Skeleton className="h-48" />
+            <Skeleton className="h-48" />
+            <Skeleton className="h-48" />
           </div>
         )}
-    </div>
+        {!squadsLoading &&
+          ownedSquads.length === 0 &&
+          sharedSquads.length === 0 &&
+          !searchQuery && (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <Users className="mb-4 h-12 w-12 text-muted-foreground/50" />
+                <h3 className="mb-2 font-semibold text-lg">Brak squadów</h3>
+                <p className="mb-4 text-center text-muted-foreground">
+                  Nie masz jeszcze żadnych squadów. Utwórz pierwszy!
+                </p>
+                <Button asChild>
+                  <Link to="/dashboard/squad-builder/create">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Utwórz squad
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        {!squadsLoading &&
+          ownedSquads.length === 0 &&
+          sharedSquads.length === 0 &&
+          searchQuery && (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <Search className="mb-4 h-12 w-12 text-muted-foreground/50" />
+                <h3 className="mb-2 font-semibold text-lg">Brak wyników</h3>
+                <p className="mb-4 text-center text-muted-foreground">
+                  Nie znaleziono squadów pasujących do "{searchQuery}"
+                </p>
+                <Button onClick={() => setSearchQuery("")} variant="outline">
+                  Wyczyść wyszukiwanie
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        {!squadsLoading &&
+          (ownedSquads.length > 0 || sharedSquads.length > 0) && (
+            <div className="space-y-8">
+              {/* Własne squady */}
+              {ownedSquads.length > 0 && (
+                <section>
+                  <h2 className="mb-4 flex items-center gap-2 font-semibold text-xl">
+                    <Users className="h-5 w-5" />
+                    Twoje squady ({ownedSquads.length})
+                  </h2>
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {ownedSquads.map((squad) => (
+                      <SquadCard key={squad.id} squad={squad} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Udostępnione squady */}
+              {sharedSquads.length > 0 && (
+                <section>
+                  <h2 className="mb-4 flex items-center gap-2 font-semibold text-xl">
+                    <Share2 className="h-5 w-5" />
+                    Udostępnione Ci ({sharedSquads.length})
+                  </h2>
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {sharedSquads.map((squad) => (
+                      <SquadCard key={squad.id} squad={squad} />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+      </div>
+    </ErrorBoundary>
   );
 }
 
@@ -232,7 +233,7 @@ function SquadCard({ squad }: { squad: Squad }) {
   // Fetch squad details for preview
   const { data: details } = useQuery({
     ...orpc.squad.getSquadDetails.queryOptions({ input: { id: squad.id } }),
-  }) as { data: SquadDetails | undefined };
+  });
 
   return (
     <>
@@ -264,6 +265,7 @@ function SquadCard({ squad }: { squad: Squad }) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
+                    aria-label="Opcje squadu"
                     className="opacity-0 transition-opacity group-hover:opacity-100"
                     size="icon"
                     variant="ghost"
@@ -446,16 +448,6 @@ function ProfessionSummary({ members }: { members: SquadMember[] }) {
     {} as Record<string, number>
   );
 
-  // Get profession abbreviations
-  const professionAbbr: Record<string, string> = {
-    w: "W",
-    m: "M",
-    p: "P",
-    b: "B",
-    h: "H",
-    t: "T",
-  };
-
   return (
     <TooltipProvider>
       <div className="flex items-center gap-0.5">
@@ -466,8 +458,8 @@ function ProfessionSummary({ members }: { members: SquadMember[] }) {
                 className={`flex h-5 min-w-5 items-center justify-center rounded px-1 font-medium text-[10px] ${getProfessionColor(prof)}`}
               >
                 {count > 1
-                  ? `${professionAbbr[prof] || prof.toUpperCase()}${count}`
-                  : professionAbbr[prof] || prof.toUpperCase()}
+                  ? `${professionAbbreviations[prof] || prof.toUpperCase()}${count}`
+                  : professionAbbreviations[prof] || prof.toUpperCase()}
               </div>
             </TooltipTrigger>
             <TooltipContent>
@@ -494,7 +486,7 @@ function SquadDetailsDialog({
   const { data: details, isPending } = useQuery({
     ...orpc.squad.getSquadDetails.queryOptions({ input: { id: squadId } }),
     enabled: open,
-  }) as { data: SquadDetails | undefined; isPending: boolean };
+  });
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -606,12 +598,12 @@ function ShareSquadDialog({
   const { data: verifiedUsers } = useQuery({
     ...orpc.user.getVerified.queryOptions(),
     enabled: open,
-  }) as { data: VerifiedUser[] | undefined };
+  });
 
   const { data: squadDetails } = useQuery({
     ...orpc.squad.getSquadDetails.queryOptions({ input: { id: squadId } }),
     enabled: open,
-  }) as { data: SquadDetails | undefined };
+  });
 
   // Filter out users who already have access
   const availableUsers = useMemo(() => {
@@ -828,23 +820,46 @@ function EditSquadDialog({
     []
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [minLevel, setMinLevel] = useState<string>("");
+  const [maxLevel, setMaxLevel] = useState<string>("");
+  const [hideInSquad, setHideInSquad] = useState<boolean>(true);
+
+  // Reset all state when dialog opens/closes
+  useEffect(() => {
+    if (open) {
+      setName(squad.name);
+      setDescription(squad.description || "");
+      setIsPublic(squad.isPublic);
+      setSearchQuery("");
+      setMinLevel("");
+      setMaxLevel("");
+      setHideInSquad(true);
+      setSelectedCharacterIds([]);
+    }
+  }, [open, squad.name, squad.description, squad.isPublic]);
 
   // Load squad details to get current members
   const { data: details, isPending: detailsLoading } = useQuery({
     ...orpc.squad.getSquadDetails.queryOptions({ input: { id: squad.id } }),
     enabled: open,
-  }) as { data: SquadDetails | undefined; isPending: boolean };
+  });
 
   // Load characters for the squad's world
   const { data: characters, isPending: charactersLoading } = useQuery({
     ...orpc.squad.getMyCharacters.queryOptions({
-      input: { world: squad.world },
+      input: {
+        world: squad.world,
+        minLevel: parseLevel(minLevel),
+        maxLevel: parseLevel(maxLevel),
+        excludeInSquad: hideInSquad,
+        excludeInSquadExceptSquadId: squad.id,
+      },
     }),
     enabled: open,
-  }) as { data: Character[] | undefined; isPending: boolean };
+  });
 
   // Initialize selected characters from details
-  useMemo(() => {
+  useEffect(() => {
     if (details?.members && selectedCharacterIds.length === 0) {
       setSelectedCharacterIds(details.members.map((m) => m.characterId));
     }
@@ -996,6 +1011,37 @@ function EditSquadDialog({
               />
             </div>
 
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-2 gap-2 sm:col-span-2 sm:grid-cols-4">
+                <Input
+                  inputMode="numeric"
+                  min={1}
+                  onChange={(e) => setMinLevel(e.target.value)}
+                  placeholder="Min lvl"
+                  value={minLevel}
+                />
+                <Input
+                  inputMode="numeric"
+                  min={1}
+                  onChange={(e) => setMaxLevel(e.target.value)}
+                  placeholder="Max lvl"
+                  value={maxLevel}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-lg border p-3 sm:col-span-1">
+                <div>
+                  <p className="font-medium text-sm">Ukryj w składach</p>
+                  <p className="text-muted-foreground text-xs">
+                    Nie pokazuj postaci będących w innych squadach
+                  </p>
+                </div>
+                <Switch
+                  checked={hideInSquad}
+                  onCheckedChange={setHideInSquad}
+                />
+              </div>
+            </div>
+
             {/* Character list */}
             {(detailsLoading || charactersLoading) && (
               <div className="space-y-2">
@@ -1006,6 +1052,24 @@ function EditSquadDialog({
             {!(detailsLoading || charactersLoading) && (
               <ScrollArea className="h-[200px] rounded-md border">
                 <div className="space-y-1 p-2">
+                  {filteredCharacters.length === 0 && (
+                    <div className="py-4 text-center text-muted-foreground text-sm">
+                      <p>Brak postaci spełniających kryteria</p>
+                      <Button
+                        className="mt-2"
+                        onClick={() => {
+                          setSearchQuery("");
+                          setMinLevel("");
+                          setMaxLevel("");
+                          setHideInSquad(false);
+                        }}
+                        size="sm"
+                        variant="link"
+                      >
+                        Wyczyść filtry
+                      </Button>
+                    </div>
+                  )}
                   {filteredCharacters.map((char) => (
                     <button
                       className={cn(

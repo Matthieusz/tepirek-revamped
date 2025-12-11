@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Globe, Lock, Search, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +34,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useDebounce } from "@/hooks/use-debounce";
 import { getProfessionColor, professionNames } from "@/lib/margonem-parser";
+import { parseLevel, professionAbbreviations } from "@/lib/squad-utils";
 import type { Character } from "@/types/squad";
 import { orpc } from "@/utils/orpc";
 
@@ -56,19 +59,30 @@ function RouteComponent() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [professionFilter, setProfessionFilter] = useState<string>("all");
+  const [minLevel, setMinLevel] = useState<string>("");
+  const [maxLevel, setMaxLevel] = useState<string>("");
+  const [hideInSquad, setHideInSquad] = useState<boolean>(false);
+
+  // Debounce search for better performance
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const { data: worlds, isPending: worldsLoading } = useQuery(
     orpc.squad.getAvailableWorlds.queryOptions()
-  ) as { data: string[] | undefined; isPending: boolean };
+  );
 
   const { data: characters, isPending: charactersLoading } = useQuery({
     ...orpc.squad.getMyCharacters.queryOptions({
-      input: { world: selectedWorld || "" },
+      input: {
+        world: selectedWorld || "",
+        minLevel: parseLevel(minLevel),
+        maxLevel: parseLevel(maxLevel),
+        excludeInSquad: hideInSquad,
+      },
     }),
     enabled: !!selectedWorld,
   }) as { data: Character[] | undefined; isPending: boolean };
 
-  // Filtered characters
+  // Filtered characters (using debounced search)
   const filteredCharacters = useMemo(() => {
     if (!characters) {
       return [];
@@ -76,16 +90,18 @@ function RouteComponent() {
 
     return characters.filter((char) => {
       const matchesSearch =
-        searchQuery === "" ||
-        char.nick.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        char.gameAccountName.toLowerCase().includes(searchQuery.toLowerCase());
+        debouncedSearchQuery === "" ||
+        char.nick.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        char.gameAccountName
+          .toLowerCase()
+          .includes(debouncedSearchQuery.toLowerCase());
 
       const matchesProfession =
         professionFilter === "all" || char.profession === professionFilter;
 
       return matchesSearch && matchesProfession;
     });
-  }, [characters, searchQuery, professionFilter]);
+  }, [characters, debouncedSearchQuery, professionFilter]);
 
   const form = useForm({
     defaultValues: {
@@ -122,6 +138,9 @@ function RouteComponent() {
         queryClient.invalidateQueries({
           queryKey: orpc.squad.getMySquads.queryKey(),
         });
+        queryClient.invalidateQueries({
+          queryKey: orpc.squad.getMyCharacters.queryKey(),
+        });
         navigate({ to: "/dashboard/squad-builder/manage" });
       } catch (error) {
         const message =
@@ -138,6 +157,9 @@ function RouteComponent() {
     setSelectedCharacterIds([]);
     setSearchQuery("");
     setProfessionFilter("all");
+    setMinLevel("");
+    setMaxLevel("");
+    setHideInSquad(false);
   };
 
   const toggleCharacter = (characterId: number) => {
@@ -158,239 +180,330 @@ function RouteComponent() {
   );
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="mb-6">
-        <h1 className="font-bold text-3xl">Utwórz nowy Squad</h1>
-        <p className="text-muted-foreground">
-          Wybierz świat, postacie i skonfiguruj swoją drużynę
-        </p>
-      </div>
+    <ErrorBoundary>
+      <div className="container mx-auto py-6">
+        <div className="mb-6">
+          <h1 className="font-bold text-3xl">Utwórz nowy Squad</h1>
+          <p className="text-muted-foreground">
+            Wybierz świat, postacie i skonfiguruj swoją drużynę
+          </p>
+        </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Formularz - lewa strona */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Konfiguracja squadu</CardTitle>
-            <CardDescription>Podstawowe informacje o drużynie</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form
-              className="space-y-6"
-              onSubmit={(e) => {
-                e.preventDefault();
-                form.handleSubmit();
-              }}
-            >
-              {/* Nazwa */}
-              <form.Field name="name">
-                {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor="squad-name">Nazwa squadu *</Label>
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Formularz - lewa strona */}
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle>Konfiguracja squadu</CardTitle>
+              <CardDescription>
+                Podstawowe informacje o drużynie
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form
+                className="space-y-6"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  form.handleSubmit();
+                }}
+              >
+                {/* Nazwa */}
+                <form.Field
+                  name="name"
+                  validators={{
+                    onChange: ({ value }) => {
+                      if (!value) {
+                        return "Nazwa jest wymagana";
+                      }
+                      if (value.length < 3) {
+                        return "Nazwa musi mieć co najmniej 3 znaki";
+                      }
+                      if (value.length > 50) {
+                        return "Nazwa może mieć maksymalnie 50 znaków";
+                      }
+                    },
+                  }}
+                >
+                  {(field) => (
+                    <div className="space-y-2">
+                      <Label htmlFor="squad-name">Nazwa squadu *</Label>
+                      <Input
+                        aria-describedby={
+                          field.state.meta.errors.length
+                            ? "squad-name-error"
+                            : undefined
+                        }
+                        aria-invalid={!!field.state.meta.errors.length}
+                        id="squad-name"
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="np. drimtim"
+                        value={field.state.value}
+                      />
+                      {field.state.meta.errors.length > 0 && (
+                        <p
+                          className="text-destructive text-sm"
+                          id="squad-name-error"
+                        >
+                          {field.state.meta.errors[0]}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </form.Field>
+
+                {/* Opis */}
+                <form.Field
+                  name="description"
+                  validators={{
+                    onChange: ({ value }) => {
+                      if (value && value.length > 500) {
+                        return "Opis może mieć maksymalnie 500 znaków";
+                      }
+                    },
+                  }}
+                >
+                  {(field) => (
+                    <div className="space-y-2">
+                      <Label htmlFor="squad-description">Opis</Label>
+                      <Textarea
+                        aria-describedby={
+                          field.state.meta.errors.length
+                            ? "squad-description-error"
+                            : undefined
+                        }
+                        aria-invalid={!!field.state.meta.errors.length}
+                        className="min-h-20"
+                        id="squad-description"
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="Krótki opis squadu..."
+                        value={field.state.value}
+                      />
+                      {field.state.meta.errors.length > 0 && (
+                        <p
+                          className="text-destructive text-sm"
+                          id="squad-description-error"
+                        >
+                          {field.state.meta.errors[0]}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </form.Field>
+
+                {/* Świat */}
+                <div className="space-y-2">
+                  <Label>Świat *</Label>
+                  {worldsLoading && (
+                    <p className="text-muted-foreground text-sm">
+                      Ładowanie światów...
+                    </p>
+                  )}
+                  {!worldsLoading && (!worlds || worlds.length === 0) && (
+                    <p className="text-muted-foreground text-sm">
+                      Nie masz żadnych postaci. Najpierw dodaj konto z gry.
+                    </p>
+                  )}
+                  {!worldsLoading && worlds && worlds.length > 0 && (
+                    <Select
+                      onValueChange={handleWorldChange}
+                      value={selectedWorld}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Wybierz świat" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {worlds.map((world) => (
+                          <SelectItem key={world} value={world}>
+                            {world.charAt(0).toUpperCase() + world.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
+                {/* Publiczny */}
+                <form.Field name="isPublic">
+                  {(field) => (
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          {field.state.value ? (
+                            <Globe className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Lock className="h-4 w-4 text-amber-500" />
+                          )}
+                          <Label className="font-medium">
+                            {field.state.value ? "Publiczny" : "Prywatny"}
+                          </Label>
+                        </div>
+                        <p className="text-muted-foreground text-xs">
+                          {field.state.value
+                            ? "Każdy może zobaczyć ten squad"
+                            : "Tylko Ty i osoby, którym udostępnisz"}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={field.state.value}
+                        onCheckedChange={(checked) =>
+                          field.handleChange(checked)
+                        }
+                      />
+                    </div>
+                  )}
+                </form.Field>
+
+                {/* Wybrane postacie */}
+                <div className="space-y-2">
+                  <Label>
+                    Wybrane postacie ({selectedCharacterIds.length}/10)
+                  </Label>
+                  {selectedCharacters && selectedCharacters.length > 0 ? (
+                    <>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedCharacters.map((char) => (
+                          <Badge
+                            className="cursor-pointer"
+                            key={char.id}
+                            onClick={() => toggleCharacter(char.id)}
+                            variant="secondary"
+                          >
+                            {char.nick}
+                            <span className="ml-1 opacity-60">×</span>
+                          </Badge>
+                        ))}
+                      </div>
+                      <TeamProfessionsSummary characters={selectedCharacters} />
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">
+                      Wybierz postacie z listy po prawej
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  className="w-full"
+                  disabled={
+                    !selectedWorld ||
+                    selectedCharacterIds.length === 0 ||
+                    !form.state.values.name ||
+                    form.state.isSubmitting
+                  }
+                  size="lg"
+                  type="submit"
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  Utwórz squad
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Lista postaci - prawa strona */}
+          <Card className="flex flex-col lg:col-span-2">
+            <CardHeader className="pb-3">
+              <CardTitle>Wybierz postacie</CardTitle>
+              <CardDescription>
+                {selectedWorld
+                  ? `Postacie ze świata ${selectedWorld.charAt(0).toUpperCase() + selectedWorld.slice(1)}`
+                  : "Najpierw wybierz świat"}
+              </CardDescription>
+            </CardHeader>
+
+            {selectedWorld && (
+              <div className="border-b px-6 pb-4">
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  {/* Wyszukiwarka */}
+                  <div className="relative flex-1">
+                    <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="squad-name"
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="np. drimtim"
-                      value={field.state.value}
+                      className="pl-9"
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Szukaj po nicku lub nazwie konta..."
+                      value={searchQuery}
                     />
                   </div>
-                )}
-              </form.Field>
 
-              {/* Opis */}
-              <form.Field name="description">
-                {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor="squad-description">Opis</Label>
-                    <Textarea
-                      className="min-h-20"
-                      id="squad-description"
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="Krótki opis squadu..."
-                      value={field.state.value}
-                    />
-                  </div>
-                )}
-              </form.Field>
-
-              {/* Świat */}
-              <div className="space-y-2">
-                <Label>Świat *</Label>
-                {worldsLoading && (
-                  <p className="text-muted-foreground text-sm">
-                    Ładowanie światów...
-                  </p>
-                )}
-                {!worldsLoading && (!worlds || worlds.length === 0) && (
-                  <p className="text-muted-foreground text-sm">
-                    Nie masz żadnych postaci. Najpierw dodaj konto z gry.
-                  </p>
-                )}
-                {!worldsLoading && worlds && worlds.length > 0 && (
+                  {/* Filtr profesji */}
                   <Select
-                    onValueChange={handleWorldChange}
-                    value={selectedWorld}
+                    onValueChange={setProfessionFilter}
+                    value={professionFilter}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Wybierz świat" />
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                      <SelectValue placeholder="Profesja" />
                     </SelectTrigger>
                     <SelectContent>
-                      {worlds.map((world) => (
-                        <SelectItem key={world} value={world}>
-                          {world.charAt(0).toUpperCase() + world.slice(1)}
+                      <SelectItem value="all">Wszystkie profesje</SelectItem>
+                      {PROFESSIONS.map(([code, name]) => (
+                        <SelectItem key={code} value={code}>
+                          {name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                )}
-              </div>
+                </div>
 
-              {/* Publiczny */}
-              <form.Field name="isPublic">
-                {(field) => (
-                  <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        {field.state.value ? (
-                          <Globe className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Lock className="h-4 w-4 text-amber-500" />
-                        )}
-                        <Label className="font-medium">
-                          {field.state.value ? "Publiczny" : "Prywatny"}
-                        </Label>
-                      </div>
-                      <p className="text-muted-foreground text-xs">
-                        {field.state.value
-                          ? "Każdy może zobaczyć ten squad"
-                          : "Tylko Ty i osoby, którym udostępnisz"}
+                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  <div className="grid grid-cols-2 gap-2 sm:col-span-2 sm:grid-cols-4">
+                    <Input
+                      inputMode="numeric"
+                      min={1}
+                      onChange={(e) => setMinLevel(e.target.value)}
+                      placeholder="Min lvl"
+                      value={minLevel}
+                    />
+                    <Input
+                      inputMode="numeric"
+                      min={1}
+                      onChange={(e) => setMaxLevel(e.target.value)}
+                      placeholder="Max lvl"
+                      value={maxLevel}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-lg border p-3 sm:col-span-1">
+                    <div>
+                      <p className="font-medium text-sm">
+                        Ukryj postacie już dodane
                       </p>
                     </div>
                     <Switch
-                      checked={field.state.value}
-                      onCheckedChange={(checked) => field.handleChange(checked)}
+                      checked={hideInSquad}
+                      onCheckedChange={setHideInSquad}
                     />
                   </div>
-                )}
-              </form.Field>
+                </div>
 
-              {/* Wybrane postacie */}
-              <div className="space-y-2">
-                <Label>
-                  Wybrane postacie ({selectedCharacterIds.length}/10)
-                </Label>
-                {selectedCharacters && selectedCharacters.length > 0 ? (
-                  <>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedCharacters.map((char) => (
-                        <Badge
-                          className="cursor-pointer"
-                          key={char.id}
-                          onClick={() => toggleCharacter(char.id)}
-                          variant="secondary"
-                        >
-                          {char.nick}
-                          <span className="ml-1 opacity-60">×</span>
-                        </Badge>
-                      ))}
-                    </div>
-                    <TeamProfessionsSummary characters={selectedCharacters} />
-                  </>
-                ) : (
-                  <p className="text-muted-foreground text-sm">
-                    Wybierz postacie z listy po prawej
+                {characters && (
+                  <p className="mt-2 text-muted-foreground text-xs">
+                    Pokazano {filteredCharacters.length} z {characters.length}{" "}
+                    postaci
                   </p>
                 )}
               </div>
+            )}
 
-              <Button
-                className="w-full"
-                disabled={
-                  !selectedWorld ||
-                  selectedCharacterIds.length === 0 ||
-                  !form.state.values.name ||
-                  form.state.isSubmitting
-                }
-                size="lg"
-                type="submit"
-              >
-                <Users className="mr-2 h-4 w-4" />
-                Utwórz squad
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Lista postaci - prawa strona */}
-        <Card className="flex flex-col lg:col-span-2">
-          <CardHeader className="pb-3">
-            <CardTitle>Wybierz postacie</CardTitle>
-            <CardDescription>
-              {selectedWorld
-                ? `Postacie ze świata ${selectedWorld.charAt(0).toUpperCase() + selectedWorld.slice(1)}`
-                : "Najpierw wybierz świat"}
-            </CardDescription>
-          </CardHeader>
-
-          {selectedWorld && (
-            <div className="border-b px-6 pb-4">
-              <div className="flex flex-col gap-3 sm:flex-row">
-                {/* Wyszukiwarka */}
-                <div className="relative flex-1">
-                  <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    className="pl-9"
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Szukaj po nicku lub nazwie konta..."
-                    value={searchQuery}
-                  />
-                </div>
-
-                {/* Filtr profesji */}
-                <Select
-                  onValueChange={setProfessionFilter}
-                  value={professionFilter}
-                >
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Profesja" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Wszystkie profesje</SelectItem>
-                    {PROFESSIONS.map(([code, name]) => (
-                      <SelectItem key={code} value={code}>
-                        {name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {characters && (
-                <p className="mt-2 text-muted-foreground text-xs">
-                  Pokazano {filteredCharacters.length} z {characters.length}{" "}
-                  postaci
-                </p>
-              )}
-            </div>
-          )}
-
-          <CardContent className="flex-1 p-0">
-            <CharactersList
-              charactersLoading={charactersLoading}
-              filteredCharacters={filteredCharacters}
-              professionFilter={professionFilter}
-              searchQuery={searchQuery}
-              selectedCharacterIds={selectedCharacterIds}
-              selectedWorld={selectedWorld}
-              setProfessionFilter={setProfessionFilter}
-              setSearchQuery={setSearchQuery}
-              toggleCharacter={toggleCharacter}
-            />
-          </CardContent>
-        </Card>
+            <CardContent className="flex-1 p-0">
+              <CharactersList
+                charactersLoading={charactersLoading}
+                filteredCharacters={filteredCharacters}
+                professionFilter={professionFilter}
+                searchQuery={searchQuery}
+                selectedCharacterIds={selectedCharacterIds}
+                selectedWorld={selectedWorld}
+                setHideInSquad={setHideInSquad}
+                setMaxLevel={setMaxLevel}
+                setMinLevel={setMinLevel}
+                setProfessionFilter={setProfessionFilter}
+                setSearchQuery={setSearchQuery}
+                toggleCharacter={toggleCharacter}
+              />
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
 
@@ -398,10 +511,11 @@ function CharactersList({
   selectedWorld,
   charactersLoading,
   filteredCharacters,
-  searchQuery,
-  professionFilter,
   setSearchQuery,
   setProfessionFilter,
+  setMinLevel,
+  setMaxLevel,
+  setHideInSquad,
   selectedCharacterIds,
   toggleCharacter,
 }: {
@@ -412,6 +526,9 @@ function CharactersList({
   professionFilter: string;
   setSearchQuery: (v: string) => void;
   setProfessionFilter: (v: string) => void;
+  setMinLevel: (v: string) => void;
+  setMaxLevel: (v: string) => void;
+  setHideInSquad: (v: boolean) => void;
   selectedCharacterIds: number[];
   toggleCharacter: (id: number) => void;
 }) {
@@ -438,19 +555,20 @@ function CharactersList({
     return (
       <div className="flex h-64 flex-col items-center justify-center text-muted-foreground">
         <p>Brak postaci spełniających kryteria</p>
-        {(searchQuery || professionFilter !== "all") && (
-          <Button
-            className="mt-2"
-            onClick={() => {
-              setSearchQuery("");
-              setProfessionFilter("all");
-            }}
-            size="sm"
-            variant="link"
-          >
-            Wyczyść filtry
-          </Button>
-        )}
+        <Button
+          className="mt-2"
+          onClick={() => {
+            setSearchQuery("");
+            setProfessionFilter("all");
+            setMinLevel("");
+            setMaxLevel("");
+            setHideInSquad(false);
+          }}
+          size="sm"
+          variant="link"
+        >
+          Wyczyść filtry
+        </Button>
       </div>
     );
   }
@@ -540,16 +658,6 @@ function TeamProfessionsSummary({ characters }: { characters: Character[] }) {
     {} as Record<string, number>
   );
 
-  // Get profession abbreviations
-  const professionAbbr: Record<string, string> = {
-    w: "W",
-    m: "M",
-    p: "P",
-    b: "B",
-    h: "H",
-    t: "T",
-  };
-
   // Calculate level range
   const levels = characters.map((c) => c.level);
   const minLevel = Math.min(...levels);
@@ -572,8 +680,8 @@ function TeamProfessionsSummary({ characters }: { characters: Character[] }) {
                   className={`flex h-5 min-w-5 items-center justify-center rounded px-1 font-medium text-[10px] ${getProfessionColor(prof)}`}
                 >
                   {count > 1
-                    ? `${professionAbbr[prof] || prof.toUpperCase()}${count}`
-                    : professionAbbr[prof] || prof.toUpperCase()}
+                    ? `${professionAbbreviations[prof] || prof.toUpperCase()}${count}`
+                    : professionAbbreviations[prof] || prof.toUpperCase()}
                 </div>
               </TooltipTrigger>
               <TooltipContent>
