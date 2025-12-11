@@ -5,6 +5,10 @@ import { Globe, Lock, Search, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
+import {
+  CharacterSelectCard,
+  TeamProfessionsSummary,
+} from "@/components/squad-builder";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +18,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,15 +31,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useDebounce } from "@/hooks/use-debounce";
-import { getProfessionColor, professionNames } from "@/lib/margonem-parser";
-import { parseLevel, professionAbbreviations } from "@/lib/squad-utils";
+import { professionNames } from "@/lib/margonem-parser";
+import { parseLevel } from "@/lib/squad-utils";
 import type { Character } from "@/types/squad";
 import { orpc } from "@/utils/orpc";
 
@@ -586,113 +583,5 @@ function CharactersList({
         ))}
       </div>
     </ScrollArea>
-  );
-}
-
-function CharacterSelectCard({
-  character,
-  isSelected,
-  onToggle,
-}: {
-  character: Character;
-  isSelected: boolean;
-  onToggle: () => void;
-}) {
-  const checkboxId = `char-${character.id}`;
-
-  return (
-    <label
-      className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-all ${
-        isSelected
-          ? "border-primary bg-primary/5 ring-1 ring-primary"
-          : "border-border bg-card hover:bg-accent/50"
-      }`}
-      htmlFor={checkboxId}
-    >
-      <Checkbox
-        checked={isSelected}
-        id={checkboxId}
-        onCheckedChange={() => onToggle()}
-      />
-      {character.avatarUrl && (
-        <div
-          className="h-14 w-10 shrink-0 overflow-hidden rounded"
-          style={{
-            backgroundImage: `url(${character.avatarUrl})`,
-            backgroundSize: "160px 224px",
-            backgroundPosition: "0 0",
-          }}
-        />
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="truncate font-medium">{character.nick}</span>
-          <Badge
-            className={`${getProfessionColor(character.profession)} shrink-0 text-xs`}
-            variant="outline"
-          >
-            {character.professionName}
-          </Badge>
-        </div>
-        <div className="text-muted-foreground text-xs">
-          Lvl {character.level} • {character.gameAccountName}
-        </div>
-        {character.guildName && (
-          <div className="text-muted-foreground/70 text-xs">
-            {character.guildName}
-          </div>
-        )}
-      </div>
-    </label>
-  );
-}
-
-function TeamProfessionsSummary({ characters }: { characters: Character[] }) {
-  // Count professions
-  const professionCounts = characters.reduce(
-    (acc, char) => {
-      const prof = char.profession;
-      acc[prof] = (acc[prof] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
-
-  // Calculate level range
-  const levels = characters.map((c) => c.level);
-  const minLevel = Math.min(...levels);
-  const maxLevel = Math.max(...levels);
-
-  return (
-    <div className="mt-2 flex items-center justify-between rounded-lg border bg-muted/30 p-2">
-      <div className="flex items-center gap-1 text-xs">
-        <span className="text-muted-foreground">Lvl:</span>
-        <span className="font-medium">
-          {minLevel === maxLevel ? minLevel : `${minLevel}-${maxLevel}`}
-        </span>
-      </div>
-      <TooltipProvider>
-        <div className="flex items-center gap-0.5">
-          {Object.entries(professionCounts).map(([prof, count]) => (
-            <Tooltip key={prof}>
-              <TooltipTrigger asChild>
-                <div
-                  className={`flex h-5 min-w-5 items-center justify-center rounded px-1 font-medium text-[10px] ${getProfessionColor(prof)}`}
-                >
-                  {count > 1
-                    ? `${professionAbbreviations[prof] || prof.toUpperCase()}${count}`
-                    : professionAbbreviations[prof] || prof.toUpperCase()}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>
-                  {professionNames[prof] || prof}: {count}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          ))}
-        </div>
-      </TooltipProvider>
-    </div>
   );
 }

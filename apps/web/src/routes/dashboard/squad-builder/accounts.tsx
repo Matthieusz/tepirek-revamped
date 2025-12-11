@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { AddGameAccountModal } from "@/components/modals/add-game-account-modal";
-import { ShareAccountDialog } from "@/components/squad-builder/share-account-dialog";
+import { ShareAccountDialog } from "@/components/modals/share-account-dialog";
 import {
   AlertDialog,
   AlertDialogAction,

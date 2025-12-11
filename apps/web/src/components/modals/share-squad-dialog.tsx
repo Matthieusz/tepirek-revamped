@@ -13,90 +13,96 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import type { GameAccount } from "@/types/squad";
 import { orpc } from "@/utils/orpc";
 
-type ShareAccountDialogProps = {
-  account: GameAccount;
+type ShareSquadDialogProps = {
+  squadId: number;
+  squadName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-export function ShareAccountDialog({
-  account,
+export function ShareSquadDialog({
+  squadId,
+  squadName,
   open,
   onOpenChange,
-}: ShareAccountDialogProps) {
-  const queryClient = useQueryClient();
-  const [searchQuery, setSearchQuery] = useState("");
+}: ShareSquadDialogProps) {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
 
   const { data: verifiedUsers } = useQuery({
     ...orpc.user.getVerified.queryOptions(),
     enabled: open,
   });
 
-  const { data: shares } = useQuery({
-    ...orpc.squad.getGameAccountShares.queryOptions({
-      input: { accountId: account.id },
-    }),
+  const { data: squadDetails } = useQuery({
+    ...orpc.squad.getSquadDetails.queryOptions({ input: { id: squadId } }),
     enabled: open,
   });
 
+  // Filter out users who already have access
   const availableUsers = useMemo(() => {
     if (!verifiedUsers) {
       return [];
     }
-    const sharedUserIds = shares?.map((s) => s.userId) ?? [];
+    if (!squadDetails) {
+      return [];
+    }
+    const sharedUserIds = squadDetails.shares?.map((s) => s.odUserId) ?? [];
     return verifiedUsers.filter(
-      (u) => !sharedUserIds.includes(u.id) && u.id !== account.userId
+      (u) => !sharedUserIds.includes(u.id) && u.id !== squadDetails.userId
     );
-  }, [verifiedUsers, shares, account.userId]);
+  }, [verifiedUsers, squadDetails]);
 
+  // Filter users by search query
   const filteredUsers = useMemo(() => {
     if (!searchQuery.trim()) {
       return availableUsers;
     }
-    const q = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase();
     return availableUsers.filter(
       (u) =>
-        u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+        u.name.toLowerCase().includes(query) ||
+        u.email.toLowerCase().includes(query)
     );
   }, [availableUsers, searchQuery]);
 
   const shareMutation = useMutation({
     mutationFn: () =>
-      orpc.squad.shareGameAccount.call({
-        accountId: account.id,
+      orpc.squad.shareSquad.call({
+        squadId,
         userId: selectedUserId,
       }),
     onSuccess: () => {
-      toast.success("Konto udostępnione");
+      toast.success("Squad udostępniony");
       setSelectedUserId("");
       queryClient.invalidateQueries({
-        queryKey: orpc.squad.getGameAccountShares.queryKey({
-          input: { accountId: account.id },
+        queryKey: orpc.squad.getSquadDetails.queryKey({
+          input: { id: squadId },
         }),
       });
       queryClient.invalidateQueries({
-        queryKey: orpc.squad.getMyGameAccounts.queryKey(),
+        queryKey: orpc.squad.getMySquads.queryKey(),
       });
     },
     onError: (error) => {
-      toast.error(error.message || "Nie udało się udostępnić konta");
+      toast.error(error.message || "Nie udało się udostępnić squadu");
     },
   });
 
   const removeShareMutation = useMutation({
     mutationFn: (shareId: number) =>
-      orpc.squad.removeGameAccountShare.call({ shareId }),
+      orpc.squad.removeSquadShare.call({ shareId }),
     onSuccess: () => {
       toast.success("Usunięto udostępnienie");
       queryClient.invalidateQueries({
-        queryKey: orpc.squad.getGameAccountShares.queryKey({
-          input: { accountId: account.id },
+        queryKey: orpc.squad.getSquadDetails.queryKey({
+          input: { id: squadId },
         }),
       });
     },
@@ -109,16 +115,16 @@ export function ShareAccountDialog({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Udostępnij konto</DialogTitle>
+          <DialogTitle>Udostępnij squad</DialogTitle>
           <DialogDescription>
-            Wybierz użytkownika, któremu chcesz udostępnić konto "{account.name}
-            "
+            Wybierz użytkownika, któremu chcesz udostępnić squad "{squadName}"
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* User search and selector */}
           <div className="space-y-2">
-            <p className="font-medium text-sm">Wybierz użytkownika</p>
+            <Label>Wybierz użytkownika</Label>
             <div className="relative">
               <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -164,9 +170,6 @@ export function ShareAccountDialog({
                         <p className="truncate font-medium text-sm">
                           {user.name}
                         </p>
-                        <p className="truncate text-muted-foreground text-xs">
-                          {user.email}
-                        </p>
                       </div>
                     </button>
                   ))
@@ -175,23 +178,32 @@ export function ShareAccountDialog({
             </ScrollArea>
           </div>
 
-          {shares && shares.length > 0 && (
+          {/* Existing shares */}
+          {squadDetails?.shares && squadDetails.shares.length > 0 && (
             <div className="space-y-2">
-              <p className="text-muted-foreground text-sm">
-                Udostępniono ({shares.length})
-              </p>
+              <Label className="text-muted-foreground">
+                Aktualnie udostępnione ({squadDetails.shares.length})
+              </Label>
               <div className="space-y-2">
-                {shares.map((share) => (
+                {squadDetails.shares.map((share) => (
                   <div
-                    className="flex items-center justify-between rounded-lg border bg-muted/30 p-2"
+                    className="flex items-center gap-3 rounded-lg border bg-muted/30 p-2"
                     key={share.id}
                   >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={share.userImage ?? undefined} />
+                      <AvatarFallback>
+                        {share.userName
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium text-sm">
                         {share.userName}
-                      </p>
-                      <p className="truncate text-muted-foreground text-xs">
-                        {share.userEmail}
                       </p>
                     </div>
                     <Button
