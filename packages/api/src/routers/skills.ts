@@ -114,7 +114,7 @@ export const skillsRouter = {
         })
     ),
 
-  deleteSkill: protectedProcedure
+  deleteSkill: adminProcedure
     .input(z.object({ id: z.number() }))
     .handler(
       async ({ input }) =>

@@ -1,8 +1,9 @@
+import { ORPCError } from "@orpc/server";
 import { db } from "@tepirek-revamped/db";
 import { account, user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import z from "zod";
-import { protectedProcedure } from "../index";
+import { adminProcedure, protectedProcedure } from "../index";
 
 export const userRouter = {
   getVerified: protectedProcedure.handler(async () =>
@@ -65,17 +66,14 @@ export const userRouter = {
         .where(eq(user.id, context.session.user.id));
       return updated ?? null;
     }),
-  setVerified: protectedProcedure
+  setVerified: adminProcedure
     .input(
       z.object({
         userId: z.string().min(1),
         verified: z.boolean(),
       })
     )
-    .handler(async ({ input, context }) => {
-      if (context.session.user.role !== "admin") {
-        throw new Error("FORBIDDEN");
-      }
+    .handler(async ({ input }) => {
       await db
         .update(user)
         .set({ verified: input.verified, updatedAt: new Date() })
@@ -86,17 +84,14 @@ export const userRouter = {
         .where(eq(user.id, input.userId));
       return updated ?? null;
     }),
-  setRole: protectedProcedure
+  setRole: adminProcedure
     .input(
       z.object({
         userId: z.string().min(1),
         role: z.enum(["user", "admin"]),
       })
     )
-    .handler(async ({ input, context }) => {
-      if (context.session.user.role !== "admin") {
-        throw new Error("FORBIDDEN");
-      }
+    .handler(async ({ input }) => {
       await db
         .update(user)
         .set({ role: input.role, updatedAt: new Date() })
@@ -107,17 +102,14 @@ export const userRouter = {
         .where(eq(user.id, input.userId));
       return updated ?? null;
     }),
-  updateUserName: protectedProcedure
+  updateUserName: adminProcedure
     .input(
       z.object({
         userId: z.string().min(1),
         name: z.string().min(2),
       })
     )
-    .handler(async ({ input, context }) => {
-      if (context.session.user.role !== "admin") {
-        throw new Error("FORBIDDEN");
-      }
+    .handler(async ({ input }) => {
       await db
         .update(user)
         .set({ name: input.name, updatedAt: new Date() })
@@ -128,26 +120,27 @@ export const userRouter = {
         .where(eq(user.id, input.userId));
       return updated ?? null;
     }),
-  deleteUser: protectedProcedure
+  deleteUser: adminProcedure
     .input(
       z.object({
         userId: z.string().min(1),
       })
     )
-    .handler(async ({ input, context }) => {
-      if (context.session.user.role !== "admin") {
-        throw new Error("FORBIDDEN");
-      }
+    .handler(async ({ input }) => {
       // Check if user is unverified before deleting
       const [targetUser] = await db
         .select()
         .from(user)
         .where(eq(user.id, input.userId));
       if (!targetUser) {
-        throw new Error("Użytkownik nie istnieje");
+        throw new ORPCError("NOT_FOUND", {
+          message: "Użytkownik nie istnieje",
+        });
       }
       if (targetUser.verified) {
-        throw new Error("Nie można usunąć zweryfikowanego użytkownika");
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Nie można usunąć zweryfikowanego użytkownika",
+        });
       }
       await db.delete(user).where(eq(user.id, input.userId));
       return { success: true };
