@@ -30,6 +30,29 @@ export const gameAccount = pgTable(
   ]
 );
 
+export const gameAccountShare = pgTable(
+  "game_account_share",
+  {
+    id: serial("id").primaryKey(),
+    canManage: boolean("can_manage").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    gameAccountId: integer("game_account_id")
+      .notNull()
+      .references(() => gameAccount.id, { onDelete: "cascade" }),
+    sharedWithUserId: text("shared_with_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    index("game_account_share_account_id_idx").on(table.gameAccountId),
+    index("game_account_share_shared_user_id_idx").on(table.sharedWithUserId),
+    unique("game_account_share_unique").on(
+      table.gameAccountId,
+      table.sharedWithUserId
+    ),
+  ]
+);
+
 // Profesje postaci w grze
 export const professionCode = {
   w: "Wojownik",
@@ -149,6 +172,7 @@ export const squadShare = pgTable(
 
 export const squadSchema = {
   gameAccount,
+  gameAccountShare,
   character,
   squad,
   squadMember,

@@ -4,11 +4,12 @@ import { user } from "@tepirek-revamped/db/schema/auth";
 import {
   character,
   gameAccount,
+  gameAccountShare,
   squad,
   squadMember,
   squadShare,
 } from "@tepirek-revamped/db/schema/squad";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
 import z from "zod";
 import { protectedProcedure } from "../index";
 
@@ -46,6 +47,11 @@ const shareSquadSchema = z.object({
   userId: z.string().min(1),
 });
 
+const shareGameAccountSchema = z.object({
+  accountId: z.number(),
+  userId: z.string().min(1),
+});
+
 const updateSquadSchema = z.object({
   id: z.number(),
   name: z.string().min(1).max(100),
@@ -67,11 +73,45 @@ export const squadRouter = {
     const userId = context.session.user.id;
     assertUserId(userId);
 
-    return await db
-      .select()
+    const owned = await db
+      .select({
+        id: gameAccount.id,
+        name: gameAccount.name,
+        profileUrl: gameAccount.profileUrl,
+        accountLevel: gameAccount.accountLevel,
+        createdAt: gameAccount.createdAt,
+        updatedAt: gameAccount.updatedAt,
+        userId: gameAccount.userId,
+        isOwner: sql<boolean>`true`.as("is_owner"),
+        canManage: sql<boolean>`true`.as("can_manage"),
+        ownerName: user.name,
+      })
       .from(gameAccount)
-      .where(eq(gameAccount.userId, userId))
-      .orderBy(gameAccount.name);
+      .innerJoin(user, eq(gameAccount.userId, user.id))
+      .where(eq(gameAccount.userId, userId));
+
+    const shared = await db
+      .select({
+        id: gameAccount.id,
+        name: gameAccount.name,
+        profileUrl: gameAccount.profileUrl,
+        accountLevel: gameAccount.accountLevel,
+        createdAt: gameAccount.createdAt,
+        updatedAt: gameAccount.updatedAt,
+        userId: gameAccount.userId,
+        isOwner: sql<boolean>`false`.as("is_owner"),
+        canManage: gameAccountShare.canManage,
+        ownerName: user.name,
+      })
+      .from(gameAccountShare)
+      .innerJoin(
+        gameAccount,
+        eq(gameAccountShare.gameAccountId, gameAccount.id)
+      )
+      .innerJoin(user, eq(gameAccount.userId, user.id))
+      .where(eq(gameAccountShare.sharedWithUserId, userId));
+
+    return [...owned, ...shared].sort((a, b) => a.name.localeCompare(b.name));
   }),
 
   createGameAccount: protectedProcedure
@@ -140,6 +180,120 @@ export const squadRouter = {
       return { success: true };
     }),
 
+  getGameAccountShares: protectedProcedure
+    .input(z.object({ accountId: z.number() }))
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+      assertUserId(userId);
+
+      const account = await db
+        .select({ userId: gameAccount.userId })
+        .from(gameAccount)
+        .where(eq(gameAccount.id, input.accountId))
+        .limit(1);
+
+      if (account.length === 0 || account[0]?.userId !== userId) {
+        throw new ORPCError("FORBIDDEN", {
+          message: "Nie masz dostępu do tego konta",
+        });
+      }
+
+      return await db
+        .select({
+          id: gameAccountShare.id,
+          canManage: gameAccountShare.canManage,
+          userId: user.id,
+          userName: user.name,
+          userEmail: user.email,
+          userImage: user.image,
+        })
+        .from(gameAccountShare)
+        .innerJoin(user, eq(gameAccountShare.sharedWithUserId, user.id))
+        .where(eq(gameAccountShare.gameAccountId, input.accountId));
+    }),
+
+  shareGameAccount: protectedProcedure
+    .input(shareGameAccountSchema)
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+      assertUserId(userId);
+
+      const account = await db
+        .select()
+        .from(gameAccount)
+        .where(
+          and(
+            eq(gameAccount.id, input.accountId),
+            eq(gameAccount.userId, userId)
+          )
+        )
+        .limit(1);
+
+      if (account.length === 0) {
+        throw new ORPCError("FORBIDDEN", {
+          message: "Nie masz dostępu do tego konta",
+        });
+      }
+
+      if (input.userId === userId) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Nie możesz udostępnić konta samemu sobie",
+        });
+      }
+
+      const existing = await db
+        .select()
+        .from(gameAccountShare)
+        .where(
+          and(
+            eq(gameAccountShare.gameAccountId, input.accountId),
+            eq(gameAccountShare.sharedWithUserId, input.userId)
+          )
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        return { success: true };
+      }
+
+      await db.insert(gameAccountShare).values({
+        gameAccountId: input.accountId,
+        sharedWithUserId: input.userId,
+        canManage: false,
+      });
+
+      return { success: true };
+    }),
+
+  removeGameAccountShare: protectedProcedure
+    .input(z.object({ shareId: z.number() }))
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+      assertUserId(userId);
+
+      const share = await db
+        .select({ accountUserId: gameAccount.userId })
+        .from(gameAccountShare)
+        .innerJoin(
+          gameAccount,
+          eq(gameAccountShare.gameAccountId, gameAccount.id)
+        )
+        .where(eq(gameAccountShare.id, input.shareId))
+        .limit(1);
+
+      if (share.length === 0 || share[0]?.accountUserId !== userId) {
+        throw new ORPCError("FORBIDDEN", {
+          message: "Nie masz dostępu do usunięcia tego udostępnienia",
+        });
+      }
+
+      await db
+        .delete(gameAccountShare)
+        .where(eq(gameAccountShare.id, input.shareId));
+
+      return { success: true };
+    }),
+
   // === Character Management ===
 
   deleteCharacter: protectedProcedure
@@ -173,14 +327,33 @@ export const squadRouter = {
         .object({
           world: z.string().optional(),
           gameAccountId: z.number().optional(),
+          minLevel: z.number().int().min(1).optional(),
+          maxLevel: z.number().int().min(1).optional(),
+          excludeInSquad: z.boolean().optional(),
+          excludeInSquadExceptSquadId: z.number().optional(),
         })
+        .refine(
+          (val) =>
+            val.minLevel === undefined ||
+            val.maxLevel === undefined ||
+            val.minLevel <= val.maxLevel,
+          {
+            message: "minLevel nie może być większy niż maxLevel",
+          }
+        )
         .optional()
     )
     .handler(async ({ input, context }) => {
       const userId = context.session.user.id;
       assertUserId(userId);
 
-      const conditions = [eq(gameAccount.userId, userId)];
+      const conditions = [
+        sql`(${gameAccount.userId} = ${userId} OR EXISTS (
+          SELECT 1 FROM game_account_share gas
+          WHERE gas.game_account_id = ${gameAccount.id}
+            AND gas.shared_with_user_id = ${userId}
+        ))`,
+      ];
 
       if (input?.world) {
         conditions.push(eq(character.world, input.world.toLowerCase()));
@@ -188,6 +361,27 @@ export const squadRouter = {
 
       if (input?.gameAccountId) {
         conditions.push(eq(character.gameAccountId, input.gameAccountId));
+      }
+
+      if (input?.minLevel !== undefined) {
+        conditions.push(gte(character.level, input.minLevel));
+      }
+
+      if (input?.maxLevel !== undefined) {
+        conditions.push(lte(character.level, input.maxLevel));
+      }
+
+      if (input?.excludeInSquad) {
+        const exceptSquadId = input.excludeInSquadExceptSquadId ?? -1;
+        conditions.push(sql`NOT EXISTS (
+          SELECT 1
+          FROM squad_member sm
+          JOIN squad s ON sm.squad_id = s.id
+          LEFT JOIN squad_share ss ON ss.squad_id = s.id
+          WHERE sm.character_id = ${character.id}
+            AND (s.user_id = ${userId} OR ss.shared_with_user_id = ${userId})
+            AND sm.squad_id <> ${exceptSquadId}
+        )`);
       }
 
       return await db
@@ -340,7 +534,14 @@ export const squadRouter = {
           .where(
             and(
               inArray(character.id, input.memberIds),
-              eq(gameAccount.userId, userId)
+              or(
+                eq(gameAccount.userId, userId),
+                sql`EXISTS (
+                  SELECT 1 FROM game_account_share gas
+                  WHERE gas.game_account_id = ${gameAccount.id}
+                    AND gas.shared_with_user_id = ${userId}
+                )`
+              )
             )
           );
 
@@ -435,7 +636,14 @@ export const squadRouter = {
           .where(
             and(
               inArray(character.id, input.memberIds),
-              eq(gameAccount.userId, userId)
+              or(
+                eq(gameAccount.userId, userId),
+                sql`EXISTS (
+                  SELECT 1 FROM game_account_share gas
+                  WHERE gas.game_account_id = ${gameAccount.id}
+                    AND gas.shared_with_user_id = ${userId}
+                )`
+              )
             )
           );
 
@@ -573,7 +781,16 @@ export const squadRouter = {
       .selectDistinct({ world: character.world })
       .from(character)
       .innerJoin(gameAccount, eq(character.gameAccountId, gameAccount.id))
-      .where(eq(gameAccount.userId, userId));
+      .where(
+        or(
+          eq(gameAccount.userId, userId),
+          sql`EXISTS (
+            SELECT 1 FROM game_account_share gas
+            WHERE gas.game_account_id = ${gameAccount.id}
+              AND gas.shared_with_user_id = ${userId}
+          )`
+        )
+      );
 
     return worlds.map((w) => w.world);
   }),

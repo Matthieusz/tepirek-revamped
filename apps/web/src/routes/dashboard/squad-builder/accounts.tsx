@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Search, Trash2, User, Users } from "lucide-react";
-import { useState } from "react";
+import { Plus, Search, Share2, Trash2, User, Users, X } from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { AddGameAccountModal } from "@/components/modals/add-game-account-modal";
 import {
   AlertDialog,
@@ -17,9 +18,18 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDebounce } from "@/hooks/use-debounce";
 import { getProfessionColor } from "@/lib/margonem-parser";
 import { cn } from "@/lib/utils";
 import type { CharacterWithAccountId, GameAccount } from "@/types/squad";
@@ -39,13 +49,16 @@ function RouteComponent() {
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
   const [characterSearchQuery, setCharacterSearchQuery] = useState("");
 
+  const debouncedAccountSearch = useDebounce(accountSearchQuery, 300);
+  const debouncedCharacterSearch = useDebounce(characterSearchQuery, 300);
+
   const { data: gameAccounts, isPending: accountsLoading } = useQuery(
     orpc.squad.getMyGameAccounts.queryOptions()
-  ) as { data: GameAccount[] | undefined; isPending: boolean };
+  );
 
   const { data: allCharacters, isPending: charactersLoading } = useQuery(
     orpc.squad.getMyCharacters.queryOptions()
-  ) as { data: CharacterWithAccountId[] | undefined; isPending: boolean };
+  );
 
   const selectedAccount = gameAccounts?.find((a) => a.id === selectedAccountId);
   const accountCharacters = allCharacters?.filter(
@@ -53,72 +66,75 @@ function RouteComponent() {
   );
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="font-bold text-3xl">Zarządzaj kontami</h1>
-          <p className="text-muted-foreground">
-            Wybierz konto, aby zobaczyć i zarządzać postaciami
-          </p>
+    <ErrorBoundary>
+      <div className="container mx-auto py-6">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="font-bold text-3xl">Zarządzaj kontami</h1>
+            <p className="text-muted-foreground">
+              Wybierz konto, aby zobaczyć i zarządzać postaciami
+            </p>
+          </div>
+          <AddGameAccountModal
+            trigger={
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Dodaj konto
+              </Button>
+            }
+          />
         </div>
-        <AddGameAccountModal
-          trigger={
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Dodaj konto
-            </Button>
-          }
-        />
-      </div>
 
-      <div className="grid h-[calc(100vh-220px)] grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Lista kont - lewa strona */}
-        <Card className="flex flex-col lg:col-span-1">
-          <CardHeader className="border-b">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Users className="h-5 w-5" />
-              Konta ({gameAccounts?.length ?? 0})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 p-0">
-            <AccountsList
-              accounts={gameAccounts}
-              isLoading={accountsLoading}
-              onSelect={setSelectedAccountId}
-              searchQuery={accountSearchQuery}
-              selectedId={selectedAccountId}
-              setSearchQuery={setAccountSearchQuery}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Lista postaci - prawa strona */}
-        <Card className="flex flex-col lg:col-span-2">
-          <CardHeader className="border-b">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <User className="h-5 w-5" />
-              {selectedAccount
-                ? `Postacie konta "${selectedAccount.name}" (${accountCharacters?.length ?? 0})`
-                : "Wybierz konto"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 p-0">
-            {selectedAccountId ? (
-              <CharactersList
-                characters={accountCharacters}
-                isLoading={charactersLoading}
-                searchQuery={characterSearchQuery}
-                setSearchQuery={setCharacterSearchQuery}
+        <div className="grid h-[calc(100vh-220px)] grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Lista kont - lewa strona */}
+          <Card className="flex flex-col lg:col-span-1">
+            <CardHeader className="border-b">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Users className="h-5 w-5" />
+                Konta ({gameAccounts?.length ?? 0})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 p-0">
+              <AccountsList
+                accounts={gameAccounts}
+                isLoading={accountsLoading}
+                onSelect={setSelectedAccountId}
+                searchQuery={debouncedAccountSearch}
+                selectedId={selectedAccountId}
+                setSearchQuery={setAccountSearchQuery}
               />
-            ) : (
-              <div className="flex h-full items-center justify-center p-8 text-muted-foreground">
-                <p>Wybierz konto z listy po lewej stronie</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Lista postaci - prawa strona */}
+          <Card className="flex flex-col lg:col-span-2">
+            <CardHeader className="border-b">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <User className="h-5 w-5" />
+                {selectedAccount
+                  ? `Postacie konta "${selectedAccount.name}" (${accountCharacters?.length ?? 0})`
+                  : "Wybierz konto"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 p-0">
+              {selectedAccountId ? (
+                <CharactersList
+                  canManage={Boolean(selectedAccount?.isOwner)}
+                  characters={accountCharacters}
+                  isLoading={charactersLoading}
+                  searchQuery={debouncedCharacterSearch}
+                  setSearchQuery={setCharacterSearchQuery}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center p-8 text-muted-foreground">
+                  <p>Wybierz konto z listy po lewej stronie</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
 
@@ -141,9 +157,13 @@ function AccountsList({
   const [accountToDelete, setAccountToDelete] = useState<GameAccount | null>(
     null
   );
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [accountToShare, setAccountToShare] = useState<GameAccount | null>(
+    null
+  );
   const queryClient = useQueryClient();
 
-  // Filter accounts by search query
+  // Filter accounts by search query (using parent's debounced value)
   const filteredAccounts = accounts?.filter(
     (account) =>
       searchQuery === "" ||
@@ -224,25 +244,55 @@ function AccountsList({
                 type="button"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{account.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="truncate font-medium">{account.name}</p>
+                    {!account.isOwner && (
+                      <Badge className="text-[10px]" variant="outline">
+                        Udostępnione
+                      </Badge>
+                    )}
+                  </div>
                   {account.accountLevel && (
                     <p className="text-muted-foreground text-xs">
                       Poziom konta: {account.accountLevel}
                     </p>
                   )}
+                  {!account.isOwner && account.ownerName && (
+                    <p className="text-muted-foreground text-xs">
+                      Właściciel: {account.ownerName}
+                    </p>
+                  )}
                 </div>
-                <Button
-                  className="opacity-0 transition-opacity group-hover:opacity-100"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setAccountToDelete(account);
-                    setDeleteDialogOpen(true);
-                  }}
-                  size="icon"
-                  variant="ghost"
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  {account.isOwner && (
+                    <Button
+                      aria-label={`Udostępnij konto ${account.name}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAccountToShare(account);
+                        setShareDialogOpen(true);
+                      }}
+                      size="icon"
+                      variant="ghost"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    aria-label={`Usuń konto ${account.name}`}
+                    className=""
+                    disabled={!account.isOwner}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAccountToDelete(account);
+                      setDeleteDialogOpen(true);
+                    }}
+                    size="icon"
+                    variant="ghost"
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </button>
             ))
           ) : (
@@ -286,6 +336,19 @@ function AccountsList({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {accountToShare && (
+        <ShareAccountDialog
+          account={accountToShare}
+          onOpenChange={(open) => {
+            setShareDialogOpen(open);
+            if (!open) {
+              setAccountToShare(null);
+            }
+          }}
+          open={shareDialogOpen}
+        />
+      )}
     </>
   );
 }
@@ -293,11 +356,13 @@ function AccountsList({
 function CharactersList({
   characters,
   isLoading,
+  canManage,
   searchQuery,
   setSearchQuery,
 }: {
   characters: CharacterWithAccountId[] | undefined;
   isLoading: boolean;
+  canManage: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }) {
@@ -306,7 +371,7 @@ function CharactersList({
     useState<CharacterWithAccountId | null>(null);
   const queryClient = useQueryClient();
 
-  // Filter characters by search query
+  // Filter characters by search query (using parent's debounced value)
   const filteredCharacters = characters?.filter(
     (char) =>
       searchQuery === "" ||
@@ -402,7 +467,12 @@ function CharactersList({
                   )}
                 </div>
                 <Button
-                  className="opacity-0 transition-opacity group-hover:opacity-100"
+                  aria-label={`Usuń postać ${char.nick}`}
+                  className={cn(
+                    "opacity-0 transition-opacity group-hover:opacity-100",
+                    !canManage && "pointer-events-none opacity-20"
+                  )}
+                  disabled={!canManage}
                   onClick={() => {
                     setCharToDelete(char);
                     setDeleteDialogOpen(true);
@@ -451,5 +521,199 @@ function CharactersList({
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+}
+
+function ShareAccountDialog({
+  account,
+  open,
+  onOpenChange,
+}: {
+  account: GameAccount;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const queryClient = useQueryClient();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+
+  const { data: verifiedUsers } = useQuery({
+    ...orpc.user.getVerified.queryOptions(),
+    enabled: open,
+  });
+
+  const { data: shares } = useQuery({
+    ...orpc.squad.getGameAccountShares.queryOptions({
+      input: { accountId: account.id },
+    }),
+    enabled: open,
+  });
+
+  const availableUsers = useMemo(() => {
+    if (!verifiedUsers) {
+      return [];
+    }
+    const sharedUserIds = shares?.map((s) => s.userId) ?? [];
+    return verifiedUsers.filter(
+      (u) => !sharedUserIds.includes(u.id) && u.id !== account.userId
+    );
+  }, [verifiedUsers, shares, account.userId]);
+
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return availableUsers;
+    }
+    const q = searchQuery.toLowerCase();
+    return availableUsers.filter(
+      (u) =>
+        u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+    );
+  }, [availableUsers, searchQuery]);
+
+  const shareMutation = useMutation({
+    mutationFn: () =>
+      orpc.squad.shareGameAccount.call({
+        accountId: account.id,
+        userId: selectedUserId,
+      }),
+    onSuccess: () => {
+      toast.success("Konto udostępnione");
+      setSelectedUserId("");
+      queryClient.invalidateQueries({
+        queryKey: orpc.squad.getGameAccountShares.queryKey({
+          input: { accountId: account.id },
+        }),
+      });
+      queryClient.invalidateQueries({
+        queryKey: orpc.squad.getMyGameAccounts.queryKey(),
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Nie udało się udostępnić konta");
+    },
+  });
+
+  const removeShareMutation = useMutation({
+    mutationFn: (shareId: number) =>
+      orpc.squad.removeGameAccountShare.call({ shareId }),
+    onSuccess: () => {
+      toast.success("Usunięto udostępnienie");
+      queryClient.invalidateQueries({
+        queryKey: orpc.squad.getGameAccountShares.queryKey({
+          input: { accountId: account.id },
+        }),
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Nie udało się usunąć udostępnienia");
+    },
+  });
+
+  return (
+    <Dialog onOpenChange={onOpenChange} open={open}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Udostępnij konto</DialogTitle>
+          <DialogDescription>
+            Wybierz użytkownika, któremu chcesz udostępnić konto "{account.name}
+            "
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <p className="font-medium text-sm">Wybierz użytkownika</p>
+            <div className="relative">
+              <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-8"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Szukaj użytkownika..."
+                value={searchQuery}
+              />
+            </div>
+            <ScrollArea className="h-[180px] rounded-md border">
+              <div className="space-y-1 p-2">
+                {filteredUsers.length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground text-sm">
+                    {availableUsers.length === 0
+                      ? "Brak dostępnych użytkowników"
+                      : "Nie znaleziono użytkowników"}
+                  </div>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <button
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg border p-2 text-left transition-all",
+                        selectedUserId === user.id
+                          ? "border-primary bg-primary/5"
+                          : "border-transparent hover:bg-accent/50"
+                      )}
+                      key={user.id}
+                      onClick={() => setSelectedUserId(user.id)}
+                      type="button"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-sm">
+                          {user.name}
+                        </p>
+                        <p className="truncate text-muted-foreground text-xs">
+                          {user.email}
+                        </p>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+
+          {shares && shares.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-muted-foreground text-sm">
+                Udostępniono ({shares.length})
+              </p>
+              <div className="space-y-2">
+                {shares.map((share) => (
+                  <div
+                    className="flex items-center justify-between rounded-lg border bg-muted/30 p-2"
+                    key={share.id}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium text-sm">
+                        {share.userName}
+                      </p>
+                      <p className="truncate text-muted-foreground text-xs">
+                        {share.userEmail}
+                      </p>
+                    </div>
+                    <Button
+                      disabled={removeShareMutation.isPending}
+                      onClick={() => removeShareMutation.mutate(share.id)}
+                      size="icon"
+                      variant="ghost"
+                    >
+                      <X className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)} variant="outline">
+            Zamknij
+          </Button>
+          <Button
+            disabled={!selectedUserId || shareMutation.isPending}
+            onClick={() => shareMutation.mutate()}
+          >
+            Udostępnij
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -30,6 +30,19 @@ export type GameAccount = {
   name: string;
   profileUrl: string | null;
   accountLevel: number | null;
+  userId: string;
+  isOwner: boolean;
+  canManage: boolean;
+  ownerName: string | null;
+};
+
+export type GameAccountShare = {
+  id: number;
+  canManage: boolean;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userImage: string | null;
 };
 
 export type Squad = {
