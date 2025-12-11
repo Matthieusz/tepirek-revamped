@@ -7,6 +7,15 @@ import type { AppRouter } from "@tepirek-revamped/api/routers/index";
 import { toast } from "sonner";
 
 export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 30,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false, 
+      retry: 1, 
+    },
+  },
   queryCache: new QueryCache({
     onError: (error) => {
       toast.error(`Błąd: ${error.message}`, {
