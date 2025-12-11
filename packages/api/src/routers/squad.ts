@@ -1,3 +1,4 @@
+import { ORPCError } from "@orpc/server";
 import { db } from "@tepirek-revamped/db";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import {
@@ -55,7 +56,7 @@ const updateSquadSchema = z.object({
 
 function assertUserId(userId: string | undefined): asserts userId is string {
   if (!userId) {
-    throw new Error("Unauthorized");
+    throw new ORPCError("UNAUTHORIZED");
   }
 }
 
@@ -88,7 +89,9 @@ export const squadRouter = {
         .limit(1);
 
       if (existing.length > 0) {
-        throw new Error("Konto o tej nazwie już istnieje");
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Konto o tej nazwie już istnieje",
+        });
       }
 
       const [newAccount] = await db
@@ -154,7 +157,9 @@ export const squadRouter = {
         .limit(1);
 
       if (char.length === 0 || char[0]?.gameAccountUserId !== userId) {
-        throw new Error("Postać nie istnieje lub nie masz do niej dostępu");
+        throw new ORPCError("NOT_FOUND", {
+          message: "Postać nie istnieje lub nie masz do niej dostępu",
+        });
       }
 
       await db.delete(character).where(eq(character.id, input.id));
@@ -269,7 +274,9 @@ export const squadRouter = {
         .limit(1);
 
       if (hasAccess.length === 0) {
-        throw new Error("Squad nie istnieje lub nie masz do niego dostępu");
+        throw new ORPCError("NOT_FOUND", {
+          message: "Squad nie istnieje lub nie masz do niego dostępu",
+        });
       }
 
       const squadData = hasAccess[0];
@@ -338,41 +345,46 @@ export const squadRouter = {
           );
 
         if (characters.length !== input.memberIds.length) {
-          throw new Error(
-            "Niektóre postacie nie istnieją lub nie należą do Ciebie"
-          );
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Niektóre postacie nie istnieją lub nie należą do Ciebie",
+          });
         }
 
         const wrongWorld = characters.filter(
           (c) => c.world.toLowerCase() !== input.world.toLowerCase()
         );
         if (wrongWorld.length > 0) {
-          throw new Error(
-            "Wszystkie postacie muszą być z tego samego świata co squad"
-          );
+          throw new ORPCError("BAD_REQUEST", {
+            message:
+              "Wszystkie postacie muszą być z tego samego świata co squad",
+          });
         }
       }
 
-      const [newSquad] = await db
-        .insert(squad)
-        .values({
-          name: input.name,
-          description: input.description,
-          world: input.world.toLowerCase(),
-          isPublic: input.isPublic,
-          userId,
-        })
-        .returning();
+      const newSquad = await db.transaction(async (tx) => {
+        const [created] = await tx
+          .insert(squad)
+          .values({
+            name: input.name,
+            description: input.description,
+            world: input.world.toLowerCase(),
+            isPublic: input.isPublic,
+            userId,
+          })
+          .returning();
 
-      if (input.memberIds.length > 0 && newSquad) {
-        const memberValues = input.memberIds.map((charId, idx) => ({
-          squadId: newSquad.id,
-          characterId: charId,
-          position: idx + 1,
-        }));
+        if (input.memberIds.length > 0 && created) {
+          const memberValues = input.memberIds.map((charId, idx) => ({
+            squadId: created.id,
+            characterId: charId,
+            position: idx + 1,
+          }));
 
-        await db.insert(squadMember).values(memberValues);
-      }
+          await tx.insert(squadMember).values(memberValues);
+        }
+
+        return created;
+      });
 
       return newSquad;
     }),
@@ -404,7 +416,9 @@ export const squadRouter = {
         .limit(1);
 
       if (existingSquad.length === 0) {
-        throw new Error("Squad nie istnieje lub nie jesteś jego właścicielem");
+        throw new ORPCError("NOT_FOUND", {
+          message: "Squad nie istnieje lub nie jesteś jego właścicielem",
+        });
       }
 
       const squadWorld = existingSquad[0]?.world;
@@ -426,44 +440,46 @@ export const squadRouter = {
           );
 
         if (characters.length !== input.memberIds.length) {
-          throw new Error(
-            "Niektóre postacie nie istnieją lub nie należą do Ciebie"
-          );
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Niektóre postacie nie istnieją lub nie należą do Ciebie",
+          });
         }
 
         const wrongWorld = characters.filter(
           (c) => c.world.toLowerCase() !== squadWorld?.toLowerCase()
         );
         if (wrongWorld.length > 0) {
-          throw new Error(
-            "Wszystkie postacie muszą być z tego samego świata co squad"
-          );
+          throw new ORPCError("BAD_REQUEST", {
+            message:
+              "Wszystkie postacie muszą być z tego samego świata co squad",
+          });
         }
       }
 
-      // Update squad
-      await db
-        .update(squad)
-        .set({
-          name: input.name,
-          description: input.description,
-          isPublic: input.isPublic,
-          updatedAt: new Date(),
-        })
-        .where(eq(squad.id, input.id));
+      // Update squad, delete existing members and re-add in a transaction
+      await db.transaction(async (tx) => {
+        await tx
+          .update(squad)
+          .set({
+            name: input.name,
+            description: input.description,
+            isPublic: input.isPublic,
+            updatedAt: new Date(),
+          })
+          .where(eq(squad.id, input.id));
 
-      // Delete existing members and re-add
-      await db.delete(squadMember).where(eq(squadMember.squadId, input.id));
+        await tx.delete(squadMember).where(eq(squadMember.squadId, input.id));
 
-      if (input.memberIds.length > 0) {
-        const memberValues = input.memberIds.map((charId, idx) => ({
-          squadId: input.id,
-          characterId: charId,
-          position: idx + 1,
-        }));
+        if (input.memberIds.length > 0) {
+          const memberValues = input.memberIds.map((charId, idx) => ({
+            squadId: input.id,
+            characterId: charId,
+            position: idx + 1,
+          }));
 
-        await db.insert(squadMember).values(memberValues);
-      }
+          await tx.insert(squadMember).values(memberValues);
+        }
+      });
 
       return { success: true };
     }),
@@ -483,13 +499,17 @@ export const squadRouter = {
         .limit(1);
 
       if (squadData.length === 0) {
-        throw new Error("Squad nie istnieje lub nie jesteś jego właścicielem");
+        throw new ORPCError("NOT_FOUND", {
+          message: "Squad nie istnieje lub nie jesteś jego właścicielem",
+        });
       }
 
       const targetUserId = input.userId;
 
       if (targetUserId === userId) {
-        throw new Error("Nie możesz udostępnić squadu samemu sobie");
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Nie możesz udostępnić squadu samemu sobie",
+        });
       }
 
       const existing = await db
@@ -533,7 +553,9 @@ export const squadRouter = {
         .limit(1);
 
       if (share.length === 0 || share[0]?.squadUserId !== userId) {
-        throw new Error("Nie masz uprawnień do usunięcia tego udostępnienia");
+        throw new ORPCError("FORBIDDEN", {
+          message: "Nie masz uprawnień do usunięcia tego udostępnienia",
+        });
       }
 
       await db.delete(squadShare).where(eq(squadShare.id, input.shareId));
