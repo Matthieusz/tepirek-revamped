@@ -12,8 +12,8 @@ export const queryClient = new QueryClient({
       staleTime: 1000 * 60 * 5,
       gcTime: 1000 * 60 * 30,
       refetchOnWindowFocus: false,
-      refetchOnReconnect: false, 
-      retry: 1, 
+      refetchOnReconnect: false,
+      retry: 1,
     },
   },
   queryCache: new QueryCache({
@@ -32,8 +32,8 @@ export const queryClient = new QueryClient({
 
 export const link = new RPCLink({
   url: `${import.meta.env.VITE_SERVER_URL}/rpc`,
-  fetch(url, options) {
-    return fetch(url, {
+  fetch(_url, options) {
+    return fetch(_url, {
       ...options,
       credentials: "include",
     });
