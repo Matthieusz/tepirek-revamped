@@ -97,9 +97,10 @@ function RouteComponent() {
             <CardContent className="flex-1 p-0">
               <AccountsList
                 accounts={gameAccounts}
+                debouncedSearchQuery={debouncedAccountSearch}
                 isLoading={accountsLoading}
                 onSelect={setSelectedAccountId}
-                searchQuery={debouncedAccountSearch}
+                searchQuery={accountSearchQuery}
                 selectedId={selectedAccountId}
                 setSearchQuery={setAccountSearchQuery}
               />
@@ -121,8 +122,9 @@ function RouteComponent() {
                 <CharactersList
                   canManage={Boolean(selectedAccount?.isOwner)}
                   characters={accountCharacters}
+                  debouncedSearchQuery={debouncedCharacterSearch}
                   isLoading={charactersLoading}
-                  searchQuery={debouncedCharacterSearch}
+                  searchQuery={characterSearchQuery}
                   setSearchQuery={setCharacterSearchQuery}
                 />
               ) : (
@@ -144,6 +146,7 @@ function AccountsList({
   selectedId,
   onSelect,
   searchQuery,
+  debouncedSearchQuery,
   setSearchQuery,
 }: {
   accounts: GameAccount[] | undefined;
@@ -151,6 +154,7 @@ function AccountsList({
   selectedId: number | null;
   onSelect: (id: number | null) => void;
   searchQuery: string;
+  debouncedSearchQuery: string;
   setSearchQuery: (query: string) => void;
 }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -166,8 +170,8 @@ function AccountsList({
   // Filter accounts by search query (using parent's debounced value)
   const filteredAccounts = accounts?.filter(
     (account) =>
-      searchQuery === "" ||
-      account.name.toLowerCase().includes(searchQuery.toLowerCase())
+      debouncedSearchQuery === "" ||
+      account.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
   );
 
   const deleteMutation = useMutation({
@@ -358,12 +362,14 @@ function CharactersList({
   isLoading,
   canManage,
   searchQuery,
+  debouncedSearchQuery,
   setSearchQuery,
 }: {
   characters: CharacterWithAccountId[] | undefined;
   isLoading: boolean;
   canManage: boolean;
   searchQuery: string;
+  debouncedSearchQuery: string;
   setSearchQuery: (query: string) => void;
 }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -374,11 +380,13 @@ function CharactersList({
   // Filter characters by search query (using parent's debounced value)
   const filteredCharacters = characters?.filter(
     (char) =>
-      searchQuery === "" ||
-      char.nick.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      char.professionName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      char.world.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      char.guildName?.toLowerCase().includes(searchQuery.toLowerCase())
+      debouncedSearchQuery === "" ||
+      char.nick.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      char.professionName
+        .toLowerCase()
+        .includes(debouncedSearchQuery.toLowerCase()) ||
+      char.world.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      char.guildName?.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
   );
 
   const deleteMutation = useMutation({
