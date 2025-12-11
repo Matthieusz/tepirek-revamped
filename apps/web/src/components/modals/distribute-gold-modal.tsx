@@ -1,15 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { LucideIcon } from "lucide-react";
-import {
-  Cake,
-  Calendar,
-  Coins,
-  Egg,
-  Ghost,
-  Snowflake,
-  Sun,
-} from "lucide-react";
+import { Coins } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -32,16 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getEventIcon } from "@/lib/constants";
 import { orpc } from "@/utils/orpc";
-
-const EVENT_ICON_MAP: Record<string, LucideIcon> = {
-  egg: Egg,
-  sun: Sun,
-  ghost: Ghost,
-  cake: Cake,
-  snowflake: Snowflake,
-  calendar: Calendar,
-};
 
 type HeroStats = {
   heroId: number;
@@ -257,8 +240,7 @@ export function DistributeGoldModal({
                         new Date(a.endTime).getTime()
                     )
                     .map((event) => {
-                      const IconComponent =
-                        EVENT_ICON_MAP[event.icon || "calendar"];
+                      const IconComponent = getEventIcon(event.icon);
                       return (
                         <SelectItem key={event.id} value={event.id.toString()}>
                           <div className="flex items-center gap-2">

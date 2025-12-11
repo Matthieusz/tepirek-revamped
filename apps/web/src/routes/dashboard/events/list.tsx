@@ -2,15 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns/format";
 import {
-  Cake,
   Calendar,
   CheckCircle2,
-  Egg,
-  Ghost,
   Plus,
   Power,
-  Snowflake,
-  Sun,
   Trash2,
   XCircle,
 } from "lucide-react";
@@ -38,17 +33,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getEventIcon } from "@/lib/constants";
 import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
-
-const EVENT_ICON_MAP = {
-  egg: Egg,
-  sun: Sun,
-  ghost: Ghost,
-  cake: Cake,
-  snowflake: Snowflake,
-  calendar: Calendar,
-} as const;
 
 export const Route = createFileRoute("/dashboard/events/list")({
   component: RouteComponent,
@@ -181,9 +168,7 @@ function RouteComponent() {
               </TableHeader>
               <TableBody>
                 {events.map((event, index) => {
-                  const IconComponent =
-                    EVENT_ICON_MAP[event.icon as keyof typeof EVENT_ICON_MAP] ||
-                    Calendar;
+                  const IconComponent = getEventIcon(event.icon);
                   return (
                     <TableRow key={event.id}>
                       <TableCell className="text-muted-foreground">

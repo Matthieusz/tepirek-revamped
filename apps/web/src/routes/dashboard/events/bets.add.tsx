@@ -1,17 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Cake,
-  Calendar,
-  Egg,
-  Ghost,
-  Search,
-  Snowflake,
-  Sun,
-  Sword,
-  User,
-} from "lucide-react";
+import { Search, Sword, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -28,17 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getEventIcon } from "@/lib/constants";
 import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
-
-const EVENT_ICON_MAP = {
-  egg: Egg,
-  sun: Sun,
-  ghost: Ghost,
-  cake: Cake,
-  snowflake: Snowflake,
-  calendar: Calendar,
-} as const;
 
 export const Route = createFileRoute("/dashboard/events/bets/add")({
   component: RouteComponent,
@@ -328,9 +310,7 @@ function RouteComponent() {
                   (e) => e.id.toString() === field.state.value
                 );
                 const SelectedIcon = selectedEvent
-                  ? EVENT_ICON_MAP[
-                      selectedEvent.icon as keyof typeof EVENT_ICON_MAP
-                    ] || Calendar
+                  ? getEventIcon(selectedEvent.icon)
                   : null;
 
                 return (
@@ -364,10 +344,7 @@ function RouteComponent() {
                           </SelectItem>
                         ) : (
                           events?.map((event) => {
-                            const IconComponent =
-                              EVENT_ICON_MAP[
-                                event.icon as keyof typeof EVENT_ICON_MAP
-                              ] || Calendar;
+                            const IconComponent = getEventIcon(event.icon);
                             return (
                               <SelectItem
                                 key={event.id}
