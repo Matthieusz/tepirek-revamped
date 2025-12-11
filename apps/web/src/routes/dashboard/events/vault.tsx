@@ -1,20 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, getRouteApi } from "@tanstack/react-router";
-import type { LucideIcon } from "lucide-react";
 import {
-  Cake,
-  Calendar,
-  Check,
-  Coins,
-  Egg,
-  Ghost,
-  Snowflake,
-  Sun,
-  User,
-  Vault as VaultIcon,
-} from "lucide-react";
+  createFileRoute,
+  getRouteApi,
+  useNavigate,
+} from "@tanstack/react-router";
+import { Check, Coins, User, Vault as VaultIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,30 +21,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { getEventIcon } from "@/lib/constants";
 import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 const routeApi = getRouteApi("/dashboard");
 
-const EVENT_ICON_MAP: Record<string, LucideIcon> = {
-  egg: Egg,
-  sun: Sun,
-  ghost: Ghost,
-  cake: Cake,
-  snowflake: Snowflake,
-  calendar: Calendar,
-};
+const searchSchema = z.object({
+  eventId: z.string().optional().catch(undefined),
+});
 
 export const Route = createFileRoute("/dashboard/events/vault")({
   component: RouteComponent,
   staticData: {
     crumb: "Skarbiec",
   },
+  validateSearch: searchSchema,
 });
 
 function RouteComponent() {
   const { session } = routeApi.useRouteContext();
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const { eventId: urlEventId } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
   const [hasInitialized, setHasInitialized] = useState(false);
   const queryClient = useQueryClient();
 
@@ -63,7 +54,7 @@ function RouteComponent() {
   const { data: oldestUnpaidEventId, isPending: oldestUnpaidLoading } =
     useQuery(orpc.bet.getOldestUnpaidEvent.queryOptions());
 
-  // Auto-select the oldest unpaid event on initial load
+  // Auto-select the oldest unpaid event on initial load (only if no URL param)
   useEffect(() => {
     if (hasInitialized || oldestUnpaidLoading) {
       return;
@@ -72,15 +63,29 @@ function RouteComponent() {
       return;
     }
 
+    // If URL already has eventId, just mark as initialized
+    if (urlEventId !== undefined) {
+      setHasInitialized(true);
+      return;
+    }
+
+    // Otherwise, navigate to the oldest unpaid event
     if (oldestUnpaidEventId !== null) {
-      setSelectedEventId(oldestUnpaidEventId.toString());
-    } else {
-      setSelectedEventId("all");
+      navigate({
+        search: { eventId: oldestUnpaidEventId.toString() },
+        replace: true,
+      });
     }
     setHasInitialized(true);
-  }, [oldestUnpaidEventId, oldestUnpaidLoading, hasInitialized]);
+  }, [
+    oldestUnpaidEventId,
+    oldestUnpaidLoading,
+    hasInitialized,
+    urlEventId,
+    navigate,
+  ]);
 
-  const effectiveEventId = selectedEventId ?? "all";
+  const effectiveEventId = urlEventId ?? "all";
 
   const { data: vault, isPending: vaultLoading } = useQuery({
     ...orpc.bet.getVault.queryOptions({
@@ -167,14 +172,21 @@ function RouteComponent() {
 
       {/* Event Filter */}
       <div className="flex justify-center">
-        <Select onValueChange={setSelectedEventId} value={effectiveEventId}>
+        <Select
+          onValueChange={(value) =>
+            navigate({
+              search: { eventId: value === "all" ? undefined : value },
+            })
+          }
+          value={effectiveEventId}
+        >
           <SelectTrigger className="w-56">
             <SelectValue placeholder="Wybierz event" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Wszystkie eventy</SelectItem>
             {sortedEvents.map((event) => {
-              const IconComponent = EVENT_ICON_MAP[event.icon || "calendar"];
+              const IconComponent = getEventIcon(event.icon);
               return (
                 <SelectItem key={event.id} value={event.id.toString()}>
                   <div className="flex items-center gap-2">

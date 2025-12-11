@@ -4,18 +4,11 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import type { LucideIcon } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
-  Cake,
-  Calendar,
   CalendarDays,
-  Egg,
-  Ghost,
   History,
   Loader2,
-  Snowflake,
-  Sun,
   Sword,
   Trash2,
   User,
@@ -23,6 +16,7 @@ import {
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
+import { z } from "zod";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,23 +39,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { getEventIcon } from "@/lib/constants";
 import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
-const EVENT_ICON_MAP: Record<string, LucideIcon> = {
-  egg: Egg,
-  sun: Sun,
-  ghost: Ghost,
-  cake: Cake,
-  snowflake: Snowflake,
-  calendar: Calendar,
-};
+const searchSchema = z.object({
+  eventId: z.string().optional().catch(undefined),
+  heroId: z.string().optional().catch(undefined),
+});
 
 export const Route = createFileRoute("/dashboard/events/history")({
   component: RouteComponent,
   staticData: {
     crumb: "Historia obstawień",
   },
+  validateSearch: searchSchema,
 });
 
 type BetToDelete = {
@@ -74,9 +66,11 @@ const ITEMS_PER_PAGE = 10;
 
 function RouteComponent() {
   const { session } = Route.useRouteContext();
+  const { eventId, heroId } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
   const [betToDelete, setBetToDelete] = useState<BetToDelete>(null);
-  const [selectedEventId, setSelectedEventId] = useState<string>("all");
-  const [selectedHeroId, setSelectedHeroId] = useState<string>("all");
+  const selectedEventId = eventId ?? "all";
+  const selectedHeroId = heroId ?? "all";
   const { ref: loadMoreRef, inView } = useInView({ threshold: 0.1 });
   const queryClient = useQueryClient();
 
@@ -196,7 +190,18 @@ function RouteComponent() {
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
           {/* Event Select */}
-          <Select onValueChange={setSelectedEventId} value={selectedEventId}>
+          <Select
+            onValueChange={(value) =>
+              navigate({
+                search: (prev) => ({
+                  ...prev,
+                  eventId: value === "all" ? undefined : value,
+                  heroId: undefined,
+                }),
+              })
+            }
+            value={selectedEventId}
+          >
             <SelectTrigger className="w-full sm:w-44">
               <SelectValue placeholder="Wybierz event" />
             </SelectTrigger>
@@ -209,8 +214,7 @@ function RouteComponent() {
                     new Date(a.endTime).getTime()
                 )
                 .map((event) => {
-                  const IconComponent =
-                    EVENT_ICON_MAP[event.icon || "calendar"];
+                  const IconComponent = getEventIcon(event.icon);
                   return (
                     <SelectItem key={event.id} value={event.id.toString()}>
                       <div className="flex items-center gap-2">
@@ -227,7 +231,17 @@ function RouteComponent() {
           </Select>
 
           {/* Hero Select */}
-          <Select onValueChange={setSelectedHeroId} value={selectedHeroId}>
+          <Select
+            onValueChange={(value) =>
+              navigate({
+                search: (prev) => ({
+                  ...prev,
+                  heroId: value === "all" ? undefined : value,
+                }),
+              })
+            }
+            value={selectedHeroId}
+          >
             <SelectTrigger className="w-full sm:w-44">
               <SelectValue placeholder="Wybierz herosa" />
             </SelectTrigger>
