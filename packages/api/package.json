@@ -12,7 +12,8 @@
   "scripts": {},
   "devDependencies": {
     "@tepirek-revamped/config": "workspace:*",
-    "@types/pg": "^8.15.5"
+    "@types/pg": "^8.15.5",
+    "pino": "^10.1.0"
   },
   "peerDependencies": {
     "typescript": "^5"
