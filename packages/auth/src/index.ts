@@ -4,19 +4,34 @@ import * as schema from "@tepirek-revamped/db/schema/auth";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
+const ensureEnv = (key: string) => {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`${key} is required`);
+  }
+  return value;
+};
+
+const betterAuthSecret = ensureEnv("BETTER_AUTH_SECRET");
+const betterAuthUrl = ensureEnv("BETTER_AUTH_URL");
+const discordClientId = ensureEnv("DISCORD_CLIENT_ID");
+const discordClientSecret = ensureEnv("DISCORD_CLIENT_SECRET");
+const corsOrigin = process.env.CORS_ORIGIN || "";
+const isProduction = process.env.NODE_ENV === "production";
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     schema,
   }),
-  trustedOrigins: [process.env.CORS_ORIGIN || ""],
+  trustedOrigins: [corsOrigin],
   emailAndPassword: {
     enabled: true,
   },
   socialProviders: {
     discord: {
-      clientId: process.env.DISCORD_CLIENT_ID as string,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET as string,
+      clientId: discordClientId,
+      clientSecret: discordClientSecret,
     },
   },
   session: {
@@ -26,8 +41,8 @@ export const auth = betterAuth({
       strategy: "compact",
     },
   },
-  secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL,
+  secret: betterAuthSecret,
+  baseURL: betterAuthUrl,
   user: {
     additionalFields: {
       role: {
@@ -42,17 +57,18 @@ export const auth = betterAuth({
       },
     },
   },
-  /*
-  advanced: {
-    crossSubDomainCookies: {
-      enabled: true,
-      domain: ".informati.dev",
-    },
-    defaultCookieAttributes: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      sameSite: "none",
-    },
-  },
-  */
+
+  advanced: isProduction
+    ? {
+        crossSubDomainCookies: {
+          enabled: true,
+          domain: ".informati.dev",
+        },
+        defaultCookieAttributes: {
+          secure: true,
+          httpOnly: true,
+          sameSite: "none",
+        },
+      }
+    : undefined,
 });
