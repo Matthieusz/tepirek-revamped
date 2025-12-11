@@ -22,6 +22,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getProfessionColor } from "@/lib/margonem-parser";
 import { cn } from "@/lib/utils";
+import type { CharacterWithAccountId, GameAccount } from "@/types/squad";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/squad-builder/accounts")({
@@ -30,26 +31,6 @@ export const Route = createFileRoute("/dashboard/squad-builder/accounts")({
     crumb: "Zarządzaj kontami",
   },
 });
-
-type GameAccount = {
-  id: number;
-  name: string;
-  profileUrl: string | null;
-  accountLevel: number | null;
-};
-
-type Character = {
-  id: number;
-  nick: string;
-  level: number;
-  profession: string;
-  professionName: string;
-  world: string;
-  avatarUrl: string | null;
-  guildName: string | null;
-  gameAccountName: string;
-  gameAccountId: number;
-};
 
 function RouteComponent() {
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(
@@ -64,7 +45,7 @@ function RouteComponent() {
 
   const { data: allCharacters, isPending: charactersLoading } = useQuery(
     orpc.squad.getMyCharacters.queryOptions()
-  ) as { data: Character[] | undefined; isPending: boolean };
+  ) as { data: CharacterWithAccountId[] | undefined; isPending: boolean };
 
   const selectedAccount = gameAccounts?.find((a) => a.id === selectedAccountId);
   const accountCharacters = allCharacters?.filter(
@@ -315,13 +296,14 @@ function CharactersList({
   searchQuery,
   setSearchQuery,
 }: {
-  characters: Character[] | undefined;
+  characters: CharacterWithAccountId[] | undefined;
   isLoading: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [charToDelete, setCharToDelete] = useState<Character | null>(null);
+  const [charToDelete, setCharToDelete] =
+    useState<CharacterWithAccountId | null>(null);
   const queryClient = useQueryClient();
 
   // Filter characters by search query

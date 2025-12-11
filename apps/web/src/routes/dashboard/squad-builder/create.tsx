@@ -34,6 +34,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getProfessionColor, professionNames } from "@/lib/margonem-parser";
+import type { Character } from "@/types/squad";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/squad-builder/create")({
@@ -42,18 +43,6 @@ export const Route = createFileRoute("/dashboard/squad-builder/create")({
     crumb: "Utwórz drużynę",
   },
 });
-
-type Character = {
-  id: number;
-  nick: string;
-  level: number;
-  profession: string;
-  professionName: string;
-  world: string;
-  avatarUrl: string | null;
-  guildName: string | null;
-  gameAccountName: string;
-};
 
 const PROFESSIONS = Object.entries(professionNames);
 

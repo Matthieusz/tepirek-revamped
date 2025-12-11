@@ -65,77 +65,13 @@ import {
 } from "@/components/ui/tooltip";
 import { getProfessionColor, professionNames } from "@/lib/margonem-parser";
 import { cn } from "@/lib/utils";
+import type {
+  Squad,
+  SquadDetails,
+  SquadMember,
+  VerifiedUser,
+} from "@/types/squad";
 import { orpc } from "@/utils/orpc";
-
-type VerifiedUser = {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-};
-
-type Character = {
-  id: number;
-  nick: string;
-  level: number;
-  profession: string;
-  professionName: string;
-  world: string;
-  avatarUrl: string | null;
-  guildName: string | null;
-  gameAccountName: string;
-};
-
-type Squad = {
-  id: number;
-  name: string;
-  description: string | null;
-  world: string;
-  isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  isOwner: boolean;
-  canEdit: boolean;
-  ownerName: string | null;
-};
-
-type SquadShare = {
-  id: number;
-  canEdit: boolean;
-  odUserId: string;
-  userName: string;
-  userEmail: string;
-  userImage: string | null;
-};
-
-type SquadMember = {
-  id: number;
-  position: number;
-  role: string | null;
-  characterId: number;
-  characterNick: string;
-  characterLevel: number;
-  characterProfession: string;
-  characterProfessionName: string;
-  characterWorld: string;
-  characterAvatarUrl: string | null;
-  characterGuildName: string | null;
-  gameAccountName: string;
-};
-
-type SquadDetails = {
-  id: number;
-  name: string;
-  description: string | null;
-  world: string;
-  isPublic: boolean;
-  isOwner: boolean;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  members: SquadMember[];
-  shares: SquadShare[];
-};
 
 export const Route = createFileRoute("/dashboard/squad-builder/manage")({
   component: RouteComponent,
