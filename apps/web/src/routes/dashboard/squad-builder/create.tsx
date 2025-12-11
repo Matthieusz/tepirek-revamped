@@ -5,10 +5,8 @@ import { Globe, Lock, Search, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
-import {
-  CharacterSelectCard,
-  TeamProfessionsSummary,
-} from "@/components/squad-builder";
+import { CharacterSelectCard } from "@/components/squad-builder/character-select-card";
+import { TeamProfessionsSummary } from "@/components/squad-builder/team-professions-summary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
