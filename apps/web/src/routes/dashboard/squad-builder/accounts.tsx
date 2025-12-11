@@ -15,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -662,11 +663,19 @@ function ShareAccountDialog({
                       type="button"
                     >
                       <div className="min-w-0 flex-1">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.image ?? undefined} />
+                          <AvatarFallback>
+                            {user.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()
+                              .slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
                         <p className="truncate font-medium text-sm">
                           {user.name}
-                        </p>
-                        <p className="truncate text-muted-foreground text-xs">
-                          {user.email}
                         </p>
                       </div>
                     </button>

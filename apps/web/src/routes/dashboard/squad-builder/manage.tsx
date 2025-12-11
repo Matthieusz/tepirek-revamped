@@ -730,9 +730,6 @@ function ShareSquadDialog({
                         <p className="truncate font-medium text-sm">
                           {user.name}
                         </p>
-                        <p className="truncate text-muted-foreground text-xs">
-                          {user.email}
-                        </p>
                       </div>
                     </button>
                   ))
