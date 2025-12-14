@@ -150,7 +150,7 @@ function TasksRoute() {
                   className="flex-1"
                   disabled={createMutation.isPending}
                   onChange={(e) => setNewTodoText(e.target.value)}
-                  placeholder="np. zrobić porządek na pc"
+                  placeholder="np. zrobić porządek na postaciach (pozdro Ukasz)"
                   value={newTodoText}
                 />
                 <Button
