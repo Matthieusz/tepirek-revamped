@@ -17,7 +17,8 @@ import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/waiting-room")({
   async beforeLoad() {
-    await requireUnverified();
+    const session = await requireUnverified();
+    return { session };
   },
   component: RouteComponent,
 });
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/waiting-room")({
 function RouteComponent() {
   const router = useRouter();
   const navigate = Route.useNavigate();
-  const { data: session } = authClient.useSession();
+  const { session } = Route.useRouteContext();
   const [isValidating, setIsValidating] = useState(false);
 
   // Fetch Discord access token
@@ -99,7 +100,7 @@ function RouteComponent() {
             <p className="text-muted-foreground text-sm">
               Zalogowano jako:{" "}
               <span className="font-medium text-foreground">
-                {session?.user.name}
+                {session.user.name}
               </span>
             </p>
             <Button

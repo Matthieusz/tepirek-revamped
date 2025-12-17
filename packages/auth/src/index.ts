@@ -41,6 +41,17 @@ export const auth = betterAuth({
       strategy: "compact",
     },
   },
+  rateLimit: {
+    window: 60,
+    max: 100,
+    customRules: {
+      "/get-session": false,
+      "/callback/*": {
+        window: 60,
+        max: 20,
+      },
+    },
+  },
   secret: betterAuthSecret,
   baseURL: betterAuthUrl,
   user: {

@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import Loader from "./loader";
 
 export function SignUpForm({
   className,
@@ -24,7 +23,6 @@ export function SignUpForm({
   const navigate = useNavigate({
     from: "/",
   });
-  const { isPending } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -62,14 +60,6 @@ export function SignUpForm({
       }),
     },
   });
-
-  if (isPending) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader />
-      </div>
-    );
-  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
