@@ -26,8 +26,8 @@ export const betRouter = {
     .handler(async ({ input, context }) => {
       const { heroId, userIds } = input;
       const memberCount = userIds.length;
-      const pointsPerMember = Math.floor(
-        ((POINTS_PER_HERO / memberCount) * 100) / 100
+      const pointsPerMember = (
+        Math.floor((POINTS_PER_HERO / memberCount) * 100) / 100
       ).toFixed(2);
 
       // Get the hero to find the eventId
@@ -37,7 +37,7 @@ export const betRouter = {
         .where(eq(hero.id, heroId));
 
       if (!heroData) {
-        throw new ORPCError("NOT_FOUND", { message: "Hero not found" });
+        throw new ORPCError("NOT_FOUND", { message: "Nie znaleziono herosów" });
       }
 
       // Create bet, members, and update stats in a transaction
@@ -55,7 +55,7 @@ export const betRouter = {
 
         if (!bet) {
           throw new ORPCError("INTERNAL_SERVER_ERROR", {
-            message: "Failed to create bet",
+            message: "Nie udało się utworzyć obstawienia",
           });
         }
 
