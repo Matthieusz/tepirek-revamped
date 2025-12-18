@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, Sword, User } from "lucide-react";
+import { Copy, Search, Sword, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -60,6 +60,10 @@ function RouteComponent() {
 
   const { data: verifiedUsers, isPending: usersLoading } = useQuery(
     orpc.user.getVerified.queryOptions()
+  );
+
+  const { data: allBets, isPending: betsLoading } = useQuery(
+    orpc.bet.getAll.queryOptions()
   );
 
   const isAdminUser = isAdmin(session);
@@ -132,14 +136,13 @@ function RouteComponent() {
     return [...currentUserIds, userId];
   };
 
-  const handleSelectAllUsers = (currentUserIds: string[]) => {
-    if (!verifiedUsers) {
+  const handleCopyLastBet = (currentUserIds: string[]) => {
+    if (!allBets || allBets.length === 0) {
       return currentUserIds;
     }
-    if (currentUserIds.length === verifiedUsers.length) {
-      return [];
-    }
-    return verifiedUsers.map((user) => user.id);
+    const lastBet = allBets[0];
+    const lastBetUserIds = lastBet.members.map((member) => member.userId);
+    return lastBetUserIds;
   };
 
   const renderHeroCards = (
@@ -395,8 +398,9 @@ function RouteComponent() {
                   <div className="flex items-center justify-between">
                     <Label>Gracze ({field.state.value.length} wybranych)</Label>
                     <Button
+                      disabled={!allBets || allBets.length === 0 || betsLoading}
                       onClick={() => {
-                        const newIds = handleSelectAllUsers(field.state.value);
+                        const newIds = handleCopyLastBet(field.state.value);
                         field.handleChange(newIds);
                         setSelectedUserIds(newIds);
                       }}
@@ -404,9 +408,8 @@ function RouteComponent() {
                       type="button"
                       variant="outline"
                     >
-                      {field.state.value.length === verifiedUsers?.length
-                        ? "Odznacz wszystkich"
-                        : "Zaznacz wszystkich"}
+                      <Copy className="size-4" />
+                      Kopiuj ostatnie obstawienie
                     </Button>
                   </div>
                   <div className="relative">
