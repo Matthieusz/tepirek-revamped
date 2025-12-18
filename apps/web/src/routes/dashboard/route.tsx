@@ -51,7 +51,7 @@ function RouteComponent() {
             <BreadcrumbNav />
           </div>
         </header>
-        <div className="container flex h-full w-full px-6 py-2">
+        <div className="container mb-8 flex w-full px-6 py-2">
           <Outlet />
         </div>
       </SidebarInset>
