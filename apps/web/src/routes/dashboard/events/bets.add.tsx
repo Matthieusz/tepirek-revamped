@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Copy, Search, Sword, User } from "lucide-react";
+import { Copy, CopyX, Search, Sword, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -41,12 +41,9 @@ const defaultValues: AddBetForm = {
   userIds: [],
 };
 
-const POINTS_PER_HERO = 20;
-
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [selectedEventId, setSelectedEventId] = useState("");
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
 
@@ -96,8 +93,6 @@ function RouteComponent() {
         queryClient.invalidateQueries({
           queryKey: orpc.bet.getAll.queryKey(),
         });
-        // Only reset players, keep event and hero selected
-        setSelectedUserIds([]);
         form.setFieldValue("userIds", []);
       } catch (error) {
         const message =
@@ -122,12 +117,6 @@ function RouteComponent() {
   const filteredHeroes = heroes?.filter(
     (hero) => hero.eventId === Number.parseInt(selectedEventId || "0", 10)
   );
-
-  // Calculate points preview
-  const pointsPerMember =
-    selectedUserIds.length > 0
-      ? Math.floor((POINTS_PER_HERO / selectedUserIds.length) * 100) / 100
-      : "0.00";
 
   const handleUserToggle = (userId: string, currentUserIds: string[]) => {
     if (currentUserIds.includes(userId)) {
@@ -223,9 +212,11 @@ function RouteComponent() {
       );
     }
 
-    // Filter users by search query
-    const filteredUsers = verifiedUsers?.filter((user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    // Filter users by search query and exclude selected users
+    const filteredUsers = verifiedUsers?.filter(
+      (user) =>
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !fieldValue.includes(user.id)
     );
 
     if (filteredUsers?.length === 0) {
@@ -237,7 +228,7 @@ function RouteComponent() {
     }
 
     return (
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
         {filteredUsers?.map((user) => (
           <label
             className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 ${
@@ -254,7 +245,6 @@ function RouteComponent() {
               onCheckedChange={() => {
                 const newIds = handleUserToggle(user.id, fieldValue);
                 onChange(newIds);
-                setSelectedUserIds(newIds);
               }}
             />
             <Avatar className="h-8 w-8">
@@ -287,15 +277,6 @@ function RouteComponent() {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
-      <div>
-        <h1 className="mb-1 font-bold text-2xl tracking-tight">
-          Dodaj obstawienie
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Utwórz nowe obstawienie na wybranego herosa z wybranymi graczami.
-        </p>
-      </div>
-
       <Card>
         <CardContent>
           <form
@@ -393,60 +374,119 @@ function RouteComponent() {
 
             {/* User Selection */}
             <form.Field name="userIds">
-              {(field) => (
-                <div className="grid gap-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label>Gracze ({field.state.value.length} wybranych)</Label>
-                    <Button
-                      disabled={!allBets || allBets.length === 0 || betsLoading}
-                      onClick={() => {
-                        const newIds = handleCopyLastBet(field.state.value);
-                        field.handleChange(newIds);
-                        setSelectedUserIds(newIds);
-                      }}
-                      size="sm"
-                      type="button"
-                      variant="outline"
-                    >
-                      <Copy className="size-4" />
-                      Kopiuj ostatnie obstawienie
-                    </Button>
-                  </div>
-                  <div className="relative">
-                    <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      className="pl-9"
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Szukaj gracza..."
-                      type="text"
-                      value={searchQuery}
-                    />
-                  </div>
-                  <div className="max-h-64 overflow-y-auto rounded-md border p-4">
-                    {renderUserList(field.state.value, field.handleChange)}
-                  </div>
-                  {field.state.meta.errors.map((error) => (
-                    <p className="text-red-500 text-sm" key={error?.message}>
-                      {error?.message}
-                    </p>
-                  ))}
-                </div>
-              )}
-            </form.Field>
+              {(field) => {
+                const availableCount =
+                  verifiedUsers?.filter(
+                    (user) => !field.state.value.includes(user.id)
+                  ).length ?? 0;
 
-            {/* Points Preview */}
-            {selectedUserIds.length > 0 && (
-              <div className="rounded-md border bg-muted/50 p-4">
-                <p className="font-medium text-sm">Podgląd punktów</p>
-                <p className="text-muted-foreground text-sm">
-                  {POINTS_PER_HERO} punktów ÷ {selectedUserIds.length} graczy ={" "}
-                  <span className="font-semibold text-foreground">
-                    {pointsPerMember} punktów
-                  </span>{" "}
-                  na gracza
-                </p>
-              </div>
-            )}
+                return (
+                  <div className="grid gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label>Gracze ({availableCount} dostępnych)</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          disabled={field.state.value.length === 0}
+                          onClick={() => {
+                            field.handleChange([]);
+                          }}
+                          size="sm"
+                          type="button"
+                          variant="outline"
+                        >
+                          <CopyX className="size-4" />
+                          Odznacz wszystkich
+                        </Button>
+                        <Button
+                          disabled={
+                            !allBets || allBets.length === 0 || betsLoading
+                          }
+                          onClick={() => {
+                            const newIds = handleCopyLastBet(field.state.value);
+                            field.handleChange(newIds);
+                          }}
+                          size="sm"
+                          type="button"
+                          variant="outline"
+                        >
+                          <Copy className="size-4" />
+                          Kopiuj ostatnie obstawienie
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="relative">
+                      <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        className="pl-9"
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Szukaj gracza..."
+                        type="text"
+                        value={searchQuery}
+                      />
+                    </div>
+                    <div className="max-h-64 overflow-y-auto rounded-md border p-4">
+                      {renderUserList(field.state.value, field.handleChange)}
+                    </div>
+
+                    {/* Selected Users Card */}
+                    {field.state.value.length > 0 && (
+                      <div>
+                        <Label className="mb-2">
+                          Gracze ({field.state.value.length} wybranych)
+                        </Label>
+                        <div className="rounded-md border border-muted bg-muted/30">
+                          <div className="p-4">
+                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
+                              {verifiedUsers
+                                ?.filter((user) =>
+                                  field.state.value.includes(user.id)
+                                )
+                                .map((user) => (
+                                  <label
+                                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-primary bg-primary/5 p-3 transition-colors hover:bg-muted/50"
+                                    htmlFor={`selected-user-${user.id}`}
+                                    key={user.id}
+                                  >
+                                    <Checkbox
+                                      checked={true}
+                                      id={`selected-user-${user.id}`}
+                                      onCheckedChange={() => {
+                                        const newIds = field.state.value.filter(
+                                          (id) => id !== user.id
+                                        );
+                                        field.handleChange(newIds);
+                                      }}
+                                    />
+                                    <Avatar className="h-8 w-8">
+                                      <AvatarImage
+                                        alt={user.name}
+                                        src={user.image || undefined}
+                                      />
+                                      <AvatarFallback>
+                                        <User className="h-4 w-4" />
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="truncate font-normal">
+                                      {user.name}
+                                    </span>
+                                  </label>
+                                ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {field.state.meta.errors.map((error) => (
+                      <p className="text-red-500 text-sm" key={error?.message}>
+                        {error?.message}
+                      </p>
+                    ))}
+                  </div>
+                );
+              }}
+            </form.Field>
 
             {/* Submit Button */}
             <form.Subscribe>
