@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { Clock, Loader2, LogOut, RefreshCw } from "lucide-react";
+import { Loader2, LogOut, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -79,12 +79,8 @@ function RouteComponent() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm">
-              <Clock className="size-4" />
-              <span>W trakcie weryfikacji</span>
-            </div>
             <Button
-              className="w-full"
+              className="mt-4 w-full"
               onClick={() => window.location.reload()}
               variant="outline"
             >
