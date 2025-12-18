@@ -1,10 +1,11 @@
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Copy, CopyX, Search, Sword, User } from "lucide-react";
+import { CirclePlus, Copy, CopyX, Search, Sword, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import Loader from "@/components/loader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -287,76 +288,110 @@ function RouteComponent() {
               form.handleSubmit();
             }}
           >
-            {/* Event Selection */}
-            <form.Field name="eventId">
-              {(field) => {
-                const selectedEvent = events?.find(
-                  (e) => e.id.toString() === field.state.value
-                );
-                const SelectedIcon = selectedEvent
-                  ? getEventIcon(selectedEvent.icon)
-                  : null;
+            {" "}
+            <div className="flex items-center justify-between">
+              {/* Event Selection */}
+              <form.Field name="eventId">
+                {(field) => {
+                  const selectedEvent = events?.find(
+                    (e) => e.id.toString() === field.state.value
+                  );
+                  const SelectedIcon = selectedEvent
+                    ? getEventIcon(selectedEvent.icon)
+                    : null;
 
-                return (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Event</Label>
-                    <Select
-                      onValueChange={(value) => {
-                        field.handleChange(value);
-                        setSelectedEventId(value);
-                        form.setFieldValue("heroId", "");
-                      }}
-                      value={field.state.value}
-                    >
-                      <SelectTrigger id={field.name}>
-                        <SelectValue placeholder="Wybierz event">
-                          {selectedEvent && SelectedIcon && (
-                            <span className="flex items-center gap-2">
-                              <SelectedIcon
-                                className="h-4 w-4"
-                                style={{ color: selectedEvent.color }}
-                              />
-                              {selectedEvent.name}
-                            </span>
+                  return (
+                    <div className="grid gap-1.5">
+                      <Label htmlFor={field.name}>Event</Label>
+                      <Select
+                        onValueChange={(value) => {
+                          field.handleChange(value);
+                          setSelectedEventId(value);
+                          form.setFieldValue("heroId", "");
+                        }}
+                        value={field.state.value}
+                      >
+                        <SelectTrigger id={field.name}>
+                          <SelectValue placeholder="Wybierz event">
+                            {selectedEvent && SelectedIcon && (
+                              <span className="flex items-center gap-2">
+                                <SelectedIcon
+                                  className="h-4 w-4"
+                                  style={{ color: selectedEvent.color }}
+                                />
+                                {selectedEvent.name}
+                              </span>
+                            )}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {eventsLoading ? (
+                            <SelectItem disabled value="loading">
+                              Ładowanie...
+                            </SelectItem>
+                          ) : (
+                            events?.map((event) => {
+                              const IconComponent = getEventIcon(event.icon);
+                              return (
+                                <SelectItem
+                                  key={event.id}
+                                  value={event.id.toString()}
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <IconComponent
+                                      className="h-4 w-4"
+                                      style={{ color: event.color }}
+                                    />
+                                    {event.name}
+                                  </span>
+                                </SelectItem>
+                              );
+                            })
                           )}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {eventsLoading ? (
-                          <SelectItem disabled value="loading">
-                            Ładowanie...
-                          </SelectItem>
-                        ) : (
-                          events?.map((event) => {
-                            const IconComponent = getEventIcon(event.icon);
-                            return (
-                              <SelectItem
-                                key={event.id}
-                                value={event.id.toString()}
-                              >
-                                <span className="flex items-center gap-2">
-                                  <IconComponent
-                                    className="h-4 w-4"
-                                    style={{ color: event.color }}
-                                  />
-                                  {event.name}
-                                </span>
-                              </SelectItem>
-                            );
-                          })
-                        )}
-                      </SelectContent>
-                    </Select>
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                );
-              }}
-            </form.Field>
+                        </SelectContent>
+                      </Select>
+                      {field.state.meta.errors.map((error) => (
+                        <p
+                          className="text-red-500 text-sm"
+                          key={error?.message}
+                        >
+                          {error?.message}
+                        </p>
+                      ))}
+                    </div>
+                  );
+                }}
+              </form.Field>
 
+              {/* Submit Button */}
+              <form.Subscribe>
+                {(state) => (
+                  <Button
+                    className="w-full sm:w-auto"
+                    disabled={
+                      !state.canSubmit ||
+                      state.isSubmitting ||
+                      eventsLoading ||
+                      heroesLoading ||
+                      usersLoading
+                    }
+                    type="submit"
+                  >
+                    {state.isSubmitting ? (
+                      <p className="flex items-center gap-2">
+                        <Loader />
+                        Tworzenie obstawienia
+                      </p>
+                    ) : (
+                      <p className="flex items-center gap-2">
+                        <CirclePlus className="size-4" />
+                        Utwórz obstawienie
+                      </p>
+                    )}
+                  </Button>
+                )}
+              </form.Subscribe>
+            </div>
             {/* Hero Selection - Cards with Images */}
             <form.Field name="heroId">
               {(field) => (
@@ -371,7 +406,6 @@ function RouteComponent() {
                 </div>
               )}
             </form.Field>
-
             {/* User Selection */}
             <form.Field name="userIds">
               {(field) => {
@@ -487,25 +521,6 @@ function RouteComponent() {
                 );
               }}
             </form.Field>
-
-            {/* Submit Button */}
-            <form.Subscribe>
-              {(state) => (
-                <Button
-                  className="w-full sm:w-auto"
-                  disabled={
-                    !state.canSubmit ||
-                    state.isSubmitting ||
-                    eventsLoading ||
-                    heroesLoading ||
-                    usersLoading
-                  }
-                  type="submit"
-                >
-                  {state.isSubmitting ? "Tworzenie..." : "Utwórz obstawienie"}
-                </Button>
-              )}
-            </form.Subscribe>
           </form>
         </CardContent>
       </Card>
