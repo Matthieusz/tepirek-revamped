@@ -122,6 +122,9 @@ function RouteComponent() {
   // Flatten pages into single array of bets
   const allBets = betsData?.pages.flatMap((page) => page.items) ?? [];
 
+  // Calculate stats based on current filters
+  const totalBets = betsData?.pages[0]?.pagination.totalItems ?? 0;
+
   // Load more when scrolled to bottom
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
@@ -184,10 +187,12 @@ function RouteComponent() {
           <h1 className="mb-1 font-bold text-2xl tracking-tight">
             Historia obstawień
           </h1>
-          <p className="text-muted-foreground text-sm">
-            Przeglądaj wszystkie utworzone obstawienia.
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-muted-foreground text-sm">Obstawienia: </p>
+            <p className="font-bold text-sm">{totalBets}</p>
+          </div>
         </div>
+
         <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
           {/* Event Select */}
           <Select
