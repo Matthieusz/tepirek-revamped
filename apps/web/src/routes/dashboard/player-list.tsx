@@ -1,15 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, Clock, Users } from "lucide-react";
+import { CheckCircle2, Clock, Search, Users } from "lucide-react";
+import { useState } from "react";
 import { buildPlayerColumns } from "@/components/players-table/columns";
 import { PlayerTable } from "@/components/players-table/player-table";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
@@ -23,6 +19,7 @@ export const Route = createFileRoute("/dashboard/player-list")({
 
 function RouteComponent() {
   const { session } = Route.useRouteContext();
+  const [searchQuery, setSearchQuery] = useState("");
   const { data: playersData = [], isPending } = useQuery(
     orpc.user.list.queryOptions()
   );
@@ -30,12 +27,24 @@ function RouteComponent() {
   const cols = buildPlayerColumns(isAdminUser);
 
   type Player = (typeof playersData)[number];
-  const verifiedPlayers = playersData.filter(
+
+  // Filter players by search query
+  const filteredPlayers = playersData.filter((player: Player) =>
+    player.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const verifiedPlayers = filteredPlayers.filter(
     (player: Player) => player.verified
   );
-  const notVerifiedPlayers = playersData.filter(
+  const notVerifiedPlayers = filteredPlayers.filter(
     (player: Player) => !player.verified
   );
+
+  // Stats based on all players (not filtered)
+  const totalVerified = playersData.filter((p: Player) => p.verified).length;
+  const totalNotVerified = playersData.filter(
+    (p: Player) => !p.verified
+  ).length;
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
@@ -68,7 +77,7 @@ function RouteComponent() {
           </CardHeader>
           <CardContent>
             <div className="font-bold text-2xl text-green-500">
-              {isPending ? "—" : verifiedPlayers.length}
+              {isPending ? "—" : totalVerified}
             </div>
           </CardContent>
         </Card>
@@ -79,10 +88,22 @@ function RouteComponent() {
           </CardHeader>
           <CardContent>
             <div className="font-bold text-2xl text-yellow-500">
-              {isPending ? "—" : notVerifiedPlayers.length}
+              {isPending ? "—" : totalNotVerified}
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+        <Input
+          className="pl-9"
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Szukaj gracza po nazwie..."
+          type="text"
+          value={searchQuery}
+        />
       </div>
 
       {/* Tables */}
@@ -93,9 +114,6 @@ function RouteComponent() {
               <CheckCircle2 className="h-4 w-4 text-green-500" />
               Zweryfikowani
             </CardTitle>
-            <CardDescription>
-              Gracze z pełnym dostępem do aplikacji
-            </CardDescription>
           </CardHeader>
           <CardContent>
             {isPending && <TableSkeleton rows={5} />}
@@ -116,9 +134,6 @@ function RouteComponent() {
               <Clock className="h-4 w-4 text-yellow-500" />
               Oczekujący na weryfikację
             </CardTitle>
-            <CardDescription>
-              Gracze czekający na zatwierdzenie konta
-            </CardDescription>
           </CardHeader>
           <CardContent>
             {isPending && <TableSkeleton rows={3} />}
