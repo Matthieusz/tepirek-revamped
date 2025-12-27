@@ -7,6 +7,13 @@ import { adminProcedure, protectedProcedure } from "../index";
 export const heroesRouter = {
   getAll: protectedProcedure.handler(async () => await db.select().from(hero)),
 
+  getByEventId: protectedProcedure
+    .input(z.object({ eventId: z.number() }))
+    .handler(
+      async ({ input }) =>
+        await db.select().from(hero).where(eq(hero.eventId, input.eventId))
+    ),
+
   create: adminProcedure
     .input(
       z.object({
