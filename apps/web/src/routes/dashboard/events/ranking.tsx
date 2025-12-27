@@ -47,9 +47,7 @@ function RouteComponent() {
   const selectedHeroId = heroId ?? "all";
   const currentSortBy = sortBy ?? "points";
 
-  const { data: events, isPending: eventsLoading } = useQuery(
-    orpc.event.getAll.queryOptions()
-  );
+  const { data: events } = useQuery(orpc.event.getAll.queryOptions());
 
   // Only fetch heroes when a specific event is selected
   const { data: heroes, isPending: heroesLoading } = useQuery({
