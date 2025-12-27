@@ -132,7 +132,7 @@ function RouteComponent() {
                       <CardTitle className="text-lg">
                         {announcement.title}
                       </CardTitle>
-                      <div className="mt-2 flex items-center gap-3 text-muted-foreground text-sm">
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-muted-foreground text-sm sm:gap-3">
                         <div className="flex items-center gap-1.5">
                           <Avatar className="size-5">
                             <AvatarImage
@@ -147,7 +147,10 @@ function RouteComponent() {
                             {announcement.user?.name ?? announcement.user?.id}
                           </span>
                         </div>
-                        <Separator className="h-4" orientation="vertical" />
+                        <Separator
+                          className="hidden h-4 sm:block"
+                          orientation="vertical"
+                        />
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3.5 w-3.5" />
                           <span>{formatDateTime(announcement.createdAt)}</span>

@@ -133,7 +133,7 @@ function RangeDetails() {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="mb-1 font-bold text-2xl tracking-tight">
             {range.data.name}
@@ -164,77 +164,79 @@ function RangeDetails() {
               </CardHeader>
               <CardContent className="pt-0">
                 {skills.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Link</TableHead>
-                        <TableHead className="w-20">Mistrz</TableHead>
-                        <TableHead className="w-28">Autor</TableHead>
-                        {isAdminUser && <TableHead className="w-16" />}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {skills.map((skill) => (
-                        <TableRow key={skill.id}>
-                          <TableCell>
-                            <a
-                              className="text-primary hover:underline"
-                              href={skill.link}
-                              rel="noopener noreferrer"
-                              target="_blank"
-                            >
-                              {skill.name}
-                            </a>
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={
-                                skill.mastery
-                                  ? "text-green-500"
-                                  : "text-muted-foreground"
-                              }
-                            >
-                              {skill.mastery ? "Tak" : "Nie"}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1.5">
-                              <Avatar className="size-5">
-                                <AvatarImage
-                                  alt={skill.addedBy}
-                                  src={skill.addedByImage || undefined}
-                                />
-                                <AvatarFallback className="text-xs">
-                                  {skill.addedBy?.slice(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="truncate text-xs">
-                                {skill.addedBy}
-                              </span>
-                            </div>
-                          </TableCell>
-                          {isAdminUser && (
-                            <TableCell>
-                              <Button
-                                onClick={() =>
-                                  setSkillToDelete({
-                                    id: skill.id,
-                                    name: skill.name,
-                                    rangeId: currentRange.id,
-                                  })
-                                }
-                                size="sm"
-                                type="button"
-                                variant="ghost"
-                              >
-                                Usuń
-                              </Button>
-                            </TableCell>
-                          )}
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Link</TableHead>
+                          <TableHead className="w-20">Mistrz</TableHead>
+                          <TableHead className="w-28">Autor</TableHead>
+                          {isAdminUser && <TableHead className="w-16" />}
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {skills.map((skill) => (
+                          <TableRow key={skill.id}>
+                            <TableCell>
+                              <a
+                                className="text-primary hover:underline"
+                                href={skill.link}
+                                rel="noopener noreferrer"
+                                target="_blank"
+                              >
+                                {skill.name}
+                              </a>
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={
+                                  skill.mastery
+                                    ? "text-green-500"
+                                    : "text-muted-foreground"
+                                }
+                              >
+                                {skill.mastery ? "Tak" : "Nie"}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1.5">
+                                <Avatar className="size-5">
+                                  <AvatarImage
+                                    alt={skill.addedBy}
+                                    src={skill.addedByImage || undefined}
+                                  />
+                                  <AvatarFallback className="text-xs">
+                                    {skill.addedBy?.slice(0, 2).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="truncate text-xs">
+                                  {skill.addedBy}
+                                </span>
+                              </div>
+                            </TableCell>
+                            {isAdminUser && (
+                              <TableCell>
+                                <Button
+                                  onClick={() =>
+                                    setSkillToDelete({
+                                      id: skill.id,
+                                      name: skill.name,
+                                      rangeId: currentRange.id,
+                                    })
+                                  }
+                                  size="sm"
+                                  type="button"
+                                  variant="ghost"
+                                >
+                                  Usuń
+                                </Button>
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>{" "}
+                  </div>
                 ) : (
                   <p className="py-4 text-center text-muted-foreground text-sm">
                     Brak zestawów

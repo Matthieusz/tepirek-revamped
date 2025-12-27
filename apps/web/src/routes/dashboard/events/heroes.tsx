@@ -119,68 +119,70 @@ function RouteComponent() {
               </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-16">#</TableHead>
-                  <TableHead className="w-20">Wygląd</TableHead>
-                  <TableHead>Nazwa</TableHead>
-                  <TableHead className="w-20 text-center">Poziom</TableHead>
-                  <TableHead className="w-32">Event</TableHead>
-                  {isAdminUser && (
-                    <TableHead className="w-20 text-right">Akcje</TableHead>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {heroes.map((hero, index) => (
-                  <TableRow key={hero.id}>
-                    <TableCell className="text-muted-foreground">
-                      {index + 1}
-                    </TableCell>
-                    <TableCell>
-                      {hero.image ? (
-                        <img
-                          alt={hero.name}
-                          className="h-12 w-10 rounded object-contain"
-                          height={48}
-                          src={hero.image}
-                          width={40}
-                        />
-                      ) : (
-                        <div className="flex h-12 w-10 items-center justify-center rounded bg-muted">
-                          <Sword className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">{hero.name}</TableCell>
-                    <TableCell className="text-center">
-                      <span className="font-medium">{hero.level}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-muted-foreground text-sm">
-                        {events?.find((event) => event.id === hero.eventId)
-                          ?.name || "Brak"}
-                      </span>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-16">#</TableHead>
+                    <TableHead className="w-20">Wygląd</TableHead>
+                    <TableHead>Nazwa</TableHead>
+                    <TableHead className="w-20 text-center">Poziom</TableHead>
+                    <TableHead className="w-32">Event</TableHead>
                     {isAdminUser && (
-                      <TableCell className="text-right">
-                        <Button
-                          onClick={() =>
-                            setHeroToDelete({ id: hero.id, name: hero.name })
-                          }
-                          size="sm"
-                          type="button"
-                          variant="ghost"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
+                      <TableHead className="w-20 text-right">Akcje</TableHead>
                     )}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {heroes.map((hero, index) => (
+                    <TableRow key={hero.id}>
+                      <TableCell className="text-muted-foreground">
+                        {index + 1}
+                      </TableCell>
+                      <TableCell>
+                        {hero.image ? (
+                          <img
+                            alt={hero.name}
+                            className="h-12 w-10 rounded object-contain"
+                            height={48}
+                            src={hero.image}
+                            width={40}
+                          />
+                        ) : (
+                          <div className="flex h-12 w-10 items-center justify-center rounded bg-muted">
+                            <Sword className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">{hero.name}</TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-medium">{hero.level}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-muted-foreground text-sm">
+                          {events?.find((event) => event.id === hero.eventId)
+                            ?.name || "Brak"}
+                        </span>
+                      </TableCell>
+                      {isAdminUser && (
+                        <TableCell className="text-right">
+                          <Button
+                            onClick={() =>
+                              setHeroToDelete({ id: hero.id, name: hero.name })
+                            }
+                            size="sm"
+                            type="button"
+                            variant="ghost"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

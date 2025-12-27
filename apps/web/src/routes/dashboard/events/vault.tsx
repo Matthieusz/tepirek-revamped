@@ -212,7 +212,7 @@ function RouteComponent() {
                 Następny do wypłaty
               </span>
             </div>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12 border-2 border-green-500">
                   <AvatarImage
@@ -250,8 +250,10 @@ function RouteComponent() {
                   size="sm"
                   variant="default"
                 >
-                  <Check className="mr-2 h-4 w-4" />
-                  Oznacz jako wypłacone
+                  <Check className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">
+                    Oznacz jako wypłacone
+                  </span>
                 </Button>
               )}
             </div>

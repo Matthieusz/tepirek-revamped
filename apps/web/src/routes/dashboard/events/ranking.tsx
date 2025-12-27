@@ -156,7 +156,7 @@ function RouteComponent() {
           }
           value={selectedEventId}
         >
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-full sm:w-44">
             <SelectValue placeholder="Wybierz event" />
           </SelectTrigger>
           <SelectContent>
@@ -195,7 +195,7 @@ function RouteComponent() {
           }
           value={selectedHeroId}
         >
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-full sm:w-44">
             <SelectValue placeholder="Wybierz herosa" />
           </SelectTrigger>
           <SelectContent>
@@ -300,27 +300,29 @@ function RouteComponent() {
                     </div>
 
                     {/* Stats */}
-                    <div className="flex shrink-0 items-center gap-8 text-sm">
+                    <div className="flex shrink-0 items-center gap-3 text-sm sm:gap-8">
                       {/* Points */}
-                      <div className="w-24 text-center">
-                        <p className="text-muted-foreground text-xs">Punkty</p>
-                        <p className="font-bold font-mono">
+                      <div className="w-16 text-center sm:w-24">
+                        <p className="hidden text-muted-foreground text-xs sm:block">
+                          Punkty
+                        </p>
+                        <p className="font-bold font-mono text-xs sm:text-sm">
                           {Number.parseFloat(player.totalPoints || "0").toFixed(
                             2
                           )}
                         </p>
                       </div>
 
-                      {/* Bets */}
-                      <div className="w-24 text-center">
+                      {/* Bets - hidden on mobile */}
+                      <div className="hidden w-24 text-center sm:block">
                         <p className="text-muted-foreground text-xs">
                           Obstawienia
                         </p>
                         <p className="font-semibold">{player.totalBets}</p>
                       </div>
 
-                      {/* Gold */}
-                      <div className="w-28 text-center">
+                      {/* Gold - hidden on mobile */}
+                      <div className="hidden w-28 text-center sm:block">
                         <p className="text-muted-foreground text-xs">Zarobek</p>
                         <p className="font-mono font-semibold">
                           {earnings.toLocaleString("pl-PL", {

@@ -178,8 +178,8 @@ function RouteComponent() {
     <ErrorBoundary>
       <div className="container mx-auto py-6">
         <div className="mb-6">
-          <h1 className="font-bold text-3xl">Utwórz nowy Squad</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-bold text-2xl sm:text-3xl">Utwórz nowy Squad</h1>
+          <p className="text-muted-foreground text-sm">
             Wybierz świat, postacie i skonfiguruj swoją drużynę
           </p>
         </div>

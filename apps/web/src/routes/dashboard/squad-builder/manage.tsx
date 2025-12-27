@@ -90,10 +90,10 @@ function RouteComponent() {
   return (
     <ErrorBoundary>
       <div className="container mx-auto py-6">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="font-bold text-3xl">Twoje drużyny</h1>
-            <p className="text-muted-foreground">
+            <h1 className="font-bold text-2xl sm:text-3xl">Twoje drużyny</h1>
+            <p className="text-muted-foreground text-sm">
               Przeglądaj i zarządzaj swoimi squadami
             </p>
           </div>

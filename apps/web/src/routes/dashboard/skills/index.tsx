@@ -26,7 +26,7 @@ function RouteComponent() {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="mb-1 font-bold text-2xl tracking-tight">
             Lista przedziałów
@@ -36,12 +36,13 @@ function RouteComponent() {
           </p>
         </div>
         {isAdminUser && (
-          <div>
+          <div className="flex flex-wrap gap-2">
             <AddProfessionModal
               trigger={
-                <Button className="mr-2" size="sm">
+                <Button size="sm">
                   <Plus className="h-4 w-4" />
-                  Dodaj profesję
+                  <span className="hidden sm:inline">Dodaj profesję</span>
+                  <span className="sm:hidden">Profesja</span>
                 </Button>
               }
             />
@@ -49,7 +50,8 @@ function RouteComponent() {
               trigger={
                 <Button size="sm">
                   <Plus className="h-4 w-4" />
-                  Dodaj przedział
+                  <span className="hidden sm:inline">Dodaj przedział</span>
+                  <span className="sm:hidden">Przedział</span>
                 </Button>
               }
             />

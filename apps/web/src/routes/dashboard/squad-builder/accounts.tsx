@@ -61,10 +61,12 @@ function RouteComponent() {
   return (
     <ErrorBoundary>
       <div className="container mx-auto py-6">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="font-bold text-3xl">Zarządzaj kontami</h1>
-            <p className="text-muted-foreground">
+            <h1 className="font-bold text-2xl sm:text-3xl">
+              Zarządzaj kontami
+            </h1>
+            <p className="text-muted-foreground text-sm">
               Wybierz konto, aby zobaczyć i zarządzać postaciami
             </p>
           </div>
@@ -78,7 +80,7 @@ function RouteComponent() {
           />
         </div>
 
-        <div className="grid h-[calc(100vh-220px)] grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:h-[calc(100vh-220px)] lg:grid-cols-3">
           {/* Lista kont - lewa strona */}
           <Card className="flex flex-col lg:col-span-1">
             <CardHeader className="border-b">
@@ -121,8 +123,12 @@ function RouteComponent() {
                   setSearchQuery={setCharacterSearchQuery}
                 />
               ) : (
-                <div className="flex h-full items-center justify-center p-8 text-muted-foreground">
-                  <p>Wybierz konto z listy po lewej stronie</p>
+                <div className="flex h-full items-center justify-center p-8 text-center text-muted-foreground">
+                  <p>
+                    Wybierz konto z listy{" "}
+                    <span className="hidden lg:inline">po lewej stronie</span>
+                    <span className="lg:hidden">powyżej</span>
+                  </p>
                 </div>
               )}
             </CardContent>

@@ -289,7 +289,7 @@ function RouteComponent() {
             }}
           >
             {" "}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               {/* Event Selection */}
               <form.Field name="eventId">
                 {(field) => {
@@ -416,9 +416,9 @@ function RouteComponent() {
 
                 return (
                   <div className="grid gap-1.5">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <Label>Gracze ({availableCount} dostępnych)</Label>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           disabled={field.state.value.length === 0}
                           onClick={() => {
@@ -429,7 +429,10 @@ function RouteComponent() {
                           variant="outline"
                         >
                           <CopyX className="size-4" />
-                          Odznacz wszystkich
+                          <span className="hidden sm:inline">
+                            Odznacz wszystkich
+                          </span>
+                          <span className="sm:hidden">Odznacz</span>
                         </Button>
                         <Button
                           disabled={
@@ -444,7 +447,10 @@ function RouteComponent() {
                           variant="outline"
                         >
                           <Copy className="size-4" />
-                          Kopiuj ostatnie obstawienie
+                          <span className="hidden sm:inline">
+                            Kopiuj ostatnie
+                          </span>
+                          <span className="sm:hidden">Kopiuj</span>
                         </Button>
                       </div>
                     </div>
