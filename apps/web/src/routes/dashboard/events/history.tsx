@@ -78,9 +78,13 @@ function RouteComponent() {
     orpc.event.getAll.queryOptions()
   );
 
-  const { data: heroes, isPending: heroesLoading } = useQuery(
-    orpc.heroes.getAll.queryOptions()
-  );
+  // Only fetch heroes when a specific event is selected
+  const { data: heroes, isPending: heroesLoading } = useQuery({
+    ...orpc.heroes.getByEventId.queryOptions({
+      input: { eventId: Number(selectedEventId) },
+    }),
+    enabled: selectedEventId !== "all",
+  });
 
   const isAdminUser = isAdmin(session);
 
@@ -113,11 +117,8 @@ function RouteComponent() {
       lastPage.pagination.hasMore ? lastPage.pagination.page + 1 : undefined,
   });
 
-  const filteredHeroes = (
-    selectedEventId === "all"
-      ? heroes
-      : heroes?.filter((h) => h.eventId?.toString() === selectedEventId)
-  )?.sort((a, b) => a.level - b.level);
+  // Heroes are already filtered by event from the API
+  const sortedHeroes = heroes?.slice().sort((a, b) => a.level - b.level);
 
   // Flatten pages into single array of bets
   const allBets = betsData?.pages.flatMap((page) => page.items) ?? [];
@@ -161,24 +162,6 @@ function RouteComponent() {
 
   const calculatePointsPerMember = (memberCount: number) =>
     Math.floor((POINTS_PER_HERO / memberCount) * 100) / 100;
-
-  const isPending = betsLoading || eventsLoading || heroesLoading;
-
-  if (isPending) {
-    return (
-      <div className="mx-auto w-full max-w-4xl space-y-6">
-        <div>
-          <h1 className="mb-1 font-bold text-2xl tracking-tight">
-            Historia obstawień
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Przeglądaj wszystkie utworzone obstawienia.
-          </p>
-        </div>
-        <CardGridSkeleton count={6} variant="bet" />
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -237,6 +220,7 @@ function RouteComponent() {
 
           {/* Hero Select */}
           <Select
+            disabled={selectedEventId === "all"}
             onValueChange={(value) =>
               navigate({
                 search: (prev) => ({
@@ -245,24 +229,41 @@ function RouteComponent() {
                 }),
               })
             }
-            value={selectedHeroId}
+            value={selectedEventId === "all" ? "" : selectedHeroId}
           >
             <SelectTrigger className="w-full sm:w-44">
-              <SelectValue placeholder="Wybierz herosa" />
+              <SelectValue
+                placeholder={
+                  selectedEventId === "all" ? "Wybierz event" : "Wybierz herosa"
+                }
+              />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Wszyscy herosi</SelectItem>
-              {filteredHeroes?.map((hero) => (
-                <SelectItem key={hero.id} value={hero.id.toString()}>
-                  {hero.name}
+              {heroesLoading ? (
+                <SelectItem disabled value="loading">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <span>Ładowanie...</span>
+                  </div>
                 </SelectItem>
-              ))}
+              ) : (
+                <>
+                  <SelectItem value="all">Wszyscy herosi</SelectItem>
+                  {sortedHeroes?.map((hero) => (
+                    <SelectItem key={hero.id} value={hero.id.toString()}>
+                      {hero.name}
+                    </SelectItem>
+                  ))}
+                </>
+              )}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {allBets.length === 0 ? (
+      {betsLoading ? (
+        <CardGridSkeleton count={6} variant="bet" />
+      ) : allBets.length === 0 ? (
         <Card>
           <CardContent className="py-8">
             <div className="text-center">

@@ -4,7 +4,7 @@ import {
   getRouteApi,
   useNavigate,
 } from "@tanstack/react-router";
-import { Coins, Trophy, User } from "lucide-react";
+import { Coins, Loader2, Trophy, User } from "lucide-react";
 import { z } from "zod";
 import { DistributeGoldModal } from "@/components/modals/distribute-gold-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -51,12 +51,16 @@ function RouteComponent() {
     orpc.event.getAll.queryOptions()
   );
 
-  const { data: heroes, isPending: heroesLoading } = useQuery(
-    orpc.heroes.getAll.queryOptions()
-  );
+  // Only fetch heroes when a specific event is selected
+  const { data: heroes, isPending: heroesLoading } = useQuery({
+    ...orpc.heroes.getByEventId.queryOptions({
+      input: { eventId: Number(selectedEventId) },
+    }),
+    enabled: selectedEventId !== "all",
+  });
 
-  const { data: ranking, isPending: rankingLoading } = useQuery(
-    orpc.bet.getRanking.queryOptions({
+  const { data: ranking, isPending: rankingLoading } = useQuery({
+    ...orpc.bet.getRanking.queryOptions({
       input: {
         eventId:
           selectedEventId === "all"
@@ -67,14 +71,11 @@ function RouteComponent() {
             ? undefined
             : Number.parseInt(selectedHeroId, 10),
       },
-    })
-  );
+    }),
+  });
 
-  const filteredHeroes = (
-    selectedEventId === "all"
-      ? heroes
-      : heroes?.filter((h) => h.eventId?.toString() === selectedEventId)
-  )?.sort((a, b) => a.level - b.level);
+  // Heroes are already filtered by event from the API
+  const sortedHeroes = heroes?.slice().sort((a, b) => a.level - b.level);
 
   const getRankIcon = (position: number) => {
     if (position === 1) {
@@ -88,19 +89,6 @@ function RouteComponent() {
     }
     return null;
   };
-
-  const isPending = eventsLoading || rankingLoading || heroesLoading;
-
-  if (isPending) {
-    return (
-      <div className="mx-auto w-full max-w-4xl space-y-6">
-        <h1 className="text-center font-bold text-3xl tracking-tight">
-          Ranking graczy
-        </h1>
-        <CardGridSkeleton count={6} variant="ranking" />
-      </div>
-    );
-  }
 
   // Sort ranking based on selected sort option
   const sortedRanking = [...(ranking || [])].sort((a, b) => {
@@ -185,6 +173,7 @@ function RouteComponent() {
 
         {/* Hero Select */}
         <Select
+          disabled={selectedEventId === "all"}
           onValueChange={(value) =>
             navigate({
               search: (prev) => ({
@@ -193,18 +182,33 @@ function RouteComponent() {
               }),
             })
           }
-          value={selectedHeroId}
+          value={selectedEventId === "all" ? "" : selectedHeroId}
         >
           <SelectTrigger className="w-full sm:w-44">
-            <SelectValue placeholder="Wybierz herosa" />
+            <SelectValue
+              placeholder={
+                selectedEventId === "all" ? "Wybierz event" : "Wybierz herosa"
+              }
+            />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Wszyscy herosi</SelectItem>
-            {filteredHeroes?.map((hero) => (
-              <SelectItem key={hero.id} value={hero.id.toString()}>
-                {hero.name}
+            {heroesLoading ? (
+              <SelectItem disabled value="loading">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <span>Ładowanie...</span>
+                </div>
               </SelectItem>
-            ))}
+            ) : (
+              <>
+                <SelectItem value="all">Wszyscy herosi</SelectItem>
+                {sortedHeroes?.map((hero) => (
+                  <SelectItem key={hero.id} value={hero.id.toString()}>
+                    {hero.name}
+                  </SelectItem>
+                ))}
+              </>
+            )}
           </SelectContent>
         </Select>
 
@@ -248,7 +252,9 @@ function RouteComponent() {
       </div>
 
       {/* Ranking List */}
-      {!sortedRanking || sortedRanking.length === 0 ? (
+      {rankingLoading ? (
+        <CardGridSkeleton count={6} variant="ranking" />
+      ) : !sortedRanking || sortedRanking.length === 0 ? (
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
