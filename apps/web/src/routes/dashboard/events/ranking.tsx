@@ -5,6 +5,7 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import { Coins, Loader2, Trophy, User } from "lucide-react";
+import type { ReactNode } from "react";
 import { z } from "zod";
 import { DistributeGoldModal } from "@/components/modals/distribute-gold-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,6 +30,151 @@ const searchSchema = z.object({
   heroId: z.string().optional().catch(undefined),
   sortBy: z.enum(["points", "bets", "gold"]).optional().catch(undefined),
 });
+
+type RankingItem = {
+  userId: string;
+  userName: string;
+  userImage: string | null;
+  totalPoints: string | null;
+  totalBets: number | null;
+  totalEarnings: string | null;
+};
+
+const getRankIcon = (position: number) => {
+  if (position === 1) {
+    return <Trophy className="h-5 w-5 text-yellow-500" />;
+  }
+  if (position === 2) {
+    return <Trophy className="h-5 w-5 text-gray-400" />;
+  }
+  if (position === 3) {
+    return <Trophy className="h-5 w-5 text-amber-600" />;
+  }
+  return null;
+};
+
+const sortRanking = (
+  ranking: RankingItem[] | undefined,
+  sortBy: "points" | "bets" | "gold"
+): RankingItem[] => {
+  const items = [...(ranking ?? [])];
+  items.sort((a, b) => {
+    if (sortBy === "points") {
+      return (
+        Number.parseFloat(b.totalPoints || "0") -
+        Number.parseFloat(a.totalPoints || "0")
+      );
+    }
+    if (sortBy === "bets") {
+      return (b.totalBets || 0) - (a.totalBets || 0);
+    }
+    return (
+      Number.parseFloat(b.totalEarnings || "0") -
+      Number.parseFloat(a.totalEarnings || "0")
+    );
+  });
+  return items;
+};
+
+const RankingList = ({ players }: { players: RankingItem[] }) => (
+  <div className="space-y-2">
+    {players.map((player, index) => {
+      const earnings = Number.parseFloat(player.totalEarnings || "0");
+      const rankIcon = getRankIcon(index + 1);
+
+      return (
+        <Card
+          className="overflow-hidden transition-all hover:bg-accent/50"
+          key={player.userId}
+        >
+          <CardContent className="px-4">
+            <div className="flex items-center gap-4">
+              {/* Rank Icon or Number */}
+              <div className="flex w-8 shrink-0 items-center justify-center">
+                {rankIcon || (
+                  <span className="font-medium text-muted-foreground">
+                    {index + 1}
+                  </span>
+                )}
+              </div>
+
+              {/* Avatar */}
+              <Avatar className="h-10 w-10 shrink-0 border border-border">
+                <AvatarImage
+                  alt={player.userName}
+                  src={player.userImage || undefined}
+                />
+                <AvatarFallback>
+                  <User className="h-5 w-5" />
+                </AvatarFallback>
+              </Avatar>
+
+              {/* Name */}
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold">{player.userName}</p>
+              </div>
+
+              {/* Stats */}
+              <div className="flex shrink-0 items-center gap-3 text-sm sm:gap-8">
+                {/* Points */}
+                <div className="w-16 text-center sm:w-24">
+                  <p className="hidden text-muted-foreground text-xs sm:block">
+                    Punkty
+                  </p>
+                  <p className="font-bold font-mono text-xs sm:text-sm">
+                    {Number.parseFloat(player.totalPoints || "0").toFixed(2)}
+                  </p>
+                </div>
+
+                {/* Bets - hidden on mobile */}
+                <div className="hidden w-24 text-center sm:block">
+                  <p className="text-muted-foreground text-xs">Obstawienia</p>
+                  <p className="font-semibold">{player.totalBets}</p>
+                </div>
+
+                {/* Gold - hidden on mobile */}
+                <div className="hidden w-28 text-center sm:block">
+                  <p className="text-muted-foreground text-xs">Zarobek</p>
+                  <p className="font-mono font-semibold">
+                    {earnings.toLocaleString("pl-PL", {
+                      maximumFractionDigits: 0,
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    })}
+  </div>
+);
+
+const buildRankingContent = (params: {
+  rankingLoading: boolean;
+  sortedRanking: RankingItem[];
+}): ReactNode => {
+  if (params.rankingLoading) {
+    return <CardGridSkeleton count={6} variant="ranking" />;
+  }
+
+  if (params.sortedRanking.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <div className="text-center">
+            <Trophy className="mx-auto h-8 w-8 text-muted-foreground" />
+            <p className="mt-2 text-muted-foreground text-sm">
+              Brak danych do wyświetlenia rankingu
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return <RankingList players={params.sortedRanking} />;
+};
 
 export const Route = createFileRoute("/dashboard/events/ranking")({
   component: RouteComponent,
@@ -75,38 +221,16 @@ function RouteComponent() {
   // Heroes are already filtered by event from the API
   const sortedHeroes = heroes?.slice().sort((a, b) => a.level - b.level);
 
-  const getRankIcon = (position: number) => {
-    if (position === 1) {
-      return <Trophy className="h-5 w-5 text-yellow-500" />;
-    }
-    if (position === 2) {
-      return <Trophy className="h-5 w-5 text-gray-400" />;
-    }
-    if (position === 3) {
-      return <Trophy className="h-5 w-5 text-amber-600" />;
-    }
-    return null;
-  };
-
-  // Sort ranking based on selected sort option
-  const sortedRanking = [...(ranking || [])].sort((a, b) => {
-    if (currentSortBy === "points") {
-      return (
-        Number.parseFloat(b.totalPoints || "0") -
-        Number.parseFloat(a.totalPoints || "0")
-      );
-    }
-    if (currentSortBy === "bets") {
-      return (b.totalBets || 0) - (a.totalBets || 0);
-    }
-    // Sort by actual earnings
-    return (
-      Number.parseFloat(b.totalEarnings || "0") -
-      Number.parseFloat(a.totalEarnings || "0")
-    );
-  });
+  const sortedRanking = sortRanking(
+    ranking as RankingItem[] | undefined,
+    currentSortBy
+  );
 
   const isAdminUser = isAdmin(session);
+  const rankingContent = buildRankingContent({
+    rankingLoading,
+    sortedRanking,
+  });
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -250,98 +374,7 @@ function RouteComponent() {
       </div>
 
       {/* Ranking List */}
-      {rankingLoading ? (
-        <CardGridSkeleton count={6} variant="ranking" />
-      ) : !sortedRanking || sortedRanking.length === 0 ? (
-        <Card>
-          <CardContent className="py-8">
-            <div className="text-center">
-              <Trophy className="mx-auto h-8 w-8 text-muted-foreground" />
-              <p className="mt-2 text-muted-foreground text-sm">
-                Brak danych do wyświetlenia rankingu
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-2">
-          {sortedRanking.map((player, index) => {
-            const earnings = Number.parseFloat(player.totalEarnings || "0");
-            const rankIcon = getRankIcon(index + 1);
-
-            return (
-              <Card
-                className="overflow-hidden transition-all hover:bg-accent/50"
-                key={player.userId}
-              >
-                <CardContent className="px-4">
-                  <div className="flex items-center gap-4">
-                    {/* Rank Icon or Number */}
-                    <div className="flex w-8 shrink-0 items-center justify-center">
-                      {rankIcon || (
-                        <span className="font-medium text-muted-foreground">
-                          {index + 1}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Avatar */}
-                    <Avatar className="h-10 w-10 shrink-0 border border-border">
-                      <AvatarImage
-                        alt={player.userName}
-                        src={player.userImage || undefined}
-                      />
-                      <AvatarFallback>
-                        <User className="h-5 w-5" />
-                      </AvatarFallback>
-                    </Avatar>
-
-                    {/* Name */}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold">
-                        {player.userName}
-                      </p>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex shrink-0 items-center gap-3 text-sm sm:gap-8">
-                      {/* Points */}
-                      <div className="w-16 text-center sm:w-24">
-                        <p className="hidden text-muted-foreground text-xs sm:block">
-                          Punkty
-                        </p>
-                        <p className="font-bold font-mono text-xs sm:text-sm">
-                          {Number.parseFloat(player.totalPoints || "0").toFixed(
-                            2
-                          )}
-                        </p>
-                      </div>
-
-                      {/* Bets - hidden on mobile */}
-                      <div className="hidden w-24 text-center sm:block">
-                        <p className="text-muted-foreground text-xs">
-                          Obstawienia
-                        </p>
-                        <p className="font-semibold">{player.totalBets}</p>
-                      </div>
-
-                      {/* Gold - hidden on mobile */}
-                      <div className="hidden w-28 text-center sm:block">
-                        <p className="text-muted-foreground text-xs">Zarobek</p>
-                        <p className="font-mono font-semibold">
-                          {earnings.toLocaleString("pl-PL", {
-                            maximumFractionDigits: 0,
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+      {rankingContent}
     </div>
   );
 }

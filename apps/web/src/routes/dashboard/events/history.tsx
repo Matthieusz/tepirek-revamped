@@ -13,7 +13,7 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -161,6 +161,140 @@ function RouteComponent() {
   const calculatePointsPerMember = (memberCount: number) =>
     Math.floor((POINTS_PER_HERO / memberCount) * 100) / 100;
 
+  let betsContent: ReactNode;
+  if (betsLoading) {
+    betsContent = <CardGridSkeleton count={6} variant="bet" />;
+  } else if (allBets.length === 0) {
+    betsContent = (
+      <Card>
+        <CardContent className="py-8">
+          <div className="text-center">
+            <History className="mx-auto h-8 w-8 text-muted-foreground" />
+            <p className="mt-2 text-muted-foreground text-sm">
+              Brak obstawień do wyświetlenia
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  } else {
+    betsContent = (
+      <div className="grid gap-4">
+        {allBets.map((bet) => (
+          <Card className="overflow-hidden p-0" key={bet.id}>
+            <CardContent className="p-4">
+              {/* Header: Hero Name, Level, and Delete Button */}
+              <div className="mb-3 flex items-start justify-between gap-2">
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <p className="font-semibold">{bet.heroName}</p>
+                  <p className="text-muted-foreground text-sm">
+                    Level: {bet.heroLevel}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Badge variant="secondary">
+                    {calculatePointsPerMember(bet.memberCount)} pkt/os
+                  </Badge>
+                  {isAdminUser && (
+                    <Button
+                      onClick={() =>
+                        setBetToDelete({
+                          id: bet.id,
+                          heroName: bet.heroName,
+                        })
+                      }
+                      size="icon"
+                      type="button"
+                      variant="ghost"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Main content: Hero Image and Players */}
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                {/* Hero Image */}
+                {bet.heroImage ? (
+                  <img
+                    alt={bet.heroName}
+                    className="mx-auto h-20 w-16 shrink-0 rounded-lg object-contain sm:mx-0 sm:h-16 sm:w-14"
+                    height={80}
+                    src={bet.heroImage}
+                    width={64}
+                  />
+                ) : (
+                  <div className="mx-auto flex h-20 w-16 shrink-0 items-center justify-center rounded-lg bg-muted sm:mx-0 sm:h-16 sm:w-14">
+                    <Sword className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                )}
+
+                {/* Players Section */}
+                <div className="flex flex-1 flex-wrap items-center justify-center gap-2 sm:justify-start">
+                  {bet.members.map((member) => (
+                    <div
+                      className="flex items-center gap-1.5 rounded-full border bg-muted/30 py-1 pr-2.5 pl-1 sm:gap-2 sm:pr-3"
+                      key={member.userId}
+                    >
+                      <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
+                        <AvatarImage
+                          alt={member.userName}
+                          src={member.userImage || undefined}
+                        />
+                        <AvatarFallback className="text-xs">
+                          <User className="h-3 w-3" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs sm:text-sm">
+                        {member.userName}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer with Creator and Date */}
+              <div className="mt-3 flex flex-col gap-2 border-t pt-3 text-muted-foreground text-xs sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2">
+                  <span>Dodane przez:</span>
+                  <div className="flex items-center gap-1.5">
+                    <Avatar className="h-5 w-5">
+                      <AvatarImage
+                        alt={bet.createdByName}
+                        src={bet.createdByImage || undefined}
+                      />
+                      <AvatarFallback className="text-[10px]">
+                        <User className="h-2.5 w-2.5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium text-foreground">
+                      {bet.createdByName}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  <span>{formatDate(bet.createdAt)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+
+        {/* Load more trigger */}
+        {hasNextPage && (
+          <div
+            className="flex items-center justify-center py-4"
+            ref={loadMoreRef}
+          >
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -259,134 +393,7 @@ function RouteComponent() {
         </div>
       </div>
 
-      {betsLoading ? (
-        <CardGridSkeleton count={6} variant="bet" />
-      ) : allBets.length === 0 ? (
-        <Card>
-          <CardContent className="py-8">
-            <div className="text-center">
-              <History className="mx-auto h-8 w-8 text-muted-foreground" />
-              <p className="mt-2 text-muted-foreground text-sm">
-                Brak obstawień do wyświetlenia
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4">
-          {allBets.map((bet) => (
-            <Card className="overflow-hidden p-0" key={bet.id}>
-              <CardContent className="p-4">
-                {/* Header: Hero Name, Level, and Delete Button */}
-                <div className="mb-3 flex items-start justify-between gap-2">
-                  <div className="flex flex-wrap items-baseline gap-2">
-                    <p className="font-semibold">{bet.heroName}</p>
-                    <p className="text-muted-foreground text-sm">
-                      Level: {bet.heroLevel}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <Badge variant="secondary">
-                      {calculatePointsPerMember(bet.memberCount)} pkt/os
-                    </Badge>
-                    {isAdminUser && (
-                      <Button
-                        onClick={() =>
-                          setBetToDelete({
-                            id: bet.id,
-                            heroName: bet.heroName,
-                          })
-                        }
-                        size="icon"
-                        type="button"
-                        variant="ghost"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Main content: Hero Image and Players */}
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  {/* Hero Image */}
-                  {bet.heroImage ? (
-                    <img
-                      alt={bet.heroName}
-                      className="mx-auto h-20 w-16 shrink-0 rounded-lg object-contain sm:mx-0 sm:h-16 sm:w-14"
-                      height={80}
-                      src={bet.heroImage}
-                      width={64}
-                    />
-                  ) : (
-                    <div className="mx-auto flex h-20 w-16 shrink-0 items-center justify-center rounded-lg bg-muted sm:mx-0 sm:h-16 sm:w-14">
-                      <Sword className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                  )}
-
-                  {/* Players Section */}
-                  <div className="flex flex-1 flex-wrap items-center justify-center gap-2 sm:justify-start">
-                    {bet.members.map((member) => (
-                      <div
-                        className="flex items-center gap-1.5 rounded-full border bg-muted/30 py-1 pr-2.5 pl-1 sm:gap-2 sm:pr-3"
-                        key={member.userId}
-                      >
-                        <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
-                          <AvatarImage
-                            alt={member.userName}
-                            src={member.userImage || undefined}
-                          />
-                          <AvatarFallback className="text-xs">
-                            <User className="h-3 w-3" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-xs sm:text-sm">
-                          {member.userName}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Footer with Creator and Date */}
-                <div className="mt-3 flex flex-col gap-2 border-t pt-3 text-muted-foreground text-xs sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-2">
-                    <span>Dodane przez:</span>
-                    <div className="flex items-center gap-1.5">
-                      <Avatar className="h-5 w-5">
-                        <AvatarImage
-                          alt={bet.createdByName}
-                          src={bet.createdByImage || undefined}
-                        />
-                        <AvatarFallback className="text-[10px]">
-                          <User className="h-2.5 w-2.5" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium text-foreground">
-                        {bet.createdByName}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <CalendarDays className="h-3.5 w-3.5" />
-                    <span>{formatDate(bet.createdAt)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* Load more trigger */}
-          {hasNextPage && (
-            <div
-              className="flex items-center justify-center py-4"
-              ref={loadMoreRef}
-            >
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          )}
-        </div>
-      )}
+      {betsContent}
 
       <AlertDialog
         onOpenChange={(open) => !open && setBetToDelete(null)}
