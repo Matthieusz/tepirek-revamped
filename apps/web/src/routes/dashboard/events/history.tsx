@@ -74,9 +74,7 @@ function RouteComponent() {
   const { ref: loadMoreRef, inView } = useInView({ threshold: 0.1 });
   const queryClient = useQueryClient();
 
-  const { data: events, isPending: eventsLoading } = useQuery(
-    orpc.event.getAll.queryOptions()
-  );
+  const { data: events } = useQuery(orpc.event.getAll.queryOptions());
 
   // Only fetch heroes when a specific event is selected
   const { data: heroes, isPending: heroesLoading } = useQuery({
