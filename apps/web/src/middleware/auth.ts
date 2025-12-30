@@ -1,12 +1,18 @@
 import { createMiddleware } from "@tanstack/react-start";
+import type { auth } from "@tepirek-revamped/auth";
 import { authClient } from "@/lib/auth-client";
+
+export type AuthSession = {
+  session: typeof auth.$Infer.Session.session;
+  user: typeof auth.$Infer.Session.user;
+} | null;
 
 // Simple in-memory cache for session to prevent excessive Better Auth API calls
 // Cache is per-request on server, so we use a Map keyed by cookie signature
 const sessionCache = new Map<
   string,
   {
-    session: Awaited<ReturnType<typeof authClient.getSession>>;
+    session: AuthSession;
     expires: number;
   }
 >();
