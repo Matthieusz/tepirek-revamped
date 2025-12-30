@@ -30,7 +30,7 @@ function RouteComponent() {
       <Card>
         <CardContent className="pt-6">
           <AuctionTable
-            columns={["Fizyczna", "GR", "Trucizna"]}
+            columns={["Fizyczna", "GR", "Dwureczna"]}
             currentUserId={session.user.id}
             profession={PROFESSION}
             type={TYPE}
