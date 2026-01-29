@@ -377,10 +377,16 @@ export const squadRouter = {
           SELECT 1
           FROM squad_member sm
           JOIN squad s ON sm.squad_id = s.id
-          LEFT JOIN squad_share ss ON ss.squad_id = s.id
           WHERE sm.character_id = ${character.id}
-            AND (s.user_id = ${userId} OR ss.shared_with_user_id = ${userId})
             AND sm.squad_id <> ${exceptSquadId}
+            AND (
+              s.user_id = ${userId}
+              OR EXISTS (
+                SELECT 1 FROM squad_share ss
+                WHERE ss.squad_id = s.id
+                  AND ss.shared_with_user_id = ${userId}
+              )
+            )
         )`);
       }
 
