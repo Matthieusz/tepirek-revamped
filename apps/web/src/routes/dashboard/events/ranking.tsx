@@ -4,11 +4,14 @@ import {
   getRouteApi,
   useNavigate,
 } from "@tanstack/react-router";
-import { Coins, Loader2, Trophy, User } from "lucide-react";
+import { Coins, Loader2, Trophy } from "lucide-react";
 import type { ReactNode } from "react";
 import { z } from "zod";
+import {
+  type RankingItem,
+  RankingList,
+} from "@/components/events/ranking-list";
 import { DistributeGoldModal } from "@/components/modals/distribute-gold-modal";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -30,28 +33,6 @@ const searchSchema = z.object({
   heroId: z.string().optional().catch(undefined),
   sortBy: z.enum(["points", "bets", "gold"]).optional().catch(undefined),
 });
-
-type RankingItem = {
-  userId: string;
-  userName: string;
-  userImage: string | null;
-  totalPoints: string | null;
-  totalBets: number | null;
-  totalEarnings: string | null;
-};
-
-const getRankIcon = (position: number) => {
-  if (position === 1) {
-    return <Trophy className="h-5 w-5 text-yellow-500" />;
-  }
-  if (position === 2) {
-    return <Trophy className="h-5 w-5 text-gray-400" />;
-  }
-  if (position === 3) {
-    return <Trophy className="h-5 w-5 text-amber-600" />;
-  }
-  return null;
-};
 
 const sortRanking = (
   ranking: RankingItem[] | undefined,
@@ -75,80 +56,6 @@ const sortRanking = (
   });
   return items;
 };
-
-const RankingList = ({ players }: { players: RankingItem[] }) => (
-  <div className="space-y-2">
-    {players.map((player, index) => {
-      const earnings = Number.parseFloat(player.totalEarnings || "0");
-      const rankIcon = getRankIcon(index + 1);
-
-      return (
-        <Card
-          className="overflow-hidden transition-all hover:bg-accent/50"
-          key={player.userId}
-        >
-          <CardContent className="px-4">
-            <div className="flex items-center gap-4">
-              {/* Rank Icon or Number */}
-              <div className="flex w-8 shrink-0 items-center justify-center">
-                {rankIcon || (
-                  <span className="font-medium text-muted-foreground">
-                    {index + 1}
-                  </span>
-                )}
-              </div>
-
-              {/* Avatar */}
-              <Avatar className="h-10 w-10 shrink-0 border border-border">
-                <AvatarImage
-                  alt={player.userName}
-                  src={player.userImage || undefined}
-                />
-                <AvatarFallback>
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-
-              {/* Name */}
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold">{player.userName}</p>
-              </div>
-
-              {/* Stats */}
-              <div className="flex shrink-0 items-center gap-3 text-sm sm:gap-8">
-                {/* Points */}
-                <div className="w-16 text-center sm:w-24">
-                  <p className="hidden text-muted-foreground text-xs sm:block">
-                    Punkty
-                  </p>
-                  <p className="font-bold font-mono text-xs sm:text-sm">
-                    {Number.parseFloat(player.totalPoints || "0").toFixed(2)}
-                  </p>
-                </div>
-
-                {/* Bets - hidden on mobile */}
-                <div className="hidden w-24 text-center sm:block">
-                  <p className="text-muted-foreground text-xs">Obstawienia</p>
-                  <p className="font-semibold">{player.totalBets}</p>
-                </div>
-
-                {/* Gold - hidden on mobile */}
-                <div className="hidden w-28 text-center sm:block">
-                  <p className="text-muted-foreground text-xs">Zarobek</p>
-                  <p className="font-mono font-semibold">
-                    {earnings.toLocaleString("pl-PL", {
-                      maximumFractionDigits: 0,
-                    })}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    })}
-  </div>
-);
 
 const buildRankingContent = (params: {
   rankingLoading: boolean;
@@ -238,104 +145,95 @@ function RouteComponent() {
         Ranking graczy
       </h1>
 
-      {/* Filters Row */}
-      <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-        {/* Gold Distribution Button - Admin Only */}
-        {isAdminUser && (
-          <DistributeGoldModal
-            selectedEventId={selectedEventId}
-            selectedHeroId={selectedHeroId}
-            trigger={
-              <Button className="shrink-0" size="icon" variant="outline">
-                <Coins className="h-4 w-4 text-yellow-500" />
-              </Button>
+      {/* Filters Section */}
+      <div className="flex flex-col space-y-3 lg:flex-row lg:justify-between lg:space-y-0">
+        {/* Event and Hero Selects - Stack on mobile */}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 md:flex md:items-center">
+          {/* Event Select */}
+          <Select
+            onValueChange={(value) =>
+              navigate({
+                search: (prev) => ({
+                  ...prev,
+                  eventId: value === "all" ? undefined : value,
+                  heroId: undefined,
+                }),
+              })
             }
-          />
-        )}
+            value={selectedEventId}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Wybierz event" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Wszystkie eventy</SelectItem>
+              {[...(events || [])]
+                .sort(
+                  (a, b) =>
+                    new Date(b.endTime).getTime() -
+                    new Date(a.endTime).getTime()
+                )
+                .map((event) => {
+                  const IconComponent = getEventIcon(event.icon);
+                  return (
+                    <SelectItem key={event.id} value={event.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <IconComponent
+                          className="h-4 w-4"
+                          style={{ color: event.color || undefined }}
+                        />
+                        <span>{event.name}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+            </SelectContent>
+          </Select>
 
-        {/* Event Select */}
-        <Select
-          onValueChange={(value) =>
-            navigate({
-              search: (prev) => ({
-                ...prev,
-                eventId: value === "all" ? undefined : value,
-                heroId: undefined,
-              }),
-            })
-          }
-          value={selectedEventId}
-        >
-          <SelectTrigger className="w-full sm:w-44">
-            <SelectValue placeholder="Wybierz event" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Wszystkie eventy</SelectItem>
-            {[...(events || [])]
-              .sort(
-                (a, b) =>
-                  new Date(b.endTime).getTime() - new Date(a.endTime).getTime()
-              )
-              .map((event) => {
-                const IconComponent = getEventIcon(event.icon);
-                return (
-                  <SelectItem key={event.id} value={event.id.toString()}>
-                    <div className="flex items-center gap-2">
-                      <IconComponent
-                        className="h-4 w-4"
-                        style={{ color: event.color || undefined }}
-                      />
-                      <span>{event.name}</span>
-                    </div>
-                  </SelectItem>
-                );
-              })}
-          </SelectContent>
-        </Select>
+          {/* Hero Select */}
+          <Select
+            disabled={selectedEventId === "all"}
+            onValueChange={(value) =>
+              navigate({
+                search: (prev) => ({
+                  ...prev,
+                  heroId: value === "all" ? undefined : value,
+                }),
+              })
+            }
+            value={selectedEventId === "all" ? "" : selectedHeroId}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue
+                placeholder={
+                  selectedEventId === "all" ? "Wybierz event" : "Wybierz herosa"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {heroesLoading ? (
+                <SelectItem disabled value="loading">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <span>Ładowanie...</span>
+                  </div>
+                </SelectItem>
+              ) : (
+                <>
+                  <SelectItem value="all">Wszyscy herosi</SelectItem>
+                  {sortedHeroes?.map((hero) => (
+                    <SelectItem key={hero.id} value={hero.id.toString()}>
+                      {hero.name}
+                    </SelectItem>
+                  ))}
+                </>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
 
-        {/* Hero Select */}
-        <Select
-          disabled={selectedEventId === "all"}
-          onValueChange={(value) =>
-            navigate({
-              search: (prev) => ({
-                ...prev,
-                heroId: value === "all" ? undefined : value,
-              }),
-            })
-          }
-          value={selectedEventId === "all" ? "" : selectedHeroId}
-        >
-          <SelectTrigger className="w-full sm:w-44">
-            <SelectValue
-              placeholder={
-                selectedEventId === "all" ? "Wybierz event" : "Wybierz herosa"
-              }
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {heroesLoading ? (
-              <SelectItem disabled value="loading">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  <span>Ładowanie...</span>
-                </div>
-              </SelectItem>
-            ) : (
-              <>
-                <SelectItem value="all">Wszyscy herosi</SelectItem>
-                {sortedHeroes?.map((hero) => (
-                  <SelectItem key={hero.id} value={hero.id.toString()}>
-                    {hero.name}
-                  </SelectItem>
-                ))}
-              </>
-            )}
-          </SelectContent>
-        </Select>
-
-        {/* Sort Buttons */}
-        <div className="flex items-center justify-start gap-1 sm:ml-auto">
+        {/* Sort Buttons with Gold Distribution */}
+        <div className="sm: flex items-center justify-center gap-1 sm:justify-start">
           <Button
             onClick={() =>
               navigate({
@@ -370,6 +268,19 @@ function RouteComponent() {
           >
             Złoto
           </Button>
+
+          {/* Gold Distribution Button - Admin Only */}
+          {isAdminUser && (
+            <DistributeGoldModal
+              selectedEventId={selectedEventId}
+              selectedHeroId={selectedHeroId}
+              trigger={
+                <Button className="ml-1 shrink-0" size="icon" variant="outline">
+                  <Coins className="h-4 w-4 text-yellow-500" />
+                </Button>
+              }
+            />
+          )}
         </div>
       </div>
 
