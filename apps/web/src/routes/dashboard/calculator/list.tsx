@@ -282,12 +282,12 @@ function RouteComponent() {
                   Parametry walki
                 </CardTitle>
                 <CardDescription>
-                  Wprowadź poziomy atakującego i ofiary
+                  Wprowadź poziomy atakującego i przeciwnika
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form
-                  className="grid gap-4"
+                  className="mt-2 grid gap-4"
                   onSubmit={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -499,7 +499,7 @@ function RouteComponent() {
               </CardHeader>
               <CardContent>
                 <form
-                  className="grid gap-4"
+                  className="mt-2 grid gap-4"
                   onSubmit={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
