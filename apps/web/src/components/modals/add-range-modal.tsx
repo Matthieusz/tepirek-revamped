@@ -4,17 +4,17 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import { orpc } from "@/utils/orpc";
 
 interface AddEventModalProps {
@@ -73,9 +73,9 @@ export function AddRangeModal({ trigger }: AddEventModalProps) {
   });
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
+      <ResponsiveDialogContent className="sm:max-w-[425px]">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -83,12 +83,12 @@ export function AddRangeModal({ trigger }: AddEventModalProps) {
             form.handleSubmit();
           }}
         >
-          <DialogHeader>
-            <DialogTitle>Dodaj nowy przedział</DialogTitle>
-            <DialogDescription>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Dodaj nowy przedział</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Utwórz nowy przedział z nazwą i poziomem.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <form.Field name="name">
@@ -162,7 +162,7 @@ export function AddRangeModal({ trigger }: AddEventModalProps) {
               </form.Field>
             </div>
           </div>
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <form.Subscribe>
               {(state) => (
                 <Button
@@ -173,9 +173,9 @@ export function AddRangeModal({ trigger }: AddEventModalProps) {
                 </Button>
               )}
             </form.Subscribe>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

@@ -4,17 +4,17 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import { orpc } from "@/utils/orpc";
 import { Textarea } from "../ui/textarea";
 
@@ -61,9 +61,9 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
   });
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
+      <ResponsiveDialogContent className="sm:max-w-[600px]">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -71,12 +71,12 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
             form.handleSubmit();
           }}
         >
-          <DialogHeader>
-            <DialogTitle>Dodaj nowe ogłoszenie</DialogTitle>
-            <DialogDescription>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Dodaj nowe ogłoszenie</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Utwórz nowe ogłoszenie z tytułem i opisem.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <form.Field name="title">
@@ -123,7 +123,7 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
               </form.Field>
             </div>
           </div>
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <form.Subscribe>
               {(state) => (
                 <Button
@@ -134,9 +134,9 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
                 </Button>
               )}
             </form.Subscribe>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

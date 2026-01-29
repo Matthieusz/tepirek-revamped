@@ -5,17 +5,17 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -139,22 +139,22 @@ export function CreateSquadModal({ trigger }: CreateSquadModalProps) {
   };
 
   return (
-    <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
+    <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
+      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
+      <ResponsiveDialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             form.handleSubmit();
           }}
         >
-          <DialogHeader>
-            <DialogTitle>Utwórz nowy squad</DialogTitle>
-            <DialogDescription>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Utwórz nowy squad</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Wybierz świat i postacie, które będą należeć do squadu. Squad może
               mieć maksymalnie 10 postaci.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
 
           <div className="grid gap-4 py-4">
             <form.Field name="name">
@@ -243,7 +243,7 @@ export function CreateSquadModal({ trigger }: CreateSquadModalProps) {
             </form.Field>
           </div>
 
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <Button
               onClick={() => handleOpenChange(false)}
               type="button"
@@ -261,10 +261,10 @@ export function CreateSquadModal({ trigger }: CreateSquadModalProps) {
             >
               Utwórz squad
             </Button>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
 

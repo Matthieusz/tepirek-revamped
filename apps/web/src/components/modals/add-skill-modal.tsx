@@ -5,17 +5,17 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -92,9 +92,9 @@ export function AddSkillModal({
   });
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
+      <ResponsiveDialogContent className="sm:max-w-[425px]">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -102,12 +102,14 @@ export function AddSkillModal({
             form.handleSubmit();
           }}
         >
-          <DialogHeader>
-            <DialogTitle>Dodaj zestaw umiejętności</DialogTitle>
-            <DialogDescription>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>
+              Dodaj zestaw umiejętności
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Utwórz nowy zestaw umiejętności w tym przedziale.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <form.Field name="link">
@@ -204,7 +206,7 @@ export function AddSkillModal({
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <form.Subscribe>
               {(state) => (
                 <Button
@@ -215,9 +217,9 @@ export function AddSkillModal({
                 </Button>
               )}
             </form.Subscribe>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

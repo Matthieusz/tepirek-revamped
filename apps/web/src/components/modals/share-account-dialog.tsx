@@ -4,15 +4,15 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { GameAccount } from "@/types/squad";
@@ -106,15 +106,15 @@ export function ShareAccountDialog({
   });
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Udostępnij konto</DialogTitle>
-          <DialogDescription>
+    <ResponsiveDialog onOpenChange={onOpenChange} open={open}>
+      <ResponsiveDialogContent className="sm:max-w-lg">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Udostępnij konto</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Wybierz użytkownika, któremu chcesz udostępnić konto "{account.name}
             "
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
@@ -217,7 +217,7 @@ export function ShareAccountDialog({
           )}
         </div>
 
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button onClick={() => onOpenChange(false)} variant="outline">
             Zamknij
           </Button>
@@ -227,8 +227,8 @@ export function ShareAccountDialog({
           >
             Udostępnij
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

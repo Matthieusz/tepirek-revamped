@@ -14,15 +14,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -30,6 +21,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
@@ -110,9 +110,9 @@ export function AddEventModal({ trigger }: AddEventModalProps) {
   });
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
+      <ResponsiveDialogContent className="sm:max-w-[425px]">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -120,12 +120,12 @@ export function AddEventModal({ trigger }: AddEventModalProps) {
             form.handleSubmit();
           }}
         >
-          <DialogHeader>
-            <DialogTitle>Dodaj nowy event</DialogTitle>
-            <DialogDescription>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Dodaj nowy event</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Utwórz nowy event z nazwą i datą końcową.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <form.Field name="name">
@@ -243,7 +243,7 @@ export function AddEventModal({ trigger }: AddEventModalProps) {
               </form.Field>
             </div>
           </div>
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <form.Subscribe>
               {(state) => (
                 <Button
@@ -254,9 +254,9 @@ export function AddEventModal({ trigger }: AddEventModalProps) {
                 </Button>
               )}
             </form.Subscribe>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

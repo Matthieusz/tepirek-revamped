@@ -5,16 +5,16 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
@@ -148,14 +148,14 @@ export function EditSquadDialog({
   );
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Edytuj squad</DialogTitle>
-          <DialogDescription>
+    <ResponsiveDialog onOpenChange={onOpenChange} open={open}>
+      <ResponsiveDialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Edytuj squad</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Świat: {squad.world.charAt(0).toUpperCase() + squad.world.slice(1)}
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <div className="space-y-4 py-4">
           {/* Name */}
@@ -334,7 +334,7 @@ export function EditSquadDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button onClick={() => onOpenChange(false)} variant="outline">
             Anuluj
           </Button>
@@ -348,8 +348,8 @@ export function EditSquadDialog({
           >
             Zapisz zmiany
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

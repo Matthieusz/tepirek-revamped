@@ -5,17 +5,17 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -197,9 +197,9 @@ export function DistributeGoldModal({
       : 0;
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-3 sm:max-w-[500px]">
+    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
+      <ResponsiveDialogContent className="max-w-3 sm:max-w-[500px]">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -207,16 +207,16 @@ export function DistributeGoldModal({
             form.handleSubmit();
           }}
         >
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="flex items-center gap-2">
               <Coins className="h-5 w-5 text-yellow-500" />
               Rozdziel złoto
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Ustaw kwotę złota do rozdzielenia dla herosa. Złoto zostanie
               podzielone proporcjonalnie do punktów każdego gracza.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <div className="grid gap-4 py-4">
             {/* Event Select */}
             <div className="grid gap-1.5">
@@ -354,7 +354,7 @@ export function DistributeGoldModal({
                 </div>
               )}
           </div>
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <Button
               onClick={() => setOpen(false)}
               type="button"
@@ -378,9 +378,9 @@ export function DistributeGoldModal({
                 </Button>
               )}
             </form.Subscribe>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

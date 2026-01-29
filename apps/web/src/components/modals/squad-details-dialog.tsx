@@ -2,15 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Globe, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getProfessionColor } from "@/lib/margonem-parser";
 import { orpc } from "@/utils/orpc";
@@ -32,25 +32,25 @@ export function SquadDetailsDialog({
   });
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="min-w-3xl">
-        <DialogHeader>
+    <ResponsiveDialog onOpenChange={onOpenChange} open={open}>
+      <ResponsiveDialogContent className="min-w-3xl">
+        <ResponsiveDialogHeader>
           <div className="flex items-center gap-2">
-            <DialogTitle className="text-xl">
+            <ResponsiveDialogTitle className="text-xl">
               {details?.name ?? "Ładowanie..."}
-            </DialogTitle>
+            </ResponsiveDialogTitle>
             {details?.isPublic ? (
               <Globe className="h-4 w-4 text-green-500" />
             ) : (
               <Lock className="h-4 w-4 text-amber-500" />
             )}
           </div>
-          <DialogDescription>
+          <ResponsiveDialogDescription>
             {details?.world &&
               `Świat: ${details.world.charAt(0).toUpperCase() + details.world.slice(1)}`}
             {details?.description && ` • ${details.description}`}
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <div className="py-4">
           {isPending && (
@@ -113,12 +113,12 @@ export function SquadDetailsDialog({
           )}
         </div>
 
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button onClick={() => onOpenChange(false)} variant="outline">
             Zamknij
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

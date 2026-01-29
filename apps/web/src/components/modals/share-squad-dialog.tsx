@@ -4,16 +4,16 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
@@ -112,14 +112,14 @@ export function ShareSquadDialog({
   });
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Udostępnij squad</DialogTitle>
-          <DialogDescription>
+    <ResponsiveDialog onOpenChange={onOpenChange} open={open}>
+      <ResponsiveDialogContent className="sm:max-w-lg">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Udostępnij squad</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Wybierz użytkownika, któremu chcesz udostępnić squad "{squadName}"
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <div className="space-y-4 py-4">
           {/* User search and selector */}
@@ -221,7 +221,7 @@ export function ShareSquadDialog({
           )}
         </div>
 
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button onClick={() => onOpenChange(false)} variant="outline">
             Zamknij
           </Button>
@@ -231,8 +231,8 @@ export function ShareSquadDialog({
           >
             Udostępnij
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

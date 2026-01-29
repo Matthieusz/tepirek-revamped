@@ -5,17 +5,17 @@ import { toast } from "sonner";
 import { CharacterPreviewRow } from "@/components/squad-builder/character-preview-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
   type ParsedAccount,
@@ -110,24 +110,24 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
   };
 
   return (
-    <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
+    <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
+      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
+      <ResponsiveDialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             form.handleSubmit();
           }}
         >
-          <DialogHeader>
-            <DialogTitle>Dodaj konto z gry</DialogTitle>
-            <DialogDescription>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Dodaj konto z gry</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Wklej kod HTML strony profilu z margonem.pl, aby zaimportować
               postacie. Otwórz swój profil na margonem.pl, kliknij prawym
               przyciskiem myszy, wybierz "Zbadaj" lub "Wyświetl źródło strony" i
               skopiuj cały HTML.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
 
           <div className="grid gap-4 py-4">
             <form.Field name="html">
@@ -208,7 +208,7 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
             )}
           </div>
 
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <Button
               onClick={() => handleOpenChange(false)}
               type="button"
@@ -219,9 +219,9 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
             <Button disabled={!parsedData} type="submit">
               Dodaj konto
             </Button>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

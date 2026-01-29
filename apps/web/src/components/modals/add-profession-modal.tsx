@@ -4,17 +4,17 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import { orpc } from "@/utils/orpc";
 
 type AddProfessionModalProps = {
@@ -58,9 +58,9 @@ export function AddProfessionModal({ trigger }: AddProfessionModalProps) {
   });
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
+      <ResponsiveDialogContent className="sm:max-w-[425px]">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -68,10 +68,12 @@ export function AddProfessionModal({ trigger }: AddProfessionModalProps) {
             form.handleSubmit();
           }}
         >
-          <DialogHeader>
-            <DialogTitle>Dodaj profesję</DialogTitle>
-            <DialogDescription>Utwórz nową profesję.</DialogDescription>
-          </DialogHeader>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Dodaj profesję</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Utwórz nową profesję.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <form.Field name="name">
@@ -96,7 +98,7 @@ export function AddProfessionModal({ trigger }: AddProfessionModalProps) {
               </form.Field>
             </div>
           </div>
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <form.Subscribe>
               {(state) => (
                 <Button
@@ -107,9 +109,9 @@ export function AddProfessionModal({ trigger }: AddProfessionModalProps) {
                 </Button>
               )}
             </form.Subscribe>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
