@@ -1,14 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns/format";
-import {
-  Calendar,
-  CheckCircle2,
-  Plus,
-  Power,
-  Trash2,
-  XCircle,
-} from "lucide-react";
+import { Calendar, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AddEventModal } from "@/components/modals/add-event-modal";
@@ -157,13 +150,12 @@ function RouteComponent() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-16">#</TableHead>
-                    <TableHead className="w-16">Ikona</TableHead>
+                    <TableHead>#</TableHead>
+                    <TableHead>Ikona</TableHead>
                     <TableHead>Nazwa</TableHead>
-                    <TableHead className="w-40">Data zakończenia</TableHead>
-                    <TableHead className="w-24">Status</TableHead>
+                    <TableHead>Data zakończenia</TableHead>
                     {isAdminUser && (
-                      <TableHead className="w-48 text-right">Akcje</TableHead>
+                      <TableHead className="text-right">Akcje</TableHead>
                     )}
                   </TableRow>
                 </TableHeader>
@@ -192,40 +184,10 @@ function RouteComponent() {
                         <TableCell>
                           {format(new Date(event.endTime), "dd.MM.yyyy")}
                         </TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex items-center gap-1 text-sm ${
-                              event.active
-                                ? "text-green-500"
-                                : "text-muted-foreground"
-                            }`}
-                          >
-                            {event.active ? (
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                            ) : (
-                              <XCircle className="h-3.5 w-3.5" />
-                            )}
-                            {event.active ? "Aktywny" : "Nieaktywny"}
-                          </span>
-                        </TableCell>
+
                         {isAdminUser && (
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <Button
-                                onClick={() =>
-                                  setEventAction({
-                                    id: event.id,
-                                    name: event.name,
-                                    type: "toggle",
-                                    active: event.active ?? false,
-                                  })
-                                }
-                                size="sm"
-                                variant="ghost"
-                              >
-                                <Power className="h-4 w-4" />
-                                {event.active ? "Wyłącz" : "Włącz"}
-                              </Button>
                               <Button
                                 onClick={() =>
                                   setEventAction({

@@ -123,13 +123,13 @@ function RouteComponent() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-16">#</TableHead>
-                    <TableHead className="w-20">Wygląd</TableHead>
+                    <TableHead>#</TableHead>
+                    <TableHead>Wygląd</TableHead>
                     <TableHead>Nazwa</TableHead>
-                    <TableHead className="w-20 text-center">Poziom</TableHead>
-                    <TableHead className="w-32">Event</TableHead>
+                    <TableHead className="text-center">Poziom</TableHead>
+                    <TableHead>Event</TableHead>
                     {isAdminUser && (
-                      <TableHead className="w-20 text-right">Akcje</TableHead>
+                      <TableHead className="text-right">Akcje</TableHead>
                     )}
                   </TableRow>
                 </TableHeader>
