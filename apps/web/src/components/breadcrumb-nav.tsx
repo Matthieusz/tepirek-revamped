@@ -1,4 +1,5 @@
 import { Link, useMatches } from "@tanstack/react-router";
+import { Fragment } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -32,16 +33,18 @@ export const BreadcrumbNav = () => {
         {crumbs.map((crumb, index) => {
           const isLast = index === crumbs.length - 1;
           return (
-            <BreadcrumbItem key={crumb.path}>
-              {index > 0 && <BreadcrumbSeparator />}
-              {isLast ? (
-                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-              ) : (
-                <Link className="breadcrumb-link" to={crumb.path}>
-                  {crumb.label}
-                </Link>
-              )}
-            </BreadcrumbItem>
+            <Fragment key={crumb.path}>
+              {index > 0 ? <BreadcrumbSeparator /> : null}
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                ) : (
+                  <Link className="breadcrumb-link" to={crumb.path}>
+                    {crumb.label}
+                  </Link>
+                )}
+              </BreadcrumbItem>
+            </Fragment>
           );
         })}
       </BreadcrumbList>
