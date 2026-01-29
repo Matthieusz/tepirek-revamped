@@ -2,6 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { CharacterPreviewRow } from "@/components/squad-builder/character-preview-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,9 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  getProfessionColor,
   type ParsedAccount,
-  type ParsedCharacter,
   parseMargonemProfile,
 } from "@/lib/margonem-parser";
 import { orpc } from "@/utils/orpc";
@@ -224,37 +223,5 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
         </form>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function CharacterPreviewRow({ character }: { character: ParsedCharacter }) {
-  return (
-    <div className="flex items-center gap-3 rounded-md border bg-muted/30 p-2">
-      {character.avatarUrl && (
-        <div
-          className="size-8 shrink-0 rounded bg-center bg-cover"
-          style={{
-            backgroundImage: `url(${character.avatarUrl})`,
-            backgroundSize: "64px 96px",
-            backgroundPosition: "center 10%",
-          }}
-        />
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="truncate font-medium">{character.nick}</span>
-          <Badge
-            className={getProfessionColor(character.profession)}
-            variant="outline"
-          >
-            {character.professionName}
-          </Badge>
-        </div>
-        <div className="text-muted-foreground text-xs">
-          Lvl {character.level} • {character.world}
-          {character.guildName && ` • ${character.guildName}`}
-        </div>
-      </div>
-    </div>
   );
 }

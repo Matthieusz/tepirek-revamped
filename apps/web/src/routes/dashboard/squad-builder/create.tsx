@@ -5,7 +5,7 @@ import { Globe, Lock, Search, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { CharacterSelectCard } from "@/components/squad-builder/character-select-card";
+import { CharactersList } from "@/components/squad-builder/characters-list";
 import { TeamProfessionsSummary } from "@/components/squad-builder/team-professions-summary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -26,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -130,11 +128,21 @@ function RouteComponent() {
         });
 
         toast.success("Squad utworzony pomyślnie");
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.squad.getMySquads.queryKey(),
         });
-        queryClient.invalidateQueries({
-          queryKey: orpc.squad.getMyCharacters.queryKey(),
+        // Invalidate all getMyCharacters queries regardless of input parameters
+        await queryClient.invalidateQueries({
+          predicate: (query) =>
+            Array.isArray(query.queryKey) &&
+            query.queryKey.some(
+              (key) =>
+                typeof key === "object" &&
+                key !== null &&
+                "path" in key &&
+                Array.isArray((key as { path: unknown }).path) &&
+                (key as { path: string[] }).path.includes("getMyCharacters")
+            ),
         });
         navigate({ to: "/dashboard/squad-builder/manage" });
       } catch (error) {
@@ -483,15 +491,15 @@ function RouteComponent() {
               <CharactersList
                 charactersLoading={charactersLoading}
                 filteredCharacters={filteredCharacters}
-                professionFilter={professionFilter}
-                searchQuery={searchQuery}
+                onClearFilters={() => {
+                  setSearchQuery("");
+                  setProfessionFilter("all");
+                  setMinLevel("");
+                  setMaxLevel("");
+                  setHideInSquad(false);
+                }}
                 selectedCharacterIds={selectedCharacterIds}
                 selectedWorld={selectedWorld}
-                setHideInSquad={setHideInSquad}
-                setMaxLevel={setMaxLevel}
-                setMinLevel={setMinLevel}
-                setProfessionFilter={setProfessionFilter}
-                setSearchQuery={setSearchQuery}
                 toggleCharacter={toggleCharacter}
               />
             </CardContent>
@@ -499,87 +507,5 @@ function RouteComponent() {
         </div>
       </div>
     </ErrorBoundary>
-  );
-}
-
-function CharactersList({
-  selectedWorld,
-  charactersLoading,
-  filteredCharacters,
-  setSearchQuery,
-  setProfessionFilter,
-  setMinLevel,
-  setMaxLevel,
-  setHideInSquad,
-  selectedCharacterIds,
-  toggleCharacter,
-}: {
-  selectedWorld: string;
-  charactersLoading: boolean;
-  filteredCharacters: Character[];
-  searchQuery: string;
-  professionFilter: string;
-  setSearchQuery: (v: string) => void;
-  setProfessionFilter: (v: string) => void;
-  setMinLevel: (v: string) => void;
-  setMaxLevel: (v: string) => void;
-  setHideInSquad: (v: boolean) => void;
-  selectedCharacterIds: number[];
-  toggleCharacter: (id: number) => void;
-}) {
-  if (!selectedWorld) {
-    return (
-      <div className="flex h-64 items-center justify-center text-muted-foreground">
-        <p>Wybierz świat, aby zobaczyć dostępne postacie</p>
-      </div>
-    );
-  }
-
-  if (charactersLoading) {
-    return (
-      <div className="grid gap-2 p-4 md:grid-cols-2">
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-20 w-full" />
-      </div>
-    );
-  }
-
-  if (filteredCharacters.length === 0) {
-    return (
-      <div className="flex h-64 flex-col items-center justify-center text-muted-foreground">
-        <p>Brak postaci spełniających kryteria</p>
-        <Button
-          className="mt-2"
-          onClick={() => {
-            setSearchQuery("");
-            setProfessionFilter("all");
-            setMinLevel("");
-            setMaxLevel("");
-            setHideInSquad(false);
-          }}
-          size="sm"
-          variant="link"
-        >
-          Wyczyść filtry
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <ScrollArea className="h-[500px]">
-      <div className="grid gap-2 p-4 md:grid-cols-2">
-        {filteredCharacters.map((character) => (
-          <CharacterSelectCard
-            character={character}
-            isSelected={selectedCharacterIds.includes(character.id)}
-            key={character.id}
-            onToggle={() => toggleCharacter(character.id)}
-          />
-        ))}
-      </div>
-    </ScrollArea>
   );
 }
