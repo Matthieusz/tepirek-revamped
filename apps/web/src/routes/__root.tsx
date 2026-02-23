@@ -44,7 +44,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       {
         src: "https://analytics.informati.dev/script.js",
         defer: true,
-        "data-website-id": "d990bb55-d976-46af-a0d3-65352afecef5",
+        "data-website-id": "f50f5d33-94f8-4de9-a175-21da0e10f655",
       },
     ],
   }),
