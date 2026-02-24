@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { MapAllocator } from "@/components/events/map-allocator";
+import { MapAllocator } from "@/components/events/map-allocator/map-allocator";
 
 export const Route = createFileRoute("/dashboard/events/maps")({
   component: RouteComponent,
