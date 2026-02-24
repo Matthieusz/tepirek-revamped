@@ -17,9 +17,9 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@tepirek-revamped/db": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
-    "zod": "catalog:",
-    "@tepirek-revamped/db": "workspace:*"
+    "zod": "catalog:"
   }
 }

@@ -20,17 +20,17 @@
     "db:down": "docker compose down"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.2",
-    "@types/pg": "^8.11.11",
-    "@tepirek-revamped/config": "workspace:*"
+    "@tepirek-revamped/config": "workspace:*",
+    "@types/pg": "^8.16.0",
+    "drizzle-kit": "^0.31.9"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "drizzle-orm": "catalog:",
-    "pg": "^8.14.1",
     "dotenv": "catalog:",
+    "drizzle-orm": "catalog:",
+    "pg": "^8.18.0",
     "zod": "catalog:"
   }
 }
