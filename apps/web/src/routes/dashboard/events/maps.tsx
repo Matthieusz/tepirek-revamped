@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { MapAllocator } from "@/components/events/map-allocator/map-allocator";
+import { ComingSoon } from "@/components/coming-soon";
 
 export const Route = createFileRoute("/dashboard/events/maps")({
   component: RouteComponent,
@@ -9,5 +9,10 @@ export const Route = createFileRoute("/dashboard/events/maps")({
 });
 
 function RouteComponent() {
-  return <MapAllocator />;
+  return (
+    <ComingSoon
+      description="Funkcja została tymczasowo wyłączona."
+      feature="Rozdawanie map"
+    />
+  );
 }

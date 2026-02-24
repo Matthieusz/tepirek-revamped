@@ -43,10 +43,6 @@ const data = {
           url: "/dashboard/events/heroes",
         },
         {
-          title: "Rozdawanie map",
-          url: "/dashboard/events/maps",
-        },
-        {
           title: "Dodaj obstawienie",
           url: "/dashboard/events/bets/add",
         },
