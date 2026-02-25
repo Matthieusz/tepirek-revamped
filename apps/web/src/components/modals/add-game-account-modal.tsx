@@ -111,7 +111,7 @@ export const AddGameAccountModal = ({ trigger }: AddGameAccountModalProps) => {
   return (
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
+      <ResponsiveDialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-175">
         <form
           // oxlint-disable-next-line @typescript-eslint/no-misused-promises
           onSubmit={async (e) => {
@@ -135,7 +135,7 @@ export const AddGameAccountModal = ({ trigger }: AddGameAccountModalProps) => {
                 <div className="grid gap-2">
                   <Label htmlFor="html">Kod HTML profilu</Label>
                   <Textarea
-                    className="min-h-[150px] font-mono text-xs"
+                    className="min-h-37.5 font-mono text-xs"
                     id="html"
                     onBlur={field.handleBlur}
                     onChange={(e) => {
@@ -179,7 +179,7 @@ export const AddGameAccountModal = ({ trigger }: AddGameAccountModalProps) => {
 
                   <div className="space-y-2">
                     <Label>Znalezione postacie:</Label>
-                    <div className="grid max-h-[200px] gap-2 overflow-y-auto">
+                    <div className="grid max-h-50 gap-2 overflow-y-auto">
                       {parsedData.characters.map((char) => (
                         <CharacterPreviewRow
                           character={char}

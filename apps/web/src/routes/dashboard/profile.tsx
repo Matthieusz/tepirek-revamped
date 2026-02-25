@@ -20,7 +20,6 @@ export const Route = createFileRoute("/dashboard/profile")({
   },
 });
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const isAdminUser = isAdmin(session);

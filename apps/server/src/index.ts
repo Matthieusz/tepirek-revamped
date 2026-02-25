@@ -68,7 +68,6 @@ app.use(
   })
 );
 
-// oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
 app.on(["POST", "GET"], "/api/auth/*", async (c) => auth.handler(c.req.raw));
 
 export const apiHandler = new OpenAPIHandler(appRouter, {

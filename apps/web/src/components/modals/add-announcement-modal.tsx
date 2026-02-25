@@ -66,7 +66,7 @@ export const AddAnnouncementModal = ({
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-[600px]">
+      <ResponsiveDialogContent className="sm:max-w-150">
         <form
           // oxlint-disable-next-line @typescript-eslint/no-misused-promises
           onSubmit={async (e) => {

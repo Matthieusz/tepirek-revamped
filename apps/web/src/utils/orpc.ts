@@ -21,7 +21,6 @@ export const queryClient = new QueryClient({
       toast.error(`Błąd: ${error.message}`, {
         action: {
           label: "retry",
-          // oxlint-disable-next-line @typescript-eslint/promise-function-async
           onClick: () => {
             // oxlint-disable-next-line @typescript-eslint/no-floating-promises
             queryClient.invalidateQueries();

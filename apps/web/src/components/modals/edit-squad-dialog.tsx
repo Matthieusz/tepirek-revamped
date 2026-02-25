@@ -293,7 +293,7 @@ export const EditSquadDialog = ({
               </div>
             )}
             {!(detailsLoading || charactersLoading) && (
-              <ScrollArea className="h-[200px] rounded-md border">
+              <ScrollArea className="h-50 rounded-md border">
                 <div className="space-y-1 p-2">
                   {filteredCharacters.length === 0 && (
                     <div className="py-4 text-center text-muted-foreground text-sm">
