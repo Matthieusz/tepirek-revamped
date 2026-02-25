@@ -5,10 +5,22 @@
     "./node_modules/ultracite/config/oxlint/react/.oxlintrc.json",
     "./node_modules/ultracite/config/oxlint/remix/.oxlintrc.json"
   ],
+  "ignorePatterns": ["**/*.gen.*"],
   "rules": {
     "eslint/no-use-before-define": "off",
+    "eslint/require-await": "off",
     "jsx-no-new-function-as-prop": "off",
     "jest/require-hook": "off",
-    "max-statements": "off"
-  }
+    "max-statements": "off",
+    "@typescript-eslint/no-misused-spread": "off",
+    "func-style": "off"
+  },
+  "overrides": [
+    {
+      "files": ["**/routes/**/$*.tsx", "**/routes/**/$*.ts"],
+      "rules": {
+        "unicorn/filename-case": "off"
+      }
+    }
+  ]
 }
