@@ -17,7 +17,7 @@ export const Route = createFileRoute(
   },
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const { session } = Route.useRouteContext();
 
   return (
@@ -42,4 +42,4 @@ function RouteComponent() {
       </Card>
     </div>
   );
-}
+};

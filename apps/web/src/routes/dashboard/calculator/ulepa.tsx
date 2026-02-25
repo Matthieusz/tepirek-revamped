@@ -50,11 +50,11 @@ const GAME_CONSTANTS = {
 } as const;
 
 const rarityFactors: Record<Rarity, RarityFactor> = {
-  heroiczny: { upgradeRarityFactor: 100, upgradeGoldFactor: 30 },
-  legendarny: { upgradeRarityFactor: 1000, upgradeGoldFactor: 60 },
-  ulepszony: { upgradeRarityFactor: -1, upgradeGoldFactor: 40 },
-  unikatowy: { upgradeRarityFactor: 10, upgradeGoldFactor: 10 },
-  zwykły: { upgradeRarityFactor: 1, upgradeGoldFactor: 1 },
+  heroiczny: { upgradeGoldFactor: 30, upgradeRarityFactor: 100 },
+  legendarny: { upgradeGoldFactor: 60, upgradeRarityFactor: 1000 },
+  ulepszony: { upgradeGoldFactor: 40, upgradeRarityFactor: -1 },
+  unikatowy: { upgradeGoldFactor: 10, upgradeRarityFactor: 10 },
+  zwykły: { upgradeGoldFactor: 1, upgradeRarityFactor: 1 },
 };
 
 const rarityColors: Record<Rarity, string> = {
@@ -119,7 +119,7 @@ const formSchema = z.object({
   ]),
 });
 
-function calculateUpgradePoints(lvl: number, rarity: Rarity): number[] {
+const calculateUpgradePoints = (lvl: number, rarity: Rarity): number[] => {
   const level = clampLevel(lvl);
   const factors = rarityFactors[rarity];
   if (!factors) {
@@ -128,28 +128,24 @@ function calculateUpgradePoints(lvl: number, rarity: Rarity): number[] {
 
   const upgradeCosts: number[] = [];
 
-  for (let n = 1; n <= 5; n++) {
-    let cost: number;
-    if (rarity === "ulepszony") {
-      cost =
-        upgradeLevelFactors[n] *
-        (GAME_CONSTANTS.ENHANCED_LEVEL_MULTIPLIER * level +
-          GAME_CONSTANTS.ENHANCED_BASE_COST);
-    } else {
-      cost =
-        factors.upgradeRarityFactor *
-        upgradeLevelFactors[n] *
-        (GAME_CONSTANTS.STANDARD_BASE_COST + level);
-    }
+  for (let n = 1; n <= 5; n += 1) {
+    const cost =
+      rarity === "ulepszony"
+        ? upgradeLevelFactors[n] *
+          (GAME_CONSTANTS.ENHANCED_LEVEL_MULTIPLIER * level +
+            GAME_CONSTANTS.ENHANCED_BASE_COST)
+        : factors.upgradeRarityFactor *
+          upgradeLevelFactors[n] *
+          (GAME_CONSTANTS.STANDARD_BASE_COST + level);
     upgradeCosts.push(cost);
   }
 
   return upgradeCosts;
-}
+};
 
-function calculateDifferentialCosts(upgradeCosts: number[]): number[] {
+const calculateDifferentialCosts = (upgradeCosts: number[]): number[] => {
   const differentialCosts: number[] = [];
-  for (let i = 0; i < upgradeCosts.length; i++) {
+  for (let i = 0; i < upgradeCosts.length; i += 1) {
     if (i === 0) {
       differentialCosts.push(upgradeCosts[i]);
     } else {
@@ -157,7 +153,7 @@ function calculateDifferentialCosts(upgradeCosts: number[]): number[] {
     }
   }
   return differentialCosts;
-}
+};
 
 export const Route = createFileRoute("/dashboard/calculator/ulepa")({
   component: RouteComponent,
@@ -166,7 +162,7 @@ export const Route = createFileRoute("/dashboard/calculator/ulepa")({
   },
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const [result, setResult] = useState<{
     differentialCosts: number[];
     cumulativeCosts: number[];
@@ -476,4 +472,4 @@ function RouteComponent() {
       )}
     </div>
   );
-}
+};

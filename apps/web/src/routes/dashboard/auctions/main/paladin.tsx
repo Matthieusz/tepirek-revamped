@@ -15,7 +15,7 @@ export const Route = createFileRoute("/dashboard/auctions/main/paladin")({
   },
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const { session } = Route.useRouteContext();
 
   return (
@@ -40,4 +40,4 @@ function RouteComponent() {
       </Card>
     </div>
   );
-}
+};

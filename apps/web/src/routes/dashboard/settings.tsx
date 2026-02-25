@@ -9,6 +9,4 @@ export const Route = createFileRoute("/dashboard/settings")({
   },
 });
 
-function RouteComponent() {
-  return <ComingSoon feature="Ustawienia" />;
-}
+const RouteComponent = () => <ComingSoon feature="Ustawienia" />;

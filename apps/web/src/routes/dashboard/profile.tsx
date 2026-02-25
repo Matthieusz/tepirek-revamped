@@ -20,7 +20,7 @@ export const Route = createFileRoute("/dashboard/profile")({
   },
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const { session } = Route.useRouteContext();
   const isAdminUser = isAdmin(session);
 
@@ -106,4 +106,4 @@ function RouteComponent() {
       </Card>
     </div>
   );
-}
+};

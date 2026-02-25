@@ -28,9 +28,11 @@ import { orpc } from "@/utils/orpc";
 
 const routeApi = getRouteApi("/dashboard");
 
+/* oxlint-disable promise/prefer-await-to-then, promise/valid-params -- Zod .catch() is not Promise.catch() */
 const searchSchema = z.object({
   eventId: z.string().optional().catch(),
 });
+/* oxlint-enable promise/prefer-await-to-then, promise/valid-params */
 
 export const Route = createFileRoute("/dashboard/events/vault")({
   component: RouteComponent,
@@ -40,7 +42,7 @@ export const Route = createFileRoute("/dashboard/events/vault")({
   validateSearch: searchSchema,
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const { session } = routeApi.useRouteContext();
   const { eventId: urlEventId } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
@@ -109,12 +111,12 @@ function RouteComponent() {
       paidOut: boolean;
     }) => {
       await orpc.bet.togglePaidOut.call({
-        userId,
         eventId:
           effectiveEventId === "all"
             ? undefined
             : Number.parseInt(effectiveEventId, 10),
         paidOut,
+        userId,
       });
     },
     onError: (error) => {
@@ -416,4 +418,4 @@ function RouteComponent() {
       )}
     </div>
   );
-}
+};

@@ -43,7 +43,7 @@ export const Route = createFileRoute("/dashboard/squad-builder/create")({
 
 const PROFESSIONS = Object.entries(professionNames);
 
-function RouteComponent() {
+const RouteComponent = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -509,4 +509,4 @@ function RouteComponent() {
       </div>
     </ErrorBoundary>
   );
-}
+};

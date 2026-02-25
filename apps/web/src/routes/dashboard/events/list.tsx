@@ -45,7 +45,7 @@ type EventAction = {
   active?: boolean;
 } | null;
 
-function RouteComponent() {
+const RouteComponent = () => {
   const { session } = Route.useRouteContext();
   const [eventAction, setEventAction] = useState<EventAction>(null);
   const { data: events, isPending } = useQuery(
@@ -74,7 +74,7 @@ function RouteComponent() {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, active }: { id: number; active: boolean }) => {
-      await orpc.event.toggleActive.call({ id, active });
+      await orpc.event.toggleActive.call({ active, id });
     },
     onError: (error) => {
       const message = error instanceof Error ? error.message : "Wystąpił błąd";
@@ -262,15 +262,15 @@ function RouteComponent() {
       </AlertDialog>
     </div>
   );
-}
+};
 
-function ActionButtonLabel({
+const ActionButtonLabel = ({
   actionPending,
   eventAction,
 }: {
   actionPending: boolean;
   eventAction: EventAction;
-}) {
+}) => {
   if (actionPending) {
     return "Przetwarzanie...";
   }
@@ -278,4 +278,4 @@ function ActionButtonLabel({
     return "Usuń";
   }
   return eventAction?.active ? "Dezaktywuj" : "Aktywuj";
-}
+};

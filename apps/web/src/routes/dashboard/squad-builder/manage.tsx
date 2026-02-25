@@ -19,7 +19,7 @@ export const Route = createFileRoute("/dashboard/squad-builder/manage")({
   },
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -104,7 +104,7 @@ function RouteComponent() {
                 <Search className="mb-4 h-12 w-12 text-muted-foreground/50" />
                 <h3 className="mb-2 font-semibold text-lg">Brak wyników</h3>
                 <p className="mb-4 text-center text-muted-foreground">
-                  Nie znaleziono squadów pasujących do "{searchQuery}"
+                  Nie znaleziono squadów pasujących do &quot;{searchQuery}&quot;
                 </p>
                 <Button onClick={() => setSearchQuery("")} variant="outline">
                   Wyczyść wyszukiwanie
@@ -149,4 +149,4 @@ function RouteComponent() {
       </div>
     </ErrorBoundary>
   );
-}
+};

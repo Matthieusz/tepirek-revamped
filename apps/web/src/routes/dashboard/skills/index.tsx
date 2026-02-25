@@ -17,7 +17,7 @@ export const Route = createFileRoute("/dashboard/skills/")({
   },
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const { session } = Route.useRouteContext();
   const { data: ranges, isPending } = useQuery(
     orpc.skills.getAllRanges.queryOptions()
@@ -76,4 +76,4 @@ function RouteComponent() {
       )}
     </div>
   );
-}
+};

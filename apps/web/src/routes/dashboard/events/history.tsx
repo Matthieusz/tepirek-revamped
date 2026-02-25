@@ -13,8 +13,8 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -45,10 +45,12 @@ import { getEventIcon } from "@/lib/constants";
 import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
+/* oxlint-disable promise/prefer-await-to-then, promise/valid-params -- Zod .catch() is not Promise.catch() */
 const searchSchema = z.object({
   eventId: z.string().optional().catch(),
   heroId: z.string().optional().catch(),
 });
+/* oxlint-enable promise/prefer-await-to-then, promise/valid-params */
 
 export const Route = createFileRoute("/dashboard/events/history")({
   component: RouteComponent,
@@ -66,7 +68,16 @@ type BetToDelete = {
 const POINTS_PER_HERO = 20;
 const ITEMS_PER_PAGE = 10;
 
-function RouteComponent() {
+const formatDate = (date: Date) =>
+  new Date(date).toLocaleDateString("pl-PL", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+const RouteComponent = () => {
   const { session } = Route.useRouteContext();
   const { eventId, heroId } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
@@ -101,11 +112,11 @@ function RouteComponent() {
     initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
       const result = await orpc.bet.getAllPaginated.call({
-        page: pageParam,
-        limit: ITEMS_PER_PAGE,
         eventId:
           selectedEventId === "all" ? undefined : Number(selectedEventId),
         heroId: selectedHeroId === "all" ? undefined : Number(selectedHeroId),
+        limit: ITEMS_PER_PAGE,
+        page: pageParam,
       });
       return result;
     },
@@ -150,15 +161,6 @@ function RouteComponent() {
       setBetToDelete(null);
     },
   });
-
-  const formatDate = (date: Date) =>
-    new Date(date).toLocaleDateString("pl-PL", {
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
 
   const calculatePointsPerMember = (memberCount: number) =>
     Math.floor((POINTS_PER_HERO / memberCount) * 100) / 100;
@@ -407,9 +409,9 @@ function RouteComponent() {
               Czy na pewno chcesz usunąć obstawienie?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Obstawienie na herosa "{betToDelete?.heroName}" zostanie trwale
-              usunięte wraz ze wszystkimi powiązanymi statystykami. Tej operacji
-              nie można cofnąć.
+              Obstawienie na herosa &quot;{betToDelete?.heroName}&quot; zostanie
+              trwale usunięte wraz ze wszystkimi powiązanymi statystykami. Tej
+              operacji nie można cofnąć.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -429,4 +431,4 @@ function RouteComponent() {
       </AlertDialog>
     </div>
   );
-}
+};

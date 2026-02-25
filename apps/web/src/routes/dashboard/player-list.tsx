@@ -18,7 +18,7 @@ export const Route = createFileRoute("/dashboard/player-list")({
   },
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const { session } = Route.useRouteContext();
   const [searchQuery, setSearchQuery] = useState("");
   const { data: playersData = [], isPending } = useQuery(
@@ -151,4 +151,4 @@ function RouteComponent() {
       </div>
     </div>
   );
-}
+};

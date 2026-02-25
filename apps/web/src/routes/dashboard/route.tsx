@@ -36,7 +36,7 @@ export const Route = createFileRoute("/dashboard")({
   },
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const { session } = Route.useRouteContext();
   return (
     <SidebarProvider>
@@ -58,4 +58,4 @@ function RouteComponent() {
       </SidebarInset>
     </SidebarProvider>
   );
-}
+};

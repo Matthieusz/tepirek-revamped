@@ -41,7 +41,7 @@ type HeroToDelete = {
   name: string;
 } | null;
 
-function RouteComponent() {
+const RouteComponent = () => {
   const { session } = Route.useRouteContext();
   const [heroToDelete, setHeroToDelete] = useState<HeroToDelete>(null);
   const { data: heroes, isPending } = useQuery(
@@ -198,8 +198,8 @@ function RouteComponent() {
               Czy na pewno chcesz usunąć herosa?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Heros "{heroToDelete?.name}" zostanie trwale usunięty. Tej
-              operacji nie można cofnąć.
+              Heros &quot;{heroToDelete?.name}&quot; zostanie trwale usunięty.
+              Tej operacji nie można cofnąć.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -219,4 +219,4 @@ function RouteComponent() {
       </AlertDialog>
     </div>
   );
-}
+};

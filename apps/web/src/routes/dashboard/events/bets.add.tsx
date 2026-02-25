@@ -43,7 +43,14 @@ const defaultValues: AddBetForm = {
   userIds: [],
 };
 
-function RouteComponent() {
+const handleUserToggle = (userId: string, currentUserIds: string[]) => {
+  if (currentUserIds.includes(userId)) {
+    return currentUserIds.filter((id) => id !== userId);
+  }
+  return [...currentUserIds, userId];
+};
+
+const RouteComponent = () => {
   const { session } = Route.useRouteContext();
   const [selectedEventId, setSelectedEventId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -120,18 +127,11 @@ function RouteComponent() {
     (hero) => hero.eventId === Number.parseInt(selectedEventId || "0", 10)
   );
 
-  const handleUserToggle = (userId: string, currentUserIds: string[]) => {
-    if (currentUserIds.includes(userId)) {
-      return currentUserIds.filter((id) => id !== userId);
-    }
-    return [...currentUserIds, userId];
-  };
-
   const handleCopyLastBet = (currentUserIds: string[]) => {
     if (!allBets || allBets.length === 0) {
       return currentUserIds;
     }
-    const lastBet = allBets[0];
+    const [lastBet] = allBets;
     const lastBetUserIds = lastBet.members.map((member) => member.userId);
     return lastBetUserIds;
   };
@@ -533,4 +533,4 @@ function RouteComponent() {
       </Card>
     </div>
   );
-}
+};

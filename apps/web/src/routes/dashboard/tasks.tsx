@@ -29,7 +29,7 @@ export const Route = createFileRoute("/dashboard/tasks")({
   },
 });
 
-function TasksRoute() {
+const TasksRoute = () => {
   const { session } = Route.useRouteContext();
   const [newTodoText, setNewTodoText] = useState("");
   const queryClient = useQueryClient();
@@ -246,4 +246,4 @@ function TasksRoute() {
       </div>
     </div>
   );
-}
+};

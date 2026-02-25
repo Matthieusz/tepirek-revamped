@@ -19,7 +19,7 @@ export const Route = createFileRoute("/dashboard/squad-builder/accounts")({
   },
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(
     null
   );
@@ -121,4 +121,4 @@ function RouteComponent() {
       </div>
     </ErrorBoundary>
   );
-}
+};

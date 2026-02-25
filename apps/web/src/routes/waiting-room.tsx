@@ -24,7 +24,7 @@ export const Route = createFileRoute("/waiting-room")({
   component: RouteComponent,
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const router = useRouter();
   const navigate = Route.useNavigate();
   const { session } = Route.useRouteContext();
@@ -37,7 +37,7 @@ function RouteComponent() {
 
   // Validate Discord guild membership on mount and when access token is available
   useEffect(() => {
-    async function validateAndRedirect() {
+    const validateAndRedirect = async () => {
       if (!accessToken || isValidating) {
         return;
       }
@@ -58,7 +58,7 @@ function RouteComponent() {
       } finally {
         setIsValidating(false);
       }
-    }
+    };
 
     validateAndRedirect();
   }, [accessToken, isValidating, navigate, router]);
@@ -130,4 +130,4 @@ function RouteComponent() {
       </div>
     </div>
   );
-}
+};

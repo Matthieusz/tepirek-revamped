@@ -9,11 +9,9 @@ export const Route = createFileRoute("/dashboard/events/maps")({
   },
 });
 
-function RouteComponent() {
-  return (
-    <ComingSoon
-      description="Funkcja została tymczasowo wyłączona."
-      feature="Rozdawanie map"
-    />
-  );
-}
+const RouteComponent = () => (
+  <ComingSoon
+    description="Funkcja została tymczasowo wyłączona."
+    feature="Rozdawanie map"
+  />
+);

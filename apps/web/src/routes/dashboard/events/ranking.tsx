@@ -8,8 +8,8 @@ import { Coins, Loader2, Trophy } from "lucide-react";
 import type { ReactNode } from "react";
 import { z } from "zod";
 
-import { RankingList } from '@/components/events/ranking-list';
-import type { RankingItem } from '@/components/events/ranking-list';
+import { RankingList } from "@/components/events/ranking-list";
+import type { RankingItem } from "@/components/events/ranking-list";
 import { DistributeGoldModal } from "@/components/modals/distribute-gold-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,11 +27,13 @@ import { orpc } from "@/utils/orpc";
 
 const routeApi = getRouteApi("/dashboard");
 
+/* oxlint-disable promise/prefer-await-to-then, promise/valid-params -- Zod .catch() is not Promise.catch() */
 const searchSchema = z.object({
   eventId: z.string().optional().catch(),
   heroId: z.string().optional().catch(),
   sortBy: z.enum(["points", "bets", "gold"]).optional().catch(),
 });
+/* oxlint-enable promise/prefer-await-to-then, promise/valid-params */
 
 const sortRanking = (
   ranking: RankingItem[] | undefined,
@@ -90,7 +92,7 @@ export const Route = createFileRoute("/dashboard/events/ranking")({
   validateSearch: searchSchema,
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const { session } = routeApi.useRouteContext();
   const { eventId, heroId, sortBy } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
@@ -287,4 +289,4 @@ function RouteComponent() {
       {rankingContent}
     </div>
   );
-}
+};

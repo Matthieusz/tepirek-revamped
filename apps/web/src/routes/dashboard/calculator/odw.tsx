@@ -29,18 +29,26 @@ const MAX_LEVEL = 300;
 
 /** Rarity multipliers applied to base value */
 const rarityMultipliers: Record<Rarity, number> = {
-  zwykły: 1, // No bonus
-  unikatowy: 1.2, // +20%
-  heroiczny: 1.5, // +50%
-  legendarny: 3, // +200%
+  // +50%
+  heroiczny: 1.5,
+  // +200%
+  legendarny: 3,
+  // +20%
+  unikatowy: 1.2,
+  // No bonus
+  zwykły: 1,
 };
 
 /** Cap threshold for base value (i) per rarity */
 const rarityCaps: Record<Rarity, { threshold: number; maxCost: number }> = {
-  zwykły: { maxCost: 1500, threshold: 20 }, // i > 20
-  unikatowy: { maxCost: 1800, threshold: 20 }, // i >= 20
-  heroiczny: { maxCost: 3375, threshold: 30 }, // i >= 30
-  legendarny: { maxCost: 6750, threshold: 30 }, // i >= 30
+  // i >= 30
+  heroiczny: { maxCost: 3375, threshold: 30 },
+  // i >= 30
+  legendarny: { maxCost: 6750, threshold: 30 },
+  // i >= 20
+  unikatowy: { maxCost: 1800, threshold: 20 },
+  // i > 20
+  zwykły: { maxCost: 1500, threshold: 20 },
 };
 
 const rarityColors: Record<Rarity, string> = {
@@ -73,7 +81,8 @@ const calculateUnbindCost = (
   level: number,
   rarity: Rarity
 ): { baseValue: number; totalCost: number; isCapped: boolean } => {
-  const baseValue = 10 + 0.1 * level; // i = 10 + 0.1 * a
+  // i = 10 + 0.1 * a
+  const baseValue = 10 + 0.1 * level;
   const cap = rarityCaps[rarity];
   const multiplier = rarityMultipliers[rarity];
 
@@ -110,7 +119,7 @@ export const Route = createFileRoute("/dashboard/calculator/odw")({
   },
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const [result, setResult] = useState<{
     itemLevel: number;
     itemRarity: Rarity;
@@ -380,4 +389,4 @@ function RouteComponent() {
       </Card>
     </div>
   );
-}
+};

@@ -7,6 +7,4 @@ export const Route = createFileRoute("/dashboard/auctions")({
   },
 });
 
-function RouteComponent() {
-  return <Outlet />;
-}
+const RouteComponent = () => <Outlet />;

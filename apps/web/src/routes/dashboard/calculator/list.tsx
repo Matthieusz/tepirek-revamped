@@ -63,7 +63,7 @@ const calculateMaxAttackerLevelWithoutPenalty = (
   // attackerLevel - victimLevel < 16 + max(0, (attackerLevel - 100) / 5)
   // This requires solving iteratively since attackerLevel appears on both sides
   let maxLevel = victimLevel;
-  for (let lvl = victimLevel; lvl <= MAX_LEVEL; lvl++) {
+  for (let lvl = victimLevel; lvl <= MAX_LEVEL; lvl += 1) {
     const minDiff = calculateMinLevelDifference(lvl);
     if (lvl - victimLevel < minDiff) {
       maxLevel = lvl;
@@ -77,10 +77,6 @@ const calculateMaxAttackerLevelWithoutPenalty = (
 /**
  * Calculates group attack penalty check
  * Formula: 0.5 * (max_lvl_attackers + avg_lvl_attackers) - avg_lvl_defenders > 15 + max(0, 0.1 * (max_lvl_attackers + avg_lvl_attackers) - 20)
- *
- * @param attackerLevels - array of attacker levels
- * @param defenderLevels - array of defender levels
- * @returns object with calculation details and penalty result
  */
 const calculateGroupAttackPenalty = (
   attackerLevels: number[],
@@ -154,7 +150,7 @@ export const Route = createFileRoute("/dashboard/calculator/list")({
   },
 });
 
-function RouteComponent() {
+const RouteComponent = () => {
   const [mode, setMode] = useState<"single" | "group">("single");
 
   const [result, setResult] = useState<{
@@ -789,4 +785,4 @@ function RouteComponent() {
       </Card>
     </div>
   );
-}
+};

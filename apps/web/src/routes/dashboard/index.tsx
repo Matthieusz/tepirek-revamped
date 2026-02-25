@@ -41,7 +41,7 @@ type AnnouncementToDelete = {
   title: string;
 } | null;
 
-function RouteComponent() {
+const RouteComponent = () => {
   const { session } = Route.useRouteContext();
   const [announcementToDelete, setAnnouncementToDelete] =
     useState<AnnouncementToDelete>(null);
@@ -196,8 +196,8 @@ function RouteComponent() {
               Czy na pewno chcesz usunąć ogłoszenie?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Ogłoszenie "{announcementToDelete?.title}" zostanie trwale
-              usunięte. Tej operacji nie można cofnąć.
+              Ogłoszenie &quot;{announcementToDelete?.title}&quot; zostanie
+              trwale usunięte. Tej operacji nie można cofnąć.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -218,4 +218,4 @@ function RouteComponent() {
       </AlertDialog>
     </div>
   );
-}
+};

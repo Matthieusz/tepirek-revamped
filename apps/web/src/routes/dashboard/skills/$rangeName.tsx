@@ -49,7 +49,24 @@ type SkillToDelete = {
   rangeId: number;
 } | null;
 
-function RangeDetails() {
+/* oxlint-disable react/no-array-index-key -- skeleton placeholders have no unique identifiers */
+const SkillsLoadingSkeleton = () => (
+  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {Array.from({ length: 6 }).map((_, i) => (
+      <Card key={`skill-skeleton-${i.toString()}`}>
+        <CardHeader className="pb-3">
+          <Skeleton className="h-4 w-24" />
+        </CardHeader>
+        <CardContent className="pt-0">
+          <TableSkeleton columns={3} rows={3} />
+        </CardContent>
+      </Card>
+    ))}
+  </div>
+);
+/* oxlint-enable react/no-array-index-key */
+
+const RangeDetails = () => {
   const { rangeName } = Route.useParams();
   const { session } = Route.useRouteContext();
   const [skillToDelete, setSkillToDelete] = useState<SkillToDelete>(null);
@@ -68,7 +85,7 @@ function RangeDetails() {
       ? orpc.skills.getSkillsByRange.queryOptions({
           input: { rangeId: range.data.id },
         })
-      : { queryFn: async () => [], queryKey: ["skills", rangeName, "empty"] }
+      : { queryFn: () => [], queryKey: ["skills", rangeName, "empty"] }
   );
 
   const deleteMutation = useMutation({
@@ -100,18 +117,7 @@ function RangeDetails() {
             <Skeleton className="h-4 w-64" />
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={`skill-skeleton-${i.toString()}`}>
-              <CardHeader className="pb-3">
-                <Skeleton className="h-4 w-24" />
-              </CardHeader>
-              <CardContent className="pt-0">
-                <TableSkeleton columns={3} rows={3} />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <SkillsLoadingSkeleton />
       </div>
     );
   }
@@ -257,8 +263,8 @@ function RangeDetails() {
           <AlertDialogHeader>
             <AlertDialogTitle>Usunąć ten zestaw?</AlertDialogTitle>
             <AlertDialogDescription>
-              Zestaw "{skillToDelete?.name}" zostanie trwale usunięty. Tej
-              operacji nie można cofnąć.
+              Zestaw &quot;{skillToDelete?.name}&quot; zostanie trwale usunięty.
+              Tej operacji nie można cofnąć.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -278,4 +284,4 @@ function RangeDetails() {
       </AlertDialog>
     </div>
   );
-}
+};

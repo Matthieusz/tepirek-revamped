@@ -13,10 +13,8 @@ export const Route = createFileRoute("/login")({
   component: RouteComponent,
 });
 
-function RouteComponent() {
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8">
-      <LoginForm className="w-full max-w-md" />
-    </div>
-  );
-}
+const RouteComponent = () => (
+  <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8">
+    <LoginForm className="w-full max-w-md" />
+  </div>
+);

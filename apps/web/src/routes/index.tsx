@@ -10,7 +10,7 @@ export const Route = createFileRoute("/")({
   component: HomeComponent,
 });
 
-function HomeComponent() {
+const HomeComponent = () => {
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
 
   let statusText: string;
@@ -119,4 +119,4 @@ function HomeComponent() {
       </div>
     </div>
   );
-}
+};
