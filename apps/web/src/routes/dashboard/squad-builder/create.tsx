@@ -43,6 +43,7 @@ export const Route = createFileRoute("/dashboard/squad-builder/create")({
 
 const PROFESSIONS = Object.entries(professionNames);
 
+// oxlint-disable-next-line func-style
 function RouteComponent() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -141,11 +142,13 @@ function RouteComponent() {
                 typeof key === "object" &&
                 key !== null &&
                 "path" in key &&
+                // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
                 Array.isArray((key as { path: unknown }).path) &&
+                // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
                 (key as { path: string[] }).path.includes("getMyCharacters")
             ),
         });
-        navigate({ to: "/dashboard/squad-builder/manage" });
+        await navigate({ to: "/dashboard/squad-builder/manage" });
       } catch (error) {
         const message =
           error instanceof Error
@@ -205,9 +208,10 @@ function RouteComponent() {
             <CardContent>
               <form
                 className="space-y-6"
-                onSubmit={(e) => {
+                // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+                onSubmit={async (e) => {
                   e.preventDefault();
-                  form.handleSubmit();
+                  await form.handleSubmit();
                 }}
               >
                 {/* Nazwa */}
@@ -239,7 +243,9 @@ function RouteComponent() {
                         aria-invalid={!!field.state.meta.errors.length}
                         id="squad-name"
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
+                        onChange={(e) => {
+                          field.handleChange(e.target.value);
+                        }}
                         placeholder="np. drimtim"
                         value={field.state.value}
                       />
@@ -279,7 +285,9 @@ function RouteComponent() {
                         className="min-h-20"
                         id="squad-description"
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
+                        onChange={(e) => {
+                          field.handleChange(e.target.value);
+                        }}
                         placeholder="Krótki opis squadu..."
                         value={field.state.value}
                       />
@@ -350,9 +358,9 @@ function RouteComponent() {
                       </div>
                       <Switch
                         checked={field.state.value}
-                        onCheckedChange={(checked) =>
-                          field.handleChange(checked)
-                        }
+                        onCheckedChange={(checked) => {
+                          field.handleChange(checked);
+                        }}
                       />
                     </div>
                   )}
@@ -370,7 +378,9 @@ function RouteComponent() {
                           <Badge
                             className="cursor-pointer"
                             key={char.id}
-                            onClick={() => toggleCharacter(char.id)}
+                            onClick={() => {
+                              toggleCharacter(char.id);
+                            }}
                             variant="secondary"
                           >
                             {char.nick}
@@ -424,7 +434,9 @@ function RouteComponent() {
                     <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
                     <Input
                       className="pl-9"
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                      }}
                       placeholder="Szukaj po nicku lub nazwie konta..."
                       value={searchQuery}
                     />
@@ -454,14 +466,18 @@ function RouteComponent() {
                     <Input
                       inputMode="numeric"
                       min={1}
-                      onChange={(e) => setMinLevel(e.target.value)}
+                      onChange={(e) => {
+                        setMinLevel(e.target.value);
+                      }}
                       placeholder="Min lvl"
                       value={minLevel}
                     />
                     <Input
                       inputMode="numeric"
                       min={1}
-                      onChange={(e) => setMaxLevel(e.target.value)}
+                      onChange={(e) => {
+                        setMaxLevel(e.target.value);
+                      }}
                       placeholder="Max lvl"
                       value={maxLevel}
                     />

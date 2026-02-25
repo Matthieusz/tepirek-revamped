@@ -26,12 +26,12 @@ interface ShareSquadDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function ShareSquadDialog({
+export const ShareSquadDialog = ({
   squadId,
   squadName,
   open,
   onOpenChange,
-}: ShareSquadDialogProps) {
+}: ShareSquadDialogProps) => {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
@@ -74,7 +74,7 @@ export function ShareSquadDialog({
   }, [availableUsers, searchQuery]);
 
   const shareMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: async () =>
       orpc.squad.shareSquad.call({
         squadId,
         userId: selectedUserId,
@@ -82,29 +82,29 @@ export function ShareSquadDialog({
     onError: (error) => {
       toast.error(error.message || "Nie udało się udostępnić squadu");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Squad udostępniony");
       setSelectedUserId("");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.squad.getSquadDetails.queryKey({
           input: { id: squadId },
         }),
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.squad.getMySquads.queryKey(),
       });
     },
   });
 
   const removeShareMutation = useMutation({
-    mutationFn: (shareId: number) =>
+    mutationFn: async (shareId: number) =>
       orpc.squad.removeSquadShare.call({ shareId }),
     onError: (error) => {
       toast.error(error.message || "Nie udało się usunąć udostępnienia");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Usunięto udostępnienie");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.squad.getSquadDetails.queryKey({
           input: { id: squadId },
         }),
@@ -118,7 +118,8 @@ export function ShareSquadDialog({
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Udostępnij squad</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            Wybierz użytkownika, któremu chcesz udostępnić squad "{squadName}"
+            Wybierz użytkownika, któremu chcesz udostępnić squad &quot;
+            {squadName}&quot;
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -130,7 +131,9 @@ export function ShareSquadDialog({
               <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 className="pl-8"
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                }}
                 placeholder="Szukaj użytkownika..."
                 value={searchQuery}
               />
@@ -153,7 +156,9 @@ export function ShareSquadDialog({
                           : "border-transparent hover:bg-accent/50"
                       )}
                       key={user.id}
-                      onClick={() => setSelectedUserId(user.id)}
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                      }}
                       type="button"
                     >
                       <Avatar className="h-8 w-8">
@@ -209,7 +214,9 @@ export function ShareSquadDialog({
                     </div>
                     <Button
                       disabled={removeShareMutation.isPending}
-                      onClick={() => removeShareMutation.mutate(share.id)}
+                      onClick={() => {
+                        removeShareMutation.mutate(share.id);
+                      }}
                       size="icon"
                       variant="ghost"
                     >
@@ -223,12 +230,19 @@ export function ShareSquadDialog({
         </div>
 
         <ResponsiveDialogFooter>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
+          <Button
+            onClick={() => {
+              onOpenChange(false);
+            }}
+            variant="outline"
+          >
             Zamknij
           </Button>
           <Button
             disabled={!selectedUserId || shareMutation.isPending}
-            onClick={() => shareMutation.mutate()}
+            onClick={() => {
+              shareMutation.mutate();
+            }}
           >
             Udostępnij
           </Button>
@@ -236,4 +250,4 @@ export function ShareSquadDialog({
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

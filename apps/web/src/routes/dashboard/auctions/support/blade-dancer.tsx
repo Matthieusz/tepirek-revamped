@@ -17,6 +17,7 @@ export const Route = createFileRoute(
   },
 });
 
+// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
 

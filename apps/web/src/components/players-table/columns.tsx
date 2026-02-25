@@ -4,9 +4,6 @@ import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { formatDate } from "@/lib/utils";
-import { orpc } from "@/utils/orpc";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,9 +13,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
+} from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +23,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,15 +31,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { formatDate } from "@/lib/utils";
+import { orpc } from "@/utils/orpc";
 
 type QueryOptions = ReturnType<typeof orpc.user.list.queryOptions>;
 type Players = Awaited<ReturnType<QueryOptions["queryFn"]>>;
 type Player = Players[number];
 
-function ActionCell({ player }: { player: Player }) {
+const ActionCell = ({ player }: { player: Player }) => {
   const queryClient = useQueryClient();
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -50,42 +49,48 @@ function ActionCell({ player }: { player: Player }) {
 
   const toggleVerified = useMutation({
     mutationFn: async () =>
-      await orpc.user.setVerified.call({
+      orpc.user.setVerified.call({
         userId: player.id,
         verified: !player.verified,
       }),
-    onError: (e: Error) => toast.error(e.message),
-    onSuccess: () => {
+    onError: (e: Error) => {
+      toast.error(e.message);
+    },
+    onSuccess: async () => {
       toast.success("Zmieniono status");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.user.list.queryKey(),
       });
     },
   });
   const changeRole = useMutation({
     mutationFn: async () =>
-      await orpc.user.setRole.call({
-        userId: player.id,
+      orpc.user.setRole.call({
         role: player.role === "admin" ? "user" : "admin",
+        userId: player.id,
       }),
-    onError: (e: Error) => toast.error(e.message),
-    onSuccess: () => {
+    onError: (e: Error) => {
+      toast.error(e.message);
+    },
+    onSuccess: async () => {
       toast.success("Zmieniono rolę");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.user.list.queryKey(),
       });
     },
   });
   const updateName = useMutation({
     mutationFn: async () =>
-      await orpc.user.updateUserName.call({
-        userId: player.id,
+      orpc.user.updateUserName.call({
         name: newName,
+        userId: player.id,
       }),
-    onError: (e: Error) => toast.error(e.message),
-    onSuccess: () => {
+    onError: (e: Error) => {
+      toast.error(e.message);
+    },
+    onSuccess: async () => {
       toast.success("Zmieniono nazwę użytkownika");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.user.list.queryKey(),
       });
       setShowRenameDialog(false);
@@ -93,13 +98,15 @@ function ActionCell({ player }: { player: Player }) {
   });
   const deleteUser = useMutation({
     mutationFn: async () =>
-      await orpc.user.deleteUser.call({
+      orpc.user.deleteUser.call({
         userId: player.id,
       }),
-    onError: (e: Error) => toast.error(e.message),
-    onSuccess: () => {
+    onError: (e: Error) => {
+      toast.error(e.message);
+    },
+    onSuccess: async () => {
       toast.success("Usunięto użytkownika");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.user.list.queryKey(),
       });
       setShowDeleteDialog(false);
@@ -119,25 +126,35 @@ function ActionCell({ player }: { player: Player }) {
           <DropdownMenuLabel>Akcje</DropdownMenuLabel>
           <DropdownMenuItem
             disabled={toggleVerified.isPending}
-            onClick={() => toggleVerified.mutate()}
+            onClick={() => {
+              toggleVerified.mutate();
+            }}
           >
             {player.verified ? "Odbierz weryfikację" : "Zweryfikuj"}
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={changeRole.isPending}
-            onClick={() => changeRole.mutate()}
+            onClick={() => {
+              changeRole.mutate();
+            }}
           >
             {player.role === "admin" ? "Ustaw jako user" : "Ustaw jako admin"}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setShowRenameDialog(true)}>
+          <DropdownMenuItem
+            onClick={() => {
+              setShowRenameDialog(true);
+            }}
+          >
             <Pencil className="mr-2 h-4 w-4" />
             Zmień nazwę
           </DropdownMenuItem>
           {!player.verified && (
             <DropdownMenuItem
               className="text-destructive"
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={() => {
+                setShowDeleteDialog(true);
+              }}
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Usuń konto
@@ -160,21 +177,27 @@ function ActionCell({ player }: { player: Player }) {
             <Input
               className="mt-2"
               id="new-name"
-              onChange={(e) => setNewName(e.target.value)}
+              onChange={(e) => {
+                setNewName(e.target.value);
+              }}
               placeholder="Wprowadź nową nazwę"
               value={newName}
             />
           </div>
           <DialogFooter>
             <Button
-              onClick={() => setShowRenameDialog(false)}
+              onClick={() => {
+                setShowRenameDialog(false);
+              }}
               variant="outline"
             >
               Anuluj
             </Button>
             <Button
               disabled={!newName || newName.length < 2 || updateName.isPending}
-              onClick={() => updateName.mutate()}
+              onClick={() => {
+                updateName.mutate();
+              }}
             >
               Zapisz
             </Button>
@@ -188,8 +211,8 @@ function ActionCell({ player }: { player: Player }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Usuń konto użytkownika</AlertDialogTitle>
             <AlertDialogDescription>
-              Czy na pewno chcesz usunąć konto użytkownika "{player.name}"? Ta
-              operacja jest nieodwracalna.
+              Czy na pewno chcesz usunąć konto użytkownika &quot;{player.name}
+              &quot;? Ta operacja jest nieodwracalna.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -197,7 +220,9 @@ function ActionCell({ player }: { player: Player }) {
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleteUser.isPending}
-              onClick={() => deleteUser.mutate()}
+              onClick={() => {
+                deleteUser.mutate();
+              }}
             >
               Usuń
             </AlertDialogAction>
@@ -206,7 +231,7 @@ function ActionCell({ player }: { player: Player }) {
       </AlertDialog>
     </>
   );
-}
+};
 
 const baseColumns: ColumnDef<Player>[] = [
   {
@@ -220,7 +245,7 @@ const baseColumns: ColumnDef<Player>[] = [
       <Avatar className="size-10">
         <AvatarImage
           alt={row.getValue("name")}
-          src={row.getValue("image") || undefined}
+          src={row.getValue("image") ?? undefined}
         />
         <AvatarFallback>{row.getValue("name")}</AvatarFallback>
       </Avatar>
@@ -229,11 +254,13 @@ const baseColumns: ColumnDef<Player>[] = [
   },
   {
     accessorKey: "name",
+    // oxlint-disable-next-line @typescript-eslint/no-unsafe-return
     cell: ({ row }) => row.getValue("name"),
     header: "Nazwa",
   },
   {
     accessorKey: "role",
+    // oxlint-disable-next-line @typescript-eslint/no-unsafe-return
     cell: ({ row }) => row.getValue("role"),
     header: "Rola",
   },
@@ -249,15 +276,12 @@ const baseColumns: ColumnDef<Player>[] = [
   },
 ];
 
-function actionsColumn(): ColumnDef<Player> {
-  return {
-    cell: ({ row }) => <ActionCell player={row.original} />,
-    header: "Akcje",
-    id: "actions",
-  };
-}
+const actionsColumn = (): ColumnDef<Player> => ({
+  cell: ({ row }) => <ActionCell player={row.original} />,
+  header: "Akcje",
+  id: "actions",
+});
 
-export function buildPlayerColumns(isAdmin: boolean): ColumnDef<Player>[] {
-  return isAdmin ? [...baseColumns, actionsColumn()] : baseColumns;
-}
+export const buildPlayerColumns = (isAdmin: boolean): ColumnDef<Player>[] =>
+  isAdmin ? [...baseColumns, actionsColumn()] : baseColumns;
 export const columns: ColumnDef<Player>[] = buildPlayerColumns(true);

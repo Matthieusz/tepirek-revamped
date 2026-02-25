@@ -18,6 +18,7 @@ export const Route = createFileRoute("/dashboard/player-list")({
   },
 });
 
+// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [searchQuery, setSearchQuery] = useState("");
@@ -100,7 +101,9 @@ function RouteComponent() {
         <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
         <Input
           className="pl-9"
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+          }}
           placeholder="Szukaj gracza po nazwie..."
           type="text"
           value={searchQuery}

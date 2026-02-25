@@ -8,7 +8,7 @@ import { event } from "./schema/event";
 import { squadSchema } from "./schema/squad";
 import { todo } from "./schema/todo";
 
-export const db = drizzle(process.env.DATABASE_URL || "", {
+export const db = drizzle(process.env.DATABASE_URL ?? "", {
   schema: {
     ...auth,
     ...todo,

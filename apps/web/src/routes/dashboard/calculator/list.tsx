@@ -63,7 +63,7 @@ const calculateMaxAttackerLevelWithoutPenalty = (
   // attackerLevel - victimLevel < 16 + max(0, (attackerLevel - 100) / 5)
   // This requires solving iteratively since attackerLevel appears on both sides
   let maxLevel = victimLevel;
-  for (let lvl = victimLevel; lvl <= MAX_LEVEL; lvl++) {
+  for (let lvl = victimLevel; lvl <= MAX_LEVEL; lvl += 1) {
     const minDiff = calculateMinLevelDifference(lvl);
     if (lvl - victimLevel < minDiff) {
       maxLevel = lvl;
@@ -77,10 +77,6 @@ const calculateMaxAttackerLevelWithoutPenalty = (
 /**
  * Calculates group attack penalty check
  * Formula: 0.5 * (max_lvl_attackers + avg_lvl_attackers) - avg_lvl_defenders > 15 + max(0, 0.1 * (max_lvl_attackers + avg_lvl_attackers) - 20)
- *
- * @param attackerLevels - array of attacker levels
- * @param defenderLevels - array of defender levels
- * @returns object with calculation details and penalty result
  */
 const calculateGroupAttackPenalty = (
   attackerLevels: number[],
@@ -154,6 +150,7 @@ export const Route = createFileRoute("/dashboard/calculator/list")({
   },
 });
 
+// oxlint-disable-next-line func-style
 function RouteComponent() {
   const [mode, setMode] = useState<"single" | "group">("single");
 
@@ -253,7 +250,9 @@ function RouteComponent() {
       <div className="flex gap-2 rounded-lg bg-muted p-1">
         <Button
           className="flex-1"
-          onClick={() => setMode("single")}
+          onClick={() => {
+            setMode("single");
+          }}
           size="sm"
           variant={mode === "single" ? "default" : "ghost"}
         >
@@ -262,7 +261,9 @@ function RouteComponent() {
         </Button>
         <Button
           className="flex-1"
-          onClick={() => setMode("group")}
+          onClick={() => {
+            setMode("group");
+          }}
           size="sm"
           variant={mode === "group" ? "default" : "ghost"}
         >
@@ -289,10 +290,11 @@ function RouteComponent() {
               <CardContent>
                 <form
                   className="mt-2 grid gap-4"
-                  onSubmit={(e) => {
+                  // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+                  onSubmit={async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    form.handleSubmit();
+                    await form.handleSubmit();
                   }}
                 >
                   <form.Field
@@ -318,28 +320,24 @@ function RouteComponent() {
                         </Label>
                         <Input
                           aria-describedby="attackerLevel-error"
-                          aria-invalid={
-                            field.state.meta.errors &&
-                            field.state.meta.errors.length > 0
-                          }
+                          aria-invalid={field.state.meta.errors.length > 0}
                           id="attackerLevel"
                           max={MAX_LEVEL}
                           min={MIN_LEVEL}
-                          onChange={(e) =>
-                            field.handleChange(Number(e.target.value))
-                          }
+                          onChange={(e) => {
+                            field.handleChange(Number(e.target.value));
+                          }}
                           type="number"
                           value={field.state.value}
                         />
-                        {field.state.meta.errors &&
-                          field.state.meta.errors.length > 0 && (
-                            <div
-                              className="text-destructive text-sm"
-                              id="attackerLevel-error"
-                            >
-                              {field.state.meta.errors[0]}
-                            </div>
-                          )}
+                        {field.state.meta.errors.length > 0 && (
+                          <div
+                            className="text-destructive text-sm"
+                            id="attackerLevel-error"
+                          >
+                            {field.state.meta.errors[0]}
+                          </div>
+                        )}
                       </div>
                     )}
                   </form.Field>
@@ -366,28 +364,24 @@ function RouteComponent() {
                         </Label>
                         <Input
                           aria-describedby="victimLevel-error"
-                          aria-invalid={
-                            field.state.meta.errors &&
-                            field.state.meta.errors.length > 0
-                          }
+                          aria-invalid={field.state.meta.errors.length > 0}
                           id="victimLevel"
                           max={MAX_LEVEL}
                           min={MIN_LEVEL}
-                          onChange={(e) =>
-                            field.handleChange(Number(e.target.value))
-                          }
+                          onChange={(e) => {
+                            field.handleChange(Number(e.target.value));
+                          }}
                           type="number"
                           value={field.state.value}
                         />
-                        {field.state.meta.errors &&
-                          field.state.meta.errors.length > 0 && (
-                            <div
-                              className="text-destructive text-sm"
-                              id="victimLevel-error"
-                            >
-                              {field.state.meta.errors[0]}
-                            </div>
-                          )}
+                        {field.state.meta.errors.length > 0 && (
+                          <div
+                            className="text-destructive text-sm"
+                            id="victimLevel-error"
+                          >
+                            {field.state.meta.errors[0]}
+                          </div>
+                        )}
                       </div>
                     )}
                   </form.Field>
@@ -501,10 +495,11 @@ function RouteComponent() {
               <CardContent>
                 <form
                   className="mt-2 grid gap-4"
-                  onSubmit={(e) => {
+                  // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+                  onSubmit={async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    groupForm.handleSubmit();
+                    await groupForm.handleSubmit();
                   }}
                 >
                   <groupForm.Field
@@ -534,25 +529,23 @@ function RouteComponent() {
                         </Label>
                         <Input
                           aria-describedby="attackerLevels-error"
-                          aria-invalid={
-                            field.state.meta.errors &&
-                            field.state.meta.errors.length > 0
-                          }
+                          aria-invalid={field.state.meta.errors.length > 0}
                           id="attackerLevels"
-                          onChange={(e) => field.handleChange(e.target.value)}
+                          onChange={(e) => {
+                            field.handleChange(e.target.value);
+                          }}
                           placeholder="np. 200, 180, 160"
                           type="text"
                           value={field.state.value}
                         />
-                        {field.state.meta.errors &&
-                          field.state.meta.errors.length > 0 && (
-                            <div
-                              className="text-destructive text-sm"
-                              id="attackerLevels-error"
-                            >
-                              {field.state.meta.errors[0]}
-                            </div>
-                          )}
+                        {field.state.meta.errors.length > 0 && (
+                          <div
+                            className="text-destructive text-sm"
+                            id="attackerLevels-error"
+                          >
+                            {field.state.meta.errors[0]}
+                          </div>
+                        )}
                       </div>
                     )}
                   </groupForm.Field>
@@ -583,25 +576,23 @@ function RouteComponent() {
                         </Label>
                         <Input
                           aria-describedby="defenderLevels-error"
-                          aria-invalid={
-                            field.state.meta.errors &&
-                            field.state.meta.errors.length > 0
-                          }
+                          aria-invalid={field.state.meta.errors.length > 0}
                           id="defenderLevels"
-                          onChange={(e) => field.handleChange(e.target.value)}
+                          onChange={(e) => {
+                            field.handleChange(e.target.value);
+                          }}
                           placeholder="np. 150, 140"
                           type="text"
                           value={field.state.value}
                         />
-                        {field.state.meta.errors &&
-                          field.state.meta.errors.length > 0 && (
-                            <div
-                              className="text-destructive text-sm"
-                              id="defenderLevels-error"
-                            >
-                              {field.state.meta.errors[0]}
-                            </div>
-                          )}
+                        {field.state.meta.errors.length > 0 && (
+                          <div
+                            className="text-destructive text-sm"
+                            id="defenderLevels-error"
+                          >
+                            {field.state.meta.errors[0]}
+                          </div>
+                        )}
                       </div>
                     )}
                   </groupForm.Field>

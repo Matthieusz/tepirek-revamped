@@ -1,10 +1,9 @@
+import { protectedProcedure } from "@tepirek-revamped/api";
 import { db } from "@tepirek-revamped/db";
 import { auctionSignups } from "@tepirek-revamped/db/schema/auction";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { and, count, countDistinct, eq } from "drizzle-orm";
-import z from "zod";
-
-import { protectedProcedure } from "../index";
+import { z } from "zod";
 
 export const auctionRouter = {
   getSignups: protectedProcedure
@@ -17,14 +16,14 @@ export const auctionRouter = {
     .handler(async ({ input }) => {
       const rows = await db
         .select({
-          id: auctionSignups.id,
-          userId: auctionSignups.userId,
-          level: auctionSignups.level,
-          round: auctionSignups.round,
           column: auctionSignups.column,
           createdAt: auctionSignups.createdAt,
-          userName: user.name,
+          id: auctionSignups.id,
+          level: auctionSignups.level,
+          round: auctionSignups.round,
+          userId: auctionSignups.userId,
           userImage: user.image,
+          userName: user.name,
         })
         .from(auctionSignups)
         .leftJoin(user, eq(auctionSignups.userId, user.id))
@@ -77,7 +76,7 @@ export const auctionRouter = {
         throw new Error("Signup not found");
       }
 
-      if (signup[0].userId !== context.session.user.id) {
+      if (signup[0]?.userId !== context.session.user.id) {
         throw new Error("Not authorized to remove this signup");
       }
 
@@ -88,11 +87,11 @@ export const auctionRouter = {
   toggleSignup: protectedProcedure
     .input(
       z.object({
-        profession: z.string(),
-        type: z.enum(["main", "support"]),
-        level: z.number(),
-        round: z.number(),
         column: z.number(),
+        level: z.number(),
+        profession: z.string(),
+        round: z.number(),
+        type: z.enum(["main", "support"]),
       })
     )
     .handler(async ({ input, context }) => {
@@ -114,11 +113,10 @@ export const auctionRouter = {
         .limit(1);
 
       if (existingCell.length > 0) {
+        const [cell] = existingCell;
         // If it's your signup, toggle off (unsign)
-        if (existingCell[0].userId === userId) {
-          await db
-            .delete(auctionSignups)
-            .where(eq(auctionSignups.id, existingCell[0].id));
+        if (cell?.userId === userId) {
+          await db.delete(auctionSignups).where(eq(auctionSignups.id, cell.id));
           return { action: "removed" as const };
         }
 
@@ -127,12 +125,12 @@ export const auctionRouter = {
       }
 
       await db.insert(auctionSignups).values({
+        column: input.column,
+        level: input.level,
         profession: input.profession,
+        round: input.round,
         type: input.type,
         userId,
-        level: input.level,
-        round: input.round,
-        column: input.column,
       });
 
       return { action: "added" as const };

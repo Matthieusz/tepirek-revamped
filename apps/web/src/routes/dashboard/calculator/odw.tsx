@@ -29,18 +29,26 @@ const MAX_LEVEL = 300;
 
 /** Rarity multipliers applied to base value */
 const rarityMultipliers: Record<Rarity, number> = {
-  zwykły: 1, // No bonus
-  unikatowy: 1.2, // +20%
-  heroiczny: 1.5, // +50%
-  legendarny: 3, // +200%
+  // +50%
+  heroiczny: 1.5,
+  // +200%
+  legendarny: 3,
+  // +20%
+  unikatowy: 1.2,
+  // No bonus
+  zwykły: 1,
 };
 
 /** Cap threshold for base value (i) per rarity */
 const rarityCaps: Record<Rarity, { threshold: number; maxCost: number }> = {
-  zwykły: { maxCost: 1500, threshold: 20 }, // i > 20
-  unikatowy: { maxCost: 1800, threshold: 20 }, // i >= 20
-  heroiczny: { maxCost: 3375, threshold: 30 }, // i >= 30
-  legendarny: { maxCost: 6750, threshold: 30 }, // i >= 30
+  // i >= 30
+  heroiczny: { maxCost: 3375, threshold: 30 },
+  // i >= 30
+  legendarny: { maxCost: 6750, threshold: 30 },
+  // i >= 20
+  unikatowy: { maxCost: 1800, threshold: 20 },
+  // i > 20
+  zwykły: { maxCost: 1500, threshold: 20 },
 };
 
 const rarityColors: Record<Rarity, string> = {
@@ -73,7 +81,8 @@ const calculateUnbindCost = (
   level: number,
   rarity: Rarity
 ): { baseValue: number; totalCost: number; isCapped: boolean } => {
-  const baseValue = 10 + 0.1 * level; // i = 10 + 0.1 * a
+  // i = 10 + 0.1 * a
+  const baseValue = 10 + 0.1 * level;
   const cap = rarityCaps[rarity];
   const multiplier = rarityMultipliers[rarity];
 
@@ -110,6 +119,7 @@ export const Route = createFileRoute("/dashboard/calculator/odw")({
   },
 });
 
+// oxlint-disable-next-line func-style
 function RouteComponent() {
   const [result, setResult] = useState<{
     itemLevel: number;
@@ -170,10 +180,11 @@ function RouteComponent() {
           <CardContent>
             <form
               className="grid gap-4"
-              onSubmit={(e) => {
+              // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+              onSubmit={async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                form.handleSubmit();
+                await form.handleSubmit();
               }}
             >
               <form.Field
@@ -192,28 +203,24 @@ function RouteComponent() {
                     <Label htmlFor="itemLevel">Poziom przedmiotu</Label>
                     <Input
                       aria-describedby="itemLevel-error"
-                      aria-invalid={
-                        field.state.meta.errors &&
-                        field.state.meta.errors.length > 0
-                      }
+                      aria-invalid={field.state.meta.errors.length > 0}
                       id="itemLevel"
                       max={MAX_LEVEL}
                       min={MIN_LEVEL}
-                      onChange={(e) =>
-                        field.handleChange(Number(e.target.value))
-                      }
+                      onChange={(e) => {
+                        field.handleChange(Number(e.target.value));
+                      }}
                       type="number"
                       value={field.state.value}
                     />
-                    {field.state.meta.errors &&
-                      field.state.meta.errors.length > 0 && (
-                        <div
-                          className="text-destructive text-sm"
-                          id="itemLevel-error"
-                        >
-                          {field.state.meta.errors[0]}
-                        </div>
-                      )}
+                    {field.state.meta.errors.length > 0 && (
+                      <div
+                        className="text-destructive text-sm"
+                        id="itemLevel-error"
+                      >
+                        {field.state.meta.errors[0]}
+                      </div>
+                    )}
                   </div>
                 )}
               </form.Field>
@@ -232,13 +239,17 @@ function RouteComponent() {
                   <div className="space-y-2">
                     <Label htmlFor="itemRarity">Rzadkość przedmiotu</Label>
                     <Select
-                      onValueChange={(val) => field.handleChange(val as Rarity)}
+                      onValueChange={(val) => {
+                        // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+                        field.handleChange(val as Rarity);
+                      }}
                       value={field.state.value}
                     >
                       <SelectTrigger id="itemRarity">
                         <SelectValue placeholder="Wybierz rzadkość" />
                       </SelectTrigger>
                       <SelectContent>
+                        {/* oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion */}
                         {(Object.keys(rarityMultipliers) as Rarity[]).map(
                           (rarity) => (
                             <SelectItem key={rarity} value={rarity}>
@@ -253,12 +264,11 @@ function RouteComponent() {
                         )}
                       </SelectContent>
                     </Select>
-                    {field.state.meta.errors &&
-                      field.state.meta.errors.length > 0 && (
-                        <div className="text-destructive text-sm">
-                          {field.state.meta.errors[0]}
-                        </div>
-                      )}
+                    {field.state.meta.errors.length > 0 && (
+                      <div className="text-destructive text-sm">
+                        {field.state.meta.errors[0]}
+                      </div>
+                    )}
                   </div>
                 )}
               </form.Field>

@@ -45,6 +45,7 @@ type EventAction = {
   active?: boolean;
 } | null;
 
+// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [eventAction, setEventAction] = useState<EventAction>(null);
@@ -63,9 +64,9 @@ function RouteComponent() {
       const message = error instanceof Error ? error.message : "Wystąpił błąd";
       toast.error(message);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Event został usunięty");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.event.getAll.queryKey(),
       });
       setEventAction(null);
@@ -74,15 +75,15 @@ function RouteComponent() {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, active }: { id: number; active: boolean }) => {
-      await orpc.event.toggleActive.call({ id, active });
+      await orpc.event.toggleActive.call({ active, id });
     },
     onError: (error) => {
       const message = error instanceof Error ? error.message : "Wystąpił błąd";
       toast.error(message);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Status eventu został zmieniony");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.event.getAll.queryKey(),
       });
       setEventAction(null);
@@ -190,13 +191,13 @@ function RouteComponent() {
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
                               <Button
-                                onClick={() =>
+                                onClick={() => {
                                   setEventAction({
                                     id: event.id,
                                     name: event.name,
                                     type: "delete",
-                                  })
-                                }
+                                  });
+                                }}
                                 size="sm"
                                 variant="ghost"
                               >
@@ -216,7 +217,11 @@ function RouteComponent() {
       </Card>
 
       <AlertDialog
-        onOpenChange={(open) => !open && setEventAction(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEventAction(null);
+          }
+        }}
         open={eventAction !== null}
       >
         <AlertDialogContent>
@@ -224,12 +229,12 @@ function RouteComponent() {
             <AlertDialogTitle>
               {eventAction?.type === "delete"
                 ? "Czy na pewno chcesz usunąć event?"
-                : `Czy na pewno chcesz ${eventAction?.active ? "dezaktywować" : "aktywować"} event?`}
+                : `Czy na pewno chcesz ${eventAction?.active === true ? "dezaktywować" : "aktywować"} event?`}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {eventAction?.type === "delete"
                 ? `Event "${eventAction?.name}" zostanie trwale usunięty. Tej operacji nie można cofnąć.`
-                : `Event "${eventAction?.name}" zostanie ${eventAction?.active ? "dezaktywowany" : "aktywowany"}.`}
+                : `Event "${eventAction?.name}" zostanie ${eventAction?.active === true ? "dezaktywowany" : "aktywowany"}.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -246,7 +251,7 @@ function RouteComponent() {
                   deleteMutation.mutate(eventAction.id);
                 } else {
                   toggleMutation.mutate({
-                    active: !eventAction.active,
+                    active: eventAction.active !== true,
                     id: eventAction.id,
                   });
                 }
@@ -264,18 +269,18 @@ function RouteComponent() {
   );
 }
 
-function ActionButtonLabel({
+const ActionButtonLabel = ({
   actionPending,
   eventAction,
 }: {
   actionPending: boolean;
   eventAction: EventAction;
-}) {
+}) => {
   if (actionPending) {
     return "Przetwarzanie...";
   }
   if (eventAction?.type === "delete") {
     return "Usuń";
   }
-  return eventAction?.active ? "Dezaktywuj" : "Aktywuj";
-}
+  return eventAction?.active === true ? "Dezaktywuj" : "Aktywuj";
+};

@@ -9,6 +9,7 @@ export const Route = createFileRoute("/dashboard/settings")({
   },
 });
 
+// oxlint-disable-next-line func-style
 function RouteComponent() {
   return <ComingSoon feature="Ustawienia" />;
 }

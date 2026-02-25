@@ -13,8 +13,8 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -45,10 +45,14 @@ import { getEventIcon } from "@/lib/constants";
 import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
+/* oxlint-disable promise/prefer-await-to-then, promise/valid-params -- Zod .catch() is not Promise.catch() */
 const searchSchema = z.object({
-  eventId: z.string().optional().catch(),
-  heroId: z.string().optional().catch(),
+  // oxlint-disable-next-line unicorn/no-useless-undefined
+  eventId: z.string().optional().catch(undefined),
+  // oxlint-disable-next-line unicorn/no-useless-undefined
+  heroId: z.string().optional().catch(undefined),
 });
+/* oxlint-enable promise/prefer-await-to-then, promise/valid-params */
 
 export const Route = createFileRoute("/dashboard/events/history")({
   component: RouteComponent,
@@ -66,6 +70,16 @@ type BetToDelete = {
 const POINTS_PER_HERO = 20;
 const ITEMS_PER_PAGE = 10;
 
+const formatDate = (date: Date) =>
+  new Date(date).toLocaleDateString("pl-PL", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+// oxlint-disable-next-line func-style, complexity
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const { eventId, heroId } = Route.useSearch();
@@ -96,16 +110,33 @@ function RouteComponent() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    getNextPageParam: (lastPage) =>
+    getNextPageParam: (lastPage: {
+      items: {
+        id: number;
+        heroName: string;
+        heroLevel: number;
+        heroImage: string | null;
+        memberCount: number;
+        members: {
+          userId: string;
+          userName: string;
+          userImage: string | null;
+        }[];
+        createdByName: string;
+        createdByImage: string | null;
+        createdAt: Date;
+      }[];
+      pagination: { hasMore: boolean; page: number; totalItems: number };
+    }) =>
       lastPage.pagination.hasMore ? lastPage.pagination.page + 1 : undefined,
     initialPageParam: 1,
-    queryFn: async ({ pageParam = 1 }) => {
+    queryFn: async ({ pageParam }: { pageParam: number }) => {
       const result = await orpc.bet.getAllPaginated.call({
-        page: pageParam,
-        limit: ITEMS_PER_PAGE,
         eventId:
           selectedEventId === "all" ? undefined : Number(selectedEventId),
         heroId: selectedHeroId === "all" ? undefined : Number(selectedHeroId),
+        limit: ITEMS_PER_PAGE,
+        page: pageParam,
       });
       return result;
     },
@@ -118,7 +149,7 @@ function RouteComponent() {
   });
 
   // Heroes are already filtered by event from the API
-  const sortedHeroes = [...heroes].toSorted((a, b) => a.level - b.level);
+  const sortedHeroes = (heroes ?? []).toSorted((a, b) => a.level - b.level);
 
   // Flatten pages into single array of bets
   const allBets = betsData?.pages.flatMap((page) => page.items) ?? [];
@@ -129,6 +160,7 @@ function RouteComponent() {
   // Load more when scrolled to bottom
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
+      // oxlint-disable-next-line @typescript-eslint/no-floating-promises
       fetchNextPage();
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
@@ -141,24 +173,15 @@ function RouteComponent() {
       const message = error instanceof Error ? error.message : "Wystąpił błąd";
       toast.error(message);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Obstawienie zostało usunięte");
       // Invalidate the paginated bets query
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["bets", "paginated"],
       });
       setBetToDelete(null);
     },
   });
-
-  const formatDate = (date: Date) =>
-    new Date(date).toLocaleDateString("pl-PL", {
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
 
   const calculatePointsPerMember = (memberCount: number) =>
     Math.floor((POINTS_PER_HERO / memberCount) * 100) / 100;
@@ -199,12 +222,12 @@ function RouteComponent() {
                   </Badge>
                   {isAdminUser && (
                     <Button
-                      onClick={() =>
+                      onClick={() => {
                         setBetToDelete({
                           heroName: bet.heroName,
                           id: bet.id,
-                        })
-                      }
+                        });
+                      }}
                       size="icon"
                       type="button"
                       variant="ghost"
@@ -218,7 +241,9 @@ function RouteComponent() {
               {/* Main content: Hero Image and Players */}
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 {/* Hero Image */}
-                {bet.heroImage ? (
+                {bet.heroImage !== undefined &&
+                bet.heroImage !== null &&
+                bet.heroImage !== "" ? (
                   <img
                     alt={bet.heroName}
                     className="mx-auto h-20 w-16 shrink-0 rounded-lg object-contain sm:mx-0 sm:h-16 sm:w-14"
@@ -242,7 +267,7 @@ function RouteComponent() {
                       <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
                         <AvatarImage
                           alt={member.userName}
-                          src={member.userImage || undefined}
+                          src={member.userImage ?? undefined}
                         />
                         <AvatarFallback className="text-xs">
                           <User className="h-3 w-3" />
@@ -264,7 +289,7 @@ function RouteComponent() {
                     <Avatar className="h-5 w-5">
                       <AvatarImage
                         alt={bet.createdByName}
-                        src={bet.createdByImage || undefined}
+                        src={bet.createdByImage ?? undefined}
                       />
                       <AvatarFallback className="text-[10px]">
                         <User className="h-2.5 w-2.5" />
@@ -313,7 +338,8 @@ function RouteComponent() {
         <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
           {/* Event Select */}
           <Select
-            onValueChange={(value) =>
+            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+            onValueChange={async (value) =>
               navigate({
                 search: (prev) => ({
                   ...prev,
@@ -329,7 +355,7 @@ function RouteComponent() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Wszystkie eventy</SelectItem>
-              {[...(events || [])]
+              {[...(events ?? [])]
                 .toSorted(
                   (a, b) =>
                     new Date(b.endTime).getTime() -
@@ -342,7 +368,7 @@ function RouteComponent() {
                       <div className="flex items-center gap-2">
                         <IconComponent
                           className="h-4 w-4"
-                          style={{ color: event.color || undefined }}
+                          style={{ color: event.color ?? undefined }}
                         />
                         <span>{event.name}</span>
                       </div>
@@ -355,7 +381,8 @@ function RouteComponent() {
           {/* Hero Select */}
           <Select
             disabled={selectedEventId === "all"}
-            onValueChange={(value) =>
+            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+            onValueChange={async (value) =>
               navigate({
                 search: (prev) => ({
                   ...prev,
@@ -398,7 +425,11 @@ function RouteComponent() {
       {betsContent}
 
       <AlertDialog
-        onOpenChange={(open) => !open && setBetToDelete(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setBetToDelete(null);
+          }
+        }}
         open={betToDelete !== null}
       >
         <AlertDialogContent>
@@ -407,9 +438,9 @@ function RouteComponent() {
               Czy na pewno chcesz usunąć obstawienie?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Obstawienie na herosa "{betToDelete?.heroName}" zostanie trwale
-              usunięte wraz ze wszystkimi powiązanymi statystykami. Tej operacji
-              nie można cofnąć.
+              Obstawienie na herosa &quot;{betToDelete?.heroName}&quot; zostanie
+              trwale usunięte wraz ze wszystkimi powiązanymi statystykami. Tej
+              operacji nie można cofnąć.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -418,9 +449,11 @@ function RouteComponent() {
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={deleteMutation.isPending}
-              onClick={() =>
-                betToDelete && deleteMutation.mutate(betToDelete.id)
-              }
+              onClick={() => {
+                if (betToDelete) {
+                  deleteMutation.mutate(betToDelete.id);
+                }
+              }}
             >
               {deleteMutation.isPending ? "Usuwanie..." : "Usuń"}
             </AlertDialogAction>

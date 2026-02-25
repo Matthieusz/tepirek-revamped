@@ -34,7 +34,7 @@ interface AccountsListProps {
   setSearchQuery: (query: string) => void;
 }
 
-export function AccountsList({
+export const AccountsList = ({
   accounts,
   isLoading,
   selectedId,
@@ -42,7 +42,7 @@ export function AccountsList({
   searchQuery,
   debouncedSearchQuery,
   setSearchQuery,
-}: AccountsListProps) {
+}: AccountsListProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<GameAccount | null>(
     null
@@ -61,16 +61,18 @@ export function AccountsList({
   );
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => orpc.squad.deleteGameAccount.call({ id }),
+    mutationFn: async (id: number) => orpc.squad.deleteGameAccount.call({ id }),
     onError: (error) => {
-      toast.error(error.message || "Nie udało się usunąć konta");
+      toast.error(
+        error.message === "" ? "Nie udało się usunąć konta" : error.message
+      );
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Konto usunięte");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.squad.getMyGameAccounts.queryKey(),
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.squad.getMyCharacters.queryKey(),
       });
       if (accountToDelete?.id === selectedId) {
@@ -114,7 +116,9 @@ export function AccountsList({
           <Search className="-translate-y-1/2 absolute top-1/2 left-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             className="h-9 pl-8"
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+            }}
             placeholder="Szukaj konta..."
             value={searchQuery}
           />
@@ -130,7 +134,9 @@ export function AccountsList({
                   selectedId === account.id && "border-primary bg-accent"
                 )}
                 key={account.id}
-                onClick={() => onSelect(account.id)}
+                onClick={() => {
+                  onSelect(account.id);
+                }}
                 type="button"
               >
                 <div className="min-w-0 flex-1">
@@ -142,12 +148,12 @@ export function AccountsList({
                       </Badge>
                     )}
                   </div>
-                  {account.accountLevel && (
+                  {account.accountLevel !== null && (
                     <p className="text-muted-foreground text-xs">
                       Poziom konta: {account.accountLevel}
                     </p>
                   )}
-                  {!account.isOwner && account.ownerName && (
+                  {!account.isOwner && account.ownerName !== null && (
                     <p className="text-muted-foreground text-xs">
                       Właściciel: {account.ownerName}
                     </p>
@@ -190,7 +196,9 @@ export function AccountsList({
               <Search className="h-8 w-8 opacity-50" />
               <p className="text-sm">Nie znaleziono kont</p>
               <Button
-                onClick={() => setSearchQuery("")}
+                onClick={() => {
+                  setSearchQuery("");
+                }}
                 size="sm"
                 variant="link"
               >
@@ -206,9 +214,9 @@ export function AccountsList({
           <AlertDialogHeader>
             <AlertDialogTitle>Usuń konto</AlertDialogTitle>
             <AlertDialogDescription>
-              Czy na pewno chcesz usunąć konto "{accountToDelete?.name}"? Usunie
-              to również wszystkie powiązane postacie. Ta operacja jest
-              nieodwracalna.
+              Czy na pewno chcesz usunąć konto &quot;{accountToDelete?.name}
+              &quot;? Usunie to również wszystkie powiązane postacie. Ta
+              operacja jest nieodwracalna.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -241,4 +249,4 @@ export function AccountsList({
       )}
     </>
   );
-}
+};

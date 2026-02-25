@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import z from "zod";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,10 +17,10 @@ import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
-export function LoginForm({
+export const LoginForm = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div">) => {
   const router = useRouter();
   const navigate = useNavigate({
     from: "/",
@@ -44,7 +44,7 @@ export function LoginForm({
           onSuccess: async () => {
             toast.success("Zalogowano pomyślnie");
             await router.invalidate();
-            navigate({
+            await navigate({
               to: "/dashboard",
             });
           },
@@ -70,10 +70,11 @@ export function LoginForm({
         </CardHeader>
         <CardContent>
           <form
-            onSubmit={(e) => {
+            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+            onSubmit={async (e) => {
               e.preventDefault();
               e.stopPropagation();
-              form.handleSubmit();
+              await form.handleSubmit();
             }}
           >
             <div className="flex flex-col gap-6">
@@ -86,7 +87,9 @@ export function LoginForm({
                         id={field.name}
                         name={field.name}
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
+                        onChange={(e) => {
+                          field.handleChange(e.target.value);
+                        }}
                         placeholder="m@example.com"
                         required
                         type="email"
@@ -113,7 +116,9 @@ export function LoginForm({
                         id={field.name}
                         name={field.name}
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
+                        onChange={(e) => {
+                          field.handleChange(e.target.value);
+                        }}
                         required
                         type="password"
                         value={field.state.value}
@@ -144,13 +149,16 @@ export function LoginForm({
                 </form.Subscribe>
                 <Button
                   className="w-full"
+                  // oxlint-disable-next-line @typescript-eslint/no-misused-promises
                   onClick={async () => {
                     await authClient.signIn.social({
                       callbackURL: `${window.location.origin}/waiting-room`,
                       fetchOptions: {
                         onError: (error) => {
                           toast.error(
-                            error.error.message || error.error.statusText
+                            error.error.message === ""
+                              ? error.error.statusText
+                              : error.error.message
                           );
                         },
                       },
@@ -183,4 +191,4 @@ export function LoginForm({
       </Button>
     </div>
   );
-}
+};

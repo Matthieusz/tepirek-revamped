@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import z from "zod";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,10 +17,10 @@ import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
-export function SignUpForm({
+export const SignUpForm = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div">) => {
   const navigate = useNavigate({
     from: "/",
   });
@@ -44,8 +44,8 @@ export function SignUpForm({
           onError: (error) => {
             toast.error(error.error.message || error.error.statusText);
           },
-          onSuccess: () => {
-            navigate({
+          onSuccess: async () => {
+            await navigate({
               to: "/dashboard",
             });
             toast.success("Zarejestrowano pomyślnie");
@@ -73,10 +73,11 @@ export function SignUpForm({
         </CardHeader>
         <CardContent>
           <form
-            onSubmit={(e) => {
+            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+            onSubmit={async (e) => {
               e.preventDefault();
               e.stopPropagation();
-              form.handleSubmit();
+              await form.handleSubmit();
             }}
           >
             <div className="flex flex-col gap-6">
@@ -89,7 +90,9 @@ export function SignUpForm({
                         id={field.name}
                         name={field.name}
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
+                        onChange={(e) => {
+                          field.handleChange(e.target.value);
+                        }}
                         placeholder="Marco Artenius"
                         required
                         type="text"
@@ -116,7 +119,9 @@ export function SignUpForm({
                         id={field.name}
                         name={field.name}
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
+                        onChange={(e) => {
+                          field.handleChange(e.target.value);
+                        }}
                         placeholder="m@example.com"
                         required
                         type="email"
@@ -143,7 +148,9 @@ export function SignUpForm({
                         id={field.name}
                         name={field.name}
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
+                        onChange={(e) => {
+                          field.handleChange(e.target.value);
+                        }}
                         required
                         type="password"
                         value={field.state.value}
@@ -174,13 +181,16 @@ export function SignUpForm({
                 </form.Subscribe>
                 <Button
                   className="w-full"
+                  // oxlint-disable-next-line @typescript-eslint/no-misused-promises
                   onClick={async () => {
                     await authClient.signIn.social({
                       callbackURL: `${window.location.origin}/waiting-room`,
                       fetchOptions: {
                         onError: (error) => {
                           toast.error(
-                            error.error.message || error.error.statusText
+                            error.error.message === ""
+                              ? error.error.statusText
+                              : error.error.message
                           );
                         },
                       },
@@ -213,4 +223,4 @@ export function SignUpForm({
       </Button>
     </div>
   );
-}
+};

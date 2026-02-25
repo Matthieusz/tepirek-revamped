@@ -6,7 +6,7 @@
  * Parse and validate level input
  * Returns undefined for invalid/empty values, parsed number for valid input
  */
-export function parseLevel(value: string): number | undefined {
+export const parseLevel = (value: string): number | undefined => {
   if (!value.trim()) {
     return;
   }
@@ -15,7 +15,7 @@ export function parseLevel(value: string): number | undefined {
     return;
   }
   return parsed;
-}
+};
 
 /**
  * Get profession abbreviation for display

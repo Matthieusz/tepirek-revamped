@@ -18,15 +18,15 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { parseMargonemProfile } from '@/lib/margonem-parser';
-import type { ParsedAccount } from '@/lib/margonem-parser';
+import { parseMargonemProfile } from "@/lib/margonem-parser";
+import type { ParsedAccount } from "@/lib/margonem-parser";
 import { orpc } from "@/utils/orpc";
 
 interface AddGameAccountModalProps {
   trigger: React.ReactNode;
 }
 
-export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
+export const AddGameAccountModal = ({ trigger }: AddGameAccountModalProps) => {
   const [open, setOpen] = useState(false);
   const [parsedData, setParsedData] = useState<ParsedAccount | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -38,7 +38,7 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
       name: "",
     },
     onSubmit: async ({ value }) => {
-      if (!parsedData) {
+      if (parsedData === null) {
         toast.error("Najpierw sparsuj dane z HTML");
         return;
       }
@@ -52,10 +52,10 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
         });
 
         toast.success("Konto gry dodane pomyślnie");
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.squad.getMyGameAccounts.queryKey(),
         });
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.squad.getMyCharacters.queryKey(),
         });
         setOpen(false);
@@ -73,7 +73,7 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
 
   const handleParseHtml = () => {
     const html = form.getFieldValue("html");
-    if (!html || html.trim().length === 0) {
+    if (html === "" || html.trim().length === 0) {
       setParseError("Wklej kod HTML profilu");
       return;
     }
@@ -111,11 +111,12 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
   return (
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
+      <ResponsiveDialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-175">
         <form
-          onSubmit={(e) => {
+          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={async (e) => {
             e.preventDefault();
-            form.handleSubmit();
+            await form.handleSubmit();
           }}
         >
           <ResponsiveDialogHeader>
@@ -123,8 +124,8 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
             <ResponsiveDialogDescription>
               Wklej kod HTML strony profilu z margonem.pl, aby zaimportować
               postacie. Otwórz swój profil na margonem.pl, kliknij prawym
-              przyciskiem myszy, wybierz "Zbadaj" lub "Wyświetl źródło strony" i
-              skopiuj cały HTML.
+              przyciskiem myszy, wybierz &quot;Zbadaj&quot; lub &quot;Wyświetl
+              źródło strony&quot; i skopiuj cały HTML.
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
 
@@ -134,14 +135,16 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
                 <div className="grid gap-2">
                   <Label htmlFor="html">Kod HTML profilu</Label>
                   <Textarea
-                    className="min-h-[150px] font-mono text-xs"
+                    className="min-h-37.5 font-mono text-xs"
                     id="html"
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={(e) => {
+                      field.handleChange(e.target.value);
+                    }}
                     placeholder="Wklej tutaj kod HTML ze strony profilu margonem.pl..."
                     value={field.state.value}
                   />
-                  {parseError && (
+                  {parseError !== null && (
                     <p className="text-destructive text-sm">{parseError}</p>
                   )}
                 </div>
@@ -157,13 +160,13 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
               Parsuj HTML
             </Button>
 
-            {parsedData && (
+            {parsedData !== null && (
               <>
                 <div className="rounded-lg border p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <div>
                       <h4 className="font-semibold">{parsedData.name}</h4>
-                      {parsedData.accountLevel && (
+                      {parsedData.accountLevel !== undefined && (
                         <p className="text-muted-foreground text-sm">
                           Poziom konta: {parsedData.accountLevel}
                         </p>
@@ -176,7 +179,7 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
 
                   <div className="space-y-2">
                     <Label>Znalezione postacie:</Label>
-                    <div className="grid max-h-[200px] gap-2 overflow-y-auto">
+                    <div className="grid max-h-50 gap-2 overflow-y-auto">
                       {parsedData.characters.map((char) => (
                         <CharacterPreviewRow
                           character={char}
@@ -196,7 +199,9 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
                       <Input
                         id="name"
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
+                        onChange={(e) => {
+                          field.handleChange(e.target.value);
+                        }}
                         placeholder="Nazwa konta"
                         value={field.state.value}
                       />
@@ -209,13 +214,15 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
 
           <ResponsiveDialogFooter>
             <Button
-              onClick={() => handleOpenChange(false)}
+              onClick={() => {
+                handleOpenChange(false);
+              }}
               type="button"
               variant="outline"
             >
               Anuluj
             </Button>
-            <Button disabled={!parsedData} type="submit">
+            <Button disabled={parsedData === null} type="submit">
               Dodaj konto
             </Button>
           </ResponsiveDialogFooter>
@@ -223,4 +230,4 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

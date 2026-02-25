@@ -26,7 +26,7 @@ const defaultValues = {
   name: "",
 };
 
-export function AddProfessionModal({ trigger }: AddProfessionModalProps) {
+export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -38,7 +38,7 @@ export function AddProfessionModal({ trigger }: AddProfessionModalProps) {
           name: value.name,
         });
         toast.success("Profesja utworzona");
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.skills.getAllProfessions.queryKey(),
         });
         setOpen(false);
@@ -63,10 +63,11 @@ export function AddProfessionModal({ trigger }: AddProfessionModalProps) {
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-[425px]">
         <form
-          onSubmit={(e) => {
+          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit();
+            await form.handleSubmit();
           }}
         >
           <ResponsiveDialogHeader>
@@ -85,7 +86,9 @@ export function AddProfessionModal({ trigger }: AddProfessionModalProps) {
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="Wpisz nazwę profesji"
                       value={field.state.value}
                     />
@@ -115,4 +118,4 @@ export function AddProfessionModal({ trigger }: AddProfessionModalProps) {
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

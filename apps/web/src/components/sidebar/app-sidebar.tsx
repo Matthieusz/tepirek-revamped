@@ -16,6 +16,8 @@ import { toast } from "sonner";
 
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavOther } from "@/components/sidebar/nav-other";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -25,9 +27,6 @@ import {
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 import type { AuthSession } from "@/lib/auth-guard";
-
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
 
 const data = {
   navMain: [
@@ -147,7 +146,7 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   session: AuthSession;
 };
 
-export function AppSidebar({ session, ...props }: AppSidebarProps) {
+export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
   const navigate = useNavigate();
 
   return (
@@ -213,21 +212,22 @@ export function AppSidebar({ session, ...props }: AppSidebarProps) {
           </div>
           <Button
             className="group-data-[state=collapsed]:size-8"
-            onClick={() =>
-              authClient.signOut({
+            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+            onClick={async () => {
+              await authClient.signOut({
                 fetchOptions: {
                   onError: (error) => {
                     toast.error(error.error.message || error.error.statusText);
                   },
-                  onSuccess: () => {
+                  onSuccess: async () => {
                     toast.success("Wylogowano pomyślnie");
-                    navigate({
+                    await navigate({
                       to: "/",
                     });
                   },
                 },
-              })
-            }
+              });
+            }}
             size="icon"
             variant="destructive"
           >
@@ -238,4 +238,4 @@ export function AppSidebar({ session, ...props }: AppSidebarProps) {
       <SidebarRail />
     </Sidebar>
   );
-}
+};

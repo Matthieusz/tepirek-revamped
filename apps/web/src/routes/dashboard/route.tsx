@@ -36,6 +36,7 @@ export const Route = createFileRoute("/dashboard")({
   },
 });
 
+// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   return (

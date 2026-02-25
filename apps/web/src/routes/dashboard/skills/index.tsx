@@ -17,6 +17,7 @@ export const Route = createFileRoute("/dashboard/skills/")({
   },
 });
 
+// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const { data: ranges, isPending } = useQuery(

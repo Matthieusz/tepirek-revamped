@@ -24,11 +24,11 @@ interface ResponsiveDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-function ResponsiveDialog({
+const ResponsiveDialog = ({
   children,
   open,
   onOpenChange,
-}: ResponsiveDialogProps) {
+}: ResponsiveDialogProps) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
@@ -48,12 +48,12 @@ function ResponsiveDialog({
       {children}
     </Dialog>
   );
-}
+};
 
-function ResponsiveDialogTrigger({
+const ResponsiveDialogTrigger = ({
   children,
   ...props
-}: React.ComponentProps<typeof DialogTrigger>) {
+}: React.ComponentProps<typeof DialogTrigger>) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
@@ -61,13 +61,13 @@ function ResponsiveDialogTrigger({
   }
 
   return <DialogTrigger {...props}>{children}</DialogTrigger>;
-}
+};
 
-function ResponsiveDialogContent({
+const ResponsiveDialogContent = ({
   children,
   className,
   ...props
-}: React.ComponentProps<typeof DialogContent>) {
+}: React.ComponentProps<typeof DialogContent>) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
@@ -83,13 +83,13 @@ function ResponsiveDialogContent({
       {children}
     </DialogContent>
   );
-}
+};
 
-function ResponsiveDialogHeader({
+const ResponsiveDialogHeader = ({
   children,
   className,
   ...props
-}: React.ComponentProps<typeof DialogHeader>) {
+}: React.ComponentProps<typeof DialogHeader>) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
@@ -105,13 +105,13 @@ function ResponsiveDialogHeader({
       {children}
     </DialogHeader>
   );
-}
+};
 
-function ResponsiveDialogFooter({
+const ResponsiveDialogFooter = ({
   children,
   className,
   ...props
-}: React.ComponentProps<typeof DialogFooter>) {
+}: React.ComponentProps<typeof DialogFooter>) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
@@ -127,13 +127,13 @@ function ResponsiveDialogFooter({
       {children}
     </DialogFooter>
   );
-}
+};
 
-function ResponsiveDialogTitle({
+const ResponsiveDialogTitle = ({
   children,
   className,
   ...props
-}: React.ComponentProps<typeof DialogTitle>) {
+}: React.ComponentProps<typeof DialogTitle>) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
@@ -152,13 +152,13 @@ function ResponsiveDialogTitle({
       {children}
     </DialogTitle>
   );
-}
+};
 
-function ResponsiveDialogDescription({
+const ResponsiveDialogDescription = ({
   children,
   className,
   ...props
-}: React.ComponentProps<typeof DialogDescription>) {
+}: React.ComponentProps<typeof DialogDescription>) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
@@ -174,12 +174,12 @@ function ResponsiveDialogDescription({
       {children}
     </DialogDescription>
   );
-}
+};
 
-function ResponsiveDialogClose({
+const ResponsiveDialogClose = ({
   children,
   ...props
-}: React.ComponentProps<typeof DialogClose>) {
+}: React.ComponentProps<typeof DialogClose>) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
@@ -187,7 +187,7 @@ function ResponsiveDialogClose({
   }
 
   return <DialogClose {...props}>{children}</DialogClose>;
-}
+};
 
 export {
   ResponsiveDialog,

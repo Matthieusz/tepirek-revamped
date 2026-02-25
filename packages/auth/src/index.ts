@@ -6,7 +6,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 const ensureEnv = (key: string) => {
   const value = process.env[key];
-  if (!value) {
+  if (value === undefined || value === "") {
     throw new Error(`${key} is required`);
   }
   return value;
@@ -16,20 +16,20 @@ const betterAuthSecret = ensureEnv("BETTER_AUTH_SECRET");
 const betterAuthUrl = ensureEnv("BETTER_AUTH_URL");
 const discordClientId = ensureEnv("DISCORD_CLIENT_ID");
 const discordClientSecret = ensureEnv("DISCORD_CLIENT_SECRET");
-const corsOrigin = process.env.CORS_ORIGIN || "";
+const corsOrigin = process.env.CORS_ORIGIN ?? "";
 const isProduction = process.env.NODE_ENV === "production";
 
 export const auth = betterAuth({
   advanced: isProduction
     ? {
         crossSubDomainCookies: {
-          enabled: true,
           domain: ".informati.dev",
+          enabled: true,
         },
         defaultCookieAttributes: {
-          secure: true,
           httpOnly: true,
           sameSite: "none",
+          secure: true,
         },
       }
     : undefined,
@@ -42,15 +42,15 @@ export const auth = betterAuth({
     enabled: true,
   },
   rateLimit: {
-    window: 60,
-    max: 100,
     customRules: {
-      "/get-session": false,
       "/callback/*": {
-        window: 60,
         max: 20,
+        window: 60,
       },
+      "/get-session": false,
     },
+    max: 100,
+    window: 60,
   },
   secret: betterAuthSecret,
   session: {
@@ -71,14 +71,14 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       role: {
-        type: "string",
         default: "user",
         required: true,
+        type: "string",
       },
       verified: {
-        type: "boolean",
         default: false,
         required: true,
+        type: "boolean",
       },
     },
   },

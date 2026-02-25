@@ -23,7 +23,7 @@ export interface ParsedAccount {
   characters: ParsedCharacter[];
 }
 
-export function parseMargonemProfile(html: string): ParsedAccount {
+export const parseMargonemProfile = (html: string): ParsedAccount => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
 
@@ -40,28 +40,28 @@ export function parseMargonemProfile(html: string): ParsedAccount {
     name: accountName,
     profileUrl,
   };
-}
+};
 
-function extractAccountLevel(doc: Document): number | undefined {
+const extractAccountLevel = (doc: Document): number | undefined => {
   const headerDataElements = doc.querySelectorAll(".profile-header-data");
   for (const el of headerDataElements) {
     const label = el.querySelector(".label")?.textContent?.trim();
     if (label === "Poziom konta:") {
       const value = el.querySelector(".value")?.textContent?.trim();
-      if (value) {
+      if (value !== undefined && value !== "") {
         return Number.parseInt(value.replaceAll(/\s/g, ""), 10);
       }
     }
   }
-  return;
-}
+  return undefined;
+};
 
-function extractProfileUrl(doc: Document): string | undefined {
-  const copyButton = doc.querySelector(".js-url-copy");
-  return copyButton.dataset.url ?? undefined;
-}
+const extractProfileUrl = (doc: Document): string | undefined => {
+  const copyButton = doc.querySelector<HTMLElement>(".js-url-copy");
+  return copyButton?.dataset.url ?? undefined;
+};
 
-function extractCharacters(doc: Document): ParsedCharacter[] {
+const extractCharacters = (doc: Document): ParsedCharacter[] => {
   const characters: ParsedCharacter[] = [];
   const characterElements = doc.querySelectorAll("li.char-row");
 
@@ -73,15 +73,27 @@ function extractCharacters(doc: Document): ParsedCharacter[] {
   }
 
   return characters;
-}
+};
 
-function extractSingleCharacter(li: Element): ParsedCharacter | null {
-  const externalIdStr = li.dataset.id;
-  const nick = li.dataset.nick;
-  const levelStr = li.dataset.lvl;
-  const worldRaw = li.dataset.world;
+/* oxlint-disable complexity */
+const extractSingleCharacter = (li: Element): ParsedCharacter | null => {
+  // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+  const htmlLi = li as HTMLElement;
+  const externalIdStr = htmlLi.dataset.id;
+  const { nick } = htmlLi.dataset;
+  const levelStr = htmlLi.dataset.lvl;
+  const worldRaw = htmlLi.dataset.world;
 
-  if (!(externalIdStr && nick && levelStr && worldRaw)) {
+  if (
+    externalIdStr === undefined ||
+    externalIdStr === "" ||
+    nick === undefined ||
+    nick === "" ||
+    levelStr === undefined ||
+    levelStr === "" ||
+    worldRaw === undefined ||
+    worldRaw === ""
+  ) {
     return null;
   }
 
@@ -91,9 +103,12 @@ function extractSingleCharacter(li: Element): ParsedCharacter | null {
     li.querySelector<HTMLInputElement>(".chprofname")?.value ?? "";
   const gender = li.querySelector<HTMLInputElement>(".chgender")?.value;
   const guildName =
-    li.querySelector<HTMLInputElement>(".chguild")?.value || undefined;
+    li.querySelector<HTMLInputElement>(".chguild")?.value ?? undefined;
   const guildIdStr = li.querySelector<HTMLInputElement>(".chguildid")?.value;
-  const guildId = guildIdStr ? Number.parseInt(guildIdStr, 10) : undefined;
+  const guildId =
+    guildIdStr !== undefined && guildIdStr !== ""
+      ? Number.parseInt(guildIdStr, 10)
+      : undefined;
 
   const avatarUrl = extractAvatarUrl(li);
   const world = worldRaw.replace("#", "");
@@ -102,17 +117,19 @@ function extractSingleCharacter(li: Element): ParsedCharacter | null {
     avatarUrl,
     externalId: Number.parseInt(externalIdStr, 10),
     gender,
-    guildId: guildId && guildId > 0 ? guildId : undefined,
-    guildName: guildName && guildName !== "" ? guildName : undefined,
+    guildId: guildId !== undefined && guildId > 0 ? guildId : undefined,
+    guildName:
+      guildName !== undefined && guildName !== "" ? guildName : undefined,
     level: Number.parseInt(levelStr, 10),
     nick,
     profession: professionCode,
     professionName,
     world,
   };
-}
+};
+/* oxlint-enable complexity */
 
-function extractAvatarUrl(li: Element): string | undefined {
+const extractAvatarUrl = (li: Element): string | undefined => {
   const avatarSpan = li.querySelector(".cimg");
   if (!avatarSpan) {
     return;
@@ -121,15 +138,21 @@ function extractAvatarUrl(li: Element): string | undefined {
   const style = avatarSpan.getAttribute("style") ?? "";
   const urlMatch = style.match(AVATAR_URL_REGEX);
   return urlMatch?.[1];
-}
+};
 
 export const professionColors: Record<string, string> = {
-  w: "bg-red-500/20 text-red-700 dark:text-red-400", // Wojownik
-  m: "bg-purple-500/20 text-purple-700 dark:text-purple-400", // Mag
-  h: "bg-green-500/20 text-green-700 dark:text-green-400", // Łowca
-  b: "bg-orange-500/20 text-orange-700 dark:text-orange-400", // Tancerz ostrzy
-  t: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400", // Tropiciel
-  p: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400", // Paladyn
+  // Tancerz ostrzy
+  b: "bg-orange-500/20 text-orange-700 dark:text-orange-400",
+  // Łowca
+  h: "bg-green-500/20 text-green-700 dark:text-green-400",
+  // Mag
+  m: "bg-purple-500/20 text-purple-700 dark:text-purple-400",
+  // Paladyn
+  p: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400",
+  // Tropiciel
+  t: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400",
+  // Wojownik
+  w: "bg-red-500/20 text-red-700 dark:text-red-400",
 };
 
 export const professionNames: Record<string, string> = {
@@ -141,8 +164,5 @@ export const professionNames: Record<string, string> = {
   w: "Wojownik",
 };
 
-export function getProfessionColor(code: string): string {
-  return (
-    professionColors[code] ?? "bg-gray-500/20 text-gray-700 dark:text-gray-400"
-  );
-}
+export const getProfessionColor = (code: string): string =>
+  professionColors[code] ?? "bg-gray-500/20 text-gray-700 dark:text-gray-400";

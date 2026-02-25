@@ -41,6 +41,7 @@ type HeroToDelete = {
   name: string;
 } | null;
 
+// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [heroToDelete, setHeroToDelete] = useState<HeroToDelete>(null);
@@ -60,9 +61,9 @@ function RouteComponent() {
       const message = error instanceof Error ? error.message : "Wystąpił błąd";
       toast.error(message);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Heros został usunięty");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.heroes.getAll.queryKey(),
       });
       setHeroToDelete(null);
@@ -141,7 +142,9 @@ function RouteComponent() {
                         {index + 1}
                       </TableCell>
                       <TableCell>
-                        {hero.image ? (
+                        {hero.image !== null &&
+                        hero.image !== undefined &&
+                        hero.image !== "" ? (
                           <img
                             alt={hero.name}
                             className="h-12 w-10 rounded object-contain"
@@ -162,15 +165,15 @@ function RouteComponent() {
                       <TableCell>
                         <span className="text-muted-foreground text-sm">
                           {events?.find((event) => event.id === hero.eventId)
-                            ?.name || "Brak"}
+                            ?.name ?? "Brak"}
                         </span>
                       </TableCell>
                       {isAdminUser && (
                         <TableCell className="text-right">
                           <Button
-                            onClick={() =>
-                              setHeroToDelete({ id: hero.id, name: hero.name })
-                            }
+                            onClick={() => {
+                              setHeroToDelete({ id: hero.id, name: hero.name });
+                            }}
                             size="sm"
                             type="button"
                             variant="ghost"
@@ -189,7 +192,11 @@ function RouteComponent() {
       </Card>
 
       <AlertDialog
-        onOpenChange={(open) => !open && setHeroToDelete(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setHeroToDelete(null);
+          }
+        }}
         open={heroToDelete !== null}
       >
         <AlertDialogContent>
@@ -198,8 +205,8 @@ function RouteComponent() {
               Czy na pewno chcesz usunąć herosa?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Heros "{heroToDelete?.name}" zostanie trwale usunięty. Tej
-              operacji nie można cofnąć.
+              Heros &quot;{heroToDelete?.name}&quot; zostanie trwale usunięty.
+              Tej operacji nie można cofnąć.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -208,9 +215,11 @@ function RouteComponent() {
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={deleteMutation.isPending}
-              onClick={() =>
-                heroToDelete && deleteMutation.mutate(heroToDelete.id)
-              }
+              onClick={() => {
+                if (heroToDelete) {
+                  deleteMutation.mutate(heroToDelete.id);
+                }
+              }}
             >
               {deleteMutation.isPending ? "Usuwanie..." : "Usuń"}
             </AlertDialogAction>

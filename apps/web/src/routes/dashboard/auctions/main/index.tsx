@@ -57,6 +57,7 @@ const professions = [
   },
 ] as const;
 
+// oxlint-disable-next-line func-style
 function RouteComponent() {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">

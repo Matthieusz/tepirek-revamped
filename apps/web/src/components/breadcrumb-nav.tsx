@@ -18,7 +18,9 @@ export const BreadcrumbNav = () => {
       const crumb =
         match.staticData?.crumb ??
         (match.loaderData as { crumb?: string } | undefined)?.crumb;
-      return crumb ? { label: crumb, path: match.pathname } : null;
+      return crumb !== undefined && crumb !== ""
+        ? { label: crumb, path: match.pathname }
+        : null;
     })
     .filter(
       (crumb): crumb is { path: string; label: string } => crumb !== null

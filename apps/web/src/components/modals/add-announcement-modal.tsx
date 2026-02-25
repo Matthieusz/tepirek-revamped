@@ -16,15 +16,16 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { orpc } from "@/utils/orpc";
-
-import { Textarea } from "../ui/textarea";
 
 interface AddAnnouncementModalProps {
   trigger: React.ReactNode;
 }
 
-export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
+export const AddAnnouncementModal = ({
+  trigger,
+}: AddAnnouncementModalProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -41,7 +42,7 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
         });
 
         toast.success("Ogłoszenie utworzone pomyślnie");
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.announcement.getAll.queryKey(),
         });
         setOpen(false);
@@ -65,12 +66,13 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-[600px]">
+      <ResponsiveDialogContent className="sm:max-w-150">
         <form
-          onSubmit={(e) => {
+          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit();
+            await form.handleSubmit();
           }}
         >
           <ResponsiveDialogHeader>
@@ -89,7 +91,9 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="Wpisz tytuł ogłoszenia"
                       value={field.state.value}
                     />
@@ -111,7 +115,9 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="Wpisz opis ogłoszenia"
                       value={field.state.value}
                     />
@@ -141,4 +147,4 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

@@ -1,4 +1,5 @@
 import { ORPCError } from "@orpc/server";
+import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
 import { db } from "@tepirek-revamped/db";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import {
@@ -10,9 +11,7 @@ import {
 import { event } from "@tepirek-revamped/db/schema/event";
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
-import z from "zod";
-
-import { adminProcedure, protectedProcedure } from "../index";
+import { z } from "zod";
 
 const POINTS_PER_HERO = 20;
 
@@ -47,10 +46,10 @@ export const betRouter = {
         const [bet] = await tx
           .insert(heroBet)
           .values({
-            heroId,
-            createdBy: context.session.user.id,
-            memberCount,
             createdAt: new Date(),
+            createdBy: context.session.user.id,
+            heroId,
+            memberCount,
           })
           .returning();
 
@@ -64,8 +63,8 @@ export const betRouter = {
         await tx.insert(heroBetMember).values(
           userIds.map((userId) => ({
             heroBetId: bet.id,
-            userId,
             points: pointsPerMember,
+            userId,
           }))
         );
 
@@ -74,19 +73,19 @@ export const betRouter = {
           await tx
             .insert(userStats)
             .values({
-              userId,
+              bets: 1,
+              earnings: "0",
               eventId: heroData.eventId,
               heroId,
               points: pointsPerMember,
-              bets: 1,
-              earnings: "0",
+              userId,
             })
             .onConflictDoUpdate({
-              target: [userStats.userId, userStats.eventId, userStats.heroId],
               set: {
-                points: sql`${userStats.points} + ${pointsPerMember}`,
                 bets: sql`${userStats.bets} + 1`,
+                points: sql`${userStats.points} + ${pointsPerMember}`,
               },
+              target: [userStats.userId, userStats.eventId, userStats.heroId],
             });
         }
 
@@ -124,7 +123,7 @@ export const betRouter = {
 
       // Get bet members to decrement their stats
       const members = await db
-        .select({ userId: heroBetMember.userId, points: heroBetMember.points })
+        .select({ points: heroBetMember.points, userId: heroBetMember.userId })
         .from(heroBetMember)
         .where(eq(heroBetMember.heroBetId, input.id));
 
@@ -134,8 +133,8 @@ export const betRouter = {
           await tx
             .update(userStats)
             .set({
-              points: sql`${userStats.points} - ${member.points}`,
               bets: sql`${userStats.bets} - 1`,
+              points: sql`${userStats.points} - ${member.points}`,
             })
             .where(
               and(
@@ -154,7 +153,7 @@ export const betRouter = {
     }),
 
   distributeGold: adminProcedure
-    .input(z.object({ heroId: z.number(), goldAmount: z.number().positive() }))
+    .input(z.object({ goldAmount: z.number().positive(), heroId: z.number() }))
     .handler(async ({ input }) => {
       const { heroId, goldAmount } = input;
 
@@ -172,8 +171,8 @@ export const betRouter = {
       const heroUserStats = await db
         .select({
           id: userStats.id,
-          userId: userStats.userId,
           points: userStats.points,
+          userId: userStats.userId,
         })
         .from(userStats)
         .where(eq(userStats.heroId, heroId));
@@ -221,12 +220,12 @@ export const betRouter = {
       });
 
       return {
-        success: true,
+        goldAmount,
         heroId,
         heroName: heroData.name,
-        goldAmount,
-        totalPoints,
         pointWorth,
+        success: true,
+        totalPoints,
         usersUpdated: heroUserStats.length,
       };
     }),
@@ -234,16 +233,16 @@ export const betRouter = {
   getAll: protectedProcedure.handler(async () => {
     const bets = await db
       .select({
-        id: heroBet.id,
-        heroId: heroBet.heroId,
-        heroName: hero.name,
-        heroImage: hero.image,
-        eventId: hero.eventId,
-        createdBy: heroBet.createdBy,
-        createdByName: user.name,
-        createdByImage: user.image,
-        memberCount: heroBet.memberCount,
         createdAt: heroBet.createdAt,
+        createdBy: heroBet.createdBy,
+        createdByImage: user.image,
+        createdByName: user.name,
+        eventId: hero.eventId,
+        heroId: heroBet.heroId,
+        heroImage: hero.image,
+        heroName: hero.name,
+        id: heroBet.id,
+        memberCount: heroBet.memberCount,
       })
       .from(heroBet)
       .innerJoin(hero, eq(heroBet.heroId, hero.id))
@@ -257,10 +256,10 @@ export const betRouter = {
         ? await db
             .select({
               heroBetId: heroBetMember.heroBetId,
-              userId: heroBetMember.userId,
-              userName: user.name,
-              userImage: user.image,
               points: heroBetMember.points,
+              userId: heroBetMember.userId,
+              userImage: user.image,
+              userName: user.name,
             })
             .from(heroBetMember)
             .innerJoin(user, eq(heroBetMember.userId, user.id))
@@ -270,7 +269,7 @@ export const betRouter = {
     // Group members by bet ID
     const membersByBetId = new Map<number, (typeof allMembers)[number][]>();
     for (const member of allMembers) {
-      const existing = membersByBetId.get(member.heroBetId) || [];
+      const existing = membersByBetId.get(member.heroBetId) ?? [];
       existing.push(member);
       membersByBetId.set(member.heroBetId, existing);
     }
@@ -278,17 +277,17 @@ export const betRouter = {
     // Combine bets with their members
     return bets.map((bet) => ({
       ...bet,
-      members: membersByBetId.get(bet.id) || [],
+      members: membersByBetId.get(bet.id) ?? [],
     }));
   }),
 
   getAllPaginated: protectedProcedure
     .input(
       z.object({
-        page: z.number().int().positive().default(1),
-        limit: z.number().int().positive().max(50).default(10),
         eventId: z.number().optional(),
         heroId: z.number().optional(),
+        limit: z.number().int().positive().max(50).default(10),
+        page: z.number().int().positive().default(1),
       })
     )
     .handler(async ({ input }) => {
@@ -297,10 +296,10 @@ export const betRouter = {
 
       // Build where conditions
       const conditions: SQL[] = [];
-      if (eventId) {
+      if (eventId !== undefined) {
         conditions.push(eq(hero.eventId, eventId));
       }
-      if (heroId) {
+      if (heroId !== undefined) {
         conditions.push(eq(heroBet.heroId, heroId));
       }
 
@@ -310,17 +309,17 @@ export const betRouter = {
       // Get paginated bets
       const bets = await db
         .select({
-          id: heroBet.id,
+          createdAt: heroBet.createdAt,
+          createdBy: heroBet.createdBy,
+          createdByImage: user.image,
+          createdByName: user.name,
+          eventId: hero.eventId,
           heroId: heroBet.heroId,
-          heroName: hero.name,
           heroImage: hero.image,
           heroLevel: hero.level,
-          eventId: hero.eventId,
-          createdBy: heroBet.createdBy,
-          createdByName: user.name,
-          createdByImage: user.image,
+          heroName: hero.name,
+          id: heroBet.id,
           memberCount: heroBet.memberCount,
-          createdAt: heroBet.createdAt,
         })
         .from(heroBet)
         .innerJoin(hero, eq(heroBet.heroId, hero.id))
@@ -347,10 +346,10 @@ export const betRouter = {
           ? await db
               .select({
                 heroBetId: heroBetMember.heroBetId,
-                userId: heroBetMember.userId,
-                userName: user.name,
-                userImage: user.image,
                 points: heroBetMember.points,
+                userId: heroBetMember.userId,
+                userImage: user.image,
+                userName: user.name,
               })
               .from(heroBetMember)
               .innerJoin(user, eq(heroBetMember.userId, user.id))
@@ -360,7 +359,7 @@ export const betRouter = {
       // Group members by bet ID
       const membersByBetId = new Map<number, (typeof allMembers)[number][]>();
       for (const member of allMembers) {
-        const existing = membersByBetId.get(member.heroBetId) || [];
+        const existing = membersByBetId.get(member.heroBetId) ?? [];
         existing.push(member);
         membersByBetId.set(member.heroBetId, existing);
       }
@@ -368,17 +367,17 @@ export const betRouter = {
       // Combine bets with their members
       const betsWithMembers = bets.map((bet) => ({
         ...bet,
-        members: membersByBetId.get(bet.id) || [],
+        members: membersByBetId.get(bet.id) ?? [],
       }));
 
       return {
         items: betsWithMembers,
         pagination: {
-          page,
+          hasMore: page < totalPages,
           limit,
+          page,
           totalItems,
           totalPages,
-          hasMore: page < totalPages,
         },
       };
     }),
@@ -389,8 +388,8 @@ export const betRouter = {
       const members = await db
         .select({
           id: heroBetMember.id,
-          userId: heroBetMember.userId,
           points: heroBetMember.points,
+          userId: heroBetMember.userId,
         })
         .from(heroBetMember)
         .where(eq(heroBetMember.heroBetId, input.betId));
@@ -403,13 +402,13 @@ export const betRouter = {
     .handler(async ({ input }) => {
       const bets = await db
         .select({
-          id: heroBet.id,
+          createdAt: heroBet.createdAt,
+          createdBy: heroBet.createdBy,
+          eventId: hero.eventId,
           heroId: heroBet.heroId,
           heroName: hero.name,
-          eventId: hero.eventId,
-          createdBy: heroBet.createdBy,
+          id: heroBet.id,
           memberCount: heroBet.memberCount,
-          createdAt: heroBet.createdAt,
         })
         .from(heroBet)
         .innerJoin(hero, eq(heroBet.heroId, hero.id))
@@ -445,9 +444,9 @@ export const betRouter = {
         .where(eq(hero.id, input.heroId));
 
       return {
+        currentPointWorth: heroInfo?.pointWorth ?? 0,
         heroId: input.heroId,
         heroName: heroInfo?.name ?? "Unknown",
-        currentPointWorth: heroInfo?.pointWorth ?? 0,
         totalBets: Number(stats?.totalBets ?? 0),
         totalPoints: Number.parseFloat(stats?.totalPoints ?? "0"),
       };
@@ -482,10 +481,10 @@ export const betRouter = {
     .handler(async ({ input }) => {
       // Build where conditions
       const conditions: SQL[] = [];
-      if (input.eventId) {
+      if (input.eventId !== undefined) {
         conditions.push(eq(userStats.eventId, input.eventId));
       }
-      if (input.heroId) {
+      if (input.heroId !== undefined) {
         conditions.push(eq(userStats.heroId, input.heroId));
       }
       const whereClause =
@@ -494,14 +493,14 @@ export const betRouter = {
       // Aggregate stats per user (across all heroes in the event or all events)
       const baseQuery = db
         .select({
-          userId: userStats.userId,
-          userName: user.name,
-          userImage: user.image,
-          totalPoints: sql<string>`SUM(${userStats.points})`.as("total_points"),
           totalBets: sql<number>`SUM(${userStats.bets})`.as("total_bets"),
           totalEarnings: sql<string>`SUM(${userStats.earnings})`.as(
             "total_earnings"
           ),
+          totalPoints: sql<string>`SUM(${userStats.points})`.as("total_points"),
+          userId: userStats.userId,
+          userImage: user.image,
+          userName: user.name,
         })
         .from(userStats)
         .innerJoin(user, eq(userStats.userId, user.id))
@@ -516,23 +515,24 @@ export const betRouter = {
   getUserStats: protectedProcedure
     .input(z.object({ eventId: z.number().optional() }))
     .handler(async ({ input }) => {
-      if (input.eventId) {
-        return await db
+      if (input.eventId !== undefined) {
+        return db
           .select()
           .from(userStats)
           .where(eq(userStats.eventId, input.eventId));
       }
-      return await db.select().from(userStats);
+      return db.select().from(userStats);
     }),
 
   getVault: protectedProcedure
     .input(z.object({ eventId: z.number().optional() }))
     .handler(async ({ input }) => {
-      const MIN_EARNINGS = 100_000_000; // 100 million minimum
+      // 100 million minimum
+      const MIN_EARNINGS = 100_000_000;
 
       // Build where conditions
       const conditions: SQL[] = [];
-      if (input.eventId) {
+      if (input.eventId !== undefined) {
         conditions.push(eq(userStats.eventId, input.eventId));
       }
 
@@ -542,13 +542,13 @@ export const betRouter = {
       // Aggregate earnings per user (across heroes in the event)
       const vault = await db
         .select({
-          userId: userStats.userId,
-          userName: user.name,
-          userImage: user.image,
+          paidOut: sql<boolean>`BOOL_AND(${userStats.paidOut})`.as("paid_out"),
           totalEarnings: sql<string>`SUM(${userStats.earnings})`.as(
             "total_earnings"
           ),
-          paidOut: sql<boolean>`BOOL_AND(${userStats.paidOut})`.as("paid_out"),
+          userId: userStats.userId,
+          userImage: user.image,
+          userName: user.name,
         })
         .from(userStats)
         .innerJoin(user, eq(userStats.userId, user.id))
@@ -563,14 +563,14 @@ export const betRouter = {
   togglePaidOut: adminProcedure
     .input(
       z.object({
-        userId: z.string(),
         eventId: z.number().optional(),
         paidOut: z.boolean(),
+        userId: z.string(),
       })
     )
     .handler(async ({ input }) => {
       const conditions: SQL[] = [eq(userStats.userId, input.userId)];
-      if (input.eventId) {
+      if (input.eventId !== undefined) {
         conditions.push(eq(userStats.eventId, input.eventId));
       }
 

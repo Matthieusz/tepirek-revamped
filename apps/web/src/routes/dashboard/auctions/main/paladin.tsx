@@ -15,6 +15,7 @@ export const Route = createFileRoute("/dashboard/auctions/main/paladin")({
   },
 });
 
+// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
 

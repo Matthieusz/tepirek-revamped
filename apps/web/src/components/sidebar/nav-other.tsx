@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
-export function NavOther({
+export const NavOther = ({
   projects,
 }: {
   projects: {
@@ -19,7 +19,7 @@ export function NavOther({
     icon: LucideIcon;
     disabled?: boolean;
   }[];
-}) {
+}) => {
   const matchRoute = useMatchRoute();
 
   return (
@@ -33,7 +33,7 @@ export function NavOther({
 
           return (
             <SidebarMenuItem key={item.name}>
-              {item.disabled ? (
+              {item.disabled === true ? (
                 <SidebarMenuButton
                   className="cursor-not-allowed opacity-50"
                   tooltip={item.name}
@@ -46,9 +46,9 @@ export function NavOther({
                   asChild
                   className={cn(
                     "transition-colors",
-                    isActive && "bg-accent font-medium"
+                    isActive !== false && "bg-accent font-medium"
                   )}
-                  isActive={!!isActive}
+                  isActive={isActive !== false}
                   tooltip={item.name}
                 >
                   <Link to={item.url}>
@@ -63,4 +63,4 @@ export function NavOther({
       </SidebarMenu>
     </SidebarGroup>
   );
-}
+};

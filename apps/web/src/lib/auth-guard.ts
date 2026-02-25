@@ -14,33 +14,37 @@ export interface DashboardRouteContext {
  * Requires user to be authenticated.
  * Redirects to /login if not authenticated.
  */
-export async function requireAuth() {
+export const requireAuth = async () => {
   try {
     const session = await getUser();
     if (!session?.user) {
+      // oxlint-disable-next-line @typescript-eslint/only-throw-error
       throw redirect({ to: "/login" });
     }
     return session;
   } catch (error) {
     if (isRedirect(error)) {
+      // oxlint-disable-next-line @typescript-eslint/only-throw-error
       throw error;
     }
+    // oxlint-disable-next-line @typescript-eslint/only-throw-error
     throw redirect({ to: "/login" });
   }
-}
+};
 
 /**
  * Requires user to be authenticated AND verified.
  * Redirects to /login if not authenticated.
  * Redirects to /waiting-room if not verified.
  */
-export async function requireVerified() {
+export const requireVerified = async () => {
   const session = await requireAuth();
   if (!session.user.verified) {
+    // oxlint-disable-next-line @typescript-eslint/only-throw-error
     throw redirect({ to: "/waiting-room" });
   }
   return session;
-}
+};
 
 /**
  * Requires user to be authenticated but NOT verified.
@@ -48,10 +52,11 @@ export async function requireVerified() {
  * Redirects to /login if not authenticated.
  * Redirects to /dashboard if already verified.
  */
-export async function requireUnverified() {
+export const requireUnverified = async () => {
   const session = await requireAuth();
   if (session.user.verified) {
+    // oxlint-disable-next-line @typescript-eslint/only-throw-error
     throw redirect({ to: "/dashboard" });
   }
   return session;
-}
+};

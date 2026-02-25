@@ -39,7 +39,7 @@ interface HeroStats {
  * Parse gold amount string with optional "g" suffix for billions
  * Examples: "2g" = 2,000,000,000 | "1.5g" = 1,500,000,000 | "50000000" = 50,000,000
  */
-function parseGoldAmount(value: string): number {
+const parseGoldAmount = (value: string): number => {
   const trimmed = value.trim().toLowerCase();
   if (trimmed.endsWith("g")) {
     const num = Number.parseFloat(trimmed.slice(0, -1));
@@ -47,15 +47,15 @@ function parseGoldAmount(value: string): number {
   }
   const num = Number.parseInt(trimmed, 10);
   return Number.isNaN(num) ? 0 : num;
-}
+};
 
-function HeroStatsPreview({
+const HeroStatsPreview = ({
   heroStats,
   isPending,
 }: {
   heroStats: HeroStats | undefined;
   isPending: boolean;
-}) {
+}) => {
   if (isPending) {
     return (
       <div className="rounded-lg border bg-muted/30 p-4">
@@ -97,7 +97,7 @@ function HeroStatsPreview({
       </div>
     </div>
   );
-}
+};
 
 interface DistributeGoldModalProps {
   trigger: React.ReactNode;
@@ -105,11 +105,11 @@ interface DistributeGoldModalProps {
   selectedHeroId?: string;
 }
 
-export function DistributeGoldModal({
+export const DistributeGoldModal = ({
   trigger,
   selectedEventId = "all",
   selectedHeroId = "all",
-}: DistributeGoldModalProps) {
+}: DistributeGoldModalProps) => {
   const [open, setOpen] = useState(false);
   const [eventId, setEventId] = useState(selectedEventId);
   const [heroId, setHeroId] = useState(selectedHeroId);
@@ -166,10 +166,10 @@ export function DistributeGoldModal({
         toast.success(
           `Rozdzielono ${goldAmount.toLocaleString("pl-PL")} złota dla ${result.usersUpdated} graczy`
         );
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.bet.getRanking.queryKey({ input: {} }),
         });
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.bet.getHeroStats.queryKey({
             input: { heroId: Number.parseInt(heroId, 10) },
           }),
@@ -202,10 +202,11 @@ export function DistributeGoldModal({
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="max-w-3 sm:max-w-[500px]">
         <form
-          onSubmit={(e) => {
+          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit();
+            await form.handleSubmit();
           }}
         >
           <ResponsiveDialogHeader>
@@ -234,7 +235,7 @@ export function DistributeGoldModal({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Wszystkie eventy</SelectItem>
-                  {[...(events || [])]
+                  {[...(events ?? [])]
                     .toSorted(
                       (a, b) =>
                         new Date(b.endTime).getTime() -
@@ -247,7 +248,7 @@ export function DistributeGoldModal({
                           <div className="flex items-center gap-2">
                             <IconComponent
                               className="h-4 w-4"
-                              style={{ color: event.color || undefined }}
+                              style={{ color: event.color ?? undefined }}
                             />
                             <span>{event.name}</span>
                           </div>
@@ -295,13 +296,15 @@ export function DistributeGoldModal({
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="np. 2g lub 50000000"
                       type="text"
                       value={field.state.value}
                     />
                     <p className="text-muted-foreground text-xs">
-                      Użyj "g" dla miliardów (np. 2g = 2 000 000 000)
+                      Użyj &quot;g&quot; dla miliardów (np. 2g = 2 000 000 000)
                     </p>
                     {goldAmount > 0 && (
                       <p className="font-mono text-muted-foreground text-xs">
@@ -357,7 +360,9 @@ export function DistributeGoldModal({
           </div>
           <ResponsiveDialogFooter>
             <Button
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+              }}
               type="button"
               variant="outline"
             >
@@ -384,4 +389,4 @@ export function DistributeGoldModal({
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

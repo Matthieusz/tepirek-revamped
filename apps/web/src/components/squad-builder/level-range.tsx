@@ -4,7 +4,7 @@ interface LevelRangeProps {
   members: SquadMember[];
 }
 
-export function LevelRange({ members }: LevelRangeProps) {
+export const LevelRange = ({ members }: LevelRangeProps) => {
   const levels = members.map((m) => m.characterLevel);
   const minLevel = Math.min(...levels);
   const maxLevel = Math.max(...levels);
@@ -17,4 +17,4 @@ export function LevelRange({ members }: LevelRangeProps) {
       </span>
     </div>
   );
-}
+};

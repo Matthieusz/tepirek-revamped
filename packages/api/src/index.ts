@@ -10,7 +10,7 @@ const requireAuth = o.middleware(async ({ context, next }) => {
   if (!context.session?.user) {
     throw new ORPCError("UNAUTHORIZED");
   }
-  return await next({
+  return next({
     context: {
       session: context.session,
     },
@@ -26,7 +26,7 @@ const requireAdmin = o.middleware(async ({ context, next }) => {
   if (context.session.user.role !== "admin") {
     throw new ORPCError("FORBIDDEN");
   }
-  return await next({
+  return next({
     context: {
       session: context.session,
     },

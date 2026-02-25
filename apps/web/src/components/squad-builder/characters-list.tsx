@@ -16,14 +16,14 @@ interface CharactersListProps {
   onClearFilters: () => void;
 }
 
-export function CharactersList({
+export const CharactersList = ({
   selectedWorld,
   charactersLoading,
   filteredCharacters,
   selectedCharacterIds,
   toggleCharacter,
   onClearFilters,
-}: CharactersListProps) {
+}: CharactersListProps) => {
   if (!selectedWorld) {
     return (
       <div className="flex h-64 items-center justify-center text-muted-foreground">
@@ -68,10 +68,12 @@ export function CharactersList({
             character={character}
             isSelected={selectedCharacterIds.includes(character.id)}
             key={character.id}
-            onToggle={() => toggleCharacter(character.id)}
+            onToggle={() => {
+              toggleCharacter(character.id);
+            }}
           />
         ))}
       </div>
     </ScrollArea>
   );
-}
+};

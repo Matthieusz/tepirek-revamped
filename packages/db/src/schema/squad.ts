@@ -15,11 +15,14 @@ import { user } from "./auth";
 export const gameAccount = pgTable(
   "game_account",
   {
-    id: serial("id").primaryKey(),
-    name: text("name").notNull(), // Nazwa konta (np. "informati")
-    profileUrl: text("profile_url"), // URL do profilu na margonem.pl
-    accountLevel: integer("account_level"), // Poziom konta
+    // Poziom konta
+    accountLevel: integer("account_level"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    id: serial("id").primaryKey(),
+    // Nazwa konta (np. "informati")
+    name: text("name").notNull(),
+    // URL do profilu na margonem.pl
+    profileUrl: text("profile_url"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     userId: text("user_id")
       .notNull()
@@ -70,22 +73,28 @@ export type ProfessionCode = keyof typeof professionCode;
 export const character = pgTable(
   "character",
   {
-    id: serial("id").primaryKey(),
-    externalId: integer("external_id").notNull(), // ID z Margonem
-    nick: text("nick").notNull(),
-    level: integer("level").notNull(),
-    profession: text("profession").notNull(), // kod profesji: w, m, h, b, t, p
-    professionName: text("profession_name").notNull(), // pełna nazwa: Wojownik, Mag, etc.
-    world: text("world").notNull(), // np. "jaruna", "gordion"
-    gender: text("gender"), // m lub k
-    guildName: text("guild_name"),
-    guildId: integer("guild_id"),
-    avatarUrl: text("avatar_url"), // URL do obrazka postaci
+    // URL do obrazka postaci
+    avatarUrl: text("avatar_url"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    // ID z Margonem
+    externalId: integer("external_id").notNull(),
     gameAccountId: integer("game_account_id")
       .notNull()
       .references(() => gameAccount.id, { onDelete: "cascade" }),
+    // m lub k
+    gender: text("gender"),
+    guildId: integer("guild_id"),
+    guildName: text("guild_name"),
+    id: serial("id").primaryKey(),
+    level: integer("level").notNull(),
+    nick: text("nick").notNull(),
+    // kod profesji: w, m, h, b, t, p
+    profession: text("profession").notNull(),
+    // pełna nazwa: Wojownik, Mag, etc.
+    professionName: text("profession_name").notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    // np. "jaruna", "gordion"
+    world: text("world").notNull(),
   },
   (table) => [
     index("character_game_account_id_idx").on(table.gameAccountId),
@@ -101,16 +110,18 @@ export const character = pgTable(
 export const squad = pgTable(
   "squad",
   {
-    id: serial("id").primaryKey(),
-    name: text("name").notNull(),
-    description: text("description"),
-    world: text("world").notNull(), // świat, na którym gra drużyna
-    isPublic: boolean("is_public").default(false).notNull(), // czy publicznie widoczny
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    description: text("description"),
+    id: serial("id").primaryKey(),
+    // czy publicznie widoczny
+    isPublic: boolean("is_public").default(false).notNull(),
+    name: text("name").notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    // świat, na którym gra drużyna
+    world: text("world").notNull(),
   },
   (table) => [
     index("squad_user_id_idx").on(table.userId),
@@ -122,16 +133,18 @@ export const squad = pgTable(
 export const squadMember = pgTable(
   "squad_member",
   {
-    id: serial("id").primaryKey(),
-    position: integer("position").notNull(), // pozycja w drużynie 1-10
-    role: text("role"), // opcjonalna rola w drużynie (np. "tank", "healer")
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    squadId: integer("squad_id")
-      .notNull()
-      .references(() => squad.id, { onDelete: "cascade" }),
     characterId: integer("character_id")
       .notNull()
       .references(() => character.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    id: serial("id").primaryKey(),
+    // pozycja w drużynie 1-10
+    position: integer("position").notNull(),
+    // opcjonalna rola w drużynie (np. "tank", "healer")
+    role: text("role"),
+    squadId: integer("squad_id")
+      .notNull()
+      .references(() => squad.id, { onDelete: "cascade" }),
   },
   (table) => [
     index("squad_member_squad_id_idx").on(table.squadId),
@@ -151,15 +164,16 @@ export const squadMember = pgTable(
 export const squadShare = pgTable(
   "squad_share",
   {
-    id: serial("id").primaryKey(),
-    canEdit: boolean("can_edit").default(false).notNull(), // czy może edytować
+    // czy może edytować
+    canEdit: boolean("can_edit").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    squadId: integer("squad_id")
-      .notNull()
-      .references(() => squad.id, { onDelete: "cascade" }),
+    id: serial("id").primaryKey(),
     sharedWithUserId: text("shared_with_user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    squadId: integer("squad_id")
+      .notNull()
+      .references(() => squad.id, { onDelete: "cascade" }),
   },
   (table) => [
     index("squad_share_squad_id_idx").on(table.squadId),

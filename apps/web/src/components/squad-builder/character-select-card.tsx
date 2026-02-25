@@ -9,11 +9,11 @@ interface CharacterSelectCardProps {
   onToggle: () => void;
 }
 
-export function CharacterSelectCard({
+export const CharacterSelectCard = ({
   character,
   isSelected,
   onToggle,
-}: CharacterSelectCardProps) {
+}: CharacterSelectCardProps) => {
   const checkboxId = `char-${character.id}`;
 
   return (
@@ -28,9 +28,11 @@ export function CharacterSelectCard({
       <Checkbox
         checked={isSelected}
         id={checkboxId}
-        onCheckedChange={() => onToggle()}
+        onCheckedChange={() => {
+          onToggle();
+        }}
       />
-      {character.avatarUrl && (
+      {character.avatarUrl !== null && (
         <div
           className="h-14 w-10 shrink-0 overflow-hidden rounded"
           style={{
@@ -53,7 +55,7 @@ export function CharacterSelectCard({
         <div className="text-muted-foreground text-xs">
           Lvl {character.level} • {character.gameAccountName}
         </div>
-        {character.guildName && (
+        {character.guildName !== null && (
           <div className="text-muted-foreground/70 text-xs">
             {character.guildName}
           </div>
@@ -61,4 +63,4 @@ export function CharacterSelectCard({
       </div>
     </label>
   );
-}
+};

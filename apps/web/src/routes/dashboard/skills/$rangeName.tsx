@@ -36,9 +36,9 @@ export const Route = createFileRoute("/dashboard/skills/$rangeName")({
     const slug = params.rangeName;
     try {
       const data = await orpc.skills.getRangeBySlug.call({ slug });
-      return { crumb: `${data?.name ?? slug}` };
+      return { crumb: data?.name ?? slug };
     } catch {
-      return { crumb: `${slug}` };
+      return { crumb: slug };
     }
   },
 });
@@ -49,6 +49,24 @@ type SkillToDelete = {
   rangeId: number;
 } | null;
 
+/* oxlint-disable react/no-array-index-key -- skeleton placeholders have no unique identifiers */
+const SkillsLoadingSkeleton = () => (
+  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {Array.from({ length: 6 }).map((_, i) => (
+      <Card key={`skill-skeleton-${i.toString()}`}>
+        <CardHeader className="pb-3">
+          <Skeleton className="h-4 w-24" />
+        </CardHeader>
+        <CardContent className="pt-0">
+          <TableSkeleton columns={3} rows={3} />
+        </CardContent>
+      </Card>
+    ))}
+  </div>
+);
+/* oxlint-enable react/no-array-index-key */
+
+// oxlint-disable-next-line func-style
 function RangeDetails() {
   const { rangeName } = Route.useParams();
   const { session } = Route.useRouteContext();
@@ -68,7 +86,7 @@ function RangeDetails() {
       ? orpc.skills.getSkillsByRange.queryOptions({
           input: { rangeId: range.data.id },
         })
-      : { queryFn: async () => [], queryKey: ["skills", rangeName, "empty"] }
+      : { queryFn: () => [], queryKey: ["skills", rangeName, "empty"] }
   );
 
   const deleteMutation = useMutation({
@@ -78,10 +96,10 @@ function RangeDetails() {
     onError: () => {
       toast.error("Błąd podczas usuwania");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Usunięto zestaw");
-      if (skillToDelete?.rangeId) {
-        queryClient.invalidateQueries({
+      if (skillToDelete?.rangeId !== undefined && skillToDelete.rangeId !== 0) {
+        await queryClient.invalidateQueries({
           queryKey: orpc.skills.getSkillsByRange.queryKey({
             input: { rangeId: skillToDelete.rangeId },
           }),
@@ -100,18 +118,7 @@ function RangeDetails() {
             <Skeleton className="h-4 w-64" />
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={`skill-skeleton-${i.toString()}`}>
-              <CardHeader className="pb-3">
-                <Skeleton className="h-4 w-24" />
-              </CardHeader>
-              <CardContent className="pt-0">
-                <TableSkeleton columns={3} rows={3} />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <SkillsLoadingSkeleton />
       </div>
     );
   }
@@ -126,9 +133,7 @@ function RangeDetails() {
   const skillsGrouped: Record<number, typeof skillsData> = {};
   for (const s of skillsData) {
     const key = s.professionId;
-    if (!skillsGrouped[key]) {
-      skillsGrouped[key] = [];
-    }
+    skillsGrouped[key] ??= [];
     skillsGrouped[key].push(s);
   }
 
@@ -204,7 +209,7 @@ function RangeDetails() {
                                 <Avatar className="size-5">
                                   <AvatarImage
                                     alt={skill.addedBy}
-                                    src={skill.addedByImage || undefined}
+                                    src={skill.addedByImage ?? undefined}
                                   />
                                   <AvatarFallback className="text-xs">
                                     {skill.addedBy?.slice(0, 2).toUpperCase()}
@@ -218,13 +223,13 @@ function RangeDetails() {
                             {isAdminUser && (
                               <TableCell>
                                 <Button
-                                  onClick={() =>
+                                  onClick={() => {
                                     setSkillToDelete({
                                       id: skill.id,
                                       name: skill.name,
                                       rangeId: currentRange.id,
-                                    })
-                                  }
+                                    });
+                                  }}
                                   size="sm"
                                   type="button"
                                   variant="ghost"
@@ -250,15 +255,19 @@ function RangeDetails() {
       </div>
 
       <AlertDialog
-        onOpenChange={(open) => !open && setSkillToDelete(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSkillToDelete(null);
+          }
+        }}
         open={skillToDelete !== null}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Usunąć ten zestaw?</AlertDialogTitle>
             <AlertDialogDescription>
-              Zestaw "{skillToDelete?.name}" zostanie trwale usunięty. Tej
-              operacji nie można cofnąć.
+              Zestaw &quot;{skillToDelete?.name}&quot; zostanie trwale usunięty.
+              Tej operacji nie można cofnąć.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -267,9 +276,11 @@ function RangeDetails() {
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={deleteMutation.isPending}
-              onClick={() =>
-                skillToDelete && deleteMutation.mutate(skillToDelete.id)
-              }
+              onClick={() => {
+                if (skillToDelete) {
+                  deleteMutation.mutate(skillToDelete.id);
+                }
+              }}
             >
               {deleteMutation.isPending ? "Usuwanie..." : "Usuń"}
             </AlertDialogAction>
