@@ -1,4 +1,5 @@
-import { protectedProcedure, publicProcedure } from "../index";
+import { protectedProcedure, publicProcedure } from "@tepirek-revamped/api";
+
 import { announcementRouter } from "./announcement";
 import { auctionRouter } from "./auction";
 import { betRouter } from "./bet";

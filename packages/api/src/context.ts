@@ -10,7 +10,7 @@ export interface CreateContextOptions {
   }>;
 }
 
-export async function createContext({ context }: CreateContextOptions) {
+export const createContext = async ({ context }: CreateContextOptions) => {
   const session = await auth.api.getSession({
     headers: context.req.raw.headers,
   });
@@ -18,6 +18,6 @@ export async function createContext({ context }: CreateContextOptions) {
     logger: context.get("logger"),
     session,
   };
-}
+};
 
 export type Context = Awaited<ReturnType<typeof createContext>>;

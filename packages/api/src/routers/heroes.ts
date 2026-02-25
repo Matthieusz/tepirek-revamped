@@ -1,27 +1,26 @@
+import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
 import { db } from "@tepirek-revamped/db";
 import { hero } from "@tepirek-revamped/db/schema/bet";
 import { eq } from "drizzle-orm";
-import z from "zod";
-
-import { adminProcedure, protectedProcedure } from "../index";
+import { z } from "zod";
 
 export const heroesRouter = {
   create: adminProcedure
     .input(
       z.object({
-        name: z.string().min(1),
+        eventId: z.number(),
         image: z.string().min(1).optional(),
         level: z.number().min(1).max(300).default(1),
-        eventId: z.number(),
+        name: z.string().min(1),
       })
     )
     .handler(
       async ({ input }) =>
         await db.insert(hero).values({
-          name: input.name,
+          eventId: input.eventId,
           image: input.image || null,
           level: input.level,
-          eventId: input.eventId,
+          name: input.name,
         })
     ),
 

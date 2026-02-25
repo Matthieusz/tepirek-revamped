@@ -1,10 +1,9 @@
 import { ORPCError } from "@orpc/server";
+import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
 import { db } from "@tepirek-revamped/db";
 import { account, user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
-import z from "zod";
-
-import { adminProcedure, protectedProcedure } from "../index";
+import { z } from "zod";
 
 export const userRouter = {
   deleteUser: adminProcedure
@@ -40,15 +39,15 @@ export const userRouter = {
     return rows[0]?.accessToken ?? null;
   }),
   getSession: protectedProcedure.handler(({ context }) => context.session),
-  getVerified: protectedProcedure.handler(async () =>
+  getVerified: protectedProcedure.handler(() =>
     db.select().from(user).where(eq(user.verified, true))
   ),
   list: protectedProcedure.handler(async () => await db.select().from(user)),
   setRole: adminProcedure
     .input(
       z.object({
-        userId: z.string().min(1),
         role: z.enum(["user", "admin"]),
+        userId: z.string().min(1),
       })
     )
     .handler(async ({ input }) => {
@@ -72,7 +71,7 @@ export const userRouter = {
     .handler(async ({ input }) => {
       await db
         .update(user)
-        .set({ verified: input.verified, updatedAt: new Date() })
+        .set({ updatedAt: new Date(), verified: input.verified })
         .where(eq(user.id, input.userId));
       const [updated] = await db
         .select()
@@ -100,8 +99,8 @@ export const userRouter = {
   updateUserName: adminProcedure
     .input(
       z.object({
-        userId: z.string().min(1),
         name: z.string().min(2),
+        userId: z.string().min(1),
       })
     )
     .handler(async ({ input }) => {
@@ -143,7 +142,7 @@ export const userRouter = {
     async ({ context }) =>
       await db
         .update(user)
-        .set({ verified: true, updatedAt: new Date() })
+        .set({ updatedAt: new Date(), verified: true })
         .where(eq(user.id, context.session.user.id))
   ),
 };
