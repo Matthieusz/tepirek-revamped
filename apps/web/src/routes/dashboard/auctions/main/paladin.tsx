@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Shield } from "lucide-react";
+
 import { AuctionHeader } from "@/components/auction-header";
 import AuctionTable from "@/components/auction-table";
 import { Card, CardContent } from "@/components/ui/card";

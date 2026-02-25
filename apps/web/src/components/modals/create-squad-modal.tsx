@@ -2,6 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { getProfessionColor } from "@/lib/margonem-parser";
 import { orpc } from "@/utils/orpc";
 
-type CharacterData = {
+interface CharacterData {
   id: number;
   nick: string;
   level: number;
@@ -37,11 +38,11 @@ type CharacterData = {
   avatarUrl: string | null;
   guildName: string | null;
   gameAccountName: string;
-};
+}
 
-type CreateSquadModalProps = {
+interface CreateSquadModalProps {
   trigger: React.ReactNode;
-};
+}
 
 export function CreateSquadModal({ trigger }: CreateSquadModalProps) {
   const [open, setOpen] = useState(false);
@@ -64,9 +65,9 @@ export function CreateSquadModal({ trigger }: CreateSquadModalProps) {
 
   const form = useForm({
     defaultValues: {
-      name: "",
       description: "",
       isPublic: false,
+      name: "",
     },
     onSubmit: async ({ value }) => {
       if (!selectedWorld) {
@@ -86,11 +87,11 @@ export function CreateSquadModal({ trigger }: CreateSquadModalProps) {
 
       try {
         await orpc.squad.createSquad.call({
-          name: value.name,
           description: value.description || undefined,
-          world: selectedWorld,
           isPublic: value.isPublic,
           memberIds: selectedCharacterIds,
+          name: value.name,
+          world: selectedWorld,
         });
 
         toast.success("Squad utworzony pomyślnie");
@@ -268,12 +269,12 @@ export function CreateSquadModal({ trigger }: CreateSquadModalProps) {
   );
 }
 
-type WorldSelectorProps = {
+interface WorldSelectorProps {
   worlds: string[] | undefined;
   selectedWorld: string;
   isLoading: boolean;
   onWorldChange: (world: string) => void;
-};
+}
 
 function WorldSelector({
   worlds,
@@ -311,7 +312,7 @@ function WorldSelector({
   );
 }
 
-type CharacterSelectorProps = {
+interface CharacterSelectorProps {
   characters:
     | {
         id: number;
@@ -329,7 +330,7 @@ type CharacterSelectorProps = {
   isLoading: boolean;
   selectedWorld: string;
   onToggleCharacter: (characterId: number) => void;
-};
+}
 
 function CharacterSelector({
   characters,
@@ -366,7 +367,7 @@ function CharacterSelector({
   );
 }
 
-type CharacterSelectRowProps = {
+interface CharacterSelectRowProps {
   character: {
     id: number;
     nick: string;
@@ -380,7 +381,7 @@ type CharacterSelectRowProps = {
   };
   isSelected: boolean;
   onToggle: () => void;
-};
+}
 
 function CharacterSelectRow({
   character,
@@ -407,8 +408,8 @@ function CharacterSelectRow({
           className="size-8 shrink-0 rounded bg-center bg-cover"
           style={{
             backgroundImage: `url(${character.avatarUrl})`,
-            backgroundSize: "64px 96px",
             backgroundPosition: "center 10%",
+            backgroundSize: "64px 96px",
           }}
         />
       )}

@@ -1,5 +1,7 @@
 import { AlertCircle } from "lucide-react";
-import { Component, type ReactNode } from "react";
+import { Component } from 'react';
+import type { ReactNode } from 'react';
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,15 +11,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-type Props = {
+interface Props {
   children: ReactNode;
   fallback?: ReactNode;
-};
+}
 
-type State = {
+interface State {
   hasError: boolean;
   error?: Error;
-};
+}
 
 /**
  * Error boundary component for handling React errors gracefully
@@ -29,7 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { error, hasError: true };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -59,7 +61,7 @@ export class ErrorBoundary extends Component<Props, State> {
             )}
             <Button
               onClick={() => {
-                this.setState({ hasError: false, error: undefined });
+                this.setState({ error: undefined, hasError: false });
                 window.location.reload();
               }}
               size="sm"

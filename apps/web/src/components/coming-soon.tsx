@@ -1,10 +1,11 @@
 import { Clock, Construction, Sparkles } from "lucide-react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-type ComingSoonProps = {
+interface ComingSoonProps {
   feature: string;
   description?: string;
-};
+}
 
 export function ComingSoon({ feature, description }: ComingSoonProps) {
   return (

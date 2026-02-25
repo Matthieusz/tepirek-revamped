@@ -21,10 +21,10 @@ export function parseLevel(value: string): number | undefined {
  * Get profession abbreviation for display
  */
 export const professionAbbreviations: Record<string, string> = {
-  w: "W",
-  m: "M",
-  p: "P",
   b: "B",
   h: "H",
+  m: "M",
+  p: "P",
   t: "T",
+  w: "W",
 } as const;

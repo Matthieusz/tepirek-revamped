@@ -19,6 +19,12 @@
     "db:stop": "docker compose stop",
     "db:down": "docker compose down"
   },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "drizzle-orm": "catalog:",
+    "pg": "^8.18.0",
+    "zod": "catalog:"
+  },
   "devDependencies": {
     "@tepirek-revamped/config": "workspace:*",
     "@types/pg": "^8.16.0",
@@ -26,11 +32,5 @@
   },
   "peerDependencies": {
     "typescript": "^5"
-  },
-  "dependencies": {
-    "dotenv": "catalog:",
-    "drizzle-orm": "catalog:",
-    "pg": "^8.18.0",
-    "zod": "catalog:"
   }
 }

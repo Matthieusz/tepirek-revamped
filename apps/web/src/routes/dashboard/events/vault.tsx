@@ -8,6 +8,7 @@ import { Check, Coins, User, Vault as VaultIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ import { orpc } from "@/utils/orpc";
 const routeApi = getRouteApi("/dashboard");
 
 const searchSchema = z.object({
-  eventId: z.string().optional().catch(undefined),
+  eventId: z.string().optional().catch(),
 });
 
 export const Route = createFileRoute("/dashboard/events/vault")({
@@ -72,8 +73,8 @@ function RouteComponent() {
     // Otherwise, navigate to the oldest unpaid event
     if (oldestUnpaidEventId !== null) {
       navigate({
-        search: { eventId: oldestUnpaidEventId.toString() },
         replace: true,
+        search: { eventId: oldestUnpaidEventId.toString() },
       });
     }
     setHasInitialized(true);
@@ -116,6 +117,10 @@ function RouteComponent() {
         paidOut,
       });
     },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : "Wystąpił błąd";
+      toast.error(message);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: orpc.bet.getVault.queryKey({
@@ -131,10 +136,6 @@ function RouteComponent() {
         queryKey: orpc.bet.getOldestUnpaidEvent.queryKey(),
       });
       toast.success("Status wypłaty zaktualizowany");
-    },
-    onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
     },
   });
 
@@ -160,7 +161,7 @@ function RouteComponent() {
     );
   }
 
-  const sortedEvents = [...(events || [])].sort(
+  const sortedEvents = [...(events || [])].toSorted(
     (a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime()
   );
 
@@ -243,8 +244,8 @@ function RouteComponent() {
                   disabled={toggleMutation.isPending}
                   onClick={() =>
                     toggleMutation.mutate({
-                      userId: nextToPay.userId,
                       paidOut: true,
+                      userId: nextToPay.userId,
                     })
                   }
                   size="sm"
@@ -329,8 +330,8 @@ function RouteComponent() {
                       disabled={toggleMutation.isPending}
                       onCheckedChange={(checked) =>
                         toggleMutation.mutate({
-                          userId: player.userId,
                           paidOut: !!checked,
+                          userId: player.userId,
                         })
                       }
                     />
@@ -401,8 +402,8 @@ function RouteComponent() {
                       disabled={toggleMutation.isPending}
                       onCheckedChange={(checked) =>
                         toggleMutation.mutate({
-                          userId: player.userId,
                           paidOut: !!checked,
+                          userId: player.userId,
                         })
                       }
                     />

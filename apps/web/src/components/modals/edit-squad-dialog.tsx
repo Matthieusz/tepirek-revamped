@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Globe, Lock, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,11 +26,11 @@ import { cn } from "@/lib/utils";
 import type { Squad } from "@/types/squad";
 import { orpc } from "@/utils/orpc";
 
-type EditSquadDialogProps = {
+interface EditSquadDialogProps {
   squad: Squad;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-};
+}
 
 export function EditSquadDialog({
   squad,
@@ -72,11 +73,11 @@ export function EditSquadDialog({
   const { data: characters, isPending: charactersLoading } = useQuery({
     ...orpc.squad.getMyCharacters.queryOptions({
       input: {
-        world: squad.world,
-        minLevel: parseLevel(minLevel),
-        maxLevel: parseLevel(maxLevel),
         excludeInSquad: hideInSquad,
         excludeInSquadExceptSquadId: squad.id,
+        maxLevel: parseLevel(maxLevel),
+        minLevel: parseLevel(minLevel),
+        world: squad.world,
       },
     }),
     enabled: open,
@@ -126,6 +127,9 @@ export function EditSquadDialog({
         isPublic,
         memberIds: selectedCharacterIds,
       }),
+    onError: (error) => {
+      toast.error(error.message || "Nie udało się zaktualizować squadu");
+    },
     onSuccess: () => {
       toast.success("Squad zaktualizowany");
       queryClient.invalidateQueries({
@@ -137,9 +141,6 @@ export function EditSquadDialog({
         }),
       });
       onOpenChange(false);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Nie udało się zaktualizować squadu");
     },
   });
 

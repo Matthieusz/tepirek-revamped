@@ -1,4 +1,5 @@
 import { Trophy, User } from "lucide-react";
+
 import {
   Accordion,
   AccordionContent,
@@ -8,14 +9,14 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 
-export type RankingItem = {
+export interface RankingItem {
   userId: string;
   userName: string;
   userImage: string | null;
   totalPoints: string | null;
   totalBets: number | null;
   totalEarnings: string | null;
-};
+}
 
 function getRankIcon(position: number) {
   if (position === 1) {
@@ -30,9 +31,9 @@ function getRankIcon(position: number) {
   return null;
 }
 
-type RankingListProps = {
+interface RankingListProps {
   players: RankingItem[];
-};
+}
 
 export function RankingList({ players }: RankingListProps) {
   return (

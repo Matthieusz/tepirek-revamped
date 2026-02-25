@@ -3,6 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import z from "zod";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,36 +27,36 @@ export function SignUpForm({
 
   const form = useForm({
     defaultValues: {
-      name: "",
       email: "",
+      name: "",
       password: "",
     },
     onSubmit: async ({ value }) => {
       await authClient.signUp.email(
         {
-          name: value.name,
           email: value.email,
+          name: value.name,
           password: value.password,
           role: "user",
           verified: false,
         },
         {
+          onError: (error) => {
+            toast.error(error.error.message || error.error.statusText);
+          },
           onSuccess: () => {
             navigate({
               to: "/dashboard",
             });
             toast.success("Zarejestrowano pomyślnie");
           },
-          onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
-          },
         }
       );
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(2, "Nazwa musi mieć conajmniej 2 znaki"),
         email: z.email("Nieprawidłowy adres e-mail"),
+        name: z.string().min(2, "Nazwa musi mieć conajmniej 2 znaki"),
         password: z.string().min(8, "Hasło musi mieć co najmniej 8 znaków"),
       }),
     },
@@ -175,7 +176,6 @@ export function SignUpForm({
                   className="w-full"
                   onClick={async () => {
                     await authClient.signIn.social({
-                      provider: "discord",
                       callbackURL: `${window.location.origin}/waiting-room`,
                       fetchOptions: {
                         onError: (error) => {
@@ -184,6 +184,7 @@ export function SignUpForm({
                           );
                         },
                       },
+                      provider: "discord",
                     });
                   }}
                   variant="outline"
@@ -196,7 +197,7 @@ export function SignUpForm({
               Masz konto?{" "}
               <Link
                 className="text-primary underline underline-offset-4"
-                to={"/login"}
+                to="/login"
               >
                 Zaloguj się
               </Link>
@@ -204,8 +205,8 @@ export function SignUpForm({
           </form>
         </CardContent>
       </Card>
-      <Button variant={"ghost"}>
-        <Link className="flex items-center gap-2" to={"/"}>
+      <Button variant="ghost">
+        <Link className="flex items-center gap-2" to="/">
           <ArrowLeft />
           Powrót do strony głównej
         </Link>

@@ -7,9 +7,9 @@ import {
 import { getProfessionColor } from "@/lib/margonem-parser";
 import type { SquadMember } from "@/types/squad";
 
-type MembersPreviewProps = {
+interface MembersPreviewProps {
   members: SquadMember[] | undefined;
-};
+}
 
 export function MembersPreview({ members }: MembersPreviewProps) {
   if (!members || members.length === 0) {

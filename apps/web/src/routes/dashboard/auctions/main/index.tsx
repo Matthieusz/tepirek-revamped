@@ -9,6 +9,7 @@ import {
   Target,
   Wand2,
 } from "lucide-react";
+
 import {
   Card,
   CardDescription,
@@ -25,34 +26,34 @@ export const Route = createFileRoute("/dashboard/auctions/main/")({
 
 const professions = [
   {
+    icon: Target,
     name: "Tropiciel",
     to: "/dashboard/auctions/main/tracker",
-    icon: Target,
   },
   {
+    icon: Shield,
     name: "Paladyn",
     to: "/dashboard/auctions/main/paladin",
-    icon: Shield,
   },
   {
+    icon: Wand2,
     name: "Mag",
     to: "/dashboard/auctions/main/mage",
-    icon: Wand2,
   },
   {
+    icon: Crosshair,
     name: "Łowca",
     to: "/dashboard/auctions/main/hunter",
-    icon: Crosshair,
   },
   {
+    icon: Swords,
     name: "Tancerz Ostrzy",
     to: "/dashboard/auctions/main/blade-dancer",
-    icon: Swords,
   },
   {
+    icon: Axe,
     name: "Wojownik",
     to: "/dashboard/auctions/main/warrior",
-    icon: Axe,
   },
 ] as const;
 

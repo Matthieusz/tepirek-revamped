@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Calendar, Megaphone, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
 import { AddAnnouncementModal } from "@/components/modals/add-announcement-modal";
 import {
   AlertDialog,
@@ -55,16 +56,16 @@ function RouteComponent() {
     mutationFn: async (id: number) => {
       await orpc.announcement.delete.call({ id });
     },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : "Wystąpił błąd";
+      toast.error(message);
+    },
     onSuccess: () => {
       toast.success("Ogłoszenie zostało usunięte");
       queryClient.invalidateQueries({
         queryKey: orpc.announcement.getAll.queryKey(),
       });
       setAnnouncementToDelete(null);
-    },
-    onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
     },
   });
 

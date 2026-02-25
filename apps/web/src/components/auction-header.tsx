@@ -2,17 +2,19 @@ import { useQuery } from "@tanstack/react-query";
 import type { LucideIcon } from "lucide-react";
 import { Users } from "lucide-react";
 import type React from "react";
+
 import { orpc } from "@/utils/orpc";
+
 import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Skeleton } from "./ui/skeleton";
 
-export type AuctionHeaderProps = {
+export interface AuctionHeaderProps {
   title: string;
   description: string;
   icon: LucideIcon;
   profession: string;
   type: "main" | "support";
-};
+}
 
 export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
   title,

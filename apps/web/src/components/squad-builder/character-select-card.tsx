@@ -3,11 +3,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { getProfessionColor } from "@/lib/margonem-parser";
 import type { Character } from "@/types/squad";
 
-type CharacterSelectCardProps = {
+interface CharacterSelectCardProps {
   character: Character;
   isSelected: boolean;
   onToggle: () => void;
-};
+}
 
 export function CharacterSelectCard({
   character,
@@ -35,8 +35,8 @@ export function CharacterSelectCard({
           className="h-14 w-10 shrink-0 overflow-hidden rounded"
           style={{
             backgroundImage: `url(${character.avatarUrl})`,
-            backgroundSize: "160px 224px",
             backgroundPosition: "0 0",
+            backgroundSize: "160px 224px",
           }}
         />
       )}

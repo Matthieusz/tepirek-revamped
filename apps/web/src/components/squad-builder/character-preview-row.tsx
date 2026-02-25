@@ -1,12 +1,10 @@
 import { Badge } from "@/components/ui/badge";
-import {
-  getProfessionColor,
-  type ParsedCharacter,
-} from "@/lib/margonem-parser";
+import { getProfessionColor } from '@/lib/margonem-parser';
+import type { ParsedCharacter } from '@/lib/margonem-parser';
 
-type CharacterPreviewRowProps = {
+interface CharacterPreviewRowProps {
   character: ParsedCharacter;
-};
+}
 
 export function CharacterPreviewRow({ character }: CharacterPreviewRowProps) {
   return (
@@ -16,8 +14,8 @@ export function CharacterPreviewRow({ character }: CharacterPreviewRowProps) {
           className="size-8 shrink-0 rounded bg-center bg-cover"
           style={{
             backgroundImage: `url(${character.avatarUrl})`,
-            backgroundSize: "64px 96px",
             backgroundPosition: "center 10%",
+            backgroundSize: "64px 96px",
           }}
         />
       )}

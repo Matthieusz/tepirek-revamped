@@ -4,6 +4,7 @@ import { format } from "date-fns/format";
 import { Calendar, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
 import { AddEventModal } from "@/components/modals/add-event-modal";
 import {
   AlertDialog,
@@ -58,6 +59,10 @@ function RouteComponent() {
     mutationFn: async (id: number) => {
       await orpc.event.delete.call({ id });
     },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : "Wystąpił błąd";
+      toast.error(message);
+    },
     onSuccess: () => {
       toast.success("Event został usunięty");
       queryClient.invalidateQueries({
@@ -65,15 +70,15 @@ function RouteComponent() {
       });
       setEventAction(null);
     },
-    onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
-    },
   });
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, active }: { id: number; active: boolean }) => {
       await orpc.event.toggleActive.call({ id, active });
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : "Wystąpił błąd";
+      toast.error(message);
     },
     onSuccess: () => {
       toast.success("Status eventu został zmieniony");
@@ -81,10 +86,6 @@ function RouteComponent() {
         queryKey: orpc.event.getAll.queryKey(),
       });
       setEventAction(null);
-    },
-    onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
     },
   });
 
@@ -245,8 +246,8 @@ function RouteComponent() {
                   deleteMutation.mutate(eventAction.id);
                 } else {
                   toggleMutation.mutate({
-                    id: eventAction.id,
                     active: !eventAction.active,
+                    id: eventAction.id,
                   });
                 }
               }}

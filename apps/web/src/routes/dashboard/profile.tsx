@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Calendar, Edit, Mail, Shield, UserCheck } from "lucide-react";
+
 import { EditProfileModal } from "@/components/modals/edit-profile-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";

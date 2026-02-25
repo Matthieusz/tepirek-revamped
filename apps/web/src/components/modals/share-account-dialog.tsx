@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,11 +19,11 @@ import { cn } from "@/lib/utils";
 import type { GameAccount } from "@/types/squad";
 import { orpc } from "@/utils/orpc";
 
-type ShareAccountDialogProps = {
+interface ShareAccountDialogProps {
   account: GameAccount;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-};
+}
 
 export function ShareAccountDialog({
   account,
@@ -72,6 +73,9 @@ export function ShareAccountDialog({
         accountId: account.id,
         userId: selectedUserId,
       }),
+    onError: (error) => {
+      toast.error(error.message || "Nie udało się udostępnić konta");
+    },
     onSuccess: () => {
       toast.success("Konto udostępnione");
       setSelectedUserId("");
@@ -84,14 +88,14 @@ export function ShareAccountDialog({
         queryKey: orpc.squad.getMyGameAccounts.queryKey(),
       });
     },
-    onError: (error) => {
-      toast.error(error.message || "Nie udało się udostępnić konta");
-    },
   });
 
   const removeShareMutation = useMutation({
     mutationFn: (shareId: number) =>
       orpc.squad.removeGameAccountShare.call({ shareId }),
+    onError: (error) => {
+      toast.error(error.message || "Nie udało się usunąć udostępnienia");
+    },
     onSuccess: () => {
       toast.success("Usunięto udostępnienie");
       queryClient.invalidateQueries({
@@ -99,9 +103,6 @@ export function ShareAccountDialog({
           input: { accountId: account.id },
         }),
       });
-    },
-    onError: (error) => {
-      toast.error(error.message || "Nie udało się usunąć udostępnienia");
     },
   });
 

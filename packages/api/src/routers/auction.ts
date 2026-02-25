@@ -3,6 +3,7 @@ import { auctionSignups } from "@tepirek-revamped/db/schema/auction";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { and, count, countDistinct, eq } from "drizzle-orm";
 import z from "zod";
+
 import { protectedProcedure } from "../index";
 
 export const auctionRouter = {
@@ -62,6 +63,28 @@ export const auctionRouter = {
       return result[0] ?? { totalSignups: 0, uniqueUsers: 0 };
     }),
 
+  removeSignup: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .handler(async ({ input, context }) => {
+      // Only allow removing own signups (or admin check could be added)
+      const signup = await db
+        .select({ userId: auctionSignups.userId })
+        .from(auctionSignups)
+        .where(eq(auctionSignups.id, input.id))
+        .limit(1);
+
+      if (signup.length === 0) {
+        throw new Error("Signup not found");
+      }
+
+      if (signup[0].userId !== context.session.user.id) {
+        throw new Error("Not authorized to remove this signup");
+      }
+
+      await db.delete(auctionSignups).where(eq(auctionSignups.id, input.id));
+      return { success: true };
+    }),
+
   toggleSignup: protectedProcedure
     .input(
       z.object({
@@ -113,27 +136,5 @@ export const auctionRouter = {
       });
 
       return { action: "added" as const };
-    }),
-
-  removeSignup: protectedProcedure
-    .input(z.object({ id: z.number() }))
-    .handler(async ({ input, context }) => {
-      // Only allow removing own signups (or admin check could be added)
-      const signup = await db
-        .select({ userId: auctionSignups.userId })
-        .from(auctionSignups)
-        .where(eq(auctionSignups.id, input.id))
-        .limit(1);
-
-      if (signup.length === 0) {
-        throw new Error("Signup not found");
-      }
-
-      if (signup[0].userId !== context.session.user.id) {
-        throw new Error("Not authorized to remove this signup");
-      }
-
-      await db.delete(auctionSignups).where(eq(auctionSignups.id, input.id));
-      return { success: true };
     }),
 };

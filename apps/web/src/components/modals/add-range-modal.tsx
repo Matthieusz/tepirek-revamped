@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,15 +22,15 @@ interface AddEventModalProps {
   trigger: React.ReactNode;
 }
 
-type AddRangeModal = {
+interface AddRangeModal {
   level: number;
   image?: string;
   name: string;
-};
+}
 
 const defaultValues: AddRangeModal = {
-  level: 1,
   image: "",
+  level: 1,
   name: "",
 };
 
@@ -44,8 +45,8 @@ export function AddRangeModal({ trigger }: AddEventModalProps) {
     onSubmit: async ({ value }) => {
       try {
         await orpc.skills.createRange.call({
-          level: value.level,
           image: value.image || "",
+          level: value.level,
           name: value.name,
         });
 
@@ -65,8 +66,8 @@ export function AddRangeModal({ trigger }: AddEventModalProps) {
     },
     validators: {
       onSubmit: z.object({
-        level: z.number().min(1, "Poziom jest wymagany"),
         image: z.string().min(2),
+        level: z.number().min(1, "Poziom jest wymagany"),
         name: z.string().min(1, "Nazwa jest wymagana"),
       }),
     },

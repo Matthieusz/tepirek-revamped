@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +26,7 @@ import type { AuthUser } from "@/lib/auth-guard";
 import { cn, slugify } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
-type RangeCardProps = {
+interface RangeCardProps {
   range: {
     id: number;
     name: string;
@@ -34,7 +35,7 @@ type RangeCardProps = {
   };
   session: AuthUser;
   className?: string;
-};
+}
 
 export function RangeCard({ range, session, className }: RangeCardProps) {
   const queryClient = useQueryClient();
@@ -44,16 +45,16 @@ export function RangeCard({ range, session, className }: RangeCardProps) {
     mutationFn: async (id: number) => {
       await orpc.skills.deleteRange.call({ id });
     },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : "Wystąpił błąd";
+      toast.error(message);
+    },
     onSuccess: () => {
       toast.success("Przedział został usunięty");
       queryClient.invalidateQueries({
         queryKey: orpc.skills.getAllRanges.queryKey(),
       });
       setShowDeleteDialog(false);
-    },
-    onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
     },
   });
 

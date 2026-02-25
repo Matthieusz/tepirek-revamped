@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -33,17 +34,17 @@ import {
 import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
-type AddEventModalProps = {
+interface AddEventModalProps {
   trigger: React.ReactNode;
-};
+}
 
 const EVENT_ICONS = [
-  { id: "egg", name: "Wielkanoc", icon: Egg },
-  { id: "sun", name: "Wakacje", icon: Sun },
-  { id: "ghost", name: "Halloween", icon: Ghost },
-  { id: "cake", name: "Urodziny", icon: Cake },
-  { id: "snowflake", name: "Gwiazdka", icon: Snowflake },
-  { id: "calendar", name: "Inne", icon: CalendarIcon },
+  { icon: Egg, id: "egg", name: "Wielkanoc" },
+  { icon: Sun, id: "sun", name: "Wakacje" },
+  { icon: Ghost, id: "ghost", name: "Halloween" },
+  { icon: Cake, id: "cake", name: "Urodziny" },
+  { icon: Snowflake, id: "snowflake", name: "Gwiazdka" },
+  { icon: CalendarIcon, id: "calendar", name: "Inne" },
 ] as const;
 
 const EVENT_COLORS = [
@@ -67,8 +68,8 @@ export function AddEventModal({ trigger }: AddEventModalProps) {
 
   const form = useForm({
     defaultValues: {
-      name: "",
       endTime: "",
+      name: "",
     },
     onSubmit: async ({ value }) => {
       try {
@@ -78,10 +79,10 @@ export function AddEventModal({ trigger }: AddEventModalProps) {
         }
 
         await orpc.event.create.call({
-          name: value.name,
-          icon: selectedIcon,
           color: selectedColor,
           endTime: date.toISOString(),
+          icon: selectedIcon,
+          name: value.name,
         });
 
         toast.success("Event utworzony pomyślnie");
@@ -103,8 +104,8 @@ export function AddEventModal({ trigger }: AddEventModalProps) {
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(1, "Nazwa eventu jest wymagana"),
         endTime: z.string(),
+        name: z.string().min(1, "Nazwa eventu jest wymagana"),
       }),
     },
   });

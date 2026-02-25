@@ -9,11 +9,11 @@ import { toast } from "sonner";
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,
       gcTime: 1000 * 60 * 30,
-      refetchOnWindowFocus: false,
       refetchOnReconnect: false,
+      refetchOnWindowFocus: false,
       retry: 1,
+      staleTime: 1000 * 60 * 5,
     },
   },
   queryCache: new QueryCache({
@@ -31,13 +31,13 @@ export const queryClient = new QueryClient({
 });
 
 export const link = new RPCLink({
-  url: `${import.meta.env.VITE_SERVER_URL}/rpc`,
   fetch(_url, options) {
     return fetch(_url, {
       ...options,
       credentials: "include",
     });
   },
+  url: `${import.meta.env.VITE_SERVER_URL}/rpc`,
 });
 
 export const client: RouterClient<AppRouter> = createORPCClient(link);

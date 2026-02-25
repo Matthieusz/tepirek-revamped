@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Calculator, Sparkles, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,49 +32,49 @@ import {
 
 type Rarity = "zwykły" | "unikatowy" | "heroiczny" | "ulepszony" | "legendarny";
 
-type RarityFactor = {
+interface RarityFactor {
   upgradeRarityFactor: number;
   upgradeGoldFactor: number;
-};
+}
 
 /**
  * Game constants for upgrade calculations
  * Values are derived from game mechanics
  */
 const GAME_CONSTANTS = {
-  ENHANCED_LEVEL_MULTIPLIER: 150,
-  ENHANCED_BASE_COST: 27_000,
-  STANDARD_BASE_COST: 180,
-  EXTRACTION_RATE: 0.75,
   DEFAULT_ITEM_LEVEL: 280,
+  ENHANCED_BASE_COST: 27_000,
+  ENHANCED_LEVEL_MULTIPLIER: 150,
+  EXTRACTION_RATE: 0.75,
+  STANDARD_BASE_COST: 180,
 } as const;
 
 const rarityFactors: Record<Rarity, RarityFactor> = {
-  zwykły: { upgradeRarityFactor: 1, upgradeGoldFactor: 1 },
-  unikatowy: { upgradeRarityFactor: 10, upgradeGoldFactor: 10 },
   heroiczny: { upgradeRarityFactor: 100, upgradeGoldFactor: 30 },
-  ulepszony: { upgradeRarityFactor: -1, upgradeGoldFactor: 40 },
   legendarny: { upgradeRarityFactor: 1000, upgradeGoldFactor: 60 },
+  ulepszony: { upgradeRarityFactor: -1, upgradeGoldFactor: 40 },
+  unikatowy: { upgradeRarityFactor: 10, upgradeGoldFactor: 10 },
+  zwykły: { upgradeRarityFactor: 1, upgradeGoldFactor: 1 },
 };
 
 const rarityColors: Record<Rarity, string> = {
-  zwykły: "text-gray-400",
-  unikatowy: "text-yellow-500",
   heroiczny: "text-blue-500",
-  ulepszony: "text-red-500",
   legendarny: "text-orange-500",
+  ulepszony: "text-red-500",
+  unikatowy: "text-yellow-500",
+  zwykły: "text-gray-400",
 };
 
 const rarityBgColors: Record<Rarity, string> = {
-  zwykły: "bg-gray-500/10 border-gray-500/20",
-  unikatowy: "bg-yellow-500/10 border-yellow-500/20",
   heroiczny: "bg-blue-500/10 border-blue-500/20",
-  ulepszony: "bg-red-500/10 border-red-500/20",
   legendarny: "bg-orange-500/10 border-orange-500/20",
+  ulepszony: "bg-red-500/10 border-red-500/20",
+  unikatowy: "bg-yellow-500/10 border-yellow-500/20",
+  zwykły: "bg-gray-500/10 border-gray-500/20",
 };
 
 /** Multipliers for each upgrade level (1-5) - index 0 is unused */
-const upgradeLevelFactors = [0.0, 1.0, 2.1, 3.4, 5.0, 7.0];
+const upgradeLevelFactors = [0, 1, 2.1, 3.4, 5, 7];
 
 const MIN_LEVEL = 1;
 const MAX_LEVEL = 300;
@@ -201,14 +202,14 @@ function RouteComponent() {
       // Extraction gold cost: 60 * total_upgrade_points (based on 100% points invested)
       const extractionGoldCost = 60 * totalUpgradeCost;
       setResult({
-        differentialCosts,
         cumulativeCosts: upgradeCosts,
-        totalUpgradeCost,
-        total75Percent,
-        upgradeGoldCost,
+        differentialCosts,
         extractionGoldCost,
         itemLevel: value.itemLevel,
         itemRarity: value.itemRarity,
+        total75Percent,
+        totalUpgradeCost,
+        upgradeGoldCost,
       });
     },
   });

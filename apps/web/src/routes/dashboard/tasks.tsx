@@ -9,6 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -71,7 +72,7 @@ function TasksRoute() {
   };
 
   const handleToggleTodo = (id: number, completed: boolean) => {
-    toggleMutation.mutate({ id, completed: !completed });
+    toggleMutation.mutate({ completed: !completed, id });
   };
 
   const handleDeleteTodo = (id: number) => {

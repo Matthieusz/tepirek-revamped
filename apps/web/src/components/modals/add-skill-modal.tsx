@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -25,17 +26,17 @@ import {
 } from "@/components/ui/select";
 import { orpc } from "@/utils/orpc";
 
-type AddSkillModalProps = {
+interface AddSkillModalProps {
   trigger: React.ReactNode;
   defaultRangeId: number;
   defaultProfessionId?: number;
-};
+}
 
 const defaultValues = {
-  name: "",
-  mastery: false,
-  professionId: "",
   link: "",
+  mastery: false,
+  name: "",
+  professionId: "",
 };
 
 export function AddSkillModal({
@@ -59,9 +60,9 @@ export function AddSkillModal({
           return;
         }
         await orpc.skills.createSkill.call({
-          name: value.name,
           link: value.link,
           mastery: value.mastery,
+          name: value.name,
           professionId: Number.parseInt(value.professionId, 10),
           rangeId: defaultRangeId,
         });
@@ -83,9 +84,9 @@ export function AddSkillModal({
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(1, "Nazwa jest wymagana"),
         link: z.url("Podaj poprawny URL").min(1, "Link jest wymagany"),
         mastery: z.boolean(),
+        name: z.string().min(1, "Nazwa jest wymagana"),
         professionId: z.string().min(1, "Wybierz profesję"),
       }),
     },

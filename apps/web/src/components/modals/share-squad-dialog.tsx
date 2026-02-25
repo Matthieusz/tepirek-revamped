@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,12 +19,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
-type ShareSquadDialogProps = {
+interface ShareSquadDialogProps {
   squadId: number;
   squadName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-};
+}
 
 export function ShareSquadDialog({
   squadId,
@@ -78,6 +79,9 @@ export function ShareSquadDialog({
         squadId,
         userId: selectedUserId,
       }),
+    onError: (error) => {
+      toast.error(error.message || "Nie udało się udostępnić squadu");
+    },
     onSuccess: () => {
       toast.success("Squad udostępniony");
       setSelectedUserId("");
@@ -90,14 +94,14 @@ export function ShareSquadDialog({
         queryKey: orpc.squad.getMySquads.queryKey(),
       });
     },
-    onError: (error) => {
-      toast.error(error.message || "Nie udało się udostępnić squadu");
-    },
   });
 
   const removeShareMutation = useMutation({
     mutationFn: (shareId: number) =>
       orpc.squad.removeSquadShare.call({ shareId }),
+    onError: (error) => {
+      toast.error(error.message || "Nie udało się usunąć udostępnienia");
+    },
     onSuccess: () => {
       toast.success("Usunięto udostępnienie");
       queryClient.invalidateQueries({
@@ -105,9 +109,6 @@ export function ShareSquadDialog({
           input: { id: squadId },
         }),
       });
-    },
-    onError: (error) => {
-      toast.error(error.message || "Nie udało się usunąć udostępnienia");
     },
   });
 

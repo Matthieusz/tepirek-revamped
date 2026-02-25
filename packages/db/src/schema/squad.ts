@@ -8,6 +8,7 @@ import {
   timestamp,
   unique,
 } from "drizzle-orm/pg-core";
+
 import { user } from "./auth";
 
 // Konto z gry Margonem (konto może mieć wiele postaci)
@@ -33,12 +34,12 @@ export const gameAccount = pgTable(
 export const gameAccountShare = pgTable(
   "game_account_share",
   {
-    id: serial("id").primaryKey(),
     canManage: boolean("can_manage").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     gameAccountId: integer("game_account_id")
       .notNull()
       .references(() => gameAccount.id, { onDelete: "cascade" }),
+    id: serial("id").primaryKey(),
     sharedWithUserId: text("shared_with_user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -55,12 +56,12 @@ export const gameAccountShare = pgTable(
 
 // Profesje postaci w grze
 export const professionCode = {
-  w: "Wojownik",
-  m: "Mag",
-  h: "Łowca",
   b: "Tancerz ostrzy",
-  t: "Tropiciel",
+  h: "Łowca",
+  m: "Mag",
   p: "Paladyn",
+  t: "Tropiciel",
+  w: "Wojownik",
 } as const;
 
 export type ProfessionCode = keyof typeof professionCode;
@@ -171,9 +172,9 @@ export const squadShare = pgTable(
 );
 
 export const squadSchema = {
+  character,
   gameAccount,
   gameAccountShare,
-  character,
   squad,
   squadMember,
   squadShare,

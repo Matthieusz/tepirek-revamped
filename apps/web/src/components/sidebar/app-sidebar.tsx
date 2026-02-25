@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type * as React from "react";
 import { toast } from "sonner";
+
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavOther } from "@/components/sidebar/nav-other";
 import {
@@ -24,14 +25,13 @@ import {
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 import type { AuthSession } from "@/lib/auth-guard";
+
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 
 const data = {
   navMain: [
     {
-      title: "Eventy",
-      url: "#",
       icon: CalendarCheck,
       items: [
         {
@@ -59,10 +59,10 @@ const data = {
           url: "/dashboard/events/vault",
         },
       ],
+      title: "Eventy",
+      url: "#",
     },
     {
-      title: "Licytacje",
-      url: "#",
       icon: Gavel,
       items: [
         {
@@ -74,10 +74,10 @@ const data = {
           url: "/dashboard/auctions/support",
         },
       ],
+      title: "Licytacje",
+      url: "#",
     },
     {
-      title: "Squad Builder",
-      url: "#",
       icon: Users,
       items: [
         {
@@ -93,10 +93,10 @@ const data = {
           url: "/dashboard/squad-builder/manage",
         },
       ],
+      title: "Squad Builder",
+      url: "#",
     },
     {
-      title: "Kalkulatory",
-      url: "#",
       icon: Calculator,
       items: [
         {
@@ -109,34 +109,36 @@ const data = {
         },
         { title: "Lista", url: "/dashboard/calculator/list" },
       ],
+      title: "Kalkulatory",
+      url: "#",
     },
   ],
   projects: [
     {
+      icon: ListChecks,
       name: "Lista zadań",
       url: "/dashboard/tasks",
-      icon: ListChecks,
     },
     {
+      icon: Brain,
       name: "Umiejętności",
       url: "/dashboard/skills",
-      icon: Brain,
     },
     {
+      icon: Users,
       name: "Lista graczy",
       url: "/dashboard/player-list",
-      icon: Users,
     },
     {
+      icon: User,
       name: "Profil",
       url: "/dashboard/profile",
-      icon: User,
     },
     {
+      disabled: true,
+      icon: Settings,
       name: "Ustawienia",
       url: "/dashboard/settings",
-      icon: Settings,
-      disabled: true,
     },
   ],
 };
@@ -214,14 +216,14 @@ export function AppSidebar({ session, ...props }: AppSidebarProps) {
             onClick={() =>
               authClient.signOut({
                 fetchOptions: {
+                  onError: (error) => {
+                    toast.error(error.error.message || error.error.statusText);
+                  },
                   onSuccess: () => {
                     toast.success("Wylogowano pomyślnie");
                     navigate({
                       to: "/",
                     });
-                  },
-                  onError: (error) => {
-                    toast.error(error.error.message || error.error.statusText);
                   },
                 },
               })

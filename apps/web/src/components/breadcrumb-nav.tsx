@@ -1,5 +1,6 @@
 import { Link, useMatches } from "@tanstack/react-router";
 import { Fragment } from "react";
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,7 +18,7 @@ export const BreadcrumbNav = () => {
       const crumb =
         match.staticData?.crumb ??
         (match.loaderData as { crumb?: string } | undefined)?.crumb;
-      return crumb ? { path: match.pathname, label: crumb } : null;
+      return crumb ? { label: crumb, path: match.pathname } : null;
     })
     .filter(
       (crumb): crumb is { path: string; label: string } => crumb !== null

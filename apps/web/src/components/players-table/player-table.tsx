@@ -1,9 +1,6 @@
-import {
-  type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import type { ColumnDef } from '@tanstack/react-table';
+
 import {
   Table,
   TableBody,
@@ -13,18 +10,18 @@ import {
   TableRow,
 } from "../ui/table";
 
-type PlayersDataTableProps<TData, TValue> = {
+interface PlayersDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-};
+}
 
 export function PlayerTable<TData, TValue>({
   columns,
   data,
 }: PlayersDataTableProps<TData, TValue>) {
   const table = useReactTable({
-    data,
     columns,
+    data,
     getCoreRowModel: getCoreRowModel(),
   });
 

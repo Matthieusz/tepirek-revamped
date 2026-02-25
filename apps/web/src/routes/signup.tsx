@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+
 import { SignUpForm } from "@/components/signup-form";
 import { getUser } from "@/functions/get-user";
 

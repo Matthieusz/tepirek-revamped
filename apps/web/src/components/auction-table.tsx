@@ -2,7 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Trash2 } from "lucide-react";
 import type React from "react";
 import { toast } from "sonner";
+
 import { orpc } from "@/utils/orpc";
+
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
@@ -18,7 +20,7 @@ import {
 type Round = 1 | 2 | 3 | 4;
 type Column = 1 | 2 | 3;
 
-type SignupData = {
+interface SignupData {
   id: number;
   userId: string;
   level: number;
@@ -27,15 +29,15 @@ type SignupData = {
   createdAt: string | Date;
   userName: string | null;
   userImage: string | null;
-};
+}
 
-type CellContentProps = {
+interface CellContentProps {
   signup: SignupData | undefined;
   isOwnSignup: boolean;
   isMutating: boolean;
   onSignup: () => void;
   onRemove: () => void;
-};
+}
 
 const formatSignupDate = (createdAt: string | Date) => {
   const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
@@ -44,9 +46,9 @@ const formatSignupDate = (createdAt: string | Date) => {
   }
   return date.toLocaleString("pl-PL", {
     day: "2-digit",
-    month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    month: "2-digit",
   });
 };
 
@@ -132,12 +134,12 @@ const CellContent: React.FC<CellContentProps> = ({
   );
 };
 
-export type AuctionTableProps = {
+export interface AuctionTableProps {
   columns?: string[];
   profession: string;
   type: "main" | "support";
   currentUserId: string;
-};
+}
 
 const rounds: Round[] = [1, 2, 3, 4];
 const roundLabels: Record<Round, string> = {
@@ -172,6 +174,9 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
         type,
         ...params,
       }),
+    onError: () => {
+      toast.error("Wystąpił błąd");
+    },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: signupsQuery.queryKey });
       queryClient.invalidateQueries({ queryKey: statsQuery.queryKey });
@@ -181,20 +186,17 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
           : "Wypisano z licytacji"
       );
     },
-    onError: () => {
-      toast.error("Wystąpił błąd");
-    },
   });
 
   const removeMutation = useMutation({
     mutationFn: (id: number) => orpc.auction.removeSignup.call({ id }),
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Wystąpił błąd");
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: signupsQuery.queryKey });
       queryClient.invalidateQueries({ queryKey: statsQuery.queryKey });
       toast.success("Wypisano z licytacji");
-    },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Wystąpił błąd");
     },
   });
 
@@ -288,9 +290,9 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
                           }
                           onSignup={() =>
                             toggleMutation.mutate({
+                              column,
                               level: value,
                               round,
-                              column,
                             })
                           }
                           signup={signup}

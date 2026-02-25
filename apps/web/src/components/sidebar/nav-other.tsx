@@ -1,5 +1,6 @@
 import { Link, useMatchRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
+
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -28,7 +29,7 @@ export function NavOther({
       </SidebarGroupLabel>
       <SidebarMenu>
         {projects.map((item) => {
-          const isActive = matchRoute({ to: item.url, fuzzy: true });
+          const isActive = matchRoute({ fuzzy: true, to: item.url });
 
           return (
             <SidebarMenuItem key={item.name}>

@@ -3,6 +3,7 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { Loader2, LogOut, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -103,16 +104,16 @@ function RouteComponent() {
               onClick={() =>
                 authClient.signOut({
                   fetchOptions: {
+                    onError: (error) => {
+                      toast.error(
+                        error.error.message || error.error.statusText
+                      );
+                    },
                     onSuccess: () => {
                       toast.success("Wylogowano pomyślnie");
                       navigate({
                         to: "/",
                       });
-                    },
-                    onError: (error) => {
-                      toast.error(
-                        error.error.message || error.error.statusText
-                      );
                     },
                   },
                 })

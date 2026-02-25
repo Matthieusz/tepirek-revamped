@@ -2,18 +2,10 @@ import { db } from "@tepirek-revamped/db";
 import { hero } from "@tepirek-revamped/db/schema/bet";
 import { eq } from "drizzle-orm";
 import z from "zod";
+
 import { adminProcedure, protectedProcedure } from "../index";
 
 export const heroesRouter = {
-  getAll: protectedProcedure.handler(async () => await db.select().from(hero)),
-
-  getByEventId: protectedProcedure
-    .input(z.object({ eventId: z.number() }))
-    .handler(
-      async ({ input }) =>
-        await db.select().from(hero).where(eq(hero.eventId, input.eventId))
-    ),
-
   create: adminProcedure
     .input(
       z.object({
@@ -37,5 +29,14 @@ export const heroesRouter = {
     .input(z.object({ id: z.number() }))
     .handler(
       async ({ input }) => await db.delete(hero).where(eq(hero.id, input.id))
+    ),
+
+  getAll: protectedProcedure.handler(async () => await db.select().from(hero)),
+
+  getByEventId: protectedProcedure
+    .input(z.object({ eventId: z.number() }))
+    .handler(
+      async ({ input }) =>
+        await db.select().from(hero).where(eq(hero.eventId, input.eventId))
     ),
 };

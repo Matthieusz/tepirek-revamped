@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, User, Users } from "lucide-react";
 import { useState } from "react";
+
 import { ErrorBoundary } from "@/components/error-boundary";
 import { AddGameAccountModal } from "@/components/modals/add-game-account-modal";
 import { AccountCharactersList } from "@/components/squad-builder/account-characters-list";

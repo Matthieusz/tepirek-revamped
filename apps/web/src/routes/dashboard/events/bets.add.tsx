@@ -5,6 +5,7 @@ import { CirclePlus, Copy, CopyX, Search, Sword, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+
 import Loader from "@/components/loader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -30,11 +31,11 @@ export const Route = createFileRoute("/dashboard/events/bets/add")({
   },
 });
 
-type AddBetForm = {
+interface AddBetForm {
   eventId: string;
   heroId: string;
   userIds: string[];
-};
+}
 
 const defaultValues: AddBetForm = {
   eventId: "",

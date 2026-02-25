@@ -2,14 +2,14 @@
  * Shared types for squad builder functionality
  */
 
-export type VerifiedUser = {
+export interface VerifiedUser {
   id: string;
   name: string;
   email: string;
   image: string | null;
-};
+}
 
-export type Character = {
+export interface Character {
   id: number;
   nick: string;
   level: number;
@@ -19,13 +19,13 @@ export type Character = {
   avatarUrl: string | null;
   guildName: string | null;
   gameAccountName: string;
-};
+}
 
 export type CharacterWithAccountId = Character & {
   gameAccountId: number;
 };
 
-export type GameAccount = {
+export interface GameAccount {
   id: number;
   name: string;
   profileUrl: string | null;
@@ -34,18 +34,18 @@ export type GameAccount = {
   isOwner: boolean;
   canManage: boolean;
   ownerName: string | null;
-};
+}
 
-export type GameAccountShare = {
+export interface GameAccountShare {
   id: number;
   canManage: boolean;
   userId: string;
   userName: string;
   userEmail: string;
   userImage: string | null;
-};
+}
 
-export type Squad = {
+export interface Squad {
   id: number;
   name: string;
   description: string | null;
@@ -56,18 +56,18 @@ export type Squad = {
   isOwner: boolean;
   canEdit: boolean;
   ownerName: string | null;
-};
+}
 
-export type SquadShare = {
+export interface SquadShare {
   id: number;
   canEdit: boolean;
   odUserId: string;
   userName: string;
   userEmail: string;
   userImage: string | null;
-};
+}
 
-export type SquadMember = {
+export interface SquadMember {
   id: number;
   position: number;
   role: string | null;
@@ -80,9 +80,9 @@ export type SquadMember = {
   characterAvatarUrl: string | null;
   characterGuildName: string | null;
   gameAccountName: string;
-};
+}
 
-export type SquadDetails = {
+export interface SquadDetails {
   id: number;
   name: string;
   description: string | null;
@@ -94,4 +94,4 @@ export type SquadDetails = {
   updatedAt: Date;
   members: SquadMember[];
   shares: SquadShare[];
-};
+}
