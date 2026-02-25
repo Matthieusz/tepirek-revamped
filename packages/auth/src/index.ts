@@ -23,13 +23,13 @@ export const auth = betterAuth({
   advanced: isProduction
     ? {
         crossSubDomainCookies: {
-          enabled: true,
           domain: ".informati.dev",
+          enabled: true,
         },
         defaultCookieAttributes: {
-          secure: true,
           httpOnly: true,
           sameSite: "none",
+          secure: true,
         },
       }
     : undefined,
@@ -42,15 +42,15 @@ export const auth = betterAuth({
     enabled: true,
   },
   rateLimit: {
-    window: 60,
-    max: 100,
     customRules: {
-      "/get-session": false,
       "/callback/*": {
-        window: 60,
         max: 20,
+        window: 60,
       },
+      "/get-session": false,
     },
+    max: 100,
+    window: 60,
   },
   secret: betterAuthSecret,
   session: {
@@ -71,14 +71,14 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       role: {
-        type: "string",
         default: "user",
         required: true,
+        type: "string",
       },
       verified: {
-        type: "boolean",
         default: false,
         required: true,
+        type: "boolean",
       },
     },
   },
