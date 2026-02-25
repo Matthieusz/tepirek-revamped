@@ -6,7 +6,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 const ensureEnv = (key: string) => {
   const value = process.env[key];
-  if (!value) {
+  if (value === undefined || value === "") {
     throw new Error(`${key} is required`);
   }
   return value;
@@ -16,7 +16,7 @@ const betterAuthSecret = ensureEnv("BETTER_AUTH_SECRET");
 const betterAuthUrl = ensureEnv("BETTER_AUTH_URL");
 const discordClientId = ensureEnv("DISCORD_CLIENT_ID");
 const discordClientSecret = ensureEnv("DISCORD_CLIENT_SECRET");
-const corsOrigin = process.env.CORS_ORIGIN || "";
+const corsOrigin = process.env.CORS_ORIGIN ?? "";
 const isProduction = process.env.NODE_ENV === "production";
 
 export const auth = betterAuth({

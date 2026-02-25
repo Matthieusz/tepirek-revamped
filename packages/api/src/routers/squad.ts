@@ -63,7 +63,7 @@ const updateSquadSchema = z.object({
 // TypeScript requires function declarations for assertion signatures (TS2775)
 // oxlint-disable-next-line func-style
 function assertUserId(userId: string | undefined): asserts userId is string {
-  if (!userId) {
+  if (userId === undefined || userId === "") {
     throw new ORPCError("UNAUTHORIZED");
   }
 }
@@ -105,8 +105,8 @@ export const squadRouter = {
           externalId: char.externalId,
           gameAccountId: newAccount.id,
           gender: char.gender,
-          guildId: char.guildId || null,
-          guildName: char.guildName || null,
+          guildId: char.guildId ?? null,
+          guildName: char.guildName ?? null,
           level: char.level,
           nick: char.nick,
           profession: char.profession,
@@ -286,7 +286,7 @@ export const squadRouter = {
         });
       }
 
-      return await db
+      return db
         .select({
           canManage: gameAccountShare.canManage,
           id: gameAccountShare.id,
@@ -334,11 +334,11 @@ export const squadRouter = {
         ))`,
       ];
 
-      if (input?.world) {
+      if (input?.world !== undefined && input.world !== "") {
         conditions.push(eq(character.world, input.world.toLowerCase()));
       }
 
-      if (input?.gameAccountId) {
+      if (input?.gameAccountId !== undefined) {
         conditions.push(eq(character.gameAccountId, input.gameAccountId));
       }
 
@@ -350,7 +350,7 @@ export const squadRouter = {
         conditions.push(lte(character.level, input.maxLevel));
       }
 
-      if (input?.excludeInSquad) {
+      if (input?.excludeInSquad === true) {
         const exceptSquadId = input.excludeInSquadExceptSquadId ?? -1;
         conditions.push(sql`NOT EXISTS (
           SELECT 1
@@ -369,7 +369,7 @@ export const squadRouter = {
         )`);
       }
 
-      return await db
+      return db
         .select({
           avatarUrl: character.avatarUrl,
           externalId: character.externalId,

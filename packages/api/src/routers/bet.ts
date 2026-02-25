@@ -269,7 +269,7 @@ export const betRouter = {
     // Group members by bet ID
     const membersByBetId = new Map<number, (typeof allMembers)[number][]>();
     for (const member of allMembers) {
-      const existing = membersByBetId.get(member.heroBetId) || [];
+      const existing = membersByBetId.get(member.heroBetId) ?? [];
       existing.push(member);
       membersByBetId.set(member.heroBetId, existing);
     }
@@ -277,7 +277,7 @@ export const betRouter = {
     // Combine bets with their members
     return bets.map((bet) => ({
       ...bet,
-      members: membersByBetId.get(bet.id) || [],
+      members: membersByBetId.get(bet.id) ?? [],
     }));
   }),
 
@@ -296,10 +296,10 @@ export const betRouter = {
 
       // Build where conditions
       const conditions: SQL[] = [];
-      if (eventId) {
+      if (eventId !== undefined) {
         conditions.push(eq(hero.eventId, eventId));
       }
-      if (heroId) {
+      if (heroId !== undefined) {
         conditions.push(eq(heroBet.heroId, heroId));
       }
 
@@ -359,7 +359,7 @@ export const betRouter = {
       // Group members by bet ID
       const membersByBetId = new Map<number, (typeof allMembers)[number][]>();
       for (const member of allMembers) {
-        const existing = membersByBetId.get(member.heroBetId) || [];
+        const existing = membersByBetId.get(member.heroBetId) ?? [];
         existing.push(member);
         membersByBetId.set(member.heroBetId, existing);
       }
@@ -367,7 +367,7 @@ export const betRouter = {
       // Combine bets with their members
       const betsWithMembers = bets.map((bet) => ({
         ...bet,
-        members: membersByBetId.get(bet.id) || [],
+        members: membersByBetId.get(bet.id) ?? [],
       }));
 
       return {
@@ -481,10 +481,10 @@ export const betRouter = {
     .handler(async ({ input }) => {
       // Build where conditions
       const conditions: SQL[] = [];
-      if (input.eventId) {
+      if (input.eventId !== undefined) {
         conditions.push(eq(userStats.eventId, input.eventId));
       }
-      if (input.heroId) {
+      if (input.heroId !== undefined) {
         conditions.push(eq(userStats.heroId, input.heroId));
       }
       const whereClause =
@@ -515,13 +515,13 @@ export const betRouter = {
   getUserStats: protectedProcedure
     .input(z.object({ eventId: z.number().optional() }))
     .handler(async ({ input }) => {
-      if (input.eventId) {
-        return await db
+      if (input.eventId !== undefined) {
+        return db
           .select()
           .from(userStats)
           .where(eq(userStats.eventId, input.eventId));
       }
-      return await db.select().from(userStats);
+      return db.select().from(userStats);
     }),
 
   getVault: protectedProcedure
@@ -532,7 +532,7 @@ export const betRouter = {
 
       // Build where conditions
       const conditions: SQL[] = [];
-      if (input.eventId) {
+      if (input.eventId !== undefined) {
         conditions.push(eq(userStats.eventId, input.eventId));
       }
 
@@ -570,7 +570,7 @@ export const betRouter = {
     )
     .handler(async ({ input }) => {
       const conditions: SQL[] = [eq(userStats.userId, input.userId)];
-      if (input.eventId) {
+      if (input.eventId !== undefined) {
         conditions.push(eq(userStats.eventId, input.eventId));
       }
 

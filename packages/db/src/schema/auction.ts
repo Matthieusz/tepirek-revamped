@@ -7,6 +7,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
+// oxlint-disable-next-line @typescript-eslint/no-deprecated
 export const auctionSignups = pgTable(
   "auction_signups",
   {

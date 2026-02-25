@@ -42,7 +42,7 @@ export const userRouter = {
   getVerified: protectedProcedure.handler(() =>
     db.select().from(user).where(eq(user.verified, true))
   ),
-  list: protectedProcedure.handler(async () => await db.select().from(user)),
+  list: protectedProcedure.handler(async () => db.select().from(user)),
   setRole: adminProcedure
     .input(
       z.object({
@@ -138,11 +138,10 @@ export const userRouter = {
       }
       return { valid: false };
     }),
-  verifySelf: protectedProcedure.handler(
-    async ({ context }) =>
-      await db
-        .update(user)
-        .set({ updatedAt: new Date(), verified: true })
-        .where(eq(user.id, context.session.user.id))
+  verifySelf: protectedProcedure.handler(async ({ context }) =>
+    db
+      .update(user)
+      .set({ updatedAt: new Date(), verified: true })
+      .where(eq(user.id, context.session.user.id))
   ),
 };

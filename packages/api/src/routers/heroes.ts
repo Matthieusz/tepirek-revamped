@@ -14,28 +14,24 @@ export const heroesRouter = {
         name: z.string().min(1),
       })
     )
-    .handler(
-      async ({ input }) =>
-        await db.insert(hero).values({
-          eventId: input.eventId,
-          image: input.image || null,
-          level: input.level,
-          name: input.name,
-        })
+    .handler(async ({ input }) =>
+      db.insert(hero).values({
+        eventId: input.eventId,
+        image: input.image ?? null,
+        level: input.level,
+        name: input.name,
+      })
     ),
 
   delete: adminProcedure
     .input(z.object({ id: z.number() }))
-    .handler(
-      async ({ input }) => await db.delete(hero).where(eq(hero.id, input.id))
-    ),
+    .handler(async ({ input }) => db.delete(hero).where(eq(hero.id, input.id))),
 
-  getAll: protectedProcedure.handler(async () => await db.select().from(hero)),
+  getAll: protectedProcedure.handler(async () => db.select().from(hero)),
 
   getByEventId: protectedProcedure
     .input(z.object({ eventId: z.number() }))
-    .handler(
-      async ({ input }) =>
-        await db.select().from(hero).where(eq(hero.eventId, input.eventId))
+    .handler(async ({ input }) =>
+      db.select().from(hero).where(eq(hero.eventId, input.eventId))
     ),
 };

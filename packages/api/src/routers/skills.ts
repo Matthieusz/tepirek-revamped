@@ -15,11 +15,10 @@ export const skillsRouter = {
         name: z.string().min(2),
       })
     )
-    .handler(
-      async ({ input }) =>
-        await db.insert(professions).values({
-          name: input.name,
-        })
+    .handler(async ({ input }) =>
+      db.insert(professions).values({
+        name: input.name,
+      })
     ),
 
   createRange: adminProcedure
@@ -30,13 +29,12 @@ export const skillsRouter = {
         name: z.string().min(2),
       })
     )
-    .handler(
-      async ({ input }) =>
-        await db.insert(range).values({
-          image: input.image,
-          level: input.level,
-          name: input.name,
-        })
+    .handler(async ({ input }) =>
+      db.insert(range).values({
+        image: input.image,
+        level: input.level,
+        name: input.name,
+      })
     ),
 
   createSkill: protectedProcedure
@@ -49,38 +47,34 @@ export const skillsRouter = {
         rangeId: z.number(),
       })
     )
-    .handler(
-      async ({ input, context }) =>
-        await db.insert(skills).values({
-          link: input.link,
-          mastery: input.mastery,
-          name: input.name,
-          professionId: input.professionId,
-          rangeId: input.rangeId,
-          userId: context.session.user.id,
-        })
+    .handler(async ({ input, context }) =>
+      db.insert(skills).values({
+        link: input.link,
+        mastery: input.mastery,
+        name: input.name,
+        professionId: input.professionId,
+        rangeId: input.rangeId,
+        userId: context.session.user.id,
+      })
     ),
 
   deleteRange: adminProcedure
     .input(z.object({ id: z.number() }))
-    .handler(
-      async ({ input }) => await db.delete(range).where(eq(range.id, input.id))
+    .handler(async ({ input }) =>
+      db.delete(range).where(eq(range.id, input.id))
     ),
 
   deleteSkill: adminProcedure
     .input(z.object({ id: z.number() }))
-    .handler(
-      async ({ input }) =>
-        await db.delete(skills).where(eq(skills.id, input.id))
+    .handler(async ({ input }) =>
+      db.delete(skills).where(eq(skills.id, input.id))
     ),
 
-  getAllProfessions: protectedProcedure.handler(
-    async () => await db.select().from(professions)
+  getAllProfessions: protectedProcedure.handler(async () =>
+    db.select().from(professions)
   ),
 
-  getAllRanges: protectedProcedure.handler(
-    async () => await db.select().from(range)
-  ),
+  getAllRanges: protectedProcedure.handler(async () => db.select().from(range)),
 
   getRangeBySlug: protectedProcedure
     .input(
@@ -103,22 +97,21 @@ export const skillsRouter = {
 
   getSkillsByRange: protectedProcedure
     .input(z.object({ rangeId: z.number() }))
-    .handler(
-      async ({ input }) =>
-        await db
-          .select({
-            addedBy: user.name,
-            addedByImage: user.image,
-            id: skills.id,
-            link: skills.link,
-            mastery: skills.mastery,
-            name: skills.name,
-            professionId: professions.id,
-            professionName: professions.name,
-          })
-          .from(skills)
-          .innerJoin(professions, eq(professions.id, skills.professionId))
-          .innerJoin(user, eq(user.id, skills.userId))
-          .where(eq(skills.rangeId, input.rangeId))
+    .handler(async ({ input }) =>
+      db
+        .select({
+          addedBy: user.name,
+          addedByImage: user.image,
+          id: skills.id,
+          link: skills.link,
+          mastery: skills.mastery,
+          name: skills.name,
+          professionId: professions.id,
+          professionName: professions.name,
+        })
+        .from(skills)
+        .innerJoin(professions, eq(professions.id, skills.professionId))
+        .innerJoin(user, eq(user.id, skills.userId))
+        .where(eq(skills.rangeId, input.rangeId))
     ),
 };

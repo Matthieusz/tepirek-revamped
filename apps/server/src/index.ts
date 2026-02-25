@@ -1,4 +1,5 @@
 import "dotenv/config";
+// oxlint-disable-next-line eslint-plugin-import(no-nodejs-modules)
 import { randomUUID } from "node:crypto";
 
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
@@ -63,14 +64,16 @@ app.use(
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "OPTIONS"],
     credentials: true,
-    origin: process.env.CORS_ORIGIN || "",
+    origin: process.env.CORS_ORIGIN ?? "",
   })
 );
 
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+// oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+app.on(["POST", "GET"], "/api/auth/*", async (c) => auth.handler(c.req.raw));
 
 export const apiHandler = new OpenAPIHandler(appRouter, {
   interceptors: [
+    // oxlint-disable-next-line promise/prefer-await-to-callbacks
     onError((error) => {
       logger.error({ err: error }, "openapi handler error");
     }),
@@ -84,6 +87,7 @@ export const apiHandler = new OpenAPIHandler(appRouter, {
 
 export const rpcHandler = new RPCHandler(appRouter, {
   interceptors: [
+    // oxlint-disable-next-line promise/prefer-await-to-callbacks
     onError((error) => {
       logger.error({ err: error }, "rpc handler error");
     }),
@@ -91,6 +95,7 @@ export const rpcHandler = new RPCHandler(appRouter, {
 });
 
 app.use("/*", async (c, next) => {
+  // oxlint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const context = await createContext({ context: c });
   const requestLogger = c.get("logger") ?? logger;
 

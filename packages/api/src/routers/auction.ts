@@ -76,7 +76,7 @@ export const auctionRouter = {
         throw new Error("Signup not found");
       }
 
-      if (signup[0].userId !== context.session.user.id) {
+      if (signup[0]?.userId !== context.session.user.id) {
         throw new Error("Not authorized to remove this signup");
       }
 
@@ -113,11 +113,10 @@ export const auctionRouter = {
         .limit(1);
 
       if (existingCell.length > 0) {
+        const [cell] = existingCell;
         // If it's your signup, toggle off (unsign)
-        if (existingCell[0].userId === userId) {
-          await db
-            .delete(auctionSignups)
-            .where(eq(auctionSignups.id, existingCell[0].id));
+        if (cell?.userId === userId) {
+          await db.delete(auctionSignups).where(eq(auctionSignups.id, cell.id));
           return { action: "removed" as const };
         }
 

@@ -14,31 +14,29 @@ export const eventRouter = {
         name: z.string().min(1),
       })
     )
-    .handler(
-      async ({ input }) =>
-        await db.insert(event).values({
-          color: input.color,
-          endTime: new Date(input.endTime),
-          icon: input.icon,
-          name: input.name,
-        })
+    .handler(async ({ input }) =>
+      db.insert(event).values({
+        color: input.color,
+        endTime: new Date(input.endTime),
+        icon: input.icon,
+        name: input.name,
+      })
     ),
 
   delete: adminProcedure
     .input(z.object({ id: z.number() }))
-    .handler(
-      async ({ input }) => await db.delete(event).where(eq(event.id, input.id))
+    .handler(async ({ input }) =>
+      db.delete(event).where(eq(event.id, input.id))
     ),
 
-  getAll: protectedProcedure.handler(async () => await db.select().from(event)),
+  getAll: protectedProcedure.handler(async () => db.select().from(event)),
 
   toggleActive: adminProcedure
     .input(z.object({ active: z.boolean(), id: z.number() }))
-    .handler(
-      async ({ input }) =>
-        await db
-          .update(event)
-          .set({ active: input.active })
-          .where(eq(event.id, input.id))
+    .handler(async ({ input }) =>
+      db
+        .update(event)
+        .set({ active: input.active })
+        .where(eq(event.id, input.id))
     ),
 };
