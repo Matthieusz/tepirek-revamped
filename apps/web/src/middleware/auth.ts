@@ -17,25 +17,26 @@ const sessionCache = new Map<
     expires: number;
   }
 >();
-const CACHE_TTL = 30 * 1000; // 30 seconds cache
+// 30 seconds cache
+const CACHE_TTL = 30 * 1000;
 
-function getCacheKey(request: Request): string {
+const getCacheKey = (request: Request): string => {
   const cookie = request.headers.get("cookie") || "";
   const authCookies = cookie
     .split(";")
     .filter((c) => c.trim().startsWith("better-auth"))
     .join(";");
   return authCookies;
-}
+};
 
-function cleanExpiredCache() {
+const cleanExpiredCache = () => {
   const now = Date.now();
   for (const [key, value] of sessionCache) {
     if (value.expires < now) {
       sessionCache.delete(key);
     }
   }
-}
+};
 
 export const authMiddleware = createMiddleware().server(
   async ({ next, request }) => {

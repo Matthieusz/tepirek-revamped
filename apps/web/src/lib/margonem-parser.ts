@@ -23,7 +23,7 @@ export interface ParsedAccount {
   characters: ParsedCharacter[];
 }
 
-export function parseMargonemProfile(html: string): ParsedAccount {
+export const parseMargonemProfile = (html: string): ParsedAccount => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
 
@@ -40,9 +40,9 @@ export function parseMargonemProfile(html: string): ParsedAccount {
     name: accountName,
     profileUrl,
   };
-}
+};
 
-function extractAccountLevel(doc: Document): number | undefined {
+const extractAccountLevel = (doc: Document): number | undefined => {
   const headerDataElements = doc.querySelectorAll(".profile-header-data");
   for (const el of headerDataElements) {
     const label = el.querySelector(".label")?.textContent?.trim();
@@ -53,15 +53,15 @@ function extractAccountLevel(doc: Document): number | undefined {
       }
     }
   }
-  return;
-}
+  return undefined;
+};
 
-function extractProfileUrl(doc: Document): string | undefined {
+const extractProfileUrl = (doc: Document): string | undefined => {
   const copyButton = doc.querySelector(".js-url-copy");
   return copyButton.dataset.url ?? undefined;
-}
+};
 
-function extractCharacters(doc: Document): ParsedCharacter[] {
+const extractCharacters = (doc: Document): ParsedCharacter[] => {
   const characters: ParsedCharacter[] = [];
   const characterElements = doc.querySelectorAll("li.char-row");
 
@@ -73,11 +73,11 @@ function extractCharacters(doc: Document): ParsedCharacter[] {
   }
 
   return characters;
-}
+};
 
-function extractSingleCharacter(li: Element): ParsedCharacter | null {
+const extractSingleCharacter = (li: Element): ParsedCharacter | null => {
   const externalIdStr = li.dataset.id;
-  const nick = li.dataset.nick;
+  const { nick } = li.dataset;
   const levelStr = li.dataset.lvl;
   const worldRaw = li.dataset.world;
 
@@ -110,9 +110,9 @@ function extractSingleCharacter(li: Element): ParsedCharacter | null {
     professionName,
     world,
   };
-}
+};
 
-function extractAvatarUrl(li: Element): string | undefined {
+const extractAvatarUrl = (li: Element): string | undefined => {
   const avatarSpan = li.querySelector(".cimg");
   if (!avatarSpan) {
     return;
@@ -121,15 +121,21 @@ function extractAvatarUrl(li: Element): string | undefined {
   const style = avatarSpan.getAttribute("style") ?? "";
   const urlMatch = style.match(AVATAR_URL_REGEX);
   return urlMatch?.[1];
-}
+};
 
 export const professionColors: Record<string, string> = {
-  w: "bg-red-500/20 text-red-700 dark:text-red-400", // Wojownik
-  m: "bg-purple-500/20 text-purple-700 dark:text-purple-400", // Mag
-  h: "bg-green-500/20 text-green-700 dark:text-green-400", // Łowca
-  b: "bg-orange-500/20 text-orange-700 dark:text-orange-400", // Tancerz ostrzy
-  t: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400", // Tropiciel
-  p: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400", // Paladyn
+  // Tancerz ostrzy
+  b: "bg-orange-500/20 text-orange-700 dark:text-orange-400",
+  // Łowca
+  h: "bg-green-500/20 text-green-700 dark:text-green-400",
+  // Mag
+  m: "bg-purple-500/20 text-purple-700 dark:text-purple-400",
+  // Paladyn
+  p: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400",
+  // Tropiciel
+  t: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400",
+  // Wojownik
+  w: "bg-red-500/20 text-red-700 dark:text-red-400",
 };
 
 export const professionNames: Record<string, string> = {
@@ -141,8 +147,5 @@ export const professionNames: Record<string, string> = {
   w: "Wojownik",
 };
 
-export function getProfessionColor(code: string): string {
-  return (
-    professionColors[code] ?? "bg-gray-500/20 text-gray-700 dark:text-gray-400"
-  );
-}
+export const getProfessionColor = (code: string): string =>
+  professionColors[code] ?? "bg-gray-500/20 text-gray-700 dark:text-gray-400";
