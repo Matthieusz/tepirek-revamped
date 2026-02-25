@@ -12,8 +12,8 @@ import { auth } from "@tepirek-revamped/auth";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
-import { logger } from './logger';
-import type { Logger } from './logger';
+import { logger } from "./logger";
+import type { Logger } from "./logger";
 
 const app = new Hono<{
   Variables: {
