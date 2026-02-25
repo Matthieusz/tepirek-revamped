@@ -129,7 +129,7 @@ const RouteComponent = () => {
   });
 
   // Heroes are already filtered by event from the API
-  const sortedHeroes = [...heroes].toSorted((a, b) => a.level - b.level);
+  const sortedHeroes = (heroes ?? []).toSorted((a, b) => a.level - b.level);
 
   // Flatten pages into single array of bets
   const allBets = betsData?.pages.flatMap((page) => page.items) ?? [];
