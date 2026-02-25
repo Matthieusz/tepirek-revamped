@@ -1,5 +1,6 @@
 import { createMiddleware } from "@tanstack/react-start";
 import type { auth } from "@tepirek-revamped/auth";
+
 import { authClient } from "@/lib/auth-client";
 
 export type AuthSession = {
@@ -63,8 +64,8 @@ export const authMiddleware = createMiddleware().server(
     // Cache the session
     if (cacheKey) {
       sessionCache.set(cacheKey, {
-        session,
         expires: Date.now() + CACHE_TTL,
+        session,
       });
     }
 

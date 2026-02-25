@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -107,12 +108,12 @@ const calculateGroupAttackPenalty = (
   const threshold = 15 + Math.max(0, 0.1 * attackerStrength - 20);
 
   return {
-    maxAttackerLevel,
+    attackerStrength,
     avgAttackerLevel,
     avgDefenderLevel,
-    attackerStrength,
-    threshold,
     difference,
+    maxAttackerLevel,
+    threshold,
     wouldReceivePenalty: difference > threshold,
   };
 };
@@ -200,13 +201,13 @@ function RouteComponent() {
       );
 
       setResult({
-        attackerLevel: value.attackerLevel,
-        victimLevel: value.victimLevel,
-        minLevelDifference,
         actualDifference,
-        wouldReceivePenalty: penalty,
-        minVictimLevelForPenalty,
+        attackerLevel: value.attackerLevel,
         maxAttackerWithoutPenalty,
+        minLevelDifference,
+        minVictimLevelForPenalty,
+        victimLevel: value.victimLevel,
+        wouldReceivePenalty: penalty,
       });
     },
   });

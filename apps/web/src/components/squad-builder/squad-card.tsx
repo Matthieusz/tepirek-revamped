@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
 import { EditSquadDialog } from "@/components/modals/edit-squad-dialog";
 import { ShareSquadDialog } from "@/components/modals/share-squad-dialog";
 import { SquadDetailsDialog } from "@/components/modals/squad-details-dialog";
@@ -40,13 +41,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Squad } from "@/types/squad";
 import { orpc } from "@/utils/orpc";
+
 import { LevelRange } from "./level-range";
 import { MembersPreview } from "./members-preview";
 import { ProfessionSummary } from "./profession-summary";
 
-type SquadCardProps = {
+interface SquadCardProps {
   squad: Squad;
-};
+}
 
 export function SquadCard({ squad }: SquadCardProps) {
   const [showDetails, setShowDetails] = useState(false);
@@ -57,14 +59,14 @@ export function SquadCard({ squad }: SquadCardProps) {
 
   const deleteMutation = useMutation({
     mutationFn: () => orpc.squad.deleteSquad.call({ id: squad.id }),
+    onError: (error) => {
+      toast.error(error.message || "Nie udało się usunąć squadu");
+    },
     onSuccess: () => {
       toast.success("Squad usunięty");
       queryClient.invalidateQueries({
         queryKey: orpc.squad.getMySquads.queryKey(),
       });
-    },
-    onError: (error) => {
-      toast.error(error.message || "Nie udało się usunąć squadu");
     },
   });
 

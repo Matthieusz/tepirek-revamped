@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Link2, LogIn, Swords, UserPlus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { orpc } from "@/utils/orpc";
@@ -79,7 +80,6 @@ function HomeComponent() {
               </Link>
             </Button>
           </CardContent>
-
 
           <CardFooter className="flex-col items-center justify-between gap-4 rounded-b-xl  p-6 sm:flex-row">
             <div className="flex items-center gap-3 rounded-full border border-border/50 bg-background/80 px-4 py-2 shadow-sm backdrop-blur-md">

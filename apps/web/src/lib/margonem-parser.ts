@@ -3,7 +3,7 @@
 
 const AVATAR_URL_REGEX = /url\(["']?([^"')]+)["']?\)/;
 
-export type ParsedCharacter = {
+export interface ParsedCharacter {
   externalId: number;
   nick: string;
   level: number;
@@ -14,14 +14,14 @@ export type ParsedCharacter = {
   guildName?: string;
   guildId?: number;
   avatarUrl?: string;
-};
+}
 
-export type ParsedAccount = {
+export interface ParsedAccount {
   name: string;
   profileUrl?: string;
   accountLevel?: number;
   characters: ParsedCharacter[];
-};
+}
 
 export function parseMargonemProfile(html: string): ParsedAccount {
   const parser = new DOMParser();
@@ -35,10 +35,10 @@ export function parseMargonemProfile(html: string): ParsedAccount {
   const characters = extractCharacters(doc);
 
   return {
-    name: accountName,
-    profileUrl,
     accountLevel,
     characters,
+    name: accountName,
+    profileUrl,
   };
 }
 
@@ -49,7 +49,7 @@ function extractAccountLevel(doc: Document): number | undefined {
     if (label === "Poziom konta:") {
       const value = el.querySelector(".value")?.textContent?.trim();
       if (value) {
-        return Number.parseInt(value.replace(/\s/g, ""), 10);
+        return Number.parseInt(value.replaceAll(/\s/g, ""), 10);
       }
     }
   }
@@ -58,7 +58,7 @@ function extractAccountLevel(doc: Document): number | undefined {
 
 function extractProfileUrl(doc: Document): string | undefined {
   const copyButton = doc.querySelector(".js-url-copy");
-  return copyButton?.getAttribute("data-url") ?? undefined;
+  return copyButton.dataset.url ?? undefined;
 }
 
 function extractCharacters(doc: Document): ParsedCharacter[] {
@@ -76,10 +76,10 @@ function extractCharacters(doc: Document): ParsedCharacter[] {
 }
 
 function extractSingleCharacter(li: Element): ParsedCharacter | null {
-  const externalIdStr = li.getAttribute("data-id");
-  const nick = li.getAttribute("data-nick");
-  const levelStr = li.getAttribute("data-lvl");
-  const worldRaw = li.getAttribute("data-world");
+  const externalIdStr = li.dataset.id;
+  const nick = li.dataset.nick;
+  const levelStr = li.dataset.lvl;
+  const worldRaw = li.dataset.world;
 
   if (!(externalIdStr && nick && levelStr && worldRaw)) {
     return null;
@@ -99,16 +99,16 @@ function extractSingleCharacter(li: Element): ParsedCharacter | null {
   const world = worldRaw.replace("#", "");
 
   return {
+    avatarUrl,
     externalId: Number.parseInt(externalIdStr, 10),
-    nick,
+    gender,
+    guildId: guildId && guildId > 0 ? guildId : undefined,
+    guildName: guildName && guildName !== "" ? guildName : undefined,
     level: Number.parseInt(levelStr, 10),
+    nick,
     profession: professionCode,
     professionName,
     world,
-    gender,
-    guildName: guildName && guildName !== "" ? guildName : undefined,
-    guildId: guildId && guildId > 0 ? guildId : undefined,
-    avatarUrl,
   };
 }
 
@@ -133,12 +133,12 @@ export const professionColors: Record<string, string> = {
 };
 
 export const professionNames: Record<string, string> = {
-  w: "Wojownik",
-  m: "Mag",
-  h: "Łowca",
   b: "Tancerz ostrzy",
-  t: "Tropiciel",
+  h: "Łowca",
+  m: "Mag",
   p: "Paladyn",
+  t: "Tropiciel",
+  w: "Wojownik",
 };
 
 export function getProfessionColor(code: string): string {

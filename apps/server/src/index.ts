@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { randomUUID } from "node:crypto";
+
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
@@ -11,7 +12,8 @@ import { auth } from "@tepirek-revamped/auth";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
-import { type Logger, logger } from "./logger";
+import { logger } from './logger';
+import type { Logger } from './logger';
 
 const app = new Hono<{
   Variables: {
@@ -22,9 +24,9 @@ const app = new Hono<{
 app.use("*", async (c, next) => {
   const requestId = c.req.header("x-request-id") ?? randomUUID();
   const requestLogger = logger.child({
-    requestId,
     method: c.req.method,
     path: c.req.path,
+    requestId,
   });
 
   c.set("logger", requestLogger);
@@ -58,24 +60,24 @@ app.use("*", async (c, next) => {
 app.use(
   "/*",
   cors({
-    origin: process.env.CORS_ORIGIN || "",
-    allowMethods: ["GET", "POST", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["GET", "POST", "OPTIONS"],
     credentials: true,
+    origin: process.env.CORS_ORIGIN || "",
   })
 );
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 export const apiHandler = new OpenAPIHandler(appRouter, {
-  plugins: [
-    new OpenAPIReferencePlugin({
-      schemaConverters: [new ZodToJsonSchemaConverter()],
-    }),
-  ],
   interceptors: [
     onError((error) => {
       logger.error({ err: error }, "openapi handler error");
+    }),
+  ],
+  plugins: [
+    new OpenAPIReferencePlugin({
+      schemaConverters: [new ZodToJsonSchemaConverter()],
     }),
   ],
 });
@@ -93,8 +95,8 @@ app.use("/*", async (c, next) => {
   const requestLogger = c.get("logger") ?? logger;
 
   const rpcResult = await rpcHandler.handle(c.req.raw, {
-    prefix: "/rpc",
     context,
+    prefix: "/rpc",
   });
 
   if (rpcResult.matched) {
@@ -103,8 +105,8 @@ app.use("/*", async (c, next) => {
   }
 
   const apiResult = await apiHandler.handle(c.req.raw, {
-    prefix: "/api-reference",
     context,
+    prefix: "/api-reference",
   });
 
   if (apiResult.matched) {

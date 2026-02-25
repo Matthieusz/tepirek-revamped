@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Sword, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
 import { AddHeroModal } from "@/components/modals/add-hero-modal";
 import {
   AlertDialog,
@@ -55,16 +56,16 @@ function RouteComponent() {
     mutationFn: async (heroId: number) => {
       await orpc.heroes.delete.call({ id: heroId });
     },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : "Wystąpił błąd";
+      toast.error(message);
+    },
     onSuccess: () => {
       toast.success("Heros został usunięty");
       queryClient.invalidateQueries({
         queryKey: orpc.heroes.getAll.queryKey(),
       });
       setHeroToDelete(null);
-    },
-    onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
     },
   });
 

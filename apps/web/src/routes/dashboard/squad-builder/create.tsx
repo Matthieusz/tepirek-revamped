@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Globe, Lock, Search, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+
 import { ErrorBoundary } from "@/components/error-boundary";
 import { CharactersList } from "@/components/squad-builder/characters-list";
 import { TeamProfessionsSummary } from "@/components/squad-builder/team-professions-summary";
@@ -66,10 +67,10 @@ function RouteComponent() {
   const { data: characters, isPending: charactersLoading } = useQuery({
     ...orpc.squad.getMyCharacters.queryOptions({
       input: {
-        world: selectedWorld || "",
-        minLevel: parseLevel(minLevel),
-        maxLevel: parseLevel(maxLevel),
         excludeInSquad: hideInSquad,
+        maxLevel: parseLevel(maxLevel),
+        minLevel: parseLevel(minLevel),
+        world: selectedWorld || "",
       },
     }),
     enabled: !!selectedWorld,
@@ -98,9 +99,9 @@ function RouteComponent() {
 
   const form = useForm({
     defaultValues: {
-      name: "",
       description: "",
       isPublic: false,
+      name: "",
     },
     onSubmit: async ({ value }) => {
       if (!selectedWorld) {
@@ -120,11 +121,11 @@ function RouteComponent() {
 
       try {
         await orpc.squad.createSquad.call({
-          name: value.name,
           description: value.description || undefined,
-          world: selectedWorld,
           isPublic: value.isPublic,
           memberIds: selectedCharacterIds,
+          name: value.name,
+          world: selectedWorld,
         });
 
         toast.success("Squad utworzony pomyślnie");

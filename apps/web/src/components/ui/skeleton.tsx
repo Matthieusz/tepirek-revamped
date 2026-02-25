@@ -232,20 +232,20 @@ function CardGridSkeleton({
   variant?: "card" | "range" | "bet" | "vault" | "ranking";
 }) {
   const SkeletonComponent = {
+    bet: BetCardSkeleton,
     card: CardSkeleton,
     range: RangeCardSkeleton,
-    bet: BetCardSkeleton,
-    vault: VaultCardSkeleton,
     ranking: RankingCardSkeleton,
+    vault: VaultCardSkeleton,
   }[variant];
 
   const gridClass = {
+    bet: "grid gap-4",
     card: "space-y-4",
     range:
       "grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
-    bet: "grid gap-4",
-    vault: "space-y-2",
     ranking: "space-y-2",
+    vault: "space-y-2",
   }[variant];
 
   return (

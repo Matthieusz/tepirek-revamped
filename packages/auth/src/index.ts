@@ -20,26 +20,26 @@ const corsOrigin = process.env.CORS_ORIGIN || "";
 const isProduction = process.env.NODE_ENV === "production";
 
 export const auth = betterAuth({
+  advanced: isProduction
+    ? {
+        crossSubDomainCookies: {
+          enabled: true,
+          domain: ".informati.dev",
+        },
+        defaultCookieAttributes: {
+          secure: true,
+          httpOnly: true,
+          sameSite: "none",
+        },
+      }
+    : undefined,
+  baseURL: betterAuthUrl,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema,
   }),
-  trustedOrigins: [corsOrigin],
   emailAndPassword: {
     enabled: true,
-  },
-  socialProviders: {
-    discord: {
-      clientId: discordClientId,
-      clientSecret: discordClientSecret,
-    },
-  },
-  session: {
-    cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60,
-      strategy: "compact",
-    },
   },
   rateLimit: {
     window: 60,
@@ -53,7 +53,21 @@ export const auth = betterAuth({
     },
   },
   secret: betterAuthSecret,
-  baseURL: betterAuthUrl,
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60,
+      strategy: "compact",
+    },
+  },
+  socialProviders: {
+    discord: {
+      clientId: discordClientId,
+      clientSecret: discordClientSecret,
+    },
+  },
+  trustedOrigins: [corsOrigin],
+
   user: {
     additionalFields: {
       role: {
@@ -68,18 +82,4 @@ export const auth = betterAuth({
       },
     },
   },
-
-  advanced: isProduction
-    ? {
-        crossSubDomainCookies: {
-          enabled: true,
-          domain: ".informati.dev",
-        },
-        defaultCookieAttributes: {
-          secure: true,
-          httpOnly: true,
-          sameSite: "none",
-        },
-      }
-    : undefined,
 });

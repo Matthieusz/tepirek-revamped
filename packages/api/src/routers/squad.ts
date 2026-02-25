@@ -11,35 +11,36 @@ import {
 } from "@tepirek-revamped/db/schema/squad";
 import { and, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
 import z from "zod";
+
 import { protectedProcedure } from "../index";
 
 // Schema do parsowania postaci z HTML
 const parsedCharacterSchema = z.object({
+  avatarUrl: z.string().optional(),
   externalId: z.number(),
-  nick: z.string(),
+  gender: z.string().optional(),
+  guildId: z.number().optional(),
+  guildName: z.string().optional(),
   level: z.number(),
+  nick: z.string(),
   profession: z.string(),
   professionName: z.string(),
   world: z.string(),
-  gender: z.string().optional(),
-  guildName: z.string().optional(),
-  guildId: z.number().optional(),
-  avatarUrl: z.string().optional(),
 });
 
 const createGameAccountSchema = z.object({
-  name: z.string().min(1),
-  profileUrl: z.string().optional(),
   accountLevel: z.number().optional(),
   characters: z.array(parsedCharacterSchema),
+  name: z.string().min(1),
+  profileUrl: z.string().optional(),
 });
 
 const createSquadSchema = z.object({
-  name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
-  world: z.string().min(1),
   isPublic: z.boolean().default(false),
   memberIds: z.array(z.number()).max(10),
+  name: z.string().min(1).max(100),
+  world: z.string().min(1),
 });
 
 const shareSquadSchema = z.object({
@@ -53,11 +54,11 @@ const shareGameAccountSchema = z.object({
 });
 
 const updateSquadSchema = z.object({
-  id: z.number(),
-  name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
+  id: z.number(),
   isPublic: z.boolean(),
   memberIds: z.array(z.number()).max(10),
+  name: z.string().min(1).max(100),
 });
 
 function assertUserId(userId: string | undefined): asserts userId is string {
@@ -75,16 +76,16 @@ export const squadRouter = {
 
     const owned = await db
       .select({
-        id: gameAccount.id,
-        name: gameAccount.name,
-        profileUrl: gameAccount.profileUrl,
         accountLevel: gameAccount.accountLevel,
+        canManage: sql<boolean>`true`.as("can_manage"),
         createdAt: gameAccount.createdAt,
+        id: gameAccount.id,
+        isOwner: sql<boolean>`true`.as("is_owner"),
+        name: gameAccount.name,
+        ownerName: user.name,
+        profileUrl: gameAccount.profileUrl,
         updatedAt: gameAccount.updatedAt,
         userId: gameAccount.userId,
-        isOwner: sql<boolean>`true`.as("is_owner"),
-        canManage: sql<boolean>`true`.as("can_manage"),
-        ownerName: user.name,
       })
       .from(gameAccount)
       .innerJoin(user, eq(gameAccount.userId, user.id))
@@ -92,16 +93,16 @@ export const squadRouter = {
 
     const shared = await db
       .select({
-        id: gameAccount.id,
-        name: gameAccount.name,
-        profileUrl: gameAccount.profileUrl,
         accountLevel: gameAccount.accountLevel,
+        canManage: gameAccountShare.canManage,
         createdAt: gameAccount.createdAt,
+        id: gameAccount.id,
+        isOwner: sql<boolean>`false`.as("is_owner"),
+        name: gameAccount.name,
+        ownerName: user.name,
+        profileUrl: gameAccount.profileUrl,
         updatedAt: gameAccount.updatedAt,
         userId: gameAccount.userId,
-        isOwner: sql<boolean>`false`.as("is_owner"),
-        canManage: gameAccountShare.canManage,
-        ownerName: user.name,
       })
       .from(gameAccountShare)
       .innerJoin(
@@ -111,7 +112,7 @@ export const squadRouter = {
       .innerJoin(user, eq(gameAccount.userId, user.id))
       .where(eq(gameAccountShare.sharedWithUserId, userId));
 
-    return [...owned, ...shared].sort((a, b) => a.name.localeCompare(b.name));
+    return [...owned, ...shared].toSorted((a, b) => a.name.localeCompare(b.name));
   }),
 
   createGameAccount: protectedProcedure
@@ -137,26 +138,26 @@ export const squadRouter = {
       const [newAccount] = await db
         .insert(gameAccount)
         .values({
+          accountLevel: input.accountLevel,
           name: input.name,
           profileUrl: input.profileUrl,
-          accountLevel: input.accountLevel,
           userId,
         })
         .returning();
 
       if (input.characters.length > 0 && newAccount) {
         const characterValues = input.characters.map((char) => ({
+          avatarUrl: char.avatarUrl,
           externalId: char.externalId,
-          nick: char.nick,
+          gameAccountId: newAccount.id,
+          gender: char.gender,
+          guildId: char.guildId || null,
+          guildName: char.guildName || null,
           level: char.level,
+          nick: char.nick,
           profession: char.profession,
           professionName: char.professionName,
           world: char.world.toLowerCase(),
-          gender: char.gender,
-          guildName: char.guildName || null,
-          guildId: char.guildId || null,
-          avatarUrl: char.avatarUrl,
-          gameAccountId: newAccount.id,
         }));
 
         await db.insert(character).values(characterValues);
@@ -200,12 +201,12 @@ export const squadRouter = {
 
       return await db
         .select({
-          id: gameAccountShare.id,
           canManage: gameAccountShare.canManage,
-          userId: user.id,
-          userName: user.name,
+          id: gameAccountShare.id,
           userEmail: user.email,
+          userId: user.id,
           userImage: user.image,
+          userName: user.name,
         })
         .from(gameAccountShare)
         .innerJoin(user, eq(gameAccountShare.sharedWithUserId, user.id))
@@ -257,9 +258,9 @@ export const squadRouter = {
       }
 
       await db.insert(gameAccountShare).values({
+        canManage: false,
         gameAccountId: input.accountId,
         sharedWithUserId: input.userId,
-        canManage: false,
       });
 
       return { success: true };
@@ -325,12 +326,12 @@ export const squadRouter = {
     .input(
       z
         .object({
-          world: z.string().optional(),
-          gameAccountId: z.number().optional(),
-          minLevel: z.number().int().min(1).optional(),
-          maxLevel: z.number().int().min(1).optional(),
           excludeInSquad: z.boolean().optional(),
           excludeInSquadExceptSquadId: z.number().optional(),
+          gameAccountId: z.number().optional(),
+          maxLevel: z.number().int().min(1).optional(),
+          minLevel: z.number().int().min(1).optional(),
+          world: z.string().optional(),
         })
         .refine(
           (val) =>
@@ -392,19 +393,19 @@ export const squadRouter = {
 
       return await db
         .select({
-          id: character.id,
+          avatarUrl: character.avatarUrl,
           externalId: character.externalId,
-          nick: character.nick,
+          gameAccountId: character.gameAccountId,
+          gameAccountName: gameAccount.name,
+          gender: character.gender,
+          guildId: character.guildId,
+          guildName: character.guildName,
+          id: character.id,
           level: character.level,
+          nick: character.nick,
           profession: character.profession,
           professionName: character.professionName,
           world: character.world,
-          gender: character.gender,
-          guildName: character.guildName,
-          guildId: character.guildId,
-          avatarUrl: character.avatarUrl,
-          gameAccountId: character.gameAccountId,
-          gameAccountName: gameAccount.name,
         })
         .from(character)
         .innerJoin(gameAccount, eq(character.gameAccountId, gameAccount.id))
@@ -420,16 +421,16 @@ export const squadRouter = {
 
     const ownedSquads = await db
       .select({
-        id: squad.id,
-        name: squad.name,
-        description: squad.description,
-        world: squad.world,
-        isPublic: squad.isPublic,
-        createdAt: squad.createdAt,
-        updatedAt: squad.updatedAt,
-        isOwner: sql<boolean>`true`.as("is_owner"),
         canEdit: sql<boolean>`true`.as("can_edit"),
+        createdAt: squad.createdAt,
+        description: squad.description,
+        id: squad.id,
+        isOwner: sql<boolean>`true`.as("is_owner"),
+        isPublic: squad.isPublic,
+        name: squad.name,
         ownerName: user.name,
+        updatedAt: squad.updatedAt,
+        world: squad.world,
       })
       .from(squad)
       .innerJoin(user, eq(squad.userId, user.id))
@@ -437,16 +438,16 @@ export const squadRouter = {
 
     const sharedSquads = await db
       .select({
-        id: squad.id,
-        name: squad.name,
-        description: squad.description,
-        world: squad.world,
-        isPublic: squad.isPublic,
-        createdAt: squad.createdAt,
-        updatedAt: squad.updatedAt,
-        isOwner: sql<boolean>`false`.as("is_owner"),
         canEdit: squadShare.canEdit,
+        createdAt: squad.createdAt,
+        description: squad.description,
+        id: squad.id,
+        isOwner: sql<boolean>`false`.as("is_owner"),
+        isPublic: squad.isPublic,
+        name: squad.name,
         ownerName: user.name,
+        updatedAt: squad.updatedAt,
+        world: squad.world,
       })
       .from(squadShare)
       .innerJoin(squad, eq(squadShare.squadId, squad.id))
@@ -483,18 +484,18 @@ export const squadRouter = {
 
       const members = await db
         .select({
-          id: squadMember.id,
-          position: squadMember.position,
-          role: squadMember.role,
+          characterAvatarUrl: character.avatarUrl,
+          characterGuildName: character.guildName,
           characterId: character.id,
-          characterNick: character.nick,
           characterLevel: character.level,
+          characterNick: character.nick,
           characterProfession: character.profession,
           characterProfessionName: character.professionName,
           characterWorld: character.world,
-          characterAvatarUrl: character.avatarUrl,
-          characterGuildName: character.guildName,
           gameAccountName: gameAccount.name,
+          id: squadMember.id,
+          position: squadMember.position,
+          role: squadMember.role,
         })
         .from(squadMember)
         .innerJoin(character, eq(squadMember.characterId, character.id))
@@ -504,12 +505,12 @@ export const squadRouter = {
 
       const shares = await db
         .select({
-          id: squadShare.id,
           canEdit: squadShare.canEdit,
+          id: squadShare.id,
           odUserId: user.id,
-          userName: user.name,
           userEmail: user.email,
           userImage: user.image,
+          userName: user.name,
         })
         .from(squadShare)
         .innerJoin(user, eq(squadShare.sharedWithUserId, user.id))
@@ -517,9 +518,9 @@ export const squadRouter = {
 
       return {
         ...squadData,
+        isOwner: squadData?.userId === userId,
         members,
         shares,
-        isOwner: squadData?.userId === userId,
       };
     }),
 
@@ -572,19 +573,19 @@ export const squadRouter = {
         const [created] = await tx
           .insert(squad)
           .values({
-            name: input.name,
             description: input.description,
-            world: input.world.toLowerCase(),
             isPublic: input.isPublic,
+            name: input.name,
             userId,
+            world: input.world.toLowerCase(),
           })
           .returning();
 
         if (input.memberIds.length > 0 && created) {
           const memberValues = input.memberIds.map((charId, idx) => ({
-            squadId: created.id,
             characterId: charId,
             position: idx + 1,
+            squadId: created.id,
           }));
 
           await tx.insert(squadMember).values(memberValues);
@@ -675,9 +676,9 @@ export const squadRouter = {
         await tx
           .update(squad)
           .set({
-            name: input.name,
             description: input.description,
             isPublic: input.isPublic,
+            name: input.name,
             updatedAt: new Date(),
           })
           .where(eq(squad.id, input.id));
@@ -686,9 +687,9 @@ export const squadRouter = {
 
         if (input.memberIds.length > 0) {
           const memberValues = input.memberIds.map((charId, idx) => ({
-            squadId: input.id,
             characterId: charId,
             position: idx + 1,
+            squadId: input.id,
           }));
 
           await tx.insert(squadMember).values(memberValues);
@@ -743,9 +744,9 @@ export const squadRouter = {
       }
 
       await db.insert(squadShare).values({
-        squadId: input.squadId,
-        sharedWithUserId: targetUserId ?? "",
         canEdit: false,
+        sharedWithUserId: targetUserId ?? "",
+        squadId: input.squadId,
       });
 
       return { success: true };

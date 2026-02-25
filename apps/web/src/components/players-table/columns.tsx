@@ -3,8 +3,10 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
 import { formatDate } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,13 +54,13 @@ function ActionCell({ player }: { player: Player }) {
         userId: player.id,
         verified: !player.verified,
       }),
+    onError: (e: Error) => toast.error(e.message),
     onSuccess: () => {
       toast.success("Zmieniono status");
       queryClient.invalidateQueries({
         queryKey: orpc.user.list.queryKey(),
       });
     },
-    onError: (e: Error) => toast.error(e.message),
   });
   const changeRole = useMutation({
     mutationFn: async () =>
@@ -66,13 +68,13 @@ function ActionCell({ player }: { player: Player }) {
         userId: player.id,
         role: player.role === "admin" ? "user" : "admin",
       }),
+    onError: (e: Error) => toast.error(e.message),
     onSuccess: () => {
       toast.success("Zmieniono rolę");
       queryClient.invalidateQueries({
         queryKey: orpc.user.list.queryKey(),
       });
     },
-    onError: (e: Error) => toast.error(e.message),
   });
   const updateName = useMutation({
     mutationFn: async () =>
@@ -80,6 +82,7 @@ function ActionCell({ player }: { player: Player }) {
         userId: player.id,
         name: newName,
       }),
+    onError: (e: Error) => toast.error(e.message),
     onSuccess: () => {
       toast.success("Zmieniono nazwę użytkownika");
       queryClient.invalidateQueries({
@@ -87,13 +90,13 @@ function ActionCell({ player }: { player: Player }) {
       });
       setShowRenameDialog(false);
     },
-    onError: (e: Error) => toast.error(e.message),
   });
   const deleteUser = useMutation({
     mutationFn: async () =>
       await orpc.user.deleteUser.call({
         userId: player.id,
       }),
+    onError: (e: Error) => toast.error(e.message),
     onSuccess: () => {
       toast.success("Usunięto użytkownika");
       queryClient.invalidateQueries({
@@ -101,7 +104,6 @@ function ActionCell({ player }: { player: Player }) {
       });
       setShowDeleteDialog(false);
     },
-    onError: (e: Error) => toast.error(e.message),
   });
 
   return (
@@ -209,12 +211,11 @@ function ActionCell({ player }: { player: Player }) {
 const baseColumns: ColumnDef<Player>[] = [
   {
     accessorKey: "id",
-    header: "ID",
     cell: ({ row }) => row.index + 1,
+    header: "ID",
   },
   {
     accessorKey: "image",
-    header: "Avatar",
     cell: ({ row }) => (
       <Avatar className="size-10">
         <AvatarImage
@@ -224,34 +225,35 @@ const baseColumns: ColumnDef<Player>[] = [
         <AvatarFallback>{row.getValue("name")}</AvatarFallback>
       </Avatar>
     ),
+    header: "Avatar",
   },
   {
     accessorKey: "name",
-    header: "Nazwa",
     cell: ({ row }) => row.getValue("name"),
+    header: "Nazwa",
   },
   {
     accessorKey: "role",
-    header: "Rola",
     cell: ({ row }) => row.getValue("role"),
+    header: "Rola",
   },
   {
     accessorKey: "createdAt",
-    header: "Utworzono",
     cell: ({ row }) => formatDate(row.getValue("createdAt")),
+    header: "Utworzono",
   },
   {
     accessorKey: "updatedAt",
-    header: "Zaktualizowano",
     cell: ({ row }) => formatDate(row.getValue("updatedAt")),
+    header: "Zaktualizowano",
   },
 ];
 
 function actionsColumn(): ColumnDef<Player> {
   return {
-    id: "actions",
-    header: "Akcje",
     cell: ({ row }) => <ActionCell player={row.original} />,
+    header: "Akcje",
+    id: "actions",
   };
 }
 

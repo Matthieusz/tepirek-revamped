@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,22 +25,22 @@ import {
 } from "@/components/ui/select";
 import { orpc } from "@/utils/orpc";
 
-type AddHeroModalProps = {
+interface AddHeroModalProps {
   trigger: React.ReactNode;
-};
+}
 
-type AddHeroModal = {
+interface AddHeroModal {
   name: string;
   image?: string;
   level: string;
   eventId: string;
-};
+}
 
 const defaultValues: AddHeroModal = {
-  name: "",
+  eventId: "",
   image: "",
   level: "1",
-  eventId: "",
+  name: "",
 };
 
 export function AddHeroModal({ trigger }: AddHeroModalProps) {
@@ -61,10 +62,10 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
         }
 
         await orpc.heroes.create.call({
-          name: value.name,
+          eventId: Number.parseInt(value.eventId, 10),
           image: value.image || undefined,
           level: Number.parseInt(value.level, 10),
-          eventId: Number.parseInt(value.eventId, 10),
+          name: value.name,
         });
 
         toast.success("Heros utworzony pomyślnie");
@@ -83,10 +84,10 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(1, "Nazwa herosa jest wymagana"),
+        eventId: z.string().min(1, "Wybierz event"),
         image: z.string().optional(),
         level: z.string().min(1, "Poziom jest wymagany"),
-        eventId: z.string().min(1, "Wybierz event"),
+        name: z.string().min(1, "Nazwa herosa jest wymagana"),
       }),
     },
   });

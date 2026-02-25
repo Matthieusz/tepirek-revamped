@@ -2,6 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+
 import { CharacterPreviewRow } from "@/components/squad-builder/character-preview-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,15 +18,13 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  type ParsedAccount,
-  parseMargonemProfile,
-} from "@/lib/margonem-parser";
+import { parseMargonemProfile } from '@/lib/margonem-parser';
+import type { ParsedAccount } from '@/lib/margonem-parser';
 import { orpc } from "@/utils/orpc";
 
-type AddGameAccountModalProps = {
+interface AddGameAccountModalProps {
   trigger: React.ReactNode;
-};
+}
 
 export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
   const [open, setOpen] = useState(false);
@@ -46,10 +45,10 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
 
       try {
         await orpc.squad.createGameAccount.call({
-          name: value.name || parsedData.name,
-          profileUrl: parsedData.profileUrl,
           accountLevel: parsedData.accountLevel,
           characters: parsedData.characters,
+          name: value.name || parsedData.name,
+          profileUrl: parsedData.profileUrl,
         });
 
         toast.success("Konto gry dodane pomyślnie");

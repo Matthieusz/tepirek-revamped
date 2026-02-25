@@ -1,5 +1,6 @@
 {
   "name": "@tepirek-revamped/auth",
+  "type": "module",
   "exports": {
     ".": {
       "default": "./src/index.ts"
@@ -8,18 +9,17 @@
       "default": "./src/*.ts"
     }
   },
-  "type": "module",
   "scripts": {},
-  "devDependencies": {
-    "@tepirek-revamped/config": "workspace:*"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
   "dependencies": {
     "@tepirek-revamped/db": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tepirek-revamped/config": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
   }
 }

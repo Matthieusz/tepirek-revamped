@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 import Loader from "@/components/loader";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
@@ -11,21 +12,13 @@ import {
 import { requireVerified } from "@/lib/auth-guard";
 
 export const Route = createFileRoute("/dashboard")({
-  component: RouteComponent,
-  staticData: {
-    crumb: "Dashboard",
-  },
   beforeLoad: async () => {
     const session = await requireVerified();
     return {
       session,
     };
   },
-  pendingComponent: () => (
-    <div className="h-full">
-      <Loader />
-    </div>
-  ),
+  component: RouteComponent,
   errorComponent: () => (
     <div className="flex h-full items-center justify-center">
       <p className="text-gray-500 text-lg">
@@ -33,6 +26,14 @@ export const Route = createFileRoute("/dashboard")({
       </p>
     </div>
   ),
+  pendingComponent: () => (
+    <div className="h-full">
+      <Loader />
+    </div>
+  ),
+  staticData: {
+    crumb: "Dashboard",
+  },
 });
 
 function RouteComponent() {

@@ -3,6 +3,7 @@ import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import z from "zod";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,15 +38,15 @@ export function LoginForm({
           password: value.password,
         },
         {
+          onError: (error) => {
+            toast.error(error.error.message || error.error.statusText);
+          },
           onSuccess: async () => {
             toast.success("Zalogowano pomyślnie");
             await router.invalidate();
             navigate({
               to: "/dashboard",
             });
-          },
-          onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
           },
         }
       );
@@ -145,7 +146,6 @@ export function LoginForm({
                   className="w-full"
                   onClick={async () => {
                     await authClient.signIn.social({
-                      provider: "discord",
                       callbackURL: `${window.location.origin}/waiting-room`,
                       fetchOptions: {
                         onError: (error) => {
@@ -154,6 +154,7 @@ export function LoginForm({
                           );
                         },
                       },
+                      provider: "discord",
                     });
                   }}
                   variant="outline"
@@ -166,7 +167,7 @@ export function LoginForm({
               Nie masz konta?{" "}
               <Link
                 className="text-primary underline underline-offset-4"
-                to={"/signup"}
+                to="/signup"
               >
                 Zarejestruj się
               </Link>
@@ -174,8 +175,8 @@ export function LoginForm({
           </form>
         </CardContent>
       </Card>
-      <Button variant={"ghost"}>
-        <Link className="flex items-center gap-2" to={"/"}>
+      <Button variant="ghost">
+        <Link className="flex items-center gap-2" to="/">
           <ArrowLeft />
           Powrót do strony głównej
         </Link>

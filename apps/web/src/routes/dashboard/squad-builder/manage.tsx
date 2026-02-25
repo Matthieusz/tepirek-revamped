@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus, Search, Share2, Users } from "lucide-react";
 import { useState } from "react";
+
 import { ErrorBoundary } from "@/components/error-boundary";
 import { SquadCard } from "@/components/squad-builder/squad-card";
 import { Button } from "@/components/ui/button";

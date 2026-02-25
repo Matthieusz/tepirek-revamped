@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Calculator, Unlink } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,39 +29,39 @@ const MAX_LEVEL = 300;
 
 /** Rarity multipliers applied to base value */
 const rarityMultipliers: Record<Rarity, number> = {
-  zwykły: 1.0, // No bonus
+  zwykły: 1, // No bonus
   unikatowy: 1.2, // +20%
   heroiczny: 1.5, // +50%
-  legendarny: 3.0, // +200%
+  legendarny: 3, // +200%
 };
 
 /** Cap threshold for base value (i) per rarity */
 const rarityCaps: Record<Rarity, { threshold: number; maxCost: number }> = {
-  zwykły: { threshold: 20, maxCost: 1500 }, // i > 20
-  unikatowy: { threshold: 20, maxCost: 1800 }, // i >= 20
-  heroiczny: { threshold: 30, maxCost: 3375 }, // i >= 30
-  legendarny: { threshold: 30, maxCost: 6750 }, // i >= 30
+  zwykły: { maxCost: 1500, threshold: 20 }, // i > 20
+  unikatowy: { maxCost: 1800, threshold: 20 }, // i >= 20
+  heroiczny: { maxCost: 3375, threshold: 30 }, // i >= 30
+  legendarny: { maxCost: 6750, threshold: 30 }, // i >= 30
 };
 
 const rarityColors: Record<Rarity, string> = {
-  zwykły: "text-gray-400",
-  unikatowy: "text-yellow-500",
   heroiczny: "text-blue-500",
   legendarny: "text-orange-500",
+  unikatowy: "text-yellow-500",
+  zwykły: "text-gray-400",
 };
 
 const rarityBgColors: Record<Rarity, string> = {
-  zwykły: "bg-gray-500/10 border-gray-500/20",
-  unikatowy: "bg-yellow-500/10 border-yellow-500/20",
   heroiczny: "bg-blue-500/10 border-blue-500/20",
   legendarny: "bg-orange-500/10 border-orange-500/20",
+  unikatowy: "bg-yellow-500/10 border-yellow-500/20",
+  zwykły: "bg-gray-500/10 border-gray-500/20",
 };
 
 const rarityBonusText: Record<Rarity, string> = {
-  zwykły: "brak bonusu",
-  unikatowy: "+20%",
   heroiczny: "+50%",
   legendarny: "+200%",
+  unikatowy: "+20%",
+  zwykły: "brak bonusu",
 };
 
 /**
@@ -82,7 +83,7 @@ const calculateUnbindCost = (
       : baseValue >= cap.threshold;
 
   if (isCapped) {
-    return { baseValue, totalCost: cap.maxCost, isCapped: true };
+    return { baseValue, isCapped: true, totalCost: cap.maxCost };
   }
 
   // Apply multiplier and calculate cost
@@ -90,7 +91,7 @@ const calculateUnbindCost = (
   const roundedValue = Math.round(adjustedValue);
   const totalCost = 75 * roundedValue;
 
-  return { baseValue, totalCost, isCapped: false };
+  return { baseValue, isCapped: false, totalCost };
 };
 
 const formSchema = z.object({
@@ -132,13 +133,13 @@ function RouteComponent() {
       );
 
       setResult({
+        baseValue,
+        isCapped,
         itemLevel: value.itemLevel,
         itemRarity: value.itemRarity,
-        baseValue,
+        maxCost: rarityCaps[value.itemRarity].maxCost,
         rarityMultiplier: rarityMultipliers[value.itemRarity],
         totalCost,
-        isCapped,
-        maxCost: rarityCaps[value.itemRarity].maxCost,
       });
     },
   });

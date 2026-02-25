@@ -8,9 +8,9 @@ import { getProfessionColor, professionNames } from "@/lib/margonem-parser";
 import { professionAbbreviations } from "@/lib/squad-utils";
 import type { Character } from "@/types/squad";
 
-type TeamProfessionsSummaryProps = {
+interface TeamProfessionsSummaryProps {
   characters: Character[];
-};
+}
 
 export function TeamProfessionsSummary({
   characters,

@@ -1,18 +1,20 @@
 import { Search } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Character } from "@/types/squad";
+
 import { CharacterSelectCard } from "./character-select-card";
 
-type CharactersListProps = {
+interface CharactersListProps {
   selectedWorld: string;
   charactersLoading: boolean;
   filteredCharacters: Character[];
   selectedCharacterIds: number[];
   toggleCharacter: (id: number) => void;
   onClearFilters: () => void;
-};
+}
 
 export function CharactersList({
   selectedWorld,

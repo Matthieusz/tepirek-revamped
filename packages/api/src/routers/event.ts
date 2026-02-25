@@ -2,11 +2,10 @@ import { db } from "@tepirek-revamped/db";
 import { event } from "@tepirek-revamped/db/schema/event";
 import { eq } from "drizzle-orm";
 import z from "zod";
+
 import { adminProcedure, protectedProcedure } from "../index";
 
 export const eventRouter = {
-  getAll: protectedProcedure.handler(async () => await db.select().from(event)),
-
   create: adminProcedure
     .input(
       z.object({
@@ -26,6 +25,14 @@ export const eventRouter = {
         })
     ),
 
+  delete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .handler(
+      async ({ input }) => await db.delete(event).where(eq(event.id, input.id))
+    ),
+
+  getAll: protectedProcedure.handler(async () => await db.select().from(event)),
+
   toggleActive: adminProcedure
     .input(z.object({ id: z.number(), active: z.boolean() }))
     .handler(
@@ -34,11 +41,5 @@ export const eventRouter = {
           .update(event)
           .set({ active: input.active })
           .where(eq(event.id, input.id))
-    ),
-
-  delete: adminProcedure
-    .input(z.object({ id: z.number() }))
-    .handler(
-      async ({ input }) => await db.delete(event).where(eq(event.id, input.id))
     ),
 };

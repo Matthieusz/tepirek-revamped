@@ -18,11 +18,11 @@ import {
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-type ResponsiveDialogProps = {
+interface ResponsiveDialogProps {
   children: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-};
+}
 
 function ResponsiveDialog({
   children,

@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Share2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
 import { AddGameAccountModal } from "@/components/modals/add-game-account-modal";
 import { ShareAccountDialog } from "@/components/modals/share-account-dialog";
 import {
@@ -23,7 +24,7 @@ import { cn } from "@/lib/utils";
 import type { GameAccount } from "@/types/squad";
 import { orpc } from "@/utils/orpc";
 
-type AccountsListProps = {
+interface AccountsListProps {
   accounts: GameAccount[] | undefined;
   isLoading: boolean;
   selectedId: number | null;
@@ -31,7 +32,7 @@ type AccountsListProps = {
   searchQuery: string;
   debouncedSearchQuery: string;
   setSearchQuery: (query: string) => void;
-};
+}
 
 export function AccountsList({
   accounts,
@@ -61,6 +62,9 @@ export function AccountsList({
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => orpc.squad.deleteGameAccount.call({ id }),
+    onError: (error) => {
+      toast.error(error.message || "Nie udało się usunąć konta");
+    },
     onSuccess: () => {
       toast.success("Konto usunięte");
       queryClient.invalidateQueries({
@@ -73,9 +77,6 @@ export function AccountsList({
         onSelect(null);
       }
       setDeleteDialogOpen(false);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Nie udało się usunąć konta");
     },
   });
 

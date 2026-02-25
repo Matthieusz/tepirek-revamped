@@ -10,19 +10,19 @@ import { todoRouter } from "./todo";
 import { userRouter } from "./user";
 
 export const appRouter = {
+  announcement: announcementRouter,
+  auction: auctionRouter,
+  bet: betRouter,
+  event: eventRouter,
   healthCheck: publicProcedure.handler(() => "OK"),
+  heroes: heroesRouter,
   privateData: protectedProcedure.handler(({ context }) => ({
     message: "This is private",
     user: context.session?.user,
   })),
-  todo: todoRouter,
-  event: eventRouter,
-  heroes: heroesRouter,
   skills: skillsRouter,
-  user: userRouter,
-  auction: auctionRouter,
-  announcement: announcementRouter,
-  bet: betRouter,
   squad: squadRouter,
+  todo: todoRouter,
+  user: userRouter,
 };
 export type AppRouter = typeof appRouter;

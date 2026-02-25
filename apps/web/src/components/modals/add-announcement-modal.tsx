@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,7 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { orpc } from "@/utils/orpc";
+
 import { Textarea } from "../ui/textarea";
 
 interface AddAnnouncementModalProps {
@@ -28,14 +30,14 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
 
   const form = useForm({
     defaultValues: {
-      title: "",
       description: "",
+      title: "",
     },
     onSubmit: async ({ value }) => {
       try {
         await orpc.announcement.create.call({
-          title: value.title,
           description: value.description,
+          title: value.title,
         });
 
         toast.success("Ogłoszenie utworzone pomyślnie");
@@ -54,8 +56,8 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
     },
     validators: {
       onSubmit: z.object({
-        title: z.string().min(1, "Tytuł ogłoszenia jest wymagany"),
         description: z.string().min(1, "Opis ogłoszenia jest wymagany"),
+        title: z.string().min(1, "Tytuł ogłoszenia jest wymagany"),
       }),
     },
   });

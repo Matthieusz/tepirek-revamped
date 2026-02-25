@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Globe, Lock } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,11 +16,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getProfessionColor } from "@/lib/margonem-parser";
 import { orpc } from "@/utils/orpc";
 
-type SquadDetailsDialogProps = {
+interface SquadDetailsDialogProps {
   squadId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-};
+}
 
 export function SquadDetailsDialog({
   squadId,
@@ -85,8 +86,8 @@ export function SquadDetailsDialog({
                         className="h-12 w-8 shrink-0 overflow-hidden rounded"
                         style={{
                           backgroundImage: `url(${member.characterAvatarUrl})`,
-                          backgroundSize: "128px 192px",
                           backgroundPosition: "0 0",
+                          backgroundSize: "128px 192px",
                         }}
                       />
                     )}

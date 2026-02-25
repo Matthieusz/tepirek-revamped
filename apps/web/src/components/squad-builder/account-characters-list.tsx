@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,14 +23,14 @@ import { cn } from "@/lib/utils";
 import type { CharacterWithAccountId } from "@/types/squad";
 import { orpc } from "@/utils/orpc";
 
-type AccountCharactersListProps = {
+interface AccountCharactersListProps {
   characters: CharacterWithAccountId[] | undefined;
   isLoading: boolean;
   canManage: boolean;
   searchQuery: string;
   debouncedSearchQuery: string;
   setSearchQuery: (query: string) => void;
-};
+}
 
 export function AccountCharactersList({
   characters,
@@ -58,15 +59,15 @@ export function AccountCharactersList({
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => orpc.squad.deleteCharacter.call({ id }),
+    onError: (error) => {
+      toast.error(error.message || "Nie udało się usunąć postaci");
+    },
     onSuccess: () => {
       toast.success("Postać usunięta");
       queryClient.invalidateQueries({
         queryKey: orpc.squad.getMyCharacters.queryKey(),
       });
       setDeleteDialogOpen(false);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Nie udało się usunąć postaci");
     },
   });
 
@@ -116,8 +117,8 @@ export function AccountCharactersList({
                     className="h-16 w-12 shrink-0 overflow-hidden rounded"
                     style={{
                       backgroundImage: `url(${char.avatarUrl})`,
-                      backgroundSize: "192px 256px",
                       backgroundPosition: "0 0",
+                      backgroundSize: "192px 256px",
                     }}
                   />
                 )}

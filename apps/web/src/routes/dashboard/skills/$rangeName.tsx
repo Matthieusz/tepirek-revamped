@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
 import { AddSkillModal } from "@/components/modals/add-skill-modal";
 import {
   AlertDialog,
@@ -30,6 +31,7 @@ import { isAdmin } from "@/lib/utils";
 import { orpc, queryClient } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/skills/$rangeName")({
+  component: RangeDetails,
   loader: async ({ params }) => {
     const slug = params.rangeName;
     try {
@@ -39,7 +41,6 @@ export const Route = createFileRoute("/dashboard/skills/$rangeName")({
       return { crumb: `${slug}` };
     }
   },
-  component: RangeDetails,
 });
 
 type SkillToDelete = {
@@ -67,12 +68,15 @@ function RangeDetails() {
       ? orpc.skills.getSkillsByRange.queryOptions({
           input: { rangeId: range.data.id },
         })
-      : { queryKey: ["skills", rangeName, "empty"], queryFn: async () => [] }
+      : { queryFn: async () => [], queryKey: ["skills", rangeName, "empty"] }
   );
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       await orpc.skills.deleteSkill.call({ id });
+    },
+    onError: () => {
+      toast.error("Błąd podczas usuwania");
     },
     onSuccess: () => {
       toast.success("Usunięto zestaw");
@@ -84,9 +88,6 @@ function RangeDetails() {
         });
       }
       setSkillToDelete(null);
-    },
-    onError: () => {
-      toast.error("Błąd podczas usuwania");
     },
   });
 

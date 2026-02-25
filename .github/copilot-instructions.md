@@ -89,7 +89,7 @@ beforeLoad: async () => requireUnverified();
 ```typescript
 // Parent route passes session to children
 // apps/web/src/routes/dashboard/route.tsx
-beforeLoad: async () => {
+beforeLoad: (async () => {
   const session = await requireVerified();
   return { session: session.user }; // Available to all child routes
 },
@@ -97,7 +97,7 @@ beforeLoad: async () => {
   function RouteComponent() {
     const { session } = Route.useRouteContext();
     // session is already available, no need to fetch again
-  };
+  });
 ```
 
 ### Loading States

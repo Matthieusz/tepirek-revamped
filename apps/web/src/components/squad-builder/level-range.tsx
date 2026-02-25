@@ -1,8 +1,8 @@
 import type { SquadMember } from "@/types/squad";
 
-type LevelRangeProps = {
+interface LevelRangeProps {
   members: SquadMember[];
-};
+}
 
 export function LevelRange({ members }: LevelRangeProps) {
   const levels = members.map((m) => m.characterLevel);

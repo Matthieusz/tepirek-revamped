@@ -3,27 +3,10 @@ import { announcement } from "@tepirek-revamped/db/schema/announcement";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import z from "zod";
+
 import { adminProcedure, protectedProcedure } from "../index";
 
 export const announcementRouter = {
-  getAll: protectedProcedure.handler(
-    async () =>
-      await db
-        .select({
-          id: announcement.id,
-          title: announcement.title,
-          description: announcement.description,
-          createdAt: announcement.createdAt,
-          user: {
-            id: user.id,
-            name: user.name,
-            image: user.image,
-          },
-        })
-        .from(announcement)
-        .leftJoin(user, eq(announcement.userId, user.id))
-  ),
-
   create: adminProcedure
     .input(
       z.object({ title: z.string().min(1), description: z.string().min(1) })
@@ -44,4 +27,22 @@ export const announcementRouter = {
       async ({ input }) =>
         await db.delete(announcement).where(eq(announcement.id, input.id))
     ),
+
+  getAll: protectedProcedure.handler(
+    async () =>
+      await db
+        .select({
+          id: announcement.id,
+          title: announcement.title,
+          description: announcement.description,
+          createdAt: announcement.createdAt,
+          user: {
+            id: user.id,
+            name: user.name,
+            image: user.image,
+          },
+        })
+        .from(announcement)
+        .leftJoin(user, eq(announcement.userId, user.id))
+  ),
 };

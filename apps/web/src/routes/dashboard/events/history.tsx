@@ -13,10 +13,12 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
 import { z } from "zod";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,8 +46,8 @@ import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 const searchSchema = z.object({
-  eventId: z.string().optional().catch(undefined),
-  heroId: z.string().optional().catch(undefined),
+  eventId: z.string().optional().catch(),
+  heroId: z.string().optional().catch(),
 });
 
 export const Route = createFileRoute("/dashboard/events/history")({
@@ -94,12 +96,9 @@ function RouteComponent() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: [
-      "bets",
-      "paginated",
-      selectedEventId === "all" ? undefined : Number(selectedEventId),
-      selectedHeroId === "all" ? undefined : Number(selectedHeroId),
-    ],
+    getNextPageParam: (lastPage) =>
+      lastPage.pagination.hasMore ? lastPage.pagination.page + 1 : undefined,
+    initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
       const result = await orpc.bet.getAllPaginated.call({
         page: pageParam,
@@ -110,13 +109,16 @@ function RouteComponent() {
       });
       return result;
     },
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) =>
-      lastPage.pagination.hasMore ? lastPage.pagination.page + 1 : undefined,
+    queryKey: [
+      "bets",
+      "paginated",
+      selectedEventId === "all" ? undefined : Number(selectedEventId),
+      selectedHeroId === "all" ? undefined : Number(selectedHeroId),
+    ],
   });
 
   // Heroes are already filtered by event from the API
-  const sortedHeroes = heroes?.slice().sort((a, b) => a.level - b.level);
+  const sortedHeroes = [...heroes].toSorted((a, b) => a.level - b.level);
 
   // Flatten pages into single array of bets
   const allBets = betsData?.pages.flatMap((page) => page.items) ?? [];
@@ -135,6 +137,10 @@ function RouteComponent() {
     mutationFn: async (betId: number) => {
       await orpc.bet.delete.call({ id: betId });
     },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : "Wystąpił błąd";
+      toast.error(message);
+    },
     onSuccess: () => {
       toast.success("Obstawienie zostało usunięte");
       // Invalidate the paginated bets query
@@ -143,19 +149,15 @@ function RouteComponent() {
       });
       setBetToDelete(null);
     },
-    onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
-    },
   });
 
   const formatDate = (date: Date) =>
     new Date(date).toLocaleDateString("pl-PL", {
       day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
 
   const calculatePointsPerMember = (memberCount: number) =>
@@ -199,8 +201,8 @@ function RouteComponent() {
                     <Button
                       onClick={() =>
                         setBetToDelete({
-                          id: bet.id,
                           heroName: bet.heroName,
+                          id: bet.id,
                         })
                       }
                       size="icon"
@@ -328,7 +330,7 @@ function RouteComponent() {
             <SelectContent>
               <SelectItem value="all">Wszystkie eventy</SelectItem>
               {[...(events || [])]
-                .sort(
+                .toSorted(
                   (a, b) =>
                     new Date(b.endTime).getTime() -
                     new Date(a.endTime).getTime()

@@ -4,6 +4,7 @@ import { Coins } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,13 +27,13 @@ import {
 import { getEventIcon } from "@/lib/constants";
 import { orpc } from "@/utils/orpc";
 
-type HeroStats = {
+interface HeroStats {
   heroId: number;
   heroName: string;
   currentPointWorth: number;
   totalBets: number;
   totalPoints: number;
-};
+}
 
 /**
  * Parse gold amount string with optional "g" suffix for billions
@@ -98,11 +99,11 @@ function HeroStatsPreview({
   );
 }
 
-type DistributeGoldModalProps = {
+interface DistributeGoldModalProps {
   trigger: React.ReactNode;
   selectedEventId?: string;
   selectedHeroId?: string;
-};
+}
 
 export function DistributeGoldModal({
   trigger,
@@ -130,7 +131,7 @@ export function DistributeGoldModal({
     eventId === "all"
       ? heroes
       : heroes?.filter((h) => h.eventId?.toString() === eventId)
-  )?.sort((a, b) => a.level - b.level);
+  )?.toSorted((a, b) => a.level - b.level);
 
   // Get hero stats when a specific hero is selected
   const { data: heroStats, isPending: heroStatsPending } = useQuery({
@@ -158,8 +159,8 @@ export function DistributeGoldModal({
         }
 
         const result = await orpc.bet.distributeGold.call({
-          heroId: Number.parseInt(heroId, 10),
           goldAmount,
+          heroId: Number.parseInt(heroId, 10),
         });
 
         toast.success(
@@ -234,7 +235,7 @@ export function DistributeGoldModal({
                 <SelectContent>
                   <SelectItem value="all">Wszystkie eventy</SelectItem>
                   {[...(events || [])]
-                    .sort(
+                    .toSorted(
                       (a, b) =>
                         new Date(b.endTime).getTime() -
                         new Date(a.endTime).getTime()

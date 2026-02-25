@@ -7,10 +7,9 @@ import {
 import { Coins, Loader2, Trophy } from "lucide-react";
 import type { ReactNode } from "react";
 import { z } from "zod";
-import {
-  type RankingItem,
-  RankingList,
-} from "@/components/events/ranking-list";
+
+import { RankingList } from '@/components/events/ranking-list';
+import type { RankingItem } from '@/components/events/ranking-list';
 import { DistributeGoldModal } from "@/components/modals/distribute-gold-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,9 +28,9 @@ import { orpc } from "@/utils/orpc";
 const routeApi = getRouteApi("/dashboard");
 
 const searchSchema = z.object({
-  eventId: z.string().optional().catch(undefined),
-  heroId: z.string().optional().catch(undefined),
-  sortBy: z.enum(["points", "bets", "gold"]).optional().catch(undefined),
+  eventId: z.string().optional().catch(),
+  heroId: z.string().optional().catch(),
+  sortBy: z.enum(["points", "bets", "gold"]).optional().catch(),
 });
 
 const sortRanking = (
@@ -126,7 +125,7 @@ function RouteComponent() {
   });
 
   // Heroes are already filtered by event from the API
-  const sortedHeroes = heroes?.slice().sort((a, b) => a.level - b.level);
+  const sortedHeroes = [...heroes].toSorted((a, b) => a.level - b.level);
 
   const sortedRanking = sortRanking(
     ranking as RankingItem[] | undefined,
@@ -168,7 +167,7 @@ function RouteComponent() {
             <SelectContent>
               <SelectItem value="all">Wszystkie eventy</SelectItem>
               {[...(events || [])]
-                .sort(
+                .toSorted(
                   (a, b) =>
                     new Date(b.endTime).getTime() -
                     new Date(a.endTime).getTime()

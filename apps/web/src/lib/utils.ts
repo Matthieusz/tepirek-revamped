@@ -2,7 +2,8 @@ export function isAdmin(session: { user?: { role?: string } }): boolean {
   return session?.user?.role === "admin";
 }
 
-import { type ClassValue, clsx } from "clsx";
+import { clsx } from 'clsx';
+import type { ClassValue } from 'clsx';
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { twMerge } from "tailwind-merge";
@@ -15,10 +16,10 @@ export function slugify(input: string) {
   return input
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/--+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replaceAll(/\s+/g, "-")
+    .replaceAll(/[^a-z0-9-]/g, "")
+    .replaceAll(/--+/g, "-")
+    .replaceAll(/^-+|-+$/g, "");
 }
 
 export function formatDate(

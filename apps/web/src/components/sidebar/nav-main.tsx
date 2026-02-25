@@ -1,5 +1,7 @@
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { ChevronRight } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -43,7 +45,7 @@ export function NavMain({
       <SidebarMenu>
         {items.map((item) => {
           const isGroupActive = item.items?.some((subItem) =>
-            matchRoute({ to: subItem.url, fuzzy: true })
+            matchRoute({ fuzzy: true, to: subItem.url })
           );
 
           return (
@@ -72,8 +74,8 @@ export function NavMain({
                   <SidebarMenuSub>
                     {item.items?.map((subItem) => {
                       const isActive = matchRoute({
-                        to: subItem.url,
                         fuzzy: true,
+                        to: subItem.url,
                       });
 
                       return (

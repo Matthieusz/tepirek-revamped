@@ -1,4 +1,5 @@
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from 'class-variance-authority';
+import type { VariantProps } from 'class-variance-authority';
 import { Slot as SlotPrimitive } from "radix-ui";
 import type * as React from "react";
 
@@ -7,6 +8,10 @@ import { cn } from "@/lib/utils";
 const buttonVariants = cva(
   "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium text-sm outline-none transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
     variants: {
       variant: {
         default:
@@ -28,10 +33,6 @@ const buttonVariants = cva(
         icon: "size-9",
       },
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
   }
 );
 
@@ -49,7 +50,7 @@ function Button({
 
   return (
     <Comp
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ className, size, variant }))}
       data-slot="button"
       {...props}
     />

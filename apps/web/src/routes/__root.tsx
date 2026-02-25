@@ -7,9 +7,11 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import type { orpc } from "@/utils/orpc";
+
 import appCss from "../index.css?url";
 export interface RouterAppContext {
   orpc: typeof orpc;
@@ -17,6 +19,9 @@ export interface RouterAppContext {
 }
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
+  component: RootDocument,
+
+  errorComponent: RootErrorBoundary,
   head: () => ({
     meta: [
       {
@@ -48,9 +53,6 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       },
     ],
   }),
-
-  component: RootDocument,
-  errorComponent: RootErrorBoundary,
 });
 
 function RootDocument() {
