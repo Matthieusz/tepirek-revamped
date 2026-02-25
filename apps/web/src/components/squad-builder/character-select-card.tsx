@@ -9,11 +9,11 @@ interface CharacterSelectCardProps {
   onToggle: () => void;
 }
 
-export function CharacterSelectCard({
+export const CharacterSelectCard = ({
   character,
   isSelected,
   onToggle,
-}: CharacterSelectCardProps) {
+}: CharacterSelectCardProps) => {
   const checkboxId = `char-${character.id}`;
 
   return (
@@ -61,4 +61,4 @@ export function CharacterSelectCard({
       </div>
     </label>
   );
-}
+};

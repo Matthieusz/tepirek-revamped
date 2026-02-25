@@ -39,7 +39,7 @@ interface HeroStats {
  * Parse gold amount string with optional "g" suffix for billions
  * Examples: "2g" = 2,000,000,000 | "1.5g" = 1,500,000,000 | "50000000" = 50,000,000
  */
-function parseGoldAmount(value: string): number {
+const parseGoldAmount = (value: string): number => {
   const trimmed = value.trim().toLowerCase();
   if (trimmed.endsWith("g")) {
     const num = Number.parseFloat(trimmed.slice(0, -1));
@@ -47,15 +47,15 @@ function parseGoldAmount(value: string): number {
   }
   const num = Number.parseInt(trimmed, 10);
   return Number.isNaN(num) ? 0 : num;
-}
+};
 
-function HeroStatsPreview({
+const HeroStatsPreview = ({
   heroStats,
   isPending,
 }: {
   heroStats: HeroStats | undefined;
   isPending: boolean;
-}) {
+}) => {
   if (isPending) {
     return (
       <div className="rounded-lg border bg-muted/30 p-4">
@@ -97,7 +97,7 @@ function HeroStatsPreview({
       </div>
     </div>
   );
-}
+};
 
 interface DistributeGoldModalProps {
   trigger: React.ReactNode;
@@ -105,11 +105,11 @@ interface DistributeGoldModalProps {
   selectedHeroId?: string;
 }
 
-export function DistributeGoldModal({
+export const DistributeGoldModal = ({
   trigger,
   selectedEventId = "all",
   selectedHeroId = "all",
-}: DistributeGoldModalProps) {
+}: DistributeGoldModalProps) => {
   const [open, setOpen] = useState(false);
   const [eventId, setEventId] = useState(selectedEventId);
   const [heroId, setHeroId] = useState(selectedHeroId);
@@ -301,7 +301,7 @@ export function DistributeGoldModal({
                       value={field.state.value}
                     />
                     <p className="text-muted-foreground text-xs">
-                      Użyj "g" dla miliardów (np. 2g = 2 000 000 000)
+                      Użyj &quot;g&quot; dla miliardów (np. 2g = 2 000 000 000)
                     </p>
                     {goldAmount > 0 && (
                       <p className="font-mono text-muted-foreground text-xs">
@@ -384,4 +384,4 @@ export function DistributeGoldModal({
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

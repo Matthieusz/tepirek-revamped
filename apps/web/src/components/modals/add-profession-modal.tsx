@@ -26,7 +26,7 @@ const defaultValues = {
   name: "",
 };
 
-export function AddProfessionModal({ trigger }: AddProfessionModalProps) {
+export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -115,4 +115,4 @@ export function AddProfessionModal({ trigger }: AddProfessionModalProps) {
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

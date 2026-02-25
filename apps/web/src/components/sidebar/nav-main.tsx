@@ -1,6 +1,6 @@
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import { ChevronRight } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { ChevronRight } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 import {
   Collapsible,
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
-export function NavMain({
+export const NavMain = ({
   items,
 }: {
   items: {
@@ -34,7 +34,7 @@ export function NavMain({
       disabled?: boolean;
     }[];
   }[];
-}) {
+}) => {
   const matchRoute = useMatchRoute();
 
   return (
@@ -106,4 +106,4 @@ export function NavMain({
       </SidebarMenu>
     </SidebarGroup>
   );
-}
+};

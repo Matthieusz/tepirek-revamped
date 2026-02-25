@@ -50,7 +50,7 @@ interface SquadCardProps {
   squad: Squad;
 }
 
-export function SquadCard({ squad }: SquadCardProps) {
+export const SquadCard = ({ squad }: SquadCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -201,8 +201,8 @@ export function SquadCard({ squad }: SquadCardProps) {
               <AlertDialogHeader>
                 <AlertDialogTitle>Usuń squad</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Czy na pewno chcesz usunąć squad "{squad.name}"? Ta operacja
-                  jest nieodwracalna.
+                  Czy na pewno chcesz usunąć squad &quot;{squad.name}&quot;? Ta
+                  operacja jest nieodwracalna.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -220,4 +220,4 @@ export function SquadCard({ squad }: SquadCardProps) {
       )}
     </>
   );
-}
+};

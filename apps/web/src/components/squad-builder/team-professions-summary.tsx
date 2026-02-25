@@ -12,18 +12,15 @@ interface TeamProfessionsSummaryProps {
   characters: Character[];
 }
 
-export function TeamProfessionsSummary({
+export const TeamProfessionsSummary = ({
   characters,
-}: TeamProfessionsSummaryProps) {
+}: TeamProfessionsSummaryProps) => {
   // Count professions
-  const professionCounts = characters.reduce(
-    (acc, char) => {
-      const prof = char.profession;
-      acc[prof] = (acc[prof] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
+  const professionCounts: Record<string, number> = {};
+  for (const char of characters) {
+    const prof = char.profession;
+    professionCounts[prof] = (professionCounts[prof] || 0) + 1;
+  }
 
   // Calculate level range
   const levels = characters.map((c) => c.level);
@@ -62,4 +59,4 @@ export function TeamProfessionsSummary({
       </TooltipProvider>
     </div>
   );
-}
+};

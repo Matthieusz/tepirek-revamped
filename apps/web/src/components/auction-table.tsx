@@ -148,7 +148,8 @@ const roundLabels: Record<Round, string> = {
   3: "Trzecia",
   4: "Czwarta (SŁ)",
 };
-const rowValues = Array.from({ length: 28 }, (_, i) => 30 + i * 10); // 30 to 300 by 10
+// 30 to 300 by 10
+const rowValues = Array.from({ length: 28 }, (_, i) => 30 + i * 10);
 
 export const AuctionTable: React.FC<AuctionTableProps> = ({
   columns = ["Kolumna 1", "Kolumna 2", "Kolumna 3"],

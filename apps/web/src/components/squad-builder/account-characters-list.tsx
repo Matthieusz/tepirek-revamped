@@ -32,14 +32,14 @@ interface AccountCharactersListProps {
   setSearchQuery: (query: string) => void;
 }
 
-export function AccountCharactersList({
+export const AccountCharactersList = ({
   characters,
   isLoading,
   canManage,
   searchQuery,
   debouncedSearchQuery,
   setSearchQuery,
-}: AccountCharactersListProps) {
+}: AccountCharactersListProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [charToDelete, setCharToDelete] =
     useState<CharacterWithAccountId | null>(null);
@@ -177,8 +177,9 @@ export function AccountCharactersList({
           <AlertDialogHeader>
             <AlertDialogTitle>Usuń postać</AlertDialogTitle>
             <AlertDialogDescription>
-              Czy na pewno chcesz usunąć postać "{charToDelete?.nick}"? Ta
-              operacja jest nieodwracalna i usunie postać ze wszystkich squadów.
+              Czy na pewno chcesz usunąć postać &quot;{charToDelete?.nick}
+              &quot;? Ta operacja jest nieodwracalna i usunie postać ze
+              wszystkich squadów.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -198,4 +199,4 @@ export function AccountCharactersList({
       </AlertDialog>
     </>
   );
-}
+};

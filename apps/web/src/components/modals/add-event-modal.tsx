@@ -59,7 +59,7 @@ const EVENT_COLORS = [
   { id: "#ec4899", name: "Różowy" },
 ] as const;
 
-export function AddEventModal({ trigger }: AddEventModalProps) {
+export const AddEventModal = ({ trigger }: AddEventModalProps) => {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date>();
   const [selectedIcon, setSelectedIcon] = useState("calendar");
@@ -260,4 +260,4 @@ export function AddEventModal({ trigger }: AddEventModalProps) {
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

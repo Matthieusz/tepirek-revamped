@@ -22,11 +22,11 @@ interface SquadDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function SquadDetailsDialog({
+export const SquadDetailsDialog = ({
   squadId,
   open,
   onOpenChange,
-}: SquadDetailsDialogProps) {
+}: SquadDetailsDialogProps) => {
   const { data: details, isPending } = useQuery({
     ...orpc.squad.getSquadDetails.queryOptions({ input: { id: squadId } }),
     enabled: open,
@@ -122,4 +122,4 @@ export function SquadDetailsDialog({
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

@@ -18,15 +18,15 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { parseMargonemProfile } from '@/lib/margonem-parser';
-import type { ParsedAccount } from '@/lib/margonem-parser';
+import { parseMargonemProfile } from "@/lib/margonem-parser";
+import type { ParsedAccount } from "@/lib/margonem-parser";
 import { orpc } from "@/utils/orpc";
 
 interface AddGameAccountModalProps {
   trigger: React.ReactNode;
 }
 
-export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
+export const AddGameAccountModal = ({ trigger }: AddGameAccountModalProps) => {
   const [open, setOpen] = useState(false);
   const [parsedData, setParsedData] = useState<ParsedAccount | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -123,8 +123,8 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
             <ResponsiveDialogDescription>
               Wklej kod HTML strony profilu z margonem.pl, aby zaimportować
               postacie. Otwórz swój profil na margonem.pl, kliknij prawym
-              przyciskiem myszy, wybierz "Zbadaj" lub "Wyświetl źródło strony" i
-              skopiuj cały HTML.
+              przyciskiem myszy, wybierz &quot;Zbadaj&quot; lub &quot;Wyświetl
+              źródło strony&quot; i skopiuj cały HTML.
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
 
@@ -223,4 +223,4 @@ export function AddGameAccountModal({ trigger }: AddGameAccountModalProps) {
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

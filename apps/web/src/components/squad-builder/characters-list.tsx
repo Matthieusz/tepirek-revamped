@@ -16,14 +16,14 @@ interface CharactersListProps {
   onClearFilters: () => void;
 }
 
-export function CharactersList({
+export const CharactersList = ({
   selectedWorld,
   charactersLoading,
   filteredCharacters,
   selectedCharacterIds,
   toggleCharacter,
   onClearFilters,
-}: CharactersListProps) {
+}: CharactersListProps) => {
   if (!selectedWorld) {
     return (
       <div className="flex h-64 items-center justify-center text-muted-foreground">
@@ -74,4 +74,4 @@ export function CharactersList({
       </div>
     </ScrollArea>
   );
-}
+};

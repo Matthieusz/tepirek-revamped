@@ -1,6 +1,6 @@
 import { AlertCircle } from "lucide-react";
-import { Component } from 'react';
-import type { ReactNode } from 'react';
+import { Component } from "react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return { error, hasError: true };
   }
 
+  // oxlint-disable-next-line eslint/class-methods-use-this -- React lifecycle method requires instance method signature
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("ErrorBoundary caught an error:", error, errorInfo);
   }

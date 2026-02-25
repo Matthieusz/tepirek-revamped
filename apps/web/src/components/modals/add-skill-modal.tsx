@@ -39,11 +39,11 @@ const defaultValues = {
   professionId: "",
 };
 
-export function AddSkillModal({
+export const AddSkillModal = ({
   trigger,
   defaultRangeId,
   defaultProfessionId,
-}: AddSkillModalProps) {
+}: AddSkillModalProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const professions = useQuery(orpc.skills.getAllProfessions.queryOptions());
@@ -223,4 +223,4 @@ export function AddSkillModal({
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

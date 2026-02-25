@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import z from "zod";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,10 +17,10 @@ import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
-export function SignUpForm({
+export const SignUpForm = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div">) => {
   const navigate = useNavigate({
     from: "/",
   });
@@ -213,4 +213,4 @@ export function SignUpForm({
       </Button>
     </div>
   );
-}
+};

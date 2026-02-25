@@ -34,7 +34,7 @@ interface AccountsListProps {
   setSearchQuery: (query: string) => void;
 }
 
-export function AccountsList({
+export const AccountsList = ({
   accounts,
   isLoading,
   selectedId,
@@ -42,7 +42,7 @@ export function AccountsList({
   searchQuery,
   debouncedSearchQuery,
   setSearchQuery,
-}: AccountsListProps) {
+}: AccountsListProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<GameAccount | null>(
     null
@@ -206,9 +206,9 @@ export function AccountsList({
           <AlertDialogHeader>
             <AlertDialogTitle>Usuń konto</AlertDialogTitle>
             <AlertDialogDescription>
-              Czy na pewno chcesz usunąć konto "{accountToDelete?.name}"? Usunie
-              to również wszystkie powiązane postacie. Ta operacja jest
-              nieodwracalna.
+              Czy na pewno chcesz usunąć konto &quot;{accountToDelete?.name}
+              &quot;? Usunie to również wszystkie powiązane postacie. Ta
+              operacja jest nieodwracalna.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -241,4 +241,4 @@ export function AccountsList({
       )}
     </>
   );
-}
+};

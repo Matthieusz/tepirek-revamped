@@ -32,11 +32,11 @@ interface EditSquadDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditSquadDialog({
+export const EditSquadDialog = ({
   squad,
   open,
   onOpenChange,
-}: EditSquadDialogProps) {
+}: EditSquadDialogProps) => {
   const queryClient = useQueryClient();
   const [name, setName] = useState(squad.name);
   const [description, setDescription] = useState(squad.description || "");
@@ -121,11 +121,11 @@ export function EditSquadDialog({
   const updateMutation = useMutation({
     mutationFn: () =>
       orpc.squad.updateSquad.call({
-        id: squad.id,
-        name,
         description: description || undefined,
+        id: squad.id,
         isPublic,
         memberIds: selectedCharacterIds,
+        name,
       }),
     onError: (error) => {
       toast.error(error.message || "Nie udało się zaktualizować squadu");
@@ -353,4 +353,4 @@ export function EditSquadDialog({
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

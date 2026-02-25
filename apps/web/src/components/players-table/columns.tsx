@@ -4,9 +4,6 @@ import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { formatDate } from "@/lib/utils";
-import { orpc } from "@/utils/orpc";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,9 +13,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
+} from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +23,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,15 +31,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { formatDate } from "@/lib/utils";
+import { orpc } from "@/utils/orpc";
 
 type QueryOptions = ReturnType<typeof orpc.user.list.queryOptions>;
 type Players = Awaited<ReturnType<QueryOptions["queryFn"]>>;
 type Player = Players[number];
 
-function ActionCell({ player }: { player: Player }) {
+const ActionCell = ({ player }: { player: Player }) => {
   const queryClient = useQueryClient();
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -65,8 +64,8 @@ function ActionCell({ player }: { player: Player }) {
   const changeRole = useMutation({
     mutationFn: async () =>
       await orpc.user.setRole.call({
-        userId: player.id,
         role: player.role === "admin" ? "user" : "admin",
+        userId: player.id,
       }),
     onError: (e: Error) => toast.error(e.message),
     onSuccess: () => {
@@ -79,8 +78,8 @@ function ActionCell({ player }: { player: Player }) {
   const updateName = useMutation({
     mutationFn: async () =>
       await orpc.user.updateUserName.call({
-        userId: player.id,
         name: newName,
+        userId: player.id,
       }),
     onError: (e: Error) => toast.error(e.message),
     onSuccess: () => {
@@ -188,8 +187,8 @@ function ActionCell({ player }: { player: Player }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Usuń konto użytkownika</AlertDialogTitle>
             <AlertDialogDescription>
-              Czy na pewno chcesz usunąć konto użytkownika "{player.name}"? Ta
-              operacja jest nieodwracalna.
+              Czy na pewno chcesz usunąć konto użytkownika &quot;{player.name}
+              &quot;? Ta operacja jest nieodwracalna.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -206,7 +205,7 @@ function ActionCell({ player }: { player: Player }) {
       </AlertDialog>
     </>
   );
-}
+};
 
 const baseColumns: ColumnDef<Player>[] = [
   {
@@ -249,15 +248,12 @@ const baseColumns: ColumnDef<Player>[] = [
   },
 ];
 
-function actionsColumn(): ColumnDef<Player> {
-  return {
-    cell: ({ row }) => <ActionCell player={row.original} />,
-    header: "Akcje",
-    id: "actions",
-  };
-}
+const actionsColumn = (): ColumnDef<Player> => ({
+  cell: ({ row }) => <ActionCell player={row.original} />,
+  header: "Akcje",
+  id: "actions",
+});
 
-export function buildPlayerColumns(isAdmin: boolean): ColumnDef<Player>[] {
-  return isAdmin ? [...baseColumns, actionsColumn()] : baseColumns;
-}
+export const buildPlayerColumns = (isAdmin: boolean): ColumnDef<Player>[] =>
+  isAdmin ? [...baseColumns, actionsColumn()] : baseColumns;
 export const columns: ColumnDef<Player>[] = buildPlayerColumns(true);

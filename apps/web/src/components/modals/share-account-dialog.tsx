@@ -25,11 +25,11 @@ interface ShareAccountDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function ShareAccountDialog({
+export const ShareAccountDialog = ({
   account,
   open,
   onOpenChange,
-}: ShareAccountDialogProps) {
+}: ShareAccountDialogProps) => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string>("");
@@ -112,8 +112,9 @@ export function ShareAccountDialog({
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Udostępnij konto</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            Wybierz użytkownika, któremu chcesz udostępnić konto "{account.name}
-            "
+            Wybierz użytkownika, któremu chcesz udostępnić konto &quot;
+            {account.name}
+            &quot;
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -232,4 +233,4 @@ export function ShareAccountDialog({
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

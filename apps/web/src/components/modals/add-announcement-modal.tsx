@@ -16,15 +16,16 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { orpc } from "@/utils/orpc";
-
-import { Textarea } from "../ui/textarea";
 
 interface AddAnnouncementModalProps {
   trigger: React.ReactNode;
 }
 
-export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
+export const AddAnnouncementModal = ({
+  trigger,
+}: AddAnnouncementModalProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -141,4 +142,4 @@ export function AddAnnouncementModal({ trigger }: AddAnnouncementModalProps) {
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

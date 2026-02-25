@@ -43,7 +43,7 @@ const defaultValues: AddHeroModal = {
   name: "",
 };
 
-export function AddHeroModal({ trigger }: AddHeroModalProps) {
+export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const { data: events, isPending: eventsLoading } = useQuery(
@@ -238,4 +238,4 @@ export function AddHeroModal({ trigger }: AddHeroModalProps) {
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

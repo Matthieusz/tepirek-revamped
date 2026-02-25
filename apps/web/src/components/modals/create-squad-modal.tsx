@@ -44,7 +44,7 @@ interface CreateSquadModalProps {
   trigger: React.ReactNode;
 }
 
-export function CreateSquadModal({ trigger }: CreateSquadModalProps) {
+export const CreateSquadModal = ({ trigger }: CreateSquadModalProps) => {
   const [open, setOpen] = useState(false);
   const [selectedWorld, setSelectedWorld] = useState<string>("");
   const [selectedCharacterIds, setSelectedCharacterIds] = useState<number[]>(
@@ -267,7 +267,7 @@ export function CreateSquadModal({ trigger }: CreateSquadModalProps) {
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};
 
 interface WorldSelectorProps {
   worlds: string[] | undefined;
@@ -276,12 +276,12 @@ interface WorldSelectorProps {
   onWorldChange: (world: string) => void;
 }
 
-function WorldSelector({
+const WorldSelector = ({
   worlds,
   selectedWorld,
   isLoading,
   onWorldChange,
-}: WorldSelectorProps) {
+}: WorldSelectorProps) => {
   if (isLoading) {
     return (
       <p className="text-muted-foreground text-sm">Ładowanie światów...</p>
@@ -310,7 +310,7 @@ function WorldSelector({
       </SelectContent>
     </Select>
   );
-}
+};
 
 interface CharacterSelectorProps {
   characters:
@@ -332,13 +332,13 @@ interface CharacterSelectorProps {
   onToggleCharacter: (characterId: number) => void;
 }
 
-function CharacterSelector({
+const CharacterSelector = ({
   characters,
   selectedCharacterIds,
   isLoading,
   selectedWorld,
   onToggleCharacter,
-}: CharacterSelectorProps) {
+}: CharacterSelectorProps) => {
   if (isLoading) {
     return (
       <p className="text-muted-foreground text-sm">Ładowanie postaci...</p>
@@ -365,7 +365,7 @@ function CharacterSelector({
       ))}
     </div>
   );
-}
+};
 
 interface CharacterSelectRowProps {
   character: {
@@ -383,11 +383,11 @@ interface CharacterSelectRowProps {
   onToggle: () => void;
 }
 
-function CharacterSelectRow({
+const CharacterSelectRow = ({
   character,
   isSelected,
   onToggle,
-}: CharacterSelectRowProps) {
+}: CharacterSelectRowProps) => {
   const checkboxId = `char-${character.id}`;
   return (
     <label
@@ -430,4 +430,4 @@ function CharacterSelectRow({
       </div>
     </label>
   );
-}
+};

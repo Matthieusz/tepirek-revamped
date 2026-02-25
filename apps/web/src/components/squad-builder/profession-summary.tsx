@@ -12,16 +12,13 @@ interface ProfessionSummaryProps {
   members: SquadMember[];
 }
 
-export function ProfessionSummary({ members }: ProfessionSummaryProps) {
+export const ProfessionSummary = ({ members }: ProfessionSummaryProps) => {
   // Count professions
-  const professionCounts = members.reduce(
-    (acc, member) => {
-      const prof = member.characterProfession;
-      acc[prof] = (acc[prof] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
+  const professionCounts: Record<string, number> = {};
+  for (const member of members) {
+    const prof = member.characterProfession;
+    professionCounts[prof] = (professionCounts[prof] || 0) + 1;
+  }
 
   return (
     <TooltipProvider>
@@ -47,4 +44,4 @@ export function ProfessionSummary({ members }: ProfessionSummaryProps) {
       </div>
     </TooltipProvider>
   );
-}
+};

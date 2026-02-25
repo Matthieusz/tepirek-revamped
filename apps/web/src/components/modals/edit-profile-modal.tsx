@@ -30,10 +30,10 @@ const schema = z.object({
     .max(24, "Maksymalna długość to 24 znaki"),
 });
 
-export function EditProfileModal({
+export const EditProfileModal = ({
   trigger,
   defaultName,
-}: EditProfileModalProps) {
+}: EditProfileModalProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -124,4 +124,4 @@ export function EditProfileModal({
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

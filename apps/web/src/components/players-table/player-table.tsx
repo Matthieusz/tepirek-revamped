@@ -1,5 +1,9 @@
-import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import type { ColumnDef } from '@tanstack/react-table';
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 
 import {
   Table,
@@ -8,17 +12,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
+} from "@/components/ui/table";
 
 interface PlayersDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-export function PlayerTable<TData, TValue>({
+export const PlayerTable = <TData, TValue>({
   columns,
   data,
-}: PlayersDataTableProps<TData, TValue>) {
+}: PlayersDataTableProps<TData, TValue>) => {
   const table = useReactTable({
     columns,
     data,
@@ -69,4 +73,4 @@ export function PlayerTable<TData, TValue>({
       </Table>
     </div>
   );
-}
+};

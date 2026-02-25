@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
-export function NavOther({
+export const NavOther = ({
   projects,
 }: {
   projects: {
@@ -19,7 +19,7 @@ export function NavOther({
     icon: LucideIcon;
     disabled?: boolean;
   }[];
-}) {
+}) => {
   const matchRoute = useMatchRoute();
 
   return (
@@ -63,4 +63,4 @@ export function NavOther({
       </SidebarMenu>
     </SidebarGroup>
   );
-}
+};

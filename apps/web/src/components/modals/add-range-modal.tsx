@@ -34,7 +34,7 @@ const defaultValues: AddRangeModal = {
   name: "",
 };
 
-export function AddRangeModal({ trigger }: AddEventModalProps) {
+export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -179,4 +179,4 @@ export function AddRangeModal({ trigger }: AddEventModalProps) {
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};

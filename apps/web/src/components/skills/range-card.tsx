@@ -37,7 +37,7 @@ interface RangeCardProps {
   className?: string;
 }
 
-export function RangeCard({ range, session, className }: RangeCardProps) {
+export const RangeCard = ({ range, session, className }: RangeCardProps) => {
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -111,8 +111,8 @@ export function RangeCard({ range, session, className }: RangeCardProps) {
               Czy na pewno chcesz usunąć przedział?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Przedział "{range.name}" zostanie trwale usunięty. Tej operacji
-              nie można cofnąć.
+              Przedział &quot;{range.name}&quot; zostanie trwale usunięty. Tej
+              operacji nie można cofnąć.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -130,4 +130,4 @@ export function RangeCard({ range, session, className }: RangeCardProps) {
       </AlertDialog>
     </>
   );
-}
+};

@@ -11,7 +11,7 @@ interface MembersPreviewProps {
   members: SquadMember[] | undefined;
 }
 
-export function MembersPreview({ members }: MembersPreviewProps) {
+export const MembersPreview = ({ members }: MembersPreviewProps) => {
   if (!members || members.length === 0) {
     return (
       <p className="text-muted-foreground/60 text-xs italic">Brak członków</p>
@@ -49,4 +49,4 @@ export function MembersPreview({ members }: MembersPreviewProps) {
       </div>
     </TooltipProvider>
   );
-}
+};

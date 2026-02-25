@@ -26,12 +26,12 @@ interface ShareSquadDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function ShareSquadDialog({
+export const ShareSquadDialog = ({
   squadId,
   squadName,
   open,
   onOpenChange,
-}: ShareSquadDialogProps) {
+}: ShareSquadDialogProps) => {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
@@ -118,7 +118,8 @@ export function ShareSquadDialog({
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Udostępnij squad</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            Wybierz użytkownika, któremu chcesz udostępnić squad "{squadName}"
+            Wybierz użytkownika, któremu chcesz udostępnić squad &quot;
+            {squadName}&quot;
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -236,4 +237,4 @@ export function ShareSquadDialog({
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
-}
+};
