@@ -38,7 +38,7 @@ export const AddGameAccountModal = ({ trigger }: AddGameAccountModalProps) => {
       name: "",
     },
     onSubmit: async ({ value }) => {
-      if (!parsedData) {
+      if (parsedData === null) {
         toast.error("Najpierw sparsuj dane z HTML");
         return;
       }
@@ -52,10 +52,10 @@ export const AddGameAccountModal = ({ trigger }: AddGameAccountModalProps) => {
         });
 
         toast.success("Konto gry dodane pomyślnie");
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.squad.getMyGameAccounts.queryKey(),
         });
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.squad.getMyCharacters.queryKey(),
         });
         setOpen(false);
@@ -73,7 +73,7 @@ export const AddGameAccountModal = ({ trigger }: AddGameAccountModalProps) => {
 
   const handleParseHtml = () => {
     const html = form.getFieldValue("html");
-    if (!html || html.trim().length === 0) {
+    if (html === "" || html.trim().length === 0) {
       setParseError("Wklej kod HTML profilu");
       return;
     }
@@ -113,9 +113,10 @@ export const AddGameAccountModal = ({ trigger }: AddGameAccountModalProps) => {
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
         <form
-          onSubmit={(e) => {
+          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={async (e) => {
             e.preventDefault();
-            form.handleSubmit();
+            await form.handleSubmit();
           }}
         >
           <ResponsiveDialogHeader>
@@ -137,11 +138,13 @@ export const AddGameAccountModal = ({ trigger }: AddGameAccountModalProps) => {
                     className="min-h-[150px] font-mono text-xs"
                     id="html"
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={(e) => {
+                      field.handleChange(e.target.value);
+                    }}
                     placeholder="Wklej tutaj kod HTML ze strony profilu margonem.pl..."
                     value={field.state.value}
                   />
-                  {parseError && (
+                  {parseError !== null && (
                     <p className="text-destructive text-sm">{parseError}</p>
                   )}
                 </div>
@@ -157,13 +160,13 @@ export const AddGameAccountModal = ({ trigger }: AddGameAccountModalProps) => {
               Parsuj HTML
             </Button>
 
-            {parsedData && (
+            {parsedData !== null && (
               <>
                 <div className="rounded-lg border p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <div>
                       <h4 className="font-semibold">{parsedData.name}</h4>
-                      {parsedData.accountLevel && (
+                      {parsedData.accountLevel !== undefined && (
                         <p className="text-muted-foreground text-sm">
                           Poziom konta: {parsedData.accountLevel}
                         </p>
@@ -196,7 +199,9 @@ export const AddGameAccountModal = ({ trigger }: AddGameAccountModalProps) => {
                       <Input
                         id="name"
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
+                        onChange={(e) => {
+                          field.handleChange(e.target.value);
+                        }}
                         placeholder="Nazwa konta"
                         value={field.state.value}
                       />
@@ -209,13 +214,15 @@ export const AddGameAccountModal = ({ trigger }: AddGameAccountModalProps) => {
 
           <ResponsiveDialogFooter>
             <Button
-              onClick={() => handleOpenChange(false)}
+              onClick={() => {
+                handleOpenChange(false);
+              }}
               type="button"
               variant="outline"
             >
               Anuluj
             </Button>
-            <Button disabled={!parsedData} type="submit">
+            <Button disabled={parsedData === null} type="submit">
               Dodaj konto
             </Button>
           </ResponsiveDialogFooter>

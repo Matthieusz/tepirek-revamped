@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,7 +29,8 @@ const routeApi = getRouteApi("/dashboard");
 
 /* oxlint-disable promise/prefer-await-to-then, promise/valid-params -- Zod .catch() is not Promise.catch() */
 const searchSchema = z.object({
-  eventId: z.string().optional().catch(),
+  // oxlint-disable-next-line unicorn/no-useless-undefined
+  eventId: z.string().optional().catch(undefined),
 });
 /* oxlint-enable promise/prefer-await-to-then, promise/valid-params */
 
@@ -42,7 +42,8 @@ export const Route = createFileRoute("/dashboard/events/vault")({
   validateSearch: searchSchema,
 });
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style, complexity
+function RouteComponent() {
   const { session } = routeApi.useRouteContext();
   const { eventId: urlEventId } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
@@ -74,6 +75,7 @@ const RouteComponent = () => {
 
     // Otherwise, navigate to the oldest unpaid event
     if (oldestUnpaidEventId !== null) {
+      // oxlint-disable-next-line @typescript-eslint/no-floating-promises
       navigate({
         replace: true,
         search: { eventId: oldestUnpaidEventId.toString() },
@@ -123,8 +125,8 @@ const RouteComponent = () => {
       const message = error instanceof Error ? error.message : "Wystąpił błąd";
       toast.error(message);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: orpc.bet.getVault.queryKey({
           input: {
             eventId:
@@ -134,7 +136,7 @@ const RouteComponent = () => {
           },
         }),
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.bet.getOldestUnpaidEvent.queryKey(),
       });
       toast.success("Status wypłaty zaktualizowany");
@@ -149,8 +151,7 @@ const RouteComponent = () => {
   const nextToPay = vault?.find((v) => !v.paidOut);
 
   // Separate paid and unpaid users
-  const unpaidUsers = vault?.filter((v) => !v.paidOut) || [];
-  const paidUsers = vault?.filter((v) => v.paidOut) || [];
+  const unpaidUsers = vault?.filter((v) => !v.paidOut) ?? [];
 
   if (isPending) {
     return (
@@ -163,7 +164,7 @@ const RouteComponent = () => {
     );
   }
 
-  const sortedEvents = [...(events || [])].toSorted(
+  const sortedEvents = [...(events ?? [])].toSorted(
     (a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime()
   );
 
@@ -176,7 +177,8 @@ const RouteComponent = () => {
       {/* Event Filter */}
       <div className="flex justify-center">
         <Select
-          onValueChange={(value) =>
+          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+          onValueChange={async (value) =>
             navigate({
               search: { eventId: value === "all" ? undefined : value },
             })
@@ -195,7 +197,7 @@ const RouteComponent = () => {
                   <div className="flex items-center gap-2">
                     <IconComponent
                       className="h-4 w-4"
-                      style={{ color: event.color || undefined }}
+                      style={{ color: event.color ?? undefined }}
                     />
                     <span>{event.name}</span>
                   </div>
@@ -220,7 +222,7 @@ const RouteComponent = () => {
                 <Avatar className="h-12 w-12 border-2 border-green-500">
                   <AvatarImage
                     alt={nextToPay.userName}
-                    src={nextToPay.userImage || undefined}
+                    src={nextToPay.userImage ?? undefined}
                   />
                   <AvatarFallback>
                     <User className="h-6 w-6" />
@@ -244,12 +246,12 @@ const RouteComponent = () => {
               {isAdminUser && (
                 <Button
                   disabled={toggleMutation.isPending}
-                  onClick={() =>
+                  onClick={() => {
                     toggleMutation.mutate({
                       paidOut: true,
                       userId: nextToPay.userId,
-                    })
-                  }
+                    });
+                  }}
                   size="sm"
                   variant="default"
                 >
@@ -301,7 +303,7 @@ const RouteComponent = () => {
                   <Avatar className="h-10 w-10 shrink-0 border border-border">
                     <AvatarImage
                       alt={player.userName}
-                      src={player.userImage || undefined}
+                      src={player.userImage ?? undefined}
                     />
                     <AvatarFallback>
                       <User className="h-5 w-5" />
@@ -330,84 +332,12 @@ const RouteComponent = () => {
                     <Checkbox
                       checked={player.paidOut}
                       disabled={toggleMutation.isPending}
-                      onCheckedChange={(checked) =>
+                      onCheckedChange={(checked) => {
                         toggleMutation.mutate({
-                          paidOut: !!checked,
+                          paidOut: checked === true,
                           userId: player.userId,
-                        })
-                      }
-                    />
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Paid users list */}
-      {paidUsers.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="font-semibold text-lg text-muted-foreground">
-            Wypłacone ({paidUsers.length})
-          </h2>
-          {paidUsers.map((player) => (
-            <Card
-              className="bg-muted/30 opacity-60 transition-all hover:opacity-100"
-              key={player.userId}
-            >
-              <CardContent className="px-4">
-                <div className="flex items-center gap-4">
-                  {/* Check icon */}
-                  <div className="flex w-8 shrink-0 items-center justify-center">
-                    <Check className="h-5 w-5 text-green-500" />
-                  </div>
-
-                  {/* Avatar */}
-                  <Avatar className="h-10 w-10 shrink-0 border border-border">
-                    <AvatarImage
-                      alt={player.userName}
-                      src={player.userImage || undefined}
-                    />
-                    <AvatarFallback>
-                      <User className="h-5 w-5" />
-                    </AvatarFallback>
-                  </Avatar>
-
-                  {/* Name */}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{player.userName}</p>
-                  </div>
-
-                  {/* Earnings */}
-                  <div className="flex items-center gap-2">
-                    <Coins className="h-4 w-4 text-yellow-500" />
-                    <p className="font-mono font-semibold">
-                      {(
-                        Math.floor(
-                          Number.parseFloat(player.totalEarnings || "0") /
-                            1_000_000
-                        ) * 1_000_000
-                      ).toLocaleString("pl-PL", {
-                        maximumFractionDigits: 0,
-                      })}
-                    </p>
-                  </div>
-
-                  {/* Badge */}
-                  <Badge variant="secondary">Wypłacone</Badge>
-
-                  {/* Checkbox for admin to undo */}
-                  {isAdminUser && (
-                    <Checkbox
-                      checked={player.paidOut}
-                      disabled={toggleMutation.isPending}
-                      onCheckedChange={(checked) =>
-                        toggleMutation.mutate({
-                          paidOut: !!checked,
-                          userId: player.userId,
-                        })
-                      }
+                        });
+                      }}
                     />
                   )}
                 </div>
@@ -418,4 +348,4 @@ const RouteComponent = () => {
       )}
     </div>
   );
-};
+}

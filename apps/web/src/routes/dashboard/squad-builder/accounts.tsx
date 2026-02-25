@@ -19,7 +19,8 @@ export const Route = createFileRoute("/dashboard/squad-builder/accounts")({
   },
 });
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style
+function RouteComponent() {
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(
     null
   );
@@ -97,7 +98,7 @@ const RouteComponent = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 p-0">
-              {selectedAccountId ? (
+              {selectedAccountId !== undefined && selectedAccountId !== null ? (
                 <AccountCharactersList
                   canManage={Boolean(selectedAccount?.isOwner)}
                   characters={accountCharacters}
@@ -121,4 +122,4 @@ const RouteComponent = () => {
       </div>
     </ErrorBoundary>
   );
-};
+}

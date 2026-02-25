@@ -18,13 +18,16 @@ export const requireAuth = async () => {
   try {
     const session = await getUser();
     if (!session?.user) {
+      // oxlint-disable-next-line @typescript-eslint/only-throw-error
       throw redirect({ to: "/login" });
     }
     return session;
   } catch (error) {
     if (isRedirect(error)) {
+      // oxlint-disable-next-line @typescript-eslint/only-throw-error
       throw error;
     }
+    // oxlint-disable-next-line @typescript-eslint/only-throw-error
     throw redirect({ to: "/login" });
   }
 };
@@ -37,6 +40,7 @@ export const requireAuth = async () => {
 export const requireVerified = async () => {
   const session = await requireAuth();
   if (!session.user.verified) {
+    // oxlint-disable-next-line @typescript-eslint/only-throw-error
     throw redirect({ to: "/waiting-room" });
   }
   return session;
@@ -51,6 +55,7 @@ export const requireVerified = async () => {
 export const requireUnverified = async () => {
   const session = await requireAuth();
   if (session.user.verified) {
+    // oxlint-disable-next-line @typescript-eslint/only-throw-error
     throw redirect({ to: "/dashboard" });
   }
   return session;

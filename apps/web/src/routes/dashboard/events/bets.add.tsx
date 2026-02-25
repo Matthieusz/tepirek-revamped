@@ -50,7 +50,8 @@ const handleUserToggle = (userId: string, currentUserIds: string[]) => {
   return [...currentUserIds, userId];
 };
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style
+function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [selectedEventId, setSelectedEventId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -99,7 +100,7 @@ const RouteComponent = () => {
         });
 
         toast.success("Obstawienie dodano pomyślnie");
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.bet.getAll.queryKey(),
         });
         form.setFieldValue("userIds", []);
@@ -166,10 +167,14 @@ const RouteComponent = () => {
                 : "border-border"
             }`}
             key={hero.id}
-            onClick={() => onChange(hero.id.toString())}
+            onClick={() => {
+              onChange(hero.id.toString());
+            }}
             type="button"
           >
-            {hero.image ? (
+            {hero.image !== null &&
+            hero.image !== undefined &&
+            hero.image !== "" ? (
               <img
                 alt={hero.name}
                 className="mb-2 h-16 w-14 rounded object-contain"
@@ -250,7 +255,7 @@ const RouteComponent = () => {
               }}
             />
             <Avatar className="h-8 w-8">
-              <AvatarImage alt={user.name} src={user.image || undefined} />
+              <AvatarImage alt={user.name} src={user.image ?? undefined} />
               <AvatarFallback>
                 <User className="h-4 w-4" />
               </AvatarFallback>
@@ -286,6 +291,7 @@ const RouteComponent = () => {
             onSubmit={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              // oxlint-disable-next-line @typescript-eslint/no-floating-promises
               form.handleSubmit();
             }}
           >
@@ -460,7 +466,9 @@ const RouteComponent = () => {
                       <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         className="pl-9"
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                        }}
                         placeholder="Szukaj gracza..."
                         type="text"
                         value={searchQuery}
@@ -502,7 +510,7 @@ const RouteComponent = () => {
                                     <Avatar className="h-8 w-8">
                                       <AvatarImage
                                         alt={user.name}
-                                        src={user.image || undefined}
+                                        src={user.image ?? undefined}
                                       />
                                       <AvatarFallback>
                                         <User className="h-4 w-4" />
@@ -533,4 +541,4 @@ const RouteComponent = () => {
       </Card>
     </div>
   );
-};
+}

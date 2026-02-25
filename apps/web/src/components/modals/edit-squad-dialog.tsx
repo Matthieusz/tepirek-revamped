@@ -39,7 +39,7 @@ export const EditSquadDialog = ({
 }: EditSquadDialogProps) => {
   const queryClient = useQueryClient();
   const [name, setName] = useState(squad.name);
-  const [description, setDescription] = useState(squad.description || "");
+  const [description, setDescription] = useState(squad.description ?? "");
   const [isPublic, setIsPublic] = useState(squad.isPublic);
   const [selectedCharacterIds, setSelectedCharacterIds] = useState<number[]>(
     []
@@ -53,7 +53,7 @@ export const EditSquadDialog = ({
   useEffect(() => {
     if (open) {
       setName(squad.name);
-      setDescription(squad.description || "");
+      setDescription(squad.description ?? "");
       setIsPublic(squad.isPublic);
       setSearchQuery("");
       setMinLevel("");
@@ -119,7 +119,7 @@ export const EditSquadDialog = ({
   };
 
   const updateMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: async () =>
       orpc.squad.updateSquad.call({
         description: description || undefined,
         id: squad.id,
@@ -128,13 +128,19 @@ export const EditSquadDialog = ({
         name,
       }),
     onError: (error) => {
-      toast.error(error.message || "Nie udało się zaktualizować squadu");
+      toast.error(
+        error.message === ""
+          ? "Nie udało się zaktualizować squadu"
+          : error.message
+      );
     },
     onSuccess: () => {
       toast.success("Squad zaktualizowany");
+      // oxlint-disable-next-line @typescript-eslint/no-floating-promises
       queryClient.invalidateQueries({
         queryKey: orpc.squad.getMySquads.queryKey(),
       });
+      // oxlint-disable-next-line @typescript-eslint/no-floating-promises
       queryClient.invalidateQueries({
         queryKey: orpc.squad.getSquadDetails.queryKey({
           input: { id: squad.id },
@@ -164,7 +170,9 @@ export const EditSquadDialog = ({
             <Label htmlFor="edit-name">Nazwa squadu *</Label>
             <Input
               id="edit-name"
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+              }}
               placeholder="np. drimtim"
               value={name}
             />
@@ -176,7 +184,9 @@ export const EditSquadDialog = ({
             <Textarea
               className="min-h-20"
               id="edit-description"
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+              }}
               placeholder="Krótki opis squadu..."
               value={description}
             />
@@ -215,7 +225,9 @@ export const EditSquadDialog = ({
                   <Badge
                     className="cursor-pointer"
                     key={char.id}
-                    onClick={() => toggleCharacter(char.id)}
+                    onClick={() => {
+                      toggleCharacter(char.id);
+                    }}
                     variant="secondary"
                   >
                     {char.nick}
@@ -230,7 +242,9 @@ export const EditSquadDialog = ({
               <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
               <Input
                 className="pl-9"
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                }}
                 placeholder="Szukaj postaci..."
                 value={searchQuery}
               />
@@ -241,14 +255,18 @@ export const EditSquadDialog = ({
                 <Input
                   inputMode="numeric"
                   min={1}
-                  onChange={(e) => setMinLevel(e.target.value)}
+                  onChange={(e) => {
+                    setMinLevel(e.target.value);
+                  }}
                   placeholder="Min lvl"
                   value={minLevel}
                 />
                 <Input
                   inputMode="numeric"
                   min={1}
-                  onChange={(e) => setMaxLevel(e.target.value)}
+                  onChange={(e) => {
+                    setMaxLevel(e.target.value);
+                  }}
                   placeholder="Max lvl"
                   value={maxLevel}
                 />
@@ -304,12 +322,16 @@ export const EditSquadDialog = ({
                           : "border-transparent hover:bg-accent/50"
                       )}
                       key={char.id}
-                      onClick={() => toggleCharacter(char.id)}
+                      onClick={() => {
+                        toggleCharacter(char.id);
+                      }}
                       type="button"
                     >
                       <Checkbox
                         checked={selectedCharacterIds.includes(char.id)}
-                        onCheckedChange={() => toggleCharacter(char.id)}
+                        onCheckedChange={() => {
+                          toggleCharacter(char.id);
+                        }}
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
@@ -336,16 +358,23 @@ export const EditSquadDialog = ({
         </div>
 
         <ResponsiveDialogFooter>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
+          <Button
+            onClick={() => {
+              onOpenChange(false);
+            }}
+            variant="outline"
+          >
             Anuluj
           </Button>
           <Button
             disabled={
-              !name ||
+              name === "" ||
               selectedCharacterIds.length === 0 ||
               updateMutation.isPending
             }
-            onClick={() => updateMutation.mutate()}
+            onClick={() => {
+              updateMutation.mutate();
+            }}
           >
             Zapisz zmiany
           </Button>

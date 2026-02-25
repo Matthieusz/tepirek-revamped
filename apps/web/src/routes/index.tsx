@@ -10,7 +10,8 @@ export const Route = createFileRoute("/")({
   component: HomeComponent,
 });
 
-const HomeComponent = () => {
+// oxlint-disable-next-line func-style
+function HomeComponent() {
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
 
   let statusText: string;
@@ -20,14 +21,14 @@ const HomeComponent = () => {
   if (healthCheck.isLoading) {
     statusText = "Sprawdzanie...";
     statusDot = "bg-yellow-500 animate-pulse";
-  } else if (healthCheck.data) {
-    statusText = "Status";
-    statusColor = "text-green-500";
-    statusDot = "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]";
-  } else {
+  } else if (healthCheck.data === undefined) {
     statusText = "Status";
     statusColor = "text-red-500";
     statusDot = "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]";
+  } else {
+    statusText = "Status";
+    statusColor = "text-green-500";
+    statusDot = "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]";
   }
 
   return (
@@ -119,4 +120,4 @@ const HomeComponent = () => {
       </div>
     </div>
   );
-};
+}

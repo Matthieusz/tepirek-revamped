@@ -48,7 +48,7 @@ const extractAccountLevel = (doc: Document): number | undefined => {
     const label = el.querySelector(".label")?.textContent?.trim();
     if (label === "Poziom konta:") {
       const value = el.querySelector(".value")?.textContent?.trim();
-      if (value) {
+      if (value !== undefined && value !== "") {
         return Number.parseInt(value.replaceAll(/\s/g, ""), 10);
       }
     }
@@ -57,8 +57,8 @@ const extractAccountLevel = (doc: Document): number | undefined => {
 };
 
 const extractProfileUrl = (doc: Document): string | undefined => {
-  const copyButton = doc.querySelector(".js-url-copy");
-  return copyButton.dataset.url ?? undefined;
+  const copyButton = doc.querySelector<HTMLElement>(".js-url-copy");
+  return copyButton?.dataset.url ?? undefined;
 };
 
 const extractCharacters = (doc: Document): ParsedCharacter[] => {
@@ -75,13 +75,25 @@ const extractCharacters = (doc: Document): ParsedCharacter[] => {
   return characters;
 };
 
+/* oxlint-disable complexity */
 const extractSingleCharacter = (li: Element): ParsedCharacter | null => {
-  const externalIdStr = li.dataset.id;
-  const { nick } = li.dataset;
-  const levelStr = li.dataset.lvl;
-  const worldRaw = li.dataset.world;
+  // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+  const htmlLi = li as HTMLElement;
+  const externalIdStr = htmlLi.dataset.id;
+  const { nick } = htmlLi.dataset;
+  const levelStr = htmlLi.dataset.lvl;
+  const worldRaw = htmlLi.dataset.world;
 
-  if (!(externalIdStr && nick && levelStr && worldRaw)) {
+  if (
+    externalIdStr === undefined ||
+    externalIdStr === "" ||
+    nick === undefined ||
+    nick === "" ||
+    levelStr === undefined ||
+    levelStr === "" ||
+    worldRaw === undefined ||
+    worldRaw === ""
+  ) {
     return null;
   }
 
@@ -91,9 +103,12 @@ const extractSingleCharacter = (li: Element): ParsedCharacter | null => {
     li.querySelector<HTMLInputElement>(".chprofname")?.value ?? "";
   const gender = li.querySelector<HTMLInputElement>(".chgender")?.value;
   const guildName =
-    li.querySelector<HTMLInputElement>(".chguild")?.value || undefined;
+    li.querySelector<HTMLInputElement>(".chguild")?.value ?? undefined;
   const guildIdStr = li.querySelector<HTMLInputElement>(".chguildid")?.value;
-  const guildId = guildIdStr ? Number.parseInt(guildIdStr, 10) : undefined;
+  const guildId =
+    guildIdStr !== undefined && guildIdStr !== ""
+      ? Number.parseInt(guildIdStr, 10)
+      : undefined;
 
   const avatarUrl = extractAvatarUrl(li);
   const world = worldRaw.replace("#", "");
@@ -102,8 +117,9 @@ const extractSingleCharacter = (li: Element): ParsedCharacter | null => {
     avatarUrl,
     externalId: Number.parseInt(externalIdStr, 10),
     gender,
-    guildId: guildId && guildId > 0 ? guildId : undefined,
-    guildName: guildName && guildName !== "" ? guildName : undefined,
+    guildId: guildId !== undefined && guildId > 0 ? guildId : undefined,
+    guildName:
+      guildName !== undefined && guildName !== "" ? guildName : undefined,
     level: Number.parseInt(levelStr, 10),
     nick,
     profession: professionCode,
@@ -111,6 +127,7 @@ const extractSingleCharacter = (li: Element): ParsedCharacter | null => {
     world,
   };
 };
+/* oxlint-enable complexity */
 
 const extractAvatarUrl = (li: Element): string | undefined => {
   const avatarSpan = li.querySelector(".cimg");

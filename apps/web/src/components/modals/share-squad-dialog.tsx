@@ -74,7 +74,7 @@ export const ShareSquadDialog = ({
   }, [availableUsers, searchQuery]);
 
   const shareMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: async () =>
       orpc.squad.shareSquad.call({
         squadId,
         userId: selectedUserId,
@@ -82,29 +82,29 @@ export const ShareSquadDialog = ({
     onError: (error) => {
       toast.error(error.message || "Nie udało się udostępnić squadu");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Squad udostępniony");
       setSelectedUserId("");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.squad.getSquadDetails.queryKey({
           input: { id: squadId },
         }),
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.squad.getMySquads.queryKey(),
       });
     },
   });
 
   const removeShareMutation = useMutation({
-    mutationFn: (shareId: number) =>
+    mutationFn: async (shareId: number) =>
       orpc.squad.removeSquadShare.call({ shareId }),
     onError: (error) => {
       toast.error(error.message || "Nie udało się usunąć udostępnienia");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Usunięto udostępnienie");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.squad.getSquadDetails.queryKey({
           input: { id: squadId },
         }),
@@ -131,7 +131,9 @@ export const ShareSquadDialog = ({
               <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 className="pl-8"
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                }}
                 placeholder="Szukaj użytkownika..."
                 value={searchQuery}
               />
@@ -154,7 +156,9 @@ export const ShareSquadDialog = ({
                           : "border-transparent hover:bg-accent/50"
                       )}
                       key={user.id}
-                      onClick={() => setSelectedUserId(user.id)}
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                      }}
                       type="button"
                     >
                       <Avatar className="h-8 w-8">
@@ -210,7 +214,9 @@ export const ShareSquadDialog = ({
                     </div>
                     <Button
                       disabled={removeShareMutation.isPending}
-                      onClick={() => removeShareMutation.mutate(share.id)}
+                      onClick={() => {
+                        removeShareMutation.mutate(share.id);
+                      }}
                       size="icon"
                       variant="ghost"
                     >
@@ -224,12 +230,19 @@ export const ShareSquadDialog = ({
         </div>
 
         <ResponsiveDialogFooter>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
+          <Button
+            onClick={() => {
+              onOpenChange(false);
+            }}
+            variant="outline"
+          >
             Zamknij
           </Button>
           <Button
             disabled={!selectedUserId || shareMutation.isPending}
-            onClick={() => shareMutation.mutate()}
+            onClick={() => {
+              shareMutation.mutate();
+            }}
           >
             Udostępnij
           </Button>

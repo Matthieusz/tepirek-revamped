@@ -119,7 +119,8 @@ export const Route = createFileRoute("/dashboard/calculator/odw")({
   },
 });
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style
+function RouteComponent() {
   const [result, setResult] = useState<{
     itemLevel: number;
     itemRarity: Rarity;
@@ -179,10 +180,11 @@ const RouteComponent = () => {
           <CardContent>
             <form
               className="grid gap-4"
-              onSubmit={(e) => {
+              // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+              onSubmit={async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                form.handleSubmit();
+                await form.handleSubmit();
               }}
             >
               <form.Field
@@ -201,28 +203,24 @@ const RouteComponent = () => {
                     <Label htmlFor="itemLevel">Poziom przedmiotu</Label>
                     <Input
                       aria-describedby="itemLevel-error"
-                      aria-invalid={
-                        field.state.meta.errors &&
-                        field.state.meta.errors.length > 0
-                      }
+                      aria-invalid={field.state.meta.errors.length > 0}
                       id="itemLevel"
                       max={MAX_LEVEL}
                       min={MIN_LEVEL}
-                      onChange={(e) =>
-                        field.handleChange(Number(e.target.value))
-                      }
+                      onChange={(e) => {
+                        field.handleChange(Number(e.target.value));
+                      }}
                       type="number"
                       value={field.state.value}
                     />
-                    {field.state.meta.errors &&
-                      field.state.meta.errors.length > 0 && (
-                        <div
-                          className="text-destructive text-sm"
-                          id="itemLevel-error"
-                        >
-                          {field.state.meta.errors[0]}
-                        </div>
-                      )}
+                    {field.state.meta.errors.length > 0 && (
+                      <div
+                        className="text-destructive text-sm"
+                        id="itemLevel-error"
+                      >
+                        {field.state.meta.errors[0]}
+                      </div>
+                    )}
                   </div>
                 )}
               </form.Field>
@@ -241,13 +239,17 @@ const RouteComponent = () => {
                   <div className="space-y-2">
                     <Label htmlFor="itemRarity">Rzadkość przedmiotu</Label>
                     <Select
-                      onValueChange={(val) => field.handleChange(val as Rarity)}
+                      onValueChange={(val) => {
+                        // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+                        field.handleChange(val as Rarity);
+                      }}
                       value={field.state.value}
                     >
                       <SelectTrigger id="itemRarity">
                         <SelectValue placeholder="Wybierz rzadkość" />
                       </SelectTrigger>
                       <SelectContent>
+                        {/* oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion */}
                         {(Object.keys(rarityMultipliers) as Rarity[]).map(
                           (rarity) => (
                             <SelectItem key={rarity} value={rarity}>
@@ -262,12 +264,11 @@ const RouteComponent = () => {
                         )}
                       </SelectContent>
                     </Select>
-                    {field.state.meta.errors &&
-                      field.state.meta.errors.length > 0 && (
-                        <div className="text-destructive text-sm">
-                          {field.state.meta.errors[0]}
-                        </div>
-                      )}
+                    {field.state.meta.errors.length > 0 && (
+                      <div className="text-destructive text-sm">
+                        {field.state.meta.errors[0]}
+                      </div>
+                    )}
                   </div>
                 )}
               </form.Field>
@@ -389,4 +390,4 @@ const RouteComponent = () => {
       </Card>
     </div>
   );
-};
+}

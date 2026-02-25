@@ -35,6 +35,7 @@ const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
 const setSidebarCookie = async (value: boolean) => {
   if ("cookieStore" in window) {
+    /* oxlint-disable @typescript-eslint/no-unsafe-type-assertion -- safe window extension */
     const store = (
       window as unknown as {
         cookieStore: {
@@ -47,6 +48,7 @@ const setSidebarCookie = async (value: boolean) => {
         };
       }
     ).cookieStore;
+    /* oxlint-enable @typescript-eslint/no-unsafe-type-assertion */
     try {
       await store.set({
         maxAge: SIDEBAR_COOKIE_MAX_AGE,
@@ -111,17 +113,20 @@ const SidebarProvider = ({
       }
 
       // This sets the cookie to keep the sidebar state.
+      // oxlint-disable-next-line @typescript-eslint/no-floating-promises
       setSidebarCookie(openState);
     },
     [setOpenProp, open]
   );
 
   // Helper to toggle the sidebar.
-  const toggleSidebar = React.useCallback(
-    () =>
-      isMobile ? setOpenMobile((prev) => !prev) : setOpen((prev) => !prev),
-    [isMobile, setOpen, setOpenMobile]
-  );
+  const toggleSidebar = React.useCallback(() => {
+    if (isMobile) {
+      setOpenMobile((prev) => !prev);
+    } else {
+      setOpen((prev) => !prev);
+    }
+  }, [isMobile, setOpen, setOpenMobile]);
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
@@ -136,7 +141,9 @@ const SidebarProvider = ({
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [toggleSidebar]);
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
@@ -166,6 +173,7 @@ const SidebarProvider = ({
           )}
           data-slot="sidebar-wrapper"
           style={
+            // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
             {
               "--sidebar-width": SIDEBAR_WIDTH,
               "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
@@ -220,6 +228,7 @@ const Sidebar = ({
           data-slot="sidebar"
           side={side}
           style={
+            // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
             } as React.CSSProperties
@@ -551,7 +560,7 @@ const SidebarMenuButton = ({
     />
   );
 
-  if (!tooltip) {
+  if (tooltip === undefined) {
     return button;
   }
 
@@ -653,6 +662,7 @@ const SidebarMenuSkeleton = ({
         className="h-4 max-w-(--skeleton-width) flex-1"
         data-sidebar="menu-skeleton-text"
         style={
+          // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
           {
             "--skeleton-width": width,
           } as React.CSSProperties

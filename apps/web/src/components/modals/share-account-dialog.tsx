@@ -68,7 +68,7 @@ export const ShareAccountDialog = ({
   }, [availableUsers, searchQuery]);
 
   const shareMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: async () =>
       orpc.squad.shareGameAccount.call({
         accountId: account.id,
         userId: selectedUserId,
@@ -76,29 +76,29 @@ export const ShareAccountDialog = ({
     onError: (error) => {
       toast.error(error.message || "Nie udało się udostępnić konta");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Konto udostępnione");
       setSelectedUserId("");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.squad.getGameAccountShares.queryKey({
           input: { accountId: account.id },
         }),
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.squad.getMyGameAccounts.queryKey(),
       });
     },
   });
 
   const removeShareMutation = useMutation({
-    mutationFn: (shareId: number) =>
+    mutationFn: async (shareId: number) =>
       orpc.squad.removeGameAccountShare.call({ shareId }),
     onError: (error) => {
       toast.error(error.message || "Nie udało się usunąć udostępnienia");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Usunięto udostępnienie");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.squad.getGameAccountShares.queryKey({
           input: { accountId: account.id },
         }),
@@ -125,7 +125,9 @@ export const ShareAccountDialog = ({
               <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 className="pl-8"
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                }}
                 placeholder="Szukaj użytkownika..."
                 value={searchQuery}
               />
@@ -148,7 +150,9 @@ export const ShareAccountDialog = ({
                           : "border-transparent hover:bg-accent/50"
                       )}
                       key={user.id}
-                      onClick={() => setSelectedUserId(user.id)}
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                      }}
                       type="button"
                     >
                       <Avatar className="h-8 w-8">
@@ -206,7 +210,9 @@ export const ShareAccountDialog = ({
                     </div>
                     <Button
                       disabled={removeShareMutation.isPending}
-                      onClick={() => removeShareMutation.mutate(share.id)}
+                      onClick={() => {
+                        removeShareMutation.mutate(share.id);
+                      }}
                       size="icon"
                       variant="ghost"
                     >
@@ -220,12 +226,19 @@ export const ShareAccountDialog = ({
         </div>
 
         <ResponsiveDialogFooter>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
+          <Button
+            onClick={() => {
+              onOpenChange(false);
+            }}
+            variant="outline"
+          >
             Zamknij
           </Button>
           <Button
             disabled={!selectedUserId || shareMutation.isPending}
-            onClick={() => shareMutation.mutate()}
+            onClick={() => {
+              shareMutation.mutate();
+            }}
           >
             Udostępnij
           </Button>

@@ -20,7 +20,8 @@ export const Route = createFileRoute("/dashboard/profile")({
   },
 });
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style
+function RouteComponent() {
   const { session } = Route.useRouteContext();
   const isAdminUser = isAdmin(session);
 
@@ -84,26 +85,22 @@ const RouteComponent = () => {
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Dołączono</p>
               <p className="font-medium text-sm">
-                {session.user.createdAt
-                  ? formatDate(session.user.createdAt)
-                  : "—"}
+                {formatDate(session.user.createdAt)}
               </p>
             </div>
           </div>
 
-          {session && (
-            <EditProfileModal
-              defaultName={session.user.name as string}
-              trigger={
-                <Button className="mt-2 w-full" variant="outline">
-                  <Edit className="h-4 w-4" />
-                  Edytuj profil
-                </Button>
-              }
-            />
-          )}
+          <EditProfileModal
+            defaultName={session.user.name}
+            trigger={
+              <Button className="mt-2 w-full" variant="outline">
+                <Edit className="h-4 w-4" />
+                Edytuj profil
+              </Button>
+            }
+          />
         </CardContent>
       </Card>
     </div>
   );
-};
+}

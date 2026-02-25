@@ -40,16 +40,19 @@ export const SquadDetailsDialog = ({
             <ResponsiveDialogTitle className="text-xl">
               {details?.name ?? "Ładowanie..."}
             </ResponsiveDialogTitle>
-            {details?.isPublic ? (
+            {details?.isPublic === true ? (
               <Globe className="h-4 w-4 text-green-500" />
             ) : (
               <Lock className="h-4 w-4 text-amber-500" />
             )}
           </div>
           <ResponsiveDialogDescription>
-            {details?.world &&
+            {details?.world !== undefined &&
               `Świat: ${details.world.charAt(0).toUpperCase() + details.world.slice(1)}`}
-            {details?.description && ` • ${details.description}`}
+            {details?.description !== undefined &&
+              details.description !== null &&
+              details.description !== "" &&
+              ` • ${details.description}`}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -81,7 +84,7 @@ export const SquadDetailsDialog = ({
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 font-bold text-primary text-xs">
                       {member.position}
                     </div>
-                    {member.characterAvatarUrl && (
+                    {member.characterAvatarUrl !== null && (
                       <div
                         className="h-12 w-8 shrink-0 overflow-hidden rounded"
                         style={{
@@ -115,7 +118,12 @@ export const SquadDetailsDialog = ({
         </div>
 
         <ResponsiveDialogFooter>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
+          <Button
+            onClick={() => {
+              onOpenChange(false);
+            }}
+            variant="outline"
+          >
             Zamknij
           </Button>
         </ResponsiveDialogFooter>

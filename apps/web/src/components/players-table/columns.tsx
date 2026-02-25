@@ -49,42 +49,48 @@ const ActionCell = ({ player }: { player: Player }) => {
 
   const toggleVerified = useMutation({
     mutationFn: async () =>
-      await orpc.user.setVerified.call({
+      orpc.user.setVerified.call({
         userId: player.id,
         verified: !player.verified,
       }),
-    onError: (e: Error) => toast.error(e.message),
-    onSuccess: () => {
+    onError: (e: Error) => {
+      toast.error(e.message);
+    },
+    onSuccess: async () => {
       toast.success("Zmieniono status");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.user.list.queryKey(),
       });
     },
   });
   const changeRole = useMutation({
     mutationFn: async () =>
-      await orpc.user.setRole.call({
+      orpc.user.setRole.call({
         role: player.role === "admin" ? "user" : "admin",
         userId: player.id,
       }),
-    onError: (e: Error) => toast.error(e.message),
-    onSuccess: () => {
+    onError: (e: Error) => {
+      toast.error(e.message);
+    },
+    onSuccess: async () => {
       toast.success("Zmieniono rolę");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.user.list.queryKey(),
       });
     },
   });
   const updateName = useMutation({
     mutationFn: async () =>
-      await orpc.user.updateUserName.call({
+      orpc.user.updateUserName.call({
         name: newName,
         userId: player.id,
       }),
-    onError: (e: Error) => toast.error(e.message),
-    onSuccess: () => {
+    onError: (e: Error) => {
+      toast.error(e.message);
+    },
+    onSuccess: async () => {
       toast.success("Zmieniono nazwę użytkownika");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.user.list.queryKey(),
       });
       setShowRenameDialog(false);
@@ -92,13 +98,15 @@ const ActionCell = ({ player }: { player: Player }) => {
   });
   const deleteUser = useMutation({
     mutationFn: async () =>
-      await orpc.user.deleteUser.call({
+      orpc.user.deleteUser.call({
         userId: player.id,
       }),
-    onError: (e: Error) => toast.error(e.message),
-    onSuccess: () => {
+    onError: (e: Error) => {
+      toast.error(e.message);
+    },
+    onSuccess: async () => {
       toast.success("Usunięto użytkownika");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.user.list.queryKey(),
       });
       setShowDeleteDialog(false);
@@ -118,25 +126,35 @@ const ActionCell = ({ player }: { player: Player }) => {
           <DropdownMenuLabel>Akcje</DropdownMenuLabel>
           <DropdownMenuItem
             disabled={toggleVerified.isPending}
-            onClick={() => toggleVerified.mutate()}
+            onClick={() => {
+              toggleVerified.mutate();
+            }}
           >
             {player.verified ? "Odbierz weryfikację" : "Zweryfikuj"}
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={changeRole.isPending}
-            onClick={() => changeRole.mutate()}
+            onClick={() => {
+              changeRole.mutate();
+            }}
           >
             {player.role === "admin" ? "Ustaw jako user" : "Ustaw jako admin"}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setShowRenameDialog(true)}>
+          <DropdownMenuItem
+            onClick={() => {
+              setShowRenameDialog(true);
+            }}
+          >
             <Pencil className="mr-2 h-4 w-4" />
             Zmień nazwę
           </DropdownMenuItem>
           {!player.verified && (
             <DropdownMenuItem
               className="text-destructive"
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={() => {
+                setShowDeleteDialog(true);
+              }}
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Usuń konto
@@ -159,21 +177,27 @@ const ActionCell = ({ player }: { player: Player }) => {
             <Input
               className="mt-2"
               id="new-name"
-              onChange={(e) => setNewName(e.target.value)}
+              onChange={(e) => {
+                setNewName(e.target.value);
+              }}
               placeholder="Wprowadź nową nazwę"
               value={newName}
             />
           </div>
           <DialogFooter>
             <Button
-              onClick={() => setShowRenameDialog(false)}
+              onClick={() => {
+                setShowRenameDialog(false);
+              }}
               variant="outline"
             >
               Anuluj
             </Button>
             <Button
               disabled={!newName || newName.length < 2 || updateName.isPending}
-              onClick={() => updateName.mutate()}
+              onClick={() => {
+                updateName.mutate();
+              }}
             >
               Zapisz
             </Button>
@@ -196,7 +220,9 @@ const ActionCell = ({ player }: { player: Player }) => {
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleteUser.isPending}
-              onClick={() => deleteUser.mutate()}
+              onClick={() => {
+                deleteUser.mutate();
+              }}
             >
               Usuń
             </AlertDialogAction>
@@ -219,7 +245,7 @@ const baseColumns: ColumnDef<Player>[] = [
       <Avatar className="size-10">
         <AvatarImage
           alt={row.getValue("name")}
-          src={row.getValue("image") || undefined}
+          src={row.getValue("image") ?? undefined}
         />
         <AvatarFallback>{row.getValue("name")}</AvatarFallback>
       </Avatar>
@@ -228,11 +254,13 @@ const baseColumns: ColumnDef<Player>[] = [
   },
   {
     accessorKey: "name",
+    // oxlint-disable-next-line @typescript-eslint/no-unsafe-return
     cell: ({ row }) => row.getValue("name"),
     header: "Nazwa",
   },
   {
     accessorKey: "role",
+    // oxlint-disable-next-line @typescript-eslint/no-unsafe-return
     cell: ({ row }) => row.getValue("role"),
     header: "Rola",
   },

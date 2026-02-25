@@ -47,8 +47,10 @@ import { orpc } from "@/utils/orpc";
 
 /* oxlint-disable promise/prefer-await-to-then, promise/valid-params -- Zod .catch() is not Promise.catch() */
 const searchSchema = z.object({
-  eventId: z.string().optional().catch(),
-  heroId: z.string().optional().catch(),
+  // oxlint-disable-next-line unicorn/no-useless-undefined
+  eventId: z.string().optional().catch(undefined),
+  // oxlint-disable-next-line unicorn/no-useless-undefined
+  heroId: z.string().optional().catch(undefined),
 });
 /* oxlint-enable promise/prefer-await-to-then, promise/valid-params */
 
@@ -77,7 +79,8 @@ const formatDate = (date: Date) =>
     year: "numeric",
   });
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style, complexity
+function RouteComponent() {
   const { session } = Route.useRouteContext();
   const { eventId, heroId } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
@@ -107,10 +110,27 @@ const RouteComponent = () => {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    getNextPageParam: (lastPage) =>
+    getNextPageParam: (lastPage: {
+      items: {
+        id: number;
+        heroName: string;
+        heroLevel: number;
+        heroImage: string | null;
+        memberCount: number;
+        members: {
+          userId: string;
+          userName: string;
+          userImage: string | null;
+        }[];
+        createdByName: string;
+        createdByImage: string | null;
+        createdAt: Date;
+      }[];
+      pagination: { hasMore: boolean; page: number; totalItems: number };
+    }) =>
       lastPage.pagination.hasMore ? lastPage.pagination.page + 1 : undefined,
     initialPageParam: 1,
-    queryFn: async ({ pageParam = 1 }) => {
+    queryFn: async ({ pageParam }: { pageParam: number }) => {
       const result = await orpc.bet.getAllPaginated.call({
         eventId:
           selectedEventId === "all" ? undefined : Number(selectedEventId),
@@ -140,6 +160,7 @@ const RouteComponent = () => {
   // Load more when scrolled to bottom
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
+      // oxlint-disable-next-line @typescript-eslint/no-floating-promises
       fetchNextPage();
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
@@ -152,10 +173,10 @@ const RouteComponent = () => {
       const message = error instanceof Error ? error.message : "Wystąpił błąd";
       toast.error(message);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Obstawienie zostało usunięte");
       // Invalidate the paginated bets query
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["bets", "paginated"],
       });
       setBetToDelete(null);
@@ -201,12 +222,12 @@ const RouteComponent = () => {
                   </Badge>
                   {isAdminUser && (
                     <Button
-                      onClick={() =>
+                      onClick={() => {
                         setBetToDelete({
                           heroName: bet.heroName,
                           id: bet.id,
-                        })
-                      }
+                        });
+                      }}
                       size="icon"
                       type="button"
                       variant="ghost"
@@ -220,7 +241,9 @@ const RouteComponent = () => {
               {/* Main content: Hero Image and Players */}
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 {/* Hero Image */}
-                {bet.heroImage ? (
+                {bet.heroImage !== undefined &&
+                bet.heroImage !== null &&
+                bet.heroImage !== "" ? (
                   <img
                     alt={bet.heroName}
                     className="mx-auto h-20 w-16 shrink-0 rounded-lg object-contain sm:mx-0 sm:h-16 sm:w-14"
@@ -244,7 +267,7 @@ const RouteComponent = () => {
                       <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
                         <AvatarImage
                           alt={member.userName}
-                          src={member.userImage || undefined}
+                          src={member.userImage ?? undefined}
                         />
                         <AvatarFallback className="text-xs">
                           <User className="h-3 w-3" />
@@ -266,7 +289,7 @@ const RouteComponent = () => {
                     <Avatar className="h-5 w-5">
                       <AvatarImage
                         alt={bet.createdByName}
-                        src={bet.createdByImage || undefined}
+                        src={bet.createdByImage ?? undefined}
                       />
                       <AvatarFallback className="text-[10px]">
                         <User className="h-2.5 w-2.5" />
@@ -315,7 +338,8 @@ const RouteComponent = () => {
         <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
           {/* Event Select */}
           <Select
-            onValueChange={(value) =>
+            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+            onValueChange={async (value) =>
               navigate({
                 search: (prev) => ({
                   ...prev,
@@ -331,7 +355,7 @@ const RouteComponent = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Wszystkie eventy</SelectItem>
-              {[...(events || [])]
+              {[...(events ?? [])]
                 .toSorted(
                   (a, b) =>
                     new Date(b.endTime).getTime() -
@@ -344,7 +368,7 @@ const RouteComponent = () => {
                       <div className="flex items-center gap-2">
                         <IconComponent
                           className="h-4 w-4"
-                          style={{ color: event.color || undefined }}
+                          style={{ color: event.color ?? undefined }}
                         />
                         <span>{event.name}</span>
                       </div>
@@ -357,7 +381,8 @@ const RouteComponent = () => {
           {/* Hero Select */}
           <Select
             disabled={selectedEventId === "all"}
-            onValueChange={(value) =>
+            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+            onValueChange={async (value) =>
               navigate({
                 search: (prev) => ({
                   ...prev,
@@ -400,7 +425,11 @@ const RouteComponent = () => {
       {betsContent}
 
       <AlertDialog
-        onOpenChange={(open) => !open && setBetToDelete(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setBetToDelete(null);
+          }
+        }}
         open={betToDelete !== null}
       >
         <AlertDialogContent>
@@ -420,9 +449,11 @@ const RouteComponent = () => {
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={deleteMutation.isPending}
-              onClick={() =>
-                betToDelete && deleteMutation.mutate(betToDelete.id)
-              }
+              onClick={() => {
+                if (betToDelete) {
+                  deleteMutation.mutate(betToDelete.id);
+                }
+              }}
             >
               {deleteMutation.isPending ? "Usuwanie..." : "Usuń"}
             </AlertDialogAction>
@@ -431,4 +462,4 @@ const RouteComponent = () => {
       </AlertDialog>
     </div>
   );
-};
+}

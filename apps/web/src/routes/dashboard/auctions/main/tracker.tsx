@@ -15,7 +15,8 @@ export const Route = createFileRoute("/dashboard/auctions/main/tracker")({
   },
 });
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style
+function RouteComponent() {
   const { session } = Route.useRouteContext();
 
   return (
@@ -40,4 +41,4 @@ const RouteComponent = () => {
       </Card>
     </div>
   );
-};
+}

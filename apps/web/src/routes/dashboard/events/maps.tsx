@@ -9,9 +9,12 @@ export const Route = createFileRoute("/dashboard/events/maps")({
   },
 });
 
-const RouteComponent = () => (
-  <ComingSoon
-    description="Funkcja została tymczasowo wyłączona."
-    feature="Rozdawanie map"
-  />
-);
+// oxlint-disable-next-line func-style
+function RouteComponent() {
+  return (
+    <ComingSoon
+      description="Funkcja została tymczasowo wyłączona."
+      feature="Rozdawanie map"
+    />
+  );
+}

@@ -29,9 +29,12 @@ const routeApi = getRouteApi("/dashboard");
 
 /* oxlint-disable promise/prefer-await-to-then, promise/valid-params -- Zod .catch() is not Promise.catch() */
 const searchSchema = z.object({
-  eventId: z.string().optional().catch(),
-  heroId: z.string().optional().catch(),
-  sortBy: z.enum(["points", "bets", "gold"]).optional().catch(),
+  // oxlint-disable-next-line unicorn/no-useless-undefined
+  eventId: z.string().optional().catch(undefined),
+  // oxlint-disable-next-line unicorn/no-useless-undefined
+  heroId: z.string().optional().catch(undefined),
+  // oxlint-disable-next-line unicorn/no-useless-undefined
+  sortBy: z.enum(["points", "bets", "gold"]).optional().catch(undefined),
 });
 /* oxlint-enable promise/prefer-await-to-then, promise/valid-params */
 
@@ -43,16 +46,16 @@ const sortRanking = (
   items.sort((a, b) => {
     if (sortBy === "points") {
       return (
-        Number.parseFloat(b.totalPoints || "0") -
-        Number.parseFloat(a.totalPoints || "0")
+        Number.parseFloat(b.totalPoints ?? "0") -
+        Number.parseFloat(a.totalPoints ?? "0")
       );
     }
     if (sortBy === "bets") {
-      return (b.totalBets || 0) - (a.totalBets || 0);
+      return (b.totalBets ?? 0) - (a.totalBets ?? 0);
     }
     return (
-      Number.parseFloat(b.totalEarnings || "0") -
-      Number.parseFloat(a.totalEarnings || "0")
+      Number.parseFloat(b.totalEarnings ?? "0") -
+      Number.parseFloat(a.totalEarnings ?? "0")
     );
   });
   return items;
@@ -92,7 +95,8 @@ export const Route = createFileRoute("/dashboard/events/ranking")({
   validateSearch: searchSchema,
 });
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style
+function RouteComponent() {
   const { session } = routeApi.useRouteContext();
   const { eventId, heroId, sortBy } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
@@ -127,7 +131,9 @@ const RouteComponent = () => {
   });
 
   // Heroes are already filtered by event from the API
-  const sortedHeroes = [...heroes].toSorted((a, b) => a.level - b.level);
+  const sortedHeroes = [...(heroes ?? [])].toSorted(
+    (a, b) => a.level - b.level
+  );
 
   const sortedRanking = sortRanking(
     ranking as RankingItem[] | undefined,
@@ -152,7 +158,8 @@ const RouteComponent = () => {
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 md:flex md:items-center">
           {/* Event Select */}
           <Select
-            onValueChange={(value) =>
+            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+            onValueChange={async (value) =>
               navigate({
                 search: (prev) => ({
                   ...prev,
@@ -168,7 +175,7 @@ const RouteComponent = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Wszystkie eventy</SelectItem>
-              {[...(events || [])]
+              {[...(events ?? [])]
                 .toSorted(
                   (a, b) =>
                     new Date(b.endTime).getTime() -
@@ -181,7 +188,7 @@ const RouteComponent = () => {
                       <div className="flex items-center gap-2">
                         <IconComponent
                           className="h-4 w-4"
-                          style={{ color: event.color || undefined }}
+                          style={{ color: event.color ?? undefined }}
                         />
                         <span>{event.name}</span>
                       </div>
@@ -194,7 +201,8 @@ const RouteComponent = () => {
           {/* Hero Select */}
           <Select
             disabled={selectedEventId === "all"}
-            onValueChange={(value) =>
+            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+            onValueChange={async (value) =>
               navigate({
                 search: (prev) => ({
                   ...prev,
@@ -236,7 +244,8 @@ const RouteComponent = () => {
         {/* Sort Buttons with Gold Distribution */}
         <div className="sm: flex items-center justify-center gap-1 sm:justify-start">
           <Button
-            onClick={() =>
+            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+            onClick={async () =>
               navigate({
                 search: (prev) => ({ ...prev, sortBy: undefined }),
               })
@@ -247,7 +256,8 @@ const RouteComponent = () => {
             Punkty
           </Button>
           <Button
-            onClick={() =>
+            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+            onClick={async () =>
               navigate({
                 search: (prev) => ({ ...prev, sortBy: "bets" }),
               })
@@ -259,7 +269,8 @@ const RouteComponent = () => {
           </Button>
           <Button
             className={currentSortBy === "gold" ? "border border-primary" : ""}
-            onClick={() =>
+            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+            onClick={async () =>
               navigate({
                 search: (prev) => ({ ...prev, sortBy: "gold" }),
               })
@@ -289,4 +300,4 @@ const RouteComponent = () => {
       {rankingContent}
     </div>
   );
-};
+}

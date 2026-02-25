@@ -51,11 +51,12 @@ export const AddSkillModal = ({
   const form = useForm({
     defaultValues: {
       ...defaultValues,
-      professionId: defaultProfessionId ? String(defaultProfessionId) : "",
+      professionId:
+        defaultProfessionId === undefined ? "" : String(defaultProfessionId),
     },
     onSubmit: async ({ value }) => {
       try {
-        if (!value.professionId) {
+        if (value.professionId === "") {
           toast.error("Wybierz profesję!");
           return;
         }
@@ -67,7 +68,7 @@ export const AddSkillModal = ({
           rangeId: defaultRangeId,
         });
         toast.success("Zestaw utworzony");
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.skills.getSkillsByRange.queryKey({
             input: { rangeId: defaultRangeId },
           }),
@@ -97,10 +98,11 @@ export const AddSkillModal = ({
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-[425px]">
         <form
-          onSubmit={(e) => {
+          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit();
+            await form.handleSubmit();
           }}
         >
           <ResponsiveDialogHeader>
@@ -121,7 +123,9 @@ export const AddSkillModal = ({
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="https://margoworld.pl/tools/skills#AyKaZmAA/iA="
                       value={field.state.value}
                     />
@@ -143,7 +147,9 @@ export const AddSkillModal = ({
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="Wpisz nazwę zestawu umiejętności"
                       value={field.state.value}
                     />
@@ -196,9 +202,9 @@ export const AddSkillModal = ({
                       <Checkbox
                         checked={field.state.value}
                         id={field.name}
-                        onCheckedChange={(val) =>
-                          field.handleChange(Boolean(val))
-                        }
+                        onCheckedChange={(val) => {
+                          field.handleChange(Boolean(val));
+                        }}
                       />
                       <Label htmlFor={field.name}>Mistrzostwo?</Label>
                     </div>

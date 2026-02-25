@@ -44,15 +44,18 @@ export const NavMain = ({
       </SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
-          const isGroupActive = item.items?.some((subItem) =>
-            matchRoute({ fuzzy: true, to: subItem.url })
-          );
+          const isGroupActive =
+            Array.isArray(item.items) &&
+            item.items.some(
+              (subItem) =>
+                matchRoute({ fuzzy: true, to: subItem.url }) !== false
+            );
 
           return (
             <Collapsible
               asChild
               className="group/collapsible"
-              defaultOpen={item.isActive || isGroupActive}
+              defaultOpen={item.isActive ?? isGroupActive}
               key={item.title}
             >
               <SidebarMenuItem>
@@ -60,7 +63,7 @@ export const NavMain = ({
                   <SidebarMenuButton
                     className={cn(
                       "transition-colors",
-                      item.disabled && "cursor-not-allowed opacity-50",
+                      item.disabled === true && "cursor-not-allowed opacity-50",
                       isGroupActive && "bg-accent font-medium"
                     )}
                     tooltip={item.title}
@@ -80,15 +83,18 @@ export const NavMain = ({
 
                       return (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild isActive={!!isActive}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={isActive !== false}
+                          >
                             <Link
                               className={cn(
                                 "transition-colors",
-                                subItem.disabled &&
+                                subItem.disabled === true &&
                                   "cursor-not-allowed opacity-50",
-                                isActive && "text-primary"
+                                isActive !== false && "text-primary"
                               )}
-                              disabled={!!subItem.disabled}
+                              disabled={subItem.disabled === true}
                               to={subItem.url}
                             >
                               {subItem.title}

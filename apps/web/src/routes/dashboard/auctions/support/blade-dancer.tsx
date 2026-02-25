@@ -17,7 +17,8 @@ export const Route = createFileRoute(
   },
 });
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style
+function RouteComponent() {
   const { session } = Route.useRouteContext();
 
   return (
@@ -42,4 +43,4 @@ const RouteComponent = () => {
       </Card>
     </div>
   );
-};
+}

@@ -42,7 +42,7 @@ export const AddAnnouncementModal = ({
         });
 
         toast.success("Ogłoszenie utworzone pomyślnie");
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.announcement.getAll.queryKey(),
         });
         setOpen(false);
@@ -68,10 +68,11 @@ export const AddAnnouncementModal = ({
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-[600px]">
         <form
-          onSubmit={(e) => {
+          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit();
+            await form.handleSubmit();
           }}
         >
           <ResponsiveDialogHeader>
@@ -90,7 +91,9 @@ export const AddAnnouncementModal = ({
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="Wpisz tytuł ogłoszenia"
                       value={field.state.value}
                     />
@@ -112,7 +115,9 @@ export const AddAnnouncementModal = ({
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="Wpisz opis ogłoszenia"
                       value={field.state.value}
                     />

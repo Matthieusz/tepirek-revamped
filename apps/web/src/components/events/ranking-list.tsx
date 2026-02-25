@@ -38,8 +38,8 @@ interface RankingListProps {
 export const RankingList = ({ players }: RankingListProps) => (
   <div className="space-y-2">
     {players.map((player, index) => {
-      const earnings = Number.parseFloat(player.totalEarnings || "0");
-      const points = Number.parseFloat(player.totalPoints || "0");
+      const earnings = Number.parseFloat(player.totalEarnings ?? "0");
+      const points = Number.parseFloat(player.totalPoints ?? "0");
       const rankIcon = getRankIcon(index + 1);
 
       return (
@@ -52,7 +52,7 @@ export const RankingList = ({ players }: RankingListProps) => (
             <div className="hidden items-center gap-4 sm:flex">
               {/* Rank Icon or Number */}
               <div className="flex w-8 shrink-0 items-center justify-center">
-                {rankIcon || (
+                {rankIcon ?? (
                   <span className="font-medium text-muted-foreground">
                     {index + 1}
                   </span>
@@ -63,7 +63,7 @@ export const RankingList = ({ players }: RankingListProps) => (
               <Avatar className="h-10 w-10 shrink-0 border border-border">
                 <AvatarImage
                   alt={player.userName}
-                  src={player.userImage || undefined}
+                  src={player.userImage ?? undefined}
                 />
                 <AvatarFallback>
                   <User className="h-5 w-5" />
@@ -110,7 +110,7 @@ export const RankingList = ({ players }: RankingListProps) => (
                   <div className="flex w-full items-center gap-3">
                     {/* Rank Icon or Number */}
                     <div className="flex w-6 shrink-0 items-center justify-center">
-                      {rankIcon || (
+                      {rankIcon ?? (
                         <span className="font-medium text-muted-foreground">
                           {index + 1}
                         </span>
@@ -121,7 +121,7 @@ export const RankingList = ({ players }: RankingListProps) => (
                     <Avatar className="h-12 w-12 shrink-0 border border-border">
                       <AvatarImage
                         alt={player.userName}
-                        src={player.userImage || undefined}
+                        src={player.userImage ?? undefined}
                       />
                       <AvatarFallback>
                         <User className="h-8 w-8" />

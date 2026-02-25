@@ -36,9 +36,9 @@ export const Route = createFileRoute("/dashboard/skills/$rangeName")({
     const slug = params.rangeName;
     try {
       const data = await orpc.skills.getRangeBySlug.call({ slug });
-      return { crumb: `${data?.name ?? slug}` };
+      return { crumb: data?.name ?? slug };
     } catch {
-      return { crumb: `${slug}` };
+      return { crumb: slug };
     }
   },
 });
@@ -66,7 +66,8 @@ const SkillsLoadingSkeleton = () => (
 );
 /* oxlint-enable react/no-array-index-key */
 
-const RangeDetails = () => {
+// oxlint-disable-next-line func-style
+function RangeDetails() {
   const { rangeName } = Route.useParams();
   const { session } = Route.useRouteContext();
   const [skillToDelete, setSkillToDelete] = useState<SkillToDelete>(null);
@@ -95,10 +96,10 @@ const RangeDetails = () => {
     onError: () => {
       toast.error("Błąd podczas usuwania");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Usunięto zestaw");
-      if (skillToDelete?.rangeId) {
-        queryClient.invalidateQueries({
+      if (skillToDelete?.rangeId !== undefined && skillToDelete.rangeId !== 0) {
+        await queryClient.invalidateQueries({
           queryKey: orpc.skills.getSkillsByRange.queryKey({
             input: { rangeId: skillToDelete.rangeId },
           }),
@@ -132,9 +133,7 @@ const RangeDetails = () => {
   const skillsGrouped: Record<number, typeof skillsData> = {};
   for (const s of skillsData) {
     const key = s.professionId;
-    if (!skillsGrouped[key]) {
-      skillsGrouped[key] = [];
-    }
+    skillsGrouped[key] ??= [];
     skillsGrouped[key].push(s);
   }
 
@@ -210,7 +209,7 @@ const RangeDetails = () => {
                                 <Avatar className="size-5">
                                   <AvatarImage
                                     alt={skill.addedBy}
-                                    src={skill.addedByImage || undefined}
+                                    src={skill.addedByImage ?? undefined}
                                   />
                                   <AvatarFallback className="text-xs">
                                     {skill.addedBy?.slice(0, 2).toUpperCase()}
@@ -224,13 +223,13 @@ const RangeDetails = () => {
                             {isAdminUser && (
                               <TableCell>
                                 <Button
-                                  onClick={() =>
+                                  onClick={() => {
                                     setSkillToDelete({
                                       id: skill.id,
                                       name: skill.name,
                                       rangeId: currentRange.id,
-                                    })
-                                  }
+                                    });
+                                  }}
                                   size="sm"
                                   type="button"
                                   variant="ghost"
@@ -256,7 +255,11 @@ const RangeDetails = () => {
       </div>
 
       <AlertDialog
-        onOpenChange={(open) => !open && setSkillToDelete(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSkillToDelete(null);
+          }
+        }}
         open={skillToDelete !== null}
       >
         <AlertDialogContent>
@@ -273,9 +276,11 @@ const RangeDetails = () => {
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={deleteMutation.isPending}
-              onClick={() =>
-                skillToDelete && deleteMutation.mutate(skillToDelete.id)
-              }
+              onClick={() => {
+                if (skillToDelete) {
+                  deleteMutation.mutate(skillToDelete.id);
+                }
+              }}
             >
               {deleteMutation.isPending ? "Usuwanie..." : "Usuń"}
             </AlertDialogAction>
@@ -284,4 +289,4 @@ const RangeDetails = () => {
       </AlertDialog>
     </div>
   );
-};
+}

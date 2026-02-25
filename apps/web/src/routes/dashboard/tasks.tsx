@@ -29,7 +29,8 @@ export const Route = createFileRoute("/dashboard/tasks")({
   },
 });
 
-const TasksRoute = () => {
+// oxlint-disable-next-line func-style
+function TasksRoute() {
   const { session } = Route.useRouteContext();
   const [newTodoText, setNewTodoText] = useState("");
   const queryClient = useQueryClient();
@@ -37,8 +38,8 @@ const TasksRoute = () => {
   const todos = useQuery(orpc.todo.getAll.queryOptions());
   const createMutation = useMutation(
     orpc.todo.create.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
           queryKey: orpc.todo.getAll.queryKey(),
         });
         setNewTodoText("");
@@ -47,8 +48,8 @@ const TasksRoute = () => {
   );
   const toggleMutation = useMutation(
     orpc.todo.toggle.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
           queryKey: orpc.todo.getAll.queryKey(),
         });
       },
@@ -56,8 +57,8 @@ const TasksRoute = () => {
   );
   const deleteMutation = useMutation(
     orpc.todo.delete.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
           queryKey: orpc.todo.getAll.queryKey(),
         });
       },
@@ -150,7 +151,9 @@ const TasksRoute = () => {
                 <Input
                   className="flex-1"
                   disabled={createMutation.isPending}
-                  onChange={(e) => setNewTodoText(e.target.value)}
+                  onChange={(e) => {
+                    setNewTodoText(e.target.value);
+                  }}
                   placeholder="np. zrobić porządek na postaciach (pozdro Ukasz)"
                   value={newTodoText}
                 />
@@ -214,9 +217,9 @@ const TasksRoute = () => {
                       <Checkbox
                         checked={todo.completed}
                         id={`todo-${todo.id}`}
-                        onCheckedChange={() =>
-                          handleToggleTodo(todo.id, todo.completed)
-                        }
+                        onCheckedChange={() => {
+                          handleToggleTodo(todo.id, todo.completed);
+                        }}
                       />
                       <label
                         className={`cursor-pointer text-sm ${
@@ -231,7 +234,9 @@ const TasksRoute = () => {
                     </div>
                     <Button
                       aria-label="Usuń zadanie"
-                      onClick={() => handleDeleteTodo(todo.id)}
+                      onClick={() => {
+                        handleDeleteTodo(todo.id);
+                      }}
                       size="icon"
                       variant="ghost"
                     >
@@ -246,4 +251,4 @@ const TasksRoute = () => {
       </div>
     </div>
   );
-};
+}

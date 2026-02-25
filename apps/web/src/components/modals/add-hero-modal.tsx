@@ -56,19 +56,20 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
     },
     onSubmit: async ({ value }) => {
       try {
-        if (!value.eventId) {
+        if (value.eventId === "") {
           toast.error("Wybierz event!");
           return;
         }
 
         await orpc.heroes.create.call({
           eventId: Number.parseInt(value.eventId, 10),
-          image: value.image || undefined,
+          image: value.image ?? undefined,
           level: Number.parseInt(value.level, 10),
           name: value.name,
         });
 
         toast.success("Heros utworzony pomyślnie");
+        // oxlint-disable-next-line @typescript-eslint/no-floating-promises
         queryClient.invalidateQueries({
           queryKey: orpc.heroes.getAll.queryKey(),
         });
@@ -100,6 +101,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            // oxlint-disable-next-line @typescript-eslint/no-floating-promises
             form.handleSubmit();
           }}
         >
@@ -119,7 +121,9 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="Wprowadź nazwę herosa"
                       value={field.state.value}
                     />
@@ -143,7 +147,9 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="Wprowadź URL obrazka"
                       value={field.state.value}
                     />
@@ -167,7 +173,9 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                       min={1}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="Wprowadź poziom"
                       type="number"
                       value={field.state.value}

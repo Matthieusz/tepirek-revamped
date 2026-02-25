@@ -7,4 +7,7 @@ export const Route = createFileRoute("/dashboard/auctions")({
   },
 });
 
-const RouteComponent = () => <Outlet />;
+// oxlint-disable-next-line func-style
+function RouteComponent() {
+  return <Outlet />;
+}

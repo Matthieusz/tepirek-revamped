@@ -19,7 +19,8 @@ export const Route = createFileRoute("/dashboard/squad-builder/manage")({
   },
 });
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style
+function RouteComponent() {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -33,7 +34,9 @@ const RouteComponent = () => {
       debouncedSearchQuery === "" ||
       s.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
       s.world.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-      s.description?.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+      s.description
+        ?.toLowerCase()
+        .includes(debouncedSearchQuery.toLowerCase()) === true
   );
 
   const ownedSquads = filteredSquads?.filter((s) => s.isOwner) ?? [];
@@ -62,7 +65,9 @@ const RouteComponent = () => {
           <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
           <Input
             className="pl-9"
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+            }}
             placeholder="Szukaj po nazwie, świecie lub opisie..."
             value={searchQuery}
           />
@@ -106,7 +111,12 @@ const RouteComponent = () => {
                 <p className="mb-4 text-center text-muted-foreground">
                   Nie znaleziono squadów pasujących do &quot;{searchQuery}&quot;
                 </p>
-                <Button onClick={() => setSearchQuery("")} variant="outline">
+                <Button
+                  onClick={() => {
+                    setSearchQuery("");
+                  }}
+                  variant="outline"
+                >
                   Wyczyść wyszukiwanie
                 </Button>
               </CardContent>
@@ -149,4 +159,4 @@ const RouteComponent = () => {
       </div>
     </ErrorBoundary>
   );
-};
+}

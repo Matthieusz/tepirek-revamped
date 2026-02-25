@@ -17,7 +17,8 @@ export const Route = createFileRoute("/dashboard/skills/")({
   },
 });
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style
+function RouteComponent() {
   const { session } = Route.useRouteContext();
   const { data: ranges, isPending } = useQuery(
     orpc.skills.getAllRanges.queryOptions()
@@ -76,4 +77,4 @@ const RouteComponent = () => {
       )}
     </div>
   );
-};
+}

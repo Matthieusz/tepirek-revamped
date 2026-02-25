@@ -28,9 +28,11 @@ export const CharacterSelectCard = ({
       <Checkbox
         checked={isSelected}
         id={checkboxId}
-        onCheckedChange={() => onToggle()}
+        onCheckedChange={() => {
+          onToggle();
+        }}
       />
-      {character.avatarUrl && (
+      {character.avatarUrl !== null && (
         <div
           className="h-14 w-10 shrink-0 overflow-hidden rounded"
           style={{
@@ -53,7 +55,7 @@ export const CharacterSelectCard = ({
         <div className="text-muted-foreground text-xs">
           Lvl {character.level} • {character.gameAccountName}
         </div>
-        {character.guildName && (
+        {character.guildName !== null && (
           <div className="text-muted-foreground/70 text-xs">
             {character.guildName}
           </div>

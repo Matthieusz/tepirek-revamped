@@ -36,7 +36,8 @@ export const Route = createFileRoute("/dashboard")({
   },
 });
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style
+function RouteComponent() {
   const { session } = Route.useRouteContext();
   return (
     <SidebarProvider>
@@ -58,4 +59,4 @@ const RouteComponent = () => {
       </SidebarInset>
     </SidebarProvider>
   );
-};
+}

@@ -45,13 +45,13 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
     onSubmit: async ({ value }) => {
       try {
         await orpc.skills.createRange.call({
-          image: value.image || "",
+          image: value.image ?? "",
           level: value.level,
           name: value.name,
         });
 
         toast.success("Przedział utworzony pomyślnie");
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.skills.getAllRanges.queryKey(),
         });
         setOpen(false);
@@ -78,10 +78,11 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-[425px]">
         <form
-          onSubmit={(e) => {
+          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit();
+            await form.handleSubmit();
           }}
         >
           <ResponsiveDialogHeader>
@@ -100,7 +101,9 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="Wpisz nazwę przedziału"
                       value={field.state.value}
                     />
@@ -122,11 +125,11 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         field.handleChange(
                           Number.parseInt(e.target.value, 10) || 0
-                        )
-                      }
+                        );
+                      }}
                       placeholder="Wpisz level"
                       type="number"
                       value={field.state.value}
@@ -149,7 +152,9 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="Wpisz URL obrazka"
                       value={field.state.value}
                     />

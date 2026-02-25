@@ -169,7 +169,11 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
   const { data: signups, isPending } = useQuery(signupsQuery);
 
   const toggleMutation = useMutation({
-    mutationFn: (params: { level: number; round: number; column: number }) =>
+    mutationFn: async (params: {
+      level: number;
+      round: number;
+      column: number;
+    }) =>
       orpc.auction.toggleSignup.call({
         profession,
         type,
@@ -178,9 +182,9 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
     onError: () => {
       toast.error("Wystąpił błąd");
     },
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: signupsQuery.queryKey });
-      queryClient.invalidateQueries({ queryKey: statsQuery.queryKey });
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: signupsQuery.queryKey });
+      await queryClient.invalidateQueries({ queryKey: statsQuery.queryKey });
       toast.success(
         result.action === "added"
           ? "Zapisano na licytację"
@@ -190,13 +194,13 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
   });
 
   const removeMutation = useMutation({
-    mutationFn: (id: number) => orpc.auction.removeSignup.call({ id }),
+    mutationFn: async (id: number) => orpc.auction.removeSignup.call({ id }),
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Wystąpił błąd");
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: signupsQuery.queryKey });
-      queryClient.invalidateQueries({ queryKey: statsQuery.queryKey });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: signupsQuery.queryKey });
+      await queryClient.invalidateQueries({ queryKey: statsQuery.queryKey });
       toast.success("Wypisano z licytacji");
     },
   });
@@ -268,6 +272,7 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
                   {roundLabels[round]}
                 </TableCell>
                 {columns.map((col: string, colIdx: number) => {
+                  // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
                   const column = (colIdx + 1) as Column;
                   const signup = getSignupForCell(value, round, column);
                   const isOwnSignup = signup?.userId === currentUserId;
@@ -286,16 +291,18 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
                         <CellContent
                           isMutating={isMutating}
                           isOwnSignup={isOwnSignup ?? false}
-                          onRemove={() =>
-                            signup && removeMutation.mutate(signup.id)
-                          }
-                          onSignup={() =>
+                          onRemove={() => {
+                            if (signup !== undefined) {
+                              removeMutation.mutate(signup.id);
+                            }
+                          }}
+                          onSignup={() => {
                             toggleMutation.mutate({
                               column,
                               level: value,
                               round,
-                            })
-                          }
+                            });
+                          }}
                           signup={signup}
                         />
                       </div>

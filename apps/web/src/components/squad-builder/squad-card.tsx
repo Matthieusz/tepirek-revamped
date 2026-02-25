@@ -58,13 +58,15 @@ export const SquadCard = ({ squad }: SquadCardProps) => {
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
-    mutationFn: () => orpc.squad.deleteSquad.call({ id: squad.id }),
+    mutationFn: async () => orpc.squad.deleteSquad.call({ id: squad.id }),
     onError: (error) => {
-      toast.error(error.message || "Nie udało się usunąć squadu");
+      toast.error(
+        error.message === "" ? "Nie udało się usunąć squadu" : error.message
+      );
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Squad usunięty");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.squad.getMySquads.queryKey(),
       });
     },
@@ -92,7 +94,7 @@ export const SquadCard = ({ squad }: SquadCardProps) => {
               </div>
               <CardDescription className="mt-1">
                 {squad.world.charAt(0).toUpperCase() + squad.world.slice(1)}
-                {!squad.isOwner && squad.ownerName && (
+                {!squad.isOwner && squad.ownerName !== null && (
                   <span className="text-muted-foreground">
                     {" "}
                     • od {squad.ownerName}
@@ -114,18 +116,28 @@ export const SquadCard = ({ squad }: SquadCardProps) => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setShowEditDialog(true);
+                    }}
+                  >
                     <Pencil className="mr-2 h-4 w-4" />
                     Edytuj
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowShareDialog(true)}>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setShowShareDialog(true);
+                    }}
+                  >
                     <Share2 className="mr-2 h-4 w-4" />
                     Udostępnij
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="text-destructive"
-                    onClick={() => setShowDeleteDialog(true)}
+                    onClick={() => {
+                      setShowDeleteDialog(true);
+                    }}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
                     Usuń
@@ -138,14 +150,14 @@ export const SquadCard = ({ squad }: SquadCardProps) => {
 
         <CardContent className="pb-4">
           {/* Opis */}
-          {squad.description && (
+          {squad.description !== null && (
             <p className="mb-3 line-clamp-1 text-muted-foreground text-sm">
               {squad.description}
             </p>
           )}
 
           {/* Stats: Level range + Profession summary */}
-          {details?.members && details.members.length > 0 && (
+          {details?.members !== undefined && details.members.length > 0 && (
             <div className="mb-3 flex items-center justify-between gap-2">
               <LevelRange members={details.members} />
               <ProfessionSummary members={details.members} />
@@ -163,7 +175,9 @@ export const SquadCard = ({ squad }: SquadCardProps) => {
           {/* Przycisk szczegółów */}
           <Button
             className="w-full"
-            onClick={() => setShowDetails(true)}
+            onClick={() => {
+              setShowDetails(true);
+            }}
             size="sm"
             variant="outline"
           >
@@ -209,7 +223,9 @@ export const SquadCard = ({ squad }: SquadCardProps) => {
                 <AlertDialogCancel>Anuluj</AlertDialogCancel>
                 <AlertDialogAction
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={() => deleteMutation.mutate()}
+                  onClick={() => {
+                    deleteMutation.mutate();
+                  }}
                 >
                   Usuń
                 </AlertDialogAction>

@@ -17,4 +17,4 @@ export const EVENT_ICON_MAP: Record<string, LucideIcon> = {
  * Get an event icon component by name, with fallback to Calendar
  */
 export const getEventIcon = (iconName: string | null | undefined): LucideIcon =>
-  EVENT_ICON_MAP[iconName || "calendar"] || Calendar;
+  EVENT_ICON_MAP[iconName ?? "calendar"] ?? Calendar;

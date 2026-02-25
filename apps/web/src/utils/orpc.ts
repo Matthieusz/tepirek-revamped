@@ -21,7 +21,9 @@ export const queryClient = new QueryClient({
       toast.error(`Błąd: ${error.message}`, {
         action: {
           label: "retry",
+          // oxlint-disable-next-line @typescript-eslint/promise-function-async
           onClick: () => {
+            // oxlint-disable-next-line @typescript-eslint/no-floating-promises
             queryClient.invalidateQueries();
           },
         },
@@ -31,7 +33,7 @@ export const queryClient = new QueryClient({
 });
 
 export const link = new RPCLink({
-  fetch(_url, options) {
+  async fetch(_url, options) {
     return fetch(_url, {
       ...options,
       credentials: "include",

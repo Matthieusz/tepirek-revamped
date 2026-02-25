@@ -49,9 +49,9 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
       const message = error instanceof Error ? error.message : "Wystąpił błąd";
       toast.error(message);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Przedział został usunięty");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.skills.getAllRanges.queryKey(),
       });
       setShowDeleteDialog(false);
@@ -71,7 +71,13 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
             <CardDescription>Level: {range.level}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-1 items-center justify-center">
-            {range.image ? (
+            {range.image === null ? (
+              <div className="flex h-40 w-40 items-center justify-center rounded-md bg-muted">
+                <span className="text-muted-foreground text-sm">
+                  Brak obrazu
+                </span>
+              </div>
+            ) : (
               <img
                 alt={range.name}
                 className="h-40 w-40 rounded-md object-contain"
@@ -79,12 +85,6 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
                 src={range.image}
                 width={160}
               />
-            ) : (
-              <div className="flex h-40 w-40 items-center justify-center rounded-md bg-muted">
-                <span className="text-muted-foreground text-sm">
-                  Brak obrazu
-                </span>
-              </div>
             )}
           </CardContent>
         </Link>
@@ -92,7 +92,9 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
           <div className="mt-auto p-4 pt-0">
             <Button
               className="w-full"
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={() => {
+                setShowDeleteDialog(true);
+              }}
               size="sm"
               type="button"
               variant="destructive"
@@ -121,7 +123,9 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={deleteMutation.isPending}
-              onClick={() => deleteMutation.mutate(range.id)}
+              onClick={() => {
+                deleteMutation.mutate(range.id);
+              }}
             >
               {deleteMutation.isPending ? "Usuwanie..." : "Usuń"}
             </AlertDialogAction>

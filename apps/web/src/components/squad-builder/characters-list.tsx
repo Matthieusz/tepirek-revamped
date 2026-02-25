@@ -68,7 +68,9 @@ export const CharactersList = ({
             character={character}
             isSelected={selectedCharacterIds.includes(character.id)}
             key={character.id}
-            onToggle={() => toggleCharacter(character.id)}
+            onToggle={() => {
+              toggleCharacter(character.id);
+            }}
           />
         ))}
       </div>

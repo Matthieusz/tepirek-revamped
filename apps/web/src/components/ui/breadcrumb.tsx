@@ -40,7 +40,7 @@ const BreadcrumbLink = ({
 }: React.ComponentProps<"a"> & {
   asChild?: boolean;
 }) => {
-  const Comp = asChild ? Slot : "a";
+  const Comp = asChild === true ? Slot : "a";
 
   return (
     <Comp

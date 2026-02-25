@@ -47,7 +47,7 @@ export const EditProfileModal = ({
           name: value.name,
         });
         toast.success("Profil zaktualizowany");
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.user.getSession.queryKey(),
         });
         setOpen(false);
@@ -69,10 +69,11 @@ export const EditProfileModal = ({
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-[425px]">
         <form
-          onSubmit={(e) => {
+          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit();
+            await form.handleSubmit();
           }}
         >
           <ResponsiveDialogHeader>
@@ -91,7 +92,9 @@ export const EditProfileModal = ({
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="Wpisz nazwę"
                       value={field.state.value}
                     />

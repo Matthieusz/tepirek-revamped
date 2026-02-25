@@ -24,7 +24,8 @@ export const Route = createFileRoute("/waiting-room")({
   component: RouteComponent,
 });
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style
+function RouteComponent() {
   const router = useRouter();
   const navigate = Route.useNavigate();
   const { session } = Route.useRouteContext();
@@ -38,7 +39,12 @@ const RouteComponent = () => {
   // Validate Discord guild membership on mount and when access token is available
   useEffect(() => {
     const validateAndRedirect = async () => {
-      if (!accessToken || isValidating) {
+      if (
+        accessToken === undefined ||
+        accessToken === null ||
+        accessToken === "" ||
+        isValidating
+      ) {
         return;
       }
 
@@ -50,7 +56,7 @@ const RouteComponent = () => {
         if (result?.valid) {
           await orpc.user.verifySelf.call();
           await router.invalidate();
-          navigate({ to: "/dashboard" });
+          await navigate({ to: "/dashboard" });
         }
       } catch (error) {
         // Discord validation failed, stay on waiting room
@@ -60,7 +66,8 @@ const RouteComponent = () => {
       }
     };
 
-    validateAndRedirect();
+    // oxlint-disable-next-line no-void
+    void validateAndRedirect();
   }, [accessToken, isValidating, navigate, router]);
 
   return (
@@ -82,7 +89,9 @@ const RouteComponent = () => {
           <CardContent className="space-y-4">
             <Button
               className="mt-4 w-full"
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                window.location.reload();
+              }}
               variant="outline"
             >
               <RefreshCw className="size-4" />
@@ -100,18 +109,20 @@ const RouteComponent = () => {
                 {session.user.name}
               </span>
             </p>
+            {/* oxlint-disable @typescript-eslint/no-misused-promises -- async onClick handler */}
             <Button
-              onClick={() =>
+              onClick={async () =>
                 authClient.signOut({
                   fetchOptions: {
                     onError: (error) => {
                       toast.error(
-                        error.error.message || error.error.statusText
+                        error.error.message ?? error.error.statusText
                       );
                     },
                     onSuccess: () => {
                       toast.success("Wylogowano pomyślnie");
-                      navigate({
+                      // oxlint-disable-next-line no-void
+                      void navigate({
                         to: "/",
                       });
                     },
@@ -125,9 +136,10 @@ const RouteComponent = () => {
               <LogOut className="size-4" />
               Wyloguj się
             </Button>
+            {/* oxlint-enable @typescript-eslint/no-misused-promises */}
           </CardContent>
         </Card>
       </div>
     </div>
   );
-};
+}

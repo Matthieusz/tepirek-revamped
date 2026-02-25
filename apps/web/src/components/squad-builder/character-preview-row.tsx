@@ -10,7 +10,7 @@ export const CharacterPreviewRow = ({
   character,
 }: CharacterPreviewRowProps) => (
   <div className="flex items-center gap-3 rounded-md border bg-muted/30 p-2">
-    {character.avatarUrl && (
+    {character.avatarUrl !== undefined && (
       <div
         className="size-8 shrink-0 rounded bg-center bg-cover"
         style={{
@@ -32,7 +32,7 @@ export const CharacterPreviewRow = ({
       </div>
       <div className="text-muted-foreground text-xs">
         Lvl {character.level} • {character.world}
-        {character.guildName && ` • ${character.guildName}`}
+        {character.guildName !== undefined && ` • ${character.guildName}`}
       </div>
     </div>
   </div>

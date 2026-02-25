@@ -41,7 +41,8 @@ type AnnouncementToDelete = {
   title: string;
 } | null;
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style
+function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [announcementToDelete, setAnnouncementToDelete] =
     useState<AnnouncementToDelete>(null);
@@ -60,9 +61,9 @@ const RouteComponent = () => {
       const message = error instanceof Error ? error.message : "Wystąpił błąd";
       toast.error(message);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Ogłoszenie zostało usunięte");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.announcement.getAll.queryKey(),
       });
       setAnnouncementToDelete(null);
@@ -161,12 +162,12 @@ const RouteComponent = () => {
                     {isAdminUser && (
                       <Button
                         aria-label="Usuń ogłoszenie"
-                        onClick={() =>
+                        onClick={() => {
                           setAnnouncementToDelete({
                             id: announcement.id,
                             title: announcement.title,
-                          })
-                        }
+                          });
+                        }}
                         size="sm"
                         variant="ghost"
                       >
@@ -187,7 +188,11 @@ const RouteComponent = () => {
       </div>
 
       <AlertDialog
-        onOpenChange={(open) => !open && setAnnouncementToDelete(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAnnouncementToDelete(null);
+          }
+        }}
         open={announcementToDelete !== null}
       >
         <AlertDialogContent>
@@ -206,10 +211,11 @@ const RouteComponent = () => {
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={deleteMutation.isPending}
-              onClick={() =>
-                announcementToDelete &&
-                deleteMutation.mutate(announcementToDelete.id)
-              }
+              onClick={() => {
+                if (announcementToDelete) {
+                  deleteMutation.mutate(announcementToDelete.id);
+                }
+              }}
             >
               {deleteMutation.isPending ? "Usuwanie..." : "Usuń"}
             </AlertDialogAction>
@@ -218,4 +224,4 @@ const RouteComponent = () => {
       </AlertDialog>
     </div>
   );
-};
+}

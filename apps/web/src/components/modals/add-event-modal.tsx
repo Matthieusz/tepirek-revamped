@@ -86,7 +86,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
         });
 
         toast.success("Event utworzony pomyślnie");
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.event.getAll.queryKey(),
         });
         setOpen(false);
@@ -115,10 +115,11 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-[425px]">
         <form
-          onSubmit={(e) => {
+          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit();
+            await form.handleSubmit();
           }}
         >
           <ResponsiveDialogHeader>
@@ -137,7 +138,9 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="Wpisz nazwę eventu"
                       value={field.state.value}
                     />
@@ -166,7 +169,9 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                           : "border-border"
                       )}
                       key={item.id}
-                      onClick={() => setSelectedIcon(item.id)}
+                      onClick={() => {
+                        setSelectedIcon(item.id);
+                      }}
                       type="button"
                     >
                       <IconComponent
@@ -193,7 +198,9 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                         : "border-transparent"
                     )}
                     key={color.id}
-                    onClick={() => setSelectedColor(color.id)}
+                    onClick={() => {
+                      setSelectedColor(color.id);
+                    }}
                     style={{ backgroundColor: color.id }}
                     title={color.name}
                     type="button"
@@ -227,7 +234,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                           onSelect={(selectedDate) => {
                             setDate(selectedDate);
                             field.handleChange(
-                              selectedDate?.toISOString() || ""
+                              selectedDate?.toISOString() ?? ""
                             );
                           }}
                           selected={date}

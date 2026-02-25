@@ -212,21 +212,22 @@ export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
           </div>
           <Button
             className="group-data-[state=collapsed]:size-8"
-            onClick={() =>
-              authClient.signOut({
+            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+            onClick={async () => {
+              await authClient.signOut({
                 fetchOptions: {
                   onError: (error) => {
                     toast.error(error.error.message || error.error.statusText);
                   },
-                  onSuccess: () => {
+                  onSuccess: async () => {
                     toast.success("Wylogowano pomyślnie");
-                    navigate({
+                    await navigate({
                       to: "/",
                     });
                   },
                 },
-              })
-            }
+              });
+            }}
             size="icon"
             variant="destructive"
           >

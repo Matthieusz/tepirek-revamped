@@ -21,7 +21,7 @@ const sessionCache = new Map<
 const CACHE_TTL = 30 * 1000;
 
 const getCacheKey = (request: Request): string => {
-  const cookie = request.headers.get("cookie") || "";
+  const cookie = request.headers.get("cookie") ?? "";
   const authCookies = cookie
     .split(";")
     .filter((c) => c.trim().startsWith("better-auth"))

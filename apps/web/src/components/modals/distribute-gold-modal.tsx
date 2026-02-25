@@ -166,10 +166,10 @@ export const DistributeGoldModal = ({
         toast.success(
           `Rozdzielono ${goldAmount.toLocaleString("pl-PL")} złota dla ${result.usersUpdated} graczy`
         );
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.bet.getRanking.queryKey({ input: {} }),
         });
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.bet.getHeroStats.queryKey({
             input: { heroId: Number.parseInt(heroId, 10) },
           }),
@@ -202,10 +202,11 @@ export const DistributeGoldModal = ({
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="max-w-3 sm:max-w-[500px]">
         <form
-          onSubmit={(e) => {
+          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit();
+            await form.handleSubmit();
           }}
         >
           <ResponsiveDialogHeader>
@@ -234,7 +235,7 @@ export const DistributeGoldModal = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Wszystkie eventy</SelectItem>
-                  {[...(events || [])]
+                  {[...(events ?? [])]
                     .toSorted(
                       (a, b) =>
                         new Date(b.endTime).getTime() -
@@ -247,7 +248,7 @@ export const DistributeGoldModal = ({
                           <div className="flex items-center gap-2">
                             <IconComponent
                               className="h-4 w-4"
-                              style={{ color: event.color || undefined }}
+                              style={{ color: event.color ?? undefined }}
                             />
                             <span>{event.name}</span>
                           </div>
@@ -295,7 +296,9 @@ export const DistributeGoldModal = ({
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                      }}
                       placeholder="np. 2g lub 50000000"
                       type="text"
                       value={field.state.value}
@@ -357,7 +360,9 @@ export const DistributeGoldModal = ({
           </div>
           <ResponsiveDialogFooter>
             <Button
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+              }}
               type="button"
               variant="outline"
             >

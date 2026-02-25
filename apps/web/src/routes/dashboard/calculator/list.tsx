@@ -150,7 +150,8 @@ export const Route = createFileRoute("/dashboard/calculator/list")({
   },
 });
 
-const RouteComponent = () => {
+// oxlint-disable-next-line func-style
+function RouteComponent() {
   const [mode, setMode] = useState<"single" | "group">("single");
 
   const [result, setResult] = useState<{
@@ -249,7 +250,9 @@ const RouteComponent = () => {
       <div className="flex gap-2 rounded-lg bg-muted p-1">
         <Button
           className="flex-1"
-          onClick={() => setMode("single")}
+          onClick={() => {
+            setMode("single");
+          }}
           size="sm"
           variant={mode === "single" ? "default" : "ghost"}
         >
@@ -258,7 +261,9 @@ const RouteComponent = () => {
         </Button>
         <Button
           className="flex-1"
-          onClick={() => setMode("group")}
+          onClick={() => {
+            setMode("group");
+          }}
           size="sm"
           variant={mode === "group" ? "default" : "ghost"}
         >
@@ -285,10 +290,11 @@ const RouteComponent = () => {
               <CardContent>
                 <form
                   className="mt-2 grid gap-4"
-                  onSubmit={(e) => {
+                  // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+                  onSubmit={async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    form.handleSubmit();
+                    await form.handleSubmit();
                   }}
                 >
                   <form.Field
@@ -314,28 +320,24 @@ const RouteComponent = () => {
                         </Label>
                         <Input
                           aria-describedby="attackerLevel-error"
-                          aria-invalid={
-                            field.state.meta.errors &&
-                            field.state.meta.errors.length > 0
-                          }
+                          aria-invalid={field.state.meta.errors.length > 0}
                           id="attackerLevel"
                           max={MAX_LEVEL}
                           min={MIN_LEVEL}
-                          onChange={(e) =>
-                            field.handleChange(Number(e.target.value))
-                          }
+                          onChange={(e) => {
+                            field.handleChange(Number(e.target.value));
+                          }}
                           type="number"
                           value={field.state.value}
                         />
-                        {field.state.meta.errors &&
-                          field.state.meta.errors.length > 0 && (
-                            <div
-                              className="text-destructive text-sm"
-                              id="attackerLevel-error"
-                            >
-                              {field.state.meta.errors[0]}
-                            </div>
-                          )}
+                        {field.state.meta.errors.length > 0 && (
+                          <div
+                            className="text-destructive text-sm"
+                            id="attackerLevel-error"
+                          >
+                            {field.state.meta.errors[0]}
+                          </div>
+                        )}
                       </div>
                     )}
                   </form.Field>
@@ -362,28 +364,24 @@ const RouteComponent = () => {
                         </Label>
                         <Input
                           aria-describedby="victimLevel-error"
-                          aria-invalid={
-                            field.state.meta.errors &&
-                            field.state.meta.errors.length > 0
-                          }
+                          aria-invalid={field.state.meta.errors.length > 0}
                           id="victimLevel"
                           max={MAX_LEVEL}
                           min={MIN_LEVEL}
-                          onChange={(e) =>
-                            field.handleChange(Number(e.target.value))
-                          }
+                          onChange={(e) => {
+                            field.handleChange(Number(e.target.value));
+                          }}
                           type="number"
                           value={field.state.value}
                         />
-                        {field.state.meta.errors &&
-                          field.state.meta.errors.length > 0 && (
-                            <div
-                              className="text-destructive text-sm"
-                              id="victimLevel-error"
-                            >
-                              {field.state.meta.errors[0]}
-                            </div>
-                          )}
+                        {field.state.meta.errors.length > 0 && (
+                          <div
+                            className="text-destructive text-sm"
+                            id="victimLevel-error"
+                          >
+                            {field.state.meta.errors[0]}
+                          </div>
+                        )}
                       </div>
                     )}
                   </form.Field>
@@ -497,10 +495,11 @@ const RouteComponent = () => {
               <CardContent>
                 <form
                   className="mt-2 grid gap-4"
-                  onSubmit={(e) => {
+                  // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+                  onSubmit={async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    groupForm.handleSubmit();
+                    await groupForm.handleSubmit();
                   }}
                 >
                   <groupForm.Field
@@ -530,25 +529,23 @@ const RouteComponent = () => {
                         </Label>
                         <Input
                           aria-describedby="attackerLevels-error"
-                          aria-invalid={
-                            field.state.meta.errors &&
-                            field.state.meta.errors.length > 0
-                          }
+                          aria-invalid={field.state.meta.errors.length > 0}
                           id="attackerLevels"
-                          onChange={(e) => field.handleChange(e.target.value)}
+                          onChange={(e) => {
+                            field.handleChange(e.target.value);
+                          }}
                           placeholder="np. 200, 180, 160"
                           type="text"
                           value={field.state.value}
                         />
-                        {field.state.meta.errors &&
-                          field.state.meta.errors.length > 0 && (
-                            <div
-                              className="text-destructive text-sm"
-                              id="attackerLevels-error"
-                            >
-                              {field.state.meta.errors[0]}
-                            </div>
-                          )}
+                        {field.state.meta.errors.length > 0 && (
+                          <div
+                            className="text-destructive text-sm"
+                            id="attackerLevels-error"
+                          >
+                            {field.state.meta.errors[0]}
+                          </div>
+                        )}
                       </div>
                     )}
                   </groupForm.Field>
@@ -579,25 +576,23 @@ const RouteComponent = () => {
                         </Label>
                         <Input
                           aria-describedby="defenderLevels-error"
-                          aria-invalid={
-                            field.state.meta.errors &&
-                            field.state.meta.errors.length > 0
-                          }
+                          aria-invalid={field.state.meta.errors.length > 0}
                           id="defenderLevels"
-                          onChange={(e) => field.handleChange(e.target.value)}
+                          onChange={(e) => {
+                            field.handleChange(e.target.value);
+                          }}
                           placeholder="np. 150, 140"
                           type="text"
                           value={field.state.value}
                         />
-                        {field.state.meta.errors &&
-                          field.state.meta.errors.length > 0 && (
-                            <div
-                              className="text-destructive text-sm"
-                              id="defenderLevels-error"
-                            >
-                              {field.state.meta.errors[0]}
-                            </div>
-                          )}
+                        {field.state.meta.errors.length > 0 && (
+                          <div
+                            className="text-destructive text-sm"
+                            id="defenderLevels-error"
+                          >
+                            {field.state.meta.errors[0]}
+                          </div>
+                        )}
                       </div>
                     )}
                   </groupForm.Field>
@@ -785,4 +780,4 @@ const RouteComponent = () => {
       </Card>
     </div>
   );
-};
+}

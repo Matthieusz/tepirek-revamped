@@ -57,10 +57,10 @@ export const CreateSquadModal = ({ trigger }: CreateSquadModalProps) => {
   ) as { data: string[] | undefined; isPending: boolean };
 
   const { data: characters, isPending: charactersLoading } = useQuery({
-    ...orpc.squad.getMyCharacters.queryOptions(
-      selectedWorld ? { input: { world: selectedWorld } } : undefined
-    ),
-    enabled: !!selectedWorld,
+    ...orpc.squad.getMyCharacters.queryOptions({
+      input: { world: selectedWorld },
+    }),
+    enabled: selectedWorld !== "",
   }) as { data: CharacterData[] | undefined; isPending: boolean };
 
   const form = useForm({
@@ -70,7 +70,7 @@ export const CreateSquadModal = ({ trigger }: CreateSquadModalProps) => {
       name: "",
     },
     onSubmit: async ({ value }) => {
-      if (!selectedWorld) {
+      if (selectedWorld === "") {
         toast.error("Wybierz świat");
         return;
       }
@@ -95,7 +95,7 @@ export const CreateSquadModal = ({ trigger }: CreateSquadModalProps) => {
         });
 
         toast.success("Squad utworzony pomyślnie");
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: orpc.squad.getMySquads.queryKey(),
         });
         setOpen(false);
@@ -144,9 +144,10 @@ export const CreateSquadModal = ({ trigger }: CreateSquadModalProps) => {
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
         <form
-          onSubmit={(e) => {
+          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={async (e) => {
             e.preventDefault();
-            form.handleSubmit();
+            await form.handleSubmit();
           }}
         >
           <ResponsiveDialogHeader>
@@ -165,7 +166,9 @@ export const CreateSquadModal = ({ trigger }: CreateSquadModalProps) => {
                   <Input
                     id="squad-name"
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={(e) => {
+                      field.handleChange(e.target.value);
+                    }}
                     placeholder="np. Główny team, Elite squad..."
                     value={field.state.value}
                   />
@@ -180,7 +183,9 @@ export const CreateSquadModal = ({ trigger }: CreateSquadModalProps) => {
                   <Textarea
                     id="squad-description"
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={(e) => {
+                      field.handleChange(e.target.value);
+                    }}
                     placeholder="Krótki opis squadu..."
                     value={field.state.value}
                   />
@@ -198,7 +203,7 @@ export const CreateSquadModal = ({ trigger }: CreateSquadModalProps) => {
               />
             </div>
 
-            {selectedWorld && (
+            {selectedWorld !== "" && (
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
                   <Label>
@@ -207,7 +212,9 @@ export const CreateSquadModal = ({ trigger }: CreateSquadModalProps) => {
                   {selectedCharacterIds.length > 0 && (
                     <Button
                       className="h-auto p-0 text-xs"
-                      onClick={() => setSelectedCharacterIds([])}
+                      onClick={() => {
+                        setSelectedCharacterIds([]);
+                      }}
                       type="button"
                       variant="link"
                     >
@@ -232,9 +239,9 @@ export const CreateSquadModal = ({ trigger }: CreateSquadModalProps) => {
                   <Checkbox
                     checked={field.state.value}
                     id="is-public"
-                    onCheckedChange={(checked) =>
-                      field.handleChange(checked === true)
-                    }
+                    onCheckedChange={(checked) => {
+                      field.handleChange(checked === true);
+                    }}
                   />
                   <Label className="cursor-pointer" htmlFor="is-public">
                     Squad publiczny (widoczny dla wszystkich)
@@ -246,7 +253,9 @@ export const CreateSquadModal = ({ trigger }: CreateSquadModalProps) => {
 
           <ResponsiveDialogFooter>
             <Button
-              onClick={() => handleOpenChange(false)}
+              onClick={() => {
+                handleOpenChange(false);
+              }}
               type="button"
               variant="outline"
             >
@@ -254,7 +263,7 @@ export const CreateSquadModal = ({ trigger }: CreateSquadModalProps) => {
             </Button>
             <Button
               disabled={
-                !selectedWorld ||
+                selectedWorld === "" ||
                 selectedCharacterIds.length === 0 ||
                 form.state.isSubmitting
               }
@@ -360,7 +369,9 @@ const CharacterSelector = ({
           character={char}
           isSelected={selectedCharacterIds.includes(char.id)}
           key={char.id}
-          onToggle={() => onToggleCharacter(char.id)}
+          onToggle={() => {
+            onToggleCharacter(char.id);
+          }}
         />
       ))}
     </div>
@@ -401,9 +412,11 @@ const CharacterSelectRow = ({
       <Checkbox
         checked={isSelected}
         id={checkboxId}
-        onCheckedChange={() => onToggle()}
+        onCheckedChange={() => {
+          onToggle();
+        }}
       />
-      {character.avatarUrl && (
+      {character.avatarUrl !== null && (
         <div
           className="size-8 shrink-0 rounded bg-center bg-cover"
           style={{
@@ -425,7 +438,7 @@ const CharacterSelectRow = ({
         </div>
         <div className="text-muted-foreground text-xs">
           Lvl {character.level} • {character.gameAccountName}
-          {character.guildName && ` • ${character.guildName}`}
+          {character.guildName !== null && ` • ${character.guildName}`}
         </div>
       </div>
     </label>

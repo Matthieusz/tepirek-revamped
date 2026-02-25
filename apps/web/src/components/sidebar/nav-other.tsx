@@ -33,7 +33,7 @@ export const NavOther = ({
 
           return (
             <SidebarMenuItem key={item.name}>
-              {item.disabled ? (
+              {item.disabled === true ? (
                 <SidebarMenuButton
                   className="cursor-not-allowed opacity-50"
                   tooltip={item.name}
@@ -46,9 +46,9 @@ export const NavOther = ({
                   asChild
                   className={cn(
                     "transition-colors",
-                    isActive && "bg-accent font-medium"
+                    isActive !== false && "bg-accent font-medium"
                   )}
-                  isActive={!!isActive}
+                  isActive={isActive !== false}
                   tooltip={item.name}
                 >
                   <Link to={item.url}>

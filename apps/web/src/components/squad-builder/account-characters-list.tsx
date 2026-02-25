@@ -54,17 +54,21 @@ export const AccountCharactersList = ({
         .toLowerCase()
         .includes(debouncedSearchQuery.toLowerCase()) ||
       char.world.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-      char.guildName?.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+      char.guildName
+        ?.toLowerCase()
+        .includes(debouncedSearchQuery.toLowerCase()) === true
   );
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => orpc.squad.deleteCharacter.call({ id }),
+    mutationFn: async (id: number) => orpc.squad.deleteCharacter.call({ id }),
     onError: (error) => {
-      toast.error(error.message || "Nie udało się usunąć postaci");
+      toast.error(
+        error.message === "" ? "Nie udało się usunąć postaci" : error.message
+      );
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Postać usunięta");
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: orpc.squad.getMyCharacters.queryKey(),
       });
       setDeleteDialogOpen(false);
@@ -98,7 +102,9 @@ export const AccountCharactersList = ({
           <Search className="-translate-y-1/2 absolute top-1/2 left-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             className="h-9 pl-8"
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+            }}
             placeholder="Szukaj postaci..."
             value={searchQuery}
           />
@@ -112,7 +118,7 @@ export const AccountCharactersList = ({
                 className="group flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50"
                 key={char.id}
               >
-                {char.avatarUrl && (
+                {char.avatarUrl !== null && (
                   <div
                     className="h-16 w-12 shrink-0 overflow-hidden rounded"
                     style={{
@@ -136,7 +142,7 @@ export const AccountCharactersList = ({
                     Lvl {char.level} •{" "}
                     {char.world.charAt(0).toUpperCase() + char.world.slice(1)}
                   </div>
-                  {char.guildName && (
+                  {char.guildName !== null && (
                     <div className="text-muted-foreground/70 text-xs">
                       {char.guildName}
                     </div>
@@ -165,7 +171,13 @@ export const AccountCharactersList = ({
           <div className="flex flex-col items-center justify-center gap-2 py-16 text-center text-muted-foreground">
             <Search className="h-8 w-8 opacity-50" />
             <p className="text-sm">Nie znaleziono postaci</p>
-            <Button onClick={() => setSearchQuery("")} size="sm" variant="link">
+            <Button
+              onClick={() => {
+                setSearchQuery("");
+              }}
+              size="sm"
+              variant="link"
+            >
               Wyczyść wyszukiwanie
             </Button>
           </div>
