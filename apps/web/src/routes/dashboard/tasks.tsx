@@ -29,7 +29,7 @@ export const Route = createFileRoute("/dashboard/tasks")({
   },
 });
 
-// oxlint-disable-next-line func-style
+//
 function TasksRoute() {
   const { session } = Route.useRouteContext();
   const [newTodoText, setNewTodoText] = useState("");
@@ -154,7 +154,7 @@ function TasksRoute() {
                   onChange={(e) => {
                     setNewTodoText(e.target.value);
                   }}
-                  placeholder="np. zrobić porządek na postaciach (pozdro Ukasz)"
+                  placeholder="np. zrobić porządek na postaciach (pozdro Wolan)"
                   value={newTodoText}
                 />
                 <Button
