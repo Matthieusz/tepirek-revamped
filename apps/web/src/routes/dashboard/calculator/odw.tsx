@@ -119,7 +119,6 @@ export const Route = createFileRoute("/dashboard/calculator/odw")({
   },
 });
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const [result, setResult] = useState<{
     itemLevel: number;

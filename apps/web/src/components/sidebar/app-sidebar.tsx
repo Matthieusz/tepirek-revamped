@@ -77,25 +77,6 @@ const data = {
       url: "#",
     },
     {
-      icon: Users,
-      items: [
-        {
-          title: "Zarządzaj kontami",
-          url: "/dashboard/squad-builder/accounts",
-        },
-        {
-          title: "Utwórz nową drużynę",
-          url: "/dashboard/squad-builder/create",
-        },
-        {
-          title: "Zarządzaj drużynami",
-          url: "/dashboard/squad-builder/manage",
-        },
-      ],
-      title: "Squad Builder",
-      url: "#",
-    },
-    {
       icon: Calculator,
       items: [
         {

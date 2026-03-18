@@ -6,7 +6,6 @@ import { betRouter } from "./bet";
 import { eventRouter } from "./event";
 import { heroesRouter } from "./heroes";
 import { skillsRouter } from "./skills";
-import { squadRouter } from "./squad";
 import { todoRouter } from "./todo";
 import { userRouter } from "./user";
 
@@ -22,7 +21,6 @@ export const appRouter = {
     user: context.session?.user,
   })),
   skills: skillsRouter,
-  squad: squadRouter,
   todo: todoRouter,
   user: userRouter,
 };
