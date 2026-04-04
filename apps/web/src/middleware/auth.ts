@@ -19,6 +19,10 @@ const sessionCache = new Map<
 >();
 // 30 seconds cache
 const CACHE_TTL = 30 * 1000;
+/**
+ * Maximum number of cached sessions before cleanup is triggered
+ */
+const MAX_CACHE_SIZE = 100;
 
 const getCacheKey = (request: Request): string => {
   const cookie = request.headers.get("cookie") ?? "";
@@ -51,7 +55,7 @@ export const authMiddleware = createMiddleware().server(
     }
 
     // Clean expired entries periodically
-    if (sessionCache.size > 100) {
+    if (sessionCache.size > MAX_CACHE_SIZE) {
       cleanExpiredCache();
     }
 

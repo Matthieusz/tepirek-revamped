@@ -532,14 +532,17 @@ export const betRouter = {
         totalBets = Number(betsResult?.count ?? 0);
       }
 
-      const pointWorth =
+      const pointWorthRows =
         input.heroId === undefined
           ? null
           : await db
               .select({ pointWorth: hero.pointWorth })
               .from(hero)
-              .where(eq(hero.id, input.heroId))
-              .then((rows) => rows[0]?.pointWorth ?? null);
+              .where(eq(hero.id, input.heroId));
+      const pointWorth =
+        pointWorthRows === null
+          ? null
+          : (pointWorthRows[0]?.pointWorth ?? null);
 
       return { pointWorth, ranking, totalBets };
     }),

@@ -27,11 +27,37 @@ const MIN_LEVEL = 1;
 const MAX_LEVEL = 500;
 
 /**
+ * Base level difference threshold before scaling
+ */
+const LEVEL_DIFFERENCE_BASE = 16;
+/**
+ * Level at which scaling starts
+ */
+const LEVEL_DIFFERENCE_SCALING_START = 100;
+/**
+ * Scaling divisor for level difference
+ */
+const LEVEL_DIFFERENCE_SCALING_DIVISOR = 5;
+
+/**
+ * Group attack formula constants
+ */
+const GROUP_ATTACK_STRENGTH_MULTIPLIER = 0.5;
+const GROUP_ATTACK_THRESHOLD_BASE = 15;
+const GROUP_ATTACK_THRESHOLD_MULTIPLIER = 0.1;
+const GROUP_ATTACK_THRESHOLD_OFFSET = 20;
+
+/**
  * Calculates minimum level difference required to avoid penalty points
  * Formula: min_lvl_difference = 16 + max(0, (lvl_player - 100) / 5)
  */
 const calculateMinLevelDifference = (attackerLevel: number): number =>
-  16 + Math.max(0, (attackerLevel - 100) / 5);
+  LEVEL_DIFFERENCE_BASE +
+  Math.max(
+    0,
+    (attackerLevel - LEVEL_DIFFERENCE_SCALING_START) /
+      LEVEL_DIFFERENCE_SCALING_DIVISOR
+  );
 
 /**
  * Checks if attacker would receive penalty points for killing a lower level player
@@ -98,10 +124,17 @@ const calculateGroupAttackPenalty = (
 
   // Left side of inequality: 0.5 * (max + avg_attackers) - avg_defenders
   const attackerStrength = maxAttackerLevel + avgAttackerLevel;
-  const difference = 0.5 * attackerStrength - avgDefenderLevel;
+  const difference =
+    GROUP_ATTACK_STRENGTH_MULTIPLIER * attackerStrength - avgDefenderLevel;
 
   // Right side of inequality: 15 + max(0, 0.1 * (max + avg_attackers) - 20)
-  const threshold = 15 + Math.max(0, 0.1 * attackerStrength - 20);
+  const threshold =
+    GROUP_ATTACK_THRESHOLD_BASE +
+    Math.max(
+      0,
+      GROUP_ATTACK_THRESHOLD_MULTIPLIER * attackerStrength -
+        GROUP_ATTACK_THRESHOLD_OFFSET
+    );
 
   return {
     attackerStrength,

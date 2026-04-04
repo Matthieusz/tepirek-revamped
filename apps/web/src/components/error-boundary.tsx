@@ -35,8 +35,9 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   // oxlint-disable-next-line eslint/class-methods-use-this -- React lifecycle method requires instance method signature
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+  componentDidCatch(_error: Error, _errorInfo: React.ErrorInfo) {
+    // Error is tracked via React's built-in error handling
+    // In production, consider integrating with an error monitoring service
   }
 
   // oxlint-disable-next-line @typescript-eslint/promise-function-async

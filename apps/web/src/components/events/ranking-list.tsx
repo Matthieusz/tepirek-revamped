@@ -18,14 +18,18 @@ export interface RankingItem {
   totalEarnings: string | null;
 }
 
-const getRankIcon = (position: number) => {
-  if (position === 1) {
+const GOLD_MEDAL = 1;
+const SILVER_MEDAL = 2;
+const BRONZE_MEDAL = 3;
+
+const getRankIcon = (position: number): JSX.Element | null => {
+  if (position === GOLD_MEDAL) {
     return <Trophy className="size-5 text-yellow-500" />;
   }
-  if (position === 2) {
+  if (position === SILVER_MEDAL) {
     return <Trophy className="size-5 text-gray-400" />;
   }
-  if (position === 3) {
+  if (position === BRONZE_MEDAL) {
     return <Trophy className="size-5 text-amber-600" />;
   }
   return null;

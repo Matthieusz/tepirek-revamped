@@ -74,7 +74,7 @@ const rarityBgColors: Record<Rarity, string> = {
 };
 
 /** Multipliers for each upgrade level (1-5) - index 0 is unused */
-const upgradeLevelFactors = [0, 1, 2.1, 3.4, 5, 7];
+const UPGRADE_LEVEL_FACTORS = [0, 1, 2.1, 3.4, 5, 7] as const;
 
 const MIN_LEVEL = 1;
 const MAX_LEVEL = 300;
@@ -119,6 +119,10 @@ const formSchema = z.object({
   ]),
 });
 
+const GOLD_COST_LEVEL_MULTIPLIER = 10;
+const GOLD_COST_LEVEL_ADDEND = 1300;
+const EXTRACTION_GOLD_PER_POINT = 60;
+
 const calculateUpgradePoints = (lvl: number, rarity: Rarity): number[] => {
   const level = clampLevel(lvl);
   const factors = rarityFactors[rarity];
@@ -132,11 +136,11 @@ const calculateUpgradePoints = (lvl: number, rarity: Rarity): number[] => {
   for (let n = 1; n <= 5; n += 1) {
     const cost =
       rarity === "ulepszony"
-        ? upgradeLevelFactors[n] *
+        ? UPGRADE_LEVEL_FACTORS[n] *
           (GAME_CONSTANTS.ENHANCED_LEVEL_MULTIPLIER * level +
             GAME_CONSTANTS.ENHANCED_BASE_COST)
         : factors.upgradeRarityFactor *
-          upgradeLevelFactors[n] *
+          UPGRADE_LEVEL_FACTORS[n] *
           (GAME_CONSTANTS.STANDARD_BASE_COST + level);
     upgradeCosts.push(cost);
   }
@@ -193,11 +197,12 @@ function RouteComponent() {
       const total75Percent = totalUpgradeCost * GAME_CONSTANTS.EXTRACTION_RATE;
       // Gold cost for upgrading to +5: (10 * lvl + 1300) * lvl * upgrade_gold_factor
       const upgradeGoldCost =
-        (10 * value.itemLevel + 1300) *
+        (GOLD_COST_LEVEL_MULTIPLIER * value.itemLevel +
+          GOLD_COST_LEVEL_ADDEND) *
         value.itemLevel *
         rarityFactors[value.itemRarity].upgradeGoldFactor;
       // Extraction gold cost: 60 * total_upgrade_points (based on 100% points invested)
-      const extractionGoldCost = 60 * totalUpgradeCost;
+      const extractionGoldCost = EXTRACTION_GOLD_PER_POINT * totalUpgradeCost;
       setResult({
         cumulativeCosts: upgradeCosts,
         differentialCosts,

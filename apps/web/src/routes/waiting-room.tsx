@@ -57,9 +57,8 @@ function RouteComponent() {
           await router.invalidate();
           await navigate({ to: "/dashboard" });
         }
-      } catch (error) {
+      } catch {
         // Discord validation failed, stay on waiting room
-        console.error("Discord validation failed:", error);
       } finally {
         setIsValidating(false);
       }
