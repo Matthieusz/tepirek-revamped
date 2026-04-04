@@ -27,7 +27,7 @@ export const Route = createFileRoute("/dashboard")({
     </div>
   ),
   pendingComponent: () => (
-    <div className="h-full">
+    <div className="h-full w-full flex items-center justify-center">
       <Loader />
     </div>
   ),
