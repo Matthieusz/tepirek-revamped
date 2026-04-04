@@ -17,6 +17,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -26,7 +33,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { isAdmin } from "@/lib/utils";
+import { isAdmin } from "@/lib/auth-guard";
+import { getEventIcon } from "@/lib/constants";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/events/heroes")({
@@ -41,10 +49,49 @@ type HeroToDelete = {
   name: string;
 } | null;
 
-// oxlint-disable-next-line func-style
+const getEventSelectDisplay = ({
+  selectedEventId,
+  events,
+}: {
+  selectedEventId: string;
+  events:
+    | Array<{
+        color: string | null;
+        endTime: Date;
+        icon: string;
+        id: number;
+        name: string;
+      }>
+    | undefined;
+}) => {
+  if (selectedEventId === "all") {
+    return "Wszystkie eventy";
+  }
+
+  const selectedEvent = events?.find(
+    (e) => e.id.toString() === selectedEventId
+  );
+
+  if (!selectedEvent) {
+    return "Wybierz event";
+  }
+
+  const IconComponent = getEventIcon(selectedEvent.icon);
+  return (
+    <span className="flex items-center gap-2">
+      <IconComponent
+        className="size-4"
+        style={{ color: selectedEvent.color ?? undefined }}
+      />
+      {selectedEvent.name}
+    </span>
+  );
+};
+
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [heroToDelete, setHeroToDelete] = useState<HeroToDelete>(null);
+  const [selectedEventId, setSelectedEventId] = useState("all");
   const { data: heroes, isPending } = useQuery(
     orpc.heroes.getAll.queryOptions()
   );
@@ -52,6 +99,11 @@ function RouteComponent() {
   const queryClient = useQueryClient();
 
   const isAdminUser = isAdmin(session);
+
+  const filteredHeroes =
+    selectedEventId === "all"
+      ? heroes
+      : heroes?.filter((h) => h.eventId?.toString() === selectedEventId);
 
   const deleteMutation = useMutation({
     mutationFn: async (heroId: number) => {
@@ -86,18 +138,57 @@ function RouteComponent() {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="mb-1 font-bold text-2xl tracking-tight">Herosi</h1>
           <p className="text-muted-foreground text-sm">
             Zarządzaj herosami dostępnymi na eventach.
           </p>
         </div>
+        <div className="flex justify-center">
+          <Select
+            onValueChange={(value) => {
+              if (value !== null) {
+                setSelectedEventId(value);
+              }
+            }}
+            value={selectedEventId}
+          >
+            <SelectTrigger className="w-56">
+              <SelectValue>
+                {getEventSelectDisplay({ selectedEventId, events })}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Wszystkie eventy</SelectItem>
+              {events
+                ?.toSorted(
+                  (a, b) =>
+                    new Date(b.endTime).getTime() -
+                    new Date(a.endTime).getTime()
+                )
+                .map((event) => {
+                  const IconComponent = getEventIcon(event.icon);
+                  return (
+                    <SelectItem key={event.id} value={event.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <IconComponent
+                          className="size-4"
+                          style={{ color: event.color ?? undefined }}
+                        />
+                        <span>{event.name}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+            </SelectContent>
+          </Select>
+        </div>
         {isAdminUser && (
           <AddHeroModal
             trigger={
               <Button size="sm">
-                <Plus className="h-4 w-4" />
+                <Plus className="size-4" />
                 Dodaj herosa
               </Button>
             }
@@ -105,17 +196,19 @@ function RouteComponent() {
         )}
       </div>
 
+      {/* Event Filter */}
+
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Sword className="h-4 w-4" />
+            <Sword className="size-4" />
             Lista herosów
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {!heroes || heroes.length === 0 ? (
+          {!filteredHeroes || filteredHeroes.length === 0 ? (
             <div className="rounded-lg border border-dashed py-8 text-center">
-              <Sword className="mx-auto h-8 w-8 text-muted-foreground" />
+              <Sword className="mx-auto size-8 text-muted-foreground" />
               <p className="mt-2 text-muted-foreground text-sm">
                 Brak herosów do wyświetlenia
               </p>
@@ -136,7 +229,7 @@ function RouteComponent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {heroes.map((hero, index) => (
+                  {filteredHeroes.map((hero, index) => (
                     <TableRow key={hero.id}>
                       <TableCell className="text-muted-foreground">
                         {index + 1}
@@ -154,7 +247,7 @@ function RouteComponent() {
                           />
                         ) : (
                           <div className="flex h-12 w-10 items-center justify-center rounded bg-muted">
-                            <Sword className="h-4 w-4 text-muted-foreground" />
+                            <Sword className="size-4 text-muted-foreground" />
                           </div>
                         )}
                       </TableCell>
@@ -178,7 +271,7 @@ function RouteComponent() {
                             type="button"
                             variant="ghost"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="size-4" />
                           </Button>
                         </TableCell>
                       )}

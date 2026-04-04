@@ -15,7 +15,6 @@ export const Route = createFileRoute("/dashboard/auctions/support/hunter")({
   },
 });
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
 

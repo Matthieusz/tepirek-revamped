@@ -9,7 +9,6 @@ export const Route = createFileRoute("/dashboard/events/maps")({
   },
 });
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   return (
     <ComingSoon

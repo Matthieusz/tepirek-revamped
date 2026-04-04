@@ -10,6 +10,9 @@ export interface DashboardRouteContext {
   session: AuthUser;
 }
 
+export const isAdmin = (session: AuthSession): boolean =>
+  session?.user.role === "admin";
+
 /**
  * Requires user to be authenticated.
  * Redirects to /login if not authenticated.
@@ -24,7 +27,6 @@ export const requireAuth = async () => {
     return session;
   } catch (error) {
     if (isRedirect(error)) {
-      // oxlint-disable-next-line @typescript-eslint/only-throw-error
       throw error;
     }
     // oxlint-disable-next-line @typescript-eslint/only-throw-error

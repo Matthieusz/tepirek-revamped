@@ -20,8 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { isAdmin } from "@/lib/auth-guard";
 import { getEventIcon } from "@/lib/constants";
-import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/events/bets/add")({
@@ -50,7 +50,6 @@ const handleUserToggle = (userId: string, currentUserIds: string[]) => {
   return [...currentUserIds, userId];
 };
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [selectedEventId, setSelectedEventId] = useState("");
@@ -184,7 +183,7 @@ function RouteComponent() {
               />
             ) : (
               <div className="mb-2 flex h-16 w-14 items-center justify-center rounded bg-muted">
-                <Sword className="h-6 w-6 text-muted-foreground" />
+                <Sword className="size-6 text-muted-foreground" />
               </div>
             )}
             <span className="line-clamp-2 text-center font-medium text-xs">
@@ -194,7 +193,7 @@ function RouteComponent() {
               Lvl {hero.level}
             </span>
             {fieldValue === hero.id.toString() && (
-              <div className="-top-1 -right-1 absolute flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
+              <div className="-top-1 -right-1 absolute flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
                 ✓
               </div>
             )}
@@ -254,10 +253,10 @@ function RouteComponent() {
                 onChange(newIds);
               }}
             />
-            <Avatar className="h-8 w-8">
+            <Avatar className="size-8">
               <AvatarImage alt={user.name} src={user.image ?? undefined} />
               <AvatarFallback>
-                <User className="h-4 w-4" />
+                <User className="size-4" />
               </AvatarFallback>
             </Avatar>
             <span className="truncate font-normal">{user.name}</span>
@@ -312,8 +311,10 @@ function RouteComponent() {
                       <Label htmlFor={field.name}>Event</Label>
                       <Select
                         onValueChange={(value) => {
-                          field.handleChange(value);
-                          setSelectedEventId(value);
+                          if (value !== null) {
+                            field.handleChange(value);
+                            setSelectedEventId(value);
+                          }
                           form.setFieldValue("heroId", "");
                         }}
                         value={field.state.value}
@@ -323,7 +324,7 @@ function RouteComponent() {
                             {selectedEvent && SelectedIcon && (
                               <span className="flex items-center gap-2">
                                 <SelectedIcon
-                                  className="h-4 w-4"
+                                  className="size-4"
                                   style={{ color: selectedEvent.color }}
                                 />
                                 {selectedEvent.name}
@@ -346,7 +347,7 @@ function RouteComponent() {
                                 >
                                   <span className="flex items-center gap-2">
                                     <IconComponent
-                                      className="h-4 w-4"
+                                      className="size-4"
                                       style={{ color: event.color }}
                                     />
                                     {event.name}
@@ -463,7 +464,7 @@ function RouteComponent() {
                     </div>
 
                     <div className="relative">
-                      <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+                      <Search className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground" />
                       <Input
                         className="pl-9"
                         onChange={(e) => {
@@ -507,13 +508,13 @@ function RouteComponent() {
                                         field.handleChange(newIds);
                                       }}
                                     />
-                                    <Avatar className="h-8 w-8">
+                                    <Avatar className="size-8">
                                       <AvatarImage
                                         alt={user.name}
                                         src={user.image ?? undefined}
                                       />
                                       <AvatarFallback>
-                                        <User className="h-4 w-4" />
+                                        <User className="size-4" />
                                       </AvatarFallback>
                                     </Avatar>
                                     <span className="truncate font-normal">

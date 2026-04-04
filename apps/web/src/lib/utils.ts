@@ -4,9 +4,6 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { twMerge } from "tailwind-merge";
 
-export const isAdmin = (session: { user?: { role?: string } }): boolean =>
-  session?.user?.role === "admin";
-
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
 export const slugify = (input: string) =>

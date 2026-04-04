@@ -27,7 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { isAdmin } from "@/lib/utils";
+import { isAdmin } from "@/lib/auth-guard";
 import { orpc, queryClient } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/skills/$rangeName")({
@@ -66,7 +66,6 @@ const SkillsLoadingSkeleton = () => (
 );
 /* oxlint-enable react/no-array-index-key */
 
-// oxlint-disable-next-line func-style
 function RangeDetails() {
   const { rangeName } = Route.useParams();
   const { session } = Route.useRouteContext();
@@ -152,7 +151,7 @@ function RangeDetails() {
           defaultRangeId={currentRange.id}
           trigger={
             <Button size="sm" type="button">
-              <Plus className="h-4 w-4" />
+              <Plus className="size-4" />
               Dodaj zestaw
             </Button>
           }

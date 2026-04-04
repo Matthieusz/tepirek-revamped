@@ -10,7 +10,6 @@ export const Route = createFileRoute("/")({
   component: HomeComponent,
 });
 
-// oxlint-disable-next-line func-style
 function HomeComponent() {
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
 
@@ -54,42 +53,42 @@ function HomeComponent() {
         <Card className="fade-in slide-in-from-bottom-12 animate-in bg-background/60 fill-mode-both backdrop-blur-2xl delay-150 duration-1000">
           <CardContent className="flex flex-col gap-4 p-8">
             <Button
-              asChild
+              render={
+                <Link
+                  className="flex w-full items-center justify-center gap-2"
+                  to="/login"
+                >
+                  <LogIn className="group-hover:-translate-x-1 size-5 transition-transform" />
+                  Zaloguj się
+                </Link>
+              }
               className="group h-14 font-bold text-base tracking-wide transition-all hover:scale-[1.02] active:scale-[0.98]"
               size="lg"
-            >
-              <Link
-                className="flex w-full items-center justify-center gap-2"
-                to="/login"
-              >
-                <LogIn className="group-hover:-translate-x-1 size-5 transition-transform" />
-                Zaloguj się
-              </Link>
-            </Button>
+            />
             <Button
-              asChild
+              render={
+                <Link
+                  className="flex w-full items-center justify-center gap-2"
+                  to="/signup"
+                >
+                  <UserPlus className="size-5 transition-transform group-hover:scale-110" />
+                  Utwórz konto
+                </Link>
+              }
               className="group h-14 font-bold text-base tracking-wide transition-all hover:bg-primary/5 active:scale-[0.98]"
               size="lg"
               variant="outline"
-            >
-              <Link
-                className="flex w-full items-center justify-center gap-2"
-                to="/signup"
-              >
-                <UserPlus className="size-5 transition-transform group-hover:scale-110" />
-                Utwórz konto
-              </Link>
-            </Button>
+            />
           </CardContent>
 
           <CardFooter className="flex-col items-center justify-between gap-4 rounded-b-xl  p-6 sm:flex-row">
             <div className="flex items-center gap-3 rounded-full border border-border/50 bg-background/80 px-4 py-2 shadow-sm backdrop-blur-md">
-              <div className="relative flex h-3 w-3">
+              <div className="relative flex size-3">
                 {healthCheck.isLoading && (
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-yellow-400 opacity-75" />
                 )}
                 <span
-                  className={`relative inline-flex h-3 w-3 rounded-full ${statusDot}`}
+                  className={`relative inline-flex size-3 rounded-full ${statusDot}`}
                 />
               </div>
               <span
@@ -100,21 +99,21 @@ function HomeComponent() {
             </div>
 
             <Button
-              asChild
+              render={
+                <a
+                  className="gap-2 font-semibold text-xs uppercase tracking-wide"
+                  href="https://uptime.informati.dev/status/tepirek"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <Link2 className="size-4" />
+                  Status strony
+                </a>
+              }
               className="rounded-full px-4 text-muted-foreground backdrop-blur-sm transition-colors hover:bg-background/80 hover:text-foreground"
               size="sm"
               variant="ghost"
-            >
-              <a
-                className="gap-2 font-semibold text-xs uppercase tracking-wide"
-                href="https://uptime.informati.dev/status/tepirek"
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <Link2 className="size-4" />
-                Status strony
-              </a>
-            </Button>
+            />
           </CardFooter>
         </Card>
       </div>

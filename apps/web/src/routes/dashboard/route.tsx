@@ -27,7 +27,7 @@ export const Route = createFileRoute("/dashboard")({
     </div>
   ),
   pendingComponent: () => (
-    <div className="h-full">
+    <div className="h-full w-full flex items-center justify-center">
       <Loader />
     </div>
   ),
@@ -36,9 +36,9 @@ export const Route = createFileRoute("/dashboard")({
   },
 });
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
+
   return (
     <SidebarProvider>
       <AppSidebar session={session} />

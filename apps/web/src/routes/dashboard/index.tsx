@@ -26,7 +26,8 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
-import { formatDateTime, isAdmin } from "@/lib/utils";
+import { isAdmin } from "@/lib/auth-guard";
+import { formatDateTime } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/")({
@@ -41,7 +42,6 @@ type AnnouncementToDelete = {
   title: string;
 } | null;
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [announcementToDelete, setAnnouncementToDelete] =
@@ -96,7 +96,7 @@ function RouteComponent() {
             <AddAnnouncementModal
               trigger={
                 <Button size="sm">
-                  <Plus className="h-4 w-4" />
+                  <Plus className="size-4" />
                   Dodaj ogłoszenie
                 </Button>
               }
@@ -110,7 +110,7 @@ function RouteComponent() {
           <Card>
             <CardContent className="py-12">
               <div className="text-center">
-                <Megaphone className="mx-auto h-10 w-10 text-muted-foreground" />
+                <Megaphone className="mx-auto size-10 text-muted-foreground" />
                 <p className="mt-3 text-muted-foreground">
                   Brak ogłoszeń do wyświetlenia
                 </p>
@@ -171,7 +171,7 @@ function RouteComponent() {
                         size="sm"
                         variant="ghost"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="size-4" />
                       </Button>
                     )}
                   </div>

@@ -4,7 +4,8 @@ import {
   getRouteApi,
   useNavigate,
 } from "@tanstack/react-router";
-import { Coins, Loader2, Trophy } from "lucide-react";
+import { Coins, Info, Loader2, Trophy } from "lucide-react";
+import { useCallback } from "react";
 import type { ReactNode } from "react";
 import { z } from "zod";
 
@@ -14,6 +15,11 @@ import { DistributeGoldModal } from "@/components/modals/distribute-gold-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -21,22 +27,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { useFilterPersistence } from "@/hooks/use-filter-persistence";
+import { isAdmin } from "@/lib/auth-guard";
 import { getEventIcon } from "@/lib/constants";
-import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 const routeApi = getRouteApi("/dashboard");
 
-/* oxlint-disable promise/prefer-await-to-then, promise/valid-params -- Zod .catch() is not Promise.catch() */
 const searchSchema = z.object({
-  // oxlint-disable-next-line unicorn/no-useless-undefined
-  eventId: z.string().optional().catch(undefined),
-  // oxlint-disable-next-line unicorn/no-useless-undefined
-  heroId: z.string().optional().catch(undefined),
-  // oxlint-disable-next-line unicorn/no-useless-undefined
-  sortBy: z.enum(["points", "bets", "gold"]).optional().catch(undefined),
+  eventId: z.string().optional(),
+
+  heroId: z.string().optional(),
+
+  sortBy: z.enum(["points", "bets", "gold"]).optional(),
 });
-/* oxlint-enable promise/prefer-await-to-then, promise/valid-params */
 
 const sortRanking = (
   ranking: RankingItem[] | undefined,
@@ -74,7 +78,7 @@ const buildRankingContent = (params: {
       <Card>
         <CardContent className="py-8">
           <div className="text-center">
-            <Trophy className="mx-auto h-8 w-8 text-muted-foreground" />
+            <Trophy className="mx-auto size-8 text-muted-foreground" />
             <p className="mt-2 text-muted-foreground text-sm">
               Brak danych do wyświetlenia rankingu
             </p>
@@ -87,27 +91,173 @@ const buildRankingContent = (params: {
   return <RankingList players={params.sortedRanking} />;
 };
 
-export const Route = createFileRoute("/dashboard/events/ranking")({
-  component: RouteComponent,
-  staticData: {
-    crumb: "Ranking",
-  },
-  validateSearch: searchSchema,
-});
+const EventSelectItems = ({
+  events,
+}: {
+  events:
+    | Array<{
+        color: string | null;
+        endTime: Date;
+        icon: string;
+        id: number;
+        name: string;
+      }>
+    | undefined;
+}) => (
+  <>
+    <SelectItem value="all">Wszystkie eventy</SelectItem>
+    {[...(events ?? [])]
+      .toSorted(
+        (a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime()
+      )
+      .map((event) => {
+        const IconComponent = getEventIcon(event.icon);
+        return (
+          <SelectItem key={event.id} value={event.id.toString()}>
+            <div className="flex items-center gap-2">
+              <IconComponent
+                className="size-4"
+                style={{ color: event.color ?? undefined }}
+              />
+              <span>{event.name}</span>
+            </div>
+          </SelectItem>
+        );
+      })}
+  </>
+);
 
-// oxlint-disable-next-line func-style
-function RouteComponent() {
-  const { session } = routeApi.useRouteContext();
-  const { eventId, heroId, sortBy } = Route.useSearch();
-  const navigate = useNavigate({ from: Route.fullPath });
+const HeroSelectItems = ({
+  heroesLoading,
+  sortedHeroes,
+}: {
+  heroesLoading: boolean;
+  sortedHeroes: Array<{ id: number; level: number; name: string }> | undefined;
+}) => {
+  if (heroesLoading) {
+    return (
+      <SelectItem disabled value="loading">
+        <div className="flex items-center gap-2">
+          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+          <span>Ładowanie...</span>
+        </div>
+      </SelectItem>
+    );
+  }
 
-  const selectedEventId = eventId ?? "all";
-  const selectedHeroId = heroId ?? "all";
-  const currentSortBy = sortBy ?? "points";
+  return (
+    <>
+      <SelectItem value="all">Wszyscy herosi</SelectItem>
+      {sortedHeroes?.map((hero) => (
+        <SelectItem key={hero.id} value={hero.id.toString()}>
+          {hero.name}
+        </SelectItem>
+      ))}
+    </>
+  );
+};
 
+const getEventSelectDisplay = ({
+  selectedEventId,
+  events,
+}: {
+  selectedEventId: string;
+  events:
+    | Array<{
+        color: string | null;
+        icon: string;
+        id: number;
+        name: string;
+      }>
+    | undefined;
+}) => {
+  if (selectedEventId === "all") {
+    return "Wszystkie eventy";
+  }
+
+  const selectedEvent = events?.find(
+    (e) => e.id.toString() === selectedEventId
+  );
+
+  if (!selectedEvent) {
+    return "Wybierz event";
+  }
+
+  const IconComponent = getEventIcon(selectedEvent.icon);
+  return (
+    <span className="flex items-center gap-2">
+      <IconComponent
+        className="size-4"
+        style={{ color: selectedEvent.color ?? undefined }}
+      />
+      {selectedEvent.name}
+    </span>
+  );
+};
+
+const getHeroSelectDisplay = ({
+  selectedEventId,
+  selectedHeroId,
+  sortedHeroes,
+}: {
+  selectedEventId: string;
+  selectedHeroId: string;
+  sortedHeroes: Array<{ id: number; name: string }> | undefined;
+}) => {
+  if (selectedEventId === "all") {
+    return "Wybierz event";
+  }
+
+  if (selectedHeroId === "all") {
+    return "Wszyscy herosi";
+  }
+
+  const selectedHero = sortedHeroes?.find(
+    (h) => h.id.toString() === selectedHeroId
+  );
+
+  return selectedHero?.name ?? "Wybierz herosa";
+};
+
+const StatsPopover = ({
+  pointWorth,
+  totalBets,
+}: {
+  pointWorth: number | null;
+  totalBets: number;
+}) => (
+  <Popover>
+    <PopoverTrigger asChild>
+      <Button size="icon" variant="ghost">
+        <Info className="size-4" />
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent className="w-auto p-4">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-6">
+          <span className="text-muted-foreground text-sm">Obstawienia</span>
+          <span className="font-semibold">{totalBets}</span>
+        </div>
+        {pointWorth !== null && pointWorth > 0 && (
+          <div className="flex items-center justify-between gap-6">
+            <span className="text-muted-foreground text-sm">
+              Wartość punktu
+            </span>
+            <span className="font-semibold font-mono">{pointWorth} zł/pkt</span>
+          </div>
+        )}
+      </div>
+    </PopoverContent>
+  </Popover>
+);
+
+const useRankingData = (
+  selectedEventId: string,
+  selectedHeroId: string,
+  currentSortBy: "points" | "bets" | "gold"
+) => {
   const { data: events } = useQuery(orpc.event.getAll.queryOptions());
 
-  // Only fetch heroes when a specific event is selected
   const { data: heroes, isPending: heroesLoading } = useQuery({
     ...orpc.heroes.getByEventId.queryOptions({
       input: { eventId: Number(selectedEventId) },
@@ -115,7 +265,7 @@ function RouteComponent() {
     enabled: selectedEventId !== "all",
   });
 
-  const { data: ranking, isPending: rankingLoading } = useQuery({
+  const { data: rankingData, isPending: rankingLoading } = useQuery({
     ...orpc.bet.getRanking.queryOptions({
       input: {
         eventId:
@@ -130,21 +280,83 @@ function RouteComponent() {
     }),
   });
 
-  // Heroes are already filtered by event from the API
   const sortedHeroes = [...(heroes ?? [])].toSorted(
     (a, b) => a.level - b.level
   );
 
   const sortedRanking = sortRanking(
-    ranking as RankingItem[] | undefined,
+    rankingData?.ranking as RankingItem[] | undefined,
     currentSortBy
   );
+
+  return {
+    events,
+    heroesLoading,
+    pointWorth: rankingData?.pointWorth ?? null,
+    rankingLoading,
+    sortedHeroes,
+    sortedRanking,
+    totalBets: rankingData?.totalBets ?? 0,
+  };
+};
+
+export const Route = createFileRoute("/dashboard/events/ranking")({
+  component: RouteComponent,
+  staticData: {
+    crumb: "Ranking",
+  },
+  validateSearch: searchSchema,
+});
+
+//
+function RouteComponent() {
+  const { session } = routeApi.useRouteContext();
+  const { eventId, heroId, sortBy } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+
+  const [persistedFilters, updatePersistedFilters] = useFilterPersistence(
+    "ranking-filters",
+    {
+      eventId: undefined as string | undefined,
+      heroId: undefined as string | undefined,
+      sortBy: undefined as "points" | "bets" | "gold" | undefined,
+    }
+  );
+
+  const selectedEventId = eventId ?? persistedFilters.eventId ?? "all";
+  const selectedHeroId = heroId ?? persistedFilters.heroId ?? "all";
+  const currentSortBy = sortBy ?? persistedFilters.sortBy ?? "points";
+
+  const {
+    events,
+    heroesLoading,
+    pointWorth,
+    rankingLoading,
+    sortedHeroes,
+    sortedRanking,
+    totalBets,
+  } = useRankingData(selectedEventId, selectedHeroId, currentSortBy);
 
   const isAdminUser = isAdmin(session);
   const rankingContent = buildRankingContent({
     rankingLoading,
     sortedRanking,
   });
+
+  const navigateWithPersist = useCallback(
+    (updates: Record<string, unknown>) => {
+      updatePersistedFilters(
+        updates as Record<
+          string,
+          string | "points" | "bets" | "gold" | undefined
+        >
+      );
+      navigate({
+        search: (prev) => ({ ...prev, ...updates }),
+      });
+    },
+    [navigate, updatePersistedFilters]
+  );
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -158,85 +370,48 @@ function RouteComponent() {
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 md:flex md:items-center">
           {/* Event Select */}
           <Select
-            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-            onValueChange={async (value) =>
-              navigate({
-                search: (prev) => ({
-                  ...prev,
-                  eventId: value === "all" ? undefined : value,
-                  heroId: undefined,
-                }),
-              })
-            }
+            onValueChange={(value) => {
+              navigateWithPersist({
+                eventId: value === "all" || value === null ? undefined : value,
+                heroId: undefined,
+              });
+            }}
             value={selectedEventId}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Wybierz event" />
+              <SelectValue>
+                {getEventSelectDisplay({ selectedEventId, events })}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Wszystkie eventy</SelectItem>
-              {[...(events ?? [])]
-                .toSorted(
-                  (a, b) =>
-                    new Date(b.endTime).getTime() -
-                    new Date(a.endTime).getTime()
-                )
-                .map((event) => {
-                  const IconComponent = getEventIcon(event.icon);
-                  return (
-                    <SelectItem key={event.id} value={event.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <IconComponent
-                          className="h-4 w-4"
-                          style={{ color: event.color ?? undefined }}
-                        />
-                        <span>{event.name}</span>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
+              <EventSelectItems events={events} />
             </SelectContent>
           </Select>
 
           {/* Hero Select */}
           <Select
             disabled={selectedEventId === "all"}
-            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-            onValueChange={async (value) =>
-              navigate({
-                search: (prev) => ({
-                  ...prev,
-                  heroId: value === "all" ? undefined : value,
-                }),
-              })
-            }
+            onValueChange={(value) => {
+              navigateWithPersist({
+                heroId: value === "all" || value === null ? undefined : value,
+              });
+            }}
             value={selectedEventId === "all" ? "" : selectedHeroId}
           >
             <SelectTrigger className="w-full">
-              <SelectValue
-                placeholder={
-                  selectedEventId === "all" ? "Wybierz event" : "Wybierz herosa"
-                }
-              />
+              <SelectValue>
+                {getHeroSelectDisplay({
+                  selectedEventId,
+                  selectedHeroId,
+                  sortedHeroes,
+                })}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {heroesLoading ? (
-                <SelectItem disabled value="loading">
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    <span>Ładowanie...</span>
-                  </div>
-                </SelectItem>
-              ) : (
-                <>
-                  <SelectItem value="all">Wszyscy herosi</SelectItem>
-                  {sortedHeroes?.map((hero) => (
-                    <SelectItem key={hero.id} value={hero.id.toString()}>
-                      {hero.name}
-                    </SelectItem>
-                  ))}
-                </>
-              )}
+              <HeroSelectItems
+                heroesLoading={heroesLoading}
+                sortedHeroes={sortedHeroes}
+              />
             </SelectContent>
           </Select>
         </div>
@@ -244,24 +419,18 @@ function RouteComponent() {
         {/* Sort Buttons with Gold Distribution */}
         <div className="sm: flex items-center justify-center gap-1 sm:justify-start">
           <Button
-            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-            onClick={async () =>
-              navigate({
-                search: (prev) => ({ ...prev, sortBy: undefined }),
-              })
-            }
+            onClick={() => {
+              navigateWithPersist({ sortBy: undefined });
+            }}
             size="sm"
             variant={currentSortBy === "points" ? "secondary" : "ghost"}
           >
             Punkty
           </Button>
           <Button
-            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-            onClick={async () =>
-              navigate({
-                search: (prev) => ({ ...prev, sortBy: "bets" }),
-              })
-            }
+            onClick={() => {
+              navigateWithPersist({ sortBy: "bets" });
+            }}
             size="sm"
             variant={currentSortBy === "bets" ? "secondary" : "ghost"}
           >
@@ -269,17 +438,19 @@ function RouteComponent() {
           </Button>
           <Button
             className={currentSortBy === "gold" ? "border border-primary" : ""}
-            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-            onClick={async () =>
-              navigate({
-                search: (prev) => ({ ...prev, sortBy: "gold" }),
-              })
-            }
+            onClick={() => {
+              navigateWithPersist({ sortBy: "gold" });
+            }}
             size="sm"
             variant={currentSortBy === "gold" ? "outline" : "ghost"}
           >
             Złoto
           </Button>
+
+          {/* Stats Popover */}
+          {selectedHeroId !== "all" && (
+            <StatsPopover pointWorth={pointWorth} totalBets={totalBets} />
+          )}
 
           {/* Gold Distribution Button - Admin Only */}
           {isAdminUser && (
@@ -288,7 +459,7 @@ function RouteComponent() {
               selectedHeroId={selectedHeroId}
               trigger={
                 <Button className="ml-1 shrink-0" size="icon" variant="outline">
-                  <Coins className="h-4 w-4 text-yellow-500" />
+                  <Coins className="size-4 text-yellow-500" />
                 </Button>
               }
             />

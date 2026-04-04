@@ -13,7 +13,7 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
@@ -41,18 +41,78 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { useFilterPersistence } from "@/hooks/use-filter-persistence";
+import { isAdmin } from "@/lib/auth-guard";
 import { getEventIcon } from "@/lib/constants";
-import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
-/* oxlint-disable promise/prefer-await-to-then, promise/valid-params -- Zod .catch() is not Promise.catch() */
 const searchSchema = z.object({
-  // oxlint-disable-next-line unicorn/no-useless-undefined
-  eventId: z.string().optional().catch(undefined),
-  // oxlint-disable-next-line unicorn/no-useless-undefined
-  heroId: z.string().optional().catch(undefined),
+  eventId: z.string().optional(),
+  heroId: z.string().optional(),
 });
-/* oxlint-enable promise/prefer-await-to-then, promise/valid-params */
+
+const getEventSelectDisplay = ({
+  selectedEventId,
+  events,
+}: {
+  selectedEventId: string;
+  events:
+    | Array<{
+        color: string | null;
+        endTime: Date;
+        icon: string;
+        id: number;
+        name: string;
+      }>
+    | undefined;
+}) => {
+  if (selectedEventId === "all") {
+    return "Wszystkie eventy";
+  }
+
+  const selectedEvent = events?.find(
+    (e) => e.id.toString() === selectedEventId
+  );
+
+  if (!selectedEvent) {
+    return "Wybierz event";
+  }
+
+  const IconComponent = getEventIcon(selectedEvent.icon);
+  return (
+    <span className="flex items-center gap-2">
+      <IconComponent
+        className="size-4"
+        style={{ color: selectedEvent.color ?? undefined }}
+      />
+      {selectedEvent.name}
+    </span>
+  );
+};
+
+const getHeroSelectDisplay = ({
+  selectedEventId,
+  selectedHeroId,
+  sortedHeroes,
+}: {
+  selectedEventId: string;
+  selectedHeroId: string;
+  sortedHeroes: Array<{ id: number; name: string }> | undefined;
+}) => {
+  if (selectedEventId === "all") {
+    return "Wybierz event";
+  }
+
+  if (selectedHeroId === "all") {
+    return "Wszyscy herosi";
+  }
+
+  const selectedHero = sortedHeroes?.find(
+    (h) => h.id.toString() === selectedHeroId
+  );
+
+  return selectedHero?.name ?? "Wybierz herosa";
+};
 
 export const Route = createFileRoute("/dashboard/events/history")({
   component: RouteComponent,
@@ -79,16 +139,35 @@ const formatDate = (date: Date) =>
     year: "numeric",
   });
 
-// oxlint-disable-next-line func-style, complexity
+// oxlint-disable-next-line  complexity
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const { eventId, heroId } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const [betToDelete, setBetToDelete] = useState<BetToDelete>(null);
-  const selectedEventId = eventId ?? "all";
-  const selectedHeroId = heroId ?? "all";
+
+  const [persistedFilters, updatePersistedFilters] = useFilterPersistence(
+    "history-filters",
+    {
+      eventId: undefined as string | undefined,
+      heroId: undefined as string | undefined,
+    }
+  );
+
+  const selectedEventId = eventId ?? persistedFilters.eventId ?? "all";
+  const selectedHeroId = heroId ?? persistedFilters.heroId ?? "all";
   const { ref: loadMoreRef, inView } = useInView({ threshold: 0.1 });
   const queryClient = useQueryClient();
+
+  const navigateWithPersist = useCallback(
+    (updates: Record<string, unknown>) => {
+      updatePersistedFilters(updates as Record<string, string | undefined>);
+      navigate({
+        search: (prev) => ({ ...prev, ...updates }),
+      });
+    },
+    [navigate, updatePersistedFilters]
+  );
 
   const { data: events } = useQuery(orpc.event.getAll.queryOptions());
 
@@ -148,7 +227,6 @@ function RouteComponent() {
     ],
   });
 
-  // Heroes are already filtered by event from the API
   const sortedHeroes = (heroes ?? []).toSorted((a, b) => a.level - b.level);
 
   // Flatten pages into single array of bets
@@ -157,7 +235,6 @@ function RouteComponent() {
   // Calculate stats based on current filters
   const totalBets = betsData?.pages[0]?.pagination.totalItems ?? 0;
 
-  // Load more when scrolled to bottom
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
       // oxlint-disable-next-line @typescript-eslint/no-floating-promises
@@ -194,7 +271,7 @@ function RouteComponent() {
       <Card>
         <CardContent className="py-8">
           <div className="text-center">
-            <History className="mx-auto h-8 w-8 text-muted-foreground" />
+            <History className="mx-auto size-8 text-muted-foreground" />
             <p className="mt-2 text-muted-foreground text-sm">
               Brak obstawień do wyświetlenia
             </p>
@@ -232,7 +309,7 @@ function RouteComponent() {
                       type="button"
                       variant="ghost"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="size-4" />
                     </Button>
                   )}
                 </div>
@@ -253,7 +330,7 @@ function RouteComponent() {
                   />
                 ) : (
                   <div className="mx-auto flex h-20 w-16 shrink-0 items-center justify-center rounded-lg bg-muted sm:mx-0 sm:h-16 sm:w-14">
-                    <Sword className="h-6 w-6 text-muted-foreground" />
+                    <Sword className="size-6 text-muted-foreground" />
                   </div>
                 )}
 
@@ -264,13 +341,13 @@ function RouteComponent() {
                       className="flex items-center gap-1.5 rounded-full border bg-muted/30 py-1 pr-2.5 pl-1 sm:gap-2 sm:pr-3"
                       key={member.userId}
                     >
-                      <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
+                      <Avatar className="size-5 sm:h-6 sm:w-6">
                         <AvatarImage
                           alt={member.userName}
                           src={member.userImage ?? undefined}
                         />
                         <AvatarFallback className="text-xs">
-                          <User className="h-3 w-3" />
+                          <User className="size-3" />
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-xs sm:text-sm">
@@ -286,7 +363,7 @@ function RouteComponent() {
                 <div className="flex items-center gap-2">
                   <span>Dodane przez:</span>
                   <div className="flex items-center gap-1.5">
-                    <Avatar className="h-5 w-5">
+                    <Avatar className="size-5">
                       <AvatarImage
                         alt={bet.createdByName}
                         src={bet.createdByImage ?? undefined}
@@ -315,7 +392,7 @@ function RouteComponent() {
             className="flex items-center justify-center py-4"
             ref={loadMoreRef}
           >
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
           </div>
         )}
       </div>
@@ -331,27 +408,27 @@ function RouteComponent() {
           </h1>
           <div className="flex items-center gap-2">
             <p className="text-muted-foreground text-sm">Obstawienia: </p>
-            <p className="font-bold text-sm">{totalBets}</p>
+            {selectedEventId !== "all" && (
+              <p className="font-bold text-sm">{totalBets}</p>
+            )}
           </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
           {/* Event Select */}
           <Select
-            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-            onValueChange={async (value) =>
-              navigate({
-                search: (prev) => ({
-                  ...prev,
-                  eventId: value === "all" ? undefined : value,
-                  heroId: undefined,
-                }),
-              })
-            }
+            onValueChange={(value) => {
+              navigateWithPersist({
+                eventId: value === "all" || value === null ? undefined : value,
+                heroId: undefined,
+              });
+            }}
             value={selectedEventId}
           >
             <SelectTrigger className="w-full sm:w-44">
-              <SelectValue placeholder="Wybierz event" />
+              <SelectValue>
+                {getEventSelectDisplay({ selectedEventId, events })}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Wszystkie eventy</SelectItem>
@@ -367,7 +444,7 @@ function RouteComponent() {
                     <SelectItem key={event.id} value={event.id.toString()}>
                       <div className="flex items-center gap-2">
                         <IconComponent
-                          className="h-4 w-4"
+                          className="size-4"
                           style={{ color: event.color ?? undefined }}
                         />
                         <span>{event.name}</span>
@@ -381,29 +458,29 @@ function RouteComponent() {
           {/* Hero Select */}
           <Select
             disabled={selectedEventId === "all"}
-            // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-            onValueChange={async (value) =>
-              navigate({
-                search: (prev) => ({
-                  ...prev,
-                  heroId: value === "all" ? undefined : value,
-                }),
-              })
-            }
+            onValueChange={(value) => {
+              navigateWithPersist({
+                eventId:
+                  selectedEventId === "all" ? undefined : selectedEventId,
+                heroId: value === "all" || value === null ? undefined : value,
+              });
+            }}
             value={selectedEventId === "all" ? "" : selectedHeroId}
           >
             <SelectTrigger className="w-full sm:w-44">
-              <SelectValue
-                placeholder={
-                  selectedEventId === "all" ? "Wybierz event" : "Wybierz herosa"
-                }
-              />
+              <SelectValue>
+                {getHeroSelectDisplay({
+                  selectedEventId,
+                  selectedHeroId,
+                  sortedHeroes,
+                })}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {heroesLoading ? (
                 <SelectItem disabled value="loading">
                   <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
                     <span>Ładowanie...</span>
                   </div>
                 </SelectItem>

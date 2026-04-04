@@ -116,12 +116,14 @@ const ActionCell = ({ player }: { player: Player }) => {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="icon" type="button" variant="ghost">
-            <MoreHorizontal className="size-4" />
-            <span className="sr-only">Otwórz akcje</span>
-          </Button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button size="icon" type="button" variant="ghost">
+              <MoreHorizontal className="size-4" />
+              <span className="sr-only">Otwórz akcje</span>
+            </Button>
+          }
+        />
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Akcje</DropdownMenuLabel>
           <DropdownMenuItem
@@ -146,7 +148,7 @@ const ActionCell = ({ player }: { player: Player }) => {
               setShowRenameDialog(true);
             }}
           >
-            <Pencil className="mr-2 h-4 w-4" />
+            <Pencil className="mr-2 size-4" />
             Zmień nazwę
           </DropdownMenuItem>
           {!player.verified && (
@@ -156,7 +158,7 @@ const ActionCell = ({ player }: { player: Player }) => {
                 setShowDeleteDialog(true);
               }}
             >
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash2 className="mr-2 size-4" />
               Usuń konto
             </DropdownMenuItem>
           )}

@@ -8,7 +8,7 @@ import { PlayerTable } from "@/components/players-table/player-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { TableSkeleton } from "@/components/ui/skeleton";
-import { isAdmin } from "@/lib/utils";
+import { isAdmin } from "@/lib/auth-guard";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/player-list")({
@@ -18,7 +18,6 @@ export const Route = createFileRoute("/dashboard/player-list")({
   },
 });
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,7 +63,7 @@ function RouteComponent() {
             <CardTitle className="font-medium text-sm">
               Wszyscy gracze
             </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="font-bold text-2xl">
@@ -75,7 +74,7 @@ function RouteComponent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="font-medium text-sm">Zweryfikowani</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <CheckCircle2 className="size-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="font-bold text-2xl text-green-500">
@@ -86,7 +85,7 @@ function RouteComponent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="font-medium text-sm">Oczekujący</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
+            <Clock className="size-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
             <div className="font-bold text-2xl text-yellow-500">
@@ -98,7 +97,7 @@ function RouteComponent() {
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+        <Search className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground" />
         <Input
           className="pl-9"
           onChange={(e) => {
@@ -115,7 +114,7 @@ function RouteComponent() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
+              <CheckCircle2 className="size-4 text-green-500" />
               Zweryfikowani
             </CardTitle>
           </CardHeader>
@@ -135,7 +134,7 @@ function RouteComponent() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Clock className="h-4 w-4 text-yellow-500" />
+              <Clock className="size-4 text-yellow-500" />
               Oczekujący na weryfikację
             </CardTitle>
           </CardHeader>

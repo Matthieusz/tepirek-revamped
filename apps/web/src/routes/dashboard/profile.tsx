@@ -11,7 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatDate, isAdmin } from "@/lib/utils";
+import { isAdmin } from "@/lib/auth-guard";
+import { formatDate } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/profile")({
   component: RouteComponent,
@@ -46,7 +47,7 @@ function RouteComponent() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-            <Mail className="h-4 w-4 text-muted-foreground" />
+            <Mail className="size-4 text-muted-foreground" />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Email</p>
               <p className="font-medium text-sm">{session.user.email}</p>
@@ -54,7 +55,7 @@ function RouteComponent() {
           </div>
 
           <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <Shield className="size-4 text-muted-foreground" />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Rola</p>
               <p className="font-medium text-sm capitalize">
@@ -64,7 +65,7 @@ function RouteComponent() {
           </div>
 
           <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
+            <UserCheck className="size-4 text-muted-foreground" />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Status</p>
               <p className="font-medium text-sm">
@@ -80,7 +81,7 @@ function RouteComponent() {
           </div>
 
           <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="size-4 text-muted-foreground" />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Dołączono</p>
               <p className="font-medium text-sm">
@@ -93,7 +94,7 @@ function RouteComponent() {
             defaultName={session.user.name}
             trigger={
               <Button className="mt-2 w-full" variant="outline">
-                <Edit className="h-4 w-4" />
+                <Edit className="size-4" />
                 Edytuj profil
               </Button>
             }

@@ -75,113 +75,129 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
 
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
-      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-[425px]">
-        <form
-          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-          onSubmit={async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            await form.handleSubmit();
-          }}
-        >
-          <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>Dodaj nowy przedział</ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>
-              Utwórz nowy przedział z nazwą i poziomem.
-            </ResponsiveDialogDescription>
-          </ResponsiveDialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <form.Field name="name">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Nazwa przedziału</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="Wpisz nazwę przedziału"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-            <div className="grid gap-2">
-              <form.Field name="level">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Level</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(
-                          Number.parseInt(e.target.value, 10) || 0
-                        );
-                      }}
-                      placeholder="Wpisz level"
-                      type="number"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-            <div className="grid gap-2">
-              <form.Field name="image">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>URL obrazka</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="Wpisz URL obrazka"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-          </div>
-          <ResponsiveDialogFooter>
-            <form.Subscribe>
-              {(state) => (
-                <Button
-                  disabled={!state.canSubmit || state.isSubmitting}
-                  type="submit"
-                >
-                  {state.isSubmitting ? "Tworzenie..." : "Utwórz przedział"}
-                </Button>
-              )}
-            </form.Subscribe>
-          </ResponsiveDialogFooter>
-        </form>
-      </ResponsiveDialogContent>
+      <ResponsiveDialogTrigger
+        render={
+          <ResponsiveDialogContent className="sm:max-w-106.25">
+            <form
+              // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+              onSubmit={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                await form.handleSubmit();
+              }}
+            >
+              <ResponsiveDialogHeader>
+                <ResponsiveDialogTitle>
+                  Dodaj nowy przedział
+                </ResponsiveDialogTitle>
+                <ResponsiveDialogDescription>
+                  Utwórz nowy przedział z nazwą i poziomem.
+                </ResponsiveDialogDescription>
+              </ResponsiveDialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <form.Field name="name">
+                    {(field) => (
+                      <div className="grid gap-1.5">
+                        <Label htmlFor={field.name}>Nazwa przedziału</Label>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => {
+                            field.handleChange(e.target.value);
+                          }}
+                          placeholder="Wpisz nazwę przedziału"
+                          value={field.state.value}
+                        />
+                        {field.state.meta.errors.map((error) => (
+                          <p
+                            className="text-red-500 text-sm"
+                            key={error?.message}
+                          >
+                            {error?.message}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </form.Field>
+                </div>
+                <div className="grid gap-2">
+                  <form.Field name="level">
+                    {(field) => (
+                      <div className="grid gap-1.5">
+                        <Label htmlFor={field.name}>Level</Label>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => {
+                            field.handleChange(
+                              Number.parseInt(e.target.value, 10) || 0
+                            );
+                          }}
+                          placeholder="Wpisz level"
+                          type="number"
+                          value={field.state.value}
+                        />
+                        {field.state.meta.errors.map((error) => (
+                          <p
+                            className="text-red-500 text-sm"
+                            key={error?.message}
+                          >
+                            {error?.message}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </form.Field>
+                </div>
+                <div className="grid gap-2">
+                  <form.Field name="image">
+                    {(field) => (
+                      <div className="grid gap-1.5">
+                        <Label htmlFor={field.name}>URL obrazka</Label>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => {
+                            field.handleChange(e.target.value);
+                          }}
+                          placeholder="Wpisz URL obrazka"
+                          value={field.state.value}
+                        />
+                        {field.state.meta.errors.map((error) => (
+                          <p
+                            className="text-red-500 text-sm"
+                            key={error?.message}
+                          >
+                            {error?.message}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </form.Field>
+                </div>
+              </div>
+              <ResponsiveDialogFooter>
+                <form.Subscribe>
+                  {(state) => (
+                    <Button
+                      disabled={!state.canSubmit || state.isSubmitting}
+                      type="submit"
+                    >
+                      {state.isSubmitting ? "Tworzenie..." : "Utwórz przedział"}
+                    </Button>
+                  )}
+                </form.Subscribe>
+              </ResponsiveDialogFooter>
+            </form>
+          </ResponsiveDialogContent>
+        }
+      >
+        {trigger}
+      </ResponsiveDialogTrigger>
     </ResponsiveDialog>
   );
 };

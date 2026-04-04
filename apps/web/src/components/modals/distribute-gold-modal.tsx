@@ -199,194 +199,217 @@ export const DistributeGoldModal = ({
 
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
-      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="max-w-3 sm:max-w-[500px]">
-        <form
-          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-          onSubmit={async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            await form.handleSubmit();
-          }}
-        >
-          <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle className="flex items-center gap-2">
-              <Coins className="h-5 w-5 text-yellow-500" />
-              Rozdziel złoto
-            </ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>
-              Ustaw kwotę złota do rozdzielenia dla herosa. Złoto zostanie
-              podzielone proporcjonalnie do punktów każdego gracza.
-            </ResponsiveDialogDescription>
-          </ResponsiveDialogHeader>
-          <div className="grid gap-4 py-4">
-            {/* Event Select */}
-            <div className="grid gap-1.5">
-              <Label>Event</Label>
-              <Select
-                onValueChange={(value) => {
-                  setEventId(value);
-                  setHeroId("all");
-                }}
-                value={eventId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Wybierz event" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Wszystkie eventy</SelectItem>
-                  {[...(events ?? [])]
-                    .toSorted(
-                      (a, b) =>
-                        new Date(b.endTime).getTime() -
-                        new Date(a.endTime).getTime()
-                    )
-                    .map((event) => {
-                      const IconComponent = getEventIcon(event.icon);
-                      return (
-                        <SelectItem key={event.id} value={event.id.toString()}>
-                          <div className="flex items-center gap-2">
-                            <IconComponent
-                              className="h-4 w-4"
-                              style={{ color: event.color ?? undefined }}
-                            />
-                            <span>{event.name}</span>
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Hero Select */}
-            <div className="grid gap-1.5">
-              <Label>Heros</Label>
-              <Select onValueChange={setHeroId} value={heroId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Wybierz herosa" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Wybierz herosa...</SelectItem>
-                  {filteredHeroes?.map((hero) => (
-                    <SelectItem key={hero.id} value={hero.id.toString()}>
-                      {hero.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Hero Stats Preview */}
-            {heroId !== "all" && (
-              <HeroStatsPreview
-                heroStats={heroStats}
-                isPending={heroStatsPending}
-              />
-            )}
-
-            {/* Gold Amount Input */}
-            <div className="grid gap-1.5">
-              <form.Field name="goldAmount">
-                {(field) => (
-                  <>
-                    <Label htmlFor={field.name}>Kwota złota</Label>
-                    <Input
-                      disabled={heroId === "all"}
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="np. 2g lub 50000000"
-                      type="text"
-                      value={field.state.value}
-                    />
-                    <p className="text-muted-foreground text-xs">
-                      Użyj &quot;g&quot; dla miliardów (np. 2g = 2 000 000 000)
-                    </p>
-                    {goldAmount > 0 && (
-                      <p className="font-mono text-muted-foreground text-xs">
-                        = {goldAmount.toLocaleString("pl-PL")} złota
-                      </p>
-                    )}
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </>
-                )}
-              </form.Field>
-            </div>
-
-            {/* Point Worth Preview */}
-            {heroId !== "all" &&
-              goldAmount > 0 &&
-              heroStats &&
-              heroStats.totalPoints > 0 && (
-                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-                  <h4 className="mb-2 font-semibold text-primary text-sm">
-                    Podgląd rozdziału
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">
-                        Wartość jednego punktu
-                      </p>
-                      <p className="font-mono font-semibold">
-                        {pointWorth.toLocaleString("pl-PL", {
-                          maximumFractionDigits: 2,
-                        })}{" "}
-                        złota
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">
-                        Złoto do rozdzielenia
-                      </p>
-                      <p className="font-mono font-semibold">
-                        {goldAmount.toLocaleString("pl-PL")}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="mt-2 text-muted-foreground text-xs">
-                    Formuła: złoto gracza = punkty gracza ×{" "}
-                    {pointWorth.toFixed(2)}
-                  </p>
-                </div>
-              )}
-          </div>
-          <ResponsiveDialogFooter>
-            <Button
-              onClick={() => {
-                setOpen(false);
+      <ResponsiveDialogTrigger
+        render={
+          <ResponsiveDialogContent className="max-w-3 sm:max-w-125">
+            <form
+              // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+              onSubmit={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                await form.handleSubmit();
               }}
-              type="button"
-              variant="outline"
             >
-              Anuluj
-            </Button>
-            <form.Subscribe>
-              {(state) => (
+              <ResponsiveDialogHeader>
+                <ResponsiveDialogTitle className="flex items-center gap-2">
+                  <Coins className="size-5 text-yellow-500" />
+                  Rozdziel złoto
+                </ResponsiveDialogTitle>
+                <ResponsiveDialogDescription>
+                  Ustaw kwotę złota do rozdzielenia dla herosa. Złoto zostanie
+                  podzielone proporcjonalnie do punktów każdego gracza.
+                </ResponsiveDialogDescription>
+              </ResponsiveDialogHeader>
+              <div className="grid gap-4 py-4">
+                {/* Event Select */}
+                <div className="grid gap-1.5">
+                  <Label>Event</Label>
+                  <Select
+                    onValueChange={(value) => {
+                      if (value !== null) {
+                        setEventId(value);
+                      }
+                      setHeroId("all");
+                    }}
+                    value={eventId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Wybierz event" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Wszystkie eventy</SelectItem>
+                      {[...(events ?? [])]
+                        .toSorted(
+                          (a, b) =>
+                            new Date(b.endTime).getTime() -
+                            new Date(a.endTime).getTime()
+                        )
+                        .map((event) => {
+                          const IconComponent = getEventIcon(event.icon);
+                          return (
+                            <SelectItem
+                              key={event.id}
+                              value={event.id.toString()}
+                            >
+                              <div className="flex items-center gap-2">
+                                <IconComponent
+                                  className="size-4"
+                                  style={{ color: event.color ?? undefined }}
+                                />
+                                <span>{event.name}</span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Hero Select */}
+                <div className="grid gap-1.5">
+                  <Label>Heros</Label>
+                  <Select
+                    onValueChange={(value) => {
+                      if (value !== null) {
+                        setHeroId(value);
+                      }
+                    }}
+                    value={heroId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Wybierz herosa" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Wybierz herosa...</SelectItem>
+                      {filteredHeroes?.map((hero) => (
+                        <SelectItem key={hero.id} value={hero.id.toString()}>
+                          {hero.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Hero Stats Preview */}
+                {heroId !== "all" && (
+                  <HeroStatsPreview
+                    heroStats={heroStats}
+                    isPending={heroStatsPending}
+                  />
+                )}
+
+                {/* Gold Amount Input */}
+                <div className="grid gap-1.5">
+                  <form.Field name="goldAmount">
+                    {(field) => (
+                      <>
+                        <Label htmlFor={field.name}>Kwota złota</Label>
+                        <Input
+                          disabled={heroId === "all"}
+                          id={field.name}
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => {
+                            field.handleChange(e.target.value);
+                          }}
+                          placeholder="np. 2g lub 50000000"
+                          type="text"
+                          value={field.state.value}
+                        />
+                        <p className="text-muted-foreground text-xs">
+                          Użyj &quot;g&quot; dla miliardów (np. 2g = 2 000 000
+                          000)
+                        </p>
+                        {goldAmount > 0 && (
+                          <p className="font-mono text-muted-foreground text-xs">
+                            = {goldAmount.toLocaleString("pl-PL")} złota
+                          </p>
+                        )}
+                        {field.state.meta.errors.map((error) => (
+                          <p
+                            className="text-red-500 text-sm"
+                            key={error?.message}
+                          >
+                            {error?.message}
+                          </p>
+                        ))}
+                      </>
+                    )}
+                  </form.Field>
+                </div>
+
+                {/* Point Worth Preview */}
+                {heroId !== "all" &&
+                  goldAmount > 0 &&
+                  heroStats &&
+                  heroStats.totalPoints > 0 && (
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                      <h4 className="mb-2 font-semibold text-primary text-sm">
+                        Podgląd rozdziału
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">
+                            Wartość jednego punktu
+                          </p>
+                          <p className="font-mono font-semibold">
+                            {pointWorth.toLocaleString("pl-PL", {
+                              maximumFractionDigits: 2,
+                            })}{" "}
+                            złota
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">
+                            Złoto do rozdzielenia
+                          </p>
+                          <p className="font-mono font-semibold">
+                            {goldAmount.toLocaleString("pl-PL")}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-muted-foreground text-xs">
+                        Formuła: złoto gracza = punkty gracza ×{" "}
+                        {pointWorth.toFixed(2)}
+                      </p>
+                    </div>
+                  )}
+              </div>
+              <ResponsiveDialogFooter>
                 <Button
-                  disabled={
-                    !state.canSubmit ||
-                    state.isSubmitting ||
-                    heroId === "all" ||
-                    !heroStats ||
-                    heroStats.totalPoints <= 0
-                  }
-                  type="submit"
+                  onClick={() => {
+                    setOpen(false);
+                  }}
+                  type="button"
+                  variant="outline"
                 >
-                  {state.isSubmitting ? "Rozdzielanie..." : "Rozdziel złoto"}
+                  Anuluj
                 </Button>
-              )}
-            </form.Subscribe>
-          </ResponsiveDialogFooter>
-        </form>
-      </ResponsiveDialogContent>
+                <form.Subscribe>
+                  {(state) => (
+                    <Button
+                      disabled={
+                        !state.canSubmit ||
+                        state.isSubmitting ||
+                        heroId === "all" ||
+                        !heroStats ||
+                        heroStats.totalPoints <= 0
+                      }
+                      type="submit"
+                    >
+                      {state.isSubmitting
+                        ? "Rozdzielanie..."
+                        : "Rozdziel złoto"}
+                    </Button>
+                  )}
+                </form.Subscribe>
+              </ResponsiveDialogFooter>
+            </form>
+          </ResponsiveDialogContent>
+        }
+      >
+        {trigger}
+      </ResponsiveDialogTrigger>
     </ResponsiveDialog>
   );
 };
