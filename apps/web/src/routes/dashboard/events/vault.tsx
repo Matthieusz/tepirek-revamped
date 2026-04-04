@@ -31,6 +31,45 @@ const searchSchema = z.object({
   eventId: z.string().optional(),
 });
 
+const getEventSelectDisplay = ({
+  selectedEventId,
+  events,
+}: {
+  selectedEventId: string;
+  events:
+    | Array<{
+        color: string | null;
+        endTime: Date;
+        icon: string;
+        id: number;
+        name: string;
+      }>
+    | undefined;
+}) => {
+  if (selectedEventId === "all") {
+    return "Wszystkie eventy";
+  }
+
+  const selectedEvent = events?.find(
+    (e) => e.id.toString() === selectedEventId
+  );
+
+  if (!selectedEvent) {
+    return "Wybierz event";
+  }
+
+  const IconComponent = getEventIcon(selectedEvent.icon);
+  return (
+    <span className="flex items-center gap-2">
+      <IconComponent
+        className="size-4"
+        style={{ color: selectedEvent.color ?? undefined }}
+      />
+      {selectedEvent.name}
+    </span>
+  );
+};
+
 export const Route = createFileRoute("/dashboard/events/vault")({
   component: RouteComponent,
   staticData: {
@@ -184,7 +223,12 @@ function RouteComponent() {
           value={effectiveEventId}
         >
           <SelectTrigger className="w-56">
-            <SelectValue placeholder="Wybierz event" />
+            <SelectValue>
+              {getEventSelectDisplay({
+                selectedEventId: effectiveEventId,
+                events,
+              })}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Wszystkie eventy</SelectItem>
