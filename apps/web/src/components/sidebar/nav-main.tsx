@@ -99,8 +99,7 @@ function NavItemCollapsible({
               <SidebarMenuButton
                 className={cn(
                   "transition-colors",
-                  item.disabled === true &&
-                    "cursor-not-allowed opacity-50",
+                  item.disabled === true && "cursor-not-allowed opacity-50",
                   isGroupActive && "bg-accent font-medium"
                 )}
                 tooltip={item.title}

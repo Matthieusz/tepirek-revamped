@@ -95,9 +95,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
 
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
-      <ResponsiveDialogTrigger asChild>
-        {trigger}
-      </ResponsiveDialogTrigger>
+      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-106.25">
         <form
           onSubmit={(e) => {
@@ -108,9 +106,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
           }}
         >
           <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>
-              Dodaj nowego herosa
-            </ResponsiveDialogTitle>
+            <ResponsiveDialogTitle>Dodaj nowego herosa</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
               Utwórz nowego herosa do wybranego eventu.
             </ResponsiveDialogDescription>
@@ -132,10 +128,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p
-                        className="text-red-500 text-sm"
-                        key={error?.message}
-                      >
+                      <p className="text-red-500 text-sm" key={error?.message}>
                         {error?.message}
                       </p>
                     ))}
@@ -161,10 +154,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p
-                        className="text-red-500 text-sm"
-                        key={error?.message}
-                      >
+                      <p className="text-red-500 text-sm" key={error?.message}>
                         {error?.message}
                       </p>
                     ))}
@@ -191,10 +181,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p
-                        className="text-red-500 text-sm"
-                        key={error?.message}
-                      >
+                      <p className="text-red-500 text-sm" key={error?.message}>
                         {error?.message}
                       </p>
                     ))}
@@ -236,10 +223,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                       </SelectContent>
                     </Select>
                     {field.state.meta.errors.map((error) => (
-                      <p
-                        className="text-red-500 text-sm"
-                        key={error?.message}
-                      >
+                      <p className="text-red-500 text-sm" key={error?.message}>
                         {error?.message}
                       </p>
                     ))}

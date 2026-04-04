@@ -199,9 +199,7 @@ export const DistributeGoldModal = ({
 
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
-      <ResponsiveDialogTrigger asChild>
-        {trigger}
-      </ResponsiveDialogTrigger>
+      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="max-w-3 sm:max-w-125">
         <form
           // oxlint-disable-next-line @typescript-eslint/no-misused-promises
@@ -248,10 +246,7 @@ export const DistributeGoldModal = ({
                     .map((event) => {
                       const IconComponent = getEventIcon(event.icon);
                       return (
-                        <SelectItem
-                          key={event.id}
-                          value={event.id.toString()}
-                        >
+                        <SelectItem key={event.id} value={event.id.toString()}>
                           <div className="flex items-center gap-2">
                             <IconComponent
                               className="size-4"
@@ -318,8 +313,7 @@ export const DistributeGoldModal = ({
                       value={field.state.value}
                     />
                     <p className="text-muted-foreground text-xs">
-                      Użyj &quot;g&quot; dla miliardów (np. 2g = 2 000 000
-                      000)
+                      Użyj &quot;g&quot; dla miliardów (np. 2g = 2 000 000 000)
                     </p>
                     {goldAmount > 0 && (
                       <p className="font-mono text-muted-foreground text-xs">
@@ -327,10 +321,7 @@ export const DistributeGoldModal = ({
                       </p>
                     )}
                     {field.state.meta.errors.map((error) => (
-                      <p
-                        className="text-red-500 text-sm"
-                        key={error?.message}
-                      >
+                      <p className="text-red-500 text-sm" key={error?.message}>
                         {error?.message}
                       </p>
                     ))}
@@ -398,9 +389,7 @@ export const DistributeGoldModal = ({
                   }
                   type="submit"
                 >
-                  {state.isSubmitting
-                    ? "Rozdzielanie..."
-                    : "Rozdziel złoto"}
+                  {state.isSubmitting ? "Rozdzielanie..." : "Rozdziel złoto"}
                 </Button>
               )}
             </form.Subscribe>

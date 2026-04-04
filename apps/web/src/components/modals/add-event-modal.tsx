@@ -112,9 +112,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
 
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
-      <ResponsiveDialogTrigger asChild>
-        {trigger}
-      </ResponsiveDialogTrigger>
+      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-106.25">
         <form
           // oxlint-disable-next-line @typescript-eslint/no-misused-promises
@@ -147,10 +145,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p
-                        className="text-red-500 text-sm"
-                        key={error?.message}
-                      >
+                      <p className="text-red-500 text-sm" key={error?.message}>
                         {error?.message}
                       </p>
                     ))}
@@ -249,10 +244,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                       </PopoverContent>
                     </Popover>
                     {field.state.meta.errors.map((error) => (
-                      <p
-                        className="text-red-500 text-sm"
-                        key={error?.message}
-                      >
+                      <p className="text-red-500 text-sm" key={error?.message}>
                         {error?.message}
                       </p>
                     ))}

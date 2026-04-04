@@ -106,7 +106,11 @@ const ResponsiveDialogContent = ({
   }
 
   return (
-    <DialogContent aria-describedby={ariaDescribedBy} className={className} {...props}>
+    <DialogContent
+      aria-describedby={ariaDescribedBy}
+      className={className}
+      {...props}
+    >
       {children}
     </DialogContent>
   );

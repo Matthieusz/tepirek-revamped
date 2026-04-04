@@ -60,9 +60,7 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
 
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
-      <ResponsiveDialogTrigger asChild>
-        {trigger}
-      </ResponsiveDialogTrigger>
+      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-[425px]">
         <form
           // oxlint-disable-next-line @typescript-eslint/no-misused-promises
@@ -95,10 +93,7 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p
-                        className="text-red-500 text-sm"
-                        key={error?.message}
-                      >
+                      <p className="text-red-500 text-sm" key={error?.message}>
                         {error?.message}
                       </p>
                     ))}
