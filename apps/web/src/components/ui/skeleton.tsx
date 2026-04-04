@@ -1,62 +1,63 @@
+import * as React from "react";
+
 import { cn } from "@/lib/utils";
 
-const Skeleton = ({ className, ...props }: React.ComponentProps<"div">) => (
-  <div
-    className={cn("animate-pulse rounded-md bg-accent", className)}
-    data-slot="skeleton"
-    {...props}
-  />
-);
-
-const TableSkeleton = ({
-  rows = 5,
-  columns = 4,
-}: {
-  rows?: number;
-  columns?: number;
-}) => {
-  const getHeaderWidth = (index: number) => {
-    if (index === 0) {
-      return "w-12";
-    }
-    if (index === columns - 1) {
-      return "ml-auto w-16";
-    }
-    return "w-24";
-  };
-
-  const getCellWidth = (colIndex: number) => {
-    if (colIndex === 0) {
-      return "w-8";
-    }
-    if (colIndex === columns - 1) {
-      return "ml-auto w-12";
-    }
-    return "w-20";
-  };
-
+function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div className="relative w-full overflow-x-auto">
-      <div className="w-full">
-        {/* Header row */}
-        <div className="flex h-10 items-center gap-4 border-b px-2">
-          {Array.from({ length: columns }).map((_, headerIndex) => (
+    <div
+      data-slot="skeleton"
+      className={cn("animate-pulse rounded-md bg-muted", className)}
+      {...props}
+    />
+  );
+}
+
+function TableSkeleton({
+  className,
+  columns = 4,
+  rows = 5,
+  showHeader = true,
+  ...props
+}: React.ComponentProps<"div"> & {
+  columns?: number;
+  rows?: number;
+  showHeader?: boolean;
+}) {
+  return (
+    <div
+      data-slot="table-skeleton"
+      className={cn("w-full space-y-3", className)}
+      {...props}
+    >
+      {showHeader && (
+        <div
+          className="grid gap-3"
+          style={{
+            gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+          }}
+        >
+          {Array.from({ length: columns }).map((_, index) => (
             <Skeleton
-              className={cn("h-4", getHeaderWidth(headerIndex))}
-              key={`header-${headerIndex.toString()}`} // oxlint-disable-line react/no-array-index-key -- static skeleton placeholder
+              className="h-5 w-full rounded-md"
+              key={`table-skeleton-header-${index}`}
             />
           ))}
         </div>
-        {/* Data rows */}
+      )}
+
+      <div className="space-y-2">
         {Array.from({ length: rows }).map((_, rowIndex) => (
           <div
-            className="flex h-12 items-center gap-4 border-b px-2"
-            key={`row-${rowIndex.toString()}`} // oxlint-disable-line react/no-array-index-key -- static skeleton placeholder
+            className="grid gap-3 rounded-lg border p-3"
+            key={`table-skeleton-row-${rowIndex}`}
+            style={{
+              gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+            }}
           >
-            {Array.from({ length: columns }).map((__, cellIndex) => (
+            {Array.from({ length: columns }).map((_, columnIndex) => (
               <Skeleton
-                className={cn("h-4", getCellWidth(cellIndex))}
-                key={`cell-${rowIndex.toString()}-${cellIndex.toString()}`} // oxlint-disable-line react/no-array-index-key -- static skeleton placeholder
+                className="h-4 w-full rounded-md"
+                key={`table-skeleton-cell-${rowIndex}-${columnIndex}`}
               />
             ))}
           </div>
@@ -64,195 +65,52 @@ const TableSkeleton = ({
       </div>
     </div>
   );
-};
+}
 
-/** Skeleton for announcement-style cards (title, metadata, description) */
-const CardSkeleton = () => (
-  <div className="flex flex-col gap-6 rounded-xl border bg-card py-6 shadow-sm">
-    {/* CardHeader */}
-    <div className="grid gap-1.5 px-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 space-y-2">
-          {/* Title */}
-          <Skeleton className="h-5 w-2/5" />
-          {/* Metadata row */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <Skeleton className="size-5 rounded-full" />
-              <Skeleton className="h-3 w-16" />
-            </div>
-            <Skeleton className="h-4 w-px" />
-            <Skeleton className="h-3 w-28" />
-          </div>
-        </div>
-      </div>
-    </div>
-    {/* CardContent */}
-    <div className="space-y-2 px-6">
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-3/4" />
-    </div>
-  </div>
-);
+const cardGridSkeletonVariants = {
+  bet: "grid-cols-1 md:grid-cols-2",
+  default: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+  range:
+    "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
+  ranking: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+  vault: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+} as const;
 
-/** Skeleton for range cards with image (skills page) */
-const RangeCardSkeleton = () => (
-  <div className="flex h-full flex-col gap-6 rounded-xl border bg-card py-6 shadow-sm">
-    {/* CardHeader */}
-    <div className="grid gap-1.5 px-6">
-      <Skeleton className="h-5 w-24" />
-      <Skeleton className="h-4 w-16" />
-    </div>
-    {/* CardContent with image placeholder */}
-    <div className="flex flex-1 items-center justify-center px-6">
-      <Skeleton className="h-40 w-40 rounded-md" />
-    </div>
-  </div>
-);
-
-/** Skeleton for bet history cards */
-const BetCardSkeleton = () => (
-  <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-    <div className="p-4">
-      {/* Header */}
-      <div className="mb-3 flex items-start justify-between gap-2">
-        <div className="flex items-baseline gap-2">
-          <Skeleton className="h-5 w-28" />
-          <Skeleton className="h-4 w-16" />
-        </div>
-        <Skeleton className="h-6 w-20 rounded-full" />
-      </div>
-      {/* Main content */}
-      <div className="flex items-center gap-4">
-        {/* Hero image */}
-        <Skeleton className="h-16 w-14 shrink-0 rounded-lg" />
-        {/* Players */}
-        <div className="flex flex-1 flex-wrap gap-2">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              className="flex items-center gap-2 rounded-full border bg-muted/30 py-1 pr-3 pl-1"
-              key={`player-${i.toString()}`} // oxlint-disable-line react/no-array-index-key -- static skeleton placeholder
-            >
-              <Skeleton className="size-6 rounded-full" />
-              <Skeleton className="h-3 w-12" />
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Footer */}
-      <div className="mt-3 flex items-center justify-between border-t pt-3">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-3 w-20" />
-          <Skeleton className="size-5 rounded-full" />
-          <Skeleton className="h-3 w-16" />
-        </div>
-        <Skeleton className="h-3 w-24" />
-      </div>
-    </div>
-  </div>
-);
-
-/** Skeleton for vault user cards */
-const VaultCardSkeleton = () => (
-  <div className="overflow-hidden rounded-xl border bg-card shadow-sm transition-all">
-    <div className="px-4 py-6">
-      <div className="flex items-center gap-4">
-        {/* Position */}
-        <div className="flex w-8 shrink-0 justify-center">
-          <Skeleton className="h-4 w-4" />
-        </div>
-        {/* Avatar */}
-        <Skeleton className="size-10 shrink-0 rounded-full" />
-        {/* Name */}
-        <div className="min-w-0 flex-1">
-          <Skeleton className="h-5 w-24" />
-        </div>
-        {/* Earnings */}
-        <div className="flex items-center gap-2">
-          <Skeleton className="size-4" />
-          <Skeleton className="h-4 w-20" />
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-/** Skeleton for ranking player cards */
-const RankingCardSkeleton = () => (
-  <div className="overflow-hidden rounded-xl border bg-card shadow-sm transition-all">
-    <div className="px-4 py-6">
-      <div className="flex items-center gap-4">
-        {/* Rank */}
-        <div className="flex w-8 shrink-0 justify-center">
-          <Skeleton className="size-5" />
-        </div>
-        {/* Avatar */}
-        <Skeleton className="size-10 shrink-0 rounded-full" />
-        {/* Name */}
-        <div className="min-w-0 flex-1">
-          <Skeleton className="h-5 w-28" />
-        </div>
-        {/* Stats */}
-        <div className="flex shrink-0 items-center gap-8">
-          <div className="w-24 space-y-1.5 text-center">
-            <Skeleton className="mx-auto h-3 w-12" />
-            <Skeleton className="mx-auto h-5 w-16" />
-          </div>
-          <div className="w-24 space-y-1.5 text-center">
-            <Skeleton className="mx-auto h-3 w-16" />
-            <Skeleton className="mx-auto h-5 w-8" />
-          </div>
-          <div className="w-28 space-y-1.5 text-center">
-            <Skeleton className="mx-auto h-3 w-12" />
-            <Skeleton className="mx-auto h-5 w-20" />
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const CardGridSkeleton = ({
+function CardGridSkeleton({
+  className,
   count = 6,
-  variant = "card",
-}: {
+  variant = "default",
+  ...props
+}: React.ComponentProps<"div"> & {
   count?: number;
-  variant?: "card" | "range" | "bet" | "vault" | "ranking";
-}) => {
-  const SkeletonComponent = {
-    bet: BetCardSkeleton,
-    card: CardSkeleton,
-    range: RangeCardSkeleton,
-    ranking: RankingCardSkeleton,
-    vault: VaultCardSkeleton,
-  }[variant];
-
-  const gridClass = {
-    bet: "grid gap-4",
-    card: "space-y-4",
-    range:
-      "grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
-    ranking: "space-y-2",
-    vault: "space-y-2",
-  }[variant];
-
+  variant?: keyof typeof cardGridSkeletonVariants;
+}) {
   return (
-    <div className={gridClass}>
-      {Array.from({ length: count }).map((_, i) => (
-        // oxlint-disable-next-line react/no-array-index-key -- static skeleton placeholder
-        <SkeletonComponent key={`skeleton-${i.toString()}`} />
+    <div
+      data-slot="card-grid-skeleton"
+      className={cn("grid gap-4", cardGridSkeletonVariants[variant], className)}
+      {...props}
+    >
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          className="rounded-lg border bg-card p-4 shadow-sm"
+          key={`card-grid-skeleton-${index}`}
+        >
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          </div>
+        </div>
       ))}
     </div>
   );
-};
+}
 
-export {
-  Skeleton,
-  TableSkeleton,
-  CardSkeleton,
-  RangeCardSkeleton,
-  BetCardSkeleton,
-  VaultCardSkeleton,
-  RankingCardSkeleton,
-  CardGridSkeleton,
-};
+export { Skeleton, TableSkeleton, CardGridSkeleton };
