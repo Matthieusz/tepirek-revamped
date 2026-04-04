@@ -68,11 +68,7 @@ export const Route = createFileRoute("/dashboard")({
 
 ```typescript
 // Use centralized auth guards - DO NOT duplicate auth logic
-import {
-  requireAuth,
-  requireVerified,
-  requireUnverified,
-} from "@/lib/auth-guard";
+import { Auth, requireVerified, requireUnverified } from "@/lib/auth-guard";
 
 // For routes requiring login only
 beforeLoad: async () => requireAuth();

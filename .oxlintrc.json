@@ -5,7 +5,7 @@
     "./node_modules/ultracite/config/oxlint/react/.oxlintrc.json",
     "./node_modules/ultracite/config/oxlint/remix/.oxlintrc.json"
   ],
-  "ignorePatterns": ["**/*.gen.*"],
+  "ignorePatterns": ["**/*.gen.*", "**/components/ui/**"],
   "rules": {
     "eslint/no-use-before-define": "off",
     "eslint/require-await": "off",
@@ -13,7 +13,8 @@
     "jest/require-hook": "off",
     "max-statements": "off",
     "@typescript-eslint/no-misused-spread": "off",
-    "func-style": "off"
+    "func-style": "off",
+    "sort-keys": "off"
   },
   "overrides": [
     {
