@@ -509,7 +509,39 @@ export const betRouter = {
         .orderBy(desc(sql`SUM(${userStats.points})`));
 
       const ranking = await baseQuery;
-      return ranking;
+
+      // Count distinct bets
+      let totalBets = 0;
+      if (input.heroId !== undefined) {
+        const [betsResult] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(heroBet)
+          .where(eq(heroBet.heroId, input.heroId));
+        totalBets = Number(betsResult?.count ?? 0);
+      } else if (input.eventId === undefined) {
+        const [betsResult] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(heroBet);
+        totalBets = Number(betsResult?.count ?? 0);
+      } else {
+        const [betsResult] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(heroBet)
+          .innerJoin(hero, eq(heroBet.heroId, hero.id))
+          .where(eq(hero.eventId, input.eventId));
+        totalBets = Number(betsResult?.count ?? 0);
+      }
+
+      const pointWorth =
+        input.heroId === undefined
+          ? null
+          : await db
+              .select({ pointWorth: hero.pointWorth })
+              .from(hero)
+              .where(eq(hero.id, input.heroId))
+              .then((rows) => rows[0]?.pointWorth ?? null);
+
+      return { pointWorth, ranking, totalBets };
     }),
 
   getUserStats: protectedProcedure
