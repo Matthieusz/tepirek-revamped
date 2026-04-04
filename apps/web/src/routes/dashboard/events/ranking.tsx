@@ -227,11 +227,13 @@ const StatsPopover = ({
   totalBets: number;
 }) => (
   <Popover>
-    <PopoverTrigger asChild>
-      <Button size="icon" variant="ghost">
-        <Info className="size-4" />
-      </Button>
-    </PopoverTrigger>
+    <PopoverTrigger
+      render={
+        <Button size="icon" variant="ghost">
+          <Info className="size-4" />
+        </Button>
+      }
+    />
     <PopoverContent className="w-auto p-4">
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between gap-6">
