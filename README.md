@@ -1,162 +1,75 @@
 # 🎮 Tepirek Revamped
 
-<div align="center">
+A modern guild management platform for **Margonem** MMORPG players. We built this because spreadsheets weren't cutting it anymore — managing squads, tracking events, running auctions, and keeping tabs on everyone's skills deserves something better.
 
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
-
-A modern guild management platform for **Margonem** MMORPG players, built with cutting-edge TypeScript technologies.
-
-[Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [Project Structure](#-project-structure) • [Commands](#-commands)
-
-</div>
+Built with TypeScript, end-to-end typesafety, and a monorepo setup that makes the frontend and backend actually talk to each other without the usual API contract headaches.
 
 ---
 
-## ✨ Features
-
-### 🛡️ Squad Builder
-
-- Create and manage team compositions (up to 10 characters per squad)
-- Import characters from multiple game accounts
-- Filter by world, profession, and level
-- Share squads with other users (view or edit permissions)
-- Public/private squad visibility
+## ✨ What you can do
 
 ### 📊 Event Management
 
 - Track guild events and activities
-- Hero management system
-- Betting system for events
-- Event history and ranking
-- Vault management
+- Hero management with a betting system
+- Event history, rankings, and vault management
 
 ### 💰 Auction System
 
-- Support for main and auxiliary character auctions
+- Main and auxiliary character auctions
 - Profession-based filtering
-- Round and column-based signup system
+- Round and column-based signup
 
 ### 🎯 Skills Tracker
 
-- Track character skills and professions
+- One place to store all of clans skills
 - Range-based skill organization
-- Profession and skill management
 
 ### 👥 User Management
 
 - Role-based access control (Admin/User)
-- Discord OAuth integration
-- Email verification system
-- Admin panel for user management
+- Discord OAuth
+- Admin panel for managing users
 
-### 📋 Additional Features
+### 📋 And a few extras
 
-- Task/Todo management
+- Task/todo management
 - Guild announcements
 - Player listing with verification status
-- Profile management
 - Calculator tools (ODW, ULEPA)
 
 ---
 
-## 🛠️ Tech Stack
+## 🏗️ What's under the hood
 
-### Frontend (`apps/web`)
-
-| Technology         | Purpose                               |
-| ------------------ | ------------------------------------- |
-| **TanStack Start** | SSR framework with file-based routing |
-| **TanStack Query** | Server state management               |
-| **TanStack Form**  | Form handling with validation         |
-| **shadcn/ui**      | Accessible UI components              |
-| **TailwindCSS v4** | Utility-first styling                 |
-| **Vite**           | Build tool and dev server             |
-
-### Backend (`apps/server`)
-
-| Technology      | Purpose                                |
-| --------------- | -------------------------------------- |
-| **Hono**        | Lightweight, performant web framework  |
-| **oRPC**        | End-to-end type-safe API layer         |
-| **Better Auth** | Authentication (Email + Discord OAuth) |
-| **Bun**         | JavaScript runtime                     |
-
-### Database (`packages/db`)
-
-| Technology      | Purpose                    |
-| --------------- | -------------------------- |
-| **PostgreSQL**  | Relational database        |
-| **Drizzle ORM** | Type-safe database queries |
-
-### Tooling
-
-| Technology    | Purpose                      |
-| ------------- | ---------------------------- |
-| **Turborepo** | Monorepo build orchestration |
-| **Biome**     | Linting and formatting       |
-| **pnpm**      | Package management           |
-
----
-
-## 📁 Project Structure
+This is a **Turborepo monorepo** with end-to-end typesafety. The frontend and backend share types through the `packages/api` layer, so there's no guessing about API contracts — change a type in one place and everything stays in sync.
 
 ```
 tepirek-revamped/
 ├── apps/
-│   ├── web/                    # Frontend application (port 3001)
-│   │   └── src/
-│   │       ├── components/     # Reusable UI components
-│   │       │   ├── modals/     # Modal dialogs
-│   │       │   ├── sidebar/    # Navigation sidebar
-│   │       │   └── ui/         # shadcn/ui components
-│   │       ├── routes/         # File-based routing
-│   │       │   ├── dashboard/  # Protected dashboard routes
-│   │       │   │   ├── auctions/
-│   │       │   │   ├── calculator/
-│   │       │   │   ├── events/
-│   │       │   │   ├── skills/
-│   │       │   │   └── squad-builder/
-│   │       │   └── ...
-│   │       ├── hooks/          # Custom React hooks
-│   │       ├── lib/            # Utilities and helpers
-│   │       └── utils/          # oRPC client setup
-│   │
-│   └── server/                 # Backend API (port 3000)
-│       └── src/
-│           └── index.ts        # Hono server entry
+│   ├── web/          # Frontend (TanStack Start, port 3001)
+│   └── server/       # Backend (Hono + Bun, port 3000)
 │
 ├── packages/
-│   ├── api/                    # Shared API routers
-│   │   └── src/routers/        # oRPC procedure definitions
-│   │       ├── announcement.ts
-│   │       ├── auction.ts
-│   │       ├── bet.ts
-│   │       ├── event.ts
-│   │       ├── heroes.ts
-│   │       ├── skills.ts
-│   │       ├── squad.ts
-│   │       ├── todo.ts
-│   │       └── user.ts
-│   │
-│   ├── auth/                   # Better Auth configuration
-│   │
-│   ├── db/                     # Database layer
-│   │   └── src/schema/         # Drizzle table definitions
-│   │       ├── auth.ts
-│   │       ├── auction.ts
-│   │       ├── bet.ts
-│   │       ├── event.ts
-│   │       ├── skills.ts
-│   │       ├── squad.ts
-│   │       └── todo.ts
-│   │
-│   └── config/                 # Shared TypeScript configs
+│   ├── api/          # Shared oRPC routers (end-to-end types)
+│   ├── auth/         # Better Auth config
+│   ├── db/           # Drizzle ORM + PostgreSQL schemas
+│   └── config/       # Shared TypeScript configs
 │
-└── turbo.json                  # Turborepo configuration
+└── turbo.json        # Build orchestration
 ```
+
+### Tech choices
+
+| Layer | What we use | Why |
+|-------|-------------|-----|
+| **Frontend** | TanStack Start + React 19 | SSR, file-based routing, great DX |
+| **Backend** | Hono + Bun | Lightweight, fast, simple |
+| **API** | oRPC | End-to-end typesafety without codegen |
+| **Database** | PostgreSQL + Drizzle ORM | Type-safe queries, no ORM bloat |
+| **Auth** | Better Auth | Discord OAuth + email, zero fuss |
+| **UI** | shadcn/ui + Tailwind v4 | Accessible, customizable, no lock-in |
+| **Linting** | Ultracite (Oxlint + Oxfmt) | Fast, strict, zero-config |
 
 ---
 
@@ -167,24 +80,30 @@ tepirek-revamped/
 - **Node.js** 20+
 - **pnpm** 10+
 - **PostgreSQL** 15+
-- **Bun** (for server runtime)
+- **Bun** (for the server)
 
-### Installation
+### Quick start
 
-1. **Clone the repository**
+Already know the drill?
+
+```bash
+git clone https://github.com/Matthieusz/tepirek-revamped.git
+cd tepirek-revamped
+pnpm install
+pnpm db:start && pnpm db:push && pnpm dev
+```
+
+### Full setup
+
+1. **Clone & install**
 
    ```bash
    git clone https://github.com/Matthieusz/tepirek-revamped.git
    cd tepirek-revamped
-   ```
-
-2. **Install dependencies**
-
-   ```bash
    pnpm install
    ```
 
-3. **Set up environment variables**
+2. **Set up your env**
 
    Create `apps/server/.env`:
 
@@ -193,7 +112,7 @@ tepirek-revamped/
    DATABASE_URL=postgresql://user:password@localhost:5432/tepirek
 
    # Auth
-   BETTER_AUTH_SECRET=your-secret-key
+   BETTER_AUTH_SECRET=your-secret-key-here
    BETTER_AUTH_URL=http://localhost:3000
    CORS_ORIGIN=http://localhost:3001
 
@@ -203,23 +122,19 @@ tepirek-revamped/
    DISCORD_SERVER_ID=your-discord-server-id
    ```
 
-4. **Set up the database**
+3. **Set up the database**
 
    ```bash
-   # Start PostgreSQL (if using Docker)
-   pnpm db:start
-
-   # Push schema to database
-   pnpm db:push
+   pnpm db:start    # Start PostgreSQL (Docker)
+   pnpm db:push     # Push schema to database
    ```
 
-5. **Start development servers**
+4. **Start dev servers**
 
    ```bash
    pnpm dev
    ```
 
-6. **Open in browser**
    - Frontend: [http://localhost:3001](http://localhost:3001)
    - API: [http://localhost:3000](http://localhost:3000)
 
@@ -227,55 +142,51 @@ tepirek-revamped/
 
 ## 📜 Commands
 
-| Command            | Description                        |
-| ------------------ | ---------------------------------- |
-| `pnpm dev`         | Start all apps in development mode |
-| `pnpm dev:web`     | Start frontend only                |
-| `pnpm dev:server`  | Start backend only                 |
-| `pnpm build`       | Build all apps for production      |
-| `pnpm check`       | Run Biome linting and formatting   |
-| `pnpm check-types` | TypeScript type checking           |
+| Command | What it does |
+|---------|-------------|
+| `pnpm dev` | Start everything in dev mode |
+| `pnpm dev:web` | Frontend only |
+| `pnpm dev:server` | Backend only |
+| `pnpm build` | Build everything for production |
+| `pnpm check` | Run Ultracite (lint + format check) |
+| `pnpm fix` | Auto-fix lint and format issues |
+| `pnpm check-types` | TypeScript type checking |
 
-### Database Commands
+### Database
 
-| Command            | Description                        |
-| ------------------ | ---------------------------------- |
-| `pnpm db:push`     | Push schema changes to database    |
-| `pnpm db:studio`   | Open Drizzle Studio (database GUI) |
-| `pnpm db:generate` | Generate migrations                |
-| `pnpm db:migrate`  | Run migrations                     |
-| `pnpm db:start`    | Start PostgreSQL (Docker)          |
-| `pnpm db:stop`     | Stop PostgreSQL (Docker)           |
+| Command | What it does |
+|---------|-------------|
+| `pnpm db:push` | Push schema changes |
+| `pnpm db:studio` | Open Drizzle Studio (database GUI) |
+| `pnpm db:generate` | Generate migrations |
+| `pnpm db:migrate` | Run migrations |
+| `pnpm db:start` | Start PostgreSQL (Docker) |
+| `pnpm db:stop` | Stop PostgreSQL |
 
 ---
 
 ## 🔐 Authentication Flow
 
-1. **Registration** - Email/password or Discord OAuth
-2. **Email Verification** - Users wait in "waiting room" until verified
-3. **Admin Approval** - Admins can verify users via the player list
-4. **Discord Guild Check** - Optional validation that user belongs to specific Discord server
+1. **Sign up** — Email/password or Discord OAuth
+2. **Wait in the waiting room** — Wait till you get verified by an admin or get approved through membership in set Discord server
+3. **Get approved** — Admins verify you via the player list
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Got an idea or found a bug? Here's how to help out:
+
+1. Fork the repo
+2. Create a branch (`git checkout -b feature/your-thing`)
+3. Make your changes
+4. Run `pnpm check` and `pnpm check-types` to make sure everything's clean
+5. Push and open a PR
+
+If you're not sure where to start, just open an issue and we'll figure it out together.
 
 ---
 
 ## 📄 License
 
-This project is private and intended for guild use only.
-
----
-
-<div align="center">
-
-Built with ❤️ for the Margonem community
-
-</div>
+This project is open source and available under the [MIT License](LICENSE).
