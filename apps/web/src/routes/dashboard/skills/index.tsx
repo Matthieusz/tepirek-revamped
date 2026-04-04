@@ -6,7 +6,7 @@ import { AddProfessionModal } from "@/components/modals/add-profession-modal";
 import { AddRangeModal } from "@/components/modals/add-range-modal";
 import { RangeCard } from "@/components/skills/range-card";
 import { Button } from "@/components/ui/button";
-import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { isAdmin } from "@/lib/auth-guard";
 import { orpc } from "@/utils/orpc";
 
@@ -59,7 +59,7 @@ function RouteComponent() {
           </div>
         )}
       </div>
-      {isPending && <CardGridSkeleton count={10} variant="range" />}
+      {isPending && <Spinner />}
       {!isPending && ranges?.length === 0 && (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <p className="text-muted-foreground">

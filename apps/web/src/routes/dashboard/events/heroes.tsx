@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Sword, Trash2 } from "lucide-react";
+import { Loader2, Plus, Sword, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -24,7 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -131,7 +130,9 @@ function RouteComponent() {
             Zarządzaj herosami dostępnymi na eventach.
           </p>
         </div>
-        <TableSkeleton rows={5} />
+        <div className="flex w-full items-center justify-center py-12">
+          <Loader2 className="size-8 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }

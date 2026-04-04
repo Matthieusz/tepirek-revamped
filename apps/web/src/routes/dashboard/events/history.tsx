@@ -40,7 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CardGridSkeleton } from "@/components/ui/skeleton";
 import { useFilterPersistence } from "@/hooks/use-filter-persistence";
 import { isAdmin } from "@/lib/auth-guard";
 import { getEventIcon } from "@/lib/constants";
@@ -265,7 +264,11 @@ function RouteComponent() {
 
   let betsContent: ReactNode;
   if (betsLoading) {
-    betsContent = <CardGridSkeleton count={6} variant="bet" />;
+    betsContent = (
+      <div className="flex w-full items-center justify-center py-12">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   } else if (allBets.length === 0) {
     betsContent = (
       <Card>

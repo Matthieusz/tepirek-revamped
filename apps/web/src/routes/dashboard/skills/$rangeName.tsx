@@ -18,7 +18,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton, TableSkeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -48,23 +48,6 @@ type SkillToDelete = {
   name: string;
   rangeId: number;
 } | null;
-
-/* oxlint-disable react/no-array-index-key -- skeleton placeholders have no unique identifiers */
-const SkillsLoadingSkeleton = () => (
-  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-    {Array.from({ length: 6 }).map((_, i) => (
-      <Card key={`skill-skeleton-${i.toString()}`}>
-        <CardHeader className="pb-3">
-          <Skeleton className="h-4 w-24" />
-        </CardHeader>
-        <CardContent className="pt-0">
-          <TableSkeleton columns={3} rows={3} />
-        </CardContent>
-      </Card>
-    ))}
-  </div>
-);
-/* oxlint-enable react/no-array-index-key */
 
 function RangeDetails() {
   const { rangeName } = Route.useParams();
@@ -113,11 +96,9 @@ function RangeDetails() {
       <div className="mx-auto w-full max-w-6xl space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <Skeleton className="mb-1 h-7 w-48" />
-            <Skeleton className="h-4 w-64" />
+            <Spinner />
           </div>
         </div>
-        <SkillsLoadingSkeleton />
       </div>
     );
   }

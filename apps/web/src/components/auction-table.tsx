@@ -3,11 +3,11 @@ import { Loader2, Trash2 } from "lucide-react";
 import type React from "react";
 import { toast } from "sonner";
 
+import { Spinner } from "@/components/ui/spinner";
 import { orpc } from "@/utils/orpc";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
 import {
   Table,
   TableBody,
@@ -231,12 +231,7 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
   };
 
   if (isPending) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-96 w-full" />
-      </div>
-    );
+    return <Spinner />;
   }
 
   return (

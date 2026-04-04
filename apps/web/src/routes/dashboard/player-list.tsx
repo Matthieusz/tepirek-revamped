@@ -7,7 +7,7 @@ import { buildPlayerColumns } from "@/components/players-table/columns";
 import { PlayerTable } from "@/components/players-table/player-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { TableSkeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { isAdmin } from "@/lib/auth-guard";
 import { orpc } from "@/utils/orpc";
 
@@ -119,7 +119,7 @@ function RouteComponent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {isPending && <TableSkeleton rows={5} />}
+            {isPending && <Spinner />}
             {!isPending && verifiedPlayers.length > 0 && (
               <PlayerTable columns={cols} data={verifiedPlayers} />
             )}
@@ -139,7 +139,7 @@ function RouteComponent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {isPending && <TableSkeleton rows={3} />}
+            {isPending && <Spinner />}
             {!isPending && notVerifiedPlayers.length > 0 && (
               <PlayerTable columns={cols} data={notVerifiedPlayers} />
             )}

@@ -4,7 +4,7 @@ import {
   getRouteApi,
   useNavigate,
 } from "@tanstack/react-router";
-import { Check, Coins, User, Vault as VaultIcon } from "lucide-react";
+import { Check, Coins, Loader2, User, Vault as VaultIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CardGridSkeleton } from "@/components/ui/skeleton";
 import { isAdmin } from "@/lib/auth-guard";
 import { getEventIcon } from "@/lib/constants";
 import { orpc } from "@/utils/orpc";
@@ -85,9 +84,7 @@ function RouteComponent() {
   const [hasInitialized, setHasInitialized] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: events, isPending: eventsLoading } = useQuery(
-    orpc.event.getAll.queryOptions()
-  );
+  const { data: events } = useQuery(orpc.event.getAll.queryOptions());
 
   // Get the oldest event with unpaid users
   const { data: oldestUnpaidEventId, isPending: oldestUnpaidLoading } =
@@ -179,25 +176,12 @@ function RouteComponent() {
   });
 
   const isAdminUser = isAdmin(session);
-  const isPending =
-    eventsLoading || vaultLoading || oldestUnpaidLoading || !hasInitialized;
 
   // Find the next person to receive money (first unpaid user)
   const nextToPay = vault?.find((v) => !v.paidOut);
 
   // Separate paid and unpaid users
   const unpaidUsers = vault?.filter((v) => !v.paidOut) ?? [];
-
-  if (isPending) {
-    return (
-      <div className="mx-auto w-full max-w-4xl space-y-6">
-        <h1 className="text-center font-bold text-3xl tracking-tight">
-          Skarbiec
-        </h1>
-        <CardGridSkeleton count={6} variant="vault" />
-      </div>
-    );
-  }
 
   const sortedEvents = [...(events ?? [])].toSorted(
     (a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime()
@@ -250,143 +234,153 @@ function RouteComponent() {
         </Select>
       </div>
 
-      {/* Next to receive payment - highlighted */}
-      {nextToPay && (
-        <Card className="border-2 border-green-500/50 bg-green-500/5">
-          <CardContent>
-            <div className="mb-2 flex items-center justify-center gap-2">
-              <span className="font-semibold text-green-600 text-sm dark:text-green-400">
-                Następny do wypłaty
-              </span>
-            </div>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar className="size-12 border-2 border-green-500">
-                  <AvatarImage
-                    alt={nextToPay.userName}
-                    src={nextToPay.userImage ?? undefined}
-                  />
-                  <AvatarFallback>
-                    <User className="size-6" />
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-bold text-lg">{nextToPay.userName}</p>
-                  <p className="font-mono text-muted-foreground">
-                    {(
-                      Math.floor(
-                        Number.parseFloat(nextToPay.totalEarnings || "0") /
-                          1_000_000
-                      ) * 1_000_000
-                    ).toLocaleString("pl-PL", {
-                      maximumFractionDigits: 0,
-                    })}{" "}
-                    złota
-                  </p>
-                </div>
-              </div>
-              {isAdminUser && (
-                <Button
-                  disabled={toggleMutation.isPending}
-                  onClick={() => {
-                    toggleMutation.mutate({
-                      paidOut: true,
-                      userId: nextToPay.userId,
-                    });
-                  }}
-                  size="sm"
-                  variant="default"
-                >
-                  <Check className="size-4 sm:mr-2" />
-                  <span className="hidden sm:inline">
-                    Oznacz jako wypłacone
+      {vaultLoading ? (
+        <div className="flex w-full items-center justify-center py-12">
+          <Loader2 className="size-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <>
+          {/* Next to receive payment - highlighted */}
+          {nextToPay && (
+            <Card className="border-2 border-green-500/50 bg-green-500/5">
+              <CardContent>
+                <div className="mb-2 flex items-center justify-center gap-2">
+                  <span className="font-semibold text-green-600 text-sm dark:text-green-400">
+                    Następny do wypłaty
                   </span>
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Empty state */}
-      {(!vault || vault.length === 0) && (
-        <Card>
-          <CardContent className="py-8">
-            <div className="text-center">
-              <VaultIcon className="mx-auto size-8 text-muted-foreground" />
-              <p className="mt-2 text-muted-foreground text-sm">
-                Brak graczy z zarobkami powyżej 100 000 000 złota
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Unpaid users list */}
-      {unpaidUsers.length > 1 && (
-        <div className="space-y-2">
-          <h2 className="font-semibold text-lg">
-            Do wypłaty ({unpaidUsers.length})
-          </h2>
-          {unpaidUsers.slice(1).map((player, index) => (
-            <Card
-              className="transition-all hover:bg-accent/50"
-              key={player.userId}
-            >
-              <CardContent className="px-4">
-                <div className="flex items-center gap-4">
-                  {/* Position */}
-                  <div className="flex w-8 shrink-0 items-center justify-center">
-                    <span className="font-medium text-muted-foreground">
-                      {index + 2}
-                    </span>
+                </div>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="size-12 border-2 border-green-500">
+                      <AvatarImage
+                        alt={nextToPay.userName}
+                        src={nextToPay.userImage ?? undefined}
+                      />
+                      <AvatarFallback>
+                        <User className="size-6" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-bold text-lg">{nextToPay.userName}</p>
+                      <p className="font-mono text-muted-foreground">
+                        {(
+                          Math.floor(
+                            Number.parseFloat(nextToPay.totalEarnings || "0") /
+                              1_000_000
+                          ) * 1_000_000
+                        ).toLocaleString("pl-PL", {
+                          maximumFractionDigits: 0,
+                        })}{" "}
+                        złota
+                      </p>
+                    </div>
                   </div>
-                  {/* Avatar */}
-                  <Avatar className="size-10 shrink-0 border border-border">
-                    <AvatarImage
-                      alt={player.userName}
-                      src={player.userImage ?? undefined}
-                    />
-                    <AvatarFallback>
-                      <User className="size-5" />
-                    </AvatarFallback>
-                  </Avatar>
-                  {/* Name */}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{player.userName}</p>
-                  </div>
-                  {/* Earnings */}
-                  <div className="flex items-center gap-2">
-                    <Coins className="size-4 text-yellow-500" />
-                    <p className="font-mono font-semibold">
-                      {(
-                        Math.floor(
-                          Number.parseFloat(player.totalEarnings || "0") /
-                            1_000_000
-                        ) * 1_000_000
-                      ).toLocaleString("pl-PL", {
-                        maximumFractionDigits: 0,
-                      })}
-                    </p>
-                  </div>
-                  {/* Checkbox for admin */}
                   {isAdminUser && (
-                    <Checkbox
-                      checked={player.paidOut}
+                    <Button
                       disabled={toggleMutation.isPending}
-                      onCheckedChange={(checked) => {
+                      onClick={() => {
                         toggleMutation.mutate({
-                          paidOut: checked,
-                          userId: player.userId,
+                          paidOut: true,
+                          userId: nextToPay.userId,
                         });
                       }}
-                    />
+                      size="sm"
+                      variant="default"
+                    >
+                      <Check className="size-4 sm:mr-2" />
+                      <span className="hidden sm:inline">
+                        Oznacz jako wypłacone
+                      </span>
+                    </Button>
                   )}
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+          )}
+
+          {/* Empty state */}
+          {(!vault || vault.length === 0) && (
+            <Card>
+              <CardContent className="py-8">
+                <div className="text-center">
+                  <VaultIcon className="mx-auto size-8 text-muted-foreground" />
+                  <p className="mt-2 text-muted-foreground text-sm">
+                    Brak graczy z zarobkami powyżej 100 000 000 złota
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Unpaid users list */}
+          {unpaidUsers.length > 1 && (
+            <div className="space-y-2">
+              <h2 className="font-semibold text-lg">
+                Do wypłaty ({unpaidUsers.length})
+              </h2>
+              {unpaidUsers.slice(1).map((player, index) => (
+                <Card
+                  className="transition-all hover:bg-accent/50"
+                  key={player.userId}
+                >
+                  <CardContent className="px-4">
+                    <div className="flex items-center gap-4">
+                      {/* Position */}
+                      <div className="flex w-8 shrink-0 items-center justify-center">
+                        <span className="font-medium text-muted-foreground">
+                          {index + 2}
+                        </span>
+                      </div>
+                      {/* Avatar */}
+                      <Avatar className="size-10 shrink-0 border border-border">
+                        <AvatarImage
+                          alt={player.userName}
+                          src={player.userImage ?? undefined}
+                        />
+                        <AvatarFallback>
+                          <User className="size-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                      {/* Name */}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold">
+                          {player.userName}
+                        </p>
+                      </div>
+                      {/* Earnings */}
+                      <div className="flex items-center gap-2">
+                        <Coins className="size-4 text-yellow-500" />
+                        <p className="font-mono font-semibold">
+                          {(
+                            Math.floor(
+                              Number.parseFloat(player.totalEarnings || "0") /
+                                1_000_000
+                            ) * 1_000_000
+                          ).toLocaleString("pl-PL", {
+                            maximumFractionDigits: 0,
+                          })}
+                        </p>
+                      </div>
+                      {/* Checkbox for admin */}
+                      {isAdminUser && (
+                        <Checkbox
+                          checked={player.paidOut}
+                          disabled={toggleMutation.isPending}
+                          onCheckedChange={(checked) => {
+                            toggleMutation.mutate({
+                              paidOut: checked,
+                              userId: player.userId,
+                            });
+                          }}
+                        />
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

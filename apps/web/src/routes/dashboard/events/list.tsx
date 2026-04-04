@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns/format";
-import { Calendar, Plus, Trash2 } from "lucide-react";
+import { Calendar, Loader2, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -102,7 +101,9 @@ function RouteComponent() {
             Zarządzaj eventami w grze.
           </p>
         </div>
-        <TableSkeleton rows={5} />
+        <div className="flex w-full items-center justify-center py-12">
+          <Loader2 className="size-8 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }

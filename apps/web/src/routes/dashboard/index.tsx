@@ -25,7 +25,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { isAdmin } from "@/lib/auth-guard";
 import { formatDateTime } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
@@ -104,7 +104,7 @@ function RouteComponent() {
           )}
         </div>
 
-        {isPending && <CardGridSkeleton count={3} />}
+        {isPending && <Spinner />}
 
         {!isPending && (!announcements || announcements.length === 0) && (
           <Card>

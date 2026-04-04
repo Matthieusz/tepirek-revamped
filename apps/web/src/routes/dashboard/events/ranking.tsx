@@ -26,7 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CardGridSkeleton } from "@/components/ui/skeleton";
 import { useFilterPersistence } from "@/hooks/use-filter-persistence";
 import { isAdmin } from "@/lib/auth-guard";
 import { getEventIcon } from "@/lib/constants";
@@ -70,7 +69,11 @@ const buildRankingContent = (params: {
   sortedRanking: RankingItem[];
 }): ReactNode => {
   if (params.rankingLoading) {
-    return <CardGridSkeleton count={6} variant="ranking" />;
+    return (
+      <div className="flex w-full items-center justify-center py-12">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   if (params.sortedRanking.length === 0) {
