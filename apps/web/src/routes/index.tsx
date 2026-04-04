@@ -83,12 +83,12 @@ function HomeComponent() {
 
           <CardFooter className="flex-col items-center justify-between gap-4 rounded-b-xl  p-6 sm:flex-row">
             <div className="flex items-center gap-3 rounded-full border border-border/50 bg-background/80 px-4 py-2 shadow-sm backdrop-blur-md">
-              <div className="relative flex h-3 w-3">
+              <div className="relative flex size-3">
                 {healthCheck.isLoading && (
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-yellow-400 opacity-75" />
                 )}
                 <span
-                  className={`relative inline-flex h-3 w-3 rounded-full ${statusDot}`}
+                  className={`relative inline-flex size-3 rounded-full ${statusDot}`}
                 />
               </div>
               <span

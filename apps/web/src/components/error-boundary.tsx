@@ -50,7 +50,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <Card className="m-4 border-destructive">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="h-5 w-5" />
+              <AlertCircle className="size-5" />
               Wystąpił błąd
             </CardTitle>
             <CardDescription>Przepraszamy, coś poszło nie tak.</CardDescription>

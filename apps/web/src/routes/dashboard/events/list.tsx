@@ -27,8 +27,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getEventIcon } from "@/lib/constants";
 import { isAdmin } from "@/lib/auth-guard";
+import { getEventIcon } from "@/lib/constants";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/events/list")({
@@ -122,7 +122,7 @@ function RouteComponent() {
           <AddEventModal
             trigger={
               <Button size="sm">
-                <Plus className="h-4 w-4" />
+                <Plus className="size-4" />
                 Dodaj event
               </Button>
             }
@@ -134,14 +134,14 @@ function RouteComponent() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Calendar className="h-4 w-4" />
+            <Calendar className="size-4" />
             Eventy
           </CardTitle>
         </CardHeader>
         <CardContent>
           {!events || events.length === 0 ? (
             <div className="rounded-lg border border-dashed py-8 text-center">
-              <Calendar className="mx-auto h-8 w-8 text-muted-foreground" />
+              <Calendar className="mx-auto size-8 text-muted-foreground" />
               <p className="mt-2 text-muted-foreground text-sm">
                 Brak eventów do wyświetlenia
               </p>
@@ -170,11 +170,11 @@ function RouteComponent() {
                         </TableCell>
                         <TableCell>
                           <div
-                            className="flex h-8 w-8 items-center justify-center rounded-lg"
+                            className="flex size-8 items-center justify-center rounded-lg"
                             style={{ backgroundColor: `${event.color}20` }}
                           >
                             <IconComponent
-                              className="h-4 w-4"
+                              className="size-4"
                               style={{ color: event.color }}
                             />
                           </div>
@@ -200,7 +200,7 @@ function RouteComponent() {
                                 size="sm"
                                 variant="ghost"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="size-4" />
                               </Button>
                             </div>
                           </TableCell>

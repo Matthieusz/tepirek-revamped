@@ -255,7 +255,7 @@ function RouteComponent() {
           size="sm"
           variant={mode === "single" ? "default" : "ghost"}
         >
-          <User className="mr-2 h-4 w-4" />
+          <User className="mr-2 size-4" />
           Walka 1v1
         </Button>
         <Button
@@ -266,7 +266,7 @@ function RouteComponent() {
           size="sm"
           variant={mode === "group" ? "default" : "ghost"}
         >
-          <Users className="mr-2 h-4 w-4" />
+          <Users className="mr-2 size-4" />
           Walka grupowa
         </Button>
       </div>
@@ -279,7 +279,7 @@ function RouteComponent() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Calculator className="h-5 w-5" />
+                  <Calculator className="size-5" />
                   Parametry walki
                 </CardTitle>
                 <CardDescription>
@@ -314,7 +314,7 @@ function RouteComponent() {
                           className="flex items-center gap-2"
                           htmlFor="attackerLevel"
                         >
-                          <Swords className="h-4 w-4 text-red-500" />
+                          <Swords className="size-4 text-red-500" />
                           Poziom atakującego
                         </Label>
                         <Input
@@ -358,7 +358,7 @@ function RouteComponent() {
                           className="flex items-center gap-2"
                           htmlFor="victimLevel"
                         >
-                          <Skull className="h-4 w-4 text-muted-foreground" />
+                          <Skull className="size-4 text-muted-foreground" />
                           Poziom ofiary
                         </Label>
                         <Input
@@ -414,14 +414,14 @@ function RouteComponent() {
                   <CardTitle className="flex items-center gap-2">
                     {result.wouldReceivePenalty ? (
                       <>
-                        <AlertTriangle className="h-5 w-5 text-red-500" />
+                        <AlertTriangle className="size-5 text-red-500" />
                         <span className="text-red-500">
                           Otrzymasz punkt karny!
                         </span>
                       </>
                     ) : (
                       <>
-                        <Shield className="h-5 w-5 text-green-500" />
+                        <Shield className="size-5 text-green-500" />
                         <span className="text-green-500">
                           Brak punktu karnego
                         </span>
@@ -451,7 +451,7 @@ function RouteComponent() {
 
                   <div className="grid gap-3 border-t pt-4">
                     <div className="text-muted-foreground text-sm">
-                      <Users className="mr-1 mb-1 inline h-4 w-4" />
+                      <Users className="mr-1 mb-1 inline size-4" />
                       Przydatne informacje:
                     </div>
                     <div className="flex items-center justify-between rounded-lg bg-yellow-500/10 p-3">
@@ -484,7 +484,7 @@ function RouteComponent() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Calculator className="h-5 w-5" />
+                  <Calculator className="size-5" />
                   Parametry walki grupowej
                 </CardTitle>
                 <CardDescription>
@@ -523,7 +523,7 @@ function RouteComponent() {
                           className="flex items-center gap-2"
                           htmlFor="attackerLevels"
                         >
-                          <Swords className="h-4 w-4 text-red-500" />
+                          <Swords className="size-4 text-red-500" />
                           Poziomy atakujących
                         </Label>
                         <Input
@@ -570,7 +570,7 @@ function RouteComponent() {
                           className="flex items-center gap-2"
                           htmlFor="defenderLevels"
                         >
-                          <Shield className="h-4 w-4 text-blue-500" />
+                          <Shield className="size-4 text-blue-500" />
                           Poziomy obrońców
                         </Label>
                         <Input
@@ -625,14 +625,14 @@ function RouteComponent() {
                   <CardTitle className="flex items-center gap-2">
                     {groupResult.wouldReceivePenalty ? (
                       <>
-                        <AlertTriangle className="h-5 w-5 text-red-500" />
+                        <AlertTriangle className="size-5 text-red-500" />
                         <span className="text-red-500">
                           Drużyna otrzyma punkty karne!
                         </span>
                       </>
                     ) : (
                       <>
-                        <Shield className="h-5 w-5 text-green-500" />
+                        <Shield className="size-5 text-green-500" />
                         <span className="text-green-500">
                           Brak punktów karnych
                         </span>
@@ -722,7 +722,7 @@ function RouteComponent() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+            <AlertTriangle className="size-5 text-yellow-500" />
             Zasady listów gończych
           </CardTitle>
         </CardHeader>

@@ -20,13 +20,13 @@ export interface RankingItem {
 
 const getRankIcon = (position: number) => {
   if (position === 1) {
-    return <Trophy className="h-5 w-5 text-yellow-500" />;
+    return <Trophy className="size-5 text-yellow-500" />;
   }
   if (position === 2) {
-    return <Trophy className="h-5 w-5 text-gray-400" />;
+    return <Trophy className="size-5 text-gray-400" />;
   }
   if (position === 3) {
-    return <Trophy className="h-5 w-5 text-amber-600" />;
+    return <Trophy className="size-5 text-amber-600" />;
   }
   return null;
 };
@@ -60,13 +60,13 @@ export const RankingList = ({ players }: RankingListProps) => (
               </div>
 
               {/* Avatar */}
-              <Avatar className="h-10 w-10 shrink-0 border border-border">
+              <Avatar className="size-10 shrink-0 border border-border">
                 <AvatarImage
                   alt={player.userName}
                   src={player.userImage ?? undefined}
                 />
                 <AvatarFallback>
-                  <User className="h-5 w-5" />
+                  <User className="size-5" />
                 </AvatarFallback>
               </Avatar>
 
@@ -104,7 +104,7 @@ export const RankingList = ({ players }: RankingListProps) => (
             </div>
 
             {/* Mobile View - Accordion */}
-            <Accordion className="sm:hidden" collapsible type="single">
+            <Accordion className="sm:hidden">
               <AccordionItem className="border-0" value={player.userId}>
                 <AccordionTrigger className="flex w-full items-center hover:no-underline">
                   <div className="flex w-full items-center gap-3">
@@ -118,13 +118,13 @@ export const RankingList = ({ players }: RankingListProps) => (
                     </div>
 
                     {/* Avatar */}
-                    <Avatar className="h-12 w-12 shrink-0 border border-border">
+                    <Avatar className="size-12 shrink-0 border border-border">
                       <AvatarImage
                         alt={player.userName}
                         src={player.userImage ?? undefined}
                       />
                       <AvatarFallback>
-                        <User className="h-8 w-8" />
+                        <User className="size-8" />
                       </AvatarFallback>
                     </Avatar>
 

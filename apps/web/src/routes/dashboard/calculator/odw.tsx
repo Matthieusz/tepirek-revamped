@@ -169,7 +169,7 @@ function RouteComponent() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calculator className="h-5 w-5" />
+              <Calculator className="size-5" />
               Parametry przedmiotu
             </CardTitle>
             <CardDescription>
@@ -239,8 +239,9 @@ function RouteComponent() {
                     <Label htmlFor="itemRarity">Rzadkość przedmiotu</Label>
                     <Select
                       onValueChange={(val) => {
-                        // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-                        field.handleChange(!val as Rarity);
+                        if (val !== null) {
+                          field.handleChange(val as Rarity);
+                        }
                       }}
                       value={field.state.value}
                     >
@@ -294,7 +295,7 @@ function RouteComponent() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Unlink
-                  className={`h-5 w-5 ${rarityColors[result.itemRarity]}`}
+                  className={`size-5 ${rarityColors[result.itemRarity]}`}
                 />
                 Koszt odwiązania
               </CardTitle>
@@ -353,7 +354,7 @@ function RouteComponent() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Unlink className="h-5 w-5 text-muted-foreground" />
+            <Unlink className="size-5 text-muted-foreground" />
             Formuła obliczania
           </CardTitle>
         </CardHeader>

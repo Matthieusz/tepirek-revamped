@@ -201,7 +201,7 @@ export const DistributeGoldModal = ({
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
       <ResponsiveDialogTrigger
         render={
-          <ResponsiveDialogContent className="max-w-3 sm:max-w-[500px]">
+          <ResponsiveDialogContent className="max-w-3 sm:max-w-125">
             <form
               // oxlint-disable-next-line @typescript-eslint/no-misused-promises
               onSubmit={async (e) => {
@@ -212,7 +212,7 @@ export const DistributeGoldModal = ({
             >
               <ResponsiveDialogHeader>
                 <ResponsiveDialogTitle className="flex items-center gap-2">
-                  <Coins className="h-5 w-5 text-yellow-500" />
+                  <Coins className="size-5 text-yellow-500" />
                   Rozdziel złoto
                 </ResponsiveDialogTitle>
                 <ResponsiveDialogDescription>
@@ -226,7 +226,9 @@ export const DistributeGoldModal = ({
                   <Label>Event</Label>
                   <Select
                     onValueChange={(value) => {
-                      setEventId(value);
+                      if (value !== null) {
+                        setEventId(value);
+                      }
                       setHeroId("all");
                     }}
                     value={eventId}
@@ -251,7 +253,7 @@ export const DistributeGoldModal = ({
                             >
                               <div className="flex items-center gap-2">
                                 <IconComponent
-                                  className="h-4 w-4"
+                                  className="size-4"
                                   style={{ color: event.color ?? undefined }}
                                 />
                                 <span>{event.name}</span>
@@ -266,7 +268,14 @@ export const DistributeGoldModal = ({
                 {/* Hero Select */}
                 <div className="grid gap-1.5">
                   <Label>Heros</Label>
-                  <Select onValueChange={setHeroId} value={heroId}>
+                  <Select
+                    onValueChange={(value) => {
+                      if (value !== null) {
+                        setHeroId(value);
+                      }
+                    }}
+                    value={heroId}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Wybierz herosa" />
                     </SelectTrigger>

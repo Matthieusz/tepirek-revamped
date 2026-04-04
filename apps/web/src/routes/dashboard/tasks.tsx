@@ -99,7 +99,7 @@ function TasksRoute() {
               <CardHeader className="p-4 pb-2">
                 <CardTitle className="flex items-center justify-between font-medium text-muted-foreground text-xs">
                   Wszystkie
-                  <ListTodo className="ml-1 h-4 w-4" />
+                  <ListTodo className="ml-1 size-4" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
@@ -112,7 +112,7 @@ function TasksRoute() {
               <CardHeader className="p-4 pb-2">
                 <CardTitle className="flex items-center justify-between font-medium text-muted-foreground text-xs">
                   Ukończone
-                  <CheckCircle2 className="ml-1 h-4 w-4 text-green-500" />
+                  <CheckCircle2 className="ml-1 size-4 text-green-500" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
@@ -125,7 +125,7 @@ function TasksRoute() {
               <CardHeader className="p-4 pb-2">
                 <CardTitle className="flex items-center justify-between font-medium text-muted-foreground text-xs">
                   Pozostałe
-                  <Circle className="ml-1 h-4 w-4 text-yellow-500" />
+                  <Circle className="ml-1 size-4 text-yellow-500" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
@@ -140,7 +140,7 @@ function TasksRoute() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
-                <Plus className="h-4 w-4" />
+                <Plus className="size-4" />
                 Dodaj zadanie
               </CardTitle>
               <CardDescription>Wpisz treść nowego zadania</CardDescription>
@@ -161,7 +161,7 @@ function TasksRoute() {
                   type="submit"
                 >
                   {createMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="size-4 animate-spin" />
                   ) : (
                     "Dodaj"
                   )}
@@ -175,7 +175,7 @@ function TasksRoute() {
         <Card className="h-fit">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <ListTodo className="h-4 w-4" />
+              <ListTodo className="size-4" />
               Twoje zadania
             </CardTitle>
             <CardDescription>
@@ -187,12 +187,12 @@ function TasksRoute() {
           <CardContent>
             {todos.isLoading && (
               <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Loader2 className="size-6 animate-spin text-muted-foreground" />
               </div>
             )}
             {!todos.isLoading && todos.data?.length === 0 && (
               <div className="rounded-lg border border-dashed py-8 text-center">
-                <ListTodo className="mx-auto h-8 w-8 text-muted-foreground" />
+                <ListTodo className="mx-auto size-8 text-muted-foreground" />
                 <p className="mt-2 text-muted-foreground text-sm">
                   Brak zadań do wyświetlenia
                 </p>
@@ -239,7 +239,7 @@ function TasksRoute() {
                       size="icon"
                       variant="ghost"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="size-4" />
                     </Button>
                   </li>
                 ))}

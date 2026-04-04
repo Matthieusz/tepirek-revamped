@@ -114,7 +114,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
       <ResponsiveDialogTrigger
         render={
-          <ResponsiveDialogContent className="sm:max-w-[425px]">
+          <ResponsiveDialogContent className="sm:max-w-106.25">
             <form
               // oxlint-disable-next-line @typescript-eslint/no-misused-promises
               onSubmit={async (e) => {
@@ -179,7 +179,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                           type="button"
                         >
                           <IconComponent
-                            className="h-5 w-5"
+                            className="size-5"
                             style={{ color: selectedColor }}
                           />
                           <span className="text-xs">{item.name}</span>
@@ -196,7 +196,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                     {EVENT_COLORS.map((color) => (
                       <button
                         className={cn(
-                          "h-8 w-8 rounded-full border-2 transition-all",
+                          "size-8 rounded-full border-2 transition-all",
                           selectedColor === color.id
                             ? "scale-110 border-foreground"
                             : "border-transparent"
@@ -229,7 +229,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                                 id="date"
                                 variant="outline"
                               >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                <CalendarIcon className="mr-2 size-4" />
                                 {date ? format(date, "PPP") : "Wybierz datę"}
                               </Button>
                             }

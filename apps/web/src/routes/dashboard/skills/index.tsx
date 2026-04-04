@@ -41,7 +41,7 @@ function RouteComponent() {
             <AddProfessionModal
               trigger={
                 <Button size="sm">
-                  <Plus className="h-4 w-4" />
+                  <Plus className="size-4" />
                   <span className="hidden sm:inline">Dodaj profesję</span>
                   <span className="sm:hidden">Profesja</span>
                 </Button>
@@ -50,7 +50,7 @@ function RouteComponent() {
             <AddRangeModal
               trigger={
                 <Button size="sm">
-                  <Plus className="h-4 w-4" />
+                  <Plus className="size-4" />
                   <span className="hidden sm:inline">Dodaj przedział</span>
                   <span className="sm:hidden">Przedział</span>
                 </Button>

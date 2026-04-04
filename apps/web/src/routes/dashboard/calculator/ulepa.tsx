@@ -227,7 +227,7 @@ function RouteComponent() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calculator className="h-5 w-5" />
+              <Calculator className="size-5" />
               Parametry przedmiotu
             </CardTitle>
             <CardDescription>
@@ -297,7 +297,9 @@ function RouteComponent() {
                     <Label htmlFor="itemRarity">Rzadkość przedmiotu</Label>
                     <Select
                       onValueChange={(val) => {
-                        field.handleChange(val!);
+                        if (val !== null) {
+                          field.handleChange(val);
+                        }
                       }}
                       value={field.state.value}
                     >
@@ -351,7 +353,7 @@ function RouteComponent() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles
-                  className={`h-5 w-5 ${rarityColors[result.itemRarity]}`}
+                  className={`size-5 ${rarityColors[result.itemRarity]}`}
                 />
                 Ekstrakcja
               </CardTitle>
@@ -408,7 +410,7 @@ function RouteComponent() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+              <TrendingUp className="size-5" />
               Koszty ulepszenia
             </CardTitle>
             <CardDescription>
@@ -437,7 +439,7 @@ function RouteComponent() {
                   return (
                     <TableRow key={`upgrade-level-${level}`}>
                       <TableCell>
-                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary text-sm">
+                        <span className="inline-flex size-7 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary text-sm">
                           +{level}
                         </span>
                       </TableCell>

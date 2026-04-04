@@ -176,7 +176,11 @@ export const AddSkillModal = ({
                         <div className="grid gap-1.5">
                           <Label htmlFor={field.name}>Profesja</Label>
                           <Select
-                            onValueChange={field.handleChange}
+                            onValueChange={(value) => {
+                              if (value !== null) {
+                                field.handleChange(value);
+                              }
+                            }}
                             value={field.state.value}
                           >
                             <SelectTrigger id={field.name}>

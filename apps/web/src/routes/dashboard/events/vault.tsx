@@ -28,8 +28,7 @@ import { orpc } from "@/utils/orpc";
 const routeApi = getRouteApi("/dashboard");
 
 const searchSchema = z.object({
-  // oxlint-disable-next-line unicorn/no-useless-undefined
-  eventId: z.string().optional().catch(undefined),
+  eventId: z.string().optional(),
 });
 
 export const Route = createFileRoute("/dashboard/events/vault")({
@@ -177,7 +176,9 @@ function RouteComponent() {
           // oxlint-disable-next-line @typescript-eslint/no-misused-promises
           onValueChange={async (value) =>
             navigate({
-              search: { eventId: value === "all" ? undefined : value },
+              search: {
+                eventId: value === "all" || value === null ? undefined : value,
+              },
             })
           }
           value={effectiveEventId}
@@ -193,7 +194,7 @@ function RouteComponent() {
                 <SelectItem key={event.id} value={event.id.toString()}>
                   <div className="flex items-center gap-2">
                     <IconComponent
-                      className="h-4 w-4"
+                      className="size-4"
                       style={{ color: event.color ?? undefined }}
                     />
                     <span>{event.name}</span>
@@ -216,13 +217,13 @@ function RouteComponent() {
             </div>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12 border-2 border-green-500">
+                <Avatar className="size-12 border-2 border-green-500">
                   <AvatarImage
                     alt={nextToPay.userName}
                     src={nextToPay.userImage ?? undefined}
                   />
                   <AvatarFallback>
-                    <User className="h-6 w-6" />
+                    <User className="size-6" />
                   </AvatarFallback>
                 </Avatar>
                 <div>
@@ -252,7 +253,7 @@ function RouteComponent() {
                   size="sm"
                   variant="default"
                 >
-                  <Check className="h-4 w-4 sm:mr-2" />
+                  <Check className="size-4 sm:mr-2" />
                   <span className="hidden sm:inline">
                     Oznacz jako wypłacone
                   </span>
@@ -268,7 +269,7 @@ function RouteComponent() {
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
-              <VaultIcon className="mx-auto h-8 w-8 text-muted-foreground" />
+              <VaultIcon className="mx-auto size-8 text-muted-foreground" />
               <p className="mt-2 text-muted-foreground text-sm">
                 Brak graczy z zarobkami powyżej 100 000 000 złota
               </p>
@@ -297,13 +298,13 @@ function RouteComponent() {
                     </span>
                   </div>
                   {/* Avatar */}
-                  <Avatar className="h-10 w-10 shrink-0 border border-border">
+                  <Avatar className="size-10 shrink-0 border border-border">
                     <AvatarImage
                       alt={player.userName}
                       src={player.userImage ?? undefined}
                     />
                     <AvatarFallback>
-                      <User className="h-5 w-5" />
+                      <User className="size-5" />
                     </AvatarFallback>
                   </Avatar>
                   {/* Name */}
@@ -312,7 +313,7 @@ function RouteComponent() {
                   </div>
                   {/* Earnings */}
                   <div className="flex items-center gap-2">
-                    <Coins className="h-4 w-4 text-yellow-500" />
+                    <Coins className="size-4 text-yellow-500" />
                     <p className="font-mono font-semibold">
                       {(
                         Math.floor(

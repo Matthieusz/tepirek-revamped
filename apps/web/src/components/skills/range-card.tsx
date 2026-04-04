@@ -72,7 +72,7 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
           </CardHeader>
           <CardContent className="flex flex-1 items-center justify-center">
             {range.image === null ? (
-              <div className="flex h-40 w-40 items-center justify-center rounded-md bg-muted">
+              <div className="flex size-40 items-center justify-center rounded-md bg-muted">
                 <span className="text-muted-foreground text-sm">
                   Brak obrazu
                 </span>
@@ -80,7 +80,7 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
             ) : (
               <img
                 alt={range.name}
-                className="h-40 w-40 rounded-md object-contain"
+                className="size-40 rounded-md object-contain"
                 height={160}
                 src={range.image}
                 width={160}
@@ -99,7 +99,7 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
               type="button"
               variant="destructive"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="size-4" />
               Usuń
             </Button>
           </div>

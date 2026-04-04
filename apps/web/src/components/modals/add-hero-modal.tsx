@@ -97,7 +97,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
       <ResponsiveDialogTrigger
         render={
-          <ResponsiveDialogContent className="sm:max-w-[425px]">
+          <ResponsiveDialogContent className="sm:max-w-106.25">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -207,7 +207,11 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                       <div className="grid gap-1.5">
                         <Label htmlFor={field.name}>Event</Label>
                         <Select
-                          onValueChange={field.handleChange}
+                          onValueChange={(value) => {
+                            if (value !== null) {
+                              field.handleChange(value);
+                            }
+                          }}
                           value={field.state.value}
                         >
                           <SelectTrigger id={field.name}>

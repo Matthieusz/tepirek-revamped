@@ -15,9 +15,9 @@ export const ComingSoon = ({ feature, description }: ComingSoonProps) => (
 
       {/* Floating sparkles */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <Sparkles className="absolute top-4 left-4 h-4 w-4 animate-bounce text-primary/30 [animation-delay:100ms]" />
-        <Sparkles className="absolute top-8 right-8 h-3 w-3 animate-bounce text-primary/20 [animation-delay:300ms]" />
-        <Sparkles className="absolute bottom-8 left-8 h-5 w-5 animate-bounce text-primary/25 [animation-delay:500ms]" />
+        <Sparkles className="absolute top-4 left-4 size-4 animate-bounce text-primary/30 [animation-delay:100ms]" />
+        <Sparkles className="absolute top-8 right-8 size-3 animate-bounce text-primary/20 [animation-delay:300ms]" />
+        <Sparkles className="absolute bottom-8 left-8 size-5 animate-bounce text-primary/25 [animation-delay:500ms]" />
       </div>
 
       <CardHeader className="relative z-10">
@@ -33,7 +33,7 @@ export const ComingSoon = ({ feature, description }: ComingSoonProps) => (
         </p>
 
         <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs">
-          <Clock className="h-3 w-3" />
+          <Clock className="size-3" />
           <span>W przygotowaniu</span>
         </div>
 
