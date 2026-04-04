@@ -20,8 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { isAdmin } from "@/lib/auth-guard";
 import { getEventIcon } from "@/lib/constants";
-import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/events/bets/add")({
@@ -50,7 +50,6 @@ const handleUserToggle = (userId: string, currentUserIds: string[]) => {
   return [...currentUserIds, userId];
 };
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [selectedEventId, setSelectedEventId] = useState("");

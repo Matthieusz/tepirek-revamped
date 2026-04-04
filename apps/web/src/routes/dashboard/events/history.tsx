@@ -41,18 +41,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { isAdmin } from "@/lib/auth-guard";
 import { getEventIcon } from "@/lib/constants";
-import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
-/* oxlint-disable promise/prefer-await-to-then, promise/valid-params -- Zod .catch() is not Promise.catch() */
+/**/
 const searchSchema = z.object({
   // oxlint-disable-next-line unicorn/no-useless-undefined
   eventId: z.string().optional().catch(undefined),
   // oxlint-disable-next-line unicorn/no-useless-undefined
   heroId: z.string().optional().catch(undefined),
 });
-/* oxlint-enable promise/prefer-await-to-then, promise/valid-params */
 
 export const Route = createFileRoute("/dashboard/events/history")({
   component: RouteComponent,
@@ -79,7 +78,7 @@ const formatDate = (date: Date) =>
     year: "numeric",
   });
 
-// oxlint-disable-next-line func-style, complexity
+// oxlint-disable-next-line  complexity
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const { eventId, heroId } = Route.useSearch();
@@ -341,11 +340,10 @@ function RouteComponent() {
             // oxlint-disable-next-line @typescript-eslint/no-misused-promises
             onValueChange={async (value) =>
               navigate({
-                search: (prev) => ({
-                  ...prev,
+                search: {
                   eventId: value === "all" ? undefined : value,
                   heroId: undefined,
-                }),
+                },
               })
             }
             value={selectedEventId}
@@ -384,10 +382,10 @@ function RouteComponent() {
             // oxlint-disable-next-line @typescript-eslint/no-misused-promises
             onValueChange={async (value) =>
               navigate({
-                search: (prev) => ({
-                  ...prev,
+                search: {
+                  eventId: selectedEventId === "all" ? undefined : selectedEventId,
                   heroId: value === "all" ? undefined : value,
-                }),
+                },
               })
             }
             value={selectedEventId === "all" ? "" : selectedHeroId}

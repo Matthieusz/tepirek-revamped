@@ -8,7 +8,7 @@ import { PlayerTable } from "@/components/players-table/player-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { TableSkeleton } from "@/components/ui/skeleton";
-import { isAdmin } from "@/lib/utils";
+import { isAdmin } from "@/lib/auth-guard";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/player-list")({
@@ -18,7 +18,6 @@ export const Route = createFileRoute("/dashboard/player-list")({
   },
 });
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [searchQuery, setSearchQuery] = useState("");

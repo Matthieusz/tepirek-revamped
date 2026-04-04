@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { isAdmin } from "@/lib/utils";
+import { isAdmin } from "@/lib/auth-guard";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/events/heroes")({
@@ -41,7 +41,6 @@ type HeroToDelete = {
   name: string;
 } | null;
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [heroToDelete, setHeroToDelete] = useState<HeroToDelete>(null);

@@ -240,7 +240,7 @@ function RouteComponent() {
                     <Select
                       onValueChange={(val) => {
                         // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-                        field.handleChange(val as Rarity);
+                        field.handleChange(!val as Rarity);
                       }}
                       value={field.state.value}
                     >

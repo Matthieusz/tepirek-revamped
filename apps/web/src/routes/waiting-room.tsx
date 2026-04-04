@@ -24,7 +24,6 @@ export const Route = createFileRoute("/waiting-room")({
   component: RouteComponent,
 });
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const router = useRouter();
   const navigate = Route.useNavigate();

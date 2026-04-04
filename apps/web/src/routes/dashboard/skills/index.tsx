@@ -7,7 +7,7 @@ import { AddRangeModal } from "@/components/modals/add-range-modal";
 import { RangeCard } from "@/components/skills/range-card";
 import { Button } from "@/components/ui/button";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
-import { isAdmin } from "@/lib/utils";
+import { isAdmin } from "@/lib/auth-guard";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/skills/")({
@@ -17,7 +17,6 @@ export const Route = createFileRoute("/dashboard/skills/")({
   },
 });
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const { data: ranges, isPending } = useQuery(

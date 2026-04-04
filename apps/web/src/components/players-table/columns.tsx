@@ -116,12 +116,14 @@ const ActionCell = ({ player }: { player: Player }) => {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="icon" type="button" variant="ghost">
-            <MoreHorizontal className="size-4" />
-            <span className="sr-only">Otwórz akcje</span>
-          </Button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button size="icon" type="button" variant="ghost">
+              <MoreHorizontal className="size-4" />
+              <span className="sr-only">Otwórz akcje</span>
+            </Button>
+          }
+        />
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Akcje</DropdownMenuLabel>
           <DropdownMenuItem

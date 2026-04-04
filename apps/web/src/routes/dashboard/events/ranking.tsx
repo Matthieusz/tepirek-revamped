@@ -21,13 +21,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { isAdmin } from "@/lib/auth-guard";
 import { getEventIcon } from "@/lib/constants";
-import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 const routeApi = getRouteApi("/dashboard");
 
-/* oxlint-disable promise/prefer-await-to-then, promise/valid-params -- Zod .catch() is not Promise.catch() */
+/**/
 const searchSchema = z.object({
   // oxlint-disable-next-line unicorn/no-useless-undefined
   eventId: z.string().optional().catch(undefined),
@@ -36,7 +36,6 @@ const searchSchema = z.object({
   // oxlint-disable-next-line unicorn/no-useless-undefined
   sortBy: z.enum(["points", "bets", "gold"]).optional().catch(undefined),
 });
-/* oxlint-enable promise/prefer-await-to-then, promise/valid-params */
 
 const sortRanking = (
   ranking: RankingItem[] | undefined,
@@ -95,7 +94,7 @@ export const Route = createFileRoute("/dashboard/events/ranking")({
   validateSearch: searchSchema,
 });
 
-// oxlint-disable-next-line func-style
+//
 function RouteComponent() {
   const { session } = routeApi.useRouteContext();
   const { eventId, heroId, sortBy } = Route.useSearch();

@@ -28,7 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getEventIcon } from "@/lib/constants";
-import { isAdmin } from "@/lib/utils";
+import { isAdmin } from "@/lib/auth-guard";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/events/list")({
@@ -45,7 +45,6 @@ type EventAction = {
   active?: boolean;
 } | null;
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [eventAction, setEventAction] = useState<EventAction>(null);

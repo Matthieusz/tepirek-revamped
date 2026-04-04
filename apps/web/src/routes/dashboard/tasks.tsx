@@ -29,7 +29,6 @@ export const Route = createFileRoute("/dashboard/tasks")({
   },
 });
 
-//
 function TasksRoute() {
   const { session } = Route.useRouteContext();
   const [newTodoText, setNewTodoText] = useState("");

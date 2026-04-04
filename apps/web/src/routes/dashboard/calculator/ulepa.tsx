@@ -163,7 +163,6 @@ export const Route = createFileRoute("/dashboard/calculator/ulepa")({
   },
 });
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const [result, setResult] = useState<{
     differentialCosts: number[];
@@ -298,8 +297,7 @@ function RouteComponent() {
                     <Label htmlFor="itemRarity">Rzadkość przedmiotu</Label>
                     <Select
                       onValueChange={(val) => {
-                        // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-                        field.handleChange(val as Rarity);
+                        field.handleChange(val!);
                       }}
                       value={field.state.value}
                     >

@@ -21,18 +21,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
+import { isAdmin } from "@/lib/auth-guard";
 import { getEventIcon } from "@/lib/constants";
-import { isAdmin } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 const routeApi = getRouteApi("/dashboard");
 
-/* oxlint-disable promise/prefer-await-to-then, promise/valid-params -- Zod .catch() is not Promise.catch() */
 const searchSchema = z.object({
   // oxlint-disable-next-line unicorn/no-useless-undefined
   eventId: z.string().optional().catch(undefined),
 });
-/* oxlint-enable promise/prefer-await-to-then, promise/valid-params */
 
 export const Route = createFileRoute("/dashboard/events/vault")({
   component: RouteComponent,
@@ -42,7 +40,6 @@ export const Route = createFileRoute("/dashboard/events/vault")({
   validateSearch: searchSchema,
 });
 
-// oxlint-disable-next-line func-style, complexity
 function RouteComponent() {
   const { session } = routeApi.useRouteContext();
   const { eventId: urlEventId } = Route.useSearch();
@@ -334,7 +331,7 @@ function RouteComponent() {
                       disabled={toggleMutation.isPending}
                       onCheckedChange={(checked) => {
                         toggleMutation.mutate({
-                          paidOut: checked === true,
+                          paidOut: checked,
                           userId: player.userId,
                         });
                       }}

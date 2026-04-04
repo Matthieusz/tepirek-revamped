@@ -150,7 +150,6 @@ export const Route = createFileRoute("/dashboard/calculator/list")({
   },
 });
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const [mode, setMode] = useState<"single" | "group">("single");
 

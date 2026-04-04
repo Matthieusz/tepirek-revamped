@@ -26,7 +26,8 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CardGridSkeleton } from "@/components/ui/skeleton";
-import { formatDateTime, isAdmin } from "@/lib/utils";
+import { isAdmin } from "@/lib/auth-guard";
+import { formatDateTime } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/")({
@@ -41,7 +42,6 @@ type AnnouncementToDelete = {
   title: string;
 } | null;
 
-// oxlint-disable-next-line func-style
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const [announcementToDelete, setAnnouncementToDelete] =

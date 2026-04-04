@@ -11,7 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatDate, isAdmin } from "@/lib/utils";
+import { isAdmin } from "@/lib/auth-guard";
+import { formatDate } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/profile")({
   component: RouteComponent,
