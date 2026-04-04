@@ -53,60 +53,63 @@ export const NavMain = ({
 
           return (
             <Collapsible
-              asChild
+              render={
+                <SidebarMenuItem>
+                  <CollapsibleTrigger
+                    render={
+                      <SidebarMenuButton
+                        className={cn(
+                          "transition-colors",
+                          item.disabled === true &&
+                            "cursor-not-allowed opacity-50",
+                          isGroupActive && "bg-accent font-medium"
+                        )}
+                        tooltip={item.title}
+                      >
+                        {item.icon && <item.icon className="size-4" />}
+                        <span>{item.title}</span>
+                        <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      </SidebarMenuButton>
+                    }
+                  />
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {item.items?.map((subItem) => {
+                        const isActive = matchRoute({
+                          fuzzy: true,
+                          to: subItem.url,
+                        });
+
+                        return (
+                          <SidebarMenuSubItem key={subItem.title}>
+                            <SidebarMenuSubButton
+                              render={
+                                <Link
+                                  className={cn(
+                                    "transition-colors",
+                                    subItem.disabled === true &&
+                                      "cursor-not-allowed opacity-50",
+                                    isActive !== false && "text-primary"
+                                  )}
+                                  disabled={subItem.disabled === true}
+                                  to={subItem.url}
+                                >
+                                  {subItem.title}
+                                </Link>
+                              }
+                              isActive={isActive !== false}
+                            />
+                          </SidebarMenuSubItem>
+                        );
+                      })}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              }
               className="group/collapsible"
               defaultOpen={item.isActive ?? isGroupActive}
               key={item.title}
-            >
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton
-                    className={cn(
-                      "transition-colors",
-                      item.disabled === true && "cursor-not-allowed opacity-50",
-                      isGroupActive && "bg-accent font-medium"
-                    )}
-                    tooltip={item.title}
-                  >
-                    {item.icon && <item.icon className="size-4" />}
-                    <span>{item.title}</span>
-                    <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {item.items?.map((subItem) => {
-                      const isActive = matchRoute({
-                        fuzzy: true,
-                        to: subItem.url,
-                      });
-
-                      return (
-                        <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={isActive !== false}
-                          >
-                            <Link
-                              className={cn(
-                                "transition-colors",
-                                subItem.disabled === true &&
-                                  "cursor-not-allowed opacity-50",
-                                isActive !== false && "text-primary"
-                              )}
-                              disabled={subItem.disabled === true}
-                              to={subItem.url}
-                            >
-                              {subItem.title}
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      );
-                    })}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
+            />
           );
         })}
       </SidebarMenu>

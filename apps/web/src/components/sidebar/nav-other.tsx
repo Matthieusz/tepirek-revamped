@@ -43,19 +43,19 @@ export const NavOther = ({
                 </SidebarMenuButton>
               ) : (
                 <SidebarMenuButton
-                  asChild
+                  render={
+                    <Link to={item.url}>
+                      <item.icon className="size-4" />
+                      <span>{item.name}</span>
+                    </Link>
+                  }
                   className={cn(
                     "transition-colors",
                     isActive !== false && "bg-accent font-medium"
                   )}
                   isActive={isActive !== false}
                   tooltip={item.name}
-                >
-                  <Link to={item.url}>
-                    <item.icon className="size-4" />
-                    <span>{item.name}</span>
-                  </Link>
-                </SidebarMenuButton>
+                />
               )}
             </SidebarMenuItem>
           );
