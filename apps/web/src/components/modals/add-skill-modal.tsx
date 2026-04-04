@@ -95,138 +95,149 @@ export const AddSkillModal = ({
 
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
-      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-[425px]">
-        <form
-          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-          onSubmit={async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            await form.handleSubmit();
-          }}
-        >
-          <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>
-              Dodaj zestaw umiejętności
-            </ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>
-              Utwórz nowy zestaw umiejętności w tym przedziale.
-            </ResponsiveDialogDescription>
-          </ResponsiveDialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <form.Field name="link">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Link</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="https://margoworld.pl/tools/skills#AyKaZmAA/iA="
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-            <div className="grid gap-2">
-              <form.Field name="name">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Nazwa</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="Wpisz nazwę zestawu umiejętności"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-            <div className="grid grid-cols-2">
-              <div className="grid gap-2">
-                <form.Field name="professionId">
-                  {(field) => (
-                    <div className="grid gap-1.5">
-                      <Label htmlFor={field.name}>Profesja</Label>
-                      <Select
-                        onValueChange={field.handleChange}
-                        value={field.state.value}
-                      >
-                        <SelectTrigger id={field.name}>
-                          <SelectValue placeholder="Wybierz profesję" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {professions.data?.map((p) => (
-                            <SelectItem key={p.id} value={p.id.toString()}>
-                              {p.name}
-                            </SelectItem>
+      <ResponsiveDialogTrigger
+        render={
+          <ResponsiveDialogContent className="sm:max-w-106.25">
+            <form
+              // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+              onSubmit={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                await form.handleSubmit();
+              }}
+            >
+              <ResponsiveDialogHeader>
+                <ResponsiveDialogTitle>
+                  Dodaj zestaw umiejętności
+                </ResponsiveDialogTitle>
+                <ResponsiveDialogDescription>
+                  Utwórz nowy zestaw umiejętności w tym przedziale.
+                </ResponsiveDialogDescription>
+              </ResponsiveDialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <form.Field name="link">
+                    {(field) => (
+                      <div className="grid gap-1.5">
+                        <Label htmlFor={field.name}>Link</Label>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => {
+                            field.handleChange(e.target.value);
+                          }}
+                          placeholder="https://margoworld.pl/tools/skills#AyKaZmAA/iA="
+                          value={field.state.value}
+                        />
+                        {field.state.meta.errors.map((error) => (
+                          <p
+                            className="text-red-500 text-sm"
+                            key={error?.message}
+                          >
+                            {error?.message}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </form.Field>
+                </div>
+                <div className="grid gap-2">
+                  <form.Field name="name">
+                    {(field) => (
+                      <div className="grid gap-1.5">
+                        <Label htmlFor={field.name}>Nazwa</Label>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => {
+                            field.handleChange(e.target.value);
+                          }}
+                          placeholder="Wpisz nazwę zestawu umiejętności"
+                          value={field.state.value}
+                        />
+                        {field.state.meta.errors.map((error) => (
+                          <p
+                            className="text-red-500 text-sm"
+                            key={error?.message}
+                          >
+                            {error?.message}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </form.Field>
+                </div>
+                <div className="grid grid-cols-2">
+                  <div className="grid gap-2">
+                    <form.Field name="professionId">
+                      {(field) => (
+                        <div className="grid gap-1.5">
+                          <Label htmlFor={field.name}>Profesja</Label>
+                          <Select
+                            onValueChange={field.handleChange}
+                            value={field.state.value}
+                          >
+                            <SelectTrigger id={field.name}>
+                              <SelectValue placeholder="Wybierz profesję" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {professions.data?.map((p) => (
+                                <SelectItem key={p.id} value={p.id.toString()}>
+                                  {p.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {field.state.meta.errors.map((error) => (
+                            <p
+                              className="text-red-500 text-sm"
+                              key={error?.message}
+                            >
+                              {error?.message}
+                            </p>
                           ))}
-                        </SelectContent>
-                      </Select>
-                      {field.state.meta.errors.map((error) => (
-                        <p
-                          className="text-red-500 text-sm"
-                          key={error?.message}
-                        >
-                          {error?.message}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                </form.Field>
+                        </div>
+                      )}
+                    </form.Field>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <form.Field name="mastery">
+                      {(field) => (
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={field.state.value}
+                            id={field.name}
+                            onCheckedChange={(val) => {
+                              field.handleChange(Boolean(val));
+                            }}
+                          />
+                          <Label htmlFor={field.name}>Mistrzostwo?</Label>
+                        </div>
+                      )}
+                    </form.Field>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <form.Field name="mastery">
-                  {(field) => (
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        checked={field.state.value}
-                        id={field.name}
-                        onCheckedChange={(val) => {
-                          field.handleChange(Boolean(val));
-                        }}
-                      />
-                      <Label htmlFor={field.name}>Mistrzostwo?</Label>
-                    </div>
+              <ResponsiveDialogFooter>
+                <form.Subscribe>
+                  {(state) => (
+                    <Button
+                      disabled={!state.canSubmit || state.isSubmitting}
+                      type="submit"
+                    >
+                      {state.isSubmitting ? "Tworzenie..." : "Utwórz zestaw"}
+                    </Button>
                   )}
-                </form.Field>
-              </div>
-            </div>
-          </div>
-          <ResponsiveDialogFooter>
-            <form.Subscribe>
-              {(state) => (
-                <Button
-                  disabled={!state.canSubmit || state.isSubmitting}
-                  type="submit"
-                >
-                  {state.isSubmitting ? "Tworzenie..." : "Utwórz zestaw"}
-                </Button>
-              )}
-            </form.Subscribe>
-          </ResponsiveDialogFooter>
-        </form>
-      </ResponsiveDialogContent>
+                </form.Subscribe>
+              </ResponsiveDialogFooter>
+            </form>
+          </ResponsiveDialogContent>
+        }
+      >
+        {trigger}
+      </ResponsiveDialogTrigger>
     </ResponsiveDialog>
   );
 };

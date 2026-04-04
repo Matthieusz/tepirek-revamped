@@ -112,159 +112,172 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
 
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
-      <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-[425px]">
-        <form
-          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-          onSubmit={async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            await form.handleSubmit();
-          }}
-        >
-          <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>Dodaj nowy event</ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>
-              Utwórz nowy event z nazwą i datą końcową.
-            </ResponsiveDialogDescription>
-          </ResponsiveDialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <form.Field name="name">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Nazwa eventu</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="Wpisz nazwę eventu"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-
-            {/* Icon Selection */}
-            <div className="grid gap-2">
-              <Label>Ikona eventu</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {EVENT_ICONS.map((item) => {
-                  const IconComponent = item.icon;
-                  return (
-                    <button
-                      className={cn(
-                        "flex flex-col items-center gap-1 rounded-lg border p-3 transition-all hover:bg-muted/50",
-                        selectedIcon === item.id
-                          ? "border-primary bg-primary/5 ring-2 ring-primary"
-                          : "border-border"
-                      )}
-                      key={item.id}
-                      onClick={() => {
-                        setSelectedIcon(item.id);
-                      }}
-                      type="button"
-                    >
-                      <IconComponent
-                        className="h-5 w-5"
-                        style={{ color: selectedColor }}
-                      />
-                      <span className="text-xs">{item.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Color Selection */}
-            <div className="grid gap-2">
-              <Label>Kolor przewodni</Label>
-              <div className="flex flex-wrap gap-2">
-                {EVENT_COLORS.map((color) => (
-                  <button
-                    className={cn(
-                      "h-8 w-8 rounded-full border-2 transition-all",
-                      selectedColor === color.id
-                        ? "scale-110 border-foreground"
-                        : "border-transparent"
-                    )}
-                    key={color.id}
-                    onClick={() => {
-                      setSelectedColor(color.id);
-                    }}
-                    style={{ backgroundColor: color.id }}
-                    title={color.name}
-                    type="button"
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <form.Field name="endTime">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="date">Data końcowa</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          className={cn(
-                            "justify-start text-left font-normal",
-                            !date && "text-muted-foreground"
-                          )}
-                          id="date"
-                          variant="outline"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {date ? format(date, "PPP") : "Wybierz datę"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          onSelect={(selectedDate) => {
-                            setDate(selectedDate);
-                            field.handleChange(
-                              selectedDate?.toISOString() ?? ""
-                            );
+      <ResponsiveDialogTrigger
+        render={
+          <ResponsiveDialogContent className="sm:max-w-[425px]">
+            <form
+              // oxlint-disable-next-line @typescript-eslint/no-misused-promises
+              onSubmit={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                await form.handleSubmit();
+              }}
+            >
+              <ResponsiveDialogHeader>
+                <ResponsiveDialogTitle>Dodaj nowy event</ResponsiveDialogTitle>
+                <ResponsiveDialogDescription>
+                  Utwórz nowy event z nazwą i datą końcową.
+                </ResponsiveDialogDescription>
+              </ResponsiveDialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <form.Field name="name">
+                    {(field) => (
+                      <div className="grid gap-1.5">
+                        <Label htmlFor={field.name}>Nazwa eventu</Label>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => {
+                            field.handleChange(e.target.value);
                           }}
-                          selected={date}
+                          placeholder="Wpisz nazwę eventu"
+                          value={field.state.value}
                         />
-                      </PopoverContent>
-                    </Popover>
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
+                        {field.state.meta.errors.map((error) => (
+                          <p
+                            className="text-red-500 text-sm"
+                            key={error?.message}
+                          >
+                            {error?.message}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </form.Field>
+                </div>
+
+                {/* Icon Selection */}
+                <div className="grid gap-2">
+                  <Label>Ikona eventu</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {EVENT_ICONS.map((item) => {
+                      const IconComponent = item.icon;
+                      return (
+                        <button
+                          className={cn(
+                            "flex flex-col items-center gap-1 rounded-lg border p-3 transition-all hover:bg-muted/50",
+                            selectedIcon === item.id
+                              ? "border-primary bg-primary/5 ring-2 ring-primary"
+                              : "border-border"
+                          )}
+                          key={item.id}
+                          onClick={() => {
+                            setSelectedIcon(item.id);
+                          }}
+                          type="button"
+                        >
+                          <IconComponent
+                            className="h-5 w-5"
+                            style={{ color: selectedColor }}
+                          />
+                          <span className="text-xs">{item.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Color Selection */}
+                <div className="grid gap-2">
+                  <Label>Kolor przewodni</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {EVENT_COLORS.map((color) => (
+                      <button
+                        className={cn(
+                          "h-8 w-8 rounded-full border-2 transition-all",
+                          selectedColor === color.id
+                            ? "scale-110 border-foreground"
+                            : "border-transparent"
+                        )}
+                        key={color.id}
+                        onClick={() => {
+                          setSelectedColor(color.id);
+                        }}
+                        style={{ backgroundColor: color.id }}
+                        title={color.name}
+                        type="button"
+                      />
                     ))}
                   </div>
-                )}
-              </form.Field>
-            </div>
-          </div>
-          <ResponsiveDialogFooter>
-            <form.Subscribe>
-              {(state) => (
-                <Button
-                  disabled={!state.canSubmit || state.isSubmitting}
-                  type="submit"
-                >
-                  {state.isSubmitting ? "Tworzenie..." : "Utwórz event"}
-                </Button>
-              )}
-            </form.Subscribe>
-          </ResponsiveDialogFooter>
-        </form>
-      </ResponsiveDialogContent>
+                </div>
+
+                <div className="grid gap-2">
+                  <form.Field name="endTime">
+                    {(field) => (
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="date">Data końcowa</Label>
+                        <Popover>
+                          <PopoverTrigger
+                            render={
+                              <Button
+                                className={cn(
+                                  "justify-start text-left font-normal",
+                                  !date && "text-muted-foreground"
+                                )}
+                                id="date"
+                                variant="outline"
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {date ? format(date, "PPP") : "Wybierz datę"}
+                              </Button>
+                            }
+                          />
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              onSelect={(selectedDate) => {
+                                setDate(selectedDate);
+                                field.handleChange(
+                                  selectedDate?.toISOString() ?? ""
+                                );
+                              }}
+                              selected={date}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        {field.state.meta.errors.map((error) => (
+                          <p
+                            className="text-red-500 text-sm"
+                            key={error?.message}
+                          >
+                            {error?.message}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </form.Field>
+                </div>
+              </div>
+              <ResponsiveDialogFooter>
+                <form.Subscribe>
+                  {(state) => (
+                    <Button
+                      disabled={!state.canSubmit || state.isSubmitting}
+                      type="submit"
+                    >
+                      {state.isSubmitting ? "Tworzenie..." : "Utwórz event"}
+                    </Button>
+                  )}
+                </form.Subscribe>
+              </ResponsiveDialogFooter>
+            </form>
+          </ResponsiveDialogContent>
+        }
+      >
+        {trigger}
+      </ResponsiveDialogTrigger>
     </ResponsiveDialog>
   );
 };
