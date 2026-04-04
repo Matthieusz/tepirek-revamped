@@ -148,6 +148,7 @@ function TasksRoute() {
             <CardContent>
               <form className="flex gap-2" onSubmit={handleAddTodo}>
                 <Input
+                  aria-label="Treść nowego zadania"
                   className="flex-1"
                   disabled={createMutation.isPending}
                   onChange={(e) => {

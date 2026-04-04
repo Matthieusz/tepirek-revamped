@@ -466,6 +466,7 @@ function RouteComponent() {
                     <div className="relative">
                       <Search className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground" />
                       <Input
+                        aria-label="Szukaj gracza"
                         className="pl-9"
                         onChange={(e) => {
                           setSearchQuery(e.target.value);
