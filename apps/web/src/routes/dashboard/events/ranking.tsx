@@ -423,6 +423,10 @@ function RouteComponent() {
 
         {/* Sort Buttons with Gold Distribution */}
         <div className="sm: flex items-center justify-center gap-1 sm:justify-start">
+          {/* Stats Popover */}
+          {selectedHeroId !== "all" && (
+            <StatsPopover pointWorth={pointWorth} totalBets={totalBets} />
+          )}
           <Button
             onClick={() => {
               navigateWithPersist({ sortBy: undefined });
@@ -451,11 +455,6 @@ function RouteComponent() {
           >
             Złoto
           </Button>
-
-          {/* Stats Popover */}
-          {selectedHeroId !== "all" && (
-            <StatsPopover pointWorth={pointWorth} totalBets={totalBets} />
-          )}
 
           {/* Gold Distribution Button - Admin Only */}
           {isAdminUser && (
