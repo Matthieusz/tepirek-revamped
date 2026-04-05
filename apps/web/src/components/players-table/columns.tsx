@@ -6,6 +6,7 @@ import {
   Pencil,
   Shield,
   Trash2,
+  User,
   UserX,
 } from "lucide-react";
 import { useState } from "react";
@@ -260,7 +261,9 @@ const baseColumns: ColumnDef<Player>[] = [
           alt={row.getValue("name")}
           src={row.getValue("image") ?? undefined}
         />
-        <AvatarFallback>{row.getValue("name")}</AvatarFallback>
+        <AvatarFallback>
+          <User className="size-5" />
+        </AvatarFallback>
       </Avatar>
     ),
     header: "Avatar",
