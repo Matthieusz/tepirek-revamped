@@ -1,6 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import {
+  CheckCircle2,
+  MoreHorizontal,
+  Pencil,
+  Shield,
+  Trash2,
+  UserX,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -29,7 +36,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -124,7 +130,7 @@ const ActionCell = ({ player }: { player: Player }) => {
             </Button>
           }
         />
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="min-w-48">
           <DropdownMenuLabel>Akcje</DropdownMenuLabel>
           <DropdownMenuItem
             disabled={toggleVerified.isPending}
@@ -132,6 +138,11 @@ const ActionCell = ({ player }: { player: Player }) => {
               toggleVerified.mutate();
             }}
           >
+            {player.verified ? (
+              <UserX className="mr-2 size-4" />
+            ) : (
+              <CheckCircle2 className="mr-2 size-4" />
+            )}
             {player.verified ? "Odbierz weryfikację" : "Zweryfikuj"}
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -140,9 +151,9 @@ const ActionCell = ({ player }: { player: Player }) => {
               changeRole.mutate();
             }}
           >
+            <Shield className="mr-2 size-4" />
             {player.role === "admin" ? "Ustaw jako user" : "Ustaw jako admin"}
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => {
               setShowRenameDialog(true);
