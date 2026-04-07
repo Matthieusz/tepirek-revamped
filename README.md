@@ -61,15 +61,15 @@ tepirek-revamped/
 
 ### Tech choices
 
-| Layer | What we use | Why |
-|-------|-------------|-----|
-| **Frontend** | TanStack Start + React 19 | SSR, file-based routing, great DX |
-| **Backend** | Hono + Bun | Lightweight, fast, simple |
-| **API** | oRPC | End-to-end typesafety without codegen |
-| **Database** | PostgreSQL + Drizzle ORM | Type-safe queries, no ORM bloat |
-| **Auth** | Better Auth | Discord OAuth + email, zero fuss |
-| **UI** | shadcn/ui + Tailwind v4 | Accessible, customizable, no lock-in |
-| **Linting** | Ultracite (Oxlint + Oxfmt) | Fast, strict, zero-config |
+| Layer        | What we use                | Why                                   |
+| ------------ | -------------------------- | ------------------------------------- |
+| **Frontend** | TanStack Start + React 19  | SSR, file-based routing, great DX     |
+| **Backend**  | Hono + Bun                 | Lightweight, fast, simple             |
+| **API**      | oRPC                       | End-to-end typesafety without codegen |
+| **Database** | PostgreSQL + Drizzle ORM   | Type-safe queries, no ORM bloat       |
+| **Auth**     | Better Auth                | Discord OAuth + email, zero fuss      |
+| **UI**       | shadcn/ui + Tailwind v4    | Accessible, customizable, no lock-in  |
+| **Linting**  | Ultracite (Oxlint + Oxfmt) | Fast, strict, zero-config             |
 
 ---
 
@@ -142,26 +142,26 @@ pnpm db:start && pnpm db:push && pnpm dev
 
 ## 📜 Commands
 
-| Command | What it does |
-|---------|-------------|
-| `pnpm dev` | Start everything in dev mode |
-| `pnpm dev:web` | Frontend only |
-| `pnpm dev:server` | Backend only |
-| `pnpm build` | Build everything for production |
-| `pnpm check` | Run Ultracite (lint + format check) |
-| `pnpm fix` | Auto-fix lint and format issues |
-| `pnpm check-types` | TypeScript type checking |
+| Command            | What it does                        |
+| ------------------ | ----------------------------------- |
+| `pnpm dev`         | Start everything in dev mode        |
+| `pnpm dev:web`     | Frontend only                       |
+| `pnpm dev:server`  | Backend only                        |
+| `pnpm build`       | Build everything for production     |
+| `pnpm check`       | Run Ultracite (lint + format check) |
+| `pnpm fix`         | Auto-fix lint and format issues     |
+| `pnpm check-types` | TypeScript type checking            |
 
 ### Database
 
-| Command | What it does |
-|---------|-------------|
-| `pnpm db:push` | Push schema changes |
-| `pnpm db:studio` | Open Drizzle Studio (database GUI) |
-| `pnpm db:generate` | Generate migrations |
-| `pnpm db:migrate` | Run migrations |
-| `pnpm db:start` | Start PostgreSQL (Docker) |
-| `pnpm db:stop` | Stop PostgreSQL |
+| Command            | What it does                       |
+| ------------------ | ---------------------------------- |
+| `pnpm db:push`     | Push schema changes                |
+| `pnpm db:studio`   | Open Drizzle Studio (database GUI) |
+| `pnpm db:generate` | Generate migrations                |
+| `pnpm db:migrate`  | Run migrations                     |
+| `pnpm db:start`    | Start PostgreSQL (Docker)          |
+| `pnpm db:stop`     | Stop PostgreSQL                    |
 
 ---
 
