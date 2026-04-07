@@ -9,6 +9,7 @@ import {
   CalendarDays,
   History,
   Loader2,
+  Pencil,
   Sword,
   Trash2,
   User,
@@ -19,6 +20,7 @@ import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { EditBetModal } from "@/components/modals/edit-bet-modal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -301,19 +303,36 @@ function RouteComponent() {
                     {calculatePointsPerMember(bet.memberCount)} pkt/os
                   </Badge>
                   {isAdminUser && (
-                    <Button
-                      onClick={() => {
-                        setBetToDelete({
-                          heroName: bet.heroName,
-                          id: bet.id,
-                        });
-                      }}
-                      size="icon"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                    <>
+                      <EditBetModal
+                        betId={bet.id}
+                        currentMembers={bet.members.map((m) => ({
+                          userId: m.userId,
+                          userName: m.userName,
+                          userImage: m.userImage,
+                        }))}
+                        heroName={bet.heroName}
+                        memberCount={bet.memberCount}
+                        trigger={
+                          <Button size="icon" type="button" variant="ghost">
+                            <Pencil className="size-4" />
+                          </Button>
+                        }
+                      />
+                      <Button
+                        onClick={() => {
+                          setBetToDelete({
+                            heroName: bet.heroName,
+                            id: bet.id,
+                          });
+                        }}
+                        size="icon"
+                        type="button"
+                        variant="ghost"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>
