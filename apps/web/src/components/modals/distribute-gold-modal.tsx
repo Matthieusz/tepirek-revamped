@@ -49,6 +49,64 @@ const parseGoldAmount = (value: string): number => {
   return Number.isNaN(num) ? 0 : num;
 };
 
+const getEventSelectDisplay = ({
+  eventId,
+  events,
+}: {
+  eventId: string;
+  events:
+    | Array<{
+        color: string | null;
+        icon: string;
+        id: number;
+        name: string;
+      }>
+    | undefined;
+}) => {
+  if (eventId === "all") {
+    return "Wszystkie eventy";
+  }
+
+  const selectedEvent = events?.find((e) => e.id.toString() === eventId);
+
+  if (!selectedEvent) {
+    return "Wybierz event";
+  }
+
+  const IconComponent = getEventIcon(selectedEvent.icon);
+  return (
+    <span className="flex items-center gap-2">
+      <IconComponent
+        className="size-4"
+        style={{ color: selectedEvent.color ?? undefined }}
+      />
+      {selectedEvent.name}
+    </span>
+  );
+};
+
+const getHeroSelectDisplay = ({
+  eventId,
+  heroId,
+  heroes,
+}: {
+  eventId: string;
+  heroId: string;
+  heroes: Array<{ id: number; name: string }> | undefined;
+}) => {
+  if (eventId === "all") {
+    return "Wybierz event";
+  }
+
+  if (heroId === "all") {
+    return "Wybierz herosa...";
+  }
+
+  const selectedHero = heroes?.find((h) => h.id.toString() === heroId);
+
+  return selectedHero?.name ?? "Wybierz herosa...";
+};
+
 const HeroStatsPreview = ({
   heroStats,
   isPending,
@@ -233,7 +291,9 @@ export const DistributeGoldModal = ({
                 value={eventId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Wybierz event" />
+                  <SelectValue>
+                    {getEventSelectDisplay({ eventId, events })}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Wszystkie eventy</SelectItem>
@@ -273,7 +333,13 @@ export const DistributeGoldModal = ({
                 value={heroId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Wybierz herosa" />
+                  <SelectValue>
+                    {getHeroSelectDisplay({
+                      eventId,
+                      heroId,
+                      heroes: filteredHeroes,
+                    })}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Wybierz herosa...</SelectItem>
