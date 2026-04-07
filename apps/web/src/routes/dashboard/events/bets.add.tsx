@@ -1,4 +1,5 @@
 import { useForm } from "@tanstack/react-form";
+import { useHotkey } from "@tanstack/react-hotkeys";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { CirclePlus, Copy, CopyX, Search, Sword, User } from "lucide-react";
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Kbd } from "@/components/ui/kbd";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -121,6 +123,19 @@ function RouteComponent() {
       }),
     },
   });
+
+  useHotkey(
+    "Enter",
+    async () => {
+      await form.handleSubmit();
+    },
+    {
+      meta: {
+        name: "Create Bet",
+        description: "Submit the bet creation form",
+      },
+    }
+  );
 
   // Filter heroes by selected event
   const filteredHeroes = heroes?.filter(
@@ -375,7 +390,7 @@ function RouteComponent() {
               <form.Subscribe>
                 {(state) => (
                   <Button
-                    className="w-full sm:w-auto"
+                    className="w-full sm:w-auto hover:bg-primary/80"
                     disabled={
                       !state.canSubmit ||
                       state.isSubmitting ||
@@ -392,8 +407,8 @@ function RouteComponent() {
                       </p>
                     ) : (
                       <p className="flex items-center gap-2">
-                        <CirclePlus className="size-4" />
                         Utwórz obstawienie
+                        <Kbd>Enter</Kbd>
                       </p>
                     )}
                   </Button>
