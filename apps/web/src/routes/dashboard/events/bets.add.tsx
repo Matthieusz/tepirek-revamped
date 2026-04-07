@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { useHotkey } from "@tanstack/react-hotkeys";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { CirclePlus, Copy, CopyX, Search, Sword, User } from "lucide-react";
+import { Copy, CopyX, Search, Sword, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
