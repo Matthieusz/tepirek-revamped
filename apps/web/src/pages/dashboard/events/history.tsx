@@ -63,7 +63,6 @@ interface HistoryPageProps {
   session: AuthSession;
 }
 
-// oxlint-disable-next-line complexity
 export default function HistoryPage({ session }: HistoryPageProps) {
   const { eventId, heroId } = useSearch({
     from: "/dashboard/events/history",

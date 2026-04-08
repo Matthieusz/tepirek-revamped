@@ -36,7 +36,7 @@ export default function SkillsIndexPage({ session }: SkillsIndexPageProps) {
           <div className="flex flex-wrap gap-2">
             <AddProfessionModal
               trigger={
-                <Button size="sm">
+                <Button>
                   <Plus className="size-4" />
                   <span className="hidden sm:inline">Dodaj profesję</span>
                   <span className="sm:hidden">Profesja</span>
@@ -45,7 +45,7 @@ export default function SkillsIndexPage({ session }: SkillsIndexPageProps) {
             />
             <AddRangeModal
               trigger={
-                <Button size="sm">
+                <Button>
                   <Plus className="size-4" />
                   <span className="hidden sm:inline">Dodaj przedział</span>
                   <span className="sm:hidden">Przedział</span>

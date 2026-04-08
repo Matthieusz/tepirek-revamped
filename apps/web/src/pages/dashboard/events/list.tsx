@@ -119,7 +119,7 @@ export default function EventsListPage({ session }: EventsListPageProps) {
         {isAdminUser && (
           <AddEventModal
             trigger={
-              <Button size="sm">
+              <Button>
                 <Plus className="size-4" />
                 Dodaj event
               </Button>

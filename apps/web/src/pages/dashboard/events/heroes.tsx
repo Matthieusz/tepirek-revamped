@@ -105,7 +105,7 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
             Zarządzaj herosami dostępnymi na eventach.
           </p>
         </div>
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-2">
           <Select
             onValueChange={(value) => {
               if (value !== null) {
@@ -123,17 +123,17 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
               <EventSelectItems events={events} />
             </SelectContent>
           </Select>
+          {isAdminUser && (
+            <AddHeroModal
+              trigger={
+                <Button>
+                  <Plus className="size-4" />
+                  Dodaj herosa
+                </Button>
+              }
+            />
+          )}
         </div>
-        {isAdminUser && (
-          <AddHeroModal
-            trigger={
-              <Button size="sm">
-                <Plus className="size-4" />
-                Dodaj herosa
-              </Button>
-            }
-          />
-        )}
       </div>
 
       <Card>

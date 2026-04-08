@@ -3,10 +3,10 @@ import {
   Axe,
   ChevronRight,
   Crosshair,
+  Footprints,
   Shield,
   Sparkles,
   Swords,
-  Target,
   Wand2,
 } from "lucide-react";
 
@@ -20,7 +20,7 @@ import type { AuthSession } from "@/types/route";
 
 const professions = [
   {
-    icon: Target,
+    icon: Footprints,
     name: "Tropiciel",
     to: "/dashboard/auctions/main/tracker",
   },
