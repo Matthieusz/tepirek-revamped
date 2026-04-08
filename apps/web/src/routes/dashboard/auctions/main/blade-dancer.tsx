@@ -1,43 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Swords } from "lucide-react";
 
-import { AuctionHeader } from "@/components/auction-header";
-import AuctionTable from "@/components/auction-table";
-import { Card, CardContent } from "@/components/ui/card";
-
-const PROFESSION = "blade-dancer";
-const TYPE = "main" as const;
+import { requireVerified } from "@/lib/route-helpers";
+import AuctionsMainBladeDancerPage from "@/pages/dashboard/auctions/main/blade-dancer";
 
 export const Route = createFileRoute("/dashboard/auctions/main/blade-dancer")({
-  component: RouteComponent,
+  beforeLoad: async () => {
+    const session = await requireVerified();
+    return { session };
+  },
+  component: function AuctionsMainBladeDancerRoute() {
+    const { session } = Route.useRouteContext();
+    return <AuctionsMainBladeDancerPage session={session} />;
+  },
   staticData: {
     crumb: "Tancerz Ostrzy",
   },
 });
-
-function RouteComponent() {
-  const { session } = Route.useRouteContext();
-
-  return (
-    <div className="mx-auto w-full max-w-6xl space-y-6">
-      <AuctionHeader
-        description="Licytacje broni głównych"
-        icon={Swords}
-        profession={PROFESSION}
-        title="Tancerz Ostrzy"
-        type={TYPE}
-      />
-
-      <Card>
-        <CardContent className="pt-6">
-          <AuctionTable
-            columns={["Fizyczna", "GR", "Trucizna"]}
-            currentUserId={session.user.id}
-            profession={PROFESSION}
-            type={TYPE}
-          />
-        </CardContent>
-      </Card>
-    </div>
-  );
-}

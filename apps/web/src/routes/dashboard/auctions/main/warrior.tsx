@@ -1,43 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Axe } from "lucide-react";
 
-import { AuctionHeader } from "@/components/auction-header";
-import AuctionTable from "@/components/auction-table";
-import { Card, CardContent } from "@/components/ui/card";
-
-const PROFESSION = "warrior";
-const TYPE = "main" as const;
+import { requireVerified } from "@/lib/route-helpers";
+import AuctionsMainWarriorPage from "@/pages/dashboard/auctions/main/warrior";
 
 export const Route = createFileRoute("/dashboard/auctions/main/warrior")({
-  component: RouteComponent,
+  beforeLoad: async () => {
+    const session = await requireVerified();
+    return { session };
+  },
+  component: function AuctionsMainWarriorRoute() {
+    const { session } = Route.useRouteContext();
+    return <AuctionsMainWarriorPage session={session} />;
+  },
   staticData: {
     crumb: "Wojownik",
   },
 });
-
-function RouteComponent() {
-  const { session } = Route.useRouteContext();
-
-  return (
-    <div className="mx-auto w-full max-w-6xl space-y-6">
-      <AuctionHeader
-        description="Licytacje broni głównych"
-        icon={Axe}
-        profession={PROFESSION}
-        title="Wojownik"
-        type={TYPE}
-      />
-
-      <Card>
-        <CardContent className="pt-6">
-          <AuctionTable
-            columns={["Fizyczna", "GR", "Dwureczna"]}
-            currentUserId={session.user.id}
-            profession={PROFESSION}
-            type={TYPE}
-          />
-        </CardContent>
-      </Card>
-    </div>
-  );
-}

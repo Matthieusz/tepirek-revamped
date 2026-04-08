@@ -1,100 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  Axe,
-  ChevronRight,
-  Crosshair,
-  Shield,
-  Sparkles,
-  Swords,
-  Target,
-  Wand2,
-} from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
 
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { requireVerified } from "@/lib/route-helpers";
+import AuctionsMainIndexPage from "@/pages/dashboard/auctions/main/index";
 
 export const Route = createFileRoute("/dashboard/auctions/main/")({
-  component: RouteComponent,
+  beforeLoad: async () => {
+    const session = await requireVerified();
+    return { session };
+  },
+  component: function AuctionsMainIndexRoute() {
+    const { session } = Route.useRouteContext();
+    return <AuctionsMainIndexPage session={session} />;
+  },
   staticData: {
     crumb: "Przegląd",
   },
 });
-
-const professions = [
-  {
-    icon: Target,
-    name: "Tropiciel",
-    to: "/dashboard/auctions/main/tracker",
-  },
-  {
-    icon: Shield,
-    name: "Paladyn",
-    to: "/dashboard/auctions/main/paladin",
-  },
-  {
-    icon: Wand2,
-    name: "Mag",
-    to: "/dashboard/auctions/main/mage",
-  },
-  {
-    icon: Crosshair,
-    name: "Łowca",
-    to: "/dashboard/auctions/main/hunter",
-  },
-  {
-    icon: Swords,
-    name: "Tancerz Ostrzy",
-    to: "/dashboard/auctions/main/blade-dancer",
-  },
-  {
-    icon: Axe,
-    name: "Wojownik",
-    to: "/dashboard/auctions/main/warrior",
-  },
-] as const;
-
-function RouteComponent() {
-  return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
-      {/* Header */}
-      <Card className="border-none bg-linear-to-r from-primary/10 to-primary/5">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-              <Sparkles className="size-5 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-2xl">
-                Licytacje broni głównych
-              </CardTitle>
-              <CardDescription>Wybierz klasę postaci</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
-      {/* Profession Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {professions.map(({ name, to, icon: Icon }) => (
-          <Link key={to} to={to}>
-            <Card className="group h-full transition-colors hover:border-primary/50 hover:bg-accent/50">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
-                    <Icon className="size-5 text-primary" />
-                  </div>
-                  <ChevronRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
-                </div>
-                <CardTitle className="text-lg">{name}</CardTitle>
-              </CardHeader>
-            </Card>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
