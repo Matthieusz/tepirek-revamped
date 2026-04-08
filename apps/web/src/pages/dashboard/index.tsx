@@ -92,7 +92,7 @@ export default function DashboardHomePage({ session }: DashboardHomePageProps) {
           {isAdminUser && (
             <AddAnnouncementModal
               trigger={
-                <Button size="sm">
+                <Button>
                   <Plus className="size-4" />
                   Dodaj ogłoszenie
                 </Button>
@@ -109,11 +109,6 @@ export default function DashboardHomePage({ session }: DashboardHomePageProps) {
               icon={Megaphone}
               message="Brak ogłoszeń do wyświetlenia"
             />
-            {isAdminUser && (
-              <p className="-mt-2 text-center text-muted-foreground text-sm">
-                Dodaj pierwsze ogłoszenie powyżej
-              </p>
-            )}
           </>
         )}
 
