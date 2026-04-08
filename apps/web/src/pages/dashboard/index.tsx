@@ -104,12 +104,10 @@ export default function DashboardHomePage({ session }: DashboardHomePageProps) {
         {isPending && <LoadingSpinner />}
 
         {!isPending && (!announcements || announcements.length === 0) && (
-          <>
-            <EmptyState
-              icon={Megaphone}
-              message="Brak ogłoszeń do wyświetlenia"
-            />
-          </>
+          <EmptyState
+            icon={Megaphone}
+            message="Brak ogłoszeń do wyświetlenia"
+          />
         )}
 
         {!isPending && announcements && announcements.length > 0 && (
