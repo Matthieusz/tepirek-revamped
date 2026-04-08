@@ -1,14 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ComingSoon } from "@/components/coming-soon";
+import { requireVerified } from "@/lib/route-helpers";
+import SettingsPage from "@/pages/dashboard/settings";
 
 export const Route = createFileRoute("/dashboard/settings")({
-  component: RouteComponent,
+  beforeLoad: async () => {
+    const session = await requireVerified();
+    return { session };
+  },
+  component: function SettingsRoute() {
+    const { session } = Route.useRouteContext();
+    return <SettingsPage session={session} />;
+  },
   staticData: {
     crumb: "Ustawienia",
   },
 });
-
-function RouteComponent() {
-  return <ComingSoon feature="Ustawienia" />;
-}

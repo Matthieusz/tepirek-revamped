@@ -1,12 +1,10 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+
+import { Layout } from "@/pages/dashboard/auctions/route";
 
 export const Route = createFileRoute("/dashboard/auctions")({
-  component: RouteComponent,
+  component: Layout,
   staticData: {
     crumb: "Licytacje",
   },
 });
-
-function RouteComponent() {
-  return <Outlet />;
-}

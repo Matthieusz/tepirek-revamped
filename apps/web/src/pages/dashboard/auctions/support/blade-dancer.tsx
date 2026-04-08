@@ -1,0 +1,40 @@
+import { Swords } from "lucide-react";
+
+import { AuctionHeader } from "@/components/auction-header";
+import AuctionTable from "@/components/auction-table";
+import { Card, CardContent } from "@/components/ui/card";
+import type { AuthSession } from "@/types/route";
+
+const PROFESSION = "blade-dancer";
+const TYPE = "support" as const;
+
+interface AuctionProfessionPageProps {
+  session: AuthSession;
+}
+
+export default function AuctionsSupportBladeDancerPage({
+  session,
+}: AuctionProfessionPageProps) {
+  return (
+    <div className="mx-auto w-full max-w-6xl space-y-6">
+      <AuctionHeader
+        description="Licytacje broni wsparcia"
+        icon={Swords}
+        profession={PROFESSION}
+        title="Tancerz Ostrzy"
+        type={TYPE}
+      />
+
+      <Card>
+        <CardContent className="pt-6">
+          <AuctionTable
+            columns={["Fizyczna", "GR", "Trucizna"]}
+            currentUserId={session.user.id}
+            profession={PROFESSION}
+            type={TYPE}
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
