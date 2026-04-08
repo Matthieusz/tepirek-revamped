@@ -1,10 +1,17 @@
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Coins } from "lucide-react";
+import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import {
+  EventSelectItems,
+  getEventSelectDisplay,
+  getHeroSelectDisplay,
+  HeroSelectItems,
+} from "@/components/events/select-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,11 +27,9 @@ import {
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getEventIcon } from "@/lib/constants";
 import { orpc } from "@/utils/orpc";
 
 interface HeroStats {
@@ -49,63 +54,35 @@ const parseGoldAmount = (value: string): number => {
   return Number.isNaN(num) ? 0 : num;
 };
 
-const getEventSelectDisplay = ({
-  eventId,
-  events,
-}: {
+const getModalEventSelectDisplay = (params: {
   eventId: string;
   events:
     | Array<{
         color: string | null;
+        endTime: Date;
         icon: string;
         id: number;
         name: string;
       }>
     | undefined;
-}) => {
-  if (eventId === "all") {
-    return "Wszystkie eventy";
-  }
+}): ReactNode =>
+  getEventSelectDisplay({
+    selectedEventId: params.eventId,
+    events: params.events,
+  });
 
-  const selectedEvent = events?.find((e) => e.id.toString() === eventId);
-
-  if (!selectedEvent) {
-    return "Wybierz event";
-  }
-
-  const IconComponent = getEventIcon(selectedEvent.icon);
-  return (
-    <span className="flex items-center gap-2">
-      <IconComponent
-        className="size-4"
-        style={{ color: selectedEvent.color ?? undefined }}
-      />
-      {selectedEvent.name}
-    </span>
-  );
-};
-
-const getHeroSelectDisplay = ({
-  eventId,
-  heroId,
-  heroes,
-}: {
+const getModalHeroSelectDisplay = (params: {
   eventId: string;
   heroId: string;
   heroes: Array<{ id: number; name: string }> | undefined;
-}) => {
-  if (eventId === "all") {
-    return "Wybierz event";
-  }
-
-  if (heroId === "all") {
-    return "Wybierz herosa...";
-  }
-
-  const selectedHero = heroes?.find((h) => h.id.toString() === heroId);
-
-  return selectedHero?.name ?? "Wybierz herosa...";
-};
+}): string =>
+  getHeroSelectDisplay({
+    selectedEventId: params.eventId,
+    selectedHeroId: params.heroId,
+    sortedHeroes: params.heroes,
+    allLabel: "Wybierz herosa...",
+    placeholder: "Wybierz herosa...",
+  });
 
 const HeroStatsPreview = ({
   heroStats,
@@ -183,7 +160,9 @@ export const DistributeGoldModal = ({
 
   const { data: events } = useQuery(orpc.event.getAll.queryOptions());
 
-  const { data: heroes } = useQuery(orpc.heroes.getAll.queryOptions());
+  const { data: heroes, isPending: heroesLoading } = useQuery(
+    orpc.heroes.getAll.queryOptions()
+  );
 
   const filteredHeroes = (
     eventId === "all"
@@ -292,31 +271,11 @@ export const DistributeGoldModal = ({
               >
                 <SelectTrigger>
                   <SelectValue>
-                    {getEventSelectDisplay({ eventId, events })}
+                    {getModalEventSelectDisplay({ eventId, events })}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Wszystkie eventy</SelectItem>
-                  {[...(events ?? [])]
-                    .toSorted(
-                      (a, b) =>
-                        new Date(b.endTime).getTime() -
-                        new Date(a.endTime).getTime()
-                    )
-                    .map((event) => {
-                      const IconComponent = getEventIcon(event.icon);
-                      return (
-                        <SelectItem key={event.id} value={event.id.toString()}>
-                          <div className="flex items-center gap-2">
-                            <IconComponent
-                              className="size-4"
-                              style={{ color: event.color ?? undefined }}
-                            />
-                            <span>{event.name}</span>
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
+                  <EventSelectItems events={events} />
                 </SelectContent>
               </Select>
             </div>
@@ -334,7 +293,7 @@ export const DistributeGoldModal = ({
               >
                 <SelectTrigger>
                   <SelectValue>
-                    {getHeroSelectDisplay({
+                    {getModalHeroSelectDisplay({
                       eventId,
                       heroId,
                       heroes: filteredHeroes,
@@ -342,12 +301,11 @@ export const DistributeGoldModal = ({
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Wybierz herosa...</SelectItem>
-                  {filteredHeroes?.map((hero) => (
-                    <SelectItem key={hero.id} value={hero.id.toString()}>
-                      {hero.name}
-                    </SelectItem>
-                  ))}
+                  <HeroSelectItems
+                    allLabel="Wybierz herosa..."
+                    heroesLoading={heroesLoading}
+                    sortedHeroes={filteredHeroes}
+                  />
                 </SelectContent>
               </Select>
             </div>
