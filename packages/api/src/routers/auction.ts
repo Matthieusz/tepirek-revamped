@@ -1,3 +1,4 @@
+import { ORPCError } from "@orpc/server";
 import { protectedProcedure } from "@tepirek-revamped/api";
 import { db } from "@tepirek-revamped/db";
 import { auctionSignups } from "@tepirek-revamped/db/schema/auction";
@@ -73,11 +74,13 @@ export const auctionRouter = {
         .limit(1);
 
       if (signup.length === 0) {
-        throw new Error("Signup not found");
+        throw new ORPCError("NOT_FOUND", { message: "Zapis nie znaleziony" });
       }
 
       if (signup[0]?.userId !== context.session.user.id) {
-        throw new Error("Not authorized to remove this signup");
+        throw new ORPCError("FORBIDDEN", {
+          message: "Nie masz uprawnień do usunięcia tego zapisu",
+        });
       }
 
       await db.delete(auctionSignups).where(eq(auctionSignups.id, input.id));
@@ -121,7 +124,9 @@ export const auctionRouter = {
         }
 
         // Otherwise, slot is taken
-        throw new Error("To pole jest już zajęte");
+        throw new ORPCError("CONFLICT", {
+          message: "To pole jest już zajęte",
+        });
       }
 
       await db.insert(auctionSignups).values({

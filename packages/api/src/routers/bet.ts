@@ -108,7 +108,9 @@ export const betRouter = {
         .where(eq(heroBet.id, input.id));
 
       if (!betData) {
-        throw new ORPCError("NOT_FOUND", { message: "Bet not found" });
+        throw new ORPCError("NOT_FOUND", {
+          message: "Obstawienie nie znalezione",
+        });
       }
 
       // Get hero to find eventId
@@ -118,7 +120,9 @@ export const betRouter = {
         .where(eq(hero.id, betData.heroId));
 
       if (!heroData) {
-        throw new ORPCError("NOT_FOUND", { message: "Hero not found" });
+        throw new ORPCError("NOT_FOUND", {
+          message: "Heros nie znaleziony",
+        });
       }
 
       // Get bet members to decrement their stats
@@ -173,7 +177,9 @@ export const betRouter = {
         .where(eq(heroBet.id, betId));
 
       if (!betData) {
-        throw new ORPCError("NOT_FOUND", { message: "Bet not found" });
+        throw new ORPCError("NOT_FOUND", {
+          message: "Obstawienie nie znalezione",
+        });
       }
 
       // Get hero to find eventId
@@ -183,7 +189,9 @@ export const betRouter = {
         .where(eq(hero.id, betData.heroId));
 
       if (!heroData) {
-        throw new ORPCError("NOT_FOUND", { message: "Hero not found" });
+        throw new ORPCError("NOT_FOUND", {
+          message: "Heros nie znaleziony",
+        });
       }
 
       // Get current members with their points
@@ -335,7 +343,9 @@ export const betRouter = {
         .where(eq(hero.id, heroId));
 
       if (!heroData) {
-        throw new ORPCError("NOT_FOUND", { message: "Hero not found" });
+        throw new ORPCError("NOT_FOUND", {
+          message: "Heros nie znaleziony",
+        });
       }
 
       // Get all user stats for this hero
@@ -350,7 +360,7 @@ export const betRouter = {
 
       if (heroUserStats.length === 0) {
         throw new ORPCError("BAD_REQUEST", {
-          message: "No bets found for this hero",
+          message: "Brak obstawień dla tego herosa",
         });
       }
 
@@ -362,7 +372,7 @@ export const betRouter = {
 
       if (totalPoints <= 0) {
         throw new ORPCError("BAD_REQUEST", {
-          message: "Total points must be greater than 0",
+          message: "Suma punktów musi być większa od zera",
         });
       }
 
@@ -617,7 +627,7 @@ export const betRouter = {
       return {
         currentPointWorth: heroInfo?.pointWorth ?? 0,
         heroId: input.heroId,
-        heroName: heroInfo?.name ?? "Unknown",
+        heroName: heroInfo?.name ?? "Nieznany",
         totalBets: Number(stats?.totalBets ?? 0),
         totalPoints: Number.parseFloat(stats?.totalPoints ?? "0"),
       };
