@@ -59,17 +59,12 @@ export const vaultRouter = {
 
       // Update earnings for each user and hero pointWorth in a transaction
       await db.transaction(async (tx) => {
-        for (const stat of heroUserStats) {
-          const userPoints = Number.parseFloat(stat.points);
-          const userEarnings = (userPoints * pointWorth).toFixed(2);
-
-          await tx
-            .update(userStats)
-            .set({
-              earnings: userEarnings,
-            })
-            .where(eq(userStats.id, stat.id));
-        }
+        await tx
+          .update(userStats)
+          .set({
+            earnings: sql`ROUND((${userStats.points}) * ${pointWorth}, 2)`,
+          })
+          .where(eq(userStats.heroId, heroId));
 
         // Update hero's pointWorth for reference
         await tx

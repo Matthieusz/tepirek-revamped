@@ -69,25 +69,25 @@ export const betRouter = {
         );
 
         // Upsert userStats for each member
-        for (const userId of userIds) {
-          await tx
-            .insert(userStats)
-            .values({
+        await tx
+          .insert(userStats)
+          .values(
+            userIds.map((userId) => ({
               bets: 1,
               earnings: "0",
               eventId: heroData.eventId,
               heroId,
               points: pointsPerMember,
               userId,
-            })
-            .onConflictDoUpdate({
-              set: {
-                bets: sql`${userStats.bets} + 1`,
-                points: sql`${userStats.points} + ${pointsPerMember}`,
-              },
-              target: [userStats.userId, userStats.eventId, userStats.heroId],
-            });
-        }
+            }))
+          )
+          .onConflictDoUpdate({
+            set: {
+              bets: sql`${userStats.bets} + 1`,
+              points: sql`${userStats.points} + ${pointsPerMember}`,
+            },
+            target: [userStats.userId, userStats.eventId, userStats.heroId],
+          });
 
         return bet;
       });
@@ -127,24 +127,34 @@ export const betRouter = {
 
       // Get bet members to decrement their stats
       const members = await db
-        .select({ points: heroBetMember.points, userId: heroBetMember.userId })
+        .select({ userId: heroBetMember.userId })
         .from(heroBetMember)
         .where(eq(heroBetMember.heroBetId, input.id));
 
+      const memberUserIds = [
+        ...new Set(members.map((member) => member.userId)),
+      ];
+
       // Decrement stats and delete bet in a transaction
       await db.transaction(async (tx) => {
-        for (const member of members) {
+        if (memberUserIds.length > 0) {
           await tx
             .update(userStats)
             .set({
               bets: sql`${userStats.bets} - 1`,
-              points: sql`${userStats.points} - ${member.points}`,
+              points: sql`${userStats.points} - COALESCE((
+                SELECT ${heroBetMember.points}
+                FROM ${heroBetMember}
+                WHERE ${heroBetMember.heroBetId} = ${input.id}
+                  AND ${heroBetMember.userId} = ${userStats.userId}
+                LIMIT 1
+              ), 0)`,
             })
             .where(
               and(
-                eq(userStats.userId, member.userId),
                 eq(userStats.eventId, heroData.eventId),
-                eq(userStats.heroId, betData.heroId)
+                eq(userStats.heroId, betData.heroId),
+                inArray(userStats.userId, memberUserIds)
               )
             );
         }
@@ -197,7 +207,6 @@ export const betRouter = {
       // Get current members with their points
       const currentMembers = await db
         .select({
-          id: heroBetMember.id,
           points: heroBetMember.points,
           userId: heroBetMember.userId,
         })
@@ -227,6 +236,27 @@ export const betRouter = {
         if (membersToRemove.length > 0) {
           const removeUserIds = membersToRemove.map((m) => m.userId);
 
+          // Decrement bets and subtract points for removed members
+          await tx
+            .update(userStats)
+            .set({
+              bets: sql`${userStats.bets} - 1`,
+              points: sql`${userStats.points} - COALESCE((
+                SELECT ${heroBetMember.points}
+                FROM ${heroBetMember}
+                WHERE ${heroBetMember.heroBetId} = ${betId}
+                  AND ${heroBetMember.userId} = ${userStats.userId}
+                LIMIT 1
+              ), 0)`,
+            })
+            .where(
+              and(
+                eq(userStats.eventId, heroData.eventId),
+                eq(userStats.heroId, betData.heroId),
+                inArray(userStats.userId, removeUserIds)
+              )
+            );
+
           // Delete from heroBetMember
           await tx
             .delete(heroBetMember)
@@ -236,23 +266,6 @@ export const betRouter = {
                 inArray(heroBetMember.userId, removeUserIds)
               )
             );
-
-          // Decrement bets and subtract points for removed members
-          for (const member of membersToRemove) {
-            await tx
-              .update(userStats)
-              .set({
-                bets: sql`${userStats.bets} - 1`,
-                points: sql`${userStats.points} - ${member.points}`,
-              })
-              .where(
-                and(
-                  eq(userStats.userId, member.userId),
-                  eq(userStats.eventId, heroData.eventId),
-                  eq(userStats.heroId, betData.heroId)
-                )
-              );
-          }
         }
 
         // 2. Add new members to heroBetMember and increment their stats
@@ -266,58 +279,57 @@ export const betRouter = {
           );
 
           // Increment bets and add points for new members
-          for (const userId of membersToAdd) {
-            await tx
-              .insert(userStats)
-              .values({
+          await tx
+            .insert(userStats)
+            .values(
+              membersToAdd.map((userId) => ({
                 bets: 1,
                 earnings: "0",
                 eventId: heroData.eventId,
                 heroId: betData.heroId,
                 points: newPointsPerMember,
                 userId,
-              })
-              .onConflictDoUpdate({
-                set: {
-                  bets: sql`${userStats.bets} + 1`,
-                  points: sql`${userStats.points} + ${newPointsPerMember}`,
-                },
-                target: [userStats.userId, userStats.eventId, userStats.heroId],
-              });
-          }
+              }))
+            )
+            .onConflictDoUpdate({
+              set: {
+                bets: sql`${userStats.bets} + 1`,
+                points: sql`${userStats.points} + ${newPointsPerMember}`,
+              },
+              target: [userStats.userId, userStats.eventId, userStats.heroId],
+            });
         }
 
         // 3. Update existing members' points in heroBetMember and userStats
         if (membersToKeep.length > 0) {
+          const keepUserIds = membersToKeep.map((m) => m.userId);
           const pointsDiff = Number(newPointsPerMember) - oldPointsPerMember;
 
-          for (const member of membersToKeep) {
-            // Update heroBetMember points
+          // Update heroBetMember points
+          await tx
+            .update(heroBetMember)
+            .set({ points: newPointsPerMember })
+            .where(
+              and(
+                eq(heroBetMember.heroBetId, betId),
+                inArray(heroBetMember.userId, keepUserIds)
+              )
+            );
+
+          // Update userStats points (add the difference)
+          if (pointsDiff !== 0) {
             await tx
-              .update(heroBetMember)
-              .set({ points: newPointsPerMember })
+              .update(userStats)
+              .set({
+                points: sql`${userStats.points} + ${pointsDiff.toFixed(2)}`,
+              })
               .where(
                 and(
-                  eq(heroBetMember.heroBetId, betId),
-                  eq(heroBetMember.userId, member.userId)
+                  eq(userStats.eventId, heroData.eventId),
+                  eq(userStats.heroId, betData.heroId),
+                  inArray(userStats.userId, keepUserIds)
                 )
               );
-
-            // Update userStats points (add the difference)
-            if (pointsDiff !== 0) {
-              await tx
-                .update(userStats)
-                .set({
-                  points: sql`${userStats.points} + ${pointsDiff.toFixed(2)}`,
-                })
-                .where(
-                  and(
-                    eq(userStats.userId, member.userId),
-                    eq(userStats.eventId, heroData.eventId),
-                    eq(userStats.heroId, betData.heroId)
-                  )
-                );
-            }
           }
         }
 
