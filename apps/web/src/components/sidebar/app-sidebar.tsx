@@ -26,7 +26,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
-import type { AuthSession } from "@/lib/auth-guard";
+import type { AuthSession } from "@/types/route";
 
 const data = {
   navMain: [

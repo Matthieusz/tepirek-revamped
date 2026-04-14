@@ -22,8 +22,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { AuthUser } from "@/lib/auth-guard";
 import { cn, slugify } from "@/lib/utils";
+import type { AuthUser } from "@/types/route";
 import { orpc } from "@/utils/orpc";
 
 interface RangeCardProps {
