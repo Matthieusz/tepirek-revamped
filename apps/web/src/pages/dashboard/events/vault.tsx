@@ -45,7 +45,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
 
   // Get the oldest event with unpaid users
   const { data: oldestUnpaidEventId, isPending: oldestUnpaidLoading } =
-    useQuery(orpc.bet.getOldestUnpaidEvent.queryOptions());
+    useQuery(orpc.ranking.getOldestUnpaidEvent.queryOptions());
 
   // Auto-select the oldest unpaid event on initial load (only if no URL param)
   useEffect(() => {
@@ -85,7 +85,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
   const effectiveEventId = urlEventId ?? "all";
 
   const { data: vault, isPending: vaultLoading } = useQuery({
-    ...orpc.bet.getVault.queryOptions({
+    ...orpc.vault.getVault.queryOptions({
       input: {
         eventId:
           effectiveEventId === "all"
@@ -104,7 +104,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
       userId: string;
       paidOut: boolean;
     }) => {
-      await orpc.bet.togglePaidOut.call({
+      await orpc.vault.togglePaidOut.call({
         eventId:
           effectiveEventId === "all"
             ? undefined
@@ -119,7 +119,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: orpc.bet.getVault.queryKey({
+        queryKey: orpc.vault.getVault.queryKey({
           input: {
             eventId:
               effectiveEventId === "all"
@@ -129,7 +129,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
         }),
       });
       await queryClient.invalidateQueries({
-        queryKey: orpc.bet.getOldestUnpaidEvent.queryKey(),
+        queryKey: orpc.ranking.getOldestUnpaidEvent.queryKey(),
       });
       toast.success("Status wypłaty zaktualizowany");
     },

@@ -5,9 +5,11 @@ import { auctionRouter } from "./auction";
 import { betRouter } from "./bet";
 import { eventRouter } from "./event";
 import { heroesRouter } from "./heroes";
+import { rankingRouter } from "./ranking";
 import { skillsRouter } from "./skills";
 import { todoRouter } from "./todo";
 import { userRouter } from "./user";
+import { vaultRouter } from "./vault";
 
 export const appRouter = {
   announcement: announcementRouter,
@@ -20,8 +22,10 @@ export const appRouter = {
     message: "This is private",
     user: context.session?.user,
   })),
+  ranking: rankingRouter,
   skills: skillsRouter,
   todo: todoRouter,
   user: userRouter,
+  vault: vaultRouter,
 };
 export type AppRouter = typeof appRouter;
