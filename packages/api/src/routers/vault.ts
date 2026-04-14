@@ -4,7 +4,7 @@ import { db } from "@tepirek-revamped/db";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { hero, userStats } from "@tepirek-revamped/db/schema/bet";
 import type { SQL } from "drizzle-orm";
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 export const vaultRouter = {
