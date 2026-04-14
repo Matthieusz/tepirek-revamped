@@ -36,7 +36,7 @@ export type AuthUser = AuthSession["user"];
 /**
  * Session type that can be null when unauthenticated
  */
-export type MaybeAuthSession = AuthSession | null;
+export type UserSession = AuthSession | null;
 
 /**
  * Context returned by dashboard route's beforeLoad
