@@ -1,4 +1,4 @@
-import { protectedProcedure, publicProcedure } from "@tepirek-revamped/api";
+import { publicProcedure } from "@tepirek-revamped/api";
 
 import { announcementRouter } from "./announcement";
 import { auctionRouter } from "./auction";
@@ -18,10 +18,6 @@ export const appRouter = {
   event: eventRouter,
   healthCheck: publicProcedure.handler(() => "OK"),
   heroes: heroesRouter,
-  privateData: protectedProcedure.handler(({ context }) => ({
-    message: "This is private",
-    user: context.session?.user,
-  })),
   ranking: rankingRouter,
   skills: skillsRouter,
   todo: todoRouter,
