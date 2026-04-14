@@ -142,6 +142,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
 
   // Separate paid and unpaid users
   const unpaidUsers = vault?.filter((v) => !v.paidOut) ?? [];
+  const paidUsers = vault?.filter((v) => v.paidOut) ?? [];
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -264,6 +265,69 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
                           {index + 2}
                         </span>
                       </div>
+                      {/* Avatar */}
+                      <Avatar className="size-10 shrink-0 border border-border">
+                        <AvatarImage
+                          alt={player.userName}
+                          src={player.userImage ?? undefined}
+                        />
+                        <AvatarFallback>
+                          <User className="size-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                      {/* Name */}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold">
+                          {player.userName}
+                        </p>
+                      </div>
+                      {/* Earnings */}
+                      <div className="flex items-center gap-2">
+                        <Coins className="size-4 text-yellow-500" />
+                        <p className="font-mono font-semibold">
+                          {(
+                            Math.floor(
+                              Number.parseFloat(player.totalEarnings || "0") /
+                                1_000_000
+                            ) * 1_000_000
+                          ).toLocaleString("pl-PL", {
+                            maximumFractionDigits: 0,
+                          })}
+                        </p>
+                      </div>
+                      {/* Checkbox for admin */}
+                      {isAdminUser && (
+                        <Checkbox
+                          checked={player.paidOut}
+                          disabled={toggleMutation.isPending}
+                          onCheckedChange={(checked) => {
+                            toggleMutation.mutate({
+                              paidOut: checked,
+                              userId: player.userId,
+                            });
+                          }}
+                        />
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Paid users list */}
+          {paidUsers.length > 0 && (
+            <div className="space-y-2">
+              <h2 className="font-semibold text-lg">
+                Wypłacone ({paidUsers.length})
+              </h2>
+              {paidUsers.map((player) => (
+                <Card
+                  className="opacity-60 transition-all hover:bg-accent/50"
+                  key={player.userId}
+                >
+                  <CardContent className="px-4">
+                    <div className="flex items-center gap-4">
                       {/* Avatar */}
                       <Avatar className="size-10 shrink-0 border border-border">
                         <AvatarImage
