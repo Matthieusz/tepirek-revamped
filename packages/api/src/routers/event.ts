@@ -1,4 +1,8 @@
 import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
+import {
+  DEFAULT_EVENT_ICON_ID,
+  EVENT_ICON_IDS,
+} from "@tepirek-revamped/config";
 import { db } from "@tepirek-revamped/db";
 import { event } from "@tepirek-revamped/db/schema/event";
 import { eq } from "drizzle-orm";
@@ -10,7 +14,7 @@ export const eventRouter = {
       z.object({
         color: z.string().min(1).default("#6366f1"),
         endTime: z.iso.datetime(),
-        icon: z.string().min(1).default("calendar"),
+        icon: z.enum(EVENT_ICON_IDS).default(DEFAULT_EVENT_ICON_ID),
         name: z.string().min(1),
       })
     )

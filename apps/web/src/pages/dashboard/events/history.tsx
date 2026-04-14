@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { POINTS_PER_HERO } from "@tepirek-revamped/config";
 import { History, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -47,7 +48,6 @@ type BetToDelete = {
   heroName: string;
 } | null;
 
-const POINTS_PER_HERO = 20;
 const ITEMS_PER_PAGE = 10;
 
 interface HistoryFilters extends Record<string, unknown> {

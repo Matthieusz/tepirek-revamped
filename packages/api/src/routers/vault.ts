@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
+import { MIN_EARNINGS } from "@tepirek-revamped/config";
 import { db } from "@tepirek-revamped/db";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { hero, userStats } from "@tepirek-revamped/db/schema/bet";
@@ -103,9 +104,6 @@ export const vaultRouter = {
   getVault: protectedProcedure
     .input(z.object({ eventId: z.number().optional() }))
     .handler(async ({ input }) => {
-      // 100 million minimum
-      const MIN_EARNINGS = 100_000_000;
-
       // Build where conditions
       const conditions: SQL[] = [];
       if (input.eventId !== undefined) {

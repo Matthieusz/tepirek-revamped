@@ -1,4 +1,5 @@
 import { protectedProcedure } from "@tepirek-revamped/api";
+import { MIN_EARNINGS } from "@tepirek-revamped/config";
 import { db } from "@tepirek-revamped/db";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { hero, heroBet, userStats } from "@tepirek-revamped/db/schema/bet";
@@ -44,8 +45,6 @@ export const rankingRouter = {
     }),
 
   getOldestUnpaidEvent: protectedProcedure.handler(async () => {
-    const MIN_EARNINGS = 100_000_000;
-
     // Find the oldest event that has at least one user with unpaid earnings >= MIN_EARNINGS
     const result = await db
       .select({

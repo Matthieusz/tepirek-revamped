@@ -1,5 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { POINTS_PER_HERO } from "@tepirek-revamped/config";
 import { Copy, CopyX, Pencil, Search, User, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -21,8 +22,6 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { orpc } from "@/utils/orpc";
-
-const POINTS_PER_HERO = 20;
 
 interface EditBetModalProps {
   betId: number;

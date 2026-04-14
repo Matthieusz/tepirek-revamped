@@ -1,5 +1,10 @@
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  DEFAULT_EVENT_ICON_ID,
+  EVENT_ICON_OPTIONS,
+} from "@tepirek-revamped/config";
+import type { EventIconId } from "@tepirek-revamped/config";
 import { format } from "date-fns";
 import {
   Cake,
@@ -9,6 +14,7 @@ import {
   Snowflake,
   Sun,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -38,14 +44,14 @@ interface AddEventModalProps {
   trigger: React.ReactNode;
 }
 
-const EVENT_ICONS = [
-  { icon: Egg, id: "egg", name: "Wielkanoc" },
-  { icon: Sun, id: "sun", name: "Wakacje" },
-  { icon: Ghost, id: "ghost", name: "Halloween" },
-  { icon: Cake, id: "cake", name: "Urodziny" },
-  { icon: Snowflake, id: "snowflake", name: "Gwiazdka" },
-  { icon: CalendarIcon, id: "calendar", name: "Inne" },
-] as const;
+const EVENT_ICONS: Record<EventIconId, LucideIcon> = {
+  cake: Cake,
+  calendar: CalendarIcon,
+  egg: Egg,
+  ghost: Ghost,
+  snowflake: Snowflake,
+  sun: Sun,
+};
 
 const EVENT_COLORS = [
   { id: "#22c55e", name: "Zielony" },
@@ -62,7 +68,9 @@ const EVENT_COLORS = [
 export const AddEventModal = ({ trigger }: AddEventModalProps) => {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date>();
-  const [selectedIcon, setSelectedIcon] = useState("calendar");
+  const [selectedIcon, setSelectedIcon] = useState<EventIconId>(
+    DEFAULT_EVENT_ICON_ID
+  );
   const [selectedColor, setSelectedColor] = useState("#6366f1");
   const queryClient = useQueryClient();
 
@@ -92,7 +100,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
         setOpen(false);
         form.reset();
         setDate(undefined);
-        setSelectedIcon("calendar");
+        setSelectedIcon(DEFAULT_EVENT_ICON_ID);
         setSelectedColor("#6366f1");
       } catch (error) {
         const message =
@@ -158,8 +166,8 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
             <div className="grid gap-2">
               <Label>Ikona eventu</Label>
               <div className="grid grid-cols-3 gap-2">
-                {EVENT_ICONS.map((item) => {
-                  const IconComponent = item.icon;
+                {EVENT_ICON_OPTIONS.map((item) => {
+                  const IconComponent = EVENT_ICONS[item.id];
                   return (
                     <button
                       className={cn(

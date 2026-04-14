@@ -27,6 +27,7 @@
     "@tanstack/router-plugin": "^1.162.9",
     "@tepirek-revamped/api": "workspace:*",
     "@tepirek-revamped/auth": "workspace:*",
+    "@tepirek-revamped/config": "workspace:*",
     "better-auth": "catalog:",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -50,7 +51,6 @@
   "devDependencies": {
     "@tanstack/react-query-devtools": "^5.91.3",
     "@tanstack/react-router-devtools": "^1.162.9",
-    "@tepirek-revamped/config": "workspace:*",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "~19.1.17",
