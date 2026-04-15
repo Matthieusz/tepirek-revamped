@@ -4,6 +4,17 @@ import {
   isAuctionProfession,
   isAuctionType,
 } from "@tepirek-revamped/config";
+import {
+  Axe,
+  Crosshair,
+  Flame,
+  Footprints,
+  Shield,
+  Swords,
+  Target,
+  Wand2,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export { AUCTION_PROFESSIONS, isAuctionProfession, isAuctionType };
 export type { AuctionProfession, AuctionType };
