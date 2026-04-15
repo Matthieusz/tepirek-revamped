@@ -7,7 +7,6 @@ import {
   HeartIcon,
   ListChecks,
   LogOut,
-  Settings,
   User,
   Users,
 } from "lucide-react";
@@ -26,7 +25,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
-import type { AuthSession } from "@/lib/auth-guard";
+import type { AuthSession } from "@/types/route";
 
 const data = {
   navMain: [
@@ -113,12 +112,6 @@ const data = {
       icon: User,
       name: "Profil",
       url: "/dashboard/profile",
-    },
-    {
-      disabled: true,
-      icon: Settings,
-      name: "Ustawienia",
-      url: "/dashboard/settings",
     },
   ],
 };

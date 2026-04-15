@@ -129,9 +129,9 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
 
   const form = useForm({
     defaultValues: {
-      itemLevel: 280 as number,
-      itemRarity: "legendarny" as Rarity,
-    },
+      itemLevel: 280,
+      itemRarity: "legendarny",
+    } satisfies z.infer<typeof formSchema>,
     onSubmit: ({ value }) => {
       const { baseValue, totalCost, isCapped } = calculateUnbindCost(
         value.itemLevel,

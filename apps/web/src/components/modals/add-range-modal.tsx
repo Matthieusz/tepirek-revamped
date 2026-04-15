@@ -57,11 +57,7 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
         setOpen(false);
         form.reset();
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Nie udało się utworzyć przedziału";
-        toast.error(message);
+        toast.error(getErrorMessage(error));
       }
     },
     validators: {

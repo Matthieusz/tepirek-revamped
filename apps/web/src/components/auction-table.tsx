@@ -3,7 +3,8 @@ import { Loader2, Trash2 } from "lucide-react";
 import type React from "react";
 import { toast } from "sonner";
 
-import { Spinner } from "@/components/ui/spinner";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { getErrorMessage } from "@/lib/errors";
 import { orpc } from "@/utils/orpc";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -148,7 +149,7 @@ const roundLabels: Record<Round, string> = {
   3: "Trzecia",
   4: "Czwarta (SŁ)",
 };
-// 30 to 300 by 10
+const COLUMN_VALUES: Column[] = [1, 2, 3];
 const rowValues = Array.from({ length: 28 }, (_, i) => 30 + i * 10);
 
 export const AuctionTable: React.FC<AuctionTableProps> = ({
@@ -196,7 +197,7 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
   const removeMutation = useMutation({
     mutationFn: async (id: number) => orpc.auction.removeSignup.call({ id }),
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Wystąpił błąd");
+      toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: signupsQuery.queryKey });
@@ -231,7 +232,7 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
   };
 
   if (isPending) {
-    return <Spinner />;
+    return <LoadingSpinner />;
   }
 
   return (
@@ -267,8 +268,7 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
                   {roundLabels[round]}
                 </TableCell>
                 {columns.map((col: string, colIdx: number) => {
-                  // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-                  const column = (colIdx + 1) as Column;
+                  const column = COLUMN_VALUES[colIdx];
                   const signup = getSignupForCell(value, round, column);
                   const isOwnSignup = signup?.userId === currentUserId;
                   const isMutating =

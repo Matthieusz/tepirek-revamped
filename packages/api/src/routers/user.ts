@@ -1,19 +1,33 @@
 import { ORPCError } from "@orpc/server";
-import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
 import { db } from "@tepirek-revamped/db";
 import { account, user } from "@tepirek-revamped/db/schema/auth";
+import type { SQL } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+
+import { adminProcedure, protectedProcedure } from "./procedures";
+import { roleSchema, userIdSchema } from "./schemas";
+
+const updateAndReturnUser = async (
+  where: SQL,
+  values: Partial<typeof user.$inferInsert>
+) => {
+  await db
+    .update(user)
+    .set({ updatedAt: new Date(), ...values })
+    .where(where);
+  const [updated] = await db.select().from(user).where(where);
+  return updated ?? null;
+};
 
 export const userRouter = {
   deleteUser: adminProcedure
     .input(
       z.object({
-        userId: z.string().min(1),
+        userId: userIdSchema,
       })
     )
     .handler(async ({ input }) => {
-      // Check if user is unverified before deleting
       const [targetUser] = await db
         .select()
         .from(user)
@@ -46,74 +60,46 @@ export const userRouter = {
   setRole: adminProcedure
     .input(
       z.object({
-        role: z.enum(["user", "admin"]),
-        userId: z.string().min(1),
+        role: roleSchema,
+        userId: userIdSchema,
       })
     )
-    .handler(async ({ input }) => {
-      await db
-        .update(user)
-        .set({ role: input.role, updatedAt: new Date() })
-        .where(eq(user.id, input.userId));
-      const [updated] = await db
-        .select()
-        .from(user)
-        .where(eq(user.id, input.userId));
-      return updated ?? null;
-    }),
+    .handler(async ({ input }) =>
+      updateAndReturnUser(eq(user.id, input.userId), { role: input.role })
+    ),
   setVerified: adminProcedure
     .input(
       z.object({
-        userId: z.string().min(1),
+        userId: userIdSchema,
         verified: z.boolean(),
       })
     )
-    .handler(async ({ input }) => {
-      await db
-        .update(user)
-        .set({ updatedAt: new Date(), verified: input.verified })
-        .where(eq(user.id, input.userId));
-      const [updated] = await db
-        .select()
-        .from(user)
-        .where(eq(user.id, input.userId));
-      return updated ?? null;
-    }),
+    .handler(async ({ input }) =>
+      updateAndReturnUser(eq(user.id, input.userId), {
+        verified: input.verified,
+      })
+    ),
   updateProfile: protectedProcedure
     .input(
       z.object({
         name: z.string().min(2),
       })
     )
-    .handler(async ({ input, context }) => {
-      await db
-        .update(user)
-        .set({ name: input.name, updatedAt: new Date() })
-        .where(eq(user.id, context.session.user.id));
-      const [updated] = await db
-        .select()
-        .from(user)
-        .where(eq(user.id, context.session.user.id));
-      return updated ?? null;
-    }),
+    .handler(async ({ input, context }) =>
+      updateAndReturnUser(eq(user.id, context.session.user.id), {
+        name: input.name,
+      })
+    ),
   updateUserName: adminProcedure
     .input(
       z.object({
         name: z.string().min(2),
-        userId: z.string().min(1),
+        userId: userIdSchema,
       })
     )
-    .handler(async ({ input }) => {
-      await db
-        .update(user)
-        .set({ name: input.name, updatedAt: new Date() })
-        .where(eq(user.id, input.userId));
-      const [updated] = await db
-        .select()
-        .from(user)
-        .where(eq(user.id, input.userId));
-      return updated ?? null;
-    }),
+    .handler(async ({ input }) =>
+      updateAndReturnUser(eq(user.id, input.userId), { name: input.name })
+    ),
   validateDiscordGuild: protectedProcedure
     .input(
       z.object({
@@ -130,13 +116,12 @@ export const userRouter = {
         return { valid: false };
       }
       const guildId = process.env.DISCORD_SERVER_ID;
-      const guilds = await response.json();
-      if (Array.isArray(guilds)) {
-        return {
-          valid: guilds.some((guild: { id: string }) => guild.id === guildId),
-        };
+      const discordGuildSchema = z.array(z.object({ id: z.string() }));
+      const parsed = discordGuildSchema.safeParse(await response.json());
+      if (!parsed.success) {
+        return { valid: false };
       }
-      return { valid: false };
+      return { valid: parsed.data.some((guild) => guild.id === guildId) };
     }),
   verifySelf: protectedProcedure.handler(async ({ context }) =>
     db

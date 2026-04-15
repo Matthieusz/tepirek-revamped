@@ -29,6 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getEventIcon } from "@/lib/constants";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 import { orpc } from "@/utils/orpc";
@@ -58,8 +59,7 @@ export default function EventsListPage({ session }: EventsListPageProps) {
       await orpc.event.delete.call({ id });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
       toast.success("Event został usunięty");
@@ -75,8 +75,7 @@ export default function EventsListPage({ session }: EventsListPageProps) {
       await orpc.event.toggleActive.call({ active, id });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
       toast.success("Status eventu został zmieniony");

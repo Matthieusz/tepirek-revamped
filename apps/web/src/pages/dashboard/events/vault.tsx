@@ -21,6 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { VaultUserCard } from "@/components/vault-user-card";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 import { orpc } from "@/utils/orpc";
@@ -45,7 +47,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
 
   // Get the oldest event with unpaid users
   const { data: oldestUnpaidEventId, isPending: oldestUnpaidLoading } =
-    useQuery(orpc.bet.getOldestUnpaidEvent.queryOptions());
+    useQuery(orpc.ranking.getOldestUnpaidEvent.queryOptions());
 
   // Auto-select the oldest unpaid event on initial load (only if no URL param)
   useEffect(() => {
@@ -85,7 +87,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
   const effectiveEventId = urlEventId ?? "all";
 
   const { data: vault, isPending: vaultLoading } = useQuery({
-    ...orpc.bet.getVault.queryOptions({
+    ...orpc.vault.getVault.queryOptions({
       input: {
         eventId:
           effectiveEventId === "all"
@@ -104,7 +106,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
       userId: string;
       paidOut: boolean;
     }) => {
-      await orpc.bet.togglePaidOut.call({
+      await orpc.vault.togglePaidOut.call({
         eventId:
           effectiveEventId === "all"
             ? undefined
@@ -114,12 +116,11 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
       });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: orpc.bet.getVault.queryKey({
+        queryKey: orpc.vault.getVault.queryKey({
           input: {
             eventId:
               effectiveEventId === "all"
@@ -129,7 +130,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
         }),
       });
       await queryClient.invalidateQueries({
-        queryKey: orpc.bet.getOldestUnpaidEvent.queryKey(),
+        queryKey: orpc.ranking.getOldestUnpaidEvent.queryKey(),
       });
       toast.success("Status wypłaty zaktualizowany");
     },
@@ -142,6 +143,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
 
   // Separate paid and unpaid users
   const unpaidUsers = vault?.filter((v) => !v.paidOut) ?? [];
+  const paidUsers = vault?.filter((v) => v.paidOut) ?? [];
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -300,16 +302,52 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
                           checked={player.paidOut}
                           disabled={toggleMutation.isPending}
                           onCheckedChange={(checked) => {
-                            toggleMutation.mutate({
-                              paidOut: checked,
-                              userId: player.userId,
-                            });
+                            if (typeof checked === "boolean") {
+                              toggleMutation.mutate({
+                                paidOut: checked,
+                                userId: player.userId,
+                              });
+                            }
                           }}
                         />
                       )}
                     </div>
                   </CardContent>
                 </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Paid users list */}
+          {paidUsers.length > 0 && (
+            <div className="space-y-2">
+              <h2 className="font-semibold text-lg">
+                Wypłacone ({paidUsers.length})
+              </h2>
+              {paidUsers.map((player) => (
+                <VaultUserCard
+                  className="opacity-60 transition-all hover:bg-accent/50"
+                  key={player.userId}
+                  rightSlot={
+                    isAdminUser && (
+                      <Checkbox
+                        checked={player.paidOut}
+                        disabled={toggleMutation.isPending}
+                        onCheckedChange={(checked) => {
+                          if (typeof checked === "boolean") {
+                            toggleMutation.mutate({
+                              paidOut: checked,
+                              userId: player.userId,
+                            });
+                          }
+                        }}
+                      />
+                    )
+                  }
+                  totalEarnings={player.totalEarnings}
+                  userImage={player.userImage}
+                  userName={player.userName}
+                />
               ))}
             </div>
           )}

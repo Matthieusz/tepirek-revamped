@@ -7,8 +7,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-// oxlint-disable-next-line @typescript-eslint/no-deprecated
-export const auctionSignups = pgTable(
+export const auction = pgTable(
   "auction_signups",
   {
     column: integer("column").notNull(),
@@ -27,7 +26,3 @@ export const auctionSignups = pgTable(
     ),
   })
 );
-
-export const auction = {
-  ...auctionSignups,
-};

@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createColumnHelper } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   CheckCircle2,
@@ -177,7 +178,6 @@ const ActionCell = ({ player }: { player: Player }) => {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Rename Dialog */}
       <Dialog onOpenChange={setShowRenameDialog} open={showRenameDialog}>
         <DialogContent>
           <DialogHeader>
@@ -219,7 +219,6 @@ const ActionCell = ({ player }: { player: Player }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog onOpenChange={setShowDeleteDialog} open={showDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -247,19 +246,19 @@ const ActionCell = ({ player }: { player: Player }) => {
   );
 };
 
-const baseColumns: ColumnDef<Player>[] = [
-  {
-    accessorKey: "id",
-    cell: ({ row }) => row.index + 1,
+const columnHelper = createColumnHelper<Player>();
+
+const baseColumns: ColumnDef<Player, unknown>[] = [
+  columnHelper.accessor("id", {
+    cell: (info) => info.row.index + 1,
     header: "ID",
-  },
-  {
-    accessorKey: "image",
-    cell: ({ row }) => (
+  }),
+  columnHelper.accessor("image", {
+    cell: (info) => (
       <Avatar className="size-10">
         <AvatarImage
-          alt={row.getValue("name")}
-          src={row.getValue("image") ?? undefined}
+          alt={info.getValue() ?? undefined}
+          src={info.getValue() ?? undefined}
         />
         <AvatarFallback>
           <User className="size-5" />
@@ -267,36 +266,31 @@ const baseColumns: ColumnDef<Player>[] = [
       </Avatar>
     ),
     header: "Avatar",
-  },
-  {
-    accessorKey: "name",
-    // oxlint-disable-next-line @typescript-eslint/no-unsafe-return
-    cell: ({ row }) => row.getValue("name"),
+  }),
+  columnHelper.accessor("name", {
+    cell: (info) => info.getValue(),
     header: "Nazwa",
-  },
-  {
-    accessorKey: "role",
-    // oxlint-disable-next-line @typescript-eslint/no-unsafe-return
-    cell: ({ row }) => row.getValue("role"),
+  }),
+  columnHelper.accessor("role", {
+    cell: (info) => info.getValue(),
     header: "Rola",
-  },
-  {
-    accessorKey: "createdAt",
-    cell: ({ row }) => formatDate(row.getValue("createdAt")),
+  }),
+  columnHelper.accessor("createdAt", {
+    cell: (info) => formatDate(info.getValue()),
     header: "Utworzono",
-  },
-  {
-    accessorKey: "updatedAt",
-    cell: ({ row }) => formatDate(row.getValue("updatedAt")),
+  }),
+  columnHelper.accessor("updatedAt", {
+    cell: (info) => formatDate(info.getValue()),
     header: "Zaktualizowano",
-  },
+  }),
 ];
 
-const actionsColumn = (): ColumnDef<Player> => ({
-  cell: ({ row }) => <ActionCell player={row.original} />,
-  header: "Akcje",
-  id: "actions",
-});
+const actionsColumn = (): ColumnDef<Player> =>
+  columnHelper.display({
+    cell: ({ row }) => <ActionCell player={row.original} />,
+    header: "Akcje",
+    id: "actions",
+  });
 
 export const buildPlayerColumns = (isAdmin: boolean): ColumnDef<Player>[] =>
   isAdmin ? [...baseColumns, actionsColumn()] : baseColumns;

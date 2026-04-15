@@ -1,8 +1,9 @@
-import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
 import { db } from "@tepirek-revamped/db";
 import { hero } from "@tepirek-revamped/db/schema/bet";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+
+import { adminProcedure, protectedProcedure } from "./procedures";
 
 export const heroesRouter = {
   create: adminProcedure

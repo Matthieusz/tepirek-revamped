@@ -11,19 +11,15 @@
   },
   "scripts": {},
   "dependencies": {
-    "@orpc/client": "catalog:",
-    "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
-    "@orpc/zod": "catalog:",
     "@tepirek-revamped/auth": "workspace:*",
+    "@tepirek-revamped/config": "workspace:*",
     "@tepirek-revamped/db": "workspace:*",
-    "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "hono": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@tepirek-revamped/config": "workspace:*",
     "@types/pg": "^8.16.0",
     "pino": "^10.3.1"
   },

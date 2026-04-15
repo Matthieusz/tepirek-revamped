@@ -31,8 +31,7 @@ export const skills = pgTable(
       .notNull(),
     userId: text("user_id")
       .notNull()
-      .references(() => user.id)
-      .notNull(),
+      .references(() => user.id),
   },
   (table) => [index("skills_range_id_idx").on(table.rangeId)]
 );

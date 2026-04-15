@@ -51,7 +51,7 @@ export const useRankingData = ({
   });
 
   const { data: rankingData, isPending: rankingLoading } = useQuery({
-    ...orpc.bet.getRanking.queryOptions({
+    ...orpc.ranking.getRanking.queryOptions({
       input: {
         eventId:
           selectedEventId === "all"

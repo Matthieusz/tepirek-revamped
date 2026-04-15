@@ -1,39 +1,42 @@
-import { protectedProcedure } from "@tepirek-revamped/api";
+import { ORPCError } from "@orpc/server";
 import { db } from "@tepirek-revamped/db";
-import { auctionSignups } from "@tepirek-revamped/db/schema/auction";
+import { auction } from "@tepirek-revamped/db/schema/auction";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { and, count, countDistinct, eq } from "drizzle-orm";
 import { z } from "zod";
+
+import { protectedProcedure } from "./procedures";
+import { auctionTypeSchema } from "./schemas";
 
 export const auctionRouter = {
   getSignups: protectedProcedure
     .input(
       z.object({
         profession: z.string(),
-        type: z.enum(["main", "support"]),
+        type: auctionTypeSchema,
       })
     )
     .handler(async ({ input }) => {
       const rows = await db
         .select({
-          column: auctionSignups.column,
-          createdAt: auctionSignups.createdAt,
-          id: auctionSignups.id,
-          level: auctionSignups.level,
-          round: auctionSignups.round,
-          userId: auctionSignups.userId,
+          column: auction.column,
+          createdAt: auction.createdAt,
+          id: auction.id,
+          level: auction.level,
+          round: auction.round,
+          userId: auction.userId,
           userImage: user.image,
           userName: user.name,
         })
-        .from(auctionSignups)
-        .leftJoin(user, eq(auctionSignups.userId, user.id))
+        .from(auction)
+        .leftJoin(user, eq(auction.userId, user.id))
         .where(
           and(
-            eq(auctionSignups.profession, input.profession),
-            eq(auctionSignups.type, input.type)
+            eq(auction.profession, input.profession),
+            eq(auction.type, input.type)
           )
         )
-        .orderBy(auctionSignups.createdAt);
+        .orderBy(auction.createdAt);
 
       return rows;
     }),
@@ -42,20 +45,20 @@ export const auctionRouter = {
     .input(
       z.object({
         profession: z.string(),
-        type: z.enum(["main", "support"]),
+        type: auctionTypeSchema,
       })
     )
     .handler(async ({ input }) => {
       const result = await db
         .select({
           totalSignups: count(),
-          uniqueUsers: countDistinct(auctionSignups.userId),
+          uniqueUsers: countDistinct(auction.userId),
         })
-        .from(auctionSignups)
+        .from(auction)
         .where(
           and(
-            eq(auctionSignups.profession, input.profession),
-            eq(auctionSignups.type, input.type)
+            eq(auction.profession, input.profession),
+            eq(auction.type, input.type)
           )
         );
 
@@ -66,21 +69,22 @@ export const auctionRouter = {
     .input(z.object({ id: z.number() }))
     .handler(async ({ input, context }) => {
       // Only allow removing own signups (or admin check could be added)
-      const signup = await db
-        .select({ userId: auctionSignups.userId })
-        .from(auctionSignups)
-        .where(eq(auctionSignups.id, input.id))
-        .limit(1);
+      const [signup] = await db
+        .select({ userId: auction.userId })
+        .from(auction)
+        .where(eq(auction.id, input.id));
 
-      if (signup.length === 0) {
-        throw new Error("Signup not found");
+      if (!signup) {
+        throw new ORPCError("NOT_FOUND", { message: "Zapis nie znaleziony" });
       }
 
-      if (signup[0]?.userId !== context.session.user.id) {
-        throw new Error("Not authorized to remove this signup");
+      if (signup.userId !== context.session.user.id) {
+        throw new ORPCError("FORBIDDEN", {
+          message: "Nie masz uprawnień do usunięcia tego zapisu",
+        });
       }
 
-      await db.delete(auctionSignups).where(eq(auctionSignups.id, input.id));
+      await db.delete(auction).where(eq(auction.id, input.id));
       return { success: true };
     }),
 
@@ -91,7 +95,7 @@ export const auctionRouter = {
         level: z.number(),
         profession: z.string(),
         round: z.number(),
-        type: z.enum(["main", "support"]),
+        type: auctionTypeSchema,
       })
     )
     .handler(async ({ input, context }) => {
@@ -99,15 +103,15 @@ export const auctionRouter = {
 
       // Enforce one user per field (profession/type/level/round/column)
       const existingCell = await db
-        .select({ id: auctionSignups.id, userId: auctionSignups.userId })
-        .from(auctionSignups)
+        .select({ id: auction.id, userId: auction.userId })
+        .from(auction)
         .where(
           and(
-            eq(auctionSignups.profession, input.profession),
-            eq(auctionSignups.type, input.type),
-            eq(auctionSignups.level, input.level),
-            eq(auctionSignups.round, input.round),
-            eq(auctionSignups.column, input.column)
+            eq(auction.profession, input.profession),
+            eq(auction.type, input.type),
+            eq(auction.level, input.level),
+            eq(auction.round, input.round),
+            eq(auction.column, input.column)
           )
         )
         .limit(1);
@@ -116,15 +120,17 @@ export const auctionRouter = {
         const [cell] = existingCell;
         // If it's your signup, toggle off (unsign)
         if (cell?.userId === userId) {
-          await db.delete(auctionSignups).where(eq(auctionSignups.id, cell.id));
+          await db.delete(auction).where(eq(auction.id, cell.id));
           return { action: "removed" as const };
         }
 
         // Otherwise, slot is taken
-        throw new Error("To pole jest już zajęte");
+        throw new ORPCError("CONFLICT", {
+          message: "To pole jest już zajęte",
+        });
       }
 
-      await db.insert(auctionSignups).values({
+      await db.insert(auction).values({
         column: input.column,
         level: input.level,
         profession: input.profession,

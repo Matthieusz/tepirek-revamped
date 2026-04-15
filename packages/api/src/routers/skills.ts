@@ -1,12 +1,10 @@
-import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
 import { db } from "@tepirek-revamped/db";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { professions, range, skills } from "@tepirek-revamped/db/schema/skills";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
-const toSlug = (name: string) =>
-  name.trim().toLowerCase().replaceAll(/\s+/g, "-");
+import { adminProcedure, protectedProcedure } from "./procedures";
 
 export const skillsRouter = {
   createProfession: adminProcedure
@@ -86,13 +84,12 @@ export const skillsRouter = {
       })
     )
     .handler(async ({ input }) => {
-      const records = await db.select().from(range);
-      for (const r of records) {
-        if (toSlug(r.name) === input.slug) {
-          return r;
-        }
-      }
-      return null;
+      const [result] = await db
+        .select()
+        .from(range)
+        .where(sql`lower(replace(${range.name}, ' ', '-')) = ${input.slug}`)
+        .limit(1);
+      return result ?? null;
     }),
 
   getSkillsByRange: protectedProcedure

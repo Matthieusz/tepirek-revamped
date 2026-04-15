@@ -172,7 +172,7 @@ export const DistributeGoldModal = ({
 
   // Get hero stats when a specific hero is selected
   const { data: heroStats, isPending: heroStatsPending } = useQuery({
-    ...orpc.bet.getHeroStats.queryOptions({
+    ...orpc.ranking.getHeroStats.queryOptions({
       input: { heroId: Number.parseInt(heroId, 10) },
     }),
     enabled: heroId !== "all" && open,
@@ -195,7 +195,7 @@ export const DistributeGoldModal = ({
           return;
         }
 
-        const result = await orpc.bet.distributeGold.call({
+        const result = await orpc.vault.distributeGold.call({
           goldAmount,
           heroId: Number.parseInt(heroId, 10),
         });
@@ -204,21 +204,17 @@ export const DistributeGoldModal = ({
           `Rozdzielono ${goldAmount.toLocaleString("pl-PL")} złota dla ${result.usersUpdated} graczy`
         );
         await queryClient.invalidateQueries({
-          queryKey: orpc.bet.getRanking.queryKey({ input: {} }),
+          queryKey: orpc.ranking.getRanking.queryKey({ input: {} }),
         });
         await queryClient.invalidateQueries({
-          queryKey: orpc.bet.getHeroStats.queryKey({
+          queryKey: orpc.ranking.getHeroStats.queryKey({
             input: { heroId: Number.parseInt(heroId, 10) },
           }),
         });
         setOpen(false);
         form.reset();
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Nie udało się rozdzielić złota";
-        toast.error(message);
+        toast.error(getErrorMessage(error));
       }
     },
     validators: {

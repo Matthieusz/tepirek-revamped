@@ -22,6 +22,12 @@ const app = new Hono<{
   };
 }>();
 
+const corsOrigin = process.env.CORS_ORIGIN;
+
+if (!corsOrigin) {
+  throw new Error("CORS_ORIGIN environment variable is required");
+}
+
 app.use("*", async (c, next) => {
   const requestId = c.req.header("x-request-id") ?? randomUUID();
   const requestLogger = logger.child({
@@ -64,7 +70,7 @@ app.use(
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "OPTIONS"],
     credentials: true,
-    origin: process.env.CORS_ORIGIN ?? "",
+    origin: corsOrigin,
   })
 );
 
@@ -93,8 +99,7 @@ export const rpcHandler = new RPCHandler(appRouter, {
   ],
 });
 
-app.use("/*", async (c, next) => {
-  // oxlint-disable-next-line @typescript-eslint/no-unsafe-assignment
+app.use("/rpc/*", async (c, next) => {
   const context = await createContext({ context: c });
   const requestLogger = c.get("logger") ?? logger;
 
@@ -107,6 +112,13 @@ app.use("/*", async (c, next) => {
     requestLogger.debug({ path: c.req.path }, "rpc request handled");
     return c.newResponse(rpcResult.response.body, rpcResult.response);
   }
+
+  await next();
+});
+
+app.use("/api-reference/*", async (c, next) => {
+  const context = await createContext({ context: c });
+  const requestLogger = c.get("logger") ?? logger;
 
   const apiResult = await apiHandler.handle(c.req.raw, {
     context,

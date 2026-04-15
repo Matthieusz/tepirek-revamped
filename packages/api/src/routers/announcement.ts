@@ -1,9 +1,10 @@
-import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
 import { db } from "@tepirek-revamped/db";
 import { announcement } from "@tepirek-revamped/db/schema/announcement";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+
+import { adminProcedure, protectedProcedure } from "./procedures";
 
 export const announcementRouter = {
   create: adminProcedure

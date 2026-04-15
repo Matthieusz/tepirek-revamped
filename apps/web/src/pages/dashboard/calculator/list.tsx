@@ -207,9 +207,9 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
 
   const form = useForm({
     defaultValues: {
-      attackerLevel: 200 as number,
-      victimLevel: 150 as number,
-    },
+      attackerLevel: 200,
+      victimLevel: 150,
+    } satisfies z.infer<typeof formSchema>,
     onSubmit: ({ value }) => {
       const minLevelDifference = calculateMinLevelDifference(
         value.attackerLevel
@@ -240,9 +240,9 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
 
   const groupForm = useForm({
     defaultValues: {
-      attackerLevels: "200, 180, 160" as string,
-      defenderLevels: "150, 140" as string,
-    },
+      attackerLevels: "200, 180, 160",
+      defenderLevels: "150, 140",
+    } satisfies z.infer<typeof groupFormSchema>,
     onSubmit: ({ value }) => {
       const attackerLevels = parseLevels(value.attackerLevels);
       const defenderLevels = parseLevels(value.defenderLevels);

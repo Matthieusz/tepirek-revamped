@@ -76,11 +76,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
         setOpen(false);
         form.reset();
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Nie udało się utworzyć herosa";
-        toast.error(message);
+        toast.error(getErrorMessage(error));
       }
     },
     validators: {

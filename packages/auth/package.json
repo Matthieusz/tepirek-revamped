@@ -12,9 +12,7 @@
   "scripts": {},
   "dependencies": {
     "@tepirek-revamped/db": "workspace:*",
-    "better-auth": "catalog:",
-    "dotenv": "catalog:",
-    "zod": "catalog:"
+    "better-auth": "catalog:"
   },
   "devDependencies": {
     "@tepirek-revamped/config": "workspace:*"

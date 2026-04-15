@@ -29,6 +29,16 @@ export interface AuthSession {
 }
 
 /**
+ * User portion of the authenticated session, used when only user data is needed
+ */
+export type AuthUser = AuthSession["user"];
+
+/**
+ * Session type that can be null when unauthenticated
+ */
+export type UserSession = AuthSession | null;
+
+/**
  * Context returned by dashboard route's beforeLoad
  */
 export interface DashboardRouteContext {

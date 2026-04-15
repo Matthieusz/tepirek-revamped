@@ -36,6 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 import { orpc } from "@/utils/orpc";
@@ -70,8 +71,7 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
       await orpc.heroes.delete.call({ id: heroId });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
       toast.success("Heros został usunięty");

@@ -52,11 +52,7 @@ export const EditProfileModal = ({
         });
         setOpen(false);
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Nie udało się zaktualizować profilu";
-        toast.error(message);
+        toast.error(getErrorMessage(error));
       }
     },
     validators: {

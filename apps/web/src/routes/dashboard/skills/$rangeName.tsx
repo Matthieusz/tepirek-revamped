@@ -18,7 +18,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Table,
   TableBody,
@@ -27,19 +27,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { isAdmin } from "@/lib/auth-guard";
+import { isAdmin } from "@/lib/route-helpers";
 import { orpc, queryClient } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/skills/$rangeName")({
   component: RangeDetails,
   loader: async ({ params }) => {
     const slug = params.rangeName;
-    try {
-      const data = await orpc.skills.getRangeBySlug.call({ slug });
-      return { crumb: data?.name ?? slug };
-    } catch {
-      return { crumb: slug };
-    }
+    const data = await orpc.skills.getRangeBySlug.call({ slug });
+    return { crumb: data?.name ?? slug };
   },
 });
 
@@ -96,7 +92,7 @@ function RangeDetails() {
       <div className="mx-auto w-full max-w-6xl space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <Spinner />
+            <LoadingSpinner />
           </div>
         </div>
       </div>

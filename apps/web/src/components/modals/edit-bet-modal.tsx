@@ -20,9 +20,9 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import { handleUserToggle, calculatePointsPerMember } from "@/lib/bet-helpers";
+import { getErrorMessage } from "@/lib/errors";
 import { orpc } from "@/utils/orpc";
-
-const POINTS_PER_HERO = 20;
 
 interface EditBetModalProps {
   betId: number;
@@ -39,13 +39,6 @@ interface EditBetModalProps {
 const schema = z.object({
   userIds: z.array(z.string()).min(1, "Wybierz przynajmniej jednego gracza"),
 });
-
-const handleUserToggle = (userId: string, currentUserIds: string[]) => {
-  if (currentUserIds.includes(userId)) {
-    return currentUserIds.filter((id) => id !== userId);
-  }
-  return [...currentUserIds, userId];
-};
 
 export const EditBetModal = ({
   betId,
@@ -69,8 +62,7 @@ export const EditBetModal = ({
       await orpc.bet.edit.call({ betId, newUserIds });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
       toast.success("Obstawienie zostało zaktualizowane");
@@ -93,9 +85,6 @@ export const EditBetModal = ({
       onSubmit: schema,
     },
   });
-
-  const calculatePointsPerMember = (count: number) =>
-    Math.floor((POINTS_PER_HERO / count) * 100) / 100;
 
   const renderUserList = (
     fieldValue: string[],
@@ -160,8 +149,6 @@ export const EditBetModal = ({
     );
   };
 
-  const handleCopyCurrent = () => currentMemberIds;
-
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
       <ResponsiveDialogTrigger asChild>
@@ -194,6 +181,15 @@ export const EditBetModal = ({
                 calculatePointsPerMember(newMemberCount);
               const currentPointsPerMember =
                 calculatePointsPerMember(memberCount);
+              let pointsPerMemberVariant:
+                | "default"
+                | "destructive"
+                | "secondary" = "secondary";
+              if (newPointsPerMember > currentPointsPerMember) {
+                pointsPerMemberVariant = "default";
+              } else if (newPointsPerMember < currentPointsPerMember) {
+                pointsPerMemberVariant = "destructive";
+              }
 
               return (
                 <div className="grid gap-4 py-4">
@@ -217,22 +213,9 @@ export const EditBetModal = ({
                         <p className="font-semibold text-lg">
                           {newMemberCount} os.
                         </p>
-                        {(() => {
-                          let variant: "default" | "destructive" | "secondary" =
-                            "secondary";
-                          if (newPointsPerMember > currentPointsPerMember) {
-                            variant = "default";
-                          } else if (
-                            newPointsPerMember < currentPointsPerMember
-                          ) {
-                            variant = "destructive";
-                          }
-                          return (
-                            <Badge variant={variant}>
-                              {newPointsPerMember} pkt/os
-                            </Badge>
-                          );
-                        })()}
+                        <Badge variant={pointsPerMemberVariant}>
+                          {newPointsPerMember} pkt/os
+                        </Badge>
                       </div>
                     </div>
                   </div>
@@ -255,8 +238,7 @@ export const EditBetModal = ({
                         </Button>
                         <Button
                           onClick={() => {
-                            const newIds = handleCopyCurrent();
-                            field.handleChange(newIds);
+                            field.handleChange(currentMemberIds);
                           }}
                           size="sm"
                           type="button"

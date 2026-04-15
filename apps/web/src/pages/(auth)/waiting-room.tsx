@@ -52,7 +52,9 @@ export default function WaitingRoomPage({ session }: WaitingRoomPageProps) {
           await router.navigate({ to: "/dashboard" });
         }
       } catch {
-        // Discord validation failed, stay on waiting room
+        toast.error(
+          "Nie udało się zweryfikować przynależności do gildii Discord"
+        );
       } finally {
         setIsValidating(false);
       }

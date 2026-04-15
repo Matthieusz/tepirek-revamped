@@ -48,11 +48,7 @@ export const AddAnnouncementModal = ({
         setOpen(false);
         form.reset();
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Nie udało się utworzyć ogłoszenia";
-        toast.error(message);
+        toast.error(getErrorMessage(error));
       }
     },
     validators: {
@@ -98,10 +94,7 @@ export const AddAnnouncementModal = ({
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p
-                        className="text-red-500 text-sm"
-                        key={error?.message}
-                      >
+                      <p className="text-red-500 text-sm" key={error?.message}>
                         {error?.message}
                       </p>
                     ))}
@@ -125,10 +118,7 @@ export const AddAnnouncementModal = ({
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p
-                        className="text-red-500 text-sm"
-                        key={error?.message}
-                      >
+                      <p className="text-red-500 text-sm" key={error?.message}>
                         {error?.message}
                       </p>
                     ))}

@@ -36,29 +36,18 @@ const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
 const setSidebarCookie = async (value: boolean) => {
   if ("cookieStore" in window) {
-    /* oxlint-disable @typescript-eslint/no-unsafe-type-assertion -- safe window extension */
-    const store = (
-      window as unknown as {
-        cookieStore: {
-          set: (options: {
-            name: string;
-            value: string;
-            path: string;
-            maxAge: number;
-          }) => Promise<void>;
-        };
+    const store = window.cookieStore;
+    if (store) {
+      try {
+        await store.set({
+          maxAge: SIDEBAR_COOKIE_MAX_AGE,
+          name: SIDEBAR_COOKIE_NAME,
+          path: "/",
+          value: String(value),
+        });
+      } catch {
+        // Silently ignore cookie store errors
       }
-    ).cookieStore;
-    /* oxlint-enable @typescript-eslint/no-unsafe-type-assertion */
-    try {
-      await store.set({
-        maxAge: SIDEBAR_COOKIE_MAX_AGE,
-        name: SIDEBAR_COOKIE_NAME,
-        path: "/",
-        value: String(value),
-      });
-    } catch {
-      // Silently ignore cookie store errors
     }
   }
 };
@@ -173,13 +162,11 @@ const SidebarProvider = ({
             className
           )}
           data-slot="sidebar-wrapper"
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH,
-              "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
-              ...style,
-            } as React.CSSProperties
-          }
+          style={{
+            "--sidebar-width": SIDEBAR_WIDTH,
+            "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
+            ...style,
+          }}
           {...props}
         >
           {children}
@@ -227,12 +214,9 @@ const Sidebar = ({
           data-sidebar="sidebar"
           data-slot="sidebar"
           side={side}
-          style={
-            // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-            {
-              "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
-          }
+          style={{
+            "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
+          }}
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Sidebar</SheetTitle>
@@ -676,12 +660,9 @@ const SidebarMenuSkeleton = ({
       <Skeleton
         className="h-4 max-w-(--skeleton-width) flex-1"
         data-sidebar="menu-skeleton-text"
-        style={
-          // oxlint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          {
-            "--skeleton-width": width,
-          } as React.CSSProperties
-        }
+        style={{
+          "--skeleton-width": width,
+        }}
       />
     </div>
   );

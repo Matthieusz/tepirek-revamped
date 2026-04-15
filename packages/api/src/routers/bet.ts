@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
+import { POINTS_PER_HERO } from "@tepirek-revamped/config";
 import { db } from "@tepirek-revamped/db";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import {
@@ -8,12 +8,11 @@ import {
   heroBetMember,
   userStats,
 } from "@tepirek-revamped/db/schema/bet";
-import { event } from "@tepirek-revamped/db/schema/event";
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
-const POINTS_PER_HERO = 20;
+import { adminProcedure, protectedProcedure } from "./procedures";
 
 export const betRouter = {
   create: adminProcedure
@@ -37,7 +36,9 @@ export const betRouter = {
         .where(eq(hero.id, heroId));
 
       if (!heroData) {
-        throw new ORPCError("NOT_FOUND", { message: "Nie znaleziono herosów" });
+        throw new ORPCError("NOT_FOUND", {
+          message: "Nie znaleziono herosów",
+        });
       }
 
       // Create bet, members, and update stats in a transaction
@@ -69,25 +70,25 @@ export const betRouter = {
         );
 
         // Upsert userStats for each member
-        for (const userId of userIds) {
-          await tx
-            .insert(userStats)
-            .values({
+        await tx
+          .insert(userStats)
+          .values(
+            userIds.map((userId) => ({
               bets: 1,
               earnings: "0",
               eventId: heroData.eventId,
               heroId,
               points: pointsPerMember,
               userId,
-            })
-            .onConflictDoUpdate({
-              set: {
-                bets: sql`${userStats.bets} + 1`,
-                points: sql`${userStats.points} + ${pointsPerMember}`,
-              },
-              target: [userStats.userId, userStats.eventId, userStats.heroId],
-            });
-        }
+            }))
+          )
+          .onConflictDoUpdate({
+            set: {
+              bets: sql`${userStats.bets} + 1`,
+              points: sql`${userStats.points} + ${pointsPerMember}`,
+            },
+            target: [userStats.userId, userStats.eventId, userStats.heroId],
+          });
 
         return bet;
       });
@@ -108,7 +109,9 @@ export const betRouter = {
         .where(eq(heroBet.id, input.id));
 
       if (!betData) {
-        throw new ORPCError("NOT_FOUND", { message: "Bet not found" });
+        throw new ORPCError("NOT_FOUND", {
+          message: "Obstawienie nie znalezione",
+        });
       }
 
       // Get hero to find eventId
@@ -118,29 +121,41 @@ export const betRouter = {
         .where(eq(hero.id, betData.heroId));
 
       if (!heroData) {
-        throw new ORPCError("NOT_FOUND", { message: "Hero not found" });
+        throw new ORPCError("NOT_FOUND", {
+          message: "Heros nie znaleziony",
+        });
       }
 
       // Get bet members to decrement their stats
       const members = await db
-        .select({ points: heroBetMember.points, userId: heroBetMember.userId })
+        .select({ userId: heroBetMember.userId })
         .from(heroBetMember)
         .where(eq(heroBetMember.heroBetId, input.id));
 
+      const memberUserIds = [
+        ...new Set(members.map((member) => member.userId)),
+      ];
+
       // Decrement stats and delete bet in a transaction
       await db.transaction(async (tx) => {
-        for (const member of members) {
+        if (memberUserIds.length > 0) {
           await tx
             .update(userStats)
             .set({
               bets: sql`${userStats.bets} - 1`,
-              points: sql`${userStats.points} - ${member.points}`,
+              points: sql`${userStats.points} - COALESCE((
+                SELECT ${heroBetMember.points}
+                FROM ${heroBetMember}
+                WHERE ${heroBetMember.heroBetId} = ${input.id}
+                  AND ${heroBetMember.userId} = ${userStats.userId}
+                LIMIT 1
+              ), 0)`,
             })
             .where(
               and(
-                eq(userStats.userId, member.userId),
                 eq(userStats.eventId, heroData.eventId),
-                eq(userStats.heroId, betData.heroId)
+                eq(userStats.heroId, betData.heroId),
+                inArray(userStats.userId, memberUserIds)
               )
             );
         }
@@ -173,7 +188,9 @@ export const betRouter = {
         .where(eq(heroBet.id, betId));
 
       if (!betData) {
-        throw new ORPCError("NOT_FOUND", { message: "Bet not found" });
+        throw new ORPCError("NOT_FOUND", {
+          message: "Obstawienie nie znalezione",
+        });
       }
 
       // Get hero to find eventId
@@ -183,13 +200,14 @@ export const betRouter = {
         .where(eq(hero.id, betData.heroId));
 
       if (!heroData) {
-        throw new ORPCError("NOT_FOUND", { message: "Hero not found" });
+        throw new ORPCError("NOT_FOUND", {
+          message: "Heros nie znaleziony",
+        });
       }
 
       // Get current members with their points
       const currentMembers = await db
         .select({
-          id: heroBetMember.id,
           points: heroBetMember.points,
           userId: heroBetMember.userId,
         })
@@ -197,6 +215,13 @@ export const betRouter = {
         .where(eq(heroBetMember.heroBetId, betId));
 
       const currentMemberIds = new Set(currentMembers.map((m) => m.userId));
+
+      if (currentMembers.length === 0) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Obstawienie nie ma członków",
+        });
+      }
+
       const oldPointsPerMember = Number.parseFloat(
         currentMembers[0]?.points ?? "0"
       );
@@ -219,6 +244,27 @@ export const betRouter = {
         if (membersToRemove.length > 0) {
           const removeUserIds = membersToRemove.map((m) => m.userId);
 
+          // Decrement bets and subtract points for removed members
+          await tx
+            .update(userStats)
+            .set({
+              bets: sql`${userStats.bets} - 1`,
+              points: sql`${userStats.points} - COALESCE((
+                SELECT ${heroBetMember.points}
+                FROM ${heroBetMember}
+                WHERE ${heroBetMember.heroBetId} = ${betId}
+                  AND ${heroBetMember.userId} = ${userStats.userId}
+                LIMIT 1
+              ), 0)`,
+            })
+            .where(
+              and(
+                eq(userStats.eventId, heroData.eventId),
+                eq(userStats.heroId, betData.heroId),
+                inArray(userStats.userId, removeUserIds)
+              )
+            );
+
           // Delete from heroBetMember
           await tx
             .delete(heroBetMember)
@@ -228,23 +274,6 @@ export const betRouter = {
                 inArray(heroBetMember.userId, removeUserIds)
               )
             );
-
-          // Decrement bets and subtract points for removed members
-          for (const member of membersToRemove) {
-            await tx
-              .update(userStats)
-              .set({
-                bets: sql`${userStats.bets} - 1`,
-                points: sql`${userStats.points} - ${member.points}`,
-              })
-              .where(
-                and(
-                  eq(userStats.userId, member.userId),
-                  eq(userStats.eventId, heroData.eventId),
-                  eq(userStats.heroId, betData.heroId)
-                )
-              );
-          }
         }
 
         // 2. Add new members to heroBetMember and increment their stats
@@ -258,58 +287,57 @@ export const betRouter = {
           );
 
           // Increment bets and add points for new members
-          for (const userId of membersToAdd) {
-            await tx
-              .insert(userStats)
-              .values({
+          await tx
+            .insert(userStats)
+            .values(
+              membersToAdd.map((userId) => ({
                 bets: 1,
                 earnings: "0",
                 eventId: heroData.eventId,
                 heroId: betData.heroId,
                 points: newPointsPerMember,
                 userId,
-              })
-              .onConflictDoUpdate({
-                set: {
-                  bets: sql`${userStats.bets} + 1`,
-                  points: sql`${userStats.points} + ${newPointsPerMember}`,
-                },
-                target: [userStats.userId, userStats.eventId, userStats.heroId],
-              });
-          }
+              }))
+            )
+            .onConflictDoUpdate({
+              set: {
+                bets: sql`${userStats.bets} + 1`,
+                points: sql`${userStats.points} + ${newPointsPerMember}`,
+              },
+              target: [userStats.userId, userStats.eventId, userStats.heroId],
+            });
         }
 
         // 3. Update existing members' points in heroBetMember and userStats
         if (membersToKeep.length > 0) {
+          const keepUserIds = membersToKeep.map((m) => m.userId);
           const pointsDiff = Number(newPointsPerMember) - oldPointsPerMember;
 
-          for (const member of membersToKeep) {
-            // Update heroBetMember points
+          // Update heroBetMember points
+          await tx
+            .update(heroBetMember)
+            .set({ points: newPointsPerMember })
+            .where(
+              and(
+                eq(heroBetMember.heroBetId, betId),
+                inArray(heroBetMember.userId, keepUserIds)
+              )
+            );
+
+          // Update userStats points (add the difference)
+          if (pointsDiff !== 0) {
             await tx
-              .update(heroBetMember)
-              .set({ points: newPointsPerMember })
+              .update(userStats)
+              .set({
+                points: sql`${userStats.points} + ${pointsDiff.toFixed(2)}`,
+              })
               .where(
                 and(
-                  eq(heroBetMember.heroBetId, betId),
-                  eq(heroBetMember.userId, member.userId)
+                  eq(userStats.eventId, heroData.eventId),
+                  eq(userStats.heroId, betData.heroId),
+                  inArray(userStats.userId, keepUserIds)
                 )
               );
-
-            // Update userStats points (add the difference)
-            if (pointsDiff !== 0) {
-              await tx
-                .update(userStats)
-                .set({
-                  points: sql`${userStats.points} + ${pointsDiff.toFixed(2)}`,
-                })
-                .where(
-                  and(
-                    eq(userStats.userId, member.userId),
-                    eq(userStats.eventId, heroData.eventId),
-                    eq(userStats.heroId, betData.heroId)
-                  )
-                );
-            }
           }
         }
 
@@ -321,84 +349,6 @@ export const betRouter = {
       });
 
       return { success: true };
-    }),
-
-  distributeGold: adminProcedure
-    .input(z.object({ goldAmount: z.number().positive(), heroId: z.number() }))
-    .handler(async ({ input }) => {
-      const { heroId, goldAmount } = input;
-
-      // Get hero info and eventId
-      const [heroData] = await db
-        .select({ eventId: hero.eventId, name: hero.name })
-        .from(hero)
-        .where(eq(hero.id, heroId));
-
-      if (!heroData) {
-        throw new ORPCError("NOT_FOUND", { message: "Hero not found" });
-      }
-
-      // Get all user stats for this hero
-      const heroUserStats = await db
-        .select({
-          id: userStats.id,
-          points: userStats.points,
-          userId: userStats.userId,
-        })
-        .from(userStats)
-        .where(eq(userStats.heroId, heroId));
-
-      if (heroUserStats.length === 0) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "No bets found for this hero",
-        });
-      }
-
-      // Calculate total points for this hero
-      const totalPoints = heroUserStats.reduce(
-        (sum, stat) => sum + Number.parseFloat(stat.points),
-        0
-      );
-
-      if (totalPoints <= 0) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "Total points must be greater than 0",
-        });
-      }
-
-      // Calculate point worth: goldAmount / totalPoints
-      const pointWorth = goldAmount / totalPoints;
-
-      // Update earnings for each user and hero pointWorth in a transaction
-      await db.transaction(async (tx) => {
-        for (const stat of heroUserStats) {
-          const userPoints = Number.parseFloat(stat.points);
-          const userEarnings = (userPoints * pointWorth).toFixed(2);
-
-          await tx
-            .update(userStats)
-            .set({
-              earnings: userEarnings,
-            })
-            .where(eq(userStats.id, stat.id));
-        }
-
-        // Update hero's pointWorth for reference
-        await tx
-          .update(hero)
-          .set({ pointWorth: Math.round(pointWorth) })
-          .where(eq(hero.id, heroId));
-      });
-
-      return {
-        goldAmount,
-        heroId,
-        heroName: heroData.name,
-        pointWorth,
-        success: true,
-        totalPoints,
-        usersUpdated: heroUserStats.length,
-      };
     }),
 
   getAll: protectedProcedure.handler(async () => {
@@ -586,205 +536,5 @@ export const betRouter = {
         .where(eq(hero.eventId, input.eventId));
 
       return bets;
-    }),
-
-  getHeroStats: protectedProcedure
-    .input(z.object({ heroId: z.number() }))
-    .handler(async ({ input }) => {
-      // Get total bets and points for a specific hero
-      const [stats] = await db
-        .select({
-          totalBets: sql<number>`COALESCE(SUM(${userStats.bets}), 0)`.as(
-            "total_bets"
-          ),
-          totalPoints: sql<string>`COALESCE(SUM(${userStats.points}), '0')`.as(
-            "total_points"
-          ),
-        })
-        .from(userStats)
-        .where(eq(userStats.heroId, input.heroId));
-
-      // Get hero info
-      const [heroInfo] = await db
-        .select({
-          id: hero.id,
-          name: hero.name,
-          pointWorth: hero.pointWorth,
-        })
-        .from(hero)
-        .where(eq(hero.id, input.heroId));
-
-      return {
-        currentPointWorth: heroInfo?.pointWorth ?? 0,
-        heroId: input.heroId,
-        heroName: heroInfo?.name ?? "Unknown",
-        totalBets: Number(stats?.totalBets ?? 0),
-        totalPoints: Number.parseFloat(stats?.totalPoints ?? "0"),
-      };
-    }),
-
-  getOldestUnpaidEvent: protectedProcedure.handler(async () => {
-    const MIN_EARNINGS = 100_000_000;
-
-    // Find the oldest event that has at least one user with unpaid earnings >= MIN_EARNINGS
-    const result = await db
-      .select({
-        eventId: userStats.eventId,
-      })
-      .from(userStats)
-      .innerJoin(event, eq(userStats.eventId, event.id))
-      .where(eq(userStats.paidOut, false))
-      .groupBy(userStats.eventId, event.endTime)
-      .having(sql`SUM(${userStats.earnings}) >= ${MIN_EARNINGS}`)
-      .orderBy(sql`${event.endTime} ASC`)
-      .limit(1);
-
-    return result[0]?.eventId ?? null;
-  }),
-
-  getRanking: protectedProcedure
-    .input(
-      z.object({
-        eventId: z.number().optional(),
-        heroId: z.number().optional(),
-      })
-    )
-    .handler(async ({ input }) => {
-      // Build where conditions
-      const conditions: SQL[] = [];
-      if (input.eventId !== undefined) {
-        conditions.push(eq(userStats.eventId, input.eventId));
-      }
-      if (input.heroId !== undefined) {
-        conditions.push(eq(userStats.heroId, input.heroId));
-      }
-      const whereClause =
-        conditions.length > 0 ? and(...conditions) : undefined;
-
-      // Aggregate stats per user (across all heroes in the event or all events)
-      const baseQuery = db
-        .select({
-          totalBets: sql<number>`SUM(${userStats.bets})`.as("total_bets"),
-          totalEarnings: sql<string>`SUM(${userStats.earnings})`.as(
-            "total_earnings"
-          ),
-          totalPoints: sql<string>`SUM(${userStats.points})`.as("total_points"),
-          userId: userStats.userId,
-          userImage: user.image,
-          userName: user.name,
-        })
-        .from(userStats)
-        .innerJoin(user, eq(userStats.userId, user.id))
-        .where(whereClause)
-        .groupBy(userStats.userId, user.name, user.image)
-        .orderBy(desc(sql`SUM(${userStats.points})`));
-
-      const ranking = await baseQuery;
-
-      // Count distinct bets
-      let totalBets = 0;
-      if (input.heroId !== undefined) {
-        const [betsResult] = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(heroBet)
-          .where(eq(heroBet.heroId, input.heroId));
-        totalBets = Number(betsResult?.count ?? 0);
-      } else if (input.eventId === undefined) {
-        const [betsResult] = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(heroBet);
-        totalBets = Number(betsResult?.count ?? 0);
-      } else {
-        const [betsResult] = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(heroBet)
-          .innerJoin(hero, eq(heroBet.heroId, hero.id))
-          .where(eq(hero.eventId, input.eventId));
-        totalBets = Number(betsResult?.count ?? 0);
-      }
-
-      const pointWorthRows =
-        input.heroId === undefined
-          ? null
-          : await db
-              .select({ pointWorth: hero.pointWorth })
-              .from(hero)
-              .where(eq(hero.id, input.heroId));
-      const pointWorth =
-        pointWorthRows === null
-          ? null
-          : (pointWorthRows[0]?.pointWorth ?? null);
-
-      return { pointWorth, ranking, totalBets };
-    }),
-
-  getUserStats: protectedProcedure
-    .input(z.object({ eventId: z.number().optional() }))
-    .handler(async ({ input }) => {
-      if (input.eventId !== undefined) {
-        return db
-          .select()
-          .from(userStats)
-          .where(eq(userStats.eventId, input.eventId));
-      }
-      return db.select().from(userStats);
-    }),
-
-  getVault: protectedProcedure
-    .input(z.object({ eventId: z.number().optional() }))
-    .handler(async ({ input }) => {
-      // 100 million minimum
-      const MIN_EARNINGS = 100_000_000;
-
-      // Build where conditions
-      const conditions: SQL[] = [];
-      if (input.eventId !== undefined) {
-        conditions.push(eq(userStats.eventId, input.eventId));
-      }
-
-      const whereClause =
-        conditions.length > 0 ? and(...conditions) : undefined;
-
-      // Aggregate earnings per user (across heroes in the event)
-      const vault = await db
-        .select({
-          paidOut: sql<boolean>`BOOL_AND(${userStats.paidOut})`.as("paid_out"),
-          totalEarnings: sql<string>`SUM(${userStats.earnings})`.as(
-            "total_earnings"
-          ),
-          userId: userStats.userId,
-          userImage: user.image,
-          userName: user.name,
-        })
-        .from(userStats)
-        .innerJoin(user, eq(userStats.userId, user.id))
-        .where(whereClause)
-        .groupBy(userStats.userId, user.name, user.image)
-        .having(sql`SUM(${userStats.earnings}) >= ${MIN_EARNINGS}`)
-        .orderBy(desc(sql`SUM(${userStats.earnings})`));
-
-      return vault;
-    }),
-
-  togglePaidOut: adminProcedure
-    .input(
-      z.object({
-        eventId: z.number().optional(),
-        paidOut: z.boolean(),
-        userId: z.string(),
-      })
-    )
-    .handler(async ({ input }) => {
-      const conditions: SQL[] = [eq(userStats.userId, input.userId)];
-      if (input.eventId !== undefined) {
-        conditions.push(eq(userStats.eventId, input.eventId));
-      }
-
-      await db
-        .update(userStats)
-        .set({ paidOut: input.paidOut })
-        .where(and(...conditions));
-
-      return { success: true };
     }),
 };

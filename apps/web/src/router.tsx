@@ -3,8 +3,8 @@ import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 
 import "./index.css";
 import "./types/router";
-import Loader from "./components/loader";
 import NotFound from "./components/not-found";
+import { LoadingSpinner } from "./components/ui/loading-spinner";
 import { routeTree } from "./routeTree.gen";
 import { orpc, queryClient } from "./utils/orpc";
 
@@ -15,7 +15,7 @@ export const getRouter = () => {
     ),
     context: { orpc, queryClient },
     defaultNotFoundComponent: () => <NotFound />,
-    defaultPendingComponent: () => <Loader />,
+    defaultPendingComponent: () => <LoadingSpinner />,
     routeTree,
     scrollRestoration: true,
   });

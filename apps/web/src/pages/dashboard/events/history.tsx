@@ -37,6 +37,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useFilterPersistence } from "@/hooks/use-filter-persistence";
+import { calculatePointsPerMember } from "@/lib/bet-helpers";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import type { AuthSession } from "@/types/route";
@@ -47,7 +49,6 @@ type BetToDelete = {
   heroName: string;
 } | null;
 
-const POINTS_PER_HERO = 20;
 const ITEMS_PER_PAGE = 10;
 
 interface HistoryFilters extends Record<string, unknown> {
@@ -154,8 +155,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
       await orpc.bet.delete.call({ id: betId });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
       toast.success("Obstawienie zostało usunięte");
@@ -166,9 +166,6 @@ export default function HistoryPage({ session }: HistoryPageProps) {
       setBetToDelete(null);
     },
   });
-
-  const calculatePointsPerMember = (memberCount: number) =>
-    Math.floor((POINTS_PER_HERO / memberCount) * 100) / 100;
 
   let betsContent: ReactNode;
   if (betsLoading) {

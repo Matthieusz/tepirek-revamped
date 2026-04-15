@@ -1,14 +1,13 @@
 import { useForm } from "@tanstack/react-form";
 import { useHotkey } from "@tanstack/react-hotkeys";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy, CopyX, Search, User } from "lucide-react";
+import { Copy, CopyX, Loader2, Search, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { HeroCardsGrid } from "@/components/events/hero-cards-grid";
 import { UserSelectList } from "@/components/events/user-select-list";
-import Loader from "@/components/loader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { handleUserToggle } from "@/lib/bet-helpers";
 import { getEventIcon } from "@/lib/constants";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 import { orpc } from "@/utils/orpc";
@@ -38,13 +39,6 @@ const defaultValues: AddBetForm = {
   eventId: "",
   heroId: "",
   userIds: [],
-};
-
-const handleUserToggle = (userId: string, currentUserIds: string[]) => {
-  if (currentUserIds.includes(userId)) {
-    return currentUserIds.filter((id) => id !== userId);
-  }
-  return [...currentUserIds, userId];
 };
 
 interface BetsAddPageProps {
@@ -104,11 +98,7 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
         });
         form.setFieldValue("userIds", []);
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Nie udało się utworzyć obstawienia";
-        toast.error(message);
+        toast.error(getErrorMessage(error));
       }
     },
     validators: {
@@ -140,13 +130,12 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
     (hero) => hero.eventId === Number.parseInt(selectedEventId || "0", 10)
   );
 
-  const handleCopyLastBet = (currentUserIds: string[]) => {
+  const handleCopyLastBet = () => {
     if (!allBets || allBets.length === 0) {
-      return currentUserIds;
+      return [];
     }
     const [lastBet] = allBets;
-    const lastBetUserIds = lastBet.members.map((member) => member.userId);
-    return lastBetUserIds;
+    return lastBet.members.map((member) => member.userId);
   };
 
   const renderHeroSelection = (
@@ -340,7 +329,7 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
                   >
                     {state.isSubmitting ? (
                       <p className="flex items-center gap-2">
-                        <Loader />
+                        <Loader2 className="size-4 animate-spin" />
                         Tworzenie obstawienia
                       </p>
                     ) : (
@@ -400,7 +389,7 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
                             !allBets || allBets.length === 0 || betsLoading
                           }
                           onClick={() => {
-                            const newIds = handleCopyLastBet(field.state.value);
+                            const newIds = handleCopyLastBet();
                             field.handleChange(newIds);
                           }}
                           size="sm"
