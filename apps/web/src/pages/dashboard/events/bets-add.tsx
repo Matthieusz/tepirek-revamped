@@ -1,14 +1,13 @@
 import { useForm } from "@tanstack/react-form";
 import { useHotkey } from "@tanstack/react-hotkeys";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy, CopyX, Search, User } from "lucide-react";
+import { Copy, CopyX, Loader2, Search, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { HeroCardsGrid } from "@/components/events/hero-cards-grid";
 import { UserSelectList } from "@/components/events/user-select-list";
-import Loader from "@/components/loader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -340,7 +339,7 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
                   >
                     {state.isSubmitting ? (
                       <p className="flex items-center gap-2">
-                        <Loader />
+                        <Loader2 className="size-4 animate-spin" />
                         Tworzenie obstawienia
                       </p>
                     ) : (

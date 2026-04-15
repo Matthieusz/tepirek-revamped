@@ -11,14 +11,10 @@
   },
   "scripts": {},
   "dependencies": {
-    "@orpc/client": "catalog:",
-    "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
-    "@orpc/zod": "catalog:",
     "@tepirek-revamped/auth": "workspace:*",
     "@tepirek-revamped/config": "workspace:*",
     "@tepirek-revamped/db": "workspace:*",
-    "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "hono": "catalog:",
     "zod": "catalog:"

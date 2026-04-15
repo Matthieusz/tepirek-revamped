@@ -3,7 +3,7 @@ import { Loader2, Trash2 } from "lucide-react";
 import type React from "react";
 import { toast } from "sonner";
 
-import { Spinner } from "@/components/ui/spinner";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { orpc } from "@/utils/orpc";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -231,7 +231,7 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
   };
 
   if (isPending) {
-    return <Spinner />;
+    return <LoadingSpinner />;
   }
 
   return (

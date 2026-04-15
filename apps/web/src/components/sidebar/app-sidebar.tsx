@@ -7,7 +7,6 @@ import {
   HeartIcon,
   ListChecks,
   LogOut,
-  Settings,
   User,
   Users,
 } from "lucide-react";
@@ -113,12 +112,6 @@ const data = {
       icon: User,
       name: "Profil",
       url: "/dashboard/profile",
-    },
-    {
-      disabled: true,
-      icon: Settings,
-      name: "Ustawienia",
-      url: "/dashboard/settings",
     },
   ],
 };

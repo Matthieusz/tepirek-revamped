@@ -3,25 +3,10 @@ import { redirect } from "@tanstack/react-router";
 import { getUser } from "@/functions/get-user";
 import type { AuthSession } from "@/types/route";
 
-// ============================================================================
-// Type Definitions
-// ============================================================================
-
-/**
- * Props passed to page components
- */
 export interface PageProps {
   session: AuthSession;
 }
 
-// ============================================================================
-// Auth Guards
-// ============================================================================
-
-/**
- * Requires user to be authenticated.
- * Redirects to /login if not authenticated.
- */
 export const requireAuth = async (): Promise<AuthSession> => {
   const session = await getUser();
   if (!session?.user) {
@@ -57,29 +42,5 @@ export const requireUnverified = async (): Promise<AuthSession> => {
   return session;
 };
 
-/**
- * Requires user to NOT be authenticated.
- * Redirects to /dashboard if already logged in.
- */
-export const requireGuest = async (): Promise<void> => {
-  const session = await getUser();
-  if (session?.user) {
-    throw redirect({ to: "/dashboard" });
-  }
-};
-
-// ============================================================================
-// Utility Functions
-// ============================================================================
-
-/**
- * Checks if the user is an admin
- */
 export const isAdmin = (session: AuthSession): boolean =>
   session.user.role === "admin";
-
-/**
- * Checks if the user is verified
- */
-export const isVerified = (session: AuthSession): boolean =>
-  session.user.verified;

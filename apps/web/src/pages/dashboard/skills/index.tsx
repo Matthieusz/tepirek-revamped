@@ -5,7 +5,7 @@ import { AddProfessionModal } from "@/components/modals/add-profession-modal";
 import { AddRangeModal } from "@/components/modals/add-range-modal";
 import { RangeCard } from "@/components/skills/range-card";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 import { orpc } from "@/utils/orpc";
@@ -55,7 +55,7 @@ export default function SkillsIndexPage({ session }: SkillsIndexPageProps) {
           </div>
         )}
       </div>
-      {isPending && <Spinner />}
+      {isPending && <LoadingSpinner />}
       {!isPending && ranges?.length === 0 && (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <p className="text-muted-foreground">

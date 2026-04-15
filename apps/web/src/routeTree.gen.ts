@@ -16,7 +16,6 @@ import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardTasksRouteImport } from './routes/dashboard/tasks'
-import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
 import { Route as DashboardPlayerListRouteImport } from './routes/dashboard/player-list'
 import { Route as DashboardSkillsRouteRouteImport } from './routes/dashboard/skills/route'
@@ -25,7 +24,6 @@ import { Route as DashboardSkillsIndexRouteImport } from './routes/dashboard/ski
 import { Route as DashboardSkillsRangeNameRouteImport } from './routes/dashboard/skills/$rangeName'
 import { Route as DashboardEventsVaultRouteImport } from './routes/dashboard/events/vault'
 import { Route as DashboardEventsRankingRouteImport } from './routes/dashboard/events/ranking'
-import { Route as DashboardEventsMapsRouteImport } from './routes/dashboard/events/maps'
 import { Route as DashboardEventsListRouteImport } from './routes/dashboard/events/list'
 import { Route as DashboardEventsHistoryRouteImport } from './routes/dashboard/events/history'
 import { Route as DashboardEventsHeroesRouteImport } from './routes/dashboard/events/heroes'
@@ -72,11 +70,6 @@ const DashboardTasksRoute = DashboardTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
 const DashboardProfileRoute = DashboardProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -116,11 +109,6 @@ const DashboardEventsVaultRoute = DashboardEventsVaultRouteImport.update({
 const DashboardEventsRankingRoute = DashboardEventsRankingRouteImport.update({
   id: '/events/ranking',
   path: '/events/ranking',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardEventsMapsRoute = DashboardEventsMapsRouteImport.update({
-  id: '/events/maps',
-  path: '/events/maps',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardEventsListRoute = DashboardEventsListRouteImport.update({
@@ -188,7 +176,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/skills': typeof DashboardSkillsRouteRouteWithChildren
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/auctions/$type': typeof DashboardAuctionsTypeRouteRouteWithChildren
@@ -198,7 +185,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/events/heroes': typeof DashboardEventsHeroesRoute
   '/dashboard/events/history': typeof DashboardEventsHistoryRoute
   '/dashboard/events/list': typeof DashboardEventsListRoute
-  '/dashboard/events/maps': typeof DashboardEventsMapsRoute
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
   '/dashboard/events/vault': typeof DashboardEventsVaultRoute
   '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRoute
@@ -215,7 +201,6 @@ export interface FileRoutesByTo {
   '/dashboard/auctions': typeof DashboardAuctionsRouteRouteWithChildren
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/calculator/list': typeof DashboardCalculatorListRoute
@@ -224,7 +209,6 @@ export interface FileRoutesByTo {
   '/dashboard/events/heroes': typeof DashboardEventsHeroesRoute
   '/dashboard/events/history': typeof DashboardEventsHistoryRoute
   '/dashboard/events/list': typeof DashboardEventsListRoute
-  '/dashboard/events/maps': typeof DashboardEventsMapsRoute
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
   '/dashboard/events/vault': typeof DashboardEventsVaultRoute
   '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRoute
@@ -244,7 +228,6 @@ export interface FileRoutesById {
   '/dashboard/skills': typeof DashboardSkillsRouteRouteWithChildren
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/auctions/$type': typeof DashboardAuctionsTypeRouteRouteWithChildren
@@ -254,7 +237,6 @@ export interface FileRoutesById {
   '/dashboard/events/heroes': typeof DashboardEventsHeroesRoute
   '/dashboard/events/history': typeof DashboardEventsHistoryRoute
   '/dashboard/events/list': typeof DashboardEventsListRoute
-  '/dashboard/events/maps': typeof DashboardEventsMapsRoute
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
   '/dashboard/events/vault': typeof DashboardEventsVaultRoute
   '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRoute
@@ -275,7 +257,6 @@ export interface FileRouteTypes {
     | '/dashboard/skills'
     | '/dashboard/player-list'
     | '/dashboard/profile'
-    | '/dashboard/settings'
     | '/dashboard/tasks'
     | '/dashboard/'
     | '/dashboard/auctions/$type'
@@ -285,7 +266,6 @@ export interface FileRouteTypes {
     | '/dashboard/events/heroes'
     | '/dashboard/events/history'
     | '/dashboard/events/list'
-    | '/dashboard/events/maps'
     | '/dashboard/events/ranking'
     | '/dashboard/events/vault'
     | '/dashboard/skills/$rangeName'
@@ -302,7 +282,6 @@ export interface FileRouteTypes {
     | '/dashboard/auctions'
     | '/dashboard/player-list'
     | '/dashboard/profile'
-    | '/dashboard/settings'
     | '/dashboard/tasks'
     | '/dashboard'
     | '/dashboard/calculator/list'
@@ -311,7 +290,6 @@ export interface FileRouteTypes {
     | '/dashboard/events/heroes'
     | '/dashboard/events/history'
     | '/dashboard/events/list'
-    | '/dashboard/events/maps'
     | '/dashboard/events/ranking'
     | '/dashboard/events/vault'
     | '/dashboard/skills/$rangeName'
@@ -330,7 +308,6 @@ export interface FileRouteTypes {
     | '/dashboard/skills'
     | '/dashboard/player-list'
     | '/dashboard/profile'
-    | '/dashboard/settings'
     | '/dashboard/tasks'
     | '/dashboard/'
     | '/dashboard/auctions/$type'
@@ -340,7 +317,6 @@ export interface FileRouteTypes {
     | '/dashboard/events/heroes'
     | '/dashboard/events/history'
     | '/dashboard/events/list'
-    | '/dashboard/events/maps'
     | '/dashboard/events/ranking'
     | '/dashboard/events/vault'
     | '/dashboard/skills/$rangeName'
@@ -409,13 +385,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardTasksRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/settings': {
-      id: '/dashboard/settings'
-      path: '/settings'
-      fullPath: '/dashboard/settings'
-      preLoaderRoute: typeof DashboardSettingsRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
     '/dashboard/profile': {
       id: '/dashboard/profile'
       path: '/profile'
@@ -470,13 +439,6 @@ declare module '@tanstack/react-router' {
       path: '/events/ranking'
       fullPath: '/dashboard/events/ranking'
       preLoaderRoute: typeof DashboardEventsRankingRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/events/maps': {
-      id: '/dashboard/events/maps'
-      path: '/events/maps'
-      fullPath: '/dashboard/events/maps'
-      preLoaderRoute: typeof DashboardEventsMapsRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/events/list': {
@@ -601,7 +563,6 @@ interface DashboardRouteRouteChildren {
   DashboardSkillsRouteRoute: typeof DashboardSkillsRouteRouteWithChildren
   DashboardPlayerListRoute: typeof DashboardPlayerListRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
-  DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardTasksRoute: typeof DashboardTasksRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardCalculatorListRoute: typeof DashboardCalculatorListRoute
@@ -610,7 +571,6 @@ interface DashboardRouteRouteChildren {
   DashboardEventsHeroesRoute: typeof DashboardEventsHeroesRoute
   DashboardEventsHistoryRoute: typeof DashboardEventsHistoryRoute
   DashboardEventsListRoute: typeof DashboardEventsListRoute
-  DashboardEventsMapsRoute: typeof DashboardEventsMapsRoute
   DashboardEventsRankingRoute: typeof DashboardEventsRankingRoute
   DashboardEventsVaultRoute: typeof DashboardEventsVaultRoute
   DashboardEventsBetsAddRoute: typeof DashboardEventsBetsAddRoute
@@ -621,7 +581,6 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSkillsRouteRoute: DashboardSkillsRouteRouteWithChildren,
   DashboardPlayerListRoute: DashboardPlayerListRoute,
   DashboardProfileRoute: DashboardProfileRoute,
-  DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardTasksRoute: DashboardTasksRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardCalculatorListRoute: DashboardCalculatorListRoute,
@@ -630,7 +589,6 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardEventsHeroesRoute: DashboardEventsHeroesRoute,
   DashboardEventsHistoryRoute: DashboardEventsHistoryRoute,
   DashboardEventsListRoute: DashboardEventsListRoute,
-  DashboardEventsMapsRoute: DashboardEventsMapsRoute,
   DashboardEventsRankingRoute: DashboardEventsRankingRoute,
   DashboardEventsVaultRoute: DashboardEventsVaultRoute,
   DashboardEventsBetsAddRoute: DashboardEventsBetsAddRoute,

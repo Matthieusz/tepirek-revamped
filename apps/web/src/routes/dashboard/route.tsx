@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import Loader from "@/components/loader";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { requireVerified } from "@/lib/route-helpers";
 import DashboardLayout from "@/pages/dashboard/route";
 
@@ -20,11 +20,7 @@ export const Route = createFileRoute("/dashboard")({
       </p>
     </div>
   ),
-  pendingComponent: () => (
-    <div className="flex h-full w-full items-center justify-center">
-      <Loader />
-    </div>
-  ),
+  pendingComponent: () => <LoadingSpinner />,
   staticData: {
     crumb: "Dashboard",
   },
