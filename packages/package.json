@@ -22,13 +22,13 @@
   "dependencies": {
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
-    "pg": "^8.18.0",
+    "pg": "^8.20.0",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@tepirek-revamped/config": "workspace:*",
-    "@types/pg": "^8.16.0",
-    "drizzle-kit": "^0.31.9"
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10"
   },
   "peerDependencies": {
     "typescript": "^5"
