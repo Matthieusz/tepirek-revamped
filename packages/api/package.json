@@ -20,7 +20,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/pg": "^8.16.0",
+    "@types/pg": "^8.20.0",
     "pino": "^10.3.1"
   },
   "peerDependencies": {
