@@ -1,35 +1,12 @@
+import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import {
-  Axe,
-  Crosshair,
-  Flame,
-  Footprints,
-  Shield,
-  Swords,
-  Target,
-  Wand2,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+  AUCTION_PROFESSIONS,
+  isAuctionProfession,
+  isAuctionType,
+} from "@tepirek-revamped/config";
 
-export const AUCTION_TYPES = ["main", "support"] as const;
-export type AuctionType = (typeof AUCTION_TYPES)[number];
-
-export const AUCTION_PROFESSIONS = [
-  "tracker",
-  "paladin",
-  "mage",
-  "hunter",
-  "blade-dancer",
-  "warrior",
-] as const;
-export type AuctionProfession = (typeof AUCTION_PROFESSIONS)[number];
-
-export const isAuctionType = (value: string): value is AuctionType =>
-  AUCTION_TYPES.includes(value as AuctionType);
-
-export const isAuctionProfession = (
-  value: string
-): value is AuctionProfession =>
-  AUCTION_PROFESSIONS.includes(value as AuctionProfession);
+export { AUCTION_PROFESSIONS, isAuctionProfession, isAuctionType };
+export type { AuctionProfession, AuctionType };
 
 interface AuctionTypeMeta {
   crumb: string;

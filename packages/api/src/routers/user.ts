@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
+import { roleSchema, userIdSchema } from "@tepirek-revamped/api/types";
 import { db } from "@tepirek-revamped/db";
 import { account, user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
@@ -9,7 +10,7 @@ export const userRouter = {
   deleteUser: adminProcedure
     .input(
       z.object({
-        userId: z.string().min(1),
+        userId: userIdSchema,
       })
     )
     .handler(async ({ input }) => {
@@ -46,8 +47,8 @@ export const userRouter = {
   setRole: adminProcedure
     .input(
       z.object({
-        role: z.enum(["user", "admin"]),
-        userId: z.string().min(1),
+        role: roleSchema,
+        userId: userIdSchema,
       })
     )
     .handler(async ({ input }) => {
@@ -64,7 +65,7 @@ export const userRouter = {
   setVerified: adminProcedure
     .input(
       z.object({
-        userId: z.string().min(1),
+        userId: userIdSchema,
         verified: z.boolean(),
       })
     )
@@ -100,7 +101,7 @@ export const userRouter = {
     .input(
       z.object({
         name: z.string().min(2),
-        userId: z.string().min(1),
+        userId: userIdSchema,
       })
     )
     .handler(async ({ input }) => {

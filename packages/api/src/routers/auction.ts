@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { protectedProcedure } from "@tepirek-revamped/api";
+import { auctionTypeSchema } from "@tepirek-revamped/api/types";
 import { db } from "@tepirek-revamped/db";
 import { auctionSignups } from "@tepirek-revamped/db/schema/auction";
 import { user } from "@tepirek-revamped/db/schema/auth";
@@ -11,7 +12,7 @@ export const auctionRouter = {
     .input(
       z.object({
         profession: z.string(),
-        type: z.enum(["main", "support"]),
+        type: auctionTypeSchema,
       })
     )
     .handler(async ({ input }) => {
@@ -43,7 +44,7 @@ export const auctionRouter = {
     .input(
       z.object({
         profession: z.string(),
-        type: z.enum(["main", "support"]),
+        type: auctionTypeSchema,
       })
     )
     .handler(async ({ input }) => {
@@ -93,7 +94,7 @@ export const auctionRouter = {
         level: z.number(),
         profession: z.string(),
         round: z.number(),
-        type: z.enum(["main", "support"]),
+        type: auctionTypeSchema,
       })
     )
     .handler(async ({ input, context }) => {

@@ -14,5 +14,3 @@ declare global {
 
   type CSSProperties = Record<`--${string}`, string | number | undefined>;
 }
-
-
