@@ -1,3 +1,4 @@
+import { ORPCError } from "@orpc/server";
 import { protectedProcedure } from "@tepirek-revamped/api";
 import { MIN_EARNINGS } from "@tepirek-revamped/config";
 import { db } from "@tepirek-revamped/db";
@@ -35,10 +36,16 @@ export const rankingRouter = {
         .from(hero)
         .where(eq(hero.id, input.heroId));
 
+      if (!heroInfo) {
+        throw new ORPCError("NOT_FOUND", {
+          message: "Heros nie znaleziony",
+        });
+      }
+
       return {
-        currentPointWorth: heroInfo?.pointWorth ?? 0,
+        currentPointWorth: heroInfo.pointWorth,
         heroId: input.heroId,
-        heroName: heroInfo?.name ?? "Nieznany",
+        heroName: heroInfo.name,
         totalBets: Number(stats?.totalBets ?? 0),
         totalPoints: Number.parseFloat(stats?.totalPoints ?? "0"),
       };

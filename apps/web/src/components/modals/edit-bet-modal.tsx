@@ -159,8 +159,6 @@ export const EditBetModal = ({
     );
   };
 
-  const handleCopyCurrent = () => currentMemberIds;
-
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
       <ResponsiveDialogTrigger asChild>
@@ -254,8 +252,7 @@ export const EditBetModal = ({
                         </Button>
                         <Button
                           onClick={() => {
-                            const newIds = handleCopyCurrent();
-                            field.handleChange(newIds);
+                            field.handleChange(currentMemberIds);
                           }}
                           size="sm"
                           type="button"

@@ -139,13 +139,12 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
     (hero) => hero.eventId === Number.parseInt(selectedEventId || "0", 10)
   );
 
-  const handleCopyLastBet = (currentUserIds: string[]) => {
+  const handleCopyLastBet = () => {
     if (!allBets || allBets.length === 0) {
-      return currentUserIds;
+      return [];
     }
     const [lastBet] = allBets;
-    const lastBetUserIds = lastBet.members.map((member) => member.userId);
-    return lastBetUserIds;
+    return lastBet.members.map((member) => member.userId);
   };
 
   const renderHeroSelection = (
@@ -399,7 +398,7 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
                             !allBets || allBets.length === 0 || betsLoading
                           }
                           onClick={() => {
-                            const newIds = handleCopyLastBet(field.state.value);
+                            const newIds = handleCopyLastBet();
                             field.handleChange(newIds);
                           }}
                           size="sm"

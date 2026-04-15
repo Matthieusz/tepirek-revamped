@@ -214,9 +214,14 @@ export const betRouter = {
         .where(eq(heroBetMember.heroBetId, betId));
 
       const currentMemberIds = new Set(currentMembers.map((m) => m.userId));
-      const oldPointsPerMember = Number.parseFloat(
-        currentMembers[0]?.points ?? "0"
-      );
+
+      if (currentMembers.length === 0) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Obstawienie nie ma członków",
+        });
+      }
+
+      const oldPointsPerMember = Number.parseFloat(currentMembers[0].points);
       const newPointsPerMember = (
         Math.floor((POINTS_PER_HERO / newMemberCount) * 100) / 100
       ).toFixed(2);

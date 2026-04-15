@@ -77,7 +77,7 @@ export const auctionRouter = {
         throw new ORPCError("NOT_FOUND", { message: "Zapis nie znaleziony" });
       }
 
-      if (signup[0]?.userId !== context.session.user.id) {
+      if (signup[0].userId !== context.session.user.id) {
         throw new ORPCError("FORBIDDEN", {
           message: "Nie masz uprawnień do usunięcia tego zapisu",
         });
