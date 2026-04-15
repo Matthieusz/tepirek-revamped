@@ -5,6 +5,7 @@ import { auction } from "./schema/auction";
 import { auth } from "./schema/auth";
 import { bet } from "./schema/bet";
 import { event } from "./schema/event";
+import { skills } from "./schema/skills";
 import { todo } from "./schema/todo";
 
 export const db = drizzle(process.env.DATABASE_URL ?? "", {
@@ -15,5 +16,6 @@ export const db = drizzle(process.env.DATABASE_URL ?? "", {
     ...event,
     ...auction,
     ...announcement,
+    ...skills,
   },
 });

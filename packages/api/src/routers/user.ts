@@ -130,13 +130,12 @@ export const userRouter = {
         return { valid: false };
       }
       const guildId = process.env.DISCORD_SERVER_ID;
-      const guilds = await response.json();
-      if (Array.isArray(guilds)) {
-        return {
-          valid: guilds.some((guild: { id: string }) => guild.id === guildId),
-        };
+      const discordGuildSchema = z.array(z.object({ id: z.string() }));
+      const parsed = discordGuildSchema.safeParse(await response.json());
+      if (!parsed.success) {
+        return { valid: false };
       }
-      return { valid: false };
+      return { valid: parsed.data.some((guild) => guild.id === guildId) };
     }),
   verifySelf: protectedProcedure.handler(async ({ context }) =>
     db

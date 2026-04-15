@@ -177,9 +177,9 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
 
   const form = useForm({
     defaultValues: {
-      itemLevel: GAME_CONSTANTS.DEFAULT_ITEM_LEVEL as number,
-      itemRarity: "legendarny" as Rarity,
-    },
+      itemLevel: GAME_CONSTANTS.DEFAULT_ITEM_LEVEL,
+      itemRarity: "legendarny",
+    } satisfies z.infer<typeof formSchema>,
     onSubmit: ({ value }) => {
       const upgradeCosts = calculateUpgradePoints(
         value.itemLevel,

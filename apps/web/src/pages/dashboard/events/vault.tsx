@@ -301,10 +301,12 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
                           checked={player.paidOut}
                           disabled={toggleMutation.isPending}
                           onCheckedChange={(checked) => {
-                            toggleMutation.mutate({
-                              paidOut: checked,
-                              userId: player.userId,
-                            });
+                            if (typeof checked === "boolean") {
+                              toggleMutation.mutate({
+                                paidOut: checked,
+                                userId: player.userId,
+                              });
+                            }
                           }}
                         />
                       )}
@@ -364,10 +366,12 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
                           checked={player.paidOut}
                           disabled={toggleMutation.isPending}
                           onCheckedChange={(checked) => {
-                            toggleMutation.mutate({
-                              paidOut: checked,
-                              userId: player.userId,
-                            });
+                            if (typeof checked === "boolean") {
+                              toggleMutation.mutate({
+                                paidOut: checked,
+                                userId: player.userId,
+                              });
+                            }
                           }}
                         />
                       )}

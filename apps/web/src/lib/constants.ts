@@ -6,7 +6,7 @@ import { Cake, Calendar, Egg, Ghost, Snowflake, Sun } from "lucide-react";
 /**
  * Map of event icon names to their Lucide icon components
  */
-export const EVENT_ICON_MAP: Record<string, LucideIcon> = {
+export const EVENT_ICON_MAP: Record<EventIconId, LucideIcon> = {
   cake: Cake,
   calendar: Calendar,
   egg: Egg,
