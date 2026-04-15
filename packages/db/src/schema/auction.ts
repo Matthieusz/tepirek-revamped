@@ -7,8 +7,6 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import { user } from "./auth";
-
 // oxlint-disable-next-line @typescript-eslint/no-deprecated
 export const auctionSignups = pgTable(
   "auction_signups",
@@ -20,9 +18,7 @@ export const auctionSignups = pgTable(
     profession: text("profession").notNull(),
     round: integer("round").notNull(),
     type: text("type").notNull(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
   },
   (table) => ({
     professionTypeIdx: index("profession_type_idx").on(
