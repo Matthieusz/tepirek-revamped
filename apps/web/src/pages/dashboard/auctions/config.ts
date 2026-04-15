@@ -100,7 +100,7 @@ export const AUCTION_PROFESSION_META: Record<
   tracker: {
     cardIcon: {
       main: Footprints,
-      support: Target,
+      support: Footprints,
     },
     columns: {
       main: ["Ogień", "Zimno", "Błyskawice"],
