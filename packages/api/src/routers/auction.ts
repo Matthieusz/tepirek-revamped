@@ -67,17 +67,16 @@ export const auctionRouter = {
     .input(z.object({ id: z.number() }))
     .handler(async ({ input, context }) => {
       // Only allow removing own signups (or admin check could be added)
-      const signup = await db
+      const [signup] = await db
         .select({ userId: auctionSignups.userId })
         .from(auctionSignups)
-        .where(eq(auctionSignups.id, input.id))
-        .limit(1);
+        .where(eq(auctionSignups.id, input.id));
 
-      if (signup.length === 0) {
+      if (!signup) {
         throw new ORPCError("NOT_FOUND", { message: "Zapis nie znaleziony" });
       }
 
-      if (signup[0].userId !== context.session.user.id) {
+      if (signup.userId !== context.session.user.id) {
         throw new ORPCError("FORBIDDEN", {
           message: "Nie masz uprawnień do usunięcia tego zapisu",
         });

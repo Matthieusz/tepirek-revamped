@@ -221,7 +221,9 @@ export const betRouter = {
         });
       }
 
-      const oldPointsPerMember = Number.parseFloat(currentMembers[0].points);
+      const oldPointsPerMember = Number.parseFloat(
+        currentMembers[0]?.points ?? "0"
+      );
       const newPointsPerMember = (
         Math.floor((POINTS_PER_HERO / newMemberCount) * 100) / 100
       ).toFixed(2);

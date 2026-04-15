@@ -303,6 +303,10 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+    devDependencies:
+      '@tepirek-revamped/config':
+        specifier: workspace:*
+        version: link:../config
 
   packages/config: {}
 
@@ -321,6 +325,9 @@ importers:
         specifier: ^5
         version: 5.9.3
     devDependencies:
+      '@tepirek-revamped/config':
+        specifier: workspace:*
+        version: link:../config
       '@types/pg':
         specifier: ^8.16.0
         version: 8.16.0

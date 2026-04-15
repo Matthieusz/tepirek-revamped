@@ -12,7 +12,10 @@ declare global {
     cookieStore?: CookieStore;
   }
 
-  type CSSProperties = Record<`--${string}`, string | number | undefined>;
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+  interface CSSProperties {
+    [key: `--${string}`]: string | number | undefined;
+  }
 }
 
-
+export {};
