@@ -1,10 +1,9 @@
-import { publicProcedure } from "@tepirek-revamped/api";
-
 import { announcementRouter } from "./announcement";
 import { auctionRouter } from "./auction";
 import { betRouter } from "./bet";
 import { eventRouter } from "./event";
 import { heroesRouter } from "./heroes";
+import { publicProcedure } from "./procedures";
 import { rankingRouter } from "./ranking";
 import { skillsRouter } from "./skills";
 import { todoRouter } from "./todo";

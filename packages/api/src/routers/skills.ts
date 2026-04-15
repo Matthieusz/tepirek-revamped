@@ -1,9 +1,10 @@
-import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
 import { db } from "@tepirek-revamped/db";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { professions, range, skills } from "@tepirek-revamped/db/schema/skills";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
+
+import { adminProcedure, protectedProcedure } from "./procedures";
 
 export const skillsRouter = {
   createProfession: adminProcedure

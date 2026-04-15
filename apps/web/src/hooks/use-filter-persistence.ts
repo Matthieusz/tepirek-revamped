@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
 /**
  * Persist filter state in localStorage, restoring on initial load to avoid flash.
  * Syncs to localStorage whenever filters change.
@@ -17,8 +20,10 @@ export const useFilterPersistence = <T extends Record<string, unknown>>(
     try {
       const stored = localStorage.getItem(key);
       if (stored) {
-        const parsed = JSON.parse(stored) as Partial<T>;
-        return { ...defaults, ...parsed } as T;
+        const parsed: unknown = JSON.parse(stored);
+        if (isRecord(parsed)) {
+          return { ...defaults, ...parsed } as T;
+        }
       }
     } catch {
       // Ignore parse errors

@@ -1,5 +1,4 @@
 import { ORPCError } from "@orpc/server";
-import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
 import { MIN_EARNINGS } from "@tepirek-revamped/config";
 import { db } from "@tepirek-revamped/db";
 import { user } from "@tepirek-revamped/db/schema/auth";
@@ -7,6 +6,8 @@ import { hero, userStats } from "@tepirek-revamped/db/schema/bet";
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
+
+import { adminProcedure, protectedProcedure } from "./procedures";
 
 export const vaultRouter = {
   distributeGold: adminProcedure

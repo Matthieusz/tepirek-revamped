@@ -1,4 +1,3 @@
-import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
 import {
   DEFAULT_EVENT_ICON_ID,
   EVENT_ICON_IDS,
@@ -7,6 +6,8 @@ import { db } from "@tepirek-revamped/db";
 import { event } from "@tepirek-revamped/db/schema/event";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+
+import { adminProcedure, protectedProcedure } from "./procedures";
 
 export const eventRouter = {
   create: adminProcedure

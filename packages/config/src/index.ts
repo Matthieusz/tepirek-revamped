@@ -24,7 +24,7 @@ export const EVENT_ICON_IDS = [
 export type EventIconId = (typeof EVENT_ICON_IDS)[number];
 
 export const isEventIconId = (value: string): value is EventIconId =>
-  EVENT_ICON_IDS.includes(value as EventIconId);
+  EVENT_ICON_IDS.some((eventIconId) => eventIconId === value);
 
 export interface EventIconOption {
   id: EventIconId;
@@ -50,7 +50,7 @@ export const AUCTION_TYPES = ["main", "support"] as const;
 export type AuctionType = (typeof AUCTION_TYPES)[number];
 
 export const isAuctionType = (value: string): value is AuctionType =>
-  AUCTION_TYPES.includes(value as AuctionType);
+  AUCTION_TYPES.some((auctionType) => auctionType === value);
 
 export const AUCTION_PROFESSIONS = [
   "tracker",
@@ -65,4 +65,4 @@ export type AuctionProfession = (typeof AUCTION_PROFESSIONS)[number];
 export const isAuctionProfession = (
   value: string
 ): value is AuctionProfession =>
-  AUCTION_PROFESSIONS.includes(value as AuctionProfession);
+  AUCTION_PROFESSIONS.some((auctionProfession) => auctionProfession === value);

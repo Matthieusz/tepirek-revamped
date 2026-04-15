@@ -1,11 +1,12 @@
 import { ORPCError } from "@orpc/server";
-import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
-import { roleSchema, userIdSchema } from "@tepirek-revamped/api/types";
 import { db } from "@tepirek-revamped/db";
 import { account, user } from "@tepirek-revamped/db/schema/auth";
 import type { SQL } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+
+import { adminProcedure, protectedProcedure } from "./procedures";
+import { roleSchema, userIdSchema } from "./schemas";
 
 const updateAndReturnUser = async (
   where: SQL,

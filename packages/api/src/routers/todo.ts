@@ -1,8 +1,9 @@
-import { protectedProcedure } from "@tepirek-revamped/api";
 import { db } from "@tepirek-revamped/db";
 import { todo } from "@tepirek-revamped/db/schema/todo";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
+
+import { protectedProcedure } from "./procedures";
 
 export const todoRouter = {
   create: protectedProcedure

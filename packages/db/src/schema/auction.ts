@@ -7,7 +7,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-export const auctionSignups = pgTable(
+export const auction = pgTable(
   "auction_signups",
   {
     column: integer("column").notNull(),
@@ -26,7 +26,3 @@ export const auctionSignups = pgTable(
     ),
   })
 );
-
-export const auction = {
-  ...auctionSignups,
-};

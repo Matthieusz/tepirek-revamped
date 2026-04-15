@@ -1,5 +1,4 @@
 import { ORPCError } from "@orpc/server";
-import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
 import { POINTS_PER_HERO } from "@tepirek-revamped/config";
 import { db } from "@tepirek-revamped/db";
 import { user } from "@tepirek-revamped/db/schema/auth";
@@ -12,6 +11,8 @@ import {
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
+
+import { adminProcedure, protectedProcedure } from "./procedures";
 
 export const betRouter = {
   create: adminProcedure

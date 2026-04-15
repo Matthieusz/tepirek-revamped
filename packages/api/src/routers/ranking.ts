@@ -1,5 +1,4 @@
 import { ORPCError } from "@orpc/server";
-import { protectedProcedure } from "@tepirek-revamped/api";
 import { MIN_EARNINGS } from "@tepirek-revamped/config";
 import { db } from "@tepirek-revamped/db";
 import { user } from "@tepirek-revamped/db/schema/auth";
@@ -8,6 +7,8 @@ import { event } from "@tepirek-revamped/db/schema/event";
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
+
+import { protectedProcedure } from "./procedures";
 
 export const rankingRouter = {
   getHeroStats: protectedProcedure
