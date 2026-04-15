@@ -10,6 +10,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
+import { getErrorMessage } from "@/lib/errors";
 import type { orpc } from "@/utils/orpc";
 
 import appCss from "@/index.css?url";
@@ -45,9 +46,7 @@ const RootErrorBoundary = ({
     <body>
       <div className="flex h-svh flex-col items-center justify-center gap-4">
         <h1 className="font-bold text-2xl">Coś poszło nie tak</h1>
-        <p className="text-muted-foreground">
-          {error instanceof Error ? error.message : "Nieznany błąd"}
-        </p>
+        <p className="text-muted-foreground">{getErrorMessage(error)}</p>
         <Button onClick={reset}>Spróbuj ponownie</Button>
       </div>
       <Scripts />

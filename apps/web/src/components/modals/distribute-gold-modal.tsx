@@ -214,11 +214,7 @@ export const DistributeGoldModal = ({
         setOpen(false);
         form.reset();
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Nie udało się rozdzielić złota";
-        toast.error(message);
+        toast.error(getErrorMessage(error));
       }
     },
     validators: {

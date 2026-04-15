@@ -21,6 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { VaultUserCard } from "@/components/vault-user-card";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 import { orpc } from "@/utils/orpc";
@@ -114,8 +116,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
       });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
@@ -324,60 +325,29 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
                 Wypłacone ({paidUsers.length})
               </h2>
               {paidUsers.map((player) => (
-                <Card
+                <VaultUserCard
                   className="opacity-60 transition-all hover:bg-accent/50"
                   key={player.userId}
-                >
-                  <CardContent className="px-4">
-                    <div className="flex items-center gap-4">
-                      {/* Avatar */}
-                      <Avatar className="size-10 shrink-0 border border-border">
-                        <AvatarImage
-                          alt={player.userName}
-                          src={player.userImage ?? undefined}
-                        />
-                        <AvatarFallback>
-                          <User className="size-5" />
-                        </AvatarFallback>
-                      </Avatar>
-                      {/* Name */}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold">
-                          {player.userName}
-                        </p>
-                      </div>
-                      {/* Earnings */}
-                      <div className="flex items-center gap-2">
-                        <Coins className="size-4 text-yellow-500" />
-                        <p className="font-mono font-semibold">
-                          {(
-                            Math.floor(
-                              Number.parseFloat(player.totalEarnings || "0") /
-                                1_000_000
-                            ) * 1_000_000
-                          ).toLocaleString("pl-PL", {
-                            maximumFractionDigits: 0,
-                          })}
-                        </p>
-                      </div>
-                      {/* Checkbox for admin */}
-                      {isAdminUser && (
-                        <Checkbox
-                          checked={player.paidOut}
-                          disabled={toggleMutation.isPending}
-                          onCheckedChange={(checked) => {
-                            if (typeof checked === "boolean") {
-                              toggleMutation.mutate({
-                                paidOut: checked,
-                                userId: player.userId,
-                              });
-                            }
-                          }}
-                        />
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                  rightSlot={
+                    isAdminUser && (
+                      <Checkbox
+                        checked={player.paidOut}
+                        disabled={toggleMutation.isPending}
+                        onCheckedChange={(checked) => {
+                          if (typeof checked === "boolean") {
+                            toggleMutation.mutate({
+                              paidOut: checked,
+                              userId: player.userId,
+                            });
+                          }
+                        }}
+                      />
+                    )
+                  }
+                  totalEarnings={player.totalEarnings}
+                  userImage={player.userImage}
+                  userName={player.userName}
+                />
               ))}
             </div>
           )}

@@ -48,11 +48,7 @@ export const AddAnnouncementModal = ({
         setOpen(false);
         form.reset();
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Nie udało się utworzyć ogłoszenia";
-        toast.error(message);
+        toast.error(getErrorMessage(error));
       }
     },
     validators: {

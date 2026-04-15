@@ -3,8 +3,21 @@ import { adminProcedure, protectedProcedure } from "@tepirek-revamped/api";
 import { roleSchema, userIdSchema } from "@tepirek-revamped/api/types";
 import { db } from "@tepirek-revamped/db";
 import { account, user } from "@tepirek-revamped/db/schema/auth";
+import type { SQL } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+
+const updateAndReturnUser = async (
+  where: SQL,
+  values: Partial<typeof user.$inferInsert>
+) => {
+  await db
+    .update(user)
+    .set({ updatedAt: new Date(), ...values })
+    .where(where);
+  const [updated] = await db.select().from(user).where(where);
+  return updated ?? null;
+};
 
 export const userRouter = {
   deleteUser: adminProcedure
@@ -14,7 +27,6 @@ export const userRouter = {
       })
     )
     .handler(async ({ input }) => {
-      // Check if user is unverified before deleting
       const [targetUser] = await db
         .select()
         .from(user)
@@ -51,17 +63,9 @@ export const userRouter = {
         userId: userIdSchema,
       })
     )
-    .handler(async ({ input }) => {
-      await db
-        .update(user)
-        .set({ role: input.role, updatedAt: new Date() })
-        .where(eq(user.id, input.userId));
-      const [updated] = await db
-        .select()
-        .from(user)
-        .where(eq(user.id, input.userId));
-      return updated ?? null;
-    }),
+    .handler(async ({ input }) =>
+      updateAndReturnUser(eq(user.id, input.userId), { role: input.role })
+    ),
   setVerified: adminProcedure
     .input(
       z.object({
@@ -69,34 +73,22 @@ export const userRouter = {
         verified: z.boolean(),
       })
     )
-    .handler(async ({ input }) => {
-      await db
-        .update(user)
-        .set({ updatedAt: new Date(), verified: input.verified })
-        .where(eq(user.id, input.userId));
-      const [updated] = await db
-        .select()
-        .from(user)
-        .where(eq(user.id, input.userId));
-      return updated ?? null;
-    }),
+    .handler(async ({ input }) =>
+      updateAndReturnUser(eq(user.id, input.userId), {
+        verified: input.verified,
+      })
+    ),
   updateProfile: protectedProcedure
     .input(
       z.object({
         name: z.string().min(2),
       })
     )
-    .handler(async ({ input, context }) => {
-      await db
-        .update(user)
-        .set({ name: input.name, updatedAt: new Date() })
-        .where(eq(user.id, context.session.user.id));
-      const [updated] = await db
-        .select()
-        .from(user)
-        .where(eq(user.id, context.session.user.id));
-      return updated ?? null;
-    }),
+    .handler(async ({ input, context }) =>
+      updateAndReturnUser(eq(user.id, context.session.user.id), {
+        name: input.name,
+      })
+    ),
   updateUserName: adminProcedure
     .input(
       z.object({
@@ -104,17 +96,9 @@ export const userRouter = {
         userId: userIdSchema,
       })
     )
-    .handler(async ({ input }) => {
-      await db
-        .update(user)
-        .set({ name: input.name, updatedAt: new Date() })
-        .where(eq(user.id, input.userId));
-      const [updated] = await db
-        .select()
-        .from(user)
-        .where(eq(user.id, input.userId));
-      return updated ?? null;
-    }),
+    .handler(async ({ input }) =>
+      updateAndReturnUser(eq(user.id, input.userId), { name: input.name })
+    ),
   validateDiscordGuild: protectedProcedure
     .input(
       z.object({

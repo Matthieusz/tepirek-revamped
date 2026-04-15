@@ -26,6 +26,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Separator } from "@/components/ui/separator";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import type { AuthSession } from "@/types/route";
@@ -55,8 +56,7 @@ export default function DashboardHomePage({ session }: DashboardHomePageProps) {
       await orpc.announcement.delete.call({ id });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
       toast.success("Ogłoszenie zostało usunięte");

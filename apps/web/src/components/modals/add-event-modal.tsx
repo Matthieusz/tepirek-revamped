@@ -6,15 +6,7 @@ import {
 } from "@tepirek-revamped/config";
 import type { EventIconId } from "@tepirek-revamped/config";
 import { format } from "date-fns";
-import {
-  Cake,
-  Calendar as CalendarIcon,
-  Egg,
-  Ghost,
-  Snowflake,
-  Sun,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -37,21 +29,14 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import { EVENT_ICON_MAP } from "@/lib/constants";
+import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 interface AddEventModalProps {
   trigger: React.ReactNode;
 }
-
-const EVENT_ICONS: Record<EventIconId, LucideIcon> = {
-  cake: Cake,
-  calendar: CalendarIcon,
-  egg: Egg,
-  ghost: Ghost,
-  snowflake: Snowflake,
-  sun: Sun,
-};
 
 const EVENT_COLORS = [
   { id: "#22c55e", name: "Zielony" },
@@ -103,11 +88,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
         setSelectedIcon(DEFAULT_EVENT_ICON_ID);
         setSelectedColor("#6366f1");
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Nie udało się utworzyć eventu";
-        toast.error(message);
+        toast.error(getErrorMessage(error));
       }
     },
     validators: {
@@ -167,7 +148,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
               <Label>Ikona eventu</Label>
               <div className="grid grid-cols-3 gap-2">
                 {EVENT_ICON_OPTIONS.map((item) => {
-                  const IconComponent = EVENT_ICONS[item.id];
+                  const IconComponent = EVENT_ICON_MAP[item.id];
                   return (
                     <button
                       className={cn(

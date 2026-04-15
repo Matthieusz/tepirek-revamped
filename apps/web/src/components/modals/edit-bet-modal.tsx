@@ -1,6 +1,5 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { POINTS_PER_HERO } from "@tepirek-revamped/config";
 import { Copy, CopyX, Pencil, Search, User, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -21,6 +20,8 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import { handleUserToggle, calculatePointsPerMember } from "@/lib/bet-helpers";
+import { getErrorMessage } from "@/lib/errors";
 import { orpc } from "@/utils/orpc";
 
 interface EditBetModalProps {
@@ -38,13 +39,6 @@ interface EditBetModalProps {
 const schema = z.object({
   userIds: z.array(z.string()).min(1, "Wybierz przynajmniej jednego gracza"),
 });
-
-const handleUserToggle = (userId: string, currentUserIds: string[]) => {
-  if (currentUserIds.includes(userId)) {
-    return currentUserIds.filter((id) => id !== userId);
-  }
-  return [...currentUserIds, userId];
-};
 
 export const EditBetModal = ({
   betId,
@@ -68,8 +62,7 @@ export const EditBetModal = ({
       await orpc.bet.edit.call({ betId, newUserIds });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
       toast.success("Obstawienie zostało zaktualizowane");
@@ -92,9 +85,6 @@ export const EditBetModal = ({
       onSubmit: schema,
     },
   });
-
-  const calculatePointsPerMember = (count: number) =>
-    Math.floor((POINTS_PER_HERO / count) * 100) / 100;
 
   const renderUserList = (
     fieldValue: string[],

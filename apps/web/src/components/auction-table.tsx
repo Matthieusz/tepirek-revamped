@@ -4,6 +4,7 @@ import type React from "react";
 import { toast } from "sonner";
 
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { getErrorMessage } from "@/lib/errors";
 import { orpc } from "@/utils/orpc";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -196,7 +197,7 @@ export const AuctionTable: React.FC<AuctionTableProps> = ({
   const removeMutation = useMutation({
     mutationFn: async (id: number) => orpc.auction.removeSignup.call({ id }),
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Wystąpił błąd");
+      toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: signupsQuery.queryKey });

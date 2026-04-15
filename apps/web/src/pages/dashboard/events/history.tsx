@@ -5,7 +5,6 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { POINTS_PER_HERO } from "@tepirek-revamped/config";
 import { History, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -38,6 +37,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useFilterPersistence } from "@/hooks/use-filter-persistence";
+import { calculatePointsPerMember } from "@/lib/bet-helpers";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import type { AuthSession } from "@/types/route";
@@ -154,8 +155,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
       await orpc.bet.delete.call({ id: betId });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
       toast.success("Obstawienie zostało usunięte");
@@ -166,9 +166,6 @@ export default function HistoryPage({ session }: HistoryPageProps) {
       setBetToDelete(null);
     },
   });
-
-  const calculatePointsPerMember = (memberCount: number) =>
-    Math.floor((POINTS_PER_HERO / memberCount) * 100) / 100;
 
   let betsContent: ReactNode;
   if (betsLoading) {

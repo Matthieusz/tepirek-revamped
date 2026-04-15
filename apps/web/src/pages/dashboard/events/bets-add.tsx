@@ -22,7 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { handleUserToggle } from "@/lib/bet-helpers";
 import { getEventIcon } from "@/lib/constants";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 import { orpc } from "@/utils/orpc";
@@ -37,13 +39,6 @@ const defaultValues: AddBetForm = {
   eventId: "",
   heroId: "",
   userIds: [],
-};
-
-const handleUserToggle = (userId: string, currentUserIds: string[]) => {
-  if (currentUserIds.includes(userId)) {
-    return currentUserIds.filter((id) => id !== userId);
-  }
-  return [...currentUserIds, userId];
 };
 
 interface BetsAddPageProps {
@@ -103,11 +98,7 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
         });
         form.setFieldValue("userIds", []);
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Nie udało się utworzyć obstawienia";
-        toast.error(message);
+        toast.error(getErrorMessage(error));
       }
     },
     validators: {

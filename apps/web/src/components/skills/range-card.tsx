@@ -22,6 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getErrorMessage } from "@/lib/errors";
 import { cn, slugify } from "@/lib/utils";
 import type { AuthUser } from "@/types/route";
 import { orpc } from "@/utils/orpc";
@@ -46,8 +47,7 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
       await orpc.skills.deleteRange.call({ id });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Wystąpił błąd";
-      toast.error(message);
+      toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
       toast.success("Przedział został usunięty");
