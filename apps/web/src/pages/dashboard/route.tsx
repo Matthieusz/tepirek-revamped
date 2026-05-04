@@ -29,7 +29,7 @@ export default function DashboardLayout({ session }: DashboardLayoutProps) {
             <BreadcrumbNav />
           </div>
         </header>
-        <div className="container mb-8 flex w-full px-6 py-2">
+        <div className="flex w-full px-6 py-6">
           <Outlet />
         </div>
       </SidebarInset>

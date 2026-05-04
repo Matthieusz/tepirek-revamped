@@ -16,13 +16,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Separator } from "@/components/ui/separator";
@@ -68,110 +61,90 @@ export default function DashboardHomePage({ session }: DashboardHomePageProps) {
   });
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
-      {/* Welcome Section */}
-      <Card className="border-none bg-linear-to-r from-primary/10 to-primary/5">
-        <CardHeader>
-          <CardTitle className="text-2xl">
-            Witaj, {session.user.name}! 👋
-          </CardTitle>
-          <CardDescription className="text-base">
-            Strona klanowa Gildii Złodziei — sprawdź najnowsze ogłoszenia.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
-      {/* Announcements Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="mb-1 font-bold text-xl tracking-tight">
-              Ogłoszenia
-            </h2>
-          </div>
-          {isAdminUser && (
-            <AddAnnouncementModal
-              trigger={
-                <Button>
-                  <Plus className="size-4" />
-                  Dodaj ogłoszenie
-                </Button>
-              }
-            />
-          )}
-        </div>
-
-        {isPending && <LoadingSpinner />}
-
-        {!isPending && (!announcements || announcements.length === 0) && (
-          <EmptyState
-            icon={Megaphone}
-            message="Brak ogłoszeń do wyświetlenia"
+    <div className="mx-auto w-full max-w-3xl space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+          Ogłoszenia
+        </h1>
+        {isAdminUser && (
+          <AddAnnouncementModal
+            trigger={
+              <Button>
+                <Plus className="size-4" />
+                Dodaj ogłoszenie
+              </Button>
+            }
           />
         )}
-
-        {!isPending && announcements && announcements.length > 0 && (
-          <div className="space-y-4">
-            {announcements.map((announcement) => (
-              <Card key={announcement.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">
-                        {announcement.title}
-                      </CardTitle>
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-muted-foreground text-sm sm:gap-3">
-                        <div className="flex items-center gap-1.5">
-                          <Avatar className="size-5">
-                            <AvatarImage
-                              alt={announcement.user?.name ?? "Avatar"}
-                              src={announcement.user?.image ?? undefined}
-                            />
-                            <AvatarFallback className="text-xs">
-                              {announcement.user?.name?.charAt(0) ?? "?"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>
-                            {announcement.user?.name ?? announcement.user?.id}
-                          </span>
-                        </div>
-                        <Separator
-                          className="hidden h-4 sm:block"
-                          orientation="vertical"
-                        />
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3.5 w-3.5" />
-                          <span>{formatDateTime(announcement.createdAt)}</span>
-                        </div>
-                      </div>
-                    </div>
-                    {isAdminUser && (
-                      <Button
-                        aria-label="Usuń ogłoszenie"
-                        onClick={() => {
-                          setAnnouncementToDelete({
-                            id: announcement.id,
-                            title: announcement.title,
-                          });
-                        }}
-                        size="sm"
-                        variant="ghost"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="whitespace-pre-wrap text-muted-foreground text-sm leading-relaxed">
-                    {announcement.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
       </div>
+
+      {isPending && <LoadingSpinner />}
+
+      {!isPending && (!announcements || announcements.length === 0) && (
+        <EmptyState icon={Megaphone} message="Brak ogłoszeń do wyświetlenia" />
+      )}
+
+      {!isPending && announcements && announcements.length > 0 && (
+        <div className="space-y-4">
+          {announcements.map((announcement) => (
+            <article
+              className="rounded-xl border border-border bg-card p-6"
+              key={announcement.id}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-semibold text-lg leading-snug">
+                    {announcement.title}
+                  </h2>
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <Avatar className="size-5">
+                        <AvatarImage
+                          alt={announcement.user?.name ?? "Avatar"}
+                          src={announcement.user?.image ?? undefined}
+                        />
+                        <AvatarFallback className="text-xs">
+                          {announcement.user?.name?.charAt(0) ?? "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="truncate">
+                        {announcement.user?.name ?? announcement.user?.id}
+                      </span>
+                    </div>
+                    <Separator
+                      className="hidden h-4 sm:block"
+                      orientation="vertical"
+                    />
+                    <div className="flex items-center gap-1">
+                      <Calendar className="size-3.5" />
+                      <span>{formatDateTime(announcement.createdAt)}</span>
+                    </div>
+                  </div>
+                </div>
+                {isAdminUser && (
+                  <Button
+                    aria-label="Usuń ogłoszenie"
+                    onClick={() => {
+                      setAnnouncementToDelete({
+                        id: announcement.id,
+                        title: announcement.title,
+                      });
+                    }}
+                    size="sm"
+                    variant="ghost"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                )}
+              </div>
+              <p className="mt-4 whitespace-pre-wrap text-muted-foreground text-sm leading-relaxed">
+                {announcement.description}
+              </p>
+            </article>
+          ))}
+        </div>
+      )}
 
       <AlertDialog
         onOpenChange={(open) => {

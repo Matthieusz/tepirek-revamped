@@ -4,7 +4,6 @@ import {
   Calculator,
   CalendarCheck,
   Gavel,
-  HeartIcon,
   ListChecks,
   LogOut,
   User,
@@ -150,21 +149,6 @@ export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
         <NavMain items={data.navMain} />
         <NavOther projects={data.projects} />
       </SidebarContent>
-      <div className="mx-3 mb-3 rounded-lg bg-muted/50 px-3 py-2 group-data-[state=collapsed]:hidden">
-        <p className="flex items-center justify-center gap-1 text-muted-foreground text-xs">
-          Made with{" "}
-          <HeartIcon className="inline size-3.5 fill-red-500 text-red-500" /> by{" "}
-          <span className="font-medium text-foreground hover:underline">
-            <a
-              href="https://github.com/Matthieusz"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              informati
-            </a>
-          </span>
-        </p>
-      </div>
       <SidebarFooter className="border-sidebar-border border-t">
         <div className="flex items-center gap-3 px-1 py-1.5 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-3 group-data-[state=collapsed]:py-2">
           <Avatar className="size-8 rounded-lg">
