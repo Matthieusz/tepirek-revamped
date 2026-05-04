@@ -116,7 +116,7 @@ export function RankingPage({ session }: { session: AuthSession }) {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
-      <h1 className="text-center font-bold text-3xl tracking-tight">
+      <h1 className="font-serif font-bold tracking-tight text-center text-foreground text-2xl">
         Ranking graczy
       </h1>
 
@@ -214,7 +214,7 @@ export function RankingPage({ session }: { session: AuthSession }) {
               selectedHeroId={selectedHeroId}
               trigger={
                 <Button className="ml-1 shrink-0" size="icon" variant="outline">
-                  <Coins className="size-4 text-yellow-500" />
+                  <Coins className="size-4 text-muted-foreground" />
                 </Button>
               }
             />
