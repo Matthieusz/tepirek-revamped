@@ -10,13 +10,6 @@ import {
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import type { AuthSession } from "@/types/route";
@@ -81,107 +74,97 @@ export default function TasksPage({ session }: TasksPageProps) {
   return (
     <div className="w-full max-w-2xl space-y-6">
       <div>
-        <h1 className="mb-1 font-bold text-2xl tracking-tight">Lista zadań</h1>
+        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+          Lista zadań
+        </h1>
         <p className="text-muted-foreground text-sm">
           Zarządzaj swoimi zadaniami do wykonania.
         </p>
       </div>
 
-      <div className="grid gap-4">
-        <div className="space-y-4">
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
-            <Card>
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="flex items-center justify-between font-medium text-muted-foreground text-xs">
-                  Wszystkie
-                  <ListTodo className="ml-1 size-4" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <p className="font-bold text-2xl">
-                  {todos.isLoading ? "—" : totalCount}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="flex items-center justify-between font-medium text-muted-foreground text-xs">
-                  Ukończone
-                  <CheckCircle2 className="ml-1 size-4 text-green-500" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <p className="font-bold text-2xl text-green-500">
-                  {todos.isLoading ? "—" : completedCount}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="flex items-center justify-between font-medium text-muted-foreground text-xs">
-                  Pozostałe
-                  <Circle className="ml-1 size-4 text-yellow-500" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <p className="font-bold text-2xl text-yellow-500">
-                  {todos.isLoading ? "—" : totalCount - completedCount}
-                </p>
-              </CardContent>
-            </Card>
+      <div className="space-y-4">
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between">
+              <p className="font-medium text-muted-foreground text-xs">
+                Wszystkie
+              </p>
+              <ListTodo className="size-4 text-muted-foreground" />
+            </div>
+            <p className="mt-1 font-bold text-2xl">
+              {todos.isLoading ? "—" : totalCount}
+            </p>
           </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between">
+              <p className="font-medium text-muted-foreground text-xs">
+                Ukończone
+              </p>
+              <CheckCircle2 className="size-4 text-primary" />
+            </div>
+            <p className="mt-1 font-bold text-2xl text-primary">
+              {todos.isLoading ? "—" : completedCount}
+            </p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between">
+              <p className="font-medium text-muted-foreground text-xs">
+                Pozostałe
+              </p>
+              <Circle className="size-4 text-muted-foreground" />
+            </div>
+            <p className="mt-1 font-bold text-2xl text-muted-foreground">
+              {todos.isLoading ? "—" : totalCount - completedCount}
+            </p>
+          </div>
+        </div>
 
-          {/* Add Task */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Plus className="size-4" />
-                Dodaj zadanie
-              </CardTitle>
-              <CardDescription>Wpisz treść nowego zadania</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="flex gap-2" onSubmit={handleAddTodo}>
-                <Input
-                  aria-label="Treść nowego zadania"
-                  className="flex-1"
-                  disabled={createMutation.isPending}
-                  onChange={(e) => {
-                    setNewTodoText(e.target.value);
-                  }}
-                  placeholder="np. zrobić porządek na postaciach (pozdro Wolan)"
-                  value={newTodoText}
-                />
-                <Button
-                  disabled={createMutation.isPending || !newTodoText.trim()}
-                  type="submit"
-                >
-                  {createMutation.isPending ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    "Dodaj"
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+        {/* Add Task */}
+        <div className="rounded-xl border border-border bg-card p-6">
+          <h2 className="mb-1 flex items-center gap-2 font-semibold text-base">
+            <Plus className="size-4" />
+            Dodaj zadanie
+          </h2>
+          <p className="mb-4 text-muted-foreground text-sm">
+            Wpisz treść nowego zadania
+          </p>
+          <form className="flex gap-2" onSubmit={handleAddTodo}>
+            <Input
+              aria-label="Treść nowego zadania"
+              className="flex-1"
+              disabled={createMutation.isPending}
+              onChange={(e) => {
+                setNewTodoText(e.target.value);
+              }}
+              placeholder="np. zrobić porządek na postaciach (pozdro Wolan)"
+              value={newTodoText}
+            />
+            <Button
+              disabled={createMutation.isPending || !newTodoText.trim()}
+              type="submit"
+            >
+              {createMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                "Dodaj"
+              )}
+            </Button>
+          </form>
         </div>
 
         {/* Task List */}
-        <Card className="h-fit">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ListTodo className="size-4" />
-              Twoje zadania
-            </CardTitle>
-            <CardDescription>
+        <div className="rounded-xl border border-border bg-card">
+          <div className="flex items-center gap-2 border-b border-border p-4">
+            <ListTodo className="size-4" />
+            <h2 className="font-semibold text-base">Twoje zadania</h2>
+            <span className="ml-auto text-muted-foreground text-sm">
               {totalCount > 0
                 ? `${completedCount} z ${totalCount} ukończonych`
-                : "Brak zadań na liście"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+                : "Brak zadań"}
+            </span>
+          </div>
+          <div className="p-4">
             {todos.isLoading && (
               <div className="flex justify-center py-8">
                 <Loader2 className="size-6 animate-spin text-muted-foreground" />
@@ -204,7 +187,7 @@ export default function TasksPage({ session }: TasksPageProps) {
                   <li
                     className={`flex items-center justify-between rounded-lg p-3 transition-colors ${
                       todo.completed
-                        ? "bg-green-500/10"
+                        ? "bg-primary/10"
                         : "bg-muted/50 hover:bg-muted"
                     }`}
                     key={todo.id}
@@ -242,8 +225,8 @@ export default function TasksPage({ session }: TasksPageProps) {
                 ))}
               </ul>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

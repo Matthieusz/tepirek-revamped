@@ -2,12 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { ChevronRight, Sparkles } from "lucide-react";
 
 import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   AUCTION_PROFESSION_META,
   AUCTION_PROFESSIONS,
   AUCTION_TYPE_META,
@@ -25,21 +19,12 @@ export default function AuctionsTypeIndexPage({
 }: AuctionsTypeIndexPageProps) {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
-      <Card className="border-none bg-linear-to-r from-primary/10 to-primary/5">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-              <Sparkles className="size-5 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-2xl">
-                {AUCTION_TYPE_META[type].indexTitle}
-              </CardTitle>
-              <CardDescription>Wybierz klasę postaci</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+      <div>
+        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+          {AUCTION_TYPE_META[type].indexTitle}
+        </h1>
+        <p className="text-muted-foreground text-sm">Wybierz klasę postaci</p>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {AUCTION_PROFESSIONS.map((profession) => {
@@ -51,19 +36,17 @@ export default function AuctionsTypeIndexPage({
               params={{ profession, type }}
               to="/dashboard/auctions/$type/$profession"
             >
-              <Card className="group h-full transition-colors hover:border-primary/50 hover:bg-accent/50">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
-                      <Icon className="size-5 text-primary" />
-                    </div>
-                    <ChevronRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+              <div className="group h-full rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/50 hover:bg-accent/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
+                    <Icon className="size-5 text-primary" />
                   </div>
-                  <CardTitle className="text-lg">
-                    {professionMeta.name}
-                  </CardTitle>
-                </CardHeader>
-              </Card>
+                  <ChevronRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+                </div>
+                <h2 className="mt-4 font-semibold text-lg">
+                  {professionMeta.name}
+                </h2>
+              </div>
             </Link>
           );
         })}

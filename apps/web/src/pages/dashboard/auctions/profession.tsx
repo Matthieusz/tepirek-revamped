@@ -1,6 +1,5 @@
 import { AuctionHeader } from "@/components/auction-header";
 import AuctionTable from "@/components/auction-table";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   AUCTION_PROFESSION_META,
   AUCTION_TYPE_META,
@@ -34,16 +33,14 @@ export default function AuctionsProfessionPage({
         type={type}
       />
 
-      <Card>
-        <CardContent className="pt-6">
-          <AuctionTable
-            columns={professionMeta.columns[type]}
-            currentUserId={session.user.id}
-            profession={profession}
-            type={type}
-          />
-        </CardContent>
-      </Card>
+      <div className="rounded-xl border border-border bg-card p-6">
+        <AuctionTable
+          columns={professionMeta.columns[type]}
+          currentUserId={session.user.id}
+          profession={profession}
+          type={type}
+        />
+      </div>
     </div>
   );
 }

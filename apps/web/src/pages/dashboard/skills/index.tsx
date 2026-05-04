@@ -25,7 +25,7 @@ export default function SkillsIndexPage({ session }: SkillsIndexPageProps) {
     <div className="mx-auto w-full max-w-6xl space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="mb-1 font-bold text-2xl tracking-tight">
+          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
             Lista przedziałów
           </h1>
           <p className="text-muted-foreground text-sm">
