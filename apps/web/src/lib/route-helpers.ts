@@ -7,7 +7,7 @@ export interface PageProps {
   session: AuthSession;
 }
 
-export const requireAuth = async (): Promise<AuthSession> => {
+const requireAuth = async (): Promise<AuthSession> => {
   const session = await getUser();
   if (!session?.user) {
     throw redirect({ to: "/login" });

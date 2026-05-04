@@ -31,7 +31,7 @@ const toEventTimestamp = (eventEndTime: Date | string | undefined): number => {
   return timestamp;
 };
 
-export const sortEventsByEndTimeDesc = (
+const sortEventsByEndTimeDesc = (
   events: EventSelectOption[] | undefined
 ): EventSelectOption[] =>
   [...(events ?? [])].toSorted(

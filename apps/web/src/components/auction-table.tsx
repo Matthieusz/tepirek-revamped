@@ -152,7 +152,7 @@ const roundLabels: Record<Round, string> = {
 const COLUMN_VALUES: Column[] = [1, 2, 3];
 const rowValues = Array.from({ length: 28 }, (_, i) => 30 + i * 10);
 
-export const AuctionTable: React.FC<AuctionTableProps> = ({
+const AuctionTable: React.FC<AuctionTableProps> = ({
   columns = ["Kolumna 1", "Kolumna 2", "Kolumna 3"],
   profession,
   type,
