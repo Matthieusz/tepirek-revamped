@@ -12,13 +12,6 @@ import { useState } from "react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { AuthSession } from "@/types/route";
@@ -267,7 +260,7 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <div>
-        <h1 className="mb-2 font-bold text-2xl tracking-tight">
+        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
           Kalkulator listów gończych
         </h1>
         <p className="text-muted-foreground">
@@ -305,18 +298,18 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
         {/* Single Mode */}
         {mode === "single" && (
           <>
-            {/* Input Form Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            {/* Input Form */}
+            <div className="rounded-xl border border-border bg-card">
+              <div className="border-b border-border p-6">
+                <h2 className="flex items-center gap-2 font-semibold text-base">
                   <Calculator className="size-5" />
                   Parametry walki
-                </CardTitle>
-                <CardDescription>
+                </h2>
+                <p className="text-muted-foreground text-sm">
                   Wprowadź poziomy atakującego i przeciwnika
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+                </p>
+              </div>
+              <div className="p-6">
                 <form
                   className="mt-2 grid gap-4"
                   onSubmit={async (e) => {
@@ -343,7 +336,7 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
                           className="flex items-center gap-2"
                           htmlFor="attackerLevel"
                         >
-                          <Swords className="size-4 text-red-500" />
+                          <Swords className="size-4 text-muted-foreground" />
                           Poziom atakującego
                         </Label>
                         <Input
@@ -427,38 +420,38 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
                     )}
                   </form.Subscribe>
                 </form>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* Result Card */}
+            {/* Result */}
             {result && (
-              <Card
-                className={`border-2 ${
+              <div
+                className={`rounded-xl border-2 ${
                   result.wouldReceivePenalty
-                    ? "border-red-500/50 bg-red-500/5"
-                    : "border-green-500/50 bg-green-500/5"
-                }`}
+                    ? "border-destructive/50 bg-destructive/5"
+                    : "border-primary/50 bg-primary/5"
+                } bg-card p-6`}
               >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <div className="mb-4">
+                  <h2 className="flex items-center gap-2 font-semibold text-base">
                     {result.wouldReceivePenalty ? (
                       <>
-                        <AlertTriangle className="size-5 text-red-500" />
-                        <span className="text-red-500">
+                        <AlertTriangle className="size-5 text-destructive" />
+                        <span className="text-destructive">
                           Otrzymasz punkt karny!
                         </span>
                       </>
                     ) : (
                       <>
-                        <Shield className="size-5 text-green-500" />
-                        <span className="text-green-500">
+                        <Shield className="size-5 text-primary" />
+                        <span className="text-primary">
                           Brak punktu karnego
                         </span>
                       </>
                     )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                  </h2>
+                </div>
+                <div className="space-y-4">
                   <div className="grid gap-3">
                     <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
                       <span className="text-muted-foreground text-sm">
@@ -478,30 +471,30 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
                     </div>
                   </div>
 
-                  <div className="grid gap-3 border-t pt-4">
+                  <div className="grid gap-3 border-t border-border pt-4">
                     <div className="text-muted-foreground text-sm">
                       <Users className="mr-1 mb-1 inline size-4" />
                       Przydatne informacje:
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-yellow-500/10 p-3">
+                    <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
                       <span className="text-muted-foreground text-sm">
                         Min. poziom ofiary dla kary (lvl {result.attackerLevel})
                       </span>
-                      <span className="font-semibold text-yellow-600">
+                      <span className="font-semibold text-primary">
                         ≤ {result.minVictimLevelForPenalty} lvl
                       </span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-blue-500/10 p-3">
+                    <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
                       <span className="text-muted-foreground text-sm">
                         Max. atakujący bez kary (lvl {result.victimLevel})
                       </span>
-                      <span className="font-semibold text-blue-600">
+                      <span className="font-semibold">
                         ≤ {result.maxAttackerWithoutPenalty} lvl
                       </span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
           </>
         )}
@@ -509,18 +502,18 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
         {/* Group Mode */}
         {mode === "group" && (
           <>
-            {/* Group Input Form Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            {/* Group Input Form */}
+            <div className="rounded-xl border border-border bg-card">
+              <div className="border-b border-border p-6">
+                <h2 className="flex items-center gap-2 font-semibold text-base">
                   <Calculator className="size-5" />
                   Parametry walki grupowej
-                </CardTitle>
-                <CardDescription>
+                </h2>
+                <p className="text-muted-foreground text-sm">
                   Wprowadź poziomy członków drużyn (oddzielone przecinkami)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+                </p>
+              </div>
+              <div className="p-6">
                 <form
                   className="mt-2 grid gap-4"
                   onSubmit={async (e) => {
@@ -551,7 +544,7 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
                           className="flex items-center gap-2"
                           htmlFor="attackerLevels"
                         >
-                          <Swords className="size-4 text-red-500" />
+                          <Swords className="size-4 text-muted-foreground" />
                           Poziomy atakujących
                         </Label>
                         <Input
@@ -598,7 +591,7 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
                           className="flex items-center gap-2"
                           htmlFor="defenderLevels"
                         >
-                          <Shield className="size-4 text-blue-500" />
+                          <Shield className="size-4 text-muted-foreground" />
                           Poziomy obrońców
                         </Label>
                         <Input
@@ -637,42 +630,42 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
                     )}
                   </groupForm.Subscribe>
                 </form>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* Group Result Card */}
+            {/* Group Result */}
             {groupResult && (
-              <Card
-                className={`border-2 ${
+              <div
+                className={`rounded-xl border-2 ${
                   groupResult.wouldReceivePenalty
-                    ? "border-red-500/50 bg-red-500/5"
-                    : "border-green-500/50 bg-green-500/5"
-                }`}
+                    ? "border-destructive/50 bg-destructive/5"
+                    : "border-primary/50 bg-primary/5"
+                } bg-card p-6`}
               >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <div className="mb-4">
+                  <h2 className="flex items-center gap-2 font-semibold text-base">
                     {groupResult.wouldReceivePenalty ? (
                       <>
-                        <AlertTriangle className="size-5 text-red-500" />
-                        <span className="text-red-500">
+                        <AlertTriangle className="size-5 text-destructive" />
+                        <span className="text-destructive">
                           Drużyna otrzyma punkty karne!
                         </span>
                       </>
                     ) : (
                       <>
-                        <Shield className="size-5 text-green-500" />
-                        <span className="text-green-500">
+                        <Shield className="size-5 text-primary" />
+                        <span className="text-primary">
                           Brak punktów karnych
                         </span>
                       </>
                     )}
-                  </CardTitle>
-                  <CardDescription>
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
                     Atakujący: {groupResult.attackerLevels.length} | Obrońcy:{" "}
                     {groupResult.defenderLevels.length}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                  </p>
+                </div>
+                <div className="space-y-4">
                   <div className="grid gap-3">
                     <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
                       <span className="text-muted-foreground text-sm">
@@ -700,28 +693,28 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
                     </div>
                   </div>
 
-                  <div className="grid gap-3 border-t pt-4">
-                    <div className="flex items-center justify-between rounded-lg bg-yellow-500/10 p-3">
+                  <div className="grid gap-3 border-t border-border pt-4">
+                    <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
                       <span className="text-muted-foreground text-sm">
                         Różnica (lewa strona)
                       </span>
-                      <span className="font-semibold text-yellow-600">
+                      <span className="font-semibold text-primary">
                         {groupResult.difference.toFixed(1)}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-blue-500/10 p-3">
+                    <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
                       <span className="text-muted-foreground text-sm">
                         Próg (prawa strona)
                       </span>
-                      <span className="font-semibold text-blue-600">
+                      <span className="font-semibold">
                         {groupResult.threshold.toFixed(1)}
                       </span>
                     </div>
                     <div
                       className={`flex items-center justify-between rounded-lg p-3 ${
                         groupResult.wouldReceivePenalty
-                          ? "bg-red-500/10"
-                          : "bg-green-500/10"
+                          ? "bg-destructive/10"
+                          : "bg-primary/10"
                       }`}
                     >
                       <span className="text-muted-foreground text-sm">
@@ -731,30 +724,30 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
                       <span
                         className={`font-semibold ${
                           groupResult.wouldReceivePenalty
-                            ? "text-red-600"
-                            : "text-green-600"
+                            ? "text-destructive"
+                            : "text-primary"
                         }`}
                       >
                         {groupResult.wouldReceivePenalty ? "TAK" : "NIE"}
                       </span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
           </>
         )}
       </div>
 
-      {/* Info Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="size-5 text-yellow-500" />
+      {/* Info */}
+      <div className="rounded-xl border border-border bg-card">
+        <div className="border-b border-border p-6">
+          <h2 className="flex items-center gap-2 font-semibold text-base">
+            <AlertTriangle className="size-5 text-muted-foreground" />
             Zasady listów gończych
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-muted-foreground text-sm">
+          </h2>
+        </div>
+        <div className="space-y-3 p-6 text-muted-foreground text-sm">
           {mode === "single" ? (
             <p>
               <strong>Formuła (1v1):</strong>{" "}
@@ -803,8 +796,8 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
               walkę
             </li>
           </ul>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

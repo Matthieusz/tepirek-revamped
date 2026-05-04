@@ -4,13 +4,6 @@ import { useState } from "react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -153,7 +146,7 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <div>
-        <h1 className="mb-2 font-bold text-2xl tracking-tight">
+        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
           Kalkulator odwiązania
         </h1>
         <p className="text-muted-foreground">
@@ -162,18 +155,18 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Input Form Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        {/* Input Form */}
+        <div className="rounded-xl border border-border bg-card">
+          <div className="border-b border-border p-6">
+            <h2 className="flex items-center gap-2 font-semibold text-base">
               <Calculator className="size-5" />
               Parametry przedmiotu
-            </CardTitle>
-            <CardDescription>
+            </h2>
+            <p className="text-muted-foreground text-sm">
               Wprowadź poziom i wybierz rzadkość przedmiotu
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </p>
+          </div>
+          <div className="p-6">
             <form
               className="grid gap-4"
               onSubmit={async (e) => {
@@ -281,20 +274,22 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
                 )}
               </form.Subscribe>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Result Card */}
+        {/* Result */}
         {result && (
-          <Card className={`border-2 ${rarityBgColors[result.itemRarity]}`}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div
+            className={`rounded-xl border-2 ${rarityBgColors[result.itemRarity]} bg-card p-6`}
+          >
+            <div className="mb-4">
+              <h2 className="flex items-center gap-2 font-semibold text-base">
                 <Unlink
                   className={`size-5 ${rarityColors[result.itemRarity]}`}
                 />
                 Koszt odwiązania
-              </CardTitle>
-              <CardDescription>
+              </h2>
+              <p className="text-muted-foreground text-sm">
                 Przedmiot poziom{" "}
                 <span className="font-semibold">{result.itemLevel}</span> (
                 <span
@@ -303,9 +298,9 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
                   {result.itemRarity}
                 </span>
                 )
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </p>
+            </div>
+            <div className="space-y-4">
               <div className="grid gap-3">
                 <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
                   <span className="text-muted-foreground text-sm">
@@ -328,32 +323,32 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
                 </div>
               </div>
 
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between rounded-lg bg-yellow-500/10 p-4">
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center justify-between rounded-lg bg-primary/10 p-4">
                   <span className="font-medium text-sm">
                     Całkowity koszt odwiązania
                   </span>
-                  <span className="font-bold text-xl text-yellow-600">
+                  <span className="font-bold text-xl text-primary">
                     {result.totalCost.toLocaleString("pl-PL")} SŁ /{" "}
                     {Math.floor(result.totalCost / 80).toLocaleString("pl-PL")}{" "}
                     zł
                   </span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Info Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      {/* Info */}
+      <div className="rounded-xl border border-border bg-card">
+        <div className="border-b border-border p-6">
+          <h2 className="flex items-center gap-2 font-semibold text-base">
             <Unlink className="size-5 text-muted-foreground" />
             Formuła obliczania
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-muted-foreground text-sm">
+          </h2>
+        </div>
+        <div className="space-y-3 p-6 text-muted-foreground text-sm">
           <p>
             <strong>Formuła:</strong>{" "}
             <code className="rounded bg-muted px-1 py-0.5">
@@ -381,8 +376,8 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
               </li>
             </ul>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

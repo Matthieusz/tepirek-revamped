@@ -4,13 +4,6 @@ import { useState } from "react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -215,7 +208,7 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <div>
-        <h1 className="mb-2 font-bold text-2xl tracking-tight">
+        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
           Kalkulator ulepy
         </h1>
         <p className="text-muted-foreground">
@@ -224,18 +217,18 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Input Form Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        {/* Input Form */}
+        <div className="rounded-xl border border-border bg-card">
+          <div className="border-b border-border p-6">
+            <h2 className="flex items-center gap-2 font-semibold text-base">
               <Calculator className="size-5" />
               Parametry przedmiotu
-            </CardTitle>
-            <CardDescription>
+            </h2>
+            <p className="text-muted-foreground text-sm">
               Wprowadź poziom i wybierz rzadkość przedmiotu
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </p>
+          </div>
+          <div className="p-6">
             <form
               className="grid gap-4"
               onSubmit={async (e) => {
@@ -343,24 +336,26 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
                 )}
               </form.Subscribe>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Extraction Results Card */}
+        {/* Extraction Results */}
         {result && (
-          <Card className={`border-2 ${rarityBgColors[result.itemRarity]}`}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div
+            className={`rounded-xl border-2 ${rarityBgColors[result.itemRarity]} bg-card p-6`}
+          >
+            <div className="mb-4">
+              <h2 className="flex items-center gap-2 font-semibold text-base">
                 <Sparkles
                   className={`size-5 ${rarityColors[result.itemRarity]}`}
                 />
                 Ekstrakcja
-              </CardTitle>
-              <CardDescription>
+              </h2>
+              <p className="text-muted-foreground text-sm">
                 Punkty ulepszenia możliwe do odzyskania
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </p>
+            </div>
+            <div className="space-y-4">
               <div className="grid gap-3">
                 <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
                   <span className="text-muted-foreground text-sm">
@@ -381,38 +376,38 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
                   </span>
                 </div>
               </div>
-              <div className="grid gap-3 border-t pt-4">
-                <div className="flex items-center justify-between rounded-lg bg-yellow-500/10 p-3">
+              <div className="grid gap-3 border-t border-border pt-4">
+                <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
                   <span className="text-muted-foreground text-sm">
                     Koszt ulepszenia do +5
                   </span>
-                  <span className="font-semibold text-lg text-yellow-600">
+                  <span className="font-semibold text-lg text-primary">
                     {formatGold(result.upgradeGoldCost)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between rounded-lg bg-yellow-500/10 p-3">
+                <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
                   <span className="text-muted-foreground text-sm">
                     Koszt ekstrakcji
                   </span>
-                  <span className="font-semibold text-lg text-yellow-600">
+                  <span className="font-semibold text-lg text-primary">
                     {formatGold(result.extractionGoldCost)}
                   </span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
       </div>
 
       {/* Upgrade Costs Table */}
       {result && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="rounded-xl border border-border bg-card">
+          <div className="border-b border-border p-6">
+            <h2 className="flex items-center gap-2 font-semibold text-base">
               <TrendingUp className="size-5" />
               Koszty ulepszenia
-            </CardTitle>
-            <CardDescription>
+            </h2>
+            <p className="text-muted-foreground text-sm">
               Przedmiot poziom{" "}
               <span className="font-semibold">{result.itemLevel}</span> (
               <span
@@ -421,9 +416,9 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
                 {result.itemRarity}
               </span>
               )
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </p>
+          </div>
+          <div className="p-6">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -468,8 +463,8 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
                 </TableRow>
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   );
