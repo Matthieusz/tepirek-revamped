@@ -2,18 +2,29 @@ packages:
   - apps/*
   - packages/*
 
+allowBuilds:
+  esbuild: true
+  lefthook: true
+
 catalog:
-  "@orpc/client": ^1.14.1
-  "@orpc/openapi": ^1.14.1
-  "@orpc/server": ^1.14.1
-  "@orpc/zod": ^1.14.1
-  better-auth: ^1.6.9
+  "@orpc/client": ^1.14.6
+  "@orpc/openapi": ^1.14.6
+  "@orpc/server": ^1.14.6
+  "@orpc/zod": ^1.14.6
+  better-auth: ^1.6.19
   dotenv: ^17.4.2
   drizzle-orm: ^0.45.2
-  hono: ^4.12.16
-  tsdown: ^0.21.10
+  hono: ^4.12.26
+  tsdown: ^0.22.3
   typescript: ^6.0.3
   zod: ^4.4.3
+
+minimumReleaseAgeExclude:
+  - "@base-ui/react@1.6.0"
+  - "@base-ui/utils@0.3.1"
+  - pg-connection-string@2.14.0
+  - pg-protocol@1.15.0
+  - pg@8.22.0
 
 onlyBuiltDependencies:
   - esbuild

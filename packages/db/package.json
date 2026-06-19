@@ -10,6 +10,7 @@
     }
   },
   "scripts": {
+    "check-types": "tsc -b",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
@@ -22,7 +23,7 @@
   "dependencies": {
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
-    "pg": "^8.20.0"
+    "pg": "^8.22.0"
   },
   "devDependencies": {
     "@tepirek-revamped/config": "workspace:*",
