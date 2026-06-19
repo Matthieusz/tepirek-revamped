@@ -9,7 +9,10 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "check-types": "tsc --noEmit --composite false --declaration false --declarationMap false --rootDir src",
+    "test": "vitest run"
+  },
   "dependencies": {
     "@orpc/server": "catalog:",
     "@tepirek-revamped/auth": "workspace:*",

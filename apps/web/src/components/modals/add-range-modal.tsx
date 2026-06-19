@@ -16,6 +16,7 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import { getErrorMessage } from "@/lib/errors";
 import { orpc } from "@/utils/orpc";
 
 interface AddEventModalProps {

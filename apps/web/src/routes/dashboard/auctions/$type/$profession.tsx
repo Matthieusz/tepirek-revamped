@@ -7,6 +7,25 @@ import {
 } from "@/pages/dashboard/auctions/config";
 import AuctionsProfessionPage from "@/pages/dashboard/auctions/profession";
 
+const AuctionsProfessionRoute = () => {
+  // eslint-disable-next-line no-use-before-define
+  const { session } = Route.useRouteContext();
+  // eslint-disable-next-line no-use-before-define
+  const { profession, type } = Route.useParams();
+
+  if (!isAuctionType(type) || !isAuctionProfession(profession)) {
+    return null;
+  }
+
+  return (
+    <AuctionsProfessionPage
+      profession={profession}
+      session={session}
+      type={type}
+    />
+  );
+};
+
 export const Route = createFileRoute("/dashboard/auctions/$type/$profession")({
   beforeLoad: ({ params }) => {
     if (!isAuctionType(params.type)) {
@@ -27,20 +46,3 @@ export const Route = createFileRoute("/dashboard/auctions/$type/$profession")({
       : params.profession,
   }),
 });
-
-function AuctionsProfessionRoute() {
-  const { session } = Route.useRouteContext();
-  const { profession, type } = Route.useParams();
-
-  if (!isAuctionType(type) || !isAuctionProfession(profession)) {
-    return null;
-  }
-
-  return (
-    <AuctionsProfessionPage
-      profession={profession}
-      session={session}
-      type={type}
-    />
-  );
-}

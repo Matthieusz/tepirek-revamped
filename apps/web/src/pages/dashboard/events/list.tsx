@@ -17,7 +17,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
@@ -92,7 +91,7 @@ export default function EventsListPage({ session }: EventsListPageProps) {
     return (
       <div className="mx-auto w-full max-w-4xl space-y-6">
         <div>
-          <h1 className="mb-1 font-bold text-2xl tracking-tight">
+          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
             Lista eventów
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -108,7 +107,7 @@ export default function EventsListPage({ session }: EventsListPageProps) {
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="mb-1 font-bold text-2xl tracking-tight">
+          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
             Lista eventów
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -128,14 +127,12 @@ export default function EventsListPage({ session }: EventsListPageProps) {
       </div>
 
       {/* Table */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Calendar className="size-4" />
-            Eventy
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="rounded-xl border border-border bg-card">
+        <div className="flex items-center gap-2 border-b border-border p-4">
+          <Calendar className="size-4" />
+          <h2 className="font-semibold text-base">Eventy</h2>
+        </div>
+        <div className="p-4">
           {!events || events.length === 0 ? (
             <EmptyState
               icon={Calendar}
@@ -207,8 +204,8 @@ export default function EventsListPage({ session }: EventsListPageProps) {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <AlertDialog
         onOpenChange={(open) => {

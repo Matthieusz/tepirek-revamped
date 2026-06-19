@@ -9,7 +9,7 @@ export const Route = createFileRoute("/dashboard")({
     const session = await requireVerified();
     return { session };
   },
-  component: function DashboardLayoutRoute() {
+  component: function component() {
     const { session } = Route.useRouteContext();
     return <DashboardLayout session={session} />;
   },

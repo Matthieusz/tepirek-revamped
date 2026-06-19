@@ -8,7 +8,7 @@ export const Route = createFileRoute("/waiting-room")({
     const session = await requireUnverified();
     return { session };
   },
-  component: function WaitingRoomRoute() {
+  component: function component() {
     const { session } = Route.useRouteContext();
     return <WaitingRoomPage session={session} />;
   },

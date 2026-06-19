@@ -2,11 +2,25 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@tepirek-revamped/db";
 import { account, user } from "@tepirek-revamped/db/schema/auth";
 import type { SQL } from "drizzle-orm";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { adminProcedure, protectedProcedure } from "./procedures";
+import {
+  adminProcedure,
+  protectedProcedure,
+  verifiedProcedure,
+} from "./procedures";
 import { roleSchema, userIdSchema } from "./schemas";
+
+const discordGuildSchema = z.array(z.object({ id: z.string() }));
+
+export const hasDiscordGuild = (guilds: unknown, guildId: string): boolean => {
+  if (guildId === "") {
+    return false;
+  }
+  const parsed = discordGuildSchema.safeParse(guilds);
+  return parsed.success && parsed.data.some((guild) => guild.id === guildId);
+};
 
 const updateAndReturnUser = async (
   where: SQL,
@@ -45,18 +59,11 @@ export const userRouter = {
       await db.delete(user).where(eq(user.id, input.userId));
       return { success: true };
     }),
-  getDiscordAccessToken: protectedProcedure.handler(async ({ context }) => {
-    const rows = await db
-      .select({ accessToken: account.accessToken })
-      .from(account)
-      .where(eq(account.userId, context.session.user.id));
-    return rows[0]?.accessToken ?? null;
-  }),
   getSession: protectedProcedure.handler(({ context }) => context.session),
-  getVerified: protectedProcedure.handler(() =>
+  getVerified: verifiedProcedure.handler(() =>
     db.select().from(user).where(eq(user.verified, true))
   ),
-  list: protectedProcedure.handler(async () => db.select().from(user)),
+  list: verifiedProcedure.handler(() => db.select().from(user)),
   setRole: adminProcedure
     .input(
       z.object({
@@ -64,7 +71,7 @@ export const userRouter = {
         userId: userIdSchema,
       })
     )
-    .handler(async ({ input }) =>
+    .handler(({ input }) =>
       updateAndReturnUser(eq(user.id, input.userId), { role: input.role })
     ),
   setVerified: adminProcedure
@@ -74,18 +81,18 @@ export const userRouter = {
         verified: z.boolean(),
       })
     )
-    .handler(async ({ input }) =>
+    .handler(({ input }) =>
       updateAndReturnUser(eq(user.id, input.userId), {
         verified: input.verified,
       })
     ),
-  updateProfile: protectedProcedure
+  updateProfile: verifiedProcedure
     .input(
       z.object({
         name: z.string().min(2),
       })
     )
-    .handler(async ({ input, context }) =>
+    .handler(({ input, context }) =>
       updateAndReturnUser(eq(user.id, context.session.user.id), {
         name: input.name,
       })
@@ -97,36 +104,51 @@ export const userRouter = {
         userId: userIdSchema,
       })
     )
-    .handler(async ({ input }) =>
+    .handler(({ input }) =>
       updateAndReturnUser(eq(user.id, input.userId), { name: input.name })
     ),
-  validateDiscordGuild: protectedProcedure
-    .input(
-      z.object({
-        accessToken: z.string().min(1),
-      })
-    )
-    .handler(async ({ input }) => {
+  verifyDiscordGuildMembership: protectedProcedure.handler(
+    async ({ context }) => {
+      const guildId = process.env.DISCORD_SERVER_ID;
+      if (!guildId) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Brak konfiguracji serwera Discord",
+        });
+      }
+
+      const [discordAccount] = await db
+        .select({ accessToken: account.accessToken })
+        .from(account)
+        .where(
+          and(
+            eq(account.userId, context.session.user.id),
+            eq(account.providerId, "discord")
+          )
+        );
+
+      if (!discordAccount?.accessToken) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Połącz konto Discord, aby zweryfikować członkostwo",
+        });
+      }
+
       const response = await fetch("https://discord.com/api/users/@me/guilds", {
         headers: {
-          Authorization: `Bearer ${input.accessToken}`,
+          Authorization: `Bearer ${discordAccount.accessToken}`,
         },
       });
       if (!response.ok) {
         return { valid: false };
       }
-      const guildId = process.env.DISCORD_SERVER_ID;
-      const discordGuildSchema = z.array(z.object({ id: z.string() }));
-      const parsed = discordGuildSchema.safeParse(await response.json());
-      if (!parsed.success) {
-        return { valid: false };
+
+      const valid = hasDiscordGuild(await response.json(), guildId);
+      if (valid) {
+        await db
+          .update(user)
+          .set({ updatedAt: new Date(), verified: true })
+          .where(eq(user.id, context.session.user.id));
       }
-      return { valid: parsed.data.some((guild) => guild.id === guildId) };
-    }),
-  verifySelf: protectedProcedure.handler(async ({ context }) =>
-    db
-      .update(user)
-      .set({ updatedAt: new Date(), verified: true })
-      .where(eq(user.id, context.session.user.id))
+      return { valid };
+    }
   ),
 };

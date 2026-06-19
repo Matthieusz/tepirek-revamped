@@ -154,14 +154,14 @@ pnpm db:start && pnpm db:push && pnpm dev
 
 ### Database
 
-| Command            | What it does                       |
-| ------------------ | ---------------------------------- |
-| `pnpm db:push`     | Push schema changes                |
-| `pnpm db:studio`   | Open Drizzle Studio (database GUI) |
-| `pnpm db:generate` | Generate migrations                |
-| `pnpm db:migrate`  | Run migrations                     |
-| `pnpm db:start`    | Start PostgreSQL (Docker)          |
-| `pnpm db:stop`     | Stop PostgreSQL                    |
+| Command            | What it does                                            |
+| ------------------ | ------------------------------------------------------- |
+| `pnpm db:push`     | Push schema directly for local prototyping only         |
+| `pnpm db:studio`   | Open Drizzle Studio (database GUI)                      |
+| `pnpm db:generate` | Generate migration files to commit after schema changes |
+| `pnpm db:migrate`  | Apply committed migrations                              |
+| `pnpm db:start`    | Start PostgreSQL (Docker)                               |
+| `pnpm db:stop`     | Stop PostgreSQL                                         |
 
 ---
 

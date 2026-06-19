@@ -1,4 +1,5 @@
 import { Trophy, User } from "lucide-react";
+import type { ReactElement } from "react";
 
 import {
   Accordion,
@@ -22,7 +23,7 @@ const GOLD_MEDAL = 1;
 const SILVER_MEDAL = 2;
 const BRONZE_MEDAL = 3;
 
-const getRankIcon = (position: number): JSX.Element | null => {
+const getRankIcon = (position: number): ReactElement | null => {
   if (position === GOLD_MEDAL) {
     return <Trophy className="size-5 text-yellow-500" />;
   }

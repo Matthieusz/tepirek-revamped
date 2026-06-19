@@ -53,6 +53,7 @@ export const NavMain = ({
             );
 
           return (
+            // eslint-disable-next-line no-use-before-define
             <NavItemCollapsible
               isGroupActive={isGroupActive}
               item={item}
@@ -66,7 +67,7 @@ export const NavMain = ({
   );
 };
 
-function NavItemCollapsible({
+const NavItemCollapsible = ({
   isGroupActive,
   item,
   matchRoute,
@@ -85,7 +86,7 @@ function NavItemCollapsible({
     }[];
   };
   matchRoute: ReturnType<typeof useMatchRoute>;
-}) {
+}) => {
   const [open, setOpen] = useState(item.isActive ?? isGroupActive);
 
   return (
@@ -147,4 +148,4 @@ function NavItemCollapsible({
       className="group/collapsible"
     />
   );
-}
+};

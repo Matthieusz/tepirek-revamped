@@ -12,7 +12,7 @@ import type { SQL } from "drizzle-orm";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { adminProcedure, protectedProcedure } from "./procedures";
+import { adminProcedure, verifiedProcedure } from "./procedures";
 
 export const betRouter = {
   create: adminProcedure
@@ -351,7 +351,7 @@ export const betRouter = {
       return { success: true };
     }),
 
-  getAll: protectedProcedure.handler(async () => {
+  getAll: verifiedProcedure.handler(async () => {
     const bets = await db
       .select({
         createdAt: heroBet.createdAt,
@@ -402,7 +402,7 @@ export const betRouter = {
     }));
   }),
 
-  getAllPaginated: protectedProcedure
+  getAllPaginated: verifiedProcedure
     .input(
       z.object({
         eventId: z.number().optional(),
@@ -503,7 +503,7 @@ export const betRouter = {
       };
     }),
 
-  getBetMembers: protectedProcedure
+  getBetMembers: verifiedProcedure
     .input(z.object({ betId: z.number() }))
     .handler(async ({ input }) => {
       const members = await db
@@ -518,7 +518,7 @@ export const betRouter = {
       return members;
     }),
 
-  getByEvent: protectedProcedure
+  getByEvent: verifiedProcedure
     .input(z.object({ eventId: z.number() }))
     .handler(async ({ input }) => {
       const bets = await db

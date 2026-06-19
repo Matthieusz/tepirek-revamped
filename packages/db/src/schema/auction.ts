@@ -5,6 +5,7 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const auction = pgTable(
@@ -20,6 +21,13 @@ export const auction = pgTable(
     userId: text("user_id").notNull(),
   },
   (table) => ({
+    auctionSlotUniqueIdx: uniqueIndex("auction_slot_unique_idx").on(
+      table.profession,
+      table.type,
+      table.level,
+      table.round,
+      table.column
+    ),
     professionTypeIdx: index("profession_type_idx").on(
       table.profession,
       table.type

@@ -56,8 +56,8 @@ export const BetCard = ({
                 betId={bet.id}
                 currentMembers={bet.members.map((member) => ({
                   userId: member.userId,
-                  userName: member.userName,
                   userImage: member.userImage,
+                  userName: member.userName,
                 }))}
                 heroName={bet.heroName}
                 memberCount={bet.memberCount}

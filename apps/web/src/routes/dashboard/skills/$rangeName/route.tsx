@@ -30,23 +30,10 @@ import {
 import { isAdmin } from "@/lib/route-helpers";
 import { orpc, queryClient } from "@/utils/orpc";
 
-export const Route = createFileRoute("/dashboard/skills/$rangeName")({
-  component: RangeDetails,
-  loader: async ({ params }) => {
-    const slug = params.rangeName;
-    const data = await orpc.skills.getRangeBySlug.call({ slug });
-    return { crumb: data?.name ?? slug };
-  },
-});
-
-type SkillToDelete = {
-  id: number;
-  name: string;
-  rangeId: number;
-} | null;
-
-function RangeDetails() {
+const RangeDetails = () => {
+  // eslint-disable-next-line no-use-before-define
   const { rangeName } = Route.useParams();
+  // eslint-disable-next-line no-use-before-define
   const { session } = Route.useRouteContext();
   const [skillToDelete, setSkillToDelete] = useState<SkillToDelete>(null);
 
@@ -265,4 +252,19 @@ function RangeDetails() {
       </AlertDialog>
     </div>
   );
-}
+};
+
+export const Route = createFileRoute("/dashboard/skills/$rangeName")({
+  component: RangeDetails,
+  loader: async ({ params }) => {
+    const slug = params["range-name"];
+    const data = await orpc.skills.getRangeBySlug.call({ slug });
+    return { crumb: data?.name ?? slug };
+  },
+});
+
+type SkillToDelete = {
+  id: number;
+  name: string;
+  rangeId: number;
+} | null;

@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getErrorMessage } from "@/lib/errors";
 import { orpc } from "@/utils/orpc";
 
 interface AddHeroModalProps {

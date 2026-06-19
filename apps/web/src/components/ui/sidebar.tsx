@@ -418,12 +418,12 @@ const SidebarGroup = ({ className, ...props }: React.ComponentProps<"div">) => (
   />
 );
 
-function SidebarGroupLabel({
+const SidebarGroupLabel = ({
   className,
   render,
   ...props
-}: useRender.ComponentProps<"div">) {
-  return useRender({
+}: useRender.ComponentProps<"div">) =>
+  useRender({
     defaultTagName: "div",
     props: mergeProps<"div">(
       {
@@ -437,18 +437,17 @@ function SidebarGroupLabel({
     ),
     render,
     state: {
-      slot: "sidebar-group-label",
       sidebar: "group-label",
+      slot: "sidebar-group-label",
     },
   });
-}
 
-function SidebarGroupAction({
+const SidebarGroupAction = ({
   className,
   render,
   ...props
-}: useRender.ComponentProps<"button">) {
-  return useRender({
+}: useRender.ComponentProps<"button">) =>
+  useRender({
     defaultTagName: "button",
     props: mergeProps<"button">(
       {
@@ -463,11 +462,10 @@ function SidebarGroupAction({
     ),
     render,
     state: {
-      slot: "sidebar-group-action",
       sidebar: "group-action",
+      slot: "sidebar-group-action",
     },
   });
-}
 
 const SidebarGroupContent = ({
   className,
@@ -524,7 +522,7 @@ const sidebarMenuButtonVariants = cva(
   }
 );
 
-function SidebarMenuButton({
+const SidebarMenuButton = ({
   isActive = false,
   variant = "default",
   size = "default",
@@ -535,7 +533,7 @@ function SidebarMenuButton({
 }: useRender.ComponentProps<"button"> & {
   isActive?: boolean;
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-} & VariantProps<typeof sidebarMenuButtonVariants>) {
+} & VariantProps<typeof sidebarMenuButtonVariants>) => {
   const { isMobile, state } = useSidebar();
 
   const button = useRender({
@@ -574,17 +572,17 @@ function SidebarMenuButton({
       />
     </Tooltip>
   );
-}
+};
 
-function SidebarMenuAction({
+const SidebarMenuAction = ({
   className,
   render,
   showOnHover = false,
   ...props
 }: useRender.ComponentProps<"button"> & {
   showOnHover?: boolean;
-}) {
-  return useRender({
+}) =>
+  useRender({
     defaultTagName: "button",
     props: mergeProps<"button">(
       {
@@ -609,7 +607,6 @@ function SidebarMenuAction({
       slot: "sidebar-menu-action",
     },
   });
-}
 
 const SidebarMenuBadge = ({
   className,
@@ -696,7 +693,7 @@ const SidebarMenuSubItem = ({
   />
 );
 
-function SidebarMenuSubButton({
+const SidebarMenuSubButton = ({
   size = "md",
   isActive = false,
   className,
@@ -705,8 +702,8 @@ function SidebarMenuSubButton({
 }: useRender.ComponentProps<"a"> & {
   size?: "sm" | "md";
   isActive?: boolean;
-}) {
-  return useRender({
+}) =>
+  useRender({
     defaultTagName: "a",
     props: mergeProps<"a">(
       {
@@ -729,7 +726,6 @@ function SidebarMenuSubButton({
       slot: "sidebar-menu-sub-button",
     },
   });
-}
 
 export {
   Sidebar,

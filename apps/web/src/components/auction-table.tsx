@@ -170,11 +170,7 @@ const AuctionTable: React.FC<AuctionTableProps> = ({
   const { data: signups, isPending } = useQuery(signupsQuery);
 
   const toggleMutation = useMutation({
-    mutationFn: async (params: {
-      level: number;
-      round: number;
-      column: number;
-    }) =>
+    mutationFn: (params: { level: number; round: number; column: number }) =>
       orpc.auction.toggleSignup.call({
         profession,
         type,
@@ -195,7 +191,7 @@ const AuctionTable: React.FC<AuctionTableProps> = ({
   });
 
   const removeMutation = useMutation({
-    mutationFn: async (id: number) => orpc.auction.removeSignup.call({ id }),
+    mutationFn: (id: number) => orpc.auction.removeSignup.call({ id }),
     onError: (error) => {
       toast.error(getErrorMessage(error));
     },

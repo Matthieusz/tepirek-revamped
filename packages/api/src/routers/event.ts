@@ -7,7 +7,7 @@ import { event } from "@tepirek-revamped/db/schema/event";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { adminProcedure, protectedProcedure } from "./procedures";
+import { adminProcedure, verifiedProcedure } from "./procedures";
 
 export const eventRouter = {
   create: adminProcedure
@@ -19,7 +19,7 @@ export const eventRouter = {
         name: z.string().min(1),
       })
     )
-    .handler(async ({ input }) =>
+    .handler(({ input }) =>
       db.insert(event).values({
         color: input.color,
         endTime: new Date(input.endTime),
@@ -30,15 +30,13 @@ export const eventRouter = {
 
   delete: adminProcedure
     .input(z.object({ id: z.number() }))
-    .handler(async ({ input }) =>
-      db.delete(event).where(eq(event.id, input.id))
-    ),
+    .handler(({ input }) => db.delete(event).where(eq(event.id, input.id))),
 
-  getAll: protectedProcedure.handler(async () => db.select().from(event)),
+  getAll: verifiedProcedure.handler(() => db.select().from(event)),
 
   toggleActive: adminProcedure
     .input(z.object({ active: z.boolean(), id: z.number() }))
-    .handler(async ({ input }) =>
+    .handler(({ input }) =>
       db
         .update(event)
         .set({ active: input.active })

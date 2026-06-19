@@ -4,7 +4,6 @@ import { useState } from "react";
 
 import { buildPlayerColumns } from "@/components/players-table/columns";
 import { PlayerTable } from "@/components/players-table/player-table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { isAdmin } from "@/lib/route-helpers";
@@ -46,7 +45,9 @@ export default function PlayerListPage({ session }: PlayerListPageProps) {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <div>
-        <h1 className="mb-1 font-bold text-2xl tracking-tight">Lista graczy</h1>
+        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+          Lista graczy
+        </h1>
         <p className="text-muted-foreground text-sm">
           Zarządzaj użytkownikami i ich statusem weryfikacji.
         </p>
@@ -54,41 +55,33 @@ export default function PlayerListPage({ session }: PlayerListPageProps) {
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="font-medium text-sm">
-              Wszyscy gracze
-            </CardTitle>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between">
+            <p className="font-medium text-sm">Wszyscy gracze</p>
             <Users className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="font-bold text-2xl">
-              {isPending ? "—" : playersData.length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="font-medium text-sm">Zweryfikowani</CardTitle>
-            <CheckCircle2 className="size-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="font-bold text-2xl text-green-500">
-              {isPending ? "—" : totalVerified}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="font-medium text-sm">Oczekujący</CardTitle>
-            <Clock className="size-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="font-bold text-2xl text-yellow-500">
-              {isPending ? "—" : totalNotVerified}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <p className="mt-1 font-bold text-2xl">
+            {isPending ? "—" : playersData.length}
+          </p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between">
+            <p className="font-medium text-sm">Zweryfikowani</p>
+            <CheckCircle2 className="size-4 text-primary" />
+          </div>
+          <p className="mt-1 font-bold text-2xl text-primary">
+            {isPending ? "—" : totalVerified}
+          </p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between">
+            <p className="font-medium text-sm">Oczekujący</p>
+            <Clock className="size-4 text-muted-foreground" />
+          </div>
+          <p className="mt-1 font-bold text-2xl text-muted-foreground">
+            {isPending ? "—" : totalNotVerified}
+          </p>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -108,14 +101,12 @@ export default function PlayerListPage({ session }: PlayerListPageProps) {
 
       {/* Tables */}
       <div className="grid gap-6 xl:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <CheckCircle2 className="size-4 text-green-500" />
-              Zweryfikowani
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="rounded-xl border border-border bg-card">
+          <div className="flex items-center gap-2 border-b border-border p-4">
+            <CheckCircle2 className="size-4 text-primary" />
+            <h2 className="font-semibold text-base">Zweryfikowani</h2>
+          </div>
+          <div className="p-4">
             {isPending && <LoadingSpinner />}
             {!isPending && verifiedPlayers.length > 0 && (
               <PlayerTable columns={cols} data={verifiedPlayers} />
@@ -125,17 +116,17 @@ export default function PlayerListPage({ session }: PlayerListPageProps) {
                 Brak zweryfikowanych graczy
               </p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Clock className="size-4 text-yellow-500" />
+        <div className="rounded-xl border border-border bg-card">
+          <div className="flex items-center gap-2 border-b border-border p-4">
+            <Clock className="size-4 text-muted-foreground" />
+            <h2 className="font-semibold text-base">
               Oczekujący na weryfikację
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h2>
+          </div>
+          <div className="p-4">
             {isPending && <LoadingSpinner />}
             {!isPending && notVerifiedPlayers.length > 0 && (
               <PlayerTable columns={cols} data={notVerifiedPlayers} />
@@ -145,8 +136,8 @@ export default function PlayerListPage({ session }: PlayerListPageProps) {
                 Brak oczekujących graczy
               </p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

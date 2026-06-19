@@ -19,7 +19,7 @@ The system rejects both generic SaaS dashboard sameness and cluttered MMO fan-si
 
 **Key Characteristics:**
 
-- Dark surfaces with warm-tinted neutrals — never cold blue-gray, never pure black.
+- Dark surfaces with a warm near-black base and cool slate elevated layers; never pure black.
 - Monospace for data and UI chrome; display type for major headings.
 - Flat by default; motion is responsive feedback, not choreography.
 - Information density is intentional, not inherited from MMO UI bloat.
@@ -27,7 +27,7 @@ The system rejects both generic SaaS dashboard sameness and cluttered MMO fan-si
 
 ## 2. Colors
 
-The palette is a full, deliberate dark-mode system with four named roles. Every neutral is tinted warm to avoid the sterile coldness of default dark themes.
+The palette is a full, deliberate dark-mode system with four named roles. The base page background stays subtly warm and nocturnal, while elevated cards, popovers, sidebars, and borders use restrained cool slate neutrals for crisp separation.
 
 ### Primary
 
@@ -43,14 +43,15 @@ The palette is a full, deliberate dark-mode system with four named roles. Every 
 
 ### Neutral
 
-- **[To be resolved during implementation]** — Warm-tinted dark grays for surfaces and backgrounds. Lightness steps from near-black (base) through elevated cards to soft text. Not pure `#000`; chroma ~0.005–0.01 at extremes to keep warmth.
-- **[To be resolved during implementation]** — Warm-tinted light tones for primary text and icons on dark surfaces.
+- **Base neutral** — A warm near-black background that keeps the app nocturnal and avoids pure `#000`.
+- **Elevated neutral** — Cool slate cards, popovers, sidebars, borders, and muted states that separate dense product surfaces without feeling corporate or neon.
+- **Text neutral** — Soft light tones for primary text and icons on dark surfaces, tuned for readable contrast.
 
 ### Named Rules
 
 **The Dark-Only Rule.** There is no light mode. Every color token is authored for dark surfaces first and exclusively. Contrast ratios are verified against dark backgrounds.
 
-**The Warm Neutrals Rule.** No cold blue-gray neutrals. Even the darkest surface carries a warm tint so the interface feels like candlelight, not a hospital monitor.
+**The Cool Slate Layering Rule.** The root background may stay warm, but elevated surfaces use cool slate deliberately for product clarity. Cool slate is structural, not decorative: use it for cards, panels, sidebars, popovers, borders, and muted states.
 
 ## 3. Typography
 
@@ -77,7 +78,7 @@ The palette is a full, deliberate dark-mode system with four named roles. Every 
 
 ## 4. Elevation
 
-The system is flat-by-default with tonal layering as the primary depth mechanism. Surfaces are distinguished by subtle lightness shifts and warm-tinted borders, not by floating shadows.
+The system is flat-by-default with tonal layering as the primary depth mechanism. Surfaces are distinguished by subtle lightness shifts and cool slate borders, not by floating shadows.
 
 Shadows are used sparingly and only as a response to state: hover elevation on interactive cards, focus rings, and modal/dialog overlays. When shadows appear, they are diffuse and warm-tinted, not harsh black drops.
 
@@ -100,14 +101,14 @@ Shadows are used sparingly and only as a response to state: hover elevation on i
 
 - **Do** keep the interface dark-mode only; verify all contrast against dark surfaces.
 - **Do** use monospace for game-relevant numbers, stats, and data tables.
-- **Do** let tonal layering (lightness shifts + warm borders) carry surface hierarchy before reaching for shadows.
+- **Do** let tonal layering (lightness shifts + cool slate borders) carry surface hierarchy before reaching for shadows.
 - **Do** ensure Polish copy feels natural and direct, not translated or stiff.
 - **Do** respect `prefers-reduced-motion`; even responsive feedback should be disableable.
 
 ### Don't:
 
 - **Don't** introduce a light mode. The system is authored exclusively for dark surfaces.
-- **Don't** use cold blue-gray neutrals. Every dark surface must carry a warm tint.
+- **Don't** use cool slate as decoration. It is reserved for structural elevated layers, borders, panels, and muted states.
 - **Don't** use gradient text (`background-clip: text`). Emphasis comes from weight, size, or color role, not decorative gradients.
 - **Don't** use side-stripe borders (colored `border-left` or `border-right` greater than 1px) as accents on cards or alerts. Use full borders, background tints, or leading icons instead.
 - **Don't** use glassmorphism decoratively. Blurs and translucent panels are rare and purposeful, or absent.

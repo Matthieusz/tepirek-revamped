@@ -6,12 +6,15 @@ import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 
 export const BackToHomeButton = () => (
-  <Button variant="ghost" asChild>
-    <Link className="flex items-center gap-2" to="/">
-      <ArrowLeft className="size-4" />
-      Powrót do strony głównej
-    </Link>
-  </Button>
+  <Button
+    render={
+      <Link className="flex items-center gap-2" to="/">
+        <ArrowLeft className="size-4" />
+        Powrót do strony głównej
+      </Link>
+    }
+    variant="ghost"
+  />
 );
 
 const DiscordIcon = ({ className }: { className?: string }) => (

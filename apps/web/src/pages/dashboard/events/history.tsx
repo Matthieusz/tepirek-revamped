@@ -205,7 +205,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="mb-1 font-bold text-2xl tracking-tight">
+          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
             Historia obstawień
           </h1>
           <div className="flex items-center gap-2">
@@ -229,7 +229,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
           >
             <SelectTrigger className="w-full sm:w-44">
               <SelectValue>
-                {getEventSelectDisplay({ selectedEventId, events })}
+                {getEventSelectDisplay({ events, selectedEventId })}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>

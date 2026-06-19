@@ -11,7 +11,6 @@ import {
 } from "@/components/events/select-utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -147,14 +146,14 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
-      <h1 className="text-center font-bold text-3xl tracking-tight">
+      <h1 className="font-serif font-bold tracking-tight text-center text-foreground text-2xl">
         Skarbiec
       </h1>
 
       {/* Event Filter */}
       <div className="flex justify-center">
         <Select
-          onValueChange={async (value) =>
+          onValueChange={(value) =>
             navigate({
               search: {
                 eventId: value === "all" || value === null ? undefined : value,
@@ -166,8 +165,8 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
           <SelectTrigger className="w-56">
             <SelectValue>
               {getEventSelectDisplay({
-                selectedEventId: effectiveEventId,
                 events,
+                selectedEventId: effectiveEventId,
               })}
             </SelectValue>
           </SelectTrigger>
@@ -183,60 +182,58 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
         <>
           {/* Next to receive payment - highlighted */}
           {nextToPay && (
-            <Card className="border-2 border-green-500/50 bg-green-500/5">
-              <CardContent>
-                <div className="mb-2 flex items-center justify-center gap-2">
-                  <span className="font-semibold text-green-600 text-sm dark:text-green-400">
-                    Następny do wypłaty
-                  </span>
-                </div>
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="size-12 border-2 border-green-500">
-                      <AvatarImage
-                        alt={nextToPay.userName}
-                        src={nextToPay.userImage ?? undefined}
-                      />
-                      <AvatarFallback>
-                        <User className="size-6" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-bold text-lg">{nextToPay.userName}</p>
-                      <p className="font-mono text-muted-foreground">
-                        {(
-                          Math.floor(
-                            Number.parseFloat(nextToPay.totalEarnings || "0") /
-                              1_000_000
-                          ) * 1_000_000
-                        ).toLocaleString("pl-PL", {
-                          maximumFractionDigits: 0,
-                        })}{" "}
-                        złota
-                      </p>
-                    </div>
+            <div className="rounded-xl border-2 border-primary/50 bg-primary/5 p-6">
+              <div className="mb-2 flex items-center justify-center gap-2">
+                <span className="font-semibold text-primary text-sm">
+                  Następny do wypłaty
+                </span>
+              </div>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <Avatar className="size-12 border-2 border-primary">
+                    <AvatarImage
+                      alt={nextToPay.userName}
+                      src={nextToPay.userImage ?? undefined}
+                    />
+                    <AvatarFallback>
+                      <User className="size-6" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-bold text-lg">{nextToPay.userName}</p>
+                    <p className="font-mono text-muted-foreground">
+                      {(
+                        Math.floor(
+                          Number.parseFloat(nextToPay.totalEarnings || "0") /
+                            1_000_000
+                        ) * 1_000_000
+                      ).toLocaleString("pl-PL", {
+                        maximumFractionDigits: 0,
+                      })}{" "}
+                      złota
+                    </p>
                   </div>
-                  {isAdminUser && (
-                    <Button
-                      disabled={toggleMutation.isPending}
-                      onClick={() => {
-                        toggleMutation.mutate({
-                          paidOut: true,
-                          userId: nextToPay.userId,
-                        });
-                      }}
-                      size="sm"
-                      variant="default"
-                    >
-                      <Check className="size-4 sm:mr-2" />
-                      <span className="hidden sm:inline">
-                        Oznacz jako wypłacone
-                      </span>
-                    </Button>
-                  )}
                 </div>
-              </CardContent>
-            </Card>
+                {isAdminUser && (
+                  <Button
+                    disabled={toggleMutation.isPending}
+                    onClick={() => {
+                      toggleMutation.mutate({
+                        paidOut: true,
+                        userId: nextToPay.userId,
+                      });
+                    }}
+                    size="sm"
+                    variant="default"
+                  >
+                    <Check className="size-4 sm:mr-2" />
+                    <span className="hidden sm:inline">
+                      Oznacz jako wypłacone
+                    </span>
+                  </Button>
+                )}
+              </div>
+            </div>
           )}
 
           {/* Empty state */}
@@ -254,66 +251,64 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
                 Do wypłaty ({unpaidUsers.length})
               </h2>
               {unpaidUsers.slice(1).map((player, index) => (
-                <Card
-                  className="transition-all hover:bg-accent/50"
+                <div
+                  className="rounded-xl border border-border bg-card transition-colors hover:bg-accent/50"
                   key={player.userId}
                 >
-                  <CardContent className="px-4">
-                    <div className="flex items-center gap-4">
-                      {/* Position */}
-                      <div className="flex w-8 shrink-0 items-center justify-center">
-                        <span className="font-medium text-muted-foreground">
-                          {index + 2}
-                        </span>
-                      </div>
-                      {/* Avatar */}
-                      <Avatar className="size-10 shrink-0 border border-border">
-                        <AvatarImage
-                          alt={player.userName}
-                          src={player.userImage ?? undefined}
-                        />
-                        <AvatarFallback>
-                          <User className="size-5" />
-                        </AvatarFallback>
-                      </Avatar>
-                      {/* Name */}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold">
-                          {player.userName}
-                        </p>
-                      </div>
-                      {/* Earnings */}
-                      <div className="flex items-center gap-2">
-                        <Coins className="size-4 text-yellow-500" />
-                        <p className="font-mono font-semibold">
-                          {(
-                            Math.floor(
-                              Number.parseFloat(player.totalEarnings || "0") /
-                                1_000_000
-                            ) * 1_000_000
-                          ).toLocaleString("pl-PL", {
-                            maximumFractionDigits: 0,
-                          })}
-                        </p>
-                      </div>
-                      {/* Checkbox for admin */}
-                      {isAdminUser && (
-                        <Checkbox
-                          checked={player.paidOut}
-                          disabled={toggleMutation.isPending}
-                          onCheckedChange={(checked) => {
-                            if (typeof checked === "boolean") {
-                              toggleMutation.mutate({
-                                paidOut: checked,
-                                userId: player.userId,
-                              });
-                            }
-                          }}
-                        />
-                      )}
+                  <div className="flex items-center gap-4 px-4 py-3">
+                    {/* Position */}
+                    <div className="flex w-8 shrink-0 items-center justify-center">
+                      <span className="font-medium text-muted-foreground">
+                        {index + 2}
+                      </span>
                     </div>
-                  </CardContent>
-                </Card>
+                    {/* Avatar */}
+                    <Avatar className="size-10 shrink-0 border border-border">
+                      <AvatarImage
+                        alt={player.userName}
+                        src={player.userImage ?? undefined}
+                      />
+                      <AvatarFallback>
+                        <User className="size-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    {/* Name */}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">
+                        {player.userName}
+                      </p>
+                    </div>
+                    {/* Earnings */}
+                    <div className="flex items-center gap-2">
+                      <Coins className="size-4 text-muted-foreground" />
+                      <p className="font-mono font-semibold">
+                        {(
+                          Math.floor(
+                            Number.parseFloat(player.totalEarnings || "0") /
+                              1_000_000
+                          ) * 1_000_000
+                        ).toLocaleString("pl-PL", {
+                          maximumFractionDigits: 0,
+                        })}
+                      </p>
+                    </div>
+                    {/* Checkbox for admin */}
+                    {isAdminUser && (
+                      <Checkbox
+                        checked={player.paidOut}
+                        disabled={toggleMutation.isPending}
+                        onCheckedChange={(checked) => {
+                          if (typeof checked === "boolean") {
+                            toggleMutation.mutate({
+                              paidOut: checked,
+                              userId: player.userId,
+                            });
+                          }
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -326,7 +321,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
               </h2>
               {paidUsers.map((player) => (
                 <VaultUserCard
-                  className="opacity-60 transition-all hover:bg-accent/50"
+                  className="opacity-60 transition-colors hover:bg-accent/50"
                   key={player.userId}
                   rightSlot={
                     isAdminUser && (

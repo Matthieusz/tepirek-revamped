@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import ProfilePage from "@/pages/dashboard/profile";
 
 export const Route = createFileRoute("/dashboard/profile")({
-  component: function ProfileRoute() {
+  component: function component() {
     const { session } = Route.useRouteContext();
     return <ProfilePage session={session} />;
   },

@@ -7,7 +7,7 @@ import type { SQL } from "drizzle-orm";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { adminProcedure, protectedProcedure } from "./procedures";
+import { adminProcedure, verifiedProcedure } from "./procedures";
 
 export const vaultRouter = {
   distributeGold: adminProcedure
@@ -85,9 +85,9 @@ export const vaultRouter = {
       };
     }),
 
-  getUserStats: protectedProcedure
+  getUserStats: verifiedProcedure
     .input(z.object({ eventId: z.number().optional() }))
-    .handler(async ({ input }) => {
+    .handler(({ input }) => {
       if (input.eventId !== undefined) {
         return db
           .select()
@@ -97,7 +97,7 @@ export const vaultRouter = {
       return db.select().from(userStats);
     }),
 
-  getVault: protectedProcedure
+  getVault: verifiedProcedure
     .input(z.object({ eventId: z.number().optional() }))
     .handler(async ({ input }) => {
       // Build where conditions

@@ -191,6 +191,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                       setSelectedColor(color.id);
                     }}
                     style={{ backgroundColor: color.id }}
+                    aria-label={`Wybierz kolor ${color.name}`}
                     title={color.name}
                     type="button"
                   />

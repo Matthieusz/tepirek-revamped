@@ -10,7 +10,6 @@ import { HeroCardsGrid } from "@/components/events/hero-cards-grid";
 import { UserSelectList } from "@/components/events/user-select-list";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Kbd } from "@/components/ui/kbd";
@@ -45,7 +44,7 @@ interface BetsAddPageProps {
   session: AuthSession;
 }
 
-export function BetsAddPage({ session }: BetsAddPageProps) {
+export const BetsAddPage = ({ session }: BetsAddPageProps) => {
   const [selectedEventId, setSelectedEventId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
@@ -119,8 +118,8 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
     },
     {
       meta: {
-        name: "Create Bet",
         description: "Submit the bet creation form",
+        name: "Create Bet",
       },
     }
   );
@@ -213,7 +212,7 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
     return (
       <div className="mx-auto w-full max-w-4xl space-y-6">
         <div>
-          <h1 className="mb-1 font-bold text-2xl tracking-tight">
+          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
             Dodaj obstawienie
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -226,253 +225,92 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
-      <Card>
-        <CardContent>
-          <form
-            className="space-y-6"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              await form.handleSubmit();
-            }}
-          >
-            {" "}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              {/* Event Selection */}
-              <form.Field name="eventId">
-                {(field) => {
-                  const selectedEvent = events?.find(
-                    (e) => e.id.toString() === field.state.value
-                  );
-                  const SelectedIcon = selectedEvent
-                    ? getEventIcon(selectedEvent.icon)
-                    : null;
+      <div>
+        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+          Dodaj obstawienie
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Wybierz event, herosa i graczy.
+        </p>
+      </div>
 
-                  return (
-                    <div className="grid gap-1.5">
-                      <Label htmlFor={field.name}>Event</Label>
-                      <Select
-                        onValueChange={(value) => {
-                          if (value !== null) {
-                            field.handleChange(value);
-                            setSelectedEventId(value);
-                          }
-                          form.setFieldValue("heroId", "");
-                        }}
-                        value={field.state.value}
-                      >
-                        <SelectTrigger id={field.name}>
-                          <SelectValue placeholder="Wybierz event">
-                            {selectedEvent && SelectedIcon && (
-                              <span className="flex items-center gap-2">
-                                <SelectedIcon
-                                  className="size-4"
-                                  style={{ color: selectedEvent.color }}
-                                />
-                                {selectedEvent.name}
-                              </span>
-                            )}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {eventsLoading ? (
-                            <SelectItem disabled value="loading">
-                              Ładowanie...
-                            </SelectItem>
-                          ) : (
-                            events?.map((event) => {
-                              const IconComponent = getEventIcon(event.icon);
-                              return (
-                                <SelectItem
-                                  key={event.id}
-                                  value={event.id.toString()}
-                                >
-                                  <span className="flex items-center gap-2">
-                                    <IconComponent
-                                      className="size-4"
-                                      style={{ color: event.color }}
-                                    />
-                                    {event.name}
-                                  </span>
-                                </SelectItem>
-                              );
-                            })
-                          )}
-                        </SelectContent>
-                      </Select>
-                      {field.state.meta.errors.map((error) => (
-                        <p
-                          className="text-red-500 text-sm"
-                          key={error?.message}
-                        >
-                          {error?.message}
-                        </p>
-                      ))}
-                    </div>
-                  );
-                }}
-              </form.Field>
-
-              {/* Submit Button */}
-              <form.Subscribe>
-                {(state) => (
-                  <Button
-                    className="w-full sm:w-auto hover:bg-primary/80"
-                    disabled={
-                      !state.canSubmit ||
-                      state.isSubmitting ||
-                      eventsLoading ||
-                      heroesLoading ||
-                      usersLoading
-                    }
-                    type="submit"
-                  >
-                    {state.isSubmitting ? (
-                      <p className="flex items-center gap-2">
-                        <Loader2 className="size-4 animate-spin" />
-                        Tworzenie obstawienia
-                      </p>
-                    ) : (
-                      <p className="flex items-center gap-2">
-                        Utwórz obstawienie
-                        <Kbd>Enter</Kbd>
-                      </p>
-                    )}
-                  </Button>
-                )}
-              </form.Subscribe>
-            </div>
-            {/* Hero Selection - Cards with Images */}
-            <form.Field name="heroId">
-              {(field) => (
-                <div className="grid gap-1.5">
-                  <Label>Heros</Label>
-                  {renderHeroSelection(field.state.value, field.handleChange)}
-                  {field.state.meta.errors.map((error) => (
-                    <p className="text-red-500 text-sm" key={error?.message}>
-                      {error?.message}
-                    </p>
-                  ))}
-                </div>
-              )}
-            </form.Field>
-            {/* User Selection */}
-            <form.Field name="userIds">
+      <div className="rounded-xl border border-border bg-card p-6">
+        <form
+          className="space-y-6"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            await form.handleSubmit();
+          }}
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            {/* Event Selection */}
+            <form.Field name="eventId">
               {(field) => {
-                const availableCount =
-                  verifiedUsers?.filter(
-                    (user) => !field.state.value.includes(user.id)
-                  ).length ?? 0;
+                const selectedEvent = events?.find(
+                  (e) => e.id.toString() === field.state.value
+                );
+                const SelectedIcon = selectedEvent
+                  ? getEventIcon(selectedEvent.icon)
+                  : null;
 
                 return (
                   <div className="grid gap-1.5">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <Label>Gracze ({availableCount} dostępnych)</Label>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          disabled={field.state.value.length === 0}
-                          onClick={() => {
-                            field.handleChange([]);
-                          }}
-                          size="sm"
-                          type="button"
-                          variant="outline"
-                        >
-                          <CopyX className="size-4" />
-                          <span className="hidden sm:inline">
-                            Odznacz wszystkich
-                          </span>
-                          <span className="sm:hidden">Odznacz</span>
-                        </Button>
-                        <Button
-                          disabled={
-                            !allBets || allBets.length === 0 || betsLoading
-                          }
-                          onClick={() => {
-                            const newIds = handleCopyLastBet();
-                            field.handleChange(newIds);
-                          }}
-                          size="sm"
-                          type="button"
-                          variant="outline"
-                        >
-                          <Copy className="size-4" />
-                          <span className="hidden sm:inline">
-                            Kopiuj ostatnie
-                          </span>
-                          <span className="sm:hidden">Kopiuj</span>
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="relative">
-                      <Search className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground" />
-                      <Input
-                        aria-label="Szukaj gracza"
-                        className="pl-9"
-                        onChange={(e) => {
-                          setSearchQuery(e.target.value);
-                        }}
-                        placeholder="Szukaj gracza..."
-                        type="text"
-                        value={searchQuery}
-                      />
-                    </div>
-                    <div className="max-h-64 overflow-y-auto rounded-md border p-4">
-                      {renderUserList(field.state.value, field.handleChange)}
-                    </div>
-
-                    {/* Selected Users Card */}
-                    {field.state.value.length > 0 && (
-                      <div>
-                        <Label className="mb-2">
-                          Gracze ({field.state.value.length} wybranych)
-                        </Label>
-                        <div className="rounded-md border border-muted bg-muted/30">
-                          <div className="p-4">
-                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
-                              {verifiedUsers
-                                ?.filter((user) =>
-                                  field.state.value.includes(user.id)
-                                )
-                                .map((user) => (
-                                  <label
-                                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-primary bg-primary/5 p-3 transition-colors hover:bg-muted/50"
-                                    htmlFor={`selected-user-${user.id}`}
-                                    key={user.id}
-                                  >
-                                    <Checkbox
-                                      checked={true}
-                                      id={`selected-user-${user.id}`}
-                                      onCheckedChange={() => {
-                                        const newIds = field.state.value.filter(
-                                          (id) => id !== user.id
-                                        );
-                                        field.handleChange(newIds);
-                                      }}
-                                    />
-                                    <Avatar className="size-8">
-                                      <AvatarImage
-                                        alt={user.name}
-                                        src={user.image ?? undefined}
-                                      />
-                                      <AvatarFallback>
-                                        <User className="size-4" />
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <span className="truncate font-normal">
-                                      {user.name}
-                                    </span>
-                                  </label>
-                                ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
+                    <Label htmlFor={field.name}>Event</Label>
+                    <Select
+                      onValueChange={(value) => {
+                        if (value !== null) {
+                          field.handleChange(value);
+                          setSelectedEventId(value);
+                        }
+                        form.setFieldValue("heroId", "");
+                      }}
+                      value={field.state.value}
+                    >
+                      <SelectTrigger id={field.name}>
+                        <SelectValue placeholder="Wybierz event">
+                          {selectedEvent && SelectedIcon && (
+                            <span className="flex items-center gap-2">
+                              <SelectedIcon
+                                className="size-4"
+                                style={{ color: selectedEvent.color }}
+                              />
+                              {selectedEvent.name}
+                            </span>
+                          )}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {eventsLoading ? (
+                          <SelectItem disabled value="loading">
+                            Ładowanie...
+                          </SelectItem>
+                        ) : (
+                          events?.map((event) => {
+                            const IconComponent = getEventIcon(event.icon);
+                            return (
+                              <SelectItem
+                                key={event.id}
+                                value={event.id.toString()}
+                              >
+                                <span className="flex items-center gap-2">
+                                  <IconComponent
+                                    className="size-4"
+                                    style={{ color: event.color }}
+                                  />
+                                  {event.name}
+                                </span>
+                              </SelectItem>
+                            );
+                          })
+                        )}
+                      </SelectContent>
+                    </Select>
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
+                      <p
+                        className="text-destructive text-sm"
+                        key={error?.message}
+                      >
                         {error?.message}
                       </p>
                     ))}
@@ -480,9 +318,179 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
                 );
               }}
             </form.Field>
-          </form>
-        </CardContent>
-      </Card>
+
+            {/* Submit Button */}
+            <form.Subscribe>
+              {(state) => (
+                <Button
+                  className="w-full sm:w-auto hover:bg-primary/80"
+                  disabled={
+                    !state.canSubmit ||
+                    state.isSubmitting ||
+                    eventsLoading ||
+                    heroesLoading ||
+                    usersLoading
+                  }
+                  type="submit"
+                >
+                  {state.isSubmitting ? (
+                    <p className="flex items-center gap-2">
+                      <Loader2 className="size-4 animate-spin" />
+                      Tworzenie obstawienia
+                    </p>
+                  ) : (
+                    <p className="flex items-center gap-2">
+                      Utwórz obstawienie
+                      <Kbd>Enter</Kbd>
+                    </p>
+                  )}
+                </Button>
+              )}
+            </form.Subscribe>
+          </div>
+          {/* Hero Selection - Cards with Images */}
+          <form.Field name="heroId">
+            {(field) => (
+              <div className="grid gap-1.5">
+                <Label>Heros</Label>
+                {renderHeroSelection(field.state.value, field.handleChange)}
+                {field.state.meta.errors.map((error) => (
+                  <p className="text-destructive text-sm" key={error?.message}>
+                    {error?.message}
+                  </p>
+                ))}
+              </div>
+            )}
+          </form.Field>
+          {/* User Selection */}
+          <form.Field name="userIds">
+            {(field) => {
+              const availableCount =
+                verifiedUsers?.filter(
+                  (user) => !field.state.value.includes(user.id)
+                ).length ?? 0;
+
+              return (
+                <div className="grid gap-1.5">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <Label>Gracze ({availableCount} dostępnych)</Label>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        disabled={field.state.value.length === 0}
+                        onClick={() => {
+                          field.handleChange([]);
+                        }}
+                        size="sm"
+                        type="button"
+                        variant="outline"
+                      >
+                        <CopyX className="size-4" />
+                        <span className="hidden sm:inline">
+                          Odznacz wszystkich
+                        </span>
+                        <span className="sm:hidden">Odznacz</span>
+                      </Button>
+                      <Button
+                        disabled={
+                          !allBets || allBets.length === 0 || betsLoading
+                        }
+                        onClick={() => {
+                          const newIds = handleCopyLastBet();
+                          field.handleChange(newIds);
+                        }}
+                        size="sm"
+                        type="button"
+                        variant="outline"
+                      >
+                        <Copy className="size-4" />
+                        <span className="hidden sm:inline">
+                          Kopiuj ostatnie
+                        </span>
+                        <span className="sm:hidden">Kopiuj</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <Search className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground" />
+                    <Input
+                      aria-label="Szukaj gracza"
+                      className="pl-9"
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                      }}
+                      placeholder="Szukaj gracza..."
+                      type="text"
+                      value={searchQuery}
+                    />
+                  </div>
+                  <div className="max-h-64 overflow-y-auto rounded-md border p-4">
+                    {renderUserList(field.state.value, field.handleChange)}
+                  </div>
+
+                  {/* Selected Users Card */}
+                  {field.state.value.length > 0 && (
+                    <div>
+                      <Label className="mb-2">
+                        Gracze ({field.state.value.length} wybranych)
+                      </Label>
+                      <div className="rounded-md border border-muted bg-muted/30">
+                        <div className="p-4">
+                          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
+                            {verifiedUsers
+                              ?.filter((user) =>
+                                field.state.value.includes(user.id)
+                              )
+                              .map((user) => (
+                                <label
+                                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-primary bg-primary/5 p-3 transition-colors hover:bg-muted/50"
+                                  htmlFor={`selected-user-${user.id}`}
+                                  key={user.id}
+                                >
+                                  <Checkbox
+                                    checked={true}
+                                    id={`selected-user-${user.id}`}
+                                    onCheckedChange={() => {
+                                      const newIds = field.state.value.filter(
+                                        (id) => id !== user.id
+                                      );
+                                      field.handleChange(newIds);
+                                    }}
+                                  />
+                                  <Avatar className="size-8">
+                                    <AvatarImage
+                                      alt={user.name}
+                                      src={user.image ?? undefined}
+                                    />
+                                    <AvatarFallback>
+                                      <User className="size-4" />
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="truncate font-normal">
+                                    {user.name}
+                                  </span>
+                                </label>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {field.state.meta.errors.map((error) => (
+                    <p
+                      className="text-destructive text-sm"
+                      key={error?.message}
+                    >
+                      {error?.message}
+                    </p>
+                  ))}
+                </div>
+              );
+            }}
+          </form.Field>
+        </form>
+      </div>
     </div>
   );
-}
+};

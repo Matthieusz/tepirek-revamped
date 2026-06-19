@@ -21,7 +21,6 @@ import { Route as DashboardPlayerListRouteImport } from './routes/dashboard/play
 import { Route as DashboardSkillsRouteRouteImport } from './routes/dashboard/skills/route'
 import { Route as DashboardAuctionsRouteRouteImport } from './routes/dashboard/auctions/route'
 import { Route as DashboardSkillsIndexRouteImport } from './routes/dashboard/skills/index'
-import { Route as DashboardSkillsRangeNameRouteImport } from './routes/dashboard/skills/$rangeName'
 import { Route as DashboardEventsVaultRouteImport } from './routes/dashboard/events/vault'
 import { Route as DashboardEventsRankingRouteImport } from './routes/dashboard/events/ranking'
 import { Route as DashboardEventsListRouteImport } from './routes/dashboard/events/list'
@@ -30,6 +29,7 @@ import { Route as DashboardEventsHeroesRouteImport } from './routes/dashboard/ev
 import { Route as DashboardCalculatorUlepaRouteImport } from './routes/dashboard/calculator/ulepa'
 import { Route as DashboardCalculatorOdwRouteImport } from './routes/dashboard/calculator/odw'
 import { Route as DashboardCalculatorListRouteImport } from './routes/dashboard/calculator/list'
+import { Route as DashboardSkillsRangeNameRouteRouteImport } from './routes/dashboard/skills/$rangeName/route'
 import { Route as DashboardAuctionsTypeRouteRouteImport } from './routes/dashboard/auctions/$type/route'
 import { Route as DashboardAuctionsTypeIndexRouteImport } from './routes/dashboard/auctions/$type/index'
 import { Route as DashboardEventsBetsAddRouteImport } from './routes/dashboard/events/bets.add'
@@ -95,12 +95,6 @@ const DashboardSkillsIndexRoute = DashboardSkillsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardSkillsRouteRoute,
 } as any)
-const DashboardSkillsRangeNameRoute =
-  DashboardSkillsRangeNameRouteImport.update({
-    id: '/$rangeName',
-    path: '/$rangeName',
-    getParentRoute: () => DashboardSkillsRouteRoute,
-  } as any)
 const DashboardEventsVaultRoute = DashboardEventsVaultRouteImport.update({
   id: '/events/vault',
   path: '/events/vault',
@@ -142,6 +136,12 @@ const DashboardCalculatorListRoute = DashboardCalculatorListRouteImport.update({
   path: '/calculator/list',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardSkillsRangeNameRouteRoute =
+  DashboardSkillsRangeNameRouteRouteImport.update({
+    id: '/$rangeName',
+    path: '/$rangeName',
+    getParentRoute: () => DashboardSkillsRouteRoute,
+  } as any)
 const DashboardAuctionsTypeRouteRoute =
   DashboardAuctionsTypeRouteRouteImport.update({
     id: '/$type',
@@ -179,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/auctions/$type': typeof DashboardAuctionsTypeRouteRouteWithChildren
+  '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRouteRoute
   '/dashboard/calculator/list': typeof DashboardCalculatorListRoute
   '/dashboard/calculator/odw': typeof DashboardCalculatorOdwRoute
   '/dashboard/calculator/ulepa': typeof DashboardCalculatorUlepaRoute
@@ -187,7 +188,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/events/list': typeof DashboardEventsListRoute
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
   '/dashboard/events/vault': typeof DashboardEventsVaultRoute
-  '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRoute
   '/dashboard/skills/': typeof DashboardSkillsIndexRoute
   '/dashboard/auctions/$type/$profession': typeof DashboardAuctionsTypeProfessionRoute
   '/dashboard/events/bets/add': typeof DashboardEventsBetsAddRoute
@@ -203,6 +203,7 @@ export interface FileRoutesByTo {
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRouteRoute
   '/dashboard/calculator/list': typeof DashboardCalculatorListRoute
   '/dashboard/calculator/odw': typeof DashboardCalculatorOdwRoute
   '/dashboard/calculator/ulepa': typeof DashboardCalculatorUlepaRoute
@@ -211,7 +212,6 @@ export interface FileRoutesByTo {
   '/dashboard/events/list': typeof DashboardEventsListRoute
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
   '/dashboard/events/vault': typeof DashboardEventsVaultRoute
-  '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRoute
   '/dashboard/skills': typeof DashboardSkillsIndexRoute
   '/dashboard/auctions/$type/$profession': typeof DashboardAuctionsTypeProfessionRoute
   '/dashboard/events/bets/add': typeof DashboardEventsBetsAddRoute
@@ -231,6 +231,7 @@ export interface FileRoutesById {
   '/dashboard/tasks': typeof DashboardTasksRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/auctions/$type': typeof DashboardAuctionsTypeRouteRouteWithChildren
+  '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRouteRoute
   '/dashboard/calculator/list': typeof DashboardCalculatorListRoute
   '/dashboard/calculator/odw': typeof DashboardCalculatorOdwRoute
   '/dashboard/calculator/ulepa': typeof DashboardCalculatorUlepaRoute
@@ -239,7 +240,6 @@ export interface FileRoutesById {
   '/dashboard/events/list': typeof DashboardEventsListRoute
   '/dashboard/events/ranking': typeof DashboardEventsRankingRoute
   '/dashboard/events/vault': typeof DashboardEventsVaultRoute
-  '/dashboard/skills/$rangeName': typeof DashboardSkillsRangeNameRoute
   '/dashboard/skills/': typeof DashboardSkillsIndexRoute
   '/dashboard/auctions/$type/$profession': typeof DashboardAuctionsTypeProfessionRoute
   '/dashboard/events/bets/add': typeof DashboardEventsBetsAddRoute
@@ -260,6 +260,7 @@ export interface FileRouteTypes {
     | '/dashboard/tasks'
     | '/dashboard/'
     | '/dashboard/auctions/$type'
+    | '/dashboard/skills/$rangeName'
     | '/dashboard/calculator/list'
     | '/dashboard/calculator/odw'
     | '/dashboard/calculator/ulepa'
@@ -268,7 +269,6 @@ export interface FileRouteTypes {
     | '/dashboard/events/list'
     | '/dashboard/events/ranking'
     | '/dashboard/events/vault'
-    | '/dashboard/skills/$rangeName'
     | '/dashboard/skills/'
     | '/dashboard/auctions/$type/$profession'
     | '/dashboard/events/bets/add'
@@ -284,6 +284,7 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/dashboard/tasks'
     | '/dashboard'
+    | '/dashboard/skills/$rangeName'
     | '/dashboard/calculator/list'
     | '/dashboard/calculator/odw'
     | '/dashboard/calculator/ulepa'
@@ -292,7 +293,6 @@ export interface FileRouteTypes {
     | '/dashboard/events/list'
     | '/dashboard/events/ranking'
     | '/dashboard/events/vault'
-    | '/dashboard/skills/$rangeName'
     | '/dashboard/skills'
     | '/dashboard/auctions/$type/$profession'
     | '/dashboard/events/bets/add'
@@ -311,6 +311,7 @@ export interface FileRouteTypes {
     | '/dashboard/tasks'
     | '/dashboard/'
     | '/dashboard/auctions/$type'
+    | '/dashboard/skills/$rangeName'
     | '/dashboard/calculator/list'
     | '/dashboard/calculator/odw'
     | '/dashboard/calculator/ulepa'
@@ -319,7 +320,6 @@ export interface FileRouteTypes {
     | '/dashboard/events/list'
     | '/dashboard/events/ranking'
     | '/dashboard/events/vault'
-    | '/dashboard/skills/$rangeName'
     | '/dashboard/skills/'
     | '/dashboard/auctions/$type/$profession'
     | '/dashboard/events/bets/add'
@@ -420,13 +420,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSkillsIndexRouteImport
       parentRoute: typeof DashboardSkillsRouteRoute
     }
-    '/dashboard/skills/$rangeName': {
-      id: '/dashboard/skills/$rangeName'
-      path: '/$rangeName'
-      fullPath: '/dashboard/skills/$rangeName'
-      preLoaderRoute: typeof DashboardSkillsRangeNameRouteImport
-      parentRoute: typeof DashboardSkillsRouteRoute
-    }
     '/dashboard/events/vault': {
       id: '/dashboard/events/vault'
       path: '/events/vault'
@@ -482,6 +475,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/calculator/list'
       preLoaderRoute: typeof DashboardCalculatorListRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/skills/$rangeName': {
+      id: '/dashboard/skills/$rangeName'
+      path: '/$rangeName'
+      fullPath: '/dashboard/skills/$rangeName'
+      preLoaderRoute: typeof DashboardSkillsRangeNameRouteRouteImport
+      parentRoute: typeof DashboardSkillsRouteRoute
     }
     '/dashboard/auctions/$type': {
       id: '/dashboard/auctions/$type'
@@ -546,12 +546,12 @@ const DashboardAuctionsRouteRouteWithChildren =
   )
 
 interface DashboardSkillsRouteRouteChildren {
-  DashboardSkillsRangeNameRoute: typeof DashboardSkillsRangeNameRoute
+  DashboardSkillsRangeNameRouteRoute: typeof DashboardSkillsRangeNameRouteRoute
   DashboardSkillsIndexRoute: typeof DashboardSkillsIndexRoute
 }
 
 const DashboardSkillsRouteRouteChildren: DashboardSkillsRouteRouteChildren = {
-  DashboardSkillsRangeNameRoute: DashboardSkillsRangeNameRoute,
+  DashboardSkillsRangeNameRouteRoute: DashboardSkillsRangeNameRouteRoute,
   DashboardSkillsIndexRoute: DashboardSkillsIndexRoute,
 }
 

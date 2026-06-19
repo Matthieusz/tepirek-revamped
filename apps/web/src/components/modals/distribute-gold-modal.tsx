@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getErrorMessage } from "@/lib/errors";
 import { orpc } from "@/utils/orpc";
 
 interface HeroStats {
@@ -57,31 +58,31 @@ const parseGoldAmount = (value: string): number => {
 const getModalEventSelectDisplay = (params: {
   eventId: string;
   events:
-    | Array<{
+    | {
         color: string | null;
         endTime: Date;
         icon: string;
         id: number;
         name: string;
-      }>
+      }[]
     | undefined;
 }): ReactNode =>
   getEventSelectDisplay({
-    selectedEventId: params.eventId,
     events: params.events,
+    selectedEventId: params.eventId,
   });
 
 const getModalHeroSelectDisplay = (params: {
   eventId: string;
   heroId: string;
-  heroes: Array<{ id: number; name: string }> | undefined;
+  heroes: { id: number; name: string }[] | undefined;
 }): string =>
   getHeroSelectDisplay({
+    allLabel: "Wybierz herosa...",
+    placeholder: "Wybierz herosa...",
     selectedEventId: params.eventId,
     selectedHeroId: params.heroId,
     sortedHeroes: params.heroes,
-    allLabel: "Wybierz herosa...",
-    placeholder: "Wybierz herosa...",
   });
 
 const HeroStatsPreview = ({

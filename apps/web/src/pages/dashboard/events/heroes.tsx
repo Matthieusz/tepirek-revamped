@@ -19,7 +19,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
@@ -86,7 +85,9 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
     return (
       <div className="mx-auto w-full max-w-4xl space-y-6">
         <div>
-          <h1 className="mb-1 font-bold text-2xl tracking-tight">Herosi</h1>
+          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+            Herosi
+          </h1>
           <p className="text-muted-foreground text-sm">
             Zarządzaj herosami dostępnymi na eventach.
           </p>
@@ -100,7 +101,9 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="mb-1 font-bold text-2xl tracking-tight">Herosi</h1>
+          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+            Herosi
+          </h1>
           <p className="text-muted-foreground text-sm">
             Zarządzaj herosami dostępnymi na eventach.
           </p>
@@ -116,7 +119,7 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
           >
             <SelectTrigger className="w-56">
               <SelectValue>
-                {getEventSelectDisplay({ selectedEventId, events })}
+                {getEventSelectDisplay({ events, selectedEventId })}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -136,14 +139,12 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
         </div>
       </div>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Sword className="size-4" />
-            Lista herosów
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="rounded-xl border border-border bg-card">
+        <div className="flex items-center gap-2 border-b border-border p-4">
+          <Sword className="size-4" />
+          <h2 className="font-semibold text-base">Lista herosów</h2>
+        </div>
+        <div className="p-4">
           {!filteredHeroes || filteredHeroes.length === 0 ? (
             <EmptyState icon={Sword} message="Brak herosów do wyświetlenia" />
           ) : (
@@ -214,8 +215,8 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <AlertDialog
         onOpenChange={(open) => {

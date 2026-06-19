@@ -8,10 +8,10 @@ import type { SQL } from "drizzle-orm";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { protectedProcedure } from "./procedures";
+import { verifiedProcedure } from "./procedures";
 
 export const rankingRouter = {
-  getHeroStats: protectedProcedure
+  getHeroStats: verifiedProcedure
     .input(z.object({ heroId: z.number() }))
     .handler(async ({ input }) => {
       // Get total bets and points for a specific hero
@@ -52,7 +52,7 @@ export const rankingRouter = {
       };
     }),
 
-  getOldestUnpaidEvent: protectedProcedure.handler(async () => {
+  getOldestUnpaidEvent: verifiedProcedure.handler(async () => {
     // Find the oldest event that has at least one user with unpaid earnings >= MIN_EARNINGS
     const result = await db
       .select({
@@ -69,7 +69,7 @@ export const rankingRouter = {
     return result[0]?.eventId ?? null;
   }),
 
-  getRanking: protectedProcedure
+  getRanking: verifiedProcedure
     .input(
       z.object({
         eventId: z.number().optional(),

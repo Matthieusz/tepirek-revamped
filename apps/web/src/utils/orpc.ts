@@ -32,7 +32,7 @@ export const queryClient = new QueryClient({
 });
 
 export const link = new RPCLink({
-  async fetch(_url, options) {
+  fetch(_url, options) {
     return fetch(_url, {
       ...options,
       credentials: "include",
