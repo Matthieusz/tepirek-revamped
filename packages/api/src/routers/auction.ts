@@ -5,11 +5,19 @@ import { user } from "@tepirek-revamped/db/schema/auth";
 import { and, count, countDistinct, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { protectedProcedure } from "./procedures";
+import { verifiedProcedure } from "./procedures";
 import { auctionTypeSchema } from "./schemas";
 
+export const auctionSignupInputSchema = z.object({
+  column: z.number().int().positive(),
+  level: z.number().int().positive(),
+  profession: z.string(),
+  round: z.number().int().positive(),
+  type: auctionTypeSchema,
+});
+
 export const auctionRouter = {
-  getSignups: protectedProcedure
+  getSignups: verifiedProcedure
     .input(
       z.object({
         profession: z.string(),
@@ -41,7 +49,7 @@ export const auctionRouter = {
       return rows;
     }),
 
-  getStats: protectedProcedure
+  getStats: verifiedProcedure
     .input(
       z.object({
         profession: z.string(),
@@ -65,7 +73,7 @@ export const auctionRouter = {
       return result[0] ?? { totalSignups: 0, uniqueUsers: 0 };
     }),
 
-  removeSignup: protectedProcedure
+  removeSignup: verifiedProcedure
     .input(z.object({ id: z.number() }))
     .handler(async ({ input, context }) => {
       // Only allow removing own signups (or admin check could be added)
@@ -88,16 +96,8 @@ export const auctionRouter = {
       return { success: true };
     }),
 
-  toggleSignup: protectedProcedure
-    .input(
-      z.object({
-        column: z.number(),
-        level: z.number(),
-        profession: z.string(),
-        round: z.number(),
-        type: auctionTypeSchema,
-      })
-    )
+  toggleSignup: verifiedProcedure
+    .input(auctionSignupInputSchema)
     .handler(async ({ input, context }) => {
       const userId = context.session.user.id;
 
@@ -130,14 +130,32 @@ export const auctionRouter = {
         });
       }
 
-      await db.insert(auction).values({
-        column: input.column,
-        level: input.level,
-        profession: input.profession,
-        round: input.round,
-        type: input.type,
-        userId,
-      });
+      const inserted = await db
+        .insert(auction)
+        .values({
+          column: input.column,
+          level: input.level,
+          profession: input.profession,
+          round: input.round,
+          type: input.type,
+          userId,
+        })
+        .onConflictDoNothing({
+          target: [
+            auction.profession,
+            auction.type,
+            auction.level,
+            auction.round,
+            auction.column,
+          ],
+        })
+        .returning({ id: auction.id });
+
+      if (inserted.length === 0) {
+        throw new ORPCError("CONFLICT", {
+          message: "To pole jest już zajęte",
+        });
+      }
 
       return { action: "added" as const };
     }),

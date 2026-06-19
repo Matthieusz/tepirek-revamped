@@ -16,6 +16,11 @@ export const range = pgTable("range", {
   name: text("name").notNull(),
 });
 
+export const professions = pgTable("professions", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+});
+
 export const skills = pgTable(
   "skills",
   {
@@ -35,8 +40,3 @@ export const skills = pgTable(
   },
   (table) => [index("skills_range_id_idx").on(table.rangeId)]
 );
-
-export const professions = pgTable("professions", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-});
