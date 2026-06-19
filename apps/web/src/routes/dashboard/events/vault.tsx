@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import EventsVaultPage, { searchSchema } from "@/pages/dashboard/events/vault";
+import EventsVaultPage from "@/pages/dashboard/events/vault";
+import { searchSchema } from "@/pages/dashboard/events/vault-search";
 
 export const Route = createFileRoute("/dashboard/events/vault")({
-  component: function component() {
+  component: () => {
     const { session } = Route.useRouteContext();
     return <EventsVaultPage session={session} />;
   },

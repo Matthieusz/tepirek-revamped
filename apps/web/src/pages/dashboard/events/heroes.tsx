@@ -3,10 +3,8 @@ import { Plus, Sword, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import {
-  EventSelectItems,
-  getEventSelectDisplay,
-} from "@/components/events/select-utils";
+import { getEventSelectDisplay } from "@/components/events/select-display";
+import { EventSelectItems } from "@/components/events/select-utils";
 import { AddHeroModal } from "@/components/modals/add-hero-modal";
 import {
   AlertDialog,

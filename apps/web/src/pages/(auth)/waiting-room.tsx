@@ -1,6 +1,6 @@
 import { useRouter } from "@tanstack/react-router";
 import { Loader2, LogOut, RefreshCw } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -21,17 +21,17 @@ interface WaitingRoomPageProps {
 
 export default function WaitingRoomPage({ session }: WaitingRoomPageProps) {
   const router = useRouter();
-  const [isValidating, setIsValidating] = useState(false);
+  const isValidatingRef = useRef(false);
   const hasValidated = useRef(false);
 
   useEffect(() => {
     const validateAndRedirect = async () => {
-      if (hasValidated.current || isValidating) {
+      if (hasValidated.current || isValidatingRef.current) {
         return;
       }
 
       hasValidated.current = true;
-      setIsValidating(true);
+      isValidatingRef.current = true;
       try {
         const result = await orpc.user.verifyDiscordGuildMembership.call();
         if (result?.valid) {
@@ -43,13 +43,13 @@ export default function WaitingRoomPage({ session }: WaitingRoomPageProps) {
           "Nie udało się zweryfikować przynależności do gildii Discord"
         );
       } finally {
-        setIsValidating(false);
+        isValidatingRef.current = false;
       }
     };
 
     // oxlint-disable-next-line @typescript-eslint/no-floating-promises
     validateAndRedirect();
-  }, [isValidating, router]);
+  }, [router]);
 
   const handleSignOut = async () => {
     await authClient.signOut({

@@ -39,17 +39,17 @@ const RangeDetails = () => {
 
   const isAdminUser = isAdmin(session);
 
-  const range = useQuery(
+  const { data: rangeData, isLoading: rangeIsLoading } = useQuery(
     orpc.skills.getRangeBySlug.queryOptions({ input: { slug: rangeName } })
   );
-  const professionsQuery = useQuery(
+  const { data: professionsQueryData } = useQuery(
     orpc.skills.getAllProfessions.queryOptions()
   );
 
-  const skillsByRange = useQuery(
-    range.data
+  const { data: skillsByRangeData } = useQuery(
+    rangeData
       ? orpc.skills.getSkillsByRange.queryOptions({
-          input: { rangeId: range.data.id },
+          input: { rangeId: rangeData.id },
         })
       : { queryFn: () => [], queryKey: ["skills", rangeName, "empty"] }
   );
@@ -74,7 +74,7 @@ const RangeDetails = () => {
     },
   });
 
-  if (range.isLoading) {
+  if (rangeIsLoading) {
     return (
       <div className="mx-auto w-full max-w-6xl space-y-6">
         <div className="flex items-center justify-between">
@@ -86,13 +86,13 @@ const RangeDetails = () => {
     );
   }
 
-  if (!range.data) {
+  if (!rangeData) {
     return <div>Nie znaleziono przedziału.</div>;
   }
 
-  const currentRange = range.data;
+  const currentRange = rangeData;
 
-  const skillsData = skillsByRange.data ?? [];
+  const skillsData = skillsByRangeData ?? [];
   const skillsGrouped: Record<number, typeof skillsData> = {};
   for (const s of skillsData) {
     const key = s.professionId;
@@ -105,7 +105,7 @@ const RangeDetails = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="mb-1 font-bold text-2xl tracking-tight">
-            {range.data.name}
+            {rangeData.name}
           </h1>
           <p className="text-muted-foreground text-sm">
             Zestawy umiejętności dla poziomu {currentRange.level}
@@ -122,7 +122,7 @@ const RangeDetails = () => {
         />
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {professionsQuery.data?.map((profession) => {
+        {professionsQueryData?.map((profession) => {
           const skills = skillsGrouped[profession.id] ?? [];
           return (
             <Card key={profession.id}>

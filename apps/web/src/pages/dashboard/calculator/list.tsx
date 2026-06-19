@@ -1,4 +1,5 @@
 import { useForm } from "@tanstack/react-form";
+import type { ReactFormExtendedApi } from "@tanstack/react-form";
 import {
   AlertTriangle,
   Calculator,
@@ -169,6 +170,480 @@ const groupFormSchema = z.object({
   defenderLevels: z.string().min(1, { message: "Wprowadź poziomy obrońców" }),
 });
 
+type AnyForm = ReactFormExtendedApi<
+  unknown,
+  unknown,
+  unknown,
+  unknown,
+  unknown,
+  unknown,
+  unknown,
+  unknown,
+  unknown,
+  unknown,
+  unknown,
+  unknown
+>;
+
+interface SingleResult {
+  actualDifference: number;
+  attackerLevel: number;
+  maxAttackerWithoutPenalty: number;
+  minLevelDifference: number;
+  minVictimLevelForPenalty: number;
+  victimLevel: number;
+  wouldReceivePenalty: boolean;
+}
+
+interface GroupResultT {
+  attackerLevels: number[];
+  defenderLevels: number[];
+  maxAttackerLevel: number;
+  avgAttackerLevel: number;
+  avgDefenderLevel: number;
+  attackerStrength: number;
+  threshold: number;
+  difference: number;
+  wouldReceivePenalty: boolean;
+}
+
+const SingleMode = ({
+  form,
+  result,
+}: {
+  form: AnyForm;
+  result: SingleResult | null;
+}) => (
+  <>
+    <div className="rounded-xl border border-border bg-card">
+      <div className="border-b border-border p-6">
+        <h2 className="flex items-center gap-2 font-semibold text-base">
+          <Calculator className="size-5" />
+          Parametry walki
+        </h2>
+        <p className="text-muted-foreground text-sm">
+          Wprowadź poziomy atakującego i przeciwnika
+        </p>
+      </div>
+      <div className="p-6">
+        <form
+          className="mt-2 grid gap-4"
+          action={async () => {
+            await form.handleSubmit();
+          }}
+        >
+          <form.Field
+            name="attackerLevel"
+            validators={{
+              onChange: ({ value }) => {
+                const parsed = formSchema.shape.attackerLevel.safeParse(value);
+                return parsed.success
+                  ? undefined
+                  : parsed.error.issues[0]?.message;
+              },
+            }}
+          >
+            {(field) => (
+              <div className="space-y-2">
+                <Label
+                  className="flex items-center gap-2"
+                  htmlFor="attackerLevel"
+                >
+                  <Swords className="size-4 text-muted-foreground" />
+                  Poziom atakującego
+                </Label>
+                <Input
+                  aria-describedby="attackerLevel-error"
+                  aria-invalid={field.state.meta.errors.length > 0}
+                  id="attackerLevel"
+                  max={MAX_LEVEL}
+                  min={MIN_LEVEL}
+                  onChange={(e) => {
+                    field.handleChange(Number(e.target.value));
+                  }}
+                  type="number"
+                  value={field.state.value}
+                />
+                {field.state.meta.errors.length > 0 && (
+                  <div
+                    className="text-destructive text-sm"
+                    id="attackerLevel-error"
+                  >
+                    {field.state.meta.errors[0]}
+                  </div>
+                )}
+              </div>
+            )}
+          </form.Field>
+          <form.Field
+            name="victimLevel"
+            validators={{
+              onChange: ({ value }) => {
+                const parsed = formSchema.shape.victimLevel.safeParse(value);
+                return parsed.success
+                  ? undefined
+                  : parsed.error.issues[0]?.message;
+              },
+            }}
+          >
+            {(field) => (
+              <div className="space-y-2">
+                <Label
+                  className="flex items-center gap-2"
+                  htmlFor="victimLevel"
+                >
+                  <Skull className="size-4 text-muted-foreground" />
+                  Poziom ofiary
+                </Label>
+                <Input
+                  aria-describedby="victimLevel-error"
+                  aria-invalid={field.state.meta.errors.length > 0}
+                  id="victimLevel"
+                  max={MAX_LEVEL}
+                  min={MIN_LEVEL}
+                  onChange={(e) => {
+                    field.handleChange(Number(e.target.value));
+                  }}
+                  type="number"
+                  value={field.state.value}
+                />
+                {field.state.meta.errors.length > 0 && (
+                  <div
+                    className="text-destructive text-sm"
+                    id="victimLevel-error"
+                  >
+                    {field.state.meta.errors[0]}
+                  </div>
+                )}
+              </div>
+            )}
+          </form.Field>
+          <form.Subscribe
+            selector={(state) => [state.canSubmit, state.isSubmitting]}
+          >
+            {([canSubmit, isSubmitting]) => (
+              <Button
+                className="w-full"
+                disabled={!canSubmit || isSubmitting}
+                type="submit"
+              >
+                {isSubmitting ? "Obliczanie..." : "Sprawdź"}
+              </Button>
+            )}
+          </form.Subscribe>
+        </form>
+      </div>
+    </div>
+
+    {result && (
+      <div
+        className={`rounded-xl border-2 ${
+          result.wouldReceivePenalty
+            ? "border-destructive/50 bg-destructive/5"
+            : "border-primary/50 bg-primary/5"
+        } bg-card p-6`}
+      >
+        <div className="mb-4">
+          <h2 className="flex items-center gap-2 font-semibold text-base">
+            {result.wouldReceivePenalty ? (
+              <>
+                <AlertTriangle className="size-5 text-destructive" />
+                <span className="text-destructive">Otrzymasz punkt karny!</span>
+              </>
+            ) : (
+              <>
+                <Shield className="size-5 text-primary" />
+                <span className="text-primary">Brak punktu karnego</span>
+              </>
+            )}
+          </h2>
+        </div>
+        <div className="space-y-4">
+          <div className="grid gap-3">
+            <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+              <span className="text-muted-foreground text-sm">
+                Różnica poziomów
+              </span>
+              <span className="font-semibold text-lg">
+                {result.actualDifference} lvl
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+              <span className="text-muted-foreground text-sm">
+                Wymagana różnica (min)
+              </span>
+              <span className="font-semibold text-lg">
+                {result.minLevelDifference.toFixed(1)} lvl
+              </span>
+            </div>
+          </div>
+
+          <div className="grid gap-3 border-t border-border pt-4">
+            <div className="text-muted-foreground text-sm">
+              <Users className="mr-1 mb-1 inline size-4" />
+              Przydatne informacje:
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
+              <span className="text-muted-foreground text-sm">
+                Min. poziom ofiary dla kary (lvl {result.attackerLevel})
+              </span>
+              <span className="font-semibold text-primary">
+                ≤ {result.minVictimLevelForPenalty} lvl
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+              <span className="text-muted-foreground text-sm">
+                Max. atakujący bez kary (lvl {result.victimLevel})
+              </span>
+              <span className="font-semibold">
+                ≤ {result.maxAttackerWithoutPenalty} lvl
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
+);
+
+const GroupMode = ({
+  form,
+  result,
+}: {
+  form: AnyForm;
+  result: GroupResultT | null;
+}) => (
+  <>
+    <div className="rounded-xl border border-border bg-card">
+      <div className="border-b border-border p-6">
+        <h2 className="flex items-center gap-2 font-semibold text-base">
+          <Calculator className="size-5" />
+          Parametry walki grupowej
+        </h2>
+        <p className="text-muted-foreground text-sm">
+          Wprowadź poziomy członków drużyn (oddzielone przecinkami)
+        </p>
+      </div>
+      <div className="p-6">
+        <form
+          className="mt-2 grid gap-4"
+          action={async () => {
+            await form.handleSubmit();
+          }}
+        >
+          <form.Field
+            name="attackerLevels"
+            validators={{
+              onChange: ({ value }) => {
+                const parsed =
+                  groupFormSchema.shape.attackerLevels.safeParse(value);
+                if (!parsed.success) {
+                  return parsed.error.issues[0]?.message;
+                }
+                const levels = parseLevels(value);
+                if (levels.length === 0) {
+                  return "Wprowadź co najmniej jeden poprawny poziom";
+                }
+              },
+            }}
+          >
+            {(field) => (
+              <div className="space-y-2">
+                <Label
+                  className="flex items-center gap-2"
+                  htmlFor="attackerLevels"
+                >
+                  <Swords className="size-4 text-muted-foreground" />
+                  Poziomy atakujących
+                </Label>
+                <Input
+                  aria-describedby="attackerLevels-error"
+                  aria-invalid={field.state.meta.errors.length > 0}
+                  id="attackerLevels"
+                  onChange={(e) => {
+                    field.handleChange(e.target.value);
+                  }}
+                  placeholder="np. 200, 180, 160"
+                  type="text"
+                  value={field.state.value}
+                />
+                {field.state.meta.errors.length > 0 && (
+                  <div
+                    className="text-destructive text-sm"
+                    id="attackerLevels-error"
+                  >
+                    {field.state.meta.errors[0]}
+                  </div>
+                )}
+              </div>
+            )}
+          </form.Field>
+          <form.Field
+            name="defenderLevels"
+            validators={{
+              onChange: ({ value }) => {
+                const parsed =
+                  groupFormSchema.shape.defenderLevels.safeParse(value);
+                if (!parsed.success) {
+                  return parsed.error.issues[0]?.message;
+                }
+                const levels = parseLevels(value);
+                if (levels.length === 0) {
+                  return "Wprowadź co najmniej jeden poprawny poziom";
+                }
+              },
+            }}
+          >
+            {(field) => (
+              <div className="space-y-2">
+                <Label
+                  className="flex items-center gap-2"
+                  htmlFor="defenderLevels"
+                >
+                  <Shield className="size-4 text-muted-foreground" />
+                  Poziomy obrońców
+                </Label>
+                <Input
+                  aria-describedby="defenderLevels-error"
+                  aria-invalid={field.state.meta.errors.length > 0}
+                  id="defenderLevels"
+                  onChange={(e) => {
+                    field.handleChange(e.target.value);
+                  }}
+                  placeholder="np. 150, 140"
+                  type="text"
+                  value={field.state.value}
+                />
+                {field.state.meta.errors.length > 0 && (
+                  <div
+                    className="text-destructive text-sm"
+                    id="defenderLevels-error"
+                  >
+                    {field.state.meta.errors[0]}
+                  </div>
+                )}
+              </div>
+            )}
+          </form.Field>
+          <form.Subscribe
+            selector={(state) => [state.canSubmit, state.isSubmitting]}
+          >
+            {([canSubmit, isSubmitting]) => (
+              <Button
+                className="w-full"
+                disabled={!canSubmit || isSubmitting}
+                type="submit"
+              >
+                {isSubmitting ? "Obliczanie..." : "Sprawdź"}
+              </Button>
+            )}
+          </form.Subscribe>
+        </form>
+      </div>
+    </div>
+
+    {result && (
+      <div
+        className={`rounded-xl border-2 ${
+          result.wouldReceivePenalty
+            ? "border-destructive/50 bg-destructive/5"
+            : "border-primary/50 bg-primary/5"
+        } bg-card p-6`}
+      >
+        <div className="mb-4">
+          <h2 className="flex items-center gap-2 font-semibold text-base">
+            {result.wouldReceivePenalty ? (
+              <>
+                <AlertTriangle className="size-5 text-destructive" />
+                <span className="text-destructive">
+                  Drużyna otrzyma punkty karne!
+                </span>
+              </>
+            ) : (
+              <>
+                <Shield className="size-5 text-primary" />
+                <span className="text-primary">Brak punktów karnych</span>
+              </>
+            )}
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Atakujący: {result.attackerLevels.length} | Obrońcy:{" "}
+            {result.defenderLevels.length}
+          </p>
+        </div>
+        <div className="space-y-4">
+          <div className="grid gap-3">
+            <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+              <span className="text-muted-foreground text-sm">
+                Max lvl atakujących
+              </span>
+              <span className="font-semibold text-lg">
+                {result.maxAttackerLevel}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+              <span className="text-muted-foreground text-sm">
+                Średnia lvl atakujących
+              </span>
+              <span className="font-semibold text-lg">
+                {result.avgAttackerLevel.toFixed(1)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+              <span className="text-muted-foreground text-sm">
+                Średnia lvl obrońców
+              </span>
+              <span className="font-semibold text-lg">
+                {result.avgDefenderLevel.toFixed(1)}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid gap-3 border-t border-border pt-4">
+            <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
+              <span className="text-muted-foreground text-sm">
+                Różnica (lewa strona)
+              </span>
+              <span className="font-semibold text-primary">
+                {result.difference.toFixed(1)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+              <span className="text-muted-foreground text-sm">
+                Próg (prawa strona)
+              </span>
+              <span className="font-semibold">
+                {result.threshold.toFixed(1)}
+              </span>
+            </div>
+            <div
+              className={`flex items-center justify-between rounded-lg p-3 ${
+                result.wouldReceivePenalty
+                  ? "bg-destructive/10"
+                  : "bg-primary/10"
+              }`}
+            >
+              <span className="text-muted-foreground text-sm">
+                Wynik: {result.difference.toFixed(1)} {">"}{" "}
+                {result.threshold.toFixed(1)}
+              </span>
+              <span
+                className={`font-semibold ${
+                  result.wouldReceivePenalty
+                    ? "text-destructive"
+                    : "text-primary"
+                }`}
+              >
+                {result.wouldReceivePenalty ? "TAK" : "NIE"}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
+);
+
 interface CalculatorListPageProps {
   session: AuthSession;
 }
@@ -296,446 +771,11 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Single Mode */}
-        {mode === "single" && (
-          <>
-            {/* Input Form */}
-            <div className="rounded-xl border border-border bg-card">
-              <div className="border-b border-border p-6">
-                <h2 className="flex items-center gap-2 font-semibold text-base">
-                  <Calculator className="size-5" />
-                  Parametry walki
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Wprowadź poziomy atakującego i przeciwnika
-                </p>
-              </div>
-              <div className="p-6">
-                <form
-                  className="mt-2 grid gap-4"
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    await form.handleSubmit();
-                  }}
-                >
-                  <form.Field
-                    name="attackerLevel"
-                    validators={{
-                      onChange: ({ value }) => {
-                        const parsed =
-                          formSchema.shape.attackerLevel.safeParse(value);
-                        return parsed.success
-                          ? undefined
-                          : parsed.error.issues[0]?.message;
-                      },
-                    }}
-                  >
-                    {(field) => (
-                      <div className="space-y-2">
-                        <Label
-                          className="flex items-center gap-2"
-                          htmlFor="attackerLevel"
-                        >
-                          <Swords className="size-4 text-muted-foreground" />
-                          Poziom atakującego
-                        </Label>
-                        <Input
-                          aria-describedby="attackerLevel-error"
-                          aria-invalid={field.state.meta.errors.length > 0}
-                          id="attackerLevel"
-                          max={MAX_LEVEL}
-                          min={MIN_LEVEL}
-                          onChange={(e) => {
-                            field.handleChange(Number(e.target.value));
-                          }}
-                          type="number"
-                          value={field.state.value}
-                        />
-                        {field.state.meta.errors.length > 0 && (
-                          <div
-                            className="text-destructive text-sm"
-                            id="attackerLevel-error"
-                          >
-                            {field.state.meta.errors[0]}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </form.Field>
-                  <form.Field
-                    name="victimLevel"
-                    validators={{
-                      onChange: ({ value }) => {
-                        const parsed =
-                          formSchema.shape.victimLevel.safeParse(value);
-                        return parsed.success
-                          ? undefined
-                          : parsed.error.issues[0]?.message;
-                      },
-                    }}
-                  >
-                    {(field) => (
-                      <div className="space-y-2">
-                        <Label
-                          className="flex items-center gap-2"
-                          htmlFor="victimLevel"
-                        >
-                          <Skull className="size-4 text-muted-foreground" />
-                          Poziom ofiary
-                        </Label>
-                        <Input
-                          aria-describedby="victimLevel-error"
-                          aria-invalid={field.state.meta.errors.length > 0}
-                          id="victimLevel"
-                          max={MAX_LEVEL}
-                          min={MIN_LEVEL}
-                          onChange={(e) => {
-                            field.handleChange(Number(e.target.value));
-                          }}
-                          type="number"
-                          value={field.state.value}
-                        />
-                        {field.state.meta.errors.length > 0 && (
-                          <div
-                            className="text-destructive text-sm"
-                            id="victimLevel-error"
-                          >
-                            {field.state.meta.errors[0]}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </form.Field>
-                  <form.Subscribe
-                    selector={(state) => [state.canSubmit, state.isSubmitting]}
-                  >
-                    {([canSubmit, isSubmitting]) => (
-                      <Button
-                        className="w-full"
-                        disabled={!canSubmit || isSubmitting}
-                        type="submit"
-                      >
-                        {isSubmitting ? "Obliczanie..." : "Sprawdź"}
-                      </Button>
-                    )}
-                  </form.Subscribe>
-                </form>
-              </div>
-            </div>
-
-            {/* Result */}
-            {result && (
-              <div
-                className={`rounded-xl border-2 ${
-                  result.wouldReceivePenalty
-                    ? "border-destructive/50 bg-destructive/5"
-                    : "border-primary/50 bg-primary/5"
-                } bg-card p-6`}
-              >
-                <div className="mb-4">
-                  <h2 className="flex items-center gap-2 font-semibold text-base">
-                    {result.wouldReceivePenalty ? (
-                      <>
-                        <AlertTriangle className="size-5 text-destructive" />
-                        <span className="text-destructive">
-                          Otrzymasz punkt karny!
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <Shield className="size-5 text-primary" />
-                        <span className="text-primary">
-                          Brak punktu karnego
-                        </span>
-                      </>
-                    )}
-                  </h2>
-                </div>
-                <div className="space-y-4">
-                  <div className="grid gap-3">
-                    <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                      <span className="text-muted-foreground text-sm">
-                        Różnica poziomów
-                      </span>
-                      <span className="font-semibold text-lg">
-                        {result.actualDifference} lvl
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                      <span className="text-muted-foreground text-sm">
-                        Wymagana różnica (min)
-                      </span>
-                      <span className="font-semibold text-lg">
-                        {result.minLevelDifference.toFixed(1)} lvl
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 border-t border-border pt-4">
-                    <div className="text-muted-foreground text-sm">
-                      <Users className="mr-1 mb-1 inline size-4" />
-                      Przydatne informacje:
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
-                      <span className="text-muted-foreground text-sm">
-                        Min. poziom ofiary dla kary (lvl {result.attackerLevel})
-                      </span>
-                      <span className="font-semibold text-primary">
-                        ≤ {result.minVictimLevelForPenalty} lvl
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                      <span className="text-muted-foreground text-sm">
-                        Max. atakujący bez kary (lvl {result.victimLevel})
-                      </span>
-                      <span className="font-semibold">
-                        ≤ {result.maxAttackerWithoutPenalty} lvl
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+        {mode === "single" && <SingleMode form={form} result={result} />}
 
         {/* Group Mode */}
         {mode === "group" && (
-          <>
-            {/* Group Input Form */}
-            <div className="rounded-xl border border-border bg-card">
-              <div className="border-b border-border p-6">
-                <h2 className="flex items-center gap-2 font-semibold text-base">
-                  <Calculator className="size-5" />
-                  Parametry walki grupowej
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Wprowadź poziomy członków drużyn (oddzielone przecinkami)
-                </p>
-              </div>
-              <div className="p-6">
-                <form
-                  className="mt-2 grid gap-4"
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    await groupForm.handleSubmit();
-                  }}
-                >
-                  <groupForm.Field
-                    name="attackerLevels"
-                    validators={{
-                      onChange: ({ value }) => {
-                        const parsed =
-                          groupFormSchema.shape.attackerLevels.safeParse(value);
-                        if (!parsed.success) {
-                          return parsed.error.issues[0]?.message;
-                        }
-                        const levels = parseLevels(value);
-                        if (levels.length === 0) {
-                          return "Wprowadź co najmniej jeden poprawny poziom";
-                        }
-                      },
-                    }}
-                  >
-                    {(field) => (
-                      <div className="space-y-2">
-                        <Label
-                          className="flex items-center gap-2"
-                          htmlFor="attackerLevels"
-                        >
-                          <Swords className="size-4 text-muted-foreground" />
-                          Poziomy atakujących
-                        </Label>
-                        <Input
-                          aria-describedby="attackerLevels-error"
-                          aria-invalid={field.state.meta.errors.length > 0}
-                          id="attackerLevels"
-                          onChange={(e) => {
-                            field.handleChange(e.target.value);
-                          }}
-                          placeholder="np. 200, 180, 160"
-                          type="text"
-                          value={field.state.value}
-                        />
-                        {field.state.meta.errors.length > 0 && (
-                          <div
-                            className="text-destructive text-sm"
-                            id="attackerLevels-error"
-                          >
-                            {field.state.meta.errors[0]}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </groupForm.Field>
-                  <groupForm.Field
-                    name="defenderLevels"
-                    validators={{
-                      onChange: ({ value }) => {
-                        const parsed =
-                          groupFormSchema.shape.defenderLevels.safeParse(value);
-                        if (!parsed.success) {
-                          return parsed.error.issues[0]?.message;
-                        }
-                        const levels = parseLevels(value);
-                        if (levels.length === 0) {
-                          return "Wprowadź co najmniej jeden poprawny poziom";
-                        }
-                      },
-                    }}
-                  >
-                    {(field) => (
-                      <div className="space-y-2">
-                        <Label
-                          className="flex items-center gap-2"
-                          htmlFor="defenderLevels"
-                        >
-                          <Shield className="size-4 text-muted-foreground" />
-                          Poziomy obrońców
-                        </Label>
-                        <Input
-                          aria-describedby="defenderLevels-error"
-                          aria-invalid={field.state.meta.errors.length > 0}
-                          id="defenderLevels"
-                          onChange={(e) => {
-                            field.handleChange(e.target.value);
-                          }}
-                          placeholder="np. 150, 140"
-                          type="text"
-                          value={field.state.value}
-                        />
-                        {field.state.meta.errors.length > 0 && (
-                          <div
-                            className="text-destructive text-sm"
-                            id="defenderLevels-error"
-                          >
-                            {field.state.meta.errors[0]}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </groupForm.Field>
-                  <groupForm.Subscribe
-                    selector={(state) => [state.canSubmit, state.isSubmitting]}
-                  >
-                    {([canSubmit, isSubmitting]) => (
-                      <Button
-                        className="w-full"
-                        disabled={!canSubmit || isSubmitting}
-                        type="submit"
-                      >
-                        {isSubmitting ? "Obliczanie..." : "Sprawdź"}
-                      </Button>
-                    )}
-                  </groupForm.Subscribe>
-                </form>
-              </div>
-            </div>
-
-            {/* Group Result */}
-            {groupResult && (
-              <div
-                className={`rounded-xl border-2 ${
-                  groupResult.wouldReceivePenalty
-                    ? "border-destructive/50 bg-destructive/5"
-                    : "border-primary/50 bg-primary/5"
-                } bg-card p-6`}
-              >
-                <div className="mb-4">
-                  <h2 className="flex items-center gap-2 font-semibold text-base">
-                    {groupResult.wouldReceivePenalty ? (
-                      <>
-                        <AlertTriangle className="size-5 text-destructive" />
-                        <span className="text-destructive">
-                          Drużyna otrzyma punkty karne!
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <Shield className="size-5 text-primary" />
-                        <span className="text-primary">
-                          Brak punktów karnych
-                        </span>
-                      </>
-                    )}
-                  </h2>
-                  <p className="text-muted-foreground text-sm">
-                    Atakujący: {groupResult.attackerLevels.length} | Obrońcy:{" "}
-                    {groupResult.defenderLevels.length}
-                  </p>
-                </div>
-                <div className="space-y-4">
-                  <div className="grid gap-3">
-                    <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                      <span className="text-muted-foreground text-sm">
-                        Max lvl atakujących
-                      </span>
-                      <span className="font-semibold text-lg">
-                        {groupResult.maxAttackerLevel}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                      <span className="text-muted-foreground text-sm">
-                        Średnia lvl atakujących
-                      </span>
-                      <span className="font-semibold text-lg">
-                        {groupResult.avgAttackerLevel.toFixed(1)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                      <span className="text-muted-foreground text-sm">
-                        Średnia lvl obrońców
-                      </span>
-                      <span className="font-semibold text-lg">
-                        {groupResult.avgDefenderLevel.toFixed(1)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 border-t border-border pt-4">
-                    <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
-                      <span className="text-muted-foreground text-sm">
-                        Różnica (lewa strona)
-                      </span>
-                      <span className="font-semibold text-primary">
-                        {groupResult.difference.toFixed(1)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                      <span className="text-muted-foreground text-sm">
-                        Próg (prawa strona)
-                      </span>
-                      <span className="font-semibold">
-                        {groupResult.threshold.toFixed(1)}
-                      </span>
-                    </div>
-                    <div
-                      className={`flex items-center justify-between rounded-lg p-3 ${
-                        groupResult.wouldReceivePenalty
-                          ? "bg-destructive/10"
-                          : "bg-primary/10"
-                      }`}
-                    >
-                      <span className="text-muted-foreground text-sm">
-                        Wynik: {groupResult.difference.toFixed(1)} {">"}{" "}
-                        {groupResult.threshold.toFixed(1)}
-                      </span>
-                      <span
-                        className={`font-semibold ${
-                          groupResult.wouldReceivePenalty
-                            ? "text-destructive"
-                            : "text-primary"
-                        }`}
-                      >
-                        {groupResult.wouldReceivePenalty ? "TAK" : "NIE"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
+          <GroupMode form={groupForm} result={groupResult} />
         )}
       </div>
 

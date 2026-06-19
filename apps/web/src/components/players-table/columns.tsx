@@ -53,7 +53,7 @@ const ActionCell = ({ player }: { player: Player }) => {
   const queryClient = useQueryClient();
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [newName, setNewName] = useState(player.name);
+  const [newName, setNewName] = useState("");
 
   const toggleVerified = useMutation({
     mutationFn: () =>
@@ -191,6 +191,7 @@ const ActionCell = ({ player }: { player: Player }) => {
             <Input
               className="mt-2"
               id="new-name"
+              key={player.id}
               onChange={(e) => {
                 setNewName(e.target.value);
               }}
@@ -294,4 +295,3 @@ const actionsColumn = (): ColumnDef<Player> =>
 
 export const buildPlayerColumns = (isAdmin: boolean): ColumnDef<Player>[] =>
   isAdmin ? [...baseColumns, actionsColumn()] : baseColumns;
-export const columns: ColumnDef<Player>[] = buildPlayerColumns(true);

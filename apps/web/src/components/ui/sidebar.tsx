@@ -65,7 +65,7 @@ interface SidebarContextProps {
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 
 const useSidebar = () => {
-  const context = React.useContext(SidebarContext);
+  const context = React.use(SidebarContext);
   if (!context) {
     throw new Error("useSidebar must be used within a SidebarProvider.");
   }
@@ -636,10 +636,7 @@ const SidebarMenuSkeleton = ({
   showIcon?: boolean;
 }) => {
   // Random width between 50 to 90%.
-  const width = React.useMemo(
-    () => `${Math.floor(Math.random() * 40) + 50}%`,
-    []
-  );
+  const width = `${Math.floor(Math.random() * 40) + 50}%`;
 
   return (
     <div

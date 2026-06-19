@@ -13,9 +13,11 @@ import { toast } from "sonner";
 
 import { BetCard } from "@/components/events/bet-card";
 import {
-  EventSelectItems,
   getEventSelectDisplay,
   getHeroSelectDisplay,
+} from "@/components/events/select-display";
+import {
+  EventSelectItems,
   HeroSelectItems,
 } from "@/components/events/select-utils";
 import {

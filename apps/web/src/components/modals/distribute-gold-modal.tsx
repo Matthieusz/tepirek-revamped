@@ -2,14 +2,16 @@ import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Coins } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import {
-  EventSelectItems,
   getEventSelectDisplay,
   getHeroSelectDisplay,
+} from "@/components/events/select-display";
+import {
+  EventSelectItems,
   HeroSelectItems,
 } from "@/components/events/select-utils";
 import { Button } from "@/components/ui/button";
@@ -56,7 +58,7 @@ const parseGoldAmount = (value: string): number => {
 };
 
 const getModalEventSelectDisplay = (params: {
-  eventId: string;
+  selectedEventId: string;
   events:
     | {
         color: string | null;
@@ -69,19 +71,19 @@ const getModalEventSelectDisplay = (params: {
 }): ReactNode =>
   getEventSelectDisplay({
     events: params.events,
-    selectedEventId: params.eventId,
+    selectedEventId: params.selectedEventId,
   });
 
 const getModalHeroSelectDisplay = (params: {
-  eventId: string;
-  heroId: string;
+  selectedEventId: string;
+  selectedHeroId: string;
   heroes: { id: number; name: string }[] | undefined;
 }): string =>
   getHeroSelectDisplay({
     allLabel: "Wybierz herosa...",
     placeholder: "Wybierz herosa...",
-    selectedEventId: params.eventId,
-    selectedHeroId: params.heroId,
+    selectedEventId: params.selectedEventId,
+    selectedHeroId: params.selectedHeroId,
     sortedHeroes: params.heroes,
   });
 
@@ -147,17 +149,7 @@ export const DistributeGoldModal = ({
   selectedHeroId = "all",
 }: DistributeGoldModalProps) => {
   const [open, setOpen] = useState(false);
-  const [eventId, setEventId] = useState(selectedEventId);
-  const [heroId, setHeroId] = useState(selectedHeroId);
   const queryClient = useQueryClient();
-
-  // Sync with parent filter state when modal opens
-  useEffect(() => {
-    if (open) {
-      setEventId(selectedEventId);
-      setHeroId(selectedHeroId);
-    }
-  }, [open, selectedEventId, selectedHeroId]);
 
   const { data: events } = useQuery(orpc.event.getAll.queryOptions());
 
@@ -166,17 +158,17 @@ export const DistributeGoldModal = ({
   );
 
   const filteredHeroes = (
-    eventId === "all"
+    selectedEventId === "all"
       ? heroes
-      : heroes?.filter((h) => h.eventId?.toString() === eventId)
+      : heroes?.filter((h) => h.eventId?.toString() === selectedEventId)
   )?.toSorted((a, b) => a.level - b.level);
 
   // Get hero stats when a specific hero is selected
   const { data: heroStats, isPending: heroStatsPending } = useQuery({
     ...orpc.ranking.getHeroStats.queryOptions({
-      input: { heroId: Number.parseInt(heroId, 10) },
+      input: { heroId: Number.parseInt(selectedHeroId, 10) },
     }),
-    enabled: heroId !== "all" && open,
+    enabled: selectedHeroId !== "all" && open,
   });
 
   const form = useForm({
@@ -185,7 +177,7 @@ export const DistributeGoldModal = ({
     },
     onSubmit: async ({ value }) => {
       try {
-        if (heroId === "all") {
+        if (selectedHeroId === "all") {
           toast.error("Wybierz konkretnego herosa!");
           return;
         }
@@ -198,7 +190,7 @@ export const DistributeGoldModal = ({
 
         const result = await orpc.vault.distributeGold.call({
           goldAmount,
-          heroId: Number.parseInt(heroId, 10),
+          heroId: Number.parseInt(selectedHeroId, 10),
         });
 
         toast.success(
@@ -209,7 +201,7 @@ export const DistributeGoldModal = ({
         });
         await queryClient.invalidateQueries({
           queryKey: orpc.ranking.getHeroStats.queryKey({
-            input: { heroId: Number.parseInt(heroId, 10) },
+            input: { heroId: Number.parseInt(selectedHeroId, 10) },
           }),
         });
         setOpen(false);
@@ -237,9 +229,7 @@ export const DistributeGoldModal = ({
       <ResponsiveDialogContent className="max-w-3 sm:max-w-125">
         <form
           // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-          onSubmit={async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          action={async () => {
             await form.handleSubmit();
           }}
         >
@@ -258,17 +248,14 @@ export const DistributeGoldModal = ({
             <div className="grid gap-1.5">
               <Label>Event</Label>
               <Select
-                onValueChange={(value) => {
-                  if (value !== null) {
-                    setEventId(value);
-                  }
-                  setHeroId("all");
+                onValueChange={() => {
+                  /* controlled by parent */
                 }}
-                value={eventId}
+                value={selectedEventId}
               >
                 <SelectTrigger>
                   <SelectValue>
-                    {getModalEventSelectDisplay({ eventId, events })}
+                    {getModalEventSelectDisplay({ selectedEventId, events })}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -281,18 +268,16 @@ export const DistributeGoldModal = ({
             <div className="grid gap-1.5">
               <Label>Heros</Label>
               <Select
-                onValueChange={(value) => {
-                  if (value !== null) {
-                    setHeroId(value);
-                  }
+                onValueChange={() => {
+                  /* controlled by parent */
                 }}
-                value={heroId}
+                value={selectedHeroId}
               >
                 <SelectTrigger>
                   <SelectValue>
                     {getModalHeroSelectDisplay({
-                      eventId,
-                      heroId,
+                      selectedEventId,
+                      selectedHeroId,
                       heroes: filteredHeroes,
                     })}
                   </SelectValue>
@@ -308,7 +293,7 @@ export const DistributeGoldModal = ({
             </div>
 
             {/* Hero Stats Preview */}
-            {heroId !== "all" && (
+            {selectedHeroId !== "all" && (
               <HeroStatsPreview
                 heroStats={heroStats}
                 isPending={heroStatsPending}
@@ -322,7 +307,7 @@ export const DistributeGoldModal = ({
                   <>
                     <Label htmlFor={field.name}>Kwota złota</Label>
                     <Input
-                      disabled={heroId === "all"}
+                      disabled={selectedHeroId === "all"}
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
@@ -352,7 +337,7 @@ export const DistributeGoldModal = ({
             </div>
 
             {/* Point Worth Preview */}
-            {heroId !== "all" &&
+            {selectedHeroId !== "all" &&
               goldAmount > 0 &&
               heroStats &&
               heroStats.totalPoints > 0 && (
@@ -404,7 +389,7 @@ export const DistributeGoldModal = ({
                   disabled={
                     !state.canSubmit ||
                     state.isSubmitting ||
-                    heroId === "all" ||
+                    selectedHeroId === "all" ||
                     !heroStats ||
                     heroStats.totalPoints <= 0
                   }

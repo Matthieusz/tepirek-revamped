@@ -89,9 +89,7 @@ export const SignUpForm = ({
 
         <form
           // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-          onSubmit={async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          action={async () => {
             await form.handleSubmit();
           }}
         >

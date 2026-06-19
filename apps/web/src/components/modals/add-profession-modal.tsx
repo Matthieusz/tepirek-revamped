@@ -61,9 +61,7 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
       <ResponsiveDialogContent className="sm:max-w-[425px]">
         <form
           // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-          onSubmit={async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          action={async () => {
             await form.handleSubmit();
           }}
         >

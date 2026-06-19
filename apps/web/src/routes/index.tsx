@@ -6,16 +6,18 @@ import { Button } from "@/components/ui/button";
 import { orpc } from "@/utils/orpc";
 
 const HomeComponent = () => {
-  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  const { data: healthCheckData, isLoading: healthCheckIsLoading } = useQuery(
+    orpc.healthCheck.queryOptions()
+  );
 
   let statusText: string;
   let statusColor = "text-muted-foreground";
   let statusDot = "bg-[oklch(0.76_0.10_80)]";
 
-  if (healthCheck.isLoading) {
+  if (healthCheckIsLoading) {
     statusText = "Sprawdzanie...";
     statusDot = "bg-[oklch(0.76_0.10_80)]";
-  } else if (healthCheck.data === undefined) {
+  } else if (healthCheckData === undefined) {
     statusText = "Status";
     statusColor = "text-destructive";
     statusDot = "bg-destructive";
@@ -79,7 +81,7 @@ const HomeComponent = () => {
         {/* Status indicator */}
         <div className="flex items-center gap-2.5 text-sm">
           <span className="relative flex size-2">
-            {healthCheck.isLoading && (
+            {healthCheckIsLoading && (
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[oklch(0.76_0.10_80)] opacity-60" />
             )}
             <span

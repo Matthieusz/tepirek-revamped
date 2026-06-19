@@ -1,14 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { Check, Coins, User, Vault as VaultIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
-import {
-  EventSelectItems,
-  getEventSelectDisplay,
-} from "@/components/events/select-utils";
+import { getEventSelectDisplay } from "@/components/events/select-display";
+import { EventSelectItems } from "@/components/events/select-utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,18 +25,14 @@ import { orpc } from "@/utils/orpc";
 
 const routeApi = getRouteApi("/dashboard/events/vault");
 
-const searchSchema = z.object({
-  eventId: z.string().optional(),
-});
-
 interface EventsVaultPageProps {
   session: AuthSession;
 }
 
-export default function EventsVaultPage({ session }: EventsVaultPageProps) {
+const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
   const { eventId: urlEventId } = routeApi.useSearch();
   const navigate = useNavigate({ from: "/dashboard/events/vault" });
-  const [hasInitialized, setHasInitialized] = useState(false);
+  const hasInitializedRef = useRef(false);
   const queryClient = useQueryClient();
 
   const { data: events } = useQuery(orpc.event.getAll.queryOptions());
@@ -50,40 +43,32 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
 
   // Auto-select the oldest unpaid event on initial load (only if no URL param)
   useEffect(() => {
-    if (hasInitialized || oldestUnpaidLoading) {
+    if (hasInitializedRef.current || oldestUnpaidLoading) {
       return;
     }
     if (oldestUnpaidEventId === undefined) {
       return;
     }
 
-    // If URL already has eventId, just mark as initialized
+    hasInitializedRef.current = true;
+
+    // If URL already has eventId, nothing to do
     if (urlEventId !== undefined) {
-      setHasInitialized(true);
       return;
     }
 
     // Otherwise, navigate to the oldest unpaid event
     if (oldestUnpaidEventId !== null) {
-      const navigateToOldest = async (): Promise<void> => {
-        await navigate({
-          replace: true,
-          search: { eventId: oldestUnpaidEventId.toString() },
-        });
-      };
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      navigateToOldest();
+      navigate({
+        replace: true,
+        search: { eventId: oldestUnpaidEventId.toString() },
+      });
     }
-    setHasInitialized(true);
-  }, [
-    oldestUnpaidEventId,
-    oldestUnpaidLoading,
-    hasInitialized,
-    urlEventId,
-    navigate,
-  ]);
+  }, [oldestUnpaidEventId, oldestUnpaidLoading, urlEventId, navigate]);
 
   const effectiveEventId = urlEventId ?? "all";
+  const hasInitialized = hasInitializedRef.current;
 
   const { data: vault, isPending: vaultLoading } = useQuery({
     ...orpc.vault.getVault.queryOptions({
@@ -350,6 +335,8 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
       )}
     </div>
   );
-}
+};
 
-export { searchSchema };
+export default function EventsVaultPage(props: EventsVaultPageProps) {
+  return useEventsVaultPageContent(props);
+}

@@ -169,9 +169,7 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
           <div className="p-6">
             <form
               className="grid gap-4"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+              action={async () => {
                 await form.handleSubmit();
               }}
             >

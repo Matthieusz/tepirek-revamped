@@ -95,9 +95,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-106.25">
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          action={() => {
             // oxlint-disable-next-line @typescript-eslint/no-floating-promises
             form.handleSubmit();
           }}

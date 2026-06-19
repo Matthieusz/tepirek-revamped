@@ -73,5 +73,3 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
     </div>
   );
 };
-
-export default AuctionHeader;

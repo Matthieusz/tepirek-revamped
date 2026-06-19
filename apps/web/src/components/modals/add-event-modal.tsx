@@ -105,9 +105,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
       <ResponsiveDialogContent className="sm:max-w-106.25">
         <form
           // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-          onSubmit={async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          action={async () => {
             await form.handleSubmit();
           }}
         >

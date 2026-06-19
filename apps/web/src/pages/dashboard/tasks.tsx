@@ -23,7 +23,9 @@ export default function TasksPage({ session }: TasksPageProps) {
   const [newTodoText, setNewTodoText] = useState("");
   const queryClient = useQueryClient();
 
-  const todos = useQuery(orpc.todo.getAll.queryOptions());
+  const { data: todosData, isLoading: todosIsLoading } = useQuery(
+    orpc.todo.getAll.queryOptions()
+  );
   const createMutation = useMutation(
     orpc.todo.create.mutationOptions({
       onSuccess: async () => {
@@ -68,8 +70,8 @@ export default function TasksPage({ session }: TasksPageProps) {
     deleteMutation.mutate({ id });
   };
 
-  const completedCount = todos.data?.filter((t) => t.completed).length ?? 0;
-  const totalCount = todos.data?.length ?? 0;
+  const completedCount = todosData?.filter((t) => t.completed).length ?? 0;
+  const totalCount = todosData?.length ?? 0;
 
   return (
     <div className="w-full max-w-2xl space-y-6">
@@ -93,7 +95,7 @@ export default function TasksPage({ session }: TasksPageProps) {
               <ListTodo className="size-4 text-muted-foreground" />
             </div>
             <p className="mt-1 font-bold text-2xl">
-              {todos.isLoading ? "—" : totalCount}
+              {todosIsLoading ? "—" : totalCount}
             </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
@@ -104,7 +106,7 @@ export default function TasksPage({ session }: TasksPageProps) {
               <CheckCircle2 className="size-4 text-primary" />
             </div>
             <p className="mt-1 font-bold text-2xl text-primary">
-              {todos.isLoading ? "—" : completedCount}
+              {todosIsLoading ? "—" : completedCount}
             </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
@@ -115,7 +117,7 @@ export default function TasksPage({ session }: TasksPageProps) {
               <Circle className="size-4 text-muted-foreground" />
             </div>
             <p className="mt-1 font-bold text-2xl text-muted-foreground">
-              {todos.isLoading ? "—" : totalCount - completedCount}
+              {todosIsLoading ? "—" : totalCount - completedCount}
             </p>
           </div>
         </div>
@@ -165,12 +167,12 @@ export default function TasksPage({ session }: TasksPageProps) {
             </span>
           </div>
           <div className="p-4">
-            {todos.isLoading && (
+            {todosIsLoading && (
               <div className="flex justify-center py-8">
                 <Loader2 className="size-6 animate-spin text-muted-foreground" />
               </div>
             )}
-            {!todos.isLoading && todos.data?.length === 0 && (
+            {!todosIsLoading && todosData?.length === 0 && (
               <div className="rounded-lg border border-dashed py-8 text-center">
                 <ListTodo className="mx-auto size-8 text-muted-foreground" />
                 <p className="mt-2 text-muted-foreground text-sm">
@@ -181,9 +183,9 @@ export default function TasksPage({ session }: TasksPageProps) {
                 </p>
               </div>
             )}
-            {!todos.isLoading && todos.data && todos.data.length > 0 && (
+            {!todosIsLoading && todosData && todosData.length > 0 && (
               <ul className="space-y-2">
-                {todos.data.map((todo) => (
+                {todosData.map((todo) => (
                   <li
                     className={`flex items-center justify-between rounded-lg p-3 transition-colors ${
                       todo.completed

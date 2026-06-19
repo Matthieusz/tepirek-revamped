@@ -1,5 +1,5 @@
 import type * as React from "react";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, use as reactUse, useMemo } from "react";
 
 import {
   Dialog,
@@ -60,7 +60,7 @@ const ResponsiveDialog = ({
 };
 
 const useResponsiveDialog = () => {
-  const context = useContext(ResponsiveDialogContext);
+  const context = reactUse(ResponsiveDialogContext);
   if (context === undefined) {
     throw new Error(
       "Responsive dialog components must be used within a ResponsiveDialog."

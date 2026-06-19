@@ -40,6 +40,85 @@ const schema = z.object({
   userIds: z.array(z.string()).min(1, "Wybierz przynajmniej jednego gracza"),
 });
 
+interface VerifiedUserOption {
+  id: string;
+  image: string | null;
+  name: string;
+}
+
+interface AvailableUsersListProps {
+  fieldValue: string[];
+  onChange: (userIds: string[]) => void;
+  searchQuery: string;
+  users: VerifiedUserOption[] | undefined;
+  usersLoading: boolean;
+}
+
+const AvailableUsersList = ({
+  fieldValue,
+  onChange,
+  searchQuery,
+  users,
+  usersLoading,
+}: AvailableUsersListProps) => {
+  if (usersLoading) {
+    return <p className="text-muted-foreground text-sm">Ładowanie...</p>;
+  }
+  if (users?.length === 0) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        Brak zweryfikowanych graczy
+      </p>
+    );
+  }
+
+  const filteredUsers = users?.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !fieldValue.includes(user.id)
+  );
+
+  if (filteredUsers?.length === 0) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        Nie znaleziono graczy pasujących do wyszukiwania
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-2">
+      {filteredUsers?.map((user) => (
+        <label
+          className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 ${
+            fieldValue.includes(user.id)
+              ? "border-primary bg-primary/5"
+              : "border-border"
+          }`}
+          htmlFor={`edit-user-${user.id}`}
+          key={user.id}
+        >
+          <Checkbox
+            checked={fieldValue.includes(user.id)}
+            id={`edit-user-${user.id}`}
+            onCheckedChange={() => {
+              const newIds = handleUserToggle(user.id, fieldValue);
+              onChange(newIds);
+            }}
+          />
+          <Avatar className="size-8">
+            <AvatarImage alt={user.name} src={user.image ?? undefined} />
+            <AvatarFallback>
+              <User className="size-4" />
+            </AvatarFallback>
+          </Avatar>
+          <span className="truncate font-normal">{user.name}</span>
+        </label>
+      ))}
+    </div>
+  );
+};
+
 export const EditBetModal = ({
   betId,
   currentMembers,
@@ -86,69 +165,6 @@ export const EditBetModal = ({
     },
   });
 
-  const renderUserList = (
-    fieldValue: string[],
-    onChange: (userIds: string[]) => void
-  ) => {
-    if (usersLoading) {
-      return <p className="text-muted-foreground text-sm">Ładowanie...</p>;
-    }
-    if (verifiedUsers?.length === 0) {
-      return (
-        <p className="text-muted-foreground text-sm">
-          Brak zweryfikowanych graczy
-        </p>
-      );
-    }
-
-    // Filter users by search query and exclude selected users
-    const filteredUsers = verifiedUsers?.filter(
-      (user) =>
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !fieldValue.includes(user.id)
-    );
-
-    if (filteredUsers?.length === 0) {
-      return (
-        <p className="text-muted-foreground text-sm">
-          Nie znaleziono graczy pasujących do wyszukiwania
-        </p>
-      );
-    }
-
-    return (
-      <div className="grid grid-cols-1 gap-2">
-        {filteredUsers?.map((user) => (
-          <label
-            className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 ${
-              fieldValue.includes(user.id)
-                ? "border-primary bg-primary/5"
-                : "border-border"
-            }`}
-            htmlFor={`edit-user-${user.id}`}
-            key={user.id}
-          >
-            <Checkbox
-              checked={fieldValue.includes(user.id)}
-              id={`edit-user-${user.id}`}
-              onCheckedChange={() => {
-                const newIds = handleUserToggle(user.id, fieldValue);
-                onChange(newIds);
-              }}
-            />
-            <Avatar className="size-8">
-              <AvatarImage alt={user.name} src={user.image ?? undefined} />
-              <AvatarFallback>
-                <User className="size-4" />
-              </AvatarFallback>
-            </Avatar>
-            <span className="truncate font-normal">{user.name}</span>
-          </label>
-        ))}
-      </div>
-    );
-  };
-
   return (
     <ResponsiveDialog onOpenChange={setOpen} open={open}>
       <ResponsiveDialogTrigger asChild>
@@ -160,9 +176,7 @@ export const EditBetModal = ({
       </ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-[600px]">
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          action={() => {
             form.handleSubmit();
           }}
         >
@@ -181,6 +195,16 @@ export const EditBetModal = ({
                 calculatePointsPerMember(newMemberCount);
               const currentPointsPerMember =
                 calculatePointsPerMember(memberCount);
+
+              const selectedUsers: VerifiedUserOption[] = [];
+              if (verifiedUsers) {
+                for (const user of verifiedUsers) {
+                  if (field.state.value.includes(user.id)) {
+                    selectedUsers.push(user);
+                  }
+                }
+              }
+
               let pointsPerMemberVariant:
                 | "default"
                 | "destructive"
@@ -270,7 +294,13 @@ export const EditBetModal = ({
                     <p className="mb-2 text-muted-foreground text-sm">
                       Dostępni gracze:
                     </p>
-                    {renderUserList(field.state.value, field.handleChange)}
+                    <AvailableUsersList
+                      fieldValue={field.state.value}
+                      onChange={field.handleChange}
+                      searchQuery={searchQuery}
+                      users={verifiedUsers}
+                      usersLoading={usersLoading}
+                    />
                   </div>
 
                   {/* Selected users */}
@@ -280,39 +310,35 @@ export const EditBetModal = ({
                         Wybrani gracze ({field.state.value.length}):
                       </Label>
                       <div className="flex flex-wrap gap-2">
-                        {verifiedUsers
-                          ?.filter((user) =>
-                            field.state.value.includes(user.id)
-                          )
-                          .map((user) => (
-                            <div
-                              className="flex items-center gap-2 rounded-full border bg-muted/30 py-1 pr-3 pl-1"
-                              key={user.id}
+                        {selectedUsers.map((user) => (
+                          <div
+                            className="flex items-center gap-2 rounded-full border bg-muted/30 py-1 pr-3 pl-1"
+                            key={user.id}
+                          >
+                            <Avatar className="size-6">
+                              <AvatarImage
+                                alt={user.name}
+                                src={user.image ?? undefined}
+                              />
+                              <AvatarFallback className="text-xs">
+                                <User className="size-3" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm">{user.name}</span>
+                            <button
+                              className="flex size-5 items-center justify-center rounded-full bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                              onClick={() => {
+                                const newIds = field.state.value.filter(
+                                  (id) => id !== user.id
+                                );
+                                field.handleChange(newIds);
+                              }}
+                              type="button"
                             >
-                              <Avatar className="size-6">
-                                <AvatarImage
-                                  alt={user.name}
-                                  src={user.image ?? undefined}
-                                />
-                                <AvatarFallback className="text-xs">
-                                  <User className="size-3" />
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm">{user.name}</span>
-                              <button
-                                className="flex size-5 items-center justify-center rounded-full bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                onClick={() => {
-                                  const newIds = field.state.value.filter(
-                                    (id) => id !== user.id
-                                  );
-                                  field.handleChange(newIds);
-                                }}
-                                type="button"
-                              >
-                                <X className="size-3" />
-                              </button>
-                            </div>
-                          ))}
+                              <X className="size-3" />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}

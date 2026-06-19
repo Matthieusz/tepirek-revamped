@@ -47,7 +47,9 @@ export const AddSkillModal = ({
 }: AddSkillModalProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
-  const professions = useQuery(orpc.skills.getAllProfessions.queryOptions());
+  const { data: professionsData } = useQuery(
+    orpc.skills.getAllProfessions.queryOptions()
+  );
 
   const form = useForm({
     defaultValues: {
@@ -96,9 +98,7 @@ export const AddSkillModal = ({
       <ResponsiveDialogContent className="sm:max-w-106.25">
         <form
           // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-          onSubmit={async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          action={async () => {
             await form.handleSubmit();
           }}
         >
@@ -177,7 +177,7 @@ export const AddSkillModal = ({
                           <SelectValue placeholder="Wybierz profesję" />
                         </SelectTrigger>
                         <SelectContent>
-                          {professions.data?.map((p) => (
+                          {professionsData?.map((p) => (
                             <SelectItem key={p.id} value={p.id.toString()}>
                               {p.name}
                             </SelectItem>

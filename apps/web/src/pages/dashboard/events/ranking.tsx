@@ -2,14 +2,15 @@ import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { Coins, Trophy } from "lucide-react";
 import { useCallback } from "react";
 import type { ReactNode } from "react";
-import { z } from "zod";
 
 import { RankingList } from "@/components/events/ranking-list";
 import type { RankingItem } from "@/components/events/ranking-list";
 import {
-  EventSelectItems,
   getEventSelectDisplay,
   getHeroSelectDisplay,
+} from "@/components/events/select-display";
+import {
+  EventSelectItems,
   HeroSelectItems,
 } from "@/components/events/select-utils";
 import { StatsPopover } from "@/components/events/stats-popover";
@@ -29,14 +30,6 @@ import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 
 const routeApi = getRouteApi("/dashboard/events/ranking");
-
-const searchSchema = z.object({
-  eventId: z.string().optional(),
-
-  heroId: z.string().optional(),
-
-  sortBy: z.enum(["points", "bets", "gold"]).optional(),
-});
 
 type RankingSort = "points" | "bets" | "gold";
 
@@ -65,8 +58,6 @@ const buildRankingContent = (params: {
 
   return <RankingList players={params.sortedRanking} />;
 };
-
-export { searchSchema };
 
 export const RankingPage = ({ session }: { session: AuthSession }) => {
   const { eventId, heroId, sortBy } = routeApi.useSearch();
