@@ -3,21 +3,21 @@ import { todo } from "@tepirek-revamped/db/schema/todo";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { protectedProcedure } from "./procedures";
+import { verifiedProcedure } from "./procedures";
 
 export const todoRouter = {
-  create: protectedProcedure
+  create: verifiedProcedure
     .input(z.object({ text: z.string().min(1), userId: z.string() }))
-    .handler(async ({ input, context }) =>
+    .handler(({ input, context }) =>
       db.insert(todo).values({
         text: input.text,
         userId: context.session?.user.id,
       })
     ),
 
-  delete: protectedProcedure
+  delete: verifiedProcedure
     .input(z.object({ id: z.number() }))
-    .handler(async ({ input, context }) =>
+    .handler(({ input, context }) =>
       db
         .delete(todo)
         .where(
@@ -25,13 +25,13 @@ export const todoRouter = {
         )
     ),
 
-  getAll: protectedProcedure.handler(async ({ context }) =>
+  getAll: verifiedProcedure.handler(({ context }) =>
     db.select().from(todo).where(eq(todo.userId, context.session?.user.id))
   ),
 
-  toggle: protectedProcedure
+  toggle: verifiedProcedure
     .input(z.object({ completed: z.boolean(), id: z.number() }))
-    .handler(async ({ input, context }) =>
+    .handler(({ input, context }) =>
       db
         .update(todo)
         .set({ completed: input.completed })

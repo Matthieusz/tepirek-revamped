@@ -4,7 +4,7 @@ import { professions, range, skills } from "@tepirek-revamped/db/schema/skills";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { adminProcedure, protectedProcedure } from "./procedures";
+import { adminProcedure, verifiedProcedure } from "./procedures";
 
 export const skillsRouter = {
   createProfession: adminProcedure
@@ -13,7 +13,7 @@ export const skillsRouter = {
         name: z.string().min(2),
       })
     )
-    .handler(async ({ input }) =>
+    .handler(({ input }) =>
       db.insert(professions).values({
         name: input.name,
       })
@@ -27,7 +27,7 @@ export const skillsRouter = {
         name: z.string().min(2),
       })
     )
-    .handler(async ({ input }) =>
+    .handler(({ input }) =>
       db.insert(range).values({
         image: input.image,
         level: input.level,
@@ -35,7 +35,7 @@ export const skillsRouter = {
       })
     ),
 
-  createSkill: protectedProcedure
+  createSkill: verifiedProcedure
     .input(
       z.object({
         link: z.string().min(1),
@@ -45,7 +45,7 @@ export const skillsRouter = {
         rangeId: z.number(),
       })
     )
-    .handler(async ({ input, context }) =>
+    .handler(({ input, context }) =>
       db.insert(skills).values({
         link: input.link,
         mastery: input.mastery,
@@ -58,29 +58,25 @@ export const skillsRouter = {
 
   deleteRange: adminProcedure
     .input(z.object({ id: z.number() }))
-    .handler(async ({ input }) =>
-      db.delete(range).where(eq(range.id, input.id))
-    ),
+    .handler(({ input }) => db.delete(range).where(eq(range.id, input.id))),
 
   deleteSkill: adminProcedure
     .input(z.object({ id: z.number() }))
-    .handler(async ({ input }) =>
-      db.delete(skills).where(eq(skills.id, input.id))
-    ),
+    .handler(({ input }) => db.delete(skills).where(eq(skills.id, input.id))),
 
-  getAllProfessions: protectedProcedure.handler(async () =>
+  getAllProfessions: verifiedProcedure.handler(() =>
     db.select().from(professions)
   ),
 
-  getAllRanges: protectedProcedure.handler(async () => db.select().from(range)),
+  getAllRanges: verifiedProcedure.handler(() => db.select().from(range)),
 
-  getRangeBySlug: protectedProcedure
+  getRangeBySlug: verifiedProcedure
     .input(
       z.object({
         slug: z
           .string()
           .min(1)
-          .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+          .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/u),
       })
     )
     .handler(async ({ input }) => {
@@ -92,9 +88,9 @@ export const skillsRouter = {
       return result ?? null;
     }),
 
-  getSkillsByRange: protectedProcedure
+  getSkillsByRange: verifiedProcedure
     .input(z.object({ rangeId: z.number() }))
-    .handler(async ({ input }) =>
+    .handler(({ input }) =>
       db
         .select({
           addedBy: user.name,

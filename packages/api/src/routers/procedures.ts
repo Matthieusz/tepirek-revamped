@@ -13,7 +13,22 @@ const o = os.$context<RouterContext>();
 
 export const publicProcedure = o;
 
-const requireAuth = o.middleware(async ({ context, next }) => {
+interface SessionAuthorizationState {
+  user: {
+    role?: string | null;
+    verified: boolean;
+  };
+}
+
+export const isVerifiedSession = (
+  session: SessionAuthorizationState | null
+): boolean => session?.user.verified === true;
+
+export const isAdminSession = (
+  session: SessionAuthorizationState | null
+): boolean => isVerifiedSession(session) && session?.user.role === "admin";
+
+const requireAuth = o.middleware(({ context, next }) => {
   if (!context.session?.user) {
     throw new ORPCError("UNAUTHORIZED");
   }
@@ -26,11 +41,34 @@ const requireAuth = o.middleware(async ({ context, next }) => {
 
 export const protectedProcedure = publicProcedure.use(requireAuth);
 
-const requireAdmin = o.middleware(async ({ context, next }) => {
+const requireVerified = o.middleware(({ context, next }) => {
   if (!context.session?.user) {
     throw new ORPCError("UNAUTHORIZED");
   }
-  if (context.session.user.role !== "admin") {
+  if (!isVerifiedSession(context.session)) {
+    throw new ORPCError("FORBIDDEN", {
+      message: "Konto oczekuje na weryfikację",
+    });
+  }
+  return next({
+    context: {
+      session: context.session,
+    },
+  });
+});
+
+export const verifiedProcedure = protectedProcedure.use(requireVerified);
+
+const requireAdmin = o.middleware(({ context, next }) => {
+  if (!context.session?.user) {
+    throw new ORPCError("UNAUTHORIZED");
+  }
+  if (!isVerifiedSession(context.session)) {
+    throw new ORPCError("FORBIDDEN", {
+      message: "Konto oczekuje na weryfikację",
+    });
+  }
+  if (!isAdminSession(context.session)) {
     throw new ORPCError("FORBIDDEN");
   }
   return next({

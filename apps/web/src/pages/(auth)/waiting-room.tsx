@@ -1,7 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { Loader2, LogOut, RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -23,31 +22,19 @@ interface WaitingRoomPageProps {
 export default function WaitingRoomPage({ session }: WaitingRoomPageProps) {
   const router = useRouter();
   const [isValidating, setIsValidating] = useState(false);
+  const hasValidated = useRef(false);
 
-  // Fetch Discord access token
-  const { data: accessToken } = useQuery(
-    orpc.user.getDiscordAccessToken.queryOptions()
-  );
-
-  // Validate Discord guild membership on mount and when access token is available
   useEffect(() => {
     const validateAndRedirect = async () => {
-      if (
-        accessToken === undefined ||
-        accessToken === null ||
-        accessToken === "" ||
-        isValidating
-      ) {
+      if (hasValidated.current || isValidating) {
         return;
       }
 
+      hasValidated.current = true;
       setIsValidating(true);
       try {
-        const result = await orpc.user.validateDiscordGuild.call({
-          accessToken,
-        });
+        const result = await orpc.user.verifyDiscordGuildMembership.call();
         if (result?.valid) {
-          await orpc.user.verifySelf.call();
           await router.invalidate();
           await router.navigate({ to: "/dashboard" });
         }
@@ -62,7 +49,7 @@ export default function WaitingRoomPage({ session }: WaitingRoomPageProps) {
 
     // oxlint-disable-next-line @typescript-eslint/no-floating-promises
     validateAndRedirect();
-  }, [accessToken, isValidating, router]);
+  }, [isValidating, router]);
 
   const handleSignOut = async () => {
     await authClient.signOut({

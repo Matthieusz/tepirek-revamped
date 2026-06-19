@@ -4,14 +4,14 @@ import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { adminProcedure, protectedProcedure } from "./procedures";
+import { adminProcedure, verifiedProcedure } from "./procedures";
 
 export const announcementRouter = {
   create: adminProcedure
     .input(
       z.object({ description: z.string().min(1), title: z.string().min(1) })
     )
-    .handler(async ({ input, context }) =>
+    .handler(({ input, context }) =>
       db.insert(announcement).values({
         createdAt: new Date(),
         description: input.description,
@@ -22,11 +22,11 @@ export const announcementRouter = {
 
   delete: adminProcedure
     .input(z.object({ id: z.number() }))
-    .handler(async ({ input }) =>
+    .handler(({ input }) =>
       db.delete(announcement).where(eq(announcement.id, input.id))
     ),
 
-  getAll: protectedProcedure.handler(async () =>
+  getAll: verifiedProcedure.handler(() =>
     db
       .select({
         createdAt: announcement.createdAt,
