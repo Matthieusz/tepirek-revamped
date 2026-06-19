@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import HistoryPage from "@/pages/dashboard/events/history";
 
 export const Route = createFileRoute("/dashboard/events/history")({
-  component: function component() {
+  component: () => {
     const { session } = Route.useRouteContext();
     return <HistoryPage session={session} />;
   },

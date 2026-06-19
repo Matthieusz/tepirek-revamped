@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import CalculatorUlepaPage from "@/pages/dashboard/calculator/ulepa";
 
 export const Route = createFileRoute("/dashboard/calculator/ulepa")({
-  component: function component() {
+  component: () => {
     const { session } = Route.useRouteContext();
     return <CalculatorUlepaPage session={session} />;
   },
