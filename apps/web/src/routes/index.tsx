@@ -5,11 +5,7 @@ import { Link2, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { orpc } from "@/utils/orpc";
 
-export const Route = createFileRoute("/")({
-  component: HomeComponent,
-});
-
-function HomeComponent() {
+const HomeComponent = () => {
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
 
   let statusText: string;
@@ -108,4 +104,8 @@ function HomeComponent() {
       </main>
     </div>
   );
-}
+};
+
+export const Route = createFileRoute("/")({
+  component: HomeComponent,
+});

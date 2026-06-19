@@ -119,7 +119,7 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
           >
             <SelectTrigger className="w-56">
               <SelectValue>
-                {getEventSelectDisplay({ selectedEventId, events })}
+                {getEventSelectDisplay({ events, selectedEventId })}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>

@@ -229,7 +229,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
           >
             <SelectTrigger className="w-full sm:w-44">
               <SelectValue>
-                {getEventSelectDisplay({ selectedEventId, events })}
+                {getEventSelectDisplay({ events, selectedEventId })}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>

@@ -153,7 +153,7 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
       {/* Event Filter */}
       <div className="flex justify-center">
         <Select
-          onValueChange={async (value) =>
+          onValueChange={(value) =>
             navigate({
               search: {
                 eventId: value === "all" || value === null ? undefined : value,
@@ -165,8 +165,8 @@ export default function EventsVaultPage({ session }: EventsVaultPageProps) {
           <SelectTrigger className="w-56">
             <SelectValue>
               {getEventSelectDisplay({
-                selectedEventId: effectiveEventId,
                 events,
+                selectedEventId: effectiveEventId,
               })}
             </SelectValue>
           </SelectTrigger>

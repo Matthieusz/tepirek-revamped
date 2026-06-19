@@ -56,7 +56,7 @@ const ActionCell = ({ player }: { player: Player }) => {
   const [newName, setNewName] = useState(player.name);
 
   const toggleVerified = useMutation({
-    mutationFn: async () =>
+    mutationFn: () =>
       orpc.user.setVerified.call({
         userId: player.id,
         verified: !player.verified,
@@ -72,7 +72,7 @@ const ActionCell = ({ player }: { player: Player }) => {
     },
   });
   const changeRole = useMutation({
-    mutationFn: async () =>
+    mutationFn: () =>
       orpc.user.setRole.call({
         role: player.role === "admin" ? "user" : "admin",
         userId: player.id,
@@ -88,7 +88,7 @@ const ActionCell = ({ player }: { player: Player }) => {
     },
   });
   const updateName = useMutation({
-    mutationFn: async () =>
+    mutationFn: () =>
       orpc.user.updateUserName.call({
         name: newName,
         userId: player.id,
@@ -105,7 +105,7 @@ const ActionCell = ({ player }: { player: Player }) => {
     },
   });
   const deleteUser = useMutation({
-    mutationFn: async () =>
+    mutationFn: () =>
       orpc.user.deleteUser.call({
         userId: player.id,
       }),

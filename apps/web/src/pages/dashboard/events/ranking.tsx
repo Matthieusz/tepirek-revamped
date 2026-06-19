@@ -68,7 +68,7 @@ const buildRankingContent = (params: {
 
 export { searchSchema };
 
-export function RankingPage({ session }: { session: AuthSession }) {
+export const RankingPage = ({ session }: { session: AuthSession }) => {
   const { eventId, heroId, sortBy } = routeApi.useSearch();
   const navigate = useNavigate({ from: "/dashboard/events/ranking" });
 
@@ -93,9 +93,9 @@ export function RankingPage({ session }: { session: AuthSession }) {
     sortedRanking,
     totalBets,
   } = useRankingData({
+    currentSortBy,
     selectedEventId,
     selectedHeroId,
-    currentSortBy,
   });
 
   const isAdminUser = isAdmin(session);
@@ -136,7 +136,7 @@ export function RankingPage({ session }: { session: AuthSession }) {
           >
             <SelectTrigger className="w-full">
               <SelectValue>
-                {getEventSelectDisplay({ selectedEventId, events })}
+                {getEventSelectDisplay({ events, selectedEventId })}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -226,4 +226,4 @@ export function RankingPage({ session }: { session: AuthSession }) {
       {rankingContent}
     </div>
   );
-}
+};

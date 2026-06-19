@@ -15,8 +15,10 @@ import type { orpc } from "@/utils/orpc";
 
 import appCss from "@/index.css?url";
 
+const showDevtools = import.meta.env.DEV;
+
 const RootDocument = () => (
-  <html className="dark" lang="en" suppressHydrationWarning>
+  <html className="dark" lang="pl" suppressHydrationWarning>
     <head>
       <HeadContent />
     </head>
@@ -25,8 +27,12 @@ const RootDocument = () => (
         <Outlet />
       </div>
       <Toaster richColors />
-      <TanStackRouterDevtools position="bottom-right" />
-      <ReactQueryDevtools buttonPosition="bottom-right" position="bottom" />
+      {showDevtools ? (
+        <>
+          <TanStackRouterDevtools position="bottom-right" />
+          <ReactQueryDevtools buttonPosition="bottom-right" position="bottom" />
+        </>
+      ) : null}
       <Scripts />
     </body>
   </html>
@@ -39,7 +45,7 @@ const RootErrorBoundary = ({
   error: Error;
   reset: () => void;
 }) => (
-  <html className="dark" lang="en">
+  <html className="dark" lang="pl">
     <head>
       <HeadContent />
     </head>
@@ -76,7 +82,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
     ],
     meta: [
       {
-        charSet: "utf8",
+        charSet: "utf-8",
       },
       {
         content: "width=device-width, initial-scale=1",

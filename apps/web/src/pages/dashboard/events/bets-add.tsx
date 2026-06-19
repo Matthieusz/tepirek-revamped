@@ -44,7 +44,7 @@ interface BetsAddPageProps {
   session: AuthSession;
 }
 
-export function BetsAddPage({ session }: BetsAddPageProps) {
+export const BetsAddPage = ({ session }: BetsAddPageProps) => {
   const [selectedEventId, setSelectedEventId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
@@ -118,8 +118,8 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
     },
     {
       meta: {
-        name: "Create Bet",
         description: "Submit the bet creation form",
+        name: "Create Bet",
       },
     }
   );
@@ -493,4 +493,4 @@ export function BetsAddPage({ session }: BetsAddPageProps) {
       </div>
     </div>
   );
-}
+};
