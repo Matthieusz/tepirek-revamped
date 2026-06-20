@@ -2,6 +2,7 @@ import { Coins, User } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatVaultEarnings } from "@/lib/gold";
 
 interface VaultUserCardProps {
   userName: string;
@@ -10,11 +11,6 @@ interface VaultUserCardProps {
   rightSlot?: React.ReactNode;
   className?: string;
 }
-
-const formatEarnings = (totalEarnings: string): string =>
-  (
-    Math.floor(Number.parseFloat(totalEarnings || "0") / 1_000_000) * 1_000_000
-  ).toLocaleString("pl-PL", { maximumFractionDigits: 0 });
 
 export const VaultUserCard = ({
   userName,
@@ -38,7 +34,7 @@ export const VaultUserCard = ({
         <div className="flex items-center gap-2">
           <Coins className="size-4 text-yellow-500" />
           <p className="font-mono font-semibold">
-            {formatEarnings(totalEarnings)}
+            {formatVaultEarnings(totalEarnings)}
           </p>
         </div>
         {rightSlot}
