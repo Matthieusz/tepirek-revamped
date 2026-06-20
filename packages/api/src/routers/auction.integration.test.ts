@@ -1,7 +1,9 @@
 import { ORPCError } from "@orpc/server";
+import { sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import { createVerifiedMember } from "../test/integration/builders";
+import { testDb } from "../test/integration/database";
 import { createAuthenticatedRouterClient } from "../test/integration/router-client";
 
 const paladinMainSlot = {
@@ -59,6 +61,26 @@ describe("auction router Postgres integration", () => {
     await expect(
       client.auction.getSignups({ profession: "paladin", type: "main" })
     ).resolves.toEqual([]);
+  });
+
+  it("keeps auction signup working when the slot unique index is absent", async () => {
+    const member = await createVerifiedMember({ id: "missing-index-member" });
+    const client = createAuthenticatedRouterClient(member);
+
+    await testDb.execute(sql`drop index if exists auction_slot_unique_idx`);
+
+    try {
+      await expect(
+        client.auction.toggleSignup(paladinMainSlot)
+      ).resolves.toEqual({
+        action: "added",
+      });
+    } finally {
+      await testDb.execute(sql`
+        create unique index if not exists auction_slot_unique_idx
+        on auction_signups (profession, type, level, round, "column")
+      `);
+    }
   });
 
   it("prevents a second verified member from taking an occupied auction slot", async () => {

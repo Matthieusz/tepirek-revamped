@@ -138,15 +138,7 @@ export const auctionRouter = {
           type: input.type,
           userId,
         })
-        .onConflictDoNothing({
-          target: [
-            auction.profession,
-            auction.type,
-            auction.level,
-            auction.round,
-            auction.column,
-          ],
-        })
+        .onConflictDoNothing()
         .returning({ id: auction.id });
 
       if (inserted.length === 0) {

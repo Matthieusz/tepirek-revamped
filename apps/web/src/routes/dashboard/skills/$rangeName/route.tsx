@@ -257,7 +257,7 @@ const RangeDetails = () => {
 export const Route = createFileRoute("/dashboard/skills/$rangeName")({
   component: RangeDetails,
   loader: async ({ params }) => {
-    const slug = params["range-name"];
+    const slug = params.rangeName;
     const data = await orpc.skills.getRangeBySlug.call({ slug });
     return { crumb: data?.name ?? slug };
   },
