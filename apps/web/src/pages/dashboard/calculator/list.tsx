@@ -15,140 +15,21 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  MAX_LEVEL,
+  MIN_LEVEL,
+  calculateGroupAttackPenalty,
+  calculateMaxAttackerLevelWithoutPenalty,
+  calculateMinLevelDifference,
+  calculateMinVictimLevelForPenalty,
+  parseLevels,
+  wouldReceivePenalty,
+} from "@/lib/calculators/bounty";
+import type {
+  GroupPenaltyResult,
+  SinglePenaltyResult,
+} from "@/lib/calculators/bounty";
 import type { AuthSession } from "@/types/route";
-
-const MIN_LEVEL = 1;
-const MAX_LEVEL = 500;
-
-/**
- * Base level difference threshold before scaling
- */
-const LEVEL_DIFFERENCE_BASE = 16;
-/**
- * Level at which scaling starts
- */
-const LEVEL_DIFFERENCE_SCALING_START = 100;
-/**
- * Scaling divisor for level difference
- */
-const LEVEL_DIFFERENCE_SCALING_DIVISOR = 5;
-
-/**
- * Group attack formula constants
- */
-const GROUP_ATTACK_STRENGTH_MULTIPLIER = 0.5;
-const GROUP_ATTACK_THRESHOLD_BASE = 15;
-const GROUP_ATTACK_THRESHOLD_MULTIPLIER = 0.1;
-const GROUP_ATTACK_THRESHOLD_OFFSET = 20;
-
-/**
- * Calculates minimum level difference required to avoid penalty points
- * Formula: min_lvl_difference = 16 + max(0, (lvl_player - 100) / 5)
- */
-const calculateMinLevelDifference = (attackerLevel: number): number =>
-  LEVEL_DIFFERENCE_BASE +
-  Math.max(
-    0,
-    (attackerLevel - LEVEL_DIFFERENCE_SCALING_START) /
-      LEVEL_DIFFERENCE_SCALING_DIVISOR
-  );
-
-/**
- * Checks if attacker would receive penalty points for killing a lower level player
- */
-const wouldReceivePenalty = (
-  attackerLevel: number,
-  victimLevel: number
-): boolean => {
-  const minDiff = calculateMinLevelDifference(attackerLevel);
-  const actualDiff = attackerLevel - victimLevel;
-  return actualDiff >= minDiff;
-};
-
-/**
- * Calculates the minimum victim level that would give penalty points
- */
-const calculateMinVictimLevelForPenalty = (attackerLevel: number): number => {
-  const minDiff = calculateMinLevelDifference(attackerLevel);
-  return Math.ceil(attackerLevel - minDiff);
-};
-
-/**
- * Calculates the maximum attacker level that can attack without penalty
- */
-const calculateMaxAttackerLevelWithoutPenalty = (
-  victimLevel: number
-): number => {
-  // We need to find max attackerLevel where:
-  // attackerLevel - victimLevel < 16 + max(0, (attackerLevel - 100) / 5)
-  // This requires solving iteratively since attackerLevel appears on both sides
-  let maxLevel = victimLevel;
-  for (let lvl = victimLevel; lvl <= MAX_LEVEL; lvl += 1) {
-    const minDiff = calculateMinLevelDifference(lvl);
-    if (lvl - victimLevel < minDiff) {
-      maxLevel = lvl;
-    } else {
-      break;
-    }
-  }
-  return maxLevel;
-};
-
-/**
- * Calculates group attack penalty check
- * Formula: 0.5 * (max_lvl_attackers + avg_lvl_attackers) - avg_lvl_defenders > 15 + max(0, 0.1 * (max_lvl_attackers + avg_lvl_attackers) - 20)
- */
-const calculateGroupAttackPenalty = (
-  attackerLevels: number[],
-  defenderLevels: number[]
-): {
-  maxAttackerLevel: number;
-  avgAttackerLevel: number;
-  avgDefenderLevel: number;
-  attackerStrength: number;
-  threshold: number;
-  difference: number;
-  wouldReceivePenalty: boolean;
-} => {
-  const maxAttackerLevel = Math.max(...attackerLevels);
-  const avgAttackerLevel =
-    attackerLevels.reduce((sum, lvl) => sum + lvl, 0) / attackerLevels.length;
-  const avgDefenderLevel =
-    defenderLevels.reduce((sum, lvl) => sum + lvl, 0) / defenderLevels.length;
-
-  // Left side of inequality: 0.5 * (max + avg_attackers) - avg_defenders
-  const attackerStrength = maxAttackerLevel + avgAttackerLevel;
-  const difference =
-    GROUP_ATTACK_STRENGTH_MULTIPLIER * attackerStrength - avgDefenderLevel;
-
-  // Right side of inequality: 15 + max(0, 0.1 * (max + avg_attackers) - 20)
-  const threshold =
-    GROUP_ATTACK_THRESHOLD_BASE +
-    Math.max(
-      0,
-      GROUP_ATTACK_THRESHOLD_MULTIPLIER * attackerStrength -
-        GROUP_ATTACK_THRESHOLD_OFFSET
-    );
-
-  return {
-    attackerStrength,
-    avgAttackerLevel,
-    avgDefenderLevel,
-    difference,
-    maxAttackerLevel,
-    threshold,
-    wouldReceivePenalty: difference > threshold,
-  };
-};
-
-/**
- * Parse comma-separated levels string into array of numbers
- */
-const parseLevels = (input: string): number[] =>
-  input
-    .split(",")
-    .map((s) => Number.parseInt(s.trim(), 10))
-    .filter((n) => !Number.isNaN(n) && n >= MIN_LEVEL && n <= MAX_LEVEL);
 
 const formSchema = z.object({
   attackerLevel: z
@@ -185,34 +66,12 @@ type AnyForm = ReactFormExtendedApi<
   unknown
 >;
 
-interface SingleResult {
-  actualDifference: number;
-  attackerLevel: number;
-  maxAttackerWithoutPenalty: number;
-  minLevelDifference: number;
-  minVictimLevelForPenalty: number;
-  victimLevel: number;
-  wouldReceivePenalty: boolean;
-}
-
-interface GroupResultT {
-  attackerLevels: number[];
-  defenderLevels: number[];
-  maxAttackerLevel: number;
-  avgAttackerLevel: number;
-  avgDefenderLevel: number;
-  attackerStrength: number;
-  threshold: number;
-  difference: number;
-  wouldReceivePenalty: boolean;
-}
-
 const SingleMode = ({
   form,
   result,
 }: {
   form: AnyForm;
-  result: SingleResult | null;
+  result: SinglePenaltyResult | null;
 }) => (
   <>
     <div className="rounded-xl border border-border bg-card">
@@ -411,7 +270,7 @@ const GroupMode = ({
   result,
 }: {
   form: AnyForm;
-  result: GroupResultT | null;
+  result: GroupPenaltyResult | null;
 }) => (
   <>
     <div className="rounded-xl border border-border bg-card">
@@ -651,27 +510,11 @@ interface CalculatorListPageProps {
 export default function CalculatorListPage(_props: CalculatorListPageProps) {
   const [mode, setMode] = useState<"single" | "group">("single");
 
-  const [result, setResult] = useState<{
-    attackerLevel: number;
-    victimLevel: number;
-    minLevelDifference: number;
-    actualDifference: number;
-    wouldReceivePenalty: boolean;
-    minVictimLevelForPenalty: number;
-    maxAttackerWithoutPenalty: number;
-  } | null>(null);
+  const [result, setResult] = useState<SinglePenaltyResult | null>(null);
 
-  const [groupResult, setGroupResult] = useState<{
-    attackerLevels: number[];
-    defenderLevels: number[];
-    maxAttackerLevel: number;
-    avgAttackerLevel: number;
-    avgDefenderLevel: number;
-    attackerStrength: number;
-    threshold: number;
-    difference: number;
-    wouldReceivePenalty: boolean;
-  } | null>(null);
+  const [groupResult, setGroupResult] = useState<GroupPenaltyResult | null>(
+    null
+  );
 
   const form = useForm({
     defaultValues: {
