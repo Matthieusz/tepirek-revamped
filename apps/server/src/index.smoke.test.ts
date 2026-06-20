@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+process.env.BETTER_AUTH_SECRET = "test-secret";
+process.env.BETTER_AUTH_URL = "http://localhost:3000";
 process.env.CORS_ORIGIN = "http://localhost:3001";
+process.env.DATABASE_URL =
+  "postgresql://postgres:password@localhost:5433/tepirek-revamped-test";
+process.env.DISCORD_CLIENT_ID = "test-discord-client-id";
+process.env.DISCORD_CLIENT_SECRET = "test-discord-client-secret";
 
 const importApp = async () => {
   const module = await import("./index");
