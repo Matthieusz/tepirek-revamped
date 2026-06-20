@@ -1,5 +1,6 @@
 export {
   auctionProfessionSchema,
+  auctionSlotCoordinateSchema,
   auctionTypeSchema,
   eventIconIdSchema,
   roleSchema,

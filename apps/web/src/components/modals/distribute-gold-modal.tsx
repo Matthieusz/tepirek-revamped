@@ -10,10 +10,6 @@ import {
   getEventSelectDisplay,
   getHeroSelectDisplay,
 } from "@/components/events/select-display";
-import {
-  EventSelectItems,
-  HeroSelectItems,
-} from "@/components/events/select-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,12 +22,6 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/errors";
 import { orpc } from "@/utils/orpc";
 
@@ -153,9 +143,7 @@ export const DistributeGoldModal = ({
 
   const { data: events } = useQuery(orpc.event.getAll.queryOptions());
 
-  const { data: heroes, isPending: heroesLoading } = useQuery(
-    orpc.heroes.getAll.queryOptions()
-  );
+  const { data: heroes } = useQuery(orpc.heroes.getAll.queryOptions());
 
   const filteredHeroes = (
     selectedEventId === "all"
@@ -244,52 +232,24 @@ export const DistributeGoldModal = ({
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
           <div className="grid gap-4 py-4">
-            {/* Event Select */}
+            {/* Event (read-only — distribution follows the ranking filter) */}
             <div className="grid gap-1.5">
               <Label>Event</Label>
-              <Select
-                onValueChange={() => {
-                  /* controlled by parent */
-                }}
-                value={selectedEventId}
-              >
-                <SelectTrigger>
-                  <SelectValue>
-                    {getModalEventSelectDisplay({ selectedEventId, events })}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <EventSelectItems events={events} />
-                </SelectContent>
-              </Select>
+              <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted/40 px-3 text-sm">
+                {getModalEventSelectDisplay({ selectedEventId, events })}
+              </div>
             </div>
 
-            {/* Hero Select */}
+            {/* Hero (read-only — distribution follows the ranking filter) */}
             <div className="grid gap-1.5">
               <Label>Heros</Label>
-              <Select
-                onValueChange={() => {
-                  /* controlled by parent */
-                }}
-                value={selectedHeroId}
-              >
-                <SelectTrigger>
-                  <SelectValue>
-                    {getModalHeroSelectDisplay({
-                      selectedEventId,
-                      selectedHeroId,
-                      heroes: filteredHeroes,
-                    })}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <HeroSelectItems
-                    allLabel="Wybierz herosa..."
-                    heroesLoading={heroesLoading}
-                    sortedHeroes={filteredHeroes}
-                  />
-                </SelectContent>
-              </Select>
+              <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted/40 px-3 text-sm">
+                {getModalHeroSelectDisplay({
+                  selectedEventId,
+                  selectedHeroId,
+                  heroes: filteredHeroes,
+                })}
+              </div>
             </div>
 
             {/* Hero Stats Preview */}

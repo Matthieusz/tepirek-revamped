@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { VaultUserCard } from "@/components/vault-user-card";
 import { getErrorMessage } from "@/lib/errors";
+import { ALL_FILTER, toQueryInput } from "@/lib/event-hero-filter";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 import { orpc } from "@/utils/orpc";
@@ -67,16 +68,14 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
     }
   }, [oldestUnpaidEventId, oldestUnpaidLoading, urlEventId, navigate]);
 
-  const effectiveEventId = urlEventId ?? "all";
+  const effectiveEventId = urlEventId ?? ALL_FILTER;
   const hasInitialized = hasInitializedRef.current;
+  const eventQueryInput = toQueryInput(effectiveEventId);
 
   const { data: vault, isPending: vaultLoading } = useQuery({
     ...orpc.vault.getVault.queryOptions({
       input: {
-        eventId:
-          effectiveEventId === "all"
-            ? undefined
-            : Number.parseInt(effectiveEventId, 10),
+        eventId: eventQueryInput,
       },
     }),
     enabled: hasInitialized,
@@ -91,10 +90,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
       paidOut: boolean;
     }) => {
       await orpc.vault.togglePaidOut.call({
-        eventId:
-          effectiveEventId === "all"
-            ? undefined
-            : Number.parseInt(effectiveEventId, 10),
+        eventId: eventQueryInput,
         paidOut,
         userId,
       });
@@ -106,10 +102,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
       await queryClient.invalidateQueries({
         queryKey: orpc.vault.getVault.queryKey({
           input: {
-            eventId:
-              effectiveEventId === "all"
-                ? undefined
-                : Number.parseInt(effectiveEventId, 10),
+            eventId: eventQueryInput,
           },
         }),
       });
@@ -141,7 +134,8 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
           onValueChange={(value) =>
             navigate({
               search: {
-                eventId: value === "all" || value === null ? undefined : value,
+                eventId:
+                  value === ALL_FILTER || value === null ? undefined : value,
               },
             })
           }

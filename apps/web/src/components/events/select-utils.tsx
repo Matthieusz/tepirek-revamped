@@ -2,6 +2,7 @@ import { Loader2 } from "lucide-react";
 
 import { SelectItem } from "@/components/ui/select";
 import { getEventIcon } from "@/lib/constants";
+import { sortEventsByEndTimeDesc } from "@/lib/event-hero-filter";
 
 export interface EventSelectOption {
   id: number;
@@ -16,26 +17,6 @@ export interface HeroSelectOption {
   name: string;
   level?: number;
 }
-
-const toEventTimestamp = (eventEndTime: Date | string | undefined): number => {
-  if (eventEndTime === undefined) {
-    return Number.NEGATIVE_INFINITY;
-  }
-
-  const timestamp = new Date(eventEndTime).getTime();
-  if (Number.isNaN(timestamp)) {
-    return Number.NEGATIVE_INFINITY;
-  }
-
-  return timestamp;
-};
-
-const sortEventsByEndTimeDesc = (
-  events: EventSelectOption[] | undefined
-): EventSelectOption[] =>
-  [...(events ?? [])].toSorted(
-    (a, b) => toEventTimestamp(b.endTime) - toEventTimestamp(a.endTime)
-  );
 
 interface EventSelectItemsProps {
   events: EventSelectOption[] | undefined;
