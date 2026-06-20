@@ -14,6 +14,21 @@ jobs:
     name: Verify
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: tepirek_revamped_test
+          POSTGRES_PASSWORD: password
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,5 +55,10 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: API integration tests
+        run: pnpm test:integration
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/tepirek_revamped_test
 
       # build intentionally excluded until production env requirements are documented for CI.

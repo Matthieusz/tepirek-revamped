@@ -15,6 +15,7 @@
     "build": "turbo build",
     "check-types": "turbo check-types",
     "test": "turbo test",
+    "test:integration": "turbo -F @tepirek-revamped/api test:integration",
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",

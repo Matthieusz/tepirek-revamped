@@ -110,6 +110,7 @@ pnpm db:start && pnpm db:push && pnpm dev
    ```env
    # Database
    DATABASE_URL=postgresql://user:password@localhost:5432/tepirek
+   TEST_DATABASE_URL=postgresql://user:password@localhost:5432/tepirek_test
 
    # Auth
    BETTER_AUTH_SECRET=your-secret-key-here
@@ -142,15 +143,17 @@ pnpm db:start && pnpm db:push && pnpm dev
 
 ## 📜 Commands
 
-| Command            | What it does                        |
-| ------------------ | ----------------------------------- |
-| `pnpm dev`         | Start everything in dev mode        |
-| `pnpm dev:web`     | Frontend only                       |
-| `pnpm dev:server`  | Backend only                        |
-| `pnpm build`       | Build everything for production     |
-| `pnpm check`       | Run Ultracite (lint + format check) |
-| `pnpm fix`         | Auto-fix lint and format issues     |
-| `pnpm check-types` | TypeScript type checking            |
+| Command                 | What it does                                                 |
+| ----------------------- | ------------------------------------------------------------ |
+| `pnpm dev`              | Start everything in dev mode                                 |
+| `pnpm dev:web`          | Frontend only                                                |
+| `pnpm dev:server`       | Backend only                                                 |
+| `pnpm build`            | Build everything for production                              |
+| `pnpm check`            | Run Ultracite (lint + format check)                          |
+| `pnpm fix`              | Auto-fix lint and format issues                              |
+| `pnpm check-types`      | TypeScript type checking                                     |
+| `pnpm test`             | Run unit tests                                               |
+| `pnpm test:integration` | Run API/router integration tests against `TEST_DATABASE_URL` |
 
 ### Database
 

@@ -1,4 +1,5 @@
 import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 
 import { announcement } from "./schema/announcement";
 import { auction } from "./schema/auction";
@@ -8,7 +9,11 @@ import { event } from "./schema/event";
 import { skills } from "./schema/skills";
 import { todo } from "./schema/todo";
 
-export const db = drizzle(process.env.DATABASE_URL ?? "", {
+export const dbPool = new Pool({
+  connectionString: process.env.DATABASE_URL ?? "",
+});
+
+export const db = drizzle(dbPool, {
   schema: {
     ...auth,
     ...todo,
