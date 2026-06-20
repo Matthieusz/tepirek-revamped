@@ -1,4 +1,6 @@
 import { user } from "@tepirek-revamped/db/schema/auth";
+import { hero } from "@tepirek-revamped/db/schema/bet";
+import { event } from "@tepirek-revamped/db/schema/event";
 
 import { testDb } from "./database";
 
@@ -71,3 +73,55 @@ export const createVerifiedMember = (overrides: TestUserOverrides = {}) =>
 
 export const createAdmin = (overrides: TestUserOverrides = {}) =>
   createTestUser({ ...overrides, role: "admin", verified: true });
+
+interface TestEventOverrides {
+  color?: string;
+  endTime?: Date;
+  icon?: string;
+  name?: string;
+}
+
+interface TestHeroOverrides {
+  eventId?: number;
+  image?: string | null;
+  level?: number;
+  name?: string;
+}
+
+export const createEvent = async ({
+  color = "#22c55e",
+  endTime = new Date("2030-01-02T03:04:05.000Z"),
+  icon = "calendar",
+  name = "Test Event",
+}: TestEventOverrides = {}) => {
+  const [createdEvent] = await testDb
+    .insert(event)
+    .values({ color, endTime, icon, name })
+    .returning();
+
+  if (!createdEvent) {
+    throw new Error("Failed to create test event");
+  }
+
+  return createdEvent;
+};
+
+export const createHero = async ({
+  eventId,
+  image = null,
+  level = 100,
+  name = "Test Hero",
+}: TestHeroOverrides = {}) => {
+  const createdEvent = eventId === undefined ? await createEvent() : null;
+  const resolvedEventId = eventId ?? createdEvent?.id;
+  const [createdHero] = await testDb
+    .insert(hero)
+    .values({ eventId: resolvedEventId, image, level, name })
+    .returning();
+
+  if (!createdHero) {
+    throw new Error("Failed to create test hero");
+  }
+
+  return createdHero;
+};
