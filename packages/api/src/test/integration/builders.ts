@@ -112,8 +112,13 @@ export const createHero = async ({
   level = 100,
   name = "Test Hero",
 }: TestHeroOverrides = {}) => {
-  const createdEvent = eventId === undefined ? await createEvent() : null;
-  const resolvedEventId = eventId ?? createdEvent?.id;
+  let resolvedEventId = eventId;
+
+  if (resolvedEventId === undefined) {
+    const createdEvent = await createEvent();
+    resolvedEventId = createdEvent.id;
+  }
+
   const [createdHero] = await testDb
     .insert(hero)
     .values({ eventId: resolvedEventId, image, level, name })
