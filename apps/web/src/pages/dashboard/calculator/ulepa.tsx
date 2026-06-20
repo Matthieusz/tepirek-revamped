@@ -21,34 +21,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  ULEPA_DEFAULT_ITEM_LEVEL,
+  ULEPA_RARITIES,
+  calculateUpgradeSummary,
+  formatGold,
+} from "@/lib/calculators/ulepa";
+import type { UlepaRarity } from "@/lib/calculators/ulepa";
 import type { AuthSession } from "@/types/route";
 
-type Rarity = "zwykły" | "unikatowy" | "heroiczny" | "ulepszony" | "legendarny";
+type Rarity = UlepaRarity;
 
-interface RarityFactor {
-  upgradeRarityFactor: number;
-  upgradeGoldFactor: number;
-}
-
-/**
- * Game constants for upgrade calculations
- * Values are derived from game mechanics
- */
-const GAME_CONSTANTS = {
-  DEFAULT_ITEM_LEVEL: 280,
-  ENHANCED_BASE_COST: 27_000,
-  ENHANCED_LEVEL_MULTIPLIER: 150,
-  EXTRACTION_RATE: 0.75,
-  STANDARD_BASE_COST: 180,
-} as const;
-
-const rarityFactors: Record<Rarity, RarityFactor> = {
-  heroiczny: { upgradeGoldFactor: 30, upgradeRarityFactor: 100 },
-  legendarny: { upgradeGoldFactor: 60, upgradeRarityFactor: 1000 },
-  ulepszony: { upgradeGoldFactor: 40, upgradeRarityFactor: -1 },
-  unikatowy: { upgradeGoldFactor: 10, upgradeRarityFactor: 10 },
-  zwykły: { upgradeGoldFactor: 1, upgradeRarityFactor: 1 },
-};
+const MIN_LEVEL = 1;
+const MAX_LEVEL = 300;
 
 const rarityColors: Record<Rarity, string> = {
   heroiczny: "text-blue-500",
@@ -66,37 +51,6 @@ const rarityBgColors: Record<Rarity, string> = {
   zwykły: "bg-gray-500/10 border-gray-500/20",
 };
 
-/** Multipliers for each upgrade level (1-5) - index 0 is unused */
-const UPGRADE_LEVEL_FACTORS = [0, 1, 2.1, 3.4, 5, 7] as const;
-
-const MIN_LEVEL = 1;
-const MAX_LEVEL = 300;
-
-const clampLevel = (n: number): number => {
-  const v = Math.trunc(n);
-  if (Number.isNaN(v)) {
-    return MIN_LEVEL;
-  }
-  return Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, v));
-};
-
-/**
- * Formats gold amount in compact notation
- */
-const formatGold = (amount: number): string => {
-  const value = Math.floor(amount);
-  if (value >= 1_000_000_000) {
-    return `${(value / 1_000_000_000).toLocaleString("pl-PL", { maximumFractionDigits: 1 })}mld`;
-  }
-  if (value >= 1_000_000) {
-    return `${(value / 1_000_000).toLocaleString("pl-PL", { maximumFractionDigits: 1 })}m`;
-  }
-  if (value >= 1000) {
-    return `${(value / 1000).toLocaleString("pl-PL", { maximumFractionDigits: 1 })}k`;
-  }
-  return value.toLocaleString("pl-PL");
-};
-
 const formSchema = z.object({
   itemLevel: z
     .number()
@@ -111,46 +65,6 @@ const formSchema = z.object({
     "legendarny",
   ]),
 });
-
-const GOLD_COST_LEVEL_MULTIPLIER = 10;
-const GOLD_COST_LEVEL_ADDEND = 1300;
-const EXTRACTION_GOLD_PER_POINT = 60;
-
-const calculateUpgradePoints = (lvl: number, rarity: Rarity): number[] => {
-  const level = clampLevel(lvl);
-  const factors = rarityFactors[rarity];
-  if (!factors) {
-    throw new Error("Nieznana rzadkość przedmiotu");
-  }
-
-  const upgradeCosts: number[] = [];
-
-  for (let n = 1; n <= 5; n += 1) {
-    const cost =
-      rarity === "ulepszony"
-        ? UPGRADE_LEVEL_FACTORS[n] *
-          (GAME_CONSTANTS.ENHANCED_LEVEL_MULTIPLIER * level +
-            GAME_CONSTANTS.ENHANCED_BASE_COST)
-        : factors.upgradeRarityFactor *
-          UPGRADE_LEVEL_FACTORS[n] *
-          (GAME_CONSTANTS.STANDARD_BASE_COST + level);
-    upgradeCosts.push(cost);
-  }
-
-  return upgradeCosts;
-};
-
-const calculateDifferentialCosts = (upgradeCosts: number[]): number[] => {
-  const differentialCosts: number[] = [];
-  for (let i = 0; i < upgradeCosts.length; i += 1) {
-    if (i === 0) {
-      differentialCosts.push(upgradeCosts[i]);
-    } else {
-      differentialCosts.push(upgradeCosts[i] - upgradeCosts[i - 1]);
-    }
-  }
-  return differentialCosts;
-};
 
 interface CalculatorUlepaPageProps {
   session: AuthSession;
@@ -295,37 +209,18 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
 
   const form = useForm({
     defaultValues: {
-      itemLevel: GAME_CONSTANTS.DEFAULT_ITEM_LEVEL,
+      itemLevel: ULEPA_DEFAULT_ITEM_LEVEL,
       itemRarity: "legendarny",
     } satisfies z.infer<typeof formSchema>,
     onSubmit: ({ value }) => {
-      const upgradeCosts = calculateUpgradePoints(
+      const summary = calculateUpgradeSummary(
         value.itemLevel,
         value.itemRarity
       );
-      const differentialCosts = calculateDifferentialCosts(upgradeCosts);
-      const totalUpgradeCost = differentialCosts.reduce(
-        (sum, cost) => sum + cost,
-        0
-      );
-      const total75Percent = totalUpgradeCost * GAME_CONSTANTS.EXTRACTION_RATE;
-      // Gold cost for upgrading to +5: (10 * lvl + 1300) * lvl * upgrade_gold_factor
-      const upgradeGoldCost =
-        (GOLD_COST_LEVEL_MULTIPLIER * value.itemLevel +
-          GOLD_COST_LEVEL_ADDEND) *
-        value.itemLevel *
-        rarityFactors[value.itemRarity].upgradeGoldFactor;
-      // Extraction gold cost: 60 * total_upgrade_points (based on 100% points invested)
-      const extractionGoldCost = EXTRACTION_GOLD_PER_POINT * totalUpgradeCost;
       setResult({
-        cumulativeCosts: upgradeCosts,
-        differentialCosts,
-        extractionGoldCost,
+        ...summary,
         itemLevel: value.itemLevel,
         itemRarity: value.itemRarity,
-        total75Percent,
-        totalUpgradeCost,
-        upgradeGoldCost,
       });
     },
   });
@@ -423,18 +318,15 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
                         <SelectValue placeholder="Wybierz rzadkość" />
                       </SelectTrigger>
                       <SelectContent>
-                        {(Object.keys(rarityFactors) as Rarity[]).map(
-                          (rarity) => (
-                            <SelectItem key={rarity} value={rarity}>
-                              <span
-                                className={`font-medium ${rarityColors[rarity]}`}
-                              >
-                                {rarity.charAt(0).toUpperCase() +
-                                  rarity.slice(1)}
-                              </span>
-                            </SelectItem>
-                          )
-                        )}
+                        {ULEPA_RARITIES.map((rarity) => (
+                          <SelectItem key={rarity} value={rarity}>
+                            <span
+                              className={`font-medium ${rarityColors[rarity]}`}
+                            >
+                              {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
+                            </span>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     {field.state.meta.errors.length > 0 && (

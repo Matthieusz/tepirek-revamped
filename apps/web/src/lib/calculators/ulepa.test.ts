@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ULEPA_DEFAULT_ITEM_LEVEL,
+  ULEPA_RARITIES,
   calculateDifferentialCosts,
   calculateUpgradePoints,
   calculateUpgradeSummary,
@@ -53,5 +55,19 @@ describe("ulepa calculator", () => {
     expect(formatGold(1000)).toBe("1k");
     expect(formatGold(1_000_000)).toBe("1m");
     expect(formatGold(1_000_000_000)).toBe("1mld");
+  });
+
+  it("exposes the rarity set in display order", () => {
+    expect(ULEPA_RARITIES).toEqual([
+      "heroiczny",
+      "legendarny",
+      "ulepszony",
+      "unikatowy",
+      "zwykły",
+    ]);
+  });
+
+  it("exposes the default item level used by the form", () => {
+    expect(ULEPA_DEFAULT_ITEM_LEVEL).toBe(280);
   });
 });

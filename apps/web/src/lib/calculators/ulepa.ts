@@ -5,6 +5,22 @@ export type UlepaRarity =
   | "ulepszony"
   | "legendarny";
 
+/**
+ * Rarities in display order, used by the calculator page's rarity select.
+ */
+export const ULEPA_RARITIES: readonly UlepaRarity[] = [
+  "heroiczny",
+  "legendarny",
+  "ulepszony",
+  "unikatowy",
+  "zwykły",
+] as const;
+
+/**
+ * Default item level pre-filled in the calculator form.
+ */
+export const ULEPA_DEFAULT_ITEM_LEVEL = 280;
+
 interface RarityFactor {
   upgradeRarityFactor: number;
   upgradeGoldFactor: number;
