@@ -4,9 +4,8 @@ import type { RankingItem } from "@/components/events/ranking-list";
 import { orpc } from "@/utils/orpc";
 
 interface UseRankingDataParams {
-  selectedEventId: string;
-  selectedHeroId: string;
   currentSortBy: "points" | "bets" | "gold";
+  queryInputs: { eventId: number | undefined; heroId: number | undefined };
 }
 
 const sortRanking = (
@@ -37,48 +36,26 @@ const sortRanking = (
 };
 
 export const useRankingData = ({
-  selectedEventId,
-  selectedHeroId,
   currentSortBy,
+  queryInputs,
 }: UseRankingDataParams) => {
-  const { data: events } = useQuery(orpc.event.getAll.queryOptions());
-
-  const { data: heroes, isPending: heroesLoading } = useQuery({
-    ...orpc.heroes.getByEventId.queryOptions({
-      input: { eventId: Number(selectedEventId) },
-    }),
-    enabled: selectedEventId !== "all",
-  });
-
   const { data: rankingData, isPending: rankingLoading } = useQuery({
     ...orpc.ranking.getRanking.queryOptions({
       input: {
-        eventId:
-          selectedEventId === "all"
-            ? undefined
-            : Number.parseInt(selectedEventId, 10),
-        heroId:
-          selectedHeroId === "all"
-            ? undefined
-            : Number.parseInt(selectedHeroId, 10),
+        eventId: queryInputs.eventId,
+        heroId: queryInputs.heroId,
       },
     }),
   });
 
-  const sortedHeroes = [...(heroes ?? [])].toSorted(
-    (a, b) => a.level - b.level
-  );
   const sortedRanking = sortRanking(
     rankingData?.ranking as RankingItem[] | undefined,
     currentSortBy
   );
 
   return {
-    events,
-    heroesLoading,
     pointWorth: rankingData?.pointWorth ?? null,
     rankingLoading,
-    sortedHeroes,
     sortedRanking,
     totalBets: rankingData?.totalBets ?? 0,
   };

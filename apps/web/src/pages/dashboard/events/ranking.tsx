@@ -24,18 +24,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useFilterPersistence } from "@/hooks/use-filter-persistence";
+import { useEventHeroFilter } from "@/hooks/use-event-hero-filter";
 import { useRankingData } from "@/hooks/use-ranking-data";
+import { ALL_FILTER } from "@/lib/event-hero-filter";
 import { isAdmin } from "@/lib/route-helpers";
+import { useFilterPersistence } from "@/lib/use-filter-persistence";
 import type { AuthSession } from "@/types/route";
 
 const routeApi = getRouteApi("/dashboard/events/ranking");
 
 type RankingSort = "points" | "bets" | "gold";
 
-interface RankingFilters extends Record<string, unknown> {
-  eventId?: string;
-  heroId?: string;
+interface SortFilters extends Record<string, unknown> {
   sortBy?: RankingSort;
 }
 
@@ -60,33 +60,30 @@ const buildRankingContent = (params: {
 };
 
 export const RankingPage = ({ session }: { session: AuthSession }) => {
-  const { eventId, heroId, sortBy } = routeApi.useSearch();
+  const { sortBy } = routeApi.useSearch();
   const navigate = useNavigate({ from: "/dashboard/events/ranking" });
 
-  const [persistedFilters, updatePersistedFilters] =
-    useFilterPersistence<RankingFilters>("ranking-filters", {
-      eventId: undefined,
-      heroId: undefined,
+  const [persistedSort, updatePersistedSort] =
+    useFilterPersistence<SortFilters>("ranking-sort", {
       sortBy: undefined,
     });
 
-  const selectedEventId = eventId ?? persistedFilters.eventId ?? "all";
-  const selectedHeroId = heroId ?? persistedFilters.heroId ?? "all";
-  const currentSortBy: RankingSort =
-    sortBy ?? persistedFilters.sortBy ?? "points";
+  const currentSortBy: RankingSort = sortBy ?? persistedSort.sortBy ?? "points";
+
+  const filter = useEventHeroFilter({
+    persistenceKey: "ranking-filters",
+    routeId: "/dashboard/events/ranking",
+  });
 
   const {
-    events,
     heroesLoading,
     pointWorth,
     rankingLoading,
-    sortedHeroes,
     sortedRanking,
     totalBets,
   } = useRankingData({
     currentSortBy,
-    selectedEventId,
-    selectedHeroId,
+    queryInputs: filter.queryInputs,
   });
 
   const isAdminUser = isAdmin(session);
@@ -95,14 +92,14 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
     sortedRanking,
   });
 
-  const navigateWithPersist = useCallback(
-    (updates: Partial<RankingFilters>) => {
-      updatePersistedFilters(updates);
+  const navigateSortWithPersist = useCallback(
+    (updates: Partial<SortFilters>) => {
+      updatePersistedSort(updates);
       navigate({
         search: (prev) => ({ ...prev, ...updates }),
       });
     },
-    [navigate, updatePersistedFilters]
+    [navigate, updatePersistedSort]
   );
 
   return (
@@ -118,46 +115,44 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
           {/* Event Select */}
           <Select
             onValueChange={(value) => {
-              navigateWithPersist({
-                eventId: value === "all" || value === null ? undefined : value,
-                heroId: undefined,
-              });
+              filter.selectEvent(value);
             }}
-            value={selectedEventId}
+            value={filter.state.eventId}
           >
             <SelectTrigger className="w-full">
               <SelectValue>
-                {getEventSelectDisplay({ events, selectedEventId })}
+                {getEventSelectDisplay({
+                  events: filter.events,
+                  selectedEventId: filter.state.eventId,
+                })}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <EventSelectItems events={events} />
+              <EventSelectItems events={filter.events} />
             </SelectContent>
           </Select>
 
           {/* Hero Select */}
           <Select
-            disabled={selectedEventId === "all"}
+            disabled={!filter.heroQueryEnabled}
             onValueChange={(value) => {
-              navigateWithPersist({
-                heroId: value === "all" || value === null ? undefined : value,
-              });
+              filter.selectHero(value);
             }}
-            value={selectedEventId === "all" ? "" : selectedHeroId}
+            value={filter.heroQueryEnabled ? filter.state.heroId : ""}
           >
             <SelectTrigger className="w-full">
               <SelectValue>
                 {getHeroSelectDisplay({
-                  selectedEventId,
-                  selectedHeroId,
-                  sortedHeroes,
+                  selectedEventId: filter.state.eventId,
+                  selectedHeroId: filter.state.heroId,
+                  sortedHeroes: filter.sortedHeroes,
                 })}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <HeroSelectItems
                 heroesLoading={heroesLoading}
-                sortedHeroes={sortedHeroes}
+                sortedHeroes={filter.sortedHeroes}
               />
             </SelectContent>
           </Select>
@@ -166,12 +161,12 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
         {/* Sort Buttons with Gold Distribution */}
         <div className="flex items-center justify-center gap-1 sm:justify-start">
           {/* Stats Popover */}
-          {selectedHeroId !== "all" && (
+          {filter.state.heroId !== ALL_FILTER && (
             <StatsPopover pointWorth={pointWorth} totalBets={totalBets} />
           )}
           <Button
             onClick={() => {
-              navigateWithPersist({ sortBy: undefined });
+              navigateSortWithPersist({ sortBy: undefined });
             }}
             size="sm"
             variant={currentSortBy === "points" ? "secondary" : "ghost"}
@@ -180,7 +175,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
           </Button>
           <Button
             onClick={() => {
-              navigateWithPersist({ sortBy: "bets" });
+              navigateSortWithPersist({ sortBy: "bets" });
             }}
             size="sm"
             variant={currentSortBy === "bets" ? "secondary" : "ghost"}
@@ -190,7 +185,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
           <Button
             className={currentSortBy === "gold" ? "border border-primary" : ""}
             onClick={() => {
-              navigateWithPersist({ sortBy: "gold" });
+              navigateSortWithPersist({ sortBy: "gold" });
             }}
             size="sm"
             variant={currentSortBy === "gold" ? "outline" : "ghost"}
@@ -201,8 +196,8 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
           {/* Gold Distribution Button - Admin Only */}
           {isAdminUser && (
             <DistributeGoldModal
-              selectedEventId={selectedEventId}
-              selectedHeroId={selectedHeroId}
+              selectedEventId={filter.state.eventId}
+              selectedHeroId={filter.state.heroId}
               trigger={
                 <Button className="ml-1 shrink-0" size="icon" variant="outline">
                   <Coins className="size-4 text-muted-foreground" />

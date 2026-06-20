@@ -1,12 +1,10 @@
 import {
   useInfiniteQuery,
   useMutation,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useNavigate, useSearch } from "@tanstack/react-router";
 import { History, Loader2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
@@ -38,9 +36,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useFilterPersistence } from "@/hooks/use-filter-persistence";
+import { useEventHeroFilter } from "@/hooks/use-event-hero-filter";
 import { calculatePointsPerMember } from "@/lib/bet-helpers";
 import { getErrorMessage } from "@/lib/errors";
+import { ALL_FILTER } from "@/lib/event-hero-filter";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import type { AuthSession } from "@/types/route";
@@ -53,11 +52,6 @@ type BetToDelete = {
 
 const ITEMS_PER_PAGE = 10;
 
-interface HistoryFilters extends Record<string, unknown> {
-  eventId?: string;
-  heroId?: string;
-}
-
 type PaginatedBetsResponse = Awaited<
   ReturnType<typeof orpc.bet.getAllPaginated.call>
 >;
@@ -67,42 +61,15 @@ interface HistoryPageProps {
 }
 
 export default function HistoryPage({ session }: HistoryPageProps) {
-  const { eventId, heroId } = useSearch({
-    from: "/dashboard/events/history",
-  });
-  const navigate = useNavigate({ from: "/dashboard/events/history" });
   const [betToDelete, setBetToDelete] = useState<BetToDelete>(null);
 
-  const [persistedFilters, updatePersistedFilters] =
-    useFilterPersistence<HistoryFilters>("history-filters", {
-      eventId: undefined,
-      heroId: undefined,
-    });
+  const filter = useEventHeroFilter({
+    persistenceKey: "history-filters",
+    routeId: "/dashboard/events/history",
+  });
 
-  const selectedEventId = eventId ?? persistedFilters.eventId ?? "all";
-  const selectedHeroId = heroId ?? persistedFilters.heroId ?? "all";
   const { ref: loadMoreRef, inView } = useInView({ threshold: 0.1 });
   const queryClient = useQueryClient();
-
-  const navigateWithPersist = useCallback(
-    (updates: Partial<HistoryFilters>) => {
-      updatePersistedFilters(updates);
-      navigate({
-        search: (prev) => ({ ...prev, ...updates }),
-      });
-    },
-    [navigate, updatePersistedFilters]
-  );
-
-  const { data: events } = useQuery(orpc.event.getAll.queryOptions());
-
-  // Only fetch heroes when a specific event is selected
-  const { data: heroes, isPending: heroesLoading } = useQuery({
-    ...orpc.heroes.getByEventId.queryOptions({
-      input: { eventId: Number(selectedEventId) },
-    }),
-    enabled: selectedEventId !== "all",
-  });
 
   const isAdminUser = isAdmin(session);
 
@@ -122,9 +89,8 @@ export default function HistoryPage({ session }: HistoryPageProps) {
         typeof pageParam === "number" ? pageParam : Number(pageParam ?? 1);
 
       const result = await orpc.bet.getAllPaginated.call({
-        eventId:
-          selectedEventId === "all" ? undefined : Number(selectedEventId),
-        heroId: selectedHeroId === "all" ? undefined : Number(selectedHeroId),
+        eventId: filter.queryInputs.eventId,
+        heroId: filter.queryInputs.heroId,
         limit: ITEMS_PER_PAGE,
         page,
       });
@@ -133,12 +99,10 @@ export default function HistoryPage({ session }: HistoryPageProps) {
     queryKey: [
       "bets",
       "paginated",
-      selectedEventId === "all" ? undefined : Number(selectedEventId),
-      selectedHeroId === "all" ? undefined : Number(selectedHeroId),
+      filter.queryInputs.eventId,
+      filter.queryInputs.heroId,
     ],
   });
-
-  const sortedHeroes = (heroes ?? []).toSorted((a, b) => a.level - b.level);
 
   // Flatten pages into single array of bets
   const allBets = betsData?.pages.flatMap((page) => page.items) ?? [];
@@ -212,7 +176,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
           </h1>
           <div className="flex items-center gap-2">
             <p className="text-muted-foreground text-sm">Obstawienia: </p>
-            {selectedEventId !== "all" && (
+            {filter.state.eventId !== ALL_FILTER && (
               <p className="font-bold text-sm">{totalBets}</p>
             )}
           </div>
@@ -222,48 +186,44 @@ export default function HistoryPage({ session }: HistoryPageProps) {
           {/* Event Select */}
           <Select
             onValueChange={(value) => {
-              navigateWithPersist({
-                eventId: value === "all" || value === null ? undefined : value,
-                heroId: undefined,
-              });
+              filter.selectEvent(value);
             }}
-            value={selectedEventId}
+            value={filter.state.eventId}
           >
             <SelectTrigger className="w-full sm:w-44">
               <SelectValue>
-                {getEventSelectDisplay({ events, selectedEventId })}
+                {getEventSelectDisplay({
+                  events: filter.events,
+                  selectedEventId: filter.state.eventId,
+                })}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <EventSelectItems events={events} />
+              <EventSelectItems events={filter.events} />
             </SelectContent>
           </Select>
 
           {/* Hero Select */}
           <Select
-            disabled={selectedEventId === "all"}
+            disabled={!filter.heroQueryEnabled}
             onValueChange={(value) => {
-              navigateWithPersist({
-                eventId:
-                  selectedEventId === "all" ? undefined : selectedEventId,
-                heroId: value === "all" || value === null ? undefined : value,
-              });
+              filter.selectHero(value);
             }}
-            value={selectedEventId === "all" ? "" : selectedHeroId}
+            value={filter.heroQueryEnabled ? filter.state.heroId : ""}
           >
             <SelectTrigger className="w-full sm:w-44">
               <SelectValue>
                 {getHeroSelectDisplay({
-                  selectedEventId,
-                  selectedHeroId,
-                  sortedHeroes,
+                  selectedEventId: filter.state.eventId,
+                  selectedHeroId: filter.state.heroId,
+                  sortedHeroes: filter.sortedHeroes,
                 })}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <HeroSelectItems
-                heroesLoading={heroesLoading}
-                sortedHeroes={sortedHeroes}
+                heroesLoading={filter.heroesLoading}
+                sortedHeroes={filter.sortedHeroes}
               />
             </SelectContent>
           </Select>
