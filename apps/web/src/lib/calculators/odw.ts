@@ -1,5 +1,4 @@
 export type OdwRarity = "zwykły" | "unikatowy" | "heroiczny" | "legendarny";
-
 /** Rarity multipliers applied to base value */
 const ODW_RARITY_MULTIPLIERS: Record<OdwRarity, number> = {
   // +50%
@@ -57,3 +56,19 @@ export const calculateUnbindCost = (
 
   return { baseValue, isCapped: false, totalCost };
 };
+
+/**
+ * Rarity display facts the calculator page needs: the cap that the cost
+ * rolls up to and the multiplier applied before the cap. Exposed as an
+ * intention-shaped accessor so the page does not reach into the internal
+ * rarity records.
+ */
+export const getOdwRarityInfo = (
+  rarity: OdwRarity
+): {
+  maxCost: number;
+  multiplier: number;
+} => ({
+  maxCost: ODW_RARITY_CAPS[rarity].maxCost,
+  multiplier: ODW_RARITY_MULTIPLIERS[rarity],
+});
