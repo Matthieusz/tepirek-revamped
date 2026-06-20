@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX "auction_slot_unique_idx" ON "auction_signups" USING btree ("profession","type","level","round","column");
