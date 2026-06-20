@@ -1,0 +1,80 @@
+import { ORPCError } from "@orpc/server";
+import { describe, expect, it } from "vitest";
+
+import {
+  createAdmin,
+  createUnverifiedUser,
+  createVerifiedMember,
+} from "../test/integration/builders";
+import {
+  createAuthenticatedRouterClient,
+  createUnauthenticatedRouterClient,
+} from "../test/integration/router-client";
+
+const expectOrpcError = async (
+  action: Promise<unknown>,
+  code: string,
+  message?: string
+) => {
+  try {
+    await action;
+    throw new Error("Expected router call to reject");
+  } catch (error) {
+    expect(error).toBeInstanceOf(ORPCError);
+    expect(error).toMatchObject({ code });
+    if (message) {
+      expect(error).toMatchObject({ message });
+    }
+  }
+};
+
+describe("API router authorization gates", () => {
+  it("rejects unauthenticated callers from protected router behavior", async () => {
+    const client = createUnauthenticatedRouterClient();
+
+    await expectOrpcError(client.user.getSession(), "UNAUTHORIZED");
+  });
+
+  it("rejects unverified users from verified-only guild-critical behavior with a Polish message", async () => {
+    const user = await createUnverifiedUser({ id: "unverified-member" });
+    const client = createAuthenticatedRouterClient(user);
+
+    await expectOrpcError(
+      client.auction.getStats({ profession: "paladin", type: "main" }),
+      "FORBIDDEN",
+      "Konto oczekuje na weryfikację"
+    );
+  });
+
+  it("allows verified members through verified-only guild-critical behavior", async () => {
+    const member = await createVerifiedMember({ id: "verified-member" });
+    const client = createAuthenticatedRouterClient(member);
+
+    await expect(
+      client.auction.getStats({ profession: "paladin", type: "main" })
+    ).resolves.toEqual({ totalSignups: 0, uniqueUsers: 0 });
+  });
+
+  it("rejects verified non-admin members from admin-only behavior", async () => {
+    const targetUser = await createUnverifiedUser({ id: "admin-target" });
+    const member = await createVerifiedMember({ id: "non-admin-member" });
+    const client = createAuthenticatedRouterClient(member);
+
+    await expectOrpcError(
+      client.user.setVerified({ userId: targetUser.id, verified: true }),
+      "FORBIDDEN"
+    );
+  });
+
+  it("allows admins through admin-only behavior", async () => {
+    const targetUser = await createUnverifiedUser({
+      id: "admin-verified-target",
+    });
+    const admin = await createAdmin({ id: "admin-member" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    await expect(
+      client.user.setVerified({ userId: targetUser.id, verified: true })
+    ).resolves.toMatchObject({ id: targetUser.id, verified: true });
+  });
+});

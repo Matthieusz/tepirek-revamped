@@ -4,6 +4,14 @@ import { appRouter } from "../../routers";
 import type { RouterContext } from "../../routers/procedures";
 import type { TestUser } from "./builders";
 
+export const createUnauthenticatedRouterClient = () =>
+  createRouterClient(appRouter, {
+    context: {
+      logger: {} as RouterContext["logger"],
+      session: null,
+    } as RouterContext,
+  });
+
 export const createAuthenticatedRouterClient = (user: TestUser) =>
   createRouterClient(appRouter, {
     context: {
