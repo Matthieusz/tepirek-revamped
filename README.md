@@ -143,17 +143,23 @@ pnpm db:start && pnpm db:push && pnpm dev
 
 ## 📜 Commands
 
-| Command                 | What it does                                                 |
-| ----------------------- | ------------------------------------------------------------ |
-| `pnpm dev`              | Start everything in dev mode                                 |
-| `pnpm dev:web`          | Frontend only                                                |
-| `pnpm dev:server`       | Backend only                                                 |
-| `pnpm build`            | Build everything for production                              |
-| `pnpm check`            | Run Ultracite (lint + format check)                          |
-| `pnpm fix`              | Auto-fix lint and format issues                              |
-| `pnpm check-types`      | TypeScript type checking                                     |
-| `pnpm test`             | Run unit tests                                               |
-| `pnpm test:integration` | Run API/router integration tests against `TEST_DATABASE_URL` |
+| Command                 | What it does                                                |
+| ----------------------- | ----------------------------------------------------------- |
+| `pnpm dev`              | Start everything in dev mode                                |
+| `pnpm dev:web`          | Frontend only                                               |
+| `pnpm dev:server`       | Backend only                                                |
+| `pnpm build`            | Build everything for production                             |
+| `pnpm check`            | Run Ultracite (lint + format check)                         |
+| `pnpm fix`              | Auto-fix lint and format issues                             |
+| `pnpm check-types`      | TypeScript type checking                                    |
+| `pnpm test`             | Run unit tests                                              |
+| `pnpm test:integration` | Run API/router integration tests against dedicated Postgres |
+
+### Integration tests
+
+`pnpm test:integration` runs the API/router integration suite described in [`docs/adr/0001-api-router-integration-tests-with-real-postgres.md`](docs/adr/0001-api-router-integration-tests-with-real-postgres.md). By default, it starts a dedicated Docker Postgres database on port `5433`, applies the real schema, truncates application tables between tests, and stops the container after the suite completes.
+
+Set `TEST_DATABASE_URL` only when you want to connect to an already-running dedicated test database. Do not point it at your development database.
 
 ### Database
 

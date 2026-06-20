@@ -40,11 +40,17 @@ const applicationTables = [
 export const defaultTestDatabaseUrl =
   "postgresql://postgres:password@localhost:5433/tepirek-revamped-test";
 
+const hasExplicitTestDatabaseUrl = process.env.TEST_DATABASE_URL !== undefined;
 const testDatabaseUrl = process.env.TEST_DATABASE_URL ?? defaultTestDatabaseUrl;
 
 process.env.TEST_DATABASE_URL = testDatabaseUrl;
 
-if (process.env.DATABASE_URL && process.env.DATABASE_URL === testDatabaseUrl) {
+if (
+  process.env.API_INTEGRATION_MANAGED_DATABASE !== "true" &&
+  hasExplicitTestDatabaseUrl &&
+  process.env.DATABASE_URL &&
+  process.env.DATABASE_URL === testDatabaseUrl
+) {
   throw new Error(
     "TEST_DATABASE_URL must not match DATABASE_URL. Use a dedicated Postgres test database."
   );
