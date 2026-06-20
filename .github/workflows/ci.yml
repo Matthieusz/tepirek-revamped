@@ -56,6 +56,9 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Smoke tests
+        run: pnpm test:smoke
+
       # Keep aligned with docs/adr/0001-api-router-integration-tests-with-real-postgres.md.
       - name: API integration tests
         run: pnpm test:integration

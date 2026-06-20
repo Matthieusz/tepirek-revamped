@@ -8,6 +8,7 @@
     "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
     "dev": "bun run --hot src/index.ts",
     "start": "bun run dist/index.mjs",
+    "test:smoke": "vitest run src/index.smoke.test.ts",
     "db:push": "pnpm --filter @tepirek-revamped/db run db:push"
   },
   "dependencies": {

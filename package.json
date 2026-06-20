@@ -16,6 +16,7 @@
     "check-types": "turbo check-types",
     "test": "turbo test",
     "test:integration": "turbo -F @tepirek-revamped/api test:integration",
+    "test:smoke": "turbo test:smoke",
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",

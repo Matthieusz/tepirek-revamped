@@ -153,9 +153,12 @@ pnpm db:start && pnpm db:push && pnpm dev
 | `pnpm fix`              | Auto-fix lint and format issues                             |
 | `pnpm check-types`      | TypeScript type checking                                    |
 | `pnpm test`             | Run unit tests                                              |
+| `pnpm test:smoke`       | Run fast app-start and health smoke tests                   |
 | `pnpm test:integration` | Run API/router integration tests against dedicated Postgres |
 
 ### Integration tests
+
+`pnpm test:smoke` runs fast app-start and health checks. `pnpm test:integration` remains the primary confidence layer for guild-critical workflows.
 
 `pnpm test:integration` runs the API/router integration suite described in [`docs/adr/0001-api-router-integration-tests-with-real-postgres.md`](docs/adr/0001-api-router-integration-tests-with-real-postgres.md). By default, it starts a dedicated Docker Postgres database on port `5433`, applies the real schema, truncates application tables between tests, and stops the container after the suite completes.
 
