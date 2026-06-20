@@ -20,6 +20,7 @@ import {
 import { VaultUserCard } from "@/components/vault-user-card";
 import { getErrorMessage } from "@/lib/errors";
 import { ALL_FILTER, toQueryInput } from "@/lib/event-hero-filter";
+import { formatVaultEarnings } from "@/lib/gold";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 import { orpc } from "@/utils/orpc";
@@ -181,15 +182,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
                   <div>
                     <p className="font-bold text-lg">{nextToPay.userName}</p>
                     <p className="font-mono text-muted-foreground">
-                      {(
-                        Math.floor(
-                          Number.parseFloat(nextToPay.totalEarnings || "0") /
-                            1_000_000
-                        ) * 1_000_000
-                      ).toLocaleString("pl-PL", {
-                        maximumFractionDigits: 0,
-                      })}{" "}
-                      złota
+                      {formatVaultEarnings(nextToPay.totalEarnings)} złota
                     </p>
                   </div>
                 </div>
@@ -261,14 +254,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
                     <div className="flex items-center gap-2">
                       <Coins className="size-4 text-muted-foreground" />
                       <p className="font-mono font-semibold">
-                        {(
-                          Math.floor(
-                            Number.parseFloat(player.totalEarnings || "0") /
-                              1_000_000
-                          ) * 1_000_000
-                        ).toLocaleString("pl-PL", {
-                          maximumFractionDigits: 0,
-                        })}
+                        {formatVaultEarnings(player.totalEarnings)}
                       </p>
                     </div>
                     {/* Checkbox for admin */}

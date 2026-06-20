@@ -23,6 +23,7 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { getErrorMessage } from "@/lib/errors";
+import { parseGoldAmount } from "@/lib/gold";
 import { orpc } from "@/utils/orpc";
 
 interface HeroStats {
@@ -32,20 +33,6 @@ interface HeroStats {
   totalBets: number;
   totalPoints: number;
 }
-
-/**
- * Parse gold amount string with optional "g" suffix for billions
- * Examples: "2g" = 2,000,000,000 | "1.5g" = 1,500,000,000 | "50000000" = 50,000,000
- */
-const parseGoldAmount = (value: string): number => {
-  const trimmed = value.trim().toLowerCase();
-  if (trimmed.endsWith("g")) {
-    const num = Number.parseFloat(trimmed.slice(0, -1));
-    return Number.isNaN(num) ? 0 : Math.floor(num * 1_000_000_000);
-  }
-  const num = Number.parseInt(trimmed, 10);
-  return Number.isNaN(num) ? 0 : num;
-};
 
 const getModalEventSelectDisplay = (params: {
   selectedEventId: string;

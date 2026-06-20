@@ -13,36 +13,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { calculateUnbindCost, getOdwRarityInfo } from "@/lib/calculators/odw";
+import type { OdwRarity } from "@/lib/calculators/odw";
 import type { AuthSession } from "@/types/route";
 
-type Rarity = "zwykły" | "unikatowy" | "heroiczny" | "legendarny";
+type Rarity = OdwRarity;
 
 const MIN_LEVEL = 1;
 const MAX_LEVEL = 300;
 
-/** Rarity multipliers applied to base value */
-const rarityMultipliers: Record<Rarity, number> = {
-  // +50%
-  heroiczny: 1.5,
-  // +200%
-  legendarny: 3,
-  // +20%
-  unikatowy: 1.2,
-  // No bonus
-  zwykły: 1,
-};
-
-/** Cap threshold for base value (i) per rarity */
-const rarityCaps: Record<Rarity, { threshold: number; maxCost: number }> = {
-  // i >= 30
-  heroiczny: { maxCost: 3375, threshold: 30 },
-  // i >= 30
-  legendarny: { maxCost: 6750, threshold: 30 },
-  // i >= 20
-  unikatowy: { maxCost: 1800, threshold: 20 },
-  // i > 20
-  zwykły: { maxCost: 1500, threshold: 20 },
-};
+/** Display order of rarities in the form select (web rendering concern). */
+const RARITY_ORDER: Rarity[] = [
+  "heroiczny",
+  "legendarny",
+  "unikatowy",
+  "zwykły",
+];
 
 const rarityColors: Record<Rarity, string> = {
   heroiczny: "text-blue-500",
@@ -63,37 +49,6 @@ const rarityBonusText: Record<Rarity, string> = {
   legendarny: "+200%",
   unikatowy: "+20%",
   zwykły: "brak bonusu",
-};
-
-/**
- * Calculates unbind cost based on original game formula
- * Formula: 75 × round(i × rarity_multiplier) where i = 10 + 0.1 × level
- * With caps per rarity
- */
-const calculateUnbindCost = (
-  level: number,
-  rarity: Rarity
-): { baseValue: number; totalCost: number; isCapped: boolean } => {
-  // i = 10 + 0.1 * a
-  const baseValue = 10 + 0.1 * level;
-  const cap = rarityCaps[rarity];
-  const multiplier = rarityMultipliers[rarity];
-
-  const isCapped =
-    rarity === "zwykły"
-      ? baseValue > cap.threshold
-      : baseValue >= cap.threshold;
-
-  if (isCapped) {
-    return { baseValue, isCapped: true, totalCost: cap.maxCost };
-  }
-
-  // Apply multiplier and calculate cost
-  const adjustedValue = baseValue * multiplier;
-  const roundedValue = Math.round(adjustedValue);
-  const totalCost = 75 * roundedValue;
-
-  return { baseValue, isCapped: false, totalCost };
 };
 
 const formSchema = z.object({
@@ -130,14 +85,17 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
         value.itemLevel,
         value.itemRarity
       );
+      const { maxCost, multiplier: rarityMultiplier } = getOdwRarityInfo(
+        value.itemRarity
+      );
 
       setResult({
         baseValue,
         isCapped,
         itemLevel: value.itemLevel,
         itemRarity: value.itemRarity,
-        maxCost: rarityCaps[value.itemRarity].maxCost,
-        rarityMultiplier: rarityMultipliers[value.itemRarity],
+        maxCost,
+        rarityMultiplier,
         totalCost,
       });
     },
@@ -236,18 +194,15 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
                         <SelectValue placeholder="Wybierz rzadkość" />
                       </SelectTrigger>
                       <SelectContent>
-                        {(Object.keys(rarityMultipliers) as Rarity[]).map(
-                          (rarity) => (
-                            <SelectItem key={rarity} value={rarity}>
-                              <span
-                                className={`font-medium ${rarityColors[rarity]}`}
-                              >
-                                {rarity.charAt(0).toUpperCase() +
-                                  rarity.slice(1)}
-                              </span>
-                            </SelectItem>
-                          )
-                        )}
+                        {RARITY_ORDER.map((rarity) => (
+                          <SelectItem key={rarity} value={rarity}>
+                            <span
+                              className={`font-medium ${rarityColors[rarity]}`}
+                            >
+                              {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
+                            </span>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     {field.state.meta.errors.length > 0 && (
