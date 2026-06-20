@@ -66,3 +66,9 @@ export const isAuctionProfession = (
   value: string
 ): value is AuctionProfession =>
   AUCTION_PROFESSIONS.some((auctionProfession) => auctionProfession === value);
+
+// ---------------------------------------------------------------------------
+// Auction slot rules (levels, rounds, columns, legality)
+// ---------------------------------------------------------------------------
+
+export * from "./auction-slots";

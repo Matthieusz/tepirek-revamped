@@ -74,6 +74,22 @@ describe("auction router Postgres integration", () => {
     ).rejects.toBeInstanceOf(ORPCError);
   });
 
+  it("rejects an illegal auction slot coordinate at the router seam", async () => {
+    const member = await createVerifiedMember({ id: "illegal-slot-member" });
+    const client = createAuthenticatedRouterClient(member);
+
+    // hunter support only has two columns
+    await expect(
+      client.auction.toggleSignup({
+        column: 3,
+        level: 30,
+        profession: "hunter",
+        round: 1,
+        type: "support",
+      })
+    ).rejects.toBeInstanceOf(ORPCError);
+  });
+
   it("reports persisted auction signup totals and unique member counts", async () => {
     const firstMember = await createVerifiedMember({ id: "stats-member-one" });
     const secondMember = await createVerifiedMember({ id: "stats-member-two" });

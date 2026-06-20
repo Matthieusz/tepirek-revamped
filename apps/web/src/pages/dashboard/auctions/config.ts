@@ -40,7 +40,6 @@ export const AUCTION_TYPE_META: Record<AuctionType, AuctionTypeMeta> = {
 
 interface AuctionProfessionMeta {
   cardIcon: Record<AuctionType, LucideIcon>;
-  columns: Record<AuctionType, string[]>;
   headerIcon: LucideIcon;
   name: string;
 }
@@ -54,10 +53,6 @@ export const AUCTION_PROFESSION_META: Record<
       main: Swords,
       support: Swords,
     },
-    columns: {
-      main: ["Fizyczna", "GR", "Trucizna"],
-      support: ["Fizyczna", "GR", "Trucizna"],
-    },
     headerIcon: Swords,
     name: "Tancerz Ostrzy",
   },
@@ -65,10 +60,6 @@ export const AUCTION_PROFESSION_META: Record<
     cardIcon: {
       main: Crosshair,
       support: Crosshair,
-    },
-    columns: {
-      main: ["Fizyczna", "GR", "Trucizna"],
-      support: ["Fizyczna", "Trucizna"],
     },
     headerIcon: Target,
     name: "Łowca",
@@ -78,10 +69,6 @@ export const AUCTION_PROFESSION_META: Record<
       main: Wand2,
       support: Wand2,
     },
-    columns: {
-      main: ["Ogień", "Zimno", "Błyskawice"],
-      support: ["Ogień", "Zimno", "Błyskawice"],
-    },
     headerIcon: Flame,
     name: "Mag",
   },
@@ -89,10 +76,6 @@ export const AUCTION_PROFESSION_META: Record<
     cardIcon: {
       main: Shield,
       support: Shield,
-    },
-    columns: {
-      main: ["Ogień", "Zimno", "Błyskawice"],
-      support: ["Blok przebicia", "Bez bloku przebicia"],
     },
     headerIcon: Shield,
     name: "Paladyn",
@@ -102,10 +85,6 @@ export const AUCTION_PROFESSION_META: Record<
       main: Footprints,
       support: Footprints,
     },
-    columns: {
-      main: ["Ogień", "Zimno", "Błyskawice"],
-      support: ["Ogień", "Zimno", "Błyskawice"],
-    },
     headerIcon: Footprints,
     name: "Tropiciel",
   },
@@ -113,10 +92,6 @@ export const AUCTION_PROFESSION_META: Record<
     cardIcon: {
       main: Axe,
       support: Axe,
-    },
-    columns: {
-      main: ["Fizyczna", "GR", "Dwureczna"],
-      support: ["Blok przebicia", "Bez bloku przebicia"],
     },
     headerIcon: Axe,
     name: "Wojownik",

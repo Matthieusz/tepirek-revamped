@@ -6,21 +6,19 @@ import { and, count, countDistinct, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { verifiedProcedure } from "./procedures";
-import { auctionTypeSchema } from "./schemas";
+import {
+  auctionProfessionSchema,
+  auctionSlotCoordinateSchema,
+  auctionTypeSchema,
+} from "./schemas";
 
-export const auctionSignupInputSchema = z.object({
-  column: z.number().int().positive(),
-  level: z.number().int().positive(),
-  profession: z.string(),
-  round: z.number().int().positive(),
-  type: auctionTypeSchema,
-});
+export const auctionSignupInputSchema = auctionSlotCoordinateSchema;
 
 export const auctionRouter = {
   getSignups: verifiedProcedure
     .input(
       z.object({
-        profession: z.string(),
+        profession: auctionProfessionSchema,
         type: auctionTypeSchema,
       })
     )
@@ -52,7 +50,7 @@ export const auctionRouter = {
   getStats: verifiedProcedure
     .input(
       z.object({
-        profession: z.string(),
+        profession: auctionProfessionSchema,
         type: auctionTypeSchema,
       })
     )

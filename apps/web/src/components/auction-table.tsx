@@ -1,4 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AUCTION_SLOT_LEVELS,
+  AUCTION_SLOT_ROUND_LABELS,
+  AUCTION_SLOT_ROUNDS,
+  getAuctionSlotColumns,
+} from "@tepirek-revamped/config";
+import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import { Loader2, Trash2 } from "lucide-react";
 import type React from "react";
 import { toast } from "sonner";
@@ -17,9 +24,6 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
-
-type Round = 1 | 2 | 3 | 4;
-type Column = 1 | 2 | 3;
 
 interface SignupData {
   id: number;
@@ -136,28 +140,20 @@ const CellContent: React.FC<CellContentProps> = ({
 };
 
 export interface AuctionTableProps {
-  columns?: string[];
-  profession: string;
-  type: "main" | "support";
+  profession: AuctionProfession;
+  type: AuctionType;
   currentUserId: string;
 }
 
-const rounds: Round[] = [1, 2, 3, 4];
-const roundLabels: Record<Round, string> = {
-  1: "Pierwsza",
-  2: "Druga",
-  3: "Trzecia",
-  4: "Czwarta (SŁ)",
-};
-const COLUMN_VALUES: Column[] = [1, 2, 3];
-const rowValues = Array.from({ length: 28 }, (_, i) => 30 + i * 10);
+const rounds = AUCTION_SLOT_ROUNDS;
+const rowValues = AUCTION_SLOT_LEVELS;
 
 const AuctionTable: React.FC<AuctionTableProps> = ({
-  columns = ["Kolumna 1", "Kolumna 2", "Kolumna 3"],
   profession,
   type,
   currentUserId,
 }) => {
+  const columns = getAuctionSlotColumns(profession, type);
   const queryClient = useQueryClient();
 
   const signupsQuery = orpc.auction.getSignups.queryOptions({
@@ -214,8 +210,8 @@ const AuctionTable: React.FC<AuctionTableProps> = ({
   // Get single signup for cell (only one allowed)
   const getSignupForCell = (
     level: number,
-    round: Round,
-    column: Column
+    round: number,
+    column: number
   ): SignupData | undefined => {
     const cellSignups = signupMap.get(`${level}-${round}-${column}`);
     if (!cellSignups || cellSignups.length === 0) {
@@ -261,10 +257,10 @@ const AuctionTable: React.FC<AuctionTableProps> = ({
                   </TableCell>
                 ) : null}
                 <TableCell className="whitespace-nowrap border px-4 py-2 text-center">
-                  {roundLabels[round]}
+                  {AUCTION_SLOT_ROUND_LABELS[round]}
                 </TableCell>
                 {columns.map((col: string, colIdx: number) => {
-                  const column = COLUMN_VALUES[colIdx];
+                  const column = colIdx + 1;
                   const signup = getSignupForCell(value, round, column);
                   const isOwnSignup = signup?.userId === currentUserId;
                   const isMutating =

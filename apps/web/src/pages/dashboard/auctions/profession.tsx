@@ -35,7 +35,6 @@ export default function AuctionsProfessionPage({
 
       <div className="rounded-xl border border-border bg-card p-6">
         <AuctionTable
-          columns={professionMeta.columns[type]}
           currentUserId={session.user.id}
           profession={profession}
           type={type}
