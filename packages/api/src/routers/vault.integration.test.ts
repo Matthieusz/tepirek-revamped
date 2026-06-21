@@ -143,6 +143,53 @@ describe("vault router Postgres integration", () => {
     expect(vault.find((row) => row.userId === secondMember.id)).toBeUndefined();
   });
 
+  it("keeps fractional point worth when refreshing earnings after a bet edit", async () => {
+    const admin = await createAdmin({ id: "fractional-edit-admin" });
+    const firstMember = await createVerifiedMember({
+      id: "fractional-edit-member-one",
+      name: "Fractional Edit One",
+    });
+    const secondMember = await createVerifiedMember({
+      id: "fractional-edit-member-two",
+      name: "Fractional Edit Two",
+    });
+    const hero = await createHero({ name: "Fractional Edit Hero" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    await client.bet.create({
+      heroId: hero.id,
+      userIds: [firstMember.id, secondMember.id],
+    });
+    await client.vault.distributeGold({
+      goldAmount: 200_000_001,
+      heroId: hero.id,
+    });
+
+    const distributedBets = await client.bet.getByEvent({
+      eventId: hero.eventId,
+    });
+    const [distributedBet] = distributedBets;
+    if (!distributedBet) {
+      throw new Error("expected a distributed bet to exist before edit");
+    }
+
+    await client.bet.edit({
+      betId: distributedBet.id,
+      newUserIds: [firstMember.id],
+    });
+
+    await expect(
+      client.vault.getVault({ eventId: hero.eventId })
+    ).resolves.toEqual([
+      expect.objectContaining({
+        paidOut: false,
+        totalEarnings: "200000001.00",
+        userId: firstMember.id,
+        userName: "Fractional Edit One",
+      }),
+    ]);
+  });
+
   it("clears stale earnings after an admin deletes a distributed bet", async () => {
     const admin = await createAdmin({ id: "stale-delete-admin" });
     const member = await createVerifiedMember({

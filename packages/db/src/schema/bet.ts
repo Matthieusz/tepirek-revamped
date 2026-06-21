@@ -23,7 +23,9 @@ export const hero = pgTable(
     image: text("image"),
     level: integer("level").notNull().default(1),
     name: text("name").notNull(),
-    pointWorth: integer("point_worth").notNull().default(0),
+    pointWorth: numeric("point_worth", { precision: 20, scale: 6 })
+      .notNull()
+      .default("0"),
   },
   (table) => [index("hero_event_id_idx").on(table.eventId)]
 );

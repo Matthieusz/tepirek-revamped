@@ -15,6 +15,9 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 const calculatePointsPerMember = (memberCount: number) =>
   (Math.floor((POINTS_PER_HERO / memberCount) * 100) / 100).toFixed(2);
 
+const parsePointWorth = (pointWorth: number | string | null) =>
+  pointWorth === null ? null : Number(pointWorth);
+
 const getHeroEvent = async (heroId: number, message: string) => {
   const [heroData] = await db
     .select({ eventId: hero.eventId, name: hero.name })
@@ -88,7 +91,7 @@ const refreshEarningsForHero = async (
     .from(hero)
     .where(eq(hero.id, heroId));
 
-  if (!heroRow || heroRow.pointWorth <= 0) {
+  if (!heroRow || Number(heroRow.pointWorth) <= 0) {
     return;
   }
 
@@ -242,14 +245,17 @@ export const heroBetLedger = {
     }
 
     const pointWorth = goldAmount / totalPoints;
+    const storedPointWorth = pointWorth.toFixed(6);
     await db.transaction(async (tx) => {
       await tx
         .update(userStats)
-        .set({ earnings: sql`ROUND((${userStats.points}) * ${pointWorth}, 2)` })
+        .set({
+          earnings: sql`ROUND((${userStats.points}) * ${storedPointWorth}, 2)`,
+        })
         .where(eq(userStats.heroId, heroId));
       await tx
         .update(hero)
-        .set({ pointWorth: Math.round(pointWorth) })
+        .set({ pointWorth: storedPointWorth })
         .where(eq(hero.id, heroId));
     });
 
@@ -257,7 +263,7 @@ export const heroBetLedger = {
       goldAmount,
       heroId,
       heroName: heroData.name,
-      pointWorth,
+      pointWorth: Number(storedPointWorth),
       success: true,
       totalPoints,
       usersUpdated: heroUserStats.length,
@@ -480,7 +486,7 @@ export const heroBetLedger = {
     }
 
     return {
-      currentPointWorth: heroInfo.pointWorth,
+      currentPointWorth: Number(heroInfo.pointWorth),
       heroId,
       heroName: heroInfo.name,
       totalBets: Number(stats?.totalBets ?? 0),
@@ -625,7 +631,9 @@ export const heroBetLedger = {
             .from(hero)
             .where(eq(hero.id, input.heroId));
     const pointWorth =
-      pointWorthRows === null ? null : (pointWorthRows[0]?.pointWorth ?? null);
+      pointWorthRows === null
+        ? null
+        : parsePointWorth(pointWorthRows[0]?.pointWorth ?? null);
 
     return { pointWorth, ranking, totalBets };
   },
