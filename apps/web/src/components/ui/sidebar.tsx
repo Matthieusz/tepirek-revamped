@@ -27,8 +27,16 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
+/**
+ * React's CSSProperties does not allow arbitrary custom properties. This
+ * narrow helper lets sidebar style objects declare the CSS custom variables
+ * they set without weakening CSSProperties elsewhere.
+ */
+type CSSPropertiesWithVars = React.CSSProperties &
+  Partial<Record<`--${string}`, string>>;
+
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+const SIDEBAR_COOKIE_MAX_AGE_MS = 60 * 60 * 24 * 7 * 1000;
 const SIDEBAR_WIDTH = "16rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
@@ -40,7 +48,7 @@ const setSidebarCookie = async (value: boolean) => {
     if (store) {
       try {
         await store.set({
-          maxAge: SIDEBAR_COOKIE_MAX_AGE,
+          expires: Date.now() + SIDEBAR_COOKIE_MAX_AGE_MS,
           name: SIDEBAR_COOKIE_NAME,
           path: "/",
           value: String(value),
@@ -162,11 +170,13 @@ const SidebarProvider = ({
             className
           )}
           data-slot="sidebar-wrapper"
-          style={{
-            "--sidebar-width": SIDEBAR_WIDTH,
-            "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
-            ...style,
-          }}
+          style={
+            {
+              "--sidebar-width": SIDEBAR_WIDTH,
+              "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
+              ...style,
+            } as CSSPropertiesWithVars
+          }
           {...props}
         >
           {children}
@@ -214,9 +224,11 @@ const Sidebar = ({
           data-sidebar="sidebar"
           data-slot="sidebar"
           side={side}
-          style={{
-            "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-          }}
+          style={
+            {
+              "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
+            } as CSSPropertiesWithVars
+          }
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Sidebar</SheetTitle>
@@ -654,9 +666,11 @@ const SidebarMenuSkeleton = ({
       <Skeleton
         className="h-4 max-w-(--skeleton-width) flex-1"
         data-sidebar="menu-skeleton-text"
-        style={{
-          "--skeleton-width": width,
-        }}
+        style={
+          {
+            "--skeleton-width": width,
+          } as CSSPropertiesWithVars
+        }
       />
     </div>
   );

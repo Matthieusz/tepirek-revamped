@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import type { LucideIcon } from "lucide-react";
 import { Users } from "lucide-react";
 import type React from "react";
@@ -11,8 +12,8 @@ export interface AuctionHeaderProps {
   title: string;
   description: string;
   icon: LucideIcon;
-  profession: string;
-  type: "main" | "support";
+  profession: AuctionProfession;
+  type: AuctionType;
 }
 
 export const AuctionHeader: React.FC<AuctionHeaderProps> = ({

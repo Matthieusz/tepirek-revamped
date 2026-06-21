@@ -98,9 +98,9 @@ export const restoreSelection = (
 /**
  * Copy the last bet's member IDs into the selection (add flow).
  */
-export const copyLastBet = (
-  lastBet: { members: { userId: string }[] } | undefined
-): string[] => {
+export const copyLastBet = (lastBet?: {
+  members: { userId: string }[];
+}): string[] => {
   if (!lastBet) {
     return [];
   }

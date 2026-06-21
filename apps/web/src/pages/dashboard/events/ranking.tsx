@@ -75,16 +75,11 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
     routeId: "/dashboard/events/ranking",
   });
 
-  const {
-    heroesLoading,
-    pointWorth,
-    rankingLoading,
-    sortedRanking,
-    totalBets,
-  } = useRankingData({
-    currentSortBy,
-    queryInputs: filter.queryInputs,
-  });
+  const { pointWorth, rankingLoading, sortedRanking, totalBets } =
+    useRankingData({
+      currentSortBy,
+      queryInputs: filter.queryInputs,
+    });
 
   const isAdminUser = isAdmin(session);
   const rankingContent = buildRankingContent({
@@ -115,7 +110,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
           {/* Event Select */}
           <Select
             onValueChange={(value) => {
-              filter.selectEvent(value);
+              filter.selectEvent(value ?? ALL_FILTER);
             }}
             value={filter.state.eventId}
           >
@@ -136,7 +131,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
           <Select
             disabled={!filter.heroQueryEnabled}
             onValueChange={(value) => {
-              filter.selectHero(value);
+              filter.selectHero(value ?? ALL_FILTER);
             }}
             value={filter.heroQueryEnabled ? filter.state.heroId : ""}
           >
@@ -151,7 +146,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
             </SelectTrigger>
             <SelectContent>
               <HeroSelectItems
-                heroesLoading={heroesLoading}
+                heroesLoading={filter.heroesLoading}
                 sortedHeroes={filter.sortedHeroes}
               />
             </SelectContent>

@@ -80,7 +80,7 @@ const toEventTimestamp = (eventEndTime: Date | string | undefined): number => {
  * Sort events by end time descending. Events without an end time sort last.
  */
 export const sortEventsByEndTimeDesc = (
-  events: readonly EventSelectOption[] | undefined
+  events?: readonly EventSelectOption[]
 ): EventSelectOption[] =>
   [...(events ?? [])].toSorted(
     (a, b) => toEventTimestamp(b.endTime) - toEventTimestamp(a.endTime)
@@ -90,7 +90,7 @@ export const sortEventsByEndTimeDesc = (
  * Sort heroes by level ascending.
  */
 export const sortHeroesByLevel = (
-  heroes: readonly HeroSelectOption[] | undefined
+  heroes?: readonly HeroSelectOption[]
 ): HeroSelectOption[] =>
   [...(heroes ?? [])].toSorted((a, b) => (a.level ?? 0) - (b.level ?? 0));
 

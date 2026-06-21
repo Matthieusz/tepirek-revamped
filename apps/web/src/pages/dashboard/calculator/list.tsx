@@ -1,5 +1,9 @@
 import { useForm } from "@tanstack/react-form";
-import type { ReactFormExtendedApi } from "@tanstack/react-form";
+import type {
+  FormAsyncValidateOrFn,
+  FormValidateOrFn,
+  ReactFormExtendedApi,
+} from "@tanstack/react-form";
 import {
   AlertTriangle,
   Calculator,
@@ -51,18 +55,50 @@ const groupFormSchema = z.object({
   defenderLevels: z.string().min(1, { message: "Wprowadź poziomy obrońców" }),
 });
 
-type AnyForm = ReactFormExtendedApi<
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
+interface SingleFormValues {
+  attackerLevel: number;
+  victimLevel: number;
+}
+
+interface GroupFormValues {
+  attackerLevels: string;
+  defenderLevels: string;
+}
+
+/**
+ * Concrete form types inferred from each `useForm` call below. Validator slots
+ * use the library's permissive option types so the inferred form (which
+ * defaults those slots to `FormValidateOrFn | undefined`) stays assignable.
+ * Typing the prop with the real form-data shape keeps `form.Field`/
+ * `form.Subscribe` fully typed instead of forcing `unknown`.
+ */
+type SingleForm = ReactFormExtendedApi<
+  SingleFormValues,
+  FormValidateOrFn<SingleFormValues> | undefined,
+  FormValidateOrFn<SingleFormValues> | undefined,
+  FormAsyncValidateOrFn<SingleFormValues> | undefined,
+  FormValidateOrFn<SingleFormValues> | undefined,
+  FormAsyncValidateOrFn<SingleFormValues> | undefined,
+  FormValidateOrFn<SingleFormValues> | undefined,
+  FormAsyncValidateOrFn<SingleFormValues> | undefined,
+  FormValidateOrFn<SingleFormValues> | undefined,
+  FormAsyncValidateOrFn<SingleFormValues> | undefined,
+  FormAsyncValidateOrFn<SingleFormValues> | undefined,
+  unknown
+>;
+
+type GroupForm = ReactFormExtendedApi<
+  GroupFormValues,
+  FormValidateOrFn<GroupFormValues> | undefined,
+  FormValidateOrFn<GroupFormValues> | undefined,
+  FormAsyncValidateOrFn<GroupFormValues> | undefined,
+  FormValidateOrFn<GroupFormValues> | undefined,
+  FormAsyncValidateOrFn<GroupFormValues> | undefined,
+  FormValidateOrFn<GroupFormValues> | undefined,
+  FormAsyncValidateOrFn<GroupFormValues> | undefined,
+  FormValidateOrFn<GroupFormValues> | undefined,
+  FormAsyncValidateOrFn<GroupFormValues> | undefined,
+  FormAsyncValidateOrFn<GroupFormValues> | undefined,
   unknown
 >;
 
@@ -70,7 +106,7 @@ const SingleMode = ({
   form,
   result,
 }: {
-  form: AnyForm;
+  form: SingleForm;
   result: SinglePenaltyResult | null;
 }) => (
   <>
@@ -269,7 +305,7 @@ const GroupMode = ({
   form,
   result,
 }: {
-  form: AnyForm;
+  form: GroupForm;
   result: GroupPenaltyResult | null;
 }) => (
   <>
