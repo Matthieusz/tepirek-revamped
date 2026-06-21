@@ -95,4 +95,76 @@ describe("vault router Postgres integration", () => {
       client.vault.distributeGold({ goldAmount: 200_000_000, heroId: hero.id })
     ).rejects.toBeInstanceOf(ORPCError);
   });
+
+  it("refreshes member earnings after an admin edits a distributed bet", async () => {
+    const admin = await createAdmin({ id: "stale-edit-admin" });
+    const firstMember = await createVerifiedMember({
+      id: "stale-edit-member-one",
+      name: "Stale Edit One",
+    });
+    const secondMember = await createVerifiedMember({
+      id: "stale-edit-member-two",
+      name: "Stale Edit Two",
+    });
+    const hero = await createHero({ name: "Stale Edit Hero" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    await client.bet.create({
+      heroId: hero.id,
+      userIds: [firstMember.id, secondMember.id],
+    });
+    await client.vault.distributeGold({
+      goldAmount: 200_000_000,
+      heroId: hero.id,
+    });
+
+    const distributedBets = await client.bet.getByEvent({
+      eventId: hero.eventId,
+    });
+    const [distributedBet] = distributedBets;
+    if (!distributedBet) {
+      throw new Error("expected a distributed bet to exist before edit");
+    }
+    await client.bet.edit({
+      betId: distributedBet.id,
+      newUserIds: [firstMember.id],
+    });
+
+    const vault = await client.vault.getVault({ eventId: hero.eventId });
+
+    expect(vault).toEqual([
+      expect.objectContaining({
+        paidOut: false,
+        totalEarnings: "200000000.00",
+        userId: firstMember.id,
+        userName: "Stale Edit One",
+      }),
+    ]);
+    expect(vault.find((row) => row.userId === secondMember.id)).toBeUndefined();
+  });
+
+  it("clears stale earnings after an admin deletes a distributed bet", async () => {
+    const admin = await createAdmin({ id: "stale-delete-admin" });
+    const member = await createVerifiedMember({
+      id: "stale-delete-member",
+      name: "Stale Delete Member",
+    });
+    const hero = await createHero({ name: "Stale Delete Hero" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    const createdBet = await client.bet.create({
+      heroId: hero.id,
+      userIds: [member.id],
+    });
+    await client.vault.distributeGold({
+      goldAmount: 200_000_000,
+      heroId: hero.id,
+    });
+
+    await client.bet.delete({ id: createdBet.id });
+
+    await expect(
+      client.vault.getVault({ eventId: hero.eventId })
+    ).resolves.toEqual([]);
+  });
 });

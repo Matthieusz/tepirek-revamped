@@ -78,3 +78,64 @@ describe("API router authorization gates", () => {
     ).resolves.toMatchObject({ id: targetUser.id, verified: true });
   });
 });
+
+describe("admin self-lockout guardrails", () => {
+  it("prevents a verified admin from demoting themselves", async () => {
+    const admin = await createAdmin({ id: "self-demotion-admin" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    await expectOrpcError(
+      client.user.setRole({ role: "user", userId: admin.id }),
+      "FORBIDDEN"
+    );
+
+    await expect(client.user.list()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: admin.id, role: "admin" }),
+      ])
+    );
+  });
+
+  it("prevents a verified admin from unverifying themselves", async () => {
+    const admin = await createAdmin({ id: "self-unverify-admin" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    await expectOrpcError(
+      client.user.setVerified({ userId: admin.id, verified: false }),
+      "FORBIDDEN"
+    );
+
+    await expect(client.user.list()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: admin.id, verified: true }),
+      ])
+    );
+  });
+
+  it("protects the last verified admin from being demoted, even when targeted explicitly", async () => {
+    const soleAdmin = await createAdmin({ id: "sole-admin" });
+    const client = createAuthenticatedRouterClient(soleAdmin);
+
+    await expectOrpcError(
+      client.user.setRole({ role: "user", userId: soleAdmin.id }),
+      "FORBIDDEN",
+      "Nie można odebrać uprawnień ostatniemu administratorowi"
+    );
+  });
+
+  it("allows an admin to demote another verified admin when one remains", async () => {
+    const remaining = await createAdmin({ id: "remaining-admin" });
+    const target = await createAdmin({ id: "demoted-admin" });
+    const client = createAuthenticatedRouterClient(remaining);
+
+    await expect(
+      client.user.setRole({ role: "user", userId: target.id })
+    ).resolves.toMatchObject({ id: target.id, role: "user" });
+
+    await expect(client.user.list()).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: remaining.id, role: "admin" }),
+      ])
+    );
+  });
+});

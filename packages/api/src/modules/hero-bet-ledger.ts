@@ -72,6 +72,34 @@ const attachMembersToBets = async <T extends { id: number }>(bets: T[]) => {
   }));
 };
 
+/**
+ * Recompute `userStats.earnings` for a hero after a bet mutation changes
+ * member points. Earnings only have meaning once gold has been distributed
+ * (i.e. `hero.pointWorth > 0`); before that, earnings stay at "0". Keeping
+ * this in sync prevents the vault screen from showing payouts that no longer
+ * match the bet ledger after an admin edits or deletes a distributed bet.
+ */
+const refreshEarningsForHero = async (
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  heroId: number
+) => {
+  const [heroRow] = await tx
+    .select({ pointWorth: hero.pointWorth })
+    .from(hero)
+    .where(eq(hero.id, heroId));
+
+  if (!heroRow || heroRow.pointWorth <= 0) {
+    return;
+  }
+
+  await tx
+    .update(userStats)
+    .set({
+      earnings: sql`ROUND((${userStats.points}) * ${heroRow.pointWorth}, 2)`,
+    })
+    .where(eq(userStats.heroId, heroId));
+};
+
 export const heroBetLedger = {
   async createBet(input: {
     createdBy: string;
@@ -128,6 +156,8 @@ export const heroBetLedger = {
           target: [userStats.userId, userStats.eventId, userStats.heroId],
         });
 
+      await refreshEarningsForHero(tx, heroId);
+
       return bet;
     });
   },
@@ -175,6 +205,8 @@ export const heroBetLedger = {
       }
 
       await tx.delete(heroBet).where(eq(heroBet.id, id));
+
+      await refreshEarningsForHero(tx, betData.heroId);
     });
 
     return { success: true };
@@ -369,6 +401,8 @@ export const heroBetLedger = {
         .update(heroBet)
         .set({ memberCount: newMemberCount })
         .where(eq(heroBet.id, betId));
+
+      await refreshEarningsForHero(tx, betData.heroId);
     });
 
     return { success: true };
@@ -452,6 +486,21 @@ export const heroBetLedger = {
       totalBets: Number(stats?.totalBets ?? 0),
       totalPoints: Number.parseFloat(stats?.totalPoints ?? "0"),
     };
+  },
+
+  async getLatestBetForCopy() {
+    const [latestBet] = await db
+      .select({ id: heroBet.id })
+      .from(heroBet)
+      .orderBy(desc(heroBet.createdAt))
+      .limit(1);
+
+    if (!latestBet) {
+      return null;
+    }
+
+    const [withMembers] = await attachMembersToBets([latestBet]);
+    return withMembers ?? null;
   },
 
   async getOldestUnpaidEvent() {

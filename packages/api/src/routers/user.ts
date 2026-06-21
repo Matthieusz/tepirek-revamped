@@ -2,7 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@tepirek-revamped/db";
 import { account, user } from "@tepirek-revamped/db/schema/auth";
 import type { SQL } from "drizzle-orm";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import {
@@ -20,6 +20,57 @@ export const hasDiscordGuild = (guilds: unknown, guildId: string): boolean => {
   }
   const parsed = discordGuildSchema.safeParse(guilds);
   return parsed.success && parsed.data.some((guild) => guild.id === guildId);
+};
+
+const LAST_ADMIN_MESSAGE =
+  "Nie można odebrać uprawnień ostatniemu administratorowi";
+
+const loadTargetUser = async (userId: string) => {
+  const [targetUser] = await db.select().from(user).where(eq(user.id, userId));
+  if (!targetUser) {
+    throw new ORPCError("NOT_FOUND", { message: "Użytkownik nie istnieje" });
+  }
+  return targetUser;
+};
+
+const countVerifiedAdmins = async () => {
+  const [result] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(user)
+    .where(and(eq(user.role, "admin"), eq(user.verified, true)));
+  return Number(result?.count ?? 0);
+};
+
+/**
+ * Guard admin role/verification mutations so the acting admin cannot remove
+ * their own access or the access of the last verified admin. The acting admin
+ * is identified by the session; the target is loaded by id. A change is
+ * blocked when it would leave the guild with zero verified admins.
+ */
+const assertAdminMutationAllowed = async (
+  actorId: string,
+  targetUser: { id: string; role: string | null; verified: boolean },
+  next: { role?: string; verified?: boolean }
+) => {
+  const nextRole = next.role ?? targetUser.role;
+  const nextVerified = next.verified ?? targetUser.verified;
+  const willBeVerifiedAdmin = nextRole === "admin" && nextVerified === true;
+  const isCurrentlyVerifiedAdmin =
+    targetUser.role === "admin" && targetUser.verified === true;
+
+  if (!isCurrentlyVerifiedAdmin || willBeVerifiedAdmin) {
+    return;
+  }
+
+  const selfMutation = targetUser.id === actorId;
+  if (selfMutation) {
+    throw new ORPCError("FORBIDDEN", { message: LAST_ADMIN_MESSAGE });
+  }
+
+  const verifiedAdminCount = await countVerifiedAdmins();
+  if (verifiedAdminCount <= 1) {
+    throw new ORPCError("FORBIDDEN", { message: LAST_ADMIN_MESSAGE });
+  }
 };
 
 const updateAndReturnUser = async (
@@ -71,9 +122,15 @@ export const userRouter = {
         userId: userIdSchema,
       })
     )
-    .handler(({ input }) =>
-      updateAndReturnUser(eq(user.id, input.userId), { role: input.role })
-    ),
+    .handler(async ({ input, context }) => {
+      const targetUser = await loadTargetUser(input.userId);
+      await assertAdminMutationAllowed(context.session.user.id, targetUser, {
+        role: input.role,
+      });
+      return updateAndReturnUser(eq(user.id, input.userId), {
+        role: input.role,
+      });
+    }),
   setVerified: adminProcedure
     .input(
       z.object({
@@ -81,11 +138,15 @@ export const userRouter = {
         verified: z.boolean(),
       })
     )
-    .handler(({ input }) =>
-      updateAndReturnUser(eq(user.id, input.userId), {
+    .handler(async ({ input, context }) => {
+      const targetUser = await loadTargetUser(input.userId);
+      await assertAdminMutationAllowed(context.session.user.id, targetUser, {
         verified: input.verified,
-      })
-    ),
+      });
+      return updateAndReturnUser(eq(user.id, input.userId), {
+        verified: input.verified,
+      });
+    }),
   updateProfile: verifiedProcedure
     .input(
       z.object({

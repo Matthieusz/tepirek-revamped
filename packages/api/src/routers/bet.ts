@@ -52,4 +52,8 @@ export const betRouter = {
   getByEvent: verifiedProcedure
     .input(z.object({ eventId: z.number() }))
     .handler(({ input }) => heroBetLedger.getBetsByEvent(input.eventId)),
+
+  getLatestForCopy: verifiedProcedure.handler(() =>
+    heroBetLedger.getLatestBetForCopy()
+  ),
 };
