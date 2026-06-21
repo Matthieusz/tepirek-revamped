@@ -138,4 +138,37 @@ describe("admin self-lockout guardrails", () => {
       ])
     );
   });
+
+  it("serializes concurrent admin demotions so one verified admin remains", async () => {
+    const adminOne = await createAdmin({ id: "concurrent-admin-one" });
+    const adminTwo = await createAdmin({ id: "concurrent-admin-two" });
+    const adminOneClient = createAuthenticatedRouterClient(adminOne);
+    const adminTwoClient = createAuthenticatedRouterClient(adminTwo);
+
+    const results = await Promise.allSettled([
+      adminOneClient.user.setRole({ role: "user", userId: adminTwo.id }),
+      adminTwoClient.user.setRole({ role: "user", userId: adminOne.id }),
+    ]);
+
+    expect(
+      results.filter((result) => result.status === "fulfilled")
+    ).toHaveLength(1);
+    expect(
+      results.filter((result) => result.status === "rejected")
+    ).toHaveLength(1);
+
+    const rejectedResult = results.find(
+      (result) => result.status === "rejected"
+    );
+    expect(rejectedResult?.status).toBe("rejected");
+    if (rejectedResult?.status === "rejected") {
+      expect(rejectedResult.reason).toBeInstanceOf(ORPCError);
+    }
+
+    const users = await adminOneClient.user.list();
+
+    expect(
+      users.filter((member) => member.role === "admin" && member.verified)
+    ).toHaveLength(1);
+  });
 });

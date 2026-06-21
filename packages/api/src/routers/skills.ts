@@ -6,6 +6,11 @@ import { z } from "zod";
 
 import { adminProcedure, verifiedProcedure } from "./procedures";
 
+const skillLinkSchema = z.url("Podaj poprawny URL").refine((value) => {
+  const { protocol } = new URL(value);
+  return protocol === "http:" || protocol === "https:";
+}, "Link musi zaczynać się od http:// albo https://");
+
 export const skillsRouter = {
   createProfession: adminProcedure
     .input(
@@ -38,7 +43,7 @@ export const skillsRouter = {
   createSkill: verifiedProcedure
     .input(
       z.object({
-        link: z.string().min(1),
+        link: skillLinkSchema,
         mastery: z.boolean(),
         name: z.string().min(1),
         professionId: z.number(),

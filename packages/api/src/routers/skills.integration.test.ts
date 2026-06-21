@@ -68,6 +68,29 @@ describe("skills router Postgres integration", () => {
     ]);
   });
 
+  it("rejects non-http skill links and does not persist them", async () => {
+    const member = await createVerifiedMember({
+      id: "skill-invalid-link-author",
+    });
+    const profession = await createProfession({ name: "Łowca" });
+    const range = await createRange({ name: "Elita 140" });
+    const client = createAuthenticatedRouterClient(member);
+
+    await expect(
+      client.skills.createSkill({
+        link: "ftp://example.com/skill",
+        mastery: false,
+        name: "Nieprawidłowy link",
+        professionId: profession.id,
+        rangeId: range.id,
+      })
+    ).rejects.toBeInstanceOf(ORPCError);
+
+    await expect(
+      client.skills.getSkillsByRange({ rangeId: range.id })
+    ).resolves.toEqual([]);
+  });
+
   it("finds ranges by slug and returns null for a missing slug", async () => {
     const member = await createVerifiedMember({ id: "slug-member" });
     await createRange({ name: "Elita Lodowa" });
