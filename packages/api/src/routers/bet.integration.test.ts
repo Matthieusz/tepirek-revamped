@@ -112,4 +112,31 @@ describe("bet router Postgres integration", () => {
 
     await expect(client.bet.getAll()).resolves.toEqual([]);
   });
+
+  it("returns only the latest bet for the copy-last-bet helper", async () => {
+    const admin = await createAdmin({ id: "latest-bet-admin" });
+    const firstMember = await createVerifiedMember({ id: "latest-bet-one" });
+    const secondMember = await createVerifiedMember({ id: "latest-bet-two" });
+    const thirdMember = await createVerifiedMember({ id: "latest-bet-three" });
+    const hero = await createHero({ name: "Latest Bet Hero" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    await expect(client.bet.getLatestForCopy()).resolves.toBeNull();
+
+    await client.bet.create({
+      heroId: hero.id,
+      userIds: [firstMember.id],
+    });
+    await client.bet.create({
+      heroId: hero.id,
+      userIds: [secondMember.id, thirdMember.id],
+    });
+
+    const latest = await client.bet.getLatestForCopy();
+
+    expect(latest).not.toBeNull();
+    expect(latest?.members.map((member) => member.userId).toSorted()).toEqual(
+      [secondMember.id, thirdMember.id].toSorted()
+    );
+  });
 });

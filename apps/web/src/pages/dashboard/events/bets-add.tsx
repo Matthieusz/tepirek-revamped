@@ -1,5 +1,9 @@
 import { useForm } from "@tanstack/react-form";
-import type { ReactFormExtendedApi } from "@tanstack/react-form";
+import type {
+  FormAsyncValidateOrFn,
+  FormValidateOrFn,
+  ReactFormExtendedApi,
+} from "@tanstack/react-form";
 import { useHotkey } from "@tanstack/react-hotkeys";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -75,21 +79,28 @@ const HeroSelection = ({
   );
 };
 
-// Generic TanStack Form API used to pass the form across components
-// without re-typing all 12+ validator generics. The actual data
-// shape is preserved through inference at the call site.
+const addBetFormSchema = z.object({
+  eventId: z.string().min(1, "Wybierz event"),
+  heroId: z.string().min(1, "Wybierz herosa"),
+  userIds: z.array(z.string()).min(1, "Wybierz przynajmniej jednego gracza"),
+});
+
+// Form API shape passed to the presentational component. The `onSubmit`
+// slot mirrors the exact zod schema validator used at the call site so the
+// inferred form (whose TOnSubmit is that schema) stays assignable. The
+// AddBetForm data shape keeps `form.Field`/`form.Subscribe` fully typed.
 type AnyFormForBets = ReactFormExtendedApi<
   AddBetForm,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
+  FormValidateOrFn<AddBetForm> | undefined,
+  FormValidateOrFn<AddBetForm> | undefined,
+  FormAsyncValidateOrFn<AddBetForm> | undefined,
+  FormValidateOrFn<AddBetForm> | undefined,
+  FormAsyncValidateOrFn<AddBetForm> | undefined,
+  typeof addBetFormSchema,
+  FormAsyncValidateOrFn<AddBetForm> | undefined,
+  FormValidateOrFn<AddBetForm> | undefined,
+  FormAsyncValidateOrFn<AddBetForm> | undefined,
+  FormAsyncValidateOrFn<AddBetForm> | undefined,
   unknown
 >;
 
@@ -109,8 +120,8 @@ interface BetsAddFormProps {
   heroesLoading: boolean;
   verifiedUsers: SelectableUser[] | undefined;
   usersLoading: boolean;
-  allBets: { members: { userId: string }[] }[] | undefined;
-  betsLoading: boolean;
+  latestBet: { members: { userId: string }[] } | null | undefined;
+  latestBetLoading: boolean;
   selectedEventId: string;
   setSelectedEventId: (id: string) => void;
 }
@@ -123,12 +134,12 @@ const BetsAddForm = ({
   heroesLoading,
   verifiedUsers,
   usersLoading,
-  allBets,
-  betsLoading,
+  latestBet,
+  latestBetLoading,
   selectedEventId,
   setSelectedEventId,
 }: BetsAddFormProps) => {
-  const lastBet = allBets?.[0];
+  const lastBet = latestBet ?? undefined;
 
   return (
     <form
@@ -263,7 +274,11 @@ const BetsAddForm = ({
               clearEnabled
               copyLastBetEnabled
               lastBet={lastBet}
-              lastBetAvailable={!betsLoading && !!allBets && allBets.length > 0}
+              lastBetAvailable={
+                !latestBetLoading &&
+                latestBet !== null &&
+                latestBet !== undefined
+              }
               onChange={field.handleChange}
               selectedUserIds={field.state.value}
               users={verifiedUsers}
@@ -308,8 +323,8 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
     orpc.user.getVerified.queryOptions()
   );
 
-  const { data: allBets, isPending: betsLoading } = useQuery(
-    orpc.bet.getAll.queryOptions()
+  const { data: latestBet, isPending: latestBetLoading } = useQuery(
+    orpc.bet.getLatestForCopy.queryOptions()
   );
 
   const isAdminUser = isAdmin(session);
@@ -340,7 +355,7 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
 
         toast.success("Obstawienie dodano pomyślnie");
         await queryClient.invalidateQueries({
-          queryKey: orpc.bet.getAll.queryKey(),
+          queryKey: orpc.bet.getLatestForCopy.queryKey(),
         });
         form.setFieldValue("userIds", []);
       } catch (error) {
@@ -348,13 +363,7 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
       }
     },
     validators: {
-      onSubmit: z.object({
-        eventId: z.string().min(1, "Wybierz event"),
-        heroId: z.string().min(1, "Wybierz herosa"),
-        userIds: z
-          .array(z.string())
-          .min(1, "Wybierz przynajmniej jednego gracza"),
-      }),
+      onSubmit: addBetFormSchema,
     },
   });
 
@@ -402,13 +411,13 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
       <div className="rounded-xl border border-border bg-card p-6">
         {" "}
         <BetsAddForm
-          allBets={allBets}
-          betsLoading={betsLoading}
           events={events}
           eventsLoading={eventsLoading}
           form={form}
           heroes={heroes}
           heroesLoading={heroesLoading}
+          latestBet={latestBet}
+          latestBetLoading={latestBetLoading}
           selectedEventId={selectedEventId}
           setSelectedEventId={setSelectedEventId}
           usersLoading={usersLoading}

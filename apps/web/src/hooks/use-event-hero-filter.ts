@@ -18,9 +18,18 @@ import type {
 import { useFilterPersistence } from "@/lib/use-filter-persistence";
 import { orpc } from "@/utils/orpc";
 
+/**
+ * Route ids that share the Event/Hero URL search shape (eventId/heroId).
+ * Constrain the hook to these so TanStack Router's `useSearch`/`useNavigate`
+ * stay fully typed without resorting to broad string types.
+ */
+type EventHeroFilterRouteId =
+  | "/dashboard/events/history"
+  | "/dashboard/events/ranking";
+
 export interface UseEventHeroFilterOptions {
   /** Route id, e.g. "/dashboard/events/ranking". */
-  routeId: string;
+  routeId: EventHeroFilterRouteId;
   /** localStorage key for persisted Event/Hero fallback. */
   persistenceKey: string;
 }
@@ -62,8 +71,8 @@ export const useEventHeroFilter = (
   const state = normalizeEventHeroFilter({
     persistedEventId: persistedFilters.eventId as string | undefined,
     persistedHeroId: persistedFilters.heroId as string | undefined,
-    urlEventId: urlEventId as string | undefined,
-    urlHeroId: urlHeroId as string | undefined,
+    urlEventId: typeof urlEventId === "string" ? urlEventId : undefined,
+    urlHeroId: typeof urlHeroId === "string" ? urlHeroId : undefined,
   });
 
   const { data: events } = useQuery(orpc.event.getAll.queryOptions());

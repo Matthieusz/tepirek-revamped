@@ -1,5 +1,5 @@
 import type * as React from "react";
-import { createContext, use as reactUse, useMemo } from "react";
+import { createContext, isValidElement, use as reactUse, useMemo } from "react";
 
 import {
   Dialog,
@@ -19,6 +19,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface ResponsiveDialogProps {
   children: React.ReactNode;
@@ -71,20 +72,36 @@ const useResponsiveDialog = () => {
 
 const ResponsiveDialogTrigger = ({
   children,
+  className,
   asChild,
   ...props
 }: React.ComponentProps<typeof DialogTrigger> & { asChild?: boolean }) => {
   const isMobile = useResponsiveDialog();
 
   if (isMobile) {
-    return <DrawerTrigger {...props}>{children}</DrawerTrigger>;
+    return (
+      <DrawerTrigger
+        className={typeof className === "string" ? className : undefined}
+      >
+        {children}
+      </DrawerTrigger>
+    );
   }
 
   if (asChild) {
-    return <DialogTrigger render={children} {...props} />;
+    return (
+      <DialogTrigger
+        render={isValidElement(children) ? children : undefined}
+        {...props}
+      />
+    );
   }
 
-  return <DialogTrigger {...props}>{children}</DialogTrigger>;
+  return (
+    <DialogTrigger className={className} {...props}>
+      {children}
+    </DialogTrigger>
+  );
 };
 
 const ResponsiveDialogContent = ({
@@ -169,8 +186,10 @@ const ResponsiveDialogTitle = ({
   if (isMobile) {
     return (
       <DrawerTitle
-        className="font-semibold text-lg leading-none tracking-tight"
-        {...props}
+        className={cn(
+          "font-semibold text-lg leading-none tracking-tight",
+          className
+        )}
       >
         {children}
       </DrawerTitle>
@@ -193,7 +212,7 @@ const ResponsiveDialogDescription = ({
 
   if (isMobile) {
     return (
-      <p className="text-muted-foreground text-sm" {...props}>
+      <p className={cn("text-muted-foreground text-sm", className)}>
         {children}
       </p>
     );
@@ -208,15 +227,14 @@ const ResponsiveDialogDescription = ({
 
 const ResponsiveDialogClose = ({
   children,
-  ...props
 }: React.ComponentProps<typeof DialogClose>) => {
   const isMobile = useResponsiveDialog();
 
   if (isMobile) {
-    return <DrawerClose {...props}>{children}</DrawerClose>;
+    return <DrawerClose>{children}</DrawerClose>;
   }
 
-  return <DialogClose {...props}>{children}</DialogClose>;
+  return <DialogClose>{children}</DialogClose>;
 };
 
 export {

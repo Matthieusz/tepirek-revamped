@@ -19,7 +19,10 @@ const AuctionsTypeIndexRoute = () => {
 export const Route = createFileRoute("/dashboard/auctions/$type/")({
   beforeLoad: ({ params }) => {
     if (!isAuctionType(params.type)) {
-      throw redirect({ to: "/dashboard/auctions/main" });
+      throw redirect({
+        params: { type: "main" },
+        to: "/dashboard/auctions/$type",
+      });
     }
   },
   component: AuctionsTypeIndexRoute,

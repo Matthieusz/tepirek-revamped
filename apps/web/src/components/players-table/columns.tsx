@@ -249,7 +249,7 @@ const ActionCell = ({ player }: { player: Player }) => {
 
 const columnHelper = createColumnHelper<Player>();
 
-const baseColumns: ColumnDef<Player, unknown>[] = [
+const baseColumns = [
   columnHelper.accessor("id", {
     cell: (info) => info.row.index + 1,
     header: "ID",
@@ -284,7 +284,7 @@ const baseColumns: ColumnDef<Player, unknown>[] = [
     cell: (info) => formatDate(info.getValue()),
     header: "Zaktualizowano",
   }),
-];
+] as ColumnDef<Player>[];
 
 const actionsColumn = (): ColumnDef<Player> =>
   columnHelper.display({

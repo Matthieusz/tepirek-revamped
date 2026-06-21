@@ -33,8 +33,6 @@ export const SignUpForm = ({
           email: value.email,
           name: value.name,
           password: value.password,
-          role: "user",
-          verified: false,
         },
         {
           onError: (error) => {

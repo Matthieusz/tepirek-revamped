@@ -186,7 +186,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
           {/* Event Select */}
           <Select
             onValueChange={(value) => {
-              filter.selectEvent(value);
+              filter.selectEvent(value ?? ALL_FILTER);
             }}
             value={filter.state.eventId}
           >
@@ -207,7 +207,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
           <Select
             disabled={!filter.heroQueryEnabled}
             onValueChange={(value) => {
-              filter.selectHero(value);
+              filter.selectHero(value ?? ALL_FILTER);
             }}
             value={filter.heroQueryEnabled ? filter.state.heroId : ""}
           >

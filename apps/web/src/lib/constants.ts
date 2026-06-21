@@ -28,5 +28,5 @@ const getNormalizedEventIconId = (
 /**
  * Get an event icon component by name, with fallback to Calendar
  */
-export const getEventIcon = (iconName: string | null | undefined): LucideIcon =>
+export const getEventIcon = (iconName?: string | null): LucideIcon =>
   EVENT_ICON_MAP[getNormalizedEventIconId(iconName)] ?? Calendar;

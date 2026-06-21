@@ -117,11 +117,22 @@ pnpm db:start && pnpm db:push && pnpm dev
    BETTER_AUTH_URL=http://localhost:3000
    CORS_ORIGIN=http://localhost:3001
 
-   # Discord OAuth (optional)
+   # Discord OAuth (required by the current login UI and server auth config)
    DISCORD_CLIENT_ID=your-discord-client-id
    DISCORD_CLIENT_SECRET=your-discord-client-secret
    DISCORD_SERVER_ID=your-discord-server-id
    ```
+
+   Local dummy values are enough for tests and smoke tests that do not
+   exercise Discord login, but real development login through Discord requires
+   real Discord application credentials.
+
+   > **Secret hygiene:** `.env.example` is safe to commit; `.env` is git-ignored
+   > and must never be committed. If `BETTER_AUTH_SECRET` or
+   > `DISCORD_CLIENT_SECRET` is accidentally exposed (terminal transcript,
+   > screenshot, issue, chat, or agent output), rotate it in the relevant
+   > dashboard immediately. Never paste `.env` contents into plans, issues, or
+   > chats. Use deployment secret stores for production.
 
 3. **Set up the database**
 
