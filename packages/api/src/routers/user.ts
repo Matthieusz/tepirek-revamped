@@ -25,16 +25,29 @@ export const hasDiscordGuild = (guilds: unknown, guildId: string): boolean => {
 const LAST_ADMIN_MESSAGE =
   "Nie można odebrać uprawnień ostatniemu administratorowi";
 
-const loadTargetUser = async (userId: string) => {
-  const [targetUser] = await db.select().from(user).where(eq(user.id, userId));
+type UserMutationExecutor = Pick<typeof db, "select" | "update">;
+type AdminMutationNextState = Partial<
+  Pick<typeof user.$inferSelect, "role" | "verified">
+>;
+
+const loadTargetUser = async (
+  executor: Pick<UserMutationExecutor, "select">,
+  userId: string
+) => {
+  const [targetUser] = await executor
+    .select()
+    .from(user)
+    .where(eq(user.id, userId));
   if (!targetUser) {
     throw new ORPCError("NOT_FOUND", { message: "Użytkownik nie istnieje" });
   }
   return targetUser;
 };
 
-const countVerifiedAdmins = async () => {
-  const [result] = await db
+const countVerifiedAdmins = async (
+  executor: Pick<UserMutationExecutor, "select">
+) => {
+  const [result] = await executor
     .select({ count: sql<number>`count(*)` })
     .from(user)
     .where(and(eq(user.role, "admin"), eq(user.verified, true)));
@@ -48,9 +61,10 @@ const countVerifiedAdmins = async () => {
  * blocked when it would leave the guild with zero verified admins.
  */
 const assertAdminMutationAllowed = async (
+  executor: Pick<UserMutationExecutor, "select">,
   actorId: string,
   targetUser: { id: string; role: string | null; verified: boolean },
-  next: { role?: string; verified?: boolean }
+  next: AdminMutationNextState
 ) => {
   const nextRole = next.role ?? targetUser.role;
   const nextVerified = next.verified ?? targetUser.verified;
@@ -67,23 +81,40 @@ const assertAdminMutationAllowed = async (
     throw new ORPCError("FORBIDDEN", { message: LAST_ADMIN_MESSAGE });
   }
 
-  const verifiedAdminCount = await countVerifiedAdmins();
+  const verifiedAdminCount = await countVerifiedAdmins(executor);
   if (verifiedAdminCount <= 1) {
     throw new ORPCError("FORBIDDEN", { message: LAST_ADMIN_MESSAGE });
   }
 };
 
 const updateAndReturnUser = async (
+  executor: UserMutationExecutor,
   where: SQL,
   values: Partial<typeof user.$inferInsert>
 ) => {
-  await db
+  await executor
     .update(user)
     .set({ updatedAt: new Date(), ...values })
     .where(where);
-  const [updated] = await db.select().from(user).where(where);
+  const [updated] = await executor.select().from(user).where(where);
   return updated ?? null;
 };
+
+const mutateAdminAvailabilityUser = (
+  actorId: string,
+  userId: string,
+  next: AdminMutationNextState
+) =>
+  db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext('tepirek:user-admin-mutation'))`
+    );
+
+    const targetUser = await loadTargetUser(tx, userId);
+    await assertAdminMutationAllowed(tx, actorId, targetUser, next);
+
+    return updateAndReturnUser(tx, eq(user.id, userId), next);
+  });
 
 export const userRouter = {
   deleteUser: adminProcedure
@@ -122,15 +153,11 @@ export const userRouter = {
         userId: userIdSchema,
       })
     )
-    .handler(async ({ input, context }) => {
-      const targetUser = await loadTargetUser(input.userId);
-      await assertAdminMutationAllowed(context.session.user.id, targetUser, {
+    .handler(({ input, context }) =>
+      mutateAdminAvailabilityUser(context.session.user.id, input.userId, {
         role: input.role,
-      });
-      return updateAndReturnUser(eq(user.id, input.userId), {
-        role: input.role,
-      });
-    }),
+      })
+    ),
   setVerified: adminProcedure
     .input(
       z.object({
@@ -138,15 +165,11 @@ export const userRouter = {
         verified: z.boolean(),
       })
     )
-    .handler(async ({ input, context }) => {
-      const targetUser = await loadTargetUser(input.userId);
-      await assertAdminMutationAllowed(context.session.user.id, targetUser, {
+    .handler(({ input, context }) =>
+      mutateAdminAvailabilityUser(context.session.user.id, input.userId, {
         verified: input.verified,
-      });
-      return updateAndReturnUser(eq(user.id, input.userId), {
-        verified: input.verified,
-      });
-    }),
+      })
+    ),
   updateProfile: verifiedProcedure
     .input(
       z.object({
@@ -154,7 +177,7 @@ export const userRouter = {
       })
     )
     .handler(({ input, context }) =>
-      updateAndReturnUser(eq(user.id, context.session.user.id), {
+      updateAndReturnUser(db, eq(user.id, context.session.user.id), {
         name: input.name,
       })
     ),
@@ -166,7 +189,7 @@ export const userRouter = {
       })
     )
     .handler(({ input }) =>
-      updateAndReturnUser(eq(user.id, input.userId), { name: input.name })
+      updateAndReturnUser(db, eq(user.id, input.userId), { name: input.name })
     ),
   verifyDiscordGuildMembership: protectedProcedure.handler(
     async ({ context }) => {
