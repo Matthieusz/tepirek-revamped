@@ -1,11 +1,11 @@
 import { ORPCError, os } from "@orpc/server";
 import type { auth } from "@tepirek-revamped/auth";
-import type { Logger } from "pino";
+import type { RequestLogger } from "evlog";
 
 type Session = Awaited<ReturnType<typeof auth.api.getSession>>;
 
 export interface RouterContext {
-  logger: Logger;
+  logger: RequestLogger;
   session: Session;
 }
 

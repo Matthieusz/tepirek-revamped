@@ -1,13 +1,9 @@
 import { auth } from "@tepirek-revamped/auth";
+import type { EvlogVariables } from "evlog/hono";
 import type { Context as HonoContext } from "hono";
-import type { Logger } from "pino";
 
 export interface CreateContextOptions {
-  context: HonoContext<{
-    Variables: {
-      logger: Logger;
-    };
-  }>;
+  context: HonoContext<EvlogVariables>;
 }
 
 export const createContext = async ({ context }: CreateContextOptions) => {
@@ -15,7 +11,7 @@ export const createContext = async ({ context }: CreateContextOptions) => {
     headers: context.req.raw.headers,
   });
   return {
-    logger: context.get("logger"),
+    logger: context.get("log"),
     session,
   };
 };
