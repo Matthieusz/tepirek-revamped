@@ -1,12 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
 import DashboardHomePage from "@/pages/dashboard/index";
 
+const routeApi = getRouteApi("/dashboard/");
+
+const DashboardHomeRoute = () => {
+  const { session } = routeApi.useRouteContext();
+  return <DashboardHomePage session={session} />;
+};
+
 export const Route = createFileRoute("/dashboard/")({
-  component: () => {
-    const { session } = Route.useRouteContext();
-    return <DashboardHomePage session={session} />;
-  },
+  component: DashboardHomeRoute,
   staticData: {
     crumb: "Strona główna",
   },

@@ -1,12 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
 import PlayerListPage from "@/pages/dashboard/player-list";
 
+const routeApi = getRouteApi("/dashboard/player-list");
+
+const PlayerListRoute = () => {
+  const { session } = routeApi.useRouteContext();
+  return <PlayerListPage session={session} />;
+};
+
 export const Route = createFileRoute("/dashboard/player-list")({
-  component: () => {
-    const { session } = Route.useRouteContext();
-    return <PlayerListPage session={session} />;
-  },
+  component: PlayerListRoute,
   staticData: {
     crumb: "Lista graczy",
   },

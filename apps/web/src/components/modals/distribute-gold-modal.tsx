@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Coins } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -137,18 +137,20 @@ export const DistributeGoldModal = ({
   selectedHeroId = "all",
 }: DistributeGoldModalProps) => {
   const [open, setOpen] = useState(false);
-  const [eventId, setEventId] = useState(selectedEventId);
-  const [heroId, setHeroId] = useState(selectedHeroId);
+  const [eventIdOverride, setEventIdOverride] = useState<string>();
+  const [heroIdOverride, setHeroIdOverride] = useState<string>();
   const queryClient = useQueryClient();
+  const eventId = eventIdOverride ?? selectedEventId;
+  const heroId = heroIdOverride ?? selectedHeroId;
 
-  useEffect(() => {
-    if (!open) {
-      return;
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      setEventIdOverride(undefined);
+      setHeroIdOverride(undefined);
     }
 
-    setEventId(selectedEventId);
-    setHeroId(selectedHeroId);
-  }, [open, selectedEventId, selectedHeroId]);
+    setOpen(nextOpen);
+  };
 
   const { data: events } = useQuery(orpc.event.getAll.queryOptions());
 
@@ -223,7 +225,7 @@ export const DistributeGoldModal = ({
       : 0;
 
   return (
-    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+    <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="max-w-3 sm:max-w-125">
         <form
@@ -248,8 +250,8 @@ export const DistributeGoldModal = ({
               <Label>Event</Label>
               <Select
                 onValueChange={(value) => {
-                  setEventId(value ?? ALL_FILTER);
-                  setHeroId(ALL_FILTER);
+                  setEventIdOverride(value ?? ALL_FILTER);
+                  setHeroIdOverride(ALL_FILTER);
                 }}
                 value={eventId}
               >
@@ -273,7 +275,7 @@ export const DistributeGoldModal = ({
               <Select
                 disabled={eventId === ALL_FILTER}
                 onValueChange={(value) => {
-                  setHeroId(value ?? ALL_FILTER);
+                  setHeroIdOverride(value ?? ALL_FILTER);
                 }}
                 value={eventId === ALL_FILTER ? "" : heroId}
               >
