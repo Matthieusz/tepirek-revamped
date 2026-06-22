@@ -7,6 +7,8 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { createMiddleware } from "@tanstack/react-start";
+import { evlogErrorHandler } from "evlog/nitro/v3";
 
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
@@ -65,10 +67,13 @@ export interface RouterAppContext {
   queryClient: QueryClient;
 }
 
+const evlogMiddleware = createMiddleware().server(evlogErrorHandler);
+
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootDocument,
 
   errorComponent: RootErrorBoundary,
+
   head: () => ({
     links: [
       {
@@ -100,4 +105,8 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       },
     ],
   }),
+
+  server: {
+    middleware: [evlogMiddleware],
+  },
 });
