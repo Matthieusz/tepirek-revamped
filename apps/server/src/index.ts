@@ -1,7 +1,4 @@
 import "dotenv/config";
-// oxlint-disable-next-line eslint-plugin-import(no-nodejs-modules)
-import { randomUUID } from "node:crypto";
-
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
@@ -10,17 +7,20 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { createContext } from "@tepirek-revamped/api/context";
 import { appRouter } from "@tepirek-revamped/api/routers/index";
 import { auth } from "@tepirek-revamped/auth";
+import { createError, initLogger, log as evlogLog, parseError } from "evlog";
+import { createAuthMiddleware } from "evlog/better-auth";
+import type { BetterAuthInstance } from "evlog/better-auth";
+import { evlog } from "evlog/hono";
+import type { EvlogVariables } from "evlog/hono";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 
-import { logger } from "./logger";
-import type { Logger } from "./logger";
+initLogger({
+  env: { service: "tepirek-server" },
+});
 
-const app = new Hono<{
-  Variables: {
-    logger: Logger;
-  };
-}>();
+const app = new Hono<EvlogVariables>();
 
 const corsOrigin = process.env.CORS_ORIGIN;
 
@@ -28,40 +28,19 @@ if (!corsOrigin) {
   throw new Error("CORS_ORIGIN environment variable is required");
 }
 
+app.use(evlog());
+
+// Identify the authenticated user from the better-auth session and attach
+// user context to every request's wide event. Skips auth routes (where a
+// session is being established) and masks emails in logs.
+const identifyUser = createAuthMiddleware(auth as BetterAuthInstance, {
+  exclude: ["/api/auth/**"],
+  maskEmail: true,
+});
+
 app.use("*", async (c, next) => {
-  const requestId = c.req.header("x-request-id") ?? randomUUID();
-  const requestLogger = logger.child({
-    method: c.req.method,
-    path: c.req.path,
-    requestId,
-  });
-
-  c.set("logger", requestLogger);
-  c.header("x-request-id", requestId);
-
-  const start = performance.now();
-
-  try {
-    await next();
-    const durationMs = Math.round(performance.now() - start);
-    requestLogger.info(
-      {
-        durationMs,
-        status: c.res?.status ?? 200,
-      },
-      "request completed"
-    );
-  } catch (error) {
-    const durationMs = Math.round(performance.now() - start);
-    requestLogger.error(
-      {
-        durationMs,
-        err: error,
-      },
-      "request failed"
-    );
-    throw error;
-  }
+  await identifyUser(c.get("log"), c.req.raw.headers, c.req.path);
+  await next();
 });
 
 app.use(
@@ -76,11 +55,41 @@ app.use(
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
+// Demo route: shows a request-scoped wide event via the evlog Hono middleware.
+// `c.get('log')` is the Hono equivalent of `useLogger(event)` — the middleware
+// creates one request logger per request and emits a single wide event on
+// response completion.
+app.post("/api/echo", async (c) => {
+  const log = c.get("log");
+
+  let body: { text?: unknown };
+  try {
+    body = await c.req.json();
+  } catch {
+    body = {};
+  }
+
+  const text = body?.text;
+  log.set({ input: { text } });
+
+  if (typeof text !== "string" || text.trim().length === 0) {
+    throw createError({
+      fix: 'Send a JSON body like { "text": "hello" }',
+      message: "text is required",
+      status: 400,
+      why: "The `text` field was missing or empty in the request body",
+    });
+  }
+
+  log.set({ echo: { length: text.length } });
+  return c.json({ text });
+});
+
 export const apiHandler = new OpenAPIHandler(appRouter, {
   interceptors: [
     // oxlint-disable-next-line promise/prefer-await-to-callbacks
     onError((error) => {
-      logger.error({ err: error }, "openapi handler error");
+      evlogLog.error({ error, handler: "openapi" });
     }),
   ],
   plugins: [
@@ -94,14 +103,14 @@ export const rpcHandler = new RPCHandler(appRouter, {
   interceptors: [
     // oxlint-disable-next-line promise/prefer-await-to-callbacks
     onError((error) => {
-      logger.error({ err: error }, "rpc handler error");
+      evlogLog.error({ error, handler: "rpc" });
     }),
   ],
 });
 
 app.use("/rpc/*", async (c, next) => {
   const context = await createContext({ context: c });
-  const requestLogger = c.get("logger") ?? logger;
+  const requestLog = c.get("log");
 
   const rpcResult = await rpcHandler.handle(c.req.raw, {
     context,
@@ -109,7 +118,7 @@ app.use("/rpc/*", async (c, next) => {
   });
 
   if (rpcResult.matched) {
-    requestLogger.debug({ path: c.req.path }, "rpc request handled");
+    requestLog.set({ rpc: { path: c.req.path } });
     return c.newResponse(rpcResult.response.body, rpcResult.response);
   }
 
@@ -118,7 +127,7 @@ app.use("/rpc/*", async (c, next) => {
 
 app.use("/api-reference/*", async (c, next) => {
   const context = await createContext({ context: c });
-  const requestLogger = c.get("logger") ?? logger;
+  const requestLog = c.get("log");
 
   const apiResult = await apiHandler.handle(c.req.raw, {
     context,
@@ -126,7 +135,7 @@ app.use("/api-reference/*", async (c, next) => {
   });
 
   if (apiResult.matched) {
-    requestLogger.debug({ path: c.req.path }, "openapi request handled");
+    requestLog.set({ openapi: { path: c.req.path } });
     return c.newResponse(apiResult.response.body, apiResult.response);
   }
 
@@ -134,5 +143,20 @@ app.use("/api-reference/*", async (c, next) => {
 });
 
 app.get("/", (c) => c.text("OK"));
+
+// oxlint-disable-next-line promise/prefer-await-to-callbacks
+app.onError((error, c) => {
+  c.get("log").error(error);
+  const parsed = parseError(error);
+  return c.json(
+    {
+      fix: parsed.fix,
+      link: parsed.link,
+      message: parsed.message,
+      why: parsed.why,
+    },
+    parsed.status as ContentfulStatusCode
+  );
+});
 
 export default app;
