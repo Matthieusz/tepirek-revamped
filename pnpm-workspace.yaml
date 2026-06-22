@@ -16,7 +16,7 @@ catalog:
   drizzle-orm: ^0.45.2
   hono: ^4.12.26
   tsdown: ^0.22.3
-  typescript: ^6.0.3
+  typescript: rc
   zod: ^4.4.3
 
 minimumReleaseAgeExclude:
