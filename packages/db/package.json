@@ -28,9 +28,10 @@
   "devDependencies": {
     "@tepirek-revamped/config": "workspace:*",
     "@types/pg": "^8.20.0",
-    "drizzle-kit": "^0.31.10"
+    "drizzle-kit": "^0.31.10",
+    "typescript": "catalog:"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5 || ^6 || ^7.0.0-0"
   }
 }
