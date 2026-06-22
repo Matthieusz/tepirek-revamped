@@ -1,12 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
 import EventsListPage from "@/pages/dashboard/events/list";
 
+const routeApi = getRouteApi("/dashboard/events/list");
+
+const EventsListRoute = () => {
+  const { session } = routeApi.useRouteContext();
+  return <EventsListPage session={session} />;
+};
+
 export const Route = createFileRoute("/dashboard/events/list")({
-  component: () => {
-    const { session } = Route.useRouteContext();
-    return <EventsListPage session={session} />;
-  },
+  component: EventsListRoute,
   staticData: {
     crumb: "Lista eventów",
   },
