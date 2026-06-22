@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, redirect } from "@tanstack/react-router";
 
 import {
   AUCTION_PROFESSION_META,
@@ -7,11 +7,11 @@ import {
 } from "@/pages/dashboard/auctions/config";
 import AuctionsProfessionPage from "@/pages/dashboard/auctions/profession";
 
+const routeApi = getRouteApi("/dashboard/auctions/$type/$profession");
+
 const AuctionsProfessionRoute = () => {
-  // eslint-disable-next-line no-use-before-define
-  const { session } = Route.useRouteContext();
-  // eslint-disable-next-line no-use-before-define
-  const { profession, type } = Route.useParams();
+  const { session } = routeApi.useRouteContext();
+  const { profession, type } = routeApi.useParams();
 
   if (!isAuctionType(type) || !isAuctionProfession(profession)) {
     return null;

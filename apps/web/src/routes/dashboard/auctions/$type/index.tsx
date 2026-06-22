@@ -1,13 +1,13 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, redirect } from "@tanstack/react-router";
 
 import { isAuctionType } from "@/pages/dashboard/auctions/config";
 import AuctionsTypeIndexPage from "@/pages/dashboard/auctions/type-index";
 
+const routeApi = getRouteApi("/dashboard/auctions/$type/");
+
 const AuctionsTypeIndexRoute = () => {
-  // eslint-disable-next-line no-use-before-define
-  const { session } = Route.useRouteContext();
-  // eslint-disable-next-line no-use-before-define
-  const { type } = Route.useParams();
+  const { session } = routeApi.useRouteContext();
+  const { type } = routeApi.useParams();
 
   if (!isAuctionType(type)) {
     return null;
