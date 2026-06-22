@@ -1,10 +1,6 @@
-import { clsx } from "clsx";
-import type { ClassValue } from "clsx";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { twMerge } from "tailwind-merge";
-
-export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
+export { cn } from "cnfast";
 
 export const slugify = (input: string) =>
   input
