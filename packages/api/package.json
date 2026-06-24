@@ -20,7 +20,7 @@
     "@tepirek-revamped/config": "workspace:*",
     "@tepirek-revamped/db": "workspace:*",
     "drizzle-orm": "catalog:",
-    "evlog": "^2.19.1",
+    "evlog": "^2.19.2",
     "hono": "catalog:",
     "zod": "catalog:"
   },
