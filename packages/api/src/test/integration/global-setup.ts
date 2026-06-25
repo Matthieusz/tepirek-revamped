@@ -42,7 +42,7 @@ const assertTestDatabaseIsReachable = async () => {
     await testPool.query("select 1");
   } catch (error) {
     throw new Error(
-      `Could not connect to TEST_DATABASE_URL (${process.env.TEST_DATABASE_URL}).`,
+      "Could not connect to TEST_DATABASE_URL. Ensure it points to a reachable dedicated test database.",
       { cause: error }
     );
   }

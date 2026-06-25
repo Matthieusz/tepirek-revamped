@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { getEventIcon } from "@/lib/constants";
 import { getErrorMessage } from "@/lib/errors";
+import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 import { orpc } from "@/utils/orpc";
@@ -310,24 +311,27 @@ interface BetsAddPageProps {
 export const BetsAddPage = ({ session }: BetsAddPageProps) => {
   const [selectedEventId, setSelectedEventId] = useState("");
   const queryClient = useQueryClient();
-
-  const { data: events, isPending: eventsLoading } = useQuery(
-    orpc.event.getAll.queryOptions()
-  );
-
-  const { data: heroes, isPending: heroesLoading } = useQuery(
-    orpc.heroes.getAll.queryOptions()
-  );
-
-  const { data: verifiedUsers, isPending: usersLoading } = useQuery(
-    orpc.user.getVerified.queryOptions()
-  );
-
-  const { data: latestBet, isPending: latestBetLoading } = useQuery(
-    orpc.bet.getLatestForCopy.queryOptions()
-  );
-
   const isAdminUser = isAdmin(session);
+
+  const { data: events, isPending: eventsLoading } = useQuery({
+    ...orpc.event.getAll.queryOptions(),
+    enabled: isAdminUser,
+  });
+
+  const { data: heroes, isPending: heroesLoading } = useQuery({
+    ...orpc.heroes.getAll.queryOptions(),
+    enabled: isAdminUser,
+  });
+
+  const { data: verifiedUsers, isPending: usersLoading } = useQuery({
+    ...orpc.user.getVerified.queryOptions(),
+    enabled: isAdminUser,
+  });
+
+  const { data: latestBet, isPending: latestBetLoading } = useQuery({
+    ...orpc.bet.getLatestForCopy.queryOptions(),
+    enabled: isAdminUser,
+  });
 
   const form = useForm({
     defaultValues: {
@@ -354,9 +358,7 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
         });
 
         toast.success("Obstawienie dodano pomyślnie");
-        await queryClient.invalidateQueries({
-          queryKey: orpc.bet.getLatestForCopy.queryKey(),
-        });
+        await invalidateBetLedgerQueries(queryClient);
         form.setFieldValue("userIds", []);
       } catch (error) {
         toast.error(getErrorMessage(error));

@@ -35,6 +35,7 @@ import {
 import { getErrorMessage } from "@/lib/errors";
 import { ALL_FILTER } from "@/lib/event-hero-filter";
 import { parseGoldAmount } from "@/lib/gold";
+import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
 import { orpc } from "@/utils/orpc";
 
 interface HeroStats {
@@ -197,14 +198,7 @@ export const DistributeGoldModal = ({
         toast.success(
           `Rozdzielono ${goldAmount.toLocaleString("pl-PL")} złota dla ${result.usersUpdated} graczy`
         );
-        await queryClient.invalidateQueries({
-          queryKey: orpc.ranking.getRanking.queryKey({ input: {} }),
-        });
-        await queryClient.invalidateQueries({
-          queryKey: orpc.ranking.getHeroStats.queryKey({
-            input: { heroId: Number.parseInt(heroId, 10) },
-          }),
-        });
+        await invalidateBetLedgerQueries(queryClient);
         setOpen(false);
         form.reset();
       } catch (error) {

@@ -1,6 +1,8 @@
 export const POINTS_PER_HERO = 20;
 export const MIN_EARNINGS = 100_000_000;
 
+export { slugifySkillRangeName } from "./slug";
+
 // ---------------------------------------------------------------------------
 // Roles
 // ---------------------------------------------------------------------------

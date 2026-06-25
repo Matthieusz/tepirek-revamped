@@ -19,7 +19,7 @@ export const vaultRouter = {
   togglePaidOut: adminProcedure
     .input(
       z.object({
-        eventId: z.number().optional(),
+        eventId: z.number(),
         paidOut: z.boolean(),
         userId: z.string(),
       })

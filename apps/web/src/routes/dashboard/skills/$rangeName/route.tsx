@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useState } from "react";
@@ -28,7 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { isAdmin } from "@/lib/route-helpers";
-import { orpc, queryClient } from "@/utils/orpc";
+import { orpc } from "@/utils/orpc";
 
 const routeApi = getRouteApi("/dashboard/skills/$rangeName");
 
@@ -36,6 +36,7 @@ const RangeDetails = () => {
   const { rangeName } = routeApi.useParams();
   const { session } = routeApi.useRouteContext();
   const [skillToDelete, setSkillToDelete] = useState<SkillToDelete>(null);
+  const queryClient = useQueryClient();
 
   const isAdminUser = isAdmin(session);
 

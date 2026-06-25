@@ -31,6 +31,34 @@ const getHeroEvent = async (heroId: number, message: string) => {
   return heroData;
 };
 
+const validateVerifiedMemberIds = async (userIds: string[]) => {
+  if (userIds.some((userId) => userId === "")) {
+    throw new ORPCError("BAD_REQUEST", {
+      message: "Wybierz tylko zweryfikowanych graczy",
+    });
+  }
+
+  const uniqueUserIds = [...new Set(userIds)];
+  if (uniqueUserIds.length !== userIds.length) {
+    throw new ORPCError("BAD_REQUEST", {
+      message: "Ten sam gracz nie może być wybrany dwa razy",
+    });
+  }
+
+  const rows = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(and(inArray(user.id, uniqueUserIds), eq(user.verified, true)));
+
+  if (rows.length !== uniqueUserIds.length) {
+    throw new ORPCError("BAD_REQUEST", {
+      message: "Wybierz tylko zweryfikowanych graczy",
+    });
+  }
+
+  return uniqueUserIds;
+};
+
 const buildUserStatsWhere = (input: {
   eventId?: number;
   heroId?: number;
@@ -110,7 +138,8 @@ export const heroBetLedger = {
     userIds: string[];
   }) {
     const { createdBy, heroId, userIds } = input;
-    const memberCount = userIds.length;
+    const memberUserIds = await validateVerifiedMemberIds(userIds);
+    const memberCount = memberUserIds.length;
     const pointsPerMember = calculatePointsPerMember(memberCount);
     const heroData = await getHeroEvent(heroId, "Nie znaleziono herosów");
 
@@ -132,7 +161,7 @@ export const heroBetLedger = {
       }
 
       await tx.insert(heroBetMember).values(
-        userIds.map((userId) => ({
+        memberUserIds.map((userId) => ({
           heroBetId: bet.id,
           points: pointsPerMember,
           userId,
@@ -142,7 +171,7 @@ export const heroBetLedger = {
       await tx
         .insert(userStats)
         .values(
-          userIds.map((userId) => ({
+          memberUserIds.map((userId) => ({
             bets: 1,
             earnings: "0",
             eventId: heroData.eventId,
@@ -272,7 +301,8 @@ export const heroBetLedger = {
 
   async editBet(input: { betId: number; newUserIds: string[] }) {
     const { betId, newUserIds } = input;
-    const newMemberCount = newUserIds.length;
+    const memberUserIds = await validateVerifiedMemberIds(newUserIds);
+    const newMemberCount = memberUserIds.length;
     const [betData] = await db
       .select({ heroId: heroBet.heroId, memberCount: heroBet.memberCount })
       .from(heroBet)
@@ -304,11 +334,13 @@ export const heroBetLedger = {
     );
     const newPointsPerMember = calculatePointsPerMember(newMemberCount);
     const membersToRemove = currentMembers.filter(
-      (member) => !newUserIds.includes(member.userId)
+      (member) => !memberUserIds.includes(member.userId)
     );
-    const membersToAdd = newUserIds.filter((id) => !currentMemberIds.has(id));
+    const membersToAdd = memberUserIds.filter(
+      (id) => !currentMemberIds.has(id)
+    );
     const membersToKeep = currentMembers.filter((member) =>
-      newUserIds.includes(member.userId)
+      memberUserIds.includes(member.userId)
     );
 
     await db.transaction(async (tx) => {
@@ -666,14 +698,14 @@ export const heroBetLedger = {
   },
 
   async togglePaidOut(input: {
-    eventId?: number;
+    eventId: number;
     paidOut: boolean;
     userId: string;
   }) {
-    const conditions: SQL[] = [eq(userStats.userId, input.userId)];
-    if (input.eventId !== undefined) {
-      conditions.push(eq(userStats.eventId, input.eventId));
-    }
+    const conditions: SQL[] = [
+      eq(userStats.userId, input.userId),
+      eq(userStats.eventId, input.eventId),
+    ];
 
     await db
       .update(userStats)

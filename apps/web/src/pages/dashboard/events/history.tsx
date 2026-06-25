@@ -40,6 +40,7 @@ import { useEventHeroFilter } from "@/hooks/use-event-hero-filter";
 import { calculatePointsPerMember } from "@/lib/bet-helpers";
 import { getErrorMessage } from "@/lib/errors";
 import { ALL_FILTER } from "@/lib/event-hero-filter";
+import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import type { AuthSession } from "@/types/route";
@@ -125,10 +126,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
     },
     onSuccess: async () => {
       toast.success("Obstawienie zostało usunięte");
-      // Invalidate the paginated bets query
-      await queryClient.invalidateQueries({
-        queryKey: ["bets", "paginated"],
-      });
+      await invalidateBetLedgerQueries(queryClient);
       setBetToDelete(null);
     },
   });

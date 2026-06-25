@@ -25,6 +25,22 @@ export const hasDiscordGuild = (guilds: unknown, guildId: string): boolean => {
 const LAST_ADMIN_MESSAGE =
   "Nie można odebrać uprawnień ostatniemu administratorowi";
 
+const verifiedMemberSelect = {
+  id: user.id,
+  image: user.image,
+  name: user.name,
+};
+
+const playerListSelect = {
+  createdAt: user.createdAt,
+  id: user.id,
+  image: user.image,
+  name: user.name,
+  role: user.role,
+  updatedAt: user.updatedAt,
+  verified: user.verified,
+};
+
 type UserMutationExecutor = Pick<typeof db, "select" | "update">;
 type AdminMutationNextState = Partial<
   Pick<typeof user.$inferSelect, "role" | "verified">
@@ -143,9 +159,9 @@ export const userRouter = {
     }),
   getSession: protectedProcedure.handler(({ context }) => context.session),
   getVerified: verifiedProcedure.handler(() =>
-    db.select().from(user).where(eq(user.verified, true))
+    db.select(verifiedMemberSelect).from(user).where(eq(user.verified, true))
   ),
-  list: verifiedProcedure.handler(() => db.select().from(user)),
+  list: verifiedProcedure.handler(() => db.select(playerListSelect).from(user)),
   setRole: adminProcedure
     .input(
       z.object({

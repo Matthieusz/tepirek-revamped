@@ -1,7 +1,9 @@
+import { ORPCError } from "@orpc/server";
+import { slugifySkillRangeName } from "@tepirek-revamped/config";
 import { db } from "@tepirek-revamped/db";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { professions, range, skills } from "@tepirek-revamped/db/schema/skills";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { adminProcedure, verifiedProcedure } from "./procedures";
@@ -32,13 +34,32 @@ export const skillsRouter = {
         name: z.string().min(2),
       })
     )
-    .handler(({ input }) =>
-      db.insert(range).values({
+    .handler(async ({ input }) => {
+      const slug = slugifySkillRangeName(input.name);
+      if (slug === "") {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Nazwa przedziału musi zawierać litery lub cyfry",
+        });
+      }
+
+      const [existingRange] = await db
+        .select({ id: range.id })
+        .from(range)
+        .where(eq(range.slug, slug))
+        .limit(1);
+      if (existingRange) {
+        throw new ORPCError("CONFLICT", {
+          message: "Przedział o tej nazwie już istnieje",
+        });
+      }
+
+      return db.insert(range).values({
         image: input.image,
         level: input.level,
         name: input.name,
-      })
-    ),
+        slug,
+      });
+    }),
 
   createSkill: verifiedProcedure
     .input(
@@ -88,7 +109,7 @@ export const skillsRouter = {
       const [result] = await db
         .select()
         .from(range)
-        .where(sql`lower(replace(${range.name}, ' ', '-')) = ${input.slug}`)
+        .where(eq(range.slug, input.slug))
         .limit(1);
       return result ?? null;
     }),

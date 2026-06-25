@@ -43,4 +43,38 @@ describe("event router Postgres integration", () => {
 
     await expect(client.event.getAll()).resolves.toEqual([]);
   });
+
+  it("lets admins toggle event activity that verified members can read", async () => {
+    const admin = await createAdmin({ id: "event-toggle-admin" });
+    const member = await createVerifiedMember({ id: "event-toggle-member" });
+    const adminClient = createAuthenticatedRouterClient(admin);
+    const memberClient = createAuthenticatedRouterClient(member);
+
+    await adminClient.event.create({
+      ...eventInput,
+      name: "Toggle Event Activity",
+    });
+    const [createdEvent] = await memberClient.event.getAll();
+    if (!createdEvent) {
+      throw new Error("expected created event to exist");
+    }
+
+    await adminClient.event.toggleActive({
+      active: false,
+      id: createdEvent.id,
+    });
+
+    await expect(memberClient.event.getAll()).resolves.toEqual([
+      expect.objectContaining({ active: false, id: createdEvent.id }),
+    ]);
+
+    await adminClient.event.toggleActive({
+      active: true,
+      id: createdEvent.id,
+    });
+
+    await expect(memberClient.event.getAll()).resolves.toEqual([
+      expect.objectContaining({ active: true, id: createdEvent.id }),
+    ]);
+  });
 });

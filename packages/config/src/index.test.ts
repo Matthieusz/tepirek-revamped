@@ -7,6 +7,7 @@ import {
   isAuctionProfession,
   isAuctionType,
   isEventIconId,
+  slugifySkillRangeName,
 } from "./index";
 
 describe("config type guards", () => {
@@ -44,5 +45,20 @@ describe("config type guards", () => {
     for (const value of ["", "dragon", "Paladin"]) {
       expect(isAuctionProfession(value)).toBe(false);
     }
+  });
+
+  it("slugifies Polish skill range names", () => {
+    expect(slugifySkillRangeName("Przedział 100")).toBe("przedzial-100");
+    expect(slugifySkillRangeName("Łowca 300+")).toBe("lowca-300");
+  });
+
+  it("collapses whitespace and punctuation in skill range slugs", () => {
+    expect(slugifySkillRangeName("  Elita   Lodowa!!! 300  ")).toBe(
+      "elita-lodowa-300"
+    );
+  });
+
+  it("returns an empty skill range slug when no usable characters remain", () => {
+    expect(slugifySkillRangeName("+++ ---")).toBe("");
   });
 });

@@ -17,6 +17,7 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { getErrorMessage } from "@/lib/errors";
+import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
 import { orpc } from "@/utils/orpc";
 
 interface EditBetModalProps {
@@ -60,9 +61,7 @@ export const EditBetModal = ({
     },
     onSuccess: async () => {
       toast.success("Obstawienie zostało zaktualizowane");
-      await queryClient.invalidateQueries({
-        queryKey: ["bets", "paginated"],
-      });
+      await invalidateBetLedgerQueries(queryClient);
       setOpen(false);
     },
   });
