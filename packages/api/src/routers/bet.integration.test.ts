@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   createAdmin,
   createHero,
+  createUnverifiedUser,
   createVerifiedMember,
 } from "../test/integration/builders";
 import { createAuthenticatedRouterClient } from "../test/integration/router-client";
@@ -138,5 +139,94 @@ describe("bet router Postgres integration", () => {
     expect(latest?.members.map((member) => member.userId).toSorted()).toEqual(
       [secondMember.id, thirdMember.id].toSorted()
     );
+  });
+
+  it("rejects duplicate members when creating a hero bet", async () => {
+    const admin = await createAdmin({ id: "duplicate-create-admin" });
+    const member = await createVerifiedMember({
+      id: "duplicate-create-member",
+    });
+    const hero = await createHero({ name: "Duplicate Create Hero" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    await expect(
+      client.bet.create({ heroId: hero.id, userIds: [member.id, member.id] })
+    ).rejects.toBeInstanceOf(ORPCError);
+
+    await expect(client.bet.getAll()).resolves.toEqual([]);
+  });
+
+  it("rejects unverified members when creating a hero bet", async () => {
+    const admin = await createAdmin({ id: "unverified-create-admin" });
+    const unverified = await createUnverifiedUser({
+      id: "unverified-create-member",
+    });
+    const hero = await createHero({ name: "Unverified Create Hero" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    await expect(
+      client.bet.create({ heroId: hero.id, userIds: [unverified.id] })
+    ).rejects.toBeInstanceOf(ORPCError);
+
+    await expect(client.bet.getAll()).resolves.toEqual([]);
+  });
+
+  it("rejects duplicate members when editing and preserves original members", async () => {
+    const admin = await createAdmin({ id: "duplicate-edit-admin" });
+    const firstMember = await createVerifiedMember({
+      id: "duplicate-edit-one",
+    });
+    const secondMember = await createVerifiedMember({
+      id: "duplicate-edit-two",
+    });
+    const hero = await createHero({ name: "Duplicate Edit Hero" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    const createdBet = await client.bet.create({
+      heroId: hero.id,
+      userIds: [firstMember.id, secondMember.id],
+    });
+
+    await expect(
+      client.bet.edit({
+        betId: createdBet.id,
+        newUserIds: [firstMember.id, firstMember.id],
+      })
+    ).rejects.toBeInstanceOf(ORPCError);
+
+    await expect(
+      client.bet.getBetMembers({ betId: createdBet.id })
+    ).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ userId: firstMember.id }),
+        expect.objectContaining({ userId: secondMember.id }),
+      ])
+    );
+  });
+
+  it("rejects unverified members when editing and preserves original members", async () => {
+    const admin = await createAdmin({ id: "unverified-edit-admin" });
+    const verified = await createVerifiedMember({ id: "unverified-edit-good" });
+    const unverified = await createUnverifiedUser({
+      id: "unverified-edit-bad",
+    });
+    const hero = await createHero({ name: "Unverified Edit Hero" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    const createdBet = await client.bet.create({
+      heroId: hero.id,
+      userIds: [verified.id],
+    });
+
+    await expect(
+      client.bet.edit({
+        betId: createdBet.id,
+        newUserIds: [verified.id, unverified.id],
+      })
+    ).rejects.toBeInstanceOf(ORPCError);
+
+    await expect(
+      client.bet.getBetMembers({ betId: createdBet.id })
+    ).resolves.toEqual([expect.objectContaining({ userId: verified.id })]);
   });
 });

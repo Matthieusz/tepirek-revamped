@@ -72,6 +72,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
   const effectiveEventId = urlEventId ?? ALL_FILTER;
   const hasInitialized = hasInitializedRef.current;
   const eventQueryInput = toQueryInput(effectiveEventId);
+  const hasSpecificEvent = eventQueryInput !== undefined;
 
   const { data: vault, isPending: vaultLoading } = useQuery({
     ...orpc.vault.getVault.queryOptions({
@@ -90,8 +91,12 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
       userId: string;
       paidOut: boolean;
     }) => {
+      if (!hasSpecificEvent) {
+        throw new Error("Wybierz konkretny event przed zmianą statusu wypłaty");
+      }
+      const selectedEventId = eventQueryInput;
       await orpc.vault.togglePaidOut.call({
-        eventId: eventQueryInput,
+        eventId: selectedEventId,
         paidOut,
         userId,
       });
@@ -156,6 +161,12 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
         </Select>
       </div>
 
+      {isAdminUser && !hasSpecificEvent && (
+        <p className="text-center text-muted-foreground text-sm">
+          Wybierz konkretny event, aby oznaczać wypłaty.
+        </p>
+      )}
+
       {vaultLoading ? (
         <LoadingSpinner />
       ) : (
@@ -186,7 +197,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
                     </p>
                   </div>
                 </div>
-                {isAdminUser && (
+                {isAdminUser && hasSpecificEvent && (
                   <Button
                     disabled={toggleMutation.isPending}
                     onClick={() => {
@@ -258,7 +269,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
                       </p>
                     </div>
                     {/* Checkbox for admin */}
-                    {isAdminUser && (
+                    {isAdminUser && hasSpecificEvent && (
                       <Checkbox
                         checked={player.paidOut}
                         disabled={toggleMutation.isPending}
@@ -289,7 +300,8 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
                   className="opacity-60 transition-colors hover:bg-accent/50"
                   key={player.userId}
                   rightSlot={
-                    isAdminUser && (
+                    isAdminUser &&
+                    hasSpecificEvent && (
                       <Checkbox
                         checked={player.paidOut}
                         disabled={toggleMutation.isPending}

@@ -86,6 +86,42 @@ describe("vault router Postgres integration", () => {
     ]);
   });
 
+  it("marks a member paid out only for the selected event", async () => {
+    const admin = await createAdmin({ id: "paid-out-scoped-admin" });
+    const member = await createVerifiedMember({ id: "paid-out-scoped-member" });
+    const firstHero = await createHero({ name: "Scoped Paid Out First" });
+    const secondHero = await createHero({ name: "Scoped Paid Out Second" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    await client.bet.create({ heroId: firstHero.id, userIds: [member.id] });
+    await client.bet.create({ heroId: secondHero.id, userIds: [member.id] });
+    await client.vault.distributeGold({
+      goldAmount: 200_000_000,
+      heroId: firstHero.id,
+    });
+    await client.vault.distributeGold({
+      goldAmount: 200_000_000,
+      heroId: secondHero.id,
+    });
+
+    await client.vault.togglePaidOut({
+      eventId: firstHero.eventId,
+      paidOut: true,
+      userId: member.id,
+    });
+
+    await expect(
+      client.vault.getVault({ eventId: firstHero.eventId })
+    ).resolves.toEqual([
+      expect.objectContaining({ paidOut: true, userId: member.id }),
+    ]);
+    await expect(
+      client.vault.getVault({ eventId: secondHero.eventId })
+    ).resolves.toEqual([
+      expect.objectContaining({ paidOut: false, userId: member.id }),
+    ]);
+  });
+
   it("prevents verified non-admin members from distributing gold", async () => {
     const member = await createVerifiedMember({ id: "vault-non-admin" });
     const hero = await createHero({ name: "Protected Vault Hero" });

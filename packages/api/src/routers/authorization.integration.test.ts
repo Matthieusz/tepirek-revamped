@@ -172,3 +172,54 @@ describe("admin self-lockout guardrails", () => {
     ).toHaveLength(1);
   });
 });
+
+describe("user router projections", () => {
+  it("returns display-only player rows to verified members", async () => {
+    const member = await createVerifiedMember({
+      email: "projection-member@example.com",
+      id: "projection-member",
+      image: "https://example.com/projection.png",
+      name: "Projection Member",
+    });
+    const client = createAuthenticatedRouterClient(member);
+
+    const players = await client.user.list();
+    const row = players.find((player) => player.id === member.id);
+
+    expect(row).toMatchObject({
+      id: member.id,
+      image: "https://example.com/projection.png",
+      name: "Projection Member",
+      role: "user",
+      verified: true,
+    });
+    expect(row).toHaveProperty("createdAt");
+    expect(row).toHaveProperty("updatedAt");
+    expect(row).not.toHaveProperty("email");
+    expect(row).not.toHaveProperty("emailVerified");
+  });
+
+  it("returns only member picker fields from verified user lookup", async () => {
+    const member = await createVerifiedMember({
+      email: "verified-projection@example.com",
+      id: "verified-projection-member",
+      image: "https://example.com/verified-projection.png",
+      name: "Verified Projection Member",
+    });
+    const client = createAuthenticatedRouterClient(member);
+
+    const verifiedUsers = await client.user.getVerified();
+    const row = verifiedUsers.find((player) => player.id === member.id);
+
+    expect(row).toEqual({
+      id: member.id,
+      image: "https://example.com/verified-projection.png",
+      name: "Verified Projection Member",
+    });
+    expect(row).not.toHaveProperty("email");
+    expect(row).not.toHaveProperty("emailVerified");
+    expect(row).not.toHaveProperty("role");
+    expect(row).not.toHaveProperty("createdAt");
+    expect(row).not.toHaveProperty("updatedAt");
+  });
+});
