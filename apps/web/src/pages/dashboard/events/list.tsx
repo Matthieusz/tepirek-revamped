@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns/format";
-import { Calendar, Plus, Trash2 } from "lucide-react";
+import { Calendar, Plus, Power, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -146,6 +147,7 @@ export default function EventsListPage({ session }: EventsListPageProps) {
                     <TableHead>#</TableHead>
                     <TableHead>Ikona</TableHead>
                     <TableHead>Nazwa</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Data zakończenia</TableHead>
                     {isAdminUser && (
                       <TableHead className="text-right">Akcje</TableHead>
@@ -155,6 +157,7 @@ export default function EventsListPage({ session }: EventsListPageProps) {
                 <TableBody>
                   {events.map((event, index) => {
                     const IconComponent = getEventIcon(event.icon);
+                    const isEventActive = event.active !== false;
                     return (
                       <TableRow key={event.id}>
                         <TableCell className="text-muted-foreground">
@@ -175,12 +178,38 @@ export default function EventsListPage({ session }: EventsListPageProps) {
                           {event.name}
                         </TableCell>
                         <TableCell>
+                          <Badge
+                            variant={isEventActive ? "default" : "secondary"}
+                          >
+                            {isEventActive ? "Aktywny" : "Nieaktywny"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
                           {format(new Date(event.endTime), "dd.MM.yyyy")}
                         </TableCell>
 
                         {isAdminUser && (
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
+                              <Button
+                                onClick={() => {
+                                  setEventAction({
+                                    active: isEventActive,
+                                    id: event.id,
+                                    name: event.name,
+                                    type: "toggle",
+                                  });
+                                }}
+                                size="sm"
+                                variant="ghost"
+                              >
+                                <Power className="size-4" />
+                                <span className="sr-only">
+                                  {isEventActive
+                                    ? "Dezaktywuj event"
+                                    : "Aktywuj event"}
+                                </span>
+                              </Button>
                               <Button
                                 onClick={() => {
                                   setEventAction({
