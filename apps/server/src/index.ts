@@ -40,7 +40,7 @@ const identifyUser = createAuthMiddleware(auth as BetterAuthInstance, {
 
 app.use("*", async (c, next) => {
   await identifyUser(c.get("log"), c.req.raw.headers, c.req.path);
-  await next();
+  return next();
 });
 
 app.use(
@@ -122,7 +122,7 @@ app.use("/rpc/*", async (c, next) => {
     return c.newResponse(rpcResult.response.body, rpcResult.response);
   }
 
-  await next();
+  return next();
 });
 
 app.use("/api-reference/*", async (c, next) => {
@@ -139,7 +139,7 @@ app.use("/api-reference/*", async (c, next) => {
     return c.newResponse(apiResult.response.body, apiResult.response);
   }
 
-  await next();
+  return next();
 });
 
 app.get("/", (c) => c.text("OK"));
