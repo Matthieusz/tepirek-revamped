@@ -14,6 +14,7 @@ export const range = pgTable("range", {
   image: text("image"),
   level: integer("level").notNull(),
   name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
 });
 
 export const professions = pgTable("professions", {

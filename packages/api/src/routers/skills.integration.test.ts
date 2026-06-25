@@ -31,6 +31,7 @@ describe("skills router Postgres integration", () => {
         image: "https://example.com/range.png",
         level: 100,
         name: "Przedział 100",
+        slug: "przedzial-100",
       },
     ]);
   });
@@ -91,17 +92,69 @@ describe("skills router Postgres integration", () => {
     ).resolves.toEqual([]);
   });
 
-  it("finds ranges by slug and returns null for a missing slug", async () => {
+  it("finds ranges by persisted slug and returns null for a missing slug", async () => {
     const member = await createVerifiedMember({ id: "slug-member" });
-    await createRange({ name: "Elita Lodowa" });
+    await createRange({ name: "Elita Łódowa" });
     const client = createAuthenticatedRouterClient(member);
 
     await expect(
       client.skills.getRangeBySlug({ slug: "elita-lodowa" })
-    ).resolves.toMatchObject({ name: "Elita Lodowa" });
+    ).resolves.toMatchObject({ name: "Elita Łódowa", slug: "elita-lodowa" });
     await expect(
       client.skills.getRangeBySlug({ slug: "brak-przedzialu" })
     ).resolves.toBeNull();
+  });
+
+  it("stores Polish range slugs created through the API", async () => {
+    const admin = await createAdmin({ id: "range-slug-admin" });
+    const member = await createVerifiedMember({ id: "range-slug-member" });
+    const adminClient = createAuthenticatedRouterClient(admin);
+    const memberClient = createAuthenticatedRouterClient(member);
+
+    await adminClient.skills.createRange({
+      image: "https://example.com/lowca.png",
+      level: 300,
+      name: "Łowca 300+",
+    });
+
+    await expect(memberClient.skills.getAllRanges()).resolves.toEqual([
+      expect.objectContaining({ name: "Łowca 300+", slug: "lowca-300" }),
+    ]);
+    await expect(
+      memberClient.skills.getRangeBySlug({ slug: "lowca-300" })
+    ).resolves.toMatchObject({ name: "Łowca 300+" });
+  });
+
+  it("rejects duplicate normalized range slugs", async () => {
+    const admin = await createAdmin({ id: "range-conflict-admin" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    await client.skills.createRange({
+      image: "https://example.com/first.png",
+      level: 100,
+      name: "Przedział 100",
+    });
+
+    await expect(
+      client.skills.createRange({
+        image: "https://example.com/second.png",
+        level: 101,
+        name: "Przedzial 100!!!",
+      })
+    ).rejects.toBeInstanceOf(ORPCError);
+  });
+
+  it("rejects range names without usable slug characters", async () => {
+    const admin = await createAdmin({ id: "range-empty-slug-admin" });
+    const client = createAuthenticatedRouterClient(admin);
+
+    await expect(
+      client.skills.createRange({
+        image: "https://example.com/empty.png",
+        level: 100,
+        name: "++--",
+      })
+    ).rejects.toBeInstanceOf(ORPCError);
   });
 
   it("prevents verified non-admin members from deleting ranges or skills", async () => {

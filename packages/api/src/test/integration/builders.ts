@@ -1,3 +1,4 @@
+import { slugifySkillRangeName } from "@tepirek-revamped/config";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { hero } from "@tepirek-revamped/db/schema/bet";
 import { event } from "@tepirek-revamped/db/schema/event";
@@ -164,7 +165,7 @@ export const createRange = async ({
 }: TestRangeOverrides = {}) => {
   const [createdRange] = await testDb
     .insert(range)
-    .values({ image, level, name })
+    .values({ image, level, name, slug: slugifySkillRangeName(name) })
     .returning();
 
   if (!createdRange) {

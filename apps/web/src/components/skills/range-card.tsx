@@ -23,7 +23,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getErrorMessage } from "@/lib/errors";
-import { cn, slugify } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { AuthUser } from "@/types/route";
 import { orpc } from "@/utils/orpc";
 
@@ -33,6 +33,7 @@ interface RangeCardProps {
     name: string;
     level: number;
     image: string | null;
+    slug: string;
   };
   session: AuthUser;
   className?: string;
@@ -63,7 +64,7 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
       <Card className={cn("flex h-full flex-col", className)}>
         <Link
           className="flex flex-1 flex-col no-underline focus:outline-none"
-          params={{ rangeName: slugify(range.name) }}
+          params={{ rangeName: range.slug }}
           to="/dashboard/skills/$rangeName"
         >
           <CardHeader>
