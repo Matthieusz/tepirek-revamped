@@ -1,6 +1,5 @@
 import { redirect } from "@tanstack/react-router";
 
-import { getUser } from "@/functions/get-user";
 import type { AuthSession } from "@/types/route";
 
 export interface PageProps {
@@ -8,6 +7,7 @@ export interface PageProps {
 }
 
 const requireAuth = async (): Promise<AuthSession> => {
+  const { getUser } = await import("@/functions/get-user");
   const session = await getUser();
   if (!session?.user) {
     throw redirect({ to: "/login" });
