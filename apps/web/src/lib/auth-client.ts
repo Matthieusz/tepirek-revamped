@@ -2,8 +2,10 @@ import type { auth } from "@tepirek-revamped/auth";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
+import { serverUrl } from "@/lib/env";
+
 export const authClient = createAuthClient({
-  baseURL: import.meta.env.VITE_SERVER_URL,
+  baseURL: serverUrl,
   fetchOptions: {
     credentials: "include",
   },

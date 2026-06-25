@@ -6,30 +6,36 @@ import { QueryCache, QueryClient } from "@tanstack/react-query";
 import type { AppRouter } from "@tepirek-revamped/api/routers/index";
 import { toast } from "sonner";
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      gcTime: 1000 * 60 * 30,
-      refetchOnReconnect: false,
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 1000 * 60 * 5,
+import { serverUrl } from "@/lib/env";
+
+export const createAppQueryClient = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        gcTime: 1000 * 60 * 30,
+        refetchOnReconnect: false,
+        refetchOnWindowFocus: false,
+        retry: 1,
+        staleTime: 1000 * 60 * 5,
+      },
     },
-  },
-  queryCache: new QueryCache({
-    onError: (error) => {
-      toast.error(`Błąd: ${error.message}`, {
-        action: {
-          label: "retry",
-          onClick: () => {
-            // oxlint-disable-next-line @typescript-eslint/no-floating-promises
-            queryClient.invalidateQueries();
+    queryCache: new QueryCache({
+      onError: (error) => {
+        toast.error(`Błąd: ${error.message}`, {
+          action: {
+            label: "retry",
+            onClick: () => {
+              // oxlint-disable-next-line @typescript-eslint/no-floating-promises
+              queryClient.invalidateQueries();
+            },
           },
-        },
-      });
-    },
-  }),
-});
+        });
+      },
+    }),
+  });
+
+  return queryClient;
+};
 
 const link = new RPCLink({
   fetch(_url, options) {
@@ -38,7 +44,7 @@ const link = new RPCLink({
       credentials: "include",
     });
   },
-  url: `${import.meta.env.VITE_SERVER_URL}/rpc`,
+  url: `${serverUrl}/rpc`,
 });
 
 const client: RouterClient<AppRouter> = createORPCClient(link);
