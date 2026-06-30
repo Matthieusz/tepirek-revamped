@@ -6,6 +6,7 @@ import { heroesRouter } from "./heroes";
 import { publicProcedure } from "./procedures";
 import { rankingRouter } from "./ranking";
 import { skillsRouter } from "./skills";
+import { squadBuilderRouter } from "./squad-builder";
 import { todoRouter } from "./todo";
 import { userRouter } from "./user";
 import { vaultRouter } from "./vault";
@@ -19,6 +20,7 @@ export const appRouter = {
   heroes: heroesRouter,
   ranking: rankingRouter,
   skills: skillsRouter,
+  squadBuilder: squadBuilderRouter,
   todo: todoRouter,
   user: userRouter,
   vault: vaultRouter,

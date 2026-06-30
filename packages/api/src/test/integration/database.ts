@@ -14,6 +14,20 @@ import {
 } from "@tepirek-revamped/db/schema/bet";
 import { event } from "@tepirek-revamped/db/schema/event";
 import { professions, range, skills } from "@tepirek-revamped/db/schema/skills";
+import {
+  firecrawlProfileScrapeRequest,
+  margonemAccount,
+  margonemAccountAccess,
+  margonemAccountImportPreview,
+  margonemAccountImportPreviewCharacter,
+  margonemAccountRefetchPreview,
+  margonemAccountRefetchPreviewCharacter,
+  margonemCharacter,
+  squad,
+  squadCharacter,
+  squadGroup,
+  squadGroupInvitation,
+} from "@tepirek-revamped/db/schema/squad-builder";
 import { todo } from "@tepirek-revamped/db/schema/todo";
 import { getTableName, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -27,9 +41,21 @@ const applicationTables = [
   hero,
   heroBet,
   heroBetMember,
+  firecrawlProfileScrapeRequest,
+  margonemAccount,
+  margonemAccountAccess,
+  margonemAccountImportPreview,
+  margonemAccountImportPreviewCharacter,
+  margonemAccountRefetchPreview,
+  margonemAccountRefetchPreviewCharacter,
+  margonemCharacter,
   professions,
   range,
   session,
+  squad,
+  squadCharacter,
+  squadGroup,
+  squadGroupInvitation,
   skills,
   todo,
   user,

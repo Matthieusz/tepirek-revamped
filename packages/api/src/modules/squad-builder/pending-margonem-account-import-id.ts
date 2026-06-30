@@ -1,0 +1,33 @@
+import { isPositiveInteger } from "./prelude";
+import { err, ok } from "./result";
+import type { Result } from "./result";
+
+/** A validated pending Margonem account import id. */
+export type PendingMargonemAccountImportId = number & {
+  readonly __brand: "PendingMargonemAccountImportId";
+};
+
+/** Expected failure when a pending import id is not a positive integer. */
+export interface InvalidPendingMargonemAccountImportId {
+  readonly _tag: "InvalidPendingMargonemAccountImportId";
+}
+
+/** Parse a positive integer as a pending Margonem account import id. */
+export const parsePendingMargonemAccountImportId = (
+  input: number
+): Result<
+  PendingMargonemAccountImportId,
+  InvalidPendingMargonemAccountImportId
+> => {
+  if (!isPositiveInteger(input)) {
+    return err({ _tag: "InvalidPendingMargonemAccountImportId" });
+  }
+
+  // SAFETY: isPositiveInteger established the PendingMargonemAccountImportId invariant.
+  return ok(input as PendingMargonemAccountImportId);
+};
+
+/** Convert a pending import id to its primitive representation. */
+export const pendingImportIdToNumber = (
+  id: PendingMargonemAccountImportId
+): number => id;
