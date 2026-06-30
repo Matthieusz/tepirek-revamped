@@ -309,6 +309,68 @@ describe("squad-builder router Postgres integration", () => {
     });
   });
 
+  it("changes squad group visibility through the Effect oRPC bridge", async () => {
+    const member = await createVerifiedMember({
+      id: "router-effect-visibility",
+    });
+    const client = createSquadBuilderClient(member, {
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+
+    const created = await client.squadBuilder.createSquadGroup({
+      name: "Router visibility group",
+    });
+    const changed = await client.squadBuilder.setSquadGroupVisibility({
+      groupId: created.groupId,
+      visibility: "global",
+    });
+
+    expect(changed).toMatchObject({
+      groupId: created.groupId,
+      visibility: "global",
+    });
+  });
+
+  it("lists global squad groups through the Effect oRPC bridge", async () => {
+    const owner = await createVerifiedMember({
+      id: "router-effect-global-owner",
+      name: "Global Owner",
+    });
+    const viewer = await createVerifiedMember({
+      id: "router-effect-global-viewer",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const ownerClient = createSquadBuilderClient(owner, {
+      effectRuntime: runtime,
+    });
+    const viewerClient = createSquadBuilderClient(viewer, {
+      effectRuntime: runtime,
+    });
+
+    const globalGroup = await ownerClient.squadBuilder.createSquadGroup({
+      name: "Router global group",
+    });
+    await ownerClient.squadBuilder.setSquadGroupVisibility({
+      groupId: globalGroup.groupId,
+      visibility: "global",
+    });
+    await ownerClient.squadBuilder.createSquadGroup({
+      name: "Router private group",
+    });
+
+    const listed = await viewerClient.squadBuilder.listGlobalSquadGroups({});
+    const groupNames = listed.groups.map((group) => group.name);
+
+    expect(groupNames).toContain("Router global group");
+    expect(groupNames).not.toContain("Router private group");
+    expect(
+      listed.groups.find((group) => group.groupId === globalGroup.groupId)
+    ).toMatchObject({
+      ownerUserId: owner.id,
+      ownerUserName: "Global Owner",
+    });
+  });
+
   it("returns per-line owned account import preview results for a verified user", async () => {
     const member = await createVerifiedMember({ id: "preview-member" });
     const client = createSquadBuilderClient(member, {

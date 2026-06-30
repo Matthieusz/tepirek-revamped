@@ -12,11 +12,14 @@ import {
   defaultTestDatabaseUrl,
   testDb,
 } from "../../../test/integration/database";
+import { systemClock } from "../account-import/preview-margonem-profile-import";
 import { parseAppUserId } from "../app-user-id";
 import { isOk } from "../result";
 import { CreateSquadGroup } from "./create-squad-group";
 import { ListAvailableSquadCharacters } from "./list-available-squad-characters";
+import { ListGlobalSquadGroups } from "./list-global-squad-groups";
 import { ListSquadGroups } from "./list-squad-groups";
+import { SetSquadGroupVisibility } from "./set-squad-group-visibility";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -188,6 +191,86 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       name: "informati",
       profession: "tracker",
       world: "jaruna",
+    });
+  });
+
+  it("changes squad group visibility for the owner", async () => {
+    const member = await createVerifiedMember({
+      id: "effect-visibility-owner",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const createService = new CreateSquadGroup();
+    const visibilityService = new SetSquadGroupVisibility(systemClock);
+
+    const created = await runtime.runPromise(
+      createService.create({
+        actorUserId: parseTestUserId(member.id),
+        name: "Effect visibility group",
+      })
+    );
+
+    const changed = await runtime.runPromise(
+      visibilityService.set({
+        actorUserId: parseTestUserId(member.id),
+        groupId: created.groupId,
+        visibility: "global",
+      })
+    );
+
+    expect(changed).toMatchObject({
+      groupId: created.groupId,
+      visibility: "global",
+    });
+
+    const [stored] = await testDb
+      .select({ visibility: squadGroup.visibility })
+      .from(squadGroup)
+      .where(eq(squadGroup.id, created.groupId))
+      .limit(1);
+
+    expect(stored?.visibility).toBe("global");
+  });
+
+  it("lists globally visible squad groups", async () => {
+    const member = await createVerifiedMember({ id: "effect-global-owner" });
+    const other = await createVerifiedMember({ id: "effect-global-other" });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const createService = new CreateSquadGroup();
+    const visibilityService = new SetSquadGroupVisibility(systemClock);
+    const listGlobalService = new ListGlobalSquadGroups();
+
+    const globalGroup = await runtime.runPromise(
+      createService.create({
+        actorUserId: parseTestUserId(member.id),
+        name: "Effect global group",
+      })
+    );
+    await runtime.runPromise(
+      visibilityService.set({
+        actorUserId: parseTestUserId(member.id),
+        groupId: globalGroup.groupId,
+        visibility: "global",
+      })
+    );
+    await runtime.runPromise(
+      createService.create({
+        actorUserId: parseTestUserId(member.id),
+        name: "Effect private group",
+      })
+    );
+
+    const groups = await runtime.runPromise(
+      listGlobalService.list({ actorUserId: parseTestUserId(other.id) })
+    );
+    const groupNames = groups.map((group) => group.name);
+
+    expect(groupNames).toContain("Effect global group");
+    expect(groupNames).not.toContain("Effect private group");
+    expect(
+      groups.find((group) => group.groupId === globalGroup.groupId)
+    ).toMatchObject({
+      ownerUserId: parseTestUserId(member.id),
+      ownerUserName: member.name,
     });
   });
 });
