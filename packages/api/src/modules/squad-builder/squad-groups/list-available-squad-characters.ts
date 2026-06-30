@@ -1,51 +1,46 @@
+import * as Effect from "effect/Effect";
+
 import type { AppUserId } from "../app-user-id";
-import { err, isError } from "../result";
-import type { Result } from "../result";
 import type { SquadGroupId } from "../squad-group-id";
 import type { AvailableSquadCharacter } from "../squad-group-snapshot";
+import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
 import type {
   ActorCannotViewSquadGroup,
-  SquadBuilderPersistenceUnavailable,
   SquadGroupNotFound,
-  SquadGroupStore,
 } from "./squad-group-store";
+import { EffectSquadGroupStore } from "./squad-group-store";
+
+/** Expected failures returned by listing available squad characters. */
+export type ListAvailableSquadCharactersError =
+  | SquadGroupNotFound
+  | ActorCannotViewSquadGroup
+  | EffectSquadBuilderPersistenceUnavailable;
 
 /** Service module for listing accessible Jaruna characters for a squad group owner. */
 export class ListAvailableSquadCharacters {
-  private readonly store: Pick<
-    SquadGroupStore,
-    "getSquadGroupDetail" | "listAvailableCharactersForOwner"
-  >;
-
-  constructor(
-    store: Pick<
-      SquadGroupStore,
-      "getSquadGroupDetail" | "listAvailableCharactersForOwner"
-    >
-  ) {
-    this.store = store;
-  }
+  private readonly serviceName = "ListAvailableSquadCharacters";
 
   /** List Jaruna characters accessible to the squad group owner. */
-  async list(input: {
+  readonly list = (input: {
     readonly actorUserId: AppUserId;
     readonly groupId: SquadGroupId;
-  }): Promise<
-    Result<
-      readonly AvailableSquadCharacter[],
-      | SquadGroupNotFound
-      | ActorCannotViewSquadGroup
-      | SquadBuilderPersistenceUnavailable
-    >
-  > {
-    const group = await this.store.getSquadGroupDetail(input);
+  }): Effect.Effect<
+    readonly AvailableSquadCharacter[],
+    ListAvailableSquadCharactersError,
+    EffectSquadGroupStore
+  > => {
+    void this.serviceName;
 
-    if (isError(group)) {
-      return err(group.error);
-    }
+    return Effect.gen(function* listAvailableSquadCharactersEffect() {
+      const group = yield* EffectSquadGroupStore.use((store) =>
+        store.getSquadGroupDetail(input)
+      );
 
-    return this.store.listAvailableCharactersForOwner({
-      ownerUserId: group.value.ownerUserId,
+      return yield* EffectSquadGroupStore.use((store) =>
+        store.listAvailableCharactersForOwner({
+          ownerUserId: group.ownerUserId,
+        })
+      );
     });
-  }
+  };
 }

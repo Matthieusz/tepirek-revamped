@@ -47,6 +47,8 @@ it.effect(
         Effect.die(new Error("Store should not be called")),
       getSquadGroupDetail: () =>
         Effect.die(new Error("Store should not be called")),
+      listAvailableCharactersForOwner: () =>
+        Effect.die(new Error("Store should not be called")),
       listMySquadGroups: (input) =>
         input.actorUserId === actorUserId
           ? Effect.succeed(summaries)
@@ -81,6 +83,8 @@ it.effect("returns a visible squad group detail from the Effect store", () => {
       input.actorUserId === actorUserId && input.groupId === groupId
         ? Effect.succeed(detail)
         : Effect.die(new Error("Unexpected getSquadGroupDetail input")),
+    listAvailableCharactersForOwner: () =>
+      Effect.die(new Error("Store should not be called")),
     listMySquadGroups: () =>
       Effect.die(new Error("Store should not be called")),
   });

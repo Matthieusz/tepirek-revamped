@@ -3,6 +3,7 @@ import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import {
   margonemAccount,
+  margonemAccountAccess,
   margonemCharacter,
   squad,
   squadCharacter,
@@ -16,8 +17,12 @@ import * as Layer from "effect/Layer";
 import { parseAccountDisplayName } from "../account-display-name";
 import { appUserIdToString, parseAppUserId } from "../app-user-id";
 import type { AppUserId } from "../app-user-id";
+import { parseMargonemAccountId } from "../margonem-account-id";
 import type { MargonemAccountId } from "../margonem-account-id";
-import { parseMargonemProfession } from "../margonem-character";
+import {
+  parseMargonemProfession,
+  parseMargonemWorld,
+} from "../margonem-character";
 import {
   parseMargonemCharacterId,
   parsePositiveLevel,
@@ -32,8 +37,10 @@ import { parseSquadGroupName, squadGroupNameToString } from "../squad-name";
 import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
 import type {
   ActorCannotViewSquadGroup,
+  AvailableSquadCharacter,
   CreateSquadGroupStoreInput,
   GetSquadGroupDetailInput,
+  ListAvailableCharactersForOwnerInput,
   ListMySquadGroupsInput,
   SquadGroupCharacter,
   SquadGroupDetail,
@@ -45,6 +52,7 @@ import { EffectSquadGroupStore } from "./squad-group-store";
 type EffectSquadGroupPersistenceOperation =
   | "createSquadGroup"
   | "getSquadGroupDetail"
+  | "listAvailableCharactersForOwner"
   | "listMySquadGroups";
 
 const failPersistence = (
@@ -216,6 +224,146 @@ const listMySquadGroupsWithDatabase =
       }
 
       return groups;
+    });
+
+const listAvailableCharactersForOwnerWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    ownerUserId,
+  }: ListAvailableCharactersForOwnerInput): Effect.Effect<
+    readonly AvailableSquadCharacter[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* listAvailableCharactersForOwnerEffect() {
+      const operation = "listAvailableCharactersForOwner" as const;
+      const owner = appUserIdToString(ownerUserId);
+      const select = database
+        .select({
+          accountDisplayName: margonemAccount.displayName,
+          accountId: margonemAccount.id,
+          accountOwnerUserId: margonemAccount.ownerUserId,
+          accountOwnerUserImage: user.image,
+          accountOwnerUserName: user.name,
+          avatarUrl: margonemCharacter.avatarUrl,
+          characterId: margonemCharacter.id,
+          level: margonemCharacter.level,
+          margonemCharacterId: margonemCharacter.characterId,
+          name: margonemCharacter.name,
+          profession: margonemCharacter.profession,
+          world: margonemCharacter.world,
+        })
+        .from(margonemCharacter)
+        .innerJoin(
+          margonemAccount,
+          eq(margonemAccount.id, margonemCharacter.accountId)
+        )
+        .innerJoin(user, eq(user.id, margonemAccount.ownerUserId))
+        .leftJoin(
+          margonemAccountAccess,
+          and(
+            eq(margonemAccountAccess.accountId, margonemAccount.id),
+            eq(margonemAccountAccess.userId, owner),
+            eq(margonemAccountAccess.status, "accepted")
+          )
+        )
+        .where(
+          and(
+            eq(margonemCharacter.world, "jaruna"),
+            sql`(${margonemAccount.ownerUserId} = ${owner} or ${margonemAccountAccess.id} is not null)`
+          )
+        )
+        .orderBy(
+          asc(margonemAccount.displayName),
+          asc(margonemCharacter.level)
+        );
+      const selectEffect = select as Effect.Effect<
+        readonly {
+          readonly accountDisplayName: string;
+          readonly accountId: number;
+          readonly accountOwnerUserId: string;
+          readonly accountOwnerUserImage: string | null;
+          readonly accountOwnerUserName: string;
+          readonly avatarUrl: string | null;
+          readonly characterId: number;
+          readonly level: number;
+          readonly margonemCharacterId: number;
+          readonly name: string;
+          readonly profession: string;
+          readonly world: string;
+        }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const characters: AvailableSquadCharacter[] = [];
+
+      for (const row of rows) {
+        const accountDisplayName = parseAccountDisplayName(
+          row.accountDisplayName
+        );
+
+        if (isError(accountDisplayName)) {
+          return yield* failPersistence(operation, accountDisplayName.error);
+        }
+
+        const accountId = parseMargonemAccountId(row.accountId);
+
+        if (isError(accountId)) {
+          return yield* failPersistence(operation, accountId.error);
+        }
+
+        const accountOwnerUserId = parseAppUserId(row.accountOwnerUserId);
+
+        if (isError(accountOwnerUserId)) {
+          return yield* failPersistence(operation, accountOwnerUserId.error);
+        }
+
+        const level = parsePositiveLevel(row.level);
+
+        if (isError(level)) {
+          return yield* failPersistence(operation, level.error);
+        }
+
+        const profession = parseMargonemProfession(row.profession);
+
+        if (isError(profession)) {
+          return yield* failPersistence(operation, profession.error);
+        }
+
+        const world = parseMargonemWorld(row.world);
+
+        if (isError(world)) {
+          return yield* failPersistence(operation, world.error);
+        }
+
+        const margonemCharacterId = parseMargonemCharacterId(
+          row.margonemCharacterId
+        );
+
+        if (isError(margonemCharacterId)) {
+          return yield* failPersistence(operation, margonemCharacterId.error);
+        }
+
+        characters.push({
+          accountDisplayName: accountDisplayName.value,
+          accountId: accountId.value,
+          accountOwnerUserId: accountOwnerUserId.value,
+          accountOwnerUserImage: row.accountOwnerUserImage,
+          accountOwnerUserName: row.accountOwnerUserName,
+          avatarUrl: row.avatarUrl,
+          characterId: row.characterId,
+          level: level.value,
+          margonemCharacterId: margonemCharacterId.value,
+          name: row.name,
+          profession: profession.value,
+          world: world.value,
+        });
+      }
+
+      return characters;
     });
 
 const getSquadGroupDetailWithDatabase =
@@ -498,6 +646,8 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
     EffectSquadGroupStore.of({
       createSquadGroup: createSquadGroupWithDatabase(database),
       getSquadGroupDetail: getSquadGroupDetailWithDatabase(database),
+      listAvailableCharactersForOwner:
+        listAvailableCharactersForOwnerWithDatabase(database),
       listMySquadGroups: listMySquadGroupsWithDatabase(database),
     })
   )

@@ -68,7 +68,6 @@ import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,
   AccountInviteTarget,
-  ActorCannotViewSquadGroup,
   GlobalSquadGroupSummary,
   OwnedMargonemAccountSummary,
   RevokeAccountAccessResult,
@@ -79,7 +78,6 @@ import type {
   SquadGroupDetail,
   SquadGroupEditorGrantSummary,
   SquadGroupInvitationSummary,
-  SquadGroupNotFound,
   SquadGroupSummary,
 } from "../modules/squad-builder/squad-builder-store";
 import { parseSquadGroupId } from "../modules/squad-builder/squad-group-id";
@@ -94,6 +92,7 @@ import { parseSquadGroupVisibility } from "../modules/squad-builder/squad-group-
 import { CreateSquadGroup } from "../modules/squad-builder/squad-groups/create-squad-group";
 import type { CreateSquadGroupError } from "../modules/squad-builder/squad-groups/create-squad-group";
 import { ListAvailableSquadCharacters } from "../modules/squad-builder/squad-groups/list-available-squad-characters";
+import type { ListAvailableSquadCharactersError } from "../modules/squad-builder/squad-groups/list-available-squad-characters";
 import { ListGlobalSquadGroups } from "../modules/squad-builder/squad-groups/list-global-squad-groups";
 import { ListSquadGroupSharingState } from "../modules/squad-builder/squad-groups/list-squad-group-sharing-state";
 import { ListSquadGroups } from "../modules/squad-builder/squad-groups/list-squad-groups";
@@ -254,13 +253,10 @@ interface GetSquadGroupDetailService {
 interface ListAvailableSquadCharactersService {
   readonly list: (
     input: Parameters<ListAvailableSquadCharacters["list"]>[0]
-  ) => Promise<
-    Result<
-      readonly AvailableSquadCharacter[],
-      | SquadGroupNotFound
-      | ActorCannotViewSquadGroup
-      | SquadBuilderPersistenceUnavailable
-    >
+  ) => Effect<
+    readonly AvailableSquadCharacter[],
+    ListAvailableSquadCharactersError,
+    never
   >;
 }
 
@@ -535,7 +531,6 @@ interface SquadBuilderServices {
   readonly revokeAccess: RevokeAccountAccessService;
   readonly sharingState: ListAccountSharingStateService;
   readonly listGlobalSquadGroups: ListGlobalSquadGroupsService;
-  readonly listAvailableSquadCharacters: ListAvailableSquadCharactersService;
   readonly saveSquadGroup: SaveSquadGroupService;
   readonly searchSquadEditorInviteTargets: SearchSquadEditorInviteTargetsService;
   readonly sendSquadGroupEditorInvite: SendSquadGroupEditorInviteService;
@@ -569,7 +564,6 @@ const createDefaultSquadBuilderServices = (): Result<
     applyRefetch: new ApplyAccountRefetch(store, store, store, systemClock),
     confirm: new ConfirmOwnedAccountImport(store, store, systemClock),
     list: new ListOwnedMargonemAccounts(store),
-    listAvailableSquadCharacters: new ListAvailableSquadCharacters(store),
     listGlobalSquadGroups: new ListGlobalSquadGroups(store),
     preview: singlePreview,
     previewOwnedImports: new PreviewOwnedAccountImports(
@@ -1328,6 +1322,7 @@ const defaultEffectRuntime =
 
 const createSquadGroupEffect = new CreateSquadGroup();
 const listSquadGroupsEffect = new ListSquadGroups();
+const listAvailableSquadCharactersEffect = new ListAvailableSquadCharacters();
 
 /** Create the squad-builder ORPC router. */
 export const createSquadBuilderRouter = ({
@@ -1620,37 +1615,33 @@ export const createSquadBuilderRouter = ({
         throw toSquadGroupOrpcError(groupId.error);
       }
 
-      const services =
-        listAvailableSquadCharactersService === undefined
-          ? defaultServices
-          : ok({
-              listAvailableSquadCharacters: listAvailableSquadCharactersService,
-            });
-
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "listAvailableSquadCharacters",
-          services.error
-        );
-        throw toOrpcError(services.error);
-      }
-
-      const result = await services.value.listAvailableSquadCharacters.list({
+      const effect = (
+        listAvailableSquadCharactersService ??
+        listAvailableSquadCharactersEffect
+      ).list({
         actorUserId: actorUserId.value,
         groupId: groupId.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "listAvailableSquadCharacters",
-          result.error
-        );
-        throw toSquadGroupOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for listAvailableSquadCharacters"
+          ),
+          operation: "listAvailableSquadCharacters",
+        };
+        logSquadBuilderError(context, "listAvailableSquadCharacters", error);
+        throw toSquadGroupOrpcError(error);
       }
 
-      return { characters: result.value.map(toAvailableSquadCharacterDto) };
+      const characters = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as ListAvailableSquadCharactersError;
+        logSquadBuilderError(context, "listAvailableSquadCharacters", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
+      return { characters: characters.map(toAvailableSquadCharacterDto) };
     }),
   listGlobalSquadGroups: verifiedProcedure
     .input(squadGroupListFiltersInputSchema)

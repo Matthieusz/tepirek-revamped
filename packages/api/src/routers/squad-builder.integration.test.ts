@@ -1,5 +1,8 @@
 import { createRouterClient } from "@orpc/server";
-import { margonemAccount } from "@tepirek-revamped/db/schema/squad-builder";
+import {
+  margonemAccount,
+  margonemCharacter,
+} from "@tepirek-revamped/db/schema/squad-builder";
 import { describe, expect, it } from "vitest";
 
 import { makeApiManagedRuntime } from "../effect-app";
@@ -249,6 +252,60 @@ describe("squad-builder router Postgres integration", () => {
       name: "Router detail group",
       squads: [],
       visibility: "private",
+    });
+  });
+
+  it("lists available squad characters through the Effect oRPC bridge", async () => {
+    const member = await createVerifiedMember({
+      id: "router-effect-available",
+    });
+    const client = createSquadBuilderClient(member, {
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+
+    const created = await client.squadBuilder.createSquadGroup({
+      name: "Router available group",
+    });
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Router available account",
+        ownerUserId: member.id,
+        profileId: 8_200_001,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    const [character] = await testDb
+      .insert(margonemCharacter)
+      .values({
+        accountId: account.id,
+        avatarUrl: null,
+        characterId: 1_296_626,
+        level: 300,
+        name: "routerchar",
+        profession: "tracker",
+        world: "jaruna",
+      })
+      .returning({ id: margonemCharacter.id });
+
+    if (character === undefined) {
+      throw new Error("Failed to seed character");
+    }
+
+    const listed = await client.squadBuilder.listAvailableSquadCharacters({
+      groupId: created.groupId,
+    });
+
+    expect(listed.characters).toHaveLength(1);
+    expect(listed.characters[0]).toMatchObject({
+      accountId: account.id,
+      characterId: character.id,
+      name: "routerchar",
+      profession: "tracker",
     });
   });
 

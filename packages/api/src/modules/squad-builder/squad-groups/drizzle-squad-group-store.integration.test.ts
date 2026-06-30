@@ -1,4 +1,8 @@
-import { squadGroup } from "@tepirek-revamped/db/schema/squad-builder";
+import {
+  margonemAccount,
+  margonemCharacter,
+  squadGroup,
+} from "@tepirek-revamped/db/schema/squad-builder";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
@@ -11,6 +15,7 @@ import {
 import { parseAppUserId } from "../app-user-id";
 import { isOk } from "../result";
 import { CreateSquadGroup } from "./create-squad-group";
+import { ListAvailableSquadCharacters } from "./list-available-squad-characters";
 import { ListSquadGroups } from "./list-squad-groups";
 
 const parseTestUserId = (value: string) => {
@@ -123,6 +128,66 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       ownerUserId: parseTestUserId(member.id),
       squads: [],
       visibility: "private",
+    });
+  });
+
+  it("lists available Jaruna characters for the squad group owner", async () => {
+    const member = await createVerifiedMember({ id: "effect-available-owner" });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const service = new CreateSquadGroup();
+    const listService = new ListAvailableSquadCharacters();
+
+    const created = await runtime.runPromise(
+      service.create({
+        actorUserId: parseTestUserId(member.id),
+        name: "Effect available group",
+      })
+    );
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Available account",
+        ownerUserId: member.id,
+        profileId: 8_100_001,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    const [character] = await testDb
+      .insert(margonemCharacter)
+      .values({
+        accountId: account.id,
+        avatarUrl: null,
+        characterId: 1_296_625,
+        level: 315,
+        name: "informati",
+        profession: "tracker",
+        world: "jaruna",
+      })
+      .returning({ id: margonemCharacter.id });
+
+    if (character === undefined) {
+      throw new Error("Failed to seed character");
+    }
+
+    const characters = await runtime.runPromise(
+      listService.list({
+        actorUserId: parseTestUserId(member.id),
+        groupId: created.groupId,
+      })
+    );
+
+    expect(characters).toHaveLength(1);
+    expect(characters[0]).toMatchObject({
+      accountId: account.id,
+      accountOwnerUserId: parseTestUserId(member.id),
+      characterId: character.id,
+      name: "informati",
+      profession: "tracker",
+      world: "jaruna",
     });
   });
 });

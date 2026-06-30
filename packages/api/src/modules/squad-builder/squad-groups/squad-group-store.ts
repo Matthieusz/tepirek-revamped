@@ -62,6 +62,13 @@ export interface EffectSquadGroupStoreShape {
     | EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly listAvailableCharactersForOwner: (
+    input: ListAvailableCharactersForOwnerInput
+  ) => Effect<
+    readonly AvailableSquadCharacter[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
 }
 
 export class EffectSquadGroupStore extends Context.Service<

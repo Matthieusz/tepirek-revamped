@@ -33,6 +33,8 @@ it.effect("rejects an invalid squad group name", () => {
     createSquadGroup: () => Effect.die(new Error("Store should not be called")),
     getSquadGroupDetail: () =>
       Effect.die(new Error("Store should not be called")),
+    listAvailableCharactersForOwner: () =>
+      Effect.die(new Error("Store should not be called")),
     listMySquadGroups: () =>
       Effect.die(new Error("Store should not be called")),
   });
@@ -67,6 +69,8 @@ it.effect("returns the store-created squad group summary", () => {
         ? Effect.succeed(summary)
         : Effect.die(new Error("Unexpected createSquadGroup input")),
     getSquadGroupDetail: () =>
+      Effect.die(new Error("Store should not be called")),
+    listAvailableCharactersForOwner: () =>
       Effect.die(new Error("Store should not be called")),
     listMySquadGroups: () =>
       Effect.die(new Error("Store should not be called")),
