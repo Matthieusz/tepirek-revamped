@@ -11,6 +11,7 @@ import {
 import { parseAppUserId } from "../app-user-id";
 import { isOk } from "../result";
 import { CreateSquadGroup } from "./create-squad-group";
+import { ListSquadGroups } from "./list-squad-groups";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -56,5 +57,42 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       ownerUserId: member.id,
       visibility: "private",
     });
+  });
+
+  it("lists only squad groups owned by the actor", async () => {
+    const member = await createVerifiedMember({ id: "effect-list-owner" });
+    const other = await createVerifiedMember({ id: "effect-list-other" });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const service = new CreateSquadGroup();
+    const listService = new ListSquadGroups();
+
+    await runtime.runPromise(
+      service.create({
+        actorUserId: parseTestUserId(member.id),
+        name: "First listed group",
+      })
+    );
+    await runtime.runPromise(
+      service.create({
+        actorUserId: parseTestUserId(member.id),
+        name: "Second listed group",
+      })
+    );
+    await runtime.runPromise(
+      service.create({
+        actorUserId: parseTestUserId(other.id),
+        name: "Other listed group",
+      })
+    );
+
+    const groups = await runtime.runPromise(
+      listService.listMine({ actorUserId: parseTestUserId(member.id) })
+    );
+
+    const groupNames = groups.map((group) => group.name);
+
+    expect(groupNames).toContain("First listed group");
+    expect(groupNames).toContain("Second listed group");
+    expect(groupNames).not.toContain("Other listed group");
   });
 });

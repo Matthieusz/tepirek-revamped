@@ -4,7 +4,7 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
   "SquadBuilderPersistenceUnavailable",
   {
     cause: Schema.Unknown,
-    operation: Schema.Literal("createSquadGroup"),
+    operation: Schema.Literals(["createSquadGroup", "listMySquadGroups"]),
     provider: Schema.Literal("postgres"),
   }
 ) {}

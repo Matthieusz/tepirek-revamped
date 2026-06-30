@@ -97,6 +97,7 @@ import { ListAvailableSquadCharacters } from "../modules/squad-builder/squad-gro
 import { ListGlobalSquadGroups } from "../modules/squad-builder/squad-groups/list-global-squad-groups";
 import { ListSquadGroupSharingState } from "../modules/squad-builder/squad-groups/list-squad-group-sharing-state";
 import { ListSquadGroups } from "../modules/squad-builder/squad-groups/list-squad-groups";
+import type { ListMySquadGroupsError } from "../modules/squad-builder/squad-groups/list-squad-groups";
 import { RespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/respond-to-squad-group-invite";
 import { RevokeSquadGroupEditor } from "../modules/squad-builder/squad-groups/revoke-squad-group-editor";
 import { SaveSharedSquadGroupCharacters } from "../modules/squad-builder/squad-groups/save-shared-squad-group-characters";
@@ -235,12 +236,13 @@ interface ListGlobalSquadGroupsService {
   >;
 }
 
-interface ListSquadGroupsService {
+interface ListMySquadGroupsService {
   readonly listMine: (
     input: Parameters<ListSquadGroups["listMine"]>[0]
-  ) => Promise<
-    Result<readonly SquadGroupSummary[], SquadBuilderPersistenceUnavailable>
-  >;
+  ) => Effect<readonly SquadGroupSummary[], ListMySquadGroupsError, never>;
+}
+
+interface ListSquadGroupsService {
   readonly getMine: (
     input: Parameters<ListSquadGroups["getMine"]>[0]
   ) => Promise<
@@ -354,6 +356,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly listAccountSharingStateService?: ListAccountSharingStateService;
   readonly createSquadGroupService?: CreateSquadGroupService;
   readonly effectRuntime?: ManagedRuntime<EffectSquadGroupStore, unknown>;
+  readonly listMySquadGroupsService?: ListMySquadGroupsService;
   readonly listSquadGroupsService?: ListSquadGroupsService;
   readonly listGlobalSquadGroupsService?: ListGlobalSquadGroupsService;
   readonly listAvailableSquadCharactersService?: ListAvailableSquadCharactersService;
@@ -444,6 +447,13 @@ const squadGroupListFiltersInputSchema = z
 const squadGroupIdInputSchema = z.object({
   groupId: z.number().int().positive(),
 });
+
+const listMySquadGroupsOutputSchema = Schema.toStandardSchemaV1(
+  Schema.Struct({
+    groups: Schema.Array(createSquadGroupOutputSchema),
+  }),
+  { parseOptions: strictEffectBoundaryParseOptions }
+);
 
 const setSquadGroupVisibilityInputSchema = z.object({
   groupId: z.number().int().positive(),
@@ -1323,6 +1333,7 @@ const defaultEffectRuntime =
     : makeApiManagedRuntime(process.env.DATABASE_URL);
 
 const createSquadGroupEffect = new CreateSquadGroup();
+const listSquadGroupsEffect = new ListSquadGroups();
 
 /** Create the squad-builder ORPC router. */
 export const createSquadBuilderRouter = ({
@@ -1338,6 +1349,7 @@ export const createSquadBuilderRouter = ({
   revokeAccountAccessService,
   listAccountSharingStateService,
   createSquadGroupService,
+  listMySquadGroupsService,
   listSquadGroupsService,
   listGlobalSquadGroupsService,
   listAvailableSquadCharactersService,
@@ -1754,36 +1766,39 @@ export const createSquadBuilderRouter = ({
       return { invites: result.value.map(toSquadGroupInvitationDto) };
     }
   ),
-  listMySquadGroups: verifiedProcedure.handler(async ({ context }) => {
-    const actorUserId = parseAppUserId(context.session.user.id);
+  listMySquadGroups: verifiedProcedure
+    .output(listMySquadGroupsOutputSchema)
+    .handler(async ({ context }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
 
-    if (isError(actorUserId)) {
-      throw toOrpcError(actorUserId.error);
-    }
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
 
-    const services =
-      listSquadGroupsService === undefined
-        ? defaultServices
-        : ok({
-            listSquadGroups: listSquadGroupsService,
-          });
+      const effect = (
+        listMySquadGroupsService ?? listSquadGroupsEffect
+      ).listMine({
+        actorUserId: actorUserId.value,
+      });
 
-    if (isError(services)) {
-      logSquadBuilderError(context, "listMySquadGroups", services.error);
-      throw toOrpcError(services.error);
-    }
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error("DATABASE_URL is required for listMySquadGroups"),
+          operation: "listMySquadGroups",
+        };
+        logSquadBuilderError(context, "listMySquadGroups", error);
+        throw toSquadGroupOrpcError(error);
+      }
 
-    const result = await services.value.listSquadGroups.listMine({
-      actorUserId: actorUserId.value,
-    });
+      const groups = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as ListMySquadGroupsError;
+        logSquadBuilderError(context, "listMySquadGroups", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
 
-    if (isError(result)) {
-      logSquadBuilderError(context, "listMySquadGroups", result.error);
-      throw toSquadGroupOrpcError(result.error);
-    }
-
-    return { groups: result.value.map(toSquadGroupSummaryDto) };
-  }),
+      return { groups: groups.map(toSquadGroupSummaryDto) };
+    }),
   listOwnedAccounts: verifiedProcedure.handler(async ({ context }) => {
     const actorUserId = parseAppUserId(context.session.user.id);
 

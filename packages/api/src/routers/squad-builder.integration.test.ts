@@ -205,6 +205,31 @@ describe("squad-builder router Postgres integration", () => {
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 
+  it("lists my squad groups through the Effect oRPC bridge", async () => {
+    const member = await createVerifiedMember({ id: "router-effect-list" });
+    const other = await createVerifiedMember({
+      id: "router-effect-list-other",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const client = createSquadBuilderClient(member, { effectRuntime: runtime });
+    const otherClient = createSquadBuilderClient(other, {
+      effectRuntime: runtime,
+    });
+
+    await client.squadBuilder.createSquadGroup({ name: "Router listed one" });
+    await client.squadBuilder.createSquadGroup({ name: "Router listed two" });
+    await otherClient.squadBuilder.createSquadGroup({
+      name: "Router hidden other",
+    });
+
+    const listed = await client.squadBuilder.listMySquadGroups();
+    const groupNames = listed.groups.map((group) => group.name);
+
+    expect(groupNames).toContain("Router listed one");
+    expect(groupNames).toContain("Router listed two");
+    expect(groupNames).not.toContain("Router hidden other");
+  });
+
   it("returns per-line owned account import preview results for a verified user", async () => {
     const member = await createVerifiedMember({ id: "preview-member" });
     const client = createSquadBuilderClient(member, {
