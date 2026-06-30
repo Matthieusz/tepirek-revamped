@@ -5,8 +5,10 @@ import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { createContext } from "@tepirek-revamped/api/context";
+import { makeApiLiveLayer } from "@tepirek-revamped/api/effect-app";
 import { appRouter } from "@tepirek-revamped/api/routers/index";
 import { auth } from "@tepirek-revamped/auth";
+import { ManagedRuntime } from "effect";
 import { createError, initLogger, log as evlogLog, parseError } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
 import type { BetterAuthInstance } from "evlog/better-auth";
@@ -27,6 +29,17 @@ const corsOrigin = process.env.CORS_ORIGIN;
 if (!corsOrigin) {
   throw new Error("CORS_ORIGIN environment variable is required");
 }
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL environment variable is required");
+}
+
+/** Shared Effect runtime for migrated API modules. */
+export const apiEffectRuntime = ManagedRuntime.make(
+  makeApiLiveLayer(databaseUrl)
+);
 
 app.use(evlog());
 

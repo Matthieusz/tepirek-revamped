@@ -5,6 +5,7 @@ packages:
 allowBuilds:
   esbuild: true
   lefthook: true
+  msgpackr-extract: true
 
 catalog:
   "@orpc/client": ^1.14.6
@@ -13,7 +14,11 @@ catalog:
   "@orpc/zod": ^1.14.6
   better-auth: ^1.6.20
   dotenv: ^17.4.2
-  drizzle-orm: ^0.45.2
+  "@effect/sql-pg": 4.0.0-beta.85
+  "@effect/vitest": 4.0.0-beta.85
+  drizzle-kit: 1.0.0-rc.4
+  drizzle-orm: 1.0.0-rc.4
+  effect: 4.0.0-beta.85
   hono: ^4.12.27
   tsdown: ^0.22.3
   typescript: rc
@@ -28,3 +33,4 @@ minimumReleaseAgeExclude:
 
 onlyBuiltDependencies:
   - esbuild
+  - msgpackr-extract

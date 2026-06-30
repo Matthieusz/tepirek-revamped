@@ -20,6 +20,7 @@
     "@tepirek-revamped/db": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
+    "effect": "catalog:",
     "evlog": "^2.19.2",
     "hono": "catalog:",
     "zod": "catalog:"

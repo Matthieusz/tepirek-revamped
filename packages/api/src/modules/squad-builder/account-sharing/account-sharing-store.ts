@@ -1,0 +1,53 @@
+import type {
+  AccountAccessGrantSummary,
+  AccountAccessInviteSummary,
+  AccountInviteTarget,
+  AccountSharingAuthorizationError,
+  AccountSharingStore,
+  ActorDoesNotOwnMargonemAccount,
+  FindOwnedAccountForSharingInput,
+  FindVerifiedInviteTargetInput,
+  MargonemAccountNotFound,
+  MargonemAccountOwnerAuthorizer,
+  ListAccountAccessGrantsInput,
+  ListIncomingAccountInvitesInput,
+  ListSharedAccountsInput,
+  OwnedAccountForSharing,
+  RevokeAccountAccessResult,
+  RevokeAccountAccessStoreInput,
+  RespondToAccountAccessInviteStoreInput,
+  SearchInviteTargetsStoreInput,
+  SharedMargonemAccountSummary,
+  SquadBuilderPersistenceUnavailable,
+  UpsertAccountAccessInviteInput,
+  VerifiedInviteTarget,
+} from "../squad-builder-store";
+
+/** Account sharing persistence contracts used by invite and grant services. */
+export type AccountSharingPersistenceStore = AccountSharingStore &
+  MargonemAccountOwnerAuthorizer;
+
+export type {
+  AccountAccessGrantSummary,
+  AccountAccessInviteSummary,
+  AccountInviteTarget,
+  AccountSharingAuthorizationError,
+  AccountSharingStore,
+  ActorDoesNotOwnMargonemAccount,
+  FindOwnedAccountForSharingInput,
+  FindVerifiedInviteTargetInput,
+  MargonemAccountNotFound,
+  MargonemAccountOwnerAuthorizer,
+  ListAccountAccessGrantsInput,
+  ListIncomingAccountInvitesInput,
+  ListSharedAccountsInput,
+  OwnedAccountForSharing,
+  RevokeAccountAccessResult,
+  RevokeAccountAccessStoreInput,
+  RespondToAccountAccessInviteStoreInput,
+  SearchInviteTargetsStoreInput,
+  SharedMargonemAccountSummary,
+  SquadBuilderPersistenceUnavailable,
+  UpsertAccountAccessInviteInput,
+  VerifiedInviteTarget,
+};
