@@ -230,6 +230,28 @@ describe("squad-builder router Postgres integration", () => {
     expect(groupNames).not.toContain("Router hidden other");
   });
 
+  it("loads squad group detail through the Effect oRPC bridge", async () => {
+    const member = await createVerifiedMember({ id: "router-effect-detail" });
+    const client = createSquadBuilderClient(member, {
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+
+    const created = await client.squadBuilder.createSquadGroup({
+      name: "Router detail group",
+    });
+    const detail = await client.squadBuilder.getSquadGroupDetail({
+      groupId: created.groupId,
+    });
+
+    expect(detail).toMatchObject({
+      accessRole: "owner",
+      groupId: created.groupId,
+      name: "Router detail group",
+      squads: [],
+      visibility: "private",
+    });
+  });
+
   it("returns per-line owned account import preview results for a verified user", async () => {
     const member = await createVerifiedMember({ id: "preview-member" });
     const client = createSquadBuilderClient(member, {

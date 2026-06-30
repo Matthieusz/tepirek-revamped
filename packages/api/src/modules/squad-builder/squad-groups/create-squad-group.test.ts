@@ -31,6 +31,8 @@ const parseTestGroupName = (value: string) => {
 it.effect("rejects an invalid squad group name", () => {
   const store = EffectSquadGroupStore.of({
     createSquadGroup: () => Effect.die(new Error("Store should not be called")),
+    getSquadGroupDetail: () =>
+      Effect.die(new Error("Store should not be called")),
     listMySquadGroups: () =>
       Effect.die(new Error("Store should not be called")),
   });
@@ -64,6 +66,8 @@ it.effect("returns the store-created squad group summary", () => {
       input.actorUserId === actorUserId && input.name === storedName
         ? Effect.succeed(summary)
         : Effect.die(new Error("Unexpected createSquadGroup input")),
+    getSquadGroupDetail: () =>
+      Effect.die(new Error("Store should not be called")),
     listMySquadGroups: () =>
       Effect.die(new Error("Store should not be called")),
   });

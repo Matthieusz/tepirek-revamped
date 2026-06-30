@@ -1,28 +1,50 @@
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
+import { user } from "@tepirek-revamped/db/schema/auth";
 import {
+  margonemAccount,
+  margonemCharacter,
   squad,
   squadCharacter,
   squadGroup,
+  squadGroupInvitation,
 } from "@tepirek-revamped/db/schema/squad-builder";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { appUserIdToString } from "../app-user-id";
+import { parseAccountDisplayName } from "../account-display-name";
+import { appUserIdToString, parseAppUserId } from "../app-user-id";
+import type { AppUserId } from "../app-user-id";
+import type { MargonemAccountId } from "../margonem-account-id";
+import { parseMargonemProfession } from "../margonem-character";
+import {
+  parseMargonemCharacterId,
+  parsePositiveLevel,
+} from "../margonem-profile-id";
 import { isError } from "../result";
-import { parseSquadGroupId } from "../squad-group-id";
+import type { SquadGroupAccess } from "../squad-group-access";
+import { parseSquadGroupId, squadGroupIdToNumber } from "../squad-group-id";
+import { parseSquadGroupInvitationId } from "../squad-group-invitation-id";
+import { parseSquadGroupVisibility } from "../squad-group-visibility";
+import { parseSquadId } from "../squad-id";
 import { parseSquadGroupName, squadGroupNameToString } from "../squad-name";
 import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
 import type {
+  ActorCannotViewSquadGroup,
   CreateSquadGroupStoreInput,
+  GetSquadGroupDetailInput,
   ListMySquadGroupsInput,
+  SquadGroupCharacter,
+  SquadGroupDetail,
+  SquadGroupNotFound,
   SquadGroupSummary,
 } from "./squad-group-store";
 import { EffectSquadGroupStore } from "./squad-group-store";
 
 type EffectSquadGroupPersistenceOperation =
   | "createSquadGroup"
+  | "getSquadGroupDetail"
   | "listMySquadGroups";
 
 const failPersistence = (
@@ -36,6 +58,36 @@ const failPersistence = (
       provider: "postgres",
     })
   );
+
+const parsePersistedAppUserId = (
+  operation: EffectSquadGroupPersistenceOperation,
+  value: string
+): Effect.Effect<
+  AppUserId,
+  EffectSquadBuilderPersistenceUnavailable,
+  never
+> => {
+  const userId = parseAppUserId(value);
+
+  if (isError(userId)) {
+    return failPersistence(operation, userId.error);
+  }
+
+  return Effect.succeed(userId.value);
+};
+
+const parsePersistedSquadGroupName = (
+  operation: EffectSquadGroupPersistenceOperation,
+  value: string
+) => {
+  const name = parseSquadGroupName(value);
+
+  if (isError(name)) {
+    return failPersistence(operation, name.error);
+  }
+
+  return Effect.succeed(name.value);
+};
 
 const createSquadGroupWithDatabase =
   (database: EffectPgDatabase) =>
@@ -166,6 +218,276 @@ const listMySquadGroupsWithDatabase =
       return groups;
     });
 
+const getSquadGroupDetailWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+    groupId,
+  }: GetSquadGroupDetailInput): Effect.Effect<
+    SquadGroupDetail,
+    | SquadGroupNotFound
+    | ActorCannotViewSquadGroup
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* getSquadGroupDetailEffect() {
+      const operation = "getSquadGroupDetail" as const;
+      const groupIdNumber = squadGroupIdToNumber(groupId);
+      const actor = appUserIdToString(actorUserId);
+      const groupSelect = database
+        .select({
+          name: squadGroup.name,
+          ownerUserId: squadGroup.ownerUserId,
+          updatedAt: squadGroup.updatedAt,
+          visibility: squadGroup.visibility,
+        })
+        .from(squadGroup)
+        .where(eq(squadGroup.id, groupIdNumber))
+        .limit(1);
+      const groupSelectEffect = groupSelect as Effect.Effect<
+        readonly {
+          readonly name: string;
+          readonly ownerUserId: string;
+          readonly updatedAt: Date;
+          readonly visibility: string;
+        }[],
+        unknown,
+        never
+      >;
+      const groupRows = yield* groupSelectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const [group] = groupRows;
+
+      if (group === undefined) {
+        return yield* Effect.fail({ _tag: "SquadGroupNotFound" as const });
+      }
+
+      const ownerUserId = yield* parsePersistedAppUserId(
+        operation,
+        group.ownerUserId
+      );
+      const groupName = yield* parsePersistedSquadGroupName(
+        operation,
+        group.name
+      );
+      const visibility = parseSquadGroupVisibility(group.visibility);
+
+      if (isError(visibility)) {
+        return yield* failPersistence(operation, visibility.error);
+      }
+
+      let access: SquadGroupAccess;
+
+      if (group.ownerUserId === actor) {
+        access = {
+          _tag: "SquadGroupOwnerAccess",
+          groupId,
+          ownerUserId: actorUserId,
+          role: "owner",
+        };
+      } else {
+        const inviteSelect = database
+          .select({ id: squadGroupInvitation.id })
+          .from(squadGroupInvitation)
+          .where(
+            and(
+              eq(squadGroupInvitation.squadGroupId, groupIdNumber),
+              eq(squadGroupInvitation.invitedUserId, actor),
+              eq(squadGroupInvitation.status, "accepted")
+            )
+          )
+          .limit(1);
+        const inviteSelectEffect = inviteSelect as Effect.Effect<
+          readonly { readonly id: number }[],
+          unknown,
+          never
+        >;
+        const inviteRows = yield* inviteSelectEffect.pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
+        const [invite] = inviteRows;
+
+        if (invite === undefined) {
+          if (visibility.value !== "global") {
+            return yield* Effect.fail({
+              _tag: "ActorCannotViewSquadGroup" as const,
+            });
+          }
+
+          access = {
+            _tag: "SquadGroupViewerAccess",
+            groupId,
+            ownerUserId,
+            role: "viewer",
+          };
+        } else {
+          const invitationId = parseSquadGroupInvitationId(invite.id);
+
+          if (isError(invitationId)) {
+            return yield* failPersistence(operation, invitationId.error);
+          }
+
+          access = {
+            _tag: "SquadGroupEditorAccess",
+            editorUserId: actorUserId,
+            groupId,
+            invitationId: invitationId.value,
+            ownerUserId,
+            role: "editor",
+          };
+        }
+      }
+
+      const squadSelect = database
+        .select({
+          id: squad.id,
+          name: squad.name,
+          position: squad.position,
+        })
+        .from(squad)
+        .where(eq(squad.squadGroupId, groupIdNumber))
+        .orderBy(asc(squad.position), asc(squad.id));
+      const squadSelectEffect = squadSelect as Effect.Effect<
+        readonly {
+          readonly id: number;
+          readonly name: string;
+          readonly position: number;
+        }[],
+        unknown,
+        never
+      >;
+      const squadRows = yield* squadSelectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+
+      const placementSelect = database
+        .select({
+          accountDisplayName: margonemAccount.displayName,
+          accountId: margonemAccount.id,
+          accountOwnerUserImage: user.image,
+          accountOwnerUserName: user.name,
+          avatarUrl: margonemCharacter.avatarUrl,
+          characterId: margonemCharacter.id,
+          level: margonemCharacter.level,
+          margonemCharacterId: margonemCharacter.characterId,
+          name: margonemCharacter.name,
+          placementId: squadCharacter.id,
+          position: squadCharacter.position,
+          profession: margonemCharacter.profession,
+          squadId: squadCharacter.squadId,
+        })
+        .from(squadCharacter)
+        .innerJoin(
+          margonemCharacter,
+          eq(margonemCharacter.id, squadCharacter.characterId)
+        )
+        .innerJoin(
+          margonemAccount,
+          eq(margonemAccount.id, margonemCharacter.accountId)
+        )
+        .innerJoin(user, eq(user.id, margonemAccount.ownerUserId))
+        .where(eq(squadCharacter.squadGroupId, groupIdNumber))
+        .orderBy(asc(squadCharacter.position), asc(squadCharacter.id));
+      const placementSelectEffect = placementSelect as Effect.Effect<
+        readonly {
+          readonly accountDisplayName: string;
+          readonly accountId: number;
+          readonly accountOwnerUserImage: string | null;
+          readonly accountOwnerUserName: string;
+          readonly avatarUrl: string | null;
+          readonly characterId: number;
+          readonly level: number;
+          readonly margonemCharacterId: number;
+          readonly name: string;
+          readonly placementId: number;
+          readonly position: number;
+          readonly profession: string;
+          readonly squadId: number;
+        }[],
+        unknown,
+        never
+      >;
+      const placementRows = yield* placementSelectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const charactersBySquadId = new Map<number, SquadGroupCharacter[]>();
+
+      for (const placement of placementRows) {
+        const current = charactersBySquadId.get(placement.squadId) ?? [];
+        const accountDisplayName = parseAccountDisplayName(
+          placement.accountDisplayName
+        );
+
+        if (isError(accountDisplayName)) {
+          return yield* failPersistence(operation, accountDisplayName.error);
+        }
+
+        const level = parsePositiveLevel(placement.level);
+
+        if (isError(level)) {
+          return yield* failPersistence(operation, level.error);
+        }
+
+        const profession = parseMargonemProfession(placement.profession);
+
+        if (isError(profession)) {
+          return yield* failPersistence(operation, profession.error);
+        }
+
+        const margonemCharacterId = parseMargonemCharacterId(
+          placement.margonemCharacterId
+        );
+
+        if (isError(margonemCharacterId)) {
+          return yield* failPersistence(operation, margonemCharacterId.error);
+        }
+
+        current.push({
+          accountDisplayName: accountDisplayName.value,
+          accountId: placement.accountId as MargonemAccountId,
+          accountOwnerUserImage: placement.accountOwnerUserImage,
+          accountOwnerUserName: placement.accountOwnerUserName,
+          avatarUrl: placement.avatarUrl,
+          characterId: placement.characterId,
+          level: level.value,
+          margonemCharacterId: margonemCharacterId.value,
+          name: placement.name,
+          placementId: placement.placementId,
+          position: placement.position,
+          profession: profession.value,
+        });
+        charactersBySquadId.set(placement.squadId, current);
+      }
+
+      const squads = [];
+
+      for (const row of squadRows) {
+        const squadId = parseSquadId(row.id);
+
+        if (isError(squadId)) {
+          return yield* failPersistence(operation, squadId.error);
+        }
+
+        squads.push({
+          characters: charactersBySquadId.get(row.id) ?? [],
+          name: row.name,
+          position: row.position,
+          squadId: squadId.value,
+        });
+      }
+
+      return {
+        accessRole: access.role,
+        groupId,
+        name: groupName,
+        ownerUserId,
+        squads,
+        updatedAt: group.updatedAt,
+        visibility: visibility.value,
+      };
+    });
+
 export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
   EffectSquadGroupStore,
   never,
@@ -175,6 +497,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
   EffectDatabase.useSync((database) =>
     EffectSquadGroupStore.of({
       createSquadGroup: createSquadGroupWithDatabase(database),
+      getSquadGroupDetail: getSquadGroupDetailWithDatabase(database),
       listMySquadGroups: listMySquadGroupsWithDatabase(database),
     })
   )

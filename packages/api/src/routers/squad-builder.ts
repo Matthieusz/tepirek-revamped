@@ -97,7 +97,10 @@ import { ListAvailableSquadCharacters } from "../modules/squad-builder/squad-gro
 import { ListGlobalSquadGroups } from "../modules/squad-builder/squad-groups/list-global-squad-groups";
 import { ListSquadGroupSharingState } from "../modules/squad-builder/squad-groups/list-squad-group-sharing-state";
 import { ListSquadGroups } from "../modules/squad-builder/squad-groups/list-squad-groups";
-import type { ListMySquadGroupsError } from "../modules/squad-builder/squad-groups/list-squad-groups";
+import type {
+  GetSquadGroupDetailError,
+  ListMySquadGroupsError,
+} from "../modules/squad-builder/squad-groups/list-squad-groups";
 import { RespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/respond-to-squad-group-invite";
 import { RevokeSquadGroupEditor } from "../modules/squad-builder/squad-groups/revoke-squad-group-editor";
 import { SaveSharedSquadGroupCharacters } from "../modules/squad-builder/squad-groups/save-shared-squad-group-characters";
@@ -242,17 +245,10 @@ interface ListMySquadGroupsService {
   ) => Effect<readonly SquadGroupSummary[], ListMySquadGroupsError, never>;
 }
 
-interface ListSquadGroupsService {
+interface GetSquadGroupDetailService {
   readonly getMine: (
     input: Parameters<ListSquadGroups["getMine"]>[0]
-  ) => Promise<
-    Result<
-      SquadGroupDetail,
-      | SquadGroupNotFound
-      | ActorCannotViewSquadGroup
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Effect<SquadGroupDetail, GetSquadGroupDetailError, never>;
 }
 
 interface ListAvailableSquadCharactersService {
@@ -357,7 +353,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly createSquadGroupService?: CreateSquadGroupService;
   readonly effectRuntime?: ManagedRuntime<EffectSquadGroupStore, unknown>;
   readonly listMySquadGroupsService?: ListMySquadGroupsService;
-  readonly listSquadGroupsService?: ListSquadGroupsService;
+  readonly getSquadGroupDetailService?: GetSquadGroupDetailService;
   readonly listGlobalSquadGroupsService?: ListGlobalSquadGroupsService;
   readonly listAvailableSquadCharactersService?: ListAvailableSquadCharactersService;
   readonly saveSquadGroupService?: SaveSquadGroupService;
@@ -538,7 +534,6 @@ interface SquadBuilderServices {
   readonly respondInvite: RespondToAccountAccessInviteService;
   readonly revokeAccess: RevokeAccountAccessService;
   readonly sharingState: ListAccountSharingStateService;
-  readonly listSquadGroups: ListSquadGroupsService;
   readonly listGlobalSquadGroups: ListGlobalSquadGroupsService;
   readonly listAvailableSquadCharacters: ListAvailableSquadCharactersService;
   readonly saveSquadGroup: SaveSquadGroupService;
@@ -576,7 +571,6 @@ const createDefaultSquadBuilderServices = (): Result<
     list: new ListOwnedMargonemAccounts(store),
     listAvailableSquadCharacters: new ListAvailableSquadCharacters(store),
     listGlobalSquadGroups: new ListGlobalSquadGroups(store),
-    listSquadGroups: new ListSquadGroups(store),
     preview: singlePreview,
     previewOwnedImports: new PreviewOwnedAccountImports(
       singlePreview,
@@ -1350,7 +1344,7 @@ export const createSquadBuilderRouter = ({
   listAccountSharingStateService,
   createSquadGroupService,
   listMySquadGroupsService,
-  listSquadGroupsService,
+  getSquadGroupDetailService,
   listGlobalSquadGroupsService,
   listAvailableSquadCharactersService,
   saveSquadGroupService,
@@ -1542,29 +1536,30 @@ export const createSquadBuilderRouter = ({
         throw toSquadGroupOrpcError(groupId.error);
       }
 
-      const services =
-        listSquadGroupsService === undefined
-          ? defaultServices
-          : ok({
-              listSquadGroups: listSquadGroupsService,
-            });
-
-      if (isError(services)) {
-        logSquadBuilderError(context, "getSquadGroupDetail", services.error);
-        throw toOrpcError(services.error);
-      }
-
-      const result = await services.value.listSquadGroups.getMine({
+      const effect = (
+        getSquadGroupDetailService ?? listSquadGroupsEffect
+      ).getMine({
         actorUserId: actorUserId.value,
         groupId: groupId.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "getSquadGroupDetail", result.error);
-        throw toSquadGroupOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error("DATABASE_URL is required for getSquadGroupDetail"),
+          operation: "getSquadGroupDetail",
+        };
+        logSquadBuilderError(context, "getSquadGroupDetail", error);
+        throw toSquadGroupOrpcError(error);
       }
 
-      return toSquadGroupDetailDto(result.value);
+      const detail = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as GetSquadGroupDetailError;
+        logSquadBuilderError(context, "getSquadGroupDetail", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
+      return toSquadGroupDetailDto(detail);
     }),
   listAccountAccessGrants: verifiedProcedure
     .input(listAccountAccessGrantsInputSchema)

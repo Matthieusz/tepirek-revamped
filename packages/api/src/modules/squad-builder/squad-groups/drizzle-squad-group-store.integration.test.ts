@@ -95,4 +95,34 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     expect(groupNames).toContain("Second listed group");
     expect(groupNames).not.toContain("Other listed group");
   });
+
+  it("loads a squad group detail for the owner", async () => {
+    const member = await createVerifiedMember({ id: "effect-detail-owner" });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const service = new CreateSquadGroup();
+    const listService = new ListSquadGroups();
+
+    const created = await runtime.runPromise(
+      service.create({
+        actorUserId: parseTestUserId(member.id),
+        name: "Effect detail group",
+      })
+    );
+
+    const detail = await runtime.runPromise(
+      listService.getMine({
+        actorUserId: parseTestUserId(member.id),
+        groupId: created.groupId,
+      })
+    );
+
+    expect(detail).toMatchObject({
+      accessRole: "owner",
+      groupId: created.groupId,
+      name: "Effect detail group",
+      ownerUserId: parseTestUserId(member.id),
+      squads: [],
+      visibility: "private",
+    });
+  });
 });

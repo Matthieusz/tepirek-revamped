@@ -53,6 +53,15 @@ export interface EffectSquadGroupStoreShape {
     EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly getSquadGroupDetail: (
+    input: GetSquadGroupDetailInput
+  ) => Effect<
+    SquadGroupDetail,
+    | SquadGroupNotFound
+    | ActorCannotViewSquadGroup
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
 }
 
 export class EffectSquadGroupStore extends Context.Service<
