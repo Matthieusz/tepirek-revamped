@@ -1,0 +1,2520 @@
+import { ORPCError } from "@orpc/server";
+import { z } from "zod";
+
+import { accountDisplayNameToString } from "../modules/squad-builder/account-display-name";
+import type { AccountSharingError } from "../modules/squad-builder/account-sharing-error";
+import {
+  appUserIdToString,
+  parseAppUserId,
+} from "../modules/squad-builder/app-user-id";
+import type { InvalidAppUserId } from "../modules/squad-builder/app-user-id";
+import { ApplyAccountRefetch } from "../modules/squad-builder/apply-account-refetch";
+import type {
+  ApplyAccountRefetchError,
+  ApplyAccountRefetchOutput,
+} from "../modules/squad-builder/apply-account-refetch";
+import { ConfirmOwnedAccountImport } from "../modules/squad-builder/confirm-owned-account-import";
+import type { ConfirmOwnedAccountImportError } from "../modules/squad-builder/confirm-owned-account-import";
+import { CreateSquadGroup } from "../modules/squad-builder/create-squad-group";
+import type { CreateSquadGroupError } from "../modules/squad-builder/create-squad-group";
+import { FirecrawlSdkClient } from "../modules/squad-builder/firecrawl-client";
+import { parseFirecrawlConfig } from "../modules/squad-builder/firecrawl-config";
+import type { ParseFirecrawlConfigError } from "../modules/squad-builder/firecrawl-config";
+import { ListAccountSharingState } from "../modules/squad-builder/list-account-sharing-state";
+import { ListAvailableSquadCharacters } from "../modules/squad-builder/list-available-squad-characters";
+import { ListGlobalSquadGroups } from "../modules/squad-builder/list-global-squad-groups";
+import { ListOwnedMargonemAccounts } from "../modules/squad-builder/list-owned-margonem-accounts";
+import type { ListOwnedMargonemAccountsError } from "../modules/squad-builder/list-owned-margonem-accounts";
+import { ListSquadGroupSharingState } from "../modules/squad-builder/list-squad-group-sharing-state";
+import { ListSquadGroups } from "../modules/squad-builder/list-squad-groups";
+import {
+  margonemAccountAccessIdToNumber,
+  parseMargonemAccountAccessId,
+} from "../modules/squad-builder/margonem-account-access-id";
+import {
+  margonemAccountIdToNumber,
+  parseMargonemAccountId,
+} from "../modules/squad-builder/margonem-account-id";
+import { profileIdToNumber } from "../modules/squad-builder/margonem-profile-id";
+import { parsePendingMargonemAccountImportId } from "../modules/squad-builder/pending-margonem-account-import-id";
+import { parsePendingMargonemAccountRefetchId } from "../modules/squad-builder/pending-margonem-account-refetch-id";
+import { PreviewAccountRefetch } from "../modules/squad-builder/preview-account-refetch";
+import type {
+  PreviewAccountRefetchError,
+  PreviewAccountRefetchOutput,
+} from "../modules/squad-builder/preview-account-refetch";
+import {
+  PreviewMargonemProfileImport,
+  systemClock,
+} from "../modules/squad-builder/preview-margonem-profile-import";
+import type {
+  PreviewMargonemProfileImportError,
+  PreviewMargonemProfileImportInput,
+  PreviewMargonemProfileImportOutput,
+} from "../modules/squad-builder/preview-margonem-profile-import";
+import { PreviewOwnedAccountImports } from "../modules/squad-builder/preview-owned-account-imports";
+import type {
+  PreviewOwnedAccountImportItem,
+  PreviewOwnedAccountImportLineError,
+  PreviewOwnedAccountImportsError,
+  PreviewOwnedAccountImportsOutput,
+} from "../modules/squad-builder/preview-owned-account-imports";
+import { RespondToAccountAccessInvite } from "../modules/squad-builder/respond-to-account-access-invite";
+import { RespondToSquadGroupInvite } from "../modules/squad-builder/respond-to-squad-group-invite";
+import { err, isError, ok } from "../modules/squad-builder/result";
+import type { Result } from "../modules/squad-builder/result";
+import { RevokeAccountAccess } from "../modules/squad-builder/revoke-account-access";
+import { RevokeSquadGroupEditor } from "../modules/squad-builder/revoke-squad-group-editor";
+import { SaveSharedSquadGroupCharacters } from "../modules/squad-builder/save-shared-squad-group-characters";
+import type { SharedSquadGroupSaveError } from "../modules/squad-builder/save-shared-squad-group-characters";
+import { SaveSquadGroup } from "../modules/squad-builder/save-squad-group";
+import type {
+  SaveSquadGroupError,
+  SaveSquadInput,
+} from "../modules/squad-builder/save-squad-group";
+import { SearchAccountInviteTargets } from "../modules/squad-builder/search-account-invite-targets";
+import { SearchSquadEditorInviteTargets } from "../modules/squad-builder/search-squad-editor-invite-targets";
+import { SendAccountAccessInvite } from "../modules/squad-builder/send-account-access-invite";
+import { SendSquadGroupEditorInvite } from "../modules/squad-builder/send-squad-group-editor-invite";
+import { SetSquadGroupVisibility } from "../modules/squad-builder/set-squad-group-visibility";
+import type { GlobalSquadVisibilityError } from "../modules/squad-builder/set-squad-group-visibility";
+import { DrizzleSquadBuilderStore } from "../modules/squad-builder/squad-builder-store";
+import type {
+  AccountAccessGrantSummary,
+  AccountAccessInviteSummary,
+  AccountInviteTarget,
+  ActorCannotViewSquadGroup,
+  GlobalSquadGroupSummary,
+  OwnedMargonemAccountSummary,
+  RevokeAccountAccessResult,
+  SharedMargonemAccountSummary,
+  SharedSquadGroupSummary,
+  SquadBuilderPersistenceUnavailable,
+  SquadEditorInviteTarget,
+  SquadGroupDetail,
+  SquadGroupEditorGrantSummary,
+  SquadGroupInvitationSummary,
+  SquadGroupNotFound,
+  SquadGroupSummary,
+} from "../modules/squad-builder/squad-builder-store";
+import { parseSquadGroupId } from "../modules/squad-builder/squad-group-id";
+import {
+  parseSquadGroupInvitationId,
+  squadGroupInvitationIdToNumber,
+} from "../modules/squad-builder/squad-group-invitation-id";
+import { parseSquadGroupListFilters } from "../modules/squad-builder/squad-group-list-filters";
+import type { SquadGroupListFilterError } from "../modules/squad-builder/squad-group-list-filters";
+import type { SquadGroupSharingError } from "../modules/squad-builder/squad-group-sharing-error";
+import type { AvailableSquadCharacter } from "../modules/squad-builder/squad-group-snapshot";
+import { parseSquadGroupVisibility } from "../modules/squad-builder/squad-group-visibility";
+import { parseSquadId } from "../modules/squad-builder/squad-id";
+import { verifiedProcedure } from "./procedures";
+import type { RouterContext } from "./procedures";
+
+const casesHandled = (x: never): never => x;
+
+interface PreviewProfileImportService {
+  readonly preview: (
+    input: PreviewMargonemProfileImportInput,
+    options?: { readonly signal?: AbortSignal }
+  ) => Promise<
+    Result<
+      PreviewMargonemProfileImportOutput,
+      PreviewMargonemProfileImportError
+    >
+  >;
+}
+
+interface PreviewOwnedImportsService {
+  readonly preview: (
+    input: Parameters<PreviewOwnedAccountImports["preview"]>[0],
+    options?: { readonly signal?: AbortSignal }
+  ) => Promise<
+    Result<PreviewOwnedAccountImportsOutput, PreviewOwnedAccountImportsError>
+  >;
+}
+
+interface ConfirmOwnedAccountImportService {
+  readonly confirm: (
+    input: Parameters<ConfirmOwnedAccountImport["confirm"]>[0]
+  ) => Promise<
+    Result<OwnedMargonemAccountSummary, ConfirmOwnedAccountImportError>
+  >;
+}
+
+interface PreviewAccountRefetchService {
+  readonly preview: (
+    input: Parameters<PreviewAccountRefetch["preview"]>[0],
+    options?: { readonly signal?: AbortSignal }
+  ) => Promise<Result<PreviewAccountRefetchOutput, PreviewAccountRefetchError>>;
+}
+
+interface ApplyAccountRefetchService {
+  readonly apply: (
+    input: Parameters<ApplyAccountRefetch["apply"]>[0]
+  ) => Promise<Result<ApplyAccountRefetchOutput, ApplyAccountRefetchError>>;
+}
+
+interface ListOwnedAccountsService {
+  readonly list: (
+    input: Parameters<ListOwnedMargonemAccounts["list"]>[0]
+  ) => Promise<
+    Result<
+      readonly OwnedMargonemAccountSummary[],
+      ListOwnedMargonemAccountsError
+    >
+  >;
+}
+
+interface SearchAccountInviteTargetsService {
+  readonly search: (
+    input: Parameters<SearchAccountInviteTargets["search"]>[0]
+  ) => Promise<Result<readonly AccountInviteTarget[], AccountSharingError>>;
+}
+
+interface SendAccountAccessInviteService {
+  readonly send: (
+    input: Parameters<SendAccountAccessInvite["send"]>[0]
+  ) => Promise<Result<AccountAccessInviteSummary, AccountSharingError>>;
+}
+
+interface RespondToAccountAccessInviteService {
+  readonly respond: (
+    input: Parameters<RespondToAccountAccessInvite["respond"]>[0]
+  ) => Promise<Result<AccountAccessInviteSummary, AccountSharingError>>;
+}
+
+interface RevokeAccountAccessService {
+  readonly revoke: (
+    input: Parameters<RevokeAccountAccess["revoke"]>[0]
+  ) => Promise<Result<RevokeAccountAccessResult, AccountSharingError>>;
+}
+
+interface ListAccountSharingStateService {
+  readonly listIncomingInvites: (
+    input: Parameters<ListAccountSharingState["listIncomingInvites"]>[0]
+  ) => Promise<
+    Result<readonly AccountAccessInviteSummary[], AccountSharingError>
+  >;
+  readonly listSharedAccounts: (
+    input: Parameters<ListAccountSharingState["listSharedAccounts"]>[0]
+  ) => Promise<
+    Result<readonly SharedMargonemAccountSummary[], AccountSharingError>
+  >;
+  readonly listAccountAccessGrants: (
+    input: Parameters<ListAccountSharingState["listAccountAccessGrants"]>[0]
+  ) => Promise<
+    Result<readonly AccountAccessGrantSummary[], AccountSharingError>
+  >;
+}
+
+interface CreateSquadGroupService {
+  readonly create: (
+    input: Parameters<CreateSquadGroup["create"]>[0]
+  ) => Promise<Result<SquadGroupSummary, CreateSquadGroupError>>;
+}
+
+interface ListGlobalSquadGroupsService {
+  readonly list: (
+    input: Parameters<ListGlobalSquadGroups["list"]>[0]
+  ) => Promise<
+    Result<
+      readonly GlobalSquadGroupSummary[],
+      SquadBuilderPersistenceUnavailable
+    >
+  >;
+}
+
+interface ListSquadGroupsService {
+  readonly listMine: (
+    input: Parameters<ListSquadGroups["listMine"]>[0]
+  ) => Promise<
+    Result<readonly SquadGroupSummary[], SquadBuilderPersistenceUnavailable>
+  >;
+  readonly getMine: (
+    input: Parameters<ListSquadGroups["getMine"]>[0]
+  ) => Promise<
+    Result<
+      SquadGroupDetail,
+      | SquadGroupNotFound
+      | ActorCannotViewSquadGroup
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+}
+
+interface ListAvailableSquadCharactersService {
+  readonly list: (
+    input: Parameters<ListAvailableSquadCharacters["list"]>[0]
+  ) => Promise<
+    Result<
+      readonly AvailableSquadCharacter[],
+      | SquadGroupNotFound
+      | ActorCannotViewSquadGroup
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+}
+
+interface SaveSquadGroupService {
+  readonly save: (
+    input: Parameters<SaveSquadGroup["save"]>[0]
+  ) => Promise<Result<SquadGroupDetail, SaveSquadGroupError>>;
+}
+
+interface SearchSquadEditorInviteTargetsService {
+  readonly search: (
+    input: Parameters<SearchSquadEditorInviteTargets["search"]>[0]
+  ) => Promise<
+    Result<readonly SquadEditorInviteTarget[], SquadGroupSharingError>
+  >;
+}
+
+interface SendSquadGroupEditorInviteService {
+  readonly send: (
+    input: Parameters<SendSquadGroupEditorInvite["send"]>[0]
+  ) => Promise<Result<SquadGroupInvitationSummary, SquadGroupSharingError>>;
+}
+
+interface RespondToSquadGroupInviteService {
+  readonly respond: (
+    input: Parameters<RespondToSquadGroupInvite["respond"]>[0]
+  ) => Promise<Result<SquadGroupInvitationSummary, SquadGroupSharingError>>;
+}
+
+interface RevokeSquadGroupEditorService {
+  readonly revoke: (
+    input: Parameters<RevokeSquadGroupEditor["revoke"]>[0]
+  ) => Promise<Result<SquadGroupInvitationSummary, SquadGroupSharingError>>;
+}
+
+interface ListSquadGroupSharingStateService {
+  readonly listIncomingInvites: (
+    input: Parameters<ListSquadGroupSharingState["listIncomingInvites"]>[0]
+  ) => Promise<
+    Result<readonly SquadGroupInvitationSummary[], SquadGroupSharingError>
+  >;
+  readonly listSharedGroups: (
+    input: Parameters<ListSquadGroupSharingState["listSharedGroups"]>[0]
+  ) => Promise<
+    Result<readonly SharedSquadGroupSummary[], SquadGroupSharingError>
+  >;
+  readonly listEditorGrants: (
+    input: Parameters<ListSquadGroupSharingState["listEditorGrants"]>[0]
+  ) => Promise<
+    Result<readonly SquadGroupEditorGrantSummary[], SquadGroupSharingError>
+  >;
+  readonly countPendingInvites: (
+    input: Parameters<ListSquadGroupSharingState["countPendingInvites"]>[0]
+  ) => Promise<Result<number, SquadGroupSharingError>>;
+}
+
+interface SetSquadGroupVisibilityService {
+  readonly set: (
+    input: Parameters<SetSquadGroupVisibility["set"]>[0]
+  ) => Promise<
+    Result<
+      {
+        readonly groupId: number;
+        readonly visibility: "private" | "global";
+        readonly updatedAt: Date;
+      },
+      GlobalSquadVisibilityError
+    >
+  >;
+}
+
+interface SaveSharedSquadGroupCharactersService {
+  readonly save: (
+    input: Parameters<SaveSharedSquadGroupCharacters["save"]>[0]
+  ) => Promise<Result<SquadGroupDetail, SharedSquadGroupSaveError>>;
+}
+
+interface CreateSquadBuilderRouterOptions {
+  readonly previewService?: PreviewProfileImportService;
+  readonly previewOwnedImportsService?: PreviewOwnedImportsService;
+  readonly confirmOwnedAccountImportService?: ConfirmOwnedAccountImportService;
+  readonly previewAccountRefetchService?: PreviewAccountRefetchService;
+  readonly applyAccountRefetchService?: ApplyAccountRefetchService;
+  readonly listOwnedAccountsService?: ListOwnedAccountsService;
+  readonly searchAccountInviteTargetsService?: SearchAccountInviteTargetsService;
+  readonly sendAccountAccessInviteService?: SendAccountAccessInviteService;
+  readonly respondToAccountAccessInviteService?: RespondToAccountAccessInviteService;
+  readonly revokeAccountAccessService?: RevokeAccountAccessService;
+  readonly listAccountSharingStateService?: ListAccountSharingStateService;
+  readonly createSquadGroupService?: CreateSquadGroupService;
+  readonly listSquadGroupsService?: ListSquadGroupsService;
+  readonly listGlobalSquadGroupsService?: ListGlobalSquadGroupsService;
+  readonly listAvailableSquadCharactersService?: ListAvailableSquadCharactersService;
+  readonly saveSquadGroupService?: SaveSquadGroupService;
+  readonly searchSquadEditorInviteTargetsService?: SearchSquadEditorInviteTargetsService;
+  readonly sendSquadGroupEditorInviteService?: SendSquadGroupEditorInviteService;
+  readonly respondToSquadGroupInviteService?: RespondToSquadGroupInviteService;
+  readonly revokeSquadGroupEditorService?: RevokeSquadGroupEditorService;
+  readonly listSquadGroupSharingStateService?: ListSquadGroupSharingStateService;
+  readonly saveSharedSquadGroupCharactersService?: SaveSharedSquadGroupCharactersService;
+  readonly setSquadGroupVisibilityService?: SetSquadGroupVisibilityService;
+}
+
+const previewProfileImportInputSchema = z.object({
+  profileUrl: z.string().min(1),
+});
+
+const previewOwnedAccountImportsInputSchema = z.object({
+  profileUrls: z.array(z.string()).max(20),
+});
+
+const confirmOwnedAccountImportInputSchema = z.object({
+  displayName: z.string(),
+  pendingImportId: z.number().int().positive(),
+});
+
+const searchAccountInviteTargetsInputSchema = z.object({
+  accountId: z.number().int().positive(),
+  query: z.string(),
+});
+
+const sendAccountAccessInviteInputSchema = z.object({
+  accountId: z.number().int().positive(),
+  invitedUserId: z.string().min(1),
+});
+
+const respondToAccountAccessInviteInputSchema = z.object({
+  accessId: z.number().int().positive(),
+  response: z.enum(["accept", "decline"]),
+});
+
+const revokeAccountAccessInputSchema = z.object({
+  accessId: z.number().int().positive(),
+});
+
+const previewAccountRefetchInputSchema = z.object({
+  accountId: z.number().int().positive(),
+});
+
+const applyAccountRefetchInputSchema = z.object({
+  refetchPreviewId: z.number().int().positive(),
+});
+
+const listAccountAccessGrantsInputSchema = z.object({
+  accountId: z.number().int().positive(),
+});
+
+const createSquadGroupInputSchema = z.object({
+  name: z.string(),
+});
+
+const squadGroupListFiltersInputSchema = z
+  .object({
+    filters: z
+      .object({
+        maxLevel: z.number().optional(),
+        minLevel: z.number().optional(),
+        nameQuery: z.string().optional(),
+      })
+      .optional(),
+  })
+  .optional();
+
+const squadGroupIdInputSchema = z.object({
+  groupId: z.number().int().positive(),
+});
+
+const setSquadGroupVisibilityInputSchema = z.object({
+  groupId: z.number().int().positive(),
+  visibility: z.enum(["private", "global"]),
+});
+
+const saveSquadGroupInputSchema = z.object({
+  groupId: z.number().int().positive(),
+  name: z.string(),
+  squads: z.array(
+    z.object({
+      characters: z.array(
+        z.object({
+          characterId: z.number().int().positive(),
+          position: z.number().int().nonnegative(),
+        })
+      ),
+      clientKey: z.string().min(1),
+      name: z.string(),
+      position: z.number().int().nonnegative(),
+      squadId: z.number().int().positive().optional(),
+    })
+  ),
+});
+
+const searchSquadEditorInviteTargetsInputSchema = z.object({
+  groupId: z.number().int().positive(),
+  query: z.string(),
+});
+
+const sendSquadGroupEditorInviteInputSchema = z.object({
+  groupId: z.number().int().positive(),
+  invitedUserId: z.string().min(1),
+});
+
+const respondToSquadGroupInviteInputSchema = z.object({
+  invitationId: z.number().int().positive(),
+  response: z.enum(["accept", "decline"]),
+});
+
+const revokeSquadGroupEditorInputSchema = z.object({
+  invitationId: z.number().int().positive(),
+});
+
+const listSquadGroupEditorGrantsInputSchema = z.object({
+  groupId: z.number().int().positive(),
+});
+
+const saveSharedSquadGroupCharactersInputSchema = z.object({
+  groupId: z.number().int().positive(),
+  squads: z.array(
+    z.object({
+      characters: z.array(
+        z.object({
+          characterId: z.number().int().positive(),
+          position: z.number().int().nonnegative(),
+        })
+      ),
+      squadId: z.number().int().positive(),
+    })
+  ),
+});
+
+type SquadBuilderRouterError =
+  | PreviewMargonemProfileImportError
+  | InvalidAppUserId
+  | ParseFirecrawlConfigError;
+
+const failSquadBuilderServices = (
+  error: SquadBuilderRouterError
+): Result<SquadBuilderServices, SquadBuilderRouterError> => err(error);
+
+interface SquadBuilderServices {
+  readonly preview: PreviewProfileImportService;
+  readonly previewOwnedImports: PreviewOwnedImportsService;
+  readonly confirm: ConfirmOwnedAccountImportService;
+  readonly previewRefetch: PreviewAccountRefetchService;
+  readonly applyRefetch: ApplyAccountRefetchService;
+  readonly list: ListOwnedAccountsService;
+  readonly searchInviteTargets: SearchAccountInviteTargetsService;
+  readonly sendInvite: SendAccountAccessInviteService;
+  readonly respondInvite: RespondToAccountAccessInviteService;
+  readonly revokeAccess: RevokeAccountAccessService;
+  readonly sharingState: ListAccountSharingStateService;
+  readonly createSquadGroup: CreateSquadGroupService;
+  readonly listSquadGroups: ListSquadGroupsService;
+  readonly listGlobalSquadGroups: ListGlobalSquadGroupsService;
+  readonly listAvailableSquadCharacters: ListAvailableSquadCharactersService;
+  readonly saveSquadGroup: SaveSquadGroupService;
+  readonly searchSquadEditorInviteTargets: SearchSquadEditorInviteTargetsService;
+  readonly sendSquadGroupEditorInvite: SendSquadGroupEditorInviteService;
+  readonly respondToSquadGroupInvite: RespondToSquadGroupInviteService;
+  readonly revokeSquadGroupEditor: RevokeSquadGroupEditorService;
+  readonly squadGroupSharingState: ListSquadGroupSharingStateService;
+  readonly saveSharedSquadGroupCharacters: SaveSharedSquadGroupCharactersService;
+  readonly setSquadGroupVisibility: SetSquadGroupVisibilityService;
+}
+
+const createDefaultSquadBuilderServices = (): Result<
+  SquadBuilderServices,
+  SquadBuilderRouterError
+> => {
+  const config = parseFirecrawlConfig(process.env);
+
+  if (isError(config)) {
+    return failSquadBuilderServices(config.error);
+  }
+
+  const store = new DrizzleSquadBuilderStore();
+  const singlePreview = new PreviewMargonemProfileImport(
+    store,
+    store,
+    new FirecrawlSdkClient(config.value.apiKey),
+    systemClock,
+    config.value
+  );
+
+  return ok({
+    applyRefetch: new ApplyAccountRefetch(store, store, store, systemClock),
+    confirm: new ConfirmOwnedAccountImport(store, store, systemClock),
+    createSquadGroup: new CreateSquadGroup(store),
+    list: new ListOwnedMargonemAccounts(store),
+    listAvailableSquadCharacters: new ListAvailableSquadCharacters(store),
+    listGlobalSquadGroups: new ListGlobalSquadGroups(store),
+    listSquadGroups: new ListSquadGroups(store),
+    preview: singlePreview,
+    previewOwnedImports: new PreviewOwnedAccountImports(
+      singlePreview,
+      store,
+      store,
+      systemClock
+    ),
+    previewRefetch: new PreviewAccountRefetch(
+      store,
+      store,
+      store,
+      store,
+      new FirecrawlSdkClient(config.value.apiKey),
+      systemClock,
+      config.value
+    ),
+    respondInvite: new RespondToAccountAccessInvite(store, systemClock),
+    respondToSquadGroupInvite: new RespondToSquadGroupInvite(
+      store,
+      systemClock
+    ),
+    revokeAccess: new RevokeAccountAccess(store, systemClock),
+    revokeSquadGroupEditor: new RevokeSquadGroupEditor(store, systemClock),
+    saveSharedSquadGroupCharacters: new SaveSharedSquadGroupCharacters(
+      store,
+      store,
+      systemClock
+    ),
+    saveSquadGroup: new SaveSquadGroup(store, systemClock),
+    searchInviteTargets: new SearchAccountInviteTargets(store),
+    searchSquadEditorInviteTargets: new SearchSquadEditorInviteTargets(store),
+    sendInvite: new SendAccountAccessInvite(store, systemClock),
+    sendSquadGroupEditorInvite: new SendSquadGroupEditorInvite(
+      store,
+      systemClock
+    ),
+    setSquadGroupVisibility: new SetSquadGroupVisibility(store, systemClock),
+    sharingState: new ListAccountSharingState(store),
+    squadGroupSharingState: new ListSquadGroupSharingState(store),
+  });
+};
+
+const toPreviewProfileImportResponse = (
+  output: PreviewMargonemProfileImportOutput
+) => ({
+  firecrawlCreditsUsed: output.firecrawlCreditsUsed,
+  generatedProfileUrl: output.generatedProfileUrl,
+  jarunaCharacters: output.jarunaCharacters.map((character) => ({
+    avatarUrl: character.avatarUrl,
+    characterId: character.characterId,
+    level: character.level,
+    name: character.name,
+    profession: character.profession,
+  })),
+  lastFetchedAt: output.lastFetchedAt.toISOString(),
+  profileId: output.profileId,
+  suggestedAccountName: output.suggestedAccountName,
+});
+
+const lineErrorToTag = (error: PreviewOwnedAccountImportLineError): string => {
+  switch (error._tag) {
+    case "InvalidMargonemProfileUrl":
+    case "MissingMargonemProfileId": {
+      return "InvalidProfileUrl";
+    }
+    case "DuplicateProfileInBatch": {
+      return "DuplicateProfileInBatch";
+    }
+    case "MargonemAccountAlreadyOwnedByActor": {
+      return "AlreadyOwnedByActor";
+    }
+    case "MargonemAccountOwnedByAnotherUser": {
+      return "OwnedByAnotherUser";
+    }
+    case "MargonemAccountAlreadySharedWithActor": {
+      return "AlreadySharedWithActor";
+    }
+    case "FirecrawlMonthlyBudgetExhausted": {
+      return "BudgetExhausted";
+    }
+    case "FirecrawlRequestFailed":
+    case "FirecrawlResponseNotParseable":
+    case "RequestCancelled": {
+      return "FirecrawlFailed";
+    }
+    case "MargonemProfileNameNotFound":
+    case "MargonemCharacterRowsNotFound":
+    case "MargonemCharacterRowInvalid": {
+      return "ProfileParseFailed";
+    }
+    case "SquadBuilderPersistenceUnavailable": {
+      return "PersistenceUnavailable";
+    }
+    default: {
+      return casesHandled(error);
+    }
+  }
+};
+
+const lineErrorToMessage = (
+  error: PreviewOwnedAccountImportLineError
+): string => {
+  switch (error._tag) {
+    case "InvalidMargonemProfileUrl":
+    case "MissingMargonemProfileId": {
+      return "To nie jest poprawny link do profilu Margonem.";
+    }
+    case "DuplicateProfileInBatch": {
+      return "Ten profil już występuje wyżej w liście.";
+    }
+    case "MargonemAccountAlreadyOwnedByActor": {
+      return "Ten profil jest już dodany do Twoich kont.";
+    }
+    case "MargonemAccountOwnedByAnotherUser": {
+      return "Ten profil został już dodany przez innego użytkownika.";
+    }
+    case "MargonemAccountAlreadySharedWithActor": {
+      return "Ten profil jest już Ci udostępniony.";
+    }
+    case "FirecrawlMonthlyBudgetExhausted": {
+      return "Limit pobierania profili na ten miesiąc został wyczerpany.";
+    }
+    case "FirecrawlRequestFailed":
+    case "FirecrawlResponseNotParseable":
+    case "RequestCancelled": {
+      return "Nie udało się pobrać profilu Margonem.";
+    }
+    case "MargonemProfileNameNotFound":
+    case "MargonemCharacterRowsNotFound":
+    case "MargonemCharacterRowInvalid": {
+      return "Nie udało się odczytać danych profilu Margonem.";
+    }
+    case "SquadBuilderPersistenceUnavailable": {
+      return "Nie udało się zapisać podglądu. Spróbuj ponownie.";
+    }
+    default: {
+      return casesHandled(error);
+    }
+  }
+};
+
+const toPreviewOwnedAccountImportItemDto = (
+  item: PreviewOwnedAccountImportItem
+) => {
+  if (item._tag === "PreviewSucceeded") {
+    return {
+      avatarUrl: null,
+      characterCount: item.jarunaCharacters.length,
+      defaultDisplayName: item.defaultDisplayName,
+      errorTag: null,
+      firecrawlCreditsUsed: item.firecrawlCreditsUsed,
+      generatedProfileUrl: item.generatedProfileUrl,
+      inputUrl: item.inputUrl,
+      jarunaCharacters: item.jarunaCharacters.map((character) => ({
+        avatarUrl: character.avatarUrl,
+        characterId: character.characterId,
+        level: character.level,
+        name: character.name,
+        profession: character.profession,
+      })),
+      lastFetchedAt: item.lastFetchedAt.toISOString(),
+      lineNumber: item.lineNumber,
+      message: null,
+      pendingImportId: item.pendingImportId,
+      profileId: item.profileId,
+      status: "success" as const,
+      suggestedAccountName: item.suggestedAccountName,
+    };
+  }
+
+  return {
+    avatarUrl: null,
+    characterCount: 0,
+    defaultDisplayName: null,
+    errorTag: lineErrorToTag(item.error),
+    firecrawlCreditsUsed: 0,
+    generatedProfileUrl: null,
+    inputUrl: item.inputUrl,
+    jarunaCharacters: [],
+    lastFetchedAt: null,
+    lineNumber: item.lineNumber,
+    message: lineErrorToMessage(item.error),
+    pendingImportId: null,
+    profileId: null,
+    status: "error" as const,
+    suggestedAccountName: null,
+  };
+};
+
+const toConfirmOwnedAccountImportResponse = (
+  output: OwnedMargonemAccountSummary
+) => ({
+  accountId: output.accountId,
+  characterCount: output.characterCount,
+  displayName: output.displayName,
+  generatedProfileUrl: output.generatedProfileUrl,
+  lastFetchedAt: output.lastFetchedAt.toISOString(),
+  profileId: output.profileId,
+});
+
+const toListOwnedAccountsResponse = (
+  accounts: readonly OwnedMargonemAccountSummary[]
+) => ({
+  accounts: accounts.map((account) => ({
+    accountId: account.accountId,
+    characterCount: account.characterCount,
+    displayName: account.displayName,
+    generatedProfileUrl: account.generatedProfileUrl,
+    lastFetchedAt: account.lastFetchedAt.toISOString(),
+    profileId: account.profileId,
+  })),
+});
+
+const toPreviewAccountRefetchResponse = (
+  output: PreviewAccountRefetchOutput
+) => ({
+  accountId: margonemAccountIdToNumber(output.accountId),
+  diff: {
+    added: output.diff.added.map((item) => ({
+      avatarUrl: item.latest.avatarUrl,
+      characterId: item.latest.characterId,
+      level: item.latest.level,
+      name: item.latest.name,
+      profession: item.latest.profession,
+    })),
+    changed: output.diff.changed.map((item) => ({
+      changes: item.changes.map((change) => ({
+        after: change.after,
+        before: change.before,
+        field: change.field,
+      })),
+      characterId: item.margonemCharacterId,
+      databaseCharacterId: item.databaseCharacterId,
+      name: item.latest.name,
+    })),
+    removed: output.diff.removed.map((item) => ({
+      affectedSquadCount: item.current.affectedSquadCount,
+      avatarUrl: item.current.avatarUrl,
+      characterId: item.current.margonemCharacterId,
+      databaseCharacterId: item.current.databaseCharacterId,
+      level: item.current.level,
+      name: item.current.name,
+      profession: item.current.profession,
+    })),
+    unchangedCount: output.diff.unchangedCount,
+  },
+  fetchedAt: output.fetchedAt.toISOString(),
+  firecrawlCreditsUsed: output.firecrawlCreditsUsed,
+  generatedProfileUrl: output.generatedProfileUrl,
+  profileId: profileIdToNumber(output.profileId),
+  refetchPreviewId: output.refetchPreviewId,
+});
+
+const toApplyAccountRefetchResponse = (output: ApplyAccountRefetchOutput) => ({
+  accountId: margonemAccountIdToNumber(output.accountId),
+  addedCharacterCount: output.addedCharacterCount,
+  lastFetchedAt: output.lastFetchedAt.toISOString(),
+  profileId: profileIdToNumber(output.profileId),
+  removedCharacterCount: output.removedCharacterCount,
+  removedSquadCharacterCount: output.removedSquadCharacterCount,
+  updatedCharacterCount: output.updatedCharacterCount,
+});
+
+const toAccountInviteTargetDto = (target: AccountInviteTarget) => ({
+  image: target.image,
+  name: target.name,
+  userId: appUserIdToString(target.userId),
+});
+
+const toAccountAccessInviteDto = (invite: AccountAccessInviteSummary) => ({
+  accessId: margonemAccountAccessIdToNumber(invite.accessId),
+  accountDisplayName: accountDisplayNameToString(invite.accountDisplayName),
+  accountId: margonemAccountIdToNumber(invite.accountId),
+  createdAt: invite.createdAt.toISOString(),
+  generatedProfileUrl: invite.generatedProfileUrl,
+  ownerUserImage: invite.ownerUserImage,
+  ownerUserName: invite.ownerUserName,
+  status: invite.status,
+  updatedAt: invite.updatedAt.toISOString(),
+});
+
+const toSharedMargonemAccountDto = (account: SharedMargonemAccountSummary) => ({
+  accountId: margonemAccountIdToNumber(account.accountId),
+  characterCount: account.characterCount,
+  displayName: accountDisplayNameToString(account.displayName),
+  generatedProfileUrl: account.generatedProfileUrl,
+  lastFetchedAt: account.lastFetchedAt.toISOString(),
+  ownerUserImage: account.ownerUserImage,
+  ownerUserName: account.ownerUserName,
+  profileId: profileIdToNumber(account.profileId),
+});
+
+const toAccountAccessGrantDto = (grant: AccountAccessGrantSummary) => ({
+  accessId: margonemAccountAccessIdToNumber(grant.accessId),
+  createdAt: grant.createdAt.toISOString(),
+  status: grant.status,
+  updatedAt: grant.updatedAt.toISOString(),
+  userId: appUserIdToString(grant.invitedUserId),
+  userImage: grant.invitedUserImage,
+  userName: grant.invitedUserName,
+});
+
+const toSquadGroupSummaryDto = (group: SquadGroupSummary) => ({
+  characterCount: group.characterCount,
+  groupId: group.groupId,
+  name: group.name,
+  squadCount: group.squadCount,
+  updatedAt: group.updatedAt.toISOString(),
+});
+
+const toSquadGroupDetailDto = (detail: SquadGroupDetail) => ({
+  accessRole: detail.accessRole,
+  groupId: detail.groupId,
+  name: detail.name,
+  squads: detail.squads.map((squadDetail) => ({
+    characters: squadDetail.characters.map((character) => ({
+      accountDisplayName: accountDisplayNameToString(
+        character.accountDisplayName
+      ),
+      accountId: margonemAccountIdToNumber(character.accountId),
+      accountOwnerUserImage: character.accountOwnerUserImage,
+      accountOwnerUserName: character.accountOwnerUserName,
+      avatarUrl: character.avatarUrl,
+      characterId: character.characterId,
+      level: character.level,
+      margonemCharacterId: character.margonemCharacterId,
+      name: character.name,
+      placementId: character.placementId,
+      position: character.position,
+      profession: character.profession,
+    })),
+    name: squadDetail.name,
+    position: squadDetail.position,
+    squadId: squadDetail.squadId,
+  })),
+  updatedAt: detail.updatedAt.toISOString(),
+  visibility: detail.visibility,
+});
+
+const toSquadEditorInviteTargetDto = (target: SquadEditorInviteTarget) => ({
+  image: target.image,
+  name: target.name,
+  userId: appUserIdToString(target.userId),
+});
+
+const toSquadGroupInvitationDto = (invite: SquadGroupInvitationSummary) => ({
+  createdAt: invite.createdAt.toISOString(),
+  invitationId: squadGroupInvitationIdToNumber(invite.invitationId),
+  ownerUserImage: invite.ownerUserImage,
+  ownerUserName: invite.ownerUserName,
+  squadGroupId: invite.squadGroupId,
+  squadGroupName: invite.squadGroupName,
+  status: invite.status,
+  updatedAt: invite.updatedAt.toISOString(),
+});
+
+const toSharedSquadGroupDto = (group: SharedSquadGroupSummary) => ({
+  characterCount: group.characterCount,
+  groupId: group.groupId,
+  name: group.name,
+  ownerUserImage: group.ownerUserImage,
+  ownerUserName: group.ownerUserName,
+  squadCount: group.squadCount,
+  updatedAt: group.updatedAt.toISOString(),
+});
+
+const toGlobalSquadGroupDto = (group: GlobalSquadGroupSummary) => ({
+  characterCount: group.characterCount,
+  groupId: group.groupId,
+  name: group.name,
+  ownerUserImage: group.ownerUserImage,
+  ownerUserName: group.ownerUserName,
+  squadCount: group.squadCount,
+  updatedAt: group.updatedAt.toISOString(),
+});
+
+const toSquadGroupEditorGrantDto = (grant: SquadGroupEditorGrantSummary) => ({
+  createdAt: grant.createdAt.toISOString(),
+  invitationId: squadGroupInvitationIdToNumber(grant.invitationId),
+  status: grant.status,
+  updatedAt: grant.updatedAt.toISOString(),
+  userId: appUserIdToString(grant.userId),
+  userImage: grant.userImage,
+  userName: grant.userName,
+});
+
+const toAvailableSquadCharacterDto = (character: AvailableSquadCharacter) => ({
+  accountDisplayName: accountDisplayNameToString(character.accountDisplayName),
+  accountId: margonemAccountIdToNumber(character.accountId),
+  accountOwnerUserImage: character.accountOwnerUserImage,
+  accountOwnerUserName: character.accountOwnerUserName,
+  avatarUrl: character.avatarUrl,
+  characterId: character.characterId,
+  level: character.level,
+  margonemCharacterId: character.margonemCharacterId,
+  name: character.name,
+  profession: character.profession,
+});
+
+const logSquadBuilderError = (
+  context: RouterContext,
+  operation: SquadBuilderLogOperation,
+  error: { readonly _tag: string }
+) => {
+  context.logger.error("Squad builder operation failed", {
+    squadBuilder: {
+      errorTag: error._tag,
+      operation,
+    },
+  });
+};
+
+type SquadBuilderLogOperation =
+  | "previewOwnedAccountImports"
+  | "confirmOwnedAccountImport"
+  | "listOwnedAccounts"
+  | "previewMargonemProfileImport"
+  | "previewAccountRefetch"
+  | "applyAccountRefetch"
+  | "searchAccountInviteTargets"
+  | "sendAccountAccessInvite"
+  | "respondToAccountAccessInvite"
+  | "revokeAccountAccess"
+  | "listIncomingAccountInvites"
+  | "listSharedAccounts"
+  | "listAccountAccessGrants"
+  | "createSquadGroup"
+  | "listMySquadGroups"
+  | "listGlobalSquadGroups"
+  | "setSquadGroupVisibility"
+  | "getSquadGroupDetail"
+  | "listAvailableSquadCharacters"
+  | "saveSquadGroup"
+  | "searchSquadEditorInviteTargets"
+  | "sendSquadGroupEditorInvite"
+  | "listIncomingSquadGroupInvites"
+  | "respondToSquadGroupInvite"
+  | "revokeSquadGroupEditor"
+  | "listSharedSquadGroups"
+  | "listSquadGroupEditorGrants"
+  | "getPendingSquadGroupInviteCount"
+  | "saveSharedSquadGroupCharacters";
+
+const toOrpcError = (error: SquadBuilderRouterError) => {
+  switch (error._tag) {
+    case "InvalidMargonemProfileUrl":
+    case "MissingMargonemProfileId": {
+      return new ORPCError("BAD_REQUEST", { message: error.message });
+    }
+    case "InvalidAppUserId": {
+      return new ORPCError("BAD_REQUEST");
+    }
+    case "MargonemAccountAlreadyOwnedByActor": {
+      return new ORPCError("CONFLICT", {
+        message: "Ten profil jest już dodany do Twoich kont",
+      });
+    }
+    case "MargonemAccountAlreadySharedWithActor": {
+      return new ORPCError("CONFLICT", {
+        message: "Ten profil jest już Ci udostępniony",
+      });
+    }
+    case "MargonemAccountOwnedByAnotherUser": {
+      return new ORPCError("CONFLICT", {
+        message: "Ten profil został już dodany przez innego użytkownika",
+      });
+    }
+    case "FirecrawlMonthlyBudgetExhausted": {
+      return new ORPCError("TOO_MANY_REQUESTS", {
+        message: "Miesięczny limit pobierania profili został wyczerpany",
+      });
+    }
+    case "FirecrawlRequestFailed":
+    case "FirecrawlResponseNotParseable":
+    case "MargonemProfileNameNotFound":
+    case "MargonemCharacterRowsNotFound":
+    case "MargonemCharacterRowInvalid":
+    case "RequestCancelled": {
+      return new ORPCError("BAD_GATEWAY", {
+        message: "Nie udało się pobrać profilu Margonem",
+      });
+    }
+    case "SquadBuilderPersistenceUnavailable":
+    case "InvalidFirecrawlConfig": {
+      return new ORPCError("INTERNAL_SERVER_ERROR");
+    }
+    default: {
+      return casesHandled(error);
+    }
+  }
+};
+
+const toPreviewOwnedImportsOrpcError = (
+  error: PreviewOwnedAccountImportsError
+) => {
+  switch (error._tag) {
+    case "EmptyProfileUrlBatch": {
+      return new ORPCError("BAD_REQUEST", {
+        message: "Wklej co najmniej jeden link do profilu.",
+      });
+    }
+    case "TooManyProfileUrlsInBatch": {
+      return new ORPCError("BAD_REQUEST", {
+        message: `Możesz sprawdzić maksymalnie ${error.maxUrls} linków naraz.`,
+      });
+    }
+    case "SquadBuilderPersistenceUnavailable": {
+      return new ORPCError("INTERNAL_SERVER_ERROR");
+    }
+    default: {
+      return casesHandled(error);
+    }
+  }
+};
+
+const toConfirmOrpcError = (error: ConfirmOwnedAccountImportError) => {
+  switch (error._tag) {
+    case "InvalidAccountDisplayName": {
+      return new ORPCError("BAD_REQUEST", { message: error.message });
+    }
+    case "PendingMargonemAccountImportNotFound": {
+      return new ORPCError("NOT_FOUND", {
+        message: "Podgląd wygasł. Sprawdź konto ponownie.",
+      });
+    }
+    case "MargonemAccountAlreadyOwnedByActor": {
+      return new ORPCError("CONFLICT", {
+        message: "Ten profil jest już dodany do Twoich kont",
+      });
+    }
+    case "MargonemAccountAlreadySharedWithActor": {
+      return new ORPCError("CONFLICT", {
+        message: "Ten profil jest już Ci udostępniony",
+      });
+    }
+    case "MargonemAccountOwnedByAnotherUser": {
+      return new ORPCError("CONFLICT", {
+        message: "Ten profil został już dodany przez innego użytkownika",
+      });
+    }
+    case "SquadBuilderPersistenceUnavailable": {
+      return new ORPCError("INTERNAL_SERVER_ERROR");
+    }
+    default: {
+      return casesHandled(error);
+    }
+  }
+};
+
+const toListOrpcError = (error: ListOwnedMargonemAccountsError) => {
+  void error;
+  return new ORPCError("INTERNAL_SERVER_ERROR");
+};
+
+const toAccountRefetchOrpcError = (
+  error: PreviewAccountRefetchError | ApplyAccountRefetchError
+) => {
+  switch (error._tag) {
+    case "MargonemAccountNotFound":
+    case "PendingMargonemAccountRefetchNotFound": {
+      return new ORPCError("NOT_FOUND", {
+        message: "Podgląd odświeżenia wygasł. Pobierz profil ponownie.",
+      });
+    }
+    case "ActorDoesNotOwnMargonemAccount": {
+      return new ORPCError("FORBIDDEN", {
+        message: "Tylko właściciel konta może odświeżać postacie",
+      });
+    }
+    case "FirecrawlMonthlyBudgetExhausted": {
+      return new ORPCError("TOO_MANY_REQUESTS", {
+        message: "Miesięczny limit pobierania profili został wyczerpany",
+      });
+    }
+    case "FirecrawlRequestFailed":
+    case "FirecrawlResponseNotParseable":
+    case "RequestCancelled":
+    case "MargonemProfileNameNotFound":
+    case "MargonemCharacterRowsNotFound":
+    case "MargonemCharacterRowInvalid": {
+      return new ORPCError("BAD_GATEWAY", {
+        message: "Nie udało się pobrać profilu Margonem",
+      });
+    }
+    case "SquadBuilderPersistenceUnavailable": {
+      return new ORPCError("INTERNAL_SERVER_ERROR");
+    }
+    default: {
+      return casesHandled(error);
+    }
+  }
+};
+
+const errorMessageOr = (error: object, fallback: string): string =>
+  "message" in error && typeof error.message === "string"
+    ? error.message
+    : fallback;
+
+// oxlint-disable-next-line complexity
+const toSquadGroupOrpcError = (
+  error:
+    | SquadGroupSharingError
+    | SaveSquadGroupError
+    | SharedSquadGroupSaveError
+    | GlobalSquadVisibilityError
+    | SquadGroupListFilterError
+) => {
+  switch (error._tag) {
+    case "InvalidSquadGroupId":
+    case "InvalidSquadGroupVisibility":
+    case "InvalidSquadId":
+    case "InvalidSquadSnapshot":
+    case "InvalidSquadGroupNameQuery":
+    case "InvalidSquadGroupLevelRange": {
+      return new ORPCError("BAD_REQUEST", {
+        message: errorMessageOr(error, "Nieprawidłowe dane składu"),
+      });
+    }
+    case "InvalidSquadGroupName":
+    case "InvalidSquadName":
+    case "TooManyCharactersInSquad":
+    case "DuplicateCharacterInSquad":
+    case "DuplicateAccountInSquad":
+    case "DuplicateCharacterInSquadGroup":
+    case "SquadCharacterNotJaruna": {
+      return new ORPCError("BAD_REQUEST", {
+        message: errorMessageOr(
+          error,
+          "Nie można zapisać składu w tej postaci"
+        ),
+      });
+    }
+    case "SquadCharacterNotAccessible":
+    case "ActorDoesNotOwnSquadGroup":
+    case "ActorCannotViewSquadGroup":
+    case "ActorCannotEditSquadGroup": {
+      return new ORPCError("FORBIDDEN", {
+        message: "Nie masz dostępu do tej grupy składów lub postaci",
+      });
+    }
+    case "SquadGroupNotFound": {
+      return new ORPCError("NOT_FOUND", {
+        message: "Grupa składów nie została znaleziona",
+      });
+    }
+    case "SquadEditorInviteTargetNotFound":
+    case "SquadGroupInvitationNotFound": {
+      return new ORPCError("NOT_FOUND", {
+        message: "Zaproszenie lub użytkownik nie został znaleziony",
+      });
+    }
+    case "CannotInviteSelf":
+    case "SquadEditorInviteTargetNotVerified":
+    case "InvalidSquadGroupInvitationId":
+    case "InvalidAppUserId":
+    case "InvalidAccountInviteTargetQuery":
+    case "EditorCannotChangeSquadStructure":
+    case "SquadNotInGroup": {
+      return new ORPCError("BAD_REQUEST", {
+        message: errorMessageOr(error, "Nieprawidłowe zapytanie"),
+      });
+    }
+    case "ActorIsNotSquadGroupInviteRecipient": {
+      return new ORPCError("FORBIDDEN", {
+        message: "Tylko zaproszony użytkownik może odpowiedzieć na zaproszenie",
+      });
+    }
+    case "SquadGroupInvitationTransitionNotAllowed": {
+      return new ORPCError("CONFLICT", {
+        message: "Nie można wykonać tej akcji dla tego zaproszenia",
+      });
+    }
+    case "SquadBuilderPersistenceUnavailable": {
+      return new ORPCError("INTERNAL_SERVER_ERROR");
+    }
+    default: {
+      return casesHandled(error);
+    }
+  }
+};
+
+const toAccountSharingOrpcError = (error: AccountSharingError) => {
+  switch (error._tag) {
+    case "MargonemAccountNotFound": {
+      return new ORPCError("NOT_FOUND", {
+        message: "Konto Margonem nie zostało znalezione",
+      });
+    }
+    case "ActorDoesNotOwnMargonemAccount": {
+      return new ORPCError("FORBIDDEN", {
+        message: "Tylko właściciel konta może wykonać tę akcję",
+      });
+    }
+    case "CannotInviteSelf": {
+      return new ORPCError("BAD_REQUEST", {
+        message: "Nie możesz udostępnić konta samemu sobie",
+      });
+    }
+    case "InviteTargetNotFound": {
+      return new ORPCError("NOT_FOUND", {
+        message: "Wybrany użytkownik nie istnieje",
+      });
+    }
+    case "InviteTargetNotVerified": {
+      return new ORPCError("BAD_REQUEST", {
+        message: "Możesz zapraszać tylko zweryfikowanych użytkowników",
+      });
+    }
+    case "AccountAccessInviteNotFound": {
+      return new ORPCError("NOT_FOUND", {
+        message: "Zaproszenie nie zostało znalezione",
+      });
+    }
+    case "ActorIsNotInviteRecipient": {
+      return new ORPCError("FORBIDDEN", {
+        message: "Tylko zaproszony użytkownik może odpowiedzieć na zaproszenie",
+      });
+    }
+    case "AccountAccessTransitionNotAllowed": {
+      const pending =
+        error.currentStatus === "pending" || error.currentStatus === "accepted";
+
+      return new ORPCError("CONFLICT", {
+        message: pending
+          ? "To konto jest już udostępnione lub zaproszenie czeka na odpowiedź"
+          : "Nie można wykonać tej akcji dla tego zaproszenia",
+      });
+    }
+    case "InvalidMargonemAccountId":
+    case "InvalidMargonemAccountAccessId":
+    case "InvalidAppUserId": {
+      return new ORPCError("BAD_REQUEST", {
+        message: "Nieprawidłowe zapytanie",
+      });
+    }
+    case "InvalidAccountInviteTargetQuery": {
+      return new ORPCError("BAD_REQUEST", { message: error.message });
+    }
+    case "SquadBuilderPersistenceUnavailable": {
+      return new ORPCError("INTERNAL_SERVER_ERROR");
+    }
+    default: {
+      return casesHandled(error);
+    }
+  }
+};
+
+const defaultServices = createDefaultSquadBuilderServices();
+
+/** Create the squad-builder ORPC router. */
+export const createSquadBuilderRouter = ({
+  previewService,
+  previewOwnedImportsService,
+  confirmOwnedAccountImportService,
+  previewAccountRefetchService,
+  applyAccountRefetchService,
+  listOwnedAccountsService,
+  searchAccountInviteTargetsService,
+  sendAccountAccessInviteService,
+  respondToAccountAccessInviteService,
+  revokeAccountAccessService,
+  listAccountSharingStateService,
+  createSquadGroupService,
+  listSquadGroupsService,
+  listGlobalSquadGroupsService,
+  listAvailableSquadCharactersService,
+  saveSquadGroupService,
+  searchSquadEditorInviteTargetsService,
+  sendSquadGroupEditorInviteService,
+  respondToSquadGroupInviteService,
+  revokeSquadGroupEditorService,
+  listSquadGroupSharingStateService,
+  saveSharedSquadGroupCharactersService,
+  setSquadGroupVisibilityService,
+}: CreateSquadBuilderRouterOptions = {}) => ({
+  applyAccountRefetch: verifiedProcedure
+    .input(applyAccountRefetchInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const refetchPreviewId = parsePendingMargonemAccountRefetchId(
+        input.refetchPreviewId
+      );
+
+      if (isError(refetchPreviewId)) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Nieprawidłowy identyfikator podglądu odświeżenia.",
+        });
+      }
+
+      const services =
+        applyAccountRefetchService === undefined
+          ? defaultServices
+          : ok({
+              applyRefetch: applyAccountRefetchService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(context, "applyAccountRefetch", services.error);
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.applyRefetch.apply({
+        actorUserId: actorUserId.value,
+        refetchPreviewId: refetchPreviewId.value,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(context, "applyAccountRefetch", result.error);
+        throw toAccountRefetchOrpcError(result.error);
+      }
+
+      return toApplyAccountRefetchResponse(result.value);
+    }),
+  confirmOwnedAccountImport: verifiedProcedure
+    .input(confirmOwnedAccountImportInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const pendingImportId = parsePendingMargonemAccountImportId(
+        input.pendingImportId
+      );
+
+      if (isError(pendingImportId)) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Nieprawidłowy identyfikator podglądu importu.",
+        });
+      }
+
+      const services =
+        confirmOwnedAccountImportService === undefined
+          ? defaultServices
+          : ok({
+              confirm: confirmOwnedAccountImportService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "confirmOwnedAccountImport",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.confirm.confirm({
+        actorUserId: actorUserId.value,
+        displayName: input.displayName,
+        pendingImportId: pendingImportId.value,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "confirmOwnedAccountImport",
+          result.error
+        );
+        throw toConfirmOrpcError(result.error);
+      }
+
+      return toConfirmOwnedAccountImportResponse(result.value);
+    }),
+  createSquadGroup: verifiedProcedure
+    .input(createSquadGroupInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const services =
+        createSquadGroupService === undefined
+          ? defaultServices
+          : ok({
+              createSquadGroup: createSquadGroupService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(context, "createSquadGroup", services.error);
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.createSquadGroup.create({
+        actorUserId: actorUserId.value,
+        name: input.name,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(context, "createSquadGroup", result.error);
+        throw toSquadGroupOrpcError(result.error);
+      }
+
+      return toSquadGroupSummaryDto(result.value);
+    }),
+  getPendingSquadGroupInviteCount: verifiedProcedure.handler(
+    async ({ context }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+      const services =
+        listSquadGroupSharingStateService === undefined
+          ? defaultServices
+          : ok({
+              squadGroupSharingState: listSquadGroupSharingStateService,
+            });
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "getPendingSquadGroupInviteCount",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+      const result =
+        await services.value.squadGroupSharingState.countPendingInvites({
+          actorUserId: actorUserId.value,
+        });
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "getPendingSquadGroupInviteCount",
+          result.error
+        );
+        throw toSquadGroupOrpcError(result.error);
+      }
+      return { count: result.value };
+    }
+  ),
+  getSquadGroupDetail: verifiedProcedure
+    .input(squadGroupIdInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const groupId = parseSquadGroupId(input.groupId);
+      if (isError(groupId)) {
+        throw toSquadGroupOrpcError(groupId.error);
+      }
+
+      const services =
+        listSquadGroupsService === undefined
+          ? defaultServices
+          : ok({
+              listSquadGroups: listSquadGroupsService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(context, "getSquadGroupDetail", services.error);
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.listSquadGroups.getMine({
+        actorUserId: actorUserId.value,
+        groupId: groupId.value,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(context, "getSquadGroupDetail", result.error);
+        throw toSquadGroupOrpcError(result.error);
+      }
+
+      return toSquadGroupDetailDto(result.value);
+    }),
+  listAccountAccessGrants: verifiedProcedure
+    .input(listAccountAccessGrantsInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const accountId = parseMargonemAccountId(input.accountId);
+
+      if (isError(accountId)) {
+        throw toAccountSharingOrpcError(accountId.error);
+      }
+
+      const services =
+        listAccountSharingStateService === undefined
+          ? defaultServices
+          : ok({
+              sharingState: listAccountSharingStateService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "listAccountAccessGrants",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.sharingState.listAccountAccessGrants({
+        accountId: accountId.value,
+        actorUserId: actorUserId.value,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(context, "listAccountAccessGrants", result.error);
+        throw toAccountSharingOrpcError(result.error);
+      }
+
+      return {
+        grants: result.value.map(toAccountAccessGrantDto),
+      };
+    }),
+  listAvailableSquadCharacters: verifiedProcedure
+    .input(squadGroupIdInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const groupId = parseSquadGroupId(input.groupId);
+      if (isError(groupId)) {
+        throw toSquadGroupOrpcError(groupId.error);
+      }
+
+      const services =
+        listAvailableSquadCharactersService === undefined
+          ? defaultServices
+          : ok({
+              listAvailableSquadCharacters: listAvailableSquadCharactersService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "listAvailableSquadCharacters",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.listAvailableSquadCharacters.list({
+        actorUserId: actorUserId.value,
+        groupId: groupId.value,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "listAvailableSquadCharacters",
+          result.error
+        );
+        throw toSquadGroupOrpcError(result.error);
+      }
+
+      return { characters: result.value.map(toAvailableSquadCharacterDto) };
+    }),
+  listGlobalSquadGroups: verifiedProcedure
+    .input(squadGroupListFiltersInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const filters = parseSquadGroupListFilters(input?.filters ?? {});
+      if (isError(filters)) {
+        throw toSquadGroupOrpcError(filters.error);
+      }
+
+      const services =
+        listGlobalSquadGroupsService === undefined
+          ? defaultServices
+          : ok({
+              listGlobalSquadGroups: listGlobalSquadGroupsService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(context, "listGlobalSquadGroups", services.error);
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.listGlobalSquadGroups.list({
+        actorUserId: actorUserId.value,
+        filters: filters.value,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(context, "listGlobalSquadGroups", result.error);
+        throw toSquadGroupOrpcError(result.error);
+      }
+
+      return { groups: result.value.map(toGlobalSquadGroupDto) };
+    }),
+  listIncomingAccountInvites: verifiedProcedure.handler(async ({ context }) => {
+    const actorUserId = parseAppUserId(context.session.user.id);
+
+    if (isError(actorUserId)) {
+      throw toOrpcError(actorUserId.error);
+    }
+
+    const services =
+      listAccountSharingStateService === undefined
+        ? defaultServices
+        : ok({
+            sharingState: listAccountSharingStateService,
+          });
+
+    if (isError(services)) {
+      logSquadBuilderError(
+        context,
+        "listIncomingAccountInvites",
+        services.error
+      );
+      throw toOrpcError(services.error);
+    }
+
+    const result = await services.value.sharingState.listIncomingInvites({
+      actorUserId: actorUserId.value,
+    });
+
+    if (isError(result)) {
+      logSquadBuilderError(context, "listIncomingAccountInvites", result.error);
+      throw toAccountSharingOrpcError(result.error);
+    }
+
+    return {
+      invites: result.value.map(toAccountAccessInviteDto),
+    };
+  }),
+  listIncomingSquadGroupInvites: verifiedProcedure.handler(
+    async ({ context }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+      const services =
+        listSquadGroupSharingStateService === undefined
+          ? defaultServices
+          : ok({
+              squadGroupSharingState: listSquadGroupSharingStateService,
+            });
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "listIncomingSquadGroupInvites",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+      const result =
+        await services.value.squadGroupSharingState.listIncomingInvites({
+          actorUserId: actorUserId.value,
+        });
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "listIncomingSquadGroupInvites",
+          result.error
+        );
+        throw toSquadGroupOrpcError(result.error);
+      }
+      return { invites: result.value.map(toSquadGroupInvitationDto) };
+    }
+  ),
+  listMySquadGroups: verifiedProcedure.handler(async ({ context }) => {
+    const actorUserId = parseAppUserId(context.session.user.id);
+
+    if (isError(actorUserId)) {
+      throw toOrpcError(actorUserId.error);
+    }
+
+    const services =
+      listSquadGroupsService === undefined
+        ? defaultServices
+        : ok({
+            listSquadGroups: listSquadGroupsService,
+          });
+
+    if (isError(services)) {
+      logSquadBuilderError(context, "listMySquadGroups", services.error);
+      throw toOrpcError(services.error);
+    }
+
+    const result = await services.value.listSquadGroups.listMine({
+      actorUserId: actorUserId.value,
+    });
+
+    if (isError(result)) {
+      logSquadBuilderError(context, "listMySquadGroups", result.error);
+      throw toSquadGroupOrpcError(result.error);
+    }
+
+    return { groups: result.value.map(toSquadGroupSummaryDto) };
+  }),
+  listOwnedAccounts: verifiedProcedure.handler(async ({ context }) => {
+    const actorUserId = parseAppUserId(context.session.user.id);
+
+    if (isError(actorUserId)) {
+      throw toOrpcError(actorUserId.error);
+    }
+
+    const services =
+      listOwnedAccountsService === undefined
+        ? defaultServices
+        : ok({
+            list: listOwnedAccountsService,
+          });
+
+    if (isError(services)) {
+      logSquadBuilderError(context, "listOwnedAccounts", services.error);
+      throw toOrpcError(services.error);
+    }
+
+    const result = await services.value.list.list({
+      actorUserId: actorUserId.value,
+    });
+
+    if (isError(result)) {
+      logSquadBuilderError(context, "listOwnedAccounts", result.error);
+      throw toListOrpcError(result.error);
+    }
+
+    return toListOwnedAccountsResponse(result.value);
+  }),
+  listSharedAccounts: verifiedProcedure.handler(async ({ context }) => {
+    const actorUserId = parseAppUserId(context.session.user.id);
+
+    if (isError(actorUserId)) {
+      throw toOrpcError(actorUserId.error);
+    }
+
+    const services =
+      listAccountSharingStateService === undefined
+        ? defaultServices
+        : ok({
+            sharingState: listAccountSharingStateService,
+          });
+
+    if (isError(services)) {
+      logSquadBuilderError(context, "listSharedAccounts", services.error);
+      throw toOrpcError(services.error);
+    }
+
+    const result = await services.value.sharingState.listSharedAccounts({
+      actorUserId: actorUserId.value,
+    });
+
+    if (isError(result)) {
+      logSquadBuilderError(context, "listSharedAccounts", result.error);
+      throw toAccountSharingOrpcError(result.error);
+    }
+
+    return {
+      accounts: result.value.map(toSharedMargonemAccountDto),
+    };
+  }),
+  listSharedSquadGroups: verifiedProcedure
+    .input(squadGroupListFiltersInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+      const filters = parseSquadGroupListFilters(input?.filters ?? {});
+      if (isError(filters)) {
+        throw toSquadGroupOrpcError(filters.error);
+      }
+      const services =
+        listSquadGroupSharingStateService === undefined
+          ? defaultServices
+          : ok({
+              squadGroupSharingState: listSquadGroupSharingStateService,
+            });
+      if (isError(services)) {
+        logSquadBuilderError(context, "listSharedSquadGroups", services.error);
+        throw toOrpcError(services.error);
+      }
+      const result =
+        await services.value.squadGroupSharingState.listSharedGroups({
+          actorUserId: actorUserId.value,
+          filters: filters.value,
+        });
+      if (isError(result)) {
+        logSquadBuilderError(context, "listSharedSquadGroups", result.error);
+        throw toSquadGroupOrpcError(result.error);
+      }
+      return { groups: result.value.map(toSharedSquadGroupDto) };
+    }),
+  listSquadGroupEditorGrants: verifiedProcedure
+    .input(listSquadGroupEditorGrantsInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+      const groupId = parseSquadGroupId(input.groupId);
+      if (isError(groupId)) {
+        throw toSquadGroupOrpcError(groupId.error);
+      }
+      const services =
+        listSquadGroupSharingStateService === undefined
+          ? defaultServices
+          : ok({
+              squadGroupSharingState: listSquadGroupSharingStateService,
+            });
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "listSquadGroupEditorGrants",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+      const result =
+        await services.value.squadGroupSharingState.listEditorGrants({
+          actorUserId: actorUserId.value,
+          groupId: groupId.value,
+        });
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "listSquadGroupEditorGrants",
+          result.error
+        );
+        throw toSquadGroupOrpcError(result.error);
+      }
+      return { grants: result.value.map(toSquadGroupEditorGrantDto) };
+    }),
+  previewAccountRefetch: verifiedProcedure
+    .input(previewAccountRefetchInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const accountId = parseMargonemAccountId(input.accountId);
+
+      if (isError(accountId)) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Nieprawidłowy identyfikator konta.",
+        });
+      }
+
+      const services =
+        previewAccountRefetchService === undefined
+          ? defaultServices
+          : ok({
+              previewRefetch: previewAccountRefetchService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(context, "previewAccountRefetch", services.error);
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.previewRefetch.preview({
+        accountId: accountId.value,
+        actorUserId: actorUserId.value,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(context, "previewAccountRefetch", result.error);
+        throw toAccountRefetchOrpcError(result.error);
+      }
+
+      return toPreviewAccountRefetchResponse(result.value);
+    }),
+  previewOwnedAccountImports: verifiedProcedure
+    .input(previewOwnedAccountImportsInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const services =
+        previewOwnedImportsService === undefined
+          ? defaultServices
+          : ok({
+              previewOwnedImports: previewOwnedImportsService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "previewOwnedAccountImports",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.previewOwnedImports.preview({
+        actorUserId: actorUserId.value,
+        profileUrls: input.profileUrls,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "previewOwnedAccountImports",
+          result.error
+        );
+        throw toPreviewOwnedImportsOrpcError(result.error);
+      }
+
+      return {
+        items: result.value.items.map(toPreviewOwnedAccountImportItemDto),
+      };
+    }),
+  previewProfileImport: verifiedProcedure
+    .input(previewProfileImportInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const services =
+        previewService === undefined
+          ? defaultServices
+          : ok({
+              preview: previewService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "previewMargonemProfileImport",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+
+      const preview = await services.value.preview.preview({
+        actorUserId: actorUserId.value,
+        profileUrl: input.profileUrl,
+      });
+
+      if (isError(preview)) {
+        logSquadBuilderError(
+          context,
+          "previewMargonemProfileImport",
+          preview.error
+        );
+        throw toOrpcError(preview.error);
+      }
+
+      return toPreviewProfileImportResponse(preview.value);
+    }),
+  respondToAccountAccessInvite: verifiedProcedure
+    .input(respondToAccountAccessInviteInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const accessId = parseMargonemAccountAccessId(input.accessId);
+
+      if (isError(accessId)) {
+        throw toAccountSharingOrpcError(accessId.error);
+      }
+
+      const services =
+        respondToAccountAccessInviteService === undefined
+          ? defaultServices
+          : ok({
+              respondInvite: respondToAccountAccessInviteService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "respondToAccountAccessInvite",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.respondInvite.respond({
+        accessId: accessId.value,
+        actorUserId: actorUserId.value,
+        response: input.response,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "respondToAccountAccessInvite",
+          result.error
+        );
+        throw toAccountSharingOrpcError(result.error);
+      }
+
+      return toAccountAccessInviteDto(result.value);
+    }),
+  respondToSquadGroupInvite: verifiedProcedure
+    .input(respondToSquadGroupInviteInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+      const invitationId = parseSquadGroupInvitationId(input.invitationId);
+      if (isError(invitationId)) {
+        throw toSquadGroupOrpcError(invitationId.error);
+      }
+      const services =
+        respondToSquadGroupInviteService === undefined
+          ? defaultServices
+          : ok({
+              respondToSquadGroupInvite: respondToSquadGroupInviteService,
+            });
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "respondToSquadGroupInvite",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+      const result = await services.value.respondToSquadGroupInvite.respond({
+        actorUserId: actorUserId.value,
+        invitationId: invitationId.value,
+        response: input.response,
+      });
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "respondToSquadGroupInvite",
+          result.error
+        );
+        throw toSquadGroupOrpcError(result.error);
+      }
+      return toSquadGroupInvitationDto(result.value);
+    }),
+  revokeAccountAccess: verifiedProcedure
+    .input(revokeAccountAccessInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const accessId = parseMargonemAccountAccessId(input.accessId);
+
+      if (isError(accessId)) {
+        throw toAccountSharingOrpcError(accessId.error);
+      }
+
+      const services =
+        revokeAccountAccessService === undefined
+          ? defaultServices
+          : ok({
+              revokeAccess: revokeAccountAccessService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(context, "revokeAccountAccess", services.error);
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.revokeAccess.revoke({
+        accessId: accessId.value,
+        actorUserId: actorUserId.value,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(context, "revokeAccountAccess", result.error);
+        throw toAccountSharingOrpcError(result.error);
+      }
+
+      return {
+        accessId: margonemAccountAccessIdToNumber(result.value.accessId),
+        accountId: margonemAccountIdToNumber(result.value.accountId),
+        removedSquadCharacterCount: result.value.removedSquadCharacterCount,
+        revokedUserId: appUserIdToString(result.value.revokedUserId),
+      };
+    }),
+  revokeSquadGroupEditor: verifiedProcedure
+    .input(revokeSquadGroupEditorInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+      const invitationId = parseSquadGroupInvitationId(input.invitationId);
+      if (isError(invitationId)) {
+        throw toSquadGroupOrpcError(invitationId.error);
+      }
+      const services =
+        revokeSquadGroupEditorService === undefined
+          ? defaultServices
+          : ok({
+              revokeSquadGroupEditor: revokeSquadGroupEditorService,
+            });
+      if (isError(services)) {
+        logSquadBuilderError(context, "revokeSquadGroupEditor", services.error);
+        throw toOrpcError(services.error);
+      }
+      const result = await services.value.revokeSquadGroupEditor.revoke({
+        actorUserId: actorUserId.value,
+        invitationId: invitationId.value,
+      });
+      if (isError(result)) {
+        logSquadBuilderError(context, "revokeSquadGroupEditor", result.error);
+        throw toSquadGroupOrpcError(result.error);
+      }
+      return toSquadGroupInvitationDto(result.value);
+    }),
+  saveSharedSquadGroupCharacters: verifiedProcedure
+    .input(saveSharedSquadGroupCharactersInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+      const groupId = parseSquadGroupId(input.groupId);
+      if (isError(groupId)) {
+        throw toSquadGroupOrpcError(groupId.error);
+      }
+      const squads = [];
+      for (const squadInput of input.squads) {
+        const squadId = parseSquadId(squadInput.squadId);
+        if (isError(squadId)) {
+          throw toSquadGroupOrpcError(squadId.error);
+        }
+        squads.push({
+          characters: squadInput.characters,
+          squadId: squadId.value,
+        });
+      }
+      const services =
+        saveSharedSquadGroupCharactersService === undefined
+          ? defaultServices
+          : ok({
+              saveSharedSquadGroupCharacters:
+                saveSharedSquadGroupCharactersService,
+            });
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "saveSharedSquadGroupCharacters",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+      const result = await services.value.saveSharedSquadGroupCharacters.save({
+        actorUserId: actorUserId.value,
+        groupId: groupId.value,
+        squads,
+      });
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "saveSharedSquadGroupCharacters",
+          result.error
+        );
+        throw toSquadGroupOrpcError(result.error);
+      }
+      return toSquadGroupDetailDto(result.value);
+    }),
+  saveSquadGroup: verifiedProcedure
+    .input(saveSquadGroupInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const groupId = parseSquadGroupId(input.groupId);
+      if (isError(groupId)) {
+        throw toSquadGroupOrpcError(groupId.error);
+      }
+
+      const squads: SaveSquadInput[] = [];
+      for (const squadInput of input.squads) {
+        const squadId =
+          squadInput.squadId === undefined
+            ? undefined
+            : parseSquadId(squadInput.squadId);
+
+        if (squadId !== undefined && isError(squadId)) {
+          throw toSquadGroupOrpcError(squadId.error);
+        }
+
+        squads.push({
+          characters: squadInput.characters,
+          clientKey: squadInput.clientKey,
+          name: squadInput.name,
+          position: squadInput.position,
+          ...(squadId === undefined ? {} : { squadId: squadId.value }),
+        });
+      }
+
+      const services =
+        saveSquadGroupService === undefined
+          ? defaultServices
+          : ok({
+              saveSquadGroup: saveSquadGroupService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(context, "saveSquadGroup", services.error);
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.saveSquadGroup.save({
+        actorUserId: actorUserId.value,
+        groupId: groupId.value,
+        name: input.name,
+        squads,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(context, "saveSquadGroup", result.error);
+        throw toSquadGroupOrpcError(result.error);
+      }
+
+      return toSquadGroupDetailDto(result.value);
+    }),
+  searchAccountInviteTargets: verifiedProcedure
+    .input(searchAccountInviteTargetsInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const accountId = parseMargonemAccountId(input.accountId);
+
+      if (isError(accountId)) {
+        throw toAccountSharingOrpcError(accountId.error);
+      }
+
+      const services =
+        searchAccountInviteTargetsService === undefined
+          ? defaultServices
+          : ok({
+              searchInviteTargets: searchAccountInviteTargetsService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "searchAccountInviteTargets",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.searchInviteTargets.search({
+        accountId: accountId.value,
+        actorUserId: actorUserId.value,
+        query: input.query,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "searchAccountInviteTargets",
+          result.error
+        );
+        throw toAccountSharingOrpcError(result.error);
+      }
+
+      return {
+        users: result.value.map(toAccountInviteTargetDto),
+      };
+    }),
+  searchSquadEditorInviteTargets: verifiedProcedure
+    .input(searchSquadEditorInviteTargetsInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+      const groupId = parseSquadGroupId(input.groupId);
+      if (isError(groupId)) {
+        throw toSquadGroupOrpcError(groupId.error);
+      }
+      const services =
+        searchSquadEditorInviteTargetsService === undefined
+          ? defaultServices
+          : ok({
+              searchSquadEditorInviteTargets:
+                searchSquadEditorInviteTargetsService,
+            });
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "searchSquadEditorInviteTargets",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+      const result = await services.value.searchSquadEditorInviteTargets.search(
+        {
+          actorUserId: actorUserId.value,
+          groupId: groupId.value,
+          query: input.query,
+        }
+      );
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "searchSquadEditorInviteTargets",
+          result.error
+        );
+        throw toSquadGroupOrpcError(result.error);
+      }
+      return { users: result.value.map(toSquadEditorInviteTargetDto) };
+    }),
+  sendAccountAccessInvite: verifiedProcedure
+    .input(sendAccountAccessInviteInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+
+      const accountId = parseMargonemAccountId(input.accountId);
+
+      if (isError(accountId)) {
+        throw toAccountSharingOrpcError(accountId.error);
+      }
+
+      const invitedUserId = parseAppUserId(input.invitedUserId);
+
+      if (isError(invitedUserId)) {
+        throw toAccountSharingOrpcError(invitedUserId.error);
+      }
+
+      const services =
+        sendAccountAccessInviteService === undefined
+          ? defaultServices
+          : ok({
+              sendInvite: sendAccountAccessInviteService,
+            });
+
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "sendAccountAccessInvite",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+
+      const result = await services.value.sendInvite.send({
+        accountId: accountId.value,
+        actorUserId: actorUserId.value,
+        invitedUserId: invitedUserId.value,
+      });
+
+      if (isError(result)) {
+        logSquadBuilderError(context, "sendAccountAccessInvite", result.error);
+        throw toAccountSharingOrpcError(result.error);
+      }
+
+      return toAccountAccessInviteDto(result.value);
+    }),
+  sendSquadGroupEditorInvite: verifiedProcedure
+    .input(sendSquadGroupEditorInviteInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+      const groupId = parseSquadGroupId(input.groupId);
+      const invitedUserId = parseAppUserId(input.invitedUserId);
+      if (isError(groupId)) {
+        throw toSquadGroupOrpcError(groupId.error);
+      }
+      if (isError(invitedUserId)) {
+        throw toSquadGroupOrpcError(invitedUserId.error);
+      }
+      const services =
+        sendSquadGroupEditorInviteService === undefined
+          ? defaultServices
+          : ok({
+              sendSquadGroupEditorInvite: sendSquadGroupEditorInviteService,
+            });
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "sendSquadGroupEditorInvite",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+      const result = await services.value.sendSquadGroupEditorInvite.send({
+        actorUserId: actorUserId.value,
+        groupId: groupId.value,
+        invitedUserId: invitedUserId.value,
+      });
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "sendSquadGroupEditorInvite",
+          result.error
+        );
+        throw toSquadGroupOrpcError(result.error);
+      }
+      return toSquadGroupInvitationDto(result.value);
+    }),
+  setSquadGroupVisibility: verifiedProcedure
+    .input(setSquadGroupVisibilityInputSchema)
+    .handler(async ({ context, input }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
+      const groupId = parseSquadGroupId(input.groupId);
+      if (isError(groupId)) {
+        throw toSquadGroupOrpcError(groupId.error);
+      }
+      const visibility = parseSquadGroupVisibility(input.visibility);
+      if (isError(visibility)) {
+        throw toSquadGroupOrpcError(visibility.error);
+      }
+      const services =
+        setSquadGroupVisibilityService === undefined
+          ? defaultServices
+          : ok({
+              setSquadGroupVisibility: setSquadGroupVisibilityService,
+            });
+      if (isError(services)) {
+        logSquadBuilderError(
+          context,
+          "setSquadGroupVisibility",
+          services.error
+        );
+        throw toOrpcError(services.error);
+      }
+      const result = await services.value.setSquadGroupVisibility.set({
+        actorUserId: actorUserId.value,
+        groupId: groupId.value,
+        visibility: visibility.value,
+      });
+      if (isError(result)) {
+        logSquadBuilderError(context, "setSquadGroupVisibility", result.error);
+        throw toSquadGroupOrpcError(result.error);
+      }
+      return {
+        groupId: result.value.groupId,
+        updatedAt: result.value.updatedAt.toISOString(),
+        visibility: result.value.visibility,
+      };
+    }),
+});
+
+export const squadBuilderRouter = createSquadBuilderRouter();
