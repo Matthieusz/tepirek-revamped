@@ -28,6 +28,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@types/pg": "^8.20.0",
     "pg": "^8.22.0",
     "typescript": "catalog:"

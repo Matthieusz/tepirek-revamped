@@ -318,6 +318,9 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.0.0-beta.85(effect@4.0.0-beta.85)(vitest@4.1.9(@types/node@26.0.0)(vite@8.1.0(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)))
       '@types/pg':
         specifier: ^8.20.0
         version: 8.20.0
