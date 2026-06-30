@@ -2,6 +2,7 @@ import { createRouterClient } from "@orpc/server";
 import { margonemAccount } from "@tepirek-revamped/db/schema/squad-builder";
 import { describe, expect, it } from "vitest";
 
+import { makeApiManagedRuntime } from "../effect-app";
 import { parseAccountDisplayName } from "../modules/squad-builder/account-display-name";
 import { ConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/confirm-owned-account-import";
 import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-import/list-owned-margonem-accounts";
@@ -20,7 +21,7 @@ import { isOk, ok } from "../modules/squad-builder/result";
 import { DrizzleSquadBuilderStore } from "../modules/squad-builder/squad-builder-store";
 import { createVerifiedMember } from "../test/integration/builders";
 import type { TestUser } from "../test/integration/builders";
-import { testDb } from "../test/integration/database";
+import { defaultTestDatabaseUrl, testDb } from "../test/integration/database";
 import type { AppRouter } from "./index";
 import type { RouterContext } from "./procedures";
 import { createSquadBuilderRouter } from "./squad-builder";
@@ -176,6 +177,34 @@ const fakePreviewItems = (
 };
 
 describe("squad-builder router Postgres integration", () => {
+  it("creates a squad group through the Effect oRPC bridge", async () => {
+    const member = await createVerifiedMember({ id: "router-effect-create" });
+    const client = createSquadBuilderClient(member, {
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+
+    const group = await client.squadBuilder.createSquadGroup({
+      name: "  Router Effect group  ",
+    });
+
+    expect(group).toMatchObject({
+      characterCount: 0,
+      name: "Router Effect group",
+      squadCount: 0,
+    });
+  });
+
+  it("maps an invalid Effect squad group name to BAD_REQUEST", async () => {
+    const member = await createVerifiedMember({ id: "router-effect-invalid" });
+    const client = createSquadBuilderClient(member, {
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+
+    await expect(
+      client.squadBuilder.createSquadGroup({ name: "   " })
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+
   it("returns per-line owned account import preview results for a verified user", async () => {
     const member = await createVerifiedMember({ id: "preview-member" });
     const client = createSquadBuilderClient(member, {
