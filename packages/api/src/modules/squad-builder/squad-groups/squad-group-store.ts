@@ -69,6 +69,13 @@ export interface EffectSquadGroupStoreShape {
     EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly listGlobalSquadGroups: (
+    input: ListGlobalSquadGroupsInput
+  ) => Effect<
+    readonly GlobalSquadGroupSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
 }
 
 export class EffectSquadGroupStore extends Context.Service<

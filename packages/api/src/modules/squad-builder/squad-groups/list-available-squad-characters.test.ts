@@ -105,6 +105,8 @@ it.effect("lists characters for the loaded squad group owner", () => {
         : Effect.die(
             new Error("Unexpected listAvailableCharactersForOwner input")
           ),
+    listGlobalSquadGroups: () =>
+      Effect.die(new Error("Store should not be called")),
     listMySquadGroups: () =>
       Effect.die(new Error("Store should not be called")),
   });

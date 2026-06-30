@@ -10,7 +10,18 @@ import {
   squadGroup,
   squadGroupInvitation,
 } from "@tepirek-revamped/db/schema/squad-builder";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  gte,
+  ilike,
+  lte,
+  or,
+  sql,
+} from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -31,6 +42,10 @@ import { isError } from "../result";
 import type { SquadGroupAccess } from "../squad-group-access";
 import { parseSquadGroupId, squadGroupIdToNumber } from "../squad-group-id";
 import { parseSquadGroupInvitationId } from "../squad-group-invitation-id";
+import {
+  squadGroupLevelBoundToNumber,
+  squadGroupNameQueryToString,
+} from "../squad-group-list-filters";
 import { parseSquadGroupVisibility } from "../squad-group-visibility";
 import { parseSquadId } from "../squad-id";
 import { parseSquadGroupName, squadGroupNameToString } from "../squad-name";
@@ -39,8 +54,10 @@ import type {
   ActorCannotViewSquadGroup,
   AvailableSquadCharacter,
   CreateSquadGroupStoreInput,
+  GlobalSquadGroupSummary,
   GetSquadGroupDetailInput,
   ListAvailableCharactersForOwnerInput,
+  ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   SquadGroupCharacter,
   SquadGroupDetail,
@@ -53,7 +70,11 @@ type EffectSquadGroupPersistenceOperation =
   | "createSquadGroup"
   | "getSquadGroupDetail"
   | "listAvailableCharactersForOwner"
+  | "listGlobalSquadGroups"
   | "listMySquadGroups";
+
+const escapeLikePattern = (value: string): string =>
+  value.replaceAll(/[\\%_]/gu, "\\$&");
 
 const failPersistence = (
   operation: EffectSquadGroupPersistenceOperation,
@@ -636,6 +657,162 @@ const getSquadGroupDetailWithDatabase =
       };
     });
 
+const buildSquadGroupListFilterPredicates = (
+  database: EffectPgDatabase,
+  filters: ListGlobalSquadGroupsInput["filters"]
+) => {
+  const predicates = [];
+
+  if (filters.nameQuery !== undefined) {
+    const escapedQuery = escapeLikePattern(
+      squadGroupNameQueryToString(filters.nameQuery)
+    );
+    const namePredicate = or(
+      ilike(squadGroup.name, `%${escapedQuery}%`),
+      exists(
+        database
+          .select({ one: sql`1` })
+          .from(squad)
+          .where(
+            and(
+              eq(squad.squadGroupId, squadGroup.id),
+              ilike(squad.name, `%${escapedQuery}%`)
+            )
+          )
+      )
+    );
+
+    if (namePredicate !== undefined) {
+      predicates.push(namePredicate);
+    }
+  }
+
+  if (filters.levelRange._tag === "BoundedLevelRange") {
+    const levelPredicates = [eq(squad.squadGroupId, squadGroup.id)];
+
+    if (filters.levelRange.minLevel !== undefined) {
+      levelPredicates.push(
+        gte(
+          margonemCharacter.level,
+          squadGroupLevelBoundToNumber(filters.levelRange.minLevel)
+        )
+      );
+    }
+
+    if (filters.levelRange.maxLevel !== undefined) {
+      levelPredicates.push(
+        lte(
+          margonemCharacter.level,
+          squadGroupLevelBoundToNumber(filters.levelRange.maxLevel)
+        )
+      );
+    }
+
+    predicates.push(
+      exists(
+        database
+          .select({ one: sql`1` })
+          .from(squad)
+          .innerJoin(squadCharacter, eq(squadCharacter.squadId, squad.id))
+          .innerJoin(
+            margonemCharacter,
+            eq(margonemCharacter.id, squadCharacter.characterId)
+          )
+          .where(and(...levelPredicates))
+      )
+    );
+  }
+
+  return predicates;
+};
+
+const listGlobalSquadGroupsWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    filters,
+    limit,
+  }: ListGlobalSquadGroupsInput): Effect.Effect<
+    readonly GlobalSquadGroupSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* listGlobalSquadGroupsEffect() {
+      const operation = "listGlobalSquadGroups" as const;
+      const filterPredicates = buildSquadGroupListFilterPredicates(
+        database,
+        filters
+      );
+      const select = database
+        .select({
+          characterCount: sql<number>`count(distinct ${squadCharacter.id})::int`,
+          groupId: squadGroup.id,
+          name: squadGroup.name,
+          ownerId: user.id,
+          ownerImage: user.image,
+          ownerName: user.name,
+          squadCount: sql<number>`count(distinct ${squad.id})::int`,
+          updatedAt: squadGroup.updatedAt,
+        })
+        .from(squadGroup)
+        .innerJoin(user, eq(user.id, squadGroup.ownerUserId))
+        .leftJoin(squad, eq(squad.squadGroupId, squadGroup.id))
+        .leftJoin(squadCharacter, eq(squadCharacter.squadId, squad.id))
+        .where(and(eq(squadGroup.visibility, "global"), ...filterPredicates))
+        .groupBy(squadGroup.id, user.id)
+        .orderBy(desc(squadGroup.updatedAt), desc(squadGroup.id))
+        .limit(limit);
+      const selectEffect = select as Effect.Effect<
+        readonly {
+          readonly characterCount: number | null;
+          readonly groupId: number;
+          readonly name: string;
+          readonly ownerId: string;
+          readonly ownerImage: string | null;
+          readonly ownerName: string;
+          readonly squadCount: number | null;
+          readonly updatedAt: Date;
+        }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const groups: GlobalSquadGroupSummary[] = [];
+
+      for (const row of rows) {
+        const groupId = parseSquadGroupId(row.groupId);
+
+        if (isError(groupId)) {
+          return yield* failPersistence(operation, groupId.error);
+        }
+
+        const name = parseSquadGroupName(row.name);
+
+        if (isError(name)) {
+          return yield* failPersistence(operation, name.error);
+        }
+
+        const ownerUserId = yield* parsePersistedAppUserId(
+          operation,
+          row.ownerId
+        );
+
+        groups.push({
+          characterCount: row.characterCount ?? 0,
+          groupId: groupId.value,
+          name: name.value,
+          ownerUserId,
+          ownerUserImage: row.ownerImage,
+          ownerUserName: row.ownerName,
+          squadCount: row.squadCount ?? 0,
+          updatedAt: row.updatedAt,
+        });
+      }
+
+      return groups;
+    });
+
 export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
   EffectSquadGroupStore,
   never,
@@ -648,6 +825,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       getSquadGroupDetail: getSquadGroupDetailWithDatabase(database),
       listAvailableCharactersForOwner:
         listAvailableCharactersForOwnerWithDatabase(database),
+      listGlobalSquadGroups: listGlobalSquadGroupsWithDatabase(database),
       listMySquadGroups: listMySquadGroupsWithDatabase(database),
     })
   )

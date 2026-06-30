@@ -230,11 +230,10 @@ interface CreateSquadGroupService {
 interface ListGlobalSquadGroupsService {
   readonly list: (
     input: Parameters<ListGlobalSquadGroups["list"]>[0]
-  ) => Promise<
-    Result<
-      readonly GlobalSquadGroupSummary[],
-      SquadBuilderPersistenceUnavailable
-    >
+  ) => Effect<
+    readonly GlobalSquadGroupSummary[],
+    SquadBuilderPersistenceUnavailable,
+    never
   >;
 }
 
@@ -530,7 +529,6 @@ interface SquadBuilderServices {
   readonly respondInvite: RespondToAccountAccessInviteService;
   readonly revokeAccess: RevokeAccountAccessService;
   readonly sharingState: ListAccountSharingStateService;
-  readonly listGlobalSquadGroups: ListGlobalSquadGroupsService;
   readonly saveSquadGroup: SaveSquadGroupService;
   readonly searchSquadEditorInviteTargets: SearchSquadEditorInviteTargetsService;
   readonly sendSquadGroupEditorInvite: SendSquadGroupEditorInviteService;
@@ -564,7 +562,6 @@ const createDefaultSquadBuilderServices = (): Result<
     applyRefetch: new ApplyAccountRefetch(store, store, store, systemClock),
     confirm: new ConfirmOwnedAccountImport(store, store, systemClock),
     list: new ListOwnedMargonemAccounts(store),
-    listGlobalSquadGroups: new ListGlobalSquadGroups(store),
     preview: singlePreview,
     previewOwnedImports: new PreviewOwnedAccountImports(
       singlePreview,
@@ -1321,6 +1318,7 @@ const defaultEffectRuntime =
     : makeApiManagedRuntime(process.env.DATABASE_URL);
 
 const createSquadGroupEffect = new CreateSquadGroup();
+const listGlobalSquadGroupsEffect = new ListGlobalSquadGroups();
 const listSquadGroupsEffect = new ListSquadGroups();
 const listAvailableSquadCharactersEffect = new ListAvailableSquadCharacters();
 
@@ -1657,29 +1655,32 @@ export const createSquadBuilderRouter = ({
         throw toSquadGroupOrpcError(filters.error);
       }
 
-      const services =
-        listGlobalSquadGroupsService === undefined
-          ? defaultServices
-          : ok({
-              listGlobalSquadGroups: listGlobalSquadGroupsService,
-            });
-
-      if (isError(services)) {
-        logSquadBuilderError(context, "listGlobalSquadGroups", services.error);
-        throw toOrpcError(services.error);
-      }
-
-      const result = await services.value.listGlobalSquadGroups.list({
+      const effect = (
+        listGlobalSquadGroupsService ?? listGlobalSquadGroupsEffect
+      ).list({
         actorUserId: actorUserId.value,
         filters: filters.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "listGlobalSquadGroups", result.error);
-        throw toSquadGroupOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for listGlobalSquadGroups"
+          ),
+          operation: "listGlobalSquadGroups",
+        };
+        logSquadBuilderError(context, "listGlobalSquadGroups", error);
+        throw toSquadGroupOrpcError(error);
       }
 
-      return { groups: result.value.map(toGlobalSquadGroupDto) };
+      const groups = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as SquadBuilderPersistenceUnavailable;
+        logSquadBuilderError(context, "listGlobalSquadGroups", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
+      return { groups: groups.map(toGlobalSquadGroupDto) };
     }),
   listIncomingAccountInvites: verifiedProcedure.handler(async ({ context }) => {
     const actorUserId = parseAppUserId(context.session.user.id);

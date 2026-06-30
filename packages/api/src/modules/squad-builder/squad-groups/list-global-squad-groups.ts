@@ -1,43 +1,36 @@
+import type { Effect } from "effect/Effect";
+
 import type { AppUserId } from "../app-user-id";
-import type { Result } from "../result";
 import {
   emptySquadGroupListFilters,
   squadGroupListFilterPolicy,
 } from "../squad-group-list-filters";
 import type { SquadGroupListFilters } from "../squad-group-list-filters";
-import type {
-  GlobalSquadGroupSummary,
-  GlobalSquadVisibilityStore,
-  SquadBuilderPersistenceUnavailable,
-} from "./squad-group-store";
+import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
+import type { GlobalSquadGroupSummary } from "./squad-group-store";
+import { EffectSquadGroupStore } from "./squad-group-store";
 
 /** Service module for listing globally visible squad groups. */
 export class ListGlobalSquadGroups {
-  private readonly store: Pick<
-    GlobalSquadVisibilityStore,
-    "listGlobalSquadGroups"
-  >;
-
-  constructor(
-    store: Pick<GlobalSquadVisibilityStore, "listGlobalSquadGroups">
-  ) {
-    this.store = store;
-  }
+  private readonly serviceName = "ListGlobalSquadGroups";
 
   /** List globally visible squad groups for a verified actor. */
   list(input: {
     readonly actorUserId: AppUserId;
     readonly filters?: SquadGroupListFilters;
-  }): Promise<
-    Result<
-      readonly GlobalSquadGroupSummary[],
-      SquadBuilderPersistenceUnavailable
-    >
+  }): Effect<
+    readonly GlobalSquadGroupSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    EffectSquadGroupStore
   > {
-    return this.store.listGlobalSquadGroups({
-      actorUserId: input.actorUserId,
-      filters: input.filters ?? emptySquadGroupListFilters,
-      limit: squadGroupListFilterPolicy.defaultLimit,
-    });
+    void this.serviceName;
+
+    return EffectSquadGroupStore.use((store) =>
+      store.listGlobalSquadGroups({
+        actorUserId: input.actorUserId,
+        filters: input.filters ?? emptySquadGroupListFilters,
+        limit: squadGroupListFilterPolicy.defaultLimit,
+      })
+    );
   }
 }
