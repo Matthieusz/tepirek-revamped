@@ -52,6 +52,7 @@ import { parseSquadGroupName, squadGroupNameToString } from "../squad-name";
 import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
 import type {
   ActorCannotViewSquadGroup,
+  ActorDoesNotOwnSquadGroup,
   AvailableSquadCharacter,
   CreateSquadGroupStoreInput,
   GlobalSquadGroupSummary,
@@ -59,6 +60,8 @@ import type {
   ListAvailableCharactersForOwnerInput,
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
+  SetSquadGroupVisibilityStoreInput,
+  SquadGroupVisibilityChange,
   SquadGroupCharacter,
   SquadGroupDetail,
   SquadGroupNotFound,
@@ -71,7 +74,8 @@ type EffectSquadGroupPersistenceOperation =
   | "getSquadGroupDetail"
   | "listAvailableCharactersForOwner"
   | "listGlobalSquadGroups"
-  | "listMySquadGroups";
+  | "listMySquadGroups"
+  | "setSquadGroupVisibility";
 
 const escapeLikePattern = (value: string): string =>
   value.replaceAll(/[\\%_]/gu, "\\$&");
@@ -813,6 +817,85 @@ const listGlobalSquadGroupsWithDatabase =
       return groups;
     });
 
+const setSquadGroupVisibilityWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+    groupId,
+    now,
+    visibility,
+  }: SetSquadGroupVisibilityStoreInput): Effect.Effect<
+    SquadGroupVisibilityChange,
+    | SquadGroupNotFound
+    | ActorDoesNotOwnSquadGroup
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* setSquadGroupVisibilityEffect() {
+      const operation = "setSquadGroupVisibility" as const;
+      const groupIdNumber = squadGroupIdToNumber(groupId);
+      const select = database
+        .select({
+          ownerUserId: squadGroup.ownerUserId,
+          updatedAt: squadGroup.updatedAt,
+          visibility: squadGroup.visibility,
+        })
+        .from(squadGroup)
+        .where(eq(squadGroup.id, groupIdNumber))
+        .limit(1);
+      const selectEffect = select as Effect.Effect<
+        readonly {
+          readonly ownerUserId: string;
+          readonly updatedAt: Date;
+          readonly visibility: string;
+        }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const [existing] = rows;
+
+      if (existing === undefined) {
+        return yield* Effect.fail({ _tag: "SquadGroupNotFound" as const });
+      }
+
+      if (existing.ownerUserId !== appUserIdToString(actorUserId)) {
+        return yield* Effect.fail({
+          _tag: "ActorDoesNotOwnSquadGroup" as const,
+        });
+      }
+
+      if (existing.visibility === visibility) {
+        return { groupId, updatedAt: existing.updatedAt, visibility };
+      }
+
+      const update = database
+        .update(squadGroup)
+        .set({ updatedAt: now, visibility })
+        .where(eq(squadGroup.id, groupIdNumber))
+        .returning({ updatedAt: squadGroup.updatedAt });
+      const updateEffect = update as Effect.Effect<
+        readonly { readonly updatedAt: Date }[],
+        unknown,
+        never
+      >;
+      const updatedRows = yield* updateEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const [updated] = updatedRows;
+
+      if (updated === undefined) {
+        return yield* failPersistence(
+          operation,
+          new Error("Failed to update squad group visibility")
+        );
+      }
+
+      return { groupId, updatedAt: updated.updatedAt, visibility };
+    });
+
 export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
   EffectSquadGroupStore,
   never,
@@ -827,6 +910,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
         listAvailableCharactersForOwnerWithDatabase(database),
       listGlobalSquadGroups: listGlobalSquadGroupsWithDatabase(database),
       listMySquadGroups: listMySquadGroupsWithDatabase(database),
+      setSquadGroupVisibility: setSquadGroupVisibilityWithDatabase(database),
     })
   )
 );

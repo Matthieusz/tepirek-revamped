@@ -76,6 +76,15 @@ export interface EffectSquadGroupStoreShape {
     EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly setSquadGroupVisibility: (
+    input: SetSquadGroupVisibilityStoreInput
+  ) => Effect<
+    SquadGroupVisibilityChange,
+    | SquadGroupNotFound
+    | ActorDoesNotOwnSquadGroup
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
 }
 
 export class EffectSquadGroupStore extends Context.Service<

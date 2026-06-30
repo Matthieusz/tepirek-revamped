@@ -39,6 +39,8 @@ it.effect("rejects an invalid squad group name", () => {
       Effect.die(new Error("Store should not be called")),
     listMySquadGroups: () =>
       Effect.die(new Error("Store should not be called")),
+    setSquadGroupVisibility: () =>
+      Effect.die(new Error("Store should not be called")),
   });
 
   return Effect.gen(function* invalidNameEffect() {
@@ -77,6 +79,8 @@ it.effect("returns the store-created squad group summary", () => {
     listGlobalSquadGroups: () =>
       Effect.die(new Error("Store should not be called")),
     listMySquadGroups: () =>
+      Effect.die(new Error("Store should not be called")),
+    setSquadGroupVisibility: () =>
       Effect.die(new Error("Store should not be called")),
   });
   const service = new CreateSquadGroup();

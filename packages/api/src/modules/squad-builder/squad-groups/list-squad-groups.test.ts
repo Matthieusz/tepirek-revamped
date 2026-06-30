@@ -55,6 +55,8 @@ it.effect(
         input.actorUserId === actorUserId
           ? Effect.succeed(summaries)
           : Effect.die(new Error("Unexpected listMySquadGroups input")),
+      setSquadGroupVisibility: () =>
+        Effect.die(new Error("Store should not be called")),
     });
     const service = new ListSquadGroups();
 
@@ -90,6 +92,8 @@ it.effect("returns a visible squad group detail from the Effect store", () => {
     listGlobalSquadGroups: () =>
       Effect.die(new Error("Store should not be called")),
     listMySquadGroups: () =>
+      Effect.die(new Error("Store should not be called")),
+    setSquadGroupVisibility: () =>
       Effect.die(new Error("Store should not be called")),
   });
   const service = new ListSquadGroups();

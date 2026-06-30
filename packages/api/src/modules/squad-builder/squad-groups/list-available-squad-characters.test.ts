@@ -109,6 +109,8 @@ it.effect("lists characters for the loaded squad group owner", () => {
       Effect.die(new Error("Store should not be called")),
     listMySquadGroups: () =>
       Effect.die(new Error("Store should not be called")),
+    setSquadGroupVisibility: () =>
+      Effect.die(new Error("Store should not be called")),
   });
   const service = new ListAvailableSquadCharacters();
 

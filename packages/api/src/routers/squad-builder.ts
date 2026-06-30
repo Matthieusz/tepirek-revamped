@@ -79,6 +79,7 @@ import type {
   SquadGroupEditorGrantSummary,
   SquadGroupInvitationSummary,
   SquadGroupSummary,
+  SquadGroupVisibilityChange,
 } from "../modules/squad-builder/squad-builder-store";
 import { parseSquadGroupId } from "../modules/squad-builder/squad-group-id";
 import {
@@ -315,16 +316,7 @@ interface ListSquadGroupSharingStateService {
 interface SetSquadGroupVisibilityService {
   readonly set: (
     input: Parameters<SetSquadGroupVisibility["set"]>[0]
-  ) => Promise<
-    Result<
-      {
-        readonly groupId: number;
-        readonly visibility: "private" | "global";
-        readonly updatedAt: Date;
-      },
-      GlobalSquadVisibilityError
-    >
-  >;
+  ) => Effect<SquadGroupVisibilityChange, GlobalSquadVisibilityError, never>;
 }
 
 interface SaveSharedSquadGroupCharactersService {
@@ -536,7 +528,6 @@ interface SquadBuilderServices {
   readonly revokeSquadGroupEditor: RevokeSquadGroupEditorService;
   readonly squadGroupSharingState: ListSquadGroupSharingStateService;
   readonly saveSharedSquadGroupCharacters: SaveSharedSquadGroupCharactersService;
-  readonly setSquadGroupVisibility: SetSquadGroupVisibilityService;
 }
 
 const createDefaultSquadBuilderServices = (): Result<
@@ -598,7 +589,6 @@ const createDefaultSquadBuilderServices = (): Result<
       store,
       systemClock
     ),
-    setSquadGroupVisibility: new SetSquadGroupVisibility(store, systemClock),
     sharingState: new ListAccountSharingState(store),
     squadGroupSharingState: new ListSquadGroupSharingState(store),
   });
@@ -1321,6 +1311,7 @@ const createSquadGroupEffect = new CreateSquadGroup();
 const listGlobalSquadGroupsEffect = new ListGlobalSquadGroups();
 const listSquadGroupsEffect = new ListSquadGroups();
 const listAvailableSquadCharactersEffect = new ListAvailableSquadCharacters();
+const setSquadGroupVisibilityEffect = new SetSquadGroupVisibility(systemClock);
 
 /** Create the squad-builder ORPC router. */
 export const createSquadBuilderRouter = ({
@@ -2522,33 +2513,36 @@ export const createSquadBuilderRouter = ({
       if (isError(visibility)) {
         throw toSquadGroupOrpcError(visibility.error);
       }
-      const services =
-        setSquadGroupVisibilityService === undefined
-          ? defaultServices
-          : ok({
-              setSquadGroupVisibility: setSquadGroupVisibilityService,
-            });
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "setSquadGroupVisibility",
-          services.error
-        );
-        throw toOrpcError(services.error);
-      }
-      const result = await services.value.setSquadGroupVisibility.set({
+      const effect = (
+        setSquadGroupVisibilityService ?? setSquadGroupVisibilityEffect
+      ).set({
         actorUserId: actorUserId.value,
         groupId: groupId.value,
         visibility: visibility.value,
       });
-      if (isError(result)) {
-        logSquadBuilderError(context, "setSquadGroupVisibility", result.error);
-        throw toSquadGroupOrpcError(result.error);
+
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for setSquadGroupVisibility"
+          ),
+          operation: "setSquadGroupVisibility" as const,
+        };
+        logSquadBuilderError(context, "setSquadGroupVisibility", error);
+        throw toSquadGroupOrpcError(error);
       }
+
+      const result = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as GlobalSquadVisibilityError;
+        logSquadBuilderError(context, "setSquadGroupVisibility", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
       return {
-        groupId: result.value.groupId,
-        updatedAt: result.value.updatedAt.toISOString(),
-        visibility: result.value.visibility,
+        groupId: result.groupId,
+        updatedAt: result.updatedAt.toISOString(),
+        visibility: result.visibility,
       };
     }),
 });
