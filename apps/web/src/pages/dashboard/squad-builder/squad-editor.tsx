@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  ChevronDown,
   Loader2,
   Plus,
   Save,
@@ -15,6 +16,9 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Collapsible } from "@/components/ui/collapsible";
+import { CollapsibleContent } from "@/components/ui/collapsible-content";
+import { CollapsibleTrigger } from "@/components/ui/collapsible-trigger";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -86,6 +90,7 @@ export default function SquadBuilderEditorPage() {
   const [isDirty, setIsDirty] = useState(false);
   const [inviteQuery, setInviteQuery] = useState("");
   const [visibility, setVisibility] = useState<"private" | "global">("private");
+  const [editorsOpen, setEditorsOpen] = useState(false);
 
   const detailQuery = useQuery(
     orpc.squadBuilder.getSquadGroupDetail.queryOptions({
@@ -386,7 +391,7 @@ export default function SquadBuilderEditorPage() {
   }
 
   return (
-    <div className="w-full space-y-5">
+    <div className="mx-auto w-full max-w-6xl space-y-5">
       <div className="flex flex-wrap items-center gap-3">
         <Button
           onClick={() => {
@@ -411,9 +416,7 @@ export default function SquadBuilderEditorPage() {
               value={groupName}
             />
           ) : (
-            <p className="rounded-md border border-border bg-muted px-3 py-2 text-sm">
-              {groupName}
-            </p>
+            <p className="rounded-md bg-muted px-3 py-2 text-sm">{groupName}</p>
           )}
         </div>
         <div className="flex items-center gap-2 self-end">
@@ -447,9 +450,9 @@ export default function SquadBuilderEditorPage() {
       </div>
 
       {isOwner && (
-        <section className="space-y-3 rounded-xl border border-border bg-card p-4">
-          <div className="space-y-1">
-            <h2 className="font-semibold text-base">Widoczność</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+          <div className="space-y-0.5">
+            <h2 className="font-semibold text-sm">Widoczność</h2>
             <p className="text-muted-foreground text-xs">
               Publiczne składy może oglądać każdy zalogowany użytkownik.
               Edytować mogą tylko zaproszeni edytorzy.
@@ -464,6 +467,7 @@ export default function SquadBuilderEditorPage() {
               onClick={() =>
                 visibilityMutation.mutate({ groupId, visibility: "private" })
               }
+              size="sm"
               type="button"
               variant={visibility === "private" ? "default" : "outline"}
             >
@@ -474,13 +478,14 @@ export default function SquadBuilderEditorPage() {
               onClick={() =>
                 visibilityMutation.mutate({ groupId, visibility: "global" })
               }
+              size="sm"
               type="button"
               variant={visibility === "global" ? "default" : "outline"}
             >
               Publiczny dla zalogowanych
             </Button>
           </fieldset>
-        </section>
+        </div>
       )}
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -488,7 +493,12 @@ export default function SquadBuilderEditorPage() {
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-base">Składy w grupie</h2>
             {isOwner && (
-              <Button onClick={handleAddSquad} type="button" variant="outline">
+              <Button
+                onClick={handleAddSquad}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
                 <Plus className="size-4" />
                 Dodaj skład
               </Button>
@@ -496,291 +506,418 @@ export default function SquadBuilderEditorPage() {
           </div>
 
           {squads.length === 0 && (
-            <div className="rounded-xl border border-dashed border-border bg-card py-10 text-center text-muted-foreground text-sm">
+            <div className="rounded-xl border border-dashed border-border py-10 text-center text-muted-foreground text-sm">
               Dodaj pierwszy skład, a potem wybierz postacie z panelu obok.
             </div>
           )}
 
           <div className="grid gap-3 lg:grid-cols-2">
-            {squads.map((squad, squadIndex) => (
-              <article
-                className="space-y-3 rounded-xl border border-border bg-card p-4"
-                key={squad.clientKey}
-              >
-                <div className="flex items-center gap-2">
-                  {isOwner ? (
-                    <Input
-                      aria-label="Nazwa składu"
-                      maxLength={60}
-                      onChange={(event) => {
-                        updateSquads(
-                          squads.map((item) =>
-                            item.clientKey === squad.clientKey
-                              ? { ...item, name: event.target.value }
-                              : item
+            {squads.map((squad) => {
+              const fill = Math.min(squad.characters.length, 10) / 10;
+              return (
+                <article
+                  className="overflow-hidden rounded-xl border border-border bg-card"
+                  key={squad.clientKey}
+                >
+                  <header className="flex items-center gap-2 border-b border-border px-4 py-2.5">
+                    {isOwner ? (
+                      <Input
+                        aria-label="Nazwa składu"
+                        className="h-8"
+                        maxLength={60}
+                        onChange={(event) => {
+                          updateSquads(
+                            squads.map((item) =>
+                              item.clientKey === squad.clientKey
+                                ? { ...item, name: event.target.value }
+                                : item
+                            )
+                          );
+                        }}
+                        value={squad.name}
+                      />
+                    ) : (
+                      <h3 className="flex-1 font-medium text-sm">
+                        {squad.name}
+                      </h3>
+                    )}
+                    {isOwner && (
+                      <Button
+                        aria-label={`Usuń skład ${squad.name}`}
+                        onClick={() =>
+                          updateSquads(
+                            squads.filter(
+                              (item) => item.clientKey !== squad.clientKey
+                            )
                           )
-                        );
-                      }}
-                      value={squad.name}
-                    />
-                  ) : (
-                    <h3 className="flex-1 font-medium text-sm">{squad.name}</h3>
-                  )}
-                  {isOwner && (
-                    <Button
-                      aria-label={`Usuń skład ${squad.name}`}
-                      onClick={() =>
-                        updateSquads(
-                          squads.filter(
-                            (item) => item.clientKey !== squad.clientKey
-                          )
-                        )
-                      }
-                      size="icon"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
-                  )}
-                </div>
-
-                <ul className="space-y-2">
-                  {squad.characters.map((placement) => {
-                    const character = availableById.get(placement.characterId);
-                    return (
-                      <li
-                        className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background/40 p-2"
-                        key={placement.characterId}
+                        }
+                        size="icon-sm"
+                        type="button"
+                        variant="ghost"
                       >
-                        <span className="truncate text-sm">
-                          {character === undefined
-                            ? "Niedostępna postać"
-                            : characterLabel(character)}
-                        </span>
-                        {canEditPlacements && (
-                          <Button
-                            aria-label={`Usuń ${character?.name ?? "postać"} ze składu ${squad.name}`}
-                            onClick={() => {
-                              updateSquads(
-                                squads.map((item) =>
-                                  item.clientKey === squad.clientKey
-                                    ? {
-                                        ...item,
-                                        characters: item.characters.filter(
-                                          (current) =>
-                                            current.characterId !==
-                                            placement.characterId
-                                        ),
-                                      }
-                                    : item
-                                )
-                              );
-                            }}
-                            size="icon-sm"
-                            type="button"
-                            variant="ghost"
-                          >
-                            <X className="size-3.5" />
-                          </Button>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-                <p className="text-muted-foreground text-xs">
-                  {squad.characters.length}/10 postaci
-                </p>
-                {squadIndex > -1 ? null : null}
-              </article>
-            ))}
+                        <Trash2 className="size-3.5 text-destructive" />
+                      </Button>
+                    )}
+                  </header>
+
+                  <div className="px-3 py-2">
+                    {squad.characters.length === 0 ? (
+                      <p className="py-5 text-center text-xs text-muted-foreground">
+                        Brak postaci. Wybierz z panelu obok.
+                      </p>
+                    ) : (
+                      <ul className="divide-y divide-border/60">
+                        {squad.characters.map((placement) => {
+                          const character = availableById.get(
+                            placement.characterId
+                          );
+                          return (
+                            <li
+                              className="flex items-center justify-between gap-2 py-2"
+                              key={placement.characterId}
+                            >
+                              <div className="flex min-w-0 items-center gap-2">
+                                <Avatar size="sm" className="size-7">
+                                  {character?.avatarUrl ? (
+                                    <AvatarImage
+                                      alt={character.name}
+                                      src={character.avatarUrl}
+                                    />
+                                  ) : null}
+                                  <AvatarFallback>
+                                    {character
+                                      ? character.name.slice(0, 2).toUpperCase()
+                                      : "?"}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="truncate text-sm">
+                                  {character === undefined
+                                    ? "Niedostępna postać"
+                                    : characterLabel(character)}
+                                </span>
+                              </div>
+                              {canEditPlacements && (
+                                <Button
+                                  aria-label={`Usuń ${character?.name ?? "postać"} ze składu ${squad.name}`}
+                                  onClick={() => {
+                                    updateSquads(
+                                      squads.map((item) =>
+                                        item.clientKey === squad.clientKey
+                                          ? {
+                                              ...item,
+                                              characters:
+                                                item.characters.filter(
+                                                  (current) =>
+                                                    current.characterId !==
+                                                    placement.characterId
+                                                ),
+                                            }
+                                          : item
+                                      )
+                                    );
+                                  }}
+                                  size="icon-sm"
+                                  type="button"
+                                  variant="ghost"
+                                >
+                                  <X className="size-3.5" />
+                                </Button>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+
+                    <div className="mt-2.5 space-y-1.5">
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-primary/60"
+                          style={{ width: `${fill * 100}%` }}
+                        />
+                      </div>
+                      <p className="font-mono text-xs text-muted-foreground">
+                        {squad.characters.length}/10 postaci
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
 
-        <aside className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <aside className="space-y-4">
           {isOwner && (
-            <section className="space-y-3 border-border border-b pb-4">
-              <h2 className="font-semibold text-base">Edytorzy</h2>
-              <div className="space-y-2">
-                <Label htmlFor="editor-invite-query">Zaproś użytkownika</Label>
-                <Input
-                  id="editor-invite-query"
-                  onChange={(event) => setInviteQuery(event.target.value)}
-                  placeholder="Nazwa użytkownika"
-                  value={inviteQuery}
-                />
-              </div>
-              {inviteTargets.length > 0 && (
-                <ul className="space-y-2">
-                  {inviteTargets.map((target) => (
-                    <li
-                      className="flex items-center justify-between gap-2 rounded-lg border border-border p-2"
-                      key={target.userId}
-                    >
-                      <span className="text-sm">{target.name}</span>
-                      <Button
-                        disabled={sendInviteMutation.isPending}
-                        onClick={() =>
-                          sendInviteMutation.mutate({
-                            groupId,
-                            invitedUserId: target.userId,
-                          })
-                        }
-                        size="xs"
-                        type="button"
-                      >
-                        Zaproś
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {editorGrants.length > 0 && (
-                <ul className="space-y-2">
-                  {editorGrants.map((grant) => (
-                    <li
-                      className="flex items-center justify-between gap-2 rounded-lg border border-border p-2"
-                      key={grant.invitationId}
-                    >
-                      <span className="text-sm">
-                        {grant.userName} ·{" "}
-                        {grant.status === "pending" ? "oczekuje" : "aktywny"}
-                      </span>
-                      <Button
-                        disabled={revokeInviteMutation.isPending}
-                        onClick={() =>
-                          revokeInviteMutation.mutate({
-                            invitationId: grant.invitationId,
-                          })
-                        }
-                        size="xs"
-                        type="button"
-                        variant="outline"
-                      >
-                        Cofnij dostęp
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )}
-          <h2 className="font-semibold text-base">
-            {isViewer ? "Informacje" : "Dostępne postacie"}
-          </h2>
-          {isViewer ? (
-            <p className="text-muted-foreground text-sm">
-              Oglądasz publiczną grupę w trybie tylko do odczytu. Nie możesz
-              dodawać ani usuwać postaci.
-            </p>
-          ) : (
-            <>
-              {!isOwner && (
-                <p className="text-muted-foreground text-xs">
-                  Dostępne postacie pochodzą z kont dostępnych właścicielowi
-                  składu.
-                </p>
-              )}
-              {availableQuery.isLoading && <Skeleton className="h-40 w-full" />}
-              {!availableQuery.isLoading &&
-                availableCharacters.length === 0 && (
-                  <p className="text-muted-foreground text-sm">
-                    Brak dostępnych postaci z Jaruny. Dodaj konto na stronie
-                    Konta.
-                  </p>
-                )}
-              <ul className="space-y-2">
-                {availableCharacters.map((character) => {
-                  const isSelected = selectedCharacterIds.has(
-                    character.characterId
-                  );
-                  return (
-                    <li
-                      className="rounded-lg border border-border bg-background/40 p-2"
-                      key={character.characterId}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Avatar className="size-8">
-                          {character.avatarUrl ? (
-                            <AvatarImage
-                              alt={character.name}
-                              src={character.avatarUrl}
-                            />
-                          ) : null}
-                          <AvatarFallback>
-                            {character.name.slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium text-sm">
-                            {characterLabel(character)}
-                          </p>
-                          <p className="truncate text-muted-foreground text-xs">
-                            {character.accountDisplayName} ·{" "}
-                            {character.accountOwnerUserName}
-                          </p>
-                        </div>
-                        {isSelected && (
-                          <Badge variant="secondary">wybrana</Badge>
+            <Collapsible onOpenChange={setEditorsOpen} open={editorsOpen}>
+              <div className="overflow-hidden rounded-xl border border-border bg-card">
+                <CollapsibleTrigger
+                  className="flex w-full items-center justify-between gap-2 border-b border-border px-4 py-3 text-left transition-colors hover:bg-muted/40"
+                  render={
+                    <button type="button">
+                      <span className="flex items-center gap-2">
+                        <UserPlus className="size-4 text-muted-foreground" />
+                        <span className="font-semibold text-sm">Edytorzy</span>
+                        {editorGrants.length > 0 && (
+                          <span className="font-mono text-xs text-muted-foreground">
+                            {editorGrants.length}
+                          </span>
                         )}
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {squads.map((squad) => {
-                          const hasCharacterFromSameAccount =
-                            squad.characters.some(
-                              (placement) =>
-                                availableById.get(placement.characterId)
-                                  ?.accountId === character.accountId
-                            );
-                          const cannotAddToSquad =
-                            isSelected ||
-                            squad.characters.length >= 10 ||
-                            hasCharacterFromSameAccount;
-
-                          return (
+                      </span>
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={`size-4 text-muted-foreground transition-transform ${
+                          editorsOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                  }
+                />
+                {editorsOpen && (
+                  <CollapsibleContent className="space-y-3 px-4 py-3">
+                    <div className="space-y-2">
+                      <Label
+                        className="text-muted-foreground text-xs"
+                        htmlFor="editor-invite-query"
+                      >
+                        Zaproś użytkownika
+                      </Label>
+                      <Input
+                        id="editor-invite-query"
+                        onChange={(event) => setInviteQuery(event.target.value)}
+                        placeholder="Nazwa użytkownika"
+                        value={inviteQuery}
+                      />
+                    </div>
+                    {inviteTargets.length > 0 && (
+                      <ul className="space-y-1">
+                        {inviteTargets.map((target) => (
+                          <li
+                            className="flex items-center justify-between gap-2 rounded-md px-1 py-1"
+                            key={target.userId}
+                          >
+                            <div className="flex min-w-0 items-center gap-2">
+                              <Avatar size="sm">
+                                {target.image ? (
+                                  <AvatarImage
+                                    alt={target.name}
+                                    src={target.image}
+                                  />
+                                ) : null}
+                                <AvatarFallback>
+                                  {target.name.slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="truncate text-sm">
+                                {target.name}
+                              </span>
+                            </div>
                             <Button
-                              disabled={cannotAddToSquad}
-                              key={squad.clientKey}
-                              onClick={() => {
-                                updateSquads(
-                                  squads.map((item) =>
-                                    item.clientKey === squad.clientKey
-                                      ? {
-                                          ...item,
-                                          characters: [
-                                            ...item.characters,
-                                            {
-                                              characterId:
-                                                character.characterId,
-                                              position: item.characters.length,
-                                            },
-                                          ],
-                                        }
-                                      : item
-                                  )
-                                );
-                              }}
-                              size="xs"
-                              title={
-                                hasCharacterFromSameAccount
-                                  ? "Ten skład ma już postać z tego konta"
-                                  : undefined
+                              disabled={sendInviteMutation.isPending}
+                              onClick={() =>
+                                sendInviteMutation.mutate({
+                                  groupId,
+                                  invitedUserId: target.userId,
+                                })
                               }
+                              size="xs"
+                              type="button"
+                            >
+                              Zaproś
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {editorGrants.length > 0 && (
+                      <ul className="space-y-1 border-t border-border pt-3">
+                        {editorGrants.map((grant) => (
+                          <li
+                            className="flex items-center justify-between gap-2 rounded-md px-1 py-1"
+                            key={grant.invitationId}
+                          >
+                            <div className="flex min-w-0 items-center gap-2">
+                              <Avatar size="sm">
+                                {grant.userImage ? (
+                                  <AvatarImage
+                                    alt={grant.userName}
+                                    src={grant.userImage}
+                                  />
+                                ) : null}
+                                <AvatarFallback>
+                                  {grant.userName.slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="truncate text-sm">
+                                {grant.userName}
+                              </span>
+                              <Badge
+                                variant={
+                                  grant.status === "accepted"
+                                    ? "default"
+                                    : "secondary"
+                                }
+                              >
+                                {grant.status === "pending"
+                                  ? "oczekuje"
+                                  : "aktywny"}
+                              </Badge>
+                            </div>
+                            <Button
+                              disabled={revokeInviteMutation.isPending}
+                              onClick={() =>
+                                revokeInviteMutation.mutate({
+                                  invitationId: grant.invitationId,
+                                })
+                              }
+                              size="xs"
                               type="button"
                               variant="outline"
                             >
-                              <UserPlus className="size-3.5" />
-                              {squad.name}
+                              Cofnij dostęp
                             </Button>
-                          );
-                        })}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </CollapsibleContent>
+                )}
+              </div>
+            </Collapsible>
           )}
+
+          <section className="overflow-hidden rounded-xl border border-border bg-card">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <h2 className="font-semibold text-base">
+                {isViewer ? "Informacje" : "Dostępne postacie"}
+              </h2>
+              {!isViewer && (
+                <span className="font-mono text-xs text-muted-foreground">
+                  {availableCharacters.length}
+                </span>
+              )}
+            </div>
+
+            {isViewer ? (
+              <p className="px-4 py-3 text-muted-foreground text-sm">
+                Oglądasz publiczną grupę w trybie tylko do odczytu. Nie możesz
+                dodawać ani usuwać postaci.
+              </p>
+            ) : (
+              <div className="space-y-3 px-3 py-3">
+                {!isOwner && (
+                  <p className="px-1 text-muted-foreground text-xs">
+                    Dostępne postacie pochodzą z kont dostępnych właścicielowi
+                    składu.
+                  </p>
+                )}
+                {availableQuery.isLoading && (
+                  <div className="space-y-2 px-1" aria-hidden="true">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                )}
+                {!availableQuery.isLoading &&
+                  availableCharacters.length === 0 && (
+                    <p className="px-1 text-muted-foreground text-sm">
+                      Brak dostępnych postaci z Jaruny. Dodaj konto na stronie
+                      Konta.
+                    </p>
+                  )}
+                {!availableQuery.isLoading &&
+                  availableCharacters.length > 0 && (
+                    <ul className="divide-y divide-border/60">
+                      {availableCharacters.map((character) => {
+                        const isSelected = selectedCharacterIds.has(
+                          character.characterId
+                        );
+                        return (
+                          <li className="py-2.5" key={character.characterId}>
+                            <div className="flex items-center gap-2 px-1">
+                              <Avatar className="size-8">
+                                {character.avatarUrl ? (
+                                  <AvatarImage
+                                    alt={character.name}
+                                    src={character.avatarUrl}
+                                  />
+                                ) : null}
+                                <AvatarFallback>
+                                  {character.name.slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate font-medium text-sm">
+                                  {characterLabel(character)}
+                                </p>
+                                <p className="truncate font-mono text-xs text-muted-foreground">
+                                  {character.accountDisplayName} ·{" "}
+                                  {character.accountOwnerUserName}
+                                </p>
+                              </div>
+                              {isSelected && (
+                                <Badge variant="secondary">wybrana</Badge>
+                              )}
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-1.5 pl-10">
+                              {squads.map((squad) => {
+                                const hasCharacterFromSameAccount =
+                                  squad.characters.some(
+                                    (placement) =>
+                                      availableById.get(placement.characterId)
+                                        ?.accountId === character.accountId
+                                  );
+                                const cannotAddToSquad =
+                                  isSelected ||
+                                  squad.characters.length >= 10 ||
+                                  hasCharacterFromSameAccount;
+
+                                return (
+                                  <Button
+                                    disabled={cannotAddToSquad}
+                                    key={squad.clientKey}
+                                    onClick={() => {
+                                      updateSquads(
+                                        squads.map((item) =>
+                                          item.clientKey === squad.clientKey
+                                            ? {
+                                                ...item,
+                                                characters: [
+                                                  ...item.characters,
+                                                  {
+                                                    characterId:
+                                                      character.characterId,
+                                                    position:
+                                                      item.characters.length,
+                                                  },
+                                                ],
+                                              }
+                                            : item
+                                        )
+                                      );
+                                    }}
+                                    size="xs"
+                                    title={
+                                      hasCharacterFromSameAccount
+                                        ? "Ten skład ma już postać z tego konta"
+                                        : undefined
+                                    }
+                                    type="button"
+                                    variant="outline"
+                                  >
+                                    <UserPlus className="size-3" />
+                                    {squad.name}
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+              </div>
+            )}
+          </section>
         </aside>
       </div>
     </div>
