@@ -1,3 +1,6 @@
+import * as Context from "effect/Context";
+import type { Effect } from "effect/Effect";
+
 import type {
   ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
@@ -33,6 +36,22 @@ import type {
   RevokeSquadGroupEditorStoreInput,
 } from "../squad-builder-store";
 import type { AvailableSquadCharacter } from "../squad-group-snapshot";
+import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
+
+export interface EffectSquadGroupStoreShape {
+  readonly createSquadGroup: (
+    input: CreateSquadGroupStoreInput
+  ) => Effect<
+    SquadGroupSummary,
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+}
+
+export class EffectSquadGroupStore extends Context.Service<
+  EffectSquadGroupStore,
+  EffectSquadGroupStoreShape
+>()("@tepirek-revamped/api/squad-builder/EffectSquadGroupStore") {}
 
 /** Squad group persistence contracts used by group editing, sharing, and visibility services. */
 export type SquadGroupsPersistenceStore = SquadGroupStore &
