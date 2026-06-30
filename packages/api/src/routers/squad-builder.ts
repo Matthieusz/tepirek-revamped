@@ -1,6 +1,9 @@
 import { ORPCError } from "@orpc/server";
+import type { Effect } from "effect/Effect";
+import type { ManagedRuntime } from "effect/ManagedRuntime";
 import { z } from "zod";
 
+import { makeApiManagedRuntime } from "../effect-app";
 import { accountDisplayNameToString } from "../modules/squad-builder/account-display-name";
 import { ConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/confirm-owned-account-import";
 import type { ConfirmOwnedAccountImportError } from "../modules/squad-builder/account-import/confirm-owned-account-import";
@@ -107,7 +110,9 @@ import { SendSquadGroupEditorInvite } from "../modules/squad-builder/squad-group
 import { SetSquadGroupVisibility } from "../modules/squad-builder/squad-groups/set-squad-group-visibility";
 import type { GlobalSquadVisibilityError } from "../modules/squad-builder/squad-groups/set-squad-group-visibility";
 import type { SquadGroupSharingError } from "../modules/squad-builder/squad-groups/squad-group-sharing-error";
+import type { EffectSquadGroupStore } from "../modules/squad-builder/squad-groups/squad-group-store";
 import { parseSquadId } from "../modules/squad-builder/squad-id";
+import { runOrpcEffect } from "../orpc-effect";
 import { verifiedProcedure } from "./procedures";
 import type { RouterContext } from "./procedures";
 
@@ -211,7 +216,7 @@ interface ListAccountSharingStateService {
 interface CreateSquadGroupService {
   readonly create: (
     input: Parameters<CreateSquadGroup["create"]>[0]
-  ) => Promise<Result<SquadGroupSummary, CreateSquadGroupError>>;
+  ) => Effect<SquadGroupSummary, CreateSquadGroupError, never>;
 }
 
 interface ListGlobalSquadGroupsService {
@@ -343,6 +348,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly revokeAccountAccessService?: RevokeAccountAccessService;
   readonly listAccountSharingStateService?: ListAccountSharingStateService;
   readonly createSquadGroupService?: CreateSquadGroupService;
+  readonly effectRuntime?: ManagedRuntime<EffectSquadGroupStore, unknown>;
   readonly listSquadGroupsService?: ListSquadGroupsService;
   readonly listGlobalSquadGroupsService?: ListGlobalSquadGroupsService;
   readonly listAvailableSquadCharactersService?: ListAvailableSquadCharactersService;
@@ -503,7 +509,6 @@ interface SquadBuilderServices {
   readonly respondInvite: RespondToAccountAccessInviteService;
   readonly revokeAccess: RevokeAccountAccessService;
   readonly sharingState: ListAccountSharingStateService;
-  readonly createSquadGroup: CreateSquadGroupService;
   readonly listSquadGroups: ListSquadGroupsService;
   readonly listGlobalSquadGroups: ListGlobalSquadGroupsService;
   readonly listAvailableSquadCharacters: ListAvailableSquadCharactersService;
@@ -539,7 +544,6 @@ const createDefaultSquadBuilderServices = (): Result<
   return ok({
     applyRefetch: new ApplyAccountRefetch(store, store, store, systemClock),
     confirm: new ConfirmOwnedAccountImport(store, store, systemClock),
-    createSquadGroup: new CreateSquadGroup(store),
     list: new ListOwnedMargonemAccounts(store),
     listAvailableSquadCharacters: new ListAvailableSquadCharacters(store),
     listGlobalSquadGroups: new ListGlobalSquadGroups(store),
@@ -1145,6 +1149,7 @@ const errorMessageOr = (error: object, fallback: string): string =>
 // oxlint-disable-next-line complexity
 const toSquadGroupOrpcError = (
   error:
+    | CreateSquadGroupError
     | SquadGroupSharingError
     | SaveSquadGroupError
     | SharedSquadGroupSaveError
@@ -1293,6 +1298,13 @@ const toAccountSharingOrpcError = (error: AccountSharingError) => {
 
 const defaultServices = createDefaultSquadBuilderServices();
 
+const defaultEffectRuntime =
+  process.env.DATABASE_URL === undefined
+    ? undefined
+    : makeApiManagedRuntime(process.env.DATABASE_URL);
+
+const createSquadGroupEffect = new CreateSquadGroup();
+
 /** Create the squad-builder ORPC router. */
 export const createSquadBuilderRouter = ({
   previewService,
@@ -1317,6 +1329,7 @@ export const createSquadBuilderRouter = ({
   revokeSquadGroupEditorService,
   listSquadGroupSharingStateService,
   saveSharedSquadGroupCharactersService,
+  effectRuntime = defaultEffectRuntime,
   setSquadGroupVisibilityService,
 }: CreateSquadBuilderRouterOptions = {}) => ({
   applyAccountRefetch: verifiedProcedure
@@ -1423,29 +1436,30 @@ export const createSquadBuilderRouter = ({
         throw toOrpcError(actorUserId.error);
       }
 
-      const services =
-        createSquadGroupService === undefined
-          ? defaultServices
-          : ok({
-              createSquadGroup: createSquadGroupService,
-            });
+      const effect = (createSquadGroupService ?? createSquadGroupEffect).create(
+        {
+          actorUserId: actorUserId.value,
+          name: input.name,
+        }
+      );
 
-      if (isError(services)) {
-        logSquadBuilderError(context, "createSquadGroup", services.error);
-        throw toOrpcError(services.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error("DATABASE_URL is required for createSquadGroup"),
+          operation: "createSquadGroup",
+        };
+        logSquadBuilderError(context, "createSquadGroup", error);
+        throw toSquadGroupOrpcError(error);
       }
 
-      const result = await services.value.createSquadGroup.create({
-        actorUserId: actorUserId.value,
-        name: input.name,
+      const group = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as CreateSquadGroupError;
+        logSquadBuilderError(context, "createSquadGroup", mapped);
+        return toSquadGroupOrpcError(mapped);
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "createSquadGroup", result.error);
-        throw toSquadGroupOrpcError(result.error);
-      }
-
-      return toSquadGroupSummaryDto(result.value);
+      return toSquadGroupSummaryDto(group);
     }),
   getPendingSquadGroupInviteCount: verifiedProcedure.handler(
     async ({ context }) => {
