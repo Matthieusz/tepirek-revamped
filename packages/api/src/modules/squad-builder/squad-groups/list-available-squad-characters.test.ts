@@ -10,6 +10,7 @@ import {
 } from "../margonem-profile-id";
 import { isOk } from "../result";
 import type { AvailableSquadCharacter } from "../squad-group-snapshot";
+import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support";
 import { ListAvailableSquadCharacters } from "./list-available-squad-characters";
 import { EffectSquadGroupStore } from "./squad-group-store";
 import type { SquadGroupDetail } from "./squad-group-store";
@@ -93,8 +94,7 @@ it.effect("lists characters for the loaded squad group owner", () => {
       world: "jaruna",
     },
   ];
-  const store = EffectSquadGroupStore.of({
-    createSquadGroup: () => Effect.die(new Error("Store should not be called")),
+  const store = makeEffectSquadGroupStoreTestService({
     getSquadGroupDetail: (input) =>
       input.actorUserId === actorUserId && input.groupId === groupId
         ? Effect.succeed(detail)
@@ -105,12 +105,6 @@ it.effect("lists characters for the loaded squad group owner", () => {
         : Effect.die(
             new Error("Unexpected listAvailableCharactersForOwner input")
           ),
-    listGlobalSquadGroups: () =>
-      Effect.die(new Error("Store should not be called")),
-    listMySquadGroups: () =>
-      Effect.die(new Error("Store should not be called")),
-    setSquadGroupVisibility: () =>
-      Effect.die(new Error("Store should not be called")),
   });
   const service = new ListAvailableSquadCharacters();
 

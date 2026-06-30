@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import { parseAppUserId } from "../app-user-id";
 import { isOk } from "../result";
 import { parseSquadGroupName } from "../squad-name";
+import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support";
 import { ListSquadGroups } from "./list-squad-groups";
 import { EffectSquadGroupStore } from "./squad-group-store";
 import type { SquadGroupDetail, SquadGroupSummary } from "./squad-group-store";
@@ -42,21 +43,11 @@ it.effect(
         updatedAt,
       },
     ];
-    const store = EffectSquadGroupStore.of({
-      createSquadGroup: () =>
-        Effect.die(new Error("Store should not be called")),
-      getSquadGroupDetail: () =>
-        Effect.die(new Error("Store should not be called")),
-      listAvailableCharactersForOwner: () =>
-        Effect.die(new Error("Store should not be called")),
-      listGlobalSquadGroups: () =>
-        Effect.die(new Error("Store should not be called")),
+    const store = makeEffectSquadGroupStoreTestService({
       listMySquadGroups: (input) =>
         input.actorUserId === actorUserId
           ? Effect.succeed(summaries)
           : Effect.die(new Error("Unexpected listMySquadGroups input")),
-      setSquadGroupVisibility: () =>
-        Effect.die(new Error("Store should not be called")),
     });
     const service = new ListSquadGroups();
 
@@ -81,20 +72,11 @@ it.effect("returns a visible squad group detail from the Effect store", () => {
     updatedAt,
     visibility: "private",
   };
-  const store = EffectSquadGroupStore.of({
-    createSquadGroup: () => Effect.die(new Error("Store should not be called")),
+  const store = makeEffectSquadGroupStoreTestService({
     getSquadGroupDetail: (input) =>
       input.actorUserId === actorUserId && input.groupId === groupId
         ? Effect.succeed(detail)
         : Effect.die(new Error("Unexpected getSquadGroupDetail input")),
-    listAvailableCharactersForOwner: () =>
-      Effect.die(new Error("Store should not be called")),
-    listGlobalSquadGroups: () =>
-      Effect.die(new Error("Store should not be called")),
-    listMySquadGroups: () =>
-      Effect.die(new Error("Store should not be called")),
-    setSquadGroupVisibility: () =>
-      Effect.die(new Error("Store should not be called")),
   });
   const service = new ListSquadGroups();
 

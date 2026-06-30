@@ -5,6 +5,7 @@ import { parseAppUserId } from "../app-user-id";
 import { isOk } from "../result";
 import { parseSquadGroupName } from "../squad-name";
 import { CreateSquadGroup } from "./create-squad-group";
+import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support";
 import { EffectSquadGroupStore } from "./squad-group-store";
 import type { SquadGroupSummary } from "./squad-group-store";
 
@@ -29,19 +30,7 @@ const parseTestGroupName = (value: string) => {
 };
 
 it.effect("rejects an invalid squad group name", () => {
-  const store = EffectSquadGroupStore.of({
-    createSquadGroup: () => Effect.die(new Error("Store should not be called")),
-    getSquadGroupDetail: () =>
-      Effect.die(new Error("Store should not be called")),
-    listAvailableCharactersForOwner: () =>
-      Effect.die(new Error("Store should not be called")),
-    listGlobalSquadGroups: () =>
-      Effect.die(new Error("Store should not be called")),
-    listMySquadGroups: () =>
-      Effect.die(new Error("Store should not be called")),
-    setSquadGroupVisibility: () =>
-      Effect.die(new Error("Store should not be called")),
-  });
+  const store = makeEffectSquadGroupStoreTestService({});
 
   return Effect.gen(function* invalidNameEffect() {
     const service = new CreateSquadGroup();
@@ -67,21 +56,11 @@ it.effect("returns the store-created squad group summary", () => {
     squadCount: 0,
     updatedAt,
   };
-  const store = EffectSquadGroupStore.of({
+  const store = makeEffectSquadGroupStoreTestService({
     createSquadGroup: (input) =>
       input.actorUserId === actorUserId && input.name === storedName
         ? Effect.succeed(summary)
         : Effect.die(new Error("Unexpected createSquadGroup input")),
-    getSquadGroupDetail: () =>
-      Effect.die(new Error("Store should not be called")),
-    listAvailableCharactersForOwner: () =>
-      Effect.die(new Error("Store should not be called")),
-    listGlobalSquadGroups: () =>
-      Effect.die(new Error("Store should not be called")),
-    listMySquadGroups: () =>
-      Effect.die(new Error("Store should not be called")),
-    setSquadGroupVisibility: () =>
-      Effect.die(new Error("Store should not be called")),
   });
   const service = new CreateSquadGroup();
 
