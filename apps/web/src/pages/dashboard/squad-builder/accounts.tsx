@@ -179,12 +179,9 @@ const userInitials = (name: string): string =>
     .join("");
 
 const PreviewSkeleton = () => (
-  <ul className="space-y-2" aria-hidden="true">
+  <ul className="divide-y divide-border" aria-hidden="true">
     {Array.from({ length: 2 }, (_, index) => (
-      <li
-        className="space-y-2 rounded-lg border border-border bg-card p-3"
-        key={index}
-      >
+      <li className="space-y-2 px-5 py-3" key={index}>
         <Skeleton className="h-4 w-48" />
         <Skeleton className="h-8 w-full" />
       </li>
@@ -216,7 +213,7 @@ const PreviewRow = ({
 }: PreviewRowProps) => {
   if (item.status === "error") {
     return (
-      <li className="flex items-start gap-3 rounded-lg border border-border bg-card p-3">
+      <li className="flex items-start gap-3 px-5 py-3">
         <AlertTriangle
           aria-hidden="true"
           className="mt-0.5 size-4 shrink-0 text-destructive"
@@ -237,7 +234,7 @@ const PreviewRow = ({
   const isConfirmingThis = confirmingId === item.pendingImportId;
 
   return (
-    <li className="space-y-3 rounded-lg border border-border bg-card p-3">
+    <li className="space-y-3 px-5 py-3">
       <div className="flex items-start gap-3">
         <CheckCircle2
           aria-hidden="true"
@@ -340,21 +337,21 @@ const ImportPanel = ({
   onUrlsChange,
   urlsText,
 }: ImportPanelProps) => (
-  <section className="space-y-4">
+  <section className="overflow-hidden rounded-xl border border-border bg-card">
+    <div className="border-b border-border px-5 py-3">
+      <h2 className="flex items-center gap-2 font-semibold text-base">
+        <Link2 className="size-4 text-muted-foreground" />
+        Import kont
+      </h2>
+      <p className="text-muted-foreground text-sm">
+        Wklej linki do profili Margonem, aby pobrać postacie z Jaruny.
+      </p>
+    </div>
+
     <form
-      className="space-y-4 rounded-xl border border-border bg-card p-5"
+      className="space-y-4 border-b border-border px-5 py-4"
       onSubmit={onSubmitPreview}
     >
-      <div className="space-y-1">
-        <h2 className="flex items-center gap-2 font-semibold text-base">
-          <Link2 className="size-4 text-muted-foreground" />
-          Import kont
-        </h2>
-        <p className="text-muted-foreground text-sm">
-          Wklej linki do profili Margonem, aby pobrać postacie z Jaruny.
-        </p>
-      </div>
-
       <div className="space-y-2">
         <Label htmlFor="profile-urls">Linki do profili</Label>
         <Textarea
@@ -406,7 +403,7 @@ const ImportPanel = ({
     {isPreviewPending && previewItems.length === 0 && <PreviewSkeleton />}
 
     {previewItems.length > 0 && (
-      <ul className="space-y-2">
+      <ul className="divide-y divide-border">
         {previewItems.map((item) => (
           <PreviewRow
             confirmingId={confirmingId}
@@ -426,7 +423,7 @@ const ImportPanel = ({
 const OwnedAccountsSkeleton = () => (
   <ul className="divide-y divide-border" aria-hidden="true">
     {Array.from({ length: 2 }, (_, index) => (
-      <li className="space-y-2 py-3 first:pt-0 last:pb-0" key={index}>
+      <li className="space-y-2 px-5 py-3" key={index}>
         <Skeleton className="h-4 w-32" />
         <Skeleton className="h-3 w-24" />
         <Skeleton className="h-3 w-40" />
@@ -717,7 +714,7 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
 
   return (
     <Collapsible onOpenChange={setOpen} open={open}>
-      <div className="py-3 first:pt-0 last:pb-0">
+      <div className="px-5 py-3">
         <div className="flex items-center justify-between gap-2">
           <span className="truncate font-medium text-sm">
             {account.displayName}
@@ -774,7 +771,7 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
         </div>
 
         {refetchPreview !== null && (
-          <div className="mt-3 space-y-3 rounded-lg border border-border bg-muted/30 p-3">
+          <div className="mt-3 space-y-3 rounded-lg bg-muted/50 p-3">
             <div className="space-y-1">
               <h3 className="font-medium text-sm">Podgląd odświeżenia</h3>
               <p className="text-muted-foreground text-xs">
@@ -882,7 +879,7 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
 
         {open && (
           <CollapsibleContent
-            className="mt-3 rounded-lg border border-border bg-muted/30 p-3"
+            className="mt-3 rounded-lg bg-muted/50 p-3"
             id={`share-panel-${account.accountId}`}
           >
             <AccountSharingPanel
@@ -905,8 +902,8 @@ const OwnedAccountsPanel = ({
   accounts,
   isLoading,
 }: OwnedAccountsPanelProps) => (
-  <aside className="space-y-3 rounded-xl border border-border bg-card p-5">
-    <div className="flex items-center justify-between">
+  <aside className="overflow-hidden rounded-xl border border-border bg-card">
+    <div className="flex items-center justify-between border-b border-border px-5 py-3">
       <h2 className="flex items-center gap-2 font-semibold text-base">
         <Users className="size-4 text-muted-foreground" />
         Twoje konta
@@ -919,12 +916,12 @@ const OwnedAccountsPanel = ({
     {isLoading && <OwnedAccountsSkeleton />}
 
     {!isLoading && accounts.length === 0 && (
-      <div className="rounded-lg border border-dashed border-border py-8 text-center">
+      <div className="px-5 py-10 text-center">
         <Users
           aria-hidden="true"
           className="mx-auto size-7 text-muted-foreground"
         />
-        <p className="mx-auto mt-2 max-w-44 text-muted-foreground text-sm">
+        <p className="mx-auto mt-2 max-w-52 text-muted-foreground text-sm">
           Nie masz jeszcze zapisanych kont. Wklej link do profilu, aby dodać
           postacie z Jaruny.
         </p>
@@ -942,7 +939,7 @@ const OwnedAccountsPanel = ({
 );
 
 const InviteInboxSkeleton = () => (
-  <div className="space-y-2" aria-hidden="true">
+  <div className="space-y-2 px-5 py-3" aria-hidden="true">
     {Array.from({ length: 2 }, (_, index) => (
       <Skeleton className="h-12 w-full" key={index} />
     ))}
@@ -980,8 +977,8 @@ const InviteInboxPanel = () => {
     []) as readonly AccountAccessInvite[];
 
   return (
-    <section className="space-y-3 rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center justify-between">
+    <section className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex items-center justify-between border-b border-border px-5 py-3">
         <h2 className="flex items-center gap-2 font-semibold text-base">
           <Inbox className="size-4 text-muted-foreground" />
           Zaproszenia do kont
@@ -994,10 +991,10 @@ const InviteInboxPanel = () => {
       {invitesQuery.isLoading && <InviteInboxSkeleton />}
 
       {!invitesQuery.isLoading && invites.length === 0 && (
-        <div className="rounded-lg border border-dashed border-border py-8 text-center">
+        <div className="px-5 py-8 text-center">
           <Inbox
             aria-hidden="true"
-            className="mx-auto size-7 text-muted-foreground"
+            className="mx-auto size-6 text-muted-foreground"
           />
           <p className="mx-auto mt-2 max-w-56 text-muted-foreground text-sm">
             Nie masz oczekujących zaproszeń do kont Margonem.
@@ -1006,10 +1003,10 @@ const InviteInboxPanel = () => {
       )}
 
       {invites.length > 0 && (
-        <ul className="space-y-2">
+        <ul className="divide-y divide-border">
           {invites.map((invite) => (
             <li
-              className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-background/40 p-3"
+              className="flex flex-wrap items-center justify-between gap-3 px-5 py-3"
               key={invite.accessId}
             >
               <div className="flex min-w-0 items-center gap-3">
@@ -1031,7 +1028,7 @@ const InviteInboxPanel = () => {
                     </span>
                     <Badge variant="secondary">oczekuje</Badge>
                   </div>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="font-mono text-xs text-muted-foreground">
                     Zaproszenie od {invite.ownerUserName}
                   </p>
                 </div>
@@ -1076,7 +1073,7 @@ const InviteInboxPanel = () => {
 };
 
 const SharedAccountsSkeleton = () => (
-  <div className="space-y-2" aria-hidden="true">
+  <div className="space-y-2 px-5 py-3" aria-hidden="true">
     {Array.from({ length: 2 }, (_, index) => (
       <Skeleton className="h-14 w-full" key={index} />
     ))}
@@ -1091,8 +1088,8 @@ const SharedAccountsPanel = () => {
     []) as readonly SharedAccount[];
 
   return (
-    <section className="space-y-3 rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center justify-between">
+    <section className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex items-center justify-between border-b border-border px-5 py-3">
         <h2 className="flex items-center gap-2 font-semibold text-base">
           <Users className="size-4 text-muted-foreground" />
           Udostępnione mi
@@ -1105,10 +1102,10 @@ const SharedAccountsPanel = () => {
       {sharedQuery.isLoading && <SharedAccountsSkeleton />}
 
       {!sharedQuery.isLoading && accounts.length === 0 && (
-        <div className="rounded-lg border border-dashed border-border py-8 text-center">
+        <div className="px-5 py-8 text-center">
           <Users
             aria-hidden="true"
-            className="mx-auto size-7 text-muted-foreground"
+            className="mx-auto size-6 text-muted-foreground"
           />
           <p className="mx-auto mt-2 max-w-56 text-muted-foreground text-sm">
             Żadne konto Margonem nie jest Ci jeszcze udostępnione.
@@ -1117,12 +1114,9 @@ const SharedAccountsPanel = () => {
       )}
 
       {accounts.length > 0 && (
-        <ul className="space-y-2">
+        <ul className="divide-y divide-border">
           {accounts.map((account) => (
-            <li
-              className="space-y-1 rounded-lg border border-border bg-background/40 p-3"
-              key={account.accountId}
-            >
+            <li className="space-y-1.5 px-5 py-3" key={account.accountId}>
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate font-medium text-sm">
                   {account.displayName}
@@ -1275,7 +1269,7 @@ export default function SquadBuilderAccountsPage() {
     []) as readonly OwnedAccount[];
 
   return (
-    <div className="w-full space-y-6">
+    <div className="mx-auto w-full max-w-6xl space-y-6">
       <div>
         <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
           Konta Margonem
@@ -1286,36 +1280,37 @@ export default function SquadBuilderAccountsPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
-        <ImportPanel
-          canSubmit={canSubmit}
-          confirmingId={confirmingId}
-          displayNames={displayNames}
-          isConfirming={confirmMutation.isPending}
-          isPreviewPending={previewMutation.isPending}
-          previewItems={previewItems}
-          profileLineCount={profileLines.length}
-          onClear={handleClear}
-          onConfirm={handleConfirm}
-          onDisplayNameChange={(pendingImportId, value) => {
-            setDisplayNames((current) => ({
-              ...current,
-              [pendingImportId]: value,
-            }));
-          }}
-          onSubmitPreview={handleSubmitPreview}
-          onUrlsChange={setUrlsText}
-          urlsText={urlsText}
-        />
-        <OwnedAccountsPanel
-          accounts={ownedAccounts}
-          isLoading={ownedAccountsQuery.isLoading}
-        />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <SharedAccountsPanel />
-        <InviteInboxPanel />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+        <div className="space-y-6">
+          <ImportPanel
+            canSubmit={canSubmit}
+            confirmingId={confirmingId}
+            displayNames={displayNames}
+            isConfirming={confirmMutation.isPending}
+            isPreviewPending={previewMutation.isPending}
+            previewItems={previewItems}
+            profileLineCount={profileLines.length}
+            onClear={handleClear}
+            onConfirm={handleConfirm}
+            onDisplayNameChange={(pendingImportId, value) => {
+              setDisplayNames((current) => ({
+                ...current,
+                [pendingImportId]: value,
+              }));
+            }}
+            onSubmitPreview={handleSubmitPreview}
+            onUrlsChange={setUrlsText}
+            urlsText={urlsText}
+          />
+          <OwnedAccountsPanel
+            accounts={ownedAccounts}
+            isLoading={ownedAccountsQuery.isLoading}
+          />
+        </div>
+        <div className="space-y-6">
+          <InviteInboxPanel />
+          <SharedAccountsPanel />
+        </div>
       </div>
     </div>
   );
