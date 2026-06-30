@@ -1,6 +1,6 @@
 # Step 03 — Effect Schema Boundary Migration
 
-Status: draft; starts after the first `createSquadGroup` reference slice proves the oRPC bridge and internal Effect conventions.
+Status: first `createSquadGroup` oRPC input/output boundary migrated; broader boundary migration remains incremental.
 
 ## Goal
 
@@ -23,13 +23,19 @@ Replace zod for the same `createSquadGroup` procedure immediately after these ar
 
 After that, migrate the `createSquadGroup` oRPC input/output schemas to Effect Schema before moving to the next squad-builder operation.
 
-## Compatibility to verify before implementation
+Implemented for the first slice:
 
-- Exact installed `@orpc/server` and `@orpc/openapi` support for Standard Schema inputs/outputs.
-- Exact installed Effect Schema Standard Schema adapter support and syntax for Effect v4.
-- Whether oRPC OpenAPI generation can consume the chosen Effect Schema/Standard Schema representation without losing useful docs.
-- Whether frontend `RouterClient<AppRouter>` and `@orpc/tanstack-query` type inference remains equivalent.
-- How Effect Schema parse errors should map to `ORPCError("BAD_REQUEST")` and frontend-safe messages.
+- `squadBuilder.createSquadGroup` now uses Effect Schema converted through `Schema.toStandardSchemaV1` for oRPC input and output validation.
+- The create command boundary rejects excess properties through Effect parse options.
+- API and web type checks verify the existing router client and TanStack Query-facing inference still compile after the schema swap.
+
+## Compatibility verification
+
+- Verified installed `@orpc/server@1.14.6` accepts Standard Schema inputs/outputs through the `createSquadGroup` procedure.
+- Verified installed `effect@4.0.0-beta.85` exposes `Schema.toStandardSchemaV1` for Effect Schema boundary adapters.
+- Verified frontend `RouterClient<AppRouter>` and `@orpc/tanstack-query` inference still compiles with `pnpm -F web check-types` after replacing the `createSquadGroup` zod schema.
+- Effect Schema parse failures are handled by oRPC's Standard Schema validation path before the handler; domain parse failures inside the Effect program still map through the existing typed `CreateSquadGroupError` to `ORPCError("BAD_REQUEST")`.
+- OpenAPI generation is not currently wired in the application; verify/customize an Effect Schema JSON Schema converter before relying on generated OpenAPI docs for migrated procedures.
 
 ## Guardrails
 

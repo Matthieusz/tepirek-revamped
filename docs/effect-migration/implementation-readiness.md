@@ -24,9 +24,9 @@ Status: draft; accepted as the go/no-go checklist before implementation starts.
 
 - [x] Verify Drizzle rc.4 / Effect beta compatibility in the actual package manager install.
 - [x] Verify exact `@effect/sql-pg` and `@effect/vitest` versions and peer compatibility.
-- [ ] Verify oRPC Standard Schema / Effect Schema adapter compatibility.
-- [ ] Verify oRPC OpenAPI generation compatibility with the chosen Effect Schema boundary representation.
-- [ ] Verify frontend `@orpc/tanstack-query` inference after replacing any oRPC zod schema.
+- [x] Verify oRPC Standard Schema / Effect Schema adapter compatibility for the `createSquadGroup` boundary.
+- [ ] Verify oRPC OpenAPI generation compatibility with the chosen Effect Schema boundary representation before relying on generated docs for migrated procedures.
+- [x] Verify frontend `@orpc/tanstack-query` inference after replacing the `createSquadGroup` oRPC zod schema.
 
 ### 4. First implementation task is unambiguous
 

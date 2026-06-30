@@ -1,6 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import type { Effect } from "effect/Effect";
 import type { ManagedRuntime } from "effect/ManagedRuntime";
+import * as Schema from "effect/Schema";
 import { z } from "zod";
 
 import { makeApiManagedRuntime } from "../effect-app";
@@ -117,6 +118,10 @@ import { verifiedProcedure } from "./procedures";
 import type { RouterContext } from "./procedures";
 
 const casesHandled = (x: never): never => x;
+
+const strictEffectBoundaryParseOptions = {
+  onExcessProperty: "error",
+} as const;
 
 interface PreviewProfileImportService {
   readonly preview: (
@@ -406,9 +411,23 @@ const listAccountAccessGrantsInputSchema = z.object({
   accountId: z.number().int().positive(),
 });
 
-const createSquadGroupInputSchema = z.object({
-  name: z.string(),
-});
+const createSquadGroupInputSchema = Schema.toStandardSchemaV1(
+  Schema.Struct({
+    name: Schema.String,
+  }),
+  { parseOptions: strictEffectBoundaryParseOptions }
+);
+
+const createSquadGroupOutputSchema = Schema.toStandardSchemaV1(
+  Schema.Struct({
+    characterCount: Schema.Number,
+    groupId: Schema.Number,
+    name: Schema.String,
+    squadCount: Schema.Number,
+    updatedAt: Schema.String,
+  }),
+  { parseOptions: strictEffectBoundaryParseOptions }
+);
 
 const squadGroupListFiltersInputSchema = z
   .object({
@@ -1429,6 +1448,7 @@ export const createSquadBuilderRouter = ({
     }),
   createSquadGroup: verifiedProcedure
     .input(createSquadGroupInputSchema)
+    .output(createSquadGroupOutputSchema)
     .handler(async ({ context, input }) => {
       const actorUserId = parseAppUserId(context.session.user.id);
 
