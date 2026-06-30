@@ -14,12 +14,6 @@ export const inactiveAccountAccessStatuses: readonly AccountAccessStatus[] = [
   "revoked",
 ];
 
-/** Statuses that grant the recipient character usage. */
-export const activeAccountAccessStatuses: readonly AccountAccessStatus[] = [
-  "pending",
-  "accepted",
-];
-
 /** Expected failure when a persisted status string is not a known status. */
 export interface InvalidAccountAccessStatus {
   readonly _tag: "InvalidAccountAccessStatus";
@@ -46,29 +40,6 @@ export const parseAccountAccessStatus = (
 
   return ok(value);
 };
-
-/** Legal transitions for account access rows. */
-export type AccountAccessTransition =
-  | {
-      readonly from: "pending";
-      readonly to: "accepted";
-      readonly actor: "invitedUser";
-    }
-  | {
-      readonly from: "pending";
-      readonly to: "declined";
-      readonly actor: "invitedUser";
-    }
-  | {
-      readonly from: "pending" | "accepted";
-      readonly to: "revoked";
-      readonly actor: "accountOwner";
-    }
-  | {
-      readonly from: "declined" | "revoked";
-      readonly to: "pending";
-      readonly actor: "accountOwner";
-    };
 
 /** Whether an access row may move from `from` to `to`. */
 export const canTransitionAccountAccess = (

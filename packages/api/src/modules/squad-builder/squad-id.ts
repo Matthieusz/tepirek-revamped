@@ -21,6 +21,3 @@ export const parseSquadId = (
   // SAFETY: isPositiveInteger established the SquadId invariant.
   return ok(input as SquadId);
 };
-
-/** Convert a squad id to its primitive representation. */
-export const squadIdToNumber = (id: SquadId): number => id;

@@ -6,6 +6,7 @@ import {
   Gavel,
   ListChecks,
   LogOut,
+  Swords,
   User,
   Users,
 } from "lucide-react";
@@ -72,6 +73,21 @@ const data = {
         },
       ],
       title: "Licytacje",
+      url: "#",
+    },
+    {
+      icon: Swords,
+      items: [
+        {
+          title: "Konta",
+          url: "/dashboard/squad-builder/accounts",
+        },
+        {
+          title: "Składy",
+          url: "/dashboard/squad-builder/squads",
+        },
+      ],
+      title: "Składy",
       url: "#",
     },
     {

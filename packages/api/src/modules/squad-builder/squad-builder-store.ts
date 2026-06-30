@@ -144,10 +144,6 @@ export interface SquadBuilderAccountLookup {
     input: FindProfileAccessStateInput
   ) => Promise<Result<ProfileAccessState, SquadBuilderPersistenceUnavailable>>;
 }
-
-/** Firecrawl request status recorded in the monthly request ledger. */
-export type FirecrawlRequestStatus = "reserved" | "succeeded" | "failed";
-
 /** Current state of Firecrawl monthly budget usage. */
 export interface FirecrawlBudgetState {
   readonly yearMonth: FirecrawlYearMonth;
