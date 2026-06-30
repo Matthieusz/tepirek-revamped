@@ -1,3 +1,5 @@
+import * as Schema from "effect/Schema";
+
 import { err, ok } from "./result";
 import type { Result } from "./result";
 
@@ -8,10 +10,12 @@ export type SquadGroupName = string & { readonly __brand: "SquadGroupName" };
 export type SquadName = string & { readonly __brand: "SquadName" };
 
 /** Expected failure when a squad group name is invalid. */
-export interface InvalidSquadGroupName {
-  readonly _tag: "InvalidSquadGroupName";
-  readonly message: string;
-}
+export class InvalidSquadGroupName extends Schema.TaggedErrorClass<InvalidSquadGroupName>()(
+  "InvalidSquadGroupName",
+  {
+    message: Schema.String,
+  }
+) {}
 
 /** Expected failure when a squad name is invalid. */
 export interface InvalidSquadName {
@@ -33,17 +37,19 @@ export const parseSquadGroupName = (
   const name = squadBuilderNamingPolicy.trim ? input.trim() : input;
 
   if (name.length === 0) {
-    return err({
-      _tag: "InvalidSquadGroupName",
-      message: "Nazwa grupy składów jest wymagana",
-    });
+    return err(
+      new InvalidSquadGroupName({
+        message: "Nazwa grupy składów jest wymagana",
+      })
+    );
   }
 
   if (name.length > squadBuilderNamingPolicy.squadGroupNameMaxLength) {
-    return err({
-      _tag: "InvalidSquadGroupName",
-      message: `Nazwa grupy składów może mieć maksymalnie ${squadBuilderNamingPolicy.squadGroupNameMaxLength} znaków`,
-    });
+    return err(
+      new InvalidSquadGroupName({
+        message: `Nazwa grupy składów może mieć maksymalnie ${squadBuilderNamingPolicy.squadGroupNameMaxLength} znaków`,
+      })
+    );
   }
 
   // SAFETY: non-empty trimmed string within max length established the invariant.

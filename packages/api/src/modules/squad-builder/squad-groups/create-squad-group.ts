@@ -1,14 +1,12 @@
+import * as Effect from "effect/Effect";
+
 import type { AppUserId } from "../app-user-id";
-import { err, isError } from "../result";
-import type { Result } from "../result";
+import { isError } from "../result";
 import { parseSquadGroupName } from "../squad-name";
 import type { InvalidSquadGroupName } from "../squad-name";
-import type {
-  CreateSquadGroupStoreInput,
-  SquadBuilderPersistenceUnavailable,
-  SquadGroupStore,
-  SquadGroupSummary,
-} from "./squad-group-store";
+import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
+import { EffectSquadGroupStore } from "./squad-group-store";
+import type { SquadGroupSummary } from "./squad-group-store";
 
 /** Input for creating an empty squad group. */
 export interface CreateSquadGroupInput {
@@ -19,31 +17,33 @@ export interface CreateSquadGroupInput {
 /** Expected failures returned by squad group creation. */
 export type CreateSquadGroupError =
   | InvalidSquadGroupName
-  | SquadBuilderPersistenceUnavailable;
+  | EffectSquadBuilderPersistenceUnavailable;
 
 /** Service module for creating personal squad groups. */
 export class CreateSquadGroup {
-  private readonly store: Pick<SquadGroupStore, "createSquadGroup">;
-
-  constructor(store: Pick<SquadGroupStore, "createSquadGroup">) {
-    this.store = store;
-  }
+  private readonly serviceName = "CreateSquadGroup";
 
   /** Create an empty private squad group owned by the actor. */
-  create(
+  readonly create = (
     input: CreateSquadGroupInput
-  ): Promise<Result<SquadGroupSummary, CreateSquadGroupError>> {
+  ): Effect.Effect<
+    SquadGroupSummary,
+    CreateSquadGroupError,
+    EffectSquadGroupStore
+  > => {
+    void this.serviceName;
+
     const name = parseSquadGroupName(input.name);
 
     if (isError(name)) {
-      return Promise.resolve(err(name.error));
+      return Effect.fail(name.error);
     }
 
-    const storeInput: CreateSquadGroupStoreInput = {
-      actorUserId: input.actorUserId,
-      name: name.value,
-    };
-
-    return this.store.createSquadGroup(storeInput);
-  }
+    return EffectSquadGroupStore.use((store) =>
+      store.createSquadGroup({
+        actorUserId: input.actorUserId,
+        name: name.value,
+      })
+    );
+  };
 }
