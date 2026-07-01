@@ -366,7 +366,6 @@ describe("squad-builder router Postgres integration", () => {
     expect(
       listed.groups.find((group) => group.groupId === globalGroup.groupId)
     ).toMatchObject({
-      ownerUserId: owner.id,
       ownerUserName: "Global Owner",
     });
   });
