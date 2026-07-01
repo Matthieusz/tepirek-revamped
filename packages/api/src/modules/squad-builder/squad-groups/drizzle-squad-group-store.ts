@@ -7,6 +7,8 @@ import {
   margonemAccountAccess,
   margonemAccountImportPreview,
   margonemAccountImportPreviewCharacter,
+  margonemAccountRefetchPreview,
+  margonemAccountRefetchPreviewCharacter,
   margonemCharacter,
   squad,
   squadCharacter,
@@ -39,7 +41,10 @@ import {
 import { appUserIdToString, parseAppUserId } from "../app-user-id";
 import type { AppUserId } from "../app-user-id";
 import { firecrawlYearMonthToString } from "../firecrawl-year-month";
-import { parseMargonemAccountId } from "../margonem-account-id";
+import {
+  margonemAccountIdToNumber,
+  parseMargonemAccountId,
+} from "../margonem-account-id";
 import type { MargonemAccountId } from "../margonem-account-id";
 import {
   parseMargonemProfession,
@@ -55,6 +60,7 @@ import {
 } from "../margonem-profile-id";
 import { toMargonemProfileUrl } from "../margonem-profile-url";
 import { pendingImportIdToNumber } from "../pending-margonem-account-import-id";
+import { parsePendingMargonemAccountRefetchId } from "../pending-margonem-account-refetch-id";
 import { isError } from "../result";
 import type { SquadGroupAccess } from "../squad-group-access";
 import { parseSquadGroupId, squadGroupIdToNumber } from "../squad-group-id";
@@ -73,6 +79,7 @@ import type {
   AvailableSquadCharacter,
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
+  CreatePendingMargonemAccountRefetchInput,
   CreateSquadGroupStoreInput,
   DuplicateMargonemAccountError,
   FindPendingMargonemAccountImportInput,
@@ -89,7 +96,9 @@ import type {
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
   PendingMargonemAccountImportNotFound,
+  PendingMargonemAccountRefetch,
   ProfileAccessState,
+  RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
   SetSquadGroupVisibilityStoreInput,
@@ -107,6 +116,7 @@ type EffectSquadGroupPersistenceOperation =
   | "createSquadGroup"
   | "findPendingImportForConfirmation"
   | "findProfileAccessState"
+  | "getAccountForRefetch"
   | "getSquadGroupDetail"
   | "listAvailableCharactersForOwner"
   | "listGlobalSquadGroups"
@@ -114,6 +124,7 @@ type EffectSquadGroupPersistenceOperation =
   | "listMySquadGroups"
   | "markRequestFailed"
   | "markRequestSucceeded"
+  | "createPendingRefetch"
   | "reserveRequest"
   | "setSquadGroupVisibility";
 
@@ -934,6 +945,236 @@ const listOwnedAccountsWithDatabase =
       return accounts;
     });
 
+const getAccountForRefetchWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    accountId,
+    actorUserId,
+  }: {
+    readonly actorUserId: AppUserId;
+    readonly accountId: MargonemAccountId;
+  }): Effect.Effect<
+    RefetchableMargonemAccount,
+    | { readonly _tag: "MargonemAccountNotFound" }
+    | { readonly _tag: "ActorDoesNotOwnMargonemAccount" }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* getAccountForRefetchEffect() {
+      const operation = "getAccountForRefetch" as const;
+      const accountIdNumber = margonemAccountIdToNumber(accountId);
+      const accountSelect = database
+        .select({
+          displayName: margonemAccount.displayName,
+          ownerUserId: margonemAccount.ownerUserId,
+          profileId: margonemAccount.profileId,
+        })
+        .from(margonemAccount)
+        .where(eq(margonemAccount.id, accountIdNumber))
+        .limit(1);
+      const accountSelectEffect = accountSelect as Effect.Effect<
+        readonly {
+          readonly displayName: string;
+          readonly ownerUserId: string;
+          readonly profileId: number;
+        }[],
+        unknown,
+        never
+      >;
+      const accountRows = yield* accountSelectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const [account] = accountRows;
+
+      if (account === undefined) {
+        return yield* Effect.fail({ _tag: "MargonemAccountNotFound" as const });
+      }
+
+      if (account.ownerUserId !== appUserIdToString(actorUserId)) {
+        return yield* Effect.fail({
+          _tag: "ActorDoesNotOwnMargonemAccount" as const,
+        });
+      }
+
+      const characterSelect = database
+        .select({
+          affectedSquadCount: sql<number>`count(${squadCharacter.id})::int`,
+          avatarUrl: margonemCharacter.avatarUrl,
+          characterId: margonemCharacter.characterId,
+          id: margonemCharacter.id,
+          level: margonemCharacter.level,
+          name: margonemCharacter.name,
+          profession: margonemCharacter.profession,
+          world: margonemCharacter.world,
+        })
+        .from(margonemCharacter)
+        .leftJoin(
+          squadCharacter,
+          eq(squadCharacter.characterId, margonemCharacter.id)
+        )
+        .where(eq(margonemCharacter.accountId, accountIdNumber))
+        .groupBy(margonemCharacter.id);
+      const characterSelectEffect = characterSelect as Effect.Effect<
+        readonly {
+          readonly affectedSquadCount: number | null;
+          readonly avatarUrl: string | null;
+          readonly characterId: number;
+          readonly id: number;
+          readonly level: number;
+          readonly name: string;
+          readonly profession: string;
+          readonly world: string;
+        }[],
+        unknown,
+        never
+      >;
+      const characterRows = yield* characterSelectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const displayName = parseAccountDisplayName(account.displayName);
+
+      if (isError(displayName)) {
+        return yield* failPersistence(operation, displayName.error);
+      }
+
+      const profileId = parseMargonemProfileId(account.profileId);
+
+      if (isError(profileId)) {
+        return yield* failPersistence(operation, profileId.error);
+      }
+
+      const currentCharacters: RefetchableMargonemAccount["currentCharacters"][number][] =
+        [];
+
+      for (const row of characterRows) {
+        const margonemCharacterId = parseMargonemCharacterId(row.characterId);
+
+        if (isError(margonemCharacterId)) {
+          return yield* failPersistence(operation, margonemCharacterId.error);
+        }
+
+        const level = parsePositiveLevel(row.level);
+
+        if (isError(level)) {
+          return yield* failPersistence(operation, level.error);
+        }
+
+        const profession = parseMargonemProfession(row.profession);
+
+        if (isError(profession)) {
+          return yield* failPersistence(operation, profession.error);
+        }
+
+        const world = parseMargonemWorld(row.world);
+
+        if (isError(world)) {
+          return yield* failPersistence(operation, world.error);
+        }
+
+        currentCharacters.push({
+          affectedSquadCount: row.affectedSquadCount ?? 0,
+          avatarUrl: row.avatarUrl,
+          databaseCharacterId: row.id,
+          level: level.value,
+          margonemCharacterId: margonemCharacterId.value,
+          name: row.name,
+          profession: profession.value,
+          world: world.value,
+        });
+      }
+
+      return {
+        accountId,
+        currentCharacters,
+        displayName: displayName.value,
+        profileId: profileId.value,
+      };
+    });
+
+const createPendingRefetchWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    accountId,
+    actorUserId,
+    diff,
+    expiresAt,
+    fetchedAt,
+    firecrawlCreditsUsed,
+    latestCharacters,
+    profileId,
+  }: CreatePendingMargonemAccountRefetchInput): Effect.Effect<
+    PendingMargonemAccountRefetch,
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* createPendingRefetchEffect() {
+      const operation = "createPendingRefetch" as const;
+      const transaction = database.transaction((tx) =>
+        Effect.gen(function* createPendingRefetchTransaction() {
+          const insert = tx
+            .insert(margonemAccountRefetchPreview)
+            .values({
+              accountId: margonemAccountIdToNumber(accountId),
+              actorUserId: appUserIdToString(actorUserId),
+              diffJson: JSON.stringify(diff),
+              expiresAt,
+              fetchedAt,
+              firecrawlCreditsUsed,
+              profileId: profileIdToNumber(profileId),
+            })
+            .returning({ id: margonemAccountRefetchPreview.id });
+          const insertedRows = yield* insert as Effect.Effect<
+            readonly { readonly id: number }[],
+            unknown,
+            never
+          >;
+          const [preview] = insertedRows;
+
+          if (preview === undefined) {
+            return yield* failPersistence(
+              operation,
+              new Error("Failed to create pending refetch preview")
+            );
+          }
+
+          if (latestCharacters.length > 0) {
+            const characterInsert = tx
+              .insert(margonemAccountRefetchPreviewCharacter)
+              .values(
+                latestCharacters.map((character) => ({
+                  avatarUrl: character.avatarUrl,
+                  characterId: characterIdToNumber(character.characterId),
+                  level: levelToNumber(character.level),
+                  name: character.name,
+                  profession: character.profession,
+                  refetchPreviewId: preview.id,
+                  world: character.world,
+                }))
+              );
+            yield* characterInsert as Effect.Effect<unknown, unknown, never>;
+          }
+
+          const pendingRefetchId = parsePendingMargonemAccountRefetchId(
+            preview.id
+          );
+
+          if (isError(pendingRefetchId)) {
+            return yield* failPersistence(operation, pendingRefetchId.error);
+          }
+
+          return { id: pendingRefetchId.value };
+        })
+      );
+
+      return yield* (
+        transaction as Effect.Effect<
+          PendingMargonemAccountRefetch,
+          unknown,
+          never
+        >
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+    });
+
 const listAvailableCharactersForOwnerWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -1590,10 +1831,12 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       createOwnedAccountFromPendingImport:
         createOwnedAccountFromPendingImportWithDatabase(database),
       createPendingImport: createPendingImportWithDatabase(database),
+      createPendingRefetch: createPendingRefetchWithDatabase(database),
       createSquadGroup: createSquadGroupWithDatabase(database),
       findPendingImportForConfirmation:
         findPendingImportForConfirmationWithDatabase(database),
       findProfileAccessState: findProfileAccessStateWithDatabase(database),
+      getAccountForRefetch: getAccountForRefetchWithDatabase(database),
       getSquadGroupDetail: getSquadGroupDetailWithDatabase(database),
       listAvailableCharactersForOwner:
         listAvailableCharactersForOwnerWithDatabase(database),

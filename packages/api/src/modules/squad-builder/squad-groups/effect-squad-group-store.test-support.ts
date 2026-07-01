@@ -14,10 +14,12 @@ export const makeEffectSquadGroupStoreTestService = (
     createOwnedAccountFromPendingImport: () =>
       unhandledStoreCall("createOwnedAccountFromPendingImport"),
     createPendingImport: () => unhandledStoreCall("createPendingImport"),
+    createPendingRefetch: () => unhandledStoreCall("createPendingRefetch"),
     createSquadGroup: () => unhandledStoreCall("createSquadGroup"),
     findPendingImportForConfirmation: () =>
       unhandledStoreCall("findPendingImportForConfirmation"),
     findProfileAccessState: () => unhandledStoreCall("findProfileAccessState"),
+    getAccountForRefetch: () => unhandledStoreCall("getAccountForRefetch"),
     getSquadGroupDetail: () => unhandledStoreCall("getSquadGroupDetail"),
     listAvailableCharactersForOwner: () =>
       unhandledStoreCall("listAvailableCharactersForOwner"),

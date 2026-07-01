@@ -3,6 +3,8 @@ import {
   margonemAccount,
   margonemAccountImportPreview,
   margonemAccountImportPreviewCharacter,
+  margonemAccountRefetchPreview,
+  margonemAccountRefetchPreviewCharacter,
   margonemCharacter,
   squadGroup,
 } from "@tepirek-revamped/db/schema/squad-builder";
@@ -22,6 +24,7 @@ import { systemClock } from "../account-import/preview-margonem-profile-import";
 import { parseAppUserId } from "../app-user-id";
 import { parseFirecrawlCreditCount } from "../firecrawl-config";
 import { firecrawlYearMonthFromDate } from "../firecrawl-year-month";
+import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff";
 import { parseMargonemProfileId } from "../margonem-profile-id";
 import { isOk } from "../result";
 import { CreateSquadGroup } from "./create-squad-group";
@@ -331,6 +334,103 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       profileId: 8_100_150,
     });
     expect(characters).toEqual([{ name: "pendingchar" }]);
+  });
+
+  it("loads accounts and creates pending refetch previews through the Effect store", async () => {
+    const member = await createVerifiedMember({ id: "effect-refetch-owner" });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Refetch account",
+        ownerUserId: member.id,
+        profileId: 8_100_160,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    await testDb.insert(margonemCharacter).values({
+      accountId: account.id,
+      avatarUrl: null,
+      characterId: 1_296_630,
+      level: 300,
+      name: "oldrefetch",
+      profession: "tracker",
+      world: "jaruna",
+    });
+
+    const loaded = await runtime.runPromise(
+      EffectSquadGroupStore.use((store) =>
+        store.getAccountForRefetch({
+          accountId: account.id as never,
+          actorUserId: parseTestUserId(member.id),
+        })
+      )
+    );
+
+    const fetchedAt = new Date("2026-06-29T12:00:00.000Z");
+    const latestCharacters = [
+      {
+        avatarUrl: null,
+        characterId: 1_296_630 as never,
+        level: 301 as never,
+        name: "newrefetch",
+        profession: "tracker" as const,
+        world: "jaruna" as const,
+      },
+    ];
+    const pending = await runtime.runPromise(
+      EffectSquadGroupStore.use((store) =>
+        store.createPendingRefetch({
+          accountId: loaded.accountId,
+          actorUserId: parseTestUserId(member.id),
+          diff: computeMargonemAccountRefetchDiff({
+            accountId: loaded.accountId,
+            currentCharacters: loaded.currentCharacters,
+            fetchedAt,
+            latestCharacters,
+            profileId: loaded.profileId,
+          }),
+          expiresAt: new Date("2026-06-29T12:30:00.000Z"),
+          fetchedAt,
+          firecrawlCreditsUsed: parseTestCredits(1),
+          latestCharacters,
+          profileId: loaded.profileId,
+        })
+      )
+    );
+
+    const [stored] = await testDb
+      .select({
+        accountId: margonemAccountRefetchPreview.accountId,
+        actorUserId: margonemAccountRefetchPreview.actorUserId,
+        profileId: margonemAccountRefetchPreview.profileId,
+      })
+      .from(margonemAccountRefetchPreview)
+      .where(eq(margonemAccountRefetchPreview.id, pending.id))
+      .limit(1);
+    const characters = await testDb
+      .select({ name: margonemAccountRefetchPreviewCharacter.name })
+      .from(margonemAccountRefetchPreviewCharacter)
+      .where(
+        eq(margonemAccountRefetchPreviewCharacter.refetchPreviewId, pending.id)
+      );
+
+    expect(loaded).toMatchObject({
+      accountId: account.id,
+      currentCharacters: [{ name: "oldrefetch" }],
+      displayName: "Refetch account",
+      profileId: 8_100_160,
+    });
+    expect(stored).toEqual({
+      accountId: account.id,
+      actorUserId: member.id,
+      profileId: 8_100_160,
+    });
+    expect(characters).toEqual([{ name: "newrefetch" }]);
   });
 
   it("confirms pending account imports through the Effect store", async () => {

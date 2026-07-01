@@ -1,13 +1,17 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
+import type { AppUserId } from "../app-user-id";
+import type { MargonemAccountId } from "../margonem-account-id";
 import type {
   ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
+  ActorDoesNotOwnMargonemAccount,
   ActorDoesNotOwnSquadGroup,
   AuthorizeSquadGroupViewerInput,
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
+  CreatePendingMargonemAccountRefetchInput,
   CreateSquadGroupStoreInput,
   DuplicateMargonemAccountError,
   FindPendingMargonemAccountImportInput,
@@ -20,13 +24,16 @@ import type {
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
+  MargonemAccountNotFound,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
   OwnedMargonemAccountSummary,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
   PendingMargonemAccountImportNotFound,
+  PendingMargonemAccountRefetch,
   ProfileAccessState,
+  RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
   SaveSharedSquadGroupCharactersStoreInput,
@@ -150,6 +157,23 @@ export interface EffectSquadGroupStoreShape {
   readonly markRequestFailed: (
     input: MarkFirecrawlRequestFailedInput
   ) => Effect<void, EffectSquadBuilderPersistenceUnavailable, never>;
+  readonly getAccountForRefetch: (input: {
+    readonly actorUserId: AppUserId;
+    readonly accountId: MargonemAccountId;
+  }) => Effect<
+    RefetchableMargonemAccount,
+    | MargonemAccountNotFound
+    | ActorDoesNotOwnMargonemAccount
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly createPendingRefetch: (
+    input: CreatePendingMargonemAccountRefetchInput
+  ) => Effect<
+    PendingMargonemAccountRefetch,
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
 }
 
 export class EffectSquadGroupStore extends Context.Service<
@@ -165,11 +189,13 @@ export type SquadGroupsPersistenceStore = SquadGroupStore &
 export type {
   ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
+  ActorDoesNotOwnMargonemAccount,
   ActorDoesNotOwnSquadGroup,
   AuthorizeSquadGroupViewerInput,
   AvailableSquadCharacter,
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
+  CreatePendingMargonemAccountRefetchInput,
   CreateSquadGroupStoreInput,
   DuplicateMargonemAccountError,
   FindPendingMargonemAccountImportInput,
@@ -182,13 +208,16 @@ export type {
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
+  MargonemAccountNotFound,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
   OwnedMargonemAccountSummary,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
   PendingMargonemAccountImportNotFound,
+  PendingMargonemAccountRefetch,
   ProfileAccessState,
+  RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
   RespondToSquadGroupInviteStoreInput,

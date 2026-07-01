@@ -440,6 +440,45 @@ describe("squad-builder router Postgres integration", () => {
     });
   });
 
+  it("previews account refetch through the Effect oRPC bridge", async () => {
+    const member = await createVerifiedMember({ id: "refetch-effect-member" });
+    const client = createSquadBuilderClient(member, {
+      effectPreviewAccountRefetchService: {
+        preview: (input) =>
+          Effect.succeed({
+            accountId: input.accountId,
+            diff: {
+              accountId: input.accountId,
+              added: [],
+              changed: [],
+              fetchedAt: new Date("2026-06-29T12:00:00.000Z"),
+              profileId: parseTestProfileId(),
+              removed: [],
+              unchangedCount: 1,
+            },
+            fetchedAt: new Date("2026-06-29T12:00:00.000Z"),
+            firecrawlCreditsUsed: parseTestCredits(),
+            generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
+            profileId: parseTestProfileId(),
+            refetchPreviewId: 456 as never,
+          }),
+      },
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+
+    const result = await client.squadBuilder.previewAccountRefetch({
+      accountId: 123,
+    });
+
+    expect(result).toMatchObject({
+      accountId: 123,
+      diff: { unchangedCount: 1 },
+      generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
+      profileId: 7_298_897,
+      refetchPreviewId: 456,
+    });
+  });
+
   it("returns per-line owned account import preview results for a verified user", async () => {
     const member = await createVerifiedMember({ id: "preview-member" });
     const client = createSquadBuilderClient(member, {

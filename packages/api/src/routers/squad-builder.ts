@@ -35,6 +35,7 @@ import type {
   ApplyAccountRefetchError,
   ApplyAccountRefetchOutput,
 } from "../modules/squad-builder/account-refetch/apply-account-refetch";
+import { EffectPreviewAccountRefetch } from "../modules/squad-builder/account-refetch/effect-preview-account-refetch";
 import { PreviewAccountRefetch } from "../modules/squad-builder/account-refetch/preview-account-refetch";
 import type {
   PreviewAccountRefetchError,
@@ -197,6 +198,17 @@ interface PreviewAccountRefetchService {
     input: Parameters<PreviewAccountRefetch["preview"]>[0],
     options?: { readonly signal?: AbortSignal }
   ) => Promise<Result<PreviewAccountRefetchOutput, PreviewAccountRefetchError>>;
+}
+
+interface EffectPreviewAccountRefetchService {
+  readonly preview: (
+    input: Parameters<EffectPreviewAccountRefetch["preview"]>[0],
+    options?: { readonly signal?: AbortSignal }
+  ) => Effect<
+    PreviewAccountRefetchOutput,
+    PreviewAccountRefetchError,
+    EffectSquadGroupStore
+  >;
 }
 
 interface ApplyAccountRefetchService {
@@ -368,6 +380,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly confirmOwnedAccountImportService?: ConfirmOwnedAccountImportService;
   readonly effectConfirmOwnedAccountImportService?: EffectConfirmOwnedAccountImportService;
   readonly previewAccountRefetchService?: PreviewAccountRefetchService;
+  readonly effectPreviewAccountRefetchService?: EffectPreviewAccountRefetchService;
   readonly applyAccountRefetchService?: ApplyAccountRefetchService;
   readonly listOwnedAccountsService?: ListOwnedAccountsService;
   readonly searchAccountInviteTargetsService?: SearchAccountInviteTargetsService;
@@ -1388,6 +1401,25 @@ const createDefaultPreviewOwnedAccountImportsEffect = (): Result<
   );
 };
 
+const createDefaultPreviewAccountRefetchEffect = (): Result<
+  EffectPreviewAccountRefetch,
+  SquadBuilderRouterError
+> => {
+  const config = parseFirecrawlConfig(process.env);
+
+  if (isError(config)) {
+    return err(config.error);
+  }
+
+  return ok(
+    new EffectPreviewAccountRefetch(
+      new FirecrawlSdkClient(config.value.apiKey),
+      systemClock,
+      config.value
+    )
+  );
+};
+
 /** Create the squad-builder ORPC router. */
 export const createSquadBuilderRouter = ({
   previewService,
@@ -1397,6 +1429,7 @@ export const createSquadBuilderRouter = ({
   confirmOwnedAccountImportService,
   effectConfirmOwnedAccountImportService,
   previewAccountRefetchService,
+  effectPreviewAccountRefetchService,
   applyAccountRefetchService,
   listOwnedAccountsService,
   searchAccountInviteTargetsService,
@@ -2020,29 +2053,56 @@ export const createSquadBuilderRouter = ({
         });
       }
 
-      const services =
-        previewAccountRefetchService === undefined
-          ? defaultServices
-          : ok({
-              previewRefetch: previewAccountRefetchService,
-            });
+      if (previewAccountRefetchService !== undefined) {
+        const result = await previewAccountRefetchService.preview({
+          accountId: accountId.value,
+          actorUserId: actorUserId.value,
+        });
 
-      if (isError(services)) {
-        logSquadBuilderError(context, "previewAccountRefetch", services.error);
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(context, "previewAccountRefetch", result.error);
+          throw toAccountRefetchOrpcError(result.error);
+        }
+
+        return toPreviewAccountRefetchResponse(result.value);
       }
 
-      const result = await services.value.previewRefetch.preview({
-        accountId: accountId.value,
-        actorUserId: actorUserId.value,
-      });
+      const service =
+        effectPreviewAccountRefetchService === undefined
+          ? createDefaultPreviewAccountRefetchEffect()
+          : ok(effectPreviewAccountRefetchService);
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "previewAccountRefetch", result.error);
-        throw toAccountRefetchOrpcError(result.error);
+      if (isError(service)) {
+        logSquadBuilderError(context, "previewAccountRefetch", service.error);
+        throw toOrpcError(service.error);
       }
 
-      return toPreviewAccountRefetchResponse(result.value);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for previewAccountRefetch"
+          ),
+          operation: "previewAccountRefetch",
+        };
+        logSquadBuilderError(context, "previewAccountRefetch", error);
+        throw toAccountRefetchOrpcError(error);
+      }
+
+      const preview = await runOrpcEffect(
+        effectRuntime,
+        service.value.preview({
+          accountId: accountId.value,
+          actorUserId: actorUserId.value,
+        }),
+        (error) => {
+          const mapped = error as PreviewAccountRefetchError;
+          logSquadBuilderError(context, "previewAccountRefetch", mapped);
+          return toAccountRefetchOrpcError(mapped);
+        }
+      );
+
+      return toPreviewAccountRefetchResponse(preview);
     }),
   previewOwnedAccountImports: verifiedProcedure
     .input(previewOwnedAccountImportsInputSchema)
