@@ -57,7 +57,7 @@ const buildStoreBackedServices = () => {
   const store = new DrizzleSquadBuilderStore();
   return {
     confirm: new ConfirmOwnedAccountImport(store, store, systemClock),
-    list: new ListOwnedMargonemAccounts(store),
+    list: new ListOwnedMargonemAccounts(),
     respondInvite: new RespondToAccountAccessInvite(store, systemClock),
     revokeAccess: new RevokeAccountAccess(store, systemClock),
     searchInviteTargets: new SearchAccountInviteTargets(store),
@@ -407,6 +407,7 @@ describe("squad-builder router Postgres integration", () => {
     const { confirm, list, store } = buildStoreBackedServices();
     const client = createSquadBuilderClient(member, {
       confirmOwnedAccountImportService: confirm,
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
       listOwnedAccountsService: list,
     });
 
@@ -504,10 +505,12 @@ describe("squad-builder router Postgres integration", () => {
     const { confirm, list, store } = buildStoreBackedServices();
     const firstClient = createSquadBuilderClient(first, {
       confirmOwnedAccountImportService: confirm,
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
       listOwnedAccountsService: list,
     });
     const secondClient = createSquadBuilderClient(second, {
       confirmOwnedAccountImportService: confirm,
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
       listOwnedAccountsService: list,
     });
 

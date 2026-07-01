@@ -12,6 +12,7 @@ import {
   defaultTestDatabaseUrl,
   testDb,
 } from "../../../test/integration/database";
+import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts";
 import { systemClock } from "../account-import/preview-margonem-profile-import";
 import { parseAppUserId } from "../app-user-id";
 import { isOk } from "../result";
@@ -191,6 +192,56 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       name: "informati",
       profession: "tracker",
       world: "jaruna",
+    });
+  });
+
+  it("lists only Margonem accounts owned by the actor", async () => {
+    const member = await createVerifiedMember({ id: "effect-owned-owner" });
+    const other = await createVerifiedMember({ id: "effect-owned-other" });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const service = new ListOwnedMargonemAccounts();
+
+    const [ownedAccount] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Owned Effect account",
+        lastFetchedAt: new Date("2026-06-30T12:00:00.000Z"),
+        ownerUserId: member.id,
+        profileId: 8_100_101,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (ownedAccount === undefined) {
+      throw new Error("Failed to seed owned account");
+    }
+
+    await testDb.insert(margonemAccount).values({
+      displayName: "Other Effect account",
+      ownerUserId: other.id,
+      profileId: 8_100_102,
+    });
+
+    await testDb.insert(margonemCharacter).values({
+      accountId: ownedAccount.id,
+      avatarUrl: null,
+      characterId: 1_296_627,
+      level: 300,
+      name: "ownedchar",
+      profession: "tracker",
+      world: "jaruna",
+    });
+
+    const accounts = await runtime.runPromise(
+      service.list({ actorUserId: parseTestUserId(member.id) })
+    );
+
+    expect(accounts).toHaveLength(1);
+    expect(accounts[0]).toMatchObject({
+      accountId: ownedAccount.id,
+      characterCount: 1,
+      displayName: "Owned Effect account",
+      generatedProfileUrl: "https://www.margonem.pl/profile/view,8100101",
+      profileId: 8_100_101,
     });
   });
 

@@ -10,6 +10,7 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
       "listAvailableCharactersForOwner",
       "listGlobalSquadGroups",
       "listMySquadGroups",
+      "listOwnedAccounts",
       "setSquadGroupVisibility",
     ]),
     provider: Schema.Literal("postgres"),

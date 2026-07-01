@@ -1,8 +1,8 @@
+import type { Effect } from "effect/Effect";
+
 import type { AppUserId } from "../app-user-id";
-import { err, isError, ok } from "../result";
-import type { Result } from "../result";
+import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
 import type {
-  OwnedMargonemAccountReader,
   OwnedMargonemAccountSummary,
   SquadBuilderPersistenceUnavailable,
 } from "./account-import-store";
@@ -17,29 +17,22 @@ export type ListOwnedMargonemAccountsError = SquadBuilderPersistenceUnavailable;
 
 /** Service module that lists Margonem accounts owned by the actor. */
 export class ListOwnedMargonemAccounts {
-  private readonly accounts: OwnedMargonemAccountReader;
-
-  constructor(accounts: OwnedMargonemAccountReader) {
-    this.accounts = accounts;
-  }
+  private readonly serviceName = "ListOwnedMargonemAccounts";
 
   /** List Margonem accounts owned by the actor. */
-  async list(
+  list(
     input: ListOwnedMargonemAccountsInput
-  ): Promise<
-    Result<
-      readonly OwnedMargonemAccountSummary[],
-      ListOwnedMargonemAccountsError
-    >
+  ): Effect<
+    readonly OwnedMargonemAccountSummary[],
+    ListOwnedMargonemAccountsError,
+    EffectSquadGroupStore
   > {
-    const result = await this.accounts.listOwnedAccounts({
-      actorUserId: input.actorUserId,
-    });
+    void this.serviceName;
 
-    if (isError(result)) {
-      return err(result.error);
-    }
-
-    return ok(result.value);
+    return EffectSquadGroupStore.use((store) =>
+      store.listOwnedAccounts({
+        actorUserId: input.actorUserId,
+      })
+    );
   }
 }

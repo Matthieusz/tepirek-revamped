@@ -13,6 +13,8 @@ import type {
   ListAvailableCharactersForOwnerInput,
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
+  ListOwnedMargonemAccountsInput,
+  OwnedMargonemAccountSummary,
   SaveSharedSquadGroupCharactersStoreInput,
   SaveSquadGroupSnapshotStoreInput,
   SearchSquadEditorInviteTargetsStoreInput,
@@ -85,6 +87,13 @@ export interface EffectSquadGroupStoreShape {
     | EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly listOwnedAccounts: (
+    input: ListOwnedMargonemAccountsInput
+  ) => Effect<
+    readonly OwnedMargonemAccountSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
 }
 
 export class EffectSquadGroupStore extends Context.Service<
@@ -110,6 +119,8 @@ export type {
   ListAvailableCharactersForOwnerInput,
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
+  ListOwnedMargonemAccountsInput,
+  OwnedMargonemAccountSummary,
   RespondToSquadGroupInviteStoreInput,
   RevokeSquadGroupEditorStoreInput,
   SaveSharedSquadGroupCharactersStoreInput,

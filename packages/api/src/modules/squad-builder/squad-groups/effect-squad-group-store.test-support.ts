@@ -17,6 +17,7 @@ export const makeEffectSquadGroupStoreTestService = (
       unhandledStoreCall("listAvailableCharactersForOwner"),
     listGlobalSquadGroups: () => unhandledStoreCall("listGlobalSquadGroups"),
     listMySquadGroups: () => unhandledStoreCall("listMySquadGroups"),
+    listOwnedAccounts: () => unhandledStoreCall("listOwnedAccounts"),
     setSquadGroupVisibility: () =>
       unhandledStoreCall("setSquadGroupVisibility"),
     ...overrides,

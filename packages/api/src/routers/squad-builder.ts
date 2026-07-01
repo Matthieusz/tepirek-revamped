@@ -172,11 +172,10 @@ interface ApplyAccountRefetchService {
 interface ListOwnedAccountsService {
   readonly list: (
     input: Parameters<ListOwnedMargonemAccounts["list"]>[0]
-  ) => Promise<
-    Result<
-      readonly OwnedMargonemAccountSummary[],
-      ListOwnedMargonemAccountsError
-    >
+  ) => Effect<
+    readonly OwnedMargonemAccountSummary[],
+    ListOwnedMargonemAccountsError,
+    EffectSquadGroupStore
   >;
 }
 
@@ -552,7 +551,7 @@ const createDefaultSquadBuilderServices = (): Result<
   return ok({
     applyRefetch: new ApplyAccountRefetch(store, store, store, systemClock),
     confirm: new ConfirmOwnedAccountImport(store, store, systemClock),
-    list: new ListOwnedMargonemAccounts(store),
+    list: new ListOwnedMargonemAccounts(),
     preview: singlePreview,
     previewOwnedImports: new PreviewOwnedAccountImports(
       singlePreview,
@@ -1312,6 +1311,7 @@ const listGlobalSquadGroupsEffect = new ListGlobalSquadGroups();
 const listSquadGroupsEffect = new ListSquadGroups();
 const listAvailableSquadCharactersEffect = new ListAvailableSquadCharacters();
 const setSquadGroupVisibilityEffect = new SetSquadGroupVisibility(systemClock);
+const listOwnedAccountsEffect = new ListOwnedMargonemAccounts();
 
 /** Create the squad-builder ORPC router. */
 export const createSquadBuilderRouter = ({
@@ -1784,28 +1784,27 @@ export const createSquadBuilderRouter = ({
       throw toOrpcError(actorUserId.error);
     }
 
-    const services =
-      listOwnedAccountsService === undefined
-        ? defaultServices
-        : ok({
-            list: listOwnedAccountsService,
-          });
-
-    if (isError(services)) {
-      logSquadBuilderError(context, "listOwnedAccounts", services.error);
-      throw toOrpcError(services.error);
-    }
-
-    const result = await services.value.list.list({
+    const effect = (listOwnedAccountsService ?? listOwnedAccountsEffect).list({
       actorUserId: actorUserId.value,
     });
 
-    if (isError(result)) {
-      logSquadBuilderError(context, "listOwnedAccounts", result.error);
-      throw toListOrpcError(result.error);
+    if (effectRuntime === undefined) {
+      const error = {
+        _tag: "SquadBuilderPersistenceUnavailable" as const,
+        cause: new Error("DATABASE_URL is required for listOwnedAccounts"),
+        operation: "listOwnedAccounts",
+      };
+      logSquadBuilderError(context, "listOwnedAccounts", error);
+      throw toListOrpcError(error);
     }
 
-    return toListOwnedAccountsResponse(result.value);
+    const accounts = await runOrpcEffect(effectRuntime, effect, (error) => {
+      const mapped = error as ListOwnedMargonemAccountsError;
+      logSquadBuilderError(context, "listOwnedAccounts", mapped);
+      return toListOrpcError(mapped);
+    });
+
+    return toListOwnedAccountsResponse(accounts);
   }),
   listSharedAccounts: verifiedProcedure.handler(async ({ context }) => {
     const actorUserId = parseAppUserId(context.session.user.id);

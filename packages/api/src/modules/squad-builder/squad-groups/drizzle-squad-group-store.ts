@@ -36,8 +36,10 @@ import {
 } from "../margonem-character";
 import {
   parseMargonemCharacterId,
+  parseMargonemProfileId,
   parsePositiveLevel,
 } from "../margonem-profile-id";
+import { toMargonemProfileUrl } from "../margonem-profile-url";
 import { isError } from "../result";
 import type { SquadGroupAccess } from "../squad-group-access";
 import { parseSquadGroupId, squadGroupIdToNumber } from "../squad-group-id";
@@ -60,6 +62,8 @@ import type {
   ListAvailableCharactersForOwnerInput,
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
+  ListOwnedMargonemAccountsInput,
+  OwnedMargonemAccountSummary,
   SetSquadGroupVisibilityStoreInput,
   SquadGroupVisibilityChange,
   SquadGroupCharacter,
@@ -74,6 +78,7 @@ type EffectSquadGroupPersistenceOperation =
   | "getSquadGroupDetail"
   | "listAvailableCharactersForOwner"
   | "listGlobalSquadGroups"
+  | "listOwnedAccounts"
   | "listMySquadGroups"
   | "setSquadGroupVisibility";
 
@@ -249,6 +254,79 @@ const listMySquadGroupsWithDatabase =
       }
 
       return groups;
+    });
+
+const listOwnedAccountsWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+  }: ListOwnedMargonemAccountsInput): Effect.Effect<
+    readonly OwnedMargonemAccountSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* listOwnedAccountsEffect() {
+      const operation = "listOwnedAccounts" as const;
+      const select = database
+        .select({
+          accountId: margonemAccount.id,
+          characterCount: sql<number>`count(${margonemCharacter.id})::int`.as(
+            "character_count"
+          ),
+          createdAt: margonemAccount.createdAt,
+          displayName: margonemAccount.displayName,
+          lastFetchedAt: margonemAccount.lastFetchedAt,
+          profileId: margonemAccount.profileId,
+        })
+        .from(margonemAccount)
+        .leftJoin(
+          margonemCharacter,
+          eq(margonemCharacter.accountId, margonemAccount.id)
+        )
+        .where(eq(margonemAccount.ownerUserId, appUserIdToString(actorUserId)))
+        .groupBy(margonemAccount.id)
+        .orderBy(desc(margonemAccount.createdAt), desc(margonemAccount.id));
+      const selectEffect = select as Effect.Effect<
+        readonly {
+          readonly accountId: number;
+          readonly characterCount: number | null;
+          readonly createdAt: Date;
+          readonly displayName: string;
+          readonly lastFetchedAt: Date | null;
+          readonly profileId: number;
+        }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const accounts: OwnedMargonemAccountSummary[] = [];
+
+      for (const row of rows) {
+        const displayName = parseAccountDisplayName(row.displayName);
+
+        if (isError(displayName)) {
+          return yield* failPersistence(operation, displayName.error);
+        }
+
+        const profileId = parseMargonemProfileId(row.profileId);
+
+        if (isError(profileId)) {
+          return yield* failPersistence(operation, profileId.error);
+        }
+
+        accounts.push({
+          accountId: row.accountId,
+          characterCount: row.characterCount ?? 0,
+          displayName: displayName.value,
+          generatedProfileUrl: toMargonemProfileUrl(profileId.value),
+          lastFetchedAt: row.lastFetchedAt ?? row.createdAt,
+          profileId: profileId.value,
+        });
+      }
+
+      return accounts;
     });
 
 const listAvailableCharactersForOwnerWithDatabase =
@@ -910,6 +988,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
         listAvailableCharactersForOwnerWithDatabase(database),
       listGlobalSquadGroups: listGlobalSquadGroupsWithDatabase(database),
       listMySquadGroups: listMySquadGroupsWithDatabase(database),
+      listOwnedAccounts: listOwnedAccountsWithDatabase(database),
       setSquadGroupVisibility: setSquadGroupVisibilityWithDatabase(database),
     })
   )
