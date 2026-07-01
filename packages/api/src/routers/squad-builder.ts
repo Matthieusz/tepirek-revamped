@@ -44,6 +44,7 @@ import type {
 } from "../modules/squad-builder/account-refetch/preview-account-refetch";
 import type { AccountSharingError } from "../modules/squad-builder/account-sharing/account-sharing-error";
 import { EffectRespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-respond-to-account-access-invite";
+import { EffectRevokeAccountAccess } from "../modules/squad-builder/account-sharing/effect-revoke-account-access";
 import { EffectSearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/effect-search-account-invite-targets";
 import { EffectSendAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-send-account-access-invite";
 import { ListAccountSharingState } from "../modules/squad-builder/account-sharing/list-account-sharing-state";
@@ -295,6 +296,16 @@ interface RevokeAccountAccessService {
   ) => Promise<Result<RevokeAccountAccessResult, AccountSharingError>>;
 }
 
+interface EffectRevokeAccountAccessService {
+  readonly revoke: (
+    input: Parameters<EffectRevokeAccountAccess["revoke"]>[0]
+  ) => Effect<
+    RevokeAccountAccessResult,
+    AccountSharingError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface ListAccountSharingStateService {
   readonly listIncomingInvites: (
     input: Parameters<ListAccountSharingState["listIncomingInvites"]>[0]
@@ -435,6 +446,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly respondToAccountAccessInviteService?: RespondToAccountAccessInviteService;
   readonly effectRespondToAccountAccessInviteService?: EffectRespondToAccountAccessInviteService;
   readonly revokeAccountAccessService?: RevokeAccountAccessService;
+  readonly effectRevokeAccountAccessService?: EffectRevokeAccountAccessService;
   readonly listAccountSharingStateService?: ListAccountSharingStateService;
   readonly createSquadGroupService?: CreateSquadGroupService;
   readonly effectRuntime?: ManagedRuntime<EffectSquadGroupStore, unknown>;
@@ -1419,6 +1431,7 @@ const sendAccountAccessInviteEffect = new EffectSendAccountAccessInvite(
 );
 const respondToAccountAccessInviteEffect =
   new EffectRespondToAccountAccessInvite(systemClock);
+const revokeAccountAccessEffect = new EffectRevokeAccountAccess(systemClock);
 const confirmOwnedAccountImportEffect = new EffectConfirmOwnedAccountImport(
   systemClock
 );
@@ -1495,6 +1508,7 @@ export const createSquadBuilderRouter = ({
   respondToAccountAccessInviteService,
   effectRespondToAccountAccessInviteService,
   revokeAccountAccessService,
+  effectRevokeAccountAccessService,
   listAccountSharingStateService,
   createSquadGroupService,
   listMySquadGroupsService,
@@ -2436,33 +2450,53 @@ export const createSquadBuilderRouter = ({
         throw toAccountSharingOrpcError(accessId.error);
       }
 
-      const services =
-        revokeAccountAccessService === undefined
-          ? defaultServices
-          : ok({
-              revokeAccess: revokeAccountAccessService,
-            });
+      if (revokeAccountAccessService !== undefined) {
+        const result = await revokeAccountAccessService.revoke({
+          accessId: accessId.value,
+          actorUserId: actorUserId.value,
+        });
 
-      if (isError(services)) {
-        logSquadBuilderError(context, "revokeAccountAccess", services.error);
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(context, "revokeAccountAccess", result.error);
+          throw toAccountSharingOrpcError(result.error);
+        }
+
+        return {
+          accessId: margonemAccountAccessIdToNumber(result.value.accessId),
+          accountId: margonemAccountIdToNumber(result.value.accountId),
+          removedSquadCharacterCount: result.value.removedSquadCharacterCount,
+          revokedUserId: appUserIdToString(result.value.revokedUserId),
+        };
       }
 
-      const result = await services.value.revokeAccess.revoke({
+      const effect = (
+        effectRevokeAccountAccessService ?? revokeAccountAccessEffect
+      ).revoke({
         accessId: accessId.value,
         actorUserId: actorUserId.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "revokeAccountAccess", result.error);
-        throw toAccountSharingOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const mapped: SquadBuilderPersistenceUnavailable = {
+          _tag: "SquadBuilderPersistenceUnavailable",
+          cause: new Error("DATABASE_URL is required for revokeAccountAccess"),
+          operation: "revokeAccountAccess",
+        };
+        logSquadBuilderError(context, "revokeAccountAccess", mapped);
+        throw toAccountSharingOrpcError(mapped);
       }
 
+      const revoked = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as AccountSharingError;
+        logSquadBuilderError(context, "revokeAccountAccess", mapped);
+        return toAccountSharingOrpcError(mapped);
+      });
+
       return {
-        accessId: margonemAccountAccessIdToNumber(result.value.accessId),
-        accountId: margonemAccountIdToNumber(result.value.accountId),
-        removedSquadCharacterCount: result.value.removedSquadCharacterCount,
-        revokedUserId: appUserIdToString(result.value.revokedUserId),
+        accessId: margonemAccountAccessIdToNumber(revoked.accessId),
+        accountId: margonemAccountIdToNumber(revoked.accountId),
+        removedSquadCharacterCount: revoked.removedSquadCharacterCount,
+        revokedUserId: appUserIdToString(revoked.revokedUserId),
       };
     }),
   revokeSquadGroupEditor: verifiedProcedure

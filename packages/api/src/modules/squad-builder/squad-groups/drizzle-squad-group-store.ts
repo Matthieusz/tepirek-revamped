@@ -49,7 +49,10 @@ import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account
 import { appUserIdToString, parseAppUserId } from "../app-user-id";
 import type { AppUserId } from "../app-user-id";
 import { firecrawlYearMonthToString } from "../firecrawl-year-month";
-import { parseMargonemAccountAccessId } from "../margonem-account-access-id";
+import {
+  margonemAccountAccessIdToNumber,
+  parseMargonemAccountAccessId,
+} from "../margonem-account-access-id";
 import type { MargonemAccountAccessId } from "../margonem-account-access-id";
 import {
   margonemAccountIdToNumber,
@@ -122,6 +125,8 @@ import type {
   ReservedFirecrawlRequest,
   SearchInviteTargetsStoreInput,
   RespondToAccountAccessInviteStoreInput,
+  RevokeAccountAccessResult,
+  RevokeAccountAccessStoreInput,
   SetSquadGroupVisibilityStoreInput,
   SquadGroupVisibilityChange,
   AccountInviteTarget,
@@ -155,6 +160,7 @@ type EffectSquadGroupPersistenceOperation =
   | "markPendingRefetchApplied"
   | "reserveRequest"
   | "respondToAccountAccessInvite"
+  | "revokeAccountAccess"
   | "searchInviteTargets"
   | "upsertAccountAccessInvite"
   | "setSquadGroupVisibility";
@@ -2192,6 +2198,214 @@ const respondToAccountAccessInviteWithDatabase =
       );
     });
 
+const revokeAccountAccessWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    accessId,
+    now,
+    ownerUserId,
+  }: RevokeAccountAccessStoreInput): Effect.Effect<
+    RevokeAccountAccessResult,
+    | { readonly _tag: "AccountAccessInviteNotFound" }
+    | { readonly _tag: "ActorDoesNotOwnMargonemAccount" }
+    | {
+        readonly _tag: "AccountAccessTransitionNotAllowed";
+        readonly currentStatus: AccountAccessStatus;
+        readonly attempted: string;
+      }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* revokeAccountAccessEffect() {
+      const operation = "revokeAccountAccess" as const;
+      const accessIdNumber = margonemAccountAccessIdToNumber(accessId);
+      const owner = appUserIdToString(ownerUserId);
+      const transaction = database.transaction((tx) =>
+        Effect.gen(function* revokeAccountAccessTransaction() {
+          const accessSelect = tx
+            .select({
+              accountId: margonemAccountAccess.accountId,
+              status: margonemAccountAccess.status,
+              userId: margonemAccountAccess.userId,
+            })
+            .from(margonemAccountAccess)
+            .where(eq(margonemAccountAccess.id, accessIdNumber))
+            .limit(1);
+          const accessRows = yield* accessSelect as Effect.Effect<
+            readonly {
+              readonly accountId: number;
+              readonly status: string;
+              readonly userId: string;
+            }[],
+            unknown,
+            never
+          >;
+          const [access] = accessRows;
+
+          if (access === undefined) {
+            return { _tag: "AccountAccessInviteNotFound" as const };
+          }
+
+          const accountSelect = tx
+            .select({ ownerUserId: margonemAccount.ownerUserId })
+            .from(margonemAccount)
+            .where(eq(margonemAccount.id, access.accountId))
+            .limit(1);
+          const accountRows = yield* accountSelect as Effect.Effect<
+            readonly { readonly ownerUserId: string }[],
+            unknown,
+            never
+          >;
+          const [account] = accountRows;
+
+          if (account === undefined) {
+            return { _tag: "AccountAccessInviteNotFound" as const };
+          }
+
+          if (account.ownerUserId !== owner) {
+            return { _tag: "ActorDoesNotOwnMargonemAccount" as const };
+          }
+
+          const status = parseAccountAccessStatus(access.status);
+
+          if (isError(status)) {
+            return yield* failPersistence(operation, status.error);
+          }
+
+          if (!canTransitionAccountAccess(status.value, "revoked")) {
+            return {
+              _tag: "AccountAccessTransitionNotAllowed" as const,
+              attempted: "revoked",
+              currentStatus: status.value,
+            };
+          }
+
+          yield* tx
+            .update(margonemAccountAccess)
+            .set({ status: "revoked", updatedAt: now })
+            .where(
+              eq(margonemAccountAccess.id, accessIdNumber)
+            ) as Effect.Effect<unknown, unknown, never>;
+
+          let removedSquadCharacterCount = 0;
+
+          if (status.value === "accepted") {
+            const characterSelect = tx
+              .select({ id: margonemCharacter.id })
+              .from(margonemCharacter)
+              .where(eq(margonemCharacter.accountId, access.accountId));
+            const accountCharacters = yield* characterSelect as Effect.Effect<
+              readonly { readonly id: number }[],
+              unknown,
+              never
+            >;
+            const accountCharacterIds = accountCharacters.map(
+              (character) => character.id
+            );
+
+            if (accountCharacterIds.length > 0) {
+              const affectedGroupSelect = tx
+                .select({ groupId: squadCharacter.squadGroupId })
+                .from(squadCharacter)
+                .innerJoin(
+                  squadGroup,
+                  eq(squadGroup.id, squadCharacter.squadGroupId)
+                )
+                .where(
+                  and(
+                    inArray(squadCharacter.characterId, accountCharacterIds),
+                    eq(squadGroup.ownerUserId, access.userId)
+                  )
+                );
+              const affectedGroups =
+                yield* affectedGroupSelect as Effect.Effect<
+                  readonly { readonly groupId: number }[],
+                  unknown,
+                  never
+                >;
+              const affectedGroupIds = [
+                ...new Set(affectedGroups.map((group) => group.groupId)),
+              ];
+
+              if (affectedGroupIds.length > 0) {
+                const removedPlacementsDelete = tx
+                  .delete(squadCharacter)
+                  .where(
+                    and(
+                      inArray(squadCharacter.characterId, accountCharacterIds),
+                      inArray(squadCharacter.squadGroupId, affectedGroupIds)
+                    )
+                  )
+                  .returning({ id: squadCharacter.id });
+                const removedPlacements =
+                  yield* removedPlacementsDelete as Effect.Effect<
+                    readonly { readonly id: number }[],
+                    unknown,
+                    never
+                  >;
+                removedSquadCharacterCount = removedPlacements.length;
+
+                yield* tx
+                  .update(squadGroup)
+                  .set({ updatedAt: now })
+                  .where(
+                    inArray(squadGroup.id, affectedGroupIds)
+                  ) as Effect.Effect<unknown, unknown, never>;
+              }
+            }
+          }
+
+          return {
+            _tag: "Revoked" as const,
+            accountId: access.accountId,
+            removedSquadCharacterCount,
+            revokedUserId: access.userId,
+          };
+        })
+      );
+      const revoked = yield* (
+        transaction as Effect.Effect<
+          | {
+              readonly _tag: "Revoked";
+              readonly accountId: number;
+              readonly removedSquadCharacterCount: number;
+              readonly revokedUserId: string;
+            }
+          | { readonly _tag: "AccountAccessInviteNotFound" }
+          | { readonly _tag: "ActorDoesNotOwnMargonemAccount" }
+          | {
+              readonly _tag: "AccountAccessTransitionNotAllowed";
+              readonly currentStatus: AccountAccessStatus;
+              readonly attempted: string;
+            },
+          unknown,
+          never
+        >
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
+      if (revoked._tag !== "Revoked") {
+        return yield* Effect.fail(revoked);
+      }
+
+      const accountId = parseMargonemAccountId(revoked.accountId);
+
+      if (isError(accountId)) {
+        return yield* failPersistence(operation, accountId.error);
+      }
+
+      const revokedUserId = yield* parsePersistedAppUserId(
+        operation,
+        revoked.revokedUserId
+      );
+
+      return {
+        accessId,
+        accountId: accountId.value,
+        removedSquadCharacterCount: revoked.removedSquadCharacterCount,
+        revokedUserId,
+      };
+    });
+
 const listAvailableCharactersForOwnerWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -2873,6 +3087,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       reserveRequest: reserveRequestWithDatabase(database),
       respondToAccountAccessInvite:
         respondToAccountAccessInviteWithDatabase(database),
+      revokeAccountAccess: revokeAccountAccessWithDatabase(database),
       searchInviteTargets: searchInviteTargetsWithDatabase(database),
       setSquadGroupVisibility: setSquadGroupVisibilityWithDatabase(database),
       upsertAccountAccessInvite:

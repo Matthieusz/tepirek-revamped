@@ -26,6 +26,7 @@ import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem
 import { systemClock } from "../account-import/preview-margonem-profile-import";
 import { EffectApplyAccountRefetch } from "../account-refetch/effect-apply-account-refetch";
 import { EffectRespondToAccountAccessInvite } from "../account-sharing/effect-respond-to-account-access-invite";
+import { EffectRevokeAccountAccess } from "../account-sharing/effect-revoke-account-access";
 import { EffectSearchAccountInviteTargets } from "../account-sharing/effect-search-account-invite-targets";
 import { EffectSendAccountAccessInvite } from "../account-sharing/effect-send-account-access-invite";
 import { parseAppUserId } from "../app-user-id";
@@ -915,6 +916,125 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       .limit(1);
 
     expect(stored?.status).toBe("accepted");
+  });
+
+  it("revokes accepted account access and removes recipient squad placements", async () => {
+    const owner = await createVerifiedMember({
+      id: "effect-store-revoke-owner",
+      name: "Effect Store Revoke Owner",
+    });
+    const target = await createVerifiedMember({
+      id: "effect-store-revoke-target",
+      name: "Effect Store Revoke Target",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const sendService = new EffectSendAccountAccessInvite(systemClock);
+    const respondService = new EffectRespondToAccountAccessInvite(systemClock);
+    const revokeService = new EffectRevokeAccountAccess(systemClock);
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Effect store revoke account",
+        ownerUserId: owner.id,
+        profileId: 7_299_010,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    const [character] = await testDb
+      .insert(margonemCharacter)
+      .values({
+        accountId: account.id,
+        avatarUrl: null,
+        characterId: 1_296_640,
+        level: 300,
+        name: "revokedchar",
+        profession: "tracker",
+        world: "jaruna",
+      })
+      .returning({ id: margonemCharacter.id });
+
+    if (character === undefined) {
+      throw new Error("Failed to seed character");
+    }
+
+    const [group] = await testDb
+      .insert(squadGroup)
+      .values({
+        name: "Recipient revoke group",
+        ownerUserId: target.id,
+        visibility: "private",
+      })
+      .returning({ id: squadGroup.id });
+
+    if (group === undefined) {
+      throw new Error("Failed to seed squad group");
+    }
+
+    const [seededSquad] = await testDb
+      .insert(squad)
+      .values({
+        name: "Recipient revoke squad",
+        position: 0,
+        squadGroupId: group.id,
+      })
+      .returning({ id: squad.id });
+
+    if (seededSquad === undefined) {
+      throw new Error("Failed to seed squad");
+    }
+
+    const invite = await runtime.runPromise(
+      sendService.send({
+        accountId: parseTestAccountId(account.id),
+        actorUserId: parseTestUserId(owner.id),
+        invitedUserId: parseTestUserId(target.id),
+      })
+    );
+    await runtime.runPromise(
+      respondService.respond({
+        accessId: invite.accessId,
+        actorUserId: parseTestUserId(target.id),
+        response: "accept",
+      })
+    );
+    await testDb.insert(squadCharacter).values({
+      accountId: account.id,
+      characterId: character.id,
+      position: 0,
+      squadGroupId: group.id,
+      squadId: seededSquad.id,
+    });
+
+    const revoked = await runtime.runPromise(
+      revokeService.revoke({
+        accessId: invite.accessId,
+        actorUserId: parseTestUserId(owner.id),
+      })
+    );
+
+    expect(revoked).toMatchObject({
+      accessId: invite.accessId,
+      accountId: parseTestAccountId(account.id),
+      removedSquadCharacterCount: 1,
+      revokedUserId: parseTestUserId(target.id),
+    });
+
+    const [storedAccess] = await testDb
+      .select({ status: margonemAccountAccess.status })
+      .from(margonemAccountAccess)
+      .where(eq(margonemAccountAccess.id, invite.accessId))
+      .limit(1);
+    const remainingPlacements = await testDb
+      .select({ id: squadCharacter.id })
+      .from(squadCharacter)
+      .where(eq(squadCharacter.characterId, character.id));
+
+    expect(storedAccess?.status).toBe("revoked");
+    expect(remainingPlacements).toEqual([]);
   });
 
   it("lists globally visible squad groups", async () => {

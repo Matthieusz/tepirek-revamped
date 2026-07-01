@@ -40,6 +40,7 @@ export const makeEffectSquadGroupStoreTestService = (
     reserveRequest: () => unhandledStoreCall("reserveRequest"),
     respondToAccountAccessInvite: () =>
       unhandledStoreCall("respondToAccountAccessInvite"),
+    revokeAccountAccess: () => unhandledStoreCall("revokeAccountAccess"),
     searchInviteTargets: () => unhandledStoreCall("searchInviteTargets"),
     setSquadGroupVisibility: () =>
       unhandledStoreCall("setSquadGroupVisibility"),
