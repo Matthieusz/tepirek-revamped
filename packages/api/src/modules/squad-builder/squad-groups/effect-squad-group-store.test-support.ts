@@ -11,6 +11,7 @@ export const makeEffectSquadGroupStoreTestService = (
   overrides: Partial<EffectSquadGroupStoreShape>
 ) =>
   EffectSquadGroupStore.of({
+    createPendingImport: () => unhandledStoreCall("createPendingImport"),
     createSquadGroup: () => unhandledStoreCall("createSquadGroup"),
     findProfileAccessState: () => unhandledStoreCall("findProfileAccessState"),
     getSquadGroupDetail: () => unhandledStoreCall("getSquadGroupDetail"),

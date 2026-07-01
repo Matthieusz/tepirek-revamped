@@ -9,6 +9,7 @@ import { accountDisplayNameToString } from "../modules/squad-builder/account-dis
 import { ConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/confirm-owned-account-import";
 import type { ConfirmOwnedAccountImportError } from "../modules/squad-builder/account-import/confirm-owned-account-import";
 import { EffectPreviewMargonemProfileImport } from "../modules/squad-builder/account-import/effect-preview-margonem-profile-import";
+import { EffectPreviewOwnedAccountImports } from "../modules/squad-builder/account-import/effect-preview-owned-account-imports";
 import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-import/list-owned-margonem-accounts";
 import type { ListOwnedMargonemAccountsError } from "../modules/squad-builder/account-import/list-owned-margonem-accounts";
 import {
@@ -157,6 +158,17 @@ interface PreviewOwnedImportsService {
     options?: { readonly signal?: AbortSignal }
   ) => Promise<
     Result<PreviewOwnedAccountImportsOutput, PreviewOwnedAccountImportsError>
+  >;
+}
+
+interface EffectPreviewOwnedImportsService {
+  readonly preview: (
+    input: Parameters<EffectPreviewOwnedAccountImports["preview"]>[0],
+    options?: { readonly signal?: AbortSignal }
+  ) => Effect<
+    PreviewOwnedAccountImportsOutput,
+    PreviewOwnedAccountImportsError,
+    EffectSquadGroupStore
   >;
 }
 
@@ -340,6 +352,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly previewService?: PreviewProfileImportService;
   readonly effectPreviewService?: EffectPreviewProfileImportService;
   readonly previewOwnedImportsService?: PreviewOwnedImportsService;
+  readonly effectPreviewOwnedImportsService?: EffectPreviewOwnedImportsService;
   readonly confirmOwnedAccountImportService?: ConfirmOwnedAccountImportService;
   readonly previewAccountRefetchService?: PreviewAccountRefetchService;
   readonly applyAccountRefetchService?: ApplyAccountRefetchService;
@@ -1344,11 +1357,27 @@ const createDefaultPreviewProfileImportEffect = (): Result<
   );
 };
 
+const createDefaultPreviewOwnedAccountImportsEffect = (): Result<
+  EffectPreviewOwnedAccountImports,
+  SquadBuilderRouterError
+> => {
+  const singlePreview = createDefaultPreviewProfileImportEffect();
+
+  if (isError(singlePreview)) {
+    return err(singlePreview.error);
+  }
+
+  return ok(
+    new EffectPreviewOwnedAccountImports(singlePreview.value, systemClock)
+  );
+};
+
 /** Create the squad-builder ORPC router. */
 export const createSquadBuilderRouter = ({
   previewService,
   effectPreviewService,
   previewOwnedImportsService,
+  effectPreviewOwnedImportsService,
   confirmOwnedAccountImportService,
   previewAccountRefetchService,
   applyAccountRefetchService,
@@ -1992,38 +2021,67 @@ export const createSquadBuilderRouter = ({
         throw toOrpcError(actorUserId.error);
       }
 
-      const services =
-        previewOwnedImportsService === undefined
-          ? defaultServices
-          : ok({
-              previewOwnedImports: previewOwnedImportsService,
-            });
+      if (previewOwnedImportsService !== undefined) {
+        const result = await previewOwnedImportsService.preview({
+          actorUserId: actorUserId.value,
+          profileUrls: input.profileUrls,
+        });
 
-      if (isError(services)) {
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "previewOwnedAccountImports",
+            result.error
+          );
+          throw toPreviewOwnedImportsOrpcError(result.error);
+        }
+
+        return {
+          items: result.value.items.map(toPreviewOwnedAccountImportItemDto),
+        };
+      }
+
+      const service =
+        effectPreviewOwnedImportsService === undefined
+          ? createDefaultPreviewOwnedAccountImportsEffect()
+          : ok(effectPreviewOwnedImportsService);
+
+      if (isError(service)) {
         logSquadBuilderError(
           context,
           "previewOwnedAccountImports",
-          services.error
+          service.error
         );
-        throw toOrpcError(services.error);
+        throw toOrpcError(service.error);
       }
 
-      const result = await services.value.previewOwnedImports.preview({
-        actorUserId: actorUserId.value,
-        profileUrls: input.profileUrls,
-      });
-
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "previewOwnedAccountImports",
-          result.error
-        );
-        throw toPreviewOwnedImportsOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for previewOwnedAccountImports"
+          ),
+          operation: "previewOwnedAccountImports",
+        };
+        logSquadBuilderError(context, "previewOwnedAccountImports", error);
+        throw toPreviewOwnedImportsOrpcError(error);
       }
+
+      const result = await runOrpcEffect(
+        effectRuntime,
+        service.value.preview({
+          actorUserId: actorUserId.value,
+          profileUrls: input.profileUrls,
+        }),
+        (error) => {
+          const mapped = error as PreviewOwnedAccountImportsError;
+          logSquadBuilderError(context, "previewOwnedAccountImports", mapped);
+          return toPreviewOwnedImportsOrpcError(mapped);
+        }
+      );
 
       return {
-        items: result.value.items.map(toPreviewOwnedAccountImportItemDto),
+        items: result.items.map(toPreviewOwnedAccountImportItemDto),
       };
     }),
   previewProfileImport: verifiedProcedure

@@ -6,6 +6,7 @@ import type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnSquadGroup,
   AuthorizeSquadGroupViewerInput,
+  CreatePendingMargonemAccountImportInput,
   CreateSquadGroupStoreInput,
   FindProfileAccessStateInput,
   FirecrawlBudgetError,
@@ -19,6 +20,7 @@ import type {
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
   OwnedMargonemAccountSummary,
+  PendingMargonemAccountImport,
   ProfileAccessState,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
@@ -115,6 +117,13 @@ export interface EffectSquadGroupStoreShape {
     FirecrawlBudgetError | EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly createPendingImport: (
+    input: CreatePendingMargonemAccountImportInput
+  ) => Effect<
+    PendingMargonemAccountImport,
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
   readonly markRequestSucceeded: (
     input: MarkFirecrawlRequestSucceededInput
   ) => Effect<void, EffectSquadBuilderPersistenceUnavailable, never>;
@@ -139,6 +148,7 @@ export type {
   ActorDoesNotOwnSquadGroup,
   AuthorizeSquadGroupViewerInput,
   AvailableSquadCharacter,
+  CreatePendingMargonemAccountImportInput,
   CreateSquadGroupStoreInput,
   FindProfileAccessStateInput,
   FirecrawlBudgetError,
@@ -152,6 +162,7 @@ export type {
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
   OwnedMargonemAccountSummary,
+  PendingMargonemAccountImport,
   ProfileAccessState,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,

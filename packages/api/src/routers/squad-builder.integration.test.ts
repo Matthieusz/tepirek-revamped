@@ -410,6 +410,35 @@ describe("squad-builder router Postgres integration", () => {
     expect(result.jarunaCharacters).toHaveLength(1);
   });
 
+  it("previews owned account imports through the Effect oRPC bridge", async () => {
+    const member = await createVerifiedMember({ id: "preview-owned-effect" });
+    const client = createSquadBuilderClient(member, {
+      effectPreviewOwnedImportsService: {
+        preview: () => Effect.succeed({ items: fakePreviewItems(998) }),
+      },
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+
+    const result = await client.squadBuilder.previewOwnedAccountImports({
+      profileUrls: [
+        "https://www.margonem.pl/profile/view,7298897",
+        "https://www.margonem.pl/profile/view,7298897",
+      ],
+    });
+
+    expect(result.items).toHaveLength(2);
+    expect(result.items[0]).toMatchObject({
+      lineNumber: 1,
+      pendingImportId: 998,
+      status: "success",
+    });
+    expect(result.items[1]).toMatchObject({
+      errorTag: "DuplicateProfileInBatch",
+      lineNumber: 2,
+      status: "error",
+    });
+  });
+
   it("returns per-line owned account import preview results for a verified user", async () => {
     const member = await createVerifiedMember({ id: "preview-member" });
     const client = createSquadBuilderClient(member, {

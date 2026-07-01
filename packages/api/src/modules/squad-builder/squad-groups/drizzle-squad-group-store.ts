@@ -5,6 +5,8 @@ import {
   firecrawlProfileScrapeRequest,
   margonemAccount,
   margonemAccountAccess,
+  margonemAccountImportPreview,
+  margonemAccountImportPreviewCharacter,
   margonemCharacter,
   squad,
   squadCharacter,
@@ -28,7 +30,10 @@ import {
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { parseAccountDisplayName } from "../account-display-name";
+import {
+  accountDisplayNameToString,
+  parseAccountDisplayName,
+} from "../account-display-name";
 import { appUserIdToString, parseAppUserId } from "../app-user-id";
 import type { AppUserId } from "../app-user-id";
 import { firecrawlYearMonthToString } from "../firecrawl-year-month";
@@ -42,6 +47,8 @@ import {
   parseMargonemCharacterId,
   parseMargonemProfileId,
   parsePositiveLevel,
+  characterIdToNumber,
+  levelToNumber,
   profileIdToNumber,
 } from "../margonem-profile-id";
 import { toMargonemProfileUrl } from "../margonem-profile-url";
@@ -61,6 +68,7 @@ import type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnSquadGroup,
   AvailableSquadCharacter,
+  CreatePendingMargonemAccountImportInput,
   CreateSquadGroupStoreInput,
   FindProfileAccessStateInput,
   GlobalSquadGroupSummary,
@@ -72,6 +80,7 @@ import type {
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
   OwnedMargonemAccountSummary,
+  PendingMargonemAccountImport,
   ProfileAccessState,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
@@ -85,6 +94,7 @@ import type {
 import { EffectSquadGroupStore } from "./squad-group-store";
 
 type EffectSquadGroupPersistenceOperation =
+  | "createPendingImport"
   | "createSquadGroup"
   | "findProfileAccessState"
   | "getSquadGroupDetail"
@@ -374,6 +384,86 @@ const markRequestFailedWithDatabase =
 
     return updateEffect.pipe(catchPersistenceFailure, Effect.asVoid);
   };
+
+const createPendingImportWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+    defaultDisplayName,
+    expiresAt,
+    fetchedAt,
+    firecrawlCreditsUsed,
+    jarunaCharacters,
+    profileId,
+    suggestedAccountName,
+  }: CreatePendingMargonemAccountImportInput): Effect.Effect<
+    PendingMargonemAccountImport,
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* createPendingImportEffect() {
+      const operation = "createPendingImport" as const;
+      const transaction = database.transaction((tx) =>
+        Effect.gen(function* createPendingImportTransaction() {
+          const insert = tx
+            .insert(margonemAccountImportPreview)
+            .values({
+              actorUserId: appUserIdToString(actorUserId),
+              defaultDisplayName:
+                accountDisplayNameToString(defaultDisplayName),
+              expiresAt,
+              fetchedAt,
+              firecrawlCreditsUsed,
+              profileId: profileIdToNumber(profileId),
+              suggestedAccountName,
+            })
+            .returning({ id: margonemAccountImportPreview.id });
+          const insertedRows = yield* insert as Effect.Effect<
+            readonly { readonly id: number }[],
+            unknown,
+            never
+          >;
+          const [preview] = insertedRows;
+
+          if (preview === undefined) {
+            return yield* failPersistence(
+              operation,
+              new Error("Failed to create pending import preview")
+            );
+          }
+
+          if (jarunaCharacters.length > 0) {
+            const characterInsert = tx
+              .insert(margonemAccountImportPreviewCharacter)
+              .values(
+                jarunaCharacters.map((character) => ({
+                  avatarUrl: character.avatarUrl,
+                  characterId: characterIdToNumber(character.characterId),
+                  importPreviewId: preview.id,
+                  level: levelToNumber(character.level),
+                  name: character.name,
+                  profession: character.profession,
+                  world: character.world,
+                }))
+              );
+            yield* characterInsert as Effect.Effect<unknown, unknown, never>;
+          }
+
+          return {
+            id: preview.id as PendingMargonemAccountImport["id"],
+            profileId,
+          };
+        })
+      );
+
+      return yield* (
+        transaction as Effect.Effect<
+          PendingMargonemAccountImport,
+          unknown,
+          never
+        >
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+    });
 
 const createSquadGroupWithDatabase =
   (database: EffectPgDatabase) =>
@@ -1230,6 +1320,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
   EffectSquadGroupStore,
   EffectDatabase.useSync((database) =>
     EffectSquadGroupStore.of({
+      createPendingImport: createPendingImportWithDatabase(database),
       createSquadGroup: createSquadGroupWithDatabase(database),
       findProfileAccessState: findProfileAccessStateWithDatabase(database),
       getSquadGroupDetail: getSquadGroupDetailWithDatabase(database),

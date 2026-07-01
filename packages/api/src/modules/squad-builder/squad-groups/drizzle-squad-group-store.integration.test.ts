@@ -1,6 +1,8 @@
 import {
   firecrawlProfileScrapeRequest,
   margonemAccount,
+  margonemAccountImportPreview,
+  margonemAccountImportPreviewCharacter,
   margonemCharacter,
   squadGroup,
 } from "@tepirek-revamped/db/schema/squad-builder";
@@ -13,6 +15,7 @@ import {
   defaultTestDatabaseUrl,
   testDb,
 } from "../../../test/integration/database";
+import { parseAccountDisplayName } from "../account-display-name";
 import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts";
 import { systemClock } from "../account-import/preview-margonem-profile-import";
 import { parseAppUserId } from "../app-user-id";
@@ -268,6 +271,65 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       generatedProfileUrl: "https://www.margonem.pl/profile/view,8100101",
       profileId: 8_100_101,
     });
+  });
+
+  it("creates pending account imports through the Effect store", async () => {
+    const member = await createVerifiedMember({ id: "effect-pending-user" });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const displayName = parseAccountDisplayName("Effect pending");
+
+    if (!isOk(displayName)) {
+      throw new Error("Expected display name to be valid");
+    }
+
+    const pending = await runtime.runPromise(
+      EffectSquadGroupStore.use((store) =>
+        store.createPendingImport({
+          actorUserId: parseTestUserId(member.id),
+          defaultDisplayName: displayName.value,
+          expiresAt: new Date("2026-06-29T12:30:00.000Z"),
+          fetchedAt: new Date("2026-06-29T12:00:00.000Z"),
+          firecrawlCreditsUsed: parseTestCredits(1),
+          generatedProfileUrl: "https://www.margonem.pl/profile/view,8100150",
+          jarunaCharacters: [
+            {
+              avatarUrl: null,
+              characterId: 1_296_628 as never,
+              level: 301 as never,
+              name: "pendingchar",
+              profession: "tracker",
+              world: "jaruna",
+            },
+          ],
+          profileId: parseTestProfileId(8_100_150),
+          suggestedAccountName: "Effect pending",
+        })
+      )
+    );
+
+    const [stored] = await testDb
+      .select({
+        actorUserId: margonemAccountImportPreview.actorUserId,
+        defaultDisplayName: margonemAccountImportPreview.defaultDisplayName,
+        profileId: margonemAccountImportPreview.profileId,
+      })
+      .from(margonemAccountImportPreview)
+      .where(eq(margonemAccountImportPreview.id, pending.id))
+      .limit(1);
+
+    const characters = await testDb
+      .select({ name: margonemAccountImportPreviewCharacter.name })
+      .from(margonemAccountImportPreviewCharacter)
+      .where(
+        eq(margonemAccountImportPreviewCharacter.importPreviewId, pending.id)
+      );
+
+    expect(stored).toEqual({
+      actorUserId: member.id,
+      defaultDisplayName: "Effect pending",
+      profileId: 8_100_150,
+    });
+    expect(characters).toEqual([{ name: "pendingchar" }]);
   });
 
   it("reserves and completes Firecrawl requests through the Effect store", async () => {
