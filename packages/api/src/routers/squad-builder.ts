@@ -8,6 +8,7 @@ import { makeApiManagedRuntime } from "../effect-app";
 import { accountDisplayNameToString } from "../modules/squad-builder/account-display-name";
 import { ConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/confirm-owned-account-import";
 import type { ConfirmOwnedAccountImportError } from "../modules/squad-builder/account-import/confirm-owned-account-import";
+import { EffectPreviewMargonemProfileImport } from "../modules/squad-builder/account-import/effect-preview-margonem-profile-import";
 import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-import/list-owned-margonem-accounts";
 import type { ListOwnedMargonemAccountsError } from "../modules/squad-builder/account-import/list-owned-margonem-accounts";
 import {
@@ -136,6 +137,17 @@ interface PreviewProfileImportService {
       PreviewMargonemProfileImportOutput,
       PreviewMargonemProfileImportError
     >
+  >;
+}
+
+interface EffectPreviewProfileImportService {
+  readonly preview: (
+    input: PreviewMargonemProfileImportInput,
+    options?: { readonly signal?: AbortSignal }
+  ) => Effect<
+    PreviewMargonemProfileImportOutput,
+    PreviewMargonemProfileImportError,
+    EffectSquadGroupStore
   >;
 }
 
@@ -326,6 +338,7 @@ interface SaveSharedSquadGroupCharactersService {
 
 interface CreateSquadBuilderRouterOptions {
   readonly previewService?: PreviewProfileImportService;
+  readonly effectPreviewService?: EffectPreviewProfileImportService;
   readonly previewOwnedImportsService?: PreviewOwnedImportsService;
   readonly confirmOwnedAccountImportService?: ConfirmOwnedAccountImportService;
   readonly previewAccountRefetchService?: PreviewAccountRefetchService;
@@ -1312,10 +1325,29 @@ const listSquadGroupsEffect = new ListSquadGroups();
 const listAvailableSquadCharactersEffect = new ListAvailableSquadCharacters();
 const setSquadGroupVisibilityEffect = new SetSquadGroupVisibility(systemClock);
 const listOwnedAccountsEffect = new ListOwnedMargonemAccounts();
+const createDefaultPreviewProfileImportEffect = (): Result<
+  EffectPreviewMargonemProfileImport,
+  SquadBuilderRouterError
+> => {
+  const config = parseFirecrawlConfig(process.env);
+
+  if (isError(config)) {
+    return err(config.error);
+  }
+
+  return ok(
+    new EffectPreviewMargonemProfileImport(
+      new FirecrawlSdkClient(config.value.apiKey),
+      systemClock,
+      config.value
+    )
+  );
+};
 
 /** Create the squad-builder ORPC router. */
 export const createSquadBuilderRouter = ({
   previewService,
+  effectPreviewService,
   previewOwnedImportsService,
   confirmOwnedAccountImportService,
   previewAccountRefetchService,
@@ -2003,37 +2035,64 @@ export const createSquadBuilderRouter = ({
         throw toOrpcError(actorUserId.error);
       }
 
-      const services =
-        previewService === undefined
-          ? defaultServices
-          : ok({
-              preview: previewService,
-            });
+      if (previewService !== undefined) {
+        const preview = await previewService.preview({
+          actorUserId: actorUserId.value,
+          profileUrl: input.profileUrl,
+        });
 
-      if (isError(services)) {
+        if (isError(preview)) {
+          logSquadBuilderError(
+            context,
+            "previewMargonemProfileImport",
+            preview.error
+          );
+          throw toOrpcError(preview.error);
+        }
+
+        return toPreviewProfileImportResponse(preview.value);
+      }
+
+      const service =
+        effectPreviewService === undefined
+          ? createDefaultPreviewProfileImportEffect()
+          : ok(effectPreviewService);
+
+      if (isError(service)) {
         logSquadBuilderError(
           context,
           "previewMargonemProfileImport",
-          services.error
+          service.error
         );
-        throw toOrpcError(services.error);
+        throw toOrpcError(service.error);
       }
 
-      const preview = await services.value.preview.preview({
-        actorUserId: actorUserId.value,
-        profileUrl: input.profileUrl,
-      });
-
-      if (isError(preview)) {
-        logSquadBuilderError(
-          context,
-          "previewMargonemProfileImport",
-          preview.error
-        );
-        throw toOrpcError(preview.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for previewMargonemProfileImport"
+          ),
+          operation: "previewMargonemProfileImport",
+        };
+        logSquadBuilderError(context, "previewMargonemProfileImport", error);
+        throw toOrpcError(error);
       }
 
-      return toPreviewProfileImportResponse(preview.value);
+      const preview = await runOrpcEffect(
+        effectRuntime,
+        service.value.preview({
+          actorUserId: actorUserId.value,
+          profileUrl: input.profileUrl,
+        }),
+        (error) => {
+          const mapped = error as PreviewMargonemProfileImportError;
+          logSquadBuilderError(context, "previewMargonemProfileImport", mapped);
+          return toOrpcError(mapped);
+        }
+      );
+
+      return toPreviewProfileImportResponse(preview);
     }),
   respondToAccountAccessInvite: verifiedProcedure
     .input(respondToAccountAccessInviteInputSchema)

@@ -2,6 +2,7 @@ import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import {
+  firecrawlProfileScrapeRequest,
   margonemAccount,
   margonemAccountAccess,
   margonemCharacter,
@@ -13,11 +14,13 @@ import {
 import {
   and,
   asc,
+  count,
   desc,
   eq,
   exists,
   gte,
   ilike,
+  inArray,
   lte,
   or,
   sql,
@@ -28,6 +31,7 @@ import * as Layer from "effect/Layer";
 import { parseAccountDisplayName } from "../account-display-name";
 import { appUserIdToString, parseAppUserId } from "../app-user-id";
 import type { AppUserId } from "../app-user-id";
+import { firecrawlYearMonthToString } from "../firecrawl-year-month";
 import { parseMargonemAccountId } from "../margonem-account-id";
 import type { MargonemAccountId } from "../margonem-account-id";
 import {
@@ -38,6 +42,7 @@ import {
   parseMargonemCharacterId,
   parseMargonemProfileId,
   parsePositiveLevel,
+  profileIdToNumber,
 } from "../margonem-profile-id";
 import { toMargonemProfileUrl } from "../margonem-profile-url";
 import { isError } from "../result";
@@ -57,13 +62,19 @@ import type {
   ActorDoesNotOwnSquadGroup,
   AvailableSquadCharacter,
   CreateSquadGroupStoreInput,
+  FindProfileAccessStateInput,
   GlobalSquadGroupSummary,
   GetSquadGroupDetailInput,
   ListAvailableCharactersForOwnerInput,
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
+  MarkFirecrawlRequestFailedInput,
+  MarkFirecrawlRequestSucceededInput,
   OwnedMargonemAccountSummary,
+  ProfileAccessState,
+  ReserveFirecrawlRequestInput,
+  ReservedFirecrawlRequest,
   SetSquadGroupVisibilityStoreInput,
   SquadGroupVisibilityChange,
   SquadGroupCharacter,
@@ -75,12 +86,22 @@ import { EffectSquadGroupStore } from "./squad-group-store";
 
 type EffectSquadGroupPersistenceOperation =
   | "createSquadGroup"
+  | "findProfileAccessState"
   | "getSquadGroupDetail"
   | "listAvailableCharactersForOwner"
   | "listGlobalSquadGroups"
   | "listOwnedAccounts"
   | "listMySquadGroups"
+  | "markRequestFailed"
+  | "markRequestSucceeded"
+  | "reserveRequest"
   | "setSquadGroupVisibility";
+
+const usedFirecrawlRequestStatuses = [
+  "reserved",
+  "succeeded",
+  "failed",
+] as const;
 
 const escapeLikePattern = (value: string): string =>
   value.replaceAll(/[\\%_]/gu, "\\$&");
@@ -126,6 +147,233 @@ const parsePersistedSquadGroupName = (
 
   return Effect.succeed(name.value);
 };
+
+const findProfileAccessStateWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+    profileId,
+  }: FindProfileAccessStateInput): Effect.Effect<
+    ProfileAccessState,
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* findProfileAccessStateEffect() {
+      const operation = "findProfileAccessState" as const;
+      const accountSelect = database
+        .select({
+          id: margonemAccount.id,
+          ownerUserId: margonemAccount.ownerUserId,
+        })
+        .from(margonemAccount)
+        .where(eq(margonemAccount.profileId, profileIdToNumber(profileId)))
+        .limit(1);
+      const accountSelectEffect = accountSelect as Effect.Effect<
+        readonly { readonly id: number; readonly ownerUserId: string }[],
+        unknown,
+        never
+      >;
+      const accountRows = yield* accountSelectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const [account] = accountRows;
+
+      if (account === undefined) {
+        return { _tag: "Available" as const };
+      }
+
+      if (account.ownerUserId === appUserIdToString(actorUserId)) {
+        return { _tag: "OwnedByActor" as const };
+      }
+
+      const accessSelect = database
+        .select({ id: margonemAccountAccess.id })
+        .from(margonemAccountAccess)
+        .where(
+          and(
+            eq(margonemAccountAccess.accountId, account.id),
+            eq(margonemAccountAccess.userId, appUserIdToString(actorUserId)),
+            eq(margonemAccountAccess.status, "accepted")
+          )
+        )
+        .limit(1);
+      const accessSelectEffect = accessSelect as Effect.Effect<
+        readonly { readonly id: number }[],
+        unknown,
+        never
+      >;
+      const accessRows = yield* accessSelectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+
+      if (accessRows[0] !== undefined) {
+        return { _tag: "SharedWithActor" as const };
+      }
+
+      return { _tag: "OwnedByAnotherUser" as const };
+    });
+
+const reserveRequestWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    monthlyRequestBudget,
+    profileId,
+    requestedByUserId,
+    yearMonth,
+  }: ReserveFirecrawlRequestInput): Effect.Effect<
+    ReservedFirecrawlRequest,
+    | {
+        readonly _tag: "FirecrawlMonthlyBudgetExhausted";
+        readonly yearMonth: typeof yearMonth;
+        readonly monthlyRequestBudget: number;
+        readonly usedRequests: number;
+      }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* reserveRequestEffect() {
+      const operation = "reserveRequest" as const;
+      const yearMonthText = firecrawlYearMonthToString(yearMonth);
+      const transaction = database.transaction((tx) => {
+        const transactionEffect = Effect.gen(function* reserveInTransaction() {
+          yield* tx.execute(
+            sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
+          ) as Effect.Effect<unknown, unknown, never>;
+          const usageSelect = tx
+            .select({ usedRequests: count() })
+            .from(firecrawlProfileScrapeRequest)
+            .where(
+              and(
+                eq(firecrawlProfileScrapeRequest.yearMonth, yearMonthText),
+                inArray(
+                  firecrawlProfileScrapeRequest.status,
+                  usedFirecrawlRequestStatuses
+                )
+              )
+            );
+          const usageRows = yield* usageSelect as Effect.Effect<
+            readonly { readonly usedRequests: number }[],
+            unknown,
+            never
+          >;
+          const usedRequests = usageRows[0]?.usedRequests ?? 0;
+
+          if (usedRequests >= monthlyRequestBudget) {
+            return yield* Effect.fail({
+              _tag: "FirecrawlMonthlyBudgetExhausted" as const,
+              monthlyRequestBudget,
+              usedRequests,
+              yearMonth,
+            });
+          }
+
+          const insert = tx
+            .insert(firecrawlProfileScrapeRequest)
+            .values({
+              profileId: profileIdToNumber(profileId),
+              requestedByUserId: appUserIdToString(requestedByUserId),
+              status: "reserved",
+              yearMonth: yearMonthText,
+            })
+            .returning({ id: firecrawlProfileScrapeRequest.id });
+          const insertedRows = yield* insert as Effect.Effect<
+            readonly { readonly id: number }[],
+            unknown,
+            never
+          >;
+          const [reserved] = insertedRows;
+
+          if (reserved === undefined) {
+            return yield* failPersistence(
+              operation,
+              new Error("Failed to reserve Firecrawl request")
+            );
+          }
+
+          const nextUsedRequests = usedRequests + 1;
+
+          return {
+            budgetState: {
+              monthlyRequestBudget,
+              remainingRequests: monthlyRequestBudget - nextUsedRequests,
+              usedRequests: nextUsedRequests,
+              yearMonth,
+            },
+            requestId: reserved.id,
+          };
+        });
+
+        return transactionEffect;
+      });
+
+      return yield* (
+        transaction as Effect.Effect<ReservedFirecrawlRequest, unknown, never>
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+    });
+
+const markRequestSucceededWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    cacheState,
+    creditsUsed,
+    firecrawlStatusCode,
+    requestId,
+  }: MarkFirecrawlRequestSucceededInput): Effect.Effect<
+    void,
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > => {
+    const operation = "markRequestSucceeded" as const;
+    const update = database
+      .update(firecrawlProfileScrapeRequest)
+      .set({
+        cacheState,
+        completedAt: new Date(),
+        creditsUsed,
+        firecrawlStatusCode,
+        status: "succeeded",
+      })
+      .where(eq(firecrawlProfileScrapeRequest.id, requestId));
+
+    const updateEffect = update as Effect.Effect<unknown, unknown, never>;
+    const catchEffect = Effect["catch"];
+    const handlePersistenceFailure = function handlePersistenceFailure(
+      error: unknown
+    ) {
+      return failPersistence(operation, error);
+    };
+    const catchPersistenceFailure = catchEffect(handlePersistenceFailure);
+
+    return updateEffect.pipe(catchPersistenceFailure, Effect.asVoid);
+  };
+
+const markRequestFailedWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    errorTag,
+    requestId,
+  }: MarkFirecrawlRequestFailedInput): Effect.Effect<
+    void,
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > => {
+    const operation = "markRequestFailed" as const;
+    const update = database
+      .update(firecrawlProfileScrapeRequest)
+      .set({ completedAt: new Date(), errorTag, status: "failed" })
+      .where(eq(firecrawlProfileScrapeRequest.id, requestId));
+
+    const updateEffect = update as Effect.Effect<unknown, unknown, never>;
+    const catchEffect = Effect["catch"];
+    const handlePersistenceFailure = function handlePersistenceFailure(
+      error: unknown
+    ) {
+      return failPersistence(operation, error);
+    };
+    const catchPersistenceFailure = catchEffect(handlePersistenceFailure);
+
+    return updateEffect.pipe(catchPersistenceFailure, Effect.asVoid);
+  };
 
 const createSquadGroupWithDatabase =
   (database: EffectPgDatabase) =>
@@ -983,12 +1231,16 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
   EffectDatabase.useSync((database) =>
     EffectSquadGroupStore.of({
       createSquadGroup: createSquadGroupWithDatabase(database),
+      findProfileAccessState: findProfileAccessStateWithDatabase(database),
       getSquadGroupDetail: getSquadGroupDetailWithDatabase(database),
       listAvailableCharactersForOwner:
         listAvailableCharactersForOwnerWithDatabase(database),
       listGlobalSquadGroups: listGlobalSquadGroupsWithDatabase(database),
       listMySquadGroups: listMySquadGroupsWithDatabase(database),
       listOwnedAccounts: listOwnedAccountsWithDatabase(database),
+      markRequestFailed: markRequestFailedWithDatabase(database),
+      markRequestSucceeded: markRequestSucceededWithDatabase(database),
+      reserveRequest: reserveRequestWithDatabase(database),
       setSquadGroupVisibility: setSquadGroupVisibilityWithDatabase(database),
     })
   )

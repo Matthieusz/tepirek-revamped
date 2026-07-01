@@ -1,4 +1,5 @@
 import {
+  firecrawlProfileScrapeRequest,
   margonemAccount,
   margonemCharacter,
   squadGroup,
@@ -15,12 +16,16 @@ import {
 import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts";
 import { systemClock } from "../account-import/preview-margonem-profile-import";
 import { parseAppUserId } from "../app-user-id";
+import { parseFirecrawlCreditCount } from "../firecrawl-config";
+import { firecrawlYearMonthFromDate } from "../firecrawl-year-month";
+import { parseMargonemProfileId } from "../margonem-profile-id";
 import { isOk } from "../result";
 import { CreateSquadGroup } from "./create-squad-group";
 import { ListAvailableSquadCharacters } from "./list-available-squad-characters";
 import { ListGlobalSquadGroups } from "./list-global-squad-groups";
 import { ListSquadGroups } from "./list-squad-groups";
 import { SetSquadGroupVisibility } from "./set-squad-group-visibility";
+import { EffectSquadGroupStore } from "./squad-group-store";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -30,6 +35,26 @@ const parseTestUserId = (value: string) => {
   }
 
   return userId.value;
+};
+
+const parseTestProfileId = (value: number) => {
+  const profileId = parseMargonemProfileId(value);
+
+  if (!isOk(profileId)) {
+    throw new Error("Expected test profile id to be valid");
+  }
+
+  return profileId.value;
+};
+
+const parseTestCredits = (value: number) => {
+  const credits = parseFirecrawlCreditCount(value);
+
+  if (!isOk(credits)) {
+    throw new Error("Expected test Firecrawl credits to be valid");
+  }
+
+  return credits.value;
 };
 
 describe("DrizzleEffectSquadGroupStore integration", () => {
@@ -242,6 +267,55 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       displayName: "Owned Effect account",
       generatedProfileUrl: "https://www.margonem.pl/profile/view,8100101",
       profileId: 8_100_101,
+    });
+  });
+
+  it("reserves and completes Firecrawl requests through the Effect store", async () => {
+    const member = await createVerifiedMember({ id: "effect-firecrawl-user" });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const profileId = parseTestProfileId(8_100_201);
+    const yearMonth = firecrawlYearMonthFromDate(
+      new Date("2026-06-29T12:00:00.000Z")
+    );
+
+    const reserved = await runtime.runPromise(
+      EffectSquadGroupStore.use((store) =>
+        store.reserveRequest({
+          monthlyRequestBudget: 10,
+          profileId,
+          requestedByUserId: parseTestUserId(member.id),
+          yearMonth,
+        })
+      )
+    );
+
+    await runtime.runPromise(
+      EffectSquadGroupStore.use((store) =>
+        store.markRequestSucceeded({
+          cacheState: "hit",
+          creditsUsed: parseTestCredits(1),
+          firecrawlStatusCode: 200,
+          requestId: reserved.requestId,
+        })
+      )
+    );
+
+    const [stored] = await testDb
+      .select({
+        cacheState: firecrawlProfileScrapeRequest.cacheState,
+        creditsUsed: firecrawlProfileScrapeRequest.creditsUsed,
+        firecrawlStatusCode: firecrawlProfileScrapeRequest.firecrawlStatusCode,
+        status: firecrawlProfileScrapeRequest.status,
+      })
+      .from(firecrawlProfileScrapeRequest)
+      .where(eq(firecrawlProfileScrapeRequest.id, reserved.requestId))
+      .limit(1);
+
+    expect(stored).toEqual({
+      cacheState: "hit",
+      creditsUsed: 1,
+      firecrawlStatusCode: 200,
+      status: "succeeded",
     });
   });
 

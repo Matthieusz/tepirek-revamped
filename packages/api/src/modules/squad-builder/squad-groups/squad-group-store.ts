@@ -7,6 +7,8 @@ import type {
   ActorDoesNotOwnSquadGroup,
   AuthorizeSquadGroupViewerInput,
   CreateSquadGroupStoreInput,
+  FindProfileAccessStateInput,
+  FirecrawlBudgetError,
   GetSquadGroupDetailInput,
   GlobalSquadGroupSummary,
   GlobalSquadVisibilityStore,
@@ -14,7 +16,12 @@ import type {
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
+  MarkFirecrawlRequestFailedInput,
+  MarkFirecrawlRequestSucceededInput,
   OwnedMargonemAccountSummary,
+  ProfileAccessState,
+  ReserveFirecrawlRequestInput,
+  ReservedFirecrawlRequest,
   SaveSharedSquadGroupCharactersStoreInput,
   SaveSquadGroupSnapshotStoreInput,
   SearchSquadEditorInviteTargetsStoreInput,
@@ -94,6 +101,26 @@ export interface EffectSquadGroupStoreShape {
     EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly findProfileAccessState: (
+    input: FindProfileAccessStateInput
+  ) => Effect<
+    ProfileAccessState,
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly reserveRequest: (
+    input: ReserveFirecrawlRequestInput
+  ) => Effect<
+    ReservedFirecrawlRequest,
+    FirecrawlBudgetError | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly markRequestSucceeded: (
+    input: MarkFirecrawlRequestSucceededInput
+  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable, never>;
+  readonly markRequestFailed: (
+    input: MarkFirecrawlRequestFailedInput
+  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable, never>;
 }
 
 export class EffectSquadGroupStore extends Context.Service<
@@ -113,6 +140,8 @@ export type {
   AuthorizeSquadGroupViewerInput,
   AvailableSquadCharacter,
   CreateSquadGroupStoreInput,
+  FindProfileAccessStateInput,
+  FirecrawlBudgetError,
   GetSquadGroupDetailInput,
   GlobalSquadGroupSummary,
   GlobalSquadVisibilityStore,
@@ -120,7 +149,12 @@ export type {
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
+  MarkFirecrawlRequestFailedInput,
+  MarkFirecrawlRequestSucceededInput,
   OwnedMargonemAccountSummary,
+  ProfileAccessState,
+  ReserveFirecrawlRequestInput,
+  ReservedFirecrawlRequest,
   RespondToSquadGroupInviteStoreInput,
   RevokeSquadGroupEditorStoreInput,
   SaveSharedSquadGroupCharactersStoreInput,

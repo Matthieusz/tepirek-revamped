@@ -69,7 +69,7 @@ const failPreview = (
   PreviewMargonemProfileImportError
 > => err(error);
 
-const profileAccessStateToDuplicateError = (
+export const profileAccessStateToDuplicateError = (
   state: ProfileAccessState
 ): DuplicateMargonemAccountError | undefined => {
   switch (state._tag) {

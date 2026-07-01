@@ -3,6 +3,7 @@ import {
   margonemAccount,
   margonemCharacter,
 } from "@tepirek-revamped/db/schema/squad-builder";
+import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vitest";
 
 import { makeApiManagedRuntime } from "../effect-app";
@@ -368,6 +369,45 @@ describe("squad-builder router Postgres integration", () => {
     ).toMatchObject({
       ownerUserName: "Global Owner",
     });
+  });
+
+  it("previews a single account import through the Effect oRPC bridge", async () => {
+    const member = await createVerifiedMember({ id: "preview-effect-member" });
+    const client = createSquadBuilderClient(member, {
+      effectPreviewService: {
+        preview: () =>
+          Effect.succeed({
+            firecrawlCreditsUsed: parseTestCredits(),
+            generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
+            jarunaCharacters: [
+              {
+                avatarUrl: null,
+                characterId: 1_296_625 as never,
+                level: 315 as never,
+                name: "informati",
+                profession: "tracker",
+                world: "jaruna",
+              },
+            ],
+            lastFetchedAt: new Date("2026-06-29T12:00:00.000Z"),
+            profileId: parseTestProfileId(),
+            suggestedAccountName: "informati",
+          }),
+      },
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+
+    const result = await client.squadBuilder.previewProfileImport({
+      profileUrl: "https://www.margonem.pl/profile/view,7298897",
+    });
+
+    expect(result).toMatchObject({
+      firecrawlCreditsUsed: 1,
+      generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
+      profileId: 7_298_897,
+      suggestedAccountName: "informati",
+    });
+    expect(result.jarunaCharacters).toHaveLength(1);
   });
 
   it("returns per-line owned account import preview results for a verified user", async () => {

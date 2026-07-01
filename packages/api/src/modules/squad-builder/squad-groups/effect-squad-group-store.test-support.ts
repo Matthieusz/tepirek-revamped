@@ -12,12 +12,16 @@ export const makeEffectSquadGroupStoreTestService = (
 ) =>
   EffectSquadGroupStore.of({
     createSquadGroup: () => unhandledStoreCall("createSquadGroup"),
+    findProfileAccessState: () => unhandledStoreCall("findProfileAccessState"),
     getSquadGroupDetail: () => unhandledStoreCall("getSquadGroupDetail"),
     listAvailableCharactersForOwner: () =>
       unhandledStoreCall("listAvailableCharactersForOwner"),
     listGlobalSquadGroups: () => unhandledStoreCall("listGlobalSquadGroups"),
     listMySquadGroups: () => unhandledStoreCall("listMySquadGroups"),
     listOwnedAccounts: () => unhandledStoreCall("listOwnedAccounts"),
+    markRequestFailed: () => unhandledStoreCall("markRequestFailed"),
+    markRequestSucceeded: () => unhandledStoreCall("markRequestSucceeded"),
+    reserveRequest: () => unhandledStoreCall("reserveRequest"),
     setSquadGroupVisibility: () =>
       unhandledStoreCall("setSquadGroupVisibility"),
     ...overrides,
