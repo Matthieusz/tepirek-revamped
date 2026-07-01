@@ -19,6 +19,7 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
       "getSquadGroupDetail",
       "listAvailableCharactersForOwner",
       "listGlobalSquadGroups",
+      "listIncomingAccountInvites",
       "listMySquadGroups",
       "listOwnedAccounts",
       "markPendingRefetchApplied",

@@ -27,6 +27,7 @@ import type {
   GlobalSquadGroupSummary,
   GlobalSquadVisibilityStore,
   ListAvailableCharactersForOwnerInput,
+  ListIncomingAccountInvitesInput,
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
@@ -273,6 +274,13 @@ export interface EffectSquadGroupStoreShape {
     | EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly listIncomingAccountInvites: (
+    input: ListIncomingAccountInvitesInput
+  ) => Effect<
+    readonly AccountAccessInviteSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
 }
 
 export class EffectSquadGroupStore extends Context.Service<
@@ -309,6 +317,7 @@ export type {
   GlobalSquadGroupSummary,
   GlobalSquadVisibilityStore,
   ListAvailableCharactersForOwnerInput,
+  ListIncomingAccountInvitesInput,
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,

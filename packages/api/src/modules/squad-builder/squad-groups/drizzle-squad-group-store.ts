@@ -105,6 +105,7 @@ import type {
   GlobalSquadGroupSummary,
   GetSquadGroupDetailInput,
   ListAvailableCharactersForOwnerInput,
+  ListIncomingAccountInvitesInput,
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
@@ -153,6 +154,7 @@ type EffectSquadGroupPersistenceOperation =
   | "getSquadGroupDetail"
   | "listAvailableCharactersForOwner"
   | "listGlobalSquadGroups"
+  | "listIncomingAccountInvites"
   | "listOwnedAccounts"
   | "listMySquadGroups"
   | "markRequestFailed"
@@ -2078,6 +2080,58 @@ const upsertAccountAccessInviteWithDatabase =
       return summary;
     });
 
+const listIncomingAccountInvitesWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+  }: ListIncomingAccountInvitesInput): Effect.Effect<
+    readonly AccountAccessInviteSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* listIncomingAccountInvitesEffect() {
+      const operation = "listIncomingAccountInvites" as const;
+      const select = database
+        .select({ id: margonemAccountAccess.id })
+        .from(margonemAccountAccess)
+        .where(
+          and(
+            eq(margonemAccountAccess.userId, appUserIdToString(actorUserId)),
+            eq(margonemAccountAccess.status, "pending")
+          )
+        )
+        .orderBy(desc(margonemAccountAccess.createdAt));
+      const selectEffect = select as Effect.Effect<
+        readonly { readonly id: number }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const invites: AccountAccessInviteSummary[] = [];
+
+      for (const row of rows) {
+        const accessId = parseMargonemAccountAccessId(row.id);
+
+        if (isError(accessId)) {
+          return yield* failPersistence(operation, accessId.error);
+        }
+
+        const summary = yield* loadAccountAccessInviteSummaryWithDatabase(
+          database
+        )(accessId.value, operation).pipe(
+          Effect.catchTag("AccountAccessInviteNotFound", (error) =>
+            failPersistence(operation, error)
+          )
+        );
+
+        invites.push(summary);
+      }
+
+      return invites;
+    });
+
 const respondToAccountAccessInviteWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -3078,6 +3132,8 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       listAvailableCharactersForOwner:
         listAvailableCharactersForOwnerWithDatabase(database),
       listGlobalSquadGroups: listGlobalSquadGroupsWithDatabase(database),
+      listIncomingAccountInvites:
+        listIncomingAccountInvitesWithDatabase(database),
       listMySquadGroups: listMySquadGroupsWithDatabase(database),
       listOwnedAccounts: listOwnedAccountsWithDatabase(database),
       markPendingRefetchApplied:

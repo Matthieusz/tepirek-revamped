@@ -43,6 +43,7 @@ import type {
   PreviewAccountRefetchOutput,
 } from "../modules/squad-builder/account-refetch/preview-account-refetch";
 import type { AccountSharingError } from "../modules/squad-builder/account-sharing/account-sharing-error";
+import { EffectListAccountSharingState } from "../modules/squad-builder/account-sharing/effect-list-account-sharing-state";
 import { EffectRespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-respond-to-account-access-invite";
 import { EffectRevokeAccountAccess } from "../modules/squad-builder/account-sharing/effect-revoke-account-access";
 import { EffectSearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/effect-search-account-invite-targets";
@@ -324,6 +325,16 @@ interface ListAccountSharingStateService {
   >;
 }
 
+interface EffectListAccountSharingStateService {
+  readonly listIncomingInvites: (
+    input: Parameters<EffectListAccountSharingState["listIncomingInvites"]>[0]
+  ) => Effect<
+    readonly AccountAccessInviteSummary[],
+    AccountSharingError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface CreateSquadGroupService {
   readonly create: (
     input: Parameters<CreateSquadGroup["create"]>[0]
@@ -448,6 +459,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly revokeAccountAccessService?: RevokeAccountAccessService;
   readonly effectRevokeAccountAccessService?: EffectRevokeAccountAccessService;
   readonly listAccountSharingStateService?: ListAccountSharingStateService;
+  readonly effectListAccountSharingStateService?: EffectListAccountSharingStateService;
   readonly createSquadGroupService?: CreateSquadGroupService;
   readonly effectRuntime?: ManagedRuntime<EffectSquadGroupStore, unknown>;
   readonly listMySquadGroupsService?: ListMySquadGroupsService;
@@ -1432,6 +1444,7 @@ const sendAccountAccessInviteEffect = new EffectSendAccountAccessInvite(
 const respondToAccountAccessInviteEffect =
   new EffectRespondToAccountAccessInvite(systemClock);
 const revokeAccountAccessEffect = new EffectRevokeAccountAccess(systemClock);
+const listAccountSharingStateEffect = new EffectListAccountSharingState();
 const confirmOwnedAccountImportEffect = new EffectConfirmOwnedAccountImport(
   systemClock
 );
@@ -1510,6 +1523,7 @@ export const createSquadBuilderRouter = ({
   revokeAccountAccessService,
   effectRevokeAccountAccessService,
   listAccountSharingStateService,
+  effectListAccountSharingStateService,
   createSquadGroupService,
   listMySquadGroupsService,
   getSquadGroupDetailService,
@@ -1894,33 +1908,51 @@ export const createSquadBuilderRouter = ({
       throw toOrpcError(actorUserId.error);
     }
 
-    const services =
-      listAccountSharingStateService === undefined
-        ? defaultServices
-        : ok({
-            sharingState: listAccountSharingStateService,
-          });
+    if (listAccountSharingStateService !== undefined) {
+      const result = await listAccountSharingStateService.listIncomingInvites({
+        actorUserId: actorUserId.value,
+      });
 
-    if (isError(services)) {
-      logSquadBuilderError(
-        context,
-        "listIncomingAccountInvites",
-        services.error
-      );
-      throw toOrpcError(services.error);
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "listIncomingAccountInvites",
+          result.error
+        );
+        throw toAccountSharingOrpcError(result.error);
+      }
+
+      return {
+        invites: result.value.map(toAccountAccessInviteDto),
+      };
     }
 
-    const result = await services.value.sharingState.listIncomingInvites({
+    const effect = (
+      effectListAccountSharingStateService ?? listAccountSharingStateEffect
+    ).listIncomingInvites({
       actorUserId: actorUserId.value,
     });
 
-    if (isError(result)) {
-      logSquadBuilderError(context, "listIncomingAccountInvites", result.error);
-      throw toAccountSharingOrpcError(result.error);
+    if (effectRuntime === undefined) {
+      const mapped: SquadBuilderPersistenceUnavailable = {
+        _tag: "SquadBuilderPersistenceUnavailable",
+        cause: new Error(
+          "DATABASE_URL is required for listIncomingAccountInvites"
+        ),
+        operation: "listIncomingAccountInvites",
+      };
+      logSquadBuilderError(context, "listIncomingAccountInvites", mapped);
+      throw toAccountSharingOrpcError(mapped);
     }
 
+    const invites = await runOrpcEffect(effectRuntime, effect, (error) => {
+      const mapped = error as AccountSharingError;
+      logSquadBuilderError(context, "listIncomingAccountInvites", mapped);
+      return toAccountSharingOrpcError(mapped);
+    });
+
     return {
-      invites: result.value.map(toAccountAccessInviteDto),
+      invites: invites.map(toAccountAccessInviteDto),
     };
   }),
   listIncomingSquadGroupInvites: verifiedProcedure.handler(

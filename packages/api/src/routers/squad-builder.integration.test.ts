@@ -1,6 +1,7 @@
 import { createRouterClient } from "@orpc/server";
 import {
   margonemAccount,
+  margonemAccountAccess,
   margonemAccountRefetchPreview,
   margonemCharacter,
 } from "@tepirek-revamped/db/schema/squad-builder";
@@ -15,6 +16,7 @@ import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-impo
 import { systemClock } from "../modules/squad-builder/account-import/preview-margonem-profile-import";
 import type { PreviewOwnedAccountImportItem } from "../modules/squad-builder/account-import/preview-owned-account-imports";
 import { EffectApplyAccountRefetch } from "../modules/squad-builder/account-refetch/effect-apply-account-refetch";
+import { EffectListAccountSharingState } from "../modules/squad-builder/account-sharing/effect-list-account-sharing-state";
 import { EffectRespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-respond-to-account-access-invite";
 import { EffectSearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/effect-search-account-invite-targets";
 import { EffectSendAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-send-account-access-invite";
@@ -953,6 +955,48 @@ describe("squad-builder router Postgres integration", () => {
     expect(accepted).toMatchObject({
       accessId: invite.accessId,
       status: "accepted",
+    });
+  });
+
+  it("lists incoming account invites through the Effect bridge", async () => {
+    const owner = await createVerifiedMember({
+      id: "router-effect-list-invites-owner",
+      name: "Effect Incoming Owner",
+    });
+    const recipient = await createVerifiedMember({
+      id: "router-effect-list-invites-recipient",
+    });
+    const client = createSquadBuilderClient(recipient, {
+      effectListAccountSharingStateService: new EffectListAccountSharingState(),
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Effect incoming account",
+        ownerUserId: owner.id,
+        profileId: 7_299_011,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    await testDb.insert(margonemAccountAccess).values({
+      accountId: account.id,
+      invitedByUserId: owner.id,
+      status: "pending",
+      userId: recipient.id,
+    });
+
+    const listed = await client.squadBuilder.listIncomingAccountInvites();
+
+    expect(listed.invites).toHaveLength(1);
+    expect(listed.invites[0]).toMatchObject({
+      accountId: account.id,
+      ownerUserName: "Effect Incoming Owner",
+      status: "pending",
     });
   });
 
