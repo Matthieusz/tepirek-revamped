@@ -9,6 +9,7 @@ import type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnMargonemAccount,
   ActorDoesNotOwnSquadGroup,
+  AccountInviteTarget,
   ApplyRefetchedAccountInput,
   AuthorizeSquadGroupViewerInput,
   CreateOwnedAccountFromPendingImportInput,
@@ -16,6 +17,7 @@ import type {
   CreatePendingMargonemAccountRefetchInput,
   CreateSquadGroupStoreInput,
   DuplicateMargonemAccountError,
+  FindOwnedAccountForSharingInput,
   FindPendingMargonemAccountImportInput,
   FindProfileAccessStateInput,
   FirecrawlBudgetError,
@@ -31,6 +33,7 @@ import type {
   MarkFirecrawlRequestSucceededInput,
   MarkPendingMargonemAccountRefetchAppliedInput,
   OwnedMargonemAccountSummary,
+  OwnedAccountForSharing,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
   PendingMargonemAccountImportNotFound,
@@ -43,6 +46,7 @@ import type {
   ReservedFirecrawlRequest,
   SaveSharedSquadGroupCharactersStoreInput,
   SaveSquadGroupSnapshotStoreInput,
+  SearchInviteTargetsStoreInput,
   SearchSquadEditorInviteTargetsStoreInput,
   SetSquadGroupVisibilityStoreInput,
   SharedSquadGroupSummary,
@@ -199,6 +203,20 @@ export interface EffectSquadGroupStoreShape {
   readonly markPendingRefetchApplied: (
     input: MarkPendingMargonemAccountRefetchAppliedInput
   ) => Effect<void, EffectSquadBuilderPersistenceUnavailable, never>;
+  readonly findOwnedAccountForSharing: (
+    input: FindOwnedAccountForSharingInput
+  ) => Effect<
+    OwnedAccountForSharing,
+    MargonemAccountNotFound | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly searchInviteTargets: (
+    input: SearchInviteTargetsStoreInput
+  ) => Effect<
+    readonly AccountInviteTarget[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
 }
 
 export class EffectSquadGroupStore extends Context.Service<
@@ -216,6 +234,7 @@ export type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnMargonemAccount,
   ActorDoesNotOwnSquadGroup,
+  AccountInviteTarget,
   ApplyRefetchedAccountInput,
   AuthorizeSquadGroupViewerInput,
   AvailableSquadCharacter,
@@ -224,6 +243,7 @@ export type {
   CreatePendingMargonemAccountRefetchInput,
   CreateSquadGroupStoreInput,
   DuplicateMargonemAccountError,
+  FindOwnedAccountForSharingInput,
   FindPendingMargonemAccountImportInput,
   FindProfileAccessStateInput,
   FirecrawlBudgetError,
@@ -239,6 +259,7 @@ export type {
   MarkFirecrawlRequestSucceededInput,
   MarkPendingMargonemAccountRefetchAppliedInput,
   OwnedMargonemAccountSummary,
+  OwnedAccountForSharing,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
   PendingMargonemAccountImportNotFound,
@@ -253,6 +274,7 @@ export type {
   RevokeSquadGroupEditorStoreInput,
   SaveSharedSquadGroupCharactersStoreInput,
   SaveSquadGroupSnapshotStoreInput,
+  SearchInviteTargetsStoreInput,
   SearchSquadEditorInviteTargetsStoreInput,
   SetSquadGroupVisibilityStoreInput,
   SharedSquadGroupSummary,

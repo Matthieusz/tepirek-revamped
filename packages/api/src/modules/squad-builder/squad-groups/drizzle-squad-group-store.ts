@@ -28,6 +28,8 @@ import {
   inArray,
   isNull,
   lte,
+  ne,
+  not,
   or,
   sql,
 } from "drizzle-orm";
@@ -87,6 +89,7 @@ import type {
   CreatePendingMargonemAccountRefetchInput,
   CreateSquadGroupStoreInput,
   DuplicateMargonemAccountError,
+  FindOwnedAccountForSharingInput,
   FindPendingMargonemAccountImportInput,
   FindProfileAccessStateInput,
   GlobalSquadGroupSummary,
@@ -99,6 +102,7 @@ import type {
   MarkFirecrawlRequestSucceededInput,
   MarkPendingMargonemAccountRefetchAppliedInput,
   OwnedMargonemAccountSummary,
+  OwnedAccountForSharing,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
   PendingMargonemAccountImportNotFound,
@@ -109,8 +113,10 @@ import type {
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
+  SearchInviteTargetsStoreInput,
   SetSquadGroupVisibilityStoreInput,
   SquadGroupVisibilityChange,
+  AccountInviteTarget,
   SquadGroupCharacter,
   SquadGroupDetail,
   SquadGroupNotFound,
@@ -119,12 +125,15 @@ import type {
 import { EffectSquadGroupStore } from "./squad-group-store";
 
 type EffectSquadGroupPersistenceOperation =
+  | "applyRefetchedAccount"
   | "createPendingImport"
   | "createOwnedAccountFromPendingImport"
+  | "createPendingRefetch"
   | "createSquadGroup"
+  | "findOwnedAccountForSharing"
   | "findPendingImportForConfirmation"
-  | "findProfileAccessState"
   | "findPendingRefetchForApply"
+  | "findProfileAccessState"
   | "getAccountForRefetch"
   | "getSquadGroupDetail"
   | "listAvailableCharactersForOwner"
@@ -134,9 +143,8 @@ type EffectSquadGroupPersistenceOperation =
   | "markRequestFailed"
   | "markRequestSucceeded"
   | "markPendingRefetchApplied"
-  | "applyRefetchedAccount"
-  | "createPendingRefetch"
   | "reserveRequest"
+  | "searchInviteTargets"
   | "setSquadGroupVisibility";
 
 const usedFirecrawlRequestStatuses = [
@@ -1602,6 +1610,141 @@ const applyRefetchedAccountWithDatabase =
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
     });
 
+const searchInviteTargetsWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    accountId,
+    actorUserId,
+    query,
+  }: SearchInviteTargetsStoreInput): Effect.Effect<
+    readonly AccountInviteTarget[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* searchInviteTargetsEffect() {
+      const operation = "searchInviteTargets" as const;
+      const accountIdNumber = margonemAccountIdToNumber(accountId);
+      const actor = appUserIdToString(actorUserId);
+      const select = database
+        .select({
+          image: user.image,
+          name: user.name,
+          userId: user.id,
+        })
+        .from(user)
+        .where(
+          and(
+            eq(user.verified, true),
+            ne(user.id, actor),
+            ilike(user.name, `%${query}%`),
+            not(
+              sql`${user.id} in (
+                select ${margonemAccountAccess.userId}
+                from ${margonemAccountAccess}
+                where ${margonemAccountAccess.accountId} = ${accountIdNumber}
+                  and ${margonemAccountAccess.status} in ('pending', 'accepted')
+              )`
+            )
+          )
+        )
+        .orderBy(user.name)
+        .limit(10);
+      const selectEffect = select as Effect.Effect<
+        readonly {
+          readonly image: string | null;
+          readonly name: string;
+          readonly userId: string;
+        }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const targets: AccountInviteTarget[] = [];
+
+      for (const row of rows) {
+        const userId = parseAppUserId(row.userId);
+
+        if (isError(userId)) {
+          return yield* failPersistence(operation, userId.error);
+        }
+
+        targets.push({
+          image: row.image,
+          name: row.name,
+          userId: userId.value,
+        });
+      }
+
+      return targets;
+    });
+
+const findOwnedAccountForSharingWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    accountId,
+  }: FindOwnedAccountForSharingInput): Effect.Effect<
+    OwnedAccountForSharing,
+    | { readonly _tag: "MargonemAccountNotFound" }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* findOwnedAccountForSharingEffect() {
+      const operation = "findOwnedAccountForSharing" as const;
+      const select = database
+        .select({
+          displayName: margonemAccount.displayName,
+          ownerUserId: margonemAccount.ownerUserId,
+          profileId: margonemAccount.profileId,
+        })
+        .from(margonemAccount)
+        .where(eq(margonemAccount.id, margonemAccountIdToNumber(accountId)))
+        .limit(1);
+      const selectEffect = select as Effect.Effect<
+        readonly {
+          readonly displayName: string;
+          readonly ownerUserId: string;
+          readonly profileId: number;
+        }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const [account] = rows;
+
+      if (account === undefined) {
+        return yield* Effect.fail({ _tag: "MargonemAccountNotFound" as const });
+      }
+
+      const displayName = parseAccountDisplayName(account.displayName);
+
+      if (isError(displayName)) {
+        return yield* failPersistence(operation, displayName.error);
+      }
+
+      const ownerUserId = parseAppUserId(account.ownerUserId);
+
+      if (isError(ownerUserId)) {
+        return yield* failPersistence(operation, ownerUserId.error);
+      }
+
+      const profileId = parseMargonemProfileId(account.profileId);
+
+      if (isError(profileId)) {
+        return yield* failPersistence(operation, profileId.error);
+      }
+
+      return {
+        accountId,
+        displayName: displayName.value,
+        ownerUserId: ownerUserId.value,
+        profileId: profileId.value,
+      };
+    });
+
 const listAvailableCharactersForOwnerWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -2261,6 +2404,8 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       createPendingImport: createPendingImportWithDatabase(database),
       createPendingRefetch: createPendingRefetchWithDatabase(database),
       createSquadGroup: createSquadGroupWithDatabase(database),
+      findOwnedAccountForSharing:
+        findOwnedAccountForSharingWithDatabase(database),
       findPendingImportForConfirmation:
         findPendingImportForConfirmationWithDatabase(database),
       findPendingRefetchForApply:
@@ -2278,6 +2423,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       markRequestFailed: markRequestFailedWithDatabase(database),
       markRequestSucceeded: markRequestSucceededWithDatabase(database),
       reserveRequest: reserveRequestWithDatabase(database),
+      searchInviteTargets: searchInviteTargetsWithDatabase(database),
       setSquadGroupVisibility: setSquadGroupVisibilityWithDatabase(database),
     })
   )

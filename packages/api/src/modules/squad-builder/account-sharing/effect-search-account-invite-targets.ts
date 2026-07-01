@@ -1,0 +1,73 @@
+import type { Effect } from "effect/Effect";
+import * as EffectRuntime from "effect/Effect";
+
+import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
+import type { AccountSharingError } from "./account-sharing-error";
+import type { AccountInviteTarget } from "./account-sharing-store";
+import { accountInviteTargetSearchPolicy } from "./search-account-invite-targets";
+import type {
+  InvalidAccountInviteTargetQuery,
+  SearchAccountInviteTargetsInput,
+} from "./search-account-invite-targets";
+
+const parseAccountInviteTargetQuery = (
+  input: string
+): Effect<string, InvalidAccountInviteTargetQuery, never> => {
+  const trimmed = input.trim();
+
+  if (trimmed.length < accountInviteTargetSearchPolicy.minQueryLength) {
+    return EffectRuntime.fail({
+      _tag: "InvalidAccountInviteTargetQuery" as const,
+      message: `Wpisz co najmniej ${accountInviteTargetSearchPolicy.minQueryLength} znaki`,
+    });
+  }
+
+  if (trimmed.length > accountInviteTargetSearchPolicy.maxQueryLength) {
+    return EffectRuntime.fail({
+      _tag: "InvalidAccountInviteTargetQuery" as const,
+      message: `Zapytanie może mieć maksymalnie ${accountInviteTargetSearchPolicy.maxQueryLength} znaków`,
+    });
+  }
+
+  return EffectRuntime.succeed(trimmed);
+};
+
+/** Effect service module that searches verified users an owner may invite. */
+export class EffectSearchAccountInviteTargets {
+  private readonly serviceName = "EffectSearchAccountInviteTargets";
+
+  /** Search verified users the account owner may invite. */
+  search(
+    input: SearchAccountInviteTargetsInput
+  ): Effect<
+    readonly AccountInviteTarget[],
+    AccountSharingError,
+    EffectSquadGroupStore
+  > {
+    void this.serviceName;
+
+    return EffectRuntime.gen(function* searchAccountInviteTargetsEffect() {
+      const query = yield* parseAccountInviteTargetQuery(input.query);
+      const owned = yield* EffectSquadGroupStore.use((store) =>
+        store.findOwnedAccountForSharing({
+          accountId: input.accountId,
+          actorUserId: input.actorUserId,
+        })
+      );
+
+      if (owned.ownerUserId !== input.actorUserId) {
+        return yield* EffectRuntime.fail({
+          _tag: "ActorDoesNotOwnMargonemAccount" as const,
+        });
+      }
+
+      return yield* EffectSquadGroupStore.use((store) =>
+        store.searchInviteTargets({
+          accountId: input.accountId,
+          actorUserId: input.actorUserId,
+          query,
+        })
+      );
+    });
+  }
+}

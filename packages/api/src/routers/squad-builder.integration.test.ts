@@ -15,6 +15,7 @@ import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-impo
 import { systemClock } from "../modules/squad-builder/account-import/preview-margonem-profile-import";
 import type { PreviewOwnedAccountImportItem } from "../modules/squad-builder/account-import/preview-owned-account-imports";
 import { EffectApplyAccountRefetch } from "../modules/squad-builder/account-refetch/effect-apply-account-refetch";
+import { EffectSearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/effect-search-account-invite-targets";
 import { ListAccountSharingState } from "../modules/squad-builder/account-sharing/list-account-sharing-state";
 import { RespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/respond-to-account-access-invite";
 import { RevokeAccountAccess } from "../modules/squad-builder/account-sharing/revoke-account-access";
@@ -893,6 +894,44 @@ describe("squad-builder router Postgres integration", () => {
     const result = await client.squadBuilder.searchAccountInviteTargets({
       accountId: account.id,
       query: "Search",
+    });
+
+    const foundIds = result.users.map((user) => user.userId);
+    expect(foundIds).toContain(target.id);
+    expect(foundIds).not.toContain(owner.id);
+  });
+
+  it("searches verified invite targets through the Effect oRPC bridge", async () => {
+    const owner = await createVerifiedMember({
+      id: "router-effect-search-owner",
+      name: "Effect Search Owner",
+    });
+    const target = await createVerifiedMember({
+      id: "router-effect-search-target",
+      name: "Effect Search Target",
+    });
+    const client = createSquadBuilderClient(owner, {
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+      effectSearchAccountInviteTargetsService:
+        new EffectSearchAccountInviteTargets(),
+    });
+
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Effect search account",
+        ownerUserId: owner.id,
+        profileId: 7_299_005,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    const result = await client.squadBuilder.searchAccountInviteTargets({
+      accountId: account.id,
+      query: "Effect Search",
     });
 
     const foundIds = result.users.map((user) => user.userId);

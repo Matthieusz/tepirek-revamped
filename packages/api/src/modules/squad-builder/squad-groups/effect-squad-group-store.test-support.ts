@@ -17,6 +17,8 @@ export const makeEffectSquadGroupStoreTestService = (
     createPendingImport: () => unhandledStoreCall("createPendingImport"),
     createPendingRefetch: () => unhandledStoreCall("createPendingRefetch"),
     createSquadGroup: () => unhandledStoreCall("createSquadGroup"),
+    findOwnedAccountForSharing: () =>
+      unhandledStoreCall("findOwnedAccountForSharing"),
     findPendingImportForConfirmation: () =>
       unhandledStoreCall("findPendingImportForConfirmation"),
     findPendingRefetchForApply: () =>
@@ -34,6 +36,7 @@ export const makeEffectSquadGroupStoreTestService = (
     markRequestFailed: () => unhandledStoreCall("markRequestFailed"),
     markRequestSucceeded: () => unhandledStoreCall("markRequestSucceeded"),
     reserveRequest: () => unhandledStoreCall("reserveRequest"),
+    searchInviteTargets: () => unhandledStoreCall("searchInviteTargets"),
     setSquadGroupVisibility: () =>
       unhandledStoreCall("setSquadGroupVisibility"),
     ...overrides,

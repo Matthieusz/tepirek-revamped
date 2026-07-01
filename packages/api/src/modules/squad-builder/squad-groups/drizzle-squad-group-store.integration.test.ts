@@ -24,9 +24,11 @@ import { EffectConfirmOwnedAccountImport } from "../account-import/effect-confir
 import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts";
 import { systemClock } from "../account-import/preview-margonem-profile-import";
 import { EffectApplyAccountRefetch } from "../account-refetch/effect-apply-account-refetch";
+import { EffectSearchAccountInviteTargets } from "../account-sharing/effect-search-account-invite-targets";
 import { parseAppUserId } from "../app-user-id";
 import { parseFirecrawlCreditCount } from "../firecrawl-config";
 import { firecrawlYearMonthFromDate } from "../firecrawl-year-month";
+import { parseMargonemAccountId } from "../margonem-account-id";
 import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff";
 import { parseMargonemProfileId } from "../margonem-profile-id";
 import { isOk } from "../result";
@@ -45,6 +47,16 @@ const parseTestUserId = (value: string) => {
   }
 
   return userId.value;
+};
+
+const parseTestAccountId = (value: number) => {
+  const accountId = parseMargonemAccountId(value);
+
+  if (!isOk(accountId)) {
+    throw new Error("Expected test account id to be valid");
+  }
+
+  return accountId.value;
 };
 
 const parseTestProfileId = (value: number) => {
@@ -749,6 +761,44 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       .limit(1);
 
     expect(stored?.visibility).toBe("global");
+  });
+
+  it("searches account invite targets", async () => {
+    const owner = await createVerifiedMember({
+      id: "effect-store-search-owner",
+      name: "Effect Store Search Owner",
+    });
+    const target = await createVerifiedMember({
+      id: "effect-store-search-target",
+      name: "Effect Store Search Target",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const searchService = new EffectSearchAccountInviteTargets();
+
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Effect store search account",
+        ownerUserId: owner.id,
+        profileId: 7_299_006,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    const targets = await runtime.runPromise(
+      searchService.search({
+        accountId: parseTestAccountId(account.id),
+        actorUserId: parseTestUserId(owner.id),
+        query: "Store Search",
+      })
+    );
+    const targetIds = targets.map((item) => item.userId);
+
+    expect(targetIds).toContain(parseTestUserId(target.id));
+    expect(targetIds).not.toContain(parseTestUserId(owner.id));
   });
 
   it("lists globally visible squad groups", async () => {

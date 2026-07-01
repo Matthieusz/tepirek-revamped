@@ -43,6 +43,7 @@ import type {
   PreviewAccountRefetchOutput,
 } from "../modules/squad-builder/account-refetch/preview-account-refetch";
 import type { AccountSharingError } from "../modules/squad-builder/account-sharing/account-sharing-error";
+import { EffectSearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/effect-search-account-invite-targets";
 import { ListAccountSharingState } from "../modules/squad-builder/account-sharing/list-account-sharing-state";
 import { RespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/respond-to-account-access-invite";
 import { RevokeAccountAccess } from "../modules/squad-builder/account-sharing/revoke-account-access";
@@ -244,6 +245,16 @@ interface SearchAccountInviteTargetsService {
   ) => Promise<Result<readonly AccountInviteTarget[], AccountSharingError>>;
 }
 
+interface EffectSearchAccountInviteTargetsService {
+  readonly search: (
+    input: Parameters<EffectSearchAccountInviteTargets["search"]>[0]
+  ) => Effect<
+    readonly AccountInviteTarget[],
+    AccountSharingError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface SendAccountAccessInviteService {
   readonly send: (
     input: Parameters<SendAccountAccessInvite["send"]>[0]
@@ -396,6 +407,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly effectApplyAccountRefetchService?: EffectApplyAccountRefetchService;
   readonly listOwnedAccountsService?: ListOwnedAccountsService;
   readonly searchAccountInviteTargetsService?: SearchAccountInviteTargetsService;
+  readonly effectSearchAccountInviteTargetsService?: EffectSearchAccountInviteTargetsService;
   readonly sendAccountAccessInviteService?: SendAccountAccessInviteService;
   readonly respondToAccountAccessInviteService?: RespondToAccountAccessInviteService;
   readonly revokeAccountAccessService?: RevokeAccountAccessService;
@@ -1377,6 +1389,7 @@ const listAvailableSquadCharactersEffect = new ListAvailableSquadCharacters();
 const setSquadGroupVisibilityEffect = new SetSquadGroupVisibility(systemClock);
 const listOwnedAccountsEffect = new ListOwnedMargonemAccounts();
 const applyAccountRefetchEffect = new EffectApplyAccountRefetch(systemClock);
+const searchAccountInviteTargetsEffect = new EffectSearchAccountInviteTargets();
 const confirmOwnedAccountImportEffect = new EffectConfirmOwnedAccountImport(
   systemClock
 );
@@ -1447,6 +1460,7 @@ export const createSquadBuilderRouter = ({
   effectApplyAccountRefetchService,
   listOwnedAccountsService,
   searchAccountInviteTargetsService,
+  effectSearchAccountInviteTargetsService,
   sendAccountAccessInviteService,
   respondToAccountAccessInviteService,
   revokeAccountAccessService,
@@ -2563,39 +2577,56 @@ export const createSquadBuilderRouter = ({
         throw toAccountSharingOrpcError(accountId.error);
       }
 
-      const services =
-        searchAccountInviteTargetsService === undefined
-          ? defaultServices
-          : ok({
-              searchInviteTargets: searchAccountInviteTargetsService,
-            });
+      if (searchAccountInviteTargetsService !== undefined) {
+        const result = await searchAccountInviteTargetsService.search({
+          accountId: accountId.value,
+          actorUserId: actorUserId.value,
+          query: input.query,
+        });
 
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "searchAccountInviteTargets",
-          services.error
-        );
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "searchAccountInviteTargets",
+            result.error
+          );
+          throw toAccountSharingOrpcError(result.error);
+        }
+
+        return {
+          users: result.value.map(toAccountInviteTargetDto),
+        };
       }
 
-      const result = await services.value.searchInviteTargets.search({
+      const effect = (
+        effectSearchAccountInviteTargetsService ??
+        searchAccountInviteTargetsEffect
+      ).search({
         accountId: accountId.value,
         actorUserId: actorUserId.value,
         query: input.query,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "searchAccountInviteTargets",
-          result.error
-        );
-        throw toAccountSharingOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for searchAccountInviteTargets"
+          ),
+          operation: "searchAccountInviteTargets",
+        };
+        logSquadBuilderError(context, "searchAccountInviteTargets", error);
+        throw toAccountSharingOrpcError(error);
       }
 
+      const targets = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as AccountSharingError;
+        logSquadBuilderError(context, "searchAccountInviteTargets", mapped);
+        return toAccountSharingOrpcError(mapped);
+      });
+
       return {
-        users: result.value.map(toAccountInviteTargetDto),
+        users: targets.map(toAccountInviteTargetDto),
       };
     }),
   searchSquadEditorInviteTargets: verifiedProcedure
