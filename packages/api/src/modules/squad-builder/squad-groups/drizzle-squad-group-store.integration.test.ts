@@ -25,6 +25,7 @@ import { EffectConfirmOwnedAccountImport } from "../account-import/effect-confir
 import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts";
 import { systemClock } from "../account-import/preview-margonem-profile-import";
 import { EffectApplyAccountRefetch } from "../account-refetch/effect-apply-account-refetch";
+import { EffectRespondToAccountAccessInvite } from "../account-sharing/effect-respond-to-account-access-invite";
 import { EffectSearchAccountInviteTargets } from "../account-sharing/effect-search-account-invite-targets";
 import { EffectSendAccountAccessInvite } from "../account-sharing/effect-send-account-access-invite";
 import { parseAppUserId } from "../app-user-id";
@@ -859,6 +860,61 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
         })
       )
     ).rejects.toMatchObject({ _tag: "AccountAccessTransitionNotAllowed" });
+  });
+
+  it("responds to account access invites", async () => {
+    const owner = await createVerifiedMember({
+      id: "effect-store-respond-owner",
+      name: "Effect Store Respond Owner",
+    });
+    const target = await createVerifiedMember({
+      id: "effect-store-respond-target",
+      name: "Effect Store Respond Target",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const sendService = new EffectSendAccountAccessInvite(systemClock);
+    const respondService = new EffectRespondToAccountAccessInvite(systemClock);
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Effect store respond account",
+        ownerUserId: owner.id,
+        profileId: 7_299_009,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    const invite = await runtime.runPromise(
+      sendService.send({
+        accountId: parseTestAccountId(account.id),
+        actorUserId: parseTestUserId(owner.id),
+        invitedUserId: parseTestUserId(target.id),
+      })
+    );
+    const accepted = await runtime.runPromise(
+      respondService.respond({
+        accessId: invite.accessId,
+        actorUserId: parseTestUserId(target.id),
+        response: "accept",
+      })
+    );
+
+    expect(accepted).toMatchObject({
+      accessId: invite.accessId,
+      invitedUserId: parseTestUserId(target.id),
+      status: "accepted",
+    });
+
+    const [stored] = await testDb
+      .select({ status: margonemAccountAccess.status })
+      .from(margonemAccountAccess)
+      .where(eq(margonemAccountAccess.id, invite.accessId))
+      .limit(1);
+
+    expect(stored?.status).toBe("accepted");
   });
 
   it("lists globally visible squad groups", async () => {

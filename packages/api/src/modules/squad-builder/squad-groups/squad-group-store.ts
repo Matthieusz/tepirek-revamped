@@ -68,6 +68,7 @@ import type {
   UpsertAccountAccessInviteInput,
   UpsertSquadGroupEditorInviteInput,
   VerifiedInviteTarget,
+  RespondToAccountAccessInviteStoreInput,
   RespondToSquadGroupInviteStoreInput,
   RevokeSquadGroupEditorStoreInput,
 } from "../squad-builder-store";
@@ -242,6 +243,20 @@ export interface EffectSquadGroupStoreShape {
     | EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly respondToAccountAccessInvite: (
+    input: RespondToAccountAccessInviteStoreInput
+  ) => Effect<
+    AccountAccessInviteSummary,
+    | { readonly _tag: "AccountAccessInviteNotFound" }
+    | { readonly _tag: "ActorIsNotInviteRecipient" }
+    | {
+        readonly _tag: "AccountAccessTransitionNotAllowed";
+        readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
+        readonly attempted: string;
+      }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
 }
 
 export class EffectSquadGroupStore extends Context.Service<
@@ -297,6 +312,7 @@ export type {
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
+  RespondToAccountAccessInviteStoreInput,
   RespondToSquadGroupInviteStoreInput,
   RevokeSquadGroupEditorStoreInput,
   SaveSharedSquadGroupCharactersStoreInput,

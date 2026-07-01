@@ -121,6 +121,7 @@ import type {
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
   SearchInviteTargetsStoreInput,
+  RespondToAccountAccessInviteStoreInput,
   SetSquadGroupVisibilityStoreInput,
   SquadGroupVisibilityChange,
   AccountInviteTarget,
@@ -153,6 +154,7 @@ type EffectSquadGroupPersistenceOperation =
   | "markRequestSucceeded"
   | "markPendingRefetchApplied"
   | "reserveRequest"
+  | "respondToAccountAccessInvite"
   | "searchInviteTargets"
   | "upsertAccountAccessInvite"
   | "setSquadGroupVisibility";
@@ -2070,6 +2072,126 @@ const upsertAccountAccessInviteWithDatabase =
       return summary;
     });
 
+const respondToAccountAccessInviteWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    accessId,
+    invitedUserId,
+    now,
+    response,
+  }: RespondToAccountAccessInviteStoreInput): Effect.Effect<
+    AccountAccessInviteSummary,
+    | { readonly _tag: "AccountAccessInviteNotFound" }
+    | { readonly _tag: "ActorIsNotInviteRecipient" }
+    | {
+        readonly _tag: "AccountAccessTransitionNotAllowed";
+        readonly currentStatus: AccountAccessStatus;
+        readonly attempted: string;
+      }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* respondToAccountAccessInviteEffect() {
+      const operation = "respondToAccountAccessInvite" as const;
+      const invitedUser = appUserIdToString(invitedUserId);
+      const transaction = database.transaction((tx) =>
+        Effect.gen(function* respondToAccountAccessInviteTransaction() {
+          const existingSelect = tx
+            .select({
+              id: margonemAccountAccess.id,
+              status: margonemAccountAccess.status,
+              userId: margonemAccountAccess.userId,
+            })
+            .from(margonemAccountAccess)
+            .where(eq(margonemAccountAccess.id, accessId))
+            .limit(1);
+          const existingRows = yield* existingSelect as Effect.Effect<
+            readonly {
+              readonly id: number;
+              readonly status: string;
+              readonly userId: string;
+            }[],
+            unknown,
+            never
+          >;
+          const [existing] = existingRows;
+
+          if (existing === undefined) {
+            return {
+              _tag: "AccountAccessInviteNotFound" as const,
+            };
+          }
+
+          if (existing.userId !== invitedUser) {
+            return {
+              _tag: "ActorIsNotInviteRecipient" as const,
+            };
+          }
+
+          const status = parseAccountAccessStatus(existing.status);
+
+          if (isError(status)) {
+            return yield* failPersistence(operation, status.error);
+          }
+
+          const nextStatus: AccountAccessStatus =
+            response === "accept" ? "accepted" : "declined";
+
+          if (!canTransitionAccountAccess(status.value, nextStatus)) {
+            return {
+              _tag: "AccountAccessTransitionNotAllowed" as const,
+              attempted: nextStatus,
+              currentStatus: status.value,
+            };
+          }
+
+          const update = tx
+            .update(margonemAccountAccess)
+            .set({ status: nextStatus, updatedAt: now })
+            .where(eq(margonemAccountAccess.id, existing.id))
+            .returning({ id: margonemAccountAccess.id });
+          const updatedRows = yield* update as Effect.Effect<
+            readonly { readonly id: number }[],
+            unknown,
+            never
+          >;
+          const [updated] = updatedRows;
+
+          if (updated === undefined) {
+            return yield* failPersistence(
+              operation,
+              new Error("Failed to update account access invite")
+            );
+          }
+
+          return { _tag: "Updated" as const };
+        })
+      );
+      const respond = yield* (
+        transaction as Effect.Effect<
+          | { readonly _tag: "Updated" }
+          | { readonly _tag: "AccountAccessInviteNotFound" }
+          | { readonly _tag: "ActorIsNotInviteRecipient" }
+          | {
+              readonly _tag: "AccountAccessTransitionNotAllowed";
+              readonly currentStatus: AccountAccessStatus;
+              readonly attempted: string;
+            },
+          unknown,
+          never
+        >
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
+      if (respond._tag !== "Updated") {
+        return yield* Effect.fail(respond);
+      }
+
+      return yield* loadAccountAccessInviteSummaryWithDatabase(database)(
+        accessId,
+        operation
+      );
+    });
+
 const listAvailableCharactersForOwnerWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -2749,6 +2871,8 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       markRequestFailed: markRequestFailedWithDatabase(database),
       markRequestSucceeded: markRequestSucceededWithDatabase(database),
       reserveRequest: reserveRequestWithDatabase(database),
+      respondToAccountAccessInvite:
+        respondToAccountAccessInviteWithDatabase(database),
       searchInviteTargets: searchInviteTargetsWithDatabase(database),
       setSquadGroupVisibility: setSquadGroupVisibilityWithDatabase(database),
       upsertAccountAccessInvite:

@@ -38,6 +38,8 @@ export const makeEffectSquadGroupStoreTestService = (
     markRequestFailed: () => unhandledStoreCall("markRequestFailed"),
     markRequestSucceeded: () => unhandledStoreCall("markRequestSucceeded"),
     reserveRequest: () => unhandledStoreCall("reserveRequest"),
+    respondToAccountAccessInvite: () =>
+      unhandledStoreCall("respondToAccountAccessInvite"),
     searchInviteTargets: () => unhandledStoreCall("searchInviteTargets"),
     setSquadGroupVisibility: () =>
       unhandledStoreCall("setSquadGroupVisibility"),

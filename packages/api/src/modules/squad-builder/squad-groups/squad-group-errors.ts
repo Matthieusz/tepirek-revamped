@@ -25,6 +25,7 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
       "markRequestFailed",
       "markRequestSucceeded",
       "reserveRequest",
+      "respondToAccountAccessInvite",
       "searchInviteTargets",
       "setSquadGroupVisibility",
       "upsertAccountAccessInvite",

@@ -43,6 +43,7 @@ import type {
   PreviewAccountRefetchOutput,
 } from "../modules/squad-builder/account-refetch/preview-account-refetch";
 import type { AccountSharingError } from "../modules/squad-builder/account-sharing/account-sharing-error";
+import { EffectRespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-respond-to-account-access-invite";
 import { EffectSearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/effect-search-account-invite-targets";
 import { EffectSendAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-send-account-access-invite";
 import { ListAccountSharingState } from "../modules/squad-builder/account-sharing/list-account-sharing-state";
@@ -278,6 +279,16 @@ interface RespondToAccountAccessInviteService {
   ) => Promise<Result<AccountAccessInviteSummary, AccountSharingError>>;
 }
 
+interface EffectRespondToAccountAccessInviteService {
+  readonly respond: (
+    input: Parameters<EffectRespondToAccountAccessInvite["respond"]>[0]
+  ) => Effect<
+    AccountAccessInviteSummary,
+    AccountSharingError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface RevokeAccountAccessService {
   readonly revoke: (
     input: Parameters<RevokeAccountAccess["revoke"]>[0]
@@ -422,6 +433,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly sendAccountAccessInviteService?: SendAccountAccessInviteService;
   readonly effectSendAccountAccessInviteService?: EffectSendAccountAccessInviteService;
   readonly respondToAccountAccessInviteService?: RespondToAccountAccessInviteService;
+  readonly effectRespondToAccountAccessInviteService?: EffectRespondToAccountAccessInviteService;
   readonly revokeAccountAccessService?: RevokeAccountAccessService;
   readonly listAccountSharingStateService?: ListAccountSharingStateService;
   readonly createSquadGroupService?: CreateSquadGroupService;
@@ -1405,6 +1417,8 @@ const searchAccountInviteTargetsEffect = new EffectSearchAccountInviteTargets();
 const sendAccountAccessInviteEffect = new EffectSendAccountAccessInvite(
   systemClock
 );
+const respondToAccountAccessInviteEffect =
+  new EffectRespondToAccountAccessInvite(systemClock);
 const confirmOwnedAccountImportEffect = new EffectConfirmOwnedAccountImport(
   systemClock
 );
@@ -1479,6 +1493,7 @@ export const createSquadBuilderRouter = ({
   sendAccountAccessInviteService,
   effectSendAccountAccessInviteService,
   respondToAccountAccessInviteService,
+  effectRespondToAccountAccessInviteService,
   revokeAccountAccessService,
   listAccountSharingStateService,
   createSquadGroupService,
@@ -2318,38 +2333,53 @@ export const createSquadBuilderRouter = ({
         throw toAccountSharingOrpcError(accessId.error);
       }
 
-      const services =
-        respondToAccountAccessInviteService === undefined
-          ? defaultServices
-          : ok({
-              respondInvite: respondToAccountAccessInviteService,
-            });
+      if (respondToAccountAccessInviteService !== undefined) {
+        const result = await respondToAccountAccessInviteService.respond({
+          accessId: accessId.value,
+          actorUserId: actorUserId.value,
+          response: input.response,
+        });
 
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "respondToAccountAccessInvite",
-          services.error
-        );
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "respondToAccountAccessInvite",
+            result.error
+          );
+          throw toAccountSharingOrpcError(result.error);
+        }
+
+        return toAccountAccessInviteDto(result.value);
       }
 
-      const result = await services.value.respondInvite.respond({
+      const effect = (
+        effectRespondToAccountAccessInviteService ??
+        respondToAccountAccessInviteEffect
+      ).respond({
         accessId: accessId.value,
         actorUserId: actorUserId.value,
         response: input.response,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "respondToAccountAccessInvite",
-          result.error
-        );
-        throw toAccountSharingOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const mapped: SquadBuilderPersistenceUnavailable = {
+          _tag: "SquadBuilderPersistenceUnavailable",
+          cause: new Error(
+            "DATABASE_URL is required for respondToAccountAccessInvite"
+          ),
+          operation: "respondToAccountAccessInvite",
+        };
+        logSquadBuilderError(context, "respondToAccountAccessInvite", mapped);
+        throw toAccountSharingOrpcError(mapped);
       }
 
-      return toAccountAccessInviteDto(result.value);
+      const invite = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as AccountSharingError;
+        logSquadBuilderError(context, "respondToAccountAccessInvite", mapped);
+        return toAccountSharingOrpcError(mapped);
+      });
+
+      return toAccountAccessInviteDto(invite);
     }),
   respondToSquadGroupInvite: verifiedProcedure
     .input(respondToSquadGroupInviteInputSchema)

@@ -15,6 +15,7 @@ import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-impo
 import { systemClock } from "../modules/squad-builder/account-import/preview-margonem-profile-import";
 import type { PreviewOwnedAccountImportItem } from "../modules/squad-builder/account-import/preview-owned-account-imports";
 import { EffectApplyAccountRefetch } from "../modules/squad-builder/account-refetch/effect-apply-account-refetch";
+import { EffectRespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-respond-to-account-access-invite";
 import { EffectSearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/effect-search-account-invite-targets";
 import { EffectSendAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-send-account-access-invite";
 import { ListAccountSharingState } from "../modules/squad-builder/account-sharing/list-account-sharing-state";
@@ -902,6 +903,56 @@ describe("squad-builder router Postgres integration", () => {
     expect(shared.accounts[0]).toMatchObject({
       accountId: account.id,
       ownerUserName: "Accept Owner",
+    });
+  });
+
+  it("accepts an invite through the Effect bridge", async () => {
+    const owner = await createVerifiedMember({
+      id: "router-effect-accept-owner",
+      name: "Effect Accept Owner",
+    });
+    const recipient = await createVerifiedMember({
+      id: "router-effect-accept-recipient",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const ownerClient = createSquadBuilderClient(owner, {
+      effectRuntime: runtime,
+      effectSendAccountAccessInviteService: new EffectSendAccountAccessInvite(
+        systemClock
+      ),
+    });
+    const recipientClient = createSquadBuilderClient(recipient, {
+      effectRespondToAccountAccessInviteService:
+        new EffectRespondToAccountAccessInvite(systemClock),
+      effectRuntime: runtime,
+    });
+
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Effect accept account",
+        ownerUserId: owner.id,
+        profileId: 7_299_010,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    const invite = await ownerClient.squadBuilder.sendAccountAccessInvite({
+      accountId: account.id,
+      invitedUserId: recipient.id,
+    });
+    const accepted =
+      await recipientClient.squadBuilder.respondToAccountAccessInvite({
+        accessId: invite.accessId,
+        response: "accept",
+      });
+
+    expect(accepted).toMatchObject({
+      accessId: invite.accessId,
+      status: "accepted",
     });
   });
 
