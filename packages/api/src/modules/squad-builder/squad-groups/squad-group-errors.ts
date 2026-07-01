@@ -5,11 +5,13 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
   {
     cause: Schema.Unknown,
     operation: Schema.Literals([
+      "applyRefetchedAccount",
       "createSquadGroup",
       "createOwnedAccountFromPendingImport",
       "createPendingImport",
       "createPendingRefetch",
       "findPendingImportForConfirmation",
+      "findPendingRefetchForApply",
       "findProfileAccessState",
       "getAccountForRefetch",
       "getSquadGroupDetail",
@@ -17,6 +19,7 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
       "listGlobalSquadGroups",
       "listMySquadGroups",
       "listOwnedAccounts",
+      "markPendingRefetchApplied",
       "markRequestFailed",
       "markRequestSucceeded",
       "reserveRequest",

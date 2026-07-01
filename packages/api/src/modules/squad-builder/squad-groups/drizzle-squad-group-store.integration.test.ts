@@ -6,6 +6,8 @@ import {
   margonemAccountRefetchPreview,
   margonemAccountRefetchPreviewCharacter,
   margonemCharacter,
+  squad,
+  squadCharacter,
   squadGroup,
 } from "@tepirek-revamped/db/schema/squad-builder";
 import { eq } from "drizzle-orm";
@@ -21,6 +23,7 @@ import { parseAccountDisplayName } from "../account-display-name";
 import { EffectConfirmOwnedAccountImport } from "../account-import/effect-confirm-owned-account-import";
 import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts";
 import { systemClock } from "../account-import/preview-margonem-profile-import";
+import { EffectApplyAccountRefetch } from "../account-refetch/effect-apply-account-refetch";
 import { parseAppUserId } from "../app-user-id";
 import { parseFirecrawlCreditCount } from "../firecrawl-config";
 import { firecrawlYearMonthFromDate } from "../firecrawl-year-month";
@@ -431,6 +434,168 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       profileId: 8_100_160,
     });
     expect(characters).toEqual([{ name: "newrefetch" }]);
+  });
+
+  it("applies pending account refetches through the Effect store", async () => {
+    const member = await createVerifiedMember({ id: "effect-apply-owner" });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const service = new EffectApplyAccountRefetch(systemClock);
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Apply refetch account",
+        ownerUserId: member.id,
+        profileId: 8_100_170,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    const [removedCharacter] = await testDb
+      .insert(margonemCharacter)
+      .values({
+        accountId: account.id,
+        avatarUrl: null,
+        characterId: 1_296_631,
+        level: 300,
+        name: "removedrefetch",
+        profession: "tracker",
+        world: "jaruna",
+      })
+      .returning({ id: margonemCharacter.id });
+
+    if (removedCharacter === undefined) {
+      throw new Error("Failed to seed removed character");
+    }
+
+    await testDb.insert(margonemCharacter).values({
+      accountId: account.id,
+      avatarUrl: null,
+      characterId: 1_296_632,
+      level: 300,
+      name: "updatedrefetch",
+      profession: "tracker",
+      world: "jaruna",
+    });
+
+    const [group] = await testDb
+      .insert(squadGroup)
+      .values({
+        name: "Apply refetch group",
+        ownerUserId: member.id,
+        visibility: "private",
+      })
+      .returning({ id: squadGroup.id });
+
+    if (group === undefined) {
+      throw new Error("Failed to seed squad group");
+    }
+
+    const [seededSquad] = await testDb
+      .insert(squad)
+      .values({
+        name: "Apply squad",
+        position: 0,
+        squadGroupId: group.id,
+      })
+      .returning({ id: squad.id });
+
+    if (seededSquad === undefined) {
+      throw new Error("Failed to seed squad");
+    }
+
+    await testDb.insert(squadCharacter).values({
+      accountId: account.id,
+      characterId: removedCharacter.id,
+      position: 0,
+      squadGroupId: group.id,
+      squadId: seededSquad.id,
+    });
+
+    const [pending] = await testDb
+      .insert(margonemAccountRefetchPreview)
+      .values({
+        accountId: account.id,
+        actorUserId: member.id,
+        diffJson: "{}",
+        expiresAt: new Date("2099-06-29T12:30:00.000Z"),
+        fetchedAt: new Date("2026-06-29T12:00:00.000Z"),
+        firecrawlCreditsUsed: 1,
+        profileId: 8_100_170,
+      })
+      .returning({ id: margonemAccountRefetchPreview.id });
+
+    if (pending === undefined) {
+      throw new Error("Failed to seed pending refetch");
+    }
+
+    await testDb.insert(margonemAccountRefetchPreviewCharacter).values([
+      {
+        avatarUrl: null,
+        characterId: 1_296_632,
+        level: 301,
+        name: "updatedrefetch",
+        profession: "tracker",
+        refetchPreviewId: pending.id,
+        world: "jaruna",
+      },
+      {
+        avatarUrl: null,
+        characterId: 1_296_633,
+        level: 302,
+        name: "addedrefetch",
+        profession: "mage",
+        refetchPreviewId: pending.id,
+        world: "jaruna",
+      },
+    ]);
+
+    const applied = await runtime.runPromise(
+      service.apply({
+        actorUserId: parseTestUserId(member.id),
+        refetchPreviewId: pending.id as never,
+      })
+    );
+
+    expect(applied).toMatchObject({
+      accountId: account.id,
+      addedCharacterCount: 1,
+      profileId: 8_100_170,
+      removedCharacterCount: 1,
+      removedSquadCharacterCount: 1,
+      updatedCharacterCount: 1,
+    });
+
+    const storedCharacters = await testDb
+      .select({
+        characterId: margonemCharacter.characterId,
+        level: margonemCharacter.level,
+      })
+      .from(margonemCharacter)
+      .where(eq(margonemCharacter.accountId, account.id));
+    const [storedPreview] = await testDb
+      .select({ appliedAt: margonemAccountRefetchPreview.appliedAt })
+      .from(margonemAccountRefetchPreview)
+      .where(eq(margonemAccountRefetchPreview.id, pending.id))
+      .limit(1);
+    const remainingPlacements = await testDb
+      .select({ id: squadCharacter.id })
+      .from(squadCharacter)
+      .where(eq(squadCharacter.characterId, removedCharacter.id));
+
+    expect(storedCharacters).toEqual(
+      expect.arrayContaining([
+        { characterId: 1_296_632, level: 301 },
+        { characterId: 1_296_633, level: 302 },
+      ])
+    );
+    expect(
+      storedCharacters.map((character) => character.characterId)
+    ).not.toContain(1_296_631);
+    expect(storedPreview?.appliedAt).toBeInstanceOf(Date);
+    expect(remainingPlacements).toEqual([]);
   });
 
   it("confirms pending account imports through the Effect store", async () => {

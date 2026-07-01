@@ -1,6 +1,7 @@
 import { createRouterClient } from "@orpc/server";
 import {
   margonemAccount,
+  margonemAccountRefetchPreview,
   margonemCharacter,
 } from "@tepirek-revamped/db/schema/squad-builder";
 import * as Effect from "effect/Effect";
@@ -13,6 +14,7 @@ import { EffectConfirmOwnedAccountImport } from "../modules/squad-builder/accoun
 import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-import/list-owned-margonem-accounts";
 import { systemClock } from "../modules/squad-builder/account-import/preview-margonem-profile-import";
 import type { PreviewOwnedAccountImportItem } from "../modules/squad-builder/account-import/preview-owned-account-imports";
+import { EffectApplyAccountRefetch } from "../modules/squad-builder/account-refetch/effect-apply-account-refetch";
 import { ListAccountSharingState } from "../modules/squad-builder/account-sharing/list-account-sharing-state";
 import { RespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/respond-to-account-access-invite";
 import { RevokeAccountAccess } from "../modules/squad-builder/account-sharing/revoke-account-access";
@@ -476,6 +478,58 @@ describe("squad-builder router Postgres integration", () => {
       generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
       profileId: 7_298_897,
       refetchPreviewId: 456,
+    });
+  });
+
+  it("applies account refetch through the Effect oRPC bridge", async () => {
+    const member = await createVerifiedMember({ id: "apply-effect-member" });
+    const client = createSquadBuilderClient(member, {
+      effectApplyAccountRefetchService: new EffectApplyAccountRefetch(
+        systemClock
+      ),
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Router apply account",
+        ownerUserId: member.id,
+        profileId: 8_200_002,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    const [pending] = await testDb
+      .insert(margonemAccountRefetchPreview)
+      .values({
+        accountId: account.id,
+        actorUserId: member.id,
+        diffJson: "{}",
+        expiresAt: new Date("2099-06-29T12:30:00.000Z"),
+        fetchedAt: new Date("2026-06-29T12:00:00.000Z"),
+        firecrawlCreditsUsed: 1,
+        profileId: 8_200_002,
+      })
+      .returning({ id: margonemAccountRefetchPreview.id });
+
+    if (pending === undefined) {
+      throw new Error("Failed to seed pending refetch");
+    }
+
+    const result = await client.squadBuilder.applyAccountRefetch({
+      refetchPreviewId: pending.id,
+    });
+
+    expect(result).toMatchObject({
+      accountId: account.id,
+      addedCharacterCount: 0,
+      profileId: 8_200_002,
+      removedCharacterCount: 0,
+      removedSquadCharacterCount: 0,
+      updatedCharacterCount: 0,
     });
   });
 

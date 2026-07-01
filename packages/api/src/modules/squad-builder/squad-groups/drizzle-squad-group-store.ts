@@ -38,6 +38,7 @@ import {
   accountDisplayNameToString,
   parseAccountDisplayName,
 } from "../account-display-name";
+import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch";
 import { appUserIdToString, parseAppUserId } from "../app-user-id";
 import type { AppUserId } from "../app-user-id";
 import { firecrawlYearMonthToString } from "../firecrawl-year-month";
@@ -60,7 +61,10 @@ import {
 } from "../margonem-profile-id";
 import { toMargonemProfileUrl } from "../margonem-profile-url";
 import { pendingImportIdToNumber } from "../pending-margonem-account-import-id";
-import { parsePendingMargonemAccountRefetchId } from "../pending-margonem-account-refetch-id";
+import {
+  parsePendingMargonemAccountRefetchId,
+  pendingRefetchIdToNumber,
+} from "../pending-margonem-account-refetch-id";
 import { isError } from "../result";
 import type { SquadGroupAccess } from "../squad-group-access";
 import { parseSquadGroupId, squadGroupIdToNumber } from "../squad-group-id";
@@ -77,6 +81,7 @@ import type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnSquadGroup,
   AvailableSquadCharacter,
+  ApplyRefetchedAccountInput,
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
   CreatePendingMargonemAccountRefetchInput,
@@ -92,11 +97,14 @@ import type {
   ListOwnedMargonemAccountsInput,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
+  MarkPendingMargonemAccountRefetchAppliedInput,
   OwnedMargonemAccountSummary,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
   PendingMargonemAccountImportNotFound,
   PendingMargonemAccountRefetch,
+  PendingMargonemAccountRefetchForApply,
+  PendingMargonemAccountRefetchNotFound,
   ProfileAccessState,
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
@@ -116,6 +124,7 @@ type EffectSquadGroupPersistenceOperation =
   | "createSquadGroup"
   | "findPendingImportForConfirmation"
   | "findProfileAccessState"
+  | "findPendingRefetchForApply"
   | "getAccountForRefetch"
   | "getSquadGroupDetail"
   | "listAvailableCharactersForOwner"
@@ -124,6 +133,8 @@ type EffectSquadGroupPersistenceOperation =
   | "listMySquadGroups"
   | "markRequestFailed"
   | "markRequestSucceeded"
+  | "markPendingRefetchApplied"
+  | "applyRefetchedAccount"
   | "createPendingRefetch"
   | "reserveRequest"
   | "setSquadGroupVisibility";
@@ -1175,6 +1186,422 @@ const createPendingRefetchWithDatabase =
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
     });
 
+const findPendingRefetchForApplyWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+    now,
+    refetchPreviewId,
+  }: {
+    readonly actorUserId: AppUserId;
+    readonly refetchPreviewId: PendingMargonemAccountRefetch["id"];
+    readonly now: Date;
+  }): Effect.Effect<
+    PendingMargonemAccountRefetchForApply,
+    | PendingMargonemAccountRefetchNotFound
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* findPendingRefetchForApplyEffect() {
+      const operation = "findPendingRefetchForApply" as const;
+      const previewSelect = database
+        .select({
+          accountId: margonemAccountRefetchPreview.accountId,
+          actorUserId: margonemAccountRefetchPreview.actorUserId,
+          fetchedAt: margonemAccountRefetchPreview.fetchedAt,
+          id: margonemAccountRefetchPreview.id,
+          profileId: margonemAccountRefetchPreview.profileId,
+        })
+        .from(margonemAccountRefetchPreview)
+        .where(
+          and(
+            eq(
+              margonemAccountRefetchPreview.id,
+              pendingRefetchIdToNumber(refetchPreviewId)
+            ),
+            eq(
+              margonemAccountRefetchPreview.actorUserId,
+              appUserIdToString(actorUserId)
+            ),
+            isNull(margonemAccountRefetchPreview.appliedAt),
+            gt(margonemAccountRefetchPreview.expiresAt, now)
+          )
+        )
+        .limit(1);
+      const previewSelectEffect = previewSelect as Effect.Effect<
+        readonly {
+          readonly accountId: number;
+          readonly actorUserId: string;
+          readonly fetchedAt: Date;
+          readonly id: number;
+          readonly profileId: number;
+        }[],
+        unknown,
+        never
+      >;
+      const previewRows = yield* previewSelectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const [preview] = previewRows;
+
+      if (preview === undefined) {
+        return yield* Effect.fail({
+          _tag: "PendingMargonemAccountRefetchNotFound" as const,
+        });
+      }
+
+      const characterSelect = database
+        .select({
+          avatarUrl: margonemAccountRefetchPreviewCharacter.avatarUrl,
+          characterId: margonemAccountRefetchPreviewCharacter.characterId,
+          level: margonemAccountRefetchPreviewCharacter.level,
+          name: margonemAccountRefetchPreviewCharacter.name,
+          profession: margonemAccountRefetchPreviewCharacter.profession,
+          world: margonemAccountRefetchPreviewCharacter.world,
+        })
+        .from(margonemAccountRefetchPreviewCharacter)
+        .where(
+          eq(
+            margonemAccountRefetchPreviewCharacter.refetchPreviewId,
+            preview.id
+          )
+        );
+      const characterSelectEffect = characterSelect as Effect.Effect<
+        readonly {
+          readonly avatarUrl: string | null;
+          readonly characterId: number;
+          readonly level: number;
+          readonly name: string;
+          readonly profession: string;
+          readonly world: string;
+        }[],
+        unknown,
+        never
+      >;
+      const characterRows = yield* characterSelectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const latestCharacters = [];
+
+      for (const row of characterRows) {
+        const characterId = parseMargonemCharacterId(row.characterId);
+
+        if (isError(characterId)) {
+          return yield* failPersistence(operation, characterId.error);
+        }
+
+        const level = parsePositiveLevel(row.level);
+
+        if (isError(level)) {
+          return yield* failPersistence(operation, level.error);
+        }
+
+        const profession = parseMargonemProfession(row.profession);
+
+        if (isError(profession)) {
+          return yield* failPersistence(operation, profession.error);
+        }
+
+        const world = parseMargonemWorld(row.world);
+
+        if (isError(world)) {
+          return yield* failPersistence(operation, world.error);
+        }
+
+        latestCharacters.push({
+          avatarUrl: row.avatarUrl,
+          characterId: characterId.value,
+          level: level.value,
+          name: row.name,
+          profession: profession.value,
+          world: world.value,
+        });
+      }
+
+      const accountId = parseMargonemAccountId(preview.accountId);
+
+      if (isError(accountId)) {
+        return yield* failPersistence(operation, accountId.error);
+      }
+
+      const persistedActorUserId = yield* parsePersistedAppUserId(
+        operation,
+        preview.actorUserId
+      );
+      const profileId = parseMargonemProfileId(preview.profileId);
+
+      if (isError(profileId)) {
+        return yield* failPersistence(operation, profileId.error);
+      }
+
+      return {
+        accountId: accountId.value,
+        actorUserId: persistedActorUserId,
+        fetchedAt: preview.fetchedAt,
+        id: refetchPreviewId,
+        latestCharacters,
+        profileId: profileId.value,
+      };
+    });
+
+const markPendingRefetchAppliedWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    appliedAt,
+    refetchPreviewId,
+  }: MarkPendingMargonemAccountRefetchAppliedInput): Effect.Effect<
+    void,
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > => {
+    const operation = "markPendingRefetchApplied" as const;
+    const update = database
+      .update(margonemAccountRefetchPreview)
+      .set({ appliedAt })
+      .where(
+        eq(
+          margonemAccountRefetchPreview.id,
+          pendingRefetchIdToNumber(refetchPreviewId)
+        )
+      );
+    const updateEffect = update as Effect.Effect<unknown, unknown, never>;
+    const catchEffect = Effect["catch"];
+    const handlePersistenceFailure = function handlePersistenceFailure(
+      error: unknown
+    ) {
+      return failPersistence(operation, error);
+    };
+    const catchPersistenceFailure = catchEffect(handlePersistenceFailure);
+
+    return updateEffect.pipe(catchPersistenceFailure, Effect.asVoid);
+  };
+
+const applyRefetchedAccountWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+    now,
+    pendingRefetch,
+  }: ApplyRefetchedAccountInput): Effect.Effect<
+    ApplyAccountRefetchOutput,
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* applyRefetchedAccountEffect() {
+      const operation = "applyRefetchedAccount" as const;
+      const transaction = database.transaction((tx) =>
+        Effect.gen(function* applyRefetchedAccountTransaction() {
+          const accountIdNumber = margonemAccountIdToNumber(
+            pendingRefetch.accountId
+          );
+
+          yield* tx.execute(
+            sql`select pg_advisory_xact_lock(hashtext(${`margonem-refetch:${accountIdNumber}`}))`
+          ) as Effect.Effect<unknown, unknown, never>;
+
+          const accountSelect = tx
+            .select({ id: margonemAccount.id })
+            .from(margonemAccount)
+            .where(
+              and(
+                eq(margonemAccount.id, accountIdNumber),
+                eq(margonemAccount.ownerUserId, appUserIdToString(actorUserId))
+              )
+            )
+            .limit(1);
+          const accountRows = yield* accountSelect as Effect.Effect<
+            readonly { readonly id: number }[],
+            unknown,
+            never
+          >;
+
+          if (accountRows[0] === undefined) {
+            return yield* failPersistence(
+              operation,
+              new Error("Account not found while applying refetch")
+            );
+          }
+
+          const currentSelect = tx
+            .select({
+              avatarUrl: margonemCharacter.avatarUrl,
+              characterId: margonemCharacter.characterId,
+              id: margonemCharacter.id,
+              level: margonemCharacter.level,
+              name: margonemCharacter.name,
+              profession: margonemCharacter.profession,
+            })
+            .from(margonemCharacter)
+            .where(eq(margonemCharacter.accountId, accountIdNumber));
+          const currentRows = yield* currentSelect as Effect.Effect<
+            readonly {
+              readonly avatarUrl: string | null;
+              readonly characterId: number;
+              readonly id: number;
+              readonly level: number;
+              readonly name: string;
+              readonly profession: string;
+            }[],
+            unknown,
+            never
+          >;
+          const currentByCharacterId = new Map<
+            number,
+            (typeof currentRows)[number]
+          >();
+
+          for (const current of currentRows) {
+            currentByCharacterId.set(current.characterId, current);
+          }
+
+          const latestByCharacterId = new Map<number, true>();
+          const charactersToInsert = [];
+          const charactersToUpdate = [];
+          const removedDatabaseCharacterIds = [];
+
+          for (const latest of pendingRefetch.latestCharacters) {
+            const latestCharacterId = characterIdToNumber(latest.characterId);
+            const latestLevel = levelToNumber(latest.level);
+            const current = currentByCharacterId.get(latestCharacterId);
+            latestByCharacterId.set(latestCharacterId, true);
+
+            if (current === undefined) {
+              charactersToInsert.push({
+                accountId: accountIdNumber,
+                avatarUrl: latest.avatarUrl,
+                characterId: latestCharacterId,
+                level: latestLevel,
+                name: latest.name,
+                profession: latest.profession,
+                updatedAt: now,
+                world: latest.world,
+              });
+              continue;
+            }
+
+            const changed =
+              current.avatarUrl !== latest.avatarUrl ||
+              current.level !== latestLevel ||
+              current.name !== latest.name ||
+              current.profession !== latest.profession;
+
+            if (changed) {
+              charactersToUpdate.push({
+                avatarUrl: latest.avatarUrl,
+                databaseCharacterId: current.id,
+                level: latestLevel,
+                name: latest.name,
+                profession: latest.profession,
+                world: latest.world,
+              });
+            }
+          }
+
+          if (charactersToInsert.length > 0) {
+            yield* tx
+              .insert(margonemCharacter)
+              .values(charactersToInsert) as Effect.Effect<
+              unknown,
+              unknown,
+              never
+            >;
+          }
+
+          for (const character of charactersToUpdate) {
+            yield* tx
+              .update(margonemCharacter)
+              .set({
+                avatarUrl: character.avatarUrl,
+                level: character.level,
+                name: character.name,
+                profession: character.profession,
+                updatedAt: now,
+                world: character.world,
+              })
+              .where(
+                eq(margonemCharacter.id, character.databaseCharacterId)
+              ) as Effect.Effect<unknown, unknown, never>;
+          }
+
+          for (const current of currentRows) {
+            if (!latestByCharacterId.has(current.characterId)) {
+              removedDatabaseCharacterIds.push(current.id);
+            }
+          }
+
+          let removedSquadCharacterCount = 0;
+
+          if (removedDatabaseCharacterIds.length > 0) {
+            const affectedGroupSelect = tx
+              .select({ groupId: squadCharacter.squadGroupId })
+              .from(squadCharacter)
+              .where(
+                inArray(squadCharacter.characterId, removedDatabaseCharacterIds)
+              );
+            const affectedGroups = yield* affectedGroupSelect as Effect.Effect<
+              readonly { readonly groupId: number }[],
+              unknown,
+              never
+            >;
+            const affectedGroupIds = [
+              ...new Set(affectedGroups.map((group) => group.groupId)),
+            ];
+            const removedPlacementsDelete = tx
+              .delete(squadCharacter)
+              .where(
+                inArray(squadCharacter.characterId, removedDatabaseCharacterIds)
+              )
+              .returning({ id: squadCharacter.id });
+            const removedPlacements =
+              yield* removedPlacementsDelete as Effect.Effect<
+                readonly { readonly id: number }[],
+                unknown,
+                never
+              >;
+            removedSquadCharacterCount = removedPlacements.length;
+
+            if (affectedGroupIds.length > 0) {
+              yield* tx
+                .update(squadGroup)
+                .set({ updatedAt: now })
+                .where(
+                  inArray(squadGroup.id, affectedGroupIds)
+                ) as Effect.Effect<unknown, unknown, never>;
+            }
+
+            yield* tx
+              .delete(margonemCharacter)
+              .where(
+                inArray(margonemCharacter.id, removedDatabaseCharacterIds)
+              ) as Effect.Effect<unknown, unknown, never>;
+          }
+
+          yield* tx
+            .update(margonemAccount)
+            .set({ lastFetchedAt: pendingRefetch.fetchedAt, updatedAt: now })
+            .where(eq(margonemAccount.id, accountIdNumber)) as Effect.Effect<
+            unknown,
+            unknown,
+            never
+          >;
+
+          return {
+            accountId: pendingRefetch.accountId,
+            addedCharacterCount: charactersToInsert.length,
+            lastFetchedAt: pendingRefetch.fetchedAt,
+            profileId: pendingRefetch.profileId,
+            removedCharacterCount: removedDatabaseCharacterIds.length,
+            removedSquadCharacterCount,
+            updatedCharacterCount: charactersToUpdate.length,
+          };
+        })
+      );
+
+      return yield* (
+        transaction as Effect.Effect<ApplyAccountRefetchOutput, unknown, never>
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+    });
+
 const listAvailableCharactersForOwnerWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -1828,6 +2255,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
   EffectSquadGroupStore,
   EffectDatabase.useSync((database) =>
     EffectSquadGroupStore.of({
+      applyRefetchedAccount: applyRefetchedAccountWithDatabase(database),
       createOwnedAccountFromPendingImport:
         createOwnedAccountFromPendingImportWithDatabase(database),
       createPendingImport: createPendingImportWithDatabase(database),
@@ -1835,6 +2263,8 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       createSquadGroup: createSquadGroupWithDatabase(database),
       findPendingImportForConfirmation:
         findPendingImportForConfirmationWithDatabase(database),
+      findPendingRefetchForApply:
+        findPendingRefetchForApplyWithDatabase(database),
       findProfileAccessState: findProfileAccessStateWithDatabase(database),
       getAccountForRefetch: getAccountForRefetchWithDatabase(database),
       getSquadGroupDetail: getSquadGroupDetailWithDatabase(database),
@@ -1843,6 +2273,8 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       listGlobalSquadGroups: listGlobalSquadGroupsWithDatabase(database),
       listMySquadGroups: listMySquadGroupsWithDatabase(database),
       listOwnedAccounts: listOwnedAccountsWithDatabase(database),
+      markPendingRefetchApplied:
+        markPendingRefetchAppliedWithDatabase(database),
       markRequestFailed: markRequestFailedWithDatabase(database),
       markRequestSucceeded: markRequestSucceededWithDatabase(database),
       reserveRequest: reserveRequestWithDatabase(database),

@@ -11,6 +11,7 @@ export const makeEffectSquadGroupStoreTestService = (
   overrides: Partial<EffectSquadGroupStoreShape>
 ) =>
   EffectSquadGroupStore.of({
+    applyRefetchedAccount: () => unhandledStoreCall("applyRefetchedAccount"),
     createOwnedAccountFromPendingImport: () =>
       unhandledStoreCall("createOwnedAccountFromPendingImport"),
     createPendingImport: () => unhandledStoreCall("createPendingImport"),
@@ -18,6 +19,8 @@ export const makeEffectSquadGroupStoreTestService = (
     createSquadGroup: () => unhandledStoreCall("createSquadGroup"),
     findPendingImportForConfirmation: () =>
       unhandledStoreCall("findPendingImportForConfirmation"),
+    findPendingRefetchForApply: () =>
+      unhandledStoreCall("findPendingRefetchForApply"),
     findProfileAccessState: () => unhandledStoreCall("findProfileAccessState"),
     getAccountForRefetch: () => unhandledStoreCall("getAccountForRefetch"),
     getSquadGroupDetail: () => unhandledStoreCall("getSquadGroupDetail"),
@@ -26,6 +29,8 @@ export const makeEffectSquadGroupStoreTestService = (
     listGlobalSquadGroups: () => unhandledStoreCall("listGlobalSquadGroups"),
     listMySquadGroups: () => unhandledStoreCall("listMySquadGroups"),
     listOwnedAccounts: () => unhandledStoreCall("listOwnedAccounts"),
+    markPendingRefetchApplied: () =>
+      unhandledStoreCall("markPendingRefetchApplied"),
     markRequestFailed: () => unhandledStoreCall("markRequestFailed"),
     markRequestSucceeded: () => unhandledStoreCall("markRequestSucceeded"),
     reserveRequest: () => unhandledStoreCall("reserveRequest"),

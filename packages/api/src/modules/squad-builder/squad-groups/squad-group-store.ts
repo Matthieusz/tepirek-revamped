@@ -1,6 +1,7 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
+import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch";
 import type { AppUserId } from "../app-user-id";
 import type { MargonemAccountId } from "../margonem-account-id";
 import type {
@@ -8,6 +9,7 @@ import type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnMargonemAccount,
   ActorDoesNotOwnSquadGroup,
+  ApplyRefetchedAccountInput,
   AuthorizeSquadGroupViewerInput,
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
@@ -27,11 +29,14 @@ import type {
   MargonemAccountNotFound,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
+  MarkPendingMargonemAccountRefetchAppliedInput,
   OwnedMargonemAccountSummary,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
   PendingMargonemAccountImportNotFound,
   PendingMargonemAccountRefetch,
+  PendingMargonemAccountRefetchForApply,
+  PendingMargonemAccountRefetchNotFound,
   ProfileAccessState,
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
@@ -174,6 +179,26 @@ export interface EffectSquadGroupStoreShape {
     EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly findPendingRefetchForApply: (input: {
+    readonly actorUserId: AppUserId;
+    readonly refetchPreviewId: PendingMargonemAccountRefetch["id"];
+    readonly now: Date;
+  }) => Effect<
+    PendingMargonemAccountRefetchForApply,
+    | PendingMargonemAccountRefetchNotFound
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly applyRefetchedAccount: (
+    input: ApplyRefetchedAccountInput
+  ) => Effect<
+    ApplyAccountRefetchOutput,
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly markPendingRefetchApplied: (
+    input: MarkPendingMargonemAccountRefetchAppliedInput
+  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable, never>;
 }
 
 export class EffectSquadGroupStore extends Context.Service<
@@ -191,6 +216,7 @@ export type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnMargonemAccount,
   ActorDoesNotOwnSquadGroup,
+  ApplyRefetchedAccountInput,
   AuthorizeSquadGroupViewerInput,
   AvailableSquadCharacter,
   CreateOwnedAccountFromPendingImportInput,
@@ -211,11 +237,14 @@ export type {
   MargonemAccountNotFound,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
+  MarkPendingMargonemAccountRefetchAppliedInput,
   OwnedMargonemAccountSummary,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
   PendingMargonemAccountImportNotFound,
   PendingMargonemAccountRefetch,
+  PendingMargonemAccountRefetchForApply,
+  PendingMargonemAccountRefetchNotFound,
   ProfileAccessState,
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,

@@ -35,6 +35,7 @@ import type {
   ApplyAccountRefetchError,
   ApplyAccountRefetchOutput,
 } from "../modules/squad-builder/account-refetch/apply-account-refetch";
+import { EffectApplyAccountRefetch } from "../modules/squad-builder/account-refetch/effect-apply-account-refetch";
 import { EffectPreviewAccountRefetch } from "../modules/squad-builder/account-refetch/effect-preview-account-refetch";
 import { PreviewAccountRefetch } from "../modules/squad-builder/account-refetch/preview-account-refetch";
 import type {
@@ -217,6 +218,16 @@ interface ApplyAccountRefetchService {
   ) => Promise<Result<ApplyAccountRefetchOutput, ApplyAccountRefetchError>>;
 }
 
+interface EffectApplyAccountRefetchService {
+  readonly apply: (
+    input: Parameters<EffectApplyAccountRefetch["apply"]>[0]
+  ) => Effect<
+    ApplyAccountRefetchOutput,
+    ApplyAccountRefetchError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface ListOwnedAccountsService {
   readonly list: (
     input: Parameters<ListOwnedMargonemAccounts["list"]>[0]
@@ -382,6 +393,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly previewAccountRefetchService?: PreviewAccountRefetchService;
   readonly effectPreviewAccountRefetchService?: EffectPreviewAccountRefetchService;
   readonly applyAccountRefetchService?: ApplyAccountRefetchService;
+  readonly effectApplyAccountRefetchService?: EffectApplyAccountRefetchService;
   readonly listOwnedAccountsService?: ListOwnedAccountsService;
   readonly searchAccountInviteTargetsService?: SearchAccountInviteTargetsService;
   readonly sendAccountAccessInviteService?: SendAccountAccessInviteService;
@@ -1364,6 +1376,7 @@ const listSquadGroupsEffect = new ListSquadGroups();
 const listAvailableSquadCharactersEffect = new ListAvailableSquadCharacters();
 const setSquadGroupVisibilityEffect = new SetSquadGroupVisibility(systemClock);
 const listOwnedAccountsEffect = new ListOwnedMargonemAccounts();
+const applyAccountRefetchEffect = new EffectApplyAccountRefetch(systemClock);
 const confirmOwnedAccountImportEffect = new EffectConfirmOwnedAccountImport(
   systemClock
 );
@@ -1431,6 +1444,7 @@ export const createSquadBuilderRouter = ({
   previewAccountRefetchService,
   effectPreviewAccountRefetchService,
   applyAccountRefetchService,
+  effectApplyAccountRefetchService,
   listOwnedAccountsService,
   searchAccountInviteTargetsService,
   sendAccountAccessInviteService,
@@ -1471,29 +1485,44 @@ export const createSquadBuilderRouter = ({
         });
       }
 
-      const services =
-        applyAccountRefetchService === undefined
-          ? defaultServices
-          : ok({
-              applyRefetch: applyAccountRefetchService,
-            });
+      if (applyAccountRefetchService !== undefined) {
+        const result = await applyAccountRefetchService.apply({
+          actorUserId: actorUserId.value,
+          refetchPreviewId: refetchPreviewId.value,
+        });
 
-      if (isError(services)) {
-        logSquadBuilderError(context, "applyAccountRefetch", services.error);
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(context, "applyAccountRefetch", result.error);
+          throw toAccountRefetchOrpcError(result.error);
+        }
+
+        return toApplyAccountRefetchResponse(result.value);
       }
 
-      const result = await services.value.applyRefetch.apply({
+      const effect = (
+        effectApplyAccountRefetchService ?? applyAccountRefetchEffect
+      ).apply({
         actorUserId: actorUserId.value,
         refetchPreviewId: refetchPreviewId.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "applyAccountRefetch", result.error);
-        throw toAccountRefetchOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error("DATABASE_URL is required for applyAccountRefetch"),
+          operation: "applyAccountRefetch",
+        };
+        logSquadBuilderError(context, "applyAccountRefetch", error);
+        throw toAccountRefetchOrpcError(error);
       }
 
-      return toApplyAccountRefetchResponse(result.value);
+      const applied = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as ApplyAccountRefetchError;
+        logSquadBuilderError(context, "applyAccountRefetch", mapped);
+        return toAccountRefetchOrpcError(mapped);
+      });
+
+      return toApplyAccountRefetchResponse(applied);
     }),
   confirmOwnedAccountImport: verifiedProcedure
     .input(confirmOwnedAccountImportInputSchema)
