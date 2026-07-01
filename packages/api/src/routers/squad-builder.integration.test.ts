@@ -16,6 +16,7 @@ import { systemClock } from "../modules/squad-builder/account-import/preview-mar
 import type { PreviewOwnedAccountImportItem } from "../modules/squad-builder/account-import/preview-owned-account-imports";
 import { EffectApplyAccountRefetch } from "../modules/squad-builder/account-refetch/effect-apply-account-refetch";
 import { EffectSearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/effect-search-account-invite-targets";
+import { EffectSendAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-send-account-access-invite";
 import { ListAccountSharingState } from "../modules/squad-builder/account-sharing/list-account-sharing-state";
 import { RespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/respond-to-account-access-invite";
 import { RevokeAccountAccess } from "../modules/squad-builder/account-sharing/revoke-account-access";
@@ -769,6 +770,46 @@ describe("squad-builder router Postgres integration", () => {
         invitedUserId: recipient.id,
       })
     ).rejects.toMatchObject({ code: "CONFLICT" });
+  });
+
+  it("sends an account access invite through the Effect bridge", async () => {
+    const owner = await createVerifiedMember({
+      id: "router-effect-invite-owner",
+      name: "Router Effect Owner",
+    });
+    const recipient = await createVerifiedMember({
+      id: "router-effect-invite-recipient",
+      name: "Router Effect Recipient",
+    });
+    const client = createSquadBuilderClient(owner, {
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+      effectSendAccountAccessInviteService: new EffectSendAccountAccessInvite(
+        systemClock
+      ),
+    });
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Router effect account",
+        ownerUserId: owner.id,
+        profileId: 7_299_008,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    const invite = await client.squadBuilder.sendAccountAccessInvite({
+      accountId: account.id,
+      invitedUserId: recipient.id,
+    });
+
+    expect(invite).toMatchObject({
+      accountId: account.id,
+      ownerUserName: "Router Effect Owner",
+      status: "pending",
+    });
   });
 
   it("returns FORBIDDEN when revoking access for an account the actor does not own", async () => {

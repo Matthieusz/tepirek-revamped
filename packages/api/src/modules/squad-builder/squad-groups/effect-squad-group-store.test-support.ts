@@ -24,6 +24,8 @@ export const makeEffectSquadGroupStoreTestService = (
     findPendingRefetchForApply: () =>
       unhandledStoreCall("findPendingRefetchForApply"),
     findProfileAccessState: () => unhandledStoreCall("findProfileAccessState"),
+    findVerifiedInviteTarget: () =>
+      unhandledStoreCall("findVerifiedInviteTarget"),
     getAccountForRefetch: () => unhandledStoreCall("getAccountForRefetch"),
     getSquadGroupDetail: () => unhandledStoreCall("getSquadGroupDetail"),
     listAvailableCharactersForOwner: () =>
@@ -39,5 +41,7 @@ export const makeEffectSquadGroupStoreTestService = (
     searchInviteTargets: () => unhandledStoreCall("searchInviteTargets"),
     setSquadGroupVisibility: () =>
       unhandledStoreCall("setSquadGroupVisibility"),
+    upsertAccountAccessInvite: () =>
+      unhandledStoreCall("upsertAccountAccessInvite"),
     ...overrides,
   });

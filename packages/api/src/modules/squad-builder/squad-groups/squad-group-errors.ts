@@ -11,6 +11,7 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
       "createPendingImport",
       "createPendingRefetch",
       "findOwnedAccountForSharing",
+      "findVerifiedInviteTarget",
       "findPendingImportForConfirmation",
       "findPendingRefetchForApply",
       "findProfileAccessState",
@@ -26,6 +27,7 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
       "reserveRequest",
       "searchInviteTargets",
       "setSquadGroupVisibility",
+      "upsertAccountAccessInvite",
     ]),
     provider: Schema.Literal("postgres"),
   }

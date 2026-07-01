@@ -37,6 +37,11 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import {
+  canTransitionAccountAccess,
+  parseAccountAccessStatus,
+} from "../account-access-status";
+import type { AccountAccessStatus } from "../account-access-status";
+import {
   accountDisplayNameToString,
   parseAccountDisplayName,
 } from "../account-display-name";
@@ -44,6 +49,8 @@ import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account
 import { appUserIdToString, parseAppUserId } from "../app-user-id";
 import type { AppUserId } from "../app-user-id";
 import { firecrawlYearMonthToString } from "../firecrawl-year-month";
+import { parseMargonemAccountAccessId } from "../margonem-account-access-id";
+import type { MargonemAccountAccessId } from "../margonem-account-access-id";
 import {
   margonemAccountIdToNumber,
   parseMargonemAccountId,
@@ -117,6 +124,7 @@ import type {
   SetSquadGroupVisibilityStoreInput,
   SquadGroupVisibilityChange,
   AccountInviteTarget,
+  AccountAccessInviteSummary,
   SquadGroupCharacter,
   SquadGroupDetail,
   SquadGroupNotFound,
@@ -131,6 +139,7 @@ type EffectSquadGroupPersistenceOperation =
   | "createPendingRefetch"
   | "createSquadGroup"
   | "findOwnedAccountForSharing"
+  | "findVerifiedInviteTarget"
   | "findPendingImportForConfirmation"
   | "findPendingRefetchForApply"
   | "findProfileAccessState"
@@ -145,6 +154,7 @@ type EffectSquadGroupPersistenceOperation =
   | "markPendingRefetchApplied"
   | "reserveRequest"
   | "searchInviteTargets"
+  | "upsertAccountAccessInvite"
   | "setSquadGroupVisibility";
 
 const usedFirecrawlRequestStatuses = [
@@ -1745,6 +1755,321 @@ const findOwnedAccountForSharingWithDatabase =
       };
     });
 
+const loadAccountAccessInviteSummaryWithDatabase =
+  (database: EffectPgDatabase) =>
+  (
+    accessId: MargonemAccountAccessId,
+    operation: EffectSquadGroupPersistenceOperation
+  ): Effect.Effect<
+    AccountAccessInviteSummary,
+    | { readonly _tag: "AccountAccessInviteNotFound" }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* loadAccountAccessInviteSummaryEffect() {
+      const select = database
+        .select({
+          accountDisplayName: margonemAccount.displayName,
+          accountId: margonemAccountAccess.accountId,
+          createdAt: margonemAccountAccess.createdAt,
+          invitedUserId: margonemAccountAccess.userId,
+          ownerId: user.id,
+          ownerImage: user.image,
+          ownerName: user.name,
+          profileId: margonemAccount.profileId,
+          status: margonemAccountAccess.status,
+          updatedAt: margonemAccountAccess.updatedAt,
+        })
+        .from(margonemAccountAccess)
+        .innerJoin(
+          margonemAccount,
+          eq(margonemAccount.id, margonemAccountAccess.accountId)
+        )
+        .innerJoin(user, eq(user.id, margonemAccount.ownerUserId))
+        .where(eq(margonemAccountAccess.id, accessId))
+        .limit(1);
+      const selectEffect = select as Effect.Effect<
+        readonly {
+          readonly accountDisplayName: string;
+          readonly accountId: number;
+          readonly createdAt: Date;
+          readonly invitedUserId: string;
+          readonly ownerId: string;
+          readonly ownerImage: string | null;
+          readonly ownerName: string;
+          readonly profileId: number;
+          readonly status: string;
+          readonly updatedAt: Date;
+        }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const [row] = rows;
+
+      if (row === undefined) {
+        return yield* Effect.fail({
+          _tag: "AccountAccessInviteNotFound" as const,
+        });
+      }
+
+      const status = parseAccountAccessStatus(row.status);
+
+      if (isError(status)) {
+        return yield* failPersistence(operation, status.error);
+      }
+
+      const accountDisplayName = parseAccountDisplayName(
+        row.accountDisplayName
+      );
+
+      if (isError(accountDisplayName)) {
+        return yield* failPersistence(operation, accountDisplayName.error);
+      }
+
+      const accountId = parseMargonemAccountId(row.accountId);
+
+      if (isError(accountId)) {
+        return yield* failPersistence(operation, accountId.error);
+      }
+
+      const profileId = parseMargonemProfileId(row.profileId);
+
+      if (isError(profileId)) {
+        return yield* failPersistence(operation, profileId.error);
+      }
+
+      const invitedUserId = yield* parsePersistedAppUserId(
+        operation,
+        row.invitedUserId
+      );
+      const ownerUserId = yield* parsePersistedAppUserId(
+        operation,
+        row.ownerId
+      );
+
+      return {
+        accessId,
+        accountDisplayName: accountDisplayName.value,
+        accountId: accountId.value,
+        createdAt: row.createdAt,
+        generatedProfileUrl: toMargonemProfileUrl(profileId.value),
+        invitedUserId,
+        ownerUserId,
+        ownerUserImage: row.ownerImage,
+        ownerUserName: row.ownerName,
+        status: status.value,
+        updatedAt: row.updatedAt,
+      };
+    });
+
+const findVerifiedInviteTargetWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    targetUserId,
+  }: {
+    readonly targetUserId: AppUserId;
+  }): Effect.Effect<
+    AccountInviteTarget,
+    | { readonly _tag: "InviteTargetNotFound" }
+    | { readonly _tag: "InviteTargetNotVerified" }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* findVerifiedInviteTargetEffect() {
+      const operation = "findVerifiedInviteTarget" as const;
+      const select = database
+        .select({
+          image: user.image,
+          name: user.name,
+          userId: user.id,
+          verified: user.verified,
+        })
+        .from(user)
+        .where(eq(user.id, appUserIdToString(targetUserId)))
+        .limit(1);
+      const selectEffect = select as Effect.Effect<
+        readonly {
+          readonly image: string | null;
+          readonly name: string;
+          readonly userId: string;
+          readonly verified: boolean;
+        }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const [target] = rows;
+
+      if (target === undefined) {
+        return yield* Effect.fail({ _tag: "InviteTargetNotFound" as const });
+      }
+
+      if (!target.verified) {
+        return yield* Effect.fail({
+          _tag: "InviteTargetNotVerified" as const,
+        });
+      }
+
+      const userId = yield* parsePersistedAppUserId(operation, target.userId);
+
+      return {
+        image: target.image,
+        name: target.name,
+        userId,
+      };
+    });
+
+const upsertAccountAccessInviteWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    accountId,
+    invitedUserId,
+    now,
+    ownerUserId,
+  }: {
+    readonly accountId: MargonemAccountId;
+    readonly ownerUserId: AppUserId;
+    readonly invitedUserId: AppUserId;
+    readonly now: Date;
+  }): Effect.Effect<
+    AccountAccessInviteSummary,
+    | {
+        readonly _tag: "AccountAccessTransitionNotAllowed";
+        readonly currentStatus: AccountAccessStatus;
+        readonly attempted: string;
+      }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* upsertAccountAccessInviteEffect() {
+      const operation = "upsertAccountAccessInvite" as const;
+      const accountIdNumber = margonemAccountIdToNumber(accountId);
+      const invitedUser = appUserIdToString(invitedUserId);
+      const owner = appUserIdToString(ownerUserId);
+      const transaction = database.transaction((tx) =>
+        Effect.gen(function* upsertAccountAccessInviteTransaction() {
+          const existingSelect = tx
+            .select({
+              id: margonemAccountAccess.id,
+              status: margonemAccountAccess.status,
+            })
+            .from(margonemAccountAccess)
+            .where(
+              and(
+                eq(margonemAccountAccess.accountId, accountIdNumber),
+                eq(margonemAccountAccess.userId, invitedUser)
+              )
+            )
+            .limit(1);
+          const existingRows = yield* existingSelect as Effect.Effect<
+            readonly { readonly id: number; readonly status: string }[],
+            unknown,
+            never
+          >;
+          const [existing] = existingRows;
+
+          if (existing === undefined) {
+            const insert = tx
+              .insert(margonemAccountAccess)
+              .values({
+                accountId: accountIdNumber,
+                invitedByUserId: owner,
+                status: "pending",
+                userId: invitedUser,
+              })
+              .returning({ id: margonemAccountAccess.id });
+            const insertedRows = yield* insert as Effect.Effect<
+              readonly { readonly id: number }[],
+              unknown,
+              never
+            >;
+            const [inserted] = insertedRows;
+
+            if (inserted === undefined) {
+              return yield* failPersistence(
+                operation,
+                new Error("Failed to insert account access invite")
+              );
+            }
+
+            return inserted.id;
+          }
+
+          const status = parseAccountAccessStatus(existing.status);
+
+          if (isError(status)) {
+            return yield* failPersistence(operation, status.error);
+          }
+
+          if (!canTransitionAccountAccess(status.value, "pending")) {
+            return {
+              _tag: "AccountAccessTransitionNotAllowed" as const,
+              attempted: "pending",
+              currentStatus: status.value,
+            };
+          }
+
+          const update = tx
+            .update(margonemAccountAccess)
+            .set({ invitedByUserId: owner, status: "pending", updatedAt: now })
+            .where(eq(margonemAccountAccess.id, existing.id))
+            .returning({ id: margonemAccountAccess.id });
+          const updatedRows = yield* update as Effect.Effect<
+            readonly { readonly id: number }[],
+            unknown,
+            never
+          >;
+          const [updated] = updatedRows;
+
+          if (updated === undefined) {
+            return yield* failPersistence(
+              operation,
+              new Error("Failed to re-send account access invite")
+            );
+          }
+
+          return updated.id;
+        })
+      );
+      const upserted = yield* (
+        transaction as Effect.Effect<
+          | number
+          | {
+              readonly _tag: "AccountAccessTransitionNotAllowed";
+              readonly currentStatus: AccountAccessStatus;
+              readonly attempted: string;
+            },
+          unknown,
+          never
+        >
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
+      if (typeof upserted !== "number") {
+        return yield* Effect.fail(upserted);
+      }
+
+      const accessId = parseMargonemAccountAccessId(upserted);
+
+      if (isError(accessId)) {
+        return yield* failPersistence(operation, accessId.error);
+      }
+
+      const summary = yield* loadAccountAccessInviteSummaryWithDatabase(
+        database
+      )(accessId.value, operation).pipe(
+        Effect.catchTag("AccountAccessInviteNotFound", (error) =>
+          failPersistence(operation, error)
+        )
+      );
+
+      return summary;
+    });
+
 const listAvailableCharactersForOwnerWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -2411,6 +2736,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       findPendingRefetchForApply:
         findPendingRefetchForApplyWithDatabase(database),
       findProfileAccessState: findProfileAccessStateWithDatabase(database),
+      findVerifiedInviteTarget: findVerifiedInviteTargetWithDatabase(database),
       getAccountForRefetch: getAccountForRefetchWithDatabase(database),
       getSquadGroupDetail: getSquadGroupDetailWithDatabase(database),
       listAvailableCharactersForOwner:
@@ -2425,6 +2751,8 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       reserveRequest: reserveRequestWithDatabase(database),
       searchInviteTargets: searchInviteTargetsWithDatabase(database),
       setSquadGroupVisibility: setSquadGroupVisibilityWithDatabase(database),
+      upsertAccountAccessInvite:
+        upsertAccountAccessInviteWithDatabase(database),
     })
   )
 );

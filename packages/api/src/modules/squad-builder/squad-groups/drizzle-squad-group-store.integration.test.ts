@@ -1,6 +1,7 @@
 import {
   firecrawlProfileScrapeRequest,
   margonemAccount,
+  margonemAccountAccess,
   margonemAccountImportPreview,
   margonemAccountImportPreviewCharacter,
   margonemAccountRefetchPreview,
@@ -25,6 +26,7 @@ import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem
 import { systemClock } from "../account-import/preview-margonem-profile-import";
 import { EffectApplyAccountRefetch } from "../account-refetch/effect-apply-account-refetch";
 import { EffectSearchAccountInviteTargets } from "../account-sharing/effect-search-account-invite-targets";
+import { EffectSendAccountAccessInvite } from "../account-sharing/effect-send-account-access-invite";
 import { parseAppUserId } from "../app-user-id";
 import { parseFirecrawlCreditCount } from "../firecrawl-config";
 import { firecrawlYearMonthFromDate } from "../firecrawl-year-month";
@@ -799,6 +801,64 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
     expect(targetIds).toContain(parseTestUserId(target.id));
     expect(targetIds).not.toContain(parseTestUserId(owner.id));
+  });
+
+  it("sends account access invites", async () => {
+    const owner = await createVerifiedMember({
+      id: "effect-store-send-owner",
+      name: "Effect Store Send Owner",
+    });
+    const target = await createVerifiedMember({
+      id: "effect-store-send-target",
+      name: "Effect Store Send Target",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const sendService = new EffectSendAccountAccessInvite(systemClock);
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Effect store send account",
+        ownerUserId: owner.id,
+        profileId: 7_299_007,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    const invite = await runtime.runPromise(
+      sendService.send({
+        accountId: parseTestAccountId(account.id),
+        actorUserId: parseTestUserId(owner.id),
+        invitedUserId: parseTestUserId(target.id),
+      })
+    );
+
+    expect(invite).toMatchObject({
+      accountId: parseTestAccountId(account.id),
+      invitedUserId: parseTestUserId(target.id),
+      ownerUserId: parseTestUserId(owner.id),
+      status: "pending",
+    });
+
+    const [stored] = await testDb
+      .select({ status: margonemAccountAccess.status })
+      .from(margonemAccountAccess)
+      .where(eq(margonemAccountAccess.id, invite.accessId))
+      .limit(1);
+
+    expect(stored?.status).toBe("pending");
+
+    await expect(
+      runtime.runPromise(
+        sendService.send({
+          accountId: parseTestAccountId(account.id),
+          actorUserId: parseTestUserId(owner.id),
+          invitedUserId: parseTestUserId(target.id),
+        })
+      )
+    ).rejects.toMatchObject({ _tag: "AccountAccessTransitionNotAllowed" });
   });
 
   it("lists globally visible squad groups", async () => {

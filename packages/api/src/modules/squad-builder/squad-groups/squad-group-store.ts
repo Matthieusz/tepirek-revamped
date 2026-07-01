@@ -5,6 +5,7 @@ import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account
 import type { AppUserId } from "../app-user-id";
 import type { MargonemAccountId } from "../margonem-account-id";
 import type {
+  AccountAccessInviteSummary,
   ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnMargonemAccount,
@@ -19,6 +20,7 @@ import type {
   DuplicateMargonemAccountError,
   FindOwnedAccountForSharingInput,
   FindPendingMargonemAccountImportInput,
+  FindVerifiedInviteTargetInput,
   FindProfileAccessStateInput,
   FirecrawlBudgetError,
   GetSquadGroupDetailInput,
@@ -63,7 +65,9 @@ import type {
   SquadGroupStore,
   SquadGroupSummary,
   SquadGroupVisibilityChange,
+  UpsertAccountAccessInviteInput,
   UpsertSquadGroupEditorInviteInput,
+  VerifiedInviteTarget,
   RespondToSquadGroupInviteStoreInput,
   RevokeSquadGroupEditorStoreInput,
 } from "../squad-builder-store";
@@ -217,6 +221,27 @@ export interface EffectSquadGroupStoreShape {
     EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly findVerifiedInviteTarget: (
+    input: FindVerifiedInviteTargetInput
+  ) => Effect<
+    VerifiedInviteTarget,
+    | { readonly _tag: "InviteTargetNotFound" }
+    | { readonly _tag: "InviteTargetNotVerified" }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly upsertAccountAccessInvite: (
+    input: UpsertAccountAccessInviteInput
+  ) => Effect<
+    AccountAccessInviteSummary,
+    | {
+        readonly _tag: "AccountAccessTransitionNotAllowed";
+        readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
+        readonly attempted: string;
+      }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
 }
 
 export class EffectSquadGroupStore extends Context.Service<
@@ -230,6 +255,7 @@ export type SquadGroupsPersistenceStore = SquadGroupStore &
   GlobalSquadVisibilityStore;
 
 export type {
+  AccountAccessInviteSummary,
   ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnMargonemAccount,
@@ -245,6 +271,7 @@ export type {
   DuplicateMargonemAccountError,
   FindOwnedAccountForSharingInput,
   FindPendingMargonemAccountImportInput,
+  FindVerifiedInviteTargetInput,
   FindProfileAccessStateInput,
   FirecrawlBudgetError,
   GetSquadGroupDetailInput,
@@ -291,5 +318,7 @@ export type {
   SquadGroupStore,
   SquadGroupSummary,
   SquadGroupVisibilityChange,
+  UpsertAccountAccessInviteInput,
   UpsertSquadGroupEditorInviteInput,
+  VerifiedInviteTarget,
 };
