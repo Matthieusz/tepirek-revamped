@@ -16,6 +16,7 @@ import {
   testDb,
 } from "../../../test/integration/database";
 import { parseAccountDisplayName } from "../account-display-name";
+import { EffectConfirmOwnedAccountImport } from "../account-import/effect-confirm-owned-account-import";
 import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts";
 import { systemClock } from "../account-import/preview-margonem-profile-import";
 import { parseAppUserId } from "../app-user-id";
@@ -330,6 +331,73 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       profileId: 8_100_150,
     });
     expect(characters).toEqual([{ name: "pendingchar" }]);
+  });
+
+  it("confirms pending account imports through the Effect store", async () => {
+    const member = await createVerifiedMember({ id: "effect-confirm-user" });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const service = new EffectConfirmOwnedAccountImport(systemClock);
+    const [pending] = await testDb
+      .insert(margonemAccountImportPreview)
+      .values({
+        actorUserId: member.id,
+        defaultDisplayName: "Effect confirm",
+        expiresAt: new Date("2099-06-29T12:30:00.000Z"),
+        fetchedAt: new Date("2026-06-29T12:00:00.000Z"),
+        firecrawlCreditsUsed: 1,
+        profileId: 8_100_175,
+        suggestedAccountName: "Effect confirm",
+      })
+      .returning({ id: margonemAccountImportPreview.id });
+
+    if (pending === undefined) {
+      throw new Error("Failed to seed pending import");
+    }
+
+    await testDb.insert(margonemAccountImportPreviewCharacter).values({
+      avatarUrl: null,
+      characterId: 1_296_629,
+      importPreviewId: pending.id,
+      level: 302,
+      name: "confirmedchar",
+      profession: "tracker",
+      world: "jaruna",
+    });
+
+    const confirmed = await runtime.runPromise(
+      service.confirm({
+        actorUserId: parseTestUserId(member.id),
+        displayName: "  Confirmed Effect  ",
+        pendingImportId: pending.id as never,
+      })
+    );
+
+    expect(confirmed).toMatchObject({
+      characterCount: 1,
+      displayName: "Confirmed Effect",
+      generatedProfileUrl: "https://www.margonem.pl/profile/view,8100175",
+      profileId: 8_100_175,
+    });
+
+    const [storedAccount] = await testDb
+      .select({ displayName: margonemAccount.displayName })
+      .from(margonemAccount)
+      .where(eq(margonemAccount.id, confirmed.accountId))
+      .limit(1);
+    const [storedCharacter] = await testDb
+      .select({ name: margonemCharacter.name })
+      .from(margonemCharacter)
+      .where(eq(margonemCharacter.accountId, confirmed.accountId))
+      .limit(1);
+    const [storedPreview] = await testDb
+      .select({ confirmedAt: margonemAccountImportPreview.confirmedAt })
+      .from(margonemAccountImportPreview)
+      .where(eq(margonemAccountImportPreview.id, pending.id))
+      .limit(1);
+
+    expect(storedAccount).toEqual({ displayName: "Confirmed Effect" });
+    expect(storedCharacter).toEqual({ name: "confirmedchar" });
+    expect(storedPreview?.confirmedAt).toBeInstanceOf(Date);
   });
 
   it("reserves and completes Firecrawl requests through the Effect store", async () => {

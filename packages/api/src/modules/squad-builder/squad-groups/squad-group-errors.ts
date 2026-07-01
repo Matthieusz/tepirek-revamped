@@ -6,7 +6,9 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
     cause: Schema.Unknown,
     operation: Schema.Literals([
       "createSquadGroup",
+      "createOwnedAccountFromPendingImport",
       "createPendingImport",
+      "findPendingImportForConfirmation",
       "findProfileAccessState",
       "getSquadGroupDetail",
       "listAvailableCharactersForOwner",

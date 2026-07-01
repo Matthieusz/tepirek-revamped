@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import { makeApiManagedRuntime } from "../effect-app";
 import { parseAccountDisplayName } from "../modules/squad-builder/account-display-name";
 import { ConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/confirm-owned-account-import";
+import { EffectConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import";
 import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-import/list-owned-margonem-accounts";
 import { systemClock } from "../modules/squad-builder/account-import/preview-margonem-profile-import";
 import type { PreviewOwnedAccountImportItem } from "../modules/squad-builder/account-import/preview-owned-account-imports";
@@ -467,6 +468,33 @@ describe("squad-builder router Postgres integration", () => {
       lineNumber: 2,
       message: "Ten profil już występuje wyżej w liście.",
       status: "error",
+    });
+  });
+
+  it("confirms a pending import through the Effect oRPC bridge", async () => {
+    const member = await createVerifiedMember({ id: "confirm-effect-member" });
+    const { store } = buildStoreBackedServices();
+    const client = createSquadBuilderClient(member, {
+      effectConfirmOwnedAccountImportService:
+        new EffectConfirmOwnedAccountImport(systemClock),
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+    const pendingImportId = await seedPendingImport(
+      store,
+      member.id,
+      7_298_899
+    );
+
+    const confirmed = await client.squadBuilder.confirmOwnedAccountImport({
+      displayName: "  Effect informati  ",
+      pendingImportId: pendingImportIdToNumber(pendingImportId),
+    });
+
+    expect(confirmed).toMatchObject({
+      characterCount: 1,
+      displayName: "Effect informati",
+      generatedProfileUrl: "https://www.margonem.pl/profile/view,7298899",
+      profileId: 7_298_899,
     });
   });
 

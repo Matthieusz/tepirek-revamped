@@ -6,8 +6,11 @@ import type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnSquadGroup,
   AuthorizeSquadGroupViewerInput,
+  CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
   CreateSquadGroupStoreInput,
+  DuplicateMargonemAccountError,
+  FindPendingMargonemAccountImportInput,
   FindProfileAccessStateInput,
   FirecrawlBudgetError,
   GetSquadGroupDetailInput,
@@ -21,6 +24,8 @@ import type {
   MarkFirecrawlRequestSucceededInput,
   OwnedMargonemAccountSummary,
   PendingMargonemAccountImport,
+  PendingMargonemAccountImportForConfirmation,
+  PendingMargonemAccountImportNotFound,
   ProfileAccessState,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
@@ -124,6 +129,21 @@ export interface EffectSquadGroupStoreShape {
     EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly findPendingImportForConfirmation: (
+    input: FindPendingMargonemAccountImportInput
+  ) => Effect<
+    PendingMargonemAccountImportForConfirmation,
+    | PendingMargonemAccountImportNotFound
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly createOwnedAccountFromPendingImport: (
+    input: CreateOwnedAccountFromPendingImportInput
+  ) => Effect<
+    OwnedMargonemAccountSummary,
+    DuplicateMargonemAccountError | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
   readonly markRequestSucceeded: (
     input: MarkFirecrawlRequestSucceededInput
   ) => Effect<void, EffectSquadBuilderPersistenceUnavailable, never>;
@@ -148,8 +168,11 @@ export type {
   ActorDoesNotOwnSquadGroup,
   AuthorizeSquadGroupViewerInput,
   AvailableSquadCharacter,
+  CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
   CreateSquadGroupStoreInput,
+  DuplicateMargonemAccountError,
+  FindPendingMargonemAccountImportInput,
   FindProfileAccessStateInput,
   FirecrawlBudgetError,
   GetSquadGroupDetailInput,
@@ -163,6 +186,8 @@ export type {
   MarkFirecrawlRequestSucceededInput,
   OwnedMargonemAccountSummary,
   PendingMargonemAccountImport,
+  PendingMargonemAccountImportForConfirmation,
+  PendingMargonemAccountImportNotFound,
   ProfileAccessState,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,

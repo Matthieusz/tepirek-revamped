@@ -20,9 +20,11 @@ import {
   desc,
   eq,
   exists,
+  gt,
   gte,
   ilike,
   inArray,
+  isNull,
   lte,
   or,
   sql,
@@ -52,6 +54,7 @@ import {
   profileIdToNumber,
 } from "../margonem-profile-id";
 import { toMargonemProfileUrl } from "../margonem-profile-url";
+import { pendingImportIdToNumber } from "../pending-margonem-account-import-id";
 import { isError } from "../result";
 import type { SquadGroupAccess } from "../squad-group-access";
 import { parseSquadGroupId, squadGroupIdToNumber } from "../squad-group-id";
@@ -68,8 +71,11 @@ import type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnSquadGroup,
   AvailableSquadCharacter,
+  CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
   CreateSquadGroupStoreInput,
+  DuplicateMargonemAccountError,
+  FindPendingMargonemAccountImportInput,
   FindProfileAccessStateInput,
   GlobalSquadGroupSummary,
   GetSquadGroupDetailInput,
@@ -81,6 +87,8 @@ import type {
   MarkFirecrawlRequestSucceededInput,
   OwnedMargonemAccountSummary,
   PendingMargonemAccountImport,
+  PendingMargonemAccountImportForConfirmation,
+  PendingMargonemAccountImportNotFound,
   ProfileAccessState,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
@@ -95,7 +103,9 @@ import { EffectSquadGroupStore } from "./squad-group-store";
 
 type EffectSquadGroupPersistenceOperation =
   | "createPendingImport"
+  | "createOwnedAccountFromPendingImport"
   | "createSquadGroup"
+  | "findPendingImportForConfirmation"
   | "findProfileAccessState"
   | "getSquadGroupDetail"
   | "listAvailableCharactersForOwner"
@@ -463,6 +473,263 @@ const createPendingImportWithDatabase =
           never
         >
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+    });
+
+const findPendingImportForConfirmationWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+    now,
+    pendingImportId,
+  }: FindPendingMargonemAccountImportInput): Effect.Effect<
+    PendingMargonemAccountImportForConfirmation,
+    | PendingMargonemAccountImportNotFound
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* findPendingImportForConfirmationEffect() {
+      const operation = "findPendingImportForConfirmation" as const;
+      const previewSelect = database
+        .select({
+          fetchedAt: margonemAccountImportPreview.fetchedAt,
+          id: margonemAccountImportPreview.id,
+          profileId: margonemAccountImportPreview.profileId,
+        })
+        .from(margonemAccountImportPreview)
+        .where(
+          and(
+            eq(
+              margonemAccountImportPreview.id,
+              pendingImportIdToNumber(pendingImportId)
+            ),
+            eq(
+              margonemAccountImportPreview.actorUserId,
+              appUserIdToString(actorUserId)
+            ),
+            isNull(margonemAccountImportPreview.confirmedAt),
+            gt(margonemAccountImportPreview.expiresAt, now)
+          )
+        )
+        .limit(1);
+      const previewSelectEffect = previewSelect as Effect.Effect<
+        readonly {
+          readonly fetchedAt: Date;
+          readonly id: number;
+          readonly profileId: number;
+        }[],
+        unknown,
+        never
+      >;
+      const previewRows = yield* previewSelectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const [preview] = previewRows;
+
+      if (preview === undefined) {
+        return yield* Effect.fail({
+          _tag: "PendingMargonemAccountImportNotFound" as const,
+        });
+      }
+
+      const characterSelect = database
+        .select({
+          avatarUrl: margonemAccountImportPreviewCharacter.avatarUrl,
+          characterId: margonemAccountImportPreviewCharacter.characterId,
+          level: margonemAccountImportPreviewCharacter.level,
+          name: margonemAccountImportPreviewCharacter.name,
+          profession: margonemAccountImportPreviewCharacter.profession,
+          world: margonemAccountImportPreviewCharacter.world,
+        })
+        .from(margonemAccountImportPreviewCharacter)
+        .where(
+          eq(margonemAccountImportPreviewCharacter.importPreviewId, preview.id)
+        );
+      const characterSelectEffect = characterSelect as Effect.Effect<
+        readonly {
+          readonly avatarUrl: string | null;
+          readonly characterId: number;
+          readonly level: number;
+          readonly name: string;
+          readonly profession: string;
+          readonly world: string;
+        }[],
+        unknown,
+        never
+      >;
+      const characterRows = yield* characterSelectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const jarunaCharacters = [];
+
+      for (const row of characterRows) {
+        const characterId = parseMargonemCharacterId(row.characterId);
+
+        if (isError(characterId)) {
+          return yield* failPersistence(operation, characterId.error);
+        }
+
+        const level = parsePositiveLevel(row.level);
+
+        if (isError(level)) {
+          return yield* failPersistence(operation, level.error);
+        }
+
+        const profession = parseMargonemProfession(row.profession);
+
+        if (isError(profession)) {
+          return yield* failPersistence(operation, profession.error);
+        }
+
+        const world = parseMargonemWorld(row.world);
+
+        if (isError(world)) {
+          return yield* failPersistence(operation, world.error);
+        }
+
+        jarunaCharacters.push({
+          avatarUrl: row.avatarUrl,
+          characterId: characterId.value,
+          level: level.value,
+          name: row.name,
+          profession: profession.value,
+          world: world.value,
+        });
+      }
+
+      const profileId = parseMargonemProfileId(preview.profileId);
+
+      if (isError(profileId)) {
+        return yield* failPersistence(operation, profileId.error);
+      }
+
+      return {
+        actorUserId,
+        fetchedAt: preview.fetchedAt,
+        id: pendingImportId,
+        jarunaCharacters,
+        profileId: profileId.value,
+      };
+    });
+
+const createOwnedAccountFromPendingImportWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+    displayName,
+    pending,
+  }: CreateOwnedAccountFromPendingImportInput): Effect.Effect<
+    OwnedMargonemAccountSummary,
+    DuplicateMargonemAccountError | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* createOwnedAccountFromPendingImportEffect() {
+      const operation = "createOwnedAccountFromPendingImport" as const;
+      const transaction = database.transaction((tx) =>
+        Effect.gen(function* createOwnedAccountFromPendingImportTransaction() {
+          const existingSelect = tx
+            .select({ ownerUserId: margonemAccount.ownerUserId })
+            .from(margonemAccount)
+            .where(
+              eq(
+                margonemAccount.profileId,
+                profileIdToNumber(pending.profileId)
+              )
+            )
+            .limit(1);
+          const existingRows = yield* existingSelect as Effect.Effect<
+            readonly { readonly ownerUserId: string }[],
+            unknown,
+            never
+          >;
+          const [existing] = existingRows;
+
+          if (existing !== undefined) {
+            return existing.ownerUserId === appUserIdToString(actorUserId)
+              ? ({ _tag: "MargonemAccountAlreadyOwnedByActor" } as const)
+              : ({ _tag: "MargonemAccountOwnedByAnotherUser" } as const);
+          }
+
+          const insert = tx
+            .insert(margonemAccount)
+            .values({
+              displayName: accountDisplayNameToString(displayName),
+              lastFetchedAt: pending.fetchedAt,
+              ownerUserId: appUserIdToString(actorUserId),
+              profileId: profileIdToNumber(pending.profileId),
+            })
+            .returning({
+              createdAt: margonemAccount.createdAt,
+              id: margonemAccount.id,
+            });
+          const accountRows = yield* insert as Effect.Effect<
+            readonly { readonly createdAt: Date; readonly id: number }[],
+            unknown,
+            never
+          >;
+          const [account] = accountRows;
+
+          if (account === undefined) {
+            return yield* failPersistence(
+              operation,
+              new Error("Failed to insert owned account")
+            );
+          }
+
+          if (pending.jarunaCharacters.length > 0) {
+            const characterInsert = tx.insert(margonemCharacter).values(
+              pending.jarunaCharacters.map((character) => ({
+                accountId: account.id,
+                avatarUrl: character.avatarUrl,
+                characterId: characterIdToNumber(character.characterId),
+                level: levelToNumber(character.level),
+                name: character.name,
+                profession: character.profession,
+                world: character.world,
+              }))
+            );
+            yield* characterInsert as Effect.Effect<unknown, unknown, never>;
+          }
+
+          const update = tx
+            .update(margonemAccountImportPreview)
+            .set({ confirmedAt: new Date() })
+            .where(
+              eq(
+                margonemAccountImportPreview.id,
+                pendingImportIdToNumber(pending.id)
+              )
+            );
+          yield* update as Effect.Effect<unknown, unknown, never>;
+
+          return {
+            accountId: account.id,
+            characterCount: pending.jarunaCharacters.length,
+            displayName,
+            generatedProfileUrl: toMargonemProfileUrl(pending.profileId),
+            lastFetchedAt: pending.fetchedAt,
+            profileId: pending.profileId,
+          };
+        })
+      );
+
+      const result = yield* (
+        transaction as Effect.Effect<
+          OwnedMargonemAccountSummary | DuplicateMargonemAccountError,
+          unknown,
+          never
+        >
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
+      if (
+        "_tag" in result &&
+        (result._tag === "MargonemAccountAlreadyOwnedByActor" ||
+          result._tag === "MargonemAccountOwnedByAnotherUser" ||
+          result._tag === "MargonemAccountAlreadySharedWithActor")
+      ) {
+        return yield* Effect.fail(result);
+      }
+
+      return result;
     });
 
 const createSquadGroupWithDatabase =
@@ -1320,8 +1587,12 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
   EffectSquadGroupStore,
   EffectDatabase.useSync((database) =>
     EffectSquadGroupStore.of({
+      createOwnedAccountFromPendingImport:
+        createOwnedAccountFromPendingImportWithDatabase(database),
       createPendingImport: createPendingImportWithDatabase(database),
       createSquadGroup: createSquadGroupWithDatabase(database),
+      findPendingImportForConfirmation:
+        findPendingImportForConfirmationWithDatabase(database),
       findProfileAccessState: findProfileAccessStateWithDatabase(database),
       getSquadGroupDetail: getSquadGroupDetailWithDatabase(database),
       listAvailableCharactersForOwner:

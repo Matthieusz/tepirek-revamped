@@ -8,6 +8,8 @@ import { makeApiManagedRuntime } from "../effect-app";
 import { accountDisplayNameToString } from "../modules/squad-builder/account-display-name";
 import { ConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/confirm-owned-account-import";
 import type { ConfirmOwnedAccountImportError } from "../modules/squad-builder/account-import/confirm-owned-account-import";
+import { EffectConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import";
+import type { EffectConfirmOwnedAccountImportError } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import";
 import { EffectPreviewMargonemProfileImport } from "../modules/squad-builder/account-import/effect-preview-margonem-profile-import";
 import { EffectPreviewOwnedAccountImports } from "../modules/squad-builder/account-import/effect-preview-owned-account-imports";
 import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-import/list-owned-margonem-accounts";
@@ -177,6 +179,16 @@ interface ConfirmOwnedAccountImportService {
     input: Parameters<ConfirmOwnedAccountImport["confirm"]>[0]
   ) => Promise<
     Result<OwnedMargonemAccountSummary, ConfirmOwnedAccountImportError>
+  >;
+}
+
+interface EffectConfirmOwnedAccountImportService {
+  readonly confirm: (
+    input: Parameters<EffectConfirmOwnedAccountImport["confirm"]>[0]
+  ) => Effect<
+    OwnedMargonemAccountSummary,
+    EffectConfirmOwnedAccountImportError,
+    EffectSquadGroupStore
   >;
 }
 
@@ -354,6 +366,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly previewOwnedImportsService?: PreviewOwnedImportsService;
   readonly effectPreviewOwnedImportsService?: EffectPreviewOwnedImportsService;
   readonly confirmOwnedAccountImportService?: ConfirmOwnedAccountImportService;
+  readonly effectConfirmOwnedAccountImportService?: EffectConfirmOwnedAccountImportService;
   readonly previewAccountRefetchService?: PreviewAccountRefetchService;
   readonly applyAccountRefetchService?: ApplyAccountRefetchService;
   readonly listOwnedAccountsService?: ListOwnedAccountsService;
@@ -1338,6 +1351,9 @@ const listSquadGroupsEffect = new ListSquadGroups();
 const listAvailableSquadCharactersEffect = new ListAvailableSquadCharacters();
 const setSquadGroupVisibilityEffect = new SetSquadGroupVisibility(systemClock);
 const listOwnedAccountsEffect = new ListOwnedMargonemAccounts();
+const confirmOwnedAccountImportEffect = new EffectConfirmOwnedAccountImport(
+  systemClock
+);
 const createDefaultPreviewProfileImportEffect = (): Result<
   EffectPreviewMargonemProfileImport,
   SquadBuilderRouterError
@@ -1379,6 +1395,7 @@ export const createSquadBuilderRouter = ({
   previewOwnedImportsService,
   effectPreviewOwnedImportsService,
   confirmOwnedAccountImportService,
+  effectConfirmOwnedAccountImportService,
   previewAccountRefetchService,
   applyAccountRefetchService,
   listOwnedAccountsService,
@@ -1464,38 +1481,53 @@ export const createSquadBuilderRouter = ({
         });
       }
 
-      const services =
-        confirmOwnedAccountImportService === undefined
-          ? defaultServices
-          : ok({
-              confirm: confirmOwnedAccountImportService,
-            });
+      if (confirmOwnedAccountImportService !== undefined) {
+        const result = await confirmOwnedAccountImportService.confirm({
+          actorUserId: actorUserId.value,
+          displayName: input.displayName,
+          pendingImportId: pendingImportId.value,
+        });
 
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "confirmOwnedAccountImport",
-          services.error
-        );
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "confirmOwnedAccountImport",
+            result.error
+          );
+          throw toConfirmOrpcError(result.error);
+        }
+
+        return toConfirmOwnedAccountImportResponse(result.value);
       }
 
-      const result = await services.value.confirm.confirm({
+      const effect = (
+        effectConfirmOwnedAccountImportService ??
+        confirmOwnedAccountImportEffect
+      ).confirm({
         actorUserId: actorUserId.value,
         displayName: input.displayName,
         pendingImportId: pendingImportId.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "confirmOwnedAccountImport",
-          result.error
-        );
-        throw toConfirmOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for confirmOwnedAccountImport"
+          ),
+          operation: "confirmOwnedAccountImport",
+        };
+        logSquadBuilderError(context, "confirmOwnedAccountImport", error);
+        throw toConfirmOrpcError(error);
       }
 
-      return toConfirmOwnedAccountImportResponse(result.value);
+      const result = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as ConfirmOwnedAccountImportError;
+        logSquadBuilderError(context, "confirmOwnedAccountImport", mapped);
+        return toConfirmOrpcError(mapped);
+      });
+
+      return toConfirmOwnedAccountImportResponse(result);
     }),
   createSquadGroup: verifiedProcedure
     .input(createSquadGroupInputSchema)
