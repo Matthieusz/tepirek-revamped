@@ -31,6 +31,7 @@ import { parseMargonemProfileId } from "../modules/squad-builder/margonem-profil
 import { pendingImportIdToNumber } from "../modules/squad-builder/pending-margonem-account-import-id";
 import { isOk, ok } from "../modules/squad-builder/result";
 import { DrizzleSquadBuilderStore } from "../modules/squad-builder/squad-builder-store";
+import { EffectSendSquadGroupEditorInvite } from "../modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite";
 import { createVerifiedMember } from "../test/integration/builders";
 import type { TestUser } from "../test/integration/builders";
 import { defaultTestDatabaseUrl, testDb } from "../test/integration/database";
@@ -922,6 +923,36 @@ describe("squad-builder router Postgres integration", () => {
     expect(invite).toMatchObject({
       accountId: account.id,
       ownerUserName: "Router Effect Owner",
+      status: "pending",
+    });
+  });
+
+  it("sends a squad group editor invite through the Effect bridge", async () => {
+    const owner = await createVerifiedMember({
+      id: "router-effect-squad-invite-owner",
+      name: "Router Effect Squad Owner",
+    });
+    const recipient = await createVerifiedMember({
+      id: "router-effect-squad-invite-recipient",
+      name: "Router Effect Squad Recipient",
+    });
+    const client = createSquadBuilderClient(owner, {
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+      effectSendSquadGroupEditorInviteService:
+        new EffectSendSquadGroupEditorInvite(systemClock),
+    });
+    const group = await client.squadBuilder.createSquadGroup({
+      name: "Router effect squad invite group",
+    });
+
+    const invite = await client.squadBuilder.sendSquadGroupEditorInvite({
+      groupId: group.groupId,
+      invitedUserId: recipient.id,
+    });
+
+    expect(invite).toMatchObject({
+      ownerUserName: "Router Effect Squad Owner",
+      squadGroupId: group.groupId,
       status: "pending",
     });
   });

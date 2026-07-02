@@ -28,6 +28,8 @@ export const makeEffectSquadGroupStoreTestService = (
     findProfileAccessState: () => unhandledStoreCall("findProfileAccessState"),
     findVerifiedInviteTarget: () =>
       unhandledStoreCall("findVerifiedInviteTarget"),
+    findVerifiedSquadEditorInviteTarget: () =>
+      unhandledStoreCall("findVerifiedSquadEditorInviteTarget"),
     getAccountForRefetch: () => unhandledStoreCall("getAccountForRefetch"),
     getSquadGroupDetail: () => unhandledStoreCall("getSquadGroupDetail"),
     listAccountAccessGrants: () =>
@@ -58,5 +60,7 @@ export const makeEffectSquadGroupStoreTestService = (
       unhandledStoreCall("setSquadGroupVisibility"),
     upsertAccountAccessInvite: () =>
       unhandledStoreCall("upsertAccountAccessInvite"),
+    upsertSquadGroupEditorInvite: () =>
+      unhandledStoreCall("upsertSquadGroupEditorInvite"),
     ...overrides,
   });

@@ -10,6 +10,7 @@ import {
   squad,
   squadCharacter,
   squadGroup,
+  squadGroupInvitation,
 } from "@tepirek-revamped/db/schema/squad-builder";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
@@ -38,6 +39,7 @@ import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-d
 import { parseMargonemProfileId } from "../margonem-profile-id";
 import { isOk } from "../result";
 import { CreateSquadGroup } from "./create-squad-group";
+import { EffectSendSquadGroupEditorInvite } from "./effect-send-squad-group-editor-invite";
 import { ListAvailableSquadCharacters } from "./list-available-squad-characters";
 import { ListGlobalSquadGroups } from "./list-global-squad-groups";
 import { ListSquadGroups } from "./list-squad-groups";
@@ -900,6 +902,68 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
         })
       )
     ).rejects.toMatchObject({ _tag: "AccountAccessTransitionNotAllowed" });
+  });
+
+  it("sends squad group editor invites", async () => {
+    const owner = await createVerifiedMember({
+      id: "effect-store-squad-send-owner",
+      name: "Effect Store Squad Send Owner",
+    });
+    const target = await createVerifiedMember({
+      id: "effect-store-squad-send-target",
+      name: "Effect Store Squad Send Target",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const createService = new CreateSquadGroup();
+    const sendService = new EffectSendSquadGroupEditorInvite(systemClock);
+
+    const group = await runtime.runPromise(
+      createService.create({
+        actorUserId: parseTestUserId(owner.id),
+        name: "Effect store squad send group",
+      })
+    );
+
+    const invite = await runtime.runPromise(
+      sendService.send({
+        actorUserId: parseTestUserId(owner.id),
+        groupId: group.groupId,
+        invitedUserId: parseTestUserId(target.id),
+      })
+    );
+
+    expect(invite).toMatchObject({
+      ownerUserId: parseTestUserId(owner.id),
+      ownerUserName: "Effect Store Squad Send Owner",
+      squadGroupId: group.groupId,
+      status: "pending",
+    });
+
+    const [stored] = await testDb
+      .select({
+        invitedUserId: squadGroupInvitation.invitedUserId,
+        status: squadGroupInvitation.status,
+      })
+      .from(squadGroupInvitation)
+      .where(eq(squadGroupInvitation.id, invite.invitationId))
+      .limit(1);
+
+    expect(stored).toEqual({
+      invitedUserId: target.id,
+      status: "pending",
+    });
+
+    await expect(
+      runtime.runPromise(
+        sendService.send({
+          actorUserId: parseTestUserId(owner.id),
+          groupId: group.groupId,
+          invitedUserId: parseTestUserId(target.id),
+        })
+      )
+    ).rejects.toMatchObject({
+      _tag: "SquadGroupInvitationTransitionNotAllowed",
+    });
   });
 
   it("responds to account access invites", async () => {

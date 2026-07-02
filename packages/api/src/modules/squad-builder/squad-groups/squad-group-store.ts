@@ -173,6 +173,27 @@ export interface EffectSquadGroupStoreShape {
     EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly findVerifiedSquadEditorInviteTarget: (input: {
+    readonly targetUserId: AppUserId;
+  }) => Effect<
+    SquadEditorInviteTarget,
+    | { readonly _tag: "SquadEditorInviteTargetNotFound" }
+    | { readonly _tag: "SquadEditorInviteTargetNotVerified" }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly upsertSquadGroupEditorInvite: (
+    input: UpsertSquadGroupEditorInviteInput
+  ) => Effect<
+    SquadGroupInvitationSummary,
+    | {
+        readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
+        readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
+        readonly attempted: string;
+      }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
   readonly listOwnedAccounts: (
     input: ListOwnedMargonemAccountsInput
   ) => Effect<

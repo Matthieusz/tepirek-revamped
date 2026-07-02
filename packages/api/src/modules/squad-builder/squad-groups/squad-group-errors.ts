@@ -13,6 +13,7 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
       "createPendingRefetch",
       "findOwnedAccountForSharing",
       "findVerifiedInviteTarget",
+      "findVerifiedSquadEditorInviteTarget",
       "findPendingImportForConfirmation",
       "findPendingRefetchForApply",
       "findProfileAccessState",
@@ -37,6 +38,7 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
       "searchInviteTargets",
       "setSquadGroupVisibility",
       "upsertAccountAccessInvite",
+      "upsertSquadGroupEditorInvite",
     ]),
     provider: Schema.Literal("postgres"),
   }
