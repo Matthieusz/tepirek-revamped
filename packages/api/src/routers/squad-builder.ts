@@ -1,32 +1,66 @@
 import { ORPCError } from "@orpc/server";
+import type { Effect } from "effect/Effect";
+import type { ManagedRuntime } from "effect/ManagedRuntime";
+import * as Schema from "effect/Schema";
 import { z } from "zod";
 
+import { makeApiManagedRuntime } from "../effect-app";
 import { accountDisplayNameToString } from "../modules/squad-builder/account-display-name";
-import type { AccountSharingError } from "../modules/squad-builder/account-sharing-error";
+import { ConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/confirm-owned-account-import";
+import type { ConfirmOwnedAccountImportError } from "../modules/squad-builder/account-import/confirm-owned-account-import";
+import { EffectConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import";
+import type { EffectConfirmOwnedAccountImportError } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import";
+import { EffectPreviewMargonemProfileImport } from "../modules/squad-builder/account-import/effect-preview-margonem-profile-import";
+import { EffectPreviewOwnedAccountImports } from "../modules/squad-builder/account-import/effect-preview-owned-account-imports";
+import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-import/list-owned-margonem-accounts";
+import type { ListOwnedMargonemAccountsError } from "../modules/squad-builder/account-import/list-owned-margonem-accounts";
+import {
+  PreviewMargonemProfileImport,
+  systemClock,
+} from "../modules/squad-builder/account-import/preview-margonem-profile-import";
+import type {
+  PreviewMargonemProfileImportError,
+  PreviewMargonemProfileImportInput,
+  PreviewMargonemProfileImportOutput,
+} from "../modules/squad-builder/account-import/preview-margonem-profile-import";
+import { PreviewOwnedAccountImports } from "../modules/squad-builder/account-import/preview-owned-account-imports";
+import type {
+  PreviewOwnedAccountImportItem,
+  PreviewOwnedAccountImportLineError,
+  PreviewOwnedAccountImportsError,
+  PreviewOwnedAccountImportsOutput,
+} from "../modules/squad-builder/account-import/preview-owned-account-imports";
+import { ApplyAccountRefetch } from "../modules/squad-builder/account-refetch/apply-account-refetch";
+import type {
+  ApplyAccountRefetchError,
+  ApplyAccountRefetchOutput,
+} from "../modules/squad-builder/account-refetch/apply-account-refetch";
+import { EffectApplyAccountRefetch } from "../modules/squad-builder/account-refetch/effect-apply-account-refetch";
+import { EffectPreviewAccountRefetch } from "../modules/squad-builder/account-refetch/effect-preview-account-refetch";
+import { PreviewAccountRefetch } from "../modules/squad-builder/account-refetch/preview-account-refetch";
+import type {
+  PreviewAccountRefetchError,
+  PreviewAccountRefetchOutput,
+} from "../modules/squad-builder/account-refetch/preview-account-refetch";
+import type { AccountSharingError } from "../modules/squad-builder/account-sharing/account-sharing-error";
+import { EffectListAccountSharingState } from "../modules/squad-builder/account-sharing/effect-list-account-sharing-state";
+import { EffectRespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-respond-to-account-access-invite";
+import { EffectRevokeAccountAccess } from "../modules/squad-builder/account-sharing/effect-revoke-account-access";
+import { EffectSearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/effect-search-account-invite-targets";
+import { EffectSendAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-send-account-access-invite";
+import { ListAccountSharingState } from "../modules/squad-builder/account-sharing/list-account-sharing-state";
+import { RespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/respond-to-account-access-invite";
+import { RevokeAccountAccess } from "../modules/squad-builder/account-sharing/revoke-account-access";
+import { SearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/search-account-invite-targets";
+import { SendAccountAccessInvite } from "../modules/squad-builder/account-sharing/send-account-access-invite";
 import {
   appUserIdToString,
   parseAppUserId,
 } from "../modules/squad-builder/app-user-id";
 import type { InvalidAppUserId } from "../modules/squad-builder/app-user-id";
-import { ApplyAccountRefetch } from "../modules/squad-builder/apply-account-refetch";
-import type {
-  ApplyAccountRefetchError,
-  ApplyAccountRefetchOutput,
-} from "../modules/squad-builder/apply-account-refetch";
-import { ConfirmOwnedAccountImport } from "../modules/squad-builder/confirm-owned-account-import";
-import type { ConfirmOwnedAccountImportError } from "../modules/squad-builder/confirm-owned-account-import";
-import { CreateSquadGroup } from "../modules/squad-builder/create-squad-group";
-import type { CreateSquadGroupError } from "../modules/squad-builder/create-squad-group";
 import { FirecrawlSdkClient } from "../modules/squad-builder/firecrawl-client";
 import { parseFirecrawlConfig } from "../modules/squad-builder/firecrawl-config";
 import type { ParseFirecrawlConfigError } from "../modules/squad-builder/firecrawl-config";
-import { ListAccountSharingState } from "../modules/squad-builder/list-account-sharing-state";
-import { ListAvailableSquadCharacters } from "../modules/squad-builder/list-available-squad-characters";
-import { ListGlobalSquadGroups } from "../modules/squad-builder/list-global-squad-groups";
-import { ListOwnedMargonemAccounts } from "../modules/squad-builder/list-owned-margonem-accounts";
-import type { ListOwnedMargonemAccountsError } from "../modules/squad-builder/list-owned-margonem-accounts";
-import { ListSquadGroupSharingState } from "../modules/squad-builder/list-squad-group-sharing-state";
-import { ListSquadGroups } from "../modules/squad-builder/list-squad-groups";
 import {
   margonemAccountAccessIdToNumber,
   parseMargonemAccountAccessId,
@@ -38,52 +72,13 @@ import {
 import { profileIdToNumber } from "../modules/squad-builder/margonem-profile-id";
 import { parsePendingMargonemAccountImportId } from "../modules/squad-builder/pending-margonem-account-import-id";
 import { parsePendingMargonemAccountRefetchId } from "../modules/squad-builder/pending-margonem-account-refetch-id";
-import { PreviewAccountRefetch } from "../modules/squad-builder/preview-account-refetch";
-import type {
-  PreviewAccountRefetchError,
-  PreviewAccountRefetchOutput,
-} from "../modules/squad-builder/preview-account-refetch";
-import {
-  PreviewMargonemProfileImport,
-  systemClock,
-} from "../modules/squad-builder/preview-margonem-profile-import";
-import type {
-  PreviewMargonemProfileImportError,
-  PreviewMargonemProfileImportInput,
-  PreviewMargonemProfileImportOutput,
-} from "../modules/squad-builder/preview-margonem-profile-import";
-import { PreviewOwnedAccountImports } from "../modules/squad-builder/preview-owned-account-imports";
-import type {
-  PreviewOwnedAccountImportItem,
-  PreviewOwnedAccountImportLineError,
-  PreviewOwnedAccountImportsError,
-  PreviewOwnedAccountImportsOutput,
-} from "../modules/squad-builder/preview-owned-account-imports";
-import { RespondToAccountAccessInvite } from "../modules/squad-builder/respond-to-account-access-invite";
-import { RespondToSquadGroupInvite } from "../modules/squad-builder/respond-to-squad-group-invite";
 import { err, isError, ok } from "../modules/squad-builder/result";
 import type { Result } from "../modules/squad-builder/result";
-import { RevokeAccountAccess } from "../modules/squad-builder/revoke-account-access";
-import { RevokeSquadGroupEditor } from "../modules/squad-builder/revoke-squad-group-editor";
-import { SaveSharedSquadGroupCharacters } from "../modules/squad-builder/save-shared-squad-group-characters";
-import type { SharedSquadGroupSaveError } from "../modules/squad-builder/save-shared-squad-group-characters";
-import { SaveSquadGroup } from "../modules/squad-builder/save-squad-group";
-import type {
-  SaveSquadGroupError,
-  SaveSquadInput,
-} from "../modules/squad-builder/save-squad-group";
-import { SearchAccountInviteTargets } from "../modules/squad-builder/search-account-invite-targets";
-import { SearchSquadEditorInviteTargets } from "../modules/squad-builder/search-squad-editor-invite-targets";
-import { SendAccountAccessInvite } from "../modules/squad-builder/send-account-access-invite";
-import { SendSquadGroupEditorInvite } from "../modules/squad-builder/send-squad-group-editor-invite";
-import { SetSquadGroupVisibility } from "../modules/squad-builder/set-squad-group-visibility";
-import type { GlobalSquadVisibilityError } from "../modules/squad-builder/set-squad-group-visibility";
 import { DrizzleSquadBuilderStore } from "../modules/squad-builder/squad-builder-store";
 import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,
   AccountInviteTarget,
-  ActorCannotViewSquadGroup,
   GlobalSquadGroupSummary,
   OwnedMargonemAccountSummary,
   RevokeAccountAccessResult,
@@ -94,8 +89,8 @@ import type {
   SquadGroupDetail,
   SquadGroupEditorGrantSummary,
   SquadGroupInvitationSummary,
-  SquadGroupNotFound,
   SquadGroupSummary,
+  SquadGroupVisibilityChange,
 } from "../modules/squad-builder/squad-builder-store";
 import { parseSquadGroupId } from "../modules/squad-builder/squad-group-id";
 import {
@@ -104,14 +99,47 @@ import {
 } from "../modules/squad-builder/squad-group-invitation-id";
 import { parseSquadGroupListFilters } from "../modules/squad-builder/squad-group-list-filters";
 import type { SquadGroupListFilterError } from "../modules/squad-builder/squad-group-list-filters";
-import type { SquadGroupSharingError } from "../modules/squad-builder/squad-group-sharing-error";
 import type { AvailableSquadCharacter } from "../modules/squad-builder/squad-group-snapshot";
 import { parseSquadGroupVisibility } from "../modules/squad-builder/squad-group-visibility";
+import { CreateSquadGroup } from "../modules/squad-builder/squad-groups/create-squad-group";
+import type { CreateSquadGroupError } from "../modules/squad-builder/squad-groups/create-squad-group";
+import { ListAvailableSquadCharacters } from "../modules/squad-builder/squad-groups/list-available-squad-characters";
+import type { ListAvailableSquadCharactersError } from "../modules/squad-builder/squad-groups/list-available-squad-characters";
+import { ListGlobalSquadGroups } from "../modules/squad-builder/squad-groups/list-global-squad-groups";
+import { ListSquadGroupSharingState } from "../modules/squad-builder/squad-groups/list-squad-group-sharing-state";
+import { ListSquadGroups } from "../modules/squad-builder/squad-groups/list-squad-groups";
+import type {
+  GetSquadGroupDetailError,
+  ListMySquadGroupsError,
+} from "../modules/squad-builder/squad-groups/list-squad-groups";
+import { RespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/respond-to-squad-group-invite";
+import { RevokeSquadGroupEditor } from "../modules/squad-builder/squad-groups/revoke-squad-group-editor";
+import { SaveSharedSquadGroupCharacters } from "../modules/squad-builder/squad-groups/save-shared-squad-group-characters";
+import type {
+  EffectSharedSquadGroupSaveError,
+  SharedSquadGroupSaveError,
+} from "../modules/squad-builder/squad-groups/save-shared-squad-group-characters";
+import { SaveSquadGroup } from "../modules/squad-builder/squad-groups/save-squad-group";
+import type {
+  SaveSquadGroupError,
+  SaveSquadInput,
+} from "../modules/squad-builder/squad-groups/save-squad-group";
+import { SearchSquadEditorInviteTargets } from "../modules/squad-builder/squad-groups/search-squad-editor-invite-targets";
+import { SendSquadGroupEditorInvite } from "../modules/squad-builder/squad-groups/send-squad-group-editor-invite";
+import { SetSquadGroupVisibility } from "../modules/squad-builder/squad-groups/set-squad-group-visibility";
+import type { GlobalSquadVisibilityError } from "../modules/squad-builder/squad-groups/set-squad-group-visibility";
+import type { SquadGroupSharingError } from "../modules/squad-builder/squad-groups/squad-group-sharing-error";
+import type { EffectSquadGroupStore } from "../modules/squad-builder/squad-groups/squad-group-store";
 import { parseSquadId } from "../modules/squad-builder/squad-id";
+import { runOrpcEffect } from "../orpc-effect";
 import { verifiedProcedure } from "./procedures";
 import type { RouterContext } from "./procedures";
 
 const casesHandled = (x: never): never => x;
+
+const strictEffectBoundaryParseOptions = {
+  onExcessProperty: "error",
+} as const;
 
 interface PreviewProfileImportService {
   readonly preview: (
@@ -125,12 +153,34 @@ interface PreviewProfileImportService {
   >;
 }
 
+interface EffectPreviewProfileImportService {
+  readonly preview: (
+    input: PreviewMargonemProfileImportInput,
+    options?: { readonly signal?: AbortSignal }
+  ) => Effect<
+    PreviewMargonemProfileImportOutput,
+    PreviewMargonemProfileImportError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface PreviewOwnedImportsService {
   readonly preview: (
     input: Parameters<PreviewOwnedAccountImports["preview"]>[0],
     options?: { readonly signal?: AbortSignal }
   ) => Promise<
     Result<PreviewOwnedAccountImportsOutput, PreviewOwnedAccountImportsError>
+  >;
+}
+
+interface EffectPreviewOwnedImportsService {
+  readonly preview: (
+    input: Parameters<EffectPreviewOwnedAccountImports["preview"]>[0],
+    options?: { readonly signal?: AbortSignal }
+  ) => Effect<
+    PreviewOwnedAccountImportsOutput,
+    PreviewOwnedAccountImportsError,
+    EffectSquadGroupStore
   >;
 }
 
@@ -142,11 +192,32 @@ interface ConfirmOwnedAccountImportService {
   >;
 }
 
+interface EffectConfirmOwnedAccountImportService {
+  readonly confirm: (
+    input: Parameters<EffectConfirmOwnedAccountImport["confirm"]>[0]
+  ) => Effect<
+    OwnedMargonemAccountSummary,
+    EffectConfirmOwnedAccountImportError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface PreviewAccountRefetchService {
   readonly preview: (
     input: Parameters<PreviewAccountRefetch["preview"]>[0],
     options?: { readonly signal?: AbortSignal }
   ) => Promise<Result<PreviewAccountRefetchOutput, PreviewAccountRefetchError>>;
+}
+
+interface EffectPreviewAccountRefetchService {
+  readonly preview: (
+    input: Parameters<EffectPreviewAccountRefetch["preview"]>[0],
+    options?: { readonly signal?: AbortSignal }
+  ) => Effect<
+    PreviewAccountRefetchOutput,
+    PreviewAccountRefetchError,
+    EffectSquadGroupStore
+  >;
 }
 
 interface ApplyAccountRefetchService {
@@ -155,14 +226,23 @@ interface ApplyAccountRefetchService {
   ) => Promise<Result<ApplyAccountRefetchOutput, ApplyAccountRefetchError>>;
 }
 
+interface EffectApplyAccountRefetchService {
+  readonly apply: (
+    input: Parameters<EffectApplyAccountRefetch["apply"]>[0]
+  ) => Effect<
+    ApplyAccountRefetchOutput,
+    ApplyAccountRefetchError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface ListOwnedAccountsService {
   readonly list: (
     input: Parameters<ListOwnedMargonemAccounts["list"]>[0]
-  ) => Promise<
-    Result<
-      readonly OwnedMargonemAccountSummary[],
-      ListOwnedMargonemAccountsError
-    >
+  ) => Effect<
+    readonly OwnedMargonemAccountSummary[],
+    ListOwnedMargonemAccountsError,
+    EffectSquadGroupStore
   >;
 }
 
@@ -172,10 +252,30 @@ interface SearchAccountInviteTargetsService {
   ) => Promise<Result<readonly AccountInviteTarget[], AccountSharingError>>;
 }
 
+interface EffectSearchAccountInviteTargetsService {
+  readonly search: (
+    input: Parameters<EffectSearchAccountInviteTargets["search"]>[0]
+  ) => Effect<
+    readonly AccountInviteTarget[],
+    AccountSharingError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface SendAccountAccessInviteService {
   readonly send: (
     input: Parameters<SendAccountAccessInvite["send"]>[0]
   ) => Promise<Result<AccountAccessInviteSummary, AccountSharingError>>;
+}
+
+interface EffectSendAccountAccessInviteService {
+  readonly send: (
+    input: Parameters<EffectSendAccountAccessInvite["send"]>[0]
+  ) => Effect<
+    AccountAccessInviteSummary,
+    AccountSharingError,
+    EffectSquadGroupStore
+  >;
 }
 
 interface RespondToAccountAccessInviteService {
@@ -184,10 +284,30 @@ interface RespondToAccountAccessInviteService {
   ) => Promise<Result<AccountAccessInviteSummary, AccountSharingError>>;
 }
 
+interface EffectRespondToAccountAccessInviteService {
+  readonly respond: (
+    input: Parameters<EffectRespondToAccountAccessInvite["respond"]>[0]
+  ) => Effect<
+    AccountAccessInviteSummary,
+    AccountSharingError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface RevokeAccountAccessService {
   readonly revoke: (
     input: Parameters<RevokeAccountAccess["revoke"]>[0]
   ) => Promise<Result<RevokeAccountAccessResult, AccountSharingError>>;
+}
+
+interface EffectRevokeAccountAccessService {
+  readonly revoke: (
+    input: Parameters<EffectRevokeAccountAccess["revoke"]>[0]
+  ) => Effect<
+    RevokeAccountAccessResult,
+    AccountSharingError,
+    EffectSquadGroupStore
+  >;
 }
 
 interface ListAccountSharingStateService {
@@ -208,58 +328,74 @@ interface ListAccountSharingStateService {
   >;
 }
 
+interface EffectListAccountSharingStateService {
+  readonly listIncomingInvites: (
+    input: Parameters<EffectListAccountSharingState["listIncomingInvites"]>[0]
+  ) => Effect<
+    readonly AccountAccessInviteSummary[],
+    AccountSharingError,
+    EffectSquadGroupStore
+  >;
+  readonly listSharedAccounts: (
+    input: Parameters<EffectListAccountSharingState["listSharedAccounts"]>[0]
+  ) => Effect<
+    readonly SharedMargonemAccountSummary[],
+    AccountSharingError,
+    EffectSquadGroupStore
+  >;
+  readonly listAccountAccessGrants: (
+    input: Parameters<
+      EffectListAccountSharingState["listAccountAccessGrants"]
+    >[0]
+  ) => Effect<
+    readonly AccountAccessGrantSummary[],
+    AccountSharingError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface CreateSquadGroupService {
   readonly create: (
     input: Parameters<CreateSquadGroup["create"]>[0]
-  ) => Promise<Result<SquadGroupSummary, CreateSquadGroupError>>;
+  ) => Effect<SquadGroupSummary, CreateSquadGroupError, never>;
 }
 
 interface ListGlobalSquadGroupsService {
   readonly list: (
     input: Parameters<ListGlobalSquadGroups["list"]>[0]
-  ) => Promise<
-    Result<
-      readonly GlobalSquadGroupSummary[],
-      SquadBuilderPersistenceUnavailable
-    >
+  ) => Effect<
+    readonly GlobalSquadGroupSummary[],
+    SquadBuilderPersistenceUnavailable,
+    never
   >;
 }
 
-interface ListSquadGroupsService {
+interface ListMySquadGroupsService {
   readonly listMine: (
     input: Parameters<ListSquadGroups["listMine"]>[0]
-  ) => Promise<
-    Result<readonly SquadGroupSummary[], SquadBuilderPersistenceUnavailable>
-  >;
+  ) => Effect<readonly SquadGroupSummary[], ListMySquadGroupsError, never>;
+}
+
+interface GetSquadGroupDetailService {
   readonly getMine: (
     input: Parameters<ListSquadGroups["getMine"]>[0]
-  ) => Promise<
-    Result<
-      SquadGroupDetail,
-      | SquadGroupNotFound
-      | ActorCannotViewSquadGroup
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Effect<SquadGroupDetail, GetSquadGroupDetailError, never>;
 }
 
 interface ListAvailableSquadCharactersService {
   readonly list: (
     input: Parameters<ListAvailableSquadCharacters["list"]>[0]
-  ) => Promise<
-    Result<
-      readonly AvailableSquadCharacter[],
-      | SquadGroupNotFound
-      | ActorCannotViewSquadGroup
-      | SquadBuilderPersistenceUnavailable
-    >
+  ) => Effect<
+    readonly AvailableSquadCharacter[],
+    ListAvailableSquadCharactersError,
+    never
   >;
 }
 
 interface SaveSquadGroupService {
   readonly save: (
     input: Parameters<SaveSquadGroup["save"]>[0]
-  ) => Promise<Result<SquadGroupDetail, SaveSquadGroupError>>;
+  ) => Effect<SquadGroupDetail, SaveSquadGroupError, EffectSquadGroupStore>;
 }
 
 interface SearchSquadEditorInviteTargetsService {
@@ -312,16 +448,7 @@ interface ListSquadGroupSharingStateService {
 interface SetSquadGroupVisibilityService {
   readonly set: (
     input: Parameters<SetSquadGroupVisibility["set"]>[0]
-  ) => Promise<
-    Result<
-      {
-        readonly groupId: number;
-        readonly visibility: "private" | "global";
-        readonly updatedAt: Date;
-      },
-      GlobalSquadVisibilityError
-    >
-  >;
+  ) => Effect<SquadGroupVisibilityChange, GlobalSquadVisibilityError, never>;
 }
 
 interface SaveSharedSquadGroupCharactersService {
@@ -330,20 +457,42 @@ interface SaveSharedSquadGroupCharactersService {
   ) => Promise<Result<SquadGroupDetail, SharedSquadGroupSaveError>>;
 }
 
+interface EffectSaveSharedSquadGroupCharactersService {
+  readonly saveEffect: (
+    input: Parameters<SaveSharedSquadGroupCharacters["saveEffect"]>[0]
+  ) => Effect<
+    SquadGroupDetail,
+    EffectSharedSquadGroupSaveError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface CreateSquadBuilderRouterOptions {
   readonly previewService?: PreviewProfileImportService;
+  readonly effectPreviewService?: EffectPreviewProfileImportService;
   readonly previewOwnedImportsService?: PreviewOwnedImportsService;
+  readonly effectPreviewOwnedImportsService?: EffectPreviewOwnedImportsService;
   readonly confirmOwnedAccountImportService?: ConfirmOwnedAccountImportService;
+  readonly effectConfirmOwnedAccountImportService?: EffectConfirmOwnedAccountImportService;
   readonly previewAccountRefetchService?: PreviewAccountRefetchService;
+  readonly effectPreviewAccountRefetchService?: EffectPreviewAccountRefetchService;
   readonly applyAccountRefetchService?: ApplyAccountRefetchService;
+  readonly effectApplyAccountRefetchService?: EffectApplyAccountRefetchService;
   readonly listOwnedAccountsService?: ListOwnedAccountsService;
   readonly searchAccountInviteTargetsService?: SearchAccountInviteTargetsService;
+  readonly effectSearchAccountInviteTargetsService?: EffectSearchAccountInviteTargetsService;
   readonly sendAccountAccessInviteService?: SendAccountAccessInviteService;
+  readonly effectSendAccountAccessInviteService?: EffectSendAccountAccessInviteService;
   readonly respondToAccountAccessInviteService?: RespondToAccountAccessInviteService;
+  readonly effectRespondToAccountAccessInviteService?: EffectRespondToAccountAccessInviteService;
   readonly revokeAccountAccessService?: RevokeAccountAccessService;
+  readonly effectRevokeAccountAccessService?: EffectRevokeAccountAccessService;
   readonly listAccountSharingStateService?: ListAccountSharingStateService;
+  readonly effectListAccountSharingStateService?: EffectListAccountSharingStateService;
   readonly createSquadGroupService?: CreateSquadGroupService;
-  readonly listSquadGroupsService?: ListSquadGroupsService;
+  readonly effectRuntime?: ManagedRuntime<EffectSquadGroupStore, unknown>;
+  readonly listMySquadGroupsService?: ListMySquadGroupsService;
+  readonly getSquadGroupDetailService?: GetSquadGroupDetailService;
   readonly listGlobalSquadGroupsService?: ListGlobalSquadGroupsService;
   readonly listAvailableSquadCharactersService?: ListAvailableSquadCharactersService;
   readonly saveSquadGroupService?: SaveSquadGroupService;
@@ -353,6 +502,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly revokeSquadGroupEditorService?: RevokeSquadGroupEditorService;
   readonly listSquadGroupSharingStateService?: ListSquadGroupSharingStateService;
   readonly saveSharedSquadGroupCharactersService?: SaveSharedSquadGroupCharactersService;
+  readonly effectSaveSharedSquadGroupCharactersService?: EffectSaveSharedSquadGroupCharactersService;
   readonly setSquadGroupVisibilityService?: SetSquadGroupVisibilityService;
 }
 
@@ -400,9 +550,23 @@ const listAccountAccessGrantsInputSchema = z.object({
   accountId: z.number().int().positive(),
 });
 
-const createSquadGroupInputSchema = z.object({
-  name: z.string(),
-});
+const createSquadGroupInputSchema = Schema.toStandardSchemaV1(
+  Schema.Struct({
+    name: Schema.String,
+  }),
+  { parseOptions: strictEffectBoundaryParseOptions }
+);
+
+const createSquadGroupOutputSchema = Schema.toStandardSchemaV1(
+  Schema.Struct({
+    characterCount: Schema.Number,
+    groupId: Schema.Number,
+    name: Schema.String,
+    squadCount: Schema.Number,
+    updatedAt: Schema.String,
+  }),
+  { parseOptions: strictEffectBoundaryParseOptions }
+);
 
 const squadGroupListFiltersInputSchema = z
   .object({
@@ -419,6 +583,13 @@ const squadGroupListFiltersInputSchema = z
 const squadGroupIdInputSchema = z.object({
   groupId: z.number().int().positive(),
 });
+
+const listMySquadGroupsOutputSchema = Schema.toStandardSchemaV1(
+  Schema.Struct({
+    groups: Schema.Array(createSquadGroupOutputSchema),
+  }),
+  { parseOptions: strictEffectBoundaryParseOptions }
+);
 
 const setSquadGroupVisibilityInputSchema = z.object({
   groupId: z.number().int().positive(),
@@ -503,10 +674,6 @@ interface SquadBuilderServices {
   readonly respondInvite: RespondToAccountAccessInviteService;
   readonly revokeAccess: RevokeAccountAccessService;
   readonly sharingState: ListAccountSharingStateService;
-  readonly createSquadGroup: CreateSquadGroupService;
-  readonly listSquadGroups: ListSquadGroupsService;
-  readonly listGlobalSquadGroups: ListGlobalSquadGroupsService;
-  readonly listAvailableSquadCharacters: ListAvailableSquadCharactersService;
   readonly saveSquadGroup: SaveSquadGroupService;
   readonly searchSquadEditorInviteTargets: SearchSquadEditorInviteTargetsService;
   readonly sendSquadGroupEditorInvite: SendSquadGroupEditorInviteService;
@@ -514,7 +681,6 @@ interface SquadBuilderServices {
   readonly revokeSquadGroupEditor: RevokeSquadGroupEditorService;
   readonly squadGroupSharingState: ListSquadGroupSharingStateService;
   readonly saveSharedSquadGroupCharacters: SaveSharedSquadGroupCharactersService;
-  readonly setSquadGroupVisibility: SetSquadGroupVisibilityService;
 }
 
 const createDefaultSquadBuilderServices = (): Result<
@@ -539,11 +705,7 @@ const createDefaultSquadBuilderServices = (): Result<
   return ok({
     applyRefetch: new ApplyAccountRefetch(store, store, store, systemClock),
     confirm: new ConfirmOwnedAccountImport(store, store, systemClock),
-    createSquadGroup: new CreateSquadGroup(store),
-    list: new ListOwnedMargonemAccounts(store),
-    listAvailableSquadCharacters: new ListAvailableSquadCharacters(store),
-    listGlobalSquadGroups: new ListGlobalSquadGroups(store),
-    listSquadGroups: new ListSquadGroups(store),
+    list: new ListOwnedMargonemAccounts(),
     preview: singlePreview,
     previewOwnedImports: new PreviewOwnedAccountImports(
       singlePreview,
@@ -572,7 +734,7 @@ const createDefaultSquadBuilderServices = (): Result<
       store,
       systemClock
     ),
-    saveSquadGroup: new SaveSquadGroup(store, systemClock),
+    saveSquadGroup: new SaveSquadGroup(systemClock),
     searchInviteTargets: new SearchAccountInviteTargets(store),
     searchSquadEditorInviteTargets: new SearchSquadEditorInviteTargets(store),
     sendInvite: new SendAccountAccessInvite(store, systemClock),
@@ -580,7 +742,6 @@ const createDefaultSquadBuilderServices = (): Result<
       store,
       systemClock
     ),
-    setSquadGroupVisibility: new SetSquadGroupVisibility(store, systemClock),
     sharingState: new ListAccountSharingState(store),
     squadGroupSharingState: new ListSquadGroupSharingState(store),
   });
@@ -1145,9 +1306,11 @@ const errorMessageOr = (error: object, fallback: string): string =>
 // oxlint-disable-next-line complexity
 const toSquadGroupOrpcError = (
   error:
+    | CreateSquadGroupError
     | SquadGroupSharingError
     | SaveSquadGroupError
     | SharedSquadGroupSaveError
+    | EffectSharedSquadGroupSaveError
     | GlobalSquadVisibilityError
     | SquadGroupListFilterError
 ) => {
@@ -1293,21 +1456,114 @@ const toAccountSharingOrpcError = (error: AccountSharingError) => {
 
 const defaultServices = createDefaultSquadBuilderServices();
 
+const defaultEffectRuntime =
+  process.env.DATABASE_URL === undefined
+    ? undefined
+    : makeApiManagedRuntime(process.env.DATABASE_URL);
+
+const createSquadGroupEffect = new CreateSquadGroup();
+const listGlobalSquadGroupsEffect = new ListGlobalSquadGroups();
+const listSquadGroupsEffect = new ListSquadGroups();
+const listAvailableSquadCharactersEffect = new ListAvailableSquadCharacters();
+const setSquadGroupVisibilityEffect = new SetSquadGroupVisibility(systemClock);
+const saveSquadGroupEffect = new SaveSquadGroup(systemClock);
+const saveSharedSquadGroupCharactersEffect = new SaveSharedSquadGroupCharacters(
+  undefined,
+  undefined,
+  systemClock
+);
+const listOwnedAccountsEffect = new ListOwnedMargonemAccounts();
+const applyAccountRefetchEffect = new EffectApplyAccountRefetch(systemClock);
+const searchAccountInviteTargetsEffect = new EffectSearchAccountInviteTargets();
+const sendAccountAccessInviteEffect = new EffectSendAccountAccessInvite(
+  systemClock
+);
+const respondToAccountAccessInviteEffect =
+  new EffectRespondToAccountAccessInvite(systemClock);
+const revokeAccountAccessEffect = new EffectRevokeAccountAccess(systemClock);
+const listAccountSharingStateEffect = new EffectListAccountSharingState();
+const confirmOwnedAccountImportEffect = new EffectConfirmOwnedAccountImport(
+  systemClock
+);
+const createDefaultPreviewProfileImportEffect = (): Result<
+  EffectPreviewMargonemProfileImport,
+  SquadBuilderRouterError
+> => {
+  const config = parseFirecrawlConfig(process.env);
+
+  if (isError(config)) {
+    return err(config.error);
+  }
+
+  return ok(
+    new EffectPreviewMargonemProfileImport(
+      new FirecrawlSdkClient(config.value.apiKey),
+      systemClock,
+      config.value
+    )
+  );
+};
+
+const createDefaultPreviewOwnedAccountImportsEffect = (): Result<
+  EffectPreviewOwnedAccountImports,
+  SquadBuilderRouterError
+> => {
+  const singlePreview = createDefaultPreviewProfileImportEffect();
+
+  if (isError(singlePreview)) {
+    return err(singlePreview.error);
+  }
+
+  return ok(
+    new EffectPreviewOwnedAccountImports(singlePreview.value, systemClock)
+  );
+};
+
+const createDefaultPreviewAccountRefetchEffect = (): Result<
+  EffectPreviewAccountRefetch,
+  SquadBuilderRouterError
+> => {
+  const config = parseFirecrawlConfig(process.env);
+
+  if (isError(config)) {
+    return err(config.error);
+  }
+
+  return ok(
+    new EffectPreviewAccountRefetch(
+      new FirecrawlSdkClient(config.value.apiKey),
+      systemClock,
+      config.value
+    )
+  );
+};
+
 /** Create the squad-builder ORPC router. */
 export const createSquadBuilderRouter = ({
   previewService,
+  effectPreviewService,
   previewOwnedImportsService,
+  effectPreviewOwnedImportsService,
   confirmOwnedAccountImportService,
+  effectConfirmOwnedAccountImportService,
   previewAccountRefetchService,
+  effectPreviewAccountRefetchService,
   applyAccountRefetchService,
+  effectApplyAccountRefetchService,
   listOwnedAccountsService,
   searchAccountInviteTargetsService,
+  effectSearchAccountInviteTargetsService,
   sendAccountAccessInviteService,
+  effectSendAccountAccessInviteService,
   respondToAccountAccessInviteService,
+  effectRespondToAccountAccessInviteService,
   revokeAccountAccessService,
+  effectRevokeAccountAccessService,
   listAccountSharingStateService,
+  effectListAccountSharingStateService,
   createSquadGroupService,
-  listSquadGroupsService,
+  listMySquadGroupsService,
+  getSquadGroupDetailService,
   listGlobalSquadGroupsService,
   listAvailableSquadCharactersService,
   saveSquadGroupService,
@@ -1317,6 +1573,8 @@ export const createSquadBuilderRouter = ({
   revokeSquadGroupEditorService,
   listSquadGroupSharingStateService,
   saveSharedSquadGroupCharactersService,
+  effectSaveSharedSquadGroupCharactersService,
+  effectRuntime = defaultEffectRuntime,
   setSquadGroupVisibilityService,
 }: CreateSquadBuilderRouterOptions = {}) => ({
   applyAccountRefetch: verifiedProcedure
@@ -1338,29 +1596,44 @@ export const createSquadBuilderRouter = ({
         });
       }
 
-      const services =
-        applyAccountRefetchService === undefined
-          ? defaultServices
-          : ok({
-              applyRefetch: applyAccountRefetchService,
-            });
+      if (applyAccountRefetchService !== undefined) {
+        const result = await applyAccountRefetchService.apply({
+          actorUserId: actorUserId.value,
+          refetchPreviewId: refetchPreviewId.value,
+        });
 
-      if (isError(services)) {
-        logSquadBuilderError(context, "applyAccountRefetch", services.error);
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(context, "applyAccountRefetch", result.error);
+          throw toAccountRefetchOrpcError(result.error);
+        }
+
+        return toApplyAccountRefetchResponse(result.value);
       }
 
-      const result = await services.value.applyRefetch.apply({
+      const effect = (
+        effectApplyAccountRefetchService ?? applyAccountRefetchEffect
+      ).apply({
         actorUserId: actorUserId.value,
         refetchPreviewId: refetchPreviewId.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "applyAccountRefetch", result.error);
-        throw toAccountRefetchOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error("DATABASE_URL is required for applyAccountRefetch"),
+          operation: "applyAccountRefetch",
+        };
+        logSquadBuilderError(context, "applyAccountRefetch", error);
+        throw toAccountRefetchOrpcError(error);
       }
 
-      return toApplyAccountRefetchResponse(result.value);
+      const applied = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as ApplyAccountRefetchError;
+        logSquadBuilderError(context, "applyAccountRefetch", mapped);
+        return toAccountRefetchOrpcError(mapped);
+      });
+
+      return toApplyAccountRefetchResponse(applied);
     }),
   confirmOwnedAccountImport: verifiedProcedure
     .input(confirmOwnedAccountImportInputSchema)
@@ -1381,41 +1654,57 @@ export const createSquadBuilderRouter = ({
         });
       }
 
-      const services =
-        confirmOwnedAccountImportService === undefined
-          ? defaultServices
-          : ok({
-              confirm: confirmOwnedAccountImportService,
-            });
+      if (confirmOwnedAccountImportService !== undefined) {
+        const result = await confirmOwnedAccountImportService.confirm({
+          actorUserId: actorUserId.value,
+          displayName: input.displayName,
+          pendingImportId: pendingImportId.value,
+        });
 
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "confirmOwnedAccountImport",
-          services.error
-        );
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "confirmOwnedAccountImport",
+            result.error
+          );
+          throw toConfirmOrpcError(result.error);
+        }
+
+        return toConfirmOwnedAccountImportResponse(result.value);
       }
 
-      const result = await services.value.confirm.confirm({
+      const effect = (
+        effectConfirmOwnedAccountImportService ??
+        confirmOwnedAccountImportEffect
+      ).confirm({
         actorUserId: actorUserId.value,
         displayName: input.displayName,
         pendingImportId: pendingImportId.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "confirmOwnedAccountImport",
-          result.error
-        );
-        throw toConfirmOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for confirmOwnedAccountImport"
+          ),
+          operation: "confirmOwnedAccountImport",
+        };
+        logSquadBuilderError(context, "confirmOwnedAccountImport", error);
+        throw toConfirmOrpcError(error);
       }
 
-      return toConfirmOwnedAccountImportResponse(result.value);
+      const result = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as ConfirmOwnedAccountImportError;
+        logSquadBuilderError(context, "confirmOwnedAccountImport", mapped);
+        return toConfirmOrpcError(mapped);
+      });
+
+      return toConfirmOwnedAccountImportResponse(result);
     }),
   createSquadGroup: verifiedProcedure
     .input(createSquadGroupInputSchema)
+    .output(createSquadGroupOutputSchema)
     .handler(async ({ context, input }) => {
       const actorUserId = parseAppUserId(context.session.user.id);
 
@@ -1423,29 +1712,30 @@ export const createSquadBuilderRouter = ({
         throw toOrpcError(actorUserId.error);
       }
 
-      const services =
-        createSquadGroupService === undefined
-          ? defaultServices
-          : ok({
-              createSquadGroup: createSquadGroupService,
-            });
+      const effect = (createSquadGroupService ?? createSquadGroupEffect).create(
+        {
+          actorUserId: actorUserId.value,
+          name: input.name,
+        }
+      );
 
-      if (isError(services)) {
-        logSquadBuilderError(context, "createSquadGroup", services.error);
-        throw toOrpcError(services.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error("DATABASE_URL is required for createSquadGroup"),
+          operation: "createSquadGroup",
+        };
+        logSquadBuilderError(context, "createSquadGroup", error);
+        throw toSquadGroupOrpcError(error);
       }
 
-      const result = await services.value.createSquadGroup.create({
-        actorUserId: actorUserId.value,
-        name: input.name,
+      const group = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as CreateSquadGroupError;
+        logSquadBuilderError(context, "createSquadGroup", mapped);
+        return toSquadGroupOrpcError(mapped);
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "createSquadGroup", result.error);
-        throw toSquadGroupOrpcError(result.error);
-      }
-
-      return toSquadGroupSummaryDto(result.value);
+      return toSquadGroupSummaryDto(group);
     }),
   getPendingSquadGroupInviteCount: verifiedProcedure.handler(
     async ({ context }) => {
@@ -1496,29 +1786,30 @@ export const createSquadBuilderRouter = ({
         throw toSquadGroupOrpcError(groupId.error);
       }
 
-      const services =
-        listSquadGroupsService === undefined
-          ? defaultServices
-          : ok({
-              listSquadGroups: listSquadGroupsService,
-            });
-
-      if (isError(services)) {
-        logSquadBuilderError(context, "getSquadGroupDetail", services.error);
-        throw toOrpcError(services.error);
-      }
-
-      const result = await services.value.listSquadGroups.getMine({
+      const effect = (
+        getSquadGroupDetailService ?? listSquadGroupsEffect
+      ).getMine({
         actorUserId: actorUserId.value,
         groupId: groupId.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "getSquadGroupDetail", result.error);
-        throw toSquadGroupOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error("DATABASE_URL is required for getSquadGroupDetail"),
+          operation: "getSquadGroupDetail",
+        };
+        logSquadBuilderError(context, "getSquadGroupDetail", error);
+        throw toSquadGroupOrpcError(error);
       }
 
-      return toSquadGroupDetailDto(result.value);
+      const detail = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as GetSquadGroupDetailError;
+        logSquadBuilderError(context, "getSquadGroupDetail", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
+      return toSquadGroupDetailDto(detail);
     }),
   listAccountAccessGrants: verifiedProcedure
     .input(listAccountAccessGrantsInputSchema)
@@ -1535,34 +1826,54 @@ export const createSquadBuilderRouter = ({
         throw toAccountSharingOrpcError(accountId.error);
       }
 
-      const services =
-        listAccountSharingStateService === undefined
-          ? defaultServices
-          : ok({
-              sharingState: listAccountSharingStateService,
-            });
+      if (listAccountSharingStateService !== undefined) {
+        const result =
+          await listAccountSharingStateService.listAccountAccessGrants({
+            accountId: accountId.value,
+            actorUserId: actorUserId.value,
+          });
 
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "listAccountAccessGrants",
-          services.error
-        );
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "listAccountAccessGrants",
+            result.error
+          );
+          throw toAccountSharingOrpcError(result.error);
+        }
+
+        return {
+          grants: result.value.map(toAccountAccessGrantDto),
+        };
       }
 
-      const result = await services.value.sharingState.listAccountAccessGrants({
+      const effect = (
+        effectListAccountSharingStateService ?? listAccountSharingStateEffect
+      ).listAccountAccessGrants({
         accountId: accountId.value,
         actorUserId: actorUserId.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "listAccountAccessGrants", result.error);
-        throw toAccountSharingOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const mapped: SquadBuilderPersistenceUnavailable = {
+          _tag: "SquadBuilderPersistenceUnavailable",
+          cause: new Error(
+            "DATABASE_URL is required for listAccountAccessGrants"
+          ),
+          operation: "listAccountAccessGrants",
+        };
+        logSquadBuilderError(context, "listAccountAccessGrants", mapped);
+        throw toAccountSharingOrpcError(mapped);
       }
 
+      const grants = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as AccountSharingError;
+        logSquadBuilderError(context, "listAccountAccessGrants", mapped);
+        return toAccountSharingOrpcError(mapped);
+      });
+
       return {
-        grants: result.value.map(toAccountAccessGrantDto),
+        grants: grants.map(toAccountAccessGrantDto),
       };
     }),
   listAvailableSquadCharacters: verifiedProcedure
@@ -1579,37 +1890,33 @@ export const createSquadBuilderRouter = ({
         throw toSquadGroupOrpcError(groupId.error);
       }
 
-      const services =
-        listAvailableSquadCharactersService === undefined
-          ? defaultServices
-          : ok({
-              listAvailableSquadCharacters: listAvailableSquadCharactersService,
-            });
-
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "listAvailableSquadCharacters",
-          services.error
-        );
-        throw toOrpcError(services.error);
-      }
-
-      const result = await services.value.listAvailableSquadCharacters.list({
+      const effect = (
+        listAvailableSquadCharactersService ??
+        listAvailableSquadCharactersEffect
+      ).list({
         actorUserId: actorUserId.value,
         groupId: groupId.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "listAvailableSquadCharacters",
-          result.error
-        );
-        throw toSquadGroupOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for listAvailableSquadCharacters"
+          ),
+          operation: "listAvailableSquadCharacters",
+        };
+        logSquadBuilderError(context, "listAvailableSquadCharacters", error);
+        throw toSquadGroupOrpcError(error);
       }
 
-      return { characters: result.value.map(toAvailableSquadCharacterDto) };
+      const characters = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as ListAvailableSquadCharactersError;
+        logSquadBuilderError(context, "listAvailableSquadCharacters", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
+      return { characters: characters.map(toAvailableSquadCharacterDto) };
     }),
   listGlobalSquadGroups: verifiedProcedure
     .input(squadGroupListFiltersInputSchema)
@@ -1625,29 +1932,32 @@ export const createSquadBuilderRouter = ({
         throw toSquadGroupOrpcError(filters.error);
       }
 
-      const services =
-        listGlobalSquadGroupsService === undefined
-          ? defaultServices
-          : ok({
-              listGlobalSquadGroups: listGlobalSquadGroupsService,
-            });
-
-      if (isError(services)) {
-        logSquadBuilderError(context, "listGlobalSquadGroups", services.error);
-        throw toOrpcError(services.error);
-      }
-
-      const result = await services.value.listGlobalSquadGroups.list({
+      const effect = (
+        listGlobalSquadGroupsService ?? listGlobalSquadGroupsEffect
+      ).list({
         actorUserId: actorUserId.value,
         filters: filters.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "listGlobalSquadGroups", result.error);
-        throw toSquadGroupOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for listGlobalSquadGroups"
+          ),
+          operation: "listGlobalSquadGroups",
+        };
+        logSquadBuilderError(context, "listGlobalSquadGroups", error);
+        throw toSquadGroupOrpcError(error);
       }
 
-      return { groups: result.value.map(toGlobalSquadGroupDto) };
+      const groups = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as SquadBuilderPersistenceUnavailable;
+        logSquadBuilderError(context, "listGlobalSquadGroups", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
+      return { groups: groups.map(toGlobalSquadGroupDto) };
     }),
   listIncomingAccountInvites: verifiedProcedure.handler(async ({ context }) => {
     const actorUserId = parseAppUserId(context.session.user.id);
@@ -1656,33 +1966,51 @@ export const createSquadBuilderRouter = ({
       throw toOrpcError(actorUserId.error);
     }
 
-    const services =
-      listAccountSharingStateService === undefined
-        ? defaultServices
-        : ok({
-            sharingState: listAccountSharingStateService,
-          });
+    if (listAccountSharingStateService !== undefined) {
+      const result = await listAccountSharingStateService.listIncomingInvites({
+        actorUserId: actorUserId.value,
+      });
 
-    if (isError(services)) {
-      logSquadBuilderError(
-        context,
-        "listIncomingAccountInvites",
-        services.error
-      );
-      throw toOrpcError(services.error);
+      if (isError(result)) {
+        logSquadBuilderError(
+          context,
+          "listIncomingAccountInvites",
+          result.error
+        );
+        throw toAccountSharingOrpcError(result.error);
+      }
+
+      return {
+        invites: result.value.map(toAccountAccessInviteDto),
+      };
     }
 
-    const result = await services.value.sharingState.listIncomingInvites({
+    const effect = (
+      effectListAccountSharingStateService ?? listAccountSharingStateEffect
+    ).listIncomingInvites({
       actorUserId: actorUserId.value,
     });
 
-    if (isError(result)) {
-      logSquadBuilderError(context, "listIncomingAccountInvites", result.error);
-      throw toAccountSharingOrpcError(result.error);
+    if (effectRuntime === undefined) {
+      const mapped: SquadBuilderPersistenceUnavailable = {
+        _tag: "SquadBuilderPersistenceUnavailable",
+        cause: new Error(
+          "DATABASE_URL is required for listIncomingAccountInvites"
+        ),
+        operation: "listIncomingAccountInvites",
+      };
+      logSquadBuilderError(context, "listIncomingAccountInvites", mapped);
+      throw toAccountSharingOrpcError(mapped);
     }
 
+    const invites = await runOrpcEffect(effectRuntime, effect, (error) => {
+      const mapped = error as AccountSharingError;
+      logSquadBuilderError(context, "listIncomingAccountInvites", mapped);
+      return toAccountSharingOrpcError(mapped);
+    });
+
     return {
-      invites: result.value.map(toAccountAccessInviteDto),
+      invites: invites.map(toAccountAccessInviteDto),
     };
   }),
   listIncomingSquadGroupInvites: verifiedProcedure.handler(
@@ -1720,36 +2048,39 @@ export const createSquadBuilderRouter = ({
       return { invites: result.value.map(toSquadGroupInvitationDto) };
     }
   ),
-  listMySquadGroups: verifiedProcedure.handler(async ({ context }) => {
-    const actorUserId = parseAppUserId(context.session.user.id);
+  listMySquadGroups: verifiedProcedure
+    .output(listMySquadGroupsOutputSchema)
+    .handler(async ({ context }) => {
+      const actorUserId = parseAppUserId(context.session.user.id);
 
-    if (isError(actorUserId)) {
-      throw toOrpcError(actorUserId.error);
-    }
+      if (isError(actorUserId)) {
+        throw toOrpcError(actorUserId.error);
+      }
 
-    const services =
-      listSquadGroupsService === undefined
-        ? defaultServices
-        : ok({
-            listSquadGroups: listSquadGroupsService,
-          });
+      const effect = (
+        listMySquadGroupsService ?? listSquadGroupsEffect
+      ).listMine({
+        actorUserId: actorUserId.value,
+      });
 
-    if (isError(services)) {
-      logSquadBuilderError(context, "listMySquadGroups", services.error);
-      throw toOrpcError(services.error);
-    }
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error("DATABASE_URL is required for listMySquadGroups"),
+          operation: "listMySquadGroups",
+        };
+        logSquadBuilderError(context, "listMySquadGroups", error);
+        throw toSquadGroupOrpcError(error);
+      }
 
-    const result = await services.value.listSquadGroups.listMine({
-      actorUserId: actorUserId.value,
-    });
+      const groups = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as ListMySquadGroupsError;
+        logSquadBuilderError(context, "listMySquadGroups", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
 
-    if (isError(result)) {
-      logSquadBuilderError(context, "listMySquadGroups", result.error);
-      throw toSquadGroupOrpcError(result.error);
-    }
-
-    return { groups: result.value.map(toSquadGroupSummaryDto) };
-  }),
+      return { groups: groups.map(toSquadGroupSummaryDto) };
+    }),
   listOwnedAccounts: verifiedProcedure.handler(async ({ context }) => {
     const actorUserId = parseAppUserId(context.session.user.id);
 
@@ -1757,28 +2088,27 @@ export const createSquadBuilderRouter = ({
       throw toOrpcError(actorUserId.error);
     }
 
-    const services =
-      listOwnedAccountsService === undefined
-        ? defaultServices
-        : ok({
-            list: listOwnedAccountsService,
-          });
-
-    if (isError(services)) {
-      logSquadBuilderError(context, "listOwnedAccounts", services.error);
-      throw toOrpcError(services.error);
-    }
-
-    const result = await services.value.list.list({
+    const effect = (listOwnedAccountsService ?? listOwnedAccountsEffect).list({
       actorUserId: actorUserId.value,
     });
 
-    if (isError(result)) {
-      logSquadBuilderError(context, "listOwnedAccounts", result.error);
-      throw toListOrpcError(result.error);
+    if (effectRuntime === undefined) {
+      const error = {
+        _tag: "SquadBuilderPersistenceUnavailable" as const,
+        cause: new Error("DATABASE_URL is required for listOwnedAccounts"),
+        operation: "listOwnedAccounts",
+      };
+      logSquadBuilderError(context, "listOwnedAccounts", error);
+      throw toListOrpcError(error);
     }
 
-    return toListOwnedAccountsResponse(result.value);
+    const accounts = await runOrpcEffect(effectRuntime, effect, (error) => {
+      const mapped = error as ListOwnedMargonemAccountsError;
+      logSquadBuilderError(context, "listOwnedAccounts", mapped);
+      return toListOrpcError(mapped);
+    });
+
+    return toListOwnedAccountsResponse(accounts);
   }),
   listSharedAccounts: verifiedProcedure.handler(async ({ context }) => {
     const actorUserId = parseAppUserId(context.session.user.id);
@@ -1787,29 +2117,45 @@ export const createSquadBuilderRouter = ({
       throw toOrpcError(actorUserId.error);
     }
 
-    const services =
-      listAccountSharingStateService === undefined
-        ? defaultServices
-        : ok({
-            sharingState: listAccountSharingStateService,
-          });
+    if (listAccountSharingStateService !== undefined) {
+      const result = await listAccountSharingStateService.listSharedAccounts({
+        actorUserId: actorUserId.value,
+      });
 
-    if (isError(services)) {
-      logSquadBuilderError(context, "listSharedAccounts", services.error);
-      throw toOrpcError(services.error);
+      if (isError(result)) {
+        logSquadBuilderError(context, "listSharedAccounts", result.error);
+        throw toAccountSharingOrpcError(result.error);
+      }
+
+      return {
+        accounts: result.value.map(toSharedMargonemAccountDto),
+      };
     }
 
-    const result = await services.value.sharingState.listSharedAccounts({
+    const effect = (
+      effectListAccountSharingStateService ?? listAccountSharingStateEffect
+    ).listSharedAccounts({
       actorUserId: actorUserId.value,
     });
 
-    if (isError(result)) {
-      logSquadBuilderError(context, "listSharedAccounts", result.error);
-      throw toAccountSharingOrpcError(result.error);
+    if (effectRuntime === undefined) {
+      const mapped: SquadBuilderPersistenceUnavailable = {
+        _tag: "SquadBuilderPersistenceUnavailable",
+        cause: new Error("DATABASE_URL is required for listSharedAccounts"),
+        operation: "listSharedAccounts",
+      };
+      logSquadBuilderError(context, "listSharedAccounts", mapped);
+      throw toAccountSharingOrpcError(mapped);
     }
 
+    const accounts = await runOrpcEffect(effectRuntime, effect, (error) => {
+      const mapped = error as AccountSharingError;
+      logSquadBuilderError(context, "listSharedAccounts", mapped);
+      return toAccountSharingOrpcError(mapped);
+    });
+
     return {
-      accounts: result.value.map(toSharedMargonemAccountDto),
+      accounts: accounts.map(toSharedMargonemAccountDto),
     };
   }),
   listSharedSquadGroups: verifiedProcedure
@@ -1901,29 +2247,56 @@ export const createSquadBuilderRouter = ({
         });
       }
 
-      const services =
-        previewAccountRefetchService === undefined
-          ? defaultServices
-          : ok({
-              previewRefetch: previewAccountRefetchService,
-            });
+      if (previewAccountRefetchService !== undefined) {
+        const result = await previewAccountRefetchService.preview({
+          accountId: accountId.value,
+          actorUserId: actorUserId.value,
+        });
 
-      if (isError(services)) {
-        logSquadBuilderError(context, "previewAccountRefetch", services.error);
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(context, "previewAccountRefetch", result.error);
+          throw toAccountRefetchOrpcError(result.error);
+        }
+
+        return toPreviewAccountRefetchResponse(result.value);
       }
 
-      const result = await services.value.previewRefetch.preview({
-        accountId: accountId.value,
-        actorUserId: actorUserId.value,
-      });
+      const service =
+        effectPreviewAccountRefetchService === undefined
+          ? createDefaultPreviewAccountRefetchEffect()
+          : ok(effectPreviewAccountRefetchService);
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "previewAccountRefetch", result.error);
-        throw toAccountRefetchOrpcError(result.error);
+      if (isError(service)) {
+        logSquadBuilderError(context, "previewAccountRefetch", service.error);
+        throw toOrpcError(service.error);
       }
 
-      return toPreviewAccountRefetchResponse(result.value);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for previewAccountRefetch"
+          ),
+          operation: "previewAccountRefetch",
+        };
+        logSquadBuilderError(context, "previewAccountRefetch", error);
+        throw toAccountRefetchOrpcError(error);
+      }
+
+      const preview = await runOrpcEffect(
+        effectRuntime,
+        service.value.preview({
+          accountId: accountId.value,
+          actorUserId: actorUserId.value,
+        }),
+        (error) => {
+          const mapped = error as PreviewAccountRefetchError;
+          logSquadBuilderError(context, "previewAccountRefetch", mapped);
+          return toAccountRefetchOrpcError(mapped);
+        }
+      );
+
+      return toPreviewAccountRefetchResponse(preview);
     }),
   previewOwnedAccountImports: verifiedProcedure
     .input(previewOwnedAccountImportsInputSchema)
@@ -1934,38 +2307,67 @@ export const createSquadBuilderRouter = ({
         throw toOrpcError(actorUserId.error);
       }
 
-      const services =
-        previewOwnedImportsService === undefined
-          ? defaultServices
-          : ok({
-              previewOwnedImports: previewOwnedImportsService,
-            });
+      if (previewOwnedImportsService !== undefined) {
+        const result = await previewOwnedImportsService.preview({
+          actorUserId: actorUserId.value,
+          profileUrls: input.profileUrls,
+        });
 
-      if (isError(services)) {
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "previewOwnedAccountImports",
+            result.error
+          );
+          throw toPreviewOwnedImportsOrpcError(result.error);
+        }
+
+        return {
+          items: result.value.items.map(toPreviewOwnedAccountImportItemDto),
+        };
+      }
+
+      const service =
+        effectPreviewOwnedImportsService === undefined
+          ? createDefaultPreviewOwnedAccountImportsEffect()
+          : ok(effectPreviewOwnedImportsService);
+
+      if (isError(service)) {
         logSquadBuilderError(
           context,
           "previewOwnedAccountImports",
-          services.error
+          service.error
         );
-        throw toOrpcError(services.error);
+        throw toOrpcError(service.error);
       }
 
-      const result = await services.value.previewOwnedImports.preview({
-        actorUserId: actorUserId.value,
-        profileUrls: input.profileUrls,
-      });
-
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "previewOwnedAccountImports",
-          result.error
-        );
-        throw toPreviewOwnedImportsOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for previewOwnedAccountImports"
+          ),
+          operation: "previewOwnedAccountImports",
+        };
+        logSquadBuilderError(context, "previewOwnedAccountImports", error);
+        throw toPreviewOwnedImportsOrpcError(error);
       }
+
+      const result = await runOrpcEffect(
+        effectRuntime,
+        service.value.preview({
+          actorUserId: actorUserId.value,
+          profileUrls: input.profileUrls,
+        }),
+        (error) => {
+          const mapped = error as PreviewOwnedAccountImportsError;
+          logSquadBuilderError(context, "previewOwnedAccountImports", mapped);
+          return toPreviewOwnedImportsOrpcError(mapped);
+        }
+      );
 
       return {
-        items: result.value.items.map(toPreviewOwnedAccountImportItemDto),
+        items: result.items.map(toPreviewOwnedAccountImportItemDto),
       };
     }),
   previewProfileImport: verifiedProcedure
@@ -1977,37 +2379,64 @@ export const createSquadBuilderRouter = ({
         throw toOrpcError(actorUserId.error);
       }
 
-      const services =
-        previewService === undefined
-          ? defaultServices
-          : ok({
-              preview: previewService,
-            });
+      if (previewService !== undefined) {
+        const preview = await previewService.preview({
+          actorUserId: actorUserId.value,
+          profileUrl: input.profileUrl,
+        });
 
-      if (isError(services)) {
+        if (isError(preview)) {
+          logSquadBuilderError(
+            context,
+            "previewMargonemProfileImport",
+            preview.error
+          );
+          throw toOrpcError(preview.error);
+        }
+
+        return toPreviewProfileImportResponse(preview.value);
+      }
+
+      const service =
+        effectPreviewService === undefined
+          ? createDefaultPreviewProfileImportEffect()
+          : ok(effectPreviewService);
+
+      if (isError(service)) {
         logSquadBuilderError(
           context,
           "previewMargonemProfileImport",
-          services.error
+          service.error
         );
-        throw toOrpcError(services.error);
+        throw toOrpcError(service.error);
       }
 
-      const preview = await services.value.preview.preview({
-        actorUserId: actorUserId.value,
-        profileUrl: input.profileUrl,
-      });
-
-      if (isError(preview)) {
-        logSquadBuilderError(
-          context,
-          "previewMargonemProfileImport",
-          preview.error
-        );
-        throw toOrpcError(preview.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for previewMargonemProfileImport"
+          ),
+          operation: "previewMargonemProfileImport",
+        };
+        logSquadBuilderError(context, "previewMargonemProfileImport", error);
+        throw toOrpcError(error);
       }
 
-      return toPreviewProfileImportResponse(preview.value);
+      const preview = await runOrpcEffect(
+        effectRuntime,
+        service.value.preview({
+          actorUserId: actorUserId.value,
+          profileUrl: input.profileUrl,
+        }),
+        (error) => {
+          const mapped = error as PreviewMargonemProfileImportError;
+          logSquadBuilderError(context, "previewMargonemProfileImport", mapped);
+          return toOrpcError(mapped);
+        }
+      );
+
+      return toPreviewProfileImportResponse(preview);
     }),
   respondToAccountAccessInvite: verifiedProcedure
     .input(respondToAccountAccessInviteInputSchema)
@@ -2024,38 +2453,53 @@ export const createSquadBuilderRouter = ({
         throw toAccountSharingOrpcError(accessId.error);
       }
 
-      const services =
-        respondToAccountAccessInviteService === undefined
-          ? defaultServices
-          : ok({
-              respondInvite: respondToAccountAccessInviteService,
-            });
+      if (respondToAccountAccessInviteService !== undefined) {
+        const result = await respondToAccountAccessInviteService.respond({
+          accessId: accessId.value,
+          actorUserId: actorUserId.value,
+          response: input.response,
+        });
 
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "respondToAccountAccessInvite",
-          services.error
-        );
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "respondToAccountAccessInvite",
+            result.error
+          );
+          throw toAccountSharingOrpcError(result.error);
+        }
+
+        return toAccountAccessInviteDto(result.value);
       }
 
-      const result = await services.value.respondInvite.respond({
+      const effect = (
+        effectRespondToAccountAccessInviteService ??
+        respondToAccountAccessInviteEffect
+      ).respond({
         accessId: accessId.value,
         actorUserId: actorUserId.value,
         response: input.response,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "respondToAccountAccessInvite",
-          result.error
-        );
-        throw toAccountSharingOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const mapped: SquadBuilderPersistenceUnavailable = {
+          _tag: "SquadBuilderPersistenceUnavailable",
+          cause: new Error(
+            "DATABASE_URL is required for respondToAccountAccessInvite"
+          ),
+          operation: "respondToAccountAccessInvite",
+        };
+        logSquadBuilderError(context, "respondToAccountAccessInvite", mapped);
+        throw toAccountSharingOrpcError(mapped);
       }
 
-      return toAccountAccessInviteDto(result.value);
+      const invite = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as AccountSharingError;
+        logSquadBuilderError(context, "respondToAccountAccessInvite", mapped);
+        return toAccountSharingOrpcError(mapped);
+      });
+
+      return toAccountAccessInviteDto(invite);
     }),
   respondToSquadGroupInvite: verifiedProcedure
     .input(respondToSquadGroupInviteInputSchema)
@@ -2112,33 +2556,53 @@ export const createSquadBuilderRouter = ({
         throw toAccountSharingOrpcError(accessId.error);
       }
 
-      const services =
-        revokeAccountAccessService === undefined
-          ? defaultServices
-          : ok({
-              revokeAccess: revokeAccountAccessService,
-            });
+      if (revokeAccountAccessService !== undefined) {
+        const result = await revokeAccountAccessService.revoke({
+          accessId: accessId.value,
+          actorUserId: actorUserId.value,
+        });
 
-      if (isError(services)) {
-        logSquadBuilderError(context, "revokeAccountAccess", services.error);
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(context, "revokeAccountAccess", result.error);
+          throw toAccountSharingOrpcError(result.error);
+        }
+
+        return {
+          accessId: margonemAccountAccessIdToNumber(result.value.accessId),
+          accountId: margonemAccountIdToNumber(result.value.accountId),
+          removedSquadCharacterCount: result.value.removedSquadCharacterCount,
+          revokedUserId: appUserIdToString(result.value.revokedUserId),
+        };
       }
 
-      const result = await services.value.revokeAccess.revoke({
+      const effect = (
+        effectRevokeAccountAccessService ?? revokeAccountAccessEffect
+      ).revoke({
         accessId: accessId.value,
         actorUserId: actorUserId.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "revokeAccountAccess", result.error);
-        throw toAccountSharingOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const mapped: SquadBuilderPersistenceUnavailable = {
+          _tag: "SquadBuilderPersistenceUnavailable",
+          cause: new Error("DATABASE_URL is required for revokeAccountAccess"),
+          operation: "revokeAccountAccess",
+        };
+        logSquadBuilderError(context, "revokeAccountAccess", mapped);
+        throw toAccountSharingOrpcError(mapped);
       }
 
+      const revoked = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as AccountSharingError;
+        logSquadBuilderError(context, "revokeAccountAccess", mapped);
+        return toAccountSharingOrpcError(mapped);
+      });
+
       return {
-        accessId: margonemAccountAccessIdToNumber(result.value.accessId),
-        accountId: margonemAccountIdToNumber(result.value.accountId),
-        removedSquadCharacterCount: result.value.removedSquadCharacterCount,
-        revokedUserId: appUserIdToString(result.value.revokedUserId),
+        accessId: margonemAccountAccessIdToNumber(revoked.accessId),
+        accountId: margonemAccountIdToNumber(revoked.accountId),
+        removedSquadCharacterCount: revoked.removedSquadCharacterCount,
+        revokedUserId: appUserIdToString(revoked.revokedUserId),
       };
     }),
   revokeSquadGroupEditor: verifiedProcedure
@@ -2194,35 +2658,51 @@ export const createSquadBuilderRouter = ({
           squadId: squadId.value,
         });
       }
-      const services =
-        saveSharedSquadGroupCharactersService === undefined
-          ? defaultServices
-          : ok({
-              saveSharedSquadGroupCharacters:
-                saveSharedSquadGroupCharactersService,
-            });
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "saveSharedSquadGroupCharacters",
-          services.error
-        );
-        throw toOrpcError(services.error);
+      if (saveSharedSquadGroupCharactersService !== undefined) {
+        const result = await saveSharedSquadGroupCharactersService.save({
+          actorUserId: actorUserId.value,
+          groupId: groupId.value,
+          squads,
+        });
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "saveSharedSquadGroupCharacters",
+            result.error
+          );
+          throw toSquadGroupOrpcError(result.error);
+        }
+        return toSquadGroupDetailDto(result.value);
       }
-      const result = await services.value.saveSharedSquadGroupCharacters.save({
+
+      const effect = (
+        effectSaveSharedSquadGroupCharactersService ??
+        saveSharedSquadGroupCharactersEffect
+      ).saveEffect({
         actorUserId: actorUserId.value,
         groupId: groupId.value,
         squads,
       });
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "saveSharedSquadGroupCharacters",
-          result.error
-        );
-        throw toSquadGroupOrpcError(result.error);
+
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for saveSharedSquadGroupCharacters"
+          ),
+          operation: "saveSharedSquadGroupCharacters",
+        };
+        logSquadBuilderError(context, "saveSharedSquadGroupCharacters", error);
+        throw toSquadGroupOrpcError(error);
       }
-      return toSquadGroupDetailDto(result.value);
+
+      const detail = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as EffectSharedSquadGroupSaveError;
+        logSquadBuilderError(context, "saveSharedSquadGroupCharacters", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
+      return toSquadGroupDetailDto(detail);
     }),
   saveSquadGroup: verifiedProcedure
     .input(saveSquadGroupInputSchema)
@@ -2258,31 +2738,30 @@ export const createSquadBuilderRouter = ({
         });
       }
 
-      const services =
-        saveSquadGroupService === undefined
-          ? defaultServices
-          : ok({
-              saveSquadGroup: saveSquadGroupService,
-            });
-
-      if (isError(services)) {
-        logSquadBuilderError(context, "saveSquadGroup", services.error);
-        throw toOrpcError(services.error);
-      }
-
-      const result = await services.value.saveSquadGroup.save({
+      const effect = (saveSquadGroupService ?? saveSquadGroupEffect).save({
         actorUserId: actorUserId.value,
         groupId: groupId.value,
         name: input.name,
         squads,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "saveSquadGroup", result.error);
-        throw toSquadGroupOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error("DATABASE_URL is required for saveSquadGroup"),
+          operation: "saveSquadGroup",
+        };
+        logSquadBuilderError(context, "saveSquadGroup", error);
+        throw toSquadGroupOrpcError(error);
       }
 
-      return toSquadGroupDetailDto(result.value);
+      const detail = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as SaveSquadGroupError;
+        logSquadBuilderError(context, "saveSquadGroup", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
+      return toSquadGroupDetailDto(detail);
     }),
   searchAccountInviteTargets: verifiedProcedure
     .input(searchAccountInviteTargetsInputSchema)
@@ -2299,39 +2778,56 @@ export const createSquadBuilderRouter = ({
         throw toAccountSharingOrpcError(accountId.error);
       }
 
-      const services =
-        searchAccountInviteTargetsService === undefined
-          ? defaultServices
-          : ok({
-              searchInviteTargets: searchAccountInviteTargetsService,
-            });
+      if (searchAccountInviteTargetsService !== undefined) {
+        const result = await searchAccountInviteTargetsService.search({
+          accountId: accountId.value,
+          actorUserId: actorUserId.value,
+          query: input.query,
+        });
 
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "searchAccountInviteTargets",
-          services.error
-        );
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "searchAccountInviteTargets",
+            result.error
+          );
+          throw toAccountSharingOrpcError(result.error);
+        }
+
+        return {
+          users: result.value.map(toAccountInviteTargetDto),
+        };
       }
 
-      const result = await services.value.searchInviteTargets.search({
+      const effect = (
+        effectSearchAccountInviteTargetsService ??
+        searchAccountInviteTargetsEffect
+      ).search({
         accountId: accountId.value,
         actorUserId: actorUserId.value,
         query: input.query,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "searchAccountInviteTargets",
-          result.error
-        );
-        throw toAccountSharingOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for searchAccountInviteTargets"
+          ),
+          operation: "searchAccountInviteTargets",
+        };
+        logSquadBuilderError(context, "searchAccountInviteTargets", error);
+        throw toAccountSharingOrpcError(error);
       }
 
+      const targets = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as AccountSharingError;
+        logSquadBuilderError(context, "searchAccountInviteTargets", mapped);
+        return toAccountSharingOrpcError(mapped);
+      });
+
       return {
-        users: result.value.map(toAccountInviteTargetDto),
+        users: targets.map(toAccountInviteTargetDto),
       };
     }),
   searchSquadEditorInviteTargets: verifiedProcedure
@@ -2398,34 +2894,52 @@ export const createSquadBuilderRouter = ({
         throw toAccountSharingOrpcError(invitedUserId.error);
       }
 
-      const services =
-        sendAccountAccessInviteService === undefined
-          ? defaultServices
-          : ok({
-              sendInvite: sendAccountAccessInviteService,
-            });
+      if (sendAccountAccessInviteService !== undefined) {
+        const result = await sendAccountAccessInviteService.send({
+          accountId: accountId.value,
+          actorUserId: actorUserId.value,
+          invitedUserId: invitedUserId.value,
+        });
 
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "sendAccountAccessInvite",
-          services.error
-        );
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "sendAccountAccessInvite",
+            result.error
+          );
+          throw toAccountSharingOrpcError(result.error);
+        }
+
+        return toAccountAccessInviteDto(result.value);
       }
 
-      const result = await services.value.sendInvite.send({
+      const effect = (
+        effectSendAccountAccessInviteService ?? sendAccountAccessInviteEffect
+      ).send({
         accountId: accountId.value,
         actorUserId: actorUserId.value,
         invitedUserId: invitedUserId.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "sendAccountAccessInvite", result.error);
-        throw toAccountSharingOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for sendAccountAccessInvite"
+          ),
+          operation: "sendAccountAccessInvite",
+        };
+        logSquadBuilderError(context, "sendAccountAccessInvite", error);
+        throw toAccountSharingOrpcError(error);
       }
 
-      return toAccountAccessInviteDto(result.value);
+      const invite = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as AccountSharingError;
+        logSquadBuilderError(context, "sendAccountAccessInvite", mapped);
+        return toAccountSharingOrpcError(mapped);
+      });
+
+      return toAccountAccessInviteDto(invite);
     }),
   sendSquadGroupEditorInvite: verifiedProcedure
     .input(sendSquadGroupEditorInviteInputSchema)
@@ -2486,33 +3000,36 @@ export const createSquadBuilderRouter = ({
       if (isError(visibility)) {
         throw toSquadGroupOrpcError(visibility.error);
       }
-      const services =
-        setSquadGroupVisibilityService === undefined
-          ? defaultServices
-          : ok({
-              setSquadGroupVisibility: setSquadGroupVisibilityService,
-            });
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "setSquadGroupVisibility",
-          services.error
-        );
-        throw toOrpcError(services.error);
-      }
-      const result = await services.value.setSquadGroupVisibility.set({
+      const effect = (
+        setSquadGroupVisibilityService ?? setSquadGroupVisibilityEffect
+      ).set({
         actorUserId: actorUserId.value,
         groupId: groupId.value,
         visibility: visibility.value,
       });
-      if (isError(result)) {
-        logSquadBuilderError(context, "setSquadGroupVisibility", result.error);
-        throw toSquadGroupOrpcError(result.error);
+
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for setSquadGroupVisibility"
+          ),
+          operation: "setSquadGroupVisibility" as const,
+        };
+        logSquadBuilderError(context, "setSquadGroupVisibility", error);
+        throw toSquadGroupOrpcError(error);
       }
+
+      const result = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as GlobalSquadVisibilityError;
+        logSquadBuilderError(context, "setSquadGroupVisibility", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
       return {
-        groupId: result.value.groupId,
-        updatedAt: result.value.updatedAt.toISOString(),
-        visibility: result.value.visibility,
+        groupId: result.groupId,
+        updatedAt: result.updatedAt.toISOString(),
+        visibility: result.visibility,
       };
     }),
 });

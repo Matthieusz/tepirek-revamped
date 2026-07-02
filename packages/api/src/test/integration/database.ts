@@ -86,7 +86,7 @@ process.env.DATABASE_URL = testDatabaseUrl;
 
 export const testPool = new Pool({ connectionString: testDatabaseUrl });
 
-export const testDb = drizzle(testPool);
+export const testDb = drizzle({ client: testPool });
 
 export const truncateApplicationTables = async () => {
   const tableNames = applicationTables.map((table) =>

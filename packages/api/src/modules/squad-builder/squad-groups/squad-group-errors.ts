@@ -1,0 +1,41 @@
+import * as Schema from "effect/Schema";
+
+export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedErrorClass<EffectSquadBuilderPersistenceUnavailable>()(
+  "SquadBuilderPersistenceUnavailable",
+  {
+    cause: Schema.Unknown,
+    operation: Schema.Literals([
+      "applyRefetchedAccount",
+      "createSquadGroup",
+      "createOwnedAccountFromPendingImport",
+      "createPendingImport",
+      "createPendingRefetch",
+      "findOwnedAccountForSharing",
+      "findVerifiedInviteTarget",
+      "findPendingImportForConfirmation",
+      "findPendingRefetchForApply",
+      "findProfileAccessState",
+      "getAccountForRefetch",
+      "getSquadGroupDetail",
+      "listAvailableCharactersForOwner",
+      "listAccountAccessGrants",
+      "listGlobalSquadGroups",
+      "listIncomingAccountInvites",
+      "listMySquadGroups",
+      "listOwnedAccounts",
+      "listSharedAccounts",
+      "markPendingRefetchApplied",
+      "markRequestFailed",
+      "markRequestSucceeded",
+      "reserveRequest",
+      "respondToAccountAccessInvite",
+      "revokeAccountAccess",
+      "saveSharedSquadGroupCharacters",
+      "saveSquadGroupSnapshot",
+      "searchInviteTargets",
+      "setSquadGroupVisibility",
+      "upsertAccountAccessInvite",
+    ]),
+    provider: Schema.Literal("postgres"),
+  }
+) {}
