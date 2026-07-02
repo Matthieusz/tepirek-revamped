@@ -1,6 +1,6 @@
 import { index, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
-import { auth } from "./auth";
+import { auth } from "./auth.js";
 
 export const announcement = pgTable(
   "announcement",

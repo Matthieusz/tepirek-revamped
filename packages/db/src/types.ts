@@ -1,12 +1,12 @@
 import type { InferSelectModel } from "drizzle-orm";
 
-import type { announcement } from "./schema/announcement";
-import type { auction } from "./schema/auction";
-import type { user, session, account, verification } from "./schema/auth";
-import type { hero, heroBet, heroBetMember, userStats } from "./schema/bet";
-import type { event } from "./schema/event";
-import type { range, skills, professions } from "./schema/skills";
-import type { todo } from "./schema/todo";
+import type { announcement } from "./schema/announcement.js";
+import type { auction } from "./schema/auction.js";
+import type { user, session, account, verification } from "./schema/auth.js";
+import type { hero, heroBet, heroBetMember, userStats } from "./schema/bet.js";
+import type { event } from "./schema/event.js";
+import type { range, skills, professions } from "./schema/skills.js";
+import type { todo } from "./schema/todo.js";
 
 export type User = InferSelectModel<typeof user>;
 export type Session = InferSelectModel<typeof session>;

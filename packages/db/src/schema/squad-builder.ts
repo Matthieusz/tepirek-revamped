@@ -8,7 +8,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { user } from "./auth";
+import { user } from "./auth.js";
 
 export const margonemAccount = pgTable(
   "margonem_accounts",

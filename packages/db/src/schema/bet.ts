@@ -10,8 +10,8 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 
-import { user } from "./auth";
-import { event } from "./event";
+import { user } from "./auth.js";
+import { event } from "./event.js";
 
 export const hero = pgTable(
   "hero",
