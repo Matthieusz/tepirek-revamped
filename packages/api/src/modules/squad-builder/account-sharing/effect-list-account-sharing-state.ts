@@ -1,6 +1,7 @@
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
+import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
 import type {
   AccountAccessGrantSummary,
@@ -71,9 +72,7 @@ export class EffectListAccountSharingState {
       );
 
       if (owned.ownerUserId !== input.actorUserId) {
-        return yield* EffectRuntime.fail({
-          _tag: "ActorDoesNotOwnMargonemAccount" as const,
-        });
+        return yield* new ActorDoesNotOwnMargonemAccount();
       }
 
       return yield* EffectAccountSharingStore.use((store) =>

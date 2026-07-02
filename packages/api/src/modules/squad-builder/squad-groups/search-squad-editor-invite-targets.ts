@@ -1,4 +1,7 @@
-import { accountInviteTargetSearchPolicy } from "../account-sharing/search-account-invite-targets.js";
+import {
+  accountInviteTargetSearchPolicy,
+  InvalidAccountInviteTargetQuery,
+} from "../account-sharing/search-account-invite-targets.js";
 import type { AppUserId } from "../app-user-id.js";
 import { err, isError, ok } from "../result.js";
 import type { Result } from "../result.js";
@@ -11,24 +14,23 @@ import type {
 
 const parseQuery = (
   input: string
-): Result<
-  string,
-  { readonly _tag: "InvalidAccountInviteTargetQuery"; readonly message: string }
-> => {
+): Result<string, InvalidAccountInviteTargetQuery> => {
   const trimmed = input.trim();
 
   if (trimmed.length < accountInviteTargetSearchPolicy.minQueryLength) {
-    return err({
-      _tag: "InvalidAccountInviteTargetQuery",
-      message: `Wpisz co najmniej ${accountInviteTargetSearchPolicy.minQueryLength} znaki`,
-    });
+    return err(
+      new InvalidAccountInviteTargetQuery({
+        message: `Wpisz co najmniej ${accountInviteTargetSearchPolicy.minQueryLength} znaki`,
+      })
+    );
   }
 
   if (trimmed.length > accountInviteTargetSearchPolicy.maxQueryLength) {
-    return err({
-      _tag: "InvalidAccountInviteTargetQuery",
-      message: `Zapytanie może mieć maksymalnie ${accountInviteTargetSearchPolicy.maxQueryLength} znaków`,
-    });
+    return err(
+      new InvalidAccountInviteTargetQuery({
+        message: `Zapytanie może mieć maksymalnie ${accountInviteTargetSearchPolicy.maxQueryLength} znaków`,
+      })
+    );
   }
 
   return ok(trimmed);

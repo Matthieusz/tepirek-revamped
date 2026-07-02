@@ -3,6 +3,10 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
 import { EffectFirecrawlClient } from "../effect-firecrawl-client.js";
+import {
+  FirecrawlRequestFailed,
+  FirecrawlResponseNotParseable,
+} from "../firecrawl-client.js";
 import type { FirecrawlScrapeError } from "../firecrawl-client.js";
 import {
   EffectFirecrawlConfig,
@@ -57,8 +61,7 @@ export class EffectPreviewAccountRefetch {
       );
       const scrapedProfileResult = yield* EffectRuntime.tryPromise({
         catch: (cause) =>
-          ({
-            _tag: "FirecrawlRequestFailed",
+          new FirecrawlRequestFailed({
             cause,
             profileId: account.profileId,
           }) satisfies FirecrawlScrapeError,
@@ -72,7 +75,7 @@ export class EffectPreviewAccountRefetch {
             requestId: reservedRequest.requestId,
           })
         );
-        return yield* EffectRuntime.fail(scrapedProfileResult.error);
+        return yield* scrapedProfileResult.error;
       }
 
       const scrapedProfile = scrapedProfileResult.value;
@@ -87,8 +90,7 @@ export class EffectPreviewAccountRefetch {
             requestId: reservedRequest.requestId,
           })
         );
-        return yield* EffectRuntime.fail({
-          _tag: "FirecrawlResponseNotParseable" as const,
+        return yield* new FirecrawlResponseNotParseable({
           cause: new Error("Invalid Firecrawl creditsUsed"),
           profileId: account.profileId,
         });

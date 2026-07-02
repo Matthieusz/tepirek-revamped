@@ -1,4 +1,5 @@
 import type { AppUserId } from "../app-user-id.js";
+import { FirecrawlResponseNotParseable } from "../firecrawl-client.js";
 import type {
   FirecrawlClient,
   FirecrawlScrapeError,
@@ -191,11 +192,12 @@ export class PreviewMargonemProfileImport {
         return failPreview(markFailed.error);
       }
 
-      return failPreview({
-        _tag: "FirecrawlResponseNotParseable",
-        cause: new Error("Invalid Firecrawl creditsUsed"),
-        profileId,
-      });
+      return failPreview(
+        new FirecrawlResponseNotParseable({
+          cause: new Error("Invalid Firecrawl creditsUsed"),
+          profileId,
+        })
+      );
     }
 
     const markSucceeded = await this.ledger.markRequestSucceeded({

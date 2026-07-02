@@ -1,3 +1,5 @@
+import * as Schema from "effect/Schema";
+
 import type { AppUserId } from "../app-user-id.js";
 import type { MargonemAccountId } from "../margonem-account-id.js";
 import { err, isError, ok } from "../result.js";
@@ -16,10 +18,11 @@ export const accountInviteTargetSearchPolicy = {
 } as const;
 
 /** Expected failure when an invite target search query is invalid. */
-export interface InvalidAccountInviteTargetQuery {
-  readonly _tag: "InvalidAccountInviteTargetQuery";
-  readonly message: string;
-}
+export class InvalidAccountInviteTargetQuery extends Schema.TaggedErrorClass<InvalidAccountInviteTargetQuery>()(
+  "InvalidAccountInviteTargetQuery",
+  { message: Schema.String },
+  {}
+) {}
 
 /** Input for searching account invite targets. */
 export interface SearchAccountInviteTargetsInput {
@@ -34,23 +37,25 @@ const parseAccountInviteTargetQuery = (
   const trimmed = input.trim();
 
   if (trimmed.length < accountInviteTargetSearchPolicy.minQueryLength) {
-    return err({
-      _tag: "InvalidAccountInviteTargetQuery",
-      message: `Wpisz co najmniej ${accountInviteTargetSearchPolicy.minQueryLength} znaki`,
-    });
+    return err(
+      new InvalidAccountInviteTargetQuery({
+        message: `Wpisz co najmniej ${accountInviteTargetSearchPolicy.minQueryLength} znaki`,
+      })
+    );
   }
 
   if (trimmed.length > accountInviteTargetSearchPolicy.maxQueryLength) {
-    return err({
-      _tag: "InvalidAccountInviteTargetQuery",
-      message: `Zapytanie może mieć maksymalnie ${accountInviteTargetSearchPolicy.maxQueryLength} znaków`,
-    });
+    return err(
+      new InvalidAccountInviteTargetQuery({
+        message: `Zapytanie może mieć maksymalnie ${accountInviteTargetSearchPolicy.maxQueryLength} znaków`,
+      })
+    );
   }
 
   return ok(trimmed);
 };
 
-/** Service module that searches verified users an owner may invite. */
+// oxlint-disable-next-line max-classes-per-file — Domain error schema collocated with the service that uses it.
 export class SearchAccountInviteTargets {
   private readonly store: AccountSharingStore;
 

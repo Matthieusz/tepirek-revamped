@@ -1,5 +1,6 @@
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
+import { FirecrawlResponseNotParseable } from "../firecrawl-client.js";
 import type {
   FirecrawlClient,
   FirecrawlScrapeError,
@@ -154,11 +155,12 @@ export class PreviewAccountRefetch {
         return err(markFailed.error);
       }
 
-      return err({
-        _tag: "FirecrawlResponseNotParseable",
-        cause: new Error("Invalid Firecrawl creditsUsed"),
-        profileId: account.value.profileId,
-      });
+      return err(
+        new FirecrawlResponseNotParseable({
+          cause: new Error("Invalid Firecrawl creditsUsed"),
+          profileId: account.value.profileId,
+        })
+      );
     }
 
     const markSucceeded = await this.ledger.markRequestSucceeded({

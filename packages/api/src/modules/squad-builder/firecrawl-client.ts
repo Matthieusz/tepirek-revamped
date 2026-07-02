@@ -1,3 +1,4 @@
+import * as Schema from "effect/Schema";
 import { Firecrawl } from "firecrawl";
 import type { Document } from "firecrawl";
 
@@ -22,23 +23,39 @@ export interface FirecrawlScrapeSuccess {
   };
 }
 
+// oxlint-disable max-classes-per-file — Domain error schemas collocated for the Firecrawl interface.
+export class FirecrawlRequestFailed extends Schema.TaggedErrorClass<FirecrawlRequestFailed>()(
+  "FirecrawlRequestFailed",
+  {
+    cause: Schema.Defect(),
+    profileId: Schema.Number,
+  },
+  {}
+) {}
+
+export class FirecrawlResponseNotParseable extends Schema.TaggedErrorClass<FirecrawlResponseNotParseable>()(
+  "FirecrawlResponseNotParseable",
+  {
+    cause: Schema.Defect(),
+    profileId: Schema.Number,
+  },
+  {}
+) {}
+
+export class RequestCancelled extends Schema.TaggedErrorClass<RequestCancelled>()(
+  "RequestCancelled",
+  {
+    cause: Schema.Defect(),
+    profileId: Schema.Number,
+  },
+  {}
+) {}
+
 /** Expected failure returned by the Firecrawl adapter. */
 export type FirecrawlScrapeError =
-  | {
-      readonly _tag: "FirecrawlRequestFailed";
-      readonly profileId: MargonemProfileId;
-      readonly cause: unknown;
-    }
-  | {
-      readonly _tag: "FirecrawlResponseNotParseable";
-      readonly profileId: MargonemProfileId;
-      readonly cause: unknown;
-    }
-  | {
-      readonly _tag: "RequestCancelled";
-      readonly profileId: MargonemProfileId;
-      readonly cause: unknown;
-    };
+  | FirecrawlRequestFailed
+  | FirecrawlResponseNotParseable
+  | RequestCancelled;
 
 /** Firecrawl capability consumed by the profile import preview service. */
 export interface FirecrawlClient {
@@ -57,11 +74,12 @@ const parseFirecrawlDocument = (
   document: Document
 ): Result<FirecrawlScrapeSuccess, FirecrawlScrapeError> => {
   if (typeof document.html !== "string" || document.html.length === 0) {
-    return err({
-      _tag: "FirecrawlResponseNotParseable",
-      cause: new Error("Firecrawl response did not include HTML"),
-      profileId,
-    });
+    return err(
+      new FirecrawlResponseNotParseable({
+        cause: new Error("Firecrawl response did not include HTML"),
+        profileId,
+      })
+    );
   }
 
   const rawCredits = document.metadata?.creditsUsed;
@@ -70,11 +88,12 @@ const parseFirecrawlDocument = (
     const parsedCredits = parseFirecrawlCreditCount(rawCredits);
 
     if (isError(parsedCredits)) {
-      return err({
-        _tag: "FirecrawlResponseNotParseable",
-        cause: new Error("Firecrawl response included invalid creditsUsed"),
-        profileId,
-      });
+      return err(
+        new FirecrawlResponseNotParseable({
+          cause: new Error("Firecrawl response included invalid creditsUsed"),
+          profileId,
+        })
+      );
     }
 
     return ok({
@@ -117,11 +136,12 @@ export class FirecrawlSdkClient implements FirecrawlClient {
     options: { readonly signal?: AbortSignal } = {}
   ): Promise<Result<FirecrawlScrapeSuccess, FirecrawlScrapeError>> {
     if (isSignalAborted(options.signal)) {
-      return err({
-        _tag: "RequestCancelled",
-        cause: options.signal?.reason,
-        profileId,
-      });
+      return err(
+        new RequestCancelled({
+          cause: options.signal?.reason,
+          profileId,
+        })
+      );
     }
 
     try {
@@ -136,20 +156,31 @@ export class FirecrawlSdkClient implements FirecrawlClient {
       );
 
       if (isSignalAborted(options.signal)) {
-        return err({
-          _tag: "RequestCancelled",
-          cause: options.signal?.reason,
-          profileId,
-        });
+        return err(
+          new RequestCancelled({
+            cause: options.signal?.reason,
+            profileId,
+          })
+        );
       }
 
       return parseFirecrawlDocument(profileId, document);
     } catch (error: unknown) {
       if (isSignalAborted(options.signal)) {
-        return err({ _tag: "RequestCancelled", cause: error, profileId });
+        return err(
+          new RequestCancelled({
+            cause: error,
+            profileId,
+          })
+        );
       }
 
-      return err({ _tag: "FirecrawlRequestFailed", cause: error, profileId });
+      return err(
+        new FirecrawlRequestFailed({
+          cause: error,
+          profileId,
+        })
+      );
     }
   }
 }

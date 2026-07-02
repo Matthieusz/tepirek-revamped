@@ -2,6 +2,7 @@ import type { AppUserId } from "../app-user-id.js";
 import type { MargonemAccountId } from "../margonem-account-id.js";
 import { err, isError, ok } from "../result.js";
 import type { Result } from "../result.js";
+import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
 import type {
   AccountAccessGrantSummary,
@@ -84,7 +85,7 @@ export class ListAccountSharingState {
     }
 
     if (owned.value.ownerUserId !== input.actorUserId) {
-      return err({ _tag: "ActorDoesNotOwnMargonemAccount" });
+      return err(new ActorDoesNotOwnMargonemAccount());
     }
 
     const result = await this.store.listAccountAccessGrants({

@@ -16,6 +16,7 @@ import { ConfirmOwnedAccountImport } from "../modules/squad-builder/account-impo
 import { EffectConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import.js";
 import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-import/list-owned-margonem-accounts.js";
 import { systemClock } from "../modules/squad-builder/account-import/preview-margonem-profile-import.js";
+import { DuplicateProfileInBatchError } from "../modules/squad-builder/account-import/preview-owned-account-imports.js";
 import type { PreviewOwnedAccountImportItem } from "../modules/squad-builder/account-import/preview-owned-account-imports.js";
 import { EffectApplyAccountRefetch } from "../modules/squad-builder/account-refetch/effect-apply-account-refetch.js";
 import { EffectListAccountSharingState } from "../modules/squad-builder/account-sharing/effect-list-account-sharing-state.js";
@@ -192,7 +193,7 @@ const fakePreviewItems = (
     },
     {
       _tag: "PreviewFailed",
-      error: { _tag: "DuplicateProfileInBatch", firstLineNumber: 1 },
+      error: new DuplicateProfileInBatchError({ firstLineNumber: 1 }),
       inputUrl: "https://www.margonem.pl/profile/view,7298897",
       lineNumber: 2,
     },

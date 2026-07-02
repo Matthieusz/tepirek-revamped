@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { parseAppUserId } from "../app-user-id.js";
 import type { AppUserId } from "../app-user-id.js";
+import { FirecrawlRequestFailed } from "../firecrawl-client.js";
 import type {
   FirecrawlClient,
   FirecrawlScrapeError,
@@ -245,11 +246,12 @@ describe("PreviewMargonemProfileImport", () => {
       createFixedAccessLookup({ _tag: "Available" }),
       ledger,
       createRecordingFirecrawlClient(
-        err({
-          _tag: "FirecrawlRequestFailed",
-          cause: new Error("network failed"),
-          profileId: parseTestProfileId(),
-        })
+        err(
+          new FirecrawlRequestFailed({
+            cause: new Error("network failed"),
+            profileId: parseTestProfileId(),
+          })
+        )
       ),
       fixedClock,
       { apiKey: Redacted("test-key"), monthlyRequestBudget: 900 }

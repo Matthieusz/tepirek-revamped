@@ -1,8 +1,10 @@
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import { accountInviteTargetSearchPolicy } from "../account-sharing/search-account-invite-targets.js";
-import type { InvalidAccountInviteTargetQuery } from "../account-sharing/search-account-invite-targets.js";
+import {
+  accountInviteTargetSearchPolicy,
+  InvalidAccountInviteTargetQuery,
+} from "../account-sharing/search-account-invite-targets.js";
 import type { SearchSquadEditorInviteTargets } from "./search-squad-editor-invite-targets.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import { EffectSquadGroupStore } from "./squad-group-store.js";
@@ -14,17 +16,19 @@ const parseSquadEditorInviteTargetQuery = (
   const trimmed = input.trim();
 
   if (trimmed.length < accountInviteTargetSearchPolicy.minQueryLength) {
-    return EffectRuntime.fail({
-      _tag: "InvalidAccountInviteTargetQuery" as const,
-      message: `Wpisz co najmniej ${accountInviteTargetSearchPolicy.minQueryLength} znaki`,
-    });
+    return EffectRuntime.fail(
+      new InvalidAccountInviteTargetQuery({
+        message: `Wpisz co najmniej ${accountInviteTargetSearchPolicy.minQueryLength} znaki`,
+      })
+    );
   }
 
   if (trimmed.length > accountInviteTargetSearchPolicy.maxQueryLength) {
-    return EffectRuntime.fail({
-      _tag: "InvalidAccountInviteTargetQuery" as const,
-      message: `Zapytanie może mieć maksymalnie ${accountInviteTargetSearchPolicy.maxQueryLength} znaków`,
-    });
+    return EffectRuntime.fail(
+      new InvalidAccountInviteTargetQuery({
+        message: `Zapytanie może mieć maksymalnie ${accountInviteTargetSearchPolicy.maxQueryLength} znaków`,
+      })
+    );
   }
 
   return EffectRuntime.succeed(trimmed);

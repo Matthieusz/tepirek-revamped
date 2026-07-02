@@ -1,3 +1,6 @@
+/* eslint-disable max-classes-per-file -- Batch preview error schemas are intentionally collocated with the service contract. */
+import * as Schema from "effect/Schema";
+
 import { parseAccountDisplayName } from "../account-display-name.js";
 import type { AccountDisplayName } from "../account-display-name.js";
 import type { AppUserId } from "../app-user-id.js";
@@ -61,10 +64,13 @@ export interface PreviewOwnedAccountImportSuccess {
 }
 
 /** Expected failure for a later duplicate profile id in the same batch. */
-export interface DuplicateProfileInBatchError {
-  readonly _tag: "DuplicateProfileInBatch";
-  readonly firstLineNumber: number;
-}
+export class DuplicateProfileInBatchError extends Schema.TaggedErrorClass<DuplicateProfileInBatchError>()(
+  "DuplicateProfileInBatch",
+  {
+    firstLineNumber: Schema.Number,
+  },
+  {}
+) {}
 
 /** Per-line expected failure for the batch preview. */
 export type PreviewOwnedAccountImportLineError =
@@ -98,14 +104,19 @@ export type PreviewOwnedAccountImportsError =
   | EmptyProfileUrlBatch
   | SquadBuilderPersistenceUnavailable;
 
-export interface TooManyProfileUrlsInBatch {
-  readonly _tag: "TooManyProfileUrlsInBatch";
-  readonly maxUrls: number;
-}
+export class TooManyProfileUrlsInBatch extends Schema.TaggedErrorClass<TooManyProfileUrlsInBatch>()(
+  "TooManyProfileUrlsInBatch",
+  {
+    maxUrls: Schema.Number,
+  },
+  {}
+) {}
 
-export interface EmptyProfileUrlBatch {
-  readonly _tag: "EmptyProfileUrlBatch";
-}
+export class EmptyProfileUrlBatch extends Schema.TaggedErrorClass<EmptyProfileUrlBatch>()(
+  "EmptyProfileUrlBatch",
+  {},
+  {}
+) {}
 
 /** Narrow seam over the single-profile preview service for batch use. */
 export interface SingleMargonemProfilePreview {
@@ -208,14 +219,15 @@ export class PreviewOwnedAccountImports {
       .filter((line) => !isEmpty(line.inputUrl));
 
     if (nonBlankLines.length === 0) {
-      return err({ _tag: "EmptyProfileUrlBatch" });
+      return err(new EmptyProfileUrlBatch());
     }
 
     if (nonBlankLines.length > batchImportPolicy.maxProfileUrls) {
-      return err({
-        _tag: "TooManyProfileUrlsInBatch",
-        maxUrls: batchImportPolicy.maxProfileUrls,
-      });
+      return err(
+        new TooManyProfileUrlsInBatch({
+          maxUrls: batchImportPolicy.maxProfileUrls,
+        })
+      );
     }
 
     const failures: LineFailure[] = [];
@@ -239,10 +251,9 @@ export class PreviewOwnedAccountImports {
 
       if (firstLineNumber !== undefined) {
         failures.push({
-          error: {
-            _tag: "DuplicateProfileInBatch",
+          error: new DuplicateProfileInBatchError({
             firstLineNumber,
-          },
+          }),
           inputUrl: line.inputUrl,
           lineNumber: line.lineNumber,
         });

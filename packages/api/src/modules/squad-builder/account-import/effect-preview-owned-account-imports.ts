@@ -25,6 +25,11 @@ import type {
   PreviewMargonemProfileImportInput,
   PreviewMargonemProfileImportOutput,
 } from "./preview-margonem-profile-import.js";
+import {
+  DuplicateProfileInBatchError,
+  EmptyProfileUrlBatch,
+  TooManyProfileUrlsInBatch,
+} from "./preview-owned-account-imports.js";
 import type {
   PreviewOwnedAccountImportItem,
   PreviewOwnedAccountImportLineError,
@@ -206,14 +211,11 @@ export class EffectPreviewOwnedAccountImports {
         .filter((line) => !isEmpty(line.inputUrl));
 
       if (nonBlankLines.length === 0) {
-        return yield* EffectRuntime.fail({
-          _tag: "EmptyProfileUrlBatch" as const,
-        });
+        return yield* new EmptyProfileUrlBatch();
       }
 
       if (nonBlankLines.length > batchImportPolicy.maxProfileUrls) {
-        return yield* EffectRuntime.fail({
-          _tag: "TooManyProfileUrlsInBatch" as const,
+        return yield* new TooManyProfileUrlsInBatch({
           maxUrls: batchImportPolicy.maxProfileUrls,
         });
       }
@@ -239,10 +241,9 @@ export class EffectPreviewOwnedAccountImports {
 
         if (firstLineNumber !== undefined) {
           failures.push({
-            error: {
-              _tag: "DuplicateProfileInBatch",
+            error: new DuplicateProfileInBatchError({
               firstLineNumber,
-            },
+            }),
             inputUrl: line.inputUrl,
             lineNumber: line.lineNumber,
           });
