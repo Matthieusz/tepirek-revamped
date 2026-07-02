@@ -1,13 +1,17 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 
-import { parseAppUserId } from "../app-user-id";
-import { isOk } from "../result";
-import { parseSquadGroupName } from "../squad-name";
-import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support";
-import { ListSquadGroups } from "./list-squad-groups";
-import { EffectSquadGroupStore } from "./squad-group-store";
-import type { SquadGroupDetail, SquadGroupSummary } from "./squad-group-store";
+import { parseAppUserId } from "../app-user-id.js";
+import { isOk } from "../result.js";
+import { parseSquadGroupId } from "../squad-group-id.js";
+import { parseSquadGroupName } from "../squad-name.js";
+import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
+import { ListSquadGroups } from "./list-squad-groups.js";
+import { EffectSquadGroupStore } from "./squad-group-store.js";
+import type {
+  SquadGroupDetail,
+  SquadGroupSummary,
+} from "./squad-group-store.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -17,6 +21,16 @@ const parseTestUserId = (value: string) => {
   }
 
   return userId.value;
+};
+
+const parseTestGroupId = (value: number) => {
+  const groupId = parseSquadGroupId(value);
+
+  if (!isOk(groupId)) {
+    throw new Error("Expected test squad group id to be valid");
+  }
+
+  return groupId.value;
 };
 
 const parseTestGroupName = (value: string) => {
@@ -37,7 +51,7 @@ it.effect(
     const summaries: readonly SquadGroupSummary[] = [
       {
         characterCount: 3,
-        groupId: 456 as never,
+        groupId: parseTestGroupId(456),
         name: parseTestGroupName("Main squads"),
         squadCount: 2,
         updatedAt,
@@ -61,7 +75,7 @@ it.effect(
 
 it.effect("returns a visible squad group detail from the Effect store", () => {
   const actorUserId = parseTestUserId("detail-effect-owner");
-  const groupId = 789 as never;
+  const groupId = parseTestGroupId(789);
   const updatedAt = new Date("2026-06-30T14:00:00.000Z");
   const detail: SquadGroupDetail = {
     accessRole: "owner",

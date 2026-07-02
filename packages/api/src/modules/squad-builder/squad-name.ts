@@ -1,7 +1,7 @@
 import * as Schema from "effect/Schema";
 
-import { err, ok } from "./result";
-import type { Result } from "./result";
+import { err, ok } from "./result.js";
+import type { Result } from "./result.js";
 
 /** A validated squad group name. */
 export type SquadGroupName = string & { readonly __brand: "SquadGroupName" };

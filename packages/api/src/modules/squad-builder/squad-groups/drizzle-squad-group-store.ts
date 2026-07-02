@@ -39,33 +39,33 @@ import * as Layer from "effect/Layer";
 import {
   canTransitionAccountAccess,
   parseAccountAccessStatus,
-} from "../account-access-status";
-import type { AccountAccessStatus } from "../account-access-status";
+} from "../account-access-status.js";
+import type { AccountAccessStatus } from "../account-access-status.js";
 import {
   accountDisplayNameToString,
   parseAccountDisplayName,
-} from "../account-display-name";
-import { EffectAccountImportStore } from "../account-import/effect-account-import-store";
-import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch";
-import { EffectAccountRefetchStore } from "../account-refetch/effect-account-refetch-store";
-import { EffectAccountSharingStore } from "../account-sharing/effect-account-sharing-store";
-import { appUserIdToString, parseAppUserId } from "../app-user-id";
-import type { AppUserId } from "../app-user-id";
-import { firecrawlYearMonthToString } from "../firecrawl-year-month";
+} from "../account-display-name.js";
+import { EffectAccountImportStore } from "../account-import/effect-account-import-store.js";
+import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch.js";
+import { EffectAccountRefetchStore } from "../account-refetch/effect-account-refetch-store.js";
+import { EffectAccountSharingStore } from "../account-sharing/effect-account-sharing-store.js";
+import { appUserIdToString, parseAppUserId } from "../app-user-id.js";
+import type { AppUserId } from "../app-user-id.js";
+import { firecrawlYearMonthToString } from "../firecrawl-year-month.js";
 import {
   margonemAccountAccessIdToNumber,
   parseMargonemAccountAccessId,
-} from "../margonem-account-access-id";
-import type { MargonemAccountAccessId } from "../margonem-account-access-id";
+} from "../margonem-account-access-id.js";
+import type { MargonemAccountAccessId } from "../margonem-account-access-id.js";
 import {
   margonemAccountIdToNumber,
   parseMargonemAccountId,
-} from "../margonem-account-id";
-import type { MargonemAccountId } from "../margonem-account-id";
+} from "../margonem-account-id.js";
+import type { MargonemAccountId } from "../margonem-account-id.js";
 import {
   parseMargonemProfession,
   parseMargonemWorld,
-} from "../margonem-character";
+} from "../margonem-character.js";
 import {
   parseMargonemCharacterId,
   parseMargonemProfileId,
@@ -73,43 +73,43 @@ import {
   characterIdToNumber,
   levelToNumber,
   profileIdToNumber,
-} from "../margonem-profile-id";
-import { toMargonemProfileUrl } from "../margonem-profile-url";
-import { pendingImportIdToNumber } from "../pending-margonem-account-import-id";
+} from "../margonem-profile-id.js";
+import { toMargonemProfileUrl } from "../margonem-profile-url.js";
+import { pendingImportIdToNumber } from "../pending-margonem-account-import-id.js";
 import {
   parsePendingMargonemAccountRefetchId,
   pendingRefetchIdToNumber,
-} from "../pending-margonem-account-refetch-id";
-import { isError } from "../result";
+} from "../pending-margonem-account-refetch-id.js";
+import { isError } from "../result.js";
 import type {
   SquadGroupAccess,
   SquadGroupOwnerAccess,
-} from "../squad-group-access";
-import { parseSquadGroupId, squadGroupIdToNumber } from "../squad-group-id";
-import type { SquadGroupId } from "../squad-group-id";
+} from "../squad-group-access.js";
+import { parseSquadGroupId, squadGroupIdToNumber } from "../squad-group-id.js";
+import type { SquadGroupId } from "../squad-group-id.js";
 import {
   parseSquadGroupInvitationId,
   squadGroupInvitationIdToNumber,
-} from "../squad-group-invitation-id";
-import type { SquadGroupInvitationId } from "../squad-group-invitation-id";
+} from "../squad-group-invitation-id.js";
+import type { SquadGroupInvitationId } from "../squad-group-invitation-id.js";
 import {
   canTransitionSquadGroupInvitation,
   parseSquadGroupInvitationStatus,
-} from "../squad-group-invitation-status";
-import type { SquadGroupInvitationStatus } from "../squad-group-invitation-status";
+} from "../squad-group-invitation-status.js";
+import type { SquadGroupInvitationStatus } from "../squad-group-invitation-status.js";
 import {
   squadGroupLevelBoundToNumber,
   squadGroupNameQueryToString,
-} from "../squad-group-list-filters";
-import { parseSquadGroupVisibility } from "../squad-group-visibility";
-import { parseSquadId } from "../squad-id";
-import type { SquadId } from "../squad-id";
+} from "../squad-group-list-filters.js";
+import { parseSquadGroupVisibility } from "../squad-group-visibility.js";
+import { parseSquadId } from "../squad-id.js";
+import type { SquadId } from "../squad-id.js";
 import {
   parseSquadGroupName,
   squadGroupNameToString,
   squadNameToString,
-} from "../squad-name";
-import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
+} from "../squad-name.js";
+import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import type {
   ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
@@ -171,8 +171,8 @@ import type {
   SquadGroupDetail,
   SquadGroupNotFound,
   SquadGroupSummary,
-} from "./squad-group-store";
-import { EffectSquadGroupStore } from "./squad-group-store";
+} from "./squad-group-store.js";
+import { EffectSquadGroupStore } from "./squad-group-store.js";
 
 type EffectSquadGroupPersistenceOperation =
   | "applyRefetchedAccount"
@@ -3486,8 +3486,7 @@ const revokeAccountAccessWithDatabase =
                 const removedPlacements =
                   yield* removedPlacementsDelete as Effect.Effect<
                     readonly { readonly id: number }[],
-                    unknown,
-                    never
+                    unknown
                   >;
                 removedSquadCharacterCount = removedPlacements.length;
 
@@ -3496,7 +3495,7 @@ const revokeAccountAccessWithDatabase =
                   .set({ updatedAt: now })
                   .where(
                     inArray(squadGroup.id, affectedGroupIds)
-                  ) as Effect.Effect<unknown, unknown, never>;
+                  ) as Effect.Effect<unknown, unknown>;
               }
             }
           }
@@ -3524,8 +3523,7 @@ const revokeAccountAccessWithDatabase =
               readonly currentStatus: AccountAccessStatus;
               readonly attempted: string;
             },
-          unknown,
-          never
+          unknown
         >
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
@@ -3558,8 +3556,7 @@ const listAvailableCharactersForOwnerWithDatabase =
     ownerUserId,
   }: ListAvailableCharactersForOwnerInput): Effect.Effect<
     readonly AvailableSquadCharacter[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* listAvailableCharactersForOwnerEffect() {
       const operation = "listAvailableCharactersForOwner" as const;
@@ -3618,8 +3615,7 @@ const listAvailableCharactersForOwnerWithDatabase =
           readonly profession: string;
           readonly world: string;
         }[],
-        unknown,
-        never
+        unknown
       >;
       const rows = yield* selectEffect.pipe(
         Effect.catch((error) => failPersistence(operation, error))
@@ -3701,8 +3697,7 @@ const getSquadGroupDetailWithDatabase =
     SquadGroupDetail,
     | SquadGroupNotFound
     | ActorCannotViewSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* getSquadGroupDetailEffect() {
       const operation = "getSquadGroupDetail" as const;
@@ -3725,8 +3720,7 @@ const getSquadGroupDetailWithDatabase =
           readonly updatedAt: Date;
           readonly visibility: string;
         }[],
-        unknown,
-        never
+        unknown
       >;
       const groupRows = yield* groupSelectEffect.pipe(
         Effect.catch((error) => failPersistence(operation, error))
@@ -3774,8 +3768,7 @@ const getSquadGroupDetailWithDatabase =
           .limit(1);
         const inviteSelectEffect = inviteSelect as Effect.Effect<
           readonly { readonly id: number }[],
-          unknown,
-          never
+          unknown
         >;
         const inviteRows = yield* inviteSelectEffect.pipe(
           Effect.catch((error) => failPersistence(operation, error))
@@ -3828,8 +3821,7 @@ const getSquadGroupDetailWithDatabase =
           readonly name: string;
           readonly position: number;
         }[],
-        unknown,
-        never
+        unknown
       >;
       const squadRows = yield* squadSelectEffect.pipe(
         Effect.catch((error) => failPersistence(operation, error))
@@ -3879,8 +3871,7 @@ const getSquadGroupDetailWithDatabase =
           readonly profession: string;
           readonly squadId: number;
         }[],
-        unknown,
-        never
+        unknown
       >;
       const placementRows = yield* placementSelectEffect.pipe(
         Effect.catch((error) => failPersistence(operation, error))
@@ -4041,8 +4032,7 @@ const listSharedSquadGroupsWithDatabase =
     readonly filters: ListGlobalSquadGroupsInput["filters"];
   }): Effect.Effect<
     readonly SharedSquadGroupSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* listSharedSquadGroupsEffect() {
       const operation = "listSharedSquadGroups" as const;
@@ -4092,8 +4082,7 @@ const listSharedSquadGroupsWithDatabase =
           readonly squadCount: number | null;
           readonly updatedAt: Date;
         }[],
-        unknown,
-        never
+        unknown
       >;
       const rows = yield* selectEffect.pipe(
         Effect.catch((error) => failPersistence(operation, error))
@@ -4145,8 +4134,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
         readonly _tag: "SquadCharacterNotAccessible";
         readonly characterId: number;
       }
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* saveSharedSquadGroupCharactersEffect() {
       const operation = "saveSharedSquadGroupCharacters" as const;
@@ -4165,8 +4153,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
             .limit(1);
           const groupRows = yield* groupSelect as Effect.Effect<
             readonly { readonly ownerUserId: string }[],
-            unknown,
-            never
+            unknown
           >;
           const [group] = groupRows;
 
@@ -4188,8 +4175,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
               .limit(1);
             const inviteRows = yield* inviteSelect as Effect.Effect<
               readonly { readonly id: number }[],
-              unknown,
-              never
+              unknown
             >;
 
             if (inviteRows[0] === undefined) {
@@ -4203,8 +4189,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
             .where(eq(squad.squadGroupId, groupIdNumber));
           const existingSquads = yield* existingSquadSelect as Effect.Effect<
             readonly { readonly id: number }[],
-            unknown,
-            never
+            unknown
           >;
           const existingSquadIds = new Set(existingSquads.map((row) => row.id));
 
@@ -4225,7 +4210,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
             .delete(squadCharacter)
             .where(
               eq(squadCharacter.squadGroupId, groupIdNumber)
-            ) as Effect.Effect<unknown, unknown, never>;
+            ) as Effect.Effect<unknown, unknown>;
 
           const characterIds = snapshot.squads.flatMap((item) =>
             item.characters.map((character) => character.characterId)
@@ -4245,8 +4230,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
               .where(inArray(margonemCharacter.id, characterIds));
             const characterRows = yield* characterSelect as Effect.Effect<
               readonly { readonly accountId: number; readonly id: number }[],
-              unknown,
-              never
+              unknown
             >;
 
             for (const character of characterRows) {
@@ -4282,7 +4266,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
           if (placements.length > 0) {
             yield* tx
               .insert(squadCharacter)
-              .values(placements) as Effect.Effect<unknown, unknown, never>;
+              .values(placements) as Effect.Effect<unknown, unknown>;
           }
 
           yield* tx
@@ -4290,8 +4274,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
             .set({ updatedAt: now })
             .where(eq(squadGroup.id, groupIdNumber)) as Effect.Effect<
             unknown,
-            unknown,
-            never
+            unknown
           >;
 
           return { _tag: "Saved" as const };
@@ -4309,8 +4292,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
               readonly _tag: "SquadCharacterNotAccessible";
               readonly characterId: number;
             },
-          unknown,
-          never
+          unknown
         >
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
@@ -4329,8 +4311,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
             never,
             | SquadGroupNotFound
             | ActorCannotEditSquadGroup
-            | EffectSquadBuilderPersistenceUnavailable,
-            never
+            | EffectSquadBuilderPersistenceUnavailable
           > => {
             if (error._tag === "ActorCannotViewSquadGroup") {
               return Effect.fail({
@@ -4355,8 +4336,7 @@ const saveSquadGroupSnapshotWithDatabase =
     SquadGroupDetail,
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* saveSquadGroupSnapshotEffect() {
       const operation = "saveSquadGroupSnapshot" as const;
@@ -4371,7 +4351,7 @@ const saveSquadGroupSnapshotWithDatabase =
         Effect.gen(function* saveSquadGroupSnapshotTransaction() {
           yield* tx.execute(
             sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
-          ) as Effect.Effect<unknown, unknown, never>;
+          ) as Effect.Effect<unknown, unknown>;
 
           const groupSelect = tx
             .select({ ownerUserId: squadGroup.ownerUserId })
@@ -4380,8 +4360,7 @@ const saveSquadGroupSnapshotWithDatabase =
             .limit(1);
           const groupRows = yield* groupSelect as Effect.Effect<
             readonly { readonly ownerUserId: string }[],
-            unknown,
-            never
+            unknown
           >;
           const [group] = groupRows;
 
@@ -4401,16 +4380,14 @@ const saveSquadGroupSnapshotWithDatabase =
             })
             .where(eq(squadGroup.id, groupIdNumber)) as Effect.Effect<
             unknown,
-            unknown,
-            never
+            unknown
           >;
 
           yield* tx
             .delete(squad)
             .where(eq(squad.squadGroupId, groupIdNumber)) as Effect.Effect<
             unknown,
-            unknown,
-            never
+            unknown
           >;
 
           for (const squadSnapshot of snapshot.squads) {
@@ -4425,8 +4402,7 @@ const saveSquadGroupSnapshotWithDatabase =
               .returning({ id: squad.id });
             const insertedSquadRows = yield* insertSquad as Effect.Effect<
               readonly { readonly id: number }[],
-              unknown,
-              never
+              unknown
             >;
             const [insertedSquad] = insertedSquadRows;
 
@@ -4468,7 +4444,7 @@ const saveSquadGroupSnapshotWithDatabase =
 
             yield* tx
               .insert(squadCharacter)
-              .values(placementRows) as Effect.Effect<unknown, unknown, never>;
+              .values(placementRows) as Effect.Effect<unknown, unknown>;
           }
 
           return { _tag: "Saved" as const };
@@ -4481,8 +4457,7 @@ const saveSquadGroupSnapshotWithDatabase =
           | SquadGroupNotFound
           | ActorDoesNotOwnSquadGroup
           | EffectSquadBuilderPersistenceUnavailable,
-          unknown,
-          never
+          unknown
         >
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
@@ -4501,8 +4476,7 @@ const saveSquadGroupSnapshotWithDatabase =
             never,
             | SquadGroupNotFound
             | ActorDoesNotOwnSquadGroup
-            | EffectSquadBuilderPersistenceUnavailable,
-            never
+            | EffectSquadBuilderPersistenceUnavailable
           > => {
             if (error._tag === "ActorCannotViewSquadGroup") {
               return Effect.fail({
@@ -4518,8 +4492,7 @@ const saveSquadGroupSnapshotWithDatabase =
       SquadGroupDetail,
       | SquadGroupNotFound
       | ActorDoesNotOwnSquadGroup
-      | EffectSquadBuilderPersistenceUnavailable,
-      never
+      | EffectSquadBuilderPersistenceUnavailable
     >;
 
 const listGlobalSquadGroupsWithDatabase =
@@ -4529,8 +4502,7 @@ const listGlobalSquadGroupsWithDatabase =
     limit,
   }: ListGlobalSquadGroupsInput): Effect.Effect<
     readonly GlobalSquadGroupSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* listGlobalSquadGroupsEffect() {
       const operation = "listGlobalSquadGroups" as const;
@@ -4568,8 +4540,7 @@ const listGlobalSquadGroupsWithDatabase =
           readonly squadCount: number | null;
           readonly updatedAt: Date;
         }[],
-        unknown,
-        never
+        unknown
       >;
       const rows = yield* selectEffect.pipe(
         Effect.catch((error) => failPersistence(operation, error))
@@ -4620,8 +4591,7 @@ const setSquadGroupVisibilityWithDatabase =
     SquadGroupVisibilityChange,
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* setSquadGroupVisibilityEffect() {
       const operation = "setSquadGroupVisibility" as const;
@@ -4641,8 +4611,7 @@ const setSquadGroupVisibilityWithDatabase =
           readonly updatedAt: Date;
           readonly visibility: string;
         }[],
-        unknown,
-        never
+        unknown
       >;
       const rows = yield* selectEffect.pipe(
         Effect.catch((error) => failPersistence(operation, error))
@@ -4670,8 +4639,7 @@ const setSquadGroupVisibilityWithDatabase =
         .returning({ updatedAt: squadGroup.updatedAt });
       const updateEffect = update as Effect.Effect<
         readonly { readonly updatedAt: Date }[],
-        unknown,
-        never
+        unknown
       >;
       const updatedRows = yield* updateEffect.pipe(
         Effect.catch((error) => failPersistence(operation, error))

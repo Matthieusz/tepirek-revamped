@@ -1,13 +1,14 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 
-import { parseAppUserId } from "../app-user-id";
-import { isOk } from "../result";
-import { parseSquadGroupId } from "../squad-group-id";
-import { parseSquadGroupInvitationId } from "../squad-group-invitation-id";
-import { EffectSendSquadGroupEditorInvite } from "./effect-send-squad-group-editor-invite";
-import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support";
-import { EffectSquadGroupStore } from "./squad-group-store";
+import { parseAppUserId } from "../app-user-id.js";
+import { isOk } from "../result.js";
+import { parseSquadGroupId } from "../squad-group-id.js";
+import { parseSquadGroupInvitationId } from "../squad-group-invitation-id.js";
+import { parseSquadGroupName } from "../squad-name.js";
+import { EffectSendSquadGroupEditorInvite } from "./effect-send-squad-group-editor-invite.js";
+import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
+import { EffectSquadGroupStore } from "./squad-group-store.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -37,6 +38,16 @@ const parseTestInvitationId = () => {
   }
 
   return invitationId.value;
+};
+
+const parseTestGroupName = () => {
+  const name = parseSquadGroupName("Effect squad");
+
+  if (!isOk(name)) {
+    throw new Error("Expected test squad group name to be valid");
+  }
+
+  return name.value;
 };
 
 const fixedClock = {
@@ -84,7 +95,7 @@ it.effect("sends a squad group editor invite for a verified target", () => {
         ownerUserImage: null,
         ownerUserName: "owner",
         squadGroupId: groupId,
-        squadGroupName: "Effect squad" as never,
+        squadGroupName: parseTestGroupName(),
         status: "pending" as const,
         updatedAt: fixedClock.now(),
       });

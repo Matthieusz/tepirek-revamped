@@ -1,14 +1,14 @@
-import type { InvalidAccountInviteTargetQuery } from "../account-sharing/search-account-invite-targets";
-import type { InvalidAppUserId } from "../app-user-id";
-import type { InvalidSquadGroupId } from "../squad-group-id";
-import type { InvalidSquadGroupInvitationId } from "../squad-group-invitation-id";
-import type { InvalidSquadId } from "../squad-id";
-import type { SharedSquadGroupSaveError } from "./save-shared-squad-group-characters";
+import type { InvalidAccountInviteTargetQuery } from "../account-sharing/search-account-invite-targets.js";
+import type { InvalidAppUserId } from "../app-user-id.js";
+import type { InvalidSquadGroupId } from "../squad-group-id.js";
+import type { InvalidSquadGroupInvitationId } from "../squad-group-invitation-id.js";
+import type { InvalidSquadId } from "../squad-id.js";
+import type { SharedSquadGroupSaveError } from "./save-shared-squad-group-characters.js";
 import type {
   SquadBuilderPersistenceUnavailable,
   SquadGroupSharingAuthorizationError,
   SquadGroupSharingStore,
-} from "./squad-group-store";
+} from "./squad-group-store.js";
 
 export type { SquadBuilderPersistenceUnavailable, SquadGroupSharingStore };
 

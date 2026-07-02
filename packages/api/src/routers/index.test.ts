@@ -1,8 +1,8 @@
 import { createRouterClient } from "@orpc/server";
 import { describe, expect, it } from "vitest";
 
-import { appRouter } from ".";
-import type { RouterContext } from "./procedures";
+import { appRouter } from "./index.js";
+import type { RouterContext } from "./procedures.js";
 
 describe("app router", () => {
   it("exposes a public health check", async () => {

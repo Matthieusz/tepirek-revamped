@@ -1,11 +1,11 @@
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import";
-import type { SendSquadGroupEditorInvite } from "./send-squad-group-editor-invite";
-import type { SquadGroupSharingError } from "./squad-group-sharing-error";
-import { EffectSquadGroupStore } from "./squad-group-store";
-import type { SquadGroupInvitationSummary } from "./squad-group-store";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
+import type { SendSquadGroupEditorInvite } from "./send-squad-group-editor-invite.js";
+import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
+import { EffectSquadGroupStore } from "./squad-group-store.js";
+import type { SquadGroupInvitationSummary } from "./squad-group-store.js";
 
 /** Effect service module that sends squad group editor invitations as the group owner. */
 export class EffectSendSquadGroupEditorInvite {

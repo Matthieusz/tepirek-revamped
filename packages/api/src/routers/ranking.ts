@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { heroBetLedger } from "../modules/hero-bet-ledger";
-import { verifiedProcedure } from "./procedures";
+import { heroBetLedger } from "../modules/hero-bet-ledger.js";
+import { verifiedProcedure } from "./procedures.js";
 
 export const rankingRouter = {
   getHeroStats: verifiedProcedure

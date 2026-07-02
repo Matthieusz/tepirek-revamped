@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import";
-import { parseAppUserId } from "../app-user-id";
-import type { AppUserId } from "../app-user-id";
-import { parseMargonemAccountAccessId } from "../margonem-account-access-id";
-import type { MargonemAccountAccessId } from "../margonem-account-access-id";
-import { parseMargonemAccountId } from "../margonem-account-id";
-import type { MargonemAccountId } from "../margonem-account-id";
-import { err, isError, isOk, ok } from "../result";
-import type { Result } from "../result";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
+import { parseAppUserId } from "../app-user-id.js";
+import type { AppUserId } from "../app-user-id.js";
+import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
+import type { MargonemAccountAccessId } from "../margonem-account-access-id.js";
+import { parseMargonemAccountId } from "../margonem-account-id.js";
+import type { MargonemAccountId } from "../margonem-account-id.js";
+import { err, isError, isOk, ok } from "../result.js";
+import type { Result } from "../result.js";
 import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,
@@ -18,12 +18,12 @@ import type {
   RevokeAccountAccessResult,
   SharedMargonemAccountSummary,
   SquadBuilderPersistenceUnavailable,
-} from "./account-sharing-store";
-import { ListAccountSharingState } from "./list-account-sharing-state";
-import { RespondToAccountAccessInvite } from "./respond-to-account-access-invite";
-import { RevokeAccountAccess } from "./revoke-account-access";
-import { SearchAccountInviteTargets } from "./search-account-invite-targets";
-import { SendAccountAccessInvite } from "./send-account-access-invite";
+} from "./account-sharing-store.js";
+import { ListAccountSharingState } from "./list-account-sharing-state.js";
+import { RespondToAccountAccessInvite } from "./respond-to-account-access-invite.js";
+import { RevokeAccountAccess } from "./revoke-account-access.js";
+import { SearchAccountInviteTargets } from "./search-account-invite-targets.js";
+import { SendAccountAccessInvite } from "./send-account-access-invite.js";
 
 const userId = (value: string): AppUserId => {
   const parsed = parseAppUserId(value);

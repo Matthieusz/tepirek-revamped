@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest";
 import {
   createAdmin,
   createVerifiedMember,
-} from "../test/integration/builders";
-import { createAuthenticatedRouterClient } from "../test/integration/router-client";
+} from "../test/integration/builders.js";
+import { createAuthenticatedRouterClient } from "../test/integration/router-client.js";
 
 const announcementInput = {
   description: "Zbiórka pod aukcje zaczyna się o 20:00",

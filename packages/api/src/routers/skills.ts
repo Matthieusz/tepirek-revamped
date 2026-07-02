@@ -6,7 +6,7 @@ import { professions, range, skills } from "@tepirek-revamped/db/schema/skills";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { adminProcedure, verifiedProcedure } from "./procedures";
+import { adminProcedure, verifiedProcedure } from "./procedures.js";
 
 const skillLinkSchema = z.url("Podaj poprawny URL").refine((value) => {
   const { protocol } = new URL(value);

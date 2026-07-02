@@ -1,34 +1,34 @@
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import { parseAccountDisplayName } from "../account-display-name";
-import type { AccountDisplayName } from "../account-display-name";
-import type { AppUserId } from "../app-user-id";
-import type { MargonemProfileId } from "../margonem-profile-id";
-import { profileIdToNumber } from "../margonem-profile-id";
+import { parseAccountDisplayName } from "../account-display-name.js";
+import type { AccountDisplayName } from "../account-display-name.js";
+import type { AppUserId } from "../app-user-id.js";
+import type { MargonemProfileId } from "../margonem-profile-id.js";
+import { profileIdToNumber } from "../margonem-profile-id.js";
 import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
-} from "../margonem-profile-url";
-import { isError, isOk } from "../result";
+} from "../margonem-profile-url.js";
+import { isError, isOk } from "../result.js";
 import type {
   DuplicateMargonemAccountError,
   ProfileAccessState,
-} from "./account-import-store";
-import { EffectAccountImportStore } from "./effect-account-import-store";
+} from "./account-import-store.js";
+import { EffectAccountImportStore } from "./effect-account-import-store.js";
 import type {
   Clock,
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportInput,
   PreviewMargonemProfileImportOutput,
-} from "./preview-margonem-profile-import";
+} from "./preview-margonem-profile-import.js";
 import type {
   PreviewOwnedAccountImportItem,
   PreviewOwnedAccountImportLineError,
   PreviewOwnedAccountImportsError,
   PreviewOwnedAccountImportsInput,
   PreviewOwnedAccountImportsOutput,
-} from "./preview-owned-account-imports";
+} from "./preview-owned-account-imports.js";
 
 const batchImportPolicy = {
   fetchConcurrency: 2,
@@ -322,7 +322,7 @@ export class EffectPreviewOwnedAccountImports {
                 actorUserId: input.actorUserId,
                 profileUrl: line.inputUrl,
               },
-              { signal: options.signal }
+              options.signal === undefined ? {} : { signal: options.signal }
             )
             .pipe(
               EffectRuntime.matchEffect({

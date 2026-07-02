@@ -4,77 +4,77 @@ import type { ManagedRuntime } from "effect/ManagedRuntime";
 import * as Schema from "effect/Schema";
 import { z } from "zod";
 
-import { accountDisplayNameToString } from "../modules/squad-builder/account-display-name";
+import { accountDisplayNameToString } from "../modules/squad-builder/account-display-name.js";
 import type {
   ConfirmOwnedAccountImport,
   ConfirmOwnedAccountImportError,
-} from "../modules/squad-builder/account-import/confirm-owned-account-import";
-import type { EffectAccountImportStore } from "../modules/squad-builder/account-import/effect-account-import-store";
-import { EffectConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import";
-import type { EffectConfirmOwnedAccountImportError } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import";
-import { EffectPreviewMargonemProfileImport } from "../modules/squad-builder/account-import/effect-preview-margonem-profile-import";
-import { EffectPreviewOwnedAccountImports } from "../modules/squad-builder/account-import/effect-preview-owned-account-imports";
-import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-import/list-owned-margonem-accounts";
-import type { ListOwnedMargonemAccountsError } from "../modules/squad-builder/account-import/list-owned-margonem-accounts";
-import { systemClock } from "../modules/squad-builder/account-import/preview-margonem-profile-import";
+} from "../modules/squad-builder/account-import/confirm-owned-account-import.js";
+import type { EffectAccountImportStore } from "../modules/squad-builder/account-import/effect-account-import-store.js";
+import { EffectConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import.js";
+import type { EffectConfirmOwnedAccountImportError } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import.js";
+import { EffectPreviewMargonemProfileImport } from "../modules/squad-builder/account-import/effect-preview-margonem-profile-import.js";
+import { EffectPreviewOwnedAccountImports } from "../modules/squad-builder/account-import/effect-preview-owned-account-imports.js";
+import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-import/list-owned-margonem-accounts.js";
+import type { ListOwnedMargonemAccountsError } from "../modules/squad-builder/account-import/list-owned-margonem-accounts.js";
+import { systemClock } from "../modules/squad-builder/account-import/preview-margonem-profile-import.js";
 import type {
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportInput,
   PreviewMargonemProfileImportOutput,
-} from "../modules/squad-builder/account-import/preview-margonem-profile-import";
+} from "../modules/squad-builder/account-import/preview-margonem-profile-import.js";
 import type {
   PreviewOwnedAccountImportItem,
   PreviewOwnedAccountImports,
   PreviewOwnedAccountImportLineError,
   PreviewOwnedAccountImportsError,
   PreviewOwnedAccountImportsOutput,
-} from "../modules/squad-builder/account-import/preview-owned-account-imports";
+} from "../modules/squad-builder/account-import/preview-owned-account-imports.js";
 import type {
   ApplyAccountRefetch,
   ApplyAccountRefetchError,
   ApplyAccountRefetchOutput,
-} from "../modules/squad-builder/account-refetch/apply-account-refetch";
-import type { EffectAccountRefetchStore } from "../modules/squad-builder/account-refetch/effect-account-refetch-store";
-import { EffectApplyAccountRefetch } from "../modules/squad-builder/account-refetch/effect-apply-account-refetch";
-import { EffectPreviewAccountRefetch } from "../modules/squad-builder/account-refetch/effect-preview-account-refetch";
+} from "../modules/squad-builder/account-refetch/apply-account-refetch.js";
+import type { EffectAccountRefetchStore } from "../modules/squad-builder/account-refetch/effect-account-refetch-store.js";
+import { EffectApplyAccountRefetch } from "../modules/squad-builder/account-refetch/effect-apply-account-refetch.js";
+import { EffectPreviewAccountRefetch } from "../modules/squad-builder/account-refetch/effect-preview-account-refetch.js";
 import type {
   PreviewAccountRefetch,
   PreviewAccountRefetchError,
   PreviewAccountRefetchOutput,
-} from "../modules/squad-builder/account-refetch/preview-account-refetch";
-import type { AccountSharingError } from "../modules/squad-builder/account-sharing/account-sharing-error";
-import type { EffectAccountSharingStore } from "../modules/squad-builder/account-sharing/effect-account-sharing-store";
-import { EffectListAccountSharingState } from "../modules/squad-builder/account-sharing/effect-list-account-sharing-state";
-import { EffectRespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-respond-to-account-access-invite";
-import { EffectRevokeAccountAccess } from "../modules/squad-builder/account-sharing/effect-revoke-account-access";
-import { EffectSearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/effect-search-account-invite-targets";
-import { EffectSendAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-send-account-access-invite";
-import type { ListAccountSharingState } from "../modules/squad-builder/account-sharing/list-account-sharing-state";
-import type { RespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/respond-to-account-access-invite";
-import type { RevokeAccountAccess } from "../modules/squad-builder/account-sharing/revoke-account-access";
-import type { SearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/search-account-invite-targets";
-import type { SendAccountAccessInvite } from "../modules/squad-builder/account-sharing/send-account-access-invite";
+} from "../modules/squad-builder/account-refetch/preview-account-refetch.js";
+import type { AccountSharingError } from "../modules/squad-builder/account-sharing/account-sharing-error.js";
+import type { EffectAccountSharingStore } from "../modules/squad-builder/account-sharing/effect-account-sharing-store.js";
+import { EffectListAccountSharingState } from "../modules/squad-builder/account-sharing/effect-list-account-sharing-state.js";
+import { EffectRespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-respond-to-account-access-invite.js";
+import { EffectRevokeAccountAccess } from "../modules/squad-builder/account-sharing/effect-revoke-account-access.js";
+import { EffectSearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/effect-search-account-invite-targets.js";
+import { EffectSendAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-send-account-access-invite.js";
+import type { ListAccountSharingState } from "../modules/squad-builder/account-sharing/list-account-sharing-state.js";
+import type { RespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/respond-to-account-access-invite.js";
+import type { RevokeAccountAccess } from "../modules/squad-builder/account-sharing/revoke-account-access.js";
+import type { SearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/search-account-invite-targets.js";
+import type { SendAccountAccessInvite } from "../modules/squad-builder/account-sharing/send-account-access-invite.js";
 import {
   appUserIdToString,
   parseAppUserId,
-} from "../modules/squad-builder/app-user-id";
-import type { InvalidAppUserId } from "../modules/squad-builder/app-user-id";
-import { FirecrawlSdkClient } from "../modules/squad-builder/firecrawl-client";
-import { parseFirecrawlConfig } from "../modules/squad-builder/firecrawl-config";
-import type { ParseFirecrawlConfigError } from "../modules/squad-builder/firecrawl-config";
+} from "../modules/squad-builder/app-user-id.js";
+import type { InvalidAppUserId } from "../modules/squad-builder/app-user-id.js";
+import { FirecrawlSdkClient } from "../modules/squad-builder/firecrawl-client.js";
+import { parseFirecrawlConfig } from "../modules/squad-builder/firecrawl-config.js";
+import type { ParseFirecrawlConfigError } from "../modules/squad-builder/firecrawl-config.js";
 import {
   margonemAccountAccessIdToNumber,
   parseMargonemAccountAccessId,
-} from "../modules/squad-builder/margonem-account-access-id";
+} from "../modules/squad-builder/margonem-account-access-id.js";
 import {
   margonemAccountIdToNumber,
   parseMargonemAccountId,
-} from "../modules/squad-builder/margonem-account-id";
-import { profileIdToNumber } from "../modules/squad-builder/margonem-profile-id";
-import { parsePendingMargonemAccountImportId } from "../modules/squad-builder/pending-margonem-account-import-id";
-import { parsePendingMargonemAccountRefetchId } from "../modules/squad-builder/pending-margonem-account-refetch-id";
-import { err, isError, ok } from "../modules/squad-builder/result";
-import type { Result } from "../modules/squad-builder/result";
+} from "../modules/squad-builder/margonem-account-id.js";
+import { profileIdToNumber } from "../modules/squad-builder/margonem-profile-id.js";
+import { parsePendingMargonemAccountImportId } from "../modules/squad-builder/pending-margonem-account-import-id.js";
+import { parsePendingMargonemAccountRefetchId } from "../modules/squad-builder/pending-margonem-account-refetch-id.js";
+import { err, isError, ok } from "../modules/squad-builder/result.js";
+import type { Result } from "../modules/squad-builder/result.js";
 import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,
@@ -91,54 +91,54 @@ import type {
   SquadGroupInvitationSummary,
   SquadGroupSummary,
   SquadGroupVisibilityChange,
-} from "../modules/squad-builder/squad-builder-store";
-import { parseSquadGroupId } from "../modules/squad-builder/squad-group-id";
+} from "../modules/squad-builder/squad-builder-store.js";
+import { parseSquadGroupId } from "../modules/squad-builder/squad-group-id.js";
 import {
   parseSquadGroupInvitationId,
   squadGroupInvitationIdToNumber,
-} from "../modules/squad-builder/squad-group-invitation-id";
-import { parseSquadGroupListFilters } from "../modules/squad-builder/squad-group-list-filters";
-import type { SquadGroupListFilterError } from "../modules/squad-builder/squad-group-list-filters";
-import type { AvailableSquadCharacter } from "../modules/squad-builder/squad-group-snapshot";
-import { parseSquadGroupVisibility } from "../modules/squad-builder/squad-group-visibility";
-import { CreateSquadGroup } from "../modules/squad-builder/squad-groups/create-squad-group";
-import type { CreateSquadGroupError } from "../modules/squad-builder/squad-groups/create-squad-group";
-import { EffectListSquadGroupSharingState } from "../modules/squad-builder/squad-groups/effect-list-squad-group-sharing-state";
-import { EffectRespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/effect-respond-to-squad-group-invite";
-import { EffectRevokeSquadGroupEditor } from "../modules/squad-builder/squad-groups/effect-revoke-squad-group-editor";
-import { EffectSearchSquadEditorInviteTargets } from "../modules/squad-builder/squad-groups/effect-search-squad-editor-invite-targets";
-import { EffectSendSquadGroupEditorInvite } from "../modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite";
-import { ListAvailableSquadCharacters } from "../modules/squad-builder/squad-groups/list-available-squad-characters";
-import type { ListAvailableSquadCharactersError } from "../modules/squad-builder/squad-groups/list-available-squad-characters";
-import { ListGlobalSquadGroups } from "../modules/squad-builder/squad-groups/list-global-squad-groups";
-import type { ListSquadGroupSharingState } from "../modules/squad-builder/squad-groups/list-squad-group-sharing-state";
-import { ListSquadGroups } from "../modules/squad-builder/squad-groups/list-squad-groups";
+} from "../modules/squad-builder/squad-group-invitation-id.js";
+import { parseSquadGroupListFilters } from "../modules/squad-builder/squad-group-list-filters.js";
+import type { SquadGroupListFilterError } from "../modules/squad-builder/squad-group-list-filters.js";
+import type { AvailableSquadCharacter } from "../modules/squad-builder/squad-group-snapshot.js";
+import { parseSquadGroupVisibility } from "../modules/squad-builder/squad-group-visibility.js";
+import { CreateSquadGroup } from "../modules/squad-builder/squad-groups/create-squad-group.js";
+import type { CreateSquadGroupError } from "../modules/squad-builder/squad-groups/create-squad-group.js";
+import { EffectListSquadGroupSharingState } from "../modules/squad-builder/squad-groups/effect-list-squad-group-sharing-state.js";
+import { EffectRespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/effect-respond-to-squad-group-invite.js";
+import { EffectRevokeSquadGroupEditor } from "../modules/squad-builder/squad-groups/effect-revoke-squad-group-editor.js";
+import { EffectSearchSquadEditorInviteTargets } from "../modules/squad-builder/squad-groups/effect-search-squad-editor-invite-targets.js";
+import { EffectSendSquadGroupEditorInvite } from "../modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite.js";
+import { ListAvailableSquadCharacters } from "../modules/squad-builder/squad-groups/list-available-squad-characters.js";
+import type { ListAvailableSquadCharactersError } from "../modules/squad-builder/squad-groups/list-available-squad-characters.js";
+import { ListGlobalSquadGroups } from "../modules/squad-builder/squad-groups/list-global-squad-groups.js";
+import type { ListSquadGroupSharingState } from "../modules/squad-builder/squad-groups/list-squad-group-sharing-state.js";
+import { ListSquadGroups } from "../modules/squad-builder/squad-groups/list-squad-groups.js";
 import type {
   GetSquadGroupDetailError,
   ListMySquadGroupsError,
-} from "../modules/squad-builder/squad-groups/list-squad-groups";
-import type { RespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/respond-to-squad-group-invite";
-import type { RevokeSquadGroupEditor } from "../modules/squad-builder/squad-groups/revoke-squad-group-editor";
-import { SaveSharedSquadGroupCharacters } from "../modules/squad-builder/squad-groups/save-shared-squad-group-characters";
+} from "../modules/squad-builder/squad-groups/list-squad-groups.js";
+import type { RespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/respond-to-squad-group-invite.js";
+import type { RevokeSquadGroupEditor } from "../modules/squad-builder/squad-groups/revoke-squad-group-editor.js";
+import { SaveSharedSquadGroupCharacters } from "../modules/squad-builder/squad-groups/save-shared-squad-group-characters.js";
 import type {
   EffectSharedSquadGroupSaveError,
   SharedSquadGroupSaveError,
-} from "../modules/squad-builder/squad-groups/save-shared-squad-group-characters";
-import { SaveSquadGroup } from "../modules/squad-builder/squad-groups/save-squad-group";
+} from "../modules/squad-builder/squad-groups/save-shared-squad-group-characters.js";
+import { SaveSquadGroup } from "../modules/squad-builder/squad-groups/save-squad-group.js";
 import type {
   SaveSquadGroupError,
   SaveSquadInput,
-} from "../modules/squad-builder/squad-groups/save-squad-group";
-import type { SearchSquadEditorInviteTargets } from "../modules/squad-builder/squad-groups/search-squad-editor-invite-targets";
-import type { SendSquadGroupEditorInvite } from "../modules/squad-builder/squad-groups/send-squad-group-editor-invite";
-import { SetSquadGroupVisibility } from "../modules/squad-builder/squad-groups/set-squad-group-visibility";
-import type { GlobalSquadVisibilityError } from "../modules/squad-builder/squad-groups/set-squad-group-visibility";
-import type { SquadGroupSharingError } from "../modules/squad-builder/squad-groups/squad-group-sharing-error";
-import type { EffectSquadGroupStore } from "../modules/squad-builder/squad-groups/squad-group-store";
-import { parseSquadId } from "../modules/squad-builder/squad-id";
-import { runOrpcEffect } from "../orpc-effect";
-import { verifiedProcedure } from "./procedures";
-import type { RouterContext } from "./procedures";
+} from "../modules/squad-builder/squad-groups/save-squad-group.js";
+import type { SearchSquadEditorInviteTargets } from "../modules/squad-builder/squad-groups/search-squad-editor-invite-targets.js";
+import type { SendSquadGroupEditorInvite } from "../modules/squad-builder/squad-groups/send-squad-group-editor-invite.js";
+import { SetSquadGroupVisibility } from "../modules/squad-builder/squad-groups/set-squad-group-visibility.js";
+import type { GlobalSquadVisibilityError } from "../modules/squad-builder/squad-groups/set-squad-group-visibility.js";
+import type { SquadGroupSharingError } from "../modules/squad-builder/squad-groups/squad-group-sharing-error.js";
+import type { EffectSquadGroupStore } from "../modules/squad-builder/squad-groups/squad-group-store.js";
+import { parseSquadId } from "../modules/squad-builder/squad-id.js";
+import { runOrpcEffect } from "../orpc-effect.js";
+import { verifiedProcedure } from "./procedures.js";
+import type { RouterContext } from "./procedures.js";
 
 const casesHandled = (x: never): never => x;
 
@@ -376,21 +376,20 @@ interface ListGlobalSquadGroupsService {
     input: Parameters<ListGlobalSquadGroups["list"]>[0]
   ) => Effect<
     readonly GlobalSquadGroupSummary[],
-    SquadBuilderPersistenceUnavailable,
-    never
+    SquadBuilderPersistenceUnavailable
   >;
 }
 
 interface ListMySquadGroupsService {
   readonly listMine: (
     input: Parameters<ListSquadGroups["listMine"]>[0]
-  ) => Effect<readonly SquadGroupSummary[], ListMySquadGroupsError, never>;
+  ) => Effect<readonly SquadGroupSummary[], ListMySquadGroupsError>;
 }
 
 interface GetSquadGroupDetailService {
   readonly getMine: (
     input: Parameters<ListSquadGroups["getMine"]>[0]
-  ) => Effect<SquadGroupDetail, GetSquadGroupDetailError, never>;
+  ) => Effect<SquadGroupDetail, GetSquadGroupDetailError>;
 }
 
 interface ListAvailableSquadCharactersService {
@@ -398,8 +397,7 @@ interface ListAvailableSquadCharactersService {
     input: Parameters<ListAvailableSquadCharacters["list"]>[0]
   ) => Effect<
     readonly AvailableSquadCharacter[],
-    ListAvailableSquadCharactersError,
-    never
+    ListAvailableSquadCharactersError
   >;
 }
 
@@ -530,7 +528,7 @@ interface EffectListSquadGroupSharingStateService {
 interface SetSquadGroupVisibilityService {
   readonly set: (
     input: Parameters<SetSquadGroupVisibility["set"]>[0]
-  ) => Effect<SquadGroupVisibilityChange, GlobalSquadVisibilityError, never>;
+  ) => Effect<SquadGroupVisibilityChange, GlobalSquadVisibilityError>;
 }
 
 interface SaveSharedSquadGroupCharactersService {

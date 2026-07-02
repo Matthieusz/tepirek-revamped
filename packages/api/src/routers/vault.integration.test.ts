@@ -5,8 +5,8 @@ import {
   createAdmin,
   createHero,
   createVerifiedMember,
-} from "../test/integration/builders";
-import { createAuthenticatedRouterClient } from "../test/integration/router-client";
+} from "../test/integration/builders.js";
+import { createAuthenticatedRouterClient } from "../test/integration/router-client.js";
 
 describe("vault router Postgres integration", () => {
   it("lets an admin distribute hero gold into member earnings", async () => {

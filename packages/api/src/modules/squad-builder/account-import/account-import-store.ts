@@ -21,7 +21,7 @@ import type {
   ReservedFirecrawlRequest,
   SquadBuilderAccountLookup,
   SquadBuilderPersistenceUnavailable,
-} from "../squad-builder-store";
+} from "../squad-builder-store.js";
 
 /** Account import persistence contracts used by profile preview and confirmation services. */
 export type AccountImportStore = SquadBuilderAccountLookup &

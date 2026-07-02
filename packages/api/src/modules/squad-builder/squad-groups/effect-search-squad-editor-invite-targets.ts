@@ -1,16 +1,16 @@
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import { accountInviteTargetSearchPolicy } from "../account-sharing/search-account-invite-targets";
-import type { InvalidAccountInviteTargetQuery } from "../account-sharing/search-account-invite-targets";
-import type { SearchSquadEditorInviteTargets } from "./search-squad-editor-invite-targets";
-import type { SquadGroupSharingError } from "./squad-group-sharing-error";
-import { EffectSquadGroupStore } from "./squad-group-store";
-import type { SquadEditorInviteTarget } from "./squad-group-store";
+import { accountInviteTargetSearchPolicy } from "../account-sharing/search-account-invite-targets.js";
+import type { InvalidAccountInviteTargetQuery } from "../account-sharing/search-account-invite-targets.js";
+import type { SearchSquadEditorInviteTargets } from "./search-squad-editor-invite-targets.js";
+import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
+import { EffectSquadGroupStore } from "./squad-group-store.js";
+import type { SquadEditorInviteTarget } from "./squad-group-store.js";
 
 const parseSquadEditorInviteTargetQuery = (
   input: string
-): Effect<string, InvalidAccountInviteTargetQuery, never> => {
+): Effect<string, InvalidAccountInviteTargetQuery> => {
   const trimmed = input.trim();
 
   if (trimmed.length < accountInviteTargetSearchPolicy.minQueryLength) {

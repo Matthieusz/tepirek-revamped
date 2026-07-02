@@ -1,5 +1,5 @@
-import { err, isError, ok } from "./result";
-import type { Result } from "./result";
+import { err, isError, ok } from "./result.js";
+import type { Result } from "./result.js";
 
 /** Normalized text query for browsing squad groups. */
 export type SquadGroupNameQuery = string & {
@@ -61,9 +61,9 @@ export type SquadGroupListFilterError =
 
 /** Boundary input for squad group list filters. */
 export interface ParseSquadGroupListFiltersInput {
-  readonly nameQuery?: string | null;
-  readonly minLevel?: number | null;
-  readonly maxLevel?: number | null;
+  readonly nameQuery?: string | null | undefined;
+  readonly minLevel?: number | null | undefined;
+  readonly maxLevel?: number | null | undefined;
 }
 
 /** Convert a parsed name query to its string representation. */

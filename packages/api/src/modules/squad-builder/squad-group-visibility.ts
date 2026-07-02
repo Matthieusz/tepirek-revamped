@@ -1,5 +1,5 @@
-import { err, ok } from "./result";
-import type { Result } from "./result";
+import { err, ok } from "./result.js";
+import type { Result } from "./result.js";
 
 /** Global discovery visibility for a squad group. */
 export type SquadGroupVisibility = "private" | "global";

@@ -5,12 +5,12 @@ import { user } from "@tepirek-revamped/db/schema/auth";
 import { and, count, countDistinct, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { verifiedProcedure } from "./procedures";
+import { verifiedProcedure } from "./procedures.js";
 import {
   auctionProfessionSchema,
   auctionSlotCoordinateSchema,
   auctionTypeSchema,
-} from "./schemas";
+} from "./schemas.js";
 
 export const auctionSignupInputSchema = auctionSlotCoordinateSchema;
 

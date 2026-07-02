@@ -1,15 +1,15 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import";
-import { parseAppUserId } from "../app-user-id";
-import type { FirecrawlClient } from "../firecrawl-client";
-import type { FirecrawlCreditCount } from "../firecrawl-config";
-import { Redacted } from "../prelude";
-import { isOk, ok } from "../result";
-import { makeEffectAccountRefetchStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectAccountRefetchStore } from "./effect-account-refetch-store";
-import { EffectPreviewAccountRefetch } from "./effect-preview-account-refetch";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
+import { parseAppUserId } from "../app-user-id.js";
+import type { FirecrawlClient } from "../firecrawl-client.js";
+import type { FirecrawlCreditCount } from "../firecrawl-config.js";
+import { Redacted } from "../prelude.js";
+import { isOk, ok } from "../result.js";
+import { makeEffectAccountRefetchStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
+import { EffectAccountRefetchStore } from "./effect-account-refetch-store.js";
+import { EffectPreviewAccountRefetch } from "./effect-preview-account-refetch.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-refetch-user");

@@ -15,40 +15,40 @@ import {
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import { makeApiManagedRuntime } from "../../../effect-app";
-import { createVerifiedMember } from "../../../test/integration/builders";
+import { makeApiManagedRuntime } from "../../../effect-app.js";
+import { createVerifiedMember } from "../../../test/integration/builders.js";
 import {
   defaultTestDatabaseUrl,
   testDb,
-} from "../../../test/integration/database";
-import { parseAccountDisplayName } from "../account-display-name";
-import { EffectAccountImportStore } from "../account-import/effect-account-import-store";
-import { EffectConfirmOwnedAccountImport } from "../account-import/effect-confirm-owned-account-import";
-import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts";
-import { systemClock } from "../account-import/preview-margonem-profile-import";
-import { EffectAccountRefetchStore } from "../account-refetch/effect-account-refetch-store";
-import { EffectApplyAccountRefetch } from "../account-refetch/effect-apply-account-refetch";
-import { EffectListAccountSharingState } from "../account-sharing/effect-list-account-sharing-state";
-import { EffectRespondToAccountAccessInvite } from "../account-sharing/effect-respond-to-account-access-invite";
-import { EffectRevokeAccountAccess } from "../account-sharing/effect-revoke-account-access";
-import { EffectSearchAccountInviteTargets } from "../account-sharing/effect-search-account-invite-targets";
-import { EffectSendAccountAccessInvite } from "../account-sharing/effect-send-account-access-invite";
-import { parseAppUserId } from "../app-user-id";
-import { parseFirecrawlCreditCount } from "../firecrawl-config";
-import { firecrawlYearMonthFromDate } from "../firecrawl-year-month";
-import { parseMargonemAccountId } from "../margonem-account-id";
-import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff";
-import { parseMargonemProfileId } from "../margonem-profile-id";
-import { isOk } from "../result";
-import { CreateSquadGroup } from "./create-squad-group";
-import { EffectRespondToSquadGroupInvite } from "./effect-respond-to-squad-group-invite";
-import { EffectRevokeSquadGroupEditor } from "./effect-revoke-squad-group-editor";
-import { EffectSendSquadGroupEditorInvite } from "./effect-send-squad-group-editor-invite";
-import { ListAvailableSquadCharacters } from "./list-available-squad-characters";
-import { ListGlobalSquadGroups } from "./list-global-squad-groups";
-import { ListSquadGroups } from "./list-squad-groups";
-import { SaveSquadGroup } from "./save-squad-group";
-import { SetSquadGroupVisibility } from "./set-squad-group-visibility";
+} from "../../../test/integration/database.js";
+import { parseAccountDisplayName } from "../account-display-name.js";
+import { EffectAccountImportStore } from "../account-import/effect-account-import-store.js";
+import { EffectConfirmOwnedAccountImport } from "../account-import/effect-confirm-owned-account-import.js";
+import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts.js";
+import { systemClock } from "../account-import/preview-margonem-profile-import.js";
+import { EffectAccountRefetchStore } from "../account-refetch/effect-account-refetch-store.js";
+import { EffectApplyAccountRefetch } from "../account-refetch/effect-apply-account-refetch.js";
+import { EffectListAccountSharingState } from "../account-sharing/effect-list-account-sharing-state.js";
+import { EffectRespondToAccountAccessInvite } from "../account-sharing/effect-respond-to-account-access-invite.js";
+import { EffectRevokeAccountAccess } from "../account-sharing/effect-revoke-account-access.js";
+import { EffectSearchAccountInviteTargets } from "../account-sharing/effect-search-account-invite-targets.js";
+import { EffectSendAccountAccessInvite } from "../account-sharing/effect-send-account-access-invite.js";
+import { parseAppUserId } from "../app-user-id.js";
+import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
+import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
+import { parseMargonemAccountId } from "../margonem-account-id.js";
+import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff.js";
+import { parseMargonemProfileId } from "../margonem-profile-id.js";
+import { isOk } from "../result.js";
+import { CreateSquadGroup } from "./create-squad-group.js";
+import { EffectRespondToSquadGroupInvite } from "./effect-respond-to-squad-group-invite.js";
+import { EffectRevokeSquadGroupEditor } from "./effect-revoke-squad-group-editor.js";
+import { EffectSendSquadGroupEditorInvite } from "./effect-send-squad-group-editor-invite.js";
+import { ListAvailableSquadCharacters } from "./list-available-squad-characters.js";
+import { ListGlobalSquadGroups } from "./list-global-squad-groups.js";
+import { ListSquadGroups } from "./list-squad-groups.js";
+import { SaveSquadGroup } from "./save-squad-group.js";
+import { SetSquadGroupVisibility } from "./set-squad-group-visibility.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);

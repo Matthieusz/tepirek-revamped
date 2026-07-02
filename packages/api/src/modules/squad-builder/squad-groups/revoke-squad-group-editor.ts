@@ -1,13 +1,13 @@
-import type { Clock } from "../account-import/preview-margonem-profile-import";
-import type { AppUserId } from "../app-user-id";
-import { err, isError, ok } from "../result";
-import type { Result } from "../result";
-import type { SquadGroupInvitationId } from "../squad-group-invitation-id";
-import type { SquadGroupSharingError } from "./squad-group-sharing-error";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
+import type { AppUserId } from "../app-user-id.js";
+import { err, isError, ok } from "../result.js";
+import type { Result } from "../result.js";
+import type { SquadGroupInvitationId } from "../squad-group-invitation-id.js";
+import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import type {
   SquadGroupInvitationSummary,
   SquadGroupSharingStore,
-} from "./squad-group-store";
+} from "./squad-group-store.js";
 
 export class RevokeSquadGroupEditor {
   private readonly store: SquadGroupSharingStore;

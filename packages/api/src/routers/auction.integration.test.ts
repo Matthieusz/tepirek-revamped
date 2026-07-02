@@ -2,9 +2,9 @@ import { ORPCError } from "@orpc/server";
 import { sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import { createVerifiedMember } from "../test/integration/builders";
-import { testDb } from "../test/integration/database";
-import { createAuthenticatedRouterClient } from "../test/integration/router-client";
+import { createVerifiedMember } from "../test/integration/builders.js";
+import { testDb } from "../test/integration/database.js";
+import { createAuthenticatedRouterClient } from "../test/integration/router-client.js";
 
 const paladinMainSlot = {
   column: 1,

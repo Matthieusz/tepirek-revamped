@@ -1,20 +1,20 @@
-import { parseAccountDisplayName } from "../account-display-name";
-import type { AccountDisplayName } from "../account-display-name";
-import type { AppUserId } from "../app-user-id";
-import type { FirecrawlScrapeError } from "../firecrawl-client";
-import type { FirecrawlCreditCount } from "../firecrawl-config";
-import type { MargonemCharacterPreview } from "../margonem-character";
-import type { ParseMargonemProfileHtmlError } from "../margonem-profile-html-parser";
-import type { MargonemProfileId } from "../margonem-profile-id";
-import { profileIdToNumber } from "../margonem-profile-id";
+import { parseAccountDisplayName } from "../account-display-name.js";
+import type { AccountDisplayName } from "../account-display-name.js";
+import type { AppUserId } from "../app-user-id.js";
+import type { FirecrawlScrapeError } from "../firecrawl-client.js";
+import type { FirecrawlCreditCount } from "../firecrawl-config.js";
+import type { MargonemCharacterPreview } from "../margonem-character.js";
+import type { ParseMargonemProfileHtmlError } from "../margonem-profile-html-parser.js";
+import type { MargonemProfileId } from "../margonem-profile-id.js";
+import { profileIdToNumber } from "../margonem-profile-id.js";
 import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
-} from "../margonem-profile-url";
-import type { ParseMargonemProfileUrlError } from "../margonem-profile-url";
-import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id";
-import { err, isError, isOk, ok } from "../result";
-import type { Result } from "../result";
+} from "../margonem-profile-url.js";
+import type { ParseMargonemProfileUrlError } from "../margonem-profile-url.js";
+import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
+import { err, isError, isOk, ok } from "../result.js";
+import type { Result } from "../result.js";
 import type {
   DuplicateMargonemAccountError,
   FirecrawlBudgetError,
@@ -22,13 +22,13 @@ import type {
   ProfileAccessState,
   SquadBuilderAccountLookup,
   SquadBuilderPersistenceUnavailable,
-} from "./account-import-store";
+} from "./account-import-store.js";
 import type {
   Clock,
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportInput,
   PreviewMargonemProfileImportOutput,
-} from "./preview-margonem-profile-import";
+} from "./preview-margonem-profile-import.js";
 
 const batchImportPolicy = {
   fetchConcurrency: 2,
@@ -379,7 +379,7 @@ export class PreviewOwnedAccountImports {
             actorUserId,
             profileUrl: line.inputUrl,
           },
-          { signal: options.signal }
+          options.signal === undefined ? {} : { signal: options.signal }
         );
 
         if (isError(preview)) {

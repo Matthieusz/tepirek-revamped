@@ -1,12 +1,12 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import";
-import { parseAppUserId } from "../app-user-id";
-import { isOk } from "../result";
-import { makeEffectAccountRefetchStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectAccountRefetchStore } from "./effect-account-refetch-store";
-import { EffectApplyAccountRefetch } from "./effect-apply-account-refetch";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
+import { parseAppUserId } from "../app-user-id.js";
+import { isOk } from "../result.js";
+import { makeEffectAccountRefetchStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
+import { EffectAccountRefetchStore } from "./effect-account-refetch-store.js";
+import { EffectApplyAccountRefetch } from "./effect-apply-account-refetch.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-apply-refetch-user");

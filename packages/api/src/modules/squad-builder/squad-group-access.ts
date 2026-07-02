@@ -1,6 +1,6 @@
-import type { AppUserId } from "./app-user-id";
-import type { SquadGroupId } from "./squad-group-id";
-import type { SquadGroupInvitationId } from "./squad-group-invitation-id";
+import type { AppUserId } from "./app-user-id.js";
+import type { SquadGroupId } from "./squad-group-id.js";
+import type { SquadGroupInvitationId } from "./squad-group-invitation-id.js";
 
 /** Access role within a squad group. */
 export type SquadGroupAccessRole = "owner" | "editor" | "viewer";

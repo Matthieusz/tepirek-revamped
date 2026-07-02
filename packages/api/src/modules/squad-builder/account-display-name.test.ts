@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   accountDisplayNameToString,
   parseAccountDisplayName,
-} from "./account-display-name";
-import { isError, isOk } from "./result";
+} from "./account-display-name.js";
+import { isError, isOk } from "./result.js";
 
 describe("parseAccountDisplayName", () => {
   it("trims and accepts a non-empty account display name", () => {

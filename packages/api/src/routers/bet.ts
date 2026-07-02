@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { heroBetLedger } from "../modules/hero-bet-ledger";
-import { adminProcedure, verifiedProcedure } from "./procedures";
+import { heroBetLedger } from "../modules/hero-bet-ledger.js";
+import { adminProcedure, verifiedProcedure } from "./procedures.js";
 
 export const betRouter = {
   create: adminProcedure

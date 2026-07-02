@@ -1,13 +1,13 @@
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type {
   ApplyAccountRefetchError,
   ApplyAccountRefetchInput,
   ApplyAccountRefetchOutput,
-} from "./apply-account-refetch";
-import { EffectAccountRefetchStore } from "./effect-account-refetch-store";
+} from "./apply-account-refetch.js";
+import { EffectAccountRefetchStore } from "./effect-account-refetch-store.js";
 
 /** Effect service module that applies a saved pending account refetch. */
 export class EffectApplyAccountRefetch {

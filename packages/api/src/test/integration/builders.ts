@@ -4,7 +4,7 @@ import { hero } from "@tepirek-revamped/db/schema/bet";
 import { event } from "@tepirek-revamped/db/schema/event";
 import { professions, range } from "@tepirek-revamped/db/schema/skills";
 
-import { testDb } from "./database";
+import { testDb } from "./database.js";
 
 interface TestUserOverrides {
   email?: string;

@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { parseAppUserId } from "../app-user-id";
-import type { AppUserId } from "../app-user-id";
+import { parseAppUserId } from "../app-user-id.js";
+import type { AppUserId } from "../app-user-id.js";
 import type {
   FirecrawlClient,
   FirecrawlScrapeError,
   FirecrawlScrapeSuccess,
-} from "../firecrawl-client";
-import type { FirecrawlCreditCount } from "../firecrawl-config";
-import type { FirecrawlYearMonth } from "../firecrawl-year-month";
-import { parseMargonemProfileId } from "../margonem-profile-id";
-import type { MargonemProfileId } from "../margonem-profile-id";
-import { Redacted } from "../prelude";
-import { err, isError, isOk, ok } from "../result";
-import type { Result } from "../result";
+} from "../firecrawl-client.js";
+import type { FirecrawlCreditCount } from "../firecrawl-config.js";
+import type { FirecrawlYearMonth } from "../firecrawl-year-month.js";
+import { parseMargonemProfileId } from "../margonem-profile-id.js";
+import type { MargonemProfileId } from "../margonem-profile-id.js";
+import { Redacted } from "../prelude.js";
+import { err, isError, isOk, ok } from "../result.js";
+import type { Result } from "../result.js";
 import type {
   FirecrawlBudgetError,
   FirecrawlBudgetState,
@@ -24,9 +24,9 @@ import type {
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
   SquadBuilderAccountLookup,
-} from "./account-import-store";
-import { PreviewMargonemProfileImport } from "./preview-margonem-profile-import";
-import type { Clock } from "./preview-margonem-profile-import";
+} from "./account-import-store.js";
+import { PreviewMargonemProfileImport } from "./preview-margonem-profile-import.js";
+import type { Clock } from "./preview-margonem-profile-import.js";
 
 const parseTestUserId = (): AppUserId => {
   const userId = parseAppUserId("preview-user");

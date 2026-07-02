@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { parseMargonemProfileHtml } from "./margonem-profile-html-parser";
-import { parseMargonemProfileId } from "./margonem-profile-id";
-import { isError, isOk } from "./result";
+import { parseMargonemProfileHtml } from "./margonem-profile-html-parser.js";
+import { parseMargonemProfileId } from "./margonem-profile-id.js";
+import { isError, isOk } from "./result.js";
 
 const parseFixtureProfileId = () => {
   const profileId = parseMargonemProfileId(7_298_897);

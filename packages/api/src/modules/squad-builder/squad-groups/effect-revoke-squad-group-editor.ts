@@ -1,11 +1,10 @@
 import type { Effect } from "effect/Effect";
-import * as EffectRuntime from "effect/Effect";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import";
-import type { RevokeSquadGroupEditor } from "./revoke-squad-group-editor";
-import type { SquadGroupSharingError } from "./squad-group-sharing-error";
-import { EffectSquadGroupStore } from "./squad-group-store";
-import type { SquadGroupInvitationSummary } from "./squad-group-store";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
+import type { RevokeSquadGroupEditor } from "./revoke-squad-group-editor.js";
+import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
+import { EffectSquadGroupStore } from "./squad-group-store.js";
+import type { SquadGroupInvitationSummary } from "./squad-group-store.js";
 
 /** Effect service module that revokes pending or accepted squad group editor access. */
 export class EffectRevokeSquadGroupEditor {
@@ -25,14 +24,12 @@ export class EffectRevokeSquadGroupEditor {
   > {
     const now = this.clock.now();
 
-    return EffectRuntime.gen(function* revokeSquadGroupEditorEffect() {
-      return yield* EffectSquadGroupStore.use((store) =>
-        store.revokeSquadGroupEditor({
-          invitationId: input.invitationId,
-          now,
-          ownerUserId: input.actorUserId,
-        })
-      );
-    });
+    return EffectSquadGroupStore.use((store) =>
+      store.revokeSquadGroupEditor({
+        invitationId: input.invitationId,
+        now,
+        ownerUserId: input.actorUserId,
+      })
+    );
   }
 }

@@ -1,9 +1,9 @@
-import { parseAccountDisplayName } from "../account-display-name";
-import type { InvalidAccountDisplayName } from "../account-display-name";
-import type { AppUserId } from "../app-user-id";
-import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id";
-import { err, isError, ok } from "../result";
-import type { Result } from "../result";
+import { parseAccountDisplayName } from "../account-display-name.js";
+import type { InvalidAccountDisplayName } from "../account-display-name.js";
+import type { AppUserId } from "../app-user-id.js";
+import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
+import { err, isError, ok } from "../result.js";
+import type { Result } from "../result.js";
 import type {
   DuplicateMargonemAccountError,
   OwnedMargonemAccountSummary,
@@ -11,8 +11,8 @@ import type {
   PendingMargonemAccountImportNotFound,
   PendingMargonemAccountImportStore,
   SquadBuilderPersistenceUnavailable,
-} from "./account-import-store";
-import type { Clock } from "./preview-margonem-profile-import";
+} from "./account-import-store.js";
+import type { Clock } from "./preview-margonem-profile-import.js";
 
 /** Input for confirming an owned account import. */
 export interface ConfirmOwnedAccountImportInput {

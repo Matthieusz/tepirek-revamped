@@ -1,24 +1,24 @@
 import { Firecrawl } from "firecrawl";
 import type { Document } from "firecrawl";
 
-import { parseFirecrawlCreditCount } from "./firecrawl-config";
-import type { MargonemProfileId } from "./margonem-profile-id";
-import { toMargonemProfileUrl } from "./margonem-profile-url";
-import type { Redacted } from "./prelude";
-import { unwrapRedacted } from "./prelude";
-import { err, isError, ok } from "./result";
-import type { Result } from "./result";
+import { parseFirecrawlCreditCount } from "./firecrawl-config.js";
+import type { MargonemProfileId } from "./margonem-profile-id.js";
+import { toMargonemProfileUrl } from "./margonem-profile-url.js";
+import type { Redacted } from "./prelude.js";
+import { unwrapRedacted } from "./prelude.js";
+import { err, isError, ok } from "./result.js";
+import type { Result } from "./result.js";
 
 /** Successful Firecrawl scrape output used by squad-builder. */
 export interface FirecrawlScrapeSuccess {
   readonly html: string;
   readonly metadata: {
-    readonly sourceURL?: string;
-    readonly url?: string;
-    readonly statusCode?: number;
-    readonly contentType?: string;
-    readonly cacheState?: string;
-    readonly creditsUsed?: number;
+    readonly sourceURL?: string | undefined;
+    readonly url?: string | undefined;
+    readonly statusCode?: number | undefined;
+    readonly contentType?: string | undefined;
+    readonly cacheState?: string | undefined;
+    readonly creditsUsed?: number | undefined;
   };
 }
 

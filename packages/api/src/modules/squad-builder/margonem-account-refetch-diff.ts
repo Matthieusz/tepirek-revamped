@@ -1,14 +1,14 @@
-import type { MargonemAccountId } from "./margonem-account-id";
+import type { MargonemAccountId } from "./margonem-account-id.js";
 import type {
   MargonemCharacterPreview,
   MargonemProfession,
   MargonemWorld,
-} from "./margonem-character";
+} from "./margonem-character.js";
 import type {
   MargonemCharacterId,
   MargonemProfileId,
   PositiveLevel,
-} from "./margonem-profile-id";
+} from "./margonem-profile-id.js";
 
 /** Stored Jaruna character state used when comparing a saved account with latest profile data. */
 export interface StoredMargonemCharacterSnapshot {

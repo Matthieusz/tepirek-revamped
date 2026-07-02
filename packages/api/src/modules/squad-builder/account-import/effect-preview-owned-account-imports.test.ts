@@ -1,18 +1,18 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 
-import { parseAppUserId } from "../app-user-id";
-import type { FirecrawlCreditCount } from "../firecrawl-config";
-import { parseMargonemProfileId } from "../margonem-profile-id";
-import { isOk } from "../result";
-import { makeEffectAccountImportStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectAccountImportStore } from "./effect-account-import-store";
-import { EffectPreviewOwnedAccountImports } from "./effect-preview-owned-account-imports";
-import type { EffectSingleMargonemProfilePreview } from "./effect-preview-owned-account-imports";
+import { parseAppUserId } from "../app-user-id.js";
+import type { FirecrawlCreditCount } from "../firecrawl-config.js";
+import { parseMargonemProfileId } from "../margonem-profile-id.js";
+import { isOk } from "../result.js";
+import { makeEffectAccountImportStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
+import { EffectAccountImportStore } from "./effect-account-import-store.js";
+import { EffectPreviewOwnedAccountImports } from "./effect-preview-owned-account-imports.js";
+import type { EffectSingleMargonemProfilePreview } from "./effect-preview-owned-account-imports.js";
 import type {
   Clock,
   PreviewMargonemProfileImportOutput,
-} from "./preview-margonem-profile-import";
+} from "./preview-margonem-profile-import.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-batch-user");

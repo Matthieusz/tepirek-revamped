@@ -1,11 +1,11 @@
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import";
-import type { AccountSharingError } from "./account-sharing-error";
-import type { AccountAccessInviteSummary } from "./account-sharing-store";
-import { EffectAccountSharingStore } from "./effect-account-sharing-store";
-import type { SendAccountAccessInviteInput } from "./send-account-access-invite";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
+import type { AccountSharingError } from "./account-sharing-error.js";
+import type { AccountAccessInviteSummary } from "./account-sharing-store.js";
+import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
+import type { SendAccountAccessInviteInput } from "./send-account-access-invite.js";
 
 /** Effect service module that sends account access invites as the account owner. */
 export class EffectSendAccountAccessInvite {

@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import type { MargonemAccountId } from "./margonem-account-id";
-import { computeMargonemAccountRefetchDiff } from "./margonem-account-refetch-diff";
-import type { StoredMargonemCharacterSnapshot } from "./margonem-account-refetch-diff";
-import type { MargonemCharacterPreview } from "./margonem-character";
+import type { MargonemAccountId } from "./margonem-account-id.js";
+import { computeMargonemAccountRefetchDiff } from "./margonem-account-refetch-diff.js";
+import type { StoredMargonemCharacterSnapshot } from "./margonem-account-refetch-diff.js";
+import type { MargonemCharacterPreview } from "./margonem-character.js";
 import type {
   MargonemCharacterId,
   MargonemProfileId,
   PositiveLevel,
-} from "./margonem-profile-id";
+} from "./margonem-profile-id.js";
 
 const accountId = 1 as MargonemAccountId;
 const profileId = 7_298_897 as MargonemProfileId;

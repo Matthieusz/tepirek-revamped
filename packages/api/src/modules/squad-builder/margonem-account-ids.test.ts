@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { parseMargonemAccountAccessId } from "./margonem-account-access-id";
-import { parseMargonemAccountId } from "./margonem-account-id";
-import { isError, isOk } from "./result";
+import { parseMargonemAccountAccessId } from "./margonem-account-access-id.js";
+import { parseMargonemAccountId } from "./margonem-account-id.js";
+import { isError, isOk } from "./result.js";
 
 describe("parseMargonemAccountId", () => {
   it("accepts positive integer account ids", () => {

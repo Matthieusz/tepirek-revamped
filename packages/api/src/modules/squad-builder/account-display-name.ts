@@ -1,5 +1,5 @@
-import { err, ok } from "./result";
-import type { Result } from "./result";
+import { err, ok } from "./result.js";
+import type { Result } from "./result.js";
 
 /** A validated account display name shown to the user and stored. */
 export type AccountDisplayName = string & {

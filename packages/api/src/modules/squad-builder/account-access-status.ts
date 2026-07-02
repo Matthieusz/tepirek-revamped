@@ -1,5 +1,5 @@
-import { err, ok } from "./result";
-import type { Result } from "./result";
+import { err, ok } from "./result.js";
+import type { Result } from "./result.js";
 
 /** Lifecycle status of a `margonem_account_access` row. */
 export type AccountAccessStatus =

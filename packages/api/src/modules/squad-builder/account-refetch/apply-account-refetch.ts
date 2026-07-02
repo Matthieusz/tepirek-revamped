@@ -1,10 +1,10 @@
-import type { Clock } from "../account-import/preview-margonem-profile-import";
-import type { AppUserId } from "../app-user-id";
-import type { MargonemAccountId } from "../margonem-account-id";
-import type { MargonemProfileId } from "../margonem-profile-id";
-import type { PendingMargonemAccountRefetchId } from "../pending-margonem-account-refetch-id";
-import { err, isError, ok } from "../result";
-import type { Result } from "../result";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
+import type { AppUserId } from "../app-user-id.js";
+import type { MargonemAccountId } from "../margonem-account-id.js";
+import type { MargonemProfileId } from "../margonem-profile-id.js";
+import type { PendingMargonemAccountRefetchId } from "../pending-margonem-account-refetch-id.js";
+import { err, isError, ok } from "../result.js";
+import type { Result } from "../result.js";
 import type {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
@@ -13,7 +13,7 @@ import type {
   PendingMargonemAccountRefetchStore,
   RefetchedMargonemAccountWriter,
   SquadBuilderPersistenceUnavailable,
-} from "./account-refetch-store";
+} from "./account-refetch-store.js";
 
 /** Input for applying a previously previewed account refetch. */
 export interface ApplyAccountRefetchInput {

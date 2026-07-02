@@ -9,14 +9,14 @@ import {
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import { createVerifiedMember } from "../../test/integration/builders";
-import { testDb } from "../../test/integration/database";
-import { parseAppUserId } from "./app-user-id";
-import { parseFirecrawlYearMonth } from "./firecrawl-year-month";
-import { parseMargonemAccountId } from "./margonem-account-id";
-import { parseMargonemProfileId } from "./margonem-profile-id";
-import { isError, isOk } from "./result";
-import { DrizzleSquadBuilderStore } from "./squad-builder-store";
+import { createVerifiedMember } from "../../test/integration/builders.js";
+import { testDb } from "../../test/integration/database.js";
+import { parseAppUserId } from "./app-user-id.js";
+import { parseFirecrawlYearMonth } from "./firecrawl-year-month.js";
+import { parseMargonemAccountId } from "./margonem-account-id.js";
+import { parseMargonemProfileId } from "./margonem-profile-id.js";
+import { isError, isOk } from "./result.js";
+import { DrizzleSquadBuilderStore } from "./squad-builder-store.js";
 
 const parseTestProfileId = (value = 7_298_897) => {
   const profileId = parseMargonemProfileId(value);

@@ -6,8 +6,8 @@ import {
   createProfession,
   createRange,
   createVerifiedMember,
-} from "../test/integration/builders";
-import { createAuthenticatedRouterClient } from "../test/integration/router-client";
+} from "../test/integration/builders.js";
+import { createAuthenticatedRouterClient } from "../test/integration/router-client.js";
 
 describe("skills router Postgres integration", () => {
   it("lets admins create professions and ranges that verified members can list", async () => {

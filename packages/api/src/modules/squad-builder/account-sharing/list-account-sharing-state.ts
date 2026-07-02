@@ -1,14 +1,14 @@
-import type { AppUserId } from "../app-user-id";
-import type { MargonemAccountId } from "../margonem-account-id";
-import { err, isError, ok } from "../result";
-import type { Result } from "../result";
-import type { AccountSharingError } from "./account-sharing-error";
+import type { AppUserId } from "../app-user-id.js";
+import type { MargonemAccountId } from "../margonem-account-id.js";
+import { err, isError, ok } from "../result.js";
+import type { Result } from "../result.js";
+import type { AccountSharingError } from "./account-sharing-error.js";
 import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,
   AccountSharingStore,
   SharedMargonemAccountSummary,
-} from "./account-sharing-store";
+} from "./account-sharing-store.js";
 
 /** Input for listing incoming account invites. */
 export interface ListIncomingAccountInvitesInput {

@@ -1,7 +1,7 @@
-import { parseMargonemProfileId } from "./margonem-profile-id";
-import type { MargonemProfileId } from "./margonem-profile-id";
-import { err, isError, ok } from "./result";
-import type { Result } from "./result";
+import { parseMargonemProfileId } from "./margonem-profile-id.js";
+import type { MargonemProfileId } from "./margonem-profile-id.js";
+import { err, isError, ok } from "./result.js";
+import type { Result } from "./result.js";
 
 /** Expected failure when a Margonem profile URL cannot be parsed. */
 export type ParseMargonemProfileUrlError =

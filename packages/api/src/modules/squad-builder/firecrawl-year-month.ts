@@ -1,5 +1,5 @@
-import { err, isError, ok } from "./result";
-import type { Result } from "./result";
+import { err, isError, ok } from "./result.js";
+import type { Result } from "./result.js";
 
 /** A Firecrawl budget month formatted as YYYY-MM. */
 export type FirecrawlYearMonth = string & {

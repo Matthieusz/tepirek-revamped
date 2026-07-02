@@ -9,8 +9,8 @@ import {
   adminProcedure,
   protectedProcedure,
   verifiedProcedure,
-} from "./procedures";
-import { roleSchema, userIdSchema } from "./schemas";
+} from "./procedures.js";
+import { roleSchema, userIdSchema } from "./schemas.js";
 
 const discordGuildSchema = z.array(z.object({ id: z.string() }));
 

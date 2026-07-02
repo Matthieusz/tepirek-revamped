@@ -4,24 +4,24 @@ import * as EffectRuntime from "effect/Effect";
 import type {
   FirecrawlClient,
   FirecrawlScrapeError,
-} from "../firecrawl-client";
-import { parseFirecrawlCreditCount } from "../firecrawl-config";
-import type { FirecrawlConfig } from "../firecrawl-config";
-import { firecrawlYearMonthFromDate } from "../firecrawl-year-month";
-import { parseMargonemProfileHtml } from "../margonem-profile-html-parser";
+} from "../firecrawl-client.js";
+import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
+import type { FirecrawlConfig } from "../firecrawl-config.js";
+import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
+import { parseMargonemProfileHtml } from "../margonem-profile-html-parser.js";
 import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
-} from "../margonem-profile-url";
-import { isError } from "../result";
-import { EffectAccountImportStore } from "./effect-account-import-store";
-import { profileAccessStateToDuplicateError } from "./preview-margonem-profile-import";
+} from "../margonem-profile-url.js";
+import { isError } from "../result.js";
+import { EffectAccountImportStore } from "./effect-account-import-store.js";
+import { profileAccessStateToDuplicateError } from "./preview-margonem-profile-import.js";
 import type {
   Clock,
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportInput,
   PreviewMargonemProfileImportOutput,
-} from "./preview-margonem-profile-import";
+} from "./preview-margonem-profile-import.js";
 
 /** Effect service module that previews one Margonem profile import without saving it. */
 export class EffectPreviewMargonemProfileImport {

@@ -1,14 +1,14 @@
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import type { AccountSharingError } from "./account-sharing-error";
-import type { AccountInviteTarget } from "./account-sharing-store";
-import { EffectAccountSharingStore } from "./effect-account-sharing-store";
-import { accountInviteTargetSearchPolicy } from "./search-account-invite-targets";
+import type { AccountSharingError } from "./account-sharing-error.js";
+import type { AccountInviteTarget } from "./account-sharing-store.js";
+import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
+import { accountInviteTargetSearchPolicy } from "./search-account-invite-targets.js";
 import type {
   InvalidAccountInviteTargetQuery,
   SearchAccountInviteTargetsInput,
-} from "./search-account-invite-targets";
+} from "./search-account-invite-targets.js";
 
 const parseAccountInviteTargetQuery = (
   input: string

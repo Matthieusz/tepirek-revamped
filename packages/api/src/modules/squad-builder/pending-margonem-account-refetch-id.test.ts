@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { parsePendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id";
-import { isError, isOk } from "./result";
+import { parsePendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id.js";
+import { isError, isOk } from "./result.js";
 
 describe("parsePendingMargonemAccountRefetchId", () => {
   it("accepts positive integer pending refetch ids", () => {

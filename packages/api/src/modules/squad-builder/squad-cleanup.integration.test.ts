@@ -9,19 +9,19 @@ import {
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import { createVerifiedMember } from "../../test/integration/builders";
-import { testDb } from "../../test/integration/database";
-import { parseAppUserId } from "./app-user-id";
-import { parseMargonemAccountAccessId } from "./margonem-account-access-id";
-import { parseMargonemAccountId } from "./margonem-account-id";
+import { createVerifiedMember } from "../../test/integration/builders.js";
+import { testDb } from "../../test/integration/database.js";
+import { parseAppUserId } from "./app-user-id.js";
+import { parseMargonemAccountAccessId } from "./margonem-account-access-id.js";
+import { parseMargonemAccountId } from "./margonem-account-id.js";
 import {
   parseMargonemCharacterId,
   parseMargonemProfileId,
   parsePositiveLevel,
-} from "./margonem-profile-id";
-import { parsePendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id";
-import { isOk } from "./result";
-import { DrizzleSquadBuilderStore } from "./squad-builder-store";
+} from "./margonem-profile-id.js";
+import { parsePendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id.js";
+import { isOk } from "./result.js";
+import { DrizzleSquadBuilderStore } from "./squad-builder-store.js";
 
 const parseTestUserId = (value: string) => {
   const parsed = parseAppUserId(value);

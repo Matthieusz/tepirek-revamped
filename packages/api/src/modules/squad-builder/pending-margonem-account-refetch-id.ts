@@ -1,6 +1,6 @@
-import { isPositiveInteger } from "./prelude";
-import { err, ok } from "./result";
-import type { Result } from "./result";
+import { isPositiveInteger } from "./prelude.js";
+import { err, ok } from "./result.js";
+import type { Result } from "./result.js";
 
 /** A validated pending Margonem account refetch preview id. */
 export type PendingMargonemAccountRefetchId = number & {

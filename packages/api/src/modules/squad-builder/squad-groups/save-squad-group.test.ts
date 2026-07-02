@@ -1,13 +1,13 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 
-import { parseAppUserId } from "../app-user-id";
-import { isOk } from "../result";
-import { parseSquadGroupId } from "../squad-group-id";
-import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support";
-import { SaveSquadGroup } from "./save-squad-group";
-import { EffectSquadGroupStore } from "./squad-group-store";
-import type { SquadGroupDetail } from "./squad-group-store";
+import { parseAppUserId } from "../app-user-id.js";
+import { isOk } from "../result.js";
+import { parseSquadGroupId } from "../squad-group-id.js";
+import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
+import { SaveSquadGroup } from "./save-squad-group.js";
+import { EffectSquadGroupStore } from "./squad-group-store.js";
+import type { SquadGroupDetail } from "./squad-group-store.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);

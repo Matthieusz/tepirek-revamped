@@ -5,8 +5,8 @@ import {
   createAdmin,
   createEvent,
   createVerifiedMember,
-} from "../test/integration/builders";
-import { createAuthenticatedRouterClient } from "../test/integration/router-client";
+} from "../test/integration/builders.js";
+import { createAuthenticatedRouterClient } from "../test/integration/router-client.js";
 
 const heroInput = {
   image: "https://example.com/hero.png",

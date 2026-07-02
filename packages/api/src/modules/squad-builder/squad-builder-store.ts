@@ -37,38 +37,38 @@ import type { SQL } from "drizzle-orm";
 import {
   canTransitionAccountAccess,
   parseAccountAccessStatus,
-} from "./account-access-status";
-import type { AccountAccessStatus } from "./account-access-status";
+} from "./account-access-status.js";
+import type { AccountAccessStatus } from "./account-access-status.js";
 import {
   accountDisplayNameToString,
   parseAccountDisplayName,
-} from "./account-display-name";
-import type { AccountDisplayName } from "./account-display-name";
-import type { ApplyAccountRefetchOutput } from "./account-refetch/apply-account-refetch";
-import { appUserIdToString, parseAppUserId } from "./app-user-id";
-import type { AppUserId } from "./app-user-id";
-import type { FirecrawlCreditCount } from "./firecrawl-config";
-import { firecrawlYearMonthToString } from "./firecrawl-year-month";
-import type { FirecrawlYearMonth } from "./firecrawl-year-month";
+} from "./account-display-name.js";
+import type { AccountDisplayName } from "./account-display-name.js";
+import type { ApplyAccountRefetchOutput } from "./account-refetch/apply-account-refetch.js";
+import { appUserIdToString, parseAppUserId } from "./app-user-id.js";
+import type { AppUserId } from "./app-user-id.js";
+import type { FirecrawlCreditCount } from "./firecrawl-config.js";
+import { firecrawlYearMonthToString } from "./firecrawl-year-month.js";
+import type { FirecrawlYearMonth } from "./firecrawl-year-month.js";
 import {
   margonemAccountAccessIdToNumber,
   parseMargonemAccountAccessId,
-} from "./margonem-account-access-id";
-import type { MargonemAccountAccessId } from "./margonem-account-access-id";
-import { margonemAccountIdToNumber } from "./margonem-account-id";
-import type { MargonemAccountId } from "./margonem-account-id";
+} from "./margonem-account-access-id.js";
+import type { MargonemAccountAccessId } from "./margonem-account-access-id.js";
+import { margonemAccountIdToNumber } from "./margonem-account-id.js";
+import type { MargonemAccountId } from "./margonem-account-id.js";
 import type {
   MargonemAccountRefetchDiff,
   StoredMargonemCharacterSnapshot,
-} from "./margonem-account-refetch-diff";
+} from "./margonem-account-refetch-diff.js";
 import type {
   MargonemCharacterPreview,
   MargonemProfession,
-} from "./margonem-character";
+} from "./margonem-character.js";
 import {
   parseMargonemProfession,
   parseMargonemWorld,
-} from "./margonem-character";
+} from "./margonem-character.js";
 import {
   characterIdToNumber,
   levelToNumber,
@@ -76,47 +76,47 @@ import {
   parseMargonemProfileId,
   parsePositiveLevel,
   profileIdToNumber,
-} from "./margonem-profile-id";
-import type { MargonemProfileId } from "./margonem-profile-id";
-import { toMargonemProfileUrl } from "./margonem-profile-url";
-import { pendingImportIdToNumber } from "./pending-margonem-account-import-id";
-import type { PendingMargonemAccountImportId } from "./pending-margonem-account-import-id";
-import { pendingRefetchIdToNumber } from "./pending-margonem-account-refetch-id";
-import type { PendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id";
-import { err, isError, ok } from "./result";
-import type { Result } from "./result";
+} from "./margonem-profile-id.js";
+import type { MargonemProfileId } from "./margonem-profile-id.js";
+import { toMargonemProfileUrl } from "./margonem-profile-url.js";
+import { pendingImportIdToNumber } from "./pending-margonem-account-import-id.js";
+import type { PendingMargonemAccountImportId } from "./pending-margonem-account-import-id.js";
+import { pendingRefetchIdToNumber } from "./pending-margonem-account-refetch-id.js";
+import type { PendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id.js";
+import { err, isError, ok } from "./result.js";
+import type { Result } from "./result.js";
 import type {
   SquadGroupAccess,
   SquadGroupAccessRole,
   SquadGroupOwnerAccess,
-} from "./squad-group-access";
-import type { SquadGroupId } from "./squad-group-id";
-import { squadGroupIdToNumber } from "./squad-group-id";
-import type { SquadGroupInvitationId } from "./squad-group-invitation-id";
-import { squadGroupInvitationIdToNumber } from "./squad-group-invitation-id";
+} from "./squad-group-access.js";
+import type { SquadGroupId } from "./squad-group-id.js";
+import { squadGroupIdToNumber } from "./squad-group-id.js";
+import type { SquadGroupInvitationId } from "./squad-group-invitation-id.js";
+import { squadGroupInvitationIdToNumber } from "./squad-group-invitation-id.js";
 import {
   canTransitionSquadGroupInvitation,
   parseSquadGroupInvitationStatus,
-} from "./squad-group-invitation-status";
-import type { SquadGroupInvitationStatus } from "./squad-group-invitation-status";
+} from "./squad-group-invitation-status.js";
+import type { SquadGroupInvitationStatus } from "./squad-group-invitation-status.js";
 import {
   squadGroupLevelBoundToNumber,
   squadGroupNameQueryToString,
-} from "./squad-group-list-filters";
-import type { SquadGroupListFilters } from "./squad-group-list-filters";
+} from "./squad-group-list-filters.js";
+import type { SquadGroupListFilters } from "./squad-group-list-filters.js";
 import type {
   AvailableSquadCharacter,
   SquadGroupDraftSnapshot,
-} from "./squad-group-snapshot";
-import { parseSquadGroupVisibility } from "./squad-group-visibility";
-import type { SquadGroupVisibility } from "./squad-group-visibility";
+} from "./squad-group-snapshot.js";
+import { parseSquadGroupVisibility } from "./squad-group-visibility.js";
+import type { SquadGroupVisibility } from "./squad-group-visibility.js";
 import type {
   SharedSquadGroupCharactersSnapshot,
   SharedSquadGroupSaveError,
-} from "./squad-groups/save-shared-squad-group-characters";
-import type { SquadId } from "./squad-id";
-import { squadGroupNameToString, squadNameToString } from "./squad-name";
-import type { SquadGroupName } from "./squad-name";
+} from "./squad-groups/save-shared-squad-group-characters.js";
+import type { SquadId } from "./squad-id.js";
+import { squadGroupNameToString, squadNameToString } from "./squad-name.js";
+import type { SquadGroupName } from "./squad-name.js";
 
 /** Access state for a Margonem profile relative to the current user. */
 export type ProfileAccessState =

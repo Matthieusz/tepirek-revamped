@@ -1,25 +1,25 @@
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type {
   FirecrawlClient,
   FirecrawlScrapeError,
-} from "../firecrawl-client";
-import { parseFirecrawlCreditCount } from "../firecrawl-config";
-import type { FirecrawlConfig } from "../firecrawl-config";
-import { firecrawlYearMonthFromDate } from "../firecrawl-year-month";
-import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff";
-import { parseMargonemProfileHtml } from "../margonem-profile-html-parser";
-import { toMargonemProfileUrl } from "../margonem-profile-url";
-import { isError } from "../result";
-import { EffectAccountRefetchStore } from "./effect-account-refetch-store";
+} from "../firecrawl-client.js";
+import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
+import type { FirecrawlConfig } from "../firecrawl-config.js";
+import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
+import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff.js";
+import { parseMargonemProfileHtml } from "../margonem-profile-html-parser.js";
+import { toMargonemProfileUrl } from "../margonem-profile-url.js";
+import { isError } from "../result.js";
+import { EffectAccountRefetchStore } from "./effect-account-refetch-store.js";
 import type {
   PreviewAccountRefetchError,
   PreviewAccountRefetchInput,
   PreviewAccountRefetchOutput,
-} from "./preview-account-refetch";
-import { pendingRefetchPolicy } from "./preview-account-refetch";
+} from "./preview-account-refetch.js";
+import { pendingRefetchPolicy } from "./preview-account-refetch.js";
 
 const addMinutes = (date: Date, minutes: number): Date =>
   new Date(date.getTime() + minutes * 60_000);

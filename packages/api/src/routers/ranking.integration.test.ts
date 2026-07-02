@@ -6,8 +6,8 @@ import {
   createEvent,
   createHero,
   createVerifiedMember,
-} from "../test/integration/builders";
-import { createAuthenticatedRouterClient } from "../test/integration/router-client";
+} from "../test/integration/builders.js";
+import { createAuthenticatedRouterClient } from "../test/integration/router-client.js";
 
 describe("ranking router Postgres integration", () => {
   it("reports hero stats and rankings from persisted bets and vault distribution", async () => {

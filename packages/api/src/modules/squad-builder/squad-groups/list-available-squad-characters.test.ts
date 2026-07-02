@@ -1,19 +1,20 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 
-import { parseAccountDisplayName } from "../account-display-name";
-import { parseAppUserId } from "../app-user-id";
-import { parseMargonemAccountId } from "../margonem-account-id";
+import { parseAccountDisplayName } from "../account-display-name.js";
+import { parseAppUserId } from "../app-user-id.js";
+import { parseMargonemAccountId } from "../margonem-account-id.js";
 import {
   parseMargonemCharacterId,
   parsePositiveLevel,
-} from "../margonem-profile-id";
-import { isOk } from "../result";
-import type { AvailableSquadCharacter } from "../squad-group-snapshot";
-import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support";
-import { ListAvailableSquadCharacters } from "./list-available-squad-characters";
-import { EffectSquadGroupStore } from "./squad-group-store";
-import type { SquadGroupDetail } from "./squad-group-store";
+} from "../margonem-profile-id.js";
+import { isOk } from "../result.js";
+import { parseSquadGroupId } from "../squad-group-id.js";
+import type { AvailableSquadCharacter } from "../squad-group-snapshot.js";
+import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
+import { ListAvailableSquadCharacters } from "./list-available-squad-characters.js";
+import { EffectSquadGroupStore } from "./squad-group-store.js";
+import type { SquadGroupDetail } from "./squad-group-store.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -65,10 +66,20 @@ const parseTestLevel = (value: number) => {
   return level.value;
 };
 
+const parseTestGroupId = (value: number) => {
+  const groupId = parseSquadGroupId(value);
+
+  if (!isOk(groupId)) {
+    throw new Error("Expected test squad group id to be valid");
+  }
+
+  return groupId.value;
+};
+
 it.effect("lists characters for the loaded squad group owner", () => {
   const actorUserId = parseTestUserId("available-effect-actor");
   const ownerUserId = parseTestUserId("available-effect-owner");
-  const groupId = 321 as never;
+  const groupId = parseTestGroupId(321);
   const detail: SquadGroupDetail = {
     accessRole: "editor",
     groupId,

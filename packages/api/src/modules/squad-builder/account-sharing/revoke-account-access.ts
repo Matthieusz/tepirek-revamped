@@ -1,13 +1,13 @@
-import type { Clock } from "../account-import/preview-margonem-profile-import";
-import type { AppUserId } from "../app-user-id";
-import type { MargonemAccountAccessId } from "../margonem-account-access-id";
-import { err, isError, ok } from "../result";
-import type { Result } from "../result";
-import type { AccountSharingError } from "./account-sharing-error";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
+import type { AppUserId } from "../app-user-id.js";
+import type { MargonemAccountAccessId } from "../margonem-account-access-id.js";
+import { err, isError, ok } from "../result.js";
+import type { Result } from "../result.js";
+import type { AccountSharingError } from "./account-sharing-error.js";
 import type {
   AccountSharingStore,
   RevokeAccountAccessResult,
-} from "./account-sharing-store";
+} from "./account-sharing-store.js";
 
 /** Input for revoking account access. */
 export interface RevokeAccountAccessInput {

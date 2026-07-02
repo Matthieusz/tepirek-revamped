@@ -1,12 +1,12 @@
-import { parseMargonemProfession } from "./margonem-character";
-import type { MargonemCharacterPreview } from "./margonem-character";
+import { parseMargonemProfession } from "./margonem-character.js";
+import type { MargonemCharacterPreview } from "./margonem-character.js";
 import {
   parseMargonemCharacterId,
   parsePositiveLevel,
-} from "./margonem-profile-id";
-import type { MargonemProfileId } from "./margonem-profile-id";
-import { err, isError, ok } from "./result";
-import type { Result } from "./result";
+} from "./margonem-profile-id.js";
+import type { MargonemProfileId } from "./margonem-profile-id.js";
+import { err, isError, ok } from "./result.js";
+import type { Result } from "./result.js";
 
 /** Parsed Jaruna-only Margonem profile data from Firecrawl HTML. */
 export interface ParsedMargonemProfile {

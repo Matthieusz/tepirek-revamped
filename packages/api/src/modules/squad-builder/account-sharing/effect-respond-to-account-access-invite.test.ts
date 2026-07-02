@@ -1,13 +1,13 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 
-import { parseAppUserId } from "../app-user-id";
-import { parseMargonemAccountAccessId } from "../margonem-account-access-id";
-import { parseMargonemAccountId } from "../margonem-account-id";
-import { isOk } from "../result";
-import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectAccountSharingStore } from "./effect-account-sharing-store";
-import { EffectRespondToAccountAccessInvite } from "./effect-respond-to-account-access-invite";
+import { parseAppUserId } from "../app-user-id.js";
+import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
+import { parseMargonemAccountId } from "../margonem-account-id.js";
+import { isOk } from "../result.js";
+import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
+import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
+import { EffectRespondToAccountAccessInvite } from "./effect-respond-to-account-access-invite.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);

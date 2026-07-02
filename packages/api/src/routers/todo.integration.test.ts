@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { createVerifiedMember } from "../test/integration/builders";
-import { createAuthenticatedRouterClient } from "../test/integration/router-client";
+import { createVerifiedMember } from "../test/integration/builders.js";
+import { createAuthenticatedRouterClient } from "../test/integration/router-client.js";
 
 describe("todo router Postgres integration", () => {
   it("lets verified users create, list, toggle, and delete their own todos", async () => {

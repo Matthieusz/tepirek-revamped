@@ -60,8 +60,8 @@ const validateVerifiedMemberIds = async (userIds: string[]) => {
 };
 
 const buildUserStatsWhere = (input: {
-  eventId?: number;
-  heroId?: number;
+  eventId?: number | undefined;
+  heroId?: number | undefined;
 }): SQL | undefined => {
   const conditions: SQL[] = [];
   if (input.eventId !== undefined) {
@@ -556,8 +556,8 @@ export const heroBetLedger = {
   },
 
   async getPaginatedBets(input: {
-    eventId?: number;
-    heroId?: number;
+    eventId?: number | undefined;
+    heroId?: number | undefined;
     limit: number;
     page: number;
   }) {
@@ -615,7 +615,10 @@ export const heroBetLedger = {
     };
   },
 
-  async getRanking(input: { eventId?: number; heroId?: number }) {
+  async getRanking(input: {
+    eventId?: number | undefined;
+    heroId?: number | undefined;
+  }) {
     const whereClause = buildUserStatsWhere(input);
     const ranking = await db
       .select({

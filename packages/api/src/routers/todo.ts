@@ -3,7 +3,7 @@ import { todo } from "@tepirek-revamped/db/schema/todo";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { verifiedProcedure } from "./procedures";
+import { verifiedProcedure } from "./procedures.js";
 
 export const todoRouter = {
   create: verifiedProcedure

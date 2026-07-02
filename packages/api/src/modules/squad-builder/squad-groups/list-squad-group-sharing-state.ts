@@ -1,16 +1,16 @@
-import type { AppUserId } from "../app-user-id";
-import { err, isError, ok } from "../result";
-import type { Result } from "../result";
-import type { SquadGroupId } from "../squad-group-id";
-import { emptySquadGroupListFilters } from "../squad-group-list-filters";
-import type { SquadGroupListFilters } from "../squad-group-list-filters";
-import type { SquadGroupSharingError } from "./squad-group-sharing-error";
+import type { AppUserId } from "../app-user-id.js";
+import { err, isError, ok } from "../result.js";
+import type { Result } from "../result.js";
+import type { SquadGroupId } from "../squad-group-id.js";
+import { emptySquadGroupListFilters } from "../squad-group-list-filters.js";
+import type { SquadGroupListFilters } from "../squad-group-list-filters.js";
+import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import type {
   SharedSquadGroupSummary,
   SquadGroupEditorGrantSummary,
   SquadGroupInvitationSummary,
   SquadGroupSharingStore,
-} from "./squad-group-store";
+} from "./squad-group-store.js";
 
 export class ListSquadGroupSharingState {
   private readonly store: SquadGroupSharingStore;

@@ -1,20 +1,20 @@
 import type { Effect } from "effect/Effect";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import";
-import type { AppUserId } from "../app-user-id";
-import type { SquadGroupId } from "../squad-group-id";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
+import type { AppUserId } from "../app-user-id.js";
+import type { SquadGroupId } from "../squad-group-id.js";
 import type {
   InvalidSquadGroupVisibility,
   SquadGroupVisibility,
-} from "../squad-group-visibility";
-import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
+} from "../squad-group-visibility.js";
+import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnSquadGroup,
   SquadGroupNotFound,
   SquadGroupVisibilityChange,
-} from "./squad-group-store";
-import { EffectSquadGroupStore } from "./squad-group-store";
+} from "./squad-group-store.js";
+import { EffectSquadGroupStore } from "./squad-group-store.js";
 
 /** Expected failures for global squad visibility operations. */
 export type GlobalSquadVisibilityError =

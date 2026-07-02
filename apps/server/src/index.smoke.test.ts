@@ -12,7 +12,7 @@ process.env.DISCORD_CLIENT_ID = "test-discord-client-id";
 process.env.DISCORD_CLIENT_SECRET = "test-discord-client-secret";
 
 const importApp = async () => {
-  const module = await import("./index");
+  const module = await import("./index.js");
   return module.default;
 };
 

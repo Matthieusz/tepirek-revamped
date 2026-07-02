@@ -4,7 +4,7 @@ import {
   defaultTestDatabaseUrl,
   testPool,
   truncateApplicationTables,
-} from "./database";
+} from "./database.js";
 
 const dockerComposeArgs = [
   "compose",

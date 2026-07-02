@@ -1,19 +1,25 @@
-import type { AccountDisplayName } from "./account-display-name";
-import type { AppUserId } from "./app-user-id";
-import type { MargonemAccountId } from "./margonem-account-id";
-import type { MargonemProfession, MargonemWorld } from "./margonem-character";
-import type { MargonemCharacterId, PositiveLevel } from "./margonem-profile-id";
-import { err, isError, ok } from "./result";
-import type { Result } from "./result";
-import type { SquadGroupId } from "./squad-group-id";
-import type { SquadId } from "./squad-id";
-import { parseSquadGroupName, parseSquadName } from "./squad-name";
+import type { AccountDisplayName } from "./account-display-name.js";
+import type { AppUserId } from "./app-user-id.js";
+import type { MargonemAccountId } from "./margonem-account-id.js";
+import type {
+  MargonemProfession,
+  MargonemWorld,
+} from "./margonem-character.js";
+import type {
+  MargonemCharacterId,
+  PositiveLevel,
+} from "./margonem-profile-id.js";
+import { err, isError, ok } from "./result.js";
+import type { Result } from "./result.js";
+import type { SquadGroupId } from "./squad-group-id.js";
+import type { SquadId } from "./squad-id.js";
+import { parseSquadGroupName, parseSquadName } from "./squad-name.js";
 import type {
   InvalidSquadGroupName,
   InvalidSquadName,
   SquadGroupName,
   SquadName,
-} from "./squad-name";
+} from "./squad-name.js";
 
 /** Position of a squad inside a group snapshot. */
 export type SquadPosition = number & { readonly __brand: "SquadPosition" };

@@ -1,25 +1,25 @@
-import type { Clock } from "../account-import/preview-margonem-profile-import";
-import type { AppUserId } from "../app-user-id";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
+import type { AppUserId } from "../app-user-id.js";
 import type {
   FirecrawlClient,
   FirecrawlScrapeError,
-} from "../firecrawl-client";
-import { parseFirecrawlCreditCount } from "../firecrawl-config";
+} from "../firecrawl-client.js";
+import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
 import type {
   FirecrawlConfig,
   FirecrawlCreditCount,
-} from "../firecrawl-config";
-import { firecrawlYearMonthFromDate } from "../firecrawl-year-month";
-import type { MargonemAccountId } from "../margonem-account-id";
-import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff";
-import type { MargonemAccountRefetchDiff } from "../margonem-account-refetch-diff";
-import { parseMargonemProfileHtml } from "../margonem-profile-html-parser";
-import type { ParseMargonemProfileHtmlError } from "../margonem-profile-html-parser";
-import type { MargonemProfileId } from "../margonem-profile-id";
-import { toMargonemProfileUrl } from "../margonem-profile-url";
-import type { PendingMargonemAccountRefetchId } from "../pending-margonem-account-refetch-id";
-import { err, isError, ok } from "../result";
-import type { Result } from "../result";
+} from "../firecrawl-config.js";
+import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
+import type { MargonemAccountId } from "../margonem-account-id.js";
+import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff.js";
+import type { MargonemAccountRefetchDiff } from "../margonem-account-refetch-diff.js";
+import { parseMargonemProfileHtml } from "../margonem-profile-html-parser.js";
+import type { ParseMargonemProfileHtmlError } from "../margonem-profile-html-parser.js";
+import type { MargonemProfileId } from "../margonem-profile-id.js";
+import { toMargonemProfileUrl } from "../margonem-profile-url.js";
+import type { PendingMargonemAccountRefetchId } from "../pending-margonem-account-refetch-id.js";
+import { err, isError, ok } from "../result.js";
+import type { Result } from "../result.js";
 import type {
   ActorDoesNotOwnMargonemAccount,
   FirecrawlBudgetError,
@@ -29,7 +29,7 @@ import type {
   PendingMargonemAccountRefetchStore,
   RefetchableMargonemAccountReader,
   SquadBuilderPersistenceUnavailable,
-} from "./account-refetch-store";
+} from "./account-refetch-store.js";
 
 /** Input for previewing a saved account refetch. */
 export interface PreviewAccountRefetchInput {

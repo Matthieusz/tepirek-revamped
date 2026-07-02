@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isAdminSession, isVerifiedSession } from "./procedures";
+import { isAdminSession, isVerifiedSession } from "./procedures.js";
 
 describe("authorization predicates", () => {
   it("treats a null session as neither verified nor admin", () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { auctionSignupInputSchema } from "./auction";
+import { auctionSignupInputSchema } from "./auction.js";
 
 const validSignupInput = {
   column: 1,

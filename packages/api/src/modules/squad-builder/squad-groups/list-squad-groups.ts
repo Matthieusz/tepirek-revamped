@@ -1,15 +1,15 @@
 import type { Effect } from "effect/Effect";
 
-import type { AppUserId } from "../app-user-id";
-import type { SquadGroupId } from "../squad-group-id";
-import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
+import type { AppUserId } from "../app-user-id.js";
+import type { SquadGroupId } from "../squad-group-id.js";
+import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import type {
   ActorCannotViewSquadGroup,
   SquadGroupDetail,
   SquadGroupNotFound,
   SquadGroupSummary,
-} from "./squad-group-store";
-import { EffectSquadGroupStore } from "./squad-group-store";
+} from "./squad-group-store.js";
+import { EffectSquadGroupStore } from "./squad-group-store.js";
 
 /** Expected failures returned by listing actor-owned squad groups. */
 export type ListMySquadGroupsError = EffectSquadBuilderPersistenceUnavailable;

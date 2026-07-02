@@ -1,7 +1,7 @@
-import type { Redacted } from "./prelude";
-import { Redacted as redact } from "./prelude";
-import { err, ok } from "./result";
-import type { Result } from "./result";
+import type { Redacted } from "./prelude.js";
+import { Redacted as redact } from "./prelude.js";
+import { err, ok } from "./result.js";
+import type { Result } from "./result.js";
 
 /** Number of Firecrawl credits consumed by a scrape. */
 export type FirecrawlCreditCount = number & {

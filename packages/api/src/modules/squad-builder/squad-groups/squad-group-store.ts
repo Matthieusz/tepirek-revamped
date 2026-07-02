@@ -1,9 +1,9 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
-import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch";
-import type { AppUserId } from "../app-user-id";
-import type { MargonemAccountId } from "../margonem-account-id";
+import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch.js";
+import type { AppUserId } from "../app-user-id.js";
+import type { MargonemAccountId } from "../margonem-account-id.js";
 import type {
   AccountAccessInviteSummary,
   AccountAccessGrantSummary,
@@ -78,27 +78,22 @@ import type {
   RevokeAccountAccessResult,
   RevokeAccountAccessStoreInput,
   RevokeSquadGroupEditorStoreInput,
-} from "../squad-builder-store";
-import type { SquadGroupOwnerAccess } from "../squad-group-access";
-import type { SquadGroupId } from "../squad-group-id";
-import type { AvailableSquadCharacter } from "../squad-group-snapshot";
-import type { SquadId } from "../squad-id";
-import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
+} from "../squad-builder-store.js";
+import type { SquadGroupOwnerAccess } from "../squad-group-access.js";
+import type { SquadGroupId } from "../squad-group-id.js";
+import type { AvailableSquadCharacter } from "../squad-group-snapshot.js";
+import type { SquadId } from "../squad-id.js";
+import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 
 export interface EffectSquadBuilderStoreShape {
   readonly createSquadGroup: (
     input: CreateSquadGroupStoreInput
-  ) => Effect<
-    SquadGroupSummary,
-    EffectSquadBuilderPersistenceUnavailable,
-    never
-  >;
+  ) => Effect<SquadGroupSummary, EffectSquadBuilderPersistenceUnavailable>;
   readonly listMySquadGroups: (
     input: ListMySquadGroupsInput
   ) => Effect<
     readonly SquadGroupSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly getSquadGroupDetail: (
     input: GetSquadGroupDetailInput
@@ -106,15 +101,13 @@ export interface EffectSquadBuilderStoreShape {
     SquadGroupDetail,
     | SquadGroupNotFound
     | ActorCannotViewSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly listAvailableCharactersForOwner: (
     input: ListAvailableCharactersForOwnerInput
   ) => Effect<
     readonly AvailableSquadCharacter[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly saveSquadGroupSnapshot: (
     input: SaveSquadGroupSnapshotStoreInput
@@ -122,8 +115,7 @@ export interface EffectSquadBuilderStoreShape {
     SquadGroupDetail,
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly saveSharedSquadGroupCharacters: (
     input: SaveSharedSquadGroupCharactersStoreInput
@@ -137,15 +129,13 @@ export interface EffectSquadBuilderStoreShape {
         readonly _tag: "SquadCharacterNotAccessible";
         readonly characterId: number;
       }
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly listGlobalSquadGroups: (
     input: ListGlobalSquadGroupsInput
   ) => Effect<
     readonly GlobalSquadGroupSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly setSquadGroupVisibility: (
     input: SetSquadGroupVisibilityStoreInput
@@ -153,8 +143,7 @@ export interface EffectSquadBuilderStoreShape {
     SquadGroupVisibilityChange,
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly authorizeSquadGroupOwner: (input: {
     readonly actorUserId: AppUserId;
@@ -163,15 +152,13 @@ export interface EffectSquadBuilderStoreShape {
     SquadGroupOwnerAccess,
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly searchSquadEditorInviteTargets: (
     input: SearchSquadEditorInviteTargetsStoreInput
   ) => Effect<
     readonly SquadEditorInviteTarget[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly findVerifiedSquadEditorInviteTarget: (input: {
     readonly targetUserId: AppUserId;
@@ -179,8 +166,7 @@ export interface EffectSquadBuilderStoreShape {
     SquadEditorInviteTarget,
     | { readonly _tag: "SquadEditorInviteTargetNotFound" }
     | { readonly _tag: "SquadEditorInviteTargetNotVerified" }
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly upsertSquadGroupEditorInvite: (
     input: UpsertSquadGroupEditorInviteInput
@@ -191,8 +177,7 @@ export interface EffectSquadBuilderStoreShape {
         readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
         readonly attempted: string;
       }
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly respondToSquadGroupInvite: (
     input: RespondToSquadGroupInviteStoreInput
@@ -205,8 +190,7 @@ export interface EffectSquadBuilderStoreShape {
         readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
         readonly attempted: string;
       }
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly revokeSquadGroupEditor: (
     input: RevokeSquadGroupEditorStoreInput
@@ -219,58 +203,48 @@ export interface EffectSquadBuilderStoreShape {
         readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
         readonly attempted: string;
       }
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly listOwnedAccounts: (
     input: ListOwnedMargonemAccountsInput
   ) => Effect<
     readonly OwnedMargonemAccountSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly findProfileAccessState: (
     input: FindProfileAccessStateInput
-  ) => Effect<
-    ProfileAccessState,
-    EffectSquadBuilderPersistenceUnavailable,
-    never
-  >;
+  ) => Effect<ProfileAccessState, EffectSquadBuilderPersistenceUnavailable>;
   readonly reserveRequest: (
     input: ReserveFirecrawlRequestInput
   ) => Effect<
     ReservedFirecrawlRequest,
-    FirecrawlBudgetError | EffectSquadBuilderPersistenceUnavailable,
-    never
+    FirecrawlBudgetError | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly createPendingImport: (
     input: CreatePendingMargonemAccountImportInput
   ) => Effect<
     PendingMargonemAccountImport,
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly findPendingImportForConfirmation: (
     input: FindPendingMargonemAccountImportInput
   ) => Effect<
     PendingMargonemAccountImportForConfirmation,
     | PendingMargonemAccountImportNotFound
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly createOwnedAccountFromPendingImport: (
     input: CreateOwnedAccountFromPendingImportInput
   ) => Effect<
     OwnedMargonemAccountSummary,
-    DuplicateMargonemAccountError | EffectSquadBuilderPersistenceUnavailable,
-    never
+    DuplicateMargonemAccountError | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly markRequestSucceeded: (
     input: MarkFirecrawlRequestSucceededInput
-  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable, never>;
+  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable>;
   readonly markRequestFailed: (
     input: MarkFirecrawlRequestFailedInput
-  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable, never>;
+  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable>;
   readonly getAccountForRefetch: (input: {
     readonly actorUserId: AppUserId;
     readonly accountId: MargonemAccountId;
@@ -278,15 +252,13 @@ export interface EffectSquadBuilderStoreShape {
     RefetchableMargonemAccount,
     | MargonemAccountNotFound
     | ActorDoesNotOwnMargonemAccount
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly createPendingRefetch: (
     input: CreatePendingMargonemAccountRefetchInput
   ) => Effect<
     PendingMargonemAccountRefetch,
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly findPendingRefetchForApply: (input: {
     readonly actorUserId: AppUserId;
@@ -295,32 +267,28 @@ export interface EffectSquadBuilderStoreShape {
   }) => Effect<
     PendingMargonemAccountRefetchForApply,
     | PendingMargonemAccountRefetchNotFound
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly applyRefetchedAccount: (
     input: ApplyRefetchedAccountInput
   ) => Effect<
     ApplyAccountRefetchOutput,
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly markPendingRefetchApplied: (
     input: MarkPendingMargonemAccountRefetchAppliedInput
-  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable, never>;
+  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable>;
   readonly findOwnedAccountForSharing: (
     input: FindOwnedAccountForSharingInput
   ) => Effect<
     OwnedAccountForSharing,
-    MargonemAccountNotFound | EffectSquadBuilderPersistenceUnavailable,
-    never
+    MargonemAccountNotFound | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly searchInviteTargets: (
     input: SearchInviteTargetsStoreInput
   ) => Effect<
     readonly AccountInviteTarget[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly findVerifiedInviteTarget: (
     input: FindVerifiedInviteTargetInput
@@ -328,8 +296,7 @@ export interface EffectSquadBuilderStoreShape {
     VerifiedInviteTarget,
     | { readonly _tag: "InviteTargetNotFound" }
     | { readonly _tag: "InviteTargetNotVerified" }
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly upsertAccountAccessInvite: (
     input: UpsertAccountAccessInviteInput
@@ -340,8 +307,7 @@ export interface EffectSquadBuilderStoreShape {
         readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
         readonly attempted: string;
       }
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly respondToAccountAccessInvite: (
     input: RespondToAccountAccessInviteStoreInput
@@ -354,8 +320,7 @@ export interface EffectSquadBuilderStoreShape {
         readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
         readonly attempted: string;
       }
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly revokeAccountAccess: (
     input: RevokeAccountAccessStoreInput
@@ -368,47 +333,41 @@ export interface EffectSquadBuilderStoreShape {
         readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
         readonly attempted: string;
       }
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly listIncomingAccountInvites: (
     input: ListIncomingAccountInvitesInput
   ) => Effect<
     readonly AccountAccessInviteSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly listSharedAccounts: (
     input: ListSharedAccountsInput
   ) => Effect<
     readonly SharedMargonemAccountSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly listAccountAccessGrants: (
     input: ListAccountAccessGrantsInput
   ) => Effect<
     readonly AccountAccessGrantSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly listIncomingSquadGroupInvites: (input: {
     readonly actorUserId: AppUserId;
   }) => Effect<
     readonly SquadGroupInvitationSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly getPendingSquadGroupInviteCount: (input: {
     readonly actorUserId: AppUserId;
-  }) => Effect<number, EffectSquadBuilderPersistenceUnavailable, never>;
+  }) => Effect<number, EffectSquadBuilderPersistenceUnavailable>;
   readonly listSharedSquadGroups: (input: {
     readonly actorUserId: AppUserId;
     readonly filters: ListGlobalSquadGroupsInput["filters"];
   }) => Effect<
     readonly SharedSquadGroupSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   >;
   readonly listSquadGroupEditorGrants: (input: {
     readonly actorUserId: AppUserId;
@@ -417,8 +376,7 @@ export interface EffectSquadBuilderStoreShape {
     readonly SquadGroupEditorGrantSummary[],
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   >;
 }
 

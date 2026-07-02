@@ -1,17 +1,17 @@
 import * as Effect from "effect/Effect";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import";
-import type { AppUserId } from "../app-user-id";
-import { err, isError, ok } from "../result";
-import type { Result } from "../result";
-import type { SquadGroupId } from "../squad-group-id";
+import type { Clock } from "../account-import/preview-margonem-profile-import.js";
+import type { AppUserId } from "../app-user-id.js";
+import { err, isError, ok } from "../result.js";
+import type { Result } from "../result.js";
+import type { SquadGroupId } from "../squad-group-id.js";
 import type {
   SquadCharacterDraftPlacement,
   SquadGroupValidationError,
-} from "../squad-group-snapshot";
-import { validateSquadGroupSnapshot } from "../squad-group-snapshot";
-import type { SquadId } from "../squad-id";
-import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
+} from "../squad-group-snapshot.js";
+import { validateSquadGroupSnapshot } from "../squad-group-snapshot.js";
+import type { SquadId } from "../squad-id.js";
+import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import type {
   ActorCannotViewSquadGroup,
   SquadBuilderPersistenceUnavailable,
@@ -19,8 +19,8 @@ import type {
   SquadGroupNotFound,
   SquadGroupSharingStore,
   SquadGroupStore,
-} from "./squad-group-store";
-import { EffectSquadGroupStore } from "./squad-group-store";
+} from "./squad-group-store.js";
+import { EffectSquadGroupStore } from "./squad-group-store.js";
 
 export interface SharedSquadCharactersInput {
   readonly squadId: SquadId;
@@ -64,11 +64,13 @@ export type EffectSharedSquadGroupSaveError =
 
 /** Save character placements in existing squads as owner or accepted editor. */
 export class SaveSharedSquadGroupCharacters {
-  private readonly sharingStore?: SquadGroupSharingStore;
-  private readonly squadStore?: Pick<
-    SquadGroupStore,
-    "getSquadGroupDetail" | "listAvailableCharactersForOwner"
-  >;
+  private readonly sharingStore: SquadGroupSharingStore | undefined;
+  private readonly squadStore:
+    | Pick<
+        SquadGroupStore,
+        "getSquadGroupDetail" | "listAvailableCharactersForOwner"
+      >
+    | undefined;
   private readonly clock: Clock;
 
   constructor(

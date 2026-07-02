@@ -10,40 +10,43 @@ import {
 import * as Effect from "effect/Effect";
 import { describe, expect, it, vi } from "vitest";
 
-import { makeApiManagedRuntime } from "../effect-app";
-import { parseAccountDisplayName } from "../modules/squad-builder/account-display-name";
-import { ConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/confirm-owned-account-import";
-import { EffectConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import";
-import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-import/list-owned-margonem-accounts";
-import { systemClock } from "../modules/squad-builder/account-import/preview-margonem-profile-import";
-import type { PreviewOwnedAccountImportItem } from "../modules/squad-builder/account-import/preview-owned-account-imports";
-import { EffectApplyAccountRefetch } from "../modules/squad-builder/account-refetch/effect-apply-account-refetch";
-import { EffectListAccountSharingState } from "../modules/squad-builder/account-sharing/effect-list-account-sharing-state";
-import { EffectRespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-respond-to-account-access-invite";
-import { EffectSearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/effect-search-account-invite-targets";
-import { EffectSendAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-send-account-access-invite";
-import { ListAccountSharingState } from "../modules/squad-builder/account-sharing/list-account-sharing-state";
-import { RespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/respond-to-account-access-invite";
-import { RevokeAccountAccess } from "../modules/squad-builder/account-sharing/revoke-account-access";
-import { SearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/search-account-invite-targets";
-import { SendAccountAccessInvite } from "../modules/squad-builder/account-sharing/send-account-access-invite";
-import { parseAppUserId } from "../modules/squad-builder/app-user-id";
-import { parseFirecrawlCreditCount } from "../modules/squad-builder/firecrawl-config";
-import { parseMargonemProfileId } from "../modules/squad-builder/margonem-profile-id";
-import { pendingImportIdToNumber } from "../modules/squad-builder/pending-margonem-account-import-id";
-import { isOk, ok } from "../modules/squad-builder/result";
-import { DrizzleSquadBuilderStore } from "../modules/squad-builder/squad-builder-store";
-import { EffectListSquadGroupSharingState } from "../modules/squad-builder/squad-groups/effect-list-squad-group-sharing-state";
-import { EffectRespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/effect-respond-to-squad-group-invite";
-import { EffectRevokeSquadGroupEditor } from "../modules/squad-builder/squad-groups/effect-revoke-squad-group-editor";
-import { EffectSendSquadGroupEditorInvite } from "../modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite";
-import { EffectSquadBuilderPersistenceUnavailable } from "../modules/squad-builder/squad-groups/squad-group-errors";
-import { createVerifiedMember } from "../test/integration/builders";
-import type { TestUser } from "../test/integration/builders";
-import { defaultTestDatabaseUrl, testDb } from "../test/integration/database";
-import type { AppRouter } from "./index";
-import type { RouterContext } from "./procedures";
-import { createSquadBuilderRouter } from "./squad-builder";
+import { makeApiManagedRuntime } from "../effect-app.js";
+import { parseAccountDisplayName } from "../modules/squad-builder/account-display-name.js";
+import { ConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/confirm-owned-account-import.js";
+import { EffectConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import.js";
+import { ListOwnedMargonemAccounts } from "../modules/squad-builder/account-import/list-owned-margonem-accounts.js";
+import { systemClock } from "../modules/squad-builder/account-import/preview-margonem-profile-import.js";
+import type { PreviewOwnedAccountImportItem } from "../modules/squad-builder/account-import/preview-owned-account-imports.js";
+import { EffectApplyAccountRefetch } from "../modules/squad-builder/account-refetch/effect-apply-account-refetch.js";
+import { EffectListAccountSharingState } from "../modules/squad-builder/account-sharing/effect-list-account-sharing-state.js";
+import { EffectRespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-respond-to-account-access-invite.js";
+import { EffectSearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/effect-search-account-invite-targets.js";
+import { EffectSendAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-send-account-access-invite.js";
+import { ListAccountSharingState } from "../modules/squad-builder/account-sharing/list-account-sharing-state.js";
+import { RespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/respond-to-account-access-invite.js";
+import { RevokeAccountAccess } from "../modules/squad-builder/account-sharing/revoke-account-access.js";
+import { SearchAccountInviteTargets } from "../modules/squad-builder/account-sharing/search-account-invite-targets.js";
+import { SendAccountAccessInvite } from "../modules/squad-builder/account-sharing/send-account-access-invite.js";
+import { parseAppUserId } from "../modules/squad-builder/app-user-id.js";
+import { parseFirecrawlCreditCount } from "../modules/squad-builder/firecrawl-config.js";
+import { parseMargonemProfileId } from "../modules/squad-builder/margonem-profile-id.js";
+import { pendingImportIdToNumber } from "../modules/squad-builder/pending-margonem-account-import-id.js";
+import { isOk, ok } from "../modules/squad-builder/result.js";
+import { DrizzleSquadBuilderStore } from "../modules/squad-builder/squad-builder-store.js";
+import { EffectListSquadGroupSharingState } from "../modules/squad-builder/squad-groups/effect-list-squad-group-sharing-state.js";
+import { EffectRespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/effect-respond-to-squad-group-invite.js";
+import { EffectRevokeSquadGroupEditor } from "../modules/squad-builder/squad-groups/effect-revoke-squad-group-editor.js";
+import { EffectSendSquadGroupEditorInvite } from "../modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite.js";
+import { EffectSquadBuilderPersistenceUnavailable } from "../modules/squad-builder/squad-groups/squad-group-errors.js";
+import { createVerifiedMember } from "../test/integration/builders.js";
+import type { TestUser } from "../test/integration/builders.js";
+import {
+  defaultTestDatabaseUrl,
+  testDb,
+} from "../test/integration/database.js";
+import type { AppRouter } from "./index.js";
+import type { RouterContext } from "./procedures.js";
+import { createSquadBuilderRouter } from "./squad-builder.js";
 
 const parseTestUserId = (value: string) => {
   const id = parseAppUserId(value);

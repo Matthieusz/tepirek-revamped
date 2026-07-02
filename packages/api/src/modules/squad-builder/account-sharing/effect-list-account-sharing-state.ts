@@ -1,18 +1,18 @@
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import type { AccountSharingError } from "./account-sharing-error";
+import type { AccountSharingError } from "./account-sharing-error.js";
 import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,
   SharedMargonemAccountSummary,
-} from "./account-sharing-store";
-import { EffectAccountSharingStore } from "./effect-account-sharing-store";
+} from "./account-sharing-store.js";
+import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
 import type {
   ListAccountAccessGrantsInput,
   ListIncomingAccountInvitesInput,
   ListSharedAccountsInput,
-} from "./list-account-sharing-state";
+} from "./list-account-sharing-state.js";
 
 /** Effect service module that reads account sharing state for the actor. */
 export class EffectListAccountSharingState {
@@ -28,13 +28,11 @@ export class EffectListAccountSharingState {
   > {
     void this.serviceName;
 
-    return EffectRuntime.gen(function* listIncomingAccountInvitesEffect() {
-      return yield* EffectAccountSharingStore.use((store) =>
-        store.listIncomingAccountInvites({
-          actorUserId: input.actorUserId,
-        })
-      );
-    });
+    return EffectAccountSharingStore.use((store) =>
+      store.listIncomingAccountInvites({
+        actorUserId: input.actorUserId,
+      })
+    );
   }
 
   /** List Margonem accounts shared with (accepted by) the actor. */
@@ -47,13 +45,11 @@ export class EffectListAccountSharingState {
   > {
     void this.serviceName;
 
-    return EffectRuntime.gen(function* listSharedAccountsEffect() {
-      return yield* EffectAccountSharingStore.use((store) =>
-        store.listSharedAccounts({
-          actorUserId: input.actorUserId,
-        })
-      );
-    });
+    return EffectAccountSharingStore.use((store) =>
+      store.listSharedAccounts({
+        actorUserId: input.actorUserId,
+      })
+    );
   }
 
   /** List pending and accepted access grants for an owned account. */

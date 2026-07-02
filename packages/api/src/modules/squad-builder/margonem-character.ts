@@ -1,6 +1,9 @@
-import type { MargonemCharacterId, PositiveLevel } from "./margonem-profile-id";
-import { err, ok } from "./result";
-import type { Result } from "./result";
+import type {
+  MargonemCharacterId,
+  PositiveLevel,
+} from "./margonem-profile-id.js";
+import { err, ok } from "./result.js";
+import type { Result } from "./result.js";
 
 /** The only Margonem world supported by squad builder v1. */
 export type MargonemWorld = "jaruna";

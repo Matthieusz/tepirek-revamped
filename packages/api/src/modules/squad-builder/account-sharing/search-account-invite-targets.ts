@@ -1,12 +1,12 @@
-import type { AppUserId } from "../app-user-id";
-import type { MargonemAccountId } from "../margonem-account-id";
-import { err, isError, ok } from "../result";
-import type { Result } from "../result";
-import type { AccountSharingError } from "./account-sharing-error";
+import type { AppUserId } from "../app-user-id.js";
+import type { MargonemAccountId } from "../margonem-account-id.js";
+import { err, isError, ok } from "../result.js";
+import type { Result } from "../result.js";
+import type { AccountSharingError } from "./account-sharing-error.js";
 import type {
   AccountInviteTarget,
   AccountSharingStore,
-} from "./account-sharing-store";
+} from "./account-sharing-store.js";
 
 /** Search policy for account invite target queries. */
 export const accountInviteTargetSearchPolicy = {

@@ -1,11 +1,11 @@
 import type { Effect } from "effect/Effect";
 
-import type { AppUserId } from "../app-user-id";
+import type { AppUserId } from "../app-user-id.js";
 import type {
   OwnedMargonemAccountSummary,
   SquadBuilderPersistenceUnavailable,
-} from "./account-import-store";
-import { EffectAccountImportStore } from "./effect-account-import-store";
+} from "./account-import-store.js";
+import { EffectAccountImportStore } from "./effect-account-import-store.js";
 
 /** Input for listing owned Margonem accounts. */
 export interface ListOwnedMargonemAccountsInput {

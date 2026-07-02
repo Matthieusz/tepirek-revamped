@@ -1,16 +1,16 @@
-import { announcementRouter } from "./announcement";
-import { auctionRouter } from "./auction";
-import { betRouter } from "./bet";
-import { eventRouter } from "./event";
-import { heroesRouter } from "./heroes";
-import { publicProcedure } from "./procedures";
-import { rankingRouter } from "./ranking";
-import { skillsRouter } from "./skills";
-import { createSquadBuilderRouter } from "./squad-builder";
-import type { CreateSquadBuilderRouterOptions } from "./squad-builder";
-import { todoRouter } from "./todo";
-import { userRouter } from "./user";
-import { vaultRouter } from "./vault";
+import { announcementRouter } from "./announcement.js";
+import { auctionRouter } from "./auction.js";
+import { betRouter } from "./bet.js";
+import { eventRouter } from "./event.js";
+import { heroesRouter } from "./heroes.js";
+import { publicProcedure } from "./procedures.js";
+import { rankingRouter } from "./ranking.js";
+import { skillsRouter } from "./skills.js";
+import { createSquadBuilderRouter } from "./squad-builder.js";
+import type { CreateSquadBuilderRouterOptions } from "./squad-builder.js";
+import { todoRouter } from "./todo.js";
+import { userRouter } from "./user.js";
+import { vaultRouter } from "./vault.js";
 
 export interface CreateAppRouterOptions {
   readonly squadBuilder?: CreateSquadBuilderRouterOptions;

@@ -3,7 +3,7 @@ import { hero } from "@tepirek-revamped/db/schema/bet";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { adminProcedure, verifiedProcedure } from "./procedures";
+import { adminProcedure, verifiedProcedure } from "./procedures.js";
 
 export const heroesRouter = {
   create: adminProcedure

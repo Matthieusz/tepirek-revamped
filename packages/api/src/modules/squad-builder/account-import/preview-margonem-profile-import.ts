@@ -1,25 +1,25 @@
-import type { AppUserId } from "../app-user-id";
+import type { AppUserId } from "../app-user-id.js";
 import type {
   FirecrawlClient,
   FirecrawlScrapeError,
-} from "../firecrawl-client";
-import { parseFirecrawlCreditCount } from "../firecrawl-config";
+} from "../firecrawl-client.js";
+import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
 import type {
   FirecrawlConfig,
   FirecrawlCreditCount,
-} from "../firecrawl-config";
-import { firecrawlYearMonthFromDate } from "../firecrawl-year-month";
-import type { MargonemCharacterPreview } from "../margonem-character";
-import { parseMargonemProfileHtml } from "../margonem-profile-html-parser";
-import type { ParseMargonemProfileHtmlError } from "../margonem-profile-html-parser";
-import type { MargonemProfileId } from "../margonem-profile-id";
+} from "../firecrawl-config.js";
+import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
+import type { MargonemCharacterPreview } from "../margonem-character.js";
+import { parseMargonemProfileHtml } from "../margonem-profile-html-parser.js";
+import type { ParseMargonemProfileHtmlError } from "../margonem-profile-html-parser.js";
+import type { MargonemProfileId } from "../margonem-profile-id.js";
 import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
-} from "../margonem-profile-url";
-import type { ParseMargonemProfileUrlError } from "../margonem-profile-url";
-import { err, isError, ok } from "../result";
-import type { Result } from "../result";
+} from "../margonem-profile-url.js";
+import type { ParseMargonemProfileUrlError } from "../margonem-profile-url.js";
+import { err, isError, ok } from "../result.js";
+import type { Result } from "../result.js";
 import type {
   DuplicateMargonemAccountError,
   FirecrawlBudgetError,
@@ -27,7 +27,7 @@ import type {
   ProfileAccessState,
   SquadBuilderAccountLookup,
   SquadBuilderPersistenceUnavailable,
-} from "./account-import-store";
+} from "./account-import-store.js";
 
 export type { DuplicateMargonemAccountError };
 

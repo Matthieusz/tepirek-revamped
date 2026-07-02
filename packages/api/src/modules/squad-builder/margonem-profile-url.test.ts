@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
-} from "./margonem-profile-url";
-import { isError, isOk } from "./result";
+} from "./margonem-profile-url.js";
+import { isError, isOk } from "./result.js";
 
 describe("Margonem profile URL parsing", () => {
   it("extracts the numeric profile id from canonical and anchored profile URLs", () => {

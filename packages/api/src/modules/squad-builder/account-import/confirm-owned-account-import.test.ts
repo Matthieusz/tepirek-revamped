@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { parseAppUserId } from "../app-user-id";
-import type { AppUserId } from "../app-user-id";
-import { parseMargonemProfileId } from "../margonem-profile-id";
-import type { MargonemProfileId } from "../margonem-profile-id";
-import { parsePendingMargonemAccountImportId } from "../pending-margonem-account-import-id";
-import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id";
-import { err, isError, isOk, ok } from "../result";
-import type { Result } from "../result";
+import { parseAppUserId } from "../app-user-id.js";
+import type { AppUserId } from "../app-user-id.js";
+import { parseMargonemProfileId } from "../margonem-profile-id.js";
+import type { MargonemProfileId } from "../margonem-profile-id.js";
+import { parsePendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
+import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
+import { err, isError, isOk, ok } from "../result.js";
+import type { Result } from "../result.js";
 import type {
   DuplicateMargonemAccountError,
   OwnedMargonemAccountSummary,
@@ -15,9 +15,9 @@ import type {
   PendingMargonemAccountImportForConfirmation,
   PendingMargonemAccountImportStore,
   SquadBuilderPersistenceUnavailable,
-} from "./account-import-store";
-import { ConfirmOwnedAccountImport } from "./confirm-owned-account-import";
-import type { Clock } from "./preview-margonem-profile-import";
+} from "./account-import-store.js";
+import { ConfirmOwnedAccountImport } from "./confirm-owned-account-import.js";
+import type { Clock } from "./preview-margonem-profile-import.js";
 
 const parseTestUserId = (): AppUserId => {
   const userId = parseAppUserId("confirm-user");

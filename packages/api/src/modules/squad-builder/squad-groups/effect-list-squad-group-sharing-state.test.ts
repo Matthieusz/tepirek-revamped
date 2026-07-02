@@ -1,16 +1,16 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 
-import { parseAppUserId } from "../app-user-id";
-import { isOk } from "../result";
-import { parseSquadGroupId } from "../squad-group-id";
-import { parseSquadGroupInvitationId } from "../squad-group-invitation-id";
-import { emptySquadGroupListFilters } from "../squad-group-list-filters";
-import { parseSquadGroupName } from "../squad-name";
-import { EffectListSquadGroupSharingState } from "./effect-list-squad-group-sharing-state";
-import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support";
-import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
-import { EffectSquadGroupStore } from "./squad-group-store";
+import { parseAppUserId } from "../app-user-id.js";
+import { isOk } from "../result.js";
+import { parseSquadGroupId } from "../squad-group-id.js";
+import { parseSquadGroupInvitationId } from "../squad-group-invitation-id.js";
+import { emptySquadGroupListFilters } from "../squad-group-list-filters.js";
+import { parseSquadGroupName } from "../squad-name.js";
+import { EffectListSquadGroupSharingState } from "./effect-list-squad-group-sharing-state.js";
+import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
+import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
+import { EffectSquadGroupStore } from "./squad-group-store.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);

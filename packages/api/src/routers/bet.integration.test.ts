@@ -6,8 +6,8 @@ import {
   createHero,
   createUnverifiedUser,
   createVerifiedMember,
-} from "../test/integration/builders";
-import { createAuthenticatedRouterClient } from "../test/integration/router-client";
+} from "../test/integration/builders.js";
+import { createAuthenticatedRouterClient } from "../test/integration/router-client.js";
 
 describe("bet router Postgres integration", () => {
   it("lets an admin create a hero bet and verified members read persisted members", async () => {

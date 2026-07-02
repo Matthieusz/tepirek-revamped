@@ -7,7 +7,7 @@ import { event } from "@tepirek-revamped/db/schema/event";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { adminProcedure, verifiedProcedure } from "./procedures";
+import { adminProcedure, verifiedProcedure } from "./procedures.js";
 
 export const eventRouter = {
   create: adminProcedure

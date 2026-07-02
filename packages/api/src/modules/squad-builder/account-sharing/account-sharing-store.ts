@@ -21,7 +21,7 @@ import type {
   SquadBuilderPersistenceUnavailable,
   UpsertAccountAccessInviteInput,
   VerifiedInviteTarget,
-} from "../squad-builder-store";
+} from "../squad-builder-store.js";
 
 /** Account sharing persistence contracts used by invite and grant services. */
 export type AccountSharingPersistenceStore = AccountSharingStore &

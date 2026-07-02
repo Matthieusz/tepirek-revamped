@@ -1,15 +1,14 @@
 import type { Effect } from "effect/Effect";
-import * as EffectRuntime from "effect/Effect";
 
-import { emptySquadGroupListFilters } from "../squad-group-list-filters";
-import type { ListSquadGroupSharingState } from "./list-squad-group-sharing-state";
-import type { SquadGroupSharingError } from "./squad-group-sharing-error";
-import { EffectSquadGroupStore } from "./squad-group-store";
+import { emptySquadGroupListFilters } from "../squad-group-list-filters.js";
+import type { ListSquadGroupSharingState } from "./list-squad-group-sharing-state.js";
+import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
+import { EffectSquadGroupStore } from "./squad-group-store.js";
 import type {
   SharedSquadGroupSummary,
   SquadGroupEditorGrantSummary,
   SquadGroupInvitationSummary,
-} from "./squad-group-store";
+} from "./squad-group-store.js";
 
 /** Effect service module that reads squad group sharing state for the actor. */
 export class EffectListSquadGroupSharingState {
@@ -25,13 +24,11 @@ export class EffectListSquadGroupSharingState {
   > {
     void this.serviceName;
 
-    return EffectRuntime.gen(function* listIncomingSquadGroupInvitesEffect() {
-      return yield* EffectSquadGroupStore.use((store) =>
-        store.listIncomingSquadGroupInvites({
-          actorUserId: input.actorUserId,
-        })
-      );
-    });
+    return EffectSquadGroupStore.use((store) =>
+      store.listIncomingSquadGroupInvites({
+        actorUserId: input.actorUserId,
+      })
+    );
   }
 
   /** List squad groups shared with the actor as accepted editor. */
@@ -44,14 +41,12 @@ export class EffectListSquadGroupSharingState {
   > {
     void this.serviceName;
 
-    return EffectRuntime.gen(function* listSharedSquadGroupsEffect() {
-      return yield* EffectSquadGroupStore.use((store) =>
-        store.listSharedSquadGroups({
-          actorUserId: input.actorUserId,
-          filters: input.filters ?? emptySquadGroupListFilters,
-        })
-      );
-    });
+    return EffectSquadGroupStore.use((store) =>
+      store.listSharedSquadGroups({
+        actorUserId: input.actorUserId,
+        filters: input.filters ?? emptySquadGroupListFilters,
+      })
+    );
   }
 
   /** List pending and accepted editor grants for an owned squad group. */
@@ -64,14 +59,12 @@ export class EffectListSquadGroupSharingState {
   > {
     void this.serviceName;
 
-    return EffectRuntime.gen(function* listSquadGroupEditorGrantsEffect() {
-      return yield* EffectSquadGroupStore.use((store) =>
-        store.listSquadGroupEditorGrants({
-          actorUserId: input.actorUserId,
-          groupId: input.groupId,
-        })
-      );
-    });
+    return EffectSquadGroupStore.use((store) =>
+      store.listSquadGroupEditorGrants({
+        actorUserId: input.actorUserId,
+        groupId: input.groupId,
+      })
+    );
   }
 
   /** Count pending squad group editor invites received by the actor. */
@@ -80,12 +73,10 @@ export class EffectListSquadGroupSharingState {
   ): Effect<number, SquadGroupSharingError, EffectSquadGroupStore> {
     void this.serviceName;
 
-    return EffectRuntime.gen(function* getPendingSquadGroupInviteCountEffect() {
-      return yield* EffectSquadGroupStore.use((store) =>
-        store.getPendingSquadGroupInviteCount({
-          actorUserId: input.actorUserId,
-        })
-      );
-    });
+    return EffectSquadGroupStore.use((store) =>
+      store.getPendingSquadGroupInviteCount({
+        actorUserId: input.actorUserId,
+      })
+    );
   }
 }

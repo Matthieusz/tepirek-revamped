@@ -2,4 +2,4 @@ export {
   adminProcedure,
   protectedProcedure,
   publicProcedure,
-} from "./routers/procedures";
+} from "./routers/procedures.js";

@@ -1,14 +1,14 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 
-import { parseAppUserId } from "../app-user-id";
-import type { FirecrawlClient } from "../firecrawl-client";
-import { Redacted } from "../prelude";
-import { isOk, ok } from "../result";
-import { makeEffectAccountImportStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectAccountImportStore } from "./effect-account-import-store";
-import { EffectPreviewMargonemProfileImport } from "./effect-preview-margonem-profile-import";
-import type { Clock } from "./preview-margonem-profile-import";
+import { parseAppUserId } from "../app-user-id.js";
+import type { FirecrawlClient } from "../firecrawl-client.js";
+import { Redacted } from "../prelude.js";
+import { isOk, ok } from "../result.js";
+import { makeEffectAccountImportStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
+import { EffectAccountImportStore } from "./effect-account-import-store.js";
+import { EffectPreviewMargonemProfileImport } from "./effect-preview-margonem-profile-import.js";
+import type { Clock } from "./preview-margonem-profile-import.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-preview-user");

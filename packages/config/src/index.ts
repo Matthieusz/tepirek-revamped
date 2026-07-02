@@ -1,7 +1,7 @@
 export const POINTS_PER_HERO = 20;
 export const MIN_EARNINGS = 100_000_000;
 
-export { slugifySkillRangeName } from "./slug";
+export { slugifySkillRangeName } from "./slug.js";
 
 // ---------------------------------------------------------------------------
 // Roles
@@ -73,4 +73,4 @@ export const isAuctionProfession = (
 // Auction slot rules (levels, rounds, columns, legality)
 // ---------------------------------------------------------------------------
 
-export * from "./auction-slots";
+export * from "./auction-slots.js";

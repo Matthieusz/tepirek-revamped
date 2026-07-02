@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hasDiscordGuild } from "./user";
+import { hasDiscordGuild } from "./user.js";
 
 describe("hasDiscordGuild", () => {
   it("returns true when the guild list contains the target id", () => {

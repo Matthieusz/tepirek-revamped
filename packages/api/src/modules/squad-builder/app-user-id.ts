@@ -1,5 +1,5 @@
-import { err, ok } from "./result";
-import type { Result } from "./result";
+import { err, ok } from "./result.js";
+import type { Result } from "./result.js";
 
 /** A parsed BetterAuth application user id. */
 export type AppUserId = string & { readonly __brand: "AppUserId" };

@@ -1,30 +1,30 @@
 import { describe, expect, it } from "vitest";
 
-import { parseAppUserId } from "../app-user-id";
-import type { AppUserId } from "../app-user-id";
-import type { FirecrawlCreditCount } from "../firecrawl-config";
-import { parseMargonemProfileId } from "../margonem-profile-id";
-import type { MargonemProfileId } from "../margonem-profile-id";
-import { err, isError, isOk, ok } from "../result";
-import type { Result } from "../result";
+import { parseAppUserId } from "../app-user-id.js";
+import type { AppUserId } from "../app-user-id.js";
+import type { FirecrawlCreditCount } from "../firecrawl-config.js";
+import { parseMargonemProfileId } from "../margonem-profile-id.js";
+import type { MargonemProfileId } from "../margonem-profile-id.js";
+import { err, isError, isOk, ok } from "../result.js";
+import type { Result } from "../result.js";
 import type {
   CreatePendingMargonemAccountImportInput,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportStore,
   ProfileAccessState,
   SquadBuilderAccountLookup,
-} from "./account-import-store";
+} from "./account-import-store.js";
 import type {
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportOutput,
   Clock,
-} from "./preview-margonem-profile-import";
-import { PreviewOwnedAccountImports } from "./preview-owned-account-imports";
+} from "./preview-margonem-profile-import.js";
+import { PreviewOwnedAccountImports } from "./preview-owned-account-imports.js";
 import type {
   PreviewOwnedAccountImportItem,
   PreviewOwnedAccountImportsOutput,
   SingleMargonemProfilePreview,
-} from "./preview-owned-account-imports";
+} from "./preview-owned-account-imports.js";
 
 const parseTestUserId = (): AppUserId => {
   const userId = parseAppUserId("batch-user");

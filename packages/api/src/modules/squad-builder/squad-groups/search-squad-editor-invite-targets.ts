@@ -1,13 +1,13 @@
-import { accountInviteTargetSearchPolicy } from "../account-sharing/search-account-invite-targets";
-import type { AppUserId } from "../app-user-id";
-import { err, isError, ok } from "../result";
-import type { Result } from "../result";
-import type { SquadGroupId } from "../squad-group-id";
-import type { SquadGroupSharingError } from "./squad-group-sharing-error";
+import { accountInviteTargetSearchPolicy } from "../account-sharing/search-account-invite-targets.js";
+import type { AppUserId } from "../app-user-id.js";
+import { err, isError, ok } from "../result.js";
+import type { Result } from "../result.js";
+import type { SquadGroupId } from "../squad-group-id.js";
+import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import type {
   SquadEditorInviteTarget,
   SquadGroupSharingStore,
-} from "./squad-group-store";
+} from "./squad-group-store.js";
 
 const parseQuery = (
   input: string

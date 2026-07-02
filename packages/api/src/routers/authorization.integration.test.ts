@@ -5,11 +5,11 @@ import {
   createAdmin,
   createUnverifiedUser,
   createVerifiedMember,
-} from "../test/integration/builders";
+} from "../test/integration/builders.js";
 import {
   createAuthenticatedRouterClient,
   createUnauthenticatedRouterClient,
-} from "../test/integration/router-client";
+} from "../test/integration/router-client.js";
 
 const expectOrpcError = async (
   action: Promise<unknown>,

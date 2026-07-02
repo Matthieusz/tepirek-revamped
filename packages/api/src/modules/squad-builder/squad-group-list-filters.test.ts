@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { isError, isOk } from "./result";
+import { isError, isOk } from "./result.js";
 import {
   parseSquadGroupListFilters,
   squadGroupLevelBoundToNumber,
   squadGroupNameQueryToString,
-} from "./squad-group-list-filters";
+} from "./squad-group-list-filters.js";
 
 describe("parseSquadGroupListFilters", () => {
   it("parses missing squad group list filters as an unfiltered query", () => {

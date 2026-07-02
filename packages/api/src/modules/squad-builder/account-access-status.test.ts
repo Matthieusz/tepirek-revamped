@@ -4,8 +4,8 @@ import {
   canTransitionAccountAccess,
   inactiveAccountAccessStatuses,
   parseAccountAccessStatus,
-} from "./account-access-status";
-import { isError, isOk } from "./result";
+} from "./account-access-status.js";
+import { isError, isOk } from "./result.js";
 
 describe("parseAccountAccessStatus", () => {
   it("accepts known access statuses", () => {

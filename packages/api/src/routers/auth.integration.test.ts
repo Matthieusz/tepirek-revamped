@@ -2,7 +2,7 @@ import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import { testDb } from "../test/integration/database";
+import { testDb } from "../test/integration/database.js";
 
 // Ensure the auth module can import against the integration database and
 // dummy Discord/better-auth env values. These must be set before the auth

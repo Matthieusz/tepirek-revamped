@@ -1,8 +1,8 @@
 import { createRouterClient } from "@orpc/server";
 
-import { appRouter } from "../../routers";
-import type { RouterContext } from "../../routers/procedures";
-import type { TestUser } from "./builders";
+import { appRouter } from "../../routers/index.js";
+import type { RouterContext } from "../../routers/procedures.js";
+import type { TestUser } from "./builders.js";
 
 export const createUnauthenticatedRouterClient = () =>
   createRouterClient(appRouter, {
