@@ -25,6 +25,7 @@ import { EffectConfirmOwnedAccountImport } from "../account-import/effect-confir
 import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts";
 import { systemClock } from "../account-import/preview-margonem-profile-import";
 import { EffectApplyAccountRefetch } from "../account-refetch/effect-apply-account-refetch";
+import { EffectListAccountSharingState } from "../account-sharing/effect-list-account-sharing-state";
 import { EffectRespondToAccountAccessInvite } from "../account-sharing/effect-respond-to-account-access-invite";
 import { EffectRevokeAccountAccess } from "../account-sharing/effect-revoke-account-access";
 import { EffectSearchAccountInviteTargets } from "../account-sharing/effect-search-account-invite-targets";
@@ -916,6 +917,62 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       .limit(1);
 
     expect(stored?.status).toBe("accepted");
+  });
+
+  it("lists shared accounts for accepted access", async () => {
+    const owner = await createVerifiedMember({
+      id: "effect-store-shared-owner",
+      name: "Effect Store Shared Owner",
+    });
+    const target = await createVerifiedMember({
+      id: "effect-store-shared-target",
+      name: "Effect Store Shared Target",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const sharingStateService = new EffectListAccountSharingState();
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Effect store shared account",
+        ownerUserId: owner.id,
+        profileId: 7_299_012,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    await testDb.insert(margonemAccountAccess).values({
+      accountId: account.id,
+      invitedByUserId: owner.id,
+      status: "accepted",
+      userId: target.id,
+    });
+
+    await testDb.insert(margonemCharacter).values({
+      accountId: account.id,
+      avatarUrl: null,
+      characterId: 1_296_641,
+      level: 300,
+      name: "sharedchar",
+      profession: "tracker",
+      world: "jaruna",
+    });
+
+    const accounts = await runtime.runPromise(
+      sharingStateService.listSharedAccounts({
+        actorUserId: parseTestUserId(target.id),
+      })
+    );
+
+    expect(accounts).toHaveLength(1);
+    expect(accounts[0]).toMatchObject({
+      accountId: parseTestAccountId(account.id),
+      characterCount: 1,
+      ownerUserId: parseTestUserId(owner.id),
+      ownerUserName: "Effect Store Shared Owner",
+    });
   });
 
   it("revokes accepted account access and removes recipient squad placements", async () => {

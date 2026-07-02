@@ -924,6 +924,7 @@ describe("squad-builder router Postgres integration", () => {
       ),
     });
     const recipientClient = createSquadBuilderClient(recipient, {
+      effectListAccountSharingStateService: new EffectListAccountSharingState(),
       effectRespondToAccountAccessInviteService:
         new EffectRespondToAccountAccessInvite(systemClock),
       effectRuntime: runtime,
@@ -955,6 +956,14 @@ describe("squad-builder router Postgres integration", () => {
     expect(accepted).toMatchObject({
       accessId: invite.accessId,
       status: "accepted",
+    });
+
+    const shared = await recipientClient.squadBuilder.listSharedAccounts();
+
+    expect(shared.accounts).toHaveLength(1);
+    expect(shared.accounts[0]).toMatchObject({
+      accountId: account.id,
+      ownerUserName: "Effect Accept Owner",
     });
   });
 

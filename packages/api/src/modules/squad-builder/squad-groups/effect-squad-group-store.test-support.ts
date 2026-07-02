@@ -35,6 +35,7 @@ export const makeEffectSquadGroupStoreTestService = (
       unhandledStoreCall("listIncomingAccountInvites"),
     listMySquadGroups: () => unhandledStoreCall("listMySquadGroups"),
     listOwnedAccounts: () => unhandledStoreCall("listOwnedAccounts"),
+    listSharedAccounts: () => unhandledStoreCall("listSharedAccounts"),
     markPendingRefetchApplied: () =>
       unhandledStoreCall("markPendingRefetchApplied"),
     markRequestFailed: () => unhandledStoreCall("markRequestFailed"),

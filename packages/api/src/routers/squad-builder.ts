@@ -333,6 +333,13 @@ interface EffectListAccountSharingStateService {
     AccountSharingError,
     EffectSquadGroupStore
   >;
+  readonly listSharedAccounts: (
+    input: Parameters<EffectListAccountSharingState["listSharedAccounts"]>[0]
+  ) => Effect<
+    readonly SharedMargonemAccountSummary[],
+    AccountSharingError,
+    EffectSquadGroupStore
+  >;
 }
 
 interface CreateSquadGroupService {
@@ -2059,29 +2066,45 @@ export const createSquadBuilderRouter = ({
       throw toOrpcError(actorUserId.error);
     }
 
-    const services =
-      listAccountSharingStateService === undefined
-        ? defaultServices
-        : ok({
-            sharingState: listAccountSharingStateService,
-          });
+    if (listAccountSharingStateService !== undefined) {
+      const result = await listAccountSharingStateService.listSharedAccounts({
+        actorUserId: actorUserId.value,
+      });
 
-    if (isError(services)) {
-      logSquadBuilderError(context, "listSharedAccounts", services.error);
-      throw toOrpcError(services.error);
+      if (isError(result)) {
+        logSquadBuilderError(context, "listSharedAccounts", result.error);
+        throw toAccountSharingOrpcError(result.error);
+      }
+
+      return {
+        accounts: result.value.map(toSharedMargonemAccountDto),
+      };
     }
 
-    const result = await services.value.sharingState.listSharedAccounts({
+    const effect = (
+      effectListAccountSharingStateService ?? listAccountSharingStateEffect
+    ).listSharedAccounts({
       actorUserId: actorUserId.value,
     });
 
-    if (isError(result)) {
-      logSquadBuilderError(context, "listSharedAccounts", result.error);
-      throw toAccountSharingOrpcError(result.error);
+    if (effectRuntime === undefined) {
+      const mapped: SquadBuilderPersistenceUnavailable = {
+        _tag: "SquadBuilderPersistenceUnavailable",
+        cause: new Error("DATABASE_URL is required for listSharedAccounts"),
+        operation: "listSharedAccounts",
+      };
+      logSquadBuilderError(context, "listSharedAccounts", mapped);
+      throw toAccountSharingOrpcError(mapped);
     }
 
+    const accounts = await runOrpcEffect(effectRuntime, effect, (error) => {
+      const mapped = error as AccountSharingError;
+      logSquadBuilderError(context, "listSharedAccounts", mapped);
+      return toAccountSharingOrpcError(mapped);
+    });
+
     return {
-      accounts: result.value.map(toSharedMargonemAccountDto),
+      accounts: accounts.map(toSharedMargonemAccountDto),
     };
   }),
   listSharedSquadGroups: verifiedProcedure

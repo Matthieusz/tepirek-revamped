@@ -109,6 +109,7 @@ import type {
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
+  ListSharedAccountsInput,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
   MarkPendingMargonemAccountRefetchAppliedInput,
@@ -129,6 +130,7 @@ import type {
   RevokeAccountAccessResult,
   RevokeAccountAccessStoreInput,
   SetSquadGroupVisibilityStoreInput,
+  SharedMargonemAccountSummary,
   SquadGroupVisibilityChange,
   AccountInviteTarget,
   AccountAccessInviteSummary,
@@ -155,6 +157,7 @@ type EffectSquadGroupPersistenceOperation =
   | "listAvailableCharactersForOwner"
   | "listGlobalSquadGroups"
   | "listIncomingAccountInvites"
+  | "listSharedAccounts"
   | "listOwnedAccounts"
   | "listMySquadGroups"
   | "markRequestFailed"
@@ -2132,6 +2135,110 @@ const listIncomingAccountInvitesWithDatabase =
       return invites;
     });
 
+const listSharedAccountsWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+  }: ListSharedAccountsInput): Effect.Effect<
+    readonly SharedMargonemAccountSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* listSharedAccountsEffect() {
+      const operation = "listSharedAccounts" as const;
+      const select = database
+        .select({
+          accountId: margonemAccount.id,
+          characterCount: sql<number>`count(${margonemCharacter.id})::int`.as(
+            "character_count"
+          ),
+          createdAt: margonemAccount.createdAt,
+          displayName: margonemAccount.displayName,
+          lastFetchedAt: margonemAccount.lastFetchedAt,
+          ownerId: user.id,
+          ownerImage: user.image,
+          ownerName: user.name,
+          profileId: margonemAccount.profileId,
+        })
+        .from(margonemAccountAccess)
+        .innerJoin(
+          margonemAccount,
+          eq(margonemAccount.id, margonemAccountAccess.accountId)
+        )
+        .innerJoin(user, eq(user.id, margonemAccount.ownerUserId))
+        .leftJoin(
+          margonemCharacter,
+          eq(margonemCharacter.accountId, margonemAccount.id)
+        )
+        .where(
+          and(
+            eq(margonemAccountAccess.userId, appUserIdToString(actorUserId)),
+            eq(margonemAccountAccess.status, "accepted")
+          )
+        )
+        .groupBy(margonemAccount.id, user.id)
+        .orderBy(desc(margonemAccount.createdAt), desc(margonemAccount.id));
+      const selectEffect = select as Effect.Effect<
+        readonly {
+          readonly accountId: number;
+          readonly characterCount: number | null;
+          readonly createdAt: Date;
+          readonly displayName: string;
+          readonly lastFetchedAt: Date | null;
+          readonly ownerId: string;
+          readonly ownerImage: string | null;
+          readonly ownerName: string;
+          readonly profileId: number;
+        }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const accounts: SharedMargonemAccountSummary[] = [];
+
+      for (const row of rows) {
+        const accountId = parseMargonemAccountId(row.accountId);
+
+        if (isError(accountId)) {
+          return yield* failPersistence(operation, accountId.error);
+        }
+
+        const displayName = parseAccountDisplayName(row.displayName);
+
+        if (isError(displayName)) {
+          return yield* failPersistence(operation, displayName.error);
+        }
+
+        const profileId = parseMargonemProfileId(row.profileId);
+
+        if (isError(profileId)) {
+          return yield* failPersistence(operation, profileId.error);
+        }
+
+        const ownerUserId = parseAppUserId(row.ownerId);
+
+        if (isError(ownerUserId)) {
+          return yield* failPersistence(operation, ownerUserId.error);
+        }
+
+        accounts.push({
+          accountId: accountId.value,
+          characterCount: row.characterCount ?? 0,
+          displayName: displayName.value,
+          generatedProfileUrl: toMargonemProfileUrl(profileId.value),
+          lastFetchedAt: row.lastFetchedAt ?? row.createdAt,
+          ownerUserId: ownerUserId.value,
+          ownerUserImage: row.ownerImage,
+          ownerUserName: row.ownerName,
+          profileId: profileId.value,
+        });
+      }
+
+      return accounts;
+    });
+
 const respondToAccountAccessInviteWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -3136,6 +3243,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
         listIncomingAccountInvitesWithDatabase(database),
       listMySquadGroups: listMySquadGroupsWithDatabase(database),
       listOwnedAccounts: listOwnedAccountsWithDatabase(database),
+      listSharedAccounts: listSharedAccountsWithDatabase(database),
       markPendingRefetchApplied:
         markPendingRefetchAppliedWithDatabase(database),
       markRequestFailed: markRequestFailedWithDatabase(database),

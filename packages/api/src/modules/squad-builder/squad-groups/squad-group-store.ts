@@ -31,6 +31,7 @@ import type {
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
+  ListSharedAccountsInput,
   MargonemAccountNotFound,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
@@ -52,6 +53,7 @@ import type {
   SearchInviteTargetsStoreInput,
   SearchSquadEditorInviteTargetsStoreInput,
   SetSquadGroupVisibilityStoreInput,
+  SharedMargonemAccountSummary,
   SharedSquadGroupSummary,
   SquadBuilderPersistenceUnavailable,
   SquadDetail,
@@ -281,6 +283,13 @@ export interface EffectSquadGroupStoreShape {
     EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly listSharedAccounts: (
+    input: ListSharedAccountsInput
+  ) => Effect<
+    readonly SharedMargonemAccountSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
 }
 
 export class EffectSquadGroupStore extends Context.Service<
@@ -321,6 +330,7 @@ export type {
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
+  ListSharedAccountsInput,
   MargonemAccountNotFound,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
@@ -347,6 +357,7 @@ export type {
   SearchInviteTargetsStoreInput,
   SearchSquadEditorInviteTargetsStoreInput,
   SetSquadGroupVisibilityStoreInput,
+  SharedMargonemAccountSummary,
   SharedSquadGroupSummary,
   SquadBuilderPersistenceUnavailable,
   SquadDetail,

@@ -5,6 +5,7 @@ import { parseAccountDisplayName } from "../account-display-name";
 import { parseAppUserId } from "../app-user-id";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id";
 import { parseMargonemAccountId } from "../margonem-account-id";
+import { parseMargonemProfileId } from "../margonem-profile-id";
 import { isOk } from "../result";
 import { makeEffectSquadGroupStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
 import { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors";
@@ -49,6 +50,16 @@ const parseTestDisplayName = () => {
   }
 
   return displayName.value;
+};
+
+const parseTestProfileId = () => {
+  const profileId = parseMargonemProfileId(7_299_020);
+
+  if (!isOk(profileId)) {
+    throw new Error("Expected test profile id to be valid");
+  }
+
+  return profileId.value;
 };
 
 it.effect("lists incoming account access invites for the actor", () => {
@@ -114,5 +125,44 @@ it.effect("surfaces persistence failures", () => {
     );
 
     expect(error._tag).toBe("SquadBuilderPersistenceUnavailable");
+  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+});
+
+it.effect("lists shared accounts for the actor", () => {
+  const actorUserId = parseTestUserId("effect-shared-account-recipient");
+  const ownerUserId = parseTestUserId("effect-shared-account-owner");
+  const accountId = parseTestAccountId();
+  const createdAt = new Date("2026-06-29T12:00:00.000Z");
+  const store = makeEffectSquadGroupStoreTestService({
+    listSharedAccounts: (input) => {
+      expect(input).toMatchObject({ actorUserId });
+
+      return Effect.succeed([
+        {
+          accountId,
+          characterCount: 3,
+          displayName: parseTestDisplayName(),
+          generatedProfileUrl: "https://www.margonem.pl/profile/view,7299020",
+          lastFetchedAt: createdAt,
+          ownerUserId,
+          ownerUserImage: null,
+          ownerUserName: "Effect Shared Owner",
+          profileId: parseTestProfileId(),
+        },
+      ]);
+    },
+  });
+  const service = new EffectListAccountSharingState();
+
+  return Effect.gen(function* listSharedAccountsEffect() {
+    const accounts = yield* service.listSharedAccounts({ actorUserId });
+
+    expect(accounts).toHaveLength(1);
+    expect(accounts[0]).toMatchObject({
+      accountId,
+      characterCount: 3,
+      ownerUserId,
+      ownerUserName: "Effect Shared Owner",
+    });
   }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
 });
