@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemProfileId } from "../margonem-profile-id.js";
@@ -50,7 +51,7 @@ it.effect(
     const actorUserId = parseTestUserId();
     const pendingImportId = parseTestPendingId();
     const profileId = parseTestProfileId();
-    const service = new EffectConfirmOwnedAccountImport(fixedClock);
+    const service = new EffectConfirmOwnedAccountImport();
     const store = makeEffectAccountImportStoreTestService({
       createOwnedAccountFromPendingImport: ({ displayName, pending }) =>
         Effect.succeed({
@@ -81,6 +82,7 @@ it.effect(
     });
 
     return Effect.gen(function* confirmEffect() {
+      yield* TestClock.setTime(fixedClock.now().getTime());
       const result = yield* service.confirm({
         actorUserId,
         displayName: "  informati  ",

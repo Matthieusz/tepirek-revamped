@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { isOk } from "../result.js";
@@ -82,9 +83,10 @@ it.effect("accepts a squad group editor invite as the invited user", () => {
       });
     },
   });
-  const service = new EffectRespondToSquadGroupInvite(fixedClock);
+  const service = new EffectRespondToSquadGroupInvite();
 
   return Effect.gen(function* respondToSquadGroupInviteEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
     const invite = yield* service.respond({
       actorUserId,
       invitationId,
@@ -106,9 +108,10 @@ it.effect("surfaces squad invite recipient authorization failures", () => {
     respondToSquadGroupInvite: () =>
       Effect.fail({ _tag: "ActorIsNotSquadGroupInviteRecipient" as const }),
   });
-  const service = new EffectRespondToSquadGroupInvite(fixedClock);
+  const service = new EffectRespondToSquadGroupInvite();
 
   return Effect.gen(function* respondToSquadGroupInviteEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
       service.respond({
         actorUserId,

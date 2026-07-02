@@ -1,7 +1,7 @@
+import * as Clock from "effect/Clock";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { SendSquadGroupEditorInvite } from "./send-squad-group-editor-invite.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import { EffectSquadGroupStore } from "./squad-group-store.js";
@@ -9,23 +9,22 @@ import type { SquadGroupInvitationSummary } from "./squad-group-store.js";
 
 /** Effect service module that sends squad group editor invitations as the group owner. */
 export class EffectSendSquadGroupEditorInvite {
-  private readonly clock: Clock;
-
-  constructor(clock: Clock) {
-    this.clock = clock;
-  }
+  private readonly currentDate = Clock.currentTimeMillis.pipe(
+    EffectRuntime.map((milliseconds) => new Date(milliseconds))
+  );
 
   /** Send or re-send a squad group editor invitation. */
-  send(
+  readonly send = (
     input: Parameters<SendSquadGroupEditorInvite["send"]>[0]
   ): Effect<
     SquadGroupInvitationSummary,
     SquadGroupSharingError,
     EffectSquadGroupStore
-  > {
-    const now = this.clock.now();
+  > => {
+    const { currentDate } = this;
 
     return EffectRuntime.gen(function* sendSquadGroupEditorInviteEffect() {
+      const now = yield* currentDate;
       yield* EffectSquadGroupStore.use((store) =>
         store.authorizeSquadGroupOwner({
           actorUserId: input.actorUserId,
@@ -52,5 +51,5 @@ export class EffectSendSquadGroupEditorInvite {
         })
       );
     });
-  }
+  };
 }

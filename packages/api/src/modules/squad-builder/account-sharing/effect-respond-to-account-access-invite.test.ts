@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
@@ -72,9 +73,10 @@ it.effect("accepts an account access invite as the invited user", () => {
       });
     },
   });
-  const service = new EffectRespondToAccountAccessInvite(fixedClock);
+  const service = new EffectRespondToAccountAccessInvite();
 
   return Effect.gen(function* respondToAccountAccessInviteEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
     const invite = yield* service.respond({
       accessId,
       actorUserId,
@@ -96,9 +98,10 @@ it.effect("surfaces invite recipient authorization failures", () => {
     respondToAccountAccessInvite: () =>
       Effect.fail({ _tag: "ActorIsNotInviteRecipient" as const }),
   });
-  const service = new EffectRespondToAccountAccessInvite(fixedClock);
+  const service = new EffectRespondToAccountAccessInvite();
 
   return Effect.gen(function* respondToAccountAccessInviteEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
       service.respond({
         accessId,

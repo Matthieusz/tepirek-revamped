@@ -1,7 +1,7 @@
+import * as Clock from "effect/Clock";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type {
   ApplyAccountRefetchError,
   ApplyAccountRefetchInput,
@@ -11,24 +11,22 @@ import { EffectAccountRefetchStore } from "./effect-account-refetch-store.js";
 
 /** Effect service module that applies a saved pending account refetch. */
 export class EffectApplyAccountRefetch {
-  private readonly clock: Clock;
-
-  constructor(clock: Clock) {
-    this.clock = clock;
-  }
+  private readonly currentDate = Clock.currentTimeMillis.pipe(
+    EffectRuntime.map((milliseconds) => new Date(milliseconds))
+  );
 
   /** Apply a previously previewed account refetch to account and character storage. */
-  apply(
+  readonly apply = (
     input: ApplyAccountRefetchInput
   ): Effect<
     ApplyAccountRefetchOutput,
     ApplyAccountRefetchError,
     EffectAccountRefetchStore
-  > {
-    const { clock } = this;
+  > => {
+    const { currentDate } = this;
 
     return EffectRuntime.gen(function* applyAccountRefetchEffect() {
-      const now = clock.now();
+      const now = yield* currentDate;
       const pending = yield* EffectAccountRefetchStore.use((store) =>
         store.findPendingRefetchForApply({
           actorUserId: input.actorUserId,
@@ -61,5 +59,5 @@ export class EffectApplyAccountRefetch {
 
       return applied;
     });
-  }
+  };
 }

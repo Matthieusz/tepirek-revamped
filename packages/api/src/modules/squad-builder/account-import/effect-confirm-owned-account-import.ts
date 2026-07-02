@@ -1,3 +1,4 @@
+import * as Clock from "effect/Clock";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
@@ -13,7 +14,6 @@ import type {
   SquadBuilderPersistenceUnavailable,
 } from "./account-import-store.js";
 import { EffectAccountImportStore } from "./effect-account-import-store.js";
-import type { Clock } from "./preview-margonem-profile-import.js";
 
 /** Input for confirming an owned account import through Effect. */
 export interface EffectConfirmOwnedAccountImportInput {
@@ -31,21 +31,19 @@ export type EffectConfirmOwnedAccountImportError =
 
 /** Effect service module that confirms a pending import into an owned account. */
 export class EffectConfirmOwnedAccountImport {
-  private readonly clock: Clock;
-
-  constructor(clock: Clock) {
-    this.clock = clock;
-  }
+  private readonly currentDate = Clock.currentTimeMillis.pipe(
+    EffectRuntime.map((milliseconds) => new Date(milliseconds))
+  );
 
   /** Save a previously previewed Margonem account and its Jaruna characters. */
-  confirm(
+  readonly confirm = (
     input: EffectConfirmOwnedAccountImportInput
   ): Effect<
     OwnedMargonemAccountSummary,
     EffectConfirmOwnedAccountImportError,
     EffectAccountImportStore
-  > {
-    const { clock } = this;
+  > => {
+    const { currentDate } = this;
 
     return EffectRuntime.gen(function* confirmOwnedAccountImportEffect() {
       const displayName = parseAccountDisplayName(input.displayName);
@@ -54,7 +52,7 @@ export class EffectConfirmOwnedAccountImport {
         return yield* EffectRuntime.fail(displayName.error);
       }
 
-      const now = clock.now();
+      const now = yield* currentDate;
       const pending = yield* EffectAccountImportStore.use((store) =>
         store.findPendingImportForConfirmation({
           actorUserId: input.actorUserId,
@@ -71,5 +69,5 @@ export class EffectConfirmOwnedAccountImport {
         })
       );
     });
-  }
+  };
 }

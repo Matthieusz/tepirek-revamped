@@ -1,7 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { TestClock } from "effect/testing";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import { parseAppUserId } from "../app-user-id.js";
 import { isOk } from "../result.js";
 import { makeEffectAccountRefetchStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
@@ -20,16 +20,12 @@ const parseTestUserId = () => {
 
 const fixedNow = new Date("2026-06-29T12:00:00.000Z");
 
-const fixedClock: Clock = {
-  now: () => fixedNow,
-};
-
 it.effect("applies a pending account refetch and marks it applied", () => {
   const actorUserId = parseTestUserId();
   const appliedRefetchIds: number[] = [];
   const store = makeEffectAccountRefetchStoreTestService({
     applyRefetchedAccount: (input) => {
-      expect(input.now).toBe(fixedNow);
+      expect(input.now).toEqual(fixedNow);
       expect(input.pendingRefetch.accountId).toBe(123);
 
       return Effect.succeed({
@@ -43,7 +39,7 @@ it.effect("applies a pending account refetch and marks it applied", () => {
       });
     },
     findPendingRefetchForApply: (input) => {
-      expect(input.now).toBe(fixedNow);
+      expect(input.now).toEqual(fixedNow);
       expect(input.refetchPreviewId).toBe(456);
 
       return Effect.succeed({
@@ -63,14 +59,15 @@ it.effect("applies a pending account refetch and marks it applied", () => {
         profileId: 7_298_897 as never,
       }),
     markPendingRefetchApplied: (input) => {
-      expect(input.appliedAt).toBe(fixedNow);
+      expect(input.appliedAt).toEqual(fixedNow);
       appliedRefetchIds.push(input.refetchPreviewId);
       return Effect.void;
     },
   });
-  const service = new EffectApplyAccountRefetch(fixedClock);
+  const service = new EffectApplyAccountRefetch();
 
   return Effect.gen(function* applyRefetchEffect() {
+    yield* TestClock.setTime(fixedNow.getTime());
     const applied = yield* service.apply({
       actorUserId,
       refetchPreviewId: 456 as never,

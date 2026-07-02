@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { isOk } from "../result.js";
@@ -101,9 +102,10 @@ it.effect("sends a squad group editor invite for a verified target", () => {
       });
     },
   });
-  const service = new EffectSendSquadGroupEditorInvite(fixedClock);
+  const service = new EffectSendSquadGroupEditorInvite();
 
   return Effect.gen(function* sendSquadGroupEditorInviteEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
     const invite = yield* service.send({
       actorUserId,
       groupId,
@@ -130,9 +132,10 @@ it.effect("rejects self-invites before resolving the target", () => {
         role: "owner" as const,
       }),
   });
-  const service = new EffectSendSquadGroupEditorInvite(fixedClock);
+  const service = new EffectSendSquadGroupEditorInvite();
 
   return Effect.gen(function* sendSquadGroupEditorInviteEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
       service.send({
         actorUserId,

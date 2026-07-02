@@ -651,9 +651,7 @@ describe("squad-builder router Postgres integration", () => {
   it("applies account refetch through the Effect oRPC bridge", async () => {
     const member = await createVerifiedMember({ id: "apply-effect-member" });
     const client = createSquadBuilderClient(member, {
-      effectApplyAccountRefetchService: new EffectApplyAccountRefetch(
-        systemClock
-      ),
+      effectApplyAccountRefetchService: new EffectApplyAccountRefetch(),
       effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
     });
     const [account] = await testDb
@@ -736,7 +734,7 @@ describe("squad-builder router Postgres integration", () => {
     const { store } = buildStoreBackedServices();
     const client = createSquadBuilderClient(member, {
       effectConfirmOwnedAccountImportService:
-        new EffectConfirmOwnedAccountImport(systemClock),
+        new EffectConfirmOwnedAccountImport(),
       effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
     });
     const pendingImportId = await seedPendingImport(
@@ -948,9 +946,7 @@ describe("squad-builder router Postgres integration", () => {
     });
     const client = createSquadBuilderClient(owner, {
       effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
-      effectSendAccountAccessInviteService: new EffectSendAccountAccessInvite(
-        systemClock
-      ),
+      effectSendAccountAccessInviteService: new EffectSendAccountAccessInvite(),
     });
     const [account] = await testDb
       .insert(margonemAccount)
@@ -989,7 +985,7 @@ describe("squad-builder router Postgres integration", () => {
     const client = createSquadBuilderClient(owner, {
       effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
       effectSendSquadGroupEditorInviteService:
-        new EffectSendSquadGroupEditorInvite(systemClock),
+        new EffectSendSquadGroupEditorInvite(),
     });
     const group = await client.squadBuilder.createSquadGroup({
       name: "Router effect squad invite group",
@@ -1020,11 +1016,11 @@ describe("squad-builder router Postgres integration", () => {
     const ownerClient = createSquadBuilderClient(owner, {
       effectRuntime: runtime,
       effectSendSquadGroupEditorInviteService:
-        new EffectSendSquadGroupEditorInvite(systemClock),
+        new EffectSendSquadGroupEditorInvite(),
     });
     const recipientClient = createSquadBuilderClient(recipient, {
       effectRespondToSquadGroupInviteService:
-        new EffectRespondToSquadGroupInvite(systemClock),
+        new EffectRespondToSquadGroupInvite(),
       effectRuntime: runtime,
     });
     const group = await ownerClient.squadBuilder.createSquadGroup({
@@ -1059,12 +1055,10 @@ describe("squad-builder router Postgres integration", () => {
     });
     const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const ownerClient = createSquadBuilderClient(owner, {
-      effectRevokeSquadGroupEditorService: new EffectRevokeSquadGroupEditor(
-        systemClock
-      ),
+      effectRevokeSquadGroupEditorService: new EffectRevokeSquadGroupEditor(),
       effectRuntime: runtime,
       effectSendSquadGroupEditorInviteService:
-        new EffectSendSquadGroupEditorInvite(systemClock),
+        new EffectSendSquadGroupEditorInvite(),
     });
     const group = await ownerClient.squadBuilder.createSquadGroup({
       name: "Router effect squad revoke group",
@@ -1189,14 +1183,12 @@ describe("squad-builder router Postgres integration", () => {
     const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const ownerClient = createSquadBuilderClient(owner, {
       effectRuntime: runtime,
-      effectSendAccountAccessInviteService: new EffectSendAccountAccessInvite(
-        systemClock
-      ),
+      effectSendAccountAccessInviteService: new EffectSendAccountAccessInvite(),
     });
     const recipientClient = createSquadBuilderClient(recipient, {
       effectListAccountSharingStateService: new EffectListAccountSharingState(),
       effectRespondToAccountAccessInviteService:
-        new EffectRespondToAccountAccessInvite(systemClock),
+        new EffectRespondToAccountAccessInvite(),
       effectRuntime: runtime,
     });
 

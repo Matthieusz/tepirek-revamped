@@ -1,7 +1,7 @@
+import * as Clock from "effect/Clock";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
 import type { AccountAccessInviteSummary } from "./account-sharing-store.js";
 import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
@@ -9,23 +9,22 @@ import type { SendAccountAccessInviteInput } from "./send-account-access-invite.
 
 /** Effect service module that sends account access invites as the account owner. */
 export class EffectSendAccountAccessInvite {
-  private readonly clock: Clock;
-
-  constructor(clock: Clock) {
-    this.clock = clock;
-  }
+  private readonly currentDate = Clock.currentTimeMillis.pipe(
+    EffectRuntime.map((milliseconds) => new Date(milliseconds))
+  );
 
   /** Send or re-send an account access invitation. */
-  send(
+  readonly send = (
     input: SendAccountAccessInviteInput
   ): Effect<
     AccountAccessInviteSummary,
     AccountSharingError,
     EffectAccountSharingStore
-  > {
-    const now = this.clock.now();
+  > => {
+    const { currentDate } = this;
 
     return EffectRuntime.gen(function* sendAccountAccessInviteEffect() {
+      const now = yield* currentDate;
       const owned = yield* EffectAccountSharingStore.use((store) =>
         store.findOwnedAccountForSharing({
           accountId: input.accountId,
@@ -56,5 +55,5 @@ export class EffectSendAccountAccessInvite {
         })
       );
     });
-  }
+  };
 }

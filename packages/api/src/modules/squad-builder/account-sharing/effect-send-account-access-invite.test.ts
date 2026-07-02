@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
@@ -92,9 +93,10 @@ it.effect("sends an account access invite for a verified target", () => {
       });
     },
   });
-  const service = new EffectSendAccountAccessInvite(fixedClock);
+  const service = new EffectSendAccountAccessInvite();
 
   return Effect.gen(function* sendAccountAccessInviteEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
     const invite = yield* service.send({
       accountId,
       actorUserId,
@@ -121,9 +123,10 @@ it.effect("rejects self-invites before resolving the target", () => {
         profileId: 7_298_897 as never,
       }),
   });
-  const service = new EffectSendAccountAccessInvite(fixedClock);
+  const service = new EffectSendAccountAccessInvite();
 
   return Effect.gen(function* sendAccountAccessInviteEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
       service.send({
         accountId,

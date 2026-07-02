@@ -1490,30 +1490,20 @@ const saveSharedSquadGroupCharactersEffect = new SaveSharedSquadGroupCharacters(
   systemClock
 );
 const listOwnedAccountsEffect = new ListOwnedMargonemAccounts();
-const applyAccountRefetchEffect = new EffectApplyAccountRefetch(systemClock);
+const applyAccountRefetchEffect = new EffectApplyAccountRefetch();
 const searchAccountInviteTargetsEffect = new EffectSearchAccountInviteTargets();
 const searchSquadEditorInviteTargetsEffect =
   new EffectSearchSquadEditorInviteTargets();
-const sendAccountAccessInviteEffect = new EffectSendAccountAccessInvite(
-  systemClock
-);
-const sendSquadGroupEditorInviteEffect = new EffectSendSquadGroupEditorInvite(
-  systemClock
-);
-const respondToSquadGroupInviteEffect = new EffectRespondToSquadGroupInvite(
-  systemClock
-);
-const revokeSquadGroupEditorEffect = new EffectRevokeSquadGroupEditor(
-  systemClock
-);
+const sendAccountAccessInviteEffect = new EffectSendAccountAccessInvite();
+const sendSquadGroupEditorInviteEffect = new EffectSendSquadGroupEditorInvite();
+const respondToSquadGroupInviteEffect = new EffectRespondToSquadGroupInvite();
+const revokeSquadGroupEditorEffect = new EffectRevokeSquadGroupEditor();
 const respondToAccountAccessInviteEffect =
-  new EffectRespondToAccountAccessInvite(systemClock);
-const revokeAccountAccessEffect = new EffectRevokeAccountAccess(systemClock);
+  new EffectRespondToAccountAccessInvite();
+const revokeAccountAccessEffect = new EffectRevokeAccountAccess();
 const listAccountSharingStateEffect = new EffectListAccountSharingState();
 const listSquadGroupSharingStateEffect = new EffectListSquadGroupSharingState();
-const confirmOwnedAccountImportEffect = new EffectConfirmOwnedAccountImport(
-  systemClock
-);
+const confirmOwnedAccountImportEffect = new EffectConfirmOwnedAccountImport();
 const createDefaultPreviewProfileImportEffect = (): Result<
   EffectPreviewMargonemProfileImport,
   SquadBuilderRouterError

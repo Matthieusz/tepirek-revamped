@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
@@ -64,9 +65,10 @@ it.effect("revokes account access as the account owner", () => {
       });
     },
   });
-  const service = new EffectRevokeAccountAccess(fixedClock);
+  const service = new EffectRevokeAccountAccess();
 
   return Effect.gen(function* revokeAccountAccessEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
     const revoked = yield* service.revoke({
       accessId,
       actorUserId,
@@ -88,9 +90,10 @@ it.effect("surfaces owner authorization failures", () => {
     revokeAccountAccess: () =>
       Effect.fail({ _tag: "ActorDoesNotOwnMargonemAccount" as const }),
   });
-  const service = new EffectRevokeAccountAccess(fixedClock);
+  const service = new EffectRevokeAccountAccess();
 
   return Effect.gen(function* revokeAccountAccessEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
       service.revoke({
         accessId,

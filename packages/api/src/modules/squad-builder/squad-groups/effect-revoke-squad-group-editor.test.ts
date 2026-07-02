@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { isOk } from "../result.js";
@@ -80,9 +81,10 @@ it.effect("revokes a squad group editor invite as the owner", () => {
       });
     },
   });
-  const service = new EffectRevokeSquadGroupEditor(fixedClock);
+  const service = new EffectRevokeSquadGroupEditor();
 
   return Effect.gen(function* revokeSquadGroupEditorEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
     const invite = yield* service.revoke({
       actorUserId,
       invitationId,
@@ -103,9 +105,10 @@ it.effect("surfaces squad group ownership failures", () => {
     revokeSquadGroupEditor: () =>
       Effect.fail({ _tag: "ActorDoesNotOwnSquadGroup" as const }),
   });
-  const service = new EffectRevokeSquadGroupEditor(fixedClock);
+  const service = new EffectRevokeSquadGroupEditor();
 
   return Effect.gen(function* revokeSquadGroupEditorEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
       service.revoke({
         actorUserId,
