@@ -5,10 +5,9 @@ import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { createContext } from "@tepirek-revamped/api/context";
-import { makeApiLiveLayer } from "@tepirek-revamped/api/effect-app";
+import { makeApiRuntime } from "@tepirek-revamped/api/effect-app";
 import { createAppRouter } from "@tepirek-revamped/api/routers/index";
 import { auth } from "@tepirek-revamped/auth";
-import { ManagedRuntime } from "effect";
 import { createError, initLogger, log as evlogLog, parseError } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
 import type { BetterAuthInstance } from "evlog/better-auth";
@@ -37,16 +36,14 @@ if (!databaseUrl) {
 }
 
 /** Shared Effect runtime for migrated API modules. */
-export const apiEffectRuntime = ManagedRuntime.make(
-  makeApiLiveLayer(databaseUrl)
-);
+export const apiEffectRuntime = makeApiRuntime(databaseUrl);
 
 export const disposeApiEffectRuntime = async (): Promise<void> => {
   await apiEffectRuntime.dispose();
 };
 
 export const appRouter = createAppRouter({
-  squadBuilder: { effectRuntime: apiEffectRuntime },
+  squadBuilder: { effectRuntime: apiEffectRuntime.getManagedRuntime() },
 });
 
 app.use(evlog());
