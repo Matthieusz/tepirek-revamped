@@ -39,6 +39,7 @@ import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-d
 import { parseMargonemProfileId } from "../margonem-profile-id";
 import { isOk } from "../result";
 import { CreateSquadGroup } from "./create-squad-group";
+import { EffectRespondToSquadGroupInvite } from "./effect-respond-to-squad-group-invite";
 import { EffectSendSquadGroupEditorInvite } from "./effect-send-squad-group-editor-invite";
 import { ListAvailableSquadCharacters } from "./list-available-squad-characters";
 import { ListGlobalSquadGroups } from "./list-global-squad-groups";
@@ -964,6 +965,56 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     ).rejects.toMatchObject({
       _tag: "SquadGroupInvitationTransitionNotAllowed",
     });
+  });
+
+  it("responds to squad group editor invites", async () => {
+    const owner = await createVerifiedMember({
+      id: "effect-store-squad-respond-owner",
+      name: "Effect Store Squad Respond Owner",
+    });
+    const target = await createVerifiedMember({
+      id: "effect-store-squad-respond-target",
+      name: "Effect Store Squad Respond Target",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const createService = new CreateSquadGroup();
+    const sendService = new EffectSendSquadGroupEditorInvite(systemClock);
+    const respondService = new EffectRespondToSquadGroupInvite(systemClock);
+
+    const group = await runtime.runPromise(
+      createService.create({
+        actorUserId: parseTestUserId(owner.id),
+        name: "Effect store squad respond group",
+      })
+    );
+    const invite = await runtime.runPromise(
+      sendService.send({
+        actorUserId: parseTestUserId(owner.id),
+        groupId: group.groupId,
+        invitedUserId: parseTestUserId(target.id),
+      })
+    );
+    const accepted = await runtime.runPromise(
+      respondService.respond({
+        actorUserId: parseTestUserId(target.id),
+        invitationId: invite.invitationId,
+        response: "accept",
+      })
+    );
+
+    expect(accepted).toMatchObject({
+      invitationId: invite.invitationId,
+      squadGroupId: group.groupId,
+      status: "accepted",
+    });
+
+    const [stored] = await testDb
+      .select({ status: squadGroupInvitation.status })
+      .from(squadGroupInvitation)
+      .where(eq(squadGroupInvitation.id, invite.invitationId))
+      .limit(1);
+
+    expect(stored?.status).toBe("accepted");
   });
 
   it("responds to account access invites", async () => {

@@ -146,6 +146,7 @@ import type {
   SaveSharedSquadGroupCharactersStoreInput,
   SaveSquadGroupSnapshotStoreInput,
   SearchInviteTargetsStoreInput,
+  RespondToSquadGroupInviteStoreInput,
   RespondToAccountAccessInviteStoreInput,
   RevokeAccountAccessResult,
   RevokeAccountAccessStoreInput,
@@ -193,6 +194,7 @@ type EffectSquadGroupPersistenceOperation =
   | "markPendingRefetchApplied"
   | "reserveRequest"
   | "respondToAccountAccessInvite"
+  | "respondToSquadGroupInvite"
   | "revokeAccountAccess"
   | "saveSharedSquadGroupCharacters"
   | "saveSquadGroupSnapshot"
@@ -2155,6 +2157,125 @@ const upsertSquadGroupEditorInviteWithDatabase =
         Effect.catchTag("SquadGroupInvitationNotFound", (error) =>
           failPersistence(operation, error)
         )
+      );
+    });
+
+const respondToSquadGroupInviteWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    invitationId,
+    invitedUserId,
+    now,
+    response,
+  }: RespondToSquadGroupInviteStoreInput): Effect.Effect<
+    SquadGroupInvitationSummary,
+    | { readonly _tag: "SquadGroupInvitationNotFound" }
+    | { readonly _tag: "ActorIsNotSquadGroupInviteRecipient" }
+    | {
+        readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
+        readonly currentStatus: SquadGroupInvitationStatus;
+        readonly attempted: string;
+      }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* respondToSquadGroupInviteEffect() {
+      const operation = "respondToSquadGroupInvite" as const;
+      const invitedUser = appUserIdToString(invitedUserId);
+      const invitationIdNumber = squadGroupInvitationIdToNumber(invitationId);
+      const transaction = database.transaction((tx) =>
+        Effect.gen(function* respondToSquadGroupInviteTransaction() {
+          const existingSelect = tx
+            .select({
+              id: squadGroupInvitation.id,
+              invitedUserId: squadGroupInvitation.invitedUserId,
+              status: squadGroupInvitation.status,
+            })
+            .from(squadGroupInvitation)
+            .where(eq(squadGroupInvitation.id, invitationIdNumber))
+            .limit(1);
+          const existingRows = yield* existingSelect as Effect.Effect<
+            readonly {
+              readonly id: number;
+              readonly invitedUserId: string;
+              readonly status: string;
+            }[],
+            unknown,
+            never
+          >;
+          const [existing] = existingRows;
+
+          if (existing === undefined) {
+            return { _tag: "SquadGroupInvitationNotFound" as const };
+          }
+
+          if (existing.invitedUserId !== invitedUser) {
+            return {
+              _tag: "ActorIsNotSquadGroupInviteRecipient" as const,
+            };
+          }
+
+          const status = parseSquadGroupInvitationStatus(existing.status);
+
+          if (isError(status)) {
+            return yield* failPersistence(operation, status.error);
+          }
+
+          const nextStatus: SquadGroupInvitationStatus =
+            response === "accept" ? "accepted" : "declined";
+
+          if (!canTransitionSquadGroupInvitation(status.value, nextStatus)) {
+            return {
+              _tag: "SquadGroupInvitationTransitionNotAllowed" as const,
+              attempted: nextStatus,
+              currentStatus: status.value,
+            };
+          }
+
+          const update = tx
+            .update(squadGroupInvitation)
+            .set({ status: nextStatus, updatedAt: now })
+            .where(eq(squadGroupInvitation.id, existing.id))
+            .returning({ id: squadGroupInvitation.id });
+          const updatedRows = yield* update as Effect.Effect<
+            readonly { readonly id: number }[],
+            unknown,
+            never
+          >;
+          const [updated] = updatedRows;
+
+          if (updated === undefined) {
+            return yield* failPersistence(
+              operation,
+              new Error("Failed to update squad group invitation")
+            );
+          }
+
+          return { _tag: "Updated" as const };
+        })
+      );
+      const respond = yield* (
+        transaction as Effect.Effect<
+          | { readonly _tag: "Updated" }
+          | { readonly _tag: "SquadGroupInvitationNotFound" }
+          | { readonly _tag: "ActorIsNotSquadGroupInviteRecipient" }
+          | {
+              readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
+              readonly currentStatus: SquadGroupInvitationStatus;
+              readonly attempted: string;
+            },
+          unknown,
+          never
+        >
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
+      if (respond._tag !== "Updated") {
+        return yield* Effect.fail(respond);
+      }
+
+      return yield* loadSquadGroupInvitationSummaryWithDatabase(database)(
+        invitationId,
+        operation
       );
     });
 
@@ -4196,6 +4317,8 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       reserveRequest: reserveRequestWithDatabase(database),
       respondToAccountAccessInvite:
         respondToAccountAccessInviteWithDatabase(database),
+      respondToSquadGroupInvite:
+        respondToSquadGroupInviteWithDatabase(database),
       revokeAccountAccess: revokeAccountAccessWithDatabase(database),
       saveSharedSquadGroupCharacters:
         saveSharedSquadGroupCharactersWithDatabase(database),

@@ -103,6 +103,7 @@ import type { AvailableSquadCharacter } from "../modules/squad-builder/squad-gro
 import { parseSquadGroupVisibility } from "../modules/squad-builder/squad-group-visibility";
 import { CreateSquadGroup } from "../modules/squad-builder/squad-groups/create-squad-group";
 import type { CreateSquadGroupError } from "../modules/squad-builder/squad-groups/create-squad-group";
+import { EffectRespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/effect-respond-to-squad-group-invite";
 import { EffectSearchSquadEditorInviteTargets } from "../modules/squad-builder/squad-groups/effect-search-squad-editor-invite-targets";
 import { EffectSendSquadGroupEditorInvite } from "../modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite";
 import { ListAvailableSquadCharacters } from "../modules/squad-builder/squad-groups/list-available-squad-characters";
@@ -440,6 +441,16 @@ interface RespondToSquadGroupInviteService {
   ) => Promise<Result<SquadGroupInvitationSummary, SquadGroupSharingError>>;
 }
 
+interface EffectRespondToSquadGroupInviteService {
+  readonly respond: (
+    input: Parameters<EffectRespondToSquadGroupInvite["respond"]>[0]
+  ) => Effect<
+    SquadGroupInvitationSummary,
+    SquadGroupSharingError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface RevokeSquadGroupEditorService {
   readonly revoke: (
     input: Parameters<RevokeSquadGroupEditor["revoke"]>[0]
@@ -523,6 +534,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly sendSquadGroupEditorInviteService?: SendSquadGroupEditorInviteService;
   readonly effectSendSquadGroupEditorInviteService?: EffectSendSquadGroupEditorInviteService;
   readonly respondToSquadGroupInviteService?: RespondToSquadGroupInviteService;
+  readonly effectRespondToSquadGroupInviteService?: EffectRespondToSquadGroupInviteService;
   readonly revokeSquadGroupEditorService?: RevokeSquadGroupEditorService;
   readonly listSquadGroupSharingStateService?: ListSquadGroupSharingStateService;
   readonly saveSharedSquadGroupCharactersService?: SaveSharedSquadGroupCharactersService;
@@ -1507,6 +1519,9 @@ const sendAccountAccessInviteEffect = new EffectSendAccountAccessInvite(
 const sendSquadGroupEditorInviteEffect = new EffectSendSquadGroupEditorInvite(
   systemClock
 );
+const respondToSquadGroupInviteEffect = new EffectRespondToSquadGroupInvite(
+  systemClock
+);
 const respondToAccountAccessInviteEffect =
   new EffectRespondToAccountAccessInvite(systemClock);
 const revokeAccountAccessEffect = new EffectRevokeAccountAccess(systemClock);
@@ -1601,6 +1616,7 @@ export const createSquadBuilderRouter = ({
   sendSquadGroupEditorInviteService,
   effectSendSquadGroupEditorInviteService,
   respondToSquadGroupInviteService,
+  effectRespondToSquadGroupInviteService,
   revokeSquadGroupEditorService,
   listSquadGroupSharingStateService,
   saveSharedSquadGroupCharactersService,
@@ -2543,34 +2559,53 @@ export const createSquadBuilderRouter = ({
       if (isError(invitationId)) {
         throw toSquadGroupOrpcError(invitationId.error);
       }
-      const services =
-        respondToSquadGroupInviteService === undefined
-          ? defaultServices
-          : ok({
-              respondToSquadGroupInvite: respondToSquadGroupInviteService,
-            });
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "respondToSquadGroupInvite",
-          services.error
-        );
-        throw toOrpcError(services.error);
+      if (respondToSquadGroupInviteService !== undefined) {
+        const result = await respondToSquadGroupInviteService.respond({
+          actorUserId: actorUserId.value,
+          invitationId: invitationId.value,
+          response: input.response,
+        });
+
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "respondToSquadGroupInvite",
+            result.error
+          );
+          throw toSquadGroupOrpcError(result.error);
+        }
+
+        return toSquadGroupInvitationDto(result.value);
       }
-      const result = await services.value.respondToSquadGroupInvite.respond({
+
+      const effect = (
+        effectRespondToSquadGroupInviteService ??
+        respondToSquadGroupInviteEffect
+      ).respond({
         actorUserId: actorUserId.value,
         invitationId: invitationId.value,
         response: input.response,
       });
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "respondToSquadGroupInvite",
-          result.error
-        );
-        throw toSquadGroupOrpcError(result.error);
+
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for respondToSquadGroupInvite"
+          ),
+          operation: "respondToSquadGroupInvite",
+        };
+        logSquadBuilderError(context, "respondToSquadGroupInvite", error);
+        throw toSquadGroupOrpcError(error);
       }
-      return toSquadGroupInvitationDto(result.value);
+
+      const invite = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as SquadGroupSharingError;
+        logSquadBuilderError(context, "respondToSquadGroupInvite", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
+      return toSquadGroupInvitationDto(invite);
     }),
   revokeAccountAccess: verifiedProcedure
     .input(revokeAccountAccessInputSchema)

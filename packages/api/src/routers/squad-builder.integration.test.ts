@@ -31,6 +31,7 @@ import { parseMargonemProfileId } from "../modules/squad-builder/margonem-profil
 import { pendingImportIdToNumber } from "../modules/squad-builder/pending-margonem-account-import-id";
 import { isOk, ok } from "../modules/squad-builder/result";
 import { DrizzleSquadBuilderStore } from "../modules/squad-builder/squad-builder-store";
+import { EffectRespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/effect-respond-to-squad-group-invite";
 import { EffectSendSquadGroupEditorInvite } from "../modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite";
 import { createVerifiedMember } from "../test/integration/builders";
 import type { TestUser } from "../test/integration/builders";
@@ -954,6 +955,47 @@ describe("squad-builder router Postgres integration", () => {
       ownerUserName: "Router Effect Squad Owner",
       squadGroupId: group.groupId,
       status: "pending",
+    });
+  });
+
+  it("responds to a squad group editor invite through the Effect bridge", async () => {
+    const owner = await createVerifiedMember({
+      id: "router-effect-squad-respond-owner",
+      name: "Router Effect Squad Respond Owner",
+    });
+    const recipient = await createVerifiedMember({
+      id: "router-effect-squad-respond-recipient",
+      name: "Router Effect Squad Respond Recipient",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const ownerClient = createSquadBuilderClient(owner, {
+      effectRuntime: runtime,
+      effectSendSquadGroupEditorInviteService:
+        new EffectSendSquadGroupEditorInvite(systemClock),
+    });
+    const recipientClient = createSquadBuilderClient(recipient, {
+      effectRespondToSquadGroupInviteService:
+        new EffectRespondToSquadGroupInvite(systemClock),
+      effectRuntime: runtime,
+    });
+    const group = await ownerClient.squadBuilder.createSquadGroup({
+      name: "Router effect squad respond group",
+    });
+    const invite = await ownerClient.squadBuilder.sendSquadGroupEditorInvite({
+      groupId: group.groupId,
+      invitedUserId: recipient.id,
+    });
+
+    const accepted =
+      await recipientClient.squadBuilder.respondToSquadGroupInvite({
+        invitationId: invite.invitationId,
+        response: "accept",
+      });
+
+    expect(accepted).toMatchObject({
+      invitationId: invite.invitationId,
+      squadGroupId: group.groupId,
+      status: "accepted",
     });
   });
 

@@ -194,6 +194,20 @@ export interface EffectSquadGroupStoreShape {
     | EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly respondToSquadGroupInvite: (
+    input: RespondToSquadGroupInviteStoreInput
+  ) => Effect<
+    SquadGroupInvitationSummary,
+    | { readonly _tag: "SquadGroupInvitationNotFound" }
+    | { readonly _tag: "ActorIsNotSquadGroupInviteRecipient" }
+    | {
+        readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
+        readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
+        readonly attempted: string;
+      }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
   readonly listOwnedAccounts: (
     input: ListOwnedMargonemAccountsInput
   ) => Effect<
