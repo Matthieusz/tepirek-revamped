@@ -264,6 +264,36 @@ describe("squad-builder router Postgres integration", () => {
     });
   });
 
+  it("saves a squad group through the Effect oRPC bridge", async () => {
+    const member = await createVerifiedMember({ id: "router-effect-save" });
+    const client = createSquadBuilderClient(member, {
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+
+    const created = await client.squadBuilder.createSquadGroup({
+      name: "Router save original",
+    });
+    const saved = await client.squadBuilder.saveSquadGroup({
+      groupId: created.groupId,
+      name: "Router save updated",
+      squads: [
+        {
+          characters: [],
+          clientKey: "router-squad",
+          name: "Router squad",
+          position: 0,
+        },
+      ],
+    });
+
+    expect(saved).toMatchObject({
+      accessRole: "owner",
+      groupId: created.groupId,
+      name: "Router save updated",
+      squads: [{ characters: [], name: "Router squad", position: 0 }],
+    });
+  });
+
   it("lists available squad characters through the Effect oRPC bridge", async () => {
     const member = await createVerifiedMember({
       id: "router-effect-available",

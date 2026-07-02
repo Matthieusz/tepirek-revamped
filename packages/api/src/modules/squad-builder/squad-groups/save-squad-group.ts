@@ -1,20 +1,22 @@
+import * as Effect from "effect/Effect";
+
 import type { Clock } from "../account-import/preview-margonem-profile-import";
 import type { AppUserId } from "../app-user-id";
-import { err, isError } from "../result";
-import type { Result } from "../result";
+import { isError } from "../result";
 import type { SquadGroupId } from "../squad-group-id";
 import type {
   SaveSquadInput,
   SquadGroupValidationError,
 } from "../squad-group-snapshot";
 import { validateSquadGroupSnapshot } from "../squad-group-snapshot";
+import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
 import type {
   ActorCannotViewSquadGroup,
-  SquadBuilderPersistenceUnavailable,
+  ActorDoesNotOwnSquadGroup,
   SquadGroupDetail,
   SquadGroupNotFound,
-  SquadGroupStore,
 } from "./squad-group-store";
+import { EffectSquadGroupStore } from "./squad-group-store";
 
 export type { SaveSquadInput };
 
@@ -30,71 +32,62 @@ export interface SaveSquadGroupInput {
 export type SaveSquadGroupError =
   | SquadGroupNotFound
   | ActorCannotViewSquadGroup
+  | ActorDoesNotOwnSquadGroup
   | SquadGroupValidationError
-  | SquadBuilderPersistenceUnavailable;
+  | EffectSquadBuilderPersistenceUnavailable;
 
 /** Service module that validates and atomically saves squad group snapshots. */
 export class SaveSquadGroup {
-  private readonly store: Pick<
-    SquadGroupStore,
-    | "getSquadGroupDetail"
-    | "listAvailableCharactersForOwner"
-    | "saveSquadGroupSnapshot"
-  >;
   private readonly clock: Clock;
 
-  constructor(
-    store: Pick<
-      SquadGroupStore,
-      | "getSquadGroupDetail"
-      | "listAvailableCharactersForOwner"
-      | "saveSquadGroupSnapshot"
-    >,
-    clock: Clock
-  ) {
-    this.store = store;
+  constructor(clock: Clock) {
     this.clock = clock;
   }
 
   /** Validate and atomically save a full squad group snapshot. */
-  async save(
+  save(
     input: SaveSquadGroupInput
-  ): Promise<Result<SquadGroupDetail, SaveSquadGroupError>> {
-    const group = await this.store.getSquadGroupDetail({
-      actorUserId: input.actorUserId,
-      groupId: input.groupId,
-    });
+  ): Effect.Effect<
+    SquadGroupDetail,
+    SaveSquadGroupError,
+    EffectSquadGroupStore
+  > {
+    const { clock } = this;
 
-    if (isError(group)) {
-      return err(group.error);
-    }
+    return Effect.gen(function* saveSquadGroupEffect() {
+      yield* EffectSquadGroupStore.use((store) =>
+        store.getSquadGroupDetail({
+          actorUserId: input.actorUserId,
+          groupId: input.groupId,
+        })
+      );
 
-    const availableCharacters =
-      await this.store.listAvailableCharactersForOwner({
-        ownerUserId: input.actorUserId,
+      const availableCharacters = yield* EffectSquadGroupStore.use((store) =>
+        store.listAvailableCharactersForOwner({
+          ownerUserId: input.actorUserId,
+        })
+      );
+
+      const snapshot = validateSquadGroupSnapshot({
+        actorUserId: input.actorUserId,
+        availableCharacters,
+        groupId: input.groupId,
+        name: input.name,
+        squads: input.squads,
       });
 
-    if (isError(availableCharacters)) {
-      return err(availableCharacters.error);
-    }
+      if (isError(snapshot)) {
+        return yield* Effect.fail(snapshot.error);
+      }
 
-    const snapshot = validateSquadGroupSnapshot({
-      actorUserId: input.actorUserId,
-      availableCharacters: availableCharacters.value,
-      groupId: input.groupId,
-      name: input.name,
-      squads: input.squads,
-    });
-
-    if (isError(snapshot)) {
-      return err(snapshot.error);
-    }
-
-    return this.store.saveSquadGroupSnapshot({
-      actorUserId: input.actorUserId,
-      availableCharacters: availableCharacters.value,
-      now: this.clock.now(),
-      snapshot: snapshot.value,
+      return yield* EffectSquadGroupStore.use((store) =>
+        store.saveSquadGroupSnapshot({
+          actorUserId: input.actorUserId,
+          availableCharacters,
+          now: clock.now(),
+          snapshot: snapshot.value,
+        })
+      );
     });
   }
 }

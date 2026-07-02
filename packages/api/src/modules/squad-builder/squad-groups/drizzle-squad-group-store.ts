@@ -87,7 +87,11 @@ import {
 } from "../squad-group-list-filters";
 import { parseSquadGroupVisibility } from "../squad-group-visibility";
 import { parseSquadId } from "../squad-id";
-import { parseSquadGroupName, squadGroupNameToString } from "../squad-name";
+import {
+  parseSquadGroupName,
+  squadGroupNameToString,
+  squadNameToString,
+} from "../squad-name";
 import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
 import type {
   ActorCannotViewSquadGroup,
@@ -125,6 +129,7 @@ import type {
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
+  SaveSquadGroupSnapshotStoreInput,
   SearchInviteTargetsStoreInput,
   RespondToAccountAccessInviteStoreInput,
   RevokeAccountAccessResult,
@@ -168,6 +173,7 @@ type EffectSquadGroupPersistenceOperation =
   | "reserveRequest"
   | "respondToAccountAccessInvite"
   | "revokeAccountAccess"
+  | "saveSquadGroupSnapshot"
   | "searchInviteTargets"
   | "upsertAccountAccessInvite"
   | "setSquadGroupVisibility";
@@ -3140,6 +3146,184 @@ const buildSquadGroupListFilterPredicates = (
   return predicates;
 };
 
+const saveSquadGroupSnapshotWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+    availableCharacters,
+    now,
+    snapshot,
+  }: SaveSquadGroupSnapshotStoreInput): Effect.Effect<
+    SquadGroupDetail,
+    | SquadGroupNotFound
+    | ActorDoesNotOwnSquadGroup
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* saveSquadGroupSnapshotEffect() {
+      const operation = "saveSquadGroupSnapshot" as const;
+      const groupIdNumber = squadGroupIdToNumber(snapshot.groupId);
+      const availableByCharacterId = new Map<number, AvailableSquadCharacter>();
+
+      for (const character of availableCharacters) {
+        availableByCharacterId.set(character.characterId, character);
+      }
+
+      const transaction = database.transaction((tx) =>
+        Effect.gen(function* saveSquadGroupSnapshotTransaction() {
+          yield* tx.execute(
+            sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
+          ) as Effect.Effect<unknown, unknown, never>;
+
+          const groupSelect = tx
+            .select({ ownerUserId: squadGroup.ownerUserId })
+            .from(squadGroup)
+            .where(eq(squadGroup.id, groupIdNumber))
+            .limit(1);
+          const groupRows = yield* groupSelect as Effect.Effect<
+            readonly { readonly ownerUserId: string }[],
+            unknown,
+            never
+          >;
+          const [group] = groupRows;
+
+          if (group === undefined) {
+            return { _tag: "SquadGroupNotFound" as const };
+          }
+
+          if (group.ownerUserId !== appUserIdToString(actorUserId)) {
+            return { _tag: "ActorDoesNotOwnSquadGroup" as const };
+          }
+
+          yield* tx
+            .update(squadGroup)
+            .set({
+              name: squadGroupNameToString(snapshot.name),
+              updatedAt: now,
+            })
+            .where(eq(squadGroup.id, groupIdNumber)) as Effect.Effect<
+            unknown,
+            unknown,
+            never
+          >;
+
+          yield* tx
+            .delete(squad)
+            .where(eq(squad.squadGroupId, groupIdNumber)) as Effect.Effect<
+            unknown,
+            unknown,
+            never
+          >;
+
+          for (const squadSnapshot of snapshot.squads) {
+            const insertSquad = tx
+              .insert(squad)
+              .values({
+                name: squadNameToString(squadSnapshot.name),
+                position: squadSnapshot.position,
+                squadGroupId: groupIdNumber,
+                updatedAt: now,
+              })
+              .returning({ id: squad.id });
+            const insertedSquadRows = yield* insertSquad as Effect.Effect<
+              readonly { readonly id: number }[],
+              unknown,
+              never
+            >;
+            const [insertedSquad] = insertedSquadRows;
+
+            if (insertedSquad === undefined) {
+              return new EffectSquadBuilderPersistenceUnavailable({
+                cause: new Error("Failed to insert squad"),
+                operation,
+                provider: "postgres",
+              });
+            }
+
+            if (squadSnapshot.characters.length === 0) {
+              continue;
+            }
+
+            const placementRows = [];
+
+            for (const placement of squadSnapshot.characters) {
+              const character = availableByCharacterId.get(
+                placement.characterId
+              );
+
+              if (character === undefined) {
+                return new EffectSquadBuilderPersistenceUnavailable({
+                  cause: new Error("Validated character was not available"),
+                  operation,
+                  provider: "postgres",
+                });
+              }
+
+              placementRows.push({
+                accountId: margonemAccountIdToNumber(character.accountId),
+                characterId: placement.characterId,
+                position: placement.position,
+                squadGroupId: groupIdNumber,
+                squadId: insertedSquad.id,
+              });
+            }
+
+            yield* tx
+              .insert(squadCharacter)
+              .values(placementRows) as Effect.Effect<unknown, unknown, never>;
+          }
+
+          return { _tag: "Saved" as const };
+        })
+      );
+
+      const saved = yield* (
+        transaction as Effect.Effect<
+          | { readonly _tag: "Saved" }
+          | SquadGroupNotFound
+          | ActorDoesNotOwnSquadGroup
+          | EffectSquadBuilderPersistenceUnavailable,
+          unknown,
+          never
+        >
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
+      if (saved._tag !== "Saved") {
+        return yield* Effect.fail(saved);
+      }
+
+      return yield* getSquadGroupDetailWithDatabase(database)({
+        actorUserId,
+        groupId: snapshot.groupId,
+      }).pipe(
+        Effect.catch(
+          (
+            error
+          ): Effect.Effect<
+            never,
+            | SquadGroupNotFound
+            | ActorDoesNotOwnSquadGroup
+            | EffectSquadBuilderPersistenceUnavailable,
+            never
+          > => {
+            if (error._tag === "ActorCannotViewSquadGroup") {
+              return Effect.fail({
+                _tag: "ActorDoesNotOwnSquadGroup" as const,
+              });
+            }
+
+            return Effect.fail(error);
+          }
+        )
+      );
+    }) as Effect.Effect<
+      SquadGroupDetail,
+      | SquadGroupNotFound
+      | ActorDoesNotOwnSquadGroup
+      | EffectSquadBuilderPersistenceUnavailable,
+      never
+    >;
+
 const listGlobalSquadGroupsWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -3347,6 +3531,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       respondToAccountAccessInvite:
         respondToAccountAccessInviteWithDatabase(database),
       revokeAccountAccess: revokeAccountAccessWithDatabase(database),
+      saveSquadGroupSnapshot: saveSquadGroupSnapshotWithDatabase(database),
       searchInviteTargets: searchInviteTargetsWithDatabase(database),
       setSquadGroupVisibility: setSquadGroupVisibilityWithDatabase(database),
       upsertAccountAccessInvite:

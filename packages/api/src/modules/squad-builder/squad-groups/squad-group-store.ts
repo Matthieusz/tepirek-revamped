@@ -113,6 +113,15 @@ export interface EffectSquadGroupStoreShape {
     EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly saveSquadGroupSnapshot: (
+    input: SaveSquadGroupSnapshotStoreInput
+  ) => Effect<
+    SquadGroupDetail,
+    | SquadGroupNotFound
+    | ActorDoesNotOwnSquadGroup
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
   readonly listGlobalSquadGroups: (
     input: ListGlobalSquadGroupsInput
   ) => Effect<

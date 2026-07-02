@@ -41,6 +41,7 @@ import { CreateSquadGroup } from "./create-squad-group";
 import { ListAvailableSquadCharacters } from "./list-available-squad-characters";
 import { ListGlobalSquadGroups } from "./list-global-squad-groups";
 import { ListSquadGroups } from "./list-squad-groups";
+import { SaveSquadGroup } from "./save-squad-group";
 import { SetSquadGroupVisibility } from "./set-squad-group-visibility";
 import { EffectSquadGroupStore } from "./squad-group-store";
 
@@ -184,6 +185,43 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       ownerUserId: parseTestUserId(member.id),
       squads: [],
       visibility: "private",
+    });
+  });
+
+  it("saves a squad group snapshot through the Effect store", async () => {
+    const member = await createVerifiedMember({ id: "effect-save-owner" });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const createService = new CreateSquadGroup();
+    const saveService = new SaveSquadGroup(systemClock);
+
+    const created = await runtime.runPromise(
+      createService.create({
+        actorUserId: parseTestUserId(member.id),
+        name: "Effect save original",
+      })
+    );
+
+    const saved = await runtime.runPromise(
+      saveService.save({
+        actorUserId: parseTestUserId(member.id),
+        groupId: created.groupId,
+        name: "Effect save updated",
+        squads: [
+          {
+            characters: [],
+            clientKey: "first-squad",
+            name: "First squad",
+            position: 0,
+          },
+        ],
+      })
+    );
+
+    expect(saved).toMatchObject({
+      accessRole: "owner",
+      groupId: created.groupId,
+      name: "Effect save updated",
+      squads: [{ characters: [], name: "First squad", position: 0 }],
     });
   });
 

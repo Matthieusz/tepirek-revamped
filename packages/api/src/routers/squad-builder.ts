@@ -392,7 +392,7 @@ interface ListAvailableSquadCharactersService {
 interface SaveSquadGroupService {
   readonly save: (
     input: Parameters<SaveSquadGroup["save"]>[0]
-  ) => Promise<Result<SquadGroupDetail, SaveSquadGroupError>>;
+  ) => Effect<SquadGroupDetail, SaveSquadGroupError, EffectSquadGroupStore>;
 }
 
 interface SearchSquadEditorInviteTargetsService {
@@ -720,7 +720,7 @@ const createDefaultSquadBuilderServices = (): Result<
       store,
       systemClock
     ),
-    saveSquadGroup: new SaveSquadGroup(store, systemClock),
+    saveSquadGroup: new SaveSquadGroup(systemClock),
     searchInviteTargets: new SearchAccountInviteTargets(store),
     searchSquadEditorInviteTargets: new SearchSquadEditorInviteTargets(store),
     sendInvite: new SendAccountAccessInvite(store, systemClock),
@@ -1451,6 +1451,7 @@ const listGlobalSquadGroupsEffect = new ListGlobalSquadGroups();
 const listSquadGroupsEffect = new ListSquadGroups();
 const listAvailableSquadCharactersEffect = new ListAvailableSquadCharacters();
 const setSquadGroupVisibilityEffect = new SetSquadGroupVisibility(systemClock);
+const saveSquadGroupEffect = new SaveSquadGroup(systemClock);
 const listOwnedAccountsEffect = new ListOwnedMargonemAccounts();
 const applyAccountRefetchEffect = new EffectApplyAccountRefetch(systemClock);
 const searchAccountInviteTargetsEffect = new EffectSearchAccountInviteTargets();
@@ -2700,31 +2701,30 @@ export const createSquadBuilderRouter = ({
         });
       }
 
-      const services =
-        saveSquadGroupService === undefined
-          ? defaultServices
-          : ok({
-              saveSquadGroup: saveSquadGroupService,
-            });
-
-      if (isError(services)) {
-        logSquadBuilderError(context, "saveSquadGroup", services.error);
-        throw toOrpcError(services.error);
-      }
-
-      const result = await services.value.saveSquadGroup.save({
+      const effect = (saveSquadGroupService ?? saveSquadGroupEffect).save({
         actorUserId: actorUserId.value,
         groupId: groupId.value,
         name: input.name,
         squads,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "saveSquadGroup", result.error);
-        throw toSquadGroupOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error("DATABASE_URL is required for saveSquadGroup"),
+          operation: "saveSquadGroup",
+        };
+        logSquadBuilderError(context, "saveSquadGroup", error);
+        throw toSquadGroupOrpcError(error);
       }
 
-      return toSquadGroupDetailDto(result.value);
+      const detail = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as SaveSquadGroupError;
+        logSquadBuilderError(context, "saveSquadGroup", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
+      return toSquadGroupDetailDto(detail);
     }),
   searchAccountInviteTargets: verifiedProcedure
     .input(searchAccountInviteTargetsInputSchema)
