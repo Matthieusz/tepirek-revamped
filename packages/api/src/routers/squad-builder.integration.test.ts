@@ -4,6 +4,8 @@ import {
   margonemAccountAccess,
   margonemAccountRefetchPreview,
   margonemCharacter,
+  squadGroup,
+  squadGroupInvitation,
 } from "@tepirek-revamped/db/schema/squad-builder";
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vitest";
@@ -31,6 +33,7 @@ import { parseMargonemProfileId } from "../modules/squad-builder/margonem-profil
 import { pendingImportIdToNumber } from "../modules/squad-builder/pending-margonem-account-import-id";
 import { isOk, ok } from "../modules/squad-builder/result";
 import { DrizzleSquadBuilderStore } from "../modules/squad-builder/squad-builder-store";
+import { EffectListSquadGroupSharingState } from "../modules/squad-builder/squad-groups/effect-list-squad-group-sharing-state";
 import { EffectRespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/effect-respond-to-squad-group-invite";
 import { EffectRevokeSquadGroupEditor } from "../modules/squad-builder/squad-groups/effect-revoke-squad-group-editor";
 import { EffectSendSquadGroupEditorInvite } from "../modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite";
@@ -1274,6 +1277,169 @@ describe("squad-builder router Postgres integration", () => {
       userId: recipient.id,
       userName: "Effect Grants Recipient",
     });
+  });
+
+  it("lists incoming squad group invites through the Effect bridge", async () => {
+    const owner = await createVerifiedMember({
+      id: "router-effect-squad-invites-owner",
+      name: "Effect Squad Invite Owner",
+    });
+    const recipient = await createVerifiedMember({
+      id: "router-effect-squad-invites-recipient",
+    });
+    const client = createSquadBuilderClient(recipient, {
+      effectListSquadGroupSharingStateService:
+        new EffectListSquadGroupSharingState(),
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+    const [group] = await testDb
+      .insert(squadGroup)
+      .values({ name: "Effect incoming squad", ownerUserId: owner.id })
+      .returning({ id: squadGroup.id });
+
+    if (group === undefined) {
+      throw new Error("Failed to seed squad group");
+    }
+
+    await testDb.insert(squadGroupInvitation).values({
+      invitedByUserId: owner.id,
+      invitedUserId: recipient.id,
+      squadGroupId: group.id,
+      status: "pending",
+    });
+
+    const listed = await client.squadBuilder.listIncomingSquadGroupInvites();
+
+    expect(listed.invites).toHaveLength(1);
+    expect(listed.invites[0]).toMatchObject({
+      ownerUserName: "Effect Squad Invite Owner",
+      squadGroupId: group.id,
+      status: "pending",
+    });
+  });
+
+  it("lists shared squad groups through the Effect bridge", async () => {
+    const owner = await createVerifiedMember({
+      id: "router-effect-shared-squad-owner",
+      name: "Effect Shared Squad Owner",
+    });
+    const recipient = await createVerifiedMember({
+      id: "router-effect-shared-squad-recipient",
+    });
+    const client = createSquadBuilderClient(recipient, {
+      effectListSquadGroupSharingStateService:
+        new EffectListSquadGroupSharingState(),
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+    const [group] = await testDb
+      .insert(squadGroup)
+      .values({ name: "Effect shared squad", ownerUserId: owner.id })
+      .returning({ id: squadGroup.id });
+
+    if (group === undefined) {
+      throw new Error("Failed to seed squad group");
+    }
+
+    await testDb.insert(squadGroupInvitation).values({
+      invitedByUserId: owner.id,
+      invitedUserId: recipient.id,
+      squadGroupId: group.id,
+      status: "accepted",
+    });
+
+    const listed = await client.squadBuilder.listSharedSquadGroups({});
+
+    expect(listed.groups).toHaveLength(1);
+    expect(listed.groups[0]).toMatchObject({
+      groupId: group.id,
+      ownerUserName: "Effect Shared Squad Owner",
+      squadCount: 0,
+    });
+  });
+
+  it("lists squad group editor grants through the Effect bridge", async () => {
+    const owner = await createVerifiedMember({
+      id: "router-effect-squad-grants-owner",
+    });
+    const recipient = await createVerifiedMember({
+      id: "router-effect-squad-grants-recipient",
+      name: "Effect Squad Grant Recipient",
+    });
+    const client = createSquadBuilderClient(owner, {
+      effectListSquadGroupSharingStateService:
+        new EffectListSquadGroupSharingState(),
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+    const [group] = await testDb
+      .insert(squadGroup)
+      .values({ name: "Effect grant squad", ownerUserId: owner.id })
+      .returning({ id: squadGroup.id });
+
+    if (group === undefined) {
+      throw new Error("Failed to seed squad group");
+    }
+
+    await testDb.insert(squadGroupInvitation).values({
+      invitedByUserId: owner.id,
+      invitedUserId: recipient.id,
+      squadGroupId: group.id,
+      status: "accepted",
+    });
+
+    const listed = await client.squadBuilder.listSquadGroupEditorGrants({
+      groupId: group.id,
+    });
+
+    expect(listed.grants).toHaveLength(1);
+    expect(listed.grants[0]).toMatchObject({
+      status: "accepted",
+      userId: recipient.id,
+      userName: "Effect Squad Grant Recipient",
+    });
+  });
+
+  it("counts pending squad group invites through the Effect bridge", async () => {
+    const owner = await createVerifiedMember({
+      id: "router-effect-squad-count-owner",
+    });
+    const recipient = await createVerifiedMember({
+      id: "router-effect-squad-count-recipient",
+    });
+    const client = createSquadBuilderClient(recipient, {
+      effectListSquadGroupSharingStateService:
+        new EffectListSquadGroupSharingState(),
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+    const [firstGroup, secondGroup] = await testDb
+      .insert(squadGroup)
+      .values([
+        { name: "Effect count squad one", ownerUserId: owner.id },
+        { name: "Effect count squad two", ownerUserId: owner.id },
+      ])
+      .returning({ id: squadGroup.id });
+
+    if (firstGroup === undefined || secondGroup === undefined) {
+      throw new Error("Failed to seed squad groups");
+    }
+
+    await testDb.insert(squadGroupInvitation).values([
+      {
+        invitedByUserId: owner.id,
+        invitedUserId: recipient.id,
+        squadGroupId: firstGroup.id,
+        status: "pending",
+      },
+      {
+        invitedByUserId: owner.id,
+        invitedUserId: recipient.id,
+        squadGroupId: secondGroup.id,
+        status: "pending",
+      },
+    ]);
+
+    const counted = await client.squadBuilder.getPendingSquadGroupInviteCount();
+
+    expect(counted).toEqual({ count: 2 });
   });
 
   it("searches verified invite targets and excludes the owner", async () => {

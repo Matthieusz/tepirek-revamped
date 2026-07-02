@@ -83,6 +83,7 @@ import type {
   SquadGroupOwnerAccess,
 } from "../squad-group-access";
 import { parseSquadGroupId, squadGroupIdToNumber } from "../squad-group-id";
+import type { SquadGroupId } from "../squad-group-id";
 import {
   parseSquadGroupInvitationId,
   squadGroupInvitationIdToNumber,
@@ -153,8 +154,10 @@ import type {
   RevokeSquadGroupEditorStoreInput,
   SetSquadGroupVisibilityStoreInput,
   SharedMargonemAccountSummary,
+  SharedSquadGroupSummary,
   SearchSquadEditorInviteTargetsStoreInput,
   SquadEditorInviteTarget,
+  SquadGroupEditorGrantSummary,
   SquadGroupInvitationSummary,
   SquadGroupVisibilityChange,
   AccountInviteTarget,
@@ -185,9 +188,13 @@ type EffectSquadGroupPersistenceOperation =
   | "getSquadGroupDetail"
   | "listAvailableCharactersForOwner"
   | "listAccountAccessGrants"
+  | "listIncomingSquadGroupInvites"
   | "listGlobalSquadGroups"
+  | "getPendingSquadGroupInviteCount"
   | "listIncomingAccountInvites"
   | "listSharedAccounts"
+  | "listSharedSquadGroups"
+  | "listSquadGroupEditorGrants"
   | "listOwnedAccounts"
   | "listMySquadGroups"
   | "markRequestFailed"
@@ -1746,7 +1753,7 @@ const authorizeSquadGroupOwnerWithDatabase =
     groupId,
   }: {
     readonly actorUserId: AppUserId;
-    readonly groupId: SquadGroupSummary["groupId"];
+    readonly groupId: SquadGroupId;
   }): Effect.Effect<
     SquadGroupOwnerAccess,
     | SquadGroupNotFound
@@ -3024,6 +3031,196 @@ const listAccountAccessGrantsWithDatabase =
       return grants;
     });
 
+const listIncomingSquadGroupInvitesWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+  }: {
+    readonly actorUserId: AppUserId;
+  }): Effect.Effect<
+    readonly SquadGroupInvitationSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* listIncomingSquadGroupInvitesEffect() {
+      const operation = "listIncomingSquadGroupInvites" as const;
+      const select = database
+        .select({ id: squadGroupInvitation.id })
+        .from(squadGroupInvitation)
+        .where(
+          and(
+            eq(
+              squadGroupInvitation.invitedUserId,
+              appUserIdToString(actorUserId)
+            ),
+            eq(squadGroupInvitation.status, "pending")
+          )
+        )
+        .orderBy(desc(squadGroupInvitation.createdAt));
+      const selectEffect = select as Effect.Effect<
+        readonly { readonly id: number }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const invites: SquadGroupInvitationSummary[] = [];
+
+      for (const row of rows) {
+        const invitationId = parseSquadGroupInvitationId(row.id);
+
+        if (isError(invitationId)) {
+          return yield* failPersistence(operation, invitationId.error);
+        }
+
+        const summary = yield* loadSquadGroupInvitationSummaryWithDatabase(
+          database
+        )(invitationId.value, operation).pipe(
+          Effect.catchTag("SquadGroupInvitationNotFound", (error) =>
+            failPersistence(operation, error)
+          )
+        );
+
+        invites.push(summary);
+      }
+
+      return invites;
+    });
+
+const getPendingSquadGroupInviteCountWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+  }: {
+    readonly actorUserId: AppUserId;
+  }): Effect.Effect<number, EffectSquadBuilderPersistenceUnavailable, never> =>
+    Effect.gen(function* getPendingSquadGroupInviteCountEffect() {
+      const operation = "getPendingSquadGroupInviteCount" as const;
+      const select = database
+        .select({ inviteCount: count() })
+        .from(squadGroupInvitation)
+        .where(
+          and(
+            eq(
+              squadGroupInvitation.invitedUserId,
+              appUserIdToString(actorUserId)
+            ),
+            eq(squadGroupInvitation.status, "pending")
+          )
+        );
+      const selectEffect = select as Effect.Effect<
+        readonly { readonly inviteCount: number }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+
+      return rows[0]?.inviteCount ?? 0;
+    });
+
+const listSquadGroupEditorGrantsWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+    groupId,
+  }: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupSummary["groupId"];
+  }): Effect.Effect<
+    readonly SquadGroupEditorGrantSummary[],
+    | SquadGroupNotFound
+    | ActorDoesNotOwnSquadGroup
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* listSquadGroupEditorGrantsEffect() {
+      const operation = "listSquadGroupEditorGrants" as const;
+      yield* authorizeSquadGroupOwnerWithDatabase(database)({
+        actorUserId,
+        groupId,
+      });
+
+      const select = database
+        .select({
+          createdAt: squadGroupInvitation.createdAt,
+          image: user.image,
+          invitationId: squadGroupInvitation.id,
+          name: user.name,
+          status: squadGroupInvitation.status,
+          updatedAt: squadGroupInvitation.updatedAt,
+          userId: user.id,
+        })
+        .from(squadGroupInvitation)
+        .innerJoin(user, eq(user.id, squadGroupInvitation.invitedUserId))
+        .where(
+          and(
+            eq(
+              squadGroupInvitation.squadGroupId,
+              squadGroupIdToNumber(groupId)
+            ),
+            inArray(squadGroupInvitation.status, ["pending", "accepted"])
+          )
+        )
+        .orderBy(desc(squadGroupInvitation.createdAt));
+      const selectEffect = select as Effect.Effect<
+        readonly {
+          readonly createdAt: Date;
+          readonly image: string | null;
+          readonly invitationId: number;
+          readonly name: string;
+          readonly status: string;
+          readonly updatedAt: Date;
+          readonly userId: string;
+        }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const grants: SquadGroupEditorGrantSummary[] = [];
+
+      for (const row of rows) {
+        const status = parseSquadGroupInvitationStatus(row.status);
+
+        if (isError(status)) {
+          return yield* failPersistence(operation, status.error);
+        }
+
+        if (status.value !== "pending" && status.value !== "accepted") {
+          return yield* failPersistence(
+            operation,
+            new Error(
+              `Unexpected squad group invitation status: ${status.value}`
+            )
+          );
+        }
+
+        const invitationId = parseSquadGroupInvitationId(row.invitationId);
+
+        if (isError(invitationId)) {
+          return yield* failPersistence(operation, invitationId.error);
+        }
+
+        const userId = yield* parsePersistedAppUserId(operation, row.userId);
+
+        grants.push({
+          createdAt: row.createdAt,
+          invitationId: invitationId.value,
+          status: status.value,
+          updatedAt: row.updatedAt,
+          userId,
+          userImage: row.image,
+          userName: row.name,
+        });
+      }
+
+      return grants;
+    });
+
 const respondToAccountAccessInviteWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -3831,6 +4028,103 @@ const buildSquadGroupListFilterPredicates = (
   return predicates;
 };
 
+const listSharedSquadGroupsWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+    filters,
+  }: {
+    readonly actorUserId: AppUserId;
+    readonly filters: ListGlobalSquadGroupsInput["filters"];
+  }): Effect.Effect<
+    readonly SharedSquadGroupSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* listSharedSquadGroupsEffect() {
+      const operation = "listSharedSquadGroups" as const;
+      const filterPredicates = buildSquadGroupListFilterPredicates(
+        database,
+        filters
+      );
+      const select = database
+        .select({
+          characterCount: sql<number>`count(distinct ${squadCharacter.id})::int`,
+          groupId: squadGroup.id,
+          name: squadGroup.name,
+          ownerId: user.id,
+          ownerImage: user.image,
+          ownerName: user.name,
+          squadCount: sql<number>`count(distinct ${squad.id})::int`,
+          updatedAt: squadGroup.updatedAt,
+        })
+        .from(squadGroupInvitation)
+        .innerJoin(
+          squadGroup,
+          eq(squadGroup.id, squadGroupInvitation.squadGroupId)
+        )
+        .innerJoin(user, eq(user.id, squadGroup.ownerUserId))
+        .leftJoin(squad, eq(squad.squadGroupId, squadGroup.id))
+        .leftJoin(squadCharacter, eq(squadCharacter.squadId, squad.id))
+        .where(
+          and(
+            eq(
+              squadGroupInvitation.invitedUserId,
+              appUserIdToString(actorUserId)
+            ),
+            eq(squadGroupInvitation.status, "accepted"),
+            ...filterPredicates
+          )
+        )
+        .groupBy(squadGroup.id, user.id)
+        .orderBy(desc(squadGroup.updatedAt), desc(squadGroup.id));
+      const selectEffect = select as Effect.Effect<
+        readonly {
+          readonly characterCount: number | null;
+          readonly groupId: number;
+          readonly name: string;
+          readonly ownerId: string;
+          readonly ownerImage: string | null;
+          readonly ownerName: string;
+          readonly squadCount: number | null;
+          readonly updatedAt: Date;
+        }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const groups: SharedSquadGroupSummary[] = [];
+
+      for (const row of rows) {
+        const groupId = parseSquadGroupId(row.groupId);
+
+        if (isError(groupId)) {
+          return yield* failPersistence(operation, groupId.error);
+        }
+
+        const name = yield* parsePersistedSquadGroupName(operation, row.name);
+        const ownerUserId = yield* parsePersistedAppUserId(
+          operation,
+          row.ownerId
+        );
+
+        groups.push({
+          characterCount: row.characterCount ?? 0,
+          groupId: groupId.value,
+          name,
+          ownerUserId,
+          ownerUserImage: row.ownerImage,
+          ownerUserName: row.ownerName,
+          squadCount: row.squadCount ?? 0,
+          updatedAt: row.updatedAt,
+        });
+      }
+
+      return groups;
+    });
+
 const saveSharedSquadGroupCharactersWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -4417,6 +4711,8 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       findVerifiedSquadEditorInviteTarget:
         findVerifiedSquadEditorInviteTargetWithDatabase(database),
       getAccountForRefetch: getAccountForRefetchWithDatabase(database),
+      getPendingSquadGroupInviteCount:
+        getPendingSquadGroupInviteCountWithDatabase(database),
       getSquadGroupDetail: getSquadGroupDetailWithDatabase(database),
       listAccountAccessGrants: listAccountAccessGrantsWithDatabase(database),
       listAvailableCharactersForOwner:
@@ -4424,9 +4720,14 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       listGlobalSquadGroups: listGlobalSquadGroupsWithDatabase(database),
       listIncomingAccountInvites:
         listIncomingAccountInvitesWithDatabase(database),
+      listIncomingSquadGroupInvites:
+        listIncomingSquadGroupInvitesWithDatabase(database),
       listMySquadGroups: listMySquadGroupsWithDatabase(database),
       listOwnedAccounts: listOwnedAccountsWithDatabase(database),
       listSharedAccounts: listSharedAccountsWithDatabase(database),
+      listSharedSquadGroups: listSharedSquadGroupsWithDatabase(database),
+      listSquadGroupEditorGrants:
+        listSquadGroupEditorGrantsWithDatabase(database),
       markPendingRefetchApplied:
         markPendingRefetchAppliedWithDatabase(database),
       markRequestFailed: markRequestFailedWithDatabase(database),

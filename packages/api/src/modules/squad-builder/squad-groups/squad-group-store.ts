@@ -392,6 +392,34 @@ export interface EffectSquadGroupStoreShape {
     EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly listIncomingSquadGroupInvites: (input: {
+    readonly actorUserId: AppUserId;
+  }) => Effect<
+    readonly SquadGroupInvitationSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly getPendingSquadGroupInviteCount: (input: {
+    readonly actorUserId: AppUserId;
+  }) => Effect<number, EffectSquadBuilderPersistenceUnavailable, never>;
+  readonly listSharedSquadGroups: (input: {
+    readonly actorUserId: AppUserId;
+    readonly filters: ListGlobalSquadGroupsInput["filters"];
+  }) => Effect<
+    readonly SharedSquadGroupSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly listSquadGroupEditorGrants: (input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+  }) => Effect<
+    readonly SquadGroupEditorGrantSummary[],
+    | SquadGroupNotFound
+    | ActorDoesNotOwnSquadGroup
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
 }
 
 export class EffectSquadGroupStore extends Context.Service<

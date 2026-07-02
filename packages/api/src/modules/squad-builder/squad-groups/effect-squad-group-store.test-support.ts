@@ -31,6 +31,8 @@ export const makeEffectSquadGroupStoreTestService = (
     findVerifiedSquadEditorInviteTarget: () =>
       unhandledStoreCall("findVerifiedSquadEditorInviteTarget"),
     getAccountForRefetch: () => unhandledStoreCall("getAccountForRefetch"),
+    getPendingSquadGroupInviteCount: () =>
+      unhandledStoreCall("getPendingSquadGroupInviteCount"),
     getSquadGroupDetail: () => unhandledStoreCall("getSquadGroupDetail"),
     listAccountAccessGrants: () =>
       unhandledStoreCall("listAccountAccessGrants"),
@@ -39,9 +41,14 @@ export const makeEffectSquadGroupStoreTestService = (
     listGlobalSquadGroups: () => unhandledStoreCall("listGlobalSquadGroups"),
     listIncomingAccountInvites: () =>
       unhandledStoreCall("listIncomingAccountInvites"),
+    listIncomingSquadGroupInvites: () =>
+      unhandledStoreCall("listIncomingSquadGroupInvites"),
     listMySquadGroups: () => unhandledStoreCall("listMySquadGroups"),
     listOwnedAccounts: () => unhandledStoreCall("listOwnedAccounts"),
     listSharedAccounts: () => unhandledStoreCall("listSharedAccounts"),
+    listSharedSquadGroups: () => unhandledStoreCall("listSharedSquadGroups"),
+    listSquadGroupEditorGrants: () =>
+      unhandledStoreCall("listSquadGroupEditorGrants"),
     markPendingRefetchApplied: () =>
       unhandledStoreCall("markPendingRefetchApplied"),
     markRequestFailed: () => unhandledStoreCall("markRequestFailed"),
