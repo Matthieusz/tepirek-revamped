@@ -1094,13 +1094,38 @@ const toAvailableSquadCharacterDto = (character: AvailableSquadCharacter) => ({
   profession: character.profession,
 });
 
+interface SquadBuilderLoggedError {
+  readonly _tag: string;
+}
+
+const squadBuilderFailureDependency = (
+  error: SquadBuilderLoggedError
+): "firecrawl" | "postgres" | undefined => {
+  switch (error._tag) {
+    case "FirecrawlMonthlyBudgetExhausted":
+    case "FirecrawlRequestFailed":
+    case "FirecrawlResponseNotParseable": {
+      return "firecrawl";
+    }
+    case "SquadBuilderPersistenceUnavailable": {
+      return "postgres";
+    }
+    default: {
+      return undefined;
+    }
+  }
+};
+
 const logSquadBuilderError = (
   context: RouterContext,
   operation: SquadBuilderLogOperation,
-  error: { readonly _tag: string }
+  error: SquadBuilderLoggedError
 ) => {
+  const dependency = squadBuilderFailureDependency(error);
+
   context.logger.error("Squad builder operation failed", {
     squadBuilder: {
+      ...(dependency === undefined ? {} : { dependency }),
       errorTag: error._tag,
       operation,
     },

@@ -8,7 +8,7 @@ import {
   squadGroupInvitation,
 } from "@tepirek-revamped/db/schema/squad-builder";
 import * as Effect from "effect/Effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { makeApiManagedRuntime } from "../effect-app";
 import { parseAccountDisplayName } from "../modules/squad-builder/account-display-name";
@@ -37,6 +37,7 @@ import { EffectListSquadGroupSharingState } from "../modules/squad-builder/squad
 import { EffectRespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/effect-respond-to-squad-group-invite";
 import { EffectRevokeSquadGroupEditor } from "../modules/squad-builder/squad-groups/effect-revoke-squad-group-editor";
 import { EffectSendSquadGroupEditorInvite } from "../modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite";
+import { EffectSquadBuilderPersistenceUnavailable } from "../modules/squad-builder/squad-groups/squad-group-errors";
 import { createVerifiedMember } from "../test/integration/builders";
 import type { TestUser } from "../test/integration/builders";
 import { defaultTestDatabaseUrl, testDb } from "../test/integration/database";
@@ -91,12 +92,13 @@ const stubLogger = {
 
 const createSquadBuilderClient = (
   user: TestUser,
-  overrides: Parameters<typeof createSquadBuilderRouter>[0]
+  overrides: Parameters<typeof createSquadBuilderRouter>[0],
+  logger: RouterContext["logger"] = stubLogger
 ) => {
   const squadBuilder = createSquadBuilderRouter(overrides);
   return createRouterClient({ squadBuilder } as unknown as AppRouter, {
     context: {
-      logger: stubLogger,
+      logger,
       session: {
         session: {
           id: `${user.id}-session`,
@@ -221,6 +223,46 @@ describe("squad-builder router Postgres integration", () => {
     await expect(
       client.squadBuilder.createSquadGroup({ name: "   " })
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+
+  it("logs safe Effect failure summaries through the request logger", async () => {
+    const member = await createVerifiedMember({ id: "router-effect-log" });
+    const logError = vi.fn();
+    const logger = {
+      debug: () => {},
+      error: logError,
+      info: () => {},
+      warn: () => {},
+    } as unknown as RouterContext["logger"];
+    const client = createSquadBuilderClient(
+      member,
+      {
+        createSquadGroupService: {
+          create: () =>
+            Effect.fail(
+              new EffectSquadBuilderPersistenceUnavailable({
+                cause: new Error("database unavailable"),
+                operation: "createSquadGroup",
+                provider: "postgres",
+              })
+            ),
+        },
+        effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+      },
+      logger
+    );
+
+    await expect(
+      client.squadBuilder.createSquadGroup({ name: "Will fail" })
+    ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+
+    expect(logError).toHaveBeenCalledWith("Squad builder operation failed", {
+      squadBuilder: {
+        dependency: "postgres",
+        errorTag: "SquadBuilderPersistenceUnavailable",
+        operation: "createSquadGroup",
+      },
+    });
   });
 
   it("lists my squad groups through the Effect oRPC bridge", async () => {
