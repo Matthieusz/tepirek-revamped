@@ -1,13 +1,13 @@
+import * as ClockRuntime from "effect/Clock";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import type { Clock } from "../account-import/preview-margonem-profile-import.js";
-import type {
-  FirecrawlClient,
-  FirecrawlScrapeError,
-} from "../firecrawl-client.js";
-import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
-import type { FirecrawlConfig } from "../firecrawl-config.js";
+import { EffectFirecrawlClient } from "../effect-firecrawl-client.js";
+import type { FirecrawlScrapeError } from "../firecrawl-client.js";
+import {
+  EffectFirecrawlConfig,
+  parseFirecrawlCreditCount,
+} from "../firecrawl-config.js";
 import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
 import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff.js";
 import { parseMargonemProfileHtml } from "../margonem-profile-html-parser.js";
@@ -26,19 +26,7 @@ const addMinutes = (date: Date, minutes: number): Date =>
 
 /** Effect service module that previews a manual saved-account refetch. */
 export class EffectPreviewAccountRefetch {
-  private readonly firecrawl: FirecrawlClient;
-  private readonly clock: Clock;
-  private readonly config: FirecrawlConfig;
-
-  constructor(
-    firecrawl: FirecrawlClient,
-    clock: Clock,
-    config: FirecrawlConfig
-  ) {
-    this.firecrawl = firecrawl;
-    this.clock = clock;
-    this.config = config;
-  }
+  readonly serviceName = "EffectPreviewAccountRefetch";
 
   /** Fetch latest account HTML and store a pending refetch diff for owner confirmation. */
   preview(
@@ -47,15 +35,18 @@ export class EffectPreviewAccountRefetch {
   ): Effect<
     PreviewAccountRefetchOutput,
     PreviewAccountRefetchError,
-    EffectAccountRefetchStore
+    EffectAccountRefetchStore | EffectFirecrawlClient | EffectFirecrawlConfig
   > {
-    const { clock, config, firecrawl } = this;
+    void this.serviceName;
 
     return EffectRuntime.gen(function* previewAccountRefetchEffect() {
+      const config = yield* EffectFirecrawlConfig;
+      const firecrawl = yield* EffectFirecrawlClient;
       const account = yield* EffectAccountRefetchStore.use((store) =>
         store.getAccountForRefetch(input)
       );
-      const yearMonth = firecrawlYearMonthFromDate(clock.now());
+      const requestTimeMillis = yield* ClockRuntime.currentTimeMillis;
+      const yearMonth = firecrawlYearMonthFromDate(new Date(requestTimeMillis));
       const reservedRequest = yield* EffectAccountRefetchStore.use((store) =>
         store.reserveRequest({
           monthlyRequestBudget: config.monthlyRequestBudget,
@@ -121,7 +112,8 @@ export class EffectPreviewAccountRefetch {
         return yield* EffectRuntime.fail(parsedHtml.error);
       }
 
-      const fetchedAt = clock.now();
+      const fetchedTimeMillis = yield* ClockRuntime.currentTimeMillis;
+      const fetchedAt = new Date(fetchedTimeMillis);
       const diff = computeMargonemAccountRefetchDiff({
         accountId: account.accountId,
         currentCharacters: account.currentCharacters,

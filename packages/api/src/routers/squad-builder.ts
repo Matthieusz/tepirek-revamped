@@ -1,5 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import type { Effect } from "effect/Effect";
+import * as EffectRuntime from "effect/Effect";
+import * as Layer from "effect/Layer";
 import type { ManagedRuntime } from "effect/ManagedRuntime";
 import * as Schema from "effect/Schema";
 import { z } from "zod";
@@ -59,9 +61,13 @@ import {
   parseAppUserId,
 } from "../modules/squad-builder/app-user-id.js";
 import type { InvalidAppUserId } from "../modules/squad-builder/app-user-id.js";
-import { FirecrawlSdkClient } from "../modules/squad-builder/firecrawl-client.js";
-import { parseFirecrawlConfig } from "../modules/squad-builder/firecrawl-config.js";
-import type { ParseFirecrawlConfigError } from "../modules/squad-builder/firecrawl-config.js";
+import { EffectFirecrawlClientLiveLayer } from "../modules/squad-builder/effect-firecrawl-client.js";
+import type { EffectFirecrawlClient } from "../modules/squad-builder/effect-firecrawl-client.js";
+import { EffectFirecrawlConfigLiveLayer } from "../modules/squad-builder/firecrawl-config.js";
+import type {
+  EffectFirecrawlConfig,
+  ParseFirecrawlConfigError,
+} from "../modules/squad-builder/firecrawl-config.js";
 import {
   margonemAccountAccessIdToNumber,
   parseMargonemAccountAccessId,
@@ -73,7 +79,7 @@ import {
 import { profileIdToNumber } from "../modules/squad-builder/margonem-profile-id.js";
 import { parsePendingMargonemAccountImportId } from "../modules/squad-builder/pending-margonem-account-import-id.js";
 import { parsePendingMargonemAccountRefetchId } from "../modules/squad-builder/pending-margonem-account-refetch-id.js";
-import { err, isError, ok } from "../modules/squad-builder/result.js";
+import { isError, ok } from "../modules/squad-builder/result.js";
 import type { Result } from "../modules/squad-builder/result.js";
 import type {
   AccountAccessGrantSummary,
@@ -171,7 +177,7 @@ interface EffectPreviewProfileImportService {
   ) => Effect<
     PreviewMargonemProfileImportOutput,
     PreviewMargonemProfileImportError,
-    EffectAccountImportStore
+    EffectAccountImportStore | EffectFirecrawlClient | EffectFirecrawlConfig
   >;
 }
 
@@ -191,7 +197,7 @@ interface EffectPreviewOwnedImportsService {
   ) => Effect<
     PreviewOwnedAccountImportsOutput,
     PreviewOwnedAccountImportsError,
-    EffectAccountImportStore
+    EffectAccountImportStore | EffectFirecrawlClient | EffectFirecrawlConfig
   >;
 }
 
@@ -227,7 +233,7 @@ interface EffectPreviewAccountRefetchService {
   ) => Effect<
     PreviewAccountRefetchOutput,
     PreviewAccountRefetchError,
-    EffectAccountRefetchStore
+    EffectAccountRefetchStore | EffectFirecrawlClient | EffectFirecrawlConfig
   >;
 }
 
@@ -1125,6 +1131,14 @@ const squadBuilderFailureDependency = (
   }
 };
 
+const isParseFirecrawlConfigError = (
+  error: unknown
+): error is ParseFirecrawlConfigError =>
+  typeof error === "object" &&
+  error !== null &&
+  "_tag" in error &&
+  error._tag === "InvalidFirecrawlConfig";
+
 const logSquadBuilderError = (
   context: RouterContext,
   operation: SquadBuilderLogOperation,
@@ -1504,58 +1518,26 @@ const revokeAccountAccessEffect = new EffectRevokeAccountAccess();
 const listAccountSharingStateEffect = new EffectListAccountSharingState();
 const listSquadGroupSharingStateEffect = new EffectListSquadGroupSharingState();
 const confirmOwnedAccountImportEffect = new EffectConfirmOwnedAccountImport();
+const firecrawlLiveLayer = Layer.mergeAll(
+  EffectFirecrawlConfigLiveLayer,
+  EffectFirecrawlClientLiveLayer.pipe(
+    Layer.provide(EffectFirecrawlConfigLiveLayer)
+  )
+);
 const createDefaultPreviewProfileImportEffect = (): Result<
-  EffectPreviewMargonemProfileImport,
+  EffectPreviewProfileImportService,
   SquadBuilderRouterError
-> => {
-  const config = parseFirecrawlConfig(process.env);
-
-  if (isError(config)) {
-    return err(config.error);
-  }
-
-  return ok(
-    new EffectPreviewMargonemProfileImport(
-      new FirecrawlSdkClient(config.value.apiKey),
-      systemClock,
-      config.value
-    )
-  );
-};
+> => ok(new EffectPreviewMargonemProfileImport());
 
 const createDefaultPreviewOwnedAccountImportsEffect = (): Result<
-  EffectPreviewOwnedAccountImports,
+  EffectPreviewOwnedImportsService,
   SquadBuilderRouterError
-> => {
-  const singlePreview = createDefaultPreviewProfileImportEffect();
-
-  if (isError(singlePreview)) {
-    return err(singlePreview.error);
-  }
-
-  return ok(
-    new EffectPreviewOwnedAccountImports(singlePreview.value, systemClock)
-  );
-};
+> => ok(new EffectPreviewOwnedAccountImports());
 
 const createDefaultPreviewAccountRefetchEffect = (): Result<
-  EffectPreviewAccountRefetch,
+  EffectPreviewAccountRefetchService,
   SquadBuilderRouterError
-> => {
-  const config = parseFirecrawlConfig(process.env);
-
-  if (isError(config)) {
-    return err(config.error);
-  }
-
-  return ok(
-    new EffectPreviewAccountRefetch(
-      new FirecrawlSdkClient(config.value.apiKey),
-      systemClock,
-      config.value
-    )
-  );
-};
+> => ok(new EffectPreviewAccountRefetch());
 
 /** Create the squad-builder ORPC router. */
 export const createSquadBuilderRouter = ({
@@ -2401,11 +2383,18 @@ export const createSquadBuilderRouter = ({
 
       const preview = await runOrpcEffect(
         effectRuntime,
-        service.value.preview({
-          accountId: accountId.value,
-          actorUserId: actorUserId.value,
-        }),
+        service.value
+          .preview({
+            accountId: accountId.value,
+            actorUserId: actorUserId.value,
+          })
+          .pipe(EffectRuntime.provide(firecrawlLiveLayer)),
         (error) => {
+          if (isParseFirecrawlConfigError(error)) {
+            logSquadBuilderError(context, "previewAccountRefetch", error);
+            return toOrpcError(error);
+          }
+
           const mapped = error as PreviewAccountRefetchError;
           logSquadBuilderError(context, "previewAccountRefetch", mapped);
           return toAccountRefetchOrpcError(mapped);
@@ -2471,11 +2460,18 @@ export const createSquadBuilderRouter = ({
 
       const result = await runOrpcEffect(
         effectRuntime,
-        service.value.preview({
-          actorUserId: actorUserId.value,
-          profileUrls: input.profileUrls,
-        }),
+        service.value
+          .preview({
+            actorUserId: actorUserId.value,
+            profileUrls: input.profileUrls,
+          })
+          .pipe(EffectRuntime.provide(firecrawlLiveLayer)),
         (error) => {
+          if (isParseFirecrawlConfigError(error)) {
+            logSquadBuilderError(context, "previewOwnedAccountImports", error);
+            return toOrpcError(error);
+          }
+
           const mapped = error as PreviewOwnedAccountImportsError;
           logSquadBuilderError(context, "previewOwnedAccountImports", mapped);
           return toPreviewOwnedImportsOrpcError(mapped);
@@ -2541,11 +2537,22 @@ export const createSquadBuilderRouter = ({
 
       const preview = await runOrpcEffect(
         effectRuntime,
-        service.value.preview({
-          actorUserId: actorUserId.value,
-          profileUrl: input.profileUrl,
-        }),
+        service.value
+          .preview({
+            actorUserId: actorUserId.value,
+            profileUrl: input.profileUrl,
+          })
+          .pipe(EffectRuntime.provide(firecrawlLiveLayer)),
         (error) => {
+          if (isParseFirecrawlConfigError(error)) {
+            logSquadBuilderError(
+              context,
+              "previewMargonemProfileImport",
+              error
+            );
+            return toOrpcError(error);
+          }
+
           const mapped = error as PreviewMargonemProfileImportError;
           logSquadBuilderError(context, "previewMargonemProfileImport", mapped);
           return toOrpcError(mapped);

@@ -1,12 +1,13 @@
+import * as ClockRuntime from "effect/Clock";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import type {
-  FirecrawlClient,
-  FirecrawlScrapeError,
-} from "../firecrawl-client.js";
-import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
-import type { FirecrawlConfig } from "../firecrawl-config.js";
+import { EffectFirecrawlClient } from "../effect-firecrawl-client.js";
+import type { FirecrawlScrapeError } from "../firecrawl-client.js";
+import {
+  EffectFirecrawlConfig,
+  parseFirecrawlCreditCount,
+} from "../firecrawl-config.js";
 import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
 import { parseMargonemProfileHtml } from "../margonem-profile-html-parser.js";
 import {
@@ -17,7 +18,6 @@ import { isError } from "../result.js";
 import { EffectAccountImportStore } from "./effect-account-import-store.js";
 import { profileAccessStateToDuplicateError } from "./preview-margonem-profile-import.js";
 import type {
-  Clock,
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportInput,
   PreviewMargonemProfileImportOutput,
@@ -25,19 +25,7 @@ import type {
 
 /** Effect service module that previews one Margonem profile import without saving it. */
 export class EffectPreviewMargonemProfileImport {
-  private readonly firecrawl: FirecrawlClient;
-  private readonly clock: Clock;
-  private readonly config: FirecrawlConfig;
-
-  constructor(
-    firecrawl: FirecrawlClient,
-    clock: Clock,
-    config: FirecrawlConfig
-  ) {
-    this.firecrawl = firecrawl;
-    this.clock = clock;
-    this.config = config;
-  }
+  readonly serviceName = "EffectPreviewMargonemProfileImport";
 
   /** Preview a Margonem profile import without saving the account. */
   preview(
@@ -46,11 +34,13 @@ export class EffectPreviewMargonemProfileImport {
   ): Effect<
     PreviewMargonemProfileImportOutput,
     PreviewMargonemProfileImportError,
-    EffectAccountImportStore
+    EffectAccountImportStore | EffectFirecrawlClient | EffectFirecrawlConfig
   > {
-    const { clock, config, firecrawl } = this;
+    void this.serviceName;
 
     return EffectRuntime.gen(function* previewEffect() {
+      const config = yield* EffectFirecrawlConfig;
+      const firecrawl = yield* EffectFirecrawlClient;
       const parsedProfileId = parseMargonemProfileUrl(input.profileUrl);
 
       if (isError(parsedProfileId)) {
@@ -70,7 +60,8 @@ export class EffectPreviewMargonemProfileImport {
         return yield* EffectRuntime.fail(duplicateError);
       }
 
-      const yearMonth = firecrawlYearMonthFromDate(clock.now());
+      const requestTimeMillis = yield* ClockRuntime.currentTimeMillis;
+      const yearMonth = firecrawlYearMonthFromDate(new Date(requestTimeMillis));
       const reservedRequest = yield* EffectAccountImportStore.use((store) =>
         store.reserveRequest({
           monthlyRequestBudget: config.monthlyRequestBudget,
@@ -136,11 +127,13 @@ export class EffectPreviewMargonemProfileImport {
         return yield* EffectRuntime.fail(parsedHtml.error);
       }
 
+      const fetchedTimeMillis = yield* ClockRuntime.currentTimeMillis;
+
       return {
         firecrawlCreditsUsed: creditsUsed.value,
         generatedProfileUrl: toMargonemProfileUrl(profileId),
         jarunaCharacters: parsedHtml.value.jarunaCharacters,
-        lastFetchedAt: clock.now(),
+        lastFetchedAt: new Date(fetchedTimeMillis),
         profileId,
         suggestedAccountName: parsedHtml.value.suggestedAccountName,
       };

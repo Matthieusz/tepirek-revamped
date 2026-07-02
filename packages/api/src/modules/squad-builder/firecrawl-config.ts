@@ -1,6 +1,10 @@
+import * as Context from "effect/Context";
+import * as EffectRuntime from "effect/Effect";
+import * as Layer from "effect/Layer";
+
 import type { Redacted } from "./prelude.js";
 import { Redacted as redact } from "./prelude.js";
-import { err, ok } from "./result.js";
+import { err, isError, ok } from "./result.js";
 import type { Result } from "./result.js";
 
 /** Number of Firecrawl credits consumed by a scrape. */
@@ -13,6 +17,12 @@ export interface FirecrawlConfig {
   readonly apiKey: Redacted<string>;
   readonly monthlyRequestBudget: number;
 }
+
+/** Effect service tag for Firecrawl-backed scraping configuration. */
+export class EffectFirecrawlConfig extends Context.Service<
+  EffectFirecrawlConfig,
+  FirecrawlConfig
+>()("@tepirek-revamped/api/squad-builder/EffectFirecrawlConfig") {}
 
 /** Expected failure when Firecrawl config is missing or unsafe. */
 export interface ParseFirecrawlConfigError {
@@ -65,3 +75,20 @@ export const parseFirecrawlConfig = (
 
   return ok({ apiKey: redact(apiKey), monthlyRequestBudget });
 };
+
+/** Live Firecrawl config layer parsed at the Effect runtime boundary. */
+export const EffectFirecrawlConfigLiveLayer: Layer.Layer<
+  EffectFirecrawlConfig,
+  ParseFirecrawlConfigError
+> = Layer.effect(
+  EffectFirecrawlConfig,
+  EffectRuntime.sync(() => parseFirecrawlConfig(process.env)).pipe(
+    EffectRuntime.flatMap((config) => {
+      if (isError(config)) {
+        return EffectRuntime.fail(config.error);
+      }
+
+      return EffectRuntime.succeed(EffectFirecrawlConfig.of(config.value));
+    })
+  )
+);

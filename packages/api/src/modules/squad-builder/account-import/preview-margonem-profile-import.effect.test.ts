@@ -2,13 +2,14 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 
 import { parseAppUserId } from "../app-user-id.js";
+import { EffectFirecrawlClient } from "../effect-firecrawl-client.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
+import { EffectFirecrawlConfig } from "../firecrawl-config.js";
 import { Redacted } from "../prelude.js";
 import { isOk, ok } from "../result.js";
 import { makeEffectAccountImportStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
 import { EffectAccountImportStore } from "./effect-account-import-store.js";
 import { EffectPreviewMargonemProfileImport } from "./effect-preview-margonem-profile-import.js";
-import type { Clock } from "./preview-margonem-profile-import.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-preview-user");
@@ -18,10 +19,6 @@ const parseTestUserId = () => {
   }
 
   return userId.value;
-};
-
-const fixedClock: Clock = {
-  now: () => new Date("2026-06-29T12:00:00.000Z"),
 };
 
 const htmlWithJarunaCharacter = `
@@ -67,11 +64,7 @@ it.effect(
           requestId: 123,
         }),
     });
-    const service = new EffectPreviewMargonemProfileImport(
-      firecrawl,
-      fixedClock,
-      { apiKey: Redacted("test-key"), monthlyRequestBudget: 900 }
-    );
+    const service = new EffectPreviewMargonemProfileImport();
 
     return Effect.gen(function* previewEffect() {
       const preview = yield* service.preview({
@@ -85,6 +78,13 @@ it.effect(
       });
       expect(preview.jarunaCharacters).toHaveLength(1);
       expect(succeededRequestIds).toEqual([123]);
-    }).pipe(Effect.provideService(EffectAccountImportStore)(store));
+    }).pipe(
+      Effect.provideService(EffectFirecrawlConfig)({
+        apiKey: Redacted("test-key"),
+        monthlyRequestBudget: 900,
+      }),
+      Effect.provideService(EffectFirecrawlClient)(firecrawl),
+      Effect.provideService(EffectAccountImportStore)(store)
+    );
   }
 );

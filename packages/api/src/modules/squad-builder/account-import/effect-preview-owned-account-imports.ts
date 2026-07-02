@@ -5,6 +5,8 @@ import * as EffectRuntime from "effect/Effect";
 import { parseAccountDisplayName } from "../account-display-name.js";
 import type { AccountDisplayName } from "../account-display-name.js";
 import type { AppUserId } from "../app-user-id.js";
+import type { EffectFirecrawlClient } from "../effect-firecrawl-client.js";
+import type { EffectFirecrawlConfig } from "../firecrawl-config.js";
 import type { MargonemProfileId } from "../margonem-profile-id.js";
 import { profileIdToNumber } from "../margonem-profile-id.js";
 import {
@@ -17,8 +19,8 @@ import type {
   ProfileAccessState,
 } from "./account-import-store.js";
 import { EffectAccountImportStore } from "./effect-account-import-store.js";
+import { EffectPreviewMargonemProfileImport } from "./effect-preview-margonem-profile-import.js";
 import type {
-  Clock,
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportInput,
   PreviewMargonemProfileImportOutput,
@@ -181,21 +183,7 @@ const persistPendingImport = ({
 
 /** Effect service module that previews and persists pending owned-account imports. */
 export class EffectPreviewOwnedAccountImports {
-  private readonly currentDate: Effect<Date>;
-  private readonly singlePreview: EffectSingleMargonemProfilePreview;
-
-  constructor(
-    singlePreview: EffectSingleMargonemProfilePreview,
-    compatibilityClock?: Clock
-  ) {
-    this.singlePreview = singlePreview;
-    this.currentDate =
-      compatibilityClock === undefined
-        ? ClockRuntime.currentTimeMillis.pipe(
-            EffectRuntime.map((milliseconds) => new Date(milliseconds))
-          )
-        : EffectRuntime.sync(() => compatibilityClock.now());
-  }
+  readonly serviceName = "EffectPreviewOwnedAccountImports";
 
   /** Preview and persist pending imports for a batch of pasted profile URLs. */
   preview(
@@ -204,12 +192,15 @@ export class EffectPreviewOwnedAccountImports {
   ): Effect<
     PreviewOwnedAccountImportsOutput,
     PreviewOwnedAccountImportsError,
-    EffectAccountImportStore
+    EffectAccountImportStore | EffectFirecrawlClient | EffectFirecrawlConfig
   > {
-    const { currentDate, singlePreview } = this;
+    void this.serviceName;
+
+    const singlePreview = new EffectPreviewMargonemProfileImport();
 
     return EffectRuntime.gen(function* previewBatchEffect() {
-      const now = yield* currentDate;
+      const currentTimeMillis = yield* ClockRuntime.currentTimeMillis;
+      const now = new Date(currentTimeMillis);
       const nonBlankLines = input.profileUrls
         .map((url, index) => ({ inputUrl: url, lineNumber: index + 1 }))
         .filter((line) => !isEmpty(line.inputUrl));
