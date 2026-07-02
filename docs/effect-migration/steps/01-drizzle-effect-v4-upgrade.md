@@ -12,13 +12,46 @@ The migration plan targets **Drizzle ORM `v1.0.0-rc.4`**. Drizzle `v1.0.0-rc.1` 
 
 ## Relevant Drizzle guidance
 
-The Drizzle Effect PostgreSQL guide shows:
+The Drizzle Effect PostgreSQL guide (https://orm.drizzle.team/docs/connect-effect-postgres) shows:
 
 - install `drizzle-orm@rc`, `effect`, `@effect/sql-pg`, `pg`;
 - create a `PgClient.layer` with `Redacted.make(process.env.DATABASE_URL!)`;
 - use `drizzle-orm/effect-postgres`;
-- access the db inside `Effect.gen` with `yield* PgDrizzle.makeWithDefaults()` or equivalent configured make function;
+- access the db inside `Effect.gen` with `yield* PgDrizzle.makeWithDefaults()` or, for production control over logging/cache/relations, `PgDrizzle.make({ relations }).pipe(Effect.provide(PgDrizzle.DefaultServices))`;
 - run programs with the PgClient layer provided at the boundary.
+
+### Required: pg type parsers for date/time columns
+
+The guide's `PgClient.layer` configures `types.getTypeParser` to return **raw values for date/time OIDs** (1184, 1114, 1082, 1186, 1231, 1115, 1185, 1187, 1182) so Drizzle handles parsing, avoiding `pg`'s UTC normalization/double-parsing of timestamps. This is a **correctness requirement**, not style: the squad-builder schema has many `timestamp`/`timestamptz` columns (`updatedAt`, `fetchedAt`, `createdAt`, etc.). `makePgClientLayer` must pass this `types` config:
+
+```ts
+import { types } from "pg";
+
+const DATE_TIME_TYPE_IDS = [
+  1184, 1114, 1082, 1186, 1231, 1115, 1185, 1187, 1182,
+];
+
+export const makePgClientLayer = (databaseUrl: Redacted.Redacted) =>
+  Pg.layer({
+    url: databaseUrl,
+    types: {
+      getTypeParser: (typeId, format) => {
+        if (DATE_TIME_TYPE_IDS.includes(typeId)) {
+          return (val: unknown) => val;
+        }
+        return types.getTypeParser(typeId, format);
+      },
+    },
+  });
+```
+
+Without this, migrated timestamp values may be parsed inconsistently between the Effect path and Drizzle's expectation.
+
+### Optional: relations and query logging
+
+- **Relations** — `PgDrizzle.make({ relations })` enables `db.query.squadGroup.findMany({ with: { characters: true } })`, replacing hand-written joins. The squad-builder schema currently defines zero `relations()` and the Effect stores use ~83 manual joins. Adopt only where a complex multi-join query becomes clearer; do not refactor working joins en masse (smallest coherent improvement).
+- **Query logging** — `makeWithDefaults()` uses a no-op logger. `EffectLogger.layer` logs queries via `Effect.log()` with SQL/param annotations, feeding the OTel `Observability` layer. Swap to `PgDrizzle.make({}).pipe(Effect.provide(EffectLogger.layer), Effect.provide(PgDrizzle.DefaultServices))` once the observability layer lands.
+- **Query error handling** — let Drizzle's typed query error flow; translate to `EffectSquadBuilderPersistenceUnavailable` **once at the store boundary** (`Effect.mapError`/`Effect.catchTag`) instead of per-query `as Effect.Effect<...>` casts. Modeling persistence failure as `Schema.Defect` (Phase 1) removes the per-query casts.
 
 ## Accepted strategy
 
@@ -38,7 +71,7 @@ Consequences:
 
 - Whether existing `packages/db/src/effect.d.ts` indicates planned/generated Effect support that should be replaced with first-class source code.
 - Where the `PgClient.layer` and Drizzle Effect layer live: `packages/db`, `packages/api`, or `apps/server` composition root.
-- How to handle current `pg` type parser behavior and current Drizzle instance compatibility.
+- ~~How to handle current `pg` type parser behavior and current Drizzle instance compatibility.~~ **Resolved:** configure `types.getTypeParser` to return raw values for date/time OIDs in `makePgClientLayer` (see "Required: pg type parsers" above). Adopt `EffectLogger` and `relations` opportunistically, not as migration blockers.
 
 ## Accepted version strategy
 

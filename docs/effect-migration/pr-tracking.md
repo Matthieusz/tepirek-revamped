@@ -1,56 +1,42 @@
 # Effect v4 Migration PR Tracking
 
-Status: draft; accepted strategy.
+Status: active; PR 24 is the tracking umbrella. The roadmap lives in the PR body.
+
+PR: https://github.com/Matthieusz/tepirek-revamped/pull/24
 
 ## Strategy
 
-Create a long-running draft PR after the planning docs are committed, then use that PR as the tracking umbrella for the migration slices.
+A long-running draft PR tracks the migration across sessions. The PR body holds the phased roadmap (Phase 1–5) and acceptance criteria; this file records only the tracking strategy and draft policy. Creating branches, commits, pushes, or GitHub PRs is externally visible and should only happen after an explicit action request.
 
-Creating branches, commits, pushes, or GitHub PRs is externally visible and should only happen after an explicit action request.
-
-## Recommended branch
+## Branch
 
 ```txt
 effect-v4-backend-migration
 ```
 
-## Recommended PR title
+## PR title
 
 ```txt
 Draft: Effect v4 backend migration
 ```
 
-## Recommended PR links
+## PR links
 
-The PR body should link:
+The PR body links:
 
-- `docs/adr/0002-effect-v4-backend-migration.md`;
-- `docs/effect-migration/README.md`;
-- `docs/effect-migration/implementation-readiness.md`;
-- `TODO-27ce79a0`.
-
-## Recommended PR checklist
-
-- [ ] Commit planning docs and ADR.
-- [ ] Dependency/platform upgrade.
-- [ ] Squad-builder structural split.
-- [ ] Effect infrastructure/runtime bridge.
-- [ ] `createSquadGroup` Effect reference slice.
-- [ ] `createSquadGroup` Effect Schema boundary migration.
-- [x] Move production Effect runtime ownership to the server composition root.
-- [ ] Continue squad-builder operation migrations.
-- [ ] Introduce fuller reusable Effect test runtime/layer composition.
-- [ ] Revisit evlog replacement after reference migration stabilizes.
-- [ ] Revisit oRPC/Hono only after backend migration stabilizes.
+- `docs/adr/0002-effect-v4-backend-migration.md`
+- `docs/effect-migration/README.md`
+- `docs/effect-migration/implementation-readiness.md`
+- `docs/effect-migration/pr-24-review-next-steps.md`
 
 ## Draft policy
 
 Keep the PR as Draft until at least:
 
-- the `createSquadGroup` Effect reference slice is green;
-- the same procedure's Effect Schema boundary migration is green;
-- frontend type inference and OpenAPI generation compatibility have been verified.
+- the squad-builder Effect `HttpApi` reference slice is green (Phase 2);
+- the frontend `effect-query` migration for squad-builder is green (Phase 4);
+- frontend type inference and OpenAPI generation compatibility have been verified (Effect `OpenApi.fromApi`).
 
 ## Splitting policy
 
-If the PR becomes too large to review effectively, split follow-up PRs by checklist slice while keeping the original PR/task as the umbrella reference.
+If the PR becomes too large to review effectively, split follow-up PRs by phase while keeping the original PR as the umbrella reference.

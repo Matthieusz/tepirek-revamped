@@ -21,7 +21,7 @@ catalog:
   effect: 4.0.0-beta.85
   hono: ^4.12.27
   tsdown: ^0.22.3
-  typescript: rc
+  typescript: 6.0.3
   zod: ^4.4.3
 
 minimumReleaseAgeExclude:

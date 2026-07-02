@@ -24,9 +24,9 @@ Status: draft; accepted as the go/no-go checklist before implementation starts.
 
 - [x] Verify Drizzle rc.4 / Effect beta compatibility in the actual package manager install.
 - [x] Verify exact `@effect/sql-pg` and `@effect/vitest` versions and peer compatibility.
-- [x] Verify oRPC Standard Schema / Effect Schema adapter compatibility for the `createSquadGroup` boundary.
-- [ ] Verify oRPC OpenAPI generation compatibility with the chosen Effect Schema boundary representation before relying on generated docs for migrated procedures.
-- [x] Verify frontend `@orpc/tanstack-query` inference after replacing the `createSquadGroup` oRPC zod schema.
+- ~~Verify oRPC Standard Schema / Effect Schema adapter compatibility for the `createSquadGroup` boundary.~~ Dissolved — oRPC is being removed (Effect `HttpApi` + `effect-query`).
+- ~~Verify oRPC OpenAPI generation compatibility with the chosen Effect Schema boundary representation.~~ Dissolved — Effect `OpenApi.fromApi` generates from the same schemas; no zod converter involved.
+- ~~Verify frontend `@orpc/tanstack-query` inference after replacing the `createSquadGroup` oRPC zod schema.~~ Superseded — frontend moves to `effect-query` against the shared `HttpApi` contract.
 
 ### 4. First implementation task is unambiguous
 
@@ -51,10 +51,10 @@ Run commands appropriate to the changed phase:
   - `pnpm --filter @tepirek-revamped/api check-types`
   - `pnpm --filter @tepirek-revamped/api test`
   - `pnpm test:integration` if persistence/router paths are touched
-- oRPC schema boundary migration:
+- Effect `HttpApi` boundary migration (Phase 2):
   - `pnpm --filter @tepirek-revamped/api check-types`
   - `pnpm --filter web check-types`
-  - relevant API/router tests
+  - relevant API/handler tests
 - Before finalizing implementation slices:
   - `pnpm fix` or `pnpm dlx ultracite fix`
   - `pnpm check-types`
