@@ -20,18 +20,14 @@ Completed change:
 
 ### 2. Split the single Effect store into the accepted sub-domain services
 
-Current state: one `EffectSquadGroupStore` service includes squad groups, account import, account sharing, account refetch, and Firecrawl ledger methods.
+Status: completed in this PR.
 
-Required next step:
+Completed change:
 
-- Introduce separate Effect service tags/layers for the accepted seams:
-  - `AccountImportStore`;
-  - `AccountSharingStore`;
-  - `AccountRefetchStore`;
-  - `SquadGroupStore`.
-- Split the Drizzle adapter layer along those seams.
-- Update Effect service modules to depend only on the narrow service(s) they consume.
-- Keep compatibility glue temporary and documented if a staged split is needed.
+- Introduced separate Effect service tags for account import, account sharing, account refetch, and squad-group persistence seams.
+- Split the Drizzle adapter into sub-domain layers and composed them in the API live layer.
+- Updated Effect service modules and router/runtime types to depend on the narrow store service they consume.
+- Kept only test support compatibility for building recording/failing store doubles across the split services.
 
 ### 3. Scope/dispose ManagedRuntime instances in tests
 

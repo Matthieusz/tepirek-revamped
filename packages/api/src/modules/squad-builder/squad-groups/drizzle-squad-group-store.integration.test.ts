@@ -22,9 +22,11 @@ import {
   testDb,
 } from "../../../test/integration/database";
 import { parseAccountDisplayName } from "../account-display-name";
+import { EffectAccountImportStore } from "../account-import/effect-account-import-store";
 import { EffectConfirmOwnedAccountImport } from "../account-import/effect-confirm-owned-account-import";
 import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts";
 import { systemClock } from "../account-import/preview-margonem-profile-import";
+import { EffectAccountRefetchStore } from "../account-refetch/effect-account-refetch-store";
 import { EffectApplyAccountRefetch } from "../account-refetch/effect-apply-account-refetch";
 import { EffectListAccountSharingState } from "../account-sharing/effect-list-account-sharing-state";
 import { EffectRespondToAccountAccessInvite } from "../account-sharing/effect-respond-to-account-access-invite";
@@ -47,7 +49,6 @@ import { ListGlobalSquadGroups } from "./list-global-squad-groups";
 import { ListSquadGroups } from "./list-squad-groups";
 import { SaveSquadGroup } from "./save-squad-group";
 import { SetSquadGroupVisibility } from "./set-squad-group-visibility";
-import { EffectSquadGroupStore } from "./squad-group-store";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -349,7 +350,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     }
 
     const pending = await runtime.runPromise(
-      EffectSquadGroupStore.use((store) =>
+      EffectAccountImportStore.use((store) =>
         store.createPendingImport({
           actorUserId: parseTestUserId(member.id),
           defaultDisplayName: displayName.value,
@@ -425,7 +426,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     });
 
     const loaded = await runtime.runPromise(
-      EffectSquadGroupStore.use((store) =>
+      EffectAccountRefetchStore.use((store) =>
         store.getAccountForRefetch({
           accountId: account.id as never,
           actorUserId: parseTestUserId(member.id),
@@ -445,7 +446,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       },
     ];
     const pending = await runtime.runPromise(
-      EffectSquadGroupStore.use((store) =>
+      EffectAccountRefetchStore.use((store) =>
         store.createPendingRefetch({
           accountId: loaded.accountId,
           actorUserId: parseTestUserId(member.id),
@@ -733,7 +734,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     );
 
     const reserved = await runtime.runPromise(
-      EffectSquadGroupStore.use((store) =>
+      EffectAccountImportStore.use((store) =>
         store.reserveRequest({
           monthlyRequestBudget: 10,
           profileId,
@@ -744,7 +745,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     );
 
     await runtime.runPromise(
-      EffectSquadGroupStore.use((store) =>
+      EffectAccountImportStore.use((store) =>
         store.markRequestSucceeded({
           cacheState: "hit",
           creditsUsed: parseTestCredits(1),

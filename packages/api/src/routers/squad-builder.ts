@@ -9,6 +9,7 @@ import type {
   ConfirmOwnedAccountImport,
   ConfirmOwnedAccountImportError,
 } from "../modules/squad-builder/account-import/confirm-owned-account-import";
+import type { EffectAccountImportStore } from "../modules/squad-builder/account-import/effect-account-import-store";
 import { EffectConfirmOwnedAccountImport } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import";
 import type { EffectConfirmOwnedAccountImportError } from "../modules/squad-builder/account-import/effect-confirm-owned-account-import";
 import { EffectPreviewMargonemProfileImport } from "../modules/squad-builder/account-import/effect-preview-margonem-profile-import";
@@ -33,6 +34,7 @@ import type {
   ApplyAccountRefetchError,
   ApplyAccountRefetchOutput,
 } from "../modules/squad-builder/account-refetch/apply-account-refetch";
+import type { EffectAccountRefetchStore } from "../modules/squad-builder/account-refetch/effect-account-refetch-store";
 import { EffectApplyAccountRefetch } from "../modules/squad-builder/account-refetch/effect-apply-account-refetch";
 import { EffectPreviewAccountRefetch } from "../modules/squad-builder/account-refetch/effect-preview-account-refetch";
 import type {
@@ -41,6 +43,7 @@ import type {
   PreviewAccountRefetchOutput,
 } from "../modules/squad-builder/account-refetch/preview-account-refetch";
 import type { AccountSharingError } from "../modules/squad-builder/account-sharing/account-sharing-error";
+import type { EffectAccountSharingStore } from "../modules/squad-builder/account-sharing/effect-account-sharing-store";
 import { EffectListAccountSharingState } from "../modules/squad-builder/account-sharing/effect-list-account-sharing-state";
 import { EffectRespondToAccountAccessInvite } from "../modules/squad-builder/account-sharing/effect-respond-to-account-access-invite";
 import { EffectRevokeAccountAccess } from "../modules/squad-builder/account-sharing/effect-revoke-account-access";
@@ -143,6 +146,12 @@ const strictEffectBoundaryParseOptions = {
   onExcessProperty: "error",
 } as const;
 
+type EffectSquadBuilderRuntimeServices =
+  | EffectAccountImportStore
+  | EffectAccountRefetchStore
+  | EffectAccountSharingStore
+  | EffectSquadGroupStore;
+
 interface PreviewProfileImportService {
   readonly preview: (
     input: PreviewMargonemProfileImportInput,
@@ -162,7 +171,7 @@ interface EffectPreviewProfileImportService {
   ) => Effect<
     PreviewMargonemProfileImportOutput,
     PreviewMargonemProfileImportError,
-    EffectSquadGroupStore
+    EffectAccountImportStore
   >;
 }
 
@@ -182,7 +191,7 @@ interface EffectPreviewOwnedImportsService {
   ) => Effect<
     PreviewOwnedAccountImportsOutput,
     PreviewOwnedAccountImportsError,
-    EffectSquadGroupStore
+    EffectAccountImportStore
   >;
 }
 
@@ -200,7 +209,7 @@ interface EffectConfirmOwnedAccountImportService {
   ) => Effect<
     OwnedMargonemAccountSummary,
     EffectConfirmOwnedAccountImportError,
-    EffectSquadGroupStore
+    EffectAccountImportStore
   >;
 }
 
@@ -218,7 +227,7 @@ interface EffectPreviewAccountRefetchService {
   ) => Effect<
     PreviewAccountRefetchOutput,
     PreviewAccountRefetchError,
-    EffectSquadGroupStore
+    EffectAccountRefetchStore
   >;
 }
 
@@ -234,7 +243,7 @@ interface EffectApplyAccountRefetchService {
   ) => Effect<
     ApplyAccountRefetchOutput,
     ApplyAccountRefetchError,
-    EffectSquadGroupStore
+    EffectAccountRefetchStore
   >;
 }
 
@@ -244,7 +253,7 @@ interface ListOwnedAccountsService {
   ) => Effect<
     readonly OwnedMargonemAccountSummary[],
     ListOwnedMargonemAccountsError,
-    EffectSquadGroupStore
+    EffectAccountImportStore
   >;
 }
 
@@ -260,7 +269,7 @@ interface EffectSearchAccountInviteTargetsService {
   ) => Effect<
     readonly AccountInviteTarget[],
     AccountSharingError,
-    EffectSquadGroupStore
+    EffectAccountSharingStore
   >;
 }
 
@@ -276,7 +285,7 @@ interface EffectSendAccountAccessInviteService {
   ) => Effect<
     AccountAccessInviteSummary,
     AccountSharingError,
-    EffectSquadGroupStore
+    EffectAccountSharingStore
   >;
 }
 
@@ -292,7 +301,7 @@ interface EffectRespondToAccountAccessInviteService {
   ) => Effect<
     AccountAccessInviteSummary,
     AccountSharingError,
-    EffectSquadGroupStore
+    EffectAccountSharingStore
   >;
 }
 
@@ -308,7 +317,7 @@ interface EffectRevokeAccountAccessService {
   ) => Effect<
     RevokeAccountAccessResult,
     AccountSharingError,
-    EffectSquadGroupStore
+    EffectAccountSharingStore
   >;
 }
 
@@ -336,14 +345,14 @@ interface EffectListAccountSharingStateService {
   ) => Effect<
     readonly AccountAccessInviteSummary[],
     AccountSharingError,
-    EffectSquadGroupStore
+    EffectAccountSharingStore
   >;
   readonly listSharedAccounts: (
     input: Parameters<EffectListAccountSharingState["listSharedAccounts"]>[0]
   ) => Effect<
     readonly SharedMargonemAccountSummary[],
     AccountSharingError,
-    EffectSquadGroupStore
+    EffectAccountSharingStore
   >;
   readonly listAccountAccessGrants: (
     input: Parameters<
@@ -352,7 +361,7 @@ interface EffectListAccountSharingStateService {
   ) => Effect<
     readonly AccountAccessGrantSummary[],
     AccountSharingError,
-    EffectSquadGroupStore
+    EffectAccountSharingStore
   >;
 }
 
@@ -563,7 +572,10 @@ export interface CreateSquadBuilderRouterOptions {
   readonly listAccountSharingStateService?: ListAccountSharingStateService;
   readonly effectListAccountSharingStateService?: EffectListAccountSharingStateService;
   readonly createSquadGroupService?: CreateSquadGroupService;
-  readonly effectRuntime?: ManagedRuntime<EffectSquadGroupStore, unknown>;
+  readonly effectRuntime?: ManagedRuntime<
+    EffectSquadBuilderRuntimeServices,
+    unknown
+  >;
   readonly listMySquadGroupsService?: ListMySquadGroupsService;
   readonly getSquadGroupDetailService?: GetSquadGroupDetailService;
   readonly listGlobalSquadGroupsService?: ListGlobalSquadGroupsService;

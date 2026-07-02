@@ -6,13 +6,13 @@ import type { InvalidAccountDisplayName } from "../account-display-name";
 import type { AppUserId } from "../app-user-id";
 import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id";
 import { isError } from "../result";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
 import type {
   DuplicateMargonemAccountError,
   OwnedMargonemAccountSummary,
   PendingMargonemAccountImportNotFound,
   SquadBuilderPersistenceUnavailable,
 } from "./account-import-store";
+import { EffectAccountImportStore } from "./effect-account-import-store";
 import type { Clock } from "./preview-margonem-profile-import";
 
 /** Input for confirming an owned account import through Effect. */
@@ -43,7 +43,7 @@ export class EffectConfirmOwnedAccountImport {
   ): Effect<
     OwnedMargonemAccountSummary,
     EffectConfirmOwnedAccountImportError,
-    EffectSquadGroupStore
+    EffectAccountImportStore
   > {
     const { clock } = this;
 
@@ -55,7 +55,7 @@ export class EffectConfirmOwnedAccountImport {
       }
 
       const now = clock.now();
-      const pending = yield* EffectSquadGroupStore.use((store) =>
+      const pending = yield* EffectAccountImportStore.use((store) =>
         store.findPendingImportForConfirmation({
           actorUserId: input.actorUserId,
           now,
@@ -63,7 +63,7 @@ export class EffectConfirmOwnedAccountImport {
         })
       );
 
-      return yield* EffectSquadGroupStore.use((store) =>
+      return yield* EffectAccountImportStore.use((store) =>
         store.createOwnedAccountFromPendingImport({
           actorUserId: input.actorUserId,
           displayName: displayName.value,

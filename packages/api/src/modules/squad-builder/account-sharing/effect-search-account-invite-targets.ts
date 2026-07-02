@@ -1,9 +1,9 @@
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
 import type { AccountSharingError } from "./account-sharing-error";
 import type { AccountInviteTarget } from "./account-sharing-store";
+import { EffectAccountSharingStore } from "./effect-account-sharing-store";
 import { accountInviteTargetSearchPolicy } from "./search-account-invite-targets";
 import type {
   InvalidAccountInviteTargetQuery,
@@ -42,13 +42,13 @@ export class EffectSearchAccountInviteTargets {
   ): Effect<
     readonly AccountInviteTarget[],
     AccountSharingError,
-    EffectSquadGroupStore
+    EffectAccountSharingStore
   > {
     void this.serviceName;
 
     return EffectRuntime.gen(function* searchAccountInviteTargetsEffect() {
       const query = yield* parseAccountInviteTargetQuery(input.query);
-      const owned = yield* EffectSquadGroupStore.use((store) =>
+      const owned = yield* EffectAccountSharingStore.use((store) =>
         store.findOwnedAccountForSharing({
           accountId: input.accountId,
           actorUserId: input.actorUserId,
@@ -61,7 +61,7 @@ export class EffectSearchAccountInviteTargets {
         });
       }
 
-      return yield* EffectSquadGroupStore.use((store) =>
+      return yield* EffectAccountSharingStore.use((store) =>
         store.searchInviteTargets({
           accountId: input.accountId,
           actorUserId: input.actorUserId,

@@ -7,8 +7,8 @@ import type { FirecrawlClient } from "../firecrawl-client";
 import type { FirecrawlCreditCount } from "../firecrawl-config";
 import { Redacted } from "../prelude";
 import { isOk, ok } from "../result";
-import { makeEffectSquadGroupStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
+import { makeEffectAccountRefetchStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
+import { EffectAccountRefetchStore } from "./effect-account-refetch-store";
 import { EffectPreviewAccountRefetch } from "./effect-preview-account-refetch";
 
 const parseTestUserId = () => {
@@ -49,7 +49,7 @@ it.effect("previews account refetch and stores the pending diff", () => {
         })
       ),
   };
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeEffectAccountRefetchStoreTestService({
     createPendingRefetch: (input) => {
       expect(input.latestCharacters).toHaveLength(1);
       expect(input.diff.changed).toHaveLength(1);
@@ -105,5 +105,5 @@ it.effect("previews account refetch and stores the pending diff", () => {
     });
     expect(preview.diff.changed).toHaveLength(1);
     expect(createdPendingIds).toEqual([456]);
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provideService(EffectAccountRefetchStore)(store));
 });

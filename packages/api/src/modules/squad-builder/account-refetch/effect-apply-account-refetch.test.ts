@@ -4,8 +4,8 @@ import * as Effect from "effect/Effect";
 import type { Clock } from "../account-import/preview-margonem-profile-import";
 import { parseAppUserId } from "../app-user-id";
 import { isOk } from "../result";
-import { makeEffectSquadGroupStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
+import { makeEffectAccountRefetchStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
+import { EffectAccountRefetchStore } from "./effect-account-refetch-store";
 import { EffectApplyAccountRefetch } from "./effect-apply-account-refetch";
 
 const parseTestUserId = () => {
@@ -27,7 +27,7 @@ const fixedClock: Clock = {
 it.effect("applies a pending account refetch and marks it applied", () => {
   const actorUserId = parseTestUserId();
   const appliedRefetchIds: number[] = [];
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeEffectAccountRefetchStoreTestService({
     applyRefetchedAccount: (input) => {
       expect(input.now).toBe(fixedNow);
       expect(input.pendingRefetch.accountId).toBe(123);
@@ -84,5 +84,5 @@ it.effect("applies a pending account refetch and marks it applied", () => {
       updatedCharacterCount: 1,
     });
     expect(appliedRefetchIds).toEqual([456]);
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provideService(EffectAccountRefetchStore)(store));
 });

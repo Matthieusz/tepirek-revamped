@@ -5,8 +5,8 @@ import { parseAppUserId } from "../app-user-id";
 import type { FirecrawlCreditCount } from "../firecrawl-config";
 import { parseMargonemProfileId } from "../margonem-profile-id";
 import { isOk } from "../result";
-import { makeEffectSquadGroupStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
+import { makeEffectAccountImportStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
+import { EffectAccountImportStore } from "./effect-account-import-store";
 import { EffectPreviewOwnedAccountImports } from "./effect-preview-owned-account-imports";
 import type { EffectSingleMargonemProfilePreview } from "./effect-preview-owned-account-imports";
 import type {
@@ -65,7 +65,7 @@ it.effect(
     const singlePreview: EffectSingleMargonemProfilePreview = {
       preview: () => Effect.succeed(successfulPreview()),
     };
-    const store = makeEffectSquadGroupStoreTestService({
+    const store = makeEffectAccountImportStoreTestService({
       createPendingImport: (input) =>
         Effect.succeed({ id: 123 as never, profileId: input.profileId }),
       findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),
@@ -94,6 +94,6 @@ it.effect(
         _tag: "PreviewFailed",
         error: { _tag: "DuplicateProfileInBatch" },
       });
-    }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+    }).pipe(Effect.provideService(EffectAccountImportStore)(store));
   }
 );

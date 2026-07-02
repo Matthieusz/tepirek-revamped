@@ -5,8 +5,8 @@ import { parseAppUserId } from "../app-user-id";
 import { parseMargonemProfileId } from "../margonem-profile-id";
 import { parsePendingMargonemAccountImportId } from "../pending-margonem-account-import-id";
 import { isOk } from "../result";
-import { makeEffectSquadGroupStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
+import { makeEffectAccountImportStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
+import { EffectAccountImportStore } from "./effect-account-import-store";
 import { EffectConfirmOwnedAccountImport } from "./effect-confirm-owned-account-import";
 import type { Clock } from "./preview-margonem-profile-import";
 
@@ -51,7 +51,7 @@ it.effect(
     const pendingImportId = parseTestPendingId();
     const profileId = parseTestProfileId();
     const service = new EffectConfirmOwnedAccountImport(fixedClock);
-    const store = makeEffectSquadGroupStoreTestService({
+    const store = makeEffectAccountImportStoreTestService({
       createOwnedAccountFromPendingImport: ({ displayName, pending }) =>
         Effect.succeed({
           accountId: 123,
@@ -93,6 +93,6 @@ it.effect(
         displayName: "informati",
         profileId,
       });
-    }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+    }).pipe(Effect.provideService(EffectAccountImportStore)(store));
   }
 );

@@ -7,9 +7,9 @@ import { parseMargonemAccountAccessId } from "../margonem-account-access-id";
 import { parseMargonemAccountId } from "../margonem-account-id";
 import { parseMargonemProfileId } from "../margonem-profile-id";
 import { isOk } from "../result";
-import { makeEffectSquadGroupStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
+import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
 import { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
+import { EffectAccountSharingStore } from "./effect-account-sharing-store";
 import { EffectListAccountSharingState } from "./effect-list-account-sharing-state";
 
 const parseTestUserId = (value: string) => {
@@ -68,7 +68,7 @@ it.effect("lists incoming account access invites for the actor", () => {
   const accessId = parseTestAccessId();
   const accountId = parseTestAccountId();
   const createdAt = new Date("2026-06-29T12:00:00.000Z");
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeEffectAccountSharingStoreTestService({
     listIncomingAccountInvites: (input) => {
       expect(input).toMatchObject({ actorUserId });
 
@@ -102,12 +102,12 @@ it.effect("lists incoming account access invites for the actor", () => {
       ownerUserId,
       status: "pending",
     });
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
 });
 
 it.effect("surfaces persistence failures", () => {
   const actorUserId = parseTestUserId("effect-account-invite-error");
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeEffectAccountSharingStoreTestService({
     listIncomingAccountInvites: () =>
       Effect.fail(
         new EffectSquadBuilderPersistenceUnavailable({
@@ -125,7 +125,7 @@ it.effect("surfaces persistence failures", () => {
     );
 
     expect(error._tag).toBe("SquadBuilderPersistenceUnavailable");
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
 });
 
 it.effect("lists shared accounts for the actor", () => {
@@ -133,7 +133,7 @@ it.effect("lists shared accounts for the actor", () => {
   const ownerUserId = parseTestUserId("effect-shared-account-owner");
   const accountId = parseTestAccountId();
   const createdAt = new Date("2026-06-29T12:00:00.000Z");
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeEffectAccountSharingStoreTestService({
     listSharedAccounts: (input) => {
       expect(input).toMatchObject({ actorUserId });
 
@@ -164,7 +164,7 @@ it.effect("lists shared accounts for the actor", () => {
       ownerUserId,
       ownerUserName: "Effect Shared Owner",
     });
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
 });
 
 it.effect("lists account access grants for an owned account", () => {
@@ -173,7 +173,7 @@ it.effect("lists account access grants for an owned account", () => {
   const accountId = parseTestAccountId();
   const accessId = parseTestAccessId();
   const createdAt = new Date("2026-06-29T12:00:00.000Z");
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeEffectAccountSharingStoreTestService({
     findOwnedAccountForSharing: (input) => {
       expect(input).toMatchObject({ accountId, actorUserId });
 
@@ -214,7 +214,7 @@ it.effect("lists account access grants for an owned account", () => {
       invitedUserId,
       status: "accepted",
     });
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
 });
 
 it.effect(
@@ -223,7 +223,7 @@ it.effect(
     const actorUserId = parseTestUserId("effect-grants-attacker");
     const ownerUserId = parseTestUserId("effect-grants-real-owner");
     const accountId = parseTestAccountId();
-    const store = makeEffectSquadGroupStoreTestService({
+    const store = makeEffectAccountSharingStoreTestService({
       findOwnedAccountForSharing: () =>
         Effect.succeed({
           accountId,
@@ -240,6 +240,6 @@ it.effect(
       );
 
       expect(error._tag).toBe("ActorDoesNotOwnMargonemAccount");
-    }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+    }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
   }
 );

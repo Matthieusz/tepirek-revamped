@@ -5,8 +5,8 @@ import { parseAppUserId } from "../app-user-id";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id";
 import { parseMargonemAccountId } from "../margonem-account-id";
 import { isOk } from "../result";
-import { makeEffectSquadGroupStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
+import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
+import { EffectAccountSharingStore } from "./effect-account-sharing-store";
 import { EffectSendAccountAccessInvite } from "./effect-send-account-access-invite";
 
 const parseTestUserId = (value: string) => {
@@ -48,7 +48,7 @@ it.effect("sends an account access invite for a verified target", () => {
   const targetUserId = parseTestUserId("effect-account-send-target");
   const accountId = parseTestAccountId();
   const accessId = parseTestAccessId();
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeEffectAccountSharingStoreTestService({
     findOwnedAccountForSharing: (input) => {
       expect(input.accountId).toBe(accountId);
       expect(input.actorUserId).toBe(actorUserId);
@@ -106,13 +106,13 @@ it.effect("sends an account access invite for a verified target", () => {
       invitedUserId: targetUserId,
       status: "pending",
     });
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
 });
 
 it.effect("rejects self-invites before resolving the target", () => {
   const actorUserId = parseTestUserId("effect-account-self-owner");
   const accountId = parseTestAccountId();
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeEffectAccountSharingStoreTestService({
     findOwnedAccountForSharing: () =>
       Effect.succeed({
         accountId,
@@ -133,5 +133,5 @@ it.effect("rejects self-invites before resolving the target", () => {
     );
 
     expect(error._tag).toBe("CannotInviteSelf");
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
 });

@@ -5,8 +5,8 @@ import { parseAppUserId } from "../app-user-id";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id";
 import { parseMargonemAccountId } from "../margonem-account-id";
 import { isOk } from "../result";
-import { makeEffectSquadGroupStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
+import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
+import { EffectAccountSharingStore } from "./effect-account-sharing-store";
 import { EffectRevokeAccountAccess } from "./effect-revoke-account-access";
 
 const parseTestUserId = (value: string) => {
@@ -48,7 +48,7 @@ it.effect("revokes account access as the account owner", () => {
   const revokedUserId = parseTestUserId("effect-account-revoke-recipient");
   const accessId = parseTestAccessId();
   const accountId = parseTestAccountId();
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeEffectAccountSharingStoreTestService({
     revokeAccountAccess: (input) => {
       expect(input).toMatchObject({
         accessId,
@@ -78,13 +78,13 @@ it.effect("revokes account access as the account owner", () => {
       removedSquadCharacterCount: 2,
       revokedUserId,
     });
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
 });
 
 it.effect("surfaces owner authorization failures", () => {
   const actorUserId = parseTestUserId("effect-account-revoke-attacker");
   const accessId = parseTestAccessId();
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeEffectAccountSharingStoreTestService({
     revokeAccountAccess: () =>
       Effect.fail({ _tag: "ActorDoesNotOwnMargonemAccount" as const }),
   });
@@ -99,5 +99,5 @@ it.effect("surfaces owner authorization failures", () => {
     );
 
     expect(error._tag).toBe("ActorDoesNotOwnMargonemAccount");
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
 });

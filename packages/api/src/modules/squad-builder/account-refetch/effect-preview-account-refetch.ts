@@ -13,7 +13,7 @@ import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-d
 import { parseMargonemProfileHtml } from "../margonem-profile-html-parser";
 import { toMargonemProfileUrl } from "../margonem-profile-url";
 import { isError } from "../result";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
+import { EffectAccountRefetchStore } from "./effect-account-refetch-store";
 import type {
   PreviewAccountRefetchError,
   PreviewAccountRefetchInput,
@@ -47,16 +47,16 @@ export class EffectPreviewAccountRefetch {
   ): Effect<
     PreviewAccountRefetchOutput,
     PreviewAccountRefetchError,
-    EffectSquadGroupStore
+    EffectAccountRefetchStore
   > {
     const { clock, config, firecrawl } = this;
 
     return EffectRuntime.gen(function* previewAccountRefetchEffect() {
-      const account = yield* EffectSquadGroupStore.use((store) =>
+      const account = yield* EffectAccountRefetchStore.use((store) =>
         store.getAccountForRefetch(input)
       );
       const yearMonth = firecrawlYearMonthFromDate(clock.now());
-      const reservedRequest = yield* EffectSquadGroupStore.use((store) =>
+      const reservedRequest = yield* EffectAccountRefetchStore.use((store) =>
         store.reserveRequest({
           monthlyRequestBudget: config.monthlyRequestBudget,
           profileId: account.profileId,
@@ -75,7 +75,7 @@ export class EffectPreviewAccountRefetch {
       });
 
       if (isError(scrapedProfileResult)) {
-        yield* EffectSquadGroupStore.use((store) =>
+        yield* EffectAccountRefetchStore.use((store) =>
           store.markRequestFailed({
             errorTag: scrapedProfileResult.error._tag,
             requestId: reservedRequest.requestId,
@@ -90,7 +90,7 @@ export class EffectPreviewAccountRefetch {
       );
 
       if (isError(creditsUsed)) {
-        yield* EffectSquadGroupStore.use((store) =>
+        yield* EffectAccountRefetchStore.use((store) =>
           store.markRequestFailed({
             errorTag: creditsUsed.error._tag,
             requestId: reservedRequest.requestId,
@@ -103,7 +103,7 @@ export class EffectPreviewAccountRefetch {
         });
       }
 
-      yield* EffectSquadGroupStore.use((store) =>
+      yield* EffectAccountRefetchStore.use((store) =>
         store.markRequestSucceeded({
           cacheState: scrapedProfile.metadata.cacheState ?? null,
           creditsUsed: creditsUsed.value,
@@ -129,7 +129,7 @@ export class EffectPreviewAccountRefetch {
         latestCharacters: parsedHtml.value.jarunaCharacters,
         profileId: account.profileId,
       });
-      const pending = yield* EffectSquadGroupStore.use((store) =>
+      const pending = yield* EffectAccountRefetchStore.use((store) =>
         store.createPendingRefetch({
           accountId: account.accountId,
           actorUserId: input.actorUserId,

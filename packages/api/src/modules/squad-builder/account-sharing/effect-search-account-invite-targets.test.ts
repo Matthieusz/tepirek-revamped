@@ -4,8 +4,8 @@ import * as Effect from "effect/Effect";
 import { parseAppUserId } from "../app-user-id";
 import { parseMargonemAccountId } from "../margonem-account-id";
 import { isOk } from "../result";
-import { makeEffectSquadGroupStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
+import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
+import { EffectAccountSharingStore } from "./effect-account-sharing-store";
 import { EffectSearchAccountInviteTargets } from "./effect-search-account-invite-targets";
 
 const parseTestUserId = (value: string) => {
@@ -32,7 +32,7 @@ it.effect("searches invite targets for an account owner", () => {
   const actorUserId = parseTestUserId("effect-account-search-owner");
   const targetUserId = parseTestUserId("effect-account-search-target");
   const accountId = parseTestAccountId();
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeEffectAccountSharingStoreTestService({
     findOwnedAccountForSharing: (input) => {
       expect(input.accountId).toBe(accountId);
       expect(input.actorUserId).toBe(actorUserId);
@@ -74,5 +74,5 @@ it.effect("searches invite targets for an account owner", () => {
         userId: targetUserId,
       },
     ]);
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
 });

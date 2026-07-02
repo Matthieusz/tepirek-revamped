@@ -5,8 +5,8 @@ import { parseAppUserId } from "../app-user-id";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id";
 import { parseMargonemAccountId } from "../margonem-account-id";
 import { isOk } from "../result";
-import { makeEffectSquadGroupStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
+import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
+import { EffectAccountSharingStore } from "./effect-account-sharing-store";
 import { EffectRespondToAccountAccessInvite } from "./effect-respond-to-account-access-invite";
 
 const parseTestUserId = (value: string) => {
@@ -48,7 +48,7 @@ it.effect("accepts an account access invite as the invited user", () => {
   const ownerUserId = parseTestUserId("effect-account-respond-owner");
   const accessId = parseTestAccessId();
   const accountId = parseTestAccountId();
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeEffectAccountSharingStoreTestService({
     respondToAccountAccessInvite: (input) => {
       expect(input).toMatchObject({
         accessId,
@@ -86,13 +86,13 @@ it.effect("accepts an account access invite as the invited user", () => {
       invitedUserId: actorUserId,
       status: "accepted",
     });
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
 });
 
 it.effect("surfaces invite recipient authorization failures", () => {
   const actorUserId = parseTestUserId("effect-account-respond-attacker");
   const accessId = parseTestAccessId();
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeEffectAccountSharingStoreTestService({
     respondToAccountAccessInvite: () =>
       Effect.fail({ _tag: "ActorIsNotInviteRecipient" as const }),
   });
@@ -108,5 +108,5 @@ it.effect("surfaces invite recipient authorization failures", () => {
     );
 
     expect(error._tag).toBe("ActorIsNotInviteRecipient");
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
 });

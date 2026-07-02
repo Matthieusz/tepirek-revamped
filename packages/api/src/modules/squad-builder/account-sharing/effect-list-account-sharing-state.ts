@@ -1,13 +1,13 @@
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
 import type { AccountSharingError } from "./account-sharing-error";
 import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,
   SharedMargonemAccountSummary,
 } from "./account-sharing-store";
+import { EffectAccountSharingStore } from "./effect-account-sharing-store";
 import type {
   ListAccountAccessGrantsInput,
   ListIncomingAccountInvitesInput,
@@ -24,12 +24,12 @@ export class EffectListAccountSharingState {
   ): Effect<
     readonly AccountAccessInviteSummary[],
     AccountSharingError,
-    EffectSquadGroupStore
+    EffectAccountSharingStore
   > {
     void this.serviceName;
 
     return EffectRuntime.gen(function* listIncomingAccountInvitesEffect() {
-      return yield* EffectSquadGroupStore.use((store) =>
+      return yield* EffectAccountSharingStore.use((store) =>
         store.listIncomingAccountInvites({
           actorUserId: input.actorUserId,
         })
@@ -43,12 +43,12 @@ export class EffectListAccountSharingState {
   ): Effect<
     readonly SharedMargonemAccountSummary[],
     AccountSharingError,
-    EffectSquadGroupStore
+    EffectAccountSharingStore
   > {
     void this.serviceName;
 
     return EffectRuntime.gen(function* listSharedAccountsEffect() {
-      return yield* EffectSquadGroupStore.use((store) =>
+      return yield* EffectAccountSharingStore.use((store) =>
         store.listSharedAccounts({
           actorUserId: input.actorUserId,
         })
@@ -62,12 +62,12 @@ export class EffectListAccountSharingState {
   ): Effect<
     readonly AccountAccessGrantSummary[],
     AccountSharingError,
-    EffectSquadGroupStore
+    EffectAccountSharingStore
   > {
     void this.serviceName;
 
     return EffectRuntime.gen(function* listAccountAccessGrantsEffect() {
-      const owned = yield* EffectSquadGroupStore.use((store) =>
+      const owned = yield* EffectAccountSharingStore.use((store) =>
         store.findOwnedAccountForSharing({
           accountId: input.accountId,
           actorUserId: input.actorUserId,
@@ -80,7 +80,7 @@ export class EffectListAccountSharingState {
         });
       }
 
-      return yield* EffectSquadGroupStore.use((store) =>
+      return yield* EffectAccountSharingStore.use((store) =>
         store.listAccountAccessGrants({
           accountId: input.accountId,
           actorUserId: input.actorUserId,

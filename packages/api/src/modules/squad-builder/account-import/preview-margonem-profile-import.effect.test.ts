@@ -5,8 +5,8 @@ import { parseAppUserId } from "../app-user-id";
 import type { FirecrawlClient } from "../firecrawl-client";
 import { Redacted } from "../prelude";
 import { isOk, ok } from "../result";
-import { makeEffectSquadGroupStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
+import { makeEffectAccountImportStoreTestService } from "../squad-groups/effect-squad-group-store.test-support";
+import { EffectAccountImportStore } from "./effect-account-import-store";
 import { EffectPreviewMargonemProfileImport } from "./effect-preview-margonem-profile-import";
 import type { Clock } from "./preview-margonem-profile-import";
 
@@ -50,7 +50,7 @@ it.effect(
           })
         ),
     };
-    const store = makeEffectSquadGroupStoreTestService({
+    const store = makeEffectAccountImportStoreTestService({
       findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),
       markRequestSucceeded: (input) => {
         succeededRequestIds.push(input.requestId);
@@ -85,6 +85,6 @@ it.effect(
       });
       expect(preview.jarunaCharacters).toHaveLength(1);
       expect(succeededRequestIds).toEqual([123]);
-    }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+    }).pipe(Effect.provideService(EffectAccountImportStore)(store));
   }
 );

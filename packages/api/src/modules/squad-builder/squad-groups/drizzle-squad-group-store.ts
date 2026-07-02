@@ -45,7 +45,10 @@ import {
   accountDisplayNameToString,
   parseAccountDisplayName,
 } from "../account-display-name";
+import { EffectAccountImportStore } from "../account-import/effect-account-import-store";
 import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch";
+import { EffectAccountRefetchStore } from "../account-refetch/effect-account-refetch-store";
+import { EffectAccountSharingStore } from "../account-sharing/effect-account-sharing-store";
 import { appUserIdToString, parseAppUserId } from "../app-user-id";
 import type { AppUserId } from "../app-user-id";
 import { firecrawlYearMonthToString } from "../firecrawl-year-month";
@@ -4693,63 +4696,110 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
   EffectSquadGroupStore,
   EffectDatabase.useSync((database) =>
     EffectSquadGroupStore.of({
-      applyRefetchedAccount: applyRefetchedAccountWithDatabase(database),
       authorizeSquadGroupOwner: authorizeSquadGroupOwnerWithDatabase(database),
-      createOwnedAccountFromPendingImport:
-        createOwnedAccountFromPendingImportWithDatabase(database),
-      createPendingImport: createPendingImportWithDatabase(database),
-      createPendingRefetch: createPendingRefetchWithDatabase(database),
       createSquadGroup: createSquadGroupWithDatabase(database),
-      findOwnedAccountForSharing:
-        findOwnedAccountForSharingWithDatabase(database),
-      findPendingImportForConfirmation:
-        findPendingImportForConfirmationWithDatabase(database),
-      findPendingRefetchForApply:
-        findPendingRefetchForApplyWithDatabase(database),
-      findProfileAccessState: findProfileAccessStateWithDatabase(database),
-      findVerifiedInviteTarget: findVerifiedInviteTargetWithDatabase(database),
       findVerifiedSquadEditorInviteTarget:
         findVerifiedSquadEditorInviteTargetWithDatabase(database),
-      getAccountForRefetch: getAccountForRefetchWithDatabase(database),
       getPendingSquadGroupInviteCount:
         getPendingSquadGroupInviteCountWithDatabase(database),
       getSquadGroupDetail: getSquadGroupDetailWithDatabase(database),
-      listAccountAccessGrants: listAccountAccessGrantsWithDatabase(database),
       listAvailableCharactersForOwner:
         listAvailableCharactersForOwnerWithDatabase(database),
       listGlobalSquadGroups: listGlobalSquadGroupsWithDatabase(database),
-      listIncomingAccountInvites:
-        listIncomingAccountInvitesWithDatabase(database),
       listIncomingSquadGroupInvites:
         listIncomingSquadGroupInvitesWithDatabase(database),
       listMySquadGroups: listMySquadGroupsWithDatabase(database),
-      listOwnedAccounts: listOwnedAccountsWithDatabase(database),
-      listSharedAccounts: listSharedAccountsWithDatabase(database),
       listSharedSquadGroups: listSharedSquadGroupsWithDatabase(database),
       listSquadGroupEditorGrants:
         listSquadGroupEditorGrantsWithDatabase(database),
+      respondToSquadGroupInvite:
+        respondToSquadGroupInviteWithDatabase(database),
+      revokeSquadGroupEditor: revokeSquadGroupEditorWithDatabase(database),
+      saveSharedSquadGroupCharacters:
+        saveSharedSquadGroupCharactersWithDatabase(database),
+      saveSquadGroupSnapshot: saveSquadGroupSnapshotWithDatabase(database),
+      searchSquadEditorInviteTargets:
+        searchSquadEditorInviteTargetsWithDatabase(database),
+      setSquadGroupVisibility: setSquadGroupVisibilityWithDatabase(database),
+      upsertSquadGroupEditorInvite:
+        upsertSquadGroupEditorInviteWithDatabase(database),
+    })
+  )
+);
+
+export const DrizzleEffectAccountImportStoreLayer: Layer.Layer<
+  EffectAccountImportStore,
+  never,
+  EffectDatabase
+> = Layer.effect(
+  EffectAccountImportStore,
+  EffectDatabase.useSync((database) =>
+    EffectAccountImportStore.of({
+      createOwnedAccountFromPendingImport:
+        createOwnedAccountFromPendingImportWithDatabase(database),
+      createPendingImport: createPendingImportWithDatabase(database),
+      findPendingImportForConfirmation:
+        findPendingImportForConfirmationWithDatabase(database),
+      findProfileAccessState: findProfileAccessStateWithDatabase(database),
+      listOwnedAccounts: listOwnedAccountsWithDatabase(database),
+      markRequestFailed: markRequestFailedWithDatabase(database),
+      markRequestSucceeded: markRequestSucceededWithDatabase(database),
+      reserveRequest: reserveRequestWithDatabase(database),
+    })
+  )
+);
+
+export const DrizzleEffectAccountRefetchStoreLayer: Layer.Layer<
+  EffectAccountRefetchStore,
+  never,
+  EffectDatabase
+> = Layer.effect(
+  EffectAccountRefetchStore,
+  EffectDatabase.useSync((database) =>
+    EffectAccountRefetchStore.of({
+      applyRefetchedAccount: applyRefetchedAccountWithDatabase(database),
+      createPendingRefetch: createPendingRefetchWithDatabase(database),
+      findPendingRefetchForApply:
+        findPendingRefetchForApplyWithDatabase(database),
+      getAccountForRefetch: getAccountForRefetchWithDatabase(database),
       markPendingRefetchApplied:
         markPendingRefetchAppliedWithDatabase(database),
       markRequestFailed: markRequestFailedWithDatabase(database),
       markRequestSucceeded: markRequestSucceededWithDatabase(database),
       reserveRequest: reserveRequestWithDatabase(database),
-      respondToAccountAccessInvite:
-        respondToAccountAccessInviteWithDatabase(database),
-      respondToSquadGroupInvite:
-        respondToSquadGroupInviteWithDatabase(database),
-      revokeAccountAccess: revokeAccountAccessWithDatabase(database),
-      revokeSquadGroupEditor: revokeSquadGroupEditorWithDatabase(database),
-      saveSharedSquadGroupCharacters:
-        saveSharedSquadGroupCharactersWithDatabase(database),
-      saveSquadGroupSnapshot: saveSquadGroupSnapshotWithDatabase(database),
-      searchInviteTargets: searchInviteTargetsWithDatabase(database),
-      searchSquadEditorInviteTargets:
-        searchSquadEditorInviteTargetsWithDatabase(database),
-      setSquadGroupVisibility: setSquadGroupVisibilityWithDatabase(database),
-      upsertAccountAccessInvite:
-        upsertAccountAccessInviteWithDatabase(database),
-      upsertSquadGroupEditorInvite:
-        upsertSquadGroupEditorInviteWithDatabase(database),
     })
   )
+);
+
+export const DrizzleEffectAccountSharingStoreLayer: Layer.Layer<
+  EffectAccountSharingStore,
+  never,
+  EffectDatabase
+> = Layer.effect(
+  EffectAccountSharingStore,
+  EffectDatabase.useSync((database) =>
+    EffectAccountSharingStore.of({
+      findOwnedAccountForSharing:
+        findOwnedAccountForSharingWithDatabase(database),
+      findVerifiedInviteTarget: findVerifiedInviteTargetWithDatabase(database),
+      listAccountAccessGrants: listAccountAccessGrantsWithDatabase(database),
+      listIncomingAccountInvites:
+        listIncomingAccountInvitesWithDatabase(database),
+      listOwnedAccounts: listOwnedAccountsWithDatabase(database),
+      listSharedAccounts: listSharedAccountsWithDatabase(database),
+      respondToAccountAccessInvite:
+        respondToAccountAccessInviteWithDatabase(database),
+      revokeAccountAccess: revokeAccountAccessWithDatabase(database),
+      searchInviteTargets: searchInviteTargetsWithDatabase(database),
+      upsertAccountAccessInvite:
+        upsertAccountAccessInviteWithDatabase(database),
+    })
+  )
+);
+
+export const DrizzleEffectSquadBuilderStoresLayer = Layer.mergeAll(
+  DrizzleEffectAccountImportStoreLayer,
+  DrizzleEffectAccountRefetchStoreLayer,
+  DrizzleEffectAccountSharingStoreLayer,
+  DrizzleEffectSquadGroupStoreLayer
 );

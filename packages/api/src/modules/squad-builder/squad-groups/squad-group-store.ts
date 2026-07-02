@@ -85,7 +85,7 @@ import type { AvailableSquadCharacter } from "../squad-group-snapshot";
 import type { SquadId } from "../squad-id";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
 
-export interface EffectSquadGroupStoreShape {
+export interface EffectSquadBuilderStoreShape {
   readonly createSquadGroup: (
     input: CreateSquadGroupStoreInput
   ) => Effect<
@@ -421,6 +421,66 @@ export interface EffectSquadGroupStoreShape {
     never
   >;
 }
+
+export type EffectSquadGroupStoreShape = Pick<
+  EffectSquadBuilderStoreShape,
+  | "authorizeSquadGroupOwner"
+  | "createSquadGroup"
+  | "findVerifiedSquadEditorInviteTarget"
+  | "getPendingSquadGroupInviteCount"
+  | "getSquadGroupDetail"
+  | "listAvailableCharactersForOwner"
+  | "listGlobalSquadGroups"
+  | "listIncomingSquadGroupInvites"
+  | "listMySquadGroups"
+  | "listSharedSquadGroups"
+  | "listSquadGroupEditorGrants"
+  | "respondToSquadGroupInvite"
+  | "revokeSquadGroupEditor"
+  | "saveSharedSquadGroupCharacters"
+  | "saveSquadGroupSnapshot"
+  | "searchSquadEditorInviteTargets"
+  | "setSquadGroupVisibility"
+  | "upsertSquadGroupEditorInvite"
+>;
+
+export type EffectAccountImportStoreShape = Pick<
+  EffectSquadBuilderStoreShape,
+  | "createOwnedAccountFromPendingImport"
+  | "createPendingImport"
+  | "findPendingImportForConfirmation"
+  | "findProfileAccessState"
+  | "listOwnedAccounts"
+  | "markRequestFailed"
+  | "markRequestSucceeded"
+  | "reserveRequest"
+>;
+
+export type EffectAccountRefetchStoreShape = Pick<
+  EffectSquadBuilderStoreShape,
+  | "applyRefetchedAccount"
+  | "createPendingRefetch"
+  | "findPendingRefetchForApply"
+  | "getAccountForRefetch"
+  | "markPendingRefetchApplied"
+  | "markRequestFailed"
+  | "markRequestSucceeded"
+  | "reserveRequest"
+>;
+
+export type EffectAccountSharingStoreShape = Pick<
+  EffectSquadBuilderStoreShape,
+  | "findOwnedAccountForSharing"
+  | "findVerifiedInviteTarget"
+  | "listAccountAccessGrants"
+  | "listIncomingAccountInvites"
+  | "listOwnedAccounts"
+  | "listSharedAccounts"
+  | "respondToAccountAccessInvite"
+  | "revokeAccountAccess"
+  | "searchInviteTargets"
+  | "upsertAccountAccessInvite"
+>;
 
 export class EffectSquadGroupStore extends Context.Service<
   EffectSquadGroupStore,

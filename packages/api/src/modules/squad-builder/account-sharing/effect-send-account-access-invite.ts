@@ -2,9 +2,9 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
 import type { Clock } from "../account-import/preview-margonem-profile-import";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
 import type { AccountSharingError } from "./account-sharing-error";
 import type { AccountAccessInviteSummary } from "./account-sharing-store";
+import { EffectAccountSharingStore } from "./effect-account-sharing-store";
 import type { SendAccountAccessInviteInput } from "./send-account-access-invite";
 
 /** Effect service module that sends account access invites as the account owner. */
@@ -21,12 +21,12 @@ export class EffectSendAccountAccessInvite {
   ): Effect<
     AccountAccessInviteSummary,
     AccountSharingError,
-    EffectSquadGroupStore
+    EffectAccountSharingStore
   > {
     const now = this.clock.now();
 
     return EffectRuntime.gen(function* sendAccountAccessInviteEffect() {
-      const owned = yield* EffectSquadGroupStore.use((store) =>
+      const owned = yield* EffectAccountSharingStore.use((store) =>
         store.findOwnedAccountForSharing({
           accountId: input.accountId,
           actorUserId: input.actorUserId,
@@ -43,11 +43,11 @@ export class EffectSendAccountAccessInvite {
         return yield* EffectRuntime.fail({ _tag: "CannotInviteSelf" as const });
       }
 
-      const target = yield* EffectSquadGroupStore.use((store) =>
+      const target = yield* EffectAccountSharingStore.use((store) =>
         store.findVerifiedInviteTarget({ targetUserId: input.invitedUserId })
       );
 
-      return yield* EffectSquadGroupStore.use((store) =>
+      return yield* EffectAccountSharingStore.use((store) =>
         store.upsertAccountAccessInvite({
           accountId: input.accountId,
           invitedUserId: target.userId,

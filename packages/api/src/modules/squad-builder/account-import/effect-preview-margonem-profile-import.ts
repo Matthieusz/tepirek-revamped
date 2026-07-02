@@ -14,7 +14,7 @@ import {
   toMargonemProfileUrl,
 } from "../margonem-profile-url";
 import { isError } from "../result";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
+import { EffectAccountImportStore } from "./effect-account-import-store";
 import { profileAccessStateToDuplicateError } from "./preview-margonem-profile-import";
 import type {
   Clock,
@@ -46,7 +46,7 @@ export class EffectPreviewMargonemProfileImport {
   ): Effect<
     PreviewMargonemProfileImportOutput,
     PreviewMargonemProfileImportError,
-    EffectSquadGroupStore
+    EffectAccountImportStore
   > {
     const { clock, config, firecrawl } = this;
 
@@ -58,7 +58,7 @@ export class EffectPreviewMargonemProfileImport {
       }
 
       const profileId = parsedProfileId.value;
-      const accessState = yield* EffectSquadGroupStore.use((store) =>
+      const accessState = yield* EffectAccountImportStore.use((store) =>
         store.findProfileAccessState({
           actorUserId: input.actorUserId,
           profileId,
@@ -71,7 +71,7 @@ export class EffectPreviewMargonemProfileImport {
       }
 
       const yearMonth = firecrawlYearMonthFromDate(clock.now());
-      const reservedRequest = yield* EffectSquadGroupStore.use((store) =>
+      const reservedRequest = yield* EffectAccountImportStore.use((store) =>
         store.reserveRequest({
           monthlyRequestBudget: config.monthlyRequestBudget,
           profileId,
@@ -90,7 +90,7 @@ export class EffectPreviewMargonemProfileImport {
       });
 
       if (isError(scrapedProfileResult)) {
-        yield* EffectSquadGroupStore.use((store) =>
+        yield* EffectAccountImportStore.use((store) =>
           store.markRequestFailed({
             errorTag: scrapedProfileResult.error._tag,
             requestId: reservedRequest.requestId,
@@ -105,7 +105,7 @@ export class EffectPreviewMargonemProfileImport {
       );
 
       if (isError(creditsUsed)) {
-        yield* EffectSquadGroupStore.use((store) =>
+        yield* EffectAccountImportStore.use((store) =>
           store.markRequestFailed({
             errorTag: creditsUsed.error._tag,
             requestId: reservedRequest.requestId,
@@ -118,7 +118,7 @@ export class EffectPreviewMargonemProfileImport {
         });
       }
 
-      yield* EffectSquadGroupStore.use((store) =>
+      yield* EffectAccountImportStore.use((store) =>
         store.markRequestSucceeded({
           cacheState: scrapedProfile.metadata.cacheState ?? null,
           creditsUsed: creditsUsed.value,

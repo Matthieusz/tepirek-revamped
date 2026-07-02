@@ -1,11 +1,11 @@
 import type { Effect } from "effect/Effect";
 
 import type { AppUserId } from "../app-user-id";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
 import type {
   OwnedMargonemAccountSummary,
   SquadBuilderPersistenceUnavailable,
 } from "./account-import-store";
+import { EffectAccountImportStore } from "./effect-account-import-store";
 
 /** Input for listing owned Margonem accounts. */
 export interface ListOwnedMargonemAccountsInput {
@@ -25,11 +25,11 @@ export class ListOwnedMargonemAccounts {
   ): Effect<
     readonly OwnedMargonemAccountSummary[],
     ListOwnedMargonemAccountsError,
-    EffectSquadGroupStore
+    EffectAccountImportStore
   > {
     void this.serviceName;
 
-    return EffectSquadGroupStore.use((store) =>
+    return EffectAccountImportStore.use((store) =>
       store.listOwnedAccounts({
         actorUserId: input.actorUserId,
       })

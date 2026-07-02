@@ -11,11 +11,11 @@ import {
   toMargonemProfileUrl,
 } from "../margonem-profile-url";
 import { isError, isOk } from "../result";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store";
 import type {
   DuplicateMargonemAccountError,
   ProfileAccessState,
 } from "./account-import-store";
+import { EffectAccountImportStore } from "./effect-account-import-store";
 import type {
   Clock,
   PreviewMargonemProfileImportError,
@@ -59,7 +59,7 @@ export interface EffectSingleMargonemProfilePreview {
   ) => Effect<
     PreviewMargonemProfileImportOutput,
     PreviewMargonemProfileImportError,
-    EffectSquadGroupStore
+    EffectAccountImportStore
   >;
 }
 
@@ -130,7 +130,7 @@ const persistPendingImport = ({
 }): Effect<
   { readonly lineNumber: number; readonly item: PreviewOwnedAccountImportItem },
   never,
-  EffectSquadGroupStore
+  EffectAccountImportStore
 > => {
   const now = clock.now();
   const expiresAt = new Date(
@@ -141,7 +141,7 @@ const persistPendingImport = ({
     preview.profileId
   );
 
-  return EffectSquadGroupStore.use((store) =>
+  return EffectAccountImportStore.use((store) =>
     store.createPendingImport({
       actorUserId,
       defaultDisplayName,
@@ -196,7 +196,7 @@ export class EffectPreviewOwnedAccountImports {
   ): Effect<
     PreviewOwnedAccountImportsOutput,
     PreviewOwnedAccountImportsError,
-    EffectSquadGroupStore
+    EffectAccountImportStore
   > {
     const { clock, singlePreview } = this;
 
@@ -259,7 +259,7 @@ export class EffectPreviewOwnedAccountImports {
 
       const accessResults = yield* EffectRuntime.all(
         parsedLines.map((line) =>
-          EffectSquadGroupStore.use((store) =>
+          EffectAccountImportStore.use((store) =>
             store.findProfileAccessState({
               actorUserId: input.actorUserId,
               profileId: line.profileId,
