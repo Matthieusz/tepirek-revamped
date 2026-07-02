@@ -1,3 +1,4 @@
+import * as ClockRuntime from "effect/Clock";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
@@ -117,22 +118,21 @@ const toFailedItem = (failure: LineFailure): PreviewOwnedAccountImportItem => ({
 
 const persistPendingImport = ({
   actorUserId,
-  clock,
   inputUrl,
   lineNumber,
+  now,
   preview,
 }: {
   readonly actorUserId: AppUserId;
-  readonly clock: Clock;
   readonly inputUrl: string;
   readonly lineNumber: number;
+  readonly now: Date;
   readonly preview: PreviewMargonemProfileImportOutput;
 }): Effect<
   { readonly lineNumber: number; readonly item: PreviewOwnedAccountImportItem },
   never,
   EffectAccountImportStore
 > => {
-  const now = clock.now();
   const expiresAt = new Date(
     now.getTime() + pendingImportPolicy.expiresAfterMinutes * 60_000
   );
@@ -181,12 +181,20 @@ const persistPendingImport = ({
 
 /** Effect service module that previews and persists pending owned-account imports. */
 export class EffectPreviewOwnedAccountImports {
+  private readonly currentDate: Effect<Date>;
   private readonly singlePreview: EffectSingleMargonemProfilePreview;
-  private readonly clock: Clock;
 
-  constructor(singlePreview: EffectSingleMargonemProfilePreview, clock: Clock) {
+  constructor(
+    singlePreview: EffectSingleMargonemProfilePreview,
+    compatibilityClock?: Clock
+  ) {
     this.singlePreview = singlePreview;
-    this.clock = clock;
+    this.currentDate =
+      compatibilityClock === undefined
+        ? ClockRuntime.currentTimeMillis.pipe(
+            EffectRuntime.map((milliseconds) => new Date(milliseconds))
+          )
+        : EffectRuntime.sync(() => compatibilityClock.now());
   }
 
   /** Preview and persist pending imports for a batch of pasted profile URLs. */
@@ -198,9 +206,10 @@ export class EffectPreviewOwnedAccountImports {
     PreviewOwnedAccountImportsError,
     EffectAccountImportStore
   > {
-    const { clock, singlePreview } = this;
+    const { currentDate, singlePreview } = this;
 
     return EffectRuntime.gen(function* previewBatchEffect() {
+      const now = yield* currentDate;
       const nonBlankLines = input.profileUrls
         .map((url, index) => ({ inputUrl: url, lineNumber: index + 1 }))
         .filter((line) => !isEmpty(line.inputUrl));
@@ -338,9 +347,9 @@ export class EffectPreviewOwnedAccountImports {
                 onSuccess: (preview) =>
                   persistPendingImport({
                     actorUserId: input.actorUserId,
-                    clock,
                     inputUrl: line.inputUrl,
                     lineNumber: line.lineNumber,
+                    now,
                     preview,
                   }),
               })
