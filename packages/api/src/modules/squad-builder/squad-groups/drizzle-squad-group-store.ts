@@ -103,17 +103,36 @@ import {
 } from "../squad-group-list-filters.js";
 import { parseSquadGroupVisibility } from "../squad-group-visibility.js";
 import { parseSquadId } from "../squad-id.js";
-import type { SquadId } from "../squad-id.js";
 import {
   parseSquadGroupName,
   squadGroupNameToString,
   squadNameToString,
 } from "../squad-name.js";
-import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
-import type {
+import {
+  AccountAccessInviteNotFound,
+  AccountAccessTransitionNotAllowed,
   ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
+  ActorDoesNotOwnMargonemAccount,
   ActorDoesNotOwnSquadGroup,
+  ActorIsNotInviteRecipient,
+  ActorIsNotSquadGroupInviteRecipient,
+  EditorCannotChangeSquadStructure,
+  EffectSquadBuilderPersistenceUnavailable,
+  InviteTargetNotFound,
+  InviteTargetNotVerified,
+  MargonemAccountNotFound,
+  PendingMargonemAccountImportNotFound,
+  PendingMargonemAccountRefetchNotFound,
+  SquadCharacterNotAccessible,
+  SquadEditorInviteTargetNotFound,
+  SquadEditorInviteTargetNotVerified,
+  SquadGroupInvitationNotFound,
+  SquadGroupInvitationTransitionNotAllowed,
+  SquadGroupNotFound,
+  SquadNotInGroup,
+} from "./squad-group-errors.js";
+import type {
   AvailableSquadCharacter,
   ApplyRefetchedAccountInput,
   CreateOwnedAccountFromPendingImportInput,
@@ -139,10 +158,8 @@ import type {
   OwnedAccountForSharing,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
-  PendingMargonemAccountImportNotFound,
   PendingMargonemAccountRefetch,
   PendingMargonemAccountRefetchForApply,
-  PendingMargonemAccountRefetchNotFound,
   ProfileAccessState,
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
@@ -169,7 +186,6 @@ import type {
   UpsertSquadGroupEditorInviteInput,
   SquadGroupCharacter,
   SquadGroupDetail,
-  SquadGroupNotFound,
   SquadGroupSummary,
 } from "./squad-group-store.js";
 import { EffectSquadGroupStore } from "./squad-group-store.js";
@@ -625,9 +641,7 @@ const findPendingImportForConfirmationWithDatabase =
       const [preview] = previewRows;
 
       if (preview === undefined) {
-        return yield* Effect.fail({
-          _tag: "PendingMargonemAccountImportNotFound" as const,
-        });
+        return yield* new PendingMargonemAccountImportNotFound();
       }
 
       const characterSelect = database
@@ -1043,8 +1057,8 @@ const getAccountForRefetchWithDatabase =
     readonly accountId: MargonemAccountId;
   }): Effect.Effect<
     RefetchableMargonemAccount,
-    | { readonly _tag: "MargonemAccountNotFound" }
-    | { readonly _tag: "ActorDoesNotOwnMargonemAccount" }
+    | MargonemAccountNotFound
+    | ActorDoesNotOwnMargonemAccount
     | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
@@ -1075,13 +1089,11 @@ const getAccountForRefetchWithDatabase =
       const [account] = accountRows;
 
       if (account === undefined) {
-        return yield* Effect.fail({ _tag: "MargonemAccountNotFound" as const });
+        return yield* new MargonemAccountNotFound();
       }
 
       if (account.ownerUserId !== appUserIdToString(actorUserId)) {
-        return yield* Effect.fail({
-          _tag: "ActorDoesNotOwnMargonemAccount" as const,
-        });
+        return yield* new ActorDoesNotOwnMargonemAccount();
       }
 
       const characterSelect = database
@@ -1322,9 +1334,7 @@ const findPendingRefetchForApplyWithDatabase =
       const [preview] = previewRows;
 
       if (preview === undefined) {
-        return yield* Effect.fail({
-          _tag: "PendingMargonemAccountRefetchNotFound" as const,
-        });
+        return yield* new PendingMargonemAccountRefetchNotFound();
       }
 
       const characterSelect = database
@@ -1782,13 +1792,11 @@ const authorizeSquadGroupOwnerWithDatabase =
       const [group] = rows;
 
       if (group === undefined) {
-        return yield* Effect.fail({ _tag: "SquadGroupNotFound" as const });
+        return yield* new SquadGroupNotFound();
       }
 
       if (group.ownerUserId !== appUserIdToString(actorUserId)) {
-        return yield* Effect.fail({
-          _tag: "ActorDoesNotOwnSquadGroup" as const,
-        });
+        return yield* new ActorDoesNotOwnSquadGroup();
       }
 
       return {
@@ -1874,8 +1882,8 @@ const findVerifiedSquadEditorInviteTargetWithDatabase =
     readonly targetUserId: AppUserId;
   }): Effect.Effect<
     SquadEditorInviteTarget,
-    | { readonly _tag: "SquadEditorInviteTargetNotFound" }
-    | { readonly _tag: "SquadEditorInviteTargetNotVerified" }
+    | SquadEditorInviteTargetNotFound
+    | SquadEditorInviteTargetNotVerified
     | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
@@ -1907,15 +1915,11 @@ const findVerifiedSquadEditorInviteTargetWithDatabase =
       const [target] = rows;
 
       if (target === undefined) {
-        return yield* Effect.fail({
-          _tag: "SquadEditorInviteTargetNotFound" as const,
-        });
+        return yield* new SquadEditorInviteTargetNotFound();
       }
 
       if (!target.verified) {
-        return yield* Effect.fail({
-          _tag: "SquadEditorInviteTargetNotVerified" as const,
-        });
+        return yield* new SquadEditorInviteTargetNotVerified();
       }
 
       const userId = yield* parsePersistedAppUserId(operation, target.userId);
@@ -1934,8 +1938,7 @@ const loadSquadGroupInvitationSummaryWithDatabase =
     operation: EffectSquadGroupPersistenceOperation
   ): Effect.Effect<
     SquadGroupInvitationSummary,
-    | { readonly _tag: "SquadGroupInvitationNotFound" }
-    | EffectSquadBuilderPersistenceUnavailable,
+    SquadGroupInvitationNotFound | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
     Effect.gen(function* loadSquadGroupInvitationSummaryEffect() {
@@ -1985,9 +1988,7 @@ const loadSquadGroupInvitationSummaryWithDatabase =
       const [row] = rows;
 
       if (row === undefined) {
-        return yield* Effect.fail({
-          _tag: "SquadGroupInvitationNotFound" as const,
-        });
+        return yield* new SquadGroupInvitationNotFound();
       }
 
       const status = parseSquadGroupInvitationStatus(row.status);
@@ -2041,11 +2042,7 @@ const upsertSquadGroupEditorInviteWithDatabase =
     ownerUserId,
   }: UpsertSquadGroupEditorInviteInput): Effect.Effect<
     SquadGroupInvitationSummary,
-    | {
-        readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
-        readonly currentStatus: SquadGroupInvitationStatus;
-        readonly attempted: string;
-      }
+    | SquadGroupInvitationTransitionNotAllowed
     | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
@@ -2110,11 +2107,10 @@ const upsertSquadGroupEditorInviteWithDatabase =
           }
 
           if (!canTransitionSquadGroupInvitation(status.value, "pending")) {
-            return {
-              _tag: "SquadGroupInvitationTransitionNotAllowed" as const,
+            return new SquadGroupInvitationTransitionNotAllowed({
               attempted: "pending",
               currentStatus: status.value,
-            };
+            });
           }
 
           const update = tx
@@ -2141,19 +2137,14 @@ const upsertSquadGroupEditorInviteWithDatabase =
       );
       const upserted = yield* (
         transaction as Effect.Effect<
-          | number
-          | {
-              readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
-              readonly currentStatus: SquadGroupInvitationStatus;
-              readonly attempted: string;
-            },
+          number | SquadGroupInvitationTransitionNotAllowed,
           unknown,
           never
         >
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
       if (typeof upserted !== "number") {
-        return yield* Effect.fail(upserted);
+        return yield* upserted;
       }
 
       const invitationId = parseSquadGroupInvitationId(upserted);
@@ -2181,13 +2172,9 @@ const respondToSquadGroupInviteWithDatabase =
     response,
   }: RespondToSquadGroupInviteStoreInput): Effect.Effect<
     SquadGroupInvitationSummary,
-    | { readonly _tag: "SquadGroupInvitationNotFound" }
-    | { readonly _tag: "ActorIsNotSquadGroupInviteRecipient" }
-    | {
-        readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
-        readonly currentStatus: SquadGroupInvitationStatus;
-        readonly attempted: string;
-      }
+    | SquadGroupInvitationNotFound
+    | ActorIsNotSquadGroupInviteRecipient
+    | SquadGroupInvitationTransitionNotAllowed
     | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
@@ -2218,13 +2205,11 @@ const respondToSquadGroupInviteWithDatabase =
           const [existing] = existingRows;
 
           if (existing === undefined) {
-            return { _tag: "SquadGroupInvitationNotFound" as const };
+            return new SquadGroupInvitationNotFound();
           }
 
           if (existing.invitedUserId !== invitedUser) {
-            return {
-              _tag: "ActorIsNotSquadGroupInviteRecipient" as const,
-            };
+            return new ActorIsNotSquadGroupInviteRecipient();
           }
 
           const status = parseSquadGroupInvitationStatus(existing.status);
@@ -2237,11 +2222,10 @@ const respondToSquadGroupInviteWithDatabase =
             response === "accept" ? "accepted" : "declined";
 
           if (!canTransitionSquadGroupInvitation(status.value, nextStatus)) {
-            return {
-              _tag: "SquadGroupInvitationTransitionNotAllowed" as const,
+            return new SquadGroupInvitationTransitionNotAllowed({
               attempted: nextStatus,
               currentStatus: status.value,
-            };
+            });
           }
 
           const update = tx
@@ -2269,20 +2253,16 @@ const respondToSquadGroupInviteWithDatabase =
       const respond = yield* (
         transaction as Effect.Effect<
           | { readonly _tag: "Updated" }
-          | { readonly _tag: "SquadGroupInvitationNotFound" }
-          | { readonly _tag: "ActorIsNotSquadGroupInviteRecipient" }
-          | {
-              readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
-              readonly currentStatus: SquadGroupInvitationStatus;
-              readonly attempted: string;
-            },
+          | SquadGroupInvitationNotFound
+          | ActorIsNotSquadGroupInviteRecipient
+          | SquadGroupInvitationTransitionNotAllowed,
           unknown,
           never
         >
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
       if (respond._tag !== "Updated") {
-        return yield* Effect.fail(respond);
+        return yield* respond;
       }
 
       return yield* loadSquadGroupInvitationSummaryWithDatabase(database)(
@@ -2299,13 +2279,9 @@ const revokeSquadGroupEditorWithDatabase =
     ownerUserId,
   }: RevokeSquadGroupEditorStoreInput): Effect.Effect<
     SquadGroupInvitationSummary,
-    | { readonly _tag: "SquadGroupInvitationNotFound" }
+    | SquadGroupInvitationNotFound
     | ActorDoesNotOwnSquadGroup
-    | {
-        readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
-        readonly currentStatus: SquadGroupInvitationStatus;
-        readonly attempted: string;
-      }
+    | SquadGroupInvitationTransitionNotAllowed
     | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
@@ -2338,11 +2314,11 @@ const revokeSquadGroupEditorWithDatabase =
           const [existing] = existingRows;
 
           if (existing === undefined) {
-            return { _tag: "SquadGroupInvitationNotFound" as const };
+            return new SquadGroupInvitationNotFound();
           }
 
           if (existing.ownerUserId !== owner) {
-            return { _tag: "ActorDoesNotOwnSquadGroup" as const };
+            return new ActorDoesNotOwnSquadGroup();
           }
 
           const status = parseSquadGroupInvitationStatus(existing.status);
@@ -2352,11 +2328,10 @@ const revokeSquadGroupEditorWithDatabase =
           }
 
           if (!canTransitionSquadGroupInvitation(status.value, "revoked")) {
-            return {
-              _tag: "SquadGroupInvitationTransitionNotAllowed" as const,
+            return new SquadGroupInvitationTransitionNotAllowed({
               attempted: "revoked",
               currentStatus: status.value,
-            };
+            });
           }
 
           const update = tx
@@ -2384,20 +2359,16 @@ const revokeSquadGroupEditorWithDatabase =
       const revoked = yield* (
         transaction as Effect.Effect<
           | { readonly _tag: "Revoked" }
-          | { readonly _tag: "SquadGroupInvitationNotFound" }
+          | SquadGroupInvitationNotFound
           | ActorDoesNotOwnSquadGroup
-          | {
-              readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
-              readonly currentStatus: SquadGroupInvitationStatus;
-              readonly attempted: string;
-            },
+          | SquadGroupInvitationTransitionNotAllowed,
           unknown,
           never
         >
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
       if (revoked._tag !== "Revoked") {
-        return yield* Effect.fail(revoked);
+        return yield* revoked;
       }
 
       return yield* loadSquadGroupInvitationSummaryWithDatabase(database)(
@@ -2412,8 +2383,7 @@ const findOwnedAccountForSharingWithDatabase =
     accountId,
   }: FindOwnedAccountForSharingInput): Effect.Effect<
     OwnedAccountForSharing,
-    | { readonly _tag: "MargonemAccountNotFound" }
-    | EffectSquadBuilderPersistenceUnavailable,
+    MargonemAccountNotFound | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
     Effect.gen(function* findOwnedAccountForSharingEffect() {
@@ -2442,7 +2412,7 @@ const findOwnedAccountForSharingWithDatabase =
       const [account] = rows;
 
       if (account === undefined) {
-        return yield* Effect.fail({ _tag: "MargonemAccountNotFound" as const });
+        return yield* new MargonemAccountNotFound();
       }
 
       const displayName = parseAccountDisplayName(account.displayName);
@@ -2478,8 +2448,7 @@ const loadAccountAccessInviteSummaryWithDatabase =
     operation: EffectSquadGroupPersistenceOperation
   ): Effect.Effect<
     AccountAccessInviteSummary,
-    | { readonly _tag: "AccountAccessInviteNotFound" }
-    | EffectSquadBuilderPersistenceUnavailable,
+    AccountAccessInviteNotFound | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
     Effect.gen(function* loadAccountAccessInviteSummaryEffect() {
@@ -2526,9 +2495,7 @@ const loadAccountAccessInviteSummaryWithDatabase =
       const [row] = rows;
 
       if (row === undefined) {
-        return yield* Effect.fail({
-          _tag: "AccountAccessInviteNotFound" as const,
-        });
+        return yield* new AccountAccessInviteNotFound();
       }
 
       const status = parseAccountAccessStatus(row.status);
@@ -2589,8 +2556,8 @@ const findVerifiedInviteTargetWithDatabase =
     readonly targetUserId: AppUserId;
   }): Effect.Effect<
     AccountInviteTarget,
-    | { readonly _tag: "InviteTargetNotFound" }
-    | { readonly _tag: "InviteTargetNotVerified" }
+    | InviteTargetNotFound
+    | InviteTargetNotVerified
     | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
@@ -2622,13 +2589,11 @@ const findVerifiedInviteTargetWithDatabase =
       const [target] = rows;
 
       if (target === undefined) {
-        return yield* Effect.fail({ _tag: "InviteTargetNotFound" as const });
+        return yield* new InviteTargetNotFound();
       }
 
       if (!target.verified) {
-        return yield* Effect.fail({
-          _tag: "InviteTargetNotVerified" as const,
-        });
+        return yield* new InviteTargetNotVerified();
       }
 
       const userId = yield* parsePersistedAppUserId(operation, target.userId);
@@ -2654,11 +2619,7 @@ const upsertAccountAccessInviteWithDatabase =
     readonly now: Date;
   }): Effect.Effect<
     AccountAccessInviteSummary,
-    | {
-        readonly _tag: "AccountAccessTransitionNotAllowed";
-        readonly currentStatus: AccountAccessStatus;
-        readonly attempted: string;
-      }
+    | AccountAccessTransitionNotAllowed
     | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
@@ -2723,11 +2684,10 @@ const upsertAccountAccessInviteWithDatabase =
           }
 
           if (!canTransitionAccountAccess(status.value, "pending")) {
-            return {
-              _tag: "AccountAccessTransitionNotAllowed" as const,
+            return new AccountAccessTransitionNotAllowed({
               attempted: "pending",
               currentStatus: status.value,
-            };
+            });
           }
 
           const update = tx
@@ -2754,19 +2714,14 @@ const upsertAccountAccessInviteWithDatabase =
       );
       const upserted = yield* (
         transaction as Effect.Effect<
-          | number
-          | {
-              readonly _tag: "AccountAccessTransitionNotAllowed";
-              readonly currentStatus: AccountAccessStatus;
-              readonly attempted: string;
-            },
+          number | AccountAccessTransitionNotAllowed,
           unknown,
           never
         >
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
       if (typeof upserted !== "number") {
-        return yield* Effect.fail(upserted);
+        return yield* upserted;
       }
 
       const accessId = parseMargonemAccountAccessId(upserted);
@@ -3233,13 +3188,9 @@ const respondToAccountAccessInviteWithDatabase =
     response,
   }: RespondToAccountAccessInviteStoreInput): Effect.Effect<
     AccountAccessInviteSummary,
-    | { readonly _tag: "AccountAccessInviteNotFound" }
-    | { readonly _tag: "ActorIsNotInviteRecipient" }
-    | {
-        readonly _tag: "AccountAccessTransitionNotAllowed";
-        readonly currentStatus: AccountAccessStatus;
-        readonly attempted: string;
-      }
+    | AccountAccessInviteNotFound
+    | ActorIsNotInviteRecipient
+    | AccountAccessTransitionNotAllowed
     | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
@@ -3269,15 +3220,11 @@ const respondToAccountAccessInviteWithDatabase =
           const [existing] = existingRows;
 
           if (existing === undefined) {
-            return {
-              _tag: "AccountAccessInviteNotFound" as const,
-            };
+            return new AccountAccessInviteNotFound();
           }
 
           if (existing.userId !== invitedUser) {
-            return {
-              _tag: "ActorIsNotInviteRecipient" as const,
-            };
+            return new ActorIsNotInviteRecipient();
           }
 
           const status = parseAccountAccessStatus(existing.status);
@@ -3290,11 +3237,10 @@ const respondToAccountAccessInviteWithDatabase =
             response === "accept" ? "accepted" : "declined";
 
           if (!canTransitionAccountAccess(status.value, nextStatus)) {
-            return {
-              _tag: "AccountAccessTransitionNotAllowed" as const,
+            return new AccountAccessTransitionNotAllowed({
               attempted: nextStatus,
               currentStatus: status.value,
-            };
+            });
           }
 
           const update = tx
@@ -3322,20 +3268,16 @@ const respondToAccountAccessInviteWithDatabase =
       const respond = yield* (
         transaction as Effect.Effect<
           | { readonly _tag: "Updated" }
-          | { readonly _tag: "AccountAccessInviteNotFound" }
-          | { readonly _tag: "ActorIsNotInviteRecipient" }
-          | {
-              readonly _tag: "AccountAccessTransitionNotAllowed";
-              readonly currentStatus: AccountAccessStatus;
-              readonly attempted: string;
-            },
+          | AccountAccessInviteNotFound
+          | ActorIsNotInviteRecipient
+          | AccountAccessTransitionNotAllowed,
           unknown,
           never
         >
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
       if (respond._tag !== "Updated") {
-        return yield* Effect.fail(respond);
+        return yield* respond;
       }
 
       return yield* loadAccountAccessInviteSummaryWithDatabase(database)(
@@ -3352,13 +3294,9 @@ const revokeAccountAccessWithDatabase =
     ownerUserId,
   }: RevokeAccountAccessStoreInput): Effect.Effect<
     RevokeAccountAccessResult,
-    | { readonly _tag: "AccountAccessInviteNotFound" }
-    | { readonly _tag: "ActorDoesNotOwnMargonemAccount" }
-    | {
-        readonly _tag: "AccountAccessTransitionNotAllowed";
-        readonly currentStatus: AccountAccessStatus;
-        readonly attempted: string;
-      }
+    | AccountAccessInviteNotFound
+    | ActorDoesNotOwnMargonemAccount
+    | AccountAccessTransitionNotAllowed
     | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
@@ -3389,7 +3327,7 @@ const revokeAccountAccessWithDatabase =
           const [access] = accessRows;
 
           if (access === undefined) {
-            return { _tag: "AccountAccessInviteNotFound" as const };
+            return new AccountAccessInviteNotFound();
           }
 
           const accountSelect = tx
@@ -3405,11 +3343,11 @@ const revokeAccountAccessWithDatabase =
           const [account] = accountRows;
 
           if (account === undefined) {
-            return { _tag: "AccountAccessInviteNotFound" as const };
+            return new AccountAccessInviteNotFound();
           }
 
           if (account.ownerUserId !== owner) {
-            return { _tag: "ActorDoesNotOwnMargonemAccount" as const };
+            return new ActorDoesNotOwnMargonemAccount();
           }
 
           const status = parseAccountAccessStatus(access.status);
@@ -3419,11 +3357,10 @@ const revokeAccountAccessWithDatabase =
           }
 
           if (!canTransitionAccountAccess(status.value, "revoked")) {
-            return {
-              _tag: "AccountAccessTransitionNotAllowed" as const,
+            return new AccountAccessTransitionNotAllowed({
               attempted: "revoked",
               currentStatus: status.value,
-            };
+            });
           }
 
           yield* tx
@@ -3516,19 +3453,15 @@ const revokeAccountAccessWithDatabase =
               readonly removedSquadCharacterCount: number;
               readonly revokedUserId: string;
             }
-          | { readonly _tag: "AccountAccessInviteNotFound" }
-          | { readonly _tag: "ActorDoesNotOwnMargonemAccount" }
-          | {
-              readonly _tag: "AccountAccessTransitionNotAllowed";
-              readonly currentStatus: AccountAccessStatus;
-              readonly attempted: string;
-            },
+          | AccountAccessInviteNotFound
+          | ActorDoesNotOwnMargonemAccount
+          | AccountAccessTransitionNotAllowed,
           unknown
         >
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
       if (revoked._tag !== "Revoked") {
-        return yield* Effect.fail(revoked);
+        return yield* revoked;
       }
 
       const accountId = parseMargonemAccountId(revoked.accountId);
@@ -3728,7 +3661,7 @@ const getSquadGroupDetailWithDatabase =
       const [group] = groupRows;
 
       if (group === undefined) {
-        return yield* Effect.fail({ _tag: "SquadGroupNotFound" as const });
+        return yield* new SquadGroupNotFound();
       }
 
       const ownerUserId = yield* parsePersistedAppUserId(
@@ -3777,9 +3710,7 @@ const getSquadGroupDetailWithDatabase =
 
         if (invite === undefined) {
           if (visibility.value !== "global") {
-            return yield* Effect.fail({
-              _tag: "ActorCannotViewSquadGroup" as const,
-            });
+            return yield* new ActorCannotViewSquadGroup();
           }
 
           access = {
@@ -4128,12 +4059,9 @@ const saveSharedSquadGroupCharactersWithDatabase =
     SquadGroupDetail,
     | SquadGroupNotFound
     | ActorCannotEditSquadGroup
-    | { readonly _tag: "SquadNotInGroup"; readonly squadId: SquadId }
-    | { readonly _tag: "EditorCannotChangeSquadStructure" }
-    | {
-        readonly _tag: "SquadCharacterNotAccessible";
-        readonly characterId: number;
-      }
+    | SquadNotInGroup
+    | EditorCannotChangeSquadStructure
+    | SquadCharacterNotAccessible
     | EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* saveSharedSquadGroupCharactersEffect() {
@@ -4158,7 +4086,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
           const [group] = groupRows;
 
           if (group === undefined) {
-            return { _tag: "SquadGroupNotFound" as const };
+            return new SquadGroupNotFound();
           }
 
           if (group.ownerUserId !== actor) {
@@ -4179,7 +4107,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
             >;
 
             if (inviteRows[0] === undefined) {
-              return { _tag: "ActorCannotEditSquadGroup" as const };
+              return new ActorCannotEditSquadGroup();
             }
           }
 
@@ -4194,15 +4122,12 @@ const saveSharedSquadGroupCharactersWithDatabase =
           const existingSquadIds = new Set(existingSquads.map((row) => row.id));
 
           if (existingSquadIds.size !== snapshot.squads.length) {
-            return { _tag: "EditorCannotChangeSquadStructure" as const };
+            return new EditorCannotChangeSquadStructure();
           }
 
           for (const submitted of snapshot.squads) {
             if (!existingSquadIds.has(submitted.squadId)) {
-              return {
-                _tag: "SquadNotInGroup" as const,
-                squadId: submitted.squadId,
-              };
+              return new SquadNotInGroup({ squadId: submitted.squadId });
             }
           }
 
@@ -4247,10 +4172,9 @@ const saveSharedSquadGroupCharactersWithDatabase =
               const stored = charactersById.get(character.characterId);
 
               if (stored === undefined) {
-                return {
-                  _tag: "SquadCharacterNotAccessible" as const,
+                return new SquadCharacterNotAccessible({
                   characterId: character.characterId,
-                };
+                });
               }
 
               placements.push({
@@ -4286,18 +4210,15 @@ const saveSharedSquadGroupCharactersWithDatabase =
           | { readonly _tag: "Saved" }
           | SquadGroupNotFound
           | ActorCannotEditSquadGroup
-          | { readonly _tag: "SquadNotInGroup"; readonly squadId: SquadId }
-          | { readonly _tag: "EditorCannotChangeSquadStructure" }
-          | {
-              readonly _tag: "SquadCharacterNotAccessible";
-              readonly characterId: number;
-            },
+          | SquadNotInGroup
+          | EditorCannotChangeSquadStructure
+          | SquadCharacterNotAccessible,
           unknown
         >
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
       if (saved._tag !== "Saved") {
-        return yield* Effect.fail(saved);
+        return yield* saved;
       }
 
       return yield* getSquadGroupDetailWithDatabase(database)({
@@ -4314,9 +4235,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
             | EffectSquadBuilderPersistenceUnavailable
           > => {
             if (error._tag === "ActorCannotViewSquadGroup") {
-              return Effect.fail({
-                _tag: "ActorCannotEditSquadGroup" as const,
-              });
+              return new ActorCannotEditSquadGroup();
             }
 
             return Effect.fail(error);
@@ -4365,11 +4284,11 @@ const saveSquadGroupSnapshotWithDatabase =
           const [group] = groupRows;
 
           if (group === undefined) {
-            return { _tag: "SquadGroupNotFound" as const };
+            return new SquadGroupNotFound();
           }
 
           if (group.ownerUserId !== appUserIdToString(actorUserId)) {
-            return { _tag: "ActorDoesNotOwnSquadGroup" as const };
+            return new ActorDoesNotOwnSquadGroup();
           }
 
           yield* tx
@@ -4462,7 +4381,7 @@ const saveSquadGroupSnapshotWithDatabase =
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
       if (saved._tag !== "Saved") {
-        return yield* Effect.fail(saved);
+        return yield* saved;
       }
 
       return yield* getSquadGroupDetailWithDatabase(database)({
@@ -4479,9 +4398,7 @@ const saveSquadGroupSnapshotWithDatabase =
             | EffectSquadBuilderPersistenceUnavailable
           > => {
             if (error._tag === "ActorCannotViewSquadGroup") {
-              return Effect.fail({
-                _tag: "ActorDoesNotOwnSquadGroup" as const,
-              });
+              return new ActorDoesNotOwnSquadGroup();
             }
 
             return Effect.fail(error);
@@ -4619,13 +4536,11 @@ const setSquadGroupVisibilityWithDatabase =
       const [existing] = rows;
 
       if (existing === undefined) {
-        return yield* Effect.fail({ _tag: "SquadGroupNotFound" as const });
+        return yield* new SquadGroupNotFound();
       }
 
       if (existing.ownerUserId !== appUserIdToString(actorUserId)) {
-        return yield* Effect.fail({
-          _tag: "ActorDoesNotOwnSquadGroup" as const,
-        });
+        return yield* new ActorDoesNotOwnSquadGroup();
       }
 
       if (existing.visibility === visibility) {

@@ -7,6 +7,7 @@ import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { isOk } from "../result.js";
 import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
+import { ActorIsNotInviteRecipient } from "../squad-groups/squad-group-errors.js";
 import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
 import { EffectRespondToAccountAccessInvite } from "./effect-respond-to-account-access-invite.js";
 
@@ -95,8 +96,7 @@ it.effect("surfaces invite recipient authorization failures", () => {
   const actorUserId = parseTestUserId("effect-account-respond-attacker");
   const accessId = parseTestAccessId();
   const store = makeEffectAccountSharingStoreTestService({
-    respondToAccountAccessInvite: () =>
-      Effect.fail({ _tag: "ActorIsNotInviteRecipient" as const }),
+    respondToAccountAccessInvite: () => new ActorIsNotInviteRecipient(),
   });
   const service = new EffectRespondToAccountAccessInvite();
 

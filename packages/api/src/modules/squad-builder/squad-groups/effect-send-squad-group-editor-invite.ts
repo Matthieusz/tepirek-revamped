@@ -3,6 +3,7 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
 import type { SendSquadGroupEditorInvite } from "./send-squad-group-editor-invite.js";
+import { CannotInviteSelf } from "./squad-group-errors.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import { EffectSquadGroupStore } from "./squad-group-store.js";
 import type { SquadGroupInvitationSummary } from "./squad-group-store.js";
@@ -33,7 +34,7 @@ export class EffectSendSquadGroupEditorInvite {
       );
 
       if (input.actorUserId === input.invitedUserId) {
-        return yield* EffectRuntime.fail({ _tag: "CannotInviteSelf" as const });
+        return yield* new CannotInviteSelf();
       }
 
       const target = yield* EffectSquadGroupStore.use((store) =>

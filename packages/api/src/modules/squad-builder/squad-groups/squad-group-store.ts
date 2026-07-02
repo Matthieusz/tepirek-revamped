@@ -7,10 +7,6 @@ import type { MargonemAccountId } from "../margonem-account-id.js";
 import type {
   AccountAccessInviteSummary,
   AccountAccessGrantSummary,
-  ActorCannotEditSquadGroup,
-  ActorCannotViewSquadGroup,
-  ActorDoesNotOwnMargonemAccount,
-  ActorDoesNotOwnSquadGroup,
   AccountInviteTarget,
   ApplyRefetchedAccountInput,
   AuthorizeSquadGroupViewerInput,
@@ -34,7 +30,6 @@ import type {
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
   ListSharedAccountsInput,
-  MargonemAccountNotFound,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
   MarkPendingMargonemAccountRefetchAppliedInput,
@@ -42,10 +37,8 @@ import type {
   OwnedAccountForSharing,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
-  PendingMargonemAccountImportNotFound,
   PendingMargonemAccountRefetch,
   PendingMargonemAccountRefetchForApply,
-  PendingMargonemAccountRefetchNotFound,
   ProfileAccessState,
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
@@ -64,7 +57,6 @@ import type {
   SquadGroupDetail,
   SquadGroupEditorGrantSummary,
   SquadGroupInvitationSummary,
-  SquadGroupNotFound,
   SquadGroupSharingAuthorizationError,
   SquadGroupSharingStore,
   SquadGroupStore,
@@ -82,8 +74,54 @@ import type {
 import type { SquadGroupOwnerAccess } from "../squad-group-access.js";
 import type { SquadGroupId } from "../squad-group-id.js";
 import type { AvailableSquadCharacter } from "../squad-group-snapshot.js";
-import type { SquadId } from "../squad-id.js";
-import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
+import type {
+  AccountAccessInviteNotFound,
+  AccountAccessTransitionNotAllowed,
+  ActorCannotEditSquadGroup,
+  ActorCannotViewSquadGroup,
+  ActorDoesNotOwnMargonemAccount,
+  ActorDoesNotOwnSquadGroup,
+  ActorIsNotInviteRecipient,
+  ActorIsNotSquadGroupInviteRecipient,
+  EditorCannotChangeSquadStructure,
+  EffectSquadBuilderPersistenceUnavailable,
+  InviteTargetNotFound,
+  InviteTargetNotVerified,
+  MargonemAccountNotFound,
+  PendingMargonemAccountImportNotFound,
+  PendingMargonemAccountRefetchNotFound,
+  SquadCharacterNotAccessible,
+  SquadEditorInviteTargetNotFound,
+  SquadEditorInviteTargetNotVerified,
+  SquadGroupInvitationNotFound,
+  SquadGroupInvitationTransitionNotAllowed,
+  SquadGroupNotFound,
+  SquadNotInGroup,
+} from "./squad-group-errors.js";
+
+export type {
+  AccountAccessInviteNotFound,
+  AccountAccessTransitionNotAllowed,
+  ActorCannotEditSquadGroup,
+  ActorCannotViewSquadGroup,
+  ActorDoesNotOwnMargonemAccount,
+  ActorDoesNotOwnSquadGroup,
+  ActorIsNotInviteRecipient,
+  ActorIsNotSquadGroupInviteRecipient,
+  EditorCannotChangeSquadStructure,
+  InviteTargetNotFound,
+  InviteTargetNotVerified,
+  MargonemAccountNotFound,
+  PendingMargonemAccountImportNotFound,
+  PendingMargonemAccountRefetchNotFound,
+  SquadCharacterNotAccessible,
+  SquadEditorInviteTargetNotFound,
+  SquadEditorInviteTargetNotVerified,
+  SquadGroupInvitationNotFound,
+  SquadGroupInvitationTransitionNotAllowed,
+  SquadGroupNotFound,
+  SquadNotInGroup,
+} from "./squad-group-errors.js";
 
 export interface EffectSquadBuilderStoreShape {
   readonly createSquadGroup: (
@@ -123,12 +161,9 @@ export interface EffectSquadBuilderStoreShape {
     SquadGroupDetail,
     | SquadGroupNotFound
     | ActorCannotEditSquadGroup
-    | { readonly _tag: "SquadNotInGroup"; readonly squadId: SquadId }
-    | { readonly _tag: "EditorCannotChangeSquadStructure" }
-    | {
-        readonly _tag: "SquadCharacterNotAccessible";
-        readonly characterId: number;
-      }
+    | SquadNotInGroup
+    | EditorCannotChangeSquadStructure
+    | SquadCharacterNotAccessible
     | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly listGlobalSquadGroups: (
@@ -164,45 +199,33 @@ export interface EffectSquadBuilderStoreShape {
     readonly targetUserId: AppUserId;
   }) => Effect<
     SquadEditorInviteTarget,
-    | { readonly _tag: "SquadEditorInviteTargetNotFound" }
-    | { readonly _tag: "SquadEditorInviteTargetNotVerified" }
+    | SquadEditorInviteTargetNotFound
+    | SquadEditorInviteTargetNotVerified
     | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly upsertSquadGroupEditorInvite: (
     input: UpsertSquadGroupEditorInviteInput
   ) => Effect<
     SquadGroupInvitationSummary,
-    | {
-        readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
-        readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
-        readonly attempted: string;
-      }
+    | SquadGroupInvitationTransitionNotAllowed
     | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly respondToSquadGroupInvite: (
     input: RespondToSquadGroupInviteStoreInput
   ) => Effect<
     SquadGroupInvitationSummary,
-    | { readonly _tag: "SquadGroupInvitationNotFound" }
-    | { readonly _tag: "ActorIsNotSquadGroupInviteRecipient" }
-    | {
-        readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
-        readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
-        readonly attempted: string;
-      }
+    | SquadGroupInvitationNotFound
+    | ActorIsNotSquadGroupInviteRecipient
+    | SquadGroupInvitationTransitionNotAllowed
     | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly revokeSquadGroupEditor: (
     input: RevokeSquadGroupEditorStoreInput
   ) => Effect<
     SquadGroupInvitationSummary,
-    | { readonly _tag: "SquadGroupInvitationNotFound" }
+    | SquadGroupInvitationNotFound
     | ActorDoesNotOwnSquadGroup
-    | {
-        readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
-        readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
-        readonly attempted: string;
-      }
+    | SquadGroupInvitationTransitionNotAllowed
     | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly listOwnedAccounts: (
@@ -294,45 +317,32 @@ export interface EffectSquadBuilderStoreShape {
     input: FindVerifiedInviteTargetInput
   ) => Effect<
     VerifiedInviteTarget,
-    | { readonly _tag: "InviteTargetNotFound" }
-    | { readonly _tag: "InviteTargetNotVerified" }
+    | InviteTargetNotFound
+    | InviteTargetNotVerified
     | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly upsertAccountAccessInvite: (
     input: UpsertAccountAccessInviteInput
   ) => Effect<
     AccountAccessInviteSummary,
-    | {
-        readonly _tag: "AccountAccessTransitionNotAllowed";
-        readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
-        readonly attempted: string;
-      }
-    | EffectSquadBuilderPersistenceUnavailable
+    AccountAccessTransitionNotAllowed | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly respondToAccountAccessInvite: (
     input: RespondToAccountAccessInviteStoreInput
   ) => Effect<
     AccountAccessInviteSummary,
-    | { readonly _tag: "AccountAccessInviteNotFound" }
-    | { readonly _tag: "ActorIsNotInviteRecipient" }
-    | {
-        readonly _tag: "AccountAccessTransitionNotAllowed";
-        readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
-        readonly attempted: string;
-      }
+    | AccountAccessInviteNotFound
+    | ActorIsNotInviteRecipient
+    | AccountAccessTransitionNotAllowed
     | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly revokeAccountAccess: (
     input: RevokeAccountAccessStoreInput
   ) => Effect<
     RevokeAccountAccessResult,
-    | { readonly _tag: "AccountAccessInviteNotFound" }
-    | { readonly _tag: "ActorDoesNotOwnMargonemAccount" }
-    | {
-        readonly _tag: "AccountAccessTransitionNotAllowed";
-        readonly currentStatus: "pending" | "accepted" | "declined" | "revoked";
-        readonly attempted: string;
-      }
+    | AccountAccessInviteNotFound
+    | ActorDoesNotOwnMargonemAccount
+    | AccountAccessTransitionNotAllowed
     | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly listIncomingAccountInvites: (
@@ -453,10 +463,6 @@ export type SquadGroupsPersistenceStore = SquadGroupStore &
 export type {
   AccountAccessInviteSummary,
   AccountAccessGrantSummary,
-  ActorCannotEditSquadGroup,
-  ActorCannotViewSquadGroup,
-  ActorDoesNotOwnMargonemAccount,
-  ActorDoesNotOwnSquadGroup,
   AccountInviteTarget,
   ApplyRefetchedAccountInput,
   AuthorizeSquadGroupViewerInput,
@@ -481,7 +487,6 @@ export type {
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
   ListSharedAccountsInput,
-  MargonemAccountNotFound,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
   MarkPendingMargonemAccountRefetchAppliedInput,
@@ -489,10 +494,8 @@ export type {
   OwnedAccountForSharing,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
-  PendingMargonemAccountImportNotFound,
   PendingMargonemAccountRefetch,
   PendingMargonemAccountRefetchForApply,
-  PendingMargonemAccountRefetchNotFound,
   ProfileAccessState,
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
@@ -516,7 +519,6 @@ export type {
   SquadGroupDetail,
   SquadGroupEditorGrantSummary,
   SquadGroupInvitationSummary,
-  SquadGroupNotFound,
   SquadGroupSharingAuthorizationError,
   SquadGroupSharingStore,
   SquadGroupStore,

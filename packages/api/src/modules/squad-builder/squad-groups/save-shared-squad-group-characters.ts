@@ -12,6 +12,11 @@ import type {
 import { validateSquadGroupSnapshot } from "../squad-group-snapshot.js";
 import type { SquadId } from "../squad-id.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
+import {
+  ActorCannotEditSquadGroup,
+  EditorCannotChangeSquadStructure,
+  SquadNotInGroup,
+} from "./squad-group-errors.js";
 import type {
   ActorCannotViewSquadGroup,
   SquadBuilderPersistenceUnavailable,
@@ -46,19 +51,28 @@ export interface SharedSquadGroupCharactersSnapshot {
 
 export type SharedSquadGroupSaveError =
   | SquadGroupNotFound
+  | { readonly _tag: "SquadGroupNotFound" }
   | ActorCannotViewSquadGroup
+  | { readonly _tag: "ActorCannotViewSquadGroup" }
+  | ActorCannotEditSquadGroup
   | { readonly _tag: "ActorCannotEditSquadGroup" }
+  | SquadNotInGroup
   | { readonly _tag: "SquadNotInGroup"; readonly squadId: SquadId }
+  | EditorCannotChangeSquadStructure
   | { readonly _tag: "EditorCannotChangeSquadStructure" }
+  | {
+      readonly _tag: "SquadCharacterNotAccessible";
+      readonly characterId: number;
+    }
   | SquadGroupValidationError
   | SquadBuilderPersistenceUnavailable;
 
 export type EffectSharedSquadGroupSaveError =
   | SquadGroupNotFound
   | ActorCannotViewSquadGroup
-  | { readonly _tag: "ActorCannotEditSquadGroup" }
-  | { readonly _tag: "SquadNotInGroup"; readonly squadId: SquadId }
-  | { readonly _tag: "EditorCannotChangeSquadStructure" }
+  | ActorCannotEditSquadGroup
+  | SquadNotInGroup
+  | EditorCannotChangeSquadStructure
   | SquadGroupValidationError
   | EffectSquadBuilderPersistenceUnavailable;
 
@@ -121,18 +135,18 @@ export class SaveSharedSquadGroupCharacters {
     }
 
     if (input.squads.length !== detail.value.squads.length) {
-      return err({ _tag: "EditorCannotChangeSquadStructure" });
+      return err(new EditorCannotChangeSquadStructure());
     }
 
     for (const submitted of input.squads) {
       if (!existingSquadIds.has(submitted.squadId)) {
-        return err({ _tag: "SquadNotInGroup", squadId: submitted.squadId });
+        return err(new SquadNotInGroup({ squadId: submitted.squadId }));
       }
     }
 
     const submittedIds = new Set(input.squads.map((squad) => squad.squadId));
     if (submittedIds.size !== existingSquadIds.size) {
-      return err({ _tag: "EditorCannotChangeSquadStructure" });
+      return err(new EditorCannotChangeSquadStructure());
     }
 
     const availableCharacters =
@@ -205,9 +219,7 @@ export class SaveSharedSquadGroupCharacters {
       );
 
       if (detail.accessRole === "viewer") {
-        return yield* Effect.fail({
-          _tag: "ActorCannotEditSquadGroup" as const,
-        });
+        return yield* new ActorCannotEditSquadGroup();
       }
 
       const existingSquadIds = new Set<number>();
@@ -216,25 +228,18 @@ export class SaveSharedSquadGroupCharacters {
       }
 
       if (input.squads.length !== detail.squads.length) {
-        return yield* Effect.fail({
-          _tag: "EditorCannotChangeSquadStructure" as const,
-        });
+        return yield* new EditorCannotChangeSquadStructure();
       }
 
       for (const submitted of input.squads) {
         if (!existingSquadIds.has(submitted.squadId)) {
-          return yield* Effect.fail({
-            _tag: "SquadNotInGroup" as const,
-            squadId: submitted.squadId,
-          });
+          return yield* new SquadNotInGroup({ squadId: submitted.squadId });
         }
       }
 
       const submittedIds = new Set(input.squads.map((squad) => squad.squadId));
       if (submittedIds.size !== existingSquadIds.size) {
-        return yield* Effect.fail({
-          _tag: "EditorCannotChangeSquadStructure" as const,
-        });
+        return yield* new EditorCannotChangeSquadStructure();
       }
 
       const availableCharacters = yield* EffectSquadGroupStore.use((store) =>

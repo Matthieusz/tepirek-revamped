@@ -9,6 +9,7 @@ import { parseSquadGroupInvitationId } from "../squad-group-invitation-id.js";
 import { parseSquadGroupName } from "../squad-name.js";
 import { EffectRevokeSquadGroupEditor } from "./effect-revoke-squad-group-editor.js";
 import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
+import { ActorDoesNotOwnSquadGroup } from "./squad-group-errors.js";
 import { EffectSquadGroupStore } from "./squad-group-store.js";
 
 const parseTestUserId = (value: string) => {
@@ -102,8 +103,7 @@ it.effect("surfaces squad group ownership failures", () => {
   const actorUserId = parseTestUserId("effect-squad-revoke-attacker");
   const invitationId = parseTestInvitationId();
   const store = makeEffectSquadGroupStoreTestService({
-    revokeSquadGroupEditor: () =>
-      Effect.fail({ _tag: "ActorDoesNotOwnSquadGroup" as const }),
+    revokeSquadGroupEditor: () => new ActorDoesNotOwnSquadGroup(),
   });
   const service = new EffectRevokeSquadGroupEditor();
 

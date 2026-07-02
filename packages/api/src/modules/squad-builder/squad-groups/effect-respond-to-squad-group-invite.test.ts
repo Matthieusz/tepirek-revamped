@@ -9,6 +9,7 @@ import { parseSquadGroupInvitationId } from "../squad-group-invitation-id.js";
 import { parseSquadGroupName } from "../squad-name.js";
 import { EffectRespondToSquadGroupInvite } from "./effect-respond-to-squad-group-invite.js";
 import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
+import { ActorIsNotSquadGroupInviteRecipient } from "./squad-group-errors.js";
 import { EffectSquadGroupStore } from "./squad-group-store.js";
 
 const parseTestUserId = (value: string) => {
@@ -105,8 +106,7 @@ it.effect("surfaces squad invite recipient authorization failures", () => {
   const actorUserId = parseTestUserId("effect-squad-respond-attacker");
   const invitationId = parseTestInvitationId();
   const store = makeEffectSquadGroupStoreTestService({
-    respondToSquadGroupInvite: () =>
-      Effect.fail({ _tag: "ActorIsNotSquadGroupInviteRecipient" as const }),
+    respondToSquadGroupInvite: () => new ActorIsNotSquadGroupInviteRecipient(),
   });
   const service = new EffectRespondToSquadGroupInvite();
 

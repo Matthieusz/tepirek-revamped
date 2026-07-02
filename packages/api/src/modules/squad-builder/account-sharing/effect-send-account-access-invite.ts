@@ -2,6 +2,10 @@ import * as Clock from "effect/Clock";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
+import {
+  ActorDoesNotOwnMargonemAccount,
+  CannotInviteSelf,
+} from "../squad-groups/squad-group-errors.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
 import type { AccountAccessInviteSummary } from "./account-sharing-store.js";
 import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
@@ -33,13 +37,11 @@ export class EffectSendAccountAccessInvite {
       );
 
       if (owned.ownerUserId !== input.actorUserId) {
-        return yield* EffectRuntime.fail({
-          _tag: "ActorDoesNotOwnMargonemAccount" as const,
-        });
+        return yield* new ActorDoesNotOwnMargonemAccount();
       }
 
       if (input.actorUserId === input.invitedUserId) {
-        return yield* EffectRuntime.fail({ _tag: "CannotInviteSelf" as const });
+        return yield* new CannotInviteSelf();
       }
 
       const target = yield* EffectAccountSharingStore.use((store) =>
