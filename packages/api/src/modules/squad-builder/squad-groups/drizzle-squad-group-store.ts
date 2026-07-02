@@ -87,6 +87,7 @@ import {
 } from "../squad-group-list-filters";
 import { parseSquadGroupVisibility } from "../squad-group-visibility";
 import { parseSquadId } from "../squad-id";
+import type { SquadId } from "../squad-id";
 import {
   parseSquadGroupName,
   squadGroupNameToString,
@@ -94,6 +95,7 @@ import {
 } from "../squad-name";
 import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
 import type {
+  ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnSquadGroup,
   AvailableSquadCharacter,
@@ -129,6 +131,7 @@ import type {
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
+  SaveSharedSquadGroupCharactersStoreInput,
   SaveSquadGroupSnapshotStoreInput,
   SearchInviteTargetsStoreInput,
   RespondToAccountAccessInviteStoreInput,
@@ -173,6 +176,7 @@ type EffectSquadGroupPersistenceOperation =
   | "reserveRequest"
   | "respondToAccountAccessInvite"
   | "revokeAccountAccess"
+  | "saveSharedSquadGroupCharacters"
   | "saveSquadGroupSnapshot"
   | "searchInviteTargets"
   | "upsertAccountAccessInvite"
@@ -3146,6 +3150,222 @@ const buildSquadGroupListFilterPredicates = (
   return predicates;
 };
 
+const saveSharedSquadGroupCharactersWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+    groupId,
+    now,
+    snapshot,
+  }: SaveSharedSquadGroupCharactersStoreInput): Effect.Effect<
+    SquadGroupDetail,
+    | SquadGroupNotFound
+    | ActorCannotEditSquadGroup
+    | { readonly _tag: "SquadNotInGroup"; readonly squadId: SquadId }
+    | { readonly _tag: "EditorCannotChangeSquadStructure" }
+    | {
+        readonly _tag: "SquadCharacterNotAccessible";
+        readonly characterId: number;
+      }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* saveSharedSquadGroupCharactersEffect() {
+      const operation = "saveSharedSquadGroupCharacters" as const;
+      const groupIdNumber = squadGroupIdToNumber(groupId);
+      const actor = appUserIdToString(actorUserId);
+      const transaction = database.transaction((tx) =>
+        Effect.gen(function* saveSharedSquadGroupCharactersTransaction() {
+          yield* tx.execute(
+            sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
+          ) as Effect.Effect<unknown, unknown, never>;
+
+          const groupSelect = tx
+            .select({ ownerUserId: squadGroup.ownerUserId })
+            .from(squadGroup)
+            .where(eq(squadGroup.id, groupIdNumber))
+            .limit(1);
+          const groupRows = yield* groupSelect as Effect.Effect<
+            readonly { readonly ownerUserId: string }[],
+            unknown,
+            never
+          >;
+          const [group] = groupRows;
+
+          if (group === undefined) {
+            return { _tag: "SquadGroupNotFound" as const };
+          }
+
+          if (group.ownerUserId !== actor) {
+            const inviteSelect = tx
+              .select({ id: squadGroupInvitation.id })
+              .from(squadGroupInvitation)
+              .where(
+                and(
+                  eq(squadGroupInvitation.squadGroupId, groupIdNumber),
+                  eq(squadGroupInvitation.invitedUserId, actor),
+                  eq(squadGroupInvitation.status, "accepted")
+                )
+              )
+              .limit(1);
+            const inviteRows = yield* inviteSelect as Effect.Effect<
+              readonly { readonly id: number }[],
+              unknown,
+              never
+            >;
+
+            if (inviteRows[0] === undefined) {
+              return { _tag: "ActorCannotEditSquadGroup" as const };
+            }
+          }
+
+          const existingSquadSelect = tx
+            .select({ id: squad.id })
+            .from(squad)
+            .where(eq(squad.squadGroupId, groupIdNumber));
+          const existingSquads = yield* existingSquadSelect as Effect.Effect<
+            readonly { readonly id: number }[],
+            unknown,
+            never
+          >;
+          const existingSquadIds = new Set(existingSquads.map((row) => row.id));
+
+          if (existingSquadIds.size !== snapshot.squads.length) {
+            return { _tag: "EditorCannotChangeSquadStructure" as const };
+          }
+
+          for (const submitted of snapshot.squads) {
+            if (!existingSquadIds.has(submitted.squadId)) {
+              return {
+                _tag: "SquadNotInGroup" as const,
+                squadId: submitted.squadId,
+              };
+            }
+          }
+
+          yield* tx
+            .delete(squadCharacter)
+            .where(
+              eq(squadCharacter.squadGroupId, groupIdNumber)
+            ) as Effect.Effect<unknown, unknown, never>;
+
+          const characterIds = snapshot.squads.flatMap((item) =>
+            item.characters.map((character) => character.characterId)
+          );
+          const charactersById = new Map<
+            number,
+            { readonly accountId: number }
+          >();
+
+          if (characterIds.length > 0) {
+            const characterSelect = tx
+              .select({
+                accountId: margonemCharacter.accountId,
+                id: margonemCharacter.id,
+              })
+              .from(margonemCharacter)
+              .where(inArray(margonemCharacter.id, characterIds));
+            const characterRows = yield* characterSelect as Effect.Effect<
+              readonly { readonly accountId: number; readonly id: number }[],
+              unknown,
+              never
+            >;
+
+            for (const character of characterRows) {
+              charactersById.set(character.id, {
+                accountId: character.accountId,
+              });
+            }
+          }
+
+          const placements = [];
+
+          for (const submitted of snapshot.squads) {
+            for (const character of submitted.characters) {
+              const stored = charactersById.get(character.characterId);
+
+              if (stored === undefined) {
+                return {
+                  _tag: "SquadCharacterNotAccessible" as const,
+                  characterId: character.characterId,
+                };
+              }
+
+              placements.push({
+                accountId: stored.accountId,
+                characterId: character.characterId,
+                position: character.position,
+                squadGroupId: groupIdNumber,
+                squadId: submitted.squadId,
+              });
+            }
+          }
+
+          if (placements.length > 0) {
+            yield* tx
+              .insert(squadCharacter)
+              .values(placements) as Effect.Effect<unknown, unknown, never>;
+          }
+
+          yield* tx
+            .update(squadGroup)
+            .set({ updatedAt: now })
+            .where(eq(squadGroup.id, groupIdNumber)) as Effect.Effect<
+            unknown,
+            unknown,
+            never
+          >;
+
+          return { _tag: "Saved" as const };
+        })
+      );
+
+      const saved = yield* (
+        transaction as Effect.Effect<
+          | { readonly _tag: "Saved" }
+          | SquadGroupNotFound
+          | ActorCannotEditSquadGroup
+          | { readonly _tag: "SquadNotInGroup"; readonly squadId: SquadId }
+          | { readonly _tag: "EditorCannotChangeSquadStructure" }
+          | {
+              readonly _tag: "SquadCharacterNotAccessible";
+              readonly characterId: number;
+            },
+          unknown,
+          never
+        >
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
+      if (saved._tag !== "Saved") {
+        return yield* Effect.fail(saved);
+      }
+
+      return yield* getSquadGroupDetailWithDatabase(database)({
+        actorUserId,
+        groupId,
+      }).pipe(
+        Effect.catch(
+          (
+            error
+          ): Effect.Effect<
+            never,
+            | SquadGroupNotFound
+            | ActorCannotEditSquadGroup
+            | EffectSquadBuilderPersistenceUnavailable,
+            never
+          > => {
+            if (error._tag === "ActorCannotViewSquadGroup") {
+              return Effect.fail({
+                _tag: "ActorCannotEditSquadGroup" as const,
+              });
+            }
+
+            return Effect.fail(error);
+          }
+        )
+      );
+    });
+
 const saveSquadGroupSnapshotWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -3531,6 +3751,8 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       respondToAccountAccessInvite:
         respondToAccountAccessInviteWithDatabase(database),
       revokeAccountAccess: revokeAccountAccessWithDatabase(database),
+      saveSharedSquadGroupCharacters:
+        saveSharedSquadGroupCharactersWithDatabase(database),
       saveSquadGroupSnapshot: saveSquadGroupSnapshotWithDatabase(database),
       searchInviteTargets: searchInviteTargetsWithDatabase(database),
       setSquadGroupVisibility: setSquadGroupVisibilityWithDatabase(database),

@@ -294,6 +294,87 @@ describe("squad-builder router Postgres integration", () => {
     });
   });
 
+  it("saves shared squad group characters through the Effect oRPC bridge", async () => {
+    const member = await createVerifiedMember({
+      id: "router-effect-save-shared",
+    });
+    const client = createSquadBuilderClient(member, {
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Router shared account",
+        ownerUserId: member.id,
+        profileId: 8_200_003,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    const [character] = await testDb
+      .insert(margonemCharacter)
+      .values({
+        accountId: account.id,
+        avatarUrl: null,
+        characterId: 1_296_627,
+        level: 301,
+        name: "sharedrouterchar",
+        profession: "tracker",
+        world: "jaruna",
+      })
+      .returning({ id: margonemCharacter.id });
+
+    if (character === undefined) {
+      throw new Error("Failed to seed character");
+    }
+
+    const created = await client.squadBuilder.createSquadGroup({
+      name: "Router shared save group",
+    });
+    const savedStructure = await client.squadBuilder.saveSquadGroup({
+      groupId: created.groupId,
+      name: "Router shared save group",
+      squads: [
+        {
+          characters: [],
+          clientKey: "shared-router-squad",
+          name: "Shared router squad",
+          position: 0,
+        },
+      ],
+    });
+    const squadId = savedStructure.squads[0]?.squadId;
+
+    if (squadId === undefined) {
+      throw new Error("Expected saved squad id");
+    }
+
+    const saved = await client.squadBuilder.saveSharedSquadGroupCharacters({
+      groupId: created.groupId,
+      squads: [
+        {
+          characters: [{ characterId: character.id, position: 0 }],
+          squadId,
+        },
+      ],
+    });
+
+    expect(saved).toMatchObject({
+      accessRole: "owner",
+      groupId: created.groupId,
+      squads: [
+        {
+          characters: [{ characterId: character.id, name: "sharedrouterchar" }],
+          squadId,
+        },
+      ],
+    });
+  });
+
   it("lists available squad characters through the Effect oRPC bridge", async () => {
     const member = await createVerifiedMember({
       id: "router-effect-available",

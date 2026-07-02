@@ -80,6 +80,7 @@ import type {
   RevokeSquadGroupEditorStoreInput,
 } from "../squad-builder-store";
 import type { AvailableSquadCharacter } from "../squad-group-snapshot";
+import type { SquadId } from "../squad-id";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
 
 export interface EffectSquadGroupStoreShape {
@@ -119,6 +120,21 @@ export interface EffectSquadGroupStoreShape {
     SquadGroupDetail,
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly saveSharedSquadGroupCharacters: (
+    input: SaveSharedSquadGroupCharactersStoreInput
+  ) => Effect<
+    SquadGroupDetail,
+    | SquadGroupNotFound
+    | ActorCannotEditSquadGroup
+    | { readonly _tag: "SquadNotInGroup"; readonly squadId: SquadId }
+    | { readonly _tag: "EditorCannotChangeSquadStructure" }
+    | {
+        readonly _tag: "SquadCharacterNotAccessible";
+        readonly characterId: number;
+      }
     | EffectSquadBuilderPersistenceUnavailable,
     never
   >;

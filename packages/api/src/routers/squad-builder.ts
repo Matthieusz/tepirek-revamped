@@ -115,7 +115,10 @@ import type {
 import { RespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/respond-to-squad-group-invite";
 import { RevokeSquadGroupEditor } from "../modules/squad-builder/squad-groups/revoke-squad-group-editor";
 import { SaveSharedSquadGroupCharacters } from "../modules/squad-builder/squad-groups/save-shared-squad-group-characters";
-import type { SharedSquadGroupSaveError } from "../modules/squad-builder/squad-groups/save-shared-squad-group-characters";
+import type {
+  EffectSharedSquadGroupSaveError,
+  SharedSquadGroupSaveError,
+} from "../modules/squad-builder/squad-groups/save-shared-squad-group-characters";
 import { SaveSquadGroup } from "../modules/squad-builder/squad-groups/save-squad-group";
 import type {
   SaveSquadGroupError,
@@ -454,6 +457,16 @@ interface SaveSharedSquadGroupCharactersService {
   ) => Promise<Result<SquadGroupDetail, SharedSquadGroupSaveError>>;
 }
 
+interface EffectSaveSharedSquadGroupCharactersService {
+  readonly saveEffect: (
+    input: Parameters<SaveSharedSquadGroupCharacters["saveEffect"]>[0]
+  ) => Effect<
+    SquadGroupDetail,
+    EffectSharedSquadGroupSaveError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface CreateSquadBuilderRouterOptions {
   readonly previewService?: PreviewProfileImportService;
   readonly effectPreviewService?: EffectPreviewProfileImportService;
@@ -489,6 +502,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly revokeSquadGroupEditorService?: RevokeSquadGroupEditorService;
   readonly listSquadGroupSharingStateService?: ListSquadGroupSharingStateService;
   readonly saveSharedSquadGroupCharactersService?: SaveSharedSquadGroupCharactersService;
+  readonly effectSaveSharedSquadGroupCharactersService?: EffectSaveSharedSquadGroupCharactersService;
   readonly setSquadGroupVisibilityService?: SetSquadGroupVisibilityService;
 }
 
@@ -1296,6 +1310,7 @@ const toSquadGroupOrpcError = (
     | SquadGroupSharingError
     | SaveSquadGroupError
     | SharedSquadGroupSaveError
+    | EffectSharedSquadGroupSaveError
     | GlobalSquadVisibilityError
     | SquadGroupListFilterError
 ) => {
@@ -1452,6 +1467,11 @@ const listSquadGroupsEffect = new ListSquadGroups();
 const listAvailableSquadCharactersEffect = new ListAvailableSquadCharacters();
 const setSquadGroupVisibilityEffect = new SetSquadGroupVisibility(systemClock);
 const saveSquadGroupEffect = new SaveSquadGroup(systemClock);
+const saveSharedSquadGroupCharactersEffect = new SaveSharedSquadGroupCharacters(
+  undefined,
+  undefined,
+  systemClock
+);
 const listOwnedAccountsEffect = new ListOwnedMargonemAccounts();
 const applyAccountRefetchEffect = new EffectApplyAccountRefetch(systemClock);
 const searchAccountInviteTargetsEffect = new EffectSearchAccountInviteTargets();
@@ -1553,6 +1573,7 @@ export const createSquadBuilderRouter = ({
   revokeSquadGroupEditorService,
   listSquadGroupSharingStateService,
   saveSharedSquadGroupCharactersService,
+  effectSaveSharedSquadGroupCharactersService,
   effectRuntime = defaultEffectRuntime,
   setSquadGroupVisibilityService,
 }: CreateSquadBuilderRouterOptions = {}) => ({
@@ -2637,35 +2658,51 @@ export const createSquadBuilderRouter = ({
           squadId: squadId.value,
         });
       }
-      const services =
-        saveSharedSquadGroupCharactersService === undefined
-          ? defaultServices
-          : ok({
-              saveSharedSquadGroupCharacters:
-                saveSharedSquadGroupCharactersService,
-            });
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "saveSharedSquadGroupCharacters",
-          services.error
-        );
-        throw toOrpcError(services.error);
+      if (saveSharedSquadGroupCharactersService !== undefined) {
+        const result = await saveSharedSquadGroupCharactersService.save({
+          actorUserId: actorUserId.value,
+          groupId: groupId.value,
+          squads,
+        });
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "saveSharedSquadGroupCharacters",
+            result.error
+          );
+          throw toSquadGroupOrpcError(result.error);
+        }
+        return toSquadGroupDetailDto(result.value);
       }
-      const result = await services.value.saveSharedSquadGroupCharacters.save({
+
+      const effect = (
+        effectSaveSharedSquadGroupCharactersService ??
+        saveSharedSquadGroupCharactersEffect
+      ).saveEffect({
         actorUserId: actorUserId.value,
         groupId: groupId.value,
         squads,
       });
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "saveSharedSquadGroupCharacters",
-          result.error
-        );
-        throw toSquadGroupOrpcError(result.error);
+
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for saveSharedSquadGroupCharacters"
+          ),
+          operation: "saveSharedSquadGroupCharacters",
+        };
+        logSquadBuilderError(context, "saveSharedSquadGroupCharacters", error);
+        throw toSquadGroupOrpcError(error);
       }
-      return toSquadGroupDetailDto(result.value);
+
+      const detail = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as EffectSharedSquadGroupSaveError;
+        logSquadBuilderError(context, "saveSharedSquadGroupCharacters", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
+      return toSquadGroupDetailDto(detail);
     }),
   saveSquadGroup: verifiedProcedure
     .input(saveSquadGroupInputSchema)
