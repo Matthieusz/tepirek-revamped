@@ -253,6 +253,20 @@ const failPersistence = (
     })
   );
 
+// oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
+const persistenceQuery = <A>(
+  operation: EffectSquadGroupPersistenceOperation,
+  self: Effect.Effect<A, unknown, unknown>
+): Effect.Effect<A, EffectSquadBuilderPersistenceUnavailable, never> =>
+  Effect.catch(self as Effect.Effect<A, unknown, never>, (error) =>
+    failPersistence(operation, error)
+  );
+// oxlint-enable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
+
+const persistenceQueryUnsafe = <A>(
+  self: Effect.Effect<A, unknown, unknown>
+): Effect.Effect<A, unknown, never> => self as Effect.Effect<A, unknown, never>;
+
 const parsePersistedAppUserId = (
   operation: EffectSquadGroupPersistenceOperation,
   value: string
@@ -303,14 +317,8 @@ const findProfileAccessStateWithDatabase =
         .from(margonemAccount)
         .where(eq(margonemAccount.profileId, profileIdToNumber(profileId)))
         .limit(1);
-      const accountSelectEffect = accountSelect as Effect.Effect<
-        readonly { readonly id: number; readonly ownerUserId: string }[],
-        unknown,
-        never
-      >;
-      const accountRows = yield* accountSelectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const accountRows = yield* persistenceQuery(operation, accountSelect);
+
       const [account] = accountRows;
 
       if (account === undefined) {
@@ -332,14 +340,7 @@ const findProfileAccessStateWithDatabase =
           )
         )
         .limit(1);
-      const accessSelectEffect = accessSelect as Effect.Effect<
-        readonly { readonly id: number }[],
-        unknown,
-        never
-      >;
-      const accessRows = yield* accessSelectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const accessRows = yield* persistenceQuery(operation, accessSelect);
 
       if (accessRows[0] !== undefined) {
         return { _tag: "SharedWithActor" as const };
@@ -371,9 +372,11 @@ const reserveRequestWithDatabase =
       const yearMonthText = firecrawlYearMonthToString(yearMonth);
       const transaction = database.transaction((tx) => {
         const transactionEffect = Effect.gen(function* reserveInTransaction() {
-          yield* tx.execute(
-            sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
-          ) as Effect.Effect<unknown, unknown, never>;
+          yield* persistenceQueryUnsafe(
+            tx.execute(
+              sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
+            )
+          );
           const usageSelect = tx
             .select({ usedRequests: count() })
             .from(firecrawlProfileScrapeRequest)
@@ -386,11 +389,8 @@ const reserveRequestWithDatabase =
                 )
               )
             );
-          const usageRows = yield* usageSelect as Effect.Effect<
-            readonly { readonly usedRequests: number }[],
-            unknown,
-            never
-          >;
+          const usageRows = yield* persistenceQueryUnsafe(usageSelect);
+
           const usedRequests = usageRows[0]?.usedRequests ?? 0;
 
           if (usedRequests >= monthlyRequestBudget) {
@@ -411,11 +411,8 @@ const reserveRequestWithDatabase =
               yearMonth: yearMonthText,
             })
             .returning({ id: firecrawlProfileScrapeRequest.id });
-          const insertedRows = yield* insert as Effect.Effect<
-            readonly { readonly id: number }[],
-            unknown,
-            never
-          >;
+          const insertedRows = yield* persistenceQueryUnsafe(insert);
+
           const [reserved] = insertedRows;
 
           if (reserved === undefined) {
@@ -441,9 +438,7 @@ const reserveRequestWithDatabase =
         return transactionEffect;
       });
 
-      return yield* (
-        transaction as Effect.Effect<ReservedFirecrawlRequest, unknown, never>
-      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      return yield* persistenceQuery(operation, transaction);
     });
 
 const markRequestSucceededWithDatabase =
@@ -470,16 +465,7 @@ const markRequestSucceededWithDatabase =
       })
       .where(eq(firecrawlProfileScrapeRequest.id, requestId));
 
-    const updateEffect = update as Effect.Effect<unknown, unknown, never>;
-    const catchEffect = Effect["catch"];
-    const handlePersistenceFailure = function handlePersistenceFailure(
-      error: unknown
-    ) {
-      return failPersistence(operation, error);
-    };
-    const catchPersistenceFailure = catchEffect(handlePersistenceFailure);
-
-    return updateEffect.pipe(catchPersistenceFailure, Effect.asVoid);
+    return persistenceQuery(operation, update).pipe(Effect.asVoid);
   };
 
 const markRequestFailedWithDatabase =
@@ -498,16 +484,7 @@ const markRequestFailedWithDatabase =
       .set({ completedAt: new Date(), errorTag, status: "failed" })
       .where(eq(firecrawlProfileScrapeRequest.id, requestId));
 
-    const updateEffect = update as Effect.Effect<unknown, unknown, never>;
-    const catchEffect = Effect["catch"];
-    const handlePersistenceFailure = function handlePersistenceFailure(
-      error: unknown
-    ) {
-      return failPersistence(operation, error);
-    };
-    const catchPersistenceFailure = catchEffect(handlePersistenceFailure);
-
-    return updateEffect.pipe(catchPersistenceFailure, Effect.asVoid);
+    return persistenceQuery(operation, update).pipe(Effect.asVoid);
   };
 
 const createPendingImportWithDatabase =
@@ -543,11 +520,8 @@ const createPendingImportWithDatabase =
               suggestedAccountName,
             })
             .returning({ id: margonemAccountImportPreview.id });
-          const insertedRows = yield* insert as Effect.Effect<
-            readonly { readonly id: number }[],
-            unknown,
-            never
-          >;
+          const insertedRows = yield* persistenceQueryUnsafe(insert);
+
           const [preview] = insertedRows;
 
           if (preview === undefined) {
@@ -571,7 +545,7 @@ const createPendingImportWithDatabase =
                   world: character.world,
                 }))
               );
-            yield* characterInsert as Effect.Effect<unknown, unknown, never>;
+            yield* persistenceQueryUnsafe(characterInsert);
           }
 
           return {
@@ -581,13 +555,7 @@ const createPendingImportWithDatabase =
         })
       );
 
-      return yield* (
-        transaction as Effect.Effect<
-          PendingMargonemAccountImport,
-          unknown,
-          never
-        >
-      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      return yield* persistenceQuery(operation, transaction);
     });
 
 const findPendingImportForConfirmationWithDatabase =
@@ -626,18 +594,8 @@ const findPendingImportForConfirmationWithDatabase =
           )
         )
         .limit(1);
-      const previewSelectEffect = previewSelect as Effect.Effect<
-        readonly {
-          readonly fetchedAt: Date;
-          readonly id: number;
-          readonly profileId: number;
-        }[],
-        unknown,
-        never
-      >;
-      const previewRows = yield* previewSelectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const previewRows = yield* persistenceQuery(operation, previewSelect);
+
       const [preview] = previewRows;
 
       if (preview === undefined) {
@@ -657,21 +615,8 @@ const findPendingImportForConfirmationWithDatabase =
         .where(
           eq(margonemAccountImportPreviewCharacter.importPreviewId, preview.id)
         );
-      const characterSelectEffect = characterSelect as Effect.Effect<
-        readonly {
-          readonly avatarUrl: string | null;
-          readonly characterId: number;
-          readonly level: number;
-          readonly name: string;
-          readonly profession: string;
-          readonly world: string;
-        }[],
-        unknown,
-        never
-      >;
-      const characterRows = yield* characterSelectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const characterRows = yield* persistenceQuery(operation, characterSelect);
+
       const jarunaCharacters = [];
 
       for (const row of characterRows) {
@@ -749,11 +694,8 @@ const createOwnedAccountFromPendingImportWithDatabase =
               )
             )
             .limit(1);
-          const existingRows = yield* existingSelect as Effect.Effect<
-            readonly { readonly ownerUserId: string }[],
-            unknown,
-            never
-          >;
+          const existingRows = yield* persistenceQueryUnsafe(existingSelect);
+
           const [existing] = existingRows;
 
           if (existing !== undefined) {
@@ -774,11 +716,8 @@ const createOwnedAccountFromPendingImportWithDatabase =
               createdAt: margonemAccount.createdAt,
               id: margonemAccount.id,
             });
-          const accountRows = yield* insert as Effect.Effect<
-            readonly { readonly createdAt: Date; readonly id: number }[],
-            unknown,
-            never
-          >;
+          const accountRows = yield* persistenceQueryUnsafe(insert);
+
           const [account] = accountRows;
 
           if (account === undefined) {
@@ -800,7 +739,7 @@ const createOwnedAccountFromPendingImportWithDatabase =
                 world: character.world,
               }))
             );
-            yield* characterInsert as Effect.Effect<unknown, unknown, never>;
+            yield* persistenceQueryUnsafe(characterInsert);
           }
 
           const update = tx
@@ -812,7 +751,7 @@ const createOwnedAccountFromPendingImportWithDatabase =
                 pendingImportIdToNumber(pending.id)
               )
             );
-          yield* update as Effect.Effect<unknown, unknown, never>;
+          yield* persistenceQueryUnsafe(update);
 
           return {
             accountId: account.id,
@@ -825,13 +764,7 @@ const createOwnedAccountFromPendingImportWithDatabase =
         })
       );
 
-      const result = yield* (
-        transaction as Effect.Effect<
-          OwnedMargonemAccountSummary | DuplicateMargonemAccountError,
-          unknown,
-          never
-        >
-      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      const result = yield* persistenceQuery(operation, transaction);
 
       if (
         "_tag" in result &&
@@ -867,18 +800,8 @@ const createSquadGroupWithDatabase =
           id: squadGroup.id,
           updatedAt: squadGroup.updatedAt,
         });
-      // SAFETY: Drizzle's Effect PostgreSQL insert builder is an Effect whose
-      // runtime value is the returned row array. The cast narrows the generated
-      // query effect so this adapter can translate its typed query failure into
-      // the local persistence error below.
-      const insertEffect = insert as Effect.Effect<
-        readonly { readonly id: number; readonly updatedAt: Date }[],
-        unknown,
-        never
-      >;
-      const createdRows = yield* insertEffect.pipe(
-        Effect.catch((error) => failPersistence("createSquadGroup", error))
-      );
+
+      const createdRows = yield* persistenceQuery("createSquadGroup", insert);
 
       const [created] = createdRows;
 
@@ -928,24 +851,8 @@ const listMySquadGroupsWithDatabase =
         .where(eq(squadGroup.ownerUserId, appUserIdToString(actorUserId)))
         .groupBy(squadGroup.id)
         .orderBy(desc(squadGroup.updatedAt), desc(squadGroup.id));
-      // SAFETY: Drizzle's Effect PostgreSQL select builder is an Effect whose
-      // runtime value is the selected row array. The cast narrows the generated
-      // query effect so this adapter can translate its typed query failure into
-      // the local persistence error below.
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly characterCount: number | null;
-          readonly groupId: number;
-          readonly name: string;
-          readonly squadCount: number | null;
-          readonly updatedAt: Date;
-        }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence("listMySquadGroups", error))
-      );
+
+      const rows = yield* persistenceQuery("listMySquadGroups", select);
 
       const groups: SquadGroupSummary[] = [];
 
@@ -1004,21 +911,8 @@ const listOwnedAccountsWithDatabase =
         .where(eq(margonemAccount.ownerUserId, appUserIdToString(actorUserId)))
         .groupBy(margonemAccount.id)
         .orderBy(desc(margonemAccount.createdAt), desc(margonemAccount.id));
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly accountId: number;
-          readonly characterCount: number | null;
-          readonly createdAt: Date;
-          readonly displayName: string;
-          readonly lastFetchedAt: Date | null;
-          readonly profileId: number;
-        }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const accounts: OwnedMargonemAccountSummary[] = [];
 
       for (const row of rows) {
@@ -1074,18 +968,8 @@ const getAccountForRefetchWithDatabase =
         .from(margonemAccount)
         .where(eq(margonemAccount.id, accountIdNumber))
         .limit(1);
-      const accountSelectEffect = accountSelect as Effect.Effect<
-        readonly {
-          readonly displayName: string;
-          readonly ownerUserId: string;
-          readonly profileId: number;
-        }[],
-        unknown,
-        never
-      >;
-      const accountRows = yield* accountSelectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const accountRows = yield* persistenceQuery(operation, accountSelect);
+
       const [account] = accountRows;
 
       if (account === undefined) {
@@ -1114,23 +998,8 @@ const getAccountForRefetchWithDatabase =
         )
         .where(eq(margonemCharacter.accountId, accountIdNumber))
         .groupBy(margonemCharacter.id);
-      const characterSelectEffect = characterSelect as Effect.Effect<
-        readonly {
-          readonly affectedSquadCount: number | null;
-          readonly avatarUrl: string | null;
-          readonly characterId: number;
-          readonly id: number;
-          readonly level: number;
-          readonly name: string;
-          readonly profession: string;
-          readonly world: string;
-        }[],
-        unknown,
-        never
-      >;
-      const characterRows = yield* characterSelectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const characterRows = yield* persistenceQuery(operation, characterSelect);
+
       const displayName = parseAccountDisplayName(account.displayName);
 
       if (isError(displayName)) {
@@ -1223,11 +1092,8 @@ const createPendingRefetchWithDatabase =
               profileId: profileIdToNumber(profileId),
             })
             .returning({ id: margonemAccountRefetchPreview.id });
-          const insertedRows = yield* insert as Effect.Effect<
-            readonly { readonly id: number }[],
-            unknown,
-            never
-          >;
+          const insertedRows = yield* persistenceQueryUnsafe(insert);
+
           const [preview] = insertedRows;
 
           if (preview === undefined) {
@@ -1251,7 +1117,7 @@ const createPendingRefetchWithDatabase =
                   world: character.world,
                 }))
               );
-            yield* characterInsert as Effect.Effect<unknown, unknown, never>;
+            yield* persistenceQueryUnsafe(characterInsert);
           }
 
           const pendingRefetchId = parsePendingMargonemAccountRefetchId(
@@ -1266,13 +1132,7 @@ const createPendingRefetchWithDatabase =
         })
       );
 
-      return yield* (
-        transaction as Effect.Effect<
-          PendingMargonemAccountRefetch,
-          unknown,
-          never
-        >
-      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      return yield* persistenceQuery(operation, transaction);
     });
 
 const findPendingRefetchForApplyWithDatabase =
@@ -1317,20 +1177,8 @@ const findPendingRefetchForApplyWithDatabase =
           )
         )
         .limit(1);
-      const previewSelectEffect = previewSelect as Effect.Effect<
-        readonly {
-          readonly accountId: number;
-          readonly actorUserId: string;
-          readonly fetchedAt: Date;
-          readonly id: number;
-          readonly profileId: number;
-        }[],
-        unknown,
-        never
-      >;
-      const previewRows = yield* previewSelectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const previewRows = yield* persistenceQuery(operation, previewSelect);
+
       const [preview] = previewRows;
 
       if (preview === undefined) {
@@ -1353,21 +1201,8 @@ const findPendingRefetchForApplyWithDatabase =
             preview.id
           )
         );
-      const characterSelectEffect = characterSelect as Effect.Effect<
-        readonly {
-          readonly avatarUrl: string | null;
-          readonly characterId: number;
-          readonly level: number;
-          readonly name: string;
-          readonly profession: string;
-          readonly world: string;
-        }[],
-        unknown,
-        never
-      >;
-      const characterRows = yield* characterSelectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const characterRows = yield* persistenceQuery(operation, characterSelect);
+
       const latestCharacters = [];
 
       for (const row of characterRows) {
@@ -1451,16 +1286,7 @@ const markPendingRefetchAppliedWithDatabase =
           pendingRefetchIdToNumber(refetchPreviewId)
         )
       );
-    const updateEffect = update as Effect.Effect<unknown, unknown, never>;
-    const catchEffect = Effect["catch"];
-    const handlePersistenceFailure = function handlePersistenceFailure(
-      error: unknown
-    ) {
-      return failPersistence(operation, error);
-    };
-    const catchPersistenceFailure = catchEffect(handlePersistenceFailure);
-
-    return updateEffect.pipe(catchPersistenceFailure, Effect.asVoid);
+    return persistenceQuery(operation, update).pipe(Effect.asVoid);
   };
 
 const applyRefetchedAccountWithDatabase =
@@ -1482,9 +1308,11 @@ const applyRefetchedAccountWithDatabase =
             pendingRefetch.accountId
           );
 
-          yield* tx.execute(
-            sql`select pg_advisory_xact_lock(hashtext(${`margonem-refetch:${accountIdNumber}`}))`
-          ) as Effect.Effect<unknown, unknown, never>;
+          yield* persistenceQueryUnsafe(
+            tx.execute(
+              sql`select pg_advisory_xact_lock(hashtext(${`margonem-refetch:${accountIdNumber}`}))`
+            )
+          );
 
           const accountSelect = tx
             .select({ id: margonemAccount.id })
@@ -1496,11 +1324,7 @@ const applyRefetchedAccountWithDatabase =
               )
             )
             .limit(1);
-          const accountRows = yield* accountSelect as Effect.Effect<
-            readonly { readonly id: number }[],
-            unknown,
-            never
-          >;
+          const accountRows = yield* persistenceQueryUnsafe(accountSelect);
 
           if (accountRows[0] === undefined) {
             return yield* failPersistence(
@@ -1520,18 +1344,8 @@ const applyRefetchedAccountWithDatabase =
             })
             .from(margonemCharacter)
             .where(eq(margonemCharacter.accountId, accountIdNumber));
-          const currentRows = yield* currentSelect as Effect.Effect<
-            readonly {
-              readonly avatarUrl: string | null;
-              readonly characterId: number;
-              readonly id: number;
-              readonly level: number;
-              readonly name: string;
-              readonly profession: string;
-            }[],
-            unknown,
-            never
-          >;
+          const currentRows = yield* persistenceQueryUnsafe(currentSelect);
+
           const currentByCharacterId = new Map<
             number,
             (typeof currentRows)[number]
@@ -1585,29 +1399,25 @@ const applyRefetchedAccountWithDatabase =
           }
 
           if (charactersToInsert.length > 0) {
-            yield* tx
-              .insert(margonemCharacter)
-              .values(charactersToInsert) as Effect.Effect<
-              unknown,
-              unknown,
-              never
-            >;
+            yield* persistenceQueryUnsafe(
+              tx.insert(margonemCharacter).values(charactersToInsert)
+            );
           }
 
           for (const character of charactersToUpdate) {
-            yield* tx
-              .update(margonemCharacter)
-              .set({
-                avatarUrl: character.avatarUrl,
-                level: character.level,
-                name: character.name,
-                profession: character.profession,
-                updatedAt: now,
-                world: character.world,
-              })
-              .where(
-                eq(margonemCharacter.id, character.databaseCharacterId)
-              ) as Effect.Effect<unknown, unknown, never>;
+            yield* persistenceQueryUnsafe(
+              tx
+                .update(margonemCharacter)
+                .set({
+                  avatarUrl: character.avatarUrl,
+                  level: character.level,
+                  name: character.name,
+                  profession: character.profession,
+                  updatedAt: now,
+                  world: character.world,
+                })
+                .where(eq(margonemCharacter.id, character.databaseCharacterId))
+            );
           }
 
           for (const current of currentRows) {
@@ -1625,11 +1435,9 @@ const applyRefetchedAccountWithDatabase =
               .where(
                 inArray(squadCharacter.characterId, removedDatabaseCharacterIds)
               );
-            const affectedGroups = yield* affectedGroupSelect as Effect.Effect<
-              readonly { readonly groupId: number }[],
-              unknown,
-              never
-            >;
+            const affectedGroups =
+              yield* persistenceQueryUnsafe(affectedGroupSelect);
+
             const affectedGroupIds = [
               ...new Set(affectedGroups.map((group) => group.groupId)),
             ];
@@ -1639,38 +1447,36 @@ const applyRefetchedAccountWithDatabase =
                 inArray(squadCharacter.characterId, removedDatabaseCharacterIds)
               )
               .returning({ id: squadCharacter.id });
-            const removedPlacements =
-              yield* removedPlacementsDelete as Effect.Effect<
-                readonly { readonly id: number }[],
-                unknown,
-                never
-              >;
+            const removedPlacements = yield* persistenceQueryUnsafe(
+              removedPlacementsDelete
+            );
+
             removedSquadCharacterCount = removedPlacements.length;
 
             if (affectedGroupIds.length > 0) {
-              yield* tx
-                .update(squadGroup)
-                .set({ updatedAt: now })
-                .where(
-                  inArray(squadGroup.id, affectedGroupIds)
-                ) as Effect.Effect<unknown, unknown, never>;
+              yield* persistenceQueryUnsafe(
+                tx
+                  .update(squadGroup)
+                  .set({ updatedAt: now })
+                  .where(inArray(squadGroup.id, affectedGroupIds))
+              );
             }
 
-            yield* tx
-              .delete(margonemCharacter)
-              .where(
-                inArray(margonemCharacter.id, removedDatabaseCharacterIds)
-              ) as Effect.Effect<unknown, unknown, never>;
+            yield* persistenceQueryUnsafe(
+              tx
+                .delete(margonemCharacter)
+                .where(
+                  inArray(margonemCharacter.id, removedDatabaseCharacterIds)
+                )
+            );
           }
 
-          yield* tx
-            .update(margonemAccount)
-            .set({ lastFetchedAt: pendingRefetch.fetchedAt, updatedAt: now })
-            .where(eq(margonemAccount.id, accountIdNumber)) as Effect.Effect<
-            unknown,
-            unknown,
-            never
-          >;
+          yield* persistenceQueryUnsafe(
+            tx
+              .update(margonemAccount)
+              .set({ lastFetchedAt: pendingRefetch.fetchedAt, updatedAt: now })
+              .where(eq(margonemAccount.id, accountIdNumber))
+          );
 
           return {
             accountId: pendingRefetch.accountId,
@@ -1684,9 +1490,7 @@ const applyRefetchedAccountWithDatabase =
         })
       );
 
-      return yield* (
-        transaction as Effect.Effect<ApplyAccountRefetchOutput, unknown, never>
-      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      return yield* persistenceQuery(operation, transaction);
     });
 
 const searchInviteTargetsWithDatabase =
@@ -1728,18 +1532,8 @@ const searchInviteTargetsWithDatabase =
         )
         .orderBy(user.name)
         .limit(10);
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly image: string | null;
-          readonly name: string;
-          readonly userId: string;
-        }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const targets: AccountInviteTarget[] = [];
 
       for (const row of rows) {
@@ -1781,14 +1575,8 @@ const authorizeSquadGroupOwnerWithDatabase =
         .from(squadGroup)
         .where(eq(squadGroup.id, squadGroupIdToNumber(groupId)))
         .limit(1);
-      const selectEffect = select as Effect.Effect<
-        readonly { readonly ownerUserId: string }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const [group] = rows;
 
       if (group === undefined) {
@@ -1843,18 +1631,8 @@ const searchSquadEditorInviteTargetsWithDatabase =
         )
         .orderBy(user.name)
         .limit(maxResults);
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly image: string | null;
-          readonly name: string;
-          readonly userId: string;
-        }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const targets: SquadEditorInviteTarget[] = [];
 
       for (const row of rows) {
@@ -1899,19 +1677,8 @@ const findVerifiedSquadEditorInviteTargetWithDatabase =
         .from(user)
         .where(eq(user.id, appUserIdToString(targetUserId)))
         .limit(1);
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly image: string | null;
-          readonly name: string;
-          readonly userId: string;
-          readonly verified: boolean;
-        }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const [target] = rows;
 
       if (target === undefined) {
@@ -1967,24 +1734,8 @@ const loadSquadGroupInvitationSummaryWithDatabase =
           )
         )
         .limit(1);
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly createdAt: Date;
-          readonly invitationId: number;
-          readonly ownerId: string;
-          readonly ownerImage: string | null;
-          readonly ownerName: string;
-          readonly squadGroupId: number;
-          readonly squadGroupName: string;
-          readonly status: string;
-          readonly updatedAt: Date;
-        }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const [row] = rows;
 
       if (row === undefined) {
@@ -2066,11 +1817,8 @@ const upsertSquadGroupEditorInviteWithDatabase =
               )
             )
             .limit(1);
-          const existingRows = yield* existingSelect as Effect.Effect<
-            readonly { readonly id: number; readonly status: string }[],
-            unknown,
-            never
-          >;
+          const existingRows = yield* persistenceQueryUnsafe(existingSelect);
+
           const [existing] = existingRows;
 
           if (existing === undefined) {
@@ -2083,11 +1831,8 @@ const upsertSquadGroupEditorInviteWithDatabase =
                 status: "pending",
               })
               .returning({ id: squadGroupInvitation.id });
-            const insertedRows = yield* insert as Effect.Effect<
-              readonly { readonly id: number }[],
-              unknown,
-              never
-            >;
+            const insertedRows = yield* persistenceQueryUnsafe(insert);
+
             const [inserted] = insertedRows;
 
             if (inserted === undefined) {
@@ -2118,11 +1863,8 @@ const upsertSquadGroupEditorInviteWithDatabase =
             .set({ invitedByUserId: owner, status: "pending", updatedAt: now })
             .where(eq(squadGroupInvitation.id, existing.id))
             .returning({ id: squadGroupInvitation.id });
-          const updatedRows = yield* update as Effect.Effect<
-            readonly { readonly id: number }[],
-            unknown,
-            never
-          >;
+          const updatedRows = yield* persistenceQueryUnsafe(update);
+
           const [updated] = updatedRows;
 
           if (updated === undefined) {
@@ -2135,13 +1877,7 @@ const upsertSquadGroupEditorInviteWithDatabase =
           return updated.id;
         })
       );
-      const upserted = yield* (
-        transaction as Effect.Effect<
-          number | SquadGroupInvitationTransitionNotAllowed,
-          unknown,
-          never
-        >
-      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      const upserted = yield* persistenceQuery(operation, transaction);
 
       if (typeof upserted !== "number") {
         return yield* upserted;
@@ -2193,15 +1929,8 @@ const respondToSquadGroupInviteWithDatabase =
             .from(squadGroupInvitation)
             .where(eq(squadGroupInvitation.id, invitationIdNumber))
             .limit(1);
-          const existingRows = yield* existingSelect as Effect.Effect<
-            readonly {
-              readonly id: number;
-              readonly invitedUserId: string;
-              readonly status: string;
-            }[],
-            unknown,
-            never
-          >;
+          const existingRows = yield* persistenceQueryUnsafe(existingSelect);
+
           const [existing] = existingRows;
 
           if (existing === undefined) {
@@ -2233,11 +1962,8 @@ const respondToSquadGroupInviteWithDatabase =
             .set({ status: nextStatus, updatedAt: now })
             .where(eq(squadGroupInvitation.id, existing.id))
             .returning({ id: squadGroupInvitation.id });
-          const updatedRows = yield* update as Effect.Effect<
-            readonly { readonly id: number }[],
-            unknown,
-            never
-          >;
+          const updatedRows = yield* persistenceQueryUnsafe(update);
+
           const [updated] = updatedRows;
 
           if (updated === undefined) {
@@ -2250,16 +1976,7 @@ const respondToSquadGroupInviteWithDatabase =
           return { _tag: "Updated" as const };
         })
       );
-      const respond = yield* (
-        transaction as Effect.Effect<
-          | { readonly _tag: "Updated" }
-          | SquadGroupInvitationNotFound
-          | ActorIsNotSquadGroupInviteRecipient
-          | SquadGroupInvitationTransitionNotAllowed,
-          unknown,
-          never
-        >
-      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      const respond = yield* persistenceQuery(operation, transaction);
 
       if (respond._tag !== "Updated") {
         return yield* respond;
@@ -2303,14 +2020,8 @@ const revokeSquadGroupEditorWithDatabase =
             )
             .where(eq(squadGroupInvitation.id, invitationIdNumber))
             .limit(1);
-          const existingRows = yield* existingSelect as Effect.Effect<
-            readonly {
-              readonly ownerUserId: string;
-              readonly status: string;
-            }[],
-            unknown,
-            never
-          >;
+          const existingRows = yield* persistenceQueryUnsafe(existingSelect);
+
           const [existing] = existingRows;
 
           if (existing === undefined) {
@@ -2339,11 +2050,8 @@ const revokeSquadGroupEditorWithDatabase =
             .set({ status: "revoked", updatedAt: now })
             .where(eq(squadGroupInvitation.id, invitationIdNumber))
             .returning({ id: squadGroupInvitation.id });
-          const updatedRows = yield* update as Effect.Effect<
-            readonly { readonly id: number }[],
-            unknown,
-            never
-          >;
+          const updatedRows = yield* persistenceQueryUnsafe(update);
+
           const [updated] = updatedRows;
 
           if (updated === undefined) {
@@ -2356,16 +2064,7 @@ const revokeSquadGroupEditorWithDatabase =
           return { _tag: "Revoked" as const };
         })
       );
-      const revoked = yield* (
-        transaction as Effect.Effect<
-          | { readonly _tag: "Revoked" }
-          | SquadGroupInvitationNotFound
-          | ActorDoesNotOwnSquadGroup
-          | SquadGroupInvitationTransitionNotAllowed,
-          unknown,
-          never
-        >
-      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      const revoked = yield* persistenceQuery(operation, transaction);
 
       if (revoked._tag !== "Revoked") {
         return yield* revoked;
@@ -2397,18 +2096,8 @@ const findOwnedAccountForSharingWithDatabase =
         .from(margonemAccount)
         .where(eq(margonemAccount.id, margonemAccountIdToNumber(accountId)))
         .limit(1);
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly displayName: string;
-          readonly ownerUserId: string;
-          readonly profileId: number;
-        }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const [account] = rows;
 
       if (account === undefined) {
@@ -2473,25 +2162,8 @@ const loadAccountAccessInviteSummaryWithDatabase =
         .innerJoin(user, eq(user.id, margonemAccount.ownerUserId))
         .where(eq(margonemAccountAccess.id, accessId))
         .limit(1);
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly accountDisplayName: string;
-          readonly accountId: number;
-          readonly createdAt: Date;
-          readonly invitedUserId: string;
-          readonly ownerId: string;
-          readonly ownerImage: string | null;
-          readonly ownerName: string;
-          readonly profileId: number;
-          readonly status: string;
-          readonly updatedAt: Date;
-        }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const [row] = rows;
 
       if (row === undefined) {
@@ -2573,19 +2245,8 @@ const findVerifiedInviteTargetWithDatabase =
         .from(user)
         .where(eq(user.id, appUserIdToString(targetUserId)))
         .limit(1);
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly image: string | null;
-          readonly name: string;
-          readonly userId: string;
-          readonly verified: boolean;
-        }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const [target] = rows;
 
       if (target === undefined) {
@@ -2643,11 +2304,8 @@ const upsertAccountAccessInviteWithDatabase =
               )
             )
             .limit(1);
-          const existingRows = yield* existingSelect as Effect.Effect<
-            readonly { readonly id: number; readonly status: string }[],
-            unknown,
-            never
-          >;
+          const existingRows = yield* persistenceQueryUnsafe(existingSelect);
+
           const [existing] = existingRows;
 
           if (existing === undefined) {
@@ -2660,11 +2318,8 @@ const upsertAccountAccessInviteWithDatabase =
                 userId: invitedUser,
               })
               .returning({ id: margonemAccountAccess.id });
-            const insertedRows = yield* insert as Effect.Effect<
-              readonly { readonly id: number }[],
-              unknown,
-              never
-            >;
+            const insertedRows = yield* persistenceQueryUnsafe(insert);
+
             const [inserted] = insertedRows;
 
             if (inserted === undefined) {
@@ -2695,11 +2350,8 @@ const upsertAccountAccessInviteWithDatabase =
             .set({ invitedByUserId: owner, status: "pending", updatedAt: now })
             .where(eq(margonemAccountAccess.id, existing.id))
             .returning({ id: margonemAccountAccess.id });
-          const updatedRows = yield* update as Effect.Effect<
-            readonly { readonly id: number }[],
-            unknown,
-            never
-          >;
+          const updatedRows = yield* persistenceQueryUnsafe(update);
+
           const [updated] = updatedRows;
 
           if (updated === undefined) {
@@ -2712,13 +2364,7 @@ const upsertAccountAccessInviteWithDatabase =
           return updated.id;
         })
       );
-      const upserted = yield* (
-        transaction as Effect.Effect<
-          number | AccountAccessTransitionNotAllowed,
-          unknown,
-          never
-        >
-      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      const upserted = yield* persistenceQuery(operation, transaction);
 
       if (typeof upserted !== "number") {
         return yield* upserted;
@@ -2762,14 +2408,8 @@ const listIncomingAccountInvitesWithDatabase =
           )
         )
         .orderBy(desc(margonemAccountAccess.createdAt));
-      const selectEffect = select as Effect.Effect<
-        readonly { readonly id: number }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const invites: AccountAccessInviteSummary[] = [];
 
       for (const row of rows) {
@@ -2836,24 +2476,8 @@ const listSharedAccountsWithDatabase =
         )
         .groupBy(margonemAccount.id, user.id)
         .orderBy(desc(margonemAccount.createdAt), desc(margonemAccount.id));
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly accountId: number;
-          readonly characterCount: number | null;
-          readonly createdAt: Date;
-          readonly displayName: string;
-          readonly lastFetchedAt: Date | null;
-          readonly ownerId: string;
-          readonly ownerImage: string | null;
-          readonly ownerName: string;
-          readonly profileId: number;
-        }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const accounts: SharedMargonemAccountSummary[] = [];
 
       for (const row of rows) {
@@ -2932,22 +2556,8 @@ const listAccountAccessGrantsWithDatabase =
           )
         )
         .orderBy(desc(margonemAccountAccess.createdAt));
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly accessId: number;
-          readonly createdAt: Date;
-          readonly image: string | null;
-          readonly name: string;
-          readonly status: string;
-          readonly updatedAt: Date;
-          readonly userId: string;
-        }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const grants: AccountAccessGrantSummary[] = [];
 
       for (const row of rows) {
@@ -3015,14 +2625,8 @@ const listIncomingSquadGroupInvitesWithDatabase =
           )
         )
         .orderBy(desc(squadGroupInvitation.createdAt));
-      const selectEffect = select as Effect.Effect<
-        readonly { readonly id: number }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const invites: SquadGroupInvitationSummary[] = [];
 
       for (const row of rows) {
@@ -3067,14 +2671,7 @@ const getPendingSquadGroupInviteCountWithDatabase =
             eq(squadGroupInvitation.status, "pending")
           )
         );
-      const selectEffect = select as Effect.Effect<
-        readonly { readonly inviteCount: number }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
 
       return rows[0]?.inviteCount ?? 0;
     });
@@ -3123,22 +2720,8 @@ const listSquadGroupEditorGrantsWithDatabase =
           )
         )
         .orderBy(desc(squadGroupInvitation.createdAt));
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly createdAt: Date;
-          readonly image: string | null;
-          readonly invitationId: number;
-          readonly name: string;
-          readonly status: string;
-          readonly updatedAt: Date;
-          readonly userId: string;
-        }[],
-        unknown,
-        never
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const grants: SquadGroupEditorGrantSummary[] = [];
 
       for (const row of rows) {
@@ -3208,15 +2791,8 @@ const respondToAccountAccessInviteWithDatabase =
             .from(margonemAccountAccess)
             .where(eq(margonemAccountAccess.id, accessId))
             .limit(1);
-          const existingRows = yield* existingSelect as Effect.Effect<
-            readonly {
-              readonly id: number;
-              readonly status: string;
-              readonly userId: string;
-            }[],
-            unknown,
-            never
-          >;
+          const existingRows = yield* persistenceQueryUnsafe(existingSelect);
+
           const [existing] = existingRows;
 
           if (existing === undefined) {
@@ -3248,11 +2824,8 @@ const respondToAccountAccessInviteWithDatabase =
             .set({ status: nextStatus, updatedAt: now })
             .where(eq(margonemAccountAccess.id, existing.id))
             .returning({ id: margonemAccountAccess.id });
-          const updatedRows = yield* update as Effect.Effect<
-            readonly { readonly id: number }[],
-            unknown,
-            never
-          >;
+          const updatedRows = yield* persistenceQueryUnsafe(update);
+
           const [updated] = updatedRows;
 
           if (updated === undefined) {
@@ -3265,16 +2838,7 @@ const respondToAccountAccessInviteWithDatabase =
           return { _tag: "Updated" as const };
         })
       );
-      const respond = yield* (
-        transaction as Effect.Effect<
-          | { readonly _tag: "Updated" }
-          | AccountAccessInviteNotFound
-          | ActorIsNotInviteRecipient
-          | AccountAccessTransitionNotAllowed,
-          unknown,
-          never
-        >
-      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      const respond = yield* persistenceQuery(operation, transaction);
 
       if (respond._tag !== "Updated") {
         return yield* respond;
@@ -3315,15 +2879,8 @@ const revokeAccountAccessWithDatabase =
             .from(margonemAccountAccess)
             .where(eq(margonemAccountAccess.id, accessIdNumber))
             .limit(1);
-          const accessRows = yield* accessSelect as Effect.Effect<
-            readonly {
-              readonly accountId: number;
-              readonly status: string;
-              readonly userId: string;
-            }[],
-            unknown,
-            never
-          >;
+          const accessRows = yield* persistenceQueryUnsafe(accessSelect);
+
           const [access] = accessRows;
 
           if (access === undefined) {
@@ -3335,11 +2892,8 @@ const revokeAccountAccessWithDatabase =
             .from(margonemAccount)
             .where(eq(margonemAccount.id, access.accountId))
             .limit(1);
-          const accountRows = yield* accountSelect as Effect.Effect<
-            readonly { readonly ownerUserId: string }[],
-            unknown,
-            never
-          >;
+          const accountRows = yield* persistenceQueryUnsafe(accountSelect);
+
           const [account] = accountRows;
 
           if (account === undefined) {
@@ -3363,12 +2917,12 @@ const revokeAccountAccessWithDatabase =
             });
           }
 
-          yield* tx
-            .update(margonemAccountAccess)
-            .set({ status: "revoked", updatedAt: now })
-            .where(
-              eq(margonemAccountAccess.id, accessIdNumber)
-            ) as Effect.Effect<unknown, unknown, never>;
+          yield* persistenceQueryUnsafe(
+            tx
+              .update(margonemAccountAccess)
+              .set({ status: "revoked", updatedAt: now })
+              .where(eq(margonemAccountAccess.id, accessIdNumber))
+          );
 
           let removedSquadCharacterCount = 0;
 
@@ -3377,11 +2931,9 @@ const revokeAccountAccessWithDatabase =
               .select({ id: margonemCharacter.id })
               .from(margonemCharacter)
               .where(eq(margonemCharacter.accountId, access.accountId));
-            const accountCharacters = yield* characterSelect as Effect.Effect<
-              readonly { readonly id: number }[],
-              unknown,
-              never
-            >;
+            const accountCharacters =
+              yield* persistenceQueryUnsafe(characterSelect);
+
             const accountCharacterIds = accountCharacters.map(
               (character) => character.id
             );
@@ -3401,11 +2953,8 @@ const revokeAccountAccessWithDatabase =
                   )
                 );
               const affectedGroups =
-                yield* affectedGroupSelect as Effect.Effect<
-                  readonly { readonly groupId: number }[],
-                  unknown,
-                  never
-                >;
+                yield* persistenceQueryUnsafe(affectedGroupSelect);
+
               const affectedGroupIds = [
                 ...new Set(affectedGroups.map((group) => group.groupId)),
               ];
@@ -3420,19 +2969,18 @@ const revokeAccountAccessWithDatabase =
                     )
                   )
                   .returning({ id: squadCharacter.id });
-                const removedPlacements =
-                  yield* removedPlacementsDelete as Effect.Effect<
-                    readonly { readonly id: number }[],
-                    unknown
-                  >;
+                const removedPlacements = yield* persistenceQueryUnsafe(
+                  removedPlacementsDelete
+                );
+
                 removedSquadCharacterCount = removedPlacements.length;
 
-                yield* tx
-                  .update(squadGroup)
-                  .set({ updatedAt: now })
-                  .where(
-                    inArray(squadGroup.id, affectedGroupIds)
-                  ) as Effect.Effect<unknown, unknown>;
+                yield* persistenceQueryUnsafe(
+                  tx
+                    .update(squadGroup)
+                    .set({ updatedAt: now })
+                    .where(inArray(squadGroup.id, affectedGroupIds))
+                );
               }
             }
           }
@@ -3445,20 +2993,7 @@ const revokeAccountAccessWithDatabase =
           };
         })
       );
-      const revoked = yield* (
-        transaction as Effect.Effect<
-          | {
-              readonly _tag: "Revoked";
-              readonly accountId: number;
-              readonly removedSquadCharacterCount: number;
-              readonly revokedUserId: string;
-            }
-          | AccountAccessInviteNotFound
-          | ActorDoesNotOwnMargonemAccount
-          | AccountAccessTransitionNotAllowed,
-          unknown
-        >
-      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      const revoked = yield* persistenceQuery(operation, transaction);
 
       if (revoked._tag !== "Revoked") {
         return yield* revoked;
@@ -3533,26 +3068,8 @@ const listAvailableCharactersForOwnerWithDatabase =
           asc(margonemAccount.displayName),
           asc(margonemCharacter.level)
         );
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly accountDisplayName: string;
-          readonly accountId: number;
-          readonly accountOwnerUserId: string;
-          readonly accountOwnerUserImage: string | null;
-          readonly accountOwnerUserName: string;
-          readonly avatarUrl: string | null;
-          readonly characterId: number;
-          readonly level: number;
-          readonly margonemCharacterId: number;
-          readonly name: string;
-          readonly profession: string;
-          readonly world: string;
-        }[],
-        unknown
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const characters: AvailableSquadCharacter[] = [];
 
       for (const row of rows) {
@@ -3646,18 +3163,8 @@ const getSquadGroupDetailWithDatabase =
         .from(squadGroup)
         .where(eq(squadGroup.id, groupIdNumber))
         .limit(1);
-      const groupSelectEffect = groupSelect as Effect.Effect<
-        readonly {
-          readonly name: string;
-          readonly ownerUserId: string;
-          readonly updatedAt: Date;
-          readonly visibility: string;
-        }[],
-        unknown
-      >;
-      const groupRows = yield* groupSelectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const groupRows = yield* persistenceQuery(operation, groupSelect);
+
       const [group] = groupRows;
 
       if (group === undefined) {
@@ -3699,13 +3206,8 @@ const getSquadGroupDetailWithDatabase =
             )
           )
           .limit(1);
-        const inviteSelectEffect = inviteSelect as Effect.Effect<
-          readonly { readonly id: number }[],
-          unknown
-        >;
-        const inviteRows = yield* inviteSelectEffect.pipe(
-          Effect.catch((error) => failPersistence(operation, error))
-        );
+        const inviteRows = yield* persistenceQuery(operation, inviteSelect);
+
         const [invite] = inviteRows;
 
         if (invite === undefined) {
@@ -3746,17 +3248,7 @@ const getSquadGroupDetailWithDatabase =
         .from(squad)
         .where(eq(squad.squadGroupId, groupIdNumber))
         .orderBy(asc(squad.position), asc(squad.id));
-      const squadSelectEffect = squadSelect as Effect.Effect<
-        readonly {
-          readonly id: number;
-          readonly name: string;
-          readonly position: number;
-        }[],
-        unknown
-      >;
-      const squadRows = yield* squadSelectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const squadRows = yield* persistenceQuery(operation, squadSelect);
 
       const placementSelect = database
         .select({
@@ -3786,27 +3278,8 @@ const getSquadGroupDetailWithDatabase =
         .innerJoin(user, eq(user.id, margonemAccount.ownerUserId))
         .where(eq(squadCharacter.squadGroupId, groupIdNumber))
         .orderBy(asc(squadCharacter.position), asc(squadCharacter.id));
-      const placementSelectEffect = placementSelect as Effect.Effect<
-        readonly {
-          readonly accountDisplayName: string;
-          readonly accountId: number;
-          readonly accountOwnerUserImage: string | null;
-          readonly accountOwnerUserName: string;
-          readonly avatarUrl: string | null;
-          readonly characterId: number;
-          readonly level: number;
-          readonly margonemCharacterId: number;
-          readonly name: string;
-          readonly placementId: number;
-          readonly position: number;
-          readonly profession: string;
-          readonly squadId: number;
-        }[],
-        unknown
-      >;
-      const placementRows = yield* placementSelectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const placementRows = yield* persistenceQuery(operation, placementSelect);
+
       const charactersBySquadId = new Map<number, SquadGroupCharacter[]>();
 
       for (const placement of placementRows) {
@@ -4002,22 +3475,8 @@ const listSharedSquadGroupsWithDatabase =
         )
         .groupBy(squadGroup.id, user.id)
         .orderBy(desc(squadGroup.updatedAt), desc(squadGroup.id));
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly characterCount: number | null;
-          readonly groupId: number;
-          readonly name: string;
-          readonly ownerId: string;
-          readonly ownerImage: string | null;
-          readonly ownerName: string;
-          readonly squadCount: number | null;
-          readonly updatedAt: Date;
-        }[],
-        unknown
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const groups: SharedSquadGroupSummary[] = [];
 
       for (const row of rows) {
@@ -4070,19 +3529,19 @@ const saveSharedSquadGroupCharactersWithDatabase =
       const actor = appUserIdToString(actorUserId);
       const transaction = database.transaction((tx) =>
         Effect.gen(function* saveSharedSquadGroupCharactersTransaction() {
-          yield* tx.execute(
-            sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
-          ) as Effect.Effect<unknown, unknown, never>;
+          yield* persistenceQueryUnsafe(
+            tx.execute(
+              sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
+            )
+          );
 
           const groupSelect = tx
             .select({ ownerUserId: squadGroup.ownerUserId })
             .from(squadGroup)
             .where(eq(squadGroup.id, groupIdNumber))
             .limit(1);
-          const groupRows = yield* groupSelect as Effect.Effect<
-            readonly { readonly ownerUserId: string }[],
-            unknown
-          >;
+          const groupRows = yield* persistenceQueryUnsafe(groupSelect);
+
           const [group] = groupRows;
 
           if (group === undefined) {
@@ -4101,10 +3560,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
                 )
               )
               .limit(1);
-            const inviteRows = yield* inviteSelect as Effect.Effect<
-              readonly { readonly id: number }[],
-              unknown
-            >;
+            const inviteRows = yield* persistenceQueryUnsafe(inviteSelect);
 
             if (inviteRows[0] === undefined) {
               return new ActorCannotEditSquadGroup();
@@ -4115,10 +3571,9 @@ const saveSharedSquadGroupCharactersWithDatabase =
             .select({ id: squad.id })
             .from(squad)
             .where(eq(squad.squadGroupId, groupIdNumber));
-          const existingSquads = yield* existingSquadSelect as Effect.Effect<
-            readonly { readonly id: number }[],
-            unknown
-          >;
+          const existingSquads =
+            yield* persistenceQueryUnsafe(existingSquadSelect);
+
           const existingSquadIds = new Set(existingSquads.map((row) => row.id));
 
           if (existingSquadIds.size !== snapshot.squads.length) {
@@ -4131,11 +3586,11 @@ const saveSharedSquadGroupCharactersWithDatabase =
             }
           }
 
-          yield* tx
-            .delete(squadCharacter)
-            .where(
-              eq(squadCharacter.squadGroupId, groupIdNumber)
-            ) as Effect.Effect<unknown, unknown>;
+          yield* persistenceQueryUnsafe(
+            tx
+              .delete(squadCharacter)
+              .where(eq(squadCharacter.squadGroupId, groupIdNumber))
+          );
 
           const characterIds = snapshot.squads.flatMap((item) =>
             item.characters.map((character) => character.characterId)
@@ -4153,10 +3608,8 @@ const saveSharedSquadGroupCharactersWithDatabase =
               })
               .from(margonemCharacter)
               .where(inArray(margonemCharacter.id, characterIds));
-            const characterRows = yield* characterSelect as Effect.Effect<
-              readonly { readonly accountId: number; readonly id: number }[],
-              unknown
-            >;
+            const characterRows =
+              yield* persistenceQueryUnsafe(characterSelect);
 
             for (const character of characterRows) {
               charactersById.set(character.id, {
@@ -4188,34 +3641,23 @@ const saveSharedSquadGroupCharactersWithDatabase =
           }
 
           if (placements.length > 0) {
-            yield* tx
-              .insert(squadCharacter)
-              .values(placements) as Effect.Effect<unknown, unknown>;
+            yield* persistenceQueryUnsafe(
+              tx.insert(squadCharacter).values(placements)
+            );
           }
 
-          yield* tx
-            .update(squadGroup)
-            .set({ updatedAt: now })
-            .where(eq(squadGroup.id, groupIdNumber)) as Effect.Effect<
-            unknown,
-            unknown
-          >;
+          yield* persistenceQueryUnsafe(
+            tx
+              .update(squadGroup)
+              .set({ updatedAt: now })
+              .where(eq(squadGroup.id, groupIdNumber))
+          );
 
           return { _tag: "Saved" as const };
         })
       );
 
-      const saved = yield* (
-        transaction as Effect.Effect<
-          | { readonly _tag: "Saved" }
-          | SquadGroupNotFound
-          | ActorCannotEditSquadGroup
-          | SquadNotInGroup
-          | EditorCannotChangeSquadStructure
-          | SquadCharacterNotAccessible,
-          unknown
-        >
-      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      const saved = yield* persistenceQuery(operation, transaction);
 
       if (saved._tag !== "Saved") {
         return yield* saved;
@@ -4268,19 +3710,19 @@ const saveSquadGroupSnapshotWithDatabase =
 
       const transaction = database.transaction((tx) =>
         Effect.gen(function* saveSquadGroupSnapshotTransaction() {
-          yield* tx.execute(
-            sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
-          ) as Effect.Effect<unknown, unknown>;
+          yield* persistenceQueryUnsafe(
+            tx.execute(
+              sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
+            )
+          );
 
           const groupSelect = tx
             .select({ ownerUserId: squadGroup.ownerUserId })
             .from(squadGroup)
             .where(eq(squadGroup.id, groupIdNumber))
             .limit(1);
-          const groupRows = yield* groupSelect as Effect.Effect<
-            readonly { readonly ownerUserId: string }[],
-            unknown
-          >;
+          const groupRows = yield* persistenceQueryUnsafe(groupSelect);
+
           const [group] = groupRows;
 
           if (group === undefined) {
@@ -4291,23 +3733,19 @@ const saveSquadGroupSnapshotWithDatabase =
             return new ActorDoesNotOwnSquadGroup();
           }
 
-          yield* tx
-            .update(squadGroup)
-            .set({
-              name: squadGroupNameToString(snapshot.name),
-              updatedAt: now,
-            })
-            .where(eq(squadGroup.id, groupIdNumber)) as Effect.Effect<
-            unknown,
-            unknown
-          >;
+          yield* persistenceQueryUnsafe(
+            tx
+              .update(squadGroup)
+              .set({
+                name: squadGroupNameToString(snapshot.name),
+                updatedAt: now,
+              })
+              .where(eq(squadGroup.id, groupIdNumber))
+          );
 
-          yield* tx
-            .delete(squad)
-            .where(eq(squad.squadGroupId, groupIdNumber)) as Effect.Effect<
-            unknown,
-            unknown
-          >;
+          yield* persistenceQueryUnsafe(
+            tx.delete(squad).where(eq(squad.squadGroupId, groupIdNumber))
+          );
 
           for (const squadSnapshot of snapshot.squads) {
             const insertSquad = tx
@@ -4319,10 +3757,9 @@ const saveSquadGroupSnapshotWithDatabase =
                 updatedAt: now,
               })
               .returning({ id: squad.id });
-            const insertedSquadRows = yield* insertSquad as Effect.Effect<
-              readonly { readonly id: number }[],
-              unknown
-            >;
+            const insertedSquadRows =
+              yield* persistenceQueryUnsafe(insertSquad);
+
             const [insertedSquad] = insertedSquadRows;
 
             if (insertedSquad === undefined) {
@@ -4361,24 +3798,16 @@ const saveSquadGroupSnapshotWithDatabase =
               });
             }
 
-            yield* tx
-              .insert(squadCharacter)
-              .values(placementRows) as Effect.Effect<unknown, unknown>;
+            yield* persistenceQueryUnsafe(
+              tx.insert(squadCharacter).values(placementRows)
+            );
           }
 
           return { _tag: "Saved" as const };
         })
       );
 
-      const saved = yield* (
-        transaction as Effect.Effect<
-          | { readonly _tag: "Saved" }
-          | SquadGroupNotFound
-          | ActorDoesNotOwnSquadGroup
-          | EffectSquadBuilderPersistenceUnavailable,
-          unknown
-        >
-      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      const saved = yield* persistenceQuery(operation, transaction);
 
       if (saved._tag !== "Saved") {
         return yield* saved;
@@ -4446,22 +3875,8 @@ const listGlobalSquadGroupsWithDatabase =
         .groupBy(squadGroup.id, user.id)
         .orderBy(desc(squadGroup.updatedAt), desc(squadGroup.id))
         .limit(limit);
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly characterCount: number | null;
-          readonly groupId: number;
-          readonly name: string;
-          readonly ownerId: string;
-          readonly ownerImage: string | null;
-          readonly ownerName: string;
-          readonly squadCount: number | null;
-          readonly updatedAt: Date;
-        }[],
-        unknown
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const groups: GlobalSquadGroupSummary[] = [];
 
       for (const row of rows) {
@@ -4522,17 +3937,8 @@ const setSquadGroupVisibilityWithDatabase =
         .from(squadGroup)
         .where(eq(squadGroup.id, groupIdNumber))
         .limit(1);
-      const selectEffect = select as Effect.Effect<
-        readonly {
-          readonly ownerUserId: string;
-          readonly updatedAt: Date;
-          readonly visibility: string;
-        }[],
-        unknown
-      >;
-      const rows = yield* selectEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const rows = yield* persistenceQuery(operation, select);
+
       const [existing] = rows;
 
       if (existing === undefined) {
@@ -4552,13 +3958,8 @@ const setSquadGroupVisibilityWithDatabase =
         .set({ updatedAt: now, visibility })
         .where(eq(squadGroup.id, groupIdNumber))
         .returning({ updatedAt: squadGroup.updatedAt });
-      const updateEffect = update as Effect.Effect<
-        readonly { readonly updatedAt: Date }[],
-        unknown
-      >;
-      const updatedRows = yield* updateEffect.pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
+      const updatedRows = yield* persistenceQuery(operation, update);
+
       const [updated] = updatedRows;
 
       if (updated === undefined) {

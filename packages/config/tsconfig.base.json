@@ -23,6 +23,7 @@
     "isolatedModules": true,
     "types": ["bun"],
     "strictNullChecks": true,
+    "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "incremental": true,
