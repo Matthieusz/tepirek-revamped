@@ -78,7 +78,10 @@ import {
   pendingRefetchIdToNumber,
 } from "../pending-margonem-account-refetch-id";
 import { isError } from "../result";
-import type { SquadGroupAccess } from "../squad-group-access";
+import type {
+  SquadGroupAccess,
+  SquadGroupOwnerAccess,
+} from "../squad-group-access";
 import { parseSquadGroupId, squadGroupIdToNumber } from "../squad-group-id";
 import { parseSquadGroupInvitationId } from "../squad-group-invitation-id";
 import {
@@ -139,6 +142,8 @@ import type {
   RevokeAccountAccessStoreInput,
   SetSquadGroupVisibilityStoreInput,
   SharedMargonemAccountSummary,
+  SearchSquadEditorInviteTargetsStoreInput,
+  SquadEditorInviteTarget,
   SquadGroupVisibilityChange,
   AccountInviteTarget,
   AccountAccessGrantSummary,
@@ -152,6 +157,7 @@ import { EffectSquadGroupStore } from "./squad-group-store";
 
 type EffectSquadGroupPersistenceOperation =
   | "applyRefetchedAccount"
+  | "authorizeSquadGroupOwner"
   | "createPendingImport"
   | "createOwnedAccountFromPendingImport"
   | "createPendingRefetch"
@@ -178,6 +184,7 @@ type EffectSquadGroupPersistenceOperation =
   | "revokeAccountAccess"
   | "saveSharedSquadGroupCharacters"
   | "saveSquadGroupSnapshot"
+  | "searchSquadEditorInviteTargets"
   | "searchInviteTargets"
   | "upsertAccountAccessInvite"
   | "setSquadGroupVisibility";
@@ -1697,6 +1704,123 @@ const searchInviteTargetsWithDatabase =
         Effect.catch((error) => failPersistence(operation, error))
       );
       const targets: AccountInviteTarget[] = [];
+
+      for (const row of rows) {
+        const userId = parseAppUserId(row.userId);
+
+        if (isError(userId)) {
+          return yield* failPersistence(operation, userId.error);
+        }
+
+        targets.push({
+          image: row.image,
+          name: row.name,
+          userId: userId.value,
+        });
+      }
+
+      return targets;
+    });
+
+const authorizeSquadGroupOwnerWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    actorUserId,
+    groupId,
+  }: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupSummary["groupId"];
+  }): Effect.Effect<
+    SquadGroupOwnerAccess,
+    | SquadGroupNotFound
+    | ActorDoesNotOwnSquadGroup
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* authorizeSquadGroupOwnerEffect() {
+      const operation = "authorizeSquadGroupOwner" as const;
+      const select = database
+        .select({ ownerUserId: squadGroup.ownerUserId })
+        .from(squadGroup)
+        .where(eq(squadGroup.id, squadGroupIdToNumber(groupId)))
+        .limit(1);
+      const selectEffect = select as Effect.Effect<
+        readonly { readonly ownerUserId: string }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const [group] = rows;
+
+      if (group === undefined) {
+        return yield* Effect.fail({ _tag: "SquadGroupNotFound" as const });
+      }
+
+      if (group.ownerUserId !== appUserIdToString(actorUserId)) {
+        return yield* Effect.fail({
+          _tag: "ActorDoesNotOwnSquadGroup" as const,
+        });
+      }
+
+      return {
+        _tag: "SquadGroupOwnerAccess" as const,
+        groupId,
+        ownerUserId: actorUserId,
+        role: "owner" as const,
+      };
+    });
+
+const searchSquadEditorInviteTargetsWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    groupId,
+    maxResults,
+    ownerUserId,
+    query,
+  }: SearchSquadEditorInviteTargetsStoreInput): Effect.Effect<
+    readonly SquadEditorInviteTarget[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* searchSquadEditorInviteTargetsEffect() {
+      const operation = "searchSquadEditorInviteTargets" as const;
+      const groupIdNumber = squadGroupIdToNumber(groupId);
+      const owner = appUserIdToString(ownerUserId);
+      const select = database
+        .select({ image: user.image, name: user.name, userId: user.id })
+        .from(user)
+        .where(
+          and(
+            eq(user.verified, true),
+            ne(user.id, owner),
+            ilike(user.name, `%${query}%`),
+            not(
+              sql`${user.id} in (
+                select ${squadGroupInvitation.invitedUserId}
+                from ${squadGroupInvitation}
+                where ${squadGroupInvitation.squadGroupId} = ${groupIdNumber}
+                  and ${squadGroupInvitation.status} in ('pending', 'accepted')
+              )`
+            )
+          )
+        )
+        .orderBy(user.name)
+        .limit(maxResults);
+      const selectEffect = select as Effect.Effect<
+        readonly {
+          readonly image: string | null;
+          readonly name: string;
+          readonly userId: string;
+        }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const targets: SquadEditorInviteTarget[] = [];
 
       for (const row of rows) {
         const userId = parseAppUserId(row.userId);
@@ -3719,6 +3843,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
   EffectDatabase.useSync((database) =>
     EffectSquadGroupStore.of({
       applyRefetchedAccount: applyRefetchedAccountWithDatabase(database),
+      authorizeSquadGroupOwner: authorizeSquadGroupOwnerWithDatabase(database),
       createOwnedAccountFromPendingImport:
         createOwnedAccountFromPendingImportWithDatabase(database),
       createPendingImport: createPendingImportWithDatabase(database),
@@ -3755,6 +3880,8 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
         saveSharedSquadGroupCharactersWithDatabase(database),
       saveSquadGroupSnapshot: saveSquadGroupSnapshotWithDatabase(database),
       searchInviteTargets: searchInviteTargetsWithDatabase(database),
+      searchSquadEditorInviteTargets:
+        searchSquadEditorInviteTargetsWithDatabase(database),
       setSquadGroupVisibility: setSquadGroupVisibilityWithDatabase(database),
       upsertAccountAccessInvite:
         upsertAccountAccessInviteWithDatabase(database),

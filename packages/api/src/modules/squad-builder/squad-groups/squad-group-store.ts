@@ -79,6 +79,8 @@ import type {
   RevokeAccountAccessStoreInput,
   RevokeSquadGroupEditorStoreInput,
 } from "../squad-builder-store";
+import type { SquadGroupOwnerAccess } from "../squad-group-access";
+import type { SquadGroupId } from "../squad-group-id";
 import type { AvailableSquadCharacter } from "../squad-group-snapshot";
 import type { SquadId } from "../squad-id";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors";
@@ -152,6 +154,23 @@ export interface EffectSquadGroupStoreShape {
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
     | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly authorizeSquadGroupOwner: (input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+  }) => Effect<
+    SquadGroupOwnerAccess,
+    | SquadGroupNotFound
+    | ActorDoesNotOwnSquadGroup
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
+  readonly searchSquadEditorInviteTargets: (
+    input: SearchSquadEditorInviteTargetsStoreInput
+  ) => Effect<
+    readonly SquadEditorInviteTarget[],
+    EffectSquadBuilderPersistenceUnavailable,
     never
   >;
   readonly listOwnedAccounts: (

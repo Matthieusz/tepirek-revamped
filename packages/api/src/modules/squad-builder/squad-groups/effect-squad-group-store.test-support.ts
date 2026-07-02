@@ -12,6 +12,8 @@ export const makeEffectSquadGroupStoreTestService = (
 ) =>
   EffectSquadGroupStore.of({
     applyRefetchedAccount: () => unhandledStoreCall("applyRefetchedAccount"),
+    authorizeSquadGroupOwner: () =>
+      unhandledStoreCall("authorizeSquadGroupOwner"),
     createOwnedAccountFromPendingImport: () =>
       unhandledStoreCall("createOwnedAccountFromPendingImport"),
     createPendingImport: () => unhandledStoreCall("createPendingImport"),
@@ -50,6 +52,8 @@ export const makeEffectSquadGroupStoreTestService = (
       unhandledStoreCall("saveSharedSquadGroupCharacters"),
     saveSquadGroupSnapshot: () => unhandledStoreCall("saveSquadGroupSnapshot"),
     searchInviteTargets: () => unhandledStoreCall("searchInviteTargets"),
+    searchSquadEditorInviteTargets: () =>
+      unhandledStoreCall("searchSquadEditorInviteTargets"),
     setSquadGroupVisibility: () =>
       unhandledStoreCall("setSquadGroupVisibility"),
     upsertAccountAccessInvite: () =>

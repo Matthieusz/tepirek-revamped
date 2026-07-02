@@ -103,6 +103,7 @@ import type { AvailableSquadCharacter } from "../modules/squad-builder/squad-gro
 import { parseSquadGroupVisibility } from "../modules/squad-builder/squad-group-visibility";
 import { CreateSquadGroup } from "../modules/squad-builder/squad-groups/create-squad-group";
 import type { CreateSquadGroupError } from "../modules/squad-builder/squad-groups/create-squad-group";
+import { EffectSearchSquadEditorInviteTargets } from "../modules/squad-builder/squad-groups/effect-search-squad-editor-invite-targets";
 import { ListAvailableSquadCharacters } from "../modules/squad-builder/squad-groups/list-available-squad-characters";
 import type { ListAvailableSquadCharactersError } from "../modules/squad-builder/squad-groups/list-available-squad-characters";
 import { ListGlobalSquadGroups } from "../modules/squad-builder/squad-groups/list-global-squad-groups";
@@ -406,6 +407,16 @@ interface SearchSquadEditorInviteTargetsService {
   >;
 }
 
+interface EffectSearchSquadEditorInviteTargetsService {
+  readonly search: (
+    input: Parameters<EffectSearchSquadEditorInviteTargets["search"]>[0]
+  ) => Effect<
+    readonly SquadEditorInviteTarget[],
+    SquadGroupSharingError,
+    EffectSquadGroupStore
+  >;
+}
+
 interface SendSquadGroupEditorInviteService {
   readonly send: (
     input: Parameters<SendSquadGroupEditorInvite["send"]>[0]
@@ -497,6 +508,7 @@ interface CreateSquadBuilderRouterOptions {
   readonly listAvailableSquadCharactersService?: ListAvailableSquadCharactersService;
   readonly saveSquadGroupService?: SaveSquadGroupService;
   readonly searchSquadEditorInviteTargetsService?: SearchSquadEditorInviteTargetsService;
+  readonly effectSearchSquadEditorInviteTargetsService?: EffectSearchSquadEditorInviteTargetsService;
   readonly sendSquadGroupEditorInviteService?: SendSquadGroupEditorInviteService;
   readonly respondToSquadGroupInviteService?: RespondToSquadGroupInviteService;
   readonly revokeSquadGroupEditorService?: RevokeSquadGroupEditorService;
@@ -1475,6 +1487,8 @@ const saveSharedSquadGroupCharactersEffect = new SaveSharedSquadGroupCharacters(
 const listOwnedAccountsEffect = new ListOwnedMargonemAccounts();
 const applyAccountRefetchEffect = new EffectApplyAccountRefetch(systemClock);
 const searchAccountInviteTargetsEffect = new EffectSearchAccountInviteTargets();
+const searchSquadEditorInviteTargetsEffect =
+  new EffectSearchSquadEditorInviteTargets();
 const sendAccountAccessInviteEffect = new EffectSendAccountAccessInvite(
   systemClock
 );
@@ -1568,6 +1582,7 @@ export const createSquadBuilderRouter = ({
   listAvailableSquadCharactersService,
   saveSquadGroupService,
   searchSquadEditorInviteTargetsService,
+  effectSearchSquadEditorInviteTargetsService,
   sendSquadGroupEditorInviteService,
   respondToSquadGroupInviteService,
   revokeSquadGroupEditorService,
@@ -2841,37 +2856,54 @@ export const createSquadBuilderRouter = ({
       if (isError(groupId)) {
         throw toSquadGroupOrpcError(groupId.error);
       }
-      const services =
-        searchSquadEditorInviteTargetsService === undefined
-          ? defaultServices
-          : ok({
-              searchSquadEditorInviteTargets:
-                searchSquadEditorInviteTargetsService,
-            });
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "searchSquadEditorInviteTargets",
-          services.error
-        );
-        throw toOrpcError(services.error);
-      }
-      const result = await services.value.searchSquadEditorInviteTargets.search(
-        {
+
+      if (searchSquadEditorInviteTargetsService !== undefined) {
+        const result = await searchSquadEditorInviteTargetsService.search({
           actorUserId: actorUserId.value,
           groupId: groupId.value,
           query: input.query,
+        });
+
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "searchSquadEditorInviteTargets",
+            result.error
+          );
+          throw toSquadGroupOrpcError(result.error);
         }
-      );
-      if (isError(result)) {
-        logSquadBuilderError(
-          context,
-          "searchSquadEditorInviteTargets",
-          result.error
-        );
-        throw toSquadGroupOrpcError(result.error);
+
+        return { users: result.value.map(toSquadEditorInviteTargetDto) };
       }
-      return { users: result.value.map(toSquadEditorInviteTargetDto) };
+
+      const effect = (
+        effectSearchSquadEditorInviteTargetsService ??
+        searchSquadEditorInviteTargetsEffect
+      ).search({
+        actorUserId: actorUserId.value,
+        groupId: groupId.value,
+        query: input.query,
+      });
+
+      if (effectRuntime === undefined) {
+        const error = {
+          _tag: "SquadBuilderPersistenceUnavailable" as const,
+          cause: new Error(
+            "DATABASE_URL is required for searchSquadEditorInviteTargets"
+          ),
+          operation: "searchSquadEditorInviteTargets",
+        };
+        logSquadBuilderError(context, "searchSquadEditorInviteTargets", error);
+        throw toSquadGroupOrpcError(error);
+      }
+
+      const targets = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as SquadGroupSharingError;
+        logSquadBuilderError(context, "searchSquadEditorInviteTargets", mapped);
+        return toSquadGroupOrpcError(mapped);
+      });
+
+      return { users: targets.map(toSquadEditorInviteTargetDto) };
     }),
   sendAccountAccessInvite: verifiedProcedure
     .input(sendAccountAccessInviteInputSchema)

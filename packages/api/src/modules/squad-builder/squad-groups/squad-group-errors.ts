@@ -6,6 +6,7 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
     cause: Schema.Unknown,
     operation: Schema.Literals([
       "applyRefetchedAccount",
+      "authorizeSquadGroupOwner",
       "createSquadGroup",
       "createOwnedAccountFromPendingImport",
       "createPendingImport",
@@ -32,6 +33,7 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
       "revokeAccountAccess",
       "saveSharedSquadGroupCharacters",
       "saveSquadGroupSnapshot",
+      "searchSquadEditorInviteTargets",
       "searchInviteTargets",
       "setSquadGroupVisibility",
       "upsertAccountAccessInvite",
