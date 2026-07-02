@@ -38,6 +38,7 @@ This folder tracks the planned migration of the backend toward Effect v4. The pl
 - `implementation-readiness.md` — go/no-go checklist before implementation starts.
 - `open-questions.md` — grilling session questions, recommendations, and decisions.
 - `pr-tracking.md` — accepted long-running draft PR tracking strategy.
+- `pr-24-review-next-steps.md` — review-driven next steps for the current PR; runtime ownership is now moved to the server composition root.
 - `steps/00-foundation-and-decision-record.md` — initial decisions and setup work.
 - `steps/01-drizzle-effect-v4-upgrade.md` — Drizzle rc.4 and Effect dependency plan.
 - `steps/02-squad-builder-reference-migration.md` — reference module migration plan.

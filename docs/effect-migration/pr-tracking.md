@@ -37,6 +37,7 @@ The PR body should link:
 - [ ] Effect infrastructure/runtime bridge.
 - [ ] `createSquadGroup` Effect reference slice.
 - [ ] `createSquadGroup` Effect Schema boundary migration.
+- [x] Move production Effect runtime ownership to the server composition root.
 - [ ] Continue squad-builder operation migrations.
 - [ ] Introduce fuller reusable Effect test runtime/layer composition.
 - [ ] Revisit evlog replacement after reference migration stabilizes.

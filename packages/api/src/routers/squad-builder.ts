@@ -4,7 +4,6 @@ import type { ManagedRuntime } from "effect/ManagedRuntime";
 import * as Schema from "effect/Schema";
 import { z } from "zod";
 
-import { makeApiManagedRuntime } from "../effect-app";
 import { accountDisplayNameToString } from "../modules/squad-builder/account-display-name";
 import type {
   ConfirmOwnedAccountImport,
@@ -541,7 +540,7 @@ interface EffectSaveSharedSquadGroupCharactersService {
   >;
 }
 
-interface CreateSquadBuilderRouterOptions {
+export interface CreateSquadBuilderRouterOptions {
   readonly previewService?: PreviewProfileImportService;
   readonly effectPreviewService?: EffectPreviewProfileImportService;
   readonly previewOwnedImportsService?: PreviewOwnedImportsService;
@@ -1469,11 +1468,6 @@ const toAccountSharingOrpcError = (error: AccountSharingError) => {
   }
 };
 
-const defaultEffectRuntime =
-  process.env.DATABASE_URL === undefined
-    ? undefined
-    : makeApiManagedRuntime(process.env.DATABASE_URL);
-
 const createSquadGroupEffect = new CreateSquadGroup();
 const listGlobalSquadGroupsEffect = new ListGlobalSquadGroups();
 const listSquadGroupsEffect = new ListSquadGroups();
@@ -1604,7 +1598,7 @@ export const createSquadBuilderRouter = ({
   effectListSquadGroupSharingStateService,
   saveSharedSquadGroupCharactersService,
   effectSaveSharedSquadGroupCharactersService,
-  effectRuntime = defaultEffectRuntime,
+  effectRuntime,
   setSquadGroupVisibilityService,
 }: CreateSquadBuilderRouterOptions = {}) => ({
   applyAccountRefetch: verifiedProcedure

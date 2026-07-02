@@ -34,7 +34,12 @@ Status: draft; accepted as the go/no-go checklist before implementation starts.
 - [x] Do not migrate business code before the dependency upgrade compiles and tests.
 - [x] Do not introduce Effect business-code migration before the squad-builder structural split is complete.
 
-### 5. Verification commands are named
+### 5. Server composition owns production runtime
+
+- [x] Production API router construction in `apps/server` passes the server-owned Effect ManagedRuntime into the squad-builder router.
+- [x] `packages/api` router modules no longer construct production runtimes from environment variables at import time.
+
+### 6. Verification commands are named
 
 Run commands appropriate to the changed phase:
 

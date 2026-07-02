@@ -6,7 +6,7 @@ import { RPCHandler } from "@orpc/server/fetch";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { createContext } from "@tepirek-revamped/api/context";
 import { makeApiLiveLayer } from "@tepirek-revamped/api/effect-app";
-import { appRouter } from "@tepirek-revamped/api/routers/index";
+import { createAppRouter } from "@tepirek-revamped/api/routers/index";
 import { auth } from "@tepirek-revamped/auth";
 import { ManagedRuntime } from "effect";
 import { createError, initLogger, log as evlogLog, parseError } from "evlog";
@@ -40,6 +40,14 @@ if (!databaseUrl) {
 export const apiEffectRuntime = ManagedRuntime.make(
   makeApiLiveLayer(databaseUrl)
 );
+
+export const disposeApiEffectRuntime = async (): Promise<void> => {
+  await apiEffectRuntime.dispose();
+};
+
+export const appRouter = createAppRouter({
+  squadBuilder: { effectRuntime: apiEffectRuntime },
+});
 
 app.use(evlog());
 
