@@ -975,6 +975,64 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     });
   });
 
+  it("lists account access grants for an owned account", async () => {
+    const owner = await createVerifiedMember({
+      id: "effect-store-grants-owner",
+      name: "Effect Store Grants Owner",
+    });
+    const invited = await createVerifiedMember({
+      id: "effect-store-grants-invited",
+      name: "Effect Store Grants Invited",
+    });
+    const declined = await createVerifiedMember({
+      id: "effect-store-grants-declined",
+      name: "Effect Store Grants Declined",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const sharingStateService = new EffectListAccountSharingState();
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Effect store grants account",
+        ownerUserId: owner.id,
+        profileId: 7_299_013,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    await testDb.insert(margonemAccountAccess).values([
+      {
+        accountId: account.id,
+        invitedByUserId: owner.id,
+        status: "accepted",
+        userId: invited.id,
+      },
+      {
+        accountId: account.id,
+        invitedByUserId: owner.id,
+        status: "declined",
+        userId: declined.id,
+      },
+    ]);
+
+    const grants = await runtime.runPromise(
+      sharingStateService.listAccountAccessGrants({
+        accountId: parseTestAccountId(account.id),
+        actorUserId: parseTestUserId(owner.id),
+      })
+    );
+
+    expect(grants).toHaveLength(1);
+    expect(grants[0]).toMatchObject({
+      invitedUserId: parseTestUserId(invited.id),
+      invitedUserName: "Effect Store Grants Invited",
+      status: "accepted",
+    });
+  });
+
   it("revokes accepted account access and removes recipient squad placements", async () => {
     const owner = await createVerifiedMember({
       id: "effect-store-revoke-owner",

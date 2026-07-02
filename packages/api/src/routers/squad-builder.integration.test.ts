@@ -1009,6 +1009,51 @@ describe("squad-builder router Postgres integration", () => {
     });
   });
 
+  it("lists account access grants through the Effect bridge", async () => {
+    const owner = await createVerifiedMember({
+      id: "router-effect-grants-owner",
+      name: "Effect Grants Owner",
+    });
+    const recipient = await createVerifiedMember({
+      id: "router-effect-grants-recipient",
+      name: "Effect Grants Recipient",
+    });
+    const client = createSquadBuilderClient(owner, {
+      effectListAccountSharingStateService: new EffectListAccountSharingState(),
+      effectRuntime: makeApiManagedRuntime(defaultTestDatabaseUrl),
+    });
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Effect grants account",
+        ownerUserId: owner.id,
+        profileId: 7_299_012,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed account");
+    }
+
+    await testDb.insert(margonemAccountAccess).values({
+      accountId: account.id,
+      invitedByUserId: owner.id,
+      status: "accepted",
+      userId: recipient.id,
+    });
+
+    const listed = await client.squadBuilder.listAccountAccessGrants({
+      accountId: account.id,
+    });
+
+    expect(listed.grants).toHaveLength(1);
+    expect(listed.grants[0]).toMatchObject({
+      status: "accepted",
+      userId: recipient.id,
+      userName: "Effect Grants Recipient",
+    });
+  });
+
   it("searches verified invite targets and excludes the owner", async () => {
     const owner = await createVerifiedMember({
       id: "router-search-owner",

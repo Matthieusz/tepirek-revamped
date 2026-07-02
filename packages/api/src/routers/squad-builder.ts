@@ -340,6 +340,15 @@ interface EffectListAccountSharingStateService {
     AccountSharingError,
     EffectSquadGroupStore
   >;
+  readonly listAccountAccessGrants: (
+    input: Parameters<
+      EffectListAccountSharingState["listAccountAccessGrants"]
+    >[0]
+  ) => Effect<
+    readonly AccountAccessGrantSummary[],
+    AccountSharingError,
+    EffectSquadGroupStore
+  >;
 }
 
 interface CreateSquadGroupService {
@@ -1795,34 +1804,54 @@ export const createSquadBuilderRouter = ({
         throw toAccountSharingOrpcError(accountId.error);
       }
 
-      const services =
-        listAccountSharingStateService === undefined
-          ? defaultServices
-          : ok({
-              sharingState: listAccountSharingStateService,
-            });
+      if (listAccountSharingStateService !== undefined) {
+        const result =
+          await listAccountSharingStateService.listAccountAccessGrants({
+            accountId: accountId.value,
+            actorUserId: actorUserId.value,
+          });
 
-      if (isError(services)) {
-        logSquadBuilderError(
-          context,
-          "listAccountAccessGrants",
-          services.error
-        );
-        throw toOrpcError(services.error);
+        if (isError(result)) {
+          logSquadBuilderError(
+            context,
+            "listAccountAccessGrants",
+            result.error
+          );
+          throw toAccountSharingOrpcError(result.error);
+        }
+
+        return {
+          grants: result.value.map(toAccountAccessGrantDto),
+        };
       }
 
-      const result = await services.value.sharingState.listAccountAccessGrants({
+      const effect = (
+        effectListAccountSharingStateService ?? listAccountSharingStateEffect
+      ).listAccountAccessGrants({
         accountId: accountId.value,
         actorUserId: actorUserId.value,
       });
 
-      if (isError(result)) {
-        logSquadBuilderError(context, "listAccountAccessGrants", result.error);
-        throw toAccountSharingOrpcError(result.error);
+      if (effectRuntime === undefined) {
+        const mapped: SquadBuilderPersistenceUnavailable = {
+          _tag: "SquadBuilderPersistenceUnavailable",
+          cause: new Error(
+            "DATABASE_URL is required for listAccountAccessGrants"
+          ),
+          operation: "listAccountAccessGrants",
+        };
+        logSquadBuilderError(context, "listAccountAccessGrants", mapped);
+        throw toAccountSharingOrpcError(mapped);
       }
 
+      const grants = await runOrpcEffect(effectRuntime, effect, (error) => {
+        const mapped = error as AccountSharingError;
+        logSquadBuilderError(context, "listAccountAccessGrants", mapped);
+        return toAccountSharingOrpcError(mapped);
+      });
+
       return {
-        grants: result.value.map(toAccountAccessGrantDto),
+        grants: grants.map(toAccountAccessGrantDto),
       };
     }),
   listAvailableSquadCharacters: verifiedProcedure

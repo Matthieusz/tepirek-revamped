@@ -166,3 +166,80 @@ it.effect("lists shared accounts for the actor", () => {
     });
   }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
 });
+
+it.effect("lists account access grants for an owned account", () => {
+  const actorUserId = parseTestUserId("effect-grants-owner");
+  const invitedUserId = parseTestUserId("effect-grants-invited");
+  const accountId = parseTestAccountId();
+  const accessId = parseTestAccessId();
+  const createdAt = new Date("2026-06-29T12:00:00.000Z");
+  const store = makeEffectSquadGroupStoreTestService({
+    findOwnedAccountForSharing: (input) => {
+      expect(input).toMatchObject({ accountId, actorUserId });
+
+      return Effect.succeed({
+        accountId,
+        displayName: parseTestDisplayName(),
+        ownerUserId: actorUserId,
+        profileId: parseTestProfileId(),
+      });
+    },
+    listAccountAccessGrants: (input) => {
+      expect(input).toMatchObject({ accountId, actorUserId });
+
+      return Effect.succeed([
+        {
+          accessId,
+          createdAt,
+          invitedUserId,
+          invitedUserImage: null,
+          invitedUserName: "Effect Invited",
+          status: "accepted",
+          updatedAt: createdAt,
+        },
+      ]);
+    },
+  });
+  const service = new EffectListAccountSharingState();
+
+  return Effect.gen(function* listAccountAccessGrantsEffect() {
+    const grants = yield* service.listAccountAccessGrants({
+      accountId,
+      actorUserId,
+    });
+
+    expect(grants).toHaveLength(1);
+    expect(grants[0]).toMatchObject({
+      accessId,
+      invitedUserId,
+      status: "accepted",
+    });
+  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+});
+
+it.effect(
+  "rejects account access grants for accounts owned by another user",
+  () => {
+    const actorUserId = parseTestUserId("effect-grants-attacker");
+    const ownerUserId = parseTestUserId("effect-grants-real-owner");
+    const accountId = parseTestAccountId();
+    const store = makeEffectSquadGroupStoreTestService({
+      findOwnedAccountForSharing: () =>
+        Effect.succeed({
+          accountId,
+          displayName: parseTestDisplayName(),
+          ownerUserId,
+          profileId: parseTestProfileId(),
+        }),
+    });
+    const service = new EffectListAccountSharingState();
+
+    return Effect.gen(function* listAccountAccessGrantsForbiddenEffect() {
+      const error = yield* Effect.flip(
+        service.listAccountAccessGrants({ accountId, actorUserId })
+      );
+
+      expect(error._tag).toBe("ActorDoesNotOwnMargonemAccount");
+    }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }
+);

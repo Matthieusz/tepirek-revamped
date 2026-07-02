@@ -133,6 +133,7 @@ import type {
   SharedMargonemAccountSummary,
   SquadGroupVisibilityChange,
   AccountInviteTarget,
+  AccountAccessGrantSummary,
   AccountAccessInviteSummary,
   SquadGroupCharacter,
   SquadGroupDetail,
@@ -155,6 +156,7 @@ type EffectSquadGroupPersistenceOperation =
   | "getAccountForRefetch"
   | "getSquadGroupDetail"
   | "listAvailableCharactersForOwner"
+  | "listAccountAccessGrants"
   | "listGlobalSquadGroups"
   | "listIncomingAccountInvites"
   | "listSharedAccounts"
@@ -2239,6 +2241,98 @@ const listSharedAccountsWithDatabase =
       return accounts;
     });
 
+const listAccountAccessGrantsWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    accountId,
+  }: {
+    readonly accountId: MargonemAccountId;
+  }): Effect.Effect<
+    readonly AccountAccessGrantSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* listAccountAccessGrantsEffect() {
+      const operation = "listAccountAccessGrants" as const;
+      const select = database
+        .select({
+          accessId: margonemAccountAccess.id,
+          createdAt: margonemAccountAccess.createdAt,
+          image: user.image,
+          name: user.name,
+          status: margonemAccountAccess.status,
+          updatedAt: margonemAccountAccess.updatedAt,
+          userId: user.id,
+        })
+        .from(margonemAccountAccess)
+        .innerJoin(user, eq(user.id, margonemAccountAccess.userId))
+        .where(
+          and(
+            eq(
+              margonemAccountAccess.accountId,
+              margonemAccountIdToNumber(accountId)
+            ),
+            inArray(margonemAccountAccess.status, ["pending", "accepted"])
+          )
+        )
+        .orderBy(desc(margonemAccountAccess.createdAt));
+      const selectEffect = select as Effect.Effect<
+        readonly {
+          readonly accessId: number;
+          readonly createdAt: Date;
+          readonly image: string | null;
+          readonly name: string;
+          readonly status: string;
+          readonly updatedAt: Date;
+          readonly userId: string;
+        }[],
+        unknown,
+        never
+      >;
+      const rows = yield* selectEffect.pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const grants: AccountAccessGrantSummary[] = [];
+
+      for (const row of rows) {
+        const status = parseAccountAccessStatus(row.status);
+
+        if (isError(status)) {
+          return yield* failPersistence(operation, status.error);
+        }
+
+        if (status.value !== "pending" && status.value !== "accepted") {
+          return yield* failPersistence(
+            operation,
+            new Error(`Unexpected account access status: ${status.value}`)
+          );
+        }
+
+        const accessId = parseMargonemAccountAccessId(row.accessId);
+
+        if (isError(accessId)) {
+          return yield* failPersistence(operation, accessId.error);
+        }
+
+        const invitedUserId = yield* parsePersistedAppUserId(
+          operation,
+          row.userId
+        );
+
+        grants.push({
+          accessId: accessId.value,
+          createdAt: row.createdAt,
+          invitedUserId,
+          invitedUserImage: row.image,
+          invitedUserName: row.name,
+          status: status.value,
+          updatedAt: row.updatedAt,
+        });
+      }
+
+      return grants;
+    });
+
 const respondToAccountAccessInviteWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -3236,6 +3330,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       findVerifiedInviteTarget: findVerifiedInviteTargetWithDatabase(database),
       getAccountForRefetch: getAccountForRefetchWithDatabase(database),
       getSquadGroupDetail: getSquadGroupDetailWithDatabase(database),
+      listAccountAccessGrants: listAccountAccessGrantsWithDatabase(database),
       listAvailableCharactersForOwner:
         listAvailableCharactersForOwnerWithDatabase(database),
       listGlobalSquadGroups: listGlobalSquadGroupsWithDatabase(database),

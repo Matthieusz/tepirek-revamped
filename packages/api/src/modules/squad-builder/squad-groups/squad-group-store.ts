@@ -6,6 +6,7 @@ import type { AppUserId } from "../app-user-id";
 import type { MargonemAccountId } from "../margonem-account-id";
 import type {
   AccountAccessInviteSummary,
+  AccountAccessGrantSummary,
   ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnMargonemAccount,
@@ -28,6 +29,7 @@ import type {
   GlobalSquadVisibilityStore,
   ListAvailableCharactersForOwnerInput,
   ListIncomingAccountInvitesInput,
+  ListAccountAccessGrantsInput,
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
@@ -290,6 +292,13 @@ export interface EffectSquadGroupStoreShape {
     EffectSquadBuilderPersistenceUnavailable,
     never
   >;
+  readonly listAccountAccessGrants: (
+    input: ListAccountAccessGrantsInput
+  ) => Effect<
+    readonly AccountAccessGrantSummary[],
+    EffectSquadBuilderPersistenceUnavailable,
+    never
+  >;
 }
 
 export class EffectSquadGroupStore extends Context.Service<
@@ -304,6 +313,7 @@ export type SquadGroupsPersistenceStore = SquadGroupStore &
 
 export type {
   AccountAccessInviteSummary,
+  AccountAccessGrantSummary,
   ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnMargonemAccount,
@@ -327,6 +337,7 @@ export type {
   GlobalSquadVisibilityStore,
   ListAvailableCharactersForOwnerInput,
   ListIncomingAccountInvitesInput,
+  ListAccountAccessGrantsInput,
   ListGlobalSquadGroupsInput,
   ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,

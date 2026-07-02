@@ -28,6 +28,8 @@ export const makeEffectSquadGroupStoreTestService = (
       unhandledStoreCall("findVerifiedInviteTarget"),
     getAccountForRefetch: () => unhandledStoreCall("getAccountForRefetch"),
     getSquadGroupDetail: () => unhandledStoreCall("getSquadGroupDetail"),
+    listAccountAccessGrants: () =>
+      unhandledStoreCall("listAccountAccessGrants"),
     listAvailableCharactersForOwner: () =>
       unhandledStoreCall("listAvailableCharactersForOwner"),
     listGlobalSquadGroups: () => unhandledStoreCall("listGlobalSquadGroups"),
