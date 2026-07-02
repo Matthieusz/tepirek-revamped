@@ -6,17 +6,11 @@ import { heroesRouter } from "./heroes.js";
 import { publicProcedure } from "./procedures.js";
 import { rankingRouter } from "./ranking.js";
 import { skillsRouter } from "./skills.js";
-import { createSquadBuilderRouter } from "./squad-builder.js";
-import type { CreateSquadBuilderRouterOptions } from "./squad-builder.js";
 import { todoRouter } from "./todo.js";
 import { userRouter } from "./user.js";
 import { vaultRouter } from "./vault.js";
 
-export interface CreateAppRouterOptions {
-  readonly squadBuilder?: CreateSquadBuilderRouterOptions;
-}
-
-export const createAppRouter = (options: CreateAppRouterOptions = {}) => ({
+export const createAppRouter = () => ({
   announcement: announcementRouter,
   auction: auctionRouter,
   bet: betRouter,
@@ -25,7 +19,6 @@ export const createAppRouter = (options: CreateAppRouterOptions = {}) => ({
   heroes: heroesRouter,
   ranking: rankingRouter,
   skills: skillsRouter,
-  squadBuilder: createSquadBuilderRouter(options.squadBuilder),
   todo: todoRouter,
   user: userRouter,
   vault: vaultRouter,

@@ -1,8 +1,13 @@
-import * as Schema from "effect/Schema";
 import { Firecrawl } from "firecrawl";
 import type { Document } from "firecrawl";
 
 import { parseFirecrawlCreditCount } from "./firecrawl-config.js";
+import {
+  FirecrawlRequestFailed,
+  FirecrawlResponseNotParseable,
+  RequestCancelled,
+} from "./firecrawl-errors.js";
+import type { FirecrawlScrapeError } from "./firecrawl-errors.js";
 import type { MargonemProfileId } from "./margonem-profile-id.js";
 import { toMargonemProfileUrl } from "./margonem-profile-url.js";
 import type { Redacted } from "./prelude.js";
@@ -23,39 +28,12 @@ export interface FirecrawlScrapeSuccess {
   };
 }
 
-// oxlint-disable max-classes-per-file — Domain error schemas collocated for the Firecrawl interface.
-export class FirecrawlRequestFailed extends Schema.TaggedErrorClass<FirecrawlRequestFailed>()(
-  "FirecrawlRequestFailed",
-  {
-    cause: Schema.Defect(),
-    profileId: Schema.Number,
-  },
-  {}
-) {}
-
-export class FirecrawlResponseNotParseable extends Schema.TaggedErrorClass<FirecrawlResponseNotParseable>()(
-  "FirecrawlResponseNotParseable",
-  {
-    cause: Schema.Defect(),
-    profileId: Schema.Number,
-  },
-  {}
-) {}
-
-export class RequestCancelled extends Schema.TaggedErrorClass<RequestCancelled>()(
-  "RequestCancelled",
-  {
-    cause: Schema.Defect(),
-    profileId: Schema.Number,
-  },
-  {}
-) {}
-
-/** Expected failure returned by the Firecrawl adapter. */
-export type FirecrawlScrapeError =
-  | FirecrawlRequestFailed
-  | FirecrawlResponseNotParseable
-  | RequestCancelled;
+export {
+  FirecrawlRequestFailed,
+  FirecrawlResponseNotParseable,
+  RequestCancelled,
+};
+export type { FirecrawlScrapeError };
 
 /** Firecrawl capability consumed by the profile import preview service. */
 export interface FirecrawlClient {

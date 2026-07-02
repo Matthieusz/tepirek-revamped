@@ -5,9 +5,17 @@ import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { createContext } from "@tepirek-revamped/api/context";
-import { makeApiRuntime } from "@tepirek-revamped/api/effect-app";
+import {
+  makeApiLiveLayer,
+  makeApiRuntime,
+} from "@tepirek-revamped/api/effect-app";
+import { SquadBuilderHttpApi } from "@tepirek-revamped/api/modules/squad-builder/http-api-contract";
+import { SquadBuilderHttpApiLayer } from "@tepirek-revamped/api/modules/squad-builder/http-api-handlers";
 import { createAppRouter } from "@tepirek-revamped/api/routers/index";
 import { auth } from "@tepirek-revamped/auth";
+import * as Layer from "effect/Layer";
+import { HttpRouter, HttpServer } from "effect/unstable/http";
+import { OpenApi } from "effect/unstable/httpapi";
 import { createError, initLogger, log as evlogLog, parseError } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
 import type { BetterAuthInstance } from "evlog/better-auth";
@@ -42,9 +50,23 @@ export const disposeApiEffectRuntime = async (): Promise<void> => {
   await apiEffectRuntime.dispose();
 };
 
-export const appRouter = createAppRouter({
-  squadBuilder: { effectRuntime: apiEffectRuntime.getManagedRuntime() },
+export const appRouter = createAppRouter();
+
+// SAFETY: The production layer immediately provides the squad-builder services
+// and HttpServer services required by the HttpApi layer before it reaches
+// toWebHandler; this narrows the exported web handler to the Hono boundary.
+const squadBuilderHttpApiLayer = SquadBuilderHttpApiLayer.pipe(
+  Layer.provide(makeApiLiveLayer(databaseUrl)),
+  Layer.provide(HttpServer.layerServices)
+) as Layer.Layer<HttpRouter.HttpRouter>;
+
+const squadBuilderHttpApi = HttpRouter.toWebHandler(squadBuilderHttpApiLayer, {
+  disableLogger: true,
 });
+
+export const disposeSquadBuilderHttpApi = async (): Promise<void> => {
+  await squadBuilderHttpApi.dispose();
+};
 
 app.use(evlog());
 
@@ -72,6 +94,28 @@ app.use(
 );
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+
+app.get("/squad-builder/openapi.json", (c) => {
+  c.get("log").set({ httpApi: { docs: "squad-builder-openapi" } });
+  return c.json(OpenApi.fromApi(SquadBuilderHttpApi));
+});
+
+app.use("/squad-builder/*", async (c) => {
+  const requestLog = c.get("log");
+  const { requestId } = requestLog.getContext();
+  const headers = new Headers(c.req.raw.headers);
+
+  if (typeof requestId === "string" && requestId.length > 0) {
+    headers.set("x-request-id", requestId);
+  }
+
+  requestLog.set({ httpApi: { path: c.req.path } });
+  const response = await squadBuilderHttpApi.handler(
+    new Request(c.req.raw, { headers })
+  );
+
+  return response;
+});
 
 // Demo route: shows a request-scoped wide event via the evlog Hono middleware.
 // `c.get('log')` is the Hono equivalent of `useLogger(event)` — the middleware

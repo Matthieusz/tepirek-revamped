@@ -8,6 +8,10 @@ import * as Layer from "effect/Layer";
 import type { EffectAccountImportStore } from "./modules/squad-builder/account-import/effect-account-import-store.js";
 import type { EffectAccountRefetchStore } from "./modules/squad-builder/account-refetch/effect-account-refetch-store.js";
 import type { EffectAccountSharingStore } from "./modules/squad-builder/account-sharing/effect-account-sharing-store.js";
+import { EffectFirecrawlClientLiveLayer } from "./modules/squad-builder/effect-firecrawl-client.js";
+import type { EffectFirecrawlClient } from "./modules/squad-builder/effect-firecrawl-client.js";
+import { EffectFirecrawlConfigLiveLayer } from "./modules/squad-builder/firecrawl-config.js";
+import type { EffectFirecrawlConfig } from "./modules/squad-builder/firecrawl-config.js";
 import { DrizzleEffectSquadBuilderStoresLayer } from "./modules/squad-builder/squad-groups/drizzle-squad-group-store.js";
 import type { EffectSquadGroupStore } from "./modules/squad-builder/squad-groups/squad-group-store.js";
 
@@ -16,8 +20,14 @@ export const apiLayerMemoMap = Layer.makeMemoMapUnsafe();
 
 /** Live Layer for Effect-based API modules. */
 export const makeApiLiveLayer = (databaseUrl: string) =>
-  DrizzleEffectSquadBuilderStoresLayer.pipe(
-    Layer.provide(makeLiveDatabaseLayer(databaseUrl))
+  Layer.mergeAll(
+    DrizzleEffectSquadBuilderStoresLayer.pipe(
+      Layer.provide(makeLiveDatabaseLayer(databaseUrl))
+    ),
+    EffectFirecrawlConfigLiveLayer,
+    EffectFirecrawlClientLiveLayer.pipe(
+      Layer.provide(EffectFirecrawlConfigLiveLayer)
+    )
   );
 
 export interface ApiRuntime<I, S, E> {
@@ -80,7 +90,9 @@ type SquadBuilderServices =
   | EffectSquadGroupStore
   | EffectAccountImportStore
   | EffectAccountRefetchStore
-  | EffectAccountSharingStore;
+  | EffectAccountSharingStore
+  | EffectFirecrawlClient
+  | EffectFirecrawlConfig;
 
 /** Shared runtime factory for Effect-based API modules (raw effect, composite layer). */
 export const makeApiRuntime = (databaseUrl: string) => {
