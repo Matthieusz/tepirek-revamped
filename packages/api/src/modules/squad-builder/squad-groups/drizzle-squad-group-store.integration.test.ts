@@ -40,6 +40,7 @@ import { parseMargonemProfileId } from "../margonem-profile-id";
 import { isOk } from "../result";
 import { CreateSquadGroup } from "./create-squad-group";
 import { EffectRespondToSquadGroupInvite } from "./effect-respond-to-squad-group-invite";
+import { EffectRevokeSquadGroupEditor } from "./effect-revoke-squad-group-editor";
 import { EffectSendSquadGroupEditorInvite } from "./effect-send-squad-group-editor-invite";
 import { ListAvailableSquadCharacters } from "./list-available-squad-characters";
 import { ListGlobalSquadGroups } from "./list-global-squad-groups";
@@ -1015,6 +1016,55 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       .limit(1);
 
     expect(stored?.status).toBe("accepted");
+  });
+
+  it("revokes squad group editor invites", async () => {
+    const owner = await createVerifiedMember({
+      id: "effect-store-squad-revoke-owner",
+      name: "Effect Store Squad Revoke Owner",
+    });
+    const target = await createVerifiedMember({
+      id: "effect-store-squad-revoke-target",
+      name: "Effect Store Squad Revoke Target",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const createService = new CreateSquadGroup();
+    const sendService = new EffectSendSquadGroupEditorInvite(systemClock);
+    const revokeService = new EffectRevokeSquadGroupEditor(systemClock);
+
+    const group = await runtime.runPromise(
+      createService.create({
+        actorUserId: parseTestUserId(owner.id),
+        name: "Effect store squad revoke group",
+      })
+    );
+    const invite = await runtime.runPromise(
+      sendService.send({
+        actorUserId: parseTestUserId(owner.id),
+        groupId: group.groupId,
+        invitedUserId: parseTestUserId(target.id),
+      })
+    );
+    const revoked = await runtime.runPromise(
+      revokeService.revoke({
+        actorUserId: parseTestUserId(owner.id),
+        invitationId: invite.invitationId,
+      })
+    );
+
+    expect(revoked).toMatchObject({
+      invitationId: invite.invitationId,
+      squadGroupId: group.groupId,
+      status: "revoked",
+    });
+
+    const [stored] = await testDb
+      .select({ status: squadGroupInvitation.status })
+      .from(squadGroupInvitation)
+      .where(eq(squadGroupInvitation.id, invite.invitationId))
+      .limit(1);
+
+    expect(stored?.status).toBe("revoked");
   });
 
   it("responds to account access invites", async () => {

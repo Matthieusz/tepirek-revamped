@@ -32,6 +32,7 @@ import { pendingImportIdToNumber } from "../modules/squad-builder/pending-margon
 import { isOk, ok } from "../modules/squad-builder/result";
 import { DrizzleSquadBuilderStore } from "../modules/squad-builder/squad-builder-store";
 import { EffectRespondToSquadGroupInvite } from "../modules/squad-builder/squad-groups/effect-respond-to-squad-group-invite";
+import { EffectRevokeSquadGroupEditor } from "../modules/squad-builder/squad-groups/effect-revoke-squad-group-editor";
 import { EffectSendSquadGroupEditorInvite } from "../modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite";
 import { createVerifiedMember } from "../test/integration/builders";
 import type { TestUser } from "../test/integration/builders";
@@ -996,6 +997,43 @@ describe("squad-builder router Postgres integration", () => {
       invitationId: invite.invitationId,
       squadGroupId: group.groupId,
       status: "accepted",
+    });
+  });
+
+  it("revokes a squad group editor invite through the Effect bridge", async () => {
+    const owner = await createVerifiedMember({
+      id: "router-effect-squad-revoke-owner",
+      name: "Router Effect Squad Revoke Owner",
+    });
+    const recipient = await createVerifiedMember({
+      id: "router-effect-squad-revoke-recipient",
+      name: "Router Effect Squad Revoke Recipient",
+    });
+    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
+    const ownerClient = createSquadBuilderClient(owner, {
+      effectRevokeSquadGroupEditorService: new EffectRevokeSquadGroupEditor(
+        systemClock
+      ),
+      effectRuntime: runtime,
+      effectSendSquadGroupEditorInviteService:
+        new EffectSendSquadGroupEditorInvite(systemClock),
+    });
+    const group = await ownerClient.squadBuilder.createSquadGroup({
+      name: "Router effect squad revoke group",
+    });
+    const invite = await ownerClient.squadBuilder.sendSquadGroupEditorInvite({
+      groupId: group.groupId,
+      invitedUserId: recipient.id,
+    });
+
+    const revoked = await ownerClient.squadBuilder.revokeSquadGroupEditor({
+      invitationId: invite.invitationId,
+    });
+
+    expect(revoked).toMatchObject({
+      invitationId: invite.invitationId,
+      squadGroupId: group.groupId,
+      status: "revoked",
     });
   });
 

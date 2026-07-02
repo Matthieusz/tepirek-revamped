@@ -33,6 +33,7 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
       "respondToAccountAccessInvite",
       "respondToSquadGroupInvite",
       "revokeAccountAccess",
+      "revokeSquadGroupEditor",
       "saveSharedSquadGroupCharacters",
       "saveSquadGroupSnapshot",
       "searchSquadEditorInviteTargets",

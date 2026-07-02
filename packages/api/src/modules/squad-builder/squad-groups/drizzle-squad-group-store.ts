@@ -150,6 +150,7 @@ import type {
   RespondToAccountAccessInviteStoreInput,
   RevokeAccountAccessResult,
   RevokeAccountAccessStoreInput,
+  RevokeSquadGroupEditorStoreInput,
   SetSquadGroupVisibilityStoreInput,
   SharedMargonemAccountSummary,
   SearchSquadEditorInviteTargetsStoreInput,
@@ -196,6 +197,7 @@ type EffectSquadGroupPersistenceOperation =
   | "respondToAccountAccessInvite"
   | "respondToSquadGroupInvite"
   | "revokeAccountAccess"
+  | "revokeSquadGroupEditor"
   | "saveSharedSquadGroupCharacters"
   | "saveSquadGroupSnapshot"
   | "searchSquadEditorInviteTargets"
@@ -2279,6 +2281,121 @@ const respondToSquadGroupInviteWithDatabase =
       );
     });
 
+const revokeSquadGroupEditorWithDatabase =
+  (database: EffectPgDatabase) =>
+  ({
+    invitationId,
+    now,
+    ownerUserId,
+  }: RevokeSquadGroupEditorStoreInput): Effect.Effect<
+    SquadGroupInvitationSummary,
+    | { readonly _tag: "SquadGroupInvitationNotFound" }
+    | ActorDoesNotOwnSquadGroup
+    | {
+        readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
+        readonly currentStatus: SquadGroupInvitationStatus;
+        readonly attempted: string;
+      }
+    | EffectSquadBuilderPersistenceUnavailable,
+    never
+  > =>
+    Effect.gen(function* revokeSquadGroupEditorEffect() {
+      const operation = "revokeSquadGroupEditor" as const;
+      const owner = appUserIdToString(ownerUserId);
+      const invitationIdNumber = squadGroupInvitationIdToNumber(invitationId);
+      const transaction = database.transaction((tx) =>
+        Effect.gen(function* revokeSquadGroupEditorTransaction() {
+          const existingSelect = tx
+            .select({
+              ownerUserId: squadGroup.ownerUserId,
+              status: squadGroupInvitation.status,
+            })
+            .from(squadGroupInvitation)
+            .innerJoin(
+              squadGroup,
+              eq(squadGroup.id, squadGroupInvitation.squadGroupId)
+            )
+            .where(eq(squadGroupInvitation.id, invitationIdNumber))
+            .limit(1);
+          const existingRows = yield* existingSelect as Effect.Effect<
+            readonly {
+              readonly ownerUserId: string;
+              readonly status: string;
+            }[],
+            unknown,
+            never
+          >;
+          const [existing] = existingRows;
+
+          if (existing === undefined) {
+            return { _tag: "SquadGroupInvitationNotFound" as const };
+          }
+
+          if (existing.ownerUserId !== owner) {
+            return { _tag: "ActorDoesNotOwnSquadGroup" as const };
+          }
+
+          const status = parseSquadGroupInvitationStatus(existing.status);
+
+          if (isError(status)) {
+            return yield* failPersistence(operation, status.error);
+          }
+
+          if (!canTransitionSquadGroupInvitation(status.value, "revoked")) {
+            return {
+              _tag: "SquadGroupInvitationTransitionNotAllowed" as const,
+              attempted: "revoked",
+              currentStatus: status.value,
+            };
+          }
+
+          const update = tx
+            .update(squadGroupInvitation)
+            .set({ status: "revoked", updatedAt: now })
+            .where(eq(squadGroupInvitation.id, invitationIdNumber))
+            .returning({ id: squadGroupInvitation.id });
+          const updatedRows = yield* update as Effect.Effect<
+            readonly { readonly id: number }[],
+            unknown,
+            never
+          >;
+          const [updated] = updatedRows;
+
+          if (updated === undefined) {
+            return yield* failPersistence(
+              operation,
+              new Error("Failed to revoke squad group editor invite")
+            );
+          }
+
+          return { _tag: "Revoked" as const };
+        })
+      );
+      const revoked = yield* (
+        transaction as Effect.Effect<
+          | { readonly _tag: "Revoked" }
+          | { readonly _tag: "SquadGroupInvitationNotFound" }
+          | ActorDoesNotOwnSquadGroup
+          | {
+              readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
+              readonly currentStatus: SquadGroupInvitationStatus;
+              readonly attempted: string;
+            },
+          unknown,
+          never
+        >
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
+      if (revoked._tag !== "Revoked") {
+        return yield* Effect.fail(revoked);
+      }
+
+      return yield* loadSquadGroupInvitationSummaryWithDatabase(database)(
+        invitationId,
+        operation
+      );
+    });
+
 const findOwnedAccountForSharingWithDatabase =
   (database: EffectPgDatabase) =>
   ({
@@ -4320,6 +4437,7 @@ export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
       respondToSquadGroupInvite:
         respondToSquadGroupInviteWithDatabase(database),
       revokeAccountAccess: revokeAccountAccessWithDatabase(database),
+      revokeSquadGroupEditor: revokeSquadGroupEditorWithDatabase(database),
       saveSharedSquadGroupCharacters:
         saveSharedSquadGroupCharactersWithDatabase(database),
       saveSquadGroupSnapshot: saveSquadGroupSnapshotWithDatabase(database),

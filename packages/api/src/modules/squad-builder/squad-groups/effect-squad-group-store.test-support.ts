@@ -52,6 +52,7 @@ export const makeEffectSquadGroupStoreTestService = (
     respondToSquadGroupInvite: () =>
       unhandledStoreCall("respondToSquadGroupInvite"),
     revokeAccountAccess: () => unhandledStoreCall("revokeAccountAccess"),
+    revokeSquadGroupEditor: () => unhandledStoreCall("revokeSquadGroupEditor"),
     saveSharedSquadGroupCharacters: () =>
       unhandledStoreCall("saveSharedSquadGroupCharacters"),
     saveSquadGroupSnapshot: () => unhandledStoreCall("saveSquadGroupSnapshot"),
