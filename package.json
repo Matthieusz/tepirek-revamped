@@ -29,13 +29,15 @@
     "db:stop": "turbo -F @tepirek-revamped/db db:stop",
     "db:down": "turbo -F @tepirek-revamped/db db:down",
     "check": "ultracite check",
-    "fix": "ultracite fix"
+    "fix": "ultracite fix",
+    "prepare": "effect-language-service patch"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@effect/language-service": "^0.86.2",
     "@effect/vitest": "catalog:",
     "@tepirek-revamped/config": "workspace:*",
     "@types/bun": "^1.3.14",
