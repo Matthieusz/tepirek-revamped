@@ -28,11 +28,11 @@ import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem
 import { systemClock } from "../account-import/preview-margonem-profile-import.js";
 import { EffectAccountRefetchStore } from "../account-refetch/effect-account-refetch-store.js";
 import { EffectApplyAccountRefetch } from "../account-refetch/effect-apply-account-refetch.js";
-import { EffectListAccountSharingState } from "../account-sharing/effect-list-account-sharing-state.js";
-import { EffectRespondToAccountAccessInvite } from "../account-sharing/effect-respond-to-account-access-invite.js";
-import { EffectRevokeAccountAccess } from "../account-sharing/effect-revoke-account-access.js";
-import { EffectSearchAccountInviteTargets } from "../account-sharing/effect-search-account-invite-targets.js";
-import { EffectSendAccountAccessInvite } from "../account-sharing/effect-send-account-access-invite.js";
+import { use as accountSharingState } from "../account-sharing/effect-list-account-sharing-state.js";
+import { use as accountAccessInviteResponses } from "../account-sharing/effect-respond-to-account-access-invite.js";
+import { use as accountAccessRevocations } from "../account-sharing/effect-revoke-account-access.js";
+import { use as accountInviteTargets } from "../account-sharing/effect-search-account-invite-targets.js";
+import { use as accountAccessInvites } from "../account-sharing/effect-send-account-access-invite.js";
 import { parseAppUserId } from "../app-user-id.js";
 import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
 import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
@@ -41,9 +41,9 @@ import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-d
 import { parseMargonemProfileId } from "../margonem-profile-id.js";
 import { isOk } from "../result.js";
 import { CreateSquadGroup } from "./create-squad-group.js";
-import { EffectRespondToSquadGroupInvite } from "./effect-respond-to-squad-group-invite.js";
-import { EffectRevokeSquadGroupEditor } from "./effect-revoke-squad-group-editor.js";
-import { EffectSendSquadGroupEditorInvite } from "./effect-send-squad-group-editor-invite.js";
+import { use as squadGroupEditorInviteResponses } from "./effect-respond-to-squad-group-invite.js";
+import { use as squadGroupEditorRevocations } from "./effect-revoke-squad-group-editor.js";
+import { use as squadGroupEditorInvites } from "./effect-send-squad-group-editor-invite.js";
 import { ListAvailableSquadCharacters } from "./list-available-squad-characters.js";
 import { ListGlobalSquadGroups } from "./list-global-squad-groups.js";
 import { ListSquadGroups } from "./list-squad-groups.js";
@@ -821,8 +821,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       name: "Effect Store Search Target",
     });
     const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
-    const searchService = new EffectSearchAccountInviteTargets();
-
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -837,7 +835,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     }
 
     const targets = await runtime.runPromise(
-      searchService.search({
+      accountInviteTargets.search({
         accountId: parseTestAccountId(account.id),
         actorUserId: parseTestUserId(owner.id),
         query: "Store Search",
@@ -859,7 +857,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       name: "Effect Store Send Target",
     });
     const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
-    const sendService = new EffectSendAccountAccessInvite();
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -874,7 +871,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     }
 
     const invite = await runtime.runPromise(
-      sendService.send({
+      accountAccessInvites.send({
         accountId: parseTestAccountId(account.id),
         actorUserId: parseTestUserId(owner.id),
         invitedUserId: parseTestUserId(target.id),
@@ -898,7 +895,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
     await expect(
       runtime.runPromise(
-        sendService.send({
+        accountAccessInvites.send({
           accountId: parseTestAccountId(account.id),
           actorUserId: parseTestUserId(owner.id),
           invitedUserId: parseTestUserId(target.id),
@@ -918,8 +915,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     });
     const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const createService = new CreateSquadGroup();
-    const sendService = new EffectSendSquadGroupEditorInvite();
-
     const group = await runtime.runPromise(
       createService.create({
         actorUserId: parseTestUserId(owner.id),
@@ -928,7 +923,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     );
 
     const invite = await runtime.runPromise(
-      sendService.send({
+      squadGroupEditorInvites.send({
         actorUserId: parseTestUserId(owner.id),
         groupId: group.groupId,
         invitedUserId: parseTestUserId(target.id),
@@ -958,7 +953,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
     await expect(
       runtime.runPromise(
-        sendService.send({
+        squadGroupEditorInvites.send({
           actorUserId: parseTestUserId(owner.id),
           groupId: group.groupId,
           invitedUserId: parseTestUserId(target.id),
@@ -980,9 +975,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     });
     const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const createService = new CreateSquadGroup();
-    const sendService = new EffectSendSquadGroupEditorInvite();
-    const respondService = new EffectRespondToSquadGroupInvite();
-
     const group = await runtime.runPromise(
       createService.create({
         actorUserId: parseTestUserId(owner.id),
@@ -990,14 +982,14 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       })
     );
     const invite = await runtime.runPromise(
-      sendService.send({
+      squadGroupEditorInvites.send({
         actorUserId: parseTestUserId(owner.id),
         groupId: group.groupId,
         invitedUserId: parseTestUserId(target.id),
       })
     );
     const accepted = await runtime.runPromise(
-      respondService.respond({
+      squadGroupEditorInviteResponses.respond({
         actorUserId: parseTestUserId(target.id),
         invitationId: invite.invitationId,
         response: "accept",
@@ -1030,9 +1022,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     });
     const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const createService = new CreateSquadGroup();
-    const sendService = new EffectSendSquadGroupEditorInvite();
-    const revokeService = new EffectRevokeSquadGroupEditor();
-
     const group = await runtime.runPromise(
       createService.create({
         actorUserId: parseTestUserId(owner.id),
@@ -1040,14 +1029,14 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       })
     );
     const invite = await runtime.runPromise(
-      sendService.send({
+      squadGroupEditorInvites.send({
         actorUserId: parseTestUserId(owner.id),
         groupId: group.groupId,
         invitedUserId: parseTestUserId(target.id),
       })
     );
     const revoked = await runtime.runPromise(
-      revokeService.revoke({
+      squadGroupEditorRevocations.revoke({
         actorUserId: parseTestUserId(owner.id),
         invitationId: invite.invitationId,
       })
@@ -1078,8 +1067,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       name: "Effect Store Respond Target",
     });
     const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
-    const sendService = new EffectSendAccountAccessInvite();
-    const respondService = new EffectRespondToAccountAccessInvite();
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -1094,14 +1081,14 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     }
 
     const invite = await runtime.runPromise(
-      sendService.send({
+      accountAccessInvites.send({
         accountId: parseTestAccountId(account.id),
         actorUserId: parseTestUserId(owner.id),
         invitedUserId: parseTestUserId(target.id),
       })
     );
     const accepted = await runtime.runPromise(
-      respondService.respond({
+      accountAccessInviteResponses.respond({
         accessId: invite.accessId,
         actorUserId: parseTestUserId(target.id),
         response: "accept",
@@ -1133,7 +1120,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       name: "Effect Store Shared Target",
     });
     const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
-    const sharingStateService = new EffectListAccountSharingState();
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -1165,7 +1151,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     });
 
     const accounts = await runtime.runPromise(
-      sharingStateService.listSharedAccounts({
+      accountSharingState.listSharedAccounts({
         actorUserId: parseTestUserId(target.id),
       })
     );
@@ -1193,7 +1179,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       name: "Effect Store Grants Declined",
     });
     const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
-    const sharingStateService = new EffectListAccountSharingState();
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -1223,7 +1208,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     ]);
 
     const grants = await runtime.runPromise(
-      sharingStateService.listAccountAccessGrants({
+      accountSharingState.listAccountAccessGrants({
         accountId: parseTestAccountId(account.id),
         actorUserId: parseTestUserId(owner.id),
       })
@@ -1247,9 +1232,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       name: "Effect Store Revoke Target",
     });
     const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
-    const sendService = new EffectSendAccountAccessInvite();
-    const respondService = new EffectRespondToAccountAccessInvite();
-    const revokeService = new EffectRevokeAccountAccess();
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -1307,14 +1289,14 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     }
 
     const invite = await runtime.runPromise(
-      sendService.send({
+      accountAccessInvites.send({
         accountId: parseTestAccountId(account.id),
         actorUserId: parseTestUserId(owner.id),
         invitedUserId: parseTestUserId(target.id),
       })
     );
     await runtime.runPromise(
-      respondService.respond({
+      accountAccessInviteResponses.respond({
         accessId: invite.accessId,
         actorUserId: parseTestUserId(target.id),
         response: "accept",
@@ -1329,7 +1311,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     });
 
     const revoked = await runtime.runPromise(
-      revokeService.revoke({
+      accountAccessRevocations.revoke({
         accessId: invite.accessId,
         actorUserId: parseTestUserId(owner.id),
       })

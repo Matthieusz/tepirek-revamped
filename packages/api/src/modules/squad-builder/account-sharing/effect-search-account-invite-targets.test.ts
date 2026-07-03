@@ -1,12 +1,16 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { isOk } from "../result.js";
 import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
 import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
-import { EffectSearchAccountInviteTargets } from "./effect-search-account-invite-targets.js";
+import {
+  layer as accountInviteTargetsLayer,
+  use as accountInviteTargets,
+} from "./effect-search-account-invite-targets.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -58,10 +62,12 @@ it.effect("searches invite targets for an account owner", () => {
       ]);
     },
   });
-  const service = new EffectSearchAccountInviteTargets();
+  const testLayer = accountInviteTargetsLayer.pipe(
+    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+  );
 
   return Effect.gen(function* searchInviteTargetsEffect() {
-    const targets = yield* service.search({
+    const targets = yield* accountInviteTargets.search({
       accountId,
       actorUserId,
       query: "  Target  ",
@@ -74,5 +80,5 @@ it.effect("searches invite targets for an account owner", () => {
         userId: targetUserId,
       },
     ]);
-  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });

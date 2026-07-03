@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 import { parseAccountDisplayName } from "../account-display-name.js";
 import { parseAppUserId } from "../app-user-id.js";
@@ -10,7 +11,10 @@ import { isOk } from "../result.js";
 import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
 import { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
 import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
-import { EffectListAccountSharingState } from "./effect-list-account-sharing-state.js";
+import {
+  layer as accountSharingStateLayer,
+  use as accountSharingState,
+} from "./effect-list-account-sharing-state.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -89,10 +93,14 @@ it.effect("lists incoming account access invites for the actor", () => {
       ]);
     },
   });
-  const service = new EffectListAccountSharingState();
+  const testLayer = accountSharingStateLayer.pipe(
+    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+  );
 
   return Effect.gen(function* listIncomingAccountInvitesEffect() {
-    const invites = yield* service.listIncomingInvites({ actorUserId });
+    const invites = yield* accountSharingState.listIncomingInvites({
+      actorUserId,
+    });
 
     expect(invites).toHaveLength(1);
     expect(invites[0]).toMatchObject({
@@ -102,7 +110,7 @@ it.effect("lists incoming account access invites for the actor", () => {
       ownerUserId,
       status: "pending",
     });
-  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
 
 it.effect("surfaces persistence failures", () => {
@@ -117,15 +125,17 @@ it.effect("surfaces persistence failures", () => {
         })
       ),
   });
-  const service = new EffectListAccountSharingState();
+  const testLayer = accountSharingStateLayer.pipe(
+    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+  );
 
   return Effect.gen(function* listIncomingAccountInvitesEffect() {
     const error = yield* Effect.flip(
-      service.listIncomingInvites({ actorUserId })
+      accountSharingState.listIncomingInvites({ actorUserId })
     );
 
     expect(error._tag).toBe("SquadBuilderPersistenceUnavailable");
-  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
 
 it.effect("lists shared accounts for the actor", () => {
@@ -152,10 +162,14 @@ it.effect("lists shared accounts for the actor", () => {
       ]);
     },
   });
-  const service = new EffectListAccountSharingState();
+  const testLayer = accountSharingStateLayer.pipe(
+    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+  );
 
   return Effect.gen(function* listSharedAccountsEffect() {
-    const accounts = yield* service.listSharedAccounts({ actorUserId });
+    const accounts = yield* accountSharingState.listSharedAccounts({
+      actorUserId,
+    });
 
     expect(accounts).toHaveLength(1);
     expect(accounts[0]).toMatchObject({
@@ -164,7 +178,7 @@ it.effect("lists shared accounts for the actor", () => {
       ownerUserId,
       ownerUserName: "Effect Shared Owner",
     });
-  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
 
 it.effect("lists account access grants for an owned account", () => {
@@ -200,10 +214,12 @@ it.effect("lists account access grants for an owned account", () => {
       ]);
     },
   });
-  const service = new EffectListAccountSharingState();
+  const testLayer = accountSharingStateLayer.pipe(
+    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+  );
 
   return Effect.gen(function* listAccountAccessGrantsEffect() {
-    const grants = yield* service.listAccountAccessGrants({
+    const grants = yield* accountSharingState.listAccountAccessGrants({
       accountId,
       actorUserId,
     });
@@ -214,7 +230,7 @@ it.effect("lists account access grants for an owned account", () => {
       invitedUserId,
       status: "accepted",
     });
-  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
 
 it.effect(
@@ -232,14 +248,16 @@ it.effect(
           profileId: parseTestProfileId(),
         }),
     });
-    const service = new EffectListAccountSharingState();
+    const testLayer = accountSharingStateLayer.pipe(
+      Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+    );
 
     return Effect.gen(function* listAccountAccessGrantsForbiddenEffect() {
       const error = yield* Effect.flip(
-        service.listAccountAccessGrants({ accountId, actorUserId })
+        accountSharingState.listAccountAccessGrants({ accountId, actorUserId })
       );
 
       expect(error._tag).toBe("ActorDoesNotOwnMargonemAccount");
-    }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
+    }).pipe(Effect.provide(testLayer));
   }
 );

@@ -1,10 +1,14 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { isOk } from "../result.js";
 import { parseSquadGroupId } from "../squad-group-id.js";
-import { EffectSearchSquadEditorInviteTargets } from "./effect-search-squad-editor-invite-targets.js";
+import {
+  layer as squadEditorInviteTargetsLayer,
+  use as squadEditorInviteTargets,
+} from "./effect-search-squad-editor-invite-targets.js";
 import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
 import { EffectSquadGroupStore } from "./squad-group-store.js";
 
@@ -59,10 +63,12 @@ it.effect("searches squad editor invite targets for a group owner", () => {
       ]);
     },
   });
-  const service = new EffectSearchSquadEditorInviteTargets();
+  const testLayer = squadEditorInviteTargetsLayer.pipe(
+    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+  );
 
   return Effect.gen(function* searchSquadEditorInviteTargetsEffect() {
-    const targets = yield* service.search({
+    const targets = yield* squadEditorInviteTargets.search({
       actorUserId,
       groupId,
       query: "  Target  ",
@@ -75,5 +81,5 @@ it.effect("searches squad editor invite targets for a group owner", () => {
         userId: targetUserId,
       },
     ]);
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });

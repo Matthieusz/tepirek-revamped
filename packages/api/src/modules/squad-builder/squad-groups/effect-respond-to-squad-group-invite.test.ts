@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
@@ -7,7 +8,10 @@ import { isOk } from "../result.js";
 import { parseSquadGroupId } from "../squad-group-id.js";
 import { parseSquadGroupInvitationId } from "../squad-group-invitation-id.js";
 import { parseSquadGroupName } from "../squad-name.js";
-import { EffectRespondToSquadGroupInvite } from "./effect-respond-to-squad-group-invite.js";
+import {
+  layer as squadGroupEditorInviteResponsesLayer,
+  use as squadGroupEditorInviteResponses,
+} from "./effect-respond-to-squad-group-invite.js";
 import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
 import { ActorIsNotSquadGroupInviteRecipient } from "./squad-group-errors.js";
 import { EffectSquadGroupStore } from "./squad-group-store.js";
@@ -84,11 +88,13 @@ it.effect("accepts a squad group editor invite as the invited user", () => {
       });
     },
   });
-  const service = new EffectRespondToSquadGroupInvite();
+  const testLayer = squadGroupEditorInviteResponsesLayer.pipe(
+    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+  );
 
   return Effect.gen(function* respondToSquadGroupInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* service.respond({
+    const invite = yield* squadGroupEditorInviteResponses.respond({
       actorUserId,
       invitationId,
       response: "accept",
@@ -99,7 +105,7 @@ it.effect("accepts a squad group editor invite as the invited user", () => {
       squadGroupId,
       status: "accepted",
     });
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
 
 it.effect("surfaces squad invite recipient authorization failures", () => {
@@ -108,12 +114,14 @@ it.effect("surfaces squad invite recipient authorization failures", () => {
   const store = makeEffectSquadGroupStoreTestService({
     respondToSquadGroupInvite: () => new ActorIsNotSquadGroupInviteRecipient(),
   });
-  const service = new EffectRespondToSquadGroupInvite();
+  const testLayer = squadGroupEditorInviteResponsesLayer.pipe(
+    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+  );
 
   return Effect.gen(function* respondToSquadGroupInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      service.respond({
+      squadGroupEditorInviteResponses.respond({
         actorUserId,
         invitationId,
         response: "decline",
@@ -121,5 +129,5 @@ it.effect("surfaces squad invite recipient authorization failures", () => {
     );
 
     expect(error._tag).toBe("ActorIsNotSquadGroupInviteRecipient");
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });

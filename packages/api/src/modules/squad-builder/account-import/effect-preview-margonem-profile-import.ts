@@ -1,5 +1,4 @@
 import * as ClockRuntime from "effect/Clock";
-import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
 import { EffectFirecrawlClient } from "../effect-firecrawl-client.js";
@@ -21,28 +20,18 @@ import {
 import { isError } from "../result.js";
 import { EffectAccountImportStore } from "./effect-account-import-store.js";
 import { profileAccessStateToDuplicateError } from "./preview-margonem-profile-import.js";
-import type {
-  PreviewMargonemProfileImportError,
-  PreviewMargonemProfileImportInput,
-  PreviewMargonemProfileImportOutput,
-} from "./preview-margonem-profile-import.js";
+import type { PreviewMargonemProfileImportInput } from "./preview-margonem-profile-import.js";
 
 /** Effect service module that previews one Margonem profile import without saving it. */
 export class EffectPreviewMargonemProfileImport {
   readonly serviceName = "EffectPreviewMargonemProfileImport";
 
   /** Preview a Margonem profile import without saving the account. */
-  preview(
-    input: PreviewMargonemProfileImportInput,
-    options: { readonly signal?: AbortSignal } = {}
-  ): Effect<
-    PreviewMargonemProfileImportOutput,
-    PreviewMargonemProfileImportError,
-    EffectAccountImportStore | EffectFirecrawlClient | EffectFirecrawlConfig
-  > {
-    void this.serviceName;
-
-    return EffectRuntime.gen(function* previewEffect() {
+  readonly preview = EffectRuntime.fn("AccountImport.previewProfile")(
+    function* previewEffect(
+      input: PreviewMargonemProfileImportInput,
+      options: { readonly signal?: AbortSignal } = {}
+    ) {
       const config = yield* EffectFirecrawlConfig;
       const firecrawl = yield* EffectFirecrawlClient;
       const parsedProfileId = parseMargonemProfileUrl(input.profileUrl);
@@ -139,6 +128,6 @@ export class EffectPreviewMargonemProfileImport {
         profileId,
         suggestedAccountName: parsedHtml.value.suggestedAccountName,
       };
-    });
-  }
+    }
+  );
 }

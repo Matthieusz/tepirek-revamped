@@ -1,6 +1,9 @@
+import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
+import * as Layer from "effect/Layer";
 
+import { serviceUse } from "../../../effect/service-use.js";
 import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
 import type { AccountInviteTarget } from "./account-sharing-store.js";
@@ -35,40 +38,45 @@ const parseAccountInviteTargetQuery = (
   return EffectRuntime.succeed(trimmed);
 };
 
-/** Effect service module that searches verified users an owner may invite. */
-export class EffectSearchAccountInviteTargets {
-  private readonly serviceName = "EffectSearchAccountInviteTargets";
-
+export interface Interface {
   /** Search verified users the account owner may invite. */
-  search(
+  readonly search: (
     input: SearchAccountInviteTargetsInput
-  ): Effect<
-    readonly AccountInviteTarget[],
-    AccountSharingError,
-    EffectAccountSharingStore
-  > {
-    void this.serviceName;
-
-    return EffectRuntime.gen(function* searchAccountInviteTargetsEffect() {
-      const query = yield* parseAccountInviteTargetQuery(input.query);
-      const owned = yield* EffectAccountSharingStore.use((store) =>
-        store.findOwnedAccountForSharing({
-          accountId: input.accountId,
-          actorUserId: input.actorUserId,
-        })
-      );
-
-      if (owned.ownerUserId !== input.actorUserId) {
-        return yield* new ActorDoesNotOwnMargonemAccount();
-      }
-
-      return yield* EffectAccountSharingStore.use((store) =>
-        store.searchInviteTargets({
-          accountId: input.accountId,
-          actorUserId: input.actorUserId,
-          query,
-        })
-      );
-    });
-  }
+  ) => Effect<readonly AccountInviteTarget[], AccountSharingError>;
 }
+
+/** Effect service module that searches verified users an owner may invite. */
+export class Service extends Context.Service<Service, Interface>()(
+  "@tepirek-revamped/api/squad-builder/AccountInviteTargets"
+) {}
+
+export const use = serviceUse(Service);
+
+export const layer = Layer.effect(
+  Service,
+  EffectRuntime.gen(function* makeAccountInviteTargetsService() {
+    const store = yield* EffectAccountSharingStore;
+
+    return {
+      search: EffectRuntime.fn("AccountInviteTargets.search")(
+        function* search(input) {
+          const query = yield* parseAccountInviteTargetQuery(input.query);
+          const owned = yield* store.findOwnedAccountForSharing({
+            accountId: input.accountId,
+            actorUserId: input.actorUserId,
+          });
+
+          if (owned.ownerUserId !== input.actorUserId) {
+            return yield* new ActorDoesNotOwnMargonemAccount();
+          }
+
+          return yield* store.searchInviteTargets({
+            accountId: input.accountId,
+            actorUserId: input.actorUserId,
+            query,
+          });
+        }
+      ),
+    };
+  })
+);

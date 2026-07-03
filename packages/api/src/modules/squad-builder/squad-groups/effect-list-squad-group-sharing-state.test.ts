@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { isOk } from "../result.js";
@@ -7,7 +8,10 @@ import { parseSquadGroupId } from "../squad-group-id.js";
 import { parseSquadGroupInvitationId } from "../squad-group-invitation-id.js";
 import { emptySquadGroupListFilters } from "../squad-group-list-filters.js";
 import { parseSquadGroupName } from "../squad-name.js";
-import { EffectListSquadGroupSharingState } from "./effect-list-squad-group-sharing-state.js";
+import {
+  layer as squadGroupSharingStateLayer,
+  use as squadGroupSharingState,
+} from "./effect-list-squad-group-sharing-state.js";
 import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
 import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import { EffectSquadGroupStore } from "./squad-group-store.js";
@@ -77,10 +81,14 @@ it.effect("lists incoming squad group invites for the actor", () => {
       ]);
     },
   });
-  const service = new EffectListSquadGroupSharingState();
+  const testLayer = squadGroupSharingStateLayer.pipe(
+    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+  );
 
   return Effect.gen(function* listIncomingSquadGroupInvitesEffect() {
-    const invites = yield* service.listIncomingInvites({ actorUserId });
+    const invites = yield* squadGroupSharingState.listIncomingInvites({
+      actorUserId,
+    });
 
     expect(invites).toHaveLength(1);
     expect(invites[0]).toMatchObject({
@@ -89,7 +97,7 @@ it.effect("lists incoming squad group invites for the actor", () => {
       squadGroupId,
       status: "pending",
     });
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
 
 it.effect("surfaces squad group sharing persistence failures", () => {
@@ -104,15 +112,17 @@ it.effect("surfaces squad group sharing persistence failures", () => {
         })
       ),
   });
-  const service = new EffectListSquadGroupSharingState();
+  const testLayer = squadGroupSharingStateLayer.pipe(
+    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+  );
 
   return Effect.gen(function* listIncomingSquadGroupInvitesFailureEffect() {
     const error = yield* Effect.flip(
-      service.listIncomingInvites({ actorUserId })
+      squadGroupSharingState.listIncomingInvites({ actorUserId })
     );
 
     expect(error._tag).toBe("SquadBuilderPersistenceUnavailable");
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
 
 it.effect("lists shared squad groups for the actor", () => {
@@ -141,10 +151,14 @@ it.effect("lists shared squad groups for the actor", () => {
       ]);
     },
   });
-  const service = new EffectListSquadGroupSharingState();
+  const testLayer = squadGroupSharingStateLayer.pipe(
+    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+  );
 
   return Effect.gen(function* listSharedSquadGroupsEffect() {
-    const groups = yield* service.listSharedGroups({ actorUserId });
+    const groups = yield* squadGroupSharingState.listSharedGroups({
+      actorUserId,
+    });
 
     expect(groups).toHaveLength(1);
     expect(groups[0]).toMatchObject({
@@ -153,7 +167,7 @@ it.effect("lists shared squad groups for the actor", () => {
       ownerUserId,
       squadCount: 2,
     });
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
 
 it.effect("lists squad group editor grants", () => {
@@ -179,10 +193,15 @@ it.effect("lists squad group editor grants", () => {
       ]);
     },
   });
-  const service = new EffectListSquadGroupSharingState();
+  const testLayer = squadGroupSharingStateLayer.pipe(
+    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+  );
 
   return Effect.gen(function* listSquadGroupEditorGrantsEffect() {
-    const grants = yield* service.listEditorGrants({ actorUserId, groupId });
+    const grants = yield* squadGroupSharingState.listEditorGrants({
+      actorUserId,
+      groupId,
+    });
 
     expect(grants).toHaveLength(1);
     expect(grants[0]).toMatchObject({
@@ -190,7 +209,7 @@ it.effect("lists squad group editor grants", () => {
       status: "accepted",
       userId,
     });
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
 
 it.effect("counts pending squad group invites", () => {
@@ -202,11 +221,15 @@ it.effect("counts pending squad group invites", () => {
       return Effect.succeed(2);
     },
   });
-  const service = new EffectListSquadGroupSharingState();
+  const testLayer = squadGroupSharingStateLayer.pipe(
+    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+  );
 
   return Effect.gen(function* getPendingSquadGroupInviteCountEffect() {
-    const count = yield* service.countPendingInvites({ actorUserId });
+    const count = yield* squadGroupSharingState.countPendingInvites({
+      actorUserId,
+    });
 
     expect(count).toBe(2);
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });

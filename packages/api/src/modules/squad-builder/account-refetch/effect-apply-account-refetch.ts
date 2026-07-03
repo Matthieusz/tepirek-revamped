@@ -1,12 +1,7 @@
 import * as Clock from "effect/Clock";
-import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
-import type {
-  ApplyAccountRefetchError,
-  ApplyAccountRefetchInput,
-  ApplyAccountRefetchOutput,
-} from "./apply-account-refetch.js";
+import type { ApplyAccountRefetchInput } from "./apply-account-refetch.js";
 import { EffectAccountRefetchStore } from "./effect-account-refetch-store.js";
 
 /** Effect service module that applies a saved pending account refetch. */
@@ -16,16 +11,12 @@ export class EffectApplyAccountRefetch {
   );
 
   /** Apply a previously previewed account refetch to account and character storage. */
-  readonly apply = (
-    input: ApplyAccountRefetchInput
-  ): Effect<
-    ApplyAccountRefetchOutput,
-    ApplyAccountRefetchError,
-    EffectAccountRefetchStore
-  > => {
-    const { currentDate } = this;
-
-    return EffectRuntime.gen(function* applyAccountRefetchEffect() {
+  readonly apply = EffectRuntime.fn("AccountRefetch.apply")(
+    function* applyAccountRefetchEffect(
+      this: EffectApplyAccountRefetch,
+      input: ApplyAccountRefetchInput
+    ) {
+      const { currentDate } = this;
       const now = yield* currentDate;
       const pending = yield* EffectAccountRefetchStore.use((store) =>
         store.findPendingRefetchForApply({
@@ -58,6 +49,6 @@ export class EffectApplyAccountRefetch {
       );
 
       return applied;
-    });
-  };
+    }
+  );
 }

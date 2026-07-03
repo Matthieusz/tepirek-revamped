@@ -1,5 +1,4 @@
 import * as Clock from "effect/Clock";
-import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
 import { parseAccountDisplayName } from "../account-display-name.js";
@@ -9,7 +8,6 @@ import type { PendingMargonemAccountImportId } from "../pending-margonem-account
 import { isError } from "../result.js";
 import type {
   DuplicateMargonemAccountError,
-  OwnedMargonemAccountSummary,
   PendingMargonemAccountImportNotFound,
   SquadBuilderPersistenceUnavailable,
 } from "./account-import-store.js";
@@ -36,16 +34,12 @@ export class EffectConfirmOwnedAccountImport {
   );
 
   /** Save a previously previewed Margonem account and its Jaruna characters. */
-  readonly confirm = (
-    input: EffectConfirmOwnedAccountImportInput
-  ): Effect<
-    OwnedMargonemAccountSummary,
-    EffectConfirmOwnedAccountImportError,
-    EffectAccountImportStore
-  > => {
-    const { currentDate } = this;
-
-    return EffectRuntime.gen(function* confirmOwnedAccountImportEffect() {
+  readonly confirm = EffectRuntime.fn("AccountImport.confirm")(
+    function* confirmOwnedAccountImportEffect(
+      this: EffectConfirmOwnedAccountImport,
+      input: EffectConfirmOwnedAccountImportInput
+    ) {
+      const { currentDate } = this;
       const displayName = parseAccountDisplayName(input.displayName);
 
       if (isError(displayName)) {
@@ -68,6 +62,6 @@ export class EffectConfirmOwnedAccountImport {
           pending,
         })
       );
-    });
-  };
+    }
+  );
 }

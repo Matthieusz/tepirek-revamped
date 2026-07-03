@@ -9,11 +9,26 @@ import { EffectPreviewMargonemProfileImport } from "./account-import/effect-prev
 import { EffectPreviewOwnedAccountImports } from "./account-import/effect-preview-owned-account-imports.js";
 import { EffectApplyAccountRefetch } from "./account-refetch/effect-apply-account-refetch.js";
 import { EffectPreviewAccountRefetch } from "./account-refetch/effect-preview-account-refetch.js";
-import { EffectListAccountSharingState } from "./account-sharing/effect-list-account-sharing-state.js";
-import { EffectRespondToAccountAccessInvite } from "./account-sharing/effect-respond-to-account-access-invite.js";
-import { EffectRevokeAccountAccess } from "./account-sharing/effect-revoke-account-access.js";
-import { EffectSearchAccountInviteTargets } from "./account-sharing/effect-search-account-invite-targets.js";
-import { EffectSendAccountAccessInvite } from "./account-sharing/effect-send-account-access-invite.js";
+import {
+  layer as accountSharingStateLayer,
+  use as accountSharingState,
+} from "./account-sharing/effect-list-account-sharing-state.js";
+import {
+  layer as accountAccessInviteResponsesLayer,
+  use as accountAccessInviteResponses,
+} from "./account-sharing/effect-respond-to-account-access-invite.js";
+import {
+  layer as accountAccessRevocationsLayer,
+  use as accountAccessRevocations,
+} from "./account-sharing/effect-revoke-account-access.js";
+import {
+  layer as accountInviteTargetsLayer,
+  use as accountInviteTargets,
+} from "./account-sharing/effect-search-account-invite-targets.js";
+import {
+  layer as accountAccessInvitesLayer,
+  use as accountAccessInvites,
+} from "./account-sharing/effect-send-account-access-invite.js";
 import type { AppUserId } from "./app-user-id.js";
 import { SquadBuilderHttpApi } from "./http-api-contract.js";
 import type { MargonemAccountAccessId } from "./margonem-account-access-id.js";
@@ -22,11 +37,26 @@ import type { PendingMargonemAccountImportId } from "./pending-margonem-account-
 import type { PendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id.js";
 import type { SquadGroupId } from "./squad-group-id.js";
 import type { SquadGroupInvitationId } from "./squad-group-invitation-id.js";
-import { EffectListSquadGroupSharingState } from "./squad-groups/effect-list-squad-group-sharing-state.js";
-import { EffectRespondToSquadGroupInvite } from "./squad-groups/effect-respond-to-squad-group-invite.js";
-import { EffectRevokeSquadGroupEditor } from "./squad-groups/effect-revoke-squad-group-editor.js";
-import { EffectSearchSquadEditorInviteTargets } from "./squad-groups/effect-search-squad-editor-invite-targets.js";
-import { EffectSendSquadGroupEditorInvite } from "./squad-groups/effect-send-squad-group-editor-invite.js";
+import {
+  layer as squadGroupSharingStateLayer,
+  use as squadGroupSharingState,
+} from "./squad-groups/effect-list-squad-group-sharing-state.js";
+import {
+  layer as squadGroupEditorInviteResponsesLayer,
+  use as squadGroupEditorInviteResponses,
+} from "./squad-groups/effect-respond-to-squad-group-invite.js";
+import {
+  layer as squadGroupEditorRevocationsLayer,
+  use as squadGroupEditorRevocations,
+} from "./squad-groups/effect-revoke-squad-group-editor.js";
+import {
+  layer as squadEditorInviteTargetsLayer,
+  use as squadEditorInviteTargets,
+} from "./squad-groups/effect-search-squad-editor-invite-targets.js";
+import {
+  layer as squadGroupEditorInvitesLayer,
+  use as squadGroupEditorInvites,
+} from "./squad-groups/effect-send-squad-group-editor-invite.js";
 
 const toAppUserId = (value: string): AppUserId =>
   // SAFETY: HttpApi decoded this value with AppUserIdSchema before the handler runs.
@@ -143,18 +173,12 @@ const accountRefetchHandlers = HttpApiBuilder.group(
 const accountSharingHandlers = HttpApiBuilder.group(
   SquadBuilderHttpApi,
   "squadBuilderAccountSharing",
-  (handlers) => {
-    const searchTargets = new EffectSearchAccountInviteTargets();
-    const sendInvite = new EffectSendAccountAccessInvite();
-    const respondInvite = new EffectRespondToAccountAccessInvite();
-    const revokeAccess = new EffectRevokeAccountAccess();
-    const listState = new EffectListAccountSharingState();
-
-    return handlers
+  (handlers) =>
+    handlers
       .handle("searchAccountInviteTargets", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          searchTargets.search({
+          accountInviteTargets.search({
             accountId: toMargonemAccountId(payload.accountId),
             actorUserId: toAppUserId(payload.actorUserId),
             query: payload.query,
@@ -164,7 +188,7 @@ const accountSharingHandlers = HttpApiBuilder.group(
       .handle("sendAccountAccessInvite", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          sendInvite.send({
+          accountAccessInvites.send({
             accountId: toMargonemAccountId(payload.accountId),
             actorUserId: toAppUserId(payload.actorUserId),
             invitedUserId: toAppUserId(payload.invitedUserId),
@@ -174,7 +198,7 @@ const accountSharingHandlers = HttpApiBuilder.group(
       .handle("respondToAccountAccessInvite", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          respondInvite.respond({
+          accountAccessInviteResponses.respond({
             accessId: toMargonemAccountAccessId(payload.accessId),
             actorUserId: toAppUserId(payload.actorUserId),
             response: payload.response,
@@ -184,7 +208,7 @@ const accountSharingHandlers = HttpApiBuilder.group(
       .handle("revokeAccountAccess", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          revokeAccess.revoke({
+          accountAccessRevocations.revoke({
             accessId: toMargonemAccountAccessId(payload.accessId),
             actorUserId: toAppUserId(payload.actorUserId),
           })
@@ -193,7 +217,7 @@ const accountSharingHandlers = HttpApiBuilder.group(
       .handle("listIncomingAccountInvites", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          listState.listIncomingInvites({
+          accountSharingState.listIncomingInvites({
             actorUserId: toAppUserId(payload.actorUserId),
           })
         )
@@ -201,7 +225,7 @@ const accountSharingHandlers = HttpApiBuilder.group(
       .handle("listSharedAccounts", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          listState.listSharedAccounts({
+          accountSharingState.listSharedAccounts({
             actorUserId: toAppUserId(payload.actorUserId),
           })
         )
@@ -209,30 +233,23 @@ const accountSharingHandlers = HttpApiBuilder.group(
       .handle("listAccountAccessGrants", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          listState.listAccountAccessGrants({
+          accountSharingState.listAccountAccessGrants({
             accountId: toMargonemAccountId(payload.accountId),
             actorUserId: toAppUserId(payload.actorUserId),
           })
         )
-      );
-  }
+      )
 );
 
 const squadGroupSharingHandlers = HttpApiBuilder.group(
   SquadBuilderHttpApi,
   "squadBuilderSquadGroupSharing",
-  (handlers) => {
-    const searchTargets = new EffectSearchSquadEditorInviteTargets();
-    const sendInvite = new EffectSendSquadGroupEditorInvite();
-    const respondInvite = new EffectRespondToSquadGroupInvite();
-    const revokeEditor = new EffectRevokeSquadGroupEditor();
-    const listState = new EffectListSquadGroupSharingState();
-
-    return handlers
+  (handlers) =>
+    handlers
       .handle("searchSquadEditorInviteTargets", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          searchTargets.search({
+          squadEditorInviteTargets.search({
             actorUserId: toAppUserId(payload.actorUserId),
             groupId: toSquadGroupId(payload.groupId),
             query: payload.query,
@@ -242,7 +259,7 @@ const squadGroupSharingHandlers = HttpApiBuilder.group(
       .handle("sendSquadGroupEditorInvite", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          sendInvite.send({
+          squadGroupEditorInvites.send({
             actorUserId: toAppUserId(payload.actorUserId),
             groupId: toSquadGroupId(payload.groupId),
             invitedUserId: toAppUserId(payload.invitedUserId),
@@ -252,7 +269,7 @@ const squadGroupSharingHandlers = HttpApiBuilder.group(
       .handle("respondToSquadGroupInvite", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          respondInvite.respond({
+          squadGroupEditorInviteResponses.respond({
             actorUserId: toAppUserId(payload.actorUserId),
             invitationId: toSquadGroupInvitationId(payload.invitationId),
             response: payload.response,
@@ -262,7 +279,7 @@ const squadGroupSharingHandlers = HttpApiBuilder.group(
       .handle("revokeSquadGroupEditor", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          revokeEditor.revoke({
+          squadGroupEditorRevocations.revoke({
             actorUserId: toAppUserId(payload.actorUserId),
             invitationId: toSquadGroupInvitationId(payload.invitationId),
           })
@@ -271,7 +288,7 @@ const squadGroupSharingHandlers = HttpApiBuilder.group(
       .handle("listIncomingSquadGroupInvites", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          listState.listIncomingInvites({
+          squadGroupSharingState.listIncomingInvites({
             actorUserId: toAppUserId(payload.actorUserId),
           })
         )
@@ -279,7 +296,7 @@ const squadGroupSharingHandlers = HttpApiBuilder.group(
       .handle("listSharedSquadGroups", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          listState.listSharedGroups({
+          squadGroupSharingState.listSharedGroups({
             actorUserId: toAppUserId(payload.actorUserId),
           })
         )
@@ -287,7 +304,7 @@ const squadGroupSharingHandlers = HttpApiBuilder.group(
       .handle("listSquadGroupEditorGrants", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          listState.listEditorGrants({
+          squadGroupSharingState.listEditorGrants({
             actorUserId: toAppUserId(payload.actorUserId),
             groupId: toSquadGroupId(payload.groupId),
           })
@@ -296,12 +313,11 @@ const squadGroupSharingHandlers = HttpApiBuilder.group(
       .handle("countPendingSquadGroupInvites", ({ payload, request }) =>
         withRequestCorrelation(
           request,
-          listState.countPendingInvites({
+          squadGroupSharingState.countPendingInvites({
             actorUserId: toAppUserId(payload.actorUserId),
           })
         )
-      );
-  }
+      )
 );
 
 export const SquadBuilderHttpApiHandlers = Layer.mergeAll(
@@ -309,6 +325,21 @@ export const SquadBuilderHttpApiHandlers = Layer.mergeAll(
   accountRefetchHandlers,
   accountSharingHandlers,
   squadGroupSharingHandlers
+).pipe(
+  Layer.provide(
+    Layer.mergeAll(
+      accountInviteTargetsLayer,
+      accountAccessInvitesLayer,
+      accountAccessInviteResponsesLayer,
+      accountAccessRevocationsLayer,
+      accountSharingStateLayer,
+      squadEditorInviteTargetsLayer,
+      squadGroupEditorInvitesLayer,
+      squadGroupEditorInviteResponsesLayer,
+      squadGroupEditorRevocationsLayer,
+      squadGroupSharingStateLayer
+    )
+  )
 );
 
 export const SquadBuilderHttpApiLayer = HttpApiBuilder.layer(

@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
@@ -9,7 +10,10 @@ import { isOk } from "../result.js";
 import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
 import { ActorIsNotInviteRecipient } from "../squad-groups/squad-group-errors.js";
 import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
-import { EffectRespondToAccountAccessInvite } from "./effect-respond-to-account-access-invite.js";
+import {
+  layer as accountAccessInviteResponsesLayer,
+  use as accountAccessInviteResponses,
+} from "./effect-respond-to-account-access-invite.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -74,11 +78,13 @@ it.effect("accepts an account access invite as the invited user", () => {
       });
     },
   });
-  const service = new EffectRespondToAccountAccessInvite();
+  const testLayer = accountAccessInviteResponsesLayer.pipe(
+    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+  );
 
   return Effect.gen(function* respondToAccountAccessInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* service.respond({
+    const invite = yield* accountAccessInviteResponses.respond({
       accessId,
       actorUserId,
       response: "accept",
@@ -89,7 +95,7 @@ it.effect("accepts an account access invite as the invited user", () => {
       invitedUserId: actorUserId,
       status: "accepted",
     });
-  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
 
 it.effect("surfaces invite recipient authorization failures", () => {
@@ -98,12 +104,14 @@ it.effect("surfaces invite recipient authorization failures", () => {
   const store = makeEffectAccountSharingStoreTestService({
     respondToAccountAccessInvite: () => new ActorIsNotInviteRecipient(),
   });
-  const service = new EffectRespondToAccountAccessInvite();
+  const testLayer = accountAccessInviteResponsesLayer.pipe(
+    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+  );
 
   return Effect.gen(function* respondToAccountAccessInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      service.respond({
+      accountAccessInviteResponses.respond({
         accessId,
         actorUserId,
         response: "decline",
@@ -111,5 +119,5 @@ it.effect("surfaces invite recipient authorization failures", () => {
     );
 
     expect(error._tag).toBe("ActorIsNotInviteRecipient");
-  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });

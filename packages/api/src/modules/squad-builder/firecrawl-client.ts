@@ -10,8 +10,6 @@ import {
 import type { FirecrawlScrapeError } from "./firecrawl-errors.js";
 import type { MargonemProfileId } from "./margonem-profile-id.js";
 import { toMargonemProfileUrl } from "./margonem-profile-url.js";
-import type { Redacted } from "./prelude.js";
-import { unwrapRedacted } from "./prelude.js";
 import { err, isError, ok } from "./result.js";
 import type { Result } from "./result.js";
 
@@ -103,9 +101,8 @@ const parseFirecrawlDocument = (
 export class FirecrawlSdkClient implements FirecrawlClient {
   private readonly firecrawl: Firecrawl;
 
-  constructor(apiKey: Redacted<string>) {
-    // SAFETY: Unwrap only at the SDK boundary where the raw value is required.
-    this.firecrawl = new Firecrawl({ apiKey: unwrapRedacted(apiKey) });
+  constructor(apiKey: string) {
+    this.firecrawl = new Firecrawl({ apiKey });
   }
 
   /** Scrape canonical Margonem profile HTML through Firecrawl. */

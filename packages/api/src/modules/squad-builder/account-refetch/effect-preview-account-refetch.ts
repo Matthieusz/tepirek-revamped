@@ -1,5 +1,4 @@
 import * as ClockRuntime from "effect/Clock";
-import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 
 import { EffectFirecrawlClient } from "../effect-firecrawl-client.js";
@@ -18,11 +17,7 @@ import { parseMargonemProfileHtml } from "../margonem-profile-html-parser.js";
 import { toMargonemProfileUrl } from "../margonem-profile-url.js";
 import { isError } from "../result.js";
 import { EffectAccountRefetchStore } from "./effect-account-refetch-store.js";
-import type {
-  PreviewAccountRefetchError,
-  PreviewAccountRefetchInput,
-  PreviewAccountRefetchOutput,
-} from "./preview-account-refetch.js";
+import type { PreviewAccountRefetchInput } from "./preview-account-refetch.js";
 import { pendingRefetchPolicy } from "./preview-account-refetch.js";
 
 const addMinutes = (date: Date, minutes: number): Date =>
@@ -33,17 +28,11 @@ export class EffectPreviewAccountRefetch {
   readonly serviceName = "EffectPreviewAccountRefetch";
 
   /** Fetch latest account HTML and store a pending refetch diff for owner confirmation. */
-  preview(
-    input: PreviewAccountRefetchInput,
-    options: { readonly signal?: AbortSignal } = {}
-  ): Effect<
-    PreviewAccountRefetchOutput,
-    PreviewAccountRefetchError,
-    EffectAccountRefetchStore | EffectFirecrawlClient | EffectFirecrawlConfig
-  > {
-    void this.serviceName;
-
-    return EffectRuntime.gen(function* previewAccountRefetchEffect() {
+  readonly preview = EffectRuntime.fn("AccountRefetch.preview")(
+    function* previewAccountRefetchEffect(
+      input: PreviewAccountRefetchInput,
+      options: { readonly signal?: AbortSignal } = {}
+    ) {
       const config = yield* EffectFirecrawlConfig;
       const firecrawl = yield* EffectFirecrawlClient;
       const account = yield* EffectAccountRefetchStore.use((store) =>
@@ -148,6 +137,6 @@ export class EffectPreviewAccountRefetch {
         profileId: account.profileId,
         refetchPreviewId: pending.id,
       };
-    });
-  }
+    }
+  );
 }

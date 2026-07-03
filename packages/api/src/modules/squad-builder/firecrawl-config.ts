@@ -1,10 +1,11 @@
+import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
+import type { Redacted } from "effect/Redacted";
+import * as Schema from "effect/Schema";
 
-import type { Redacted } from "./prelude.js";
-import { Redacted as redact } from "./prelude.js";
-import { err, isError, ok } from "./result.js";
+import { err, ok } from "./result.js";
 import type { Result } from "./result.js";
 
 /** Number of Firecrawl credits consumed by a scrape. */
@@ -45,50 +46,28 @@ export const parseFirecrawlCreditCount = (
   return ok(input as FirecrawlCreditCount);
 };
 
-/** Parse Firecrawl config from process-like environment values. */
-export const parseFirecrawlConfig = (
-  env: Record<string, string | undefined>
-): Result<FirecrawlConfig, ParseFirecrawlConfigError> => {
-  const apiKey = env.FIRECRAWL_API_KEY;
+const MonthlyRequestBudget = Schema.Int.check(
+  Schema.isBetween({
+    maximum: 1000,
+    minimum: 1,
+  })
+);
 
-  if (apiKey === undefined || apiKey.trim().length === 0) {
-    return err({
-      _tag: "InvalidFirecrawlConfig",
-      message: "FIRECRAWL_API_KEY is required",
-    });
-  }
-
-  const budgetText = env.FIRECRAWL_MONTHLY_REQUEST_BUDGET ?? "900";
-  const monthlyRequestBudget = Number(budgetText);
-
-  if (
-    !Number.isSafeInteger(monthlyRequestBudget) ||
-    monthlyRequestBudget < 1 ||
-    monthlyRequestBudget > 1000
-  ) {
-    return err({
-      _tag: "InvalidFirecrawlConfig",
-      message:
-        "FIRECRAWL_MONTHLY_REQUEST_BUDGET must be an integer from 1 to 1000",
-    });
-  }
-
-  return ok({ apiKey: redact(apiKey), monthlyRequestBudget });
-};
+const firecrawlConfig = Config.all({
+  apiKey: Config.redacted("FIRECRAWL_API_KEY"),
+  monthlyRequestBudget: Config.schema(
+    MonthlyRequestBudget,
+    "FIRECRAWL_MONTHLY_REQUEST_BUDGET"
+  ).pipe(Config.withDefault(900)),
+});
 
 /** Live Firecrawl config layer parsed at the Effect runtime boundary. */
 export const EffectFirecrawlConfigLiveLayer: Layer.Layer<
   EffectFirecrawlConfig,
-  ParseFirecrawlConfigError
+  Config.ConfigError
 > = Layer.effect(
   EffectFirecrawlConfig,
-  EffectRuntime.sync(() => parseFirecrawlConfig(process.env)).pipe(
-    EffectRuntime.flatMap((config) => {
-      if (isError(config)) {
-        return EffectRuntime.fail(config.error);
-      }
-
-      return EffectRuntime.succeed(EffectFirecrawlConfig.of(config.value));
-    })
-  )
+  EffectRuntime.gen(function* makeFirecrawlConfig() {
+    return EffectFirecrawlConfig.of(yield* firecrawlConfig);
+  })
 );

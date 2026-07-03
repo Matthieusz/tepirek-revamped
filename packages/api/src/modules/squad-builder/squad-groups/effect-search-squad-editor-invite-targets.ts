@@ -1,6 +1,9 @@
+import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
+import * as Layer from "effect/Layer";
 
+import { serviceUse } from "../../../effect/service-use.js";
 import {
   accountInviteTargetSearchPolicy,
   InvalidAccountInviteTargetQuery,
@@ -34,38 +37,43 @@ const parseSquadEditorInviteTargetQuery = (
   return EffectRuntime.succeed(trimmed);
 };
 
-/** Effect service module that searches verified users a squad group owner may invite as editors. */
-export class EffectSearchSquadEditorInviteTargets {
-  private readonly serviceName = "EffectSearchSquadEditorInviteTargets";
-
+export interface Interface {
   /** Search verified users the squad group owner may invite as editors. */
-  search(
+  readonly search: (
     input: Parameters<SearchSquadEditorInviteTargets["search"]>[0]
-  ): Effect<
-    readonly SquadEditorInviteTarget[],
-    SquadGroupSharingError,
-    EffectSquadGroupStore
-  > {
-    void this.serviceName;
-
-    return EffectRuntime.gen(function* searchSquadEditorInviteTargetsEffect() {
-      const query = yield* parseSquadEditorInviteTargetQuery(input.query);
-
-      yield* EffectSquadGroupStore.use((store) =>
-        store.authorizeSquadGroupOwner({
-          actorUserId: input.actorUserId,
-          groupId: input.groupId,
-        })
-      );
-
-      return yield* EffectSquadGroupStore.use((store) =>
-        store.searchSquadEditorInviteTargets({
-          groupId: input.groupId,
-          maxResults: accountInviteTargetSearchPolicy.maxResults,
-          ownerUserId: input.actorUserId,
-          query,
-        })
-      );
-    });
-  }
+  ) => Effect<readonly SquadEditorInviteTarget[], SquadGroupSharingError>;
 }
+
+/** Effect service module that searches verified users a squad group owner may invite as editors. */
+export class Service extends Context.Service<Service, Interface>()(
+  "@tepirek-revamped/api/squad-builder/SquadEditorInviteTargets"
+) {}
+
+export const use = serviceUse(Service);
+
+export const layer = Layer.effect(
+  Service,
+  EffectRuntime.gen(function* makeSquadEditorInviteTargetsService() {
+    const store = yield* EffectSquadGroupStore;
+
+    return {
+      search: EffectRuntime.fn("SquadGroupEditorInvites.searchTargets")(
+        function* search(input) {
+          const query = yield* parseSquadEditorInviteTargetQuery(input.query);
+
+          yield* store.authorizeSquadGroupOwner({
+            actorUserId: input.actorUserId,
+            groupId: input.groupId,
+          });
+
+          return yield* store.searchSquadEditorInviteTargets({
+            groupId: input.groupId,
+            maxResults: accountInviteTargetSearchPolicy.maxResults,
+            ownerUserId: input.actorUserId,
+            query,
+          });
+        }
+      ),
+    };
+  })
+);

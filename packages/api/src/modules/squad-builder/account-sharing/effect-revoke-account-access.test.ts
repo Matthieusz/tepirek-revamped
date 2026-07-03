@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
@@ -9,7 +10,10 @@ import { isOk } from "../result.js";
 import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
 import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
 import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
-import { EffectRevokeAccountAccess } from "./effect-revoke-account-access.js";
+import {
+  layer as accountAccessRevocationsLayer,
+  use as accountAccessRevocations,
+} from "./effect-revoke-account-access.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -66,11 +70,13 @@ it.effect("revokes account access as the account owner", () => {
       });
     },
   });
-  const service = new EffectRevokeAccountAccess();
+  const testLayer = accountAccessRevocationsLayer.pipe(
+    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+  );
 
   return Effect.gen(function* revokeAccountAccessEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const revoked = yield* service.revoke({
+    const revoked = yield* accountAccessRevocations.revoke({
       accessId,
       actorUserId,
     });
@@ -81,7 +87,7 @@ it.effect("revokes account access as the account owner", () => {
       removedSquadCharacterCount: 2,
       revokedUserId,
     });
-  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
 
 it.effect("surfaces owner authorization failures", () => {
@@ -90,17 +96,19 @@ it.effect("surfaces owner authorization failures", () => {
   const store = makeEffectAccountSharingStoreTestService({
     revokeAccountAccess: () => new ActorDoesNotOwnMargonemAccount(),
   });
-  const service = new EffectRevokeAccountAccess();
+  const testLayer = accountAccessRevocationsLayer.pipe(
+    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+  );
 
   return Effect.gen(function* revokeAccountAccessEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      service.revoke({
+      accountAccessRevocations.revoke({
         accessId,
         actorUserId,
       })
     );
 
     expect(error._tag).toBe("ActorDoesNotOwnMargonemAccount");
-  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });

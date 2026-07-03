@@ -1,12 +1,12 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { EffectFirecrawlClient } from "../effect-firecrawl-client.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
 import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import { EffectFirecrawlConfig } from "../firecrawl-config.js";
-import { Redacted } from "../prelude.js";
 import { isOk, ok } from "../result.js";
 import { makeEffectAccountRefetchStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
 import { EffectAccountRefetchStore } from "./effect-account-refetch-store.js";
@@ -101,7 +101,7 @@ it.effect("previews account refetch and stores the pending diff", () => {
     expect(createdPendingIds).toEqual([456]);
   }).pipe(
     Effect.provideService(EffectFirecrawlConfig)({
-      apiKey: Redacted("test-key"),
+      apiKey: Redacted.make("test-key"),
       monthlyRequestBudget: 900,
     }),
     Effect.provideService(EffectFirecrawlClient)(firecrawl),

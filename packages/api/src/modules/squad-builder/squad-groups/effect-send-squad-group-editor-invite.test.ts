@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
@@ -7,7 +8,10 @@ import { isOk } from "../result.js";
 import { parseSquadGroupId } from "../squad-group-id.js";
 import { parseSquadGroupInvitationId } from "../squad-group-invitation-id.js";
 import { parseSquadGroupName } from "../squad-name.js";
-import { EffectSendSquadGroupEditorInvite } from "./effect-send-squad-group-editor-invite.js";
+import {
+  layer as squadGroupEditorInvitesLayer,
+  use as squadGroupEditorInvites,
+} from "./effect-send-squad-group-editor-invite.js";
 import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
 import { EffectSquadGroupStore } from "./squad-group-store.js";
 
@@ -102,11 +106,13 @@ it.effect("sends a squad group editor invite for a verified target", () => {
       });
     },
   });
-  const service = new EffectSendSquadGroupEditorInvite();
+  const testLayer = squadGroupEditorInvitesLayer.pipe(
+    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+  );
 
   return Effect.gen(function* sendSquadGroupEditorInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* service.send({
+    const invite = yield* squadGroupEditorInvites.send({
       actorUserId,
       groupId,
       invitedUserId: targetUserId,
@@ -117,7 +123,7 @@ it.effect("sends a squad group editor invite for a verified target", () => {
       status: "pending",
     });
     expect(invite.squadGroupId).toBe(groupId);
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
 
 it.effect("rejects self-invites before resolving the target", () => {
@@ -132,12 +138,14 @@ it.effect("rejects self-invites before resolving the target", () => {
         role: "owner" as const,
       }),
   });
-  const service = new EffectSendSquadGroupEditorInvite();
+  const testLayer = squadGroupEditorInvitesLayer.pipe(
+    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+  );
 
   return Effect.gen(function* sendSquadGroupEditorInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      service.send({
+      squadGroupEditorInvites.send({
         actorUserId,
         groupId,
         invitedUserId: actorUserId,
@@ -145,5 +153,5 @@ it.effect("rejects self-invites before resolving the target", () => {
     );
 
     expect(error._tag).toBe("CannotInviteSelf");
-  }).pipe(Effect.provideService(EffectSquadGroupStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });

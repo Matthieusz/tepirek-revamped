@@ -1,5 +1,6 @@
 import * as Context from "effect/Context";
 import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 
 import type { FirecrawlClient } from "./firecrawl-client.js";
 import { FirecrawlSdkClient } from "./firecrawl-client.js";
@@ -19,6 +20,8 @@ export const EffectFirecrawlClientLiveLayer: Layer.Layer<
 > = Layer.effect(
   EffectFirecrawlClient,
   EffectFirecrawlConfig.useSync((config) =>
-    EffectFirecrawlClient.of(new FirecrawlSdkClient(config.apiKey))
+    EffectFirecrawlClient.of(
+      new FirecrawlSdkClient(Redacted.value(config.apiKey))
+    )
   )
 );

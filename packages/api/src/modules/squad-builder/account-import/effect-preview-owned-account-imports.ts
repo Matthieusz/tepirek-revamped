@@ -5,8 +5,6 @@ import * as EffectRuntime from "effect/Effect";
 import { parseAccountDisplayName } from "../account-display-name.js";
 import type { AccountDisplayName } from "../account-display-name.js";
 import type { AppUserId } from "../app-user-id.js";
-import type { EffectFirecrawlClient } from "../effect-firecrawl-client.js";
-import type { EffectFirecrawlConfig } from "../firecrawl-config.js";
 import type { MargonemProfileId } from "../margonem-profile-id.js";
 import { profileIdToNumber } from "../margonem-profile-id.js";
 import {
@@ -33,9 +31,7 @@ import {
 import type {
   PreviewOwnedAccountImportItem,
   PreviewOwnedAccountImportLineError,
-  PreviewOwnedAccountImportsError,
   PreviewOwnedAccountImportsInput,
-  PreviewOwnedAccountImportsOutput,
 } from "./preview-owned-account-imports.js";
 
 const batchImportPolicy = {
@@ -191,19 +187,13 @@ export class EffectPreviewOwnedAccountImports {
   readonly serviceName = "EffectPreviewOwnedAccountImports";
 
   /** Preview and persist pending imports for a batch of pasted profile URLs. */
-  preview(
-    input: PreviewOwnedAccountImportsInput,
-    options: { readonly signal?: AbortSignal } = {}
-  ): Effect<
-    PreviewOwnedAccountImportsOutput,
-    PreviewOwnedAccountImportsError,
-    EffectAccountImportStore | EffectFirecrawlClient | EffectFirecrawlConfig
-  > {
-    void this.serviceName;
+  readonly preview = EffectRuntime.fn("AccountImport.previewBatch")(
+    function* previewBatchEffect(
+      input: PreviewOwnedAccountImportsInput,
+      options: { readonly signal?: AbortSignal } = {}
+    ) {
+      const singlePreview = new EffectPreviewMargonemProfileImport();
 
-    const singlePreview = new EffectPreviewMargonemProfileImport();
-
-    return EffectRuntime.gen(function* previewBatchEffect() {
       const currentTimeMillis = yield* ClockRuntime.currentTimeMillis;
       const now = new Date(currentTimeMillis);
       const nonBlankLines = input.profileUrls
@@ -367,6 +357,6 @@ export class EffectPreviewOwnedAccountImports {
         );
 
       return { items };
-    });
-  }
+    }
+  );
 }

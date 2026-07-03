@@ -1,5 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
@@ -8,7 +9,10 @@ import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { isOk } from "../result.js";
 import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
 import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
-import { EffectSendAccountAccessInvite } from "./effect-send-account-access-invite.js";
+import {
+  layer as accountAccessInvitesLayer,
+  use as accountAccessInvites,
+} from "./effect-send-account-access-invite.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -93,11 +97,13 @@ it.effect("sends an account access invite for a verified target", () => {
       });
     },
   });
-  const service = new EffectSendAccountAccessInvite();
+  const testLayer = accountAccessInvitesLayer.pipe(
+    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+  );
 
   return Effect.gen(function* sendAccountAccessInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* service.send({
+    const invite = yield* accountAccessInvites.send({
       accountId,
       actorUserId,
       invitedUserId: targetUserId,
@@ -108,7 +114,7 @@ it.effect("sends an account access invite for a verified target", () => {
       invitedUserId: targetUserId,
       status: "pending",
     });
-  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
 
 it.effect("rejects self-invites before resolving the target", () => {
@@ -123,12 +129,14 @@ it.effect("rejects self-invites before resolving the target", () => {
         profileId: 7_298_897 as never,
       }),
   });
-  const service = new EffectSendAccountAccessInvite();
+  const testLayer = accountAccessInvitesLayer.pipe(
+    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+  );
 
   return Effect.gen(function* sendAccountAccessInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      service.send({
+      accountAccessInvites.send({
         accountId,
         actorUserId,
         invitedUserId: actorUserId,
@@ -136,5 +144,5 @@ it.effect("rejects self-invites before resolving the target", () => {
     );
 
     expect(error._tag).toBe("CannotInviteSelf");
-  }).pipe(Effect.provideService(EffectAccountSharingStore)(store));
+  }).pipe(Effect.provide(testLayer));
 });
