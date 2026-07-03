@@ -43,6 +43,11 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL environment variable is required");
 }
 
+// Effect's default ConfigProvider snapshots process.env on first read. This
+// server reads required env at startup and builds long-lived runtimes from those
+// values. If a listener/request-app construction ever needs to re-read env after
+// startup (for example in tests that mutate process.env), provide
+// ConfigProvider.layer(ConfigProvider.fromEnv()) at that construction boundary.
 /** Shared Effect runtime for migrated API modules. */
 export const apiEffectRuntime = makeApiRuntime(databaseUrl);
 

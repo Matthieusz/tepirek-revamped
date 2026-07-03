@@ -41,19 +41,18 @@ import type { EffectSquadGroupStore } from "./modules/squad-builder/squad-groups
 export const apiLayerMemoMap = Layer.makeMemoMapUnsafe();
 
 /** Live Layer for Effect-based API modules. */
-export const makeApiLiveLayer = (
+export const makeApiSquadBuilderLayer = (
   databaseUrl: string
-): Layer.Layer<SquadBuilderServices, SqlError | ConfigError> => {
+): Layer.Layer<
+  Exclude<SquadBuilderServices, EffectFirecrawlClient | EffectFirecrawlConfig>,
+  SqlError
+> => {
   const storeLayer = DrizzleEffectSquadBuilderStoresLayer.pipe(
     Layer.provide(makeLiveDatabaseLayer(databaseUrl))
   );
 
   return Layer.mergeAll(
     storeLayer,
-    EffectFirecrawlConfigLiveLayer,
-    EffectFirecrawlClientLiveLayer.pipe(
-      Layer.provide(EffectFirecrawlConfigLiveLayer)
-    ),
     accountInviteTargetsLayer.pipe(Layer.provide(storeLayer)),
     accountAccessInvitesLayer.pipe(Layer.provide(storeLayer)),
     accountAccessInviteResponsesLayer.pipe(Layer.provide(storeLayer)),
@@ -66,6 +65,17 @@ export const makeApiLiveLayer = (
     squadGroupSharingStateLayer.pipe(Layer.provide(storeLayer))
   );
 };
+
+export const makeApiLiveLayer = (
+  databaseUrl: string
+): Layer.Layer<SquadBuilderServices, SqlError | ConfigError> =>
+  Layer.mergeAll(
+    makeApiSquadBuilderLayer(databaseUrl),
+    EffectFirecrawlConfigLiveLayer,
+    EffectFirecrawlClientLiveLayer.pipe(
+      Layer.provide(EffectFirecrawlConfigLiveLayer)
+    )
+  );
 
 export interface ApiRuntime<I, S, E> {
   readonly dispose: () => Promise<void>;

@@ -15,7 +15,8 @@ import {
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
-import { makeApiManagedRuntime } from "../../../effect-app.js";
+import { makeApiSquadBuilderLayer } from "../../../effect-app.js";
+import { liveEffect } from "../../../test/effect.js";
 import { createVerifiedMember } from "../../../test/integration/builders.js";
 import {
   defaultTestDatabaseUrl,
@@ -49,6 +50,8 @@ import { ListGlobalSquadGroups } from "./list-global-squad-groups.js";
 import { ListSquadGroups } from "./list-squad-groups.js";
 import { SaveSquadGroup } from "./save-squad-group.js";
 import { SetSquadGroupVisibility } from "./set-squad-group-visibility.js";
+
+const apiTestLayer = makeApiSquadBuilderLayer(defaultTestDatabaseUrl);
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -93,10 +96,10 @@ const parseTestCredits = (value: number) => {
 describe("DrizzleEffectSquadGroupStore integration", () => {
   it("creates a private squad group for the actor", async () => {
     const member = await createVerifiedMember({ id: "effect-create-owner" });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const service = new CreateSquadGroup();
 
-    const created = await runtime.runPromise(
+    const created = await liveEffect(
+      apiTestLayer,
       service.create({
         actorUserId: parseTestUserId(member.id),
         name: "  Effect group  ",
@@ -129,30 +132,33 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
   it("lists only squad groups owned by the actor", async () => {
     const member = await createVerifiedMember({ id: "effect-list-owner" });
     const other = await createVerifiedMember({ id: "effect-list-other" });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const service = new CreateSquadGroup();
     const listService = new ListSquadGroups();
 
-    await runtime.runPromise(
+    await liveEffect(
+      apiTestLayer,
       service.create({
         actorUserId: parseTestUserId(member.id),
         name: "First listed group",
       })
     );
-    await runtime.runPromise(
+    await liveEffect(
+      apiTestLayer,
       service.create({
         actorUserId: parseTestUserId(member.id),
         name: "Second listed group",
       })
     );
-    await runtime.runPromise(
+    await liveEffect(
+      apiTestLayer,
       service.create({
         actorUserId: parseTestUserId(other.id),
         name: "Other listed group",
       })
     );
 
-    const groups = await runtime.runPromise(
+    const groups = await liveEffect(
+      apiTestLayer,
       listService.listMine({ actorUserId: parseTestUserId(member.id) })
     );
 
@@ -165,18 +171,19 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
   it("loads a squad group detail for the owner", async () => {
     const member = await createVerifiedMember({ id: "effect-detail-owner" });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const service = new CreateSquadGroup();
     const listService = new ListSquadGroups();
 
-    const created = await runtime.runPromise(
+    const created = await liveEffect(
+      apiTestLayer,
       service.create({
         actorUserId: parseTestUserId(member.id),
         name: "Effect detail group",
       })
     );
 
-    const detail = await runtime.runPromise(
+    const detail = await liveEffect(
+      apiTestLayer,
       listService.getMine({
         actorUserId: parseTestUserId(member.id),
         groupId: created.groupId,
@@ -195,18 +202,19 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
   it("saves a squad group snapshot through the Effect store", async () => {
     const member = await createVerifiedMember({ id: "effect-save-owner" });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const createService = new CreateSquadGroup();
     const saveService = new SaveSquadGroup(systemClock);
 
-    const created = await runtime.runPromise(
+    const created = await liveEffect(
+      apiTestLayer,
       createService.create({
         actorUserId: parseTestUserId(member.id),
         name: "Effect save original",
       })
     );
 
-    const saved = await runtime.runPromise(
+    const saved = await liveEffect(
+      apiTestLayer,
       saveService.save({
         actorUserId: parseTestUserId(member.id),
         groupId: created.groupId,
@@ -232,11 +240,11 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
   it("lists available Jaruna characters for the squad group owner", async () => {
     const member = await createVerifiedMember({ id: "effect-available-owner" });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const service = new CreateSquadGroup();
     const listService = new ListAvailableSquadCharacters();
 
-    const created = await runtime.runPromise(
+    const created = await liveEffect(
+      apiTestLayer,
       service.create({
         actorUserId: parseTestUserId(member.id),
         name: "Effect available group",
@@ -272,7 +280,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       throw new Error("Failed to seed character");
     }
 
-    const characters = await runtime.runPromise(
+    const characters = await liveEffect(
+      apiTestLayer,
       listService.list({
         actorUserId: parseTestUserId(member.id),
         groupId: created.groupId,
@@ -293,7 +302,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
   it("lists only Margonem accounts owned by the actor", async () => {
     const member = await createVerifiedMember({ id: "effect-owned-owner" });
     const other = await createVerifiedMember({ id: "effect-owned-other" });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const service = new ListOwnedMargonemAccounts();
 
     const [ownedAccount] = await testDb
@@ -326,7 +334,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       world: "jaruna",
     });
 
-    const accounts = await runtime.runPromise(
+    const accounts = await liveEffect(
+      apiTestLayer,
       service.list({ actorUserId: parseTestUserId(member.id) })
     );
 
@@ -342,14 +351,14 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
   it("creates pending account imports through the Effect store", async () => {
     const member = await createVerifiedMember({ id: "effect-pending-user" });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const displayName = parseAccountDisplayName("Effect pending");
 
     if (!isOk(displayName)) {
       throw new Error("Expected display name to be valid");
     }
 
-    const pending = await runtime.runPromise(
+    const pending = await liveEffect(
+      apiTestLayer,
       EffectAccountImportStore.use((store) =>
         store.createPendingImport({
           actorUserId: parseTestUserId(member.id),
@@ -401,7 +410,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
   it("loads accounts and creates pending refetch previews through the Effect store", async () => {
     const member = await createVerifiedMember({ id: "effect-refetch-owner" });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -425,7 +433,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       world: "jaruna",
     });
 
-    const loaded = await runtime.runPromise(
+    const loaded = await liveEffect(
+      apiTestLayer,
       EffectAccountRefetchStore.use((store) =>
         store.getAccountForRefetch({
           accountId: account.id as never,
@@ -445,7 +454,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
         world: "jaruna" as const,
       },
     ];
-    const pending = await runtime.runPromise(
+    const pending = await liveEffect(
+      apiTestLayer,
       EffectAccountRefetchStore.use((store) =>
         store.createPendingRefetch({
           accountId: loaded.accountId,
@@ -498,7 +508,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
   it("applies pending account refetches through the Effect store", async () => {
     const member = await createVerifiedMember({ id: "effect-apply-owner" });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const service = new EffectApplyAccountRefetch();
     const [account] = await testDb
       .insert(margonemAccount)
@@ -612,7 +621,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       },
     ]);
 
-    const applied = await runtime.runPromise(
+    const applied = await liveEffect(
+      apiTestLayer,
       service.apply({
         actorUserId: parseTestUserId(member.id),
         refetchPreviewId: pending.id as never,
@@ -660,7 +670,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
   it("confirms pending account imports through the Effect store", async () => {
     const member = await createVerifiedMember({ id: "effect-confirm-user" });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const service = new EffectConfirmOwnedAccountImport();
     const [pending] = await testDb
       .insert(margonemAccountImportPreview)
@@ -689,7 +698,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       world: "jaruna",
     });
 
-    const confirmed = await runtime.runPromise(
+    const confirmed = await liveEffect(
+      apiTestLayer,
       service.confirm({
         actorUserId: parseTestUserId(member.id),
         displayName: "  Confirmed Effect  ",
@@ -727,13 +737,13 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
   it("reserves and completes Firecrawl requests through the Effect store", async () => {
     const member = await createVerifiedMember({ id: "effect-firecrawl-user" });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const profileId = parseTestProfileId(8_100_201);
     const yearMonth = firecrawlYearMonthFromDate(
       new Date("2026-06-29T12:00:00.000Z")
     );
 
-    const reserved = await runtime.runPromise(
+    const reserved = await liveEffect(
+      apiTestLayer,
       EffectAccountImportStore.use((store) =>
         store.reserveRequest({
           monthlyRequestBudget: 10,
@@ -744,7 +754,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       )
     );
 
-    await runtime.runPromise(
+    await liveEffect(
+      apiTestLayer,
       EffectAccountImportStore.use((store) =>
         store.markRequestSucceeded({
           cacheState: "hit",
@@ -778,18 +789,19 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     const member = await createVerifiedMember({
       id: "effect-visibility-owner",
     });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const createService = new CreateSquadGroup();
     const visibilityService = new SetSquadGroupVisibility(systemClock);
 
-    const created = await runtime.runPromise(
+    const created = await liveEffect(
+      apiTestLayer,
       createService.create({
         actorUserId: parseTestUserId(member.id),
         name: "Effect visibility group",
       })
     );
 
-    const changed = await runtime.runPromise(
+    const changed = await liveEffect(
+      apiTestLayer,
       visibilityService.set({
         actorUserId: parseTestUserId(member.id),
         groupId: created.groupId,
@@ -820,7 +832,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       id: "effect-store-search-target",
       name: "Effect Store Search Target",
     });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -834,7 +845,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       throw new Error("Failed to seed account");
     }
 
-    const targets = await runtime.runPromise(
+    const targets = await liveEffect(
+      apiTestLayer,
       accountInviteTargets.search({
         accountId: parseTestAccountId(account.id),
         actorUserId: parseTestUserId(owner.id),
@@ -856,7 +868,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       id: "effect-store-send-target",
       name: "Effect Store Send Target",
     });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -870,7 +881,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       throw new Error("Failed to seed account");
     }
 
-    const invite = await runtime.runPromise(
+    const invite = await liveEffect(
+      apiTestLayer,
       accountAccessInvites.send({
         accountId: parseTestAccountId(account.id),
         actorUserId: parseTestUserId(owner.id),
@@ -894,7 +906,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     expect(stored?.status).toBe("pending");
 
     await expect(
-      runtime.runPromise(
+      liveEffect(
+        apiTestLayer,
         accountAccessInvites.send({
           accountId: parseTestAccountId(account.id),
           actorUserId: parseTestUserId(owner.id),
@@ -913,16 +926,17 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       id: "effect-store-squad-send-target",
       name: "Effect Store Squad Send Target",
     });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const createService = new CreateSquadGroup();
-    const group = await runtime.runPromise(
+    const group = await liveEffect(
+      apiTestLayer,
       createService.create({
         actorUserId: parseTestUserId(owner.id),
         name: "Effect store squad send group",
       })
     );
 
-    const invite = await runtime.runPromise(
+    const invite = await liveEffect(
+      apiTestLayer,
       squadGroupEditorInvites.send({
         actorUserId: parseTestUserId(owner.id),
         groupId: group.groupId,
@@ -952,7 +966,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     });
 
     await expect(
-      runtime.runPromise(
+      liveEffect(
+        apiTestLayer,
         squadGroupEditorInvites.send({
           actorUserId: parseTestUserId(owner.id),
           groupId: group.groupId,
@@ -973,22 +988,24 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       id: "effect-store-squad-respond-target",
       name: "Effect Store Squad Respond Target",
     });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const createService = new CreateSquadGroup();
-    const group = await runtime.runPromise(
+    const group = await liveEffect(
+      apiTestLayer,
       createService.create({
         actorUserId: parseTestUserId(owner.id),
         name: "Effect store squad respond group",
       })
     );
-    const invite = await runtime.runPromise(
+    const invite = await liveEffect(
+      apiTestLayer,
       squadGroupEditorInvites.send({
         actorUserId: parseTestUserId(owner.id),
         groupId: group.groupId,
         invitedUserId: parseTestUserId(target.id),
       })
     );
-    const accepted = await runtime.runPromise(
+    const accepted = await liveEffect(
+      apiTestLayer,
       squadGroupEditorInviteResponses.respond({
         actorUserId: parseTestUserId(target.id),
         invitationId: invite.invitationId,
@@ -1020,22 +1037,24 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       id: "effect-store-squad-revoke-target",
       name: "Effect Store Squad Revoke Target",
     });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const createService = new CreateSquadGroup();
-    const group = await runtime.runPromise(
+    const group = await liveEffect(
+      apiTestLayer,
       createService.create({
         actorUserId: parseTestUserId(owner.id),
         name: "Effect store squad revoke group",
       })
     );
-    const invite = await runtime.runPromise(
+    const invite = await liveEffect(
+      apiTestLayer,
       squadGroupEditorInvites.send({
         actorUserId: parseTestUserId(owner.id),
         groupId: group.groupId,
         invitedUserId: parseTestUserId(target.id),
       })
     );
-    const revoked = await runtime.runPromise(
+    const revoked = await liveEffect(
+      apiTestLayer,
       squadGroupEditorRevocations.revoke({
         actorUserId: parseTestUserId(owner.id),
         invitationId: invite.invitationId,
@@ -1066,7 +1085,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       id: "effect-store-respond-target",
       name: "Effect Store Respond Target",
     });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -1080,14 +1098,16 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       throw new Error("Failed to seed account");
     }
 
-    const invite = await runtime.runPromise(
+    const invite = await liveEffect(
+      apiTestLayer,
       accountAccessInvites.send({
         accountId: parseTestAccountId(account.id),
         actorUserId: parseTestUserId(owner.id),
         invitedUserId: parseTestUserId(target.id),
       })
     );
-    const accepted = await runtime.runPromise(
+    const accepted = await liveEffect(
+      apiTestLayer,
       accountAccessInviteResponses.respond({
         accessId: invite.accessId,
         actorUserId: parseTestUserId(target.id),
@@ -1119,7 +1139,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       id: "effect-store-shared-target",
       name: "Effect Store Shared Target",
     });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -1150,7 +1169,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       world: "jaruna",
     });
 
-    const accounts = await runtime.runPromise(
+    const accounts = await liveEffect(
+      apiTestLayer,
       accountSharingState.listSharedAccounts({
         actorUserId: parseTestUserId(target.id),
       })
@@ -1178,7 +1198,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       id: "effect-store-grants-declined",
       name: "Effect Store Grants Declined",
     });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -1207,7 +1226,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       },
     ]);
 
-    const grants = await runtime.runPromise(
+    const grants = await liveEffect(
+      apiTestLayer,
       accountSharingState.listAccountAccessGrants({
         accountId: parseTestAccountId(account.id),
         actorUserId: parseTestUserId(owner.id),
@@ -1231,7 +1251,6 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       id: "effect-store-revoke-target",
       name: "Effect Store Revoke Target",
     });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -1288,14 +1307,16 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       throw new Error("Failed to seed squad");
     }
 
-    const invite = await runtime.runPromise(
+    const invite = await liveEffect(
+      apiTestLayer,
       accountAccessInvites.send({
         accountId: parseTestAccountId(account.id),
         actorUserId: parseTestUserId(owner.id),
         invitedUserId: parseTestUserId(target.id),
       })
     );
-    await runtime.runPromise(
+    await liveEffect(
+      apiTestLayer,
       accountAccessInviteResponses.respond({
         accessId: invite.accessId,
         actorUserId: parseTestUserId(target.id),
@@ -1310,7 +1331,8 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
       squadId: seededSquad.id,
     });
 
-    const revoked = await runtime.runPromise(
+    const revoked = await liveEffect(
+      apiTestLayer,
       accountAccessRevocations.revoke({
         accessId: invite.accessId,
         actorUserId: parseTestUserId(owner.id),
@@ -1341,32 +1363,35 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
   it("lists globally visible squad groups", async () => {
     const member = await createVerifiedMember({ id: "effect-global-owner" });
     const other = await createVerifiedMember({ id: "effect-global-other" });
-    const runtime = makeApiManagedRuntime(defaultTestDatabaseUrl);
     const createService = new CreateSquadGroup();
     const visibilityService = new SetSquadGroupVisibility(systemClock);
     const listGlobalService = new ListGlobalSquadGroups();
 
-    const globalGroup = await runtime.runPromise(
+    const globalGroup = await liveEffect(
+      apiTestLayer,
       createService.create({
         actorUserId: parseTestUserId(member.id),
         name: "Effect global group",
       })
     );
-    await runtime.runPromise(
+    await liveEffect(
+      apiTestLayer,
       visibilityService.set({
         actorUserId: parseTestUserId(member.id),
         groupId: globalGroup.groupId,
         visibility: "global",
       })
     );
-    await runtime.runPromise(
+    await liveEffect(
+      apiTestLayer,
       createService.create({
         actorUserId: parseTestUserId(member.id),
         name: "Effect private group",
       })
     );
 
-    const groups = await runtime.runPromise(
+    const groups = await liveEffect(
+      apiTestLayer,
       listGlobalService.list({ actorUserId: parseTestUserId(other.id) })
     );
     const groupNames = groups.map((group) => group.name);
