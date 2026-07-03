@@ -28,7 +28,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { isAdmin } from "@/lib/route-helpers";
-import { orpc } from "@/utils/orpc";
+import { skillsApi } from "@/utils/skills-api";
+import type { SkillSummary } from "@/utils/skills-api";
 
 const routeApi = getRouteApi("/dashboard/skills/$rangeName");
 
@@ -40,24 +41,27 @@ const RangeDetails = () => {
 
   const isAdminUser = isAdmin(session);
 
-  const { data: rangeData, isLoading: rangeIsLoading } = useQuery(
-    orpc.skills.getRangeBySlug.queryOptions({ input: { slug: rangeName } })
-  );
-  const { data: professionsQueryData } = useQuery(
-    orpc.skills.getAllProfessions.queryOptions()
-  );
+  const { data: rangeData, isLoading: rangeIsLoading } = useQuery({
+    queryFn: () => skillsApi.getRangeBySlug({ slug: rangeName }),
+    queryKey: skillsApi.rangeBySlugQueryKey(rangeName),
+  });
+  const { data: professionsQueryData } = useQuery({
+    queryFn: skillsApi.listProfessions,
+    queryKey: skillsApi.professionsQueryKey,
+  });
 
-  const { data: skillsByRangeData } = useQuery(
-    rangeData
-      ? orpc.skills.getSkillsByRange.queryOptions({
-          input: { rangeId: rangeData.id },
-        })
-      : { queryFn: () => [], queryKey: ["skills", rangeName, "empty"] }
-  );
+  const { data: skillsByRangeData } = useQuery({
+    enabled: rangeData !== null && rangeData !== undefined,
+    queryFn: () =>
+      rangeData
+        ? skillsApi.listSkillsByRange({ rangeId: rangeData.id })
+        : Promise.resolve([]),
+    queryKey: skillsApi.skillsByRangeQueryKey(rangeData?.id ?? 0),
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await orpc.skills.deleteSkill.call({ id });
+      await skillsApi.deleteSkill({ id });
     },
     onError: () => {
       toast.error("Błąd podczas usuwania");
@@ -66,9 +70,7 @@ const RangeDetails = () => {
       toast.success("Usunięto zestaw");
       if (skillToDelete?.rangeId !== undefined && skillToDelete.rangeId !== 0) {
         await queryClient.invalidateQueries({
-          queryKey: orpc.skills.getSkillsByRange.queryKey({
-            input: { rangeId: skillToDelete.rangeId },
-          }),
+          queryKey: skillsApi.skillsByRangeQueryKey(skillToDelete.rangeId),
         });
       }
       setSkillToDelete(null);
@@ -94,7 +96,7 @@ const RangeDetails = () => {
   const currentRange = rangeData;
 
   const skillsData = skillsByRangeData ?? [];
-  const skillsGrouped: Record<number, typeof skillsData> = {};
+  const skillsGrouped: Record<number, SkillSummary[]> = {};
   for (const s of skillsData) {
     const key = s.professionId;
     skillsGrouped[key] ??= [];
@@ -172,7 +174,7 @@ const RangeDetails = () => {
                               <div className="flex items-center gap-1.5">
                                 <Avatar className="size-5">
                                   <AvatarImage
-                                    alt={skill.addedBy}
+                                    alt={skill.addedBy ?? ""}
                                     src={skill.addedByImage ?? undefined}
                                   />
                                   <AvatarFallback className="text-xs">
@@ -259,7 +261,7 @@ export const Route = createFileRoute("/dashboard/skills/$rangeName")({
   component: RangeDetails,
   loader: async ({ params }) => {
     const slug = params.rangeName;
-    const data = await orpc.skills.getRangeBySlug.call({ slug });
+    const data = await skillsApi.getRangeBySlug({ slug });
     return { crumb: data?.name ?? slug };
   },
 });

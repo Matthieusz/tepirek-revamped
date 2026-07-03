@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/errors";
-import { orpc } from "@/utils/orpc";
+import { skillsApi } from "@/utils/skills-api";
 
 interface AddSkillModalProps {
   trigger: React.ReactNode;
@@ -47,9 +47,10 @@ export const AddSkillModal = ({
 }: AddSkillModalProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
-  const { data: professionsData } = useQuery(
-    orpc.skills.getAllProfessions.queryOptions()
-  );
+  const { data: professionsData } = useQuery({
+    queryFn: skillsApi.listProfessions,
+    queryKey: skillsApi.professionsQueryKey,
+  });
 
   const form = useForm({
     defaultValues: {
@@ -63,7 +64,7 @@ export const AddSkillModal = ({
           toast.error("Wybierz profesję!");
           return;
         }
-        await orpc.skills.createSkill.call({
+        await skillsApi.createSkill({
           link: value.link,
           mastery: value.mastery,
           name: value.name,
@@ -72,9 +73,7 @@ export const AddSkillModal = ({
         });
         toast.success("Zestaw utworzony");
         await queryClient.invalidateQueries({
-          queryKey: orpc.skills.getSkillsByRange.queryKey({
-            input: { rangeId: defaultRangeId },
-          }),
+          queryKey: skillsApi.skillsByRangeQueryKey(defaultRangeId),
         });
         setOpen(false);
         form.reset();

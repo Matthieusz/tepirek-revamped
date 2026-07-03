@@ -24,7 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/errors";
-import { orpc } from "@/utils/orpc";
+import { eventsApi } from "@/utils/events-api";
+import { heroesApi } from "@/utils/heroes-api";
 
 interface AddHeroModalProps {
   trigger: React.ReactNode;
@@ -47,9 +48,10 @@ const defaultValues: AddHeroModal = {
 export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
-  const { data: events, isPending: eventsLoading } = useQuery(
-    orpc.event.getAll.queryOptions()
-  );
+  const { data: events, isPending: eventsLoading } = useQuery({
+    queryFn: eventsApi.list,
+    queryKey: eventsApi.queryKey,
+  });
 
   const form = useForm({
     defaultValues: {
@@ -62,7 +64,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
           return;
         }
 
-        await orpc.heroes.create.call({
+        await heroesApi.create({
           eventId: Number.parseInt(value.eventId, 10),
           image: value.image ?? undefined,
           level: Number.parseInt(value.level, 10),
@@ -72,7 +74,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
         toast.success("Heros utworzony pomyślnie");
         // oxlint-disable-next-line @typescript-eslint/no-floating-promises
         queryClient.invalidateQueries({
-          queryKey: orpc.heroes.getAll.queryKey(),
+          queryKey: heroesApi.queryKey,
         });
         setOpen(false);
         form.reset();

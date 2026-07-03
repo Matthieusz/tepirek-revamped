@@ -36,7 +36,8 @@ import {
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
+import { eventsApi } from "@/utils/events-api";
+import { heroesApi } from "@/utils/heroes-api";
 
 type HeroToDelete = {
   id: number;
@@ -50,10 +51,14 @@ interface EventsHeroesPageProps {
 export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
   const [heroToDelete, setHeroToDelete] = useState<HeroToDelete>(null);
   const [selectedEventId, setSelectedEventId] = useState("all");
-  const { data: heroes, isPending } = useQuery(
-    orpc.heroes.getAll.queryOptions()
-  );
-  const { data: events } = useQuery(orpc.event.getAll.queryOptions());
+  const { data: heroes, isPending } = useQuery({
+    queryFn: heroesApi.list,
+    queryKey: heroesApi.queryKey,
+  });
+  const { data: events } = useQuery({
+    queryFn: eventsApi.list,
+    queryKey: eventsApi.queryKey,
+  });
   const queryClient = useQueryClient();
 
   const isAdminUser = isAdmin(session);
@@ -65,7 +70,7 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
 
   const deleteMutation = useMutation({
     mutationFn: async (heroId: number) => {
-      await orpc.heroes.delete.call({ id: heroId });
+      await heroesApi.delete({ id: heroId });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -73,7 +78,7 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
     onSuccess: async () => {
       toast.success("Heros został usunięty");
       await queryClient.invalidateQueries({
-        queryKey: orpc.heroes.getAll.queryKey(),
+        queryKey: heroesApi.queryKey,
       });
       setHeroToDelete(null);
     },

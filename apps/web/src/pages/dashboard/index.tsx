@@ -23,7 +23,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
+import { announcementApi } from "@/utils/announcement-api";
 
 type AnnouncementToDelete = {
   id: number;
@@ -37,16 +37,17 @@ interface DashboardHomePageProps {
 export default function DashboardHomePage({ session }: DashboardHomePageProps) {
   const [announcementToDelete, setAnnouncementToDelete] =
     useState<AnnouncementToDelete>(null);
-  const { data: announcements, isPending } = useQuery(
-    orpc.announcement.getAll.queryOptions()
-  );
+  const { data: announcements, isPending } = useQuery({
+    queryFn: announcementApi.list,
+    queryKey: announcementApi.queryKey,
+  });
   const queryClient = useQueryClient();
 
   const isAdminUser = isAdmin(session);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await orpc.announcement.delete.call({ id });
+      await announcementApi.delete({ id });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -54,7 +55,7 @@ export default function DashboardHomePage({ session }: DashboardHomePageProps) {
     onSuccess: async () => {
       toast.success("Ogłoszenie zostało usunięte");
       await queryClient.invalidateQueries({
-        queryKey: orpc.announcement.getAll.queryKey(),
+        queryKey: announcementApi.queryKey,
       });
       setAnnouncementToDelete(null);
     },

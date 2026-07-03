@@ -16,12 +16,11 @@ export type ListOwnedMargonemAccountsError = SquadBuilderPersistenceUnavailable;
 export class ListOwnedMargonemAccounts {
   /** List Margonem accounts owned by the actor. */
   readonly list = Effect.fn("AccountImport.listOwnedAccounts")(
-    (input: ListOwnedMargonemAccountsInput) => 
+    (input: ListOwnedMargonemAccountsInput) =>
       EffectAccountImportStore.use((store) =>
         store.listOwnedAccounts({
           actorUserId: input.actorUserId,
         })
       )
-    
   );
 }

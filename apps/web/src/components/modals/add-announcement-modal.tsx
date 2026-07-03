@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/responsive-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { getErrorMessage } from "@/lib/errors";
-import { orpc } from "@/utils/orpc";
+import { announcementApi } from "@/utils/announcement-api";
 
 interface AddAnnouncementModalProps {
   trigger: React.ReactNode;
@@ -37,14 +37,14 @@ export const AddAnnouncementModal = ({
     },
     onSubmit: async ({ value }) => {
       try {
-        await orpc.announcement.create.call({
+        await announcementApi.create({
           description: value.description,
           title: value.title,
         });
 
         toast.success("Ogłoszenie utworzone pomyślnie");
         await queryClient.invalidateQueries({
-          queryKey: orpc.announcement.getAll.queryKey(),
+          queryKey: announcementApi.queryKey,
         });
         setOpen(false);
         form.reset();

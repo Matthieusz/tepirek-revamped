@@ -4,6 +4,7 @@ import * as Layer from "effect/Layer";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import { AppHttpApi } from "../../http-api-contract.js";
 import { EffectConfirmOwnedAccountImport } from "./account-import/effect-confirm-owned-account-import.js";
 import { EffectPreviewMargonemProfileImport } from "./account-import/effect-preview-margonem-profile-import.js";
 import { EffectPreviewOwnedAccountImports } from "./account-import/effect-preview-owned-account-imports.js";
@@ -30,7 +31,6 @@ import {
   use as accountAccessInvites,
 } from "./account-sharing/effect-send-account-access-invite.js";
 import type { AppUserId } from "./app-user-id.js";
-import { SquadBuilderHttpApi } from "./http-api-contract.js";
 import type { MargonemAccountAccessId } from "./margonem-account-access-id.js";
 import type { MargonemAccountId } from "./margonem-account-id.js";
 import type { PendingMargonemAccountImportId } from "./pending-margonem-account-import-id.js";
@@ -102,7 +102,7 @@ const withRequestCorrelation = <A, E, R>(
 };
 
 const accountImportHandlers = HttpApiBuilder.group(
-  SquadBuilderHttpApi,
+  AppHttpApi,
   "squadBuilderAccountImport",
   (handlers) => {
     const previewProfile = new EffectPreviewMargonemProfileImport();
@@ -142,7 +142,7 @@ const accountImportHandlers = HttpApiBuilder.group(
 );
 
 const accountRefetchHandlers = HttpApiBuilder.group(
-  SquadBuilderHttpApi,
+  AppHttpApi,
   "squadBuilderAccountRefetch",
   (handlers) => {
     const previewRefetch = new EffectPreviewAccountRefetch();
@@ -171,7 +171,7 @@ const accountRefetchHandlers = HttpApiBuilder.group(
 );
 
 const accountSharingHandlers = HttpApiBuilder.group(
-  SquadBuilderHttpApi,
+  AppHttpApi,
   "squadBuilderAccountSharing",
   (handlers) =>
     handlers
@@ -242,7 +242,7 @@ const accountSharingHandlers = HttpApiBuilder.group(
 );
 
 const squadGroupSharingHandlers = HttpApiBuilder.group(
-  SquadBuilderHttpApi,
+  AppHttpApi,
   "squadBuilderSquadGroupSharing",
   (handlers) =>
     handlers
@@ -341,7 +341,3 @@ export const SquadBuilderHttpApiHandlers = Layer.mergeAll(
     )
   )
 );
-
-export const SquadBuilderHttpApiLayer = HttpApiBuilder.layer(
-  SquadBuilderHttpApi
-).pipe(Layer.provide(SquadBuilderHttpApiHandlers));

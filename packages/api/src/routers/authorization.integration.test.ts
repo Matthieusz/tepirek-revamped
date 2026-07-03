@@ -40,7 +40,7 @@ describe("API router authorization gates", () => {
     const client = createAuthenticatedRouterClient(user);
 
     await expectOrpcError(
-      client.auction.getStats({ profession: "paladin", type: "main" }),
+      client.user.list(),
       "FORBIDDEN",
       "Konto oczekuje na weryfikację"
     );
@@ -50,9 +50,9 @@ describe("API router authorization gates", () => {
     const member = await createVerifiedMember({ id: "verified-member" });
     const client = createAuthenticatedRouterClient(member);
 
-    await expect(
-      client.auction.getStats({ profession: "paladin", type: "main" })
-    ).resolves.toEqual({ totalSignups: 0, uniqueUsers: 0 });
+    await expect(client.user.list()).resolves.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: member.id })])
+    );
   });
 
   it("rejects verified non-admin members from admin-only behavior", async () => {

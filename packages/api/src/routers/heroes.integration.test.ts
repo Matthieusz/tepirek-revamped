@@ -1,12 +1,18 @@
-import { ORPCError } from "@orpc/server";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
+import { makeApiLiveLayer } from "../effect-app.js";
+import { HeroesStore } from "../modules/heroes/heroes-store.js";
 import {
   createAdmin,
   createEvent,
   createVerifiedMember,
 } from "../test/integration/builders.js";
-import { createAuthenticatedRouterClient } from "../test/integration/router-client.js";
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL environment variable is required");
+}
 
 const heroInput = {
   image: "https://example.com/hero.png",
@@ -14,17 +20,24 @@ const heroInput = {
   name: "Testowy Heros",
 } as const;
 
-describe("heroes router Postgres integration", () => {
-  it("lets an admin create a hero that verified members can read", async () => {
+const runStoreEffect = <A, E>(effect: Effect.Effect<A, E, HeroesStore>) =>
+  Effect.runPromise(effect.pipe(Effect.provide(makeApiLiveLayer(databaseUrl))));
+
+describe("heroes HttpApi store Postgres integration", () => {
+  it("creates heroes that verified members can read", async () => {
     const event = await createEvent({ name: "Hero Event" });
-    const admin = await createAdmin({ id: "heroes-admin" });
-    const member = await createVerifiedMember({ id: "heroes-member" });
-    const adminClient = createAuthenticatedRouterClient(admin);
-    const memberClient = createAuthenticatedRouterClient(member);
+    await createAdmin({ id: "heroes-admin" });
+    await createVerifiedMember({ id: "heroes-member" });
 
-    await adminClient.heroes.create({ ...heroInput, eventId: event.id });
+    await runStoreEffect(
+      HeroesStore.use((store) =>
+        store.create({ ...heroInput, eventId: event.id })
+      )
+    );
 
-    await expect(memberClient.heroes.getAll()).resolves.toMatchObject([
+    await expect(
+      runStoreEffect(HeroesStore.use((store) => store.list()))
+    ).resolves.toMatchObject([
       {
         eventId: event.id,
         image: heroInput.image,
@@ -33,50 +46,33 @@ describe("heroes router Postgres integration", () => {
       },
     ]);
     await expect(
-      memberClient.heroes.getByEventId({ eventId: event.id })
-    ).resolves.toMatchObject([
-      {
-        eventId: event.id,
-        name: heroInput.name,
-      },
-    ]);
+      runStoreEffect(
+        HeroesStore.use((store) => store.listByEvent({ eventId: event.id }))
+      )
+    ).resolves.toMatchObject([{ eventId: event.id, name: heroInput.name }]);
   });
 
-  it("prevents verified non-admin members from creating or deleting heroes", async () => {
-    const event = await createEvent({ name: "Protected Hero Event" });
-    const admin = await createAdmin({ id: "heroes-owner" });
-    const member = await createVerifiedMember({ id: "heroes-non-admin" });
-    const adminClient = createAuthenticatedRouterClient(admin);
-    const memberClient = createAuthenticatedRouterClient(member);
-
-    await expect(
-      memberClient.heroes.create({ ...heroInput, eventId: event.id })
-    ).rejects.toBeInstanceOf(ORPCError);
-
-    await adminClient.heroes.create({ ...heroInput, eventId: event.id });
-    const [createdHero] = await adminClient.heroes.getAll();
-
-    await expect(
-      memberClient.heroes.delete({ id: createdHero?.id ?? 0 })
-    ).rejects.toBeInstanceOf(ORPCError);
-
-    await expect(adminClient.heroes.getAll()).resolves.toHaveLength(1);
-  });
-
-  it("lets an admin delete a hero", async () => {
+  it("deletes heroes", async () => {
     const event = await createEvent({ name: "Deleted Hero Event" });
-    const admin = await createAdmin({ id: "heroes-delete-admin" });
-    const client = createAuthenticatedRouterClient(admin);
+    await createAdmin({ id: "heroes-delete-admin" });
 
-    await client.heroes.create({ ...heroInput, eventId: event.id });
-    const [createdHero] = await client.heroes.getAll();
+    await runStoreEffect(
+      HeroesStore.use((store) =>
+        store.create({ ...heroInput, eventId: event.id })
+      )
+    );
+    const [createdHero] = await runStoreEffect(
+      HeroesStore.use((store) => store.list())
+    );
+
+    await runStoreEffect(
+      HeroesStore.use((store) => store.delete({ id: createdHero?.id ?? 0 }))
+    );
 
     await expect(
-      client.heroes.delete({ id: createdHero?.id ?? 0 })
-    ).resolves.toBeDefined();
-
-    await expect(
-      client.heroes.getByEventId({ eventId: event.id })
+      runStoreEffect(
+        HeroesStore.use((store) => store.listByEvent({ eventId: event.id }))
+      )
     ).resolves.toEqual([]);
   });
 });

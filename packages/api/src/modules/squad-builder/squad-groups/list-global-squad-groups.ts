@@ -15,7 +15,7 @@ export class ListGlobalSquadGroups {
     (input: {
       readonly actorUserId: AppUserId;
       readonly filters?: SquadGroupListFilters;
-    }) => 
+    }) =>
       EffectSquadGroupStore.use((store) =>
         store.listGlobalSquadGroups({
           actorUserId: input.actorUserId,
@@ -23,6 +23,5 @@ export class ListGlobalSquadGroups {
           limit: squadGroupListFilterPolicy.defaultLimit,
         })
       )
-    
   );
 }

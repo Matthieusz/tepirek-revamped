@@ -34,11 +34,8 @@ import {
 import { toMargonemProfileUrl } from "../margonem-profile-url.js";
 import { pendingImportIdToNumber } from "../pending-margonem-account-import-id.js";
 import { isError } from "../result.js";
-import type {
-  EffectSquadBuilderPersistenceUnavailable} from "../squad-groups/squad-group-errors.js";
-import {
-  PendingMargonemAccountImportNotFound,
-} from "../squad-groups/squad-group-errors.js";
+import type { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
+import { PendingMargonemAccountImportNotFound } from "../squad-groups/squad-group-errors.js";
 import type {
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,

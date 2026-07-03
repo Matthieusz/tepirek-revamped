@@ -17,7 +17,7 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { getErrorMessage } from "@/lib/errors";
-import { orpc } from "@/utils/orpc";
+import { skillsApi } from "@/utils/skills-api";
 
 interface AddEventModalProps {
   trigger: React.ReactNode;
@@ -45,7 +45,7 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
     },
     onSubmit: async ({ value }) => {
       try {
-        await orpc.skills.createRange.call({
+        await skillsApi.createRange({
           image: value.image ?? "",
           level: value.level,
           name: value.name,
@@ -53,7 +53,7 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
 
         toast.success("Przedział utworzony pomyślnie");
         await queryClient.invalidateQueries({
-          queryKey: orpc.skills.getAllRanges.queryKey(),
+          queryKey: skillsApi.rangesQueryKey,
         });
         setOpen(false);
         form.reset();

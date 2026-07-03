@@ -1,0 +1,80 @@
+/* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
+import * as Schema from "effect/Schema";
+import {
+  HttpApiEndpoint,
+  HttpApiGroup,
+  HttpApiSchema,
+} from "effect/unstable/httpapi";
+
+const PositiveInt = Schema.Number.check(
+  Schema.isInt(),
+  Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
+);
+const HeroLevel = Schema.Number.check(
+  Schema.isInt(),
+  Schema.isBetween({ maximum: 300, minimum: 1 })
+);
+
+export const HeroIdSchema = PositiveInt.annotate({ identifier: "HeroId" });
+export const EventIdSchema = PositiveInt.annotate({ identifier: "EventId" });
+
+export const CreateHeroPayload = Schema.Struct({
+  eventId: EventIdSchema,
+  image: Schema.optional(Schema.NonEmptyString),
+  level: Schema.optional(HeroLevel),
+  name: Schema.NonEmptyString,
+});
+export const DeleteHeroPayload = Schema.Struct({ id: HeroIdSchema });
+export const HeroesByEventPayload = Schema.Struct({ eventId: EventIdSchema });
+
+export const HeroSummary = Schema.Struct({
+  eventId: EventIdSchema,
+  id: HeroIdSchema,
+  image: Schema.NullOr(Schema.String),
+  level: HeroLevel,
+  name: Schema.String,
+  pointWorth: Schema.String,
+});
+
+export class HeroesUnauthorized extends Schema.TaggedErrorClass<HeroesUnauthorized>()(
+  "HeroesUnauthorized",
+  { message: Schema.String }
+) {}
+export class HeroesForbidden extends Schema.TaggedErrorClass<HeroesForbidden>()(
+  "HeroesForbidden",
+  { message: Schema.String }
+) {}
+export class HeroesPersistenceUnavailable extends Schema.TaggedErrorClass<HeroesPersistenceUnavailable>()(
+  "HeroesPersistenceUnavailable",
+  { cause: Schema.Defect(), operation: Schema.String }
+) {}
+
+export const HeroesError = Schema.Union([
+  HeroesUnauthorized.pipe(HttpApiSchema.status(401)),
+  HeroesForbidden.pipe(HttpApiSchema.status(403)),
+  HeroesPersistenceUnavailable.pipe(HttpApiSchema.status(500)),
+]);
+
+export const HeroesHttpApiGroup = HttpApiGroup.make("heroes")
+  .add(
+    HttpApiEndpoint.post("createHero", "/", {
+      error: HeroesError,
+      payload: CreateHeroPayload,
+      success: Schema.Void,
+    }),
+    HttpApiEndpoint.post("deleteHero", "/delete", {
+      error: HeroesError,
+      payload: DeleteHeroPayload,
+      success: Schema.Void,
+    }),
+    HttpApiEndpoint.get("listHeroes", "/", {
+      error: HeroesError,
+      success: Schema.Array(HeroSummary),
+    }),
+    HttpApiEndpoint.post("listHeroesByEvent", "/by-event", {
+      error: HeroesError,
+      payload: HeroesByEventPayload,
+      success: Schema.Array(HeroSummary),
+    })
+  )
+  .prefix("/heroes");

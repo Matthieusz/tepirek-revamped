@@ -7,6 +7,16 @@ import type { Exit } from "effect/Exit";
 import * as Layer from "effect/Layer";
 import type { SqlError } from "effect/unstable/sql/SqlError";
 
+import { AnnouncementStoreLayer } from "./modules/announcement/announcement-store.js";
+import type { AnnouncementStore } from "./modules/announcement/announcement-store.js";
+import { AuctionStoreLayer } from "./modules/auction/auction-store.js";
+import type { AuctionStore } from "./modules/auction/auction-store.js";
+import { EventStoreLayer } from "./modules/event/event-store.js";
+import type { EventStore } from "./modules/event/event-store.js";
+import { HeroesStoreLayer } from "./modules/heroes/heroes-store.js";
+import type { HeroesStore } from "./modules/heroes/heroes-store.js";
+import { SkillsStoreLayer } from "./modules/skills/skills-store.js";
+import type { SkillsStore } from "./modules/skills/skills-store.js";
 import type { EffectAccountImportStore } from "./modules/squad-builder/account-import/effect-account-import-store.js";
 import type { EffectAccountRefetchStore } from "./modules/squad-builder/account-refetch/effect-account-refetch-store.js";
 import type { EffectAccountSharingStore } from "./modules/squad-builder/account-sharing/effect-account-sharing-store.js";
@@ -36,6 +46,8 @@ import { layer as squadEditorInviteTargetsLayer } from "./modules/squad-builder/
 import type { Service as SquadGroupEditorInvites } from "./modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite.js";
 import { layer as squadGroupEditorInvitesLayer } from "./modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite.js";
 import type { EffectSquadGroupStore } from "./modules/squad-builder/squad-groups/squad-group-store.js";
+import { TodoStoreLayer } from "./modules/todo/todo-store.js";
+import type { TodoStore } from "./modules/todo/todo-store.js";
 
 /** Process-wide Layer memo map shared by production API Effect runtimes. */
 export const apiLayerMemoMap = Layer.makeMemoMapUnsafe();
@@ -44,7 +56,17 @@ export const apiLayerMemoMap = Layer.makeMemoMapUnsafe();
 export const makeApiSquadBuilderLayer = (
   databaseUrl: string
 ): Layer.Layer<
-  Exclude<SquadBuilderServices, EffectFirecrawlClient | EffectFirecrawlConfig>,
+  Exclude<
+    SquadBuilderServices,
+    | EffectFirecrawlClient
+    | EffectFirecrawlConfig
+    | AnnouncementStore
+    | TodoStore
+    | HeroesStore
+    | EventStore
+    | SkillsStore
+    | AuctionStore
+  >,
   SqlError
 > => {
   const storeLayer = DrizzleEffectSquadBuilderStoresLayer.pipe(
@@ -71,6 +93,14 @@ export const makeApiLiveLayer = (
 ): Layer.Layer<SquadBuilderServices, SqlError | ConfigError> =>
   Layer.mergeAll(
     makeApiSquadBuilderLayer(databaseUrl),
+    AnnouncementStoreLayer.pipe(
+      Layer.provide(makeLiveDatabaseLayer(databaseUrl))
+    ),
+    TodoStoreLayer.pipe(Layer.provide(makeLiveDatabaseLayer(databaseUrl))),
+    HeroesStoreLayer.pipe(Layer.provide(makeLiveDatabaseLayer(databaseUrl))),
+    EventStoreLayer.pipe(Layer.provide(makeLiveDatabaseLayer(databaseUrl))),
+    SkillsStoreLayer.pipe(Layer.provide(makeLiveDatabaseLayer(databaseUrl))),
+    AuctionStoreLayer.pipe(Layer.provide(makeLiveDatabaseLayer(databaseUrl))),
     EffectFirecrawlConfigLiveLayer,
     EffectFirecrawlClientLiveLayer.pipe(
       Layer.provide(EffectFirecrawlConfigLiveLayer)
@@ -134,6 +164,12 @@ export const makeRuntime = <I, S, E>(
 };
 
 type SquadBuilderServices =
+  | AnnouncementStore
+  | TodoStore
+  | HeroesStore
+  | EventStore
+  | SkillsStore
+  | AuctionStore
   | EffectSquadGroupStore
   | EffectAccountImportStore
   | EffectAccountRefetchStore

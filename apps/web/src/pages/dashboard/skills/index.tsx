@@ -8,16 +8,17 @@ import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
+import { skillsApi } from "@/utils/skills-api";
 
 interface SkillsIndexPageProps {
   session: AuthSession;
 }
 
 export default function SkillsIndexPage({ session }: SkillsIndexPageProps) {
-  const { data: ranges, isPending } = useQuery(
-    orpc.skills.getAllRanges.queryOptions()
-  );
+  const { data: ranges, isPending } = useQuery({
+    queryFn: skillsApi.listRanges,
+    queryKey: skillsApi.rangesQueryKey,
+  });
 
   const isAdminUser = isAdmin(session);
 

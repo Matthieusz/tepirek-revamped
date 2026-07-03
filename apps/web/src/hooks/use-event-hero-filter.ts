@@ -16,7 +16,8 @@ import type {
   FilterSelection,
 } from "@/lib/event-hero-filter";
 import { useFilterPersistence } from "@/lib/use-filter-persistence";
-import { orpc } from "@/utils/orpc";
+import { eventsApi } from "@/utils/events-api";
+import { heroesApi } from "@/utils/heroes-api";
 
 /**
  * Route ids that share the Event/Hero URL search shape (eventId/heroId).
@@ -75,14 +76,16 @@ export const useEventHeroFilter = (
     urlHeroId: typeof urlHeroId === "string" ? urlHeroId : undefined,
   });
 
-  const { data: events } = useQuery(orpc.event.getAll.queryOptions());
+  const { data: events } = useQuery({
+    queryFn: eventsApi.list,
+    queryKey: eventsApi.queryKey,
+  });
 
   const heroQueryEnabled = isHeroQueryEnabled(state);
   const { data: heroes, isPending: heroesLoading } = useQuery({
-    ...orpc.heroes.getByEventId.queryOptions({
-      input: { eventId: Number(state.eventId) },
-    }),
     enabled: heroQueryEnabled,
+    queryFn: () => heroesApi.listByEvent({ eventId: Number(state.eventId) }),
+    queryKey: heroesApi.byEventQueryKey(Number(state.eventId)),
   });
 
   const sortedHeroes = heroQueryEnabled ? sortHeroesByLevel(heroes) : [];

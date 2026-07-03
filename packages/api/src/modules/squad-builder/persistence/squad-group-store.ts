@@ -113,8 +113,16 @@ import {
   squadGroupNameToString,
   squadNameToString,
 } from "../squad-name.js";
-import { escapeLikePattern, failPersistence, namedStoreMethod, parsePersistedAppUserId, parsePersistedSquadGroupName, persistenceQuery, persistenceQueryUnsafe } from './persistence-query.js';
-import type { EffectSquadGroupPersistenceOperation } from './persistence-query.js';
+import {
+  escapeLikePattern,
+  failPersistence,
+  namedStoreMethod,
+  parsePersistedAppUserId,
+  parsePersistedSquadGroupName,
+  persistenceQuery,
+  persistenceQueryUnsafe,
+} from "./persistence-query.js";
+import type { EffectSquadGroupPersistenceOperation } from "./persistence-query.js";
 
 const createSquadGroupWithDatabase =
   (database: EffectPgDatabase) =>

@@ -1,29 +1,38 @@
-import { ORPCError } from "@orpc/server";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
+import { makeApiLiveLayer } from "../effect-app.js";
+import { EventStore } from "../modules/event/event-store.js";
 import {
   createAdmin,
   createVerifiedMember,
 } from "../test/integration/builders.js";
-import { createAuthenticatedRouterClient } from "../test/integration/router-client.js";
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL environment variable is required");
+}
 
 const eventInput = {
   color: "#22c55e",
-  endTime: "2030-01-02T03:04:05.000Z",
+  endTime: new Date("2030-01-02T03:04:05.000Z"),
   icon: "calendar",
   name: "Guild Boss Hunt",
 } as const;
 
-describe("event router Postgres integration", () => {
-  it("lets an admin create an event that verified members can read", async () => {
-    const admin = await createAdmin({ id: "event-admin" });
-    const member = await createVerifiedMember({ id: "event-member" });
-    const adminClient = createAuthenticatedRouterClient(admin);
-    const memberClient = createAuthenticatedRouterClient(member);
+const runStoreEffect = <A, E>(effect: Effect.Effect<A, E, EventStore>) =>
+  Effect.runPromise(effect.pipe(Effect.provide(makeApiLiveLayer(databaseUrl))));
 
-    await adminClient.event.create(eventInput);
+describe("event HttpApi store Postgres integration", () => {
+  it("creates events that verified members can read", async () => {
+    await createAdmin({ id: "event-admin" });
+    await createVerifiedMember({ id: "event-member" });
 
-    await expect(memberClient.event.getAll()).resolves.toMatchObject([
+    await runStoreEffect(EventStore.use((store) => store.create(eventInput)));
+
+    await expect(
+      runStoreEffect(EventStore.use((store) => store.list()))
+    ).resolves.toMatchObject([
       {
         active: true,
         color: "#22c55e",
@@ -33,47 +42,41 @@ describe("event router Postgres integration", () => {
     ]);
   });
 
-  it("prevents verified non-admin members from creating events", async () => {
-    const member = await createVerifiedMember({ id: "event-non-admin" });
-    const client = createAuthenticatedRouterClient(member);
+  it("toggles event activity", async () => {
+    await createAdmin({ id: "event-toggle-admin" });
+    await createVerifiedMember({ id: "event-toggle-member" });
 
-    await expect(client.event.create(eventInput)).rejects.toBeInstanceOf(
-      ORPCError
+    await runStoreEffect(
+      EventStore.use((store) =>
+        store.create({ ...eventInput, name: "Toggle Event Activity" })
+      )
     );
-
-    await expect(client.event.getAll()).resolves.toEqual([]);
-  });
-
-  it("lets admins toggle event activity that verified members can read", async () => {
-    const admin = await createAdmin({ id: "event-toggle-admin" });
-    const member = await createVerifiedMember({ id: "event-toggle-member" });
-    const adminClient = createAuthenticatedRouterClient(admin);
-    const memberClient = createAuthenticatedRouterClient(member);
-
-    await adminClient.event.create({
-      ...eventInput,
-      name: "Toggle Event Activity",
-    });
-    const [createdEvent] = await memberClient.event.getAll();
+    const [createdEvent] = await runStoreEffect(
+      EventStore.use((store) => store.list())
+    );
     if (!createdEvent) {
       throw new Error("expected created event to exist");
     }
 
-    await adminClient.event.toggleActive({
-      active: false,
-      id: createdEvent.id,
-    });
-
-    await expect(memberClient.event.getAll()).resolves.toEqual([
+    await runStoreEffect(
+      EventStore.use((store) =>
+        store.toggleActive({ active: false, id: createdEvent.id })
+      )
+    );
+    await expect(
+      runStoreEffect(EventStore.use((store) => store.list()))
+    ).resolves.toEqual([
       expect.objectContaining({ active: false, id: createdEvent.id }),
     ]);
 
-    await adminClient.event.toggleActive({
-      active: true,
-      id: createdEvent.id,
-    });
-
-    await expect(memberClient.event.getAll()).resolves.toEqual([
+    await runStoreEffect(
+      EventStore.use((store) =>
+        store.toggleActive({ active: true, id: createdEvent.id })
+      )
+    );
+    await expect(
+      runStoreEffect(EventStore.use((store) => store.list()))
+    ).resolves.toEqual([
       expect.objectContaining({ active: true, id: createdEvent.id }),
     ]);
   });

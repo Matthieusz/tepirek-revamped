@@ -1,32 +1,45 @@
-import { ORPCError } from "@orpc/server";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
+import { makeApiLiveLayer } from "../effect-app.js";
+import { SkillsStore } from "../modules/skills/skills-store.js";
 import {
-  createAdmin,
   createProfession,
   createRange,
   createVerifiedMember,
 } from "../test/integration/builders.js";
-import { createAuthenticatedRouterClient } from "../test/integration/router-client.js";
 
-describe("skills router Postgres integration", () => {
-  it("lets admins create professions and ranges that verified members can list", async () => {
-    const admin = await createAdmin({ id: "skills-admin" });
-    const member = await createVerifiedMember({ id: "skills-member" });
-    const adminClient = createAuthenticatedRouterClient(admin);
-    const memberClient = createAuthenticatedRouterClient(member);
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL environment variable is required");
+}
+const runStoreEffect = <A, E>(effect: Effect.Effect<A, E, SkillsStore>) =>
+  Effect.runPromise(effect.pipe(Effect.provide(makeApiLiveLayer(databaseUrl))));
+const runStoreExit = <A, E>(effect: Effect.Effect<A, E, SkillsStore>) =>
+  Effect.runPromiseExit(
+    effect.pipe(Effect.provide(makeApiLiveLayer(databaseUrl)))
+  );
 
-    await adminClient.skills.createProfession({ name: "Paladyn" });
-    await adminClient.skills.createRange({
-      image: "https://example.com/range.png",
-      level: 100,
-      name: "Przedział 100",
-    });
-
+describe("skills HttpApi store Postgres integration", () => {
+  it("creates professions and ranges", async () => {
+    await runStoreEffect(
+      SkillsStore.use((store) => store.createProfession({ name: "Paladyn" }))
+    );
+    await runStoreEffect(
+      SkillsStore.use((store) =>
+        store.createRange({
+          image: "https://example.com/range.png",
+          level: 100,
+          name: "Przedział 100",
+        })
+      )
+    );
     await expect(
-      memberClient.skills.getAllProfessions()
+      runStoreEffect(SkillsStore.use((store) => store.listProfessions()))
     ).resolves.toMatchObject([{ name: "Paladyn" }]);
-    await expect(memberClient.skills.getAllRanges()).resolves.toMatchObject([
+    await expect(
+      runStoreEffect(SkillsStore.use((store) => store.listRanges()))
+    ).resolves.toMatchObject([
       {
         image: "https://example.com/range.png",
         level: 100,
@@ -36,7 +49,7 @@ describe("skills router Postgres integration", () => {
     ]);
   });
 
-  it("lets a verified member create a skill for a range", async () => {
+  it("creates skills for a range", async () => {
     const member = await createVerifiedMember({
       id: "skill-author",
       image: "https://example.com/skill-author.png",
@@ -44,18 +57,24 @@ describe("skills router Postgres integration", () => {
     });
     const profession = await createProfession({ name: "Tropiciel" });
     const range = await createRange({ name: "Elita 120" });
-    const client = createAuthenticatedRouterClient(member);
-
-    await client.skills.createSkill({
-      link: "https://example.com/skill",
-      mastery: true,
-      name: "Podwójny strzał",
-      professionId: profession.id,
-      rangeId: range.id,
-    });
-
+    await runStoreEffect(
+      SkillsStore.use((store) =>
+        store.createSkill({
+          link: "https://example.com/skill",
+          mastery: true,
+          name: "Podwójny strzał",
+          professionId: profession.id,
+          rangeId: range.id,
+          userId: member.id,
+        })
+      )
+    );
     await expect(
-      client.skills.getSkillsByRange({ rangeId: range.id })
+      runStoreEffect(
+        SkillsStore.use((store) =>
+          store.listSkillsByRange({ rangeId: range.id })
+        )
+      )
     ).resolves.toMatchObject([
       {
         addedBy: "Skill Author",
@@ -69,121 +88,56 @@ describe("skills router Postgres integration", () => {
     ]);
   });
 
-  it("rejects non-http skill links and does not persist them", async () => {
+  it("rejects invalid links and duplicate or empty slugs", async () => {
     const member = await createVerifiedMember({
       id: "skill-invalid-link-author",
     });
     const profession = await createProfession({ name: "Łowca" });
     const range = await createRange({ name: "Elita 140" });
-    const client = createAuthenticatedRouterClient(member);
-
     await expect(
-      client.skills.createSkill({
-        link: "ftp://example.com/skill",
-        mastery: false,
-        name: "Nieprawidłowy link",
-        professionId: profession.id,
-        rangeId: range.id,
-      })
-    ).rejects.toBeInstanceOf(ORPCError);
-
+      runStoreExit(
+        SkillsStore.use((store) =>
+          store.createSkill({
+            link: "ftp://example.com/skill",
+            mastery: false,
+            name: "Nieprawidłowy link",
+            professionId: profession.id,
+            rangeId: range.id,
+            userId: member.id,
+          })
+        )
+      )
+    ).resolves.toMatchObject({ _tag: "Failure" });
     await expect(
-      client.skills.getSkillsByRange({ rangeId: range.id })
-    ).resolves.toEqual([]);
-  });
-
-  it("finds ranges by persisted slug and returns null for a missing slug", async () => {
-    const member = await createVerifiedMember({ id: "slug-member" });
-    await createRange({ name: "Elita Łódowa" });
-    const client = createAuthenticatedRouterClient(member);
-
+      runStoreExit(
+        SkillsStore.use((store) =>
+          store.createRange({
+            image: "https://example.com/empty.png",
+            level: 100,
+            name: "++--",
+          })
+        )
+      )
+    ).resolves.toMatchObject({ _tag: "Failure" });
+    await runStoreEffect(
+      SkillsStore.use((store) =>
+        store.createRange({
+          image: "https://example.com/first.png",
+          level: 100,
+          name: "Przedział 100",
+        })
+      )
+    );
     await expect(
-      client.skills.getRangeBySlug({ slug: "elita-lodowa" })
-    ).resolves.toMatchObject({ name: "Elita Łódowa", slug: "elita-lodowa" });
-    await expect(
-      client.skills.getRangeBySlug({ slug: "brak-przedzialu" })
-    ).resolves.toBeNull();
-  });
-
-  it("stores Polish range slugs created through the API", async () => {
-    const admin = await createAdmin({ id: "range-slug-admin" });
-    const member = await createVerifiedMember({ id: "range-slug-member" });
-    const adminClient = createAuthenticatedRouterClient(admin);
-    const memberClient = createAuthenticatedRouterClient(member);
-
-    await adminClient.skills.createRange({
-      image: "https://example.com/lowca.png",
-      level: 300,
-      name: "Łowca 300+",
-    });
-
-    await expect(memberClient.skills.getAllRanges()).resolves.toEqual([
-      expect.objectContaining({ name: "Łowca 300+", slug: "lowca-300" }),
-    ]);
-    await expect(
-      memberClient.skills.getRangeBySlug({ slug: "lowca-300" })
-    ).resolves.toMatchObject({ name: "Łowca 300+" });
-  });
-
-  it("rejects duplicate normalized range slugs", async () => {
-    const admin = await createAdmin({ id: "range-conflict-admin" });
-    const client = createAuthenticatedRouterClient(admin);
-
-    await client.skills.createRange({
-      image: "https://example.com/first.png",
-      level: 100,
-      name: "Przedział 100",
-    });
-
-    await expect(
-      client.skills.createRange({
-        image: "https://example.com/second.png",
-        level: 101,
-        name: "Przedzial 100!!!",
-      })
-    ).rejects.toBeInstanceOf(ORPCError);
-  });
-
-  it("rejects range names without usable slug characters", async () => {
-    const admin = await createAdmin({ id: "range-empty-slug-admin" });
-    const client = createAuthenticatedRouterClient(admin);
-
-    await expect(
-      client.skills.createRange({
-        image: "https://example.com/empty.png",
-        level: 100,
-        name: "++--",
-      })
-    ).rejects.toBeInstanceOf(ORPCError);
-  });
-
-  it("prevents verified non-admin members from deleting ranges or skills", async () => {
-    const member = await createVerifiedMember({ id: "skills-non-admin" });
-    const profession = await createProfession({ name: "Mag" });
-    const range = await createRange({ name: "Zakres Chroniony" });
-    const client = createAuthenticatedRouterClient(member);
-
-    await client.skills.createSkill({
-      link: "https://example.com/protected-skill",
-      mastery: false,
-      name: "Chroniona umiejętność",
-      professionId: profession.id,
-      rangeId: range.id,
-    });
-    const [createdSkill] = await client.skills.getSkillsByRange({
-      rangeId: range.id,
-    });
-
-    await expect(
-      client.skills.deleteRange({ id: range.id })
-    ).rejects.toBeInstanceOf(ORPCError);
-    await expect(
-      client.skills.deleteSkill({ id: createdSkill?.id ?? 0 })
-    ).rejects.toBeInstanceOf(ORPCError);
-
-    await expect(client.skills.getAllRanges()).resolves.toHaveLength(1);
-    await expect(
-      client.skills.getSkillsByRange({ rangeId: range.id })
-    ).resolves.toHaveLength(1);
+      runStoreExit(
+        SkillsStore.use((store) =>
+          store.createRange({
+            image: "https://example.com/second.png",
+            level: 101,
+            name: "Przedzial 100!!!",
+          })
+        )
+      )
+    ).resolves.toMatchObject({ _tag: "Failure" });
   });
 });

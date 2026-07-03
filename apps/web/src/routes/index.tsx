@@ -3,12 +3,23 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Link2, LogIn, UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { orpc } from "@/utils/orpc";
+import { serverUrl } from "@/lib/env";
 
 const HomeComponent = () => {
-  const { data: healthCheckData, isLoading: healthCheckIsLoading } = useQuery(
-    orpc.healthCheck.queryOptions()
-  );
+  const { data: healthCheckData, isLoading: healthCheckIsLoading } = useQuery({
+    queryFn: async () => {
+      const response = await fetch(`${serverUrl}/health`, {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Health check failed");
+      }
+
+      return response.json() as Promise<"OK">;
+    },
+    queryKey: ["healthCheck"],
+  });
 
   let statusText: string;
   let statusColor = "text-muted-foreground";

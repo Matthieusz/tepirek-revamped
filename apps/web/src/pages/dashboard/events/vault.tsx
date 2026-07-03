@@ -23,6 +23,7 @@ import { ALL_FILTER, toQueryInput } from "@/lib/event-hero-filter";
 import { formatVaultEarnings } from "@/lib/gold";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
+import { eventsApi } from "@/utils/events-api";
 import { orpc } from "@/utils/orpc";
 
 const routeApi = getRouteApi("/dashboard/events/vault");
@@ -37,7 +38,10 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
   const hasInitializedRef = useRef(false);
   const queryClient = useQueryClient();
 
-  const { data: events } = useQuery(orpc.event.getAll.queryOptions());
+  const { data: events } = useQuery({
+    queryFn: eventsApi.list,
+    queryKey: eventsApi.queryKey,
+  });
 
   // Get the oldest event with unpaid users
   const { data: oldestUnpaidEventId, isPending: oldestUnpaidLoading } =

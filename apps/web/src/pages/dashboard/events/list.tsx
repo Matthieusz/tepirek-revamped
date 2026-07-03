@@ -32,7 +32,7 @@ import { getEventIcon } from "@/lib/constants";
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
+import { eventsApi } from "@/utils/events-api";
 
 type EventAction = {
   id: number;
@@ -47,16 +47,17 @@ interface EventsListPageProps {
 
 export default function EventsListPage({ session }: EventsListPageProps) {
   const [eventAction, setEventAction] = useState<EventAction>(null);
-  const { data: events, isPending } = useQuery(
-    orpc.event.getAll.queryOptions()
-  );
+  const { data: events, isPending } = useQuery({
+    queryFn: eventsApi.list,
+    queryKey: eventsApi.queryKey,
+  });
   const queryClient = useQueryClient();
 
   const isAdminUser = isAdmin(session);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await orpc.event.delete.call({ id });
+      await eventsApi.delete({ id });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -64,7 +65,7 @@ export default function EventsListPage({ session }: EventsListPageProps) {
     onSuccess: async () => {
       toast.success("Event został usunięty");
       await queryClient.invalidateQueries({
-        queryKey: orpc.event.getAll.queryKey(),
+        queryKey: eventsApi.queryKey,
       });
       setEventAction(null);
     },
@@ -72,7 +73,7 @@ export default function EventsListPage({ session }: EventsListPageProps) {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, active }: { id: number; active: boolean }) => {
-      await orpc.event.toggleActive.call({ active, id });
+      await eventsApi.toggleActive({ active, id });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -80,7 +81,7 @@ export default function EventsListPage({ session }: EventsListPageProps) {
     onSuccess: async () => {
       toast.success("Status eventu został zmieniony");
       await queryClient.invalidateQueries({
-        queryKey: orpc.event.getAll.queryKey(),
+        queryKey: eventsApi.queryKey,
       });
       setEventAction(null);
     },

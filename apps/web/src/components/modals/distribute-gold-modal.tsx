@@ -36,6 +36,8 @@ import { getErrorMessage } from "@/lib/errors";
 import { ALL_FILTER } from "@/lib/event-hero-filter";
 import { parseGoldAmount } from "@/lib/gold";
 import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
+import { eventsApi } from "@/utils/events-api";
+import { heroesApi } from "@/utils/heroes-api";
 import { orpc } from "@/utils/orpc";
 
 interface HeroStats {
@@ -153,11 +155,15 @@ export const DistributeGoldModal = ({
     setOpen(nextOpen);
   };
 
-  const { data: events } = useQuery(orpc.event.getAll.queryOptions());
+  const { data: events } = useQuery({
+    queryFn: eventsApi.list,
+    queryKey: eventsApi.queryKey,
+  });
 
-  const { data: heroes, isPending: heroesLoading } = useQuery(
-    orpc.heroes.getAll.queryOptions()
-  );
+  const { data: heroes, isPending: heroesLoading } = useQuery({
+    queryFn: heroesApi.list,
+    queryKey: heroesApi.queryKey,
+  });
 
   const filteredHeroes = (
     eventId === ALL_FILTER

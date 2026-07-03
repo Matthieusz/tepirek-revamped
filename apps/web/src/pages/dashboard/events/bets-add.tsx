@@ -30,6 +30,8 @@ import { getErrorMessage } from "@/lib/errors";
 import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
+import { eventsApi } from "@/utils/events-api";
+import { heroesApi } from "@/utils/heroes-api";
 import { orpc } from "@/utils/orpc";
 
 interface AddBetForm {
@@ -39,7 +41,7 @@ interface AddBetForm {
 }
 
 interface HeroSelectionProps {
-  heroes: (HeroCardOption & { eventId: number })[] | undefined;
+  heroes: readonly (HeroCardOption & { eventId: number })[] | undefined;
   heroesLoading: boolean;
   selectedEventId: string;
   fieldValue: string;
@@ -117,7 +119,7 @@ interface BetsAddFormProps {
       }[]
     | undefined;
   eventsLoading: boolean;
-  heroes: (HeroCardOption & { eventId: number })[] | undefined;
+  heroes: readonly (HeroCardOption & { eventId: number })[] | undefined;
   heroesLoading: boolean;
   verifiedUsers: SelectableUser[] | undefined;
   usersLoading: boolean;
@@ -314,13 +316,15 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
   const isAdminUser = isAdmin(session);
 
   const { data: events, isPending: eventsLoading } = useQuery({
-    ...orpc.event.getAll.queryOptions(),
     enabled: isAdminUser,
+    queryFn: eventsApi.list,
+    queryKey: eventsApi.queryKey,
   });
 
   const { data: heroes, isPending: heroesLoading } = useQuery({
-    ...orpc.heroes.getAll.queryOptions(),
     enabled: isAdminUser,
+    queryFn: heroesApi.list,
+    queryKey: heroesApi.queryKey,
   });
 
   const { data: verifiedUsers, isPending: usersLoading } = useQuery({

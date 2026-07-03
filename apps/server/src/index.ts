@@ -9,8 +9,9 @@ import {
   makeApiLiveLayer,
   makeApiRuntime,
 } from "@tepirek-revamped/api/effect-app";
-import { SquadBuilderHttpApi } from "@tepirek-revamped/api/modules/squad-builder/http-api-contract";
-import { SquadBuilderHttpApiLayer } from "@tepirek-revamped/api/modules/squad-builder/http-api-handlers";
+import { AppHttpApi } from "@tepirek-revamped/api/http-api-contract";
+import { AppHttpApiLayer } from "@tepirek-revamped/api/http-api-handlers";
+import { HealthHttpApiLayer } from "@tepirek-revamped/api/modules/health/http-api-handlers";
 import { createAppRouter } from "@tepirek-revamped/api/routers/index";
 import { auth } from "@tepirek-revamped/auth";
 import * as Layer from "effect/Layer";
@@ -22,6 +23,7 @@ import type { BetterAuthInstance } from "evlog/better-auth";
 import { evlog } from "evlog/hono";
 import type { EvlogVariables } from "evlog/hono";
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
@@ -60,17 +62,26 @@ export const appRouter = createAppRouter();
 // SAFETY: The production layer immediately provides the squad-builder services
 // and HttpServer services required by the HttpApi layer before it reaches
 // toWebHandler; this narrows the exported web handler to the Hono boundary.
-const squadBuilderHttpApiLayer = SquadBuilderHttpApiLayer.pipe(
+const appHttpApiLayer = AppHttpApiLayer.pipe(
   Layer.provide(makeApiLiveLayer(databaseUrl)),
   Layer.provide(HttpServer.layerServices)
 ) as Layer.Layer<HttpRouter.HttpRouter>;
 
-const squadBuilderHttpApi = HttpRouter.toWebHandler(squadBuilderHttpApiLayer, {
+const appHttpApi = HttpRouter.toWebHandler(appHttpApiLayer, {
   disableLogger: true,
 });
 
-export const disposeSquadBuilderHttpApi = async (): Promise<void> => {
-  await squadBuilderHttpApi.dispose();
+const healthHttpApiLayer = HealthHttpApiLayer.pipe(
+  Layer.provide(HttpServer.layerServices)
+) as Layer.Layer<HttpRouter.HttpRouter>;
+
+const healthHttpApi = HttpRouter.toWebHandler(healthHttpApiLayer, {
+  disableLogger: true,
+});
+
+export const disposeAppHttpApi = async (): Promise<void> => {
+  await appHttpApi.dispose();
+  await healthHttpApi.dispose();
 };
 
 app.use(evlog());
@@ -100,12 +111,15 @@ app.use(
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
-app.get("/squad-builder/openapi.json", (c) => {
-  c.get("log").set({ httpApi: { docs: "squad-builder-openapi" } });
-  return c.json(OpenApi.fromApi(SquadBuilderHttpApi));
+app.get("/api/openapi.json", (c) => {
+  c.get("log").set({ httpApi: { docs: "app-openapi" } });
+  return c.json(OpenApi.fromApi(AppHttpApi));
 });
 
-app.use("/squad-builder/*", async (c) => {
+const handleHttpApiRequest = async (
+  c: Context<EvlogVariables>,
+  handler: typeof appHttpApi
+) => {
   const requestLog = c.get("log");
   const { requestId } = requestLog.getContext();
   const headers = new Headers(c.req.raw.headers);
@@ -115,12 +129,19 @@ app.use("/squad-builder/*", async (c) => {
   }
 
   requestLog.set({ httpApi: { path: c.req.path } });
-  const response = await squadBuilderHttpApi.handler(
-    new Request(c.req.raw, { headers })
-  );
+  const response = await handler.handler(new Request(c.req.raw, { headers }));
 
   return response;
-});
+};
+
+app.use("/health", (c) => handleHttpApiRequest(c, healthHttpApi));
+app.use("/announcements/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/todos/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/heroes/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/events/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/skills/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/auction/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/squad-builder/*", (c) => handleHttpApiRequest(c, appHttpApi));
 
 // Demo route: shows a request-scoped wide event via the evlog Hono middleware.
 // `c.get('log')` is the Hono equivalent of `useLogger(event)` — the middleware

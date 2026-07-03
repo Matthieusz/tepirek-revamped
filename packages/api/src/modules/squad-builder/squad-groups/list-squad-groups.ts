@@ -22,11 +22,8 @@ export type GetSquadGroupDetailError =
 export class ListSquadGroups {
   /** List squad groups owned by the actor. */
   readonly listMine = Effect.fn("SquadGroups.listMine")(
-    (input: { readonly actorUserId: AppUserId }) => 
-      EffectSquadGroupStore.use((store) =>
-        store.listMySquadGroups(input)
-      )
-    
+    (input: { readonly actorUserId: AppUserId }) =>
+      EffectSquadGroupStore.use((store) => store.listMySquadGroups(input))
   );
 
   /** Load a squad group the actor can view. */
@@ -34,10 +31,6 @@ export class ListSquadGroups {
     (input: {
       readonly actorUserId: AppUserId;
       readonly groupId: SquadGroupId;
-    }) => 
-      EffectSquadGroupStore.use((store) =>
-        store.getSquadGroupDetail(input)
-      )
-    
+    }) => EffectSquadGroupStore.use((store) => store.getSquadGroupDetail(input))
   );
 }

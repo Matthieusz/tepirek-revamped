@@ -32,7 +32,7 @@ import {
 import { EVENT_ICON_MAP } from "@/lib/constants";
 import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
-import { orpc } from "@/utils/orpc";
+import { eventsApi } from "@/utils/events-api";
 
 interface AddEventModalProps {
   trigger: React.ReactNode;
@@ -71,7 +71,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
           return;
         }
 
-        await orpc.event.create.call({
+        await eventsApi.create({
           color: selectedColor,
           endTime: date.toISOString(),
           icon: selectedIcon,
@@ -80,7 +80,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
 
         toast.success("Event utworzony pomyślnie");
         await queryClient.invalidateQueries({
-          queryKey: orpc.event.getAll.queryKey(),
+          queryKey: eventsApi.queryKey,
         });
         setOpen(false);
         form.reset();

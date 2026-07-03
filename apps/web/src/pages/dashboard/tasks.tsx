@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
+import { todoApi } from "@/utils/todo-api";
 
 interface TasksPageProps {
   session: AuthSession;
@@ -23,42 +23,40 @@ export default function TasksPage({ session }: TasksPageProps) {
   const [newTodoText, setNewTodoText] = useState("");
   const queryClient = useQueryClient();
 
-  const { data: todosData, isLoading: todosIsLoading } = useQuery(
-    orpc.todo.getAll.queryOptions()
-  );
-  const createMutation = useMutation(
-    orpc.todo.create.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: orpc.todo.getAll.queryKey(),
-        });
-        setNewTodoText("");
-      },
-    })
-  );
-  const toggleMutation = useMutation(
-    orpc.todo.toggle.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: orpc.todo.getAll.queryKey(),
-        });
-      },
-    })
-  );
-  const deleteMutation = useMutation(
-    orpc.todo.delete.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: orpc.todo.getAll.queryKey(),
-        });
-      },
-    })
-  );
+  const { data: todosData, isLoading: todosIsLoading } = useQuery({
+    queryFn: todoApi.list,
+    queryKey: todoApi.queryKey,
+  });
+  const createMutation = useMutation({
+    mutationFn: todoApi.create,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: todoApi.queryKey,
+      });
+      setNewTodoText("");
+    },
+  });
+  const toggleMutation = useMutation({
+    mutationFn: todoApi.toggle,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: todoApi.queryKey,
+      });
+    },
+  });
+  const deleteMutation = useMutation({
+    mutationFn: todoApi.delete,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: todoApi.queryKey,
+      });
+    },
+  });
 
   const handleAddTodo = (e: React.FormEvent) => {
     e.preventDefault();
     if (newTodoText.trim() && session.user.id) {
-      createMutation.mutate({ text: newTodoText, userId: session.user.id });
+      createMutation.mutate({ text: newTodoText });
     }
   };
 

@@ -1,18 +1,12 @@
-import { createRouterClient } from "@orpc/server";
+import { OpenApi } from "effect/unstable/httpapi";
 import { describe, expect, it } from "vitest";
 
-import { appRouter } from "./index.js";
-import type { RouterContext } from "./procedures.js";
+import { AppHttpApi } from "../http-api-contract.js";
 
-describe("app router", () => {
-  it("exposes a public health check", async () => {
-    const client = createRouterClient(appRouter, {
-      context: {
-        logger: {} as RouterContext["logger"],
-        session: null,
-      } as RouterContext,
-    });
+describe("app HttpApi", () => {
+  it("exposes a public health check", () => {
+    const document = OpenApi.fromApi(AppHttpApi);
 
-    await expect(client.healthCheck()).resolves.toBe("OK");
+    expect(document.paths).toHaveProperty("/health");
   });
 });

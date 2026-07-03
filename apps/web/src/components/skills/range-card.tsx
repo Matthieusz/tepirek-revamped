@@ -25,7 +25,7 @@ import {
 import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import type { AuthUser } from "@/types/route";
-import { orpc } from "@/utils/orpc";
+import { skillsApi } from "@/utils/skills-api";
 
 interface RangeCardProps {
   range: {
@@ -45,7 +45,7 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await orpc.skills.deleteRange.call({ id });
+      await skillsApi.deleteRange({ id });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -53,7 +53,7 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
     onSuccess: async () => {
       toast.success("Przedział został usunięty");
       await queryClient.invalidateQueries({
-        queryKey: orpc.skills.getAllRanges.queryKey(),
+        queryKey: skillsApi.rangesQueryKey,
       });
       setShowDeleteDialog(false);
     },

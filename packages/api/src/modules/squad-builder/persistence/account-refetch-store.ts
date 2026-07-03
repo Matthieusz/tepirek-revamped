@@ -41,8 +41,7 @@ import {
   pendingRefetchIdToNumber,
 } from "../pending-margonem-account-refetch-id.js";
 import { isError } from "../result.js";
-import type {
-  EffectSquadBuilderPersistenceUnavailable} from "../squad-groups/squad-group-errors.js";
+import type { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
 import {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,

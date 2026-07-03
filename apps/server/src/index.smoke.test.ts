@@ -17,19 +17,19 @@ const importApp = async () => {
 };
 
 describe("server smoke", () => {
-  it("responds to the root health endpoint", async () => {
+  it("responds to the Effect HttpApi health endpoint", async () => {
     const app = await importApp();
 
-    const response = await app.request("/");
+    const response = await app.request("/health");
 
-    await expect(response.text()).resolves.toBe("OK");
+    await expect(response.json()).resolves.toBe("OK");
     expect(response.status).toBe(200);
   });
 
   it("handles CORS preflight for the configured origin", async () => {
     const app = await importApp();
 
-    const response = await app.request("/rpc/healthCheck", {
+    const response = await app.request("/health", {
       headers: {
         "Access-Control-Request-Method": "POST",
         Origin: "http://localhost:3001",

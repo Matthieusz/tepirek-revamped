@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { getErrorMessage } from "@/lib/errors";
-import { orpc } from "@/utils/orpc";
+import { auctionApi } from "@/utils/auction-api";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -156,18 +156,17 @@ const AuctionTable: React.FC<AuctionTableProps> = ({
   const columns = getAuctionSlotColumns(profession, type);
   const queryClient = useQueryClient();
 
-  const signupsQuery = orpc.auction.getSignups.queryOptions({
-    input: { profession, type },
-  });
-  const statsQuery = orpc.auction.getStats.queryOptions({
-    input: { profession, type },
-  });
+  const signupsQueryKey = auctionApi.signupsQueryKey({ profession, type });
+  const statsQueryKey = auctionApi.statsQueryKey({ profession, type });
 
-  const { data: signups, isPending } = useQuery(signupsQuery);
+  const { data: signups, isPending } = useQuery({
+    queryFn: () => auctionApi.getSignups({ profession, type }),
+    queryKey: signupsQueryKey,
+  });
 
   const toggleMutation = useMutation({
     mutationFn: (params: { level: number; round: number; column: number }) =>
-      orpc.auction.toggleSignup.call({
+      auctionApi.toggleSignup({
         profession,
         type,
         ...params,
@@ -176,8 +175,8 @@ const AuctionTable: React.FC<AuctionTableProps> = ({
       toast.error("Wystąpił błąd");
     },
     onSuccess: async (result) => {
-      await queryClient.invalidateQueries({ queryKey: signupsQuery.queryKey });
-      await queryClient.invalidateQueries({ queryKey: statsQuery.queryKey });
+      await queryClient.invalidateQueries({ queryKey: signupsQueryKey });
+      await queryClient.invalidateQueries({ queryKey: statsQueryKey });
       toast.success(
         result.action === "added"
           ? "Zapisano na licytację"
@@ -187,13 +186,13 @@ const AuctionTable: React.FC<AuctionTableProps> = ({
   });
 
   const removeMutation = useMutation({
-    mutationFn: (id: number) => orpc.auction.removeSignup.call({ id }),
+    mutationFn: (id: number) => auctionApi.removeSignup({ id }),
     onError: (error) => {
       toast.error(getErrorMessage(error));
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: signupsQuery.queryKey });
-      await queryClient.invalidateQueries({ queryKey: statsQuery.queryKey });
+      await queryClient.invalidateQueries({ queryKey: signupsQueryKey });
+      await queryClient.invalidateQueries({ queryKey: statsQueryKey });
       toast.success("Wypisano z licytacji");
     },
   });

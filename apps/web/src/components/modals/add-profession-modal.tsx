@@ -17,7 +17,7 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { getErrorMessage } from "@/lib/errors";
-import { orpc } from "@/utils/orpc";
+import { skillsApi } from "@/utils/skills-api";
 
 interface AddProfessionModalProps {
   trigger: React.ReactNode;
@@ -35,12 +35,12 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
     defaultValues,
     onSubmit: async ({ value }) => {
       try {
-        await orpc.skills.createProfession.call({
+        await skillsApi.createProfession({
           name: value.name,
         });
         toast.success("Profesja utworzona");
         await queryClient.invalidateQueries({
-          queryKey: orpc.skills.getAllProfessions.queryKey(),
+          queryKey: skillsApi.professionsQueryKey,
         });
         setOpen(false);
         form.reset();

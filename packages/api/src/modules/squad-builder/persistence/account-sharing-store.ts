@@ -34,8 +34,7 @@ import {
 import { parseMargonemProfileId } from "../margonem-profile-id.js";
 import { toMargonemProfileUrl } from "../margonem-profile-url.js";
 import { isError } from "../result.js";
-import type {
-  EffectSquadBuilderPersistenceUnavailable} from "../squad-groups/squad-group-errors.js";
+import type { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
 import {
   AccountAccessInviteNotFound,
   AccountAccessTransitionNotAllowed,
@@ -61,8 +60,14 @@ import type {
   SearchInviteTargetsStoreInput,
   SharedMargonemAccountSummary,
 } from "../squad-groups/squad-group-store.js";
-import { failPersistence, namedStoreMethod, parsePersistedAppUserId, persistenceQuery, persistenceQueryUnsafe } from './persistence-query.js';
-import type { EffectSquadGroupPersistenceOperation } from './persistence-query.js';
+import {
+  failPersistence,
+  namedStoreMethod,
+  parsePersistedAppUserId,
+  persistenceQuery,
+  persistenceQueryUnsafe,
+} from "./persistence-query.js";
+import type { EffectSquadGroupPersistenceOperation } from "./persistence-query.js";
 
 const listOwnedAccountsWithDatabase =
   (database: EffectPgDatabase) =>
