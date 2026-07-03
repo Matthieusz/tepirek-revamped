@@ -1,4 +1,4 @@
-import type { Effect } from "effect/Effect";
+import * as Effect from "effect/Effect";
 
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
@@ -12,7 +12,6 @@ import type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnSquadGroup,
   SquadGroupNotFound,
-  SquadGroupVisibilityChange,
 } from "./squad-group-store.js";
 import { EffectSquadGroupStore } from "./squad-group-store.js";
 
@@ -33,24 +32,23 @@ export class SetSquadGroupVisibility {
   }
 
   /** Change squad group visibility as the owner. */
-  set(input: {
-    readonly actorUserId: AppUserId;
-    readonly groupId: SquadGroupId;
-    readonly visibility: SquadGroupVisibility;
-  }): Effect<
-    SquadGroupVisibilityChange,
-    | SquadGroupNotFound
-    | ActorDoesNotOwnSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable,
-    EffectSquadGroupStore
-  > {
-    return EffectSquadGroupStore.use((store) =>
-      store.setSquadGroupVisibility({
-        actorUserId: input.actorUserId,
-        groupId: input.groupId,
-        now: this.clock.now(),
-        visibility: input.visibility,
-      })
-    );
-  }
+  readonly set = Effect.fn("SquadGroups.setVisibility")(
+    function setSquadGroupVisibility(
+      this: SetSquadGroupVisibility,
+      input: {
+        readonly actorUserId: AppUserId;
+        readonly groupId: SquadGroupId;
+        readonly visibility: SquadGroupVisibility;
+      }
+    ) {
+      return EffectSquadGroupStore.use((store) =>
+        store.setSquadGroupVisibility({
+          actorUserId: input.actorUserId,
+          groupId: input.groupId,
+          now: this.clock.now(),
+          visibility: input.visibility,
+        })
+      );
+    }
+  );
 }

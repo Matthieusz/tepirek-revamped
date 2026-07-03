@@ -13,7 +13,6 @@ import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-err
 import type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnSquadGroup,
-  SquadGroupDetail,
   SquadGroupNotFound,
 } from "./squad-group-store.js";
 import { EffectSquadGroupStore } from "./squad-group-store.js";
@@ -45,49 +44,44 @@ export class SaveSquadGroup {
   }
 
   /** Validate and atomically save a full squad group snapshot. */
-  save(
+  readonly save = Effect.fn("SquadGroups.save")(function* saveSquadGroup(
+    this: SaveSquadGroup,
     input: SaveSquadGroupInput
-  ): Effect.Effect<
-    SquadGroupDetail,
-    SaveSquadGroupError,
-    EffectSquadGroupStore
-  > {
+  ) {
     const { clock } = this;
 
-    return Effect.gen(function* saveSquadGroupEffect() {
-      yield* EffectSquadGroupStore.use((store) =>
-        store.getSquadGroupDetail({
-          actorUserId: input.actorUserId,
-          groupId: input.groupId,
-        })
-      );
+    yield* EffectSquadGroupStore.use((store) =>
+      store.getSquadGroupDetail({
+        actorUserId: input.actorUserId,
+        groupId: input.groupId,
+      })
+    );
 
-      const availableCharacters = yield* EffectSquadGroupStore.use((store) =>
-        store.listAvailableCharactersForOwner({
-          ownerUserId: input.actorUserId,
-        })
-      );
+    const availableCharacters = yield* EffectSquadGroupStore.use((store) =>
+      store.listAvailableCharactersForOwner({
+        ownerUserId: input.actorUserId,
+      })
+    );
 
-      const snapshot = validateSquadGroupSnapshot({
+    const snapshot = validateSquadGroupSnapshot({
+      actorUserId: input.actorUserId,
+      availableCharacters,
+      groupId: input.groupId,
+      name: input.name,
+      squads: input.squads,
+    });
+
+    if (isError(snapshot)) {
+      return yield* Effect.fail(snapshot.error);
+    }
+
+    return yield* EffectSquadGroupStore.use((store) =>
+      store.saveSquadGroupSnapshot({
         actorUserId: input.actorUserId,
         availableCharacters,
-        groupId: input.groupId,
-        name: input.name,
-        squads: input.squads,
-      });
-
-      if (isError(snapshot)) {
-        return yield* Effect.fail(snapshot.error);
-      }
-
-      return yield* EffectSquadGroupStore.use((store) =>
-        store.saveSquadGroupSnapshot({
-          actorUserId: input.actorUserId,
-          availableCharacters,
-          now: clock.now(),
-          snapshot: snapshot.value,
-        })
-      );
-    });
-  }
+        now: clock.now(),
+        snapshot: snapshot.value,
+      })
+    );
+  });
 }

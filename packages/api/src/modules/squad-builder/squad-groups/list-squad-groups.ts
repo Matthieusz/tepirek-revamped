@@ -1,13 +1,11 @@
-import type { Effect } from "effect/Effect";
+import * as Effect from "effect/Effect";
 
 import type { AppUserId } from "../app-user-id.js";
 import type { SquadGroupId } from "../squad-group-id.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import type {
   ActorCannotViewSquadGroup,
-  SquadGroupDetail,
   SquadGroupNotFound,
-  SquadGroupSummary,
 } from "./squad-group-store.js";
 import { EffectSquadGroupStore } from "./squad-group-store.js";
 
@@ -22,36 +20,24 @@ export type GetSquadGroupDetailError =
 
 /** Service module for listing and loading squad groups owned by an actor. */
 export class ListSquadGroups {
-  private readonly serviceName = "ListSquadGroups";
-
   /** List squad groups owned by the actor. */
-  listMine(input: {
-    readonly actorUserId: AppUserId;
-  }): Effect<
-    readonly SquadGroupSummary[],
-    ListMySquadGroupsError,
-    EffectSquadGroupStore
-  > {
-    void this.serviceName;
-
-    return EffectSquadGroupStore.use((store) => store.listMySquadGroups(input));
-  }
+  readonly listMine = Effect.fn("SquadGroups.listMine")(
+    (input: { readonly actorUserId: AppUserId }) => 
+      EffectSquadGroupStore.use((store) =>
+        store.listMySquadGroups(input)
+      )
+    
+  );
 
   /** Load a squad group the actor can view. */
-  getMine(input: {
-    readonly actorUserId: AppUserId;
-    readonly groupId: SquadGroupId;
-  }): Effect<
-    SquadGroupDetail,
-    | SquadGroupNotFound
-    | ActorCannotViewSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable,
-    EffectSquadGroupStore
-  > {
-    void this.serviceName;
-
-    return EffectSquadGroupStore.use((store) =>
-      store.getSquadGroupDetail(input)
-    );
-  }
+  readonly getMine = Effect.fn("SquadGroups.getMine")(
+    (input: {
+      readonly actorUserId: AppUserId;
+      readonly groupId: SquadGroupId;
+    }) => 
+      EffectSquadGroupStore.use((store) =>
+        store.getSquadGroupDetail(input)
+      )
+    
+  );
 }

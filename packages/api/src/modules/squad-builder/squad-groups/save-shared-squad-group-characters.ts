@@ -201,16 +201,13 @@ export class SaveSharedSquadGroupCharacters {
     return ok(result.value);
   }
 
-  saveEffect(
-    input: SaveSharedSquadGroupCharactersInput
-  ): Effect.Effect<
-    SquadGroupDetail,
-    EffectSharedSquadGroupSaveError,
-    EffectSquadGroupStore
-  > {
-    const { clock } = this;
+  readonly saveEffect = Effect.fn("SquadGroups.saveSharedCharacters")(
+    function* saveSharedSquadGroupCharacters(
+      this: SaveSharedSquadGroupCharacters,
+      input: SaveSharedSquadGroupCharactersInput
+    ) {
+      const { clock } = this;
 
-    return Effect.gen(function* saveSharedSquadGroupCharactersEffect() {
       const detail = yield* EffectSquadGroupStore.use((store) =>
         store.getSquadGroupDetail({
           actorUserId: input.actorUserId,
@@ -285,6 +282,6 @@ export class SaveSharedSquadGroupCharacters {
           },
         })
       );
-    });
-  }
+    }
+  );
 }
