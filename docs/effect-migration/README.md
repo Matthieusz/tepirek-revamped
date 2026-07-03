@@ -21,6 +21,74 @@ This folder tracks the planned migration of the backend toward Effect v4. The pl
 - `apps/server`: Bun + Hono edge that mounts better-auth, oRPC RPC, and oRPC OpenAPI handlers.
 - `apps/web`: TanStack Start frontend that consumes oRPC through `@orpc/tanstack-query`.
 
+## Phase 2 Effect service module convention
+
+Newly converted Effect-owned application services should use domain-named modules, not constructor-injected use-case classes. Prefer a module name that describes the domain capability, for example `account-access-invites.ts`, with an optional namespace re-export from a nearby barrel when that improves imports:
+
+```ts
+export * as AccountAccessInvites from "./account-access-invites.js";
+```
+
+Each service module should expose this shape:
+
+1. `Interface` — the public service contract. Methods return `Effect<A, E, R>` with the same behavior and typed error channel as the migrated use case.
+2. `Service extends Context.Service<Service, Interface>()("stable/service/identifier")` — the Effect service tag.
+3. `use = serviceUse(Service)` — the standard helper used by callers that need one service method inside another Effect.
+4. `layer = Layer.effect(Service, Effect.gen(...))` — the production implementation layer. Acquire dependencies with `yield* DependencyService`; do not instantiate use-case classes inside handlers.
+5. Stable operation names via `Effect.fn("Domain.operation")` on public Effect-returning methods.
+
+Account-sharing example:
+
+```ts
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import type { Effect } from "effect/Effect";
+import * as EffectRuntime from "effect/Effect";
+import * as Layer from "effect/Layer";
+
+import { serviceUse } from "../../../effect/service-use.js";
+import type { AccountSharingError } from "./account-sharing-error.js";
+import type { AccountAccessInviteSummary } from "./account-sharing-store.js";
+import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
+import type { SendAccountAccessInviteInput } from "./send-account-access-invite.js";
+
+export interface Interface {
+  readonly send: (
+    input: SendAccountAccessInviteInput
+  ) => Effect<AccountAccessInviteSummary, AccountSharingError>;
+}
+
+export class Service extends Context.Service<Service, Interface>()(
+  "@tepirek-revamped/api/squad-builder/AccountAccessInvites"
+) {}
+
+export const use = serviceUse(Service);
+
+export const layer = Layer.effect(
+  Service,
+  EffectRuntime.gen(function* makeAccountAccessInvitesService() {
+    const store = yield* EffectAccountSharingStore;
+
+    return {
+      send: EffectRuntime.fn("AccountAccessInvites.send")(
+        function* send(input) {
+          const now = new Date(yield* Clock.currentTimeMillis);
+
+          return yield* store.upsertAccountAccessInvite({
+            accountId: input.accountId,
+            invitedUserId: input.invitedUserId,
+            now,
+            ownerUserId: input.actorUserId,
+          });
+        }
+      ),
+    };
+  })
+);
+```
+
+HTTP/RPC handlers should consume these services from the provided runtime/layers. They should not call `new SomeUseCase(...)` for services already migrated to this shape; construction belongs in layers and the server composition root.
+
 ## External references
 
 - Effect services/layers: https://www.effect.solutions/services-and-layers
