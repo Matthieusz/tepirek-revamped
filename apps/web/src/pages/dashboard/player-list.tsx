@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
+import { userApi } from "@/utils/user-api";
 
 interface PlayerListPageProps {
   session: AuthSession;
@@ -16,9 +16,10 @@ interface PlayerListPageProps {
 
 export default function PlayerListPage({ session }: PlayerListPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: playersData = [], isPending } = useQuery(
-    orpc.user.list.queryOptions()
-  );
+  const { data: playersData = [], isPending } = useQuery({
+    queryFn: userApi.list,
+    queryKey: userApi.listQueryKey,
+  });
   const isAdminUser = isAdmin(session);
   const cols = buildPlayerColumns(isAdminUser);
 

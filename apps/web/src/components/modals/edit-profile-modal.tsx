@@ -17,7 +17,7 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { getErrorMessage } from "@/lib/errors";
-import { orpc } from "@/utils/orpc";
+import { userApi } from "@/utils/user-api";
 
 interface EditProfileModalProps {
   trigger: React.ReactNode;
@@ -44,12 +44,12 @@ export const EditProfileModal = ({
     },
     onSubmit: async ({ value }) => {
       try {
-        await orpc.user.updateProfile.call({
+        await userApi.updateProfile({
           name: value.name,
         });
         toast.success("Profil zaktualizowany");
         await queryClient.invalidateQueries({
-          queryKey: orpc.user.getSession.queryKey(),
+          queryKey: userApi.sessionQueryKey,
         });
         setOpen(false);
       } catch (error) {

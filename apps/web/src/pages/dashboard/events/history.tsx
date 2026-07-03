@@ -44,7 +44,7 @@ import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
+import { betApi } from "@/utils/bet-api";
 
 type BetToDelete = {
   id: number;
@@ -53,9 +53,7 @@ type BetToDelete = {
 
 const ITEMS_PER_PAGE = 10;
 
-type PaginatedBetsResponse = Awaited<
-  ReturnType<typeof orpc.bet.getAllPaginated.call>
->;
+type PaginatedBetsResponse = Awaited<ReturnType<typeof betApi.getAllPaginated>>;
 
 interface HistoryPageProps {
   session: AuthSession;
@@ -89,7 +87,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
       const page =
         typeof pageParam === "number" ? pageParam : Number(pageParam ?? 1);
 
-      const result = await orpc.bet.getAllPaginated.call({
+      const result = await betApi.getAllPaginated({
         eventId: filter.queryInputs.eventId,
         heroId: filter.queryInputs.heroId,
         limit: ITEMS_PER_PAGE,
@@ -119,7 +117,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
 
   const deleteMutation = useMutation({
     mutationFn: async (betId: number) => {
-      await orpc.bet.delete.call({ id: betId });
+      await betApi.delete({ id: betId });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));

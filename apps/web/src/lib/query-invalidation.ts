@@ -1,6 +1,7 @@
 import type { QueryClient, QueryKey } from "@tanstack/react-query";
 
-import { orpc } from "@/utils/orpc";
+import { betApi } from "@/utils/bet-api";
+import { rankingApi } from "@/utils/ranking-api";
 
 const keyIncludes = (queryKey: QueryKey, segment: string) =>
   JSON.stringify(queryKey).includes(segment);
@@ -9,7 +10,7 @@ export const invalidateBetLedgerQueries = async (queryClient: QueryClient) => {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: ["bets", "paginated"] }),
     queryClient.invalidateQueries({
-      queryKey: orpc.bet.getLatestForCopy.queryKey(),
+      queryKey: betApi.latestForCopyQueryKey,
     }),
     queryClient.invalidateQueries({
       predicate: ({ queryKey }) => keyIncludes(queryKey, "getRanking"),
@@ -18,7 +19,7 @@ export const invalidateBetLedgerQueries = async (queryClient: QueryClient) => {
       predicate: ({ queryKey }) => keyIncludes(queryKey, "getHeroStats"),
     }),
     queryClient.invalidateQueries({
-      queryKey: orpc.ranking.getOldestUnpaidEvent.queryKey(),
+      queryKey: rankingApi.oldestUnpaidEventQueryKey,
     }),
     queryClient.invalidateQueries({
       predicate: ({ queryKey }) => keyIncludes(queryKey, "getVault"),

@@ -26,7 +26,7 @@ export const AuctionGroupPayload = Schema.Struct({
   profession: AuctionProfessionSchema,
   type: AuctionTypeSchema,
 });
-interface AuctionSignupPayloadType {
+export interface AuctionSignupPayloadType {
   readonly column: number;
   readonly level: number;
   readonly profession: AuctionProfession;

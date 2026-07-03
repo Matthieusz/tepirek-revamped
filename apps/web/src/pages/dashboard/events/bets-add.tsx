@@ -30,9 +30,10 @@ import { getErrorMessage } from "@/lib/errors";
 import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
+import { betApi } from "@/utils/bet-api";
 import { eventsApi } from "@/utils/events-api";
 import { heroesApi } from "@/utils/heroes-api";
-import { orpc } from "@/utils/orpc";
+import { userApi } from "@/utils/user-api";
 
 interface AddBetForm {
   eventId: string;
@@ -328,13 +329,15 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
   });
 
   const { data: verifiedUsers, isPending: usersLoading } = useQuery({
-    ...orpc.user.getVerified.queryOptions(),
     enabled: isAdminUser,
+    queryFn: userApi.getVerified,
+    queryKey: userApi.getVerifiedQueryKey,
   });
 
   const { data: latestBet, isPending: latestBetLoading } = useQuery({
-    ...orpc.bet.getLatestForCopy.queryOptions(),
     enabled: isAdminUser,
+    queryFn: betApi.getLatestForCopy,
+    queryKey: betApi.latestForCopyQueryKey,
   });
 
   const form = useForm({
@@ -356,7 +359,7 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
           return;
         }
 
-        await orpc.bet.create.call({
+        await betApi.create({
           heroId: Number.parseInt(value.heroId, 10),
           userIds: value.userIds,
         });

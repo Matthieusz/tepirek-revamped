@@ -141,6 +141,10 @@ app.use("/heroes/*", (c) => handleHttpApiRequest(c, appHttpApi));
 app.use("/events/*", (c) => handleHttpApiRequest(c, appHttpApi));
 app.use("/skills/*", (c) => handleHttpApiRequest(c, appHttpApi));
 app.use("/auction/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/bet/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/ranking/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/user/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/vault/*", (c) => handleHttpApiRequest(c, appHttpApi));
 app.use("/squad-builder/*", (c) => handleHttpApiRequest(c, appHttpApi));
 
 // Demo route: shows a request-scoped wide event via the evlog Hono middleware.

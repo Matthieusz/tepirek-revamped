@@ -24,7 +24,8 @@ import { formatVaultEarnings } from "@/lib/gold";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 import { eventsApi } from "@/utils/events-api";
-import { orpc } from "@/utils/orpc";
+import { rankingApi } from "@/utils/ranking-api";
+import { vaultApi } from "@/utils/vault-api";
 
 const routeApi = getRouteApi("/dashboard/events/vault");
 
@@ -45,7 +46,10 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
 
   // Get the oldest event with unpaid users
   const { data: oldestUnpaidEventId, isPending: oldestUnpaidLoading } =
-    useQuery(orpc.ranking.getOldestUnpaidEvent.queryOptions());
+    useQuery({
+      queryFn: rankingApi.getOldestUnpaidEvent,
+      queryKey: rankingApi.oldestUnpaidEventQueryKey,
+    });
 
   // Auto-select the oldest unpaid event on initial load (only if no URL param)
   useEffect(() => {
@@ -79,12 +83,9 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
   const hasSpecificEvent = eventQueryInput !== undefined;
 
   const { data: vault, isPending: vaultLoading } = useQuery({
-    ...orpc.vault.getVault.queryOptions({
-      input: {
-        eventId: eventQueryInput,
-      },
-    }),
     enabled: hasInitialized,
+    queryFn: () => vaultApi.getVault({ eventId: eventQueryInput }),
+    queryKey: vaultApi.vaultQueryKey({ eventId: eventQueryInput }),
   });
 
   const toggleMutation = useMutation({
@@ -99,7 +100,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
         throw new Error("Wybierz konkretny event przed zmianą statusu wypłaty");
       }
       const selectedEventId = eventQueryInput;
-      await orpc.vault.togglePaidOut.call({
+      await vaultApi.togglePaidOut({
         eventId: selectedEventId,
         paidOut,
         userId,
@@ -110,14 +111,10 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: orpc.vault.getVault.queryKey({
-          input: {
-            eventId: eventQueryInput,
-          },
-        }),
+        queryKey: vaultApi.vaultQueryKey({ eventId: eventQueryInput }),
       });
       await queryClient.invalidateQueries({
-        queryKey: orpc.ranking.getOldestUnpaidEvent.queryKey(),
+        queryKey: rankingApi.oldestUnpaidEventQueryKey,
       });
       toast.success("Status wypłaty zaktualizowany");
     },

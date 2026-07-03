@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/responsive-dialog";
 import { getErrorMessage } from "@/lib/errors";
 import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
-import { orpc } from "@/utils/orpc";
+import { betApi } from "@/utils/bet-api";
+import { userApi } from "@/utils/user-api";
 
 interface EditBetModalProps {
   betId: number;
@@ -48,13 +49,14 @@ export const EditBetModal = ({
 
   const currentMemberIds = currentMembers.map((m) => m.userId);
 
-  const { data: verifiedUsers, isPending: usersLoading } = useQuery(
-    orpc.user.getVerified.queryOptions()
-  );
+  const { data: verifiedUsers, isPending: usersLoading } = useQuery({
+    queryFn: userApi.getVerified,
+    queryKey: userApi.getVerifiedQueryKey,
+  });
 
   const editMutation = useMutation({
     mutationFn: async (newUserIds: string[]) => {
-      await orpc.bet.edit.call({ betId, newUserIds });
+      await betApi.edit({ betId, newUserIds });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));

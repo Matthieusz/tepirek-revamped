@@ -38,7 +38,8 @@ import { parseGoldAmount } from "@/lib/gold";
 import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
 import { eventsApi } from "@/utils/events-api";
 import { heroesApi } from "@/utils/heroes-api";
-import { orpc } from "@/utils/orpc";
+import { rankingApi } from "@/utils/ranking-api";
+import { vaultApi } from "@/utils/vault-api";
 
 interface HeroStats {
   heroId: number;
@@ -173,10 +174,12 @@ export const DistributeGoldModal = ({
 
   // Get hero stats when a specific hero is selected
   const { data: heroStats, isPending: heroStatsPending } = useQuery({
-    ...orpc.ranking.getHeroStats.queryOptions({
-      input: { heroId: Number.parseInt(heroId, 10) },
-    }),
     enabled: heroId !== ALL_FILTER && open,
+    queryFn: () =>
+      rankingApi.getHeroStats({ heroId: Number.parseInt(heroId, 10) }),
+    queryKey: rankingApi.heroStatsQueryKey({
+      heroId: Number.parseInt(heroId, 10),
+    }),
   });
 
   const form = useForm({
@@ -196,7 +199,7 @@ export const DistributeGoldModal = ({
           return;
         }
 
-        const result = await orpc.vault.distributeGold.call({
+        const result = await vaultApi.distributeGold({
           goldAmount,
           heroId: Number.parseInt(heroId, 10),
         });

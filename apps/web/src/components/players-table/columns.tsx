@@ -43,11 +43,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDate } from "@/lib/utils";
-import { orpc } from "@/utils/orpc";
-
-type QueryOptions = ReturnType<typeof orpc.user.list.queryOptions>;
-type Players = Awaited<ReturnType<QueryOptions["queryFn"]>>;
-type Player = Players[number];
+import { userApi } from "@/utils/user-api";
+import type { Player } from "@/utils/user-api";
 
 const ActionCell = ({ player }: { player: Player }) => {
   const queryClient = useQueryClient();
@@ -57,7 +54,7 @@ const ActionCell = ({ player }: { player: Player }) => {
 
   const toggleVerified = useMutation({
     mutationFn: () =>
-      orpc.user.setVerified.call({
+      userApi.setVerified({
         userId: player.id,
         verified: !player.verified,
       }),
@@ -67,13 +64,13 @@ const ActionCell = ({ player }: { player: Player }) => {
     onSuccess: async () => {
       toast.success("Zmieniono status");
       await queryClient.invalidateQueries({
-        queryKey: orpc.user.list.queryKey(),
+        queryKey: userApi.listQueryKey,
       });
     },
   });
   const changeRole = useMutation({
     mutationFn: () =>
-      orpc.user.setRole.call({
+      userApi.setRole({
         role: player.role === "admin" ? "user" : "admin",
         userId: player.id,
       }),
@@ -83,13 +80,13 @@ const ActionCell = ({ player }: { player: Player }) => {
     onSuccess: async () => {
       toast.success("Zmieniono rolę");
       await queryClient.invalidateQueries({
-        queryKey: orpc.user.list.queryKey(),
+        queryKey: userApi.listQueryKey,
       });
     },
   });
   const updateName = useMutation({
     mutationFn: () =>
-      orpc.user.updateUserName.call({
+      userApi.updateUserName({
         name: newName,
         userId: player.id,
       }),
@@ -99,14 +96,14 @@ const ActionCell = ({ player }: { player: Player }) => {
     onSuccess: async () => {
       toast.success("Zmieniono nazwę użytkownika");
       await queryClient.invalidateQueries({
-        queryKey: orpc.user.list.queryKey(),
+        queryKey: userApi.listQueryKey,
       });
       setShowRenameDialog(false);
     },
   });
   const deleteUser = useMutation({
     mutationFn: () =>
-      orpc.user.deleteUser.call({
+      userApi.deleteUser({
         userId: player.id,
       }),
     onError: (e: Error) => {
@@ -115,7 +112,7 @@ const ActionCell = ({ player }: { player: Player }) => {
     onSuccess: async () => {
       toast.success("Usunięto użytkownika");
       await queryClient.invalidateQueries({
-        queryKey: orpc.user.list.queryKey(),
+        queryKey: userApi.listQueryKey,
       });
       setShowDeleteDialog(false);
     },

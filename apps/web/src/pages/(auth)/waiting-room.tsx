@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { authClient } from "@/lib/auth-client";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
+import { userApi } from "@/utils/user-api";
 
 interface WaitingRoomPageProps {
   session: AuthSession;
@@ -33,7 +33,7 @@ export default function WaitingRoomPage({ session }: WaitingRoomPageProps) {
       hasValidated.current = true;
       isValidatingRef.current = true;
       try {
-        const result = await orpc.user.verifyDiscordGuildMembership.call();
+        const result = await userApi.verifyDiscordGuildMembership();
         if (result?.valid) {
           await router.invalidate();
           await router.navigate({ to: "/dashboard" });

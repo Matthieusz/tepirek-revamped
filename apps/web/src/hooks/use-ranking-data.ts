@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import type { RankingItem } from "@/components/events/ranking-list";
-import { orpc } from "@/utils/orpc";
+import { rankingApi } from "@/utils/ranking-api";
 
 interface UseRankingDataParams {
   currentSortBy: "points" | "bets" | "gold";
@@ -40,12 +40,12 @@ export const useRankingData = ({
   queryInputs,
 }: UseRankingDataParams) => {
   const { data: rankingData, isPending: rankingLoading } = useQuery({
-    ...orpc.ranking.getRanking.queryOptions({
-      input: {
+    queryFn: () =>
+      rankingApi.getRanking({
         eventId: queryInputs.eventId,
         heroId: queryInputs.heroId,
-      },
-    }),
+      }),
+    queryKey: rankingApi.rankingQueryKey(queryInputs),
   });
 
   const sortedRanking = sortRanking(

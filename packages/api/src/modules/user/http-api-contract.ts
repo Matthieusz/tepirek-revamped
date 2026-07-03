@@ -1,0 +1,117 @@
+/* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
+import { USER_ROLES } from "@tepirek-revamped/config";
+import * as Schema from "effect/Schema";
+import {
+  HttpApiEndpoint,
+  HttpApiGroup,
+  HttpApiSchema,
+} from "effect/unstable/httpapi";
+
+export const UserId = Schema.NonEmptyString;
+export const Role = Schema.Literals(USER_ROLES);
+export const Name = Schema.NonEmptyString.check(Schema.isMinLength(2));
+
+export const DeleteUserPayload = Schema.Struct({ userId: UserId });
+export const SetRolePayload = Schema.Struct({ role: Role, userId: UserId });
+export const SetVerifiedPayload = Schema.Struct({
+  userId: UserId,
+  verified: Schema.Boolean,
+});
+export const UpdateProfilePayload = Schema.Struct({ name: Name });
+export const UpdateUserNamePayload = Schema.Struct({
+  name: Name,
+  userId: UserId,
+});
+export const MutationSuccess = Schema.Struct({ success: Schema.Literal(true) });
+export const VerifiedMember = Schema.Struct({
+  id: UserId,
+  image: Schema.NullOr(Schema.String),
+  name: Schema.String,
+});
+export const Player = Schema.Struct({
+  createdAt: Schema.Date,
+  id: UserId,
+  image: Schema.NullOr(Schema.String),
+  name: Schema.String,
+  role: Schema.NullOr(Schema.String),
+  updatedAt: Schema.Date,
+  verified: Schema.Boolean,
+});
+export const MutatedUser = Schema.NullOr(Player);
+export const DiscordMembershipResult = Schema.Struct({ valid: Schema.Boolean });
+
+export class UserUnauthorized extends Schema.TaggedErrorClass<UserUnauthorized>()(
+  "UserUnauthorized",
+  { message: Schema.String }
+) {}
+export class UserForbidden extends Schema.TaggedErrorClass<UserForbidden>()(
+  "UserForbidden",
+  { message: Schema.String }
+) {}
+export class UserBadRequest extends Schema.TaggedErrorClass<UserBadRequest>()(
+  "UserBadRequest",
+  { message: Schema.String }
+) {}
+export class UserNotFound extends Schema.TaggedErrorClass<UserNotFound>()(
+  "UserNotFound",
+  { message: Schema.String }
+) {}
+export class UserPersistenceUnavailable extends Schema.TaggedErrorClass<UserPersistenceUnavailable>()(
+  "UserPersistenceUnavailable",
+  { cause: Schema.Defect(), operation: Schema.String }
+) {}
+
+export const UserError = Schema.Union([
+  UserUnauthorized.pipe(HttpApiSchema.status(401)),
+  UserForbidden.pipe(HttpApiSchema.status(403)),
+  UserBadRequest.pipe(HttpApiSchema.status(400)),
+  UserNotFound.pipe(HttpApiSchema.status(404)),
+  UserPersistenceUnavailable.pipe(HttpApiSchema.status(500)),
+]);
+
+export const UserHttpApiGroup = HttpApiGroup.make("user")
+  .add(
+    HttpApiEndpoint.post("deleteUser", "/delete", {
+      error: UserError,
+      payload: DeleteUserPayload,
+      success: MutationSuccess,
+    }),
+    HttpApiEndpoint.get("getSession", "/session", {
+      error: UserError,
+      success: Schema.Unknown,
+    }),
+    HttpApiEndpoint.get("getVerified", "/verified", {
+      error: UserError,
+      success: Schema.Array(VerifiedMember),
+    }),
+    HttpApiEndpoint.get("list", "/", {
+      error: UserError,
+      success: Schema.Array(Player),
+    }),
+    HttpApiEndpoint.post("setRole", "/set-role", {
+      error: UserError,
+      payload: SetRolePayload,
+      success: MutatedUser,
+    }),
+    HttpApiEndpoint.post("setVerified", "/set-verified", {
+      error: UserError,
+      payload: SetVerifiedPayload,
+      success: MutatedUser,
+    }),
+    HttpApiEndpoint.post("updateProfile", "/profile", {
+      error: UserError,
+      payload: UpdateProfilePayload,
+      success: MutatedUser,
+    }),
+    HttpApiEndpoint.post("updateUserName", "/name", {
+      error: UserError,
+      payload: UpdateUserNamePayload,
+      success: MutatedUser,
+    }),
+    HttpApiEndpoint.post(
+      "verifyDiscordGuildMembership",
+      "/verify-discord-guild-membership",
+      { error: UserError, success: DiscordMembershipResult }
+    )
+  )
+  .prefix("/user");
