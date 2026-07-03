@@ -39,6 +39,30 @@ export const Player = Schema.Struct({
 });
 export const MutatedUser = Schema.NullOr(Player);
 export const DiscordMembershipResult = Schema.Struct({ valid: Schema.Boolean });
+export const Session = Schema.Struct({
+  createdAt: Schema.Date,
+  expiresAt: Schema.Date,
+  id: Schema.NonEmptyString,
+  ipAddress: Schema.optional(Schema.NullOr(Schema.String)),
+  token: Schema.NonEmptyString,
+  updatedAt: Schema.Date,
+  userAgent: Schema.optional(Schema.NullOr(Schema.String)),
+  userId: UserId,
+});
+export const AuthenticatedSession = Schema.Struct({
+  session: Session,
+  user: Schema.Struct({
+    createdAt: Schema.Date,
+    email: Schema.String,
+    emailVerified: Schema.Boolean,
+    id: UserId,
+    image: Schema.optional(Schema.NullOr(Schema.String)),
+    name: Schema.String,
+    role: Schema.optional(Schema.NullOr(Schema.String)),
+    updatedAt: Schema.Date,
+    verified: Schema.Boolean,
+  }),
+});
 
 export class UserUnauthorized extends Schema.TaggedErrorClass<UserUnauthorized>()(
   "UserUnauthorized",
@@ -78,7 +102,7 @@ export const UserHttpApiGroup = HttpApiGroup.make("user")
     }),
     HttpApiEndpoint.get("getSession", "/session", {
       error: UserError,
-      success: Schema.Unknown,
+      success: AuthenticatedSession,
     }),
     HttpApiEndpoint.get("getVerified", "/verified", {
       error: UserError,

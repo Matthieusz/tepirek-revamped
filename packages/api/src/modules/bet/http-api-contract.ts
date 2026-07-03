@@ -67,6 +67,13 @@ export const StoredBetMember = Schema.Struct({
   points: Schema.String,
   userId: Schema.String,
 });
+export const CreatedBet = Schema.Struct({
+  createdAt: Schema.Date,
+  createdBy: UserId,
+  heroId: PositiveInt,
+  id: PositiveInt,
+  memberCount: PositiveInt,
+});
 export const LatestBetForCopy = Schema.NullOr(
   Schema.Struct({
     id: PositiveInt,
@@ -119,7 +126,7 @@ export const BetHttpApiGroup = HttpApiGroup.make("bet")
     HttpApiEndpoint.post("create", "/", {
       error: BetError,
       payload: CreateBetPayload,
-      success: Schema.Unknown,
+      success: CreatedBet,
     }),
     HttpApiEndpoint.post("delete", "/delete", {
       error: BetError,

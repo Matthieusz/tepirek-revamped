@@ -59,12 +59,12 @@ const ActiveSquadGroupInvitationStatusSchema = Schema.Literals([
 ]);
 const InviteResponseSchema = Schema.Literals(["accept", "decline"]);
 const MargonemProfessionSchema = Schema.Literals([
-  "w",
-  "p",
-  "b",
-  "m",
-  "t",
-  "h",
+  "warrior",
+  "paladin",
+  "bladeDancer",
+  "mage",
+  "hunter",
+  "tracker",
 ]);
 
 export const MargonemCharacterPreviewSchema = Schema.Struct({
@@ -76,25 +76,14 @@ export const MargonemCharacterPreviewSchema = Schema.Struct({
   world: Schema.String,
 });
 
-const StoredMargonemCharacterSnapshotSchema = Schema.Struct({
-  accountId: MargonemAccountIdSchema,
-  characterId: PositiveInt,
-  level: PositiveInt,
-  margonemCharacterId: PositiveInt,
-  name: Schema.String,
-  profession: MargonemProfessionSchema,
-  world: Schema.String,
-});
-
 const MargonemAccountRefetchDiffSchema = Schema.Struct({
-  added: Schema.Array(MargonemCharacterPreviewSchema),
-  removed: Schema.Array(StoredMargonemCharacterSnapshotSchema),
-  updated: Schema.Array(
-    Schema.Struct({
-      after: MargonemCharacterPreviewSchema,
-      before: StoredMargonemCharacterSnapshotSchema,
-    })
-  ),
+  accountId: MargonemAccountIdSchema,
+  added: Schema.Array(Schema.TaggedStruct("AddedCharacter", {})),
+  changed: Schema.Array(Schema.TaggedStruct("ChangedCharacter", {})),
+  fetchedAt: Schema.Date,
+  profileId: MargonemProfileIdSchema,
+  removed: Schema.Array(Schema.TaggedStruct("RemovedCharacter", {})),
+  unchangedCount: Schema.Number,
 });
 
 export const PreviewMargonemProfileImportPayload = Schema.Struct({
@@ -129,8 +118,53 @@ const PreviewOwnedAccountImportSucceeded = Schema.TaggedStruct(
     suggestedAccountName: Schema.String,
   }
 );
+const PreviewOwnedAccountImportLineError = Schema.Union([
+  Schema.TaggedStruct("InvalidMargonemProfileUrl", {
+    message: Schema.String,
+  }),
+  Schema.TaggedStruct("MissingMargonemProfileId", {
+    message: Schema.String,
+  }),
+  Schema.TaggedStruct("DuplicateProfileInBatch", {
+    firstLineNumber: PositiveInt,
+  }),
+  Schema.TaggedStruct("MargonemAccountAlreadyOwnedByActor", {}),
+  Schema.TaggedStruct("MargonemAccountOwnedByAnotherUser", {}),
+  Schema.TaggedStruct("MargonemAccountAlreadySharedWithActor", {}),
+  Schema.TaggedStruct("FirecrawlMonthlyBudgetExhausted", {
+    monthlyRequestBudget: Schema.Number,
+    usedRequests: Schema.Number,
+    yearMonth: Schema.String,
+  }),
+  Schema.TaggedStruct("FirecrawlRequestFailed", {
+    cause: Schema.Defect(),
+    profileId: PositiveInt,
+  }),
+  Schema.TaggedStruct("FirecrawlResponseNotParseable", {
+    cause: Schema.Defect(),
+    profileId: PositiveInt,
+  }),
+  Schema.TaggedStruct("RequestCancelled", {
+    cause: Schema.Defect(),
+    profileId: PositiveInt,
+  }),
+  Schema.TaggedStruct("MargonemProfileNameNotFound", {
+    profileId: MargonemProfileIdSchema,
+  }),
+  Schema.TaggedStruct("MargonemCharacterRowsNotFound", {
+    profileId: MargonemProfileIdSchema,
+  }),
+  Schema.TaggedStruct("MargonemCharacterRowInvalid", {
+    profileId: MargonemProfileIdSchema,
+    safeReason: Schema.String,
+  }),
+  Schema.TaggedStruct("SquadBuilderPersistenceUnavailable", {
+    cause: Schema.Defect(),
+    operation: Schema.String,
+  }),
+]);
 const PreviewOwnedAccountImportFailed = Schema.TaggedStruct("PreviewFailed", {
-  error: Schema.Unknown,
+  error: PreviewOwnedAccountImportLineError,
   inputUrl: Schema.String,
   lineNumber: PositiveInt,
 });
@@ -309,27 +343,26 @@ export const SquadGroupEditorGrantSummarySchema = Schema.Struct({
   userName: Schema.String,
 });
 
-const AnyServiceError = Schema.Any;
-const AnyServiceSuccess = Schema.Any;
+const SquadBuilderServiceError = Schema.Struct({ _tag: Schema.String });
 
 export const SquadBuilderAccountImportGroup = HttpApiGroup.make(
   "squadBuilderAccountImport"
 )
   .add(
     HttpApiEndpoint.post("previewMargonemProfileImport", "/preview-profile", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: PreviewMargonemProfileImportPayload,
-      success: AnyServiceSuccess,
+      success: PreviewMargonemProfileImportSuccess,
     }),
     HttpApiEndpoint.post("previewOwnedAccountImports", "/preview-owned", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: PreviewOwnedAccountImportsPayload,
-      success: AnyServiceSuccess,
+      success: PreviewOwnedAccountImportsSuccess,
     }),
     HttpApiEndpoint.post("confirmOwnedAccountImport", "/confirm-owned", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: ConfirmOwnedAccountImportPayload,
-      success: AnyServiceSuccess,
+      success: OwnedMargonemAccountSummarySchema,
     })
   )
   .prefix("/squad-builder/account-imports");
@@ -339,14 +372,14 @@ export const SquadBuilderAccountRefetchGroup = HttpApiGroup.make(
 )
   .add(
     HttpApiEndpoint.post("previewAccountRefetch", "/preview", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: PreviewAccountRefetchPayload,
-      success: AnyServiceSuccess,
+      success: PreviewAccountRefetchSuccess,
     }),
     HttpApiEndpoint.post("applyAccountRefetch", "/apply", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: ApplyAccountRefetchPayload,
-      success: AnyServiceSuccess,
+      success: ApplyAccountRefetchSuccess,
     })
   )
   .prefix("/squad-builder/account-refetches");
@@ -359,40 +392,40 @@ export const SquadBuilderAccountSharingGroup = HttpApiGroup.make(
       "searchAccountInviteTargets",
       "/invite-targets/search",
       {
-        error: AnyServiceError,
+        error: SquadBuilderServiceError,
         payload: SearchAccountInviteTargetsPayload,
-        success: AnyServiceSuccess,
+        success: Schema.Array(AccountInviteTargetSchema),
       }
     ),
     HttpApiEndpoint.post("sendAccountAccessInvite", "/invites", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: SendAccountAccessInvitePayload,
-      success: AnyServiceSuccess,
+      success: AccountAccessInviteSummarySchema,
     }),
     HttpApiEndpoint.post("respondToAccountAccessInvite", "/invites/respond", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: RespondToAccountAccessInvitePayload,
-      success: AnyServiceSuccess,
+      success: AccountAccessInviteSummarySchema,
     }),
     HttpApiEndpoint.post("revokeAccountAccess", "/access/revoke", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: RevokeAccountAccessPayload,
-      success: AnyServiceSuccess,
+      success: RevokeAccountAccessSuccess,
     }),
     HttpApiEndpoint.post("listIncomingAccountInvites", "/incoming-invites", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: ActorPayload,
-      success: AnyServiceSuccess,
+      success: Schema.Array(AccountAccessInviteSummarySchema),
     }),
     HttpApiEndpoint.post("listSharedAccounts", "/shared-accounts", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: ActorPayload,
-      success: AnyServiceSuccess,
+      success: Schema.Array(SharedMargonemAccountSummarySchema),
     }),
     HttpApiEndpoint.post("listAccountAccessGrants", "/access-grants", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: AccountAccessGrantsPayload,
-      success: AnyServiceSuccess,
+      success: Schema.Array(AccountAccessGrantSummarySchema),
     })
   )
   .prefix("/squad-builder/account-sharing");
@@ -405,52 +438,52 @@ export const SquadBuilderSquadGroupSharingGroup = HttpApiGroup.make(
       "searchSquadEditorInviteTargets",
       "/editor-targets/search",
       {
-        error: AnyServiceError,
+        error: SquadBuilderServiceError,
         payload: SearchSquadEditorInviteTargetsPayload,
-        success: AnyServiceSuccess,
+        success: Schema.Array(SquadEditorInviteTargetSchema),
       }
     ),
     HttpApiEndpoint.post("sendSquadGroupEditorInvite", "/editor-invites", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: SendSquadGroupEditorInvitePayload,
-      success: AnyServiceSuccess,
+      success: SquadGroupInvitationSummarySchema,
     }),
     HttpApiEndpoint.post(
       "respondToSquadGroupInvite",
       "/editor-invites/respond",
       {
-        error: AnyServiceError,
+        error: SquadBuilderServiceError,
         payload: RespondToSquadGroupInvitePayload,
-        success: AnyServiceSuccess,
+        success: SquadGroupInvitationSummarySchema,
       }
     ),
     HttpApiEndpoint.post("revokeSquadGroupEditor", "/editors/revoke", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: RevokeSquadGroupEditorPayload,
-      success: AnyServiceSuccess,
+      success: SquadGroupInvitationSummarySchema,
     }),
     HttpApiEndpoint.post("listIncomingSquadGroupInvites", "/incoming-invites", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: ActorPayload,
-      success: AnyServiceSuccess,
+      success: Schema.Array(SquadGroupInvitationSummarySchema),
     }),
     HttpApiEndpoint.post("listSharedSquadGroups", "/shared-groups", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: ActorPayload,
-      success: AnyServiceSuccess,
+      success: Schema.Array(SharedSquadGroupSummarySchema),
     }),
     HttpApiEndpoint.post("listSquadGroupEditorGrants", "/editor-grants", {
-      error: AnyServiceError,
+      error: SquadBuilderServiceError,
       payload: SquadGroupEditorGrantsPayload,
-      success: AnyServiceSuccess,
+      success: Schema.Array(SquadGroupEditorGrantSummarySchema),
     }),
     HttpApiEndpoint.post(
       "countPendingSquadGroupInvites",
       "/pending-invite-count",
       {
-        error: AnyServiceError,
+        error: SquadBuilderServiceError,
         payload: ActorPayload,
-        success: AnyServiceSuccess,
+        success: Schema.Number,
       }
     )
   )

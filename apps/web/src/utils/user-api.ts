@@ -14,6 +14,24 @@ export interface Player {
   readonly updatedAt: Date;
   readonly verified: boolean;
 }
+export interface AuthenticatedSession {
+  readonly session: {
+    readonly createdAt: Date;
+    readonly expiresAt: Date;
+    readonly id: string;
+    readonly ipAddress?: string | null;
+    readonly token: string;
+    readonly updatedAt: Date;
+    readonly userAgent?: string | null;
+    readonly userId: string;
+  };
+  readonly user: Omit<Player, "image" | "role"> & {
+    readonly email: string;
+    readonly emailVerified: boolean;
+    readonly image?: string | null;
+    readonly role?: string | null;
+  };
+}
 type PlayerJson = Omit<Player, "createdAt" | "updatedAt"> & {
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -30,10 +48,42 @@ const request = async <A>(path: string, init?: RequestInit): Promise<A> => {
   }
   return response.json() as Promise<A>;
 };
+type AuthenticatedSessionJson = Omit<
+  AuthenticatedSession,
+  "session" | "user"
+> & {
+  readonly session: Omit<
+    AuthenticatedSession["session"],
+    "createdAt" | "expiresAt" | "updatedAt"
+  > & {
+    readonly createdAt: string;
+    readonly expiresAt: string;
+    readonly updatedAt: string;
+  };
+  readonly user: PlayerJson & {
+    readonly email: string;
+    readonly emailVerified: boolean;
+  };
+};
 const parsePlayer = (player: PlayerJson): Player => ({
   ...player,
   createdAt: new Date(player.createdAt),
   updatedAt: new Date(player.updatedAt),
+});
+const parseAuthenticatedSession = (
+  authSession: AuthenticatedSessionJson
+): AuthenticatedSession => ({
+  session: {
+    ...authSession.session,
+    createdAt: new Date(authSession.session.createdAt),
+    expiresAt: new Date(authSession.session.expiresAt),
+    updatedAt: new Date(authSession.session.updatedAt),
+  },
+  user: {
+    ...authSession.user,
+    createdAt: new Date(authSession.user.createdAt),
+    updatedAt: new Date(authSession.user.updatedAt),
+  },
 });
 
 export const userApi = {
@@ -42,7 +92,10 @@ export const userApi = {
       body: JSON.stringify(input),
       method: "POST",
     }),
-  getSession: () => request<unknown>("/user/session"),
+  getSession: async () => {
+    const session = await request<AuthenticatedSessionJson>("/user/session");
+    return parseAuthenticatedSession(session);
+  },
   getVerified: () => request<readonly VerifiedMember[]>("/user/verified"),
   getVerifiedQueryKey: ["user", "verified"] as const,
   list: async () => {

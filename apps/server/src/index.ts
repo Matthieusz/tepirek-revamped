@@ -1,10 +1,4 @@
 import "dotenv/config";
-import { OpenAPIHandler } from "@orpc/openapi/fetch";
-import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
-import { onError } from "@orpc/server";
-import { RPCHandler } from "@orpc/server/fetch";
-import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
-import { createContext } from "@tepirek-revamped/api/context";
 import {
   makeApiLiveLayer,
   makeApiRuntime,
@@ -12,12 +6,11 @@ import {
 import { AppHttpApi } from "@tepirek-revamped/api/http-api-contract";
 import { AppHttpApiLayer } from "@tepirek-revamped/api/http-api-handlers";
 import { HealthHttpApiLayer } from "@tepirek-revamped/api/modules/health/http-api-handlers";
-import { createAppRouter } from "@tepirek-revamped/api/routers/index";
 import { auth } from "@tepirek-revamped/auth";
 import * as Layer from "effect/Layer";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { OpenApi } from "effect/unstable/httpapi";
-import { createError, initLogger, log as evlogLog, parseError } from "evlog";
+import { createError, initLogger, parseError } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
 import type { BetterAuthInstance } from "evlog/better-auth";
 import { evlog } from "evlog/hono";
@@ -56,8 +49,6 @@ export const apiEffectRuntime = makeApiRuntime(databaseUrl);
 export const disposeApiEffectRuntime = async (): Promise<void> => {
   await apiEffectRuntime.dispose();
 };
-
-export const appRouter = createAppRouter();
 
 // SAFETY: The production layer immediately provides the squad-builder services
 // and HttpServer services required by the HttpApi layer before it reaches
@@ -175,63 +166,6 @@ app.post("/api/echo", async (c) => {
 
   log.set({ echo: { length: text.length } });
   return c.json({ text });
-});
-
-export const apiHandler = new OpenAPIHandler(appRouter, {
-  interceptors: [
-    // oxlint-disable-next-line promise/prefer-await-to-callbacks
-    onError((error) => {
-      evlogLog.error({ error, handler: "openapi" });
-    }),
-  ],
-  plugins: [
-    new OpenAPIReferencePlugin({
-      schemaConverters: [new ZodToJsonSchemaConverter()],
-    }),
-  ],
-});
-
-export const rpcHandler = new RPCHandler(appRouter, {
-  interceptors: [
-    // oxlint-disable-next-line promise/prefer-await-to-callbacks
-    onError((error) => {
-      evlogLog.error({ error, handler: "rpc" });
-    }),
-  ],
-});
-
-app.use("/rpc/*", async (c, next) => {
-  const context = await createContext({ context: c });
-  const requestLog = c.get("log");
-
-  const rpcResult = await rpcHandler.handle(c.req.raw, {
-    context,
-    prefix: "/rpc",
-  });
-
-  if (rpcResult.matched) {
-    requestLog.set({ rpc: { path: c.req.path } });
-    return c.newResponse(rpcResult.response.body, rpcResult.response);
-  }
-
-  return next();
-});
-
-app.use("/api-reference/*", async (c, next) => {
-  const context = await createContext({ context: c });
-  const requestLog = c.get("log");
-
-  const apiResult = await apiHandler.handle(c.req.raw, {
-    context,
-    prefix: "/api-reference",
-  });
-
-  if (apiResult.matched) {
-    requestLog.set({ openapi: { path: c.req.path } });
-    return c.newResponse(apiResult.response.body, apiResult.response);
-  }
-
-  return next();
 });
 
 app.get("/", (c) => c.text("OK"));
