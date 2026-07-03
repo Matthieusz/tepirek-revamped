@@ -10,7 +10,7 @@ import { auth } from "@tepirek-revamped/auth";
 import * as Layer from "effect/Layer";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { OpenApi } from "effect/unstable/httpapi";
-import { createError, initLogger, parseError } from "evlog";
+import { initLogger, parseError } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
 import type { BetterAuthInstance } from "evlog/better-auth";
 import { evlog } from "evlog/hono";
@@ -137,36 +137,6 @@ app.use("/ranking/*", (c) => handleHttpApiRequest(c, appHttpApi));
 app.use("/user/*", (c) => handleHttpApiRequest(c, appHttpApi));
 app.use("/vault/*", (c) => handleHttpApiRequest(c, appHttpApi));
 app.use("/squad-builder/*", (c) => handleHttpApiRequest(c, appHttpApi));
-
-// Demo route: shows a request-scoped wide event via the evlog Hono middleware.
-// `c.get('log')` is the Hono equivalent of `useLogger(event)` — the middleware
-// creates one request logger per request and emits a single wide event on
-// response completion.
-app.post("/api/echo", async (c) => {
-  const log = c.get("log");
-
-  let body: { text?: unknown };
-  try {
-    body = await c.req.json();
-  } catch {
-    body = {};
-  }
-
-  const text = body?.text;
-  log.set({ input: { text } });
-
-  if (typeof text !== "string" || text.trim().length === 0) {
-    throw createError({
-      fix: 'Send a JSON body like { "text": "hello" }',
-      message: "text is required",
-      status: 400,
-      why: "The `text` field was missing or empty in the request body",
-    });
-  }
-
-  log.set({ echo: { length: text.length } });
-  return c.json({ text });
-});
 
 app.get("/", (c) => c.text("OK"));
 
