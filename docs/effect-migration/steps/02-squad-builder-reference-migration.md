@@ -58,7 +58,7 @@ Rationale:
 
 For the first `createSquadGroup` slice, keep the existing zod `.input(...)` schema at the oRPC edge, but use Effect Schema inside migrated Effect-owned modules for refined values, tagged errors, config, and codecs.
 
-This is not the long-term target. The plan should start migrating oRPC request/response schemas to Effect Schema as soon as the first slice proves the oRPC bridge and internal Effect conventions. Before replacing zod at oRPC boundaries, verify exact installed compatibility between oRPC, Effect Schema, OpenAPI generation, and frontend TanStack Query type inference.
+This is not the long-term target. The plan should start migrating oRPC request/response schemas to Effect Schema as soon as the first slice proves the internal Effect conventions. Before replacing zod at remaining oRPC boundaries, verify exact installed compatibility between Effect `HttpApi`, Effect Schema, OpenAPI generation, and the frontend Effect Atom runtime/client pattern.
 
 ## Open decisions
 

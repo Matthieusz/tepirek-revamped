@@ -24,9 +24,9 @@ Status: draft; accepted as the go/no-go checklist before implementation starts.
 
 - [x] Verify Drizzle rc.4 / Effect beta compatibility in the actual package manager install.
 - [x] Verify exact `@effect/sql-pg` and `@effect/vitest` versions and peer compatibility.
-- ~~Verify oRPC Standard Schema / Effect Schema adapter compatibility for the `createSquadGroup` boundary.~~ Dissolved — oRPC is being removed (Effect `HttpApi` + `effect-query`).
+- ~~Verify oRPC Standard Schema / Effect Schema adapter compatibility for the `createSquadGroup` boundary.~~ Dissolved — oRPC is being removed (Effect `HttpApi` + Effect Atom frontend state).
 - ~~Verify oRPC OpenAPI generation compatibility with the chosen Effect Schema boundary representation.~~ Dissolved — Effect `OpenApi.fromApi` generates from the same schemas; no zod converter involved.
-- ~~Verify frontend `@orpc/tanstack-query` inference after replacing the `createSquadGroup` oRPC zod schema.~~ Superseded — frontend moves to `effect-query` against the shared `HttpApi` contract.
+- ~~Verify frontend `@orpc/tanstack-query` inference after replacing the `createSquadGroup` oRPC zod schema.~~ Superseded — frontend moves to `@effect-atom/atom-react` runtime-backed atoms against shared `HttpApi` client services.
 
 ### 4. First implementation task is unambiguous
 

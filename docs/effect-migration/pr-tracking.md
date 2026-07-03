@@ -34,7 +34,7 @@ The PR body links:
 Keep the PR as Draft until at least:
 
 - the squad-builder Effect `HttpApi` reference slice is green (Phase 2);
-- the frontend `effect-query` migration for squad-builder is green (Phase 4);
+- the frontend Effect Atom migration for squad-builder is green (Phase 5);
 - frontend type inference and OpenAPI generation compatibility have been verified (Effect `OpenApi.fromApi`).
 
 ## Splitting policy

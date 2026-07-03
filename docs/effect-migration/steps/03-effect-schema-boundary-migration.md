@@ -4,7 +4,7 @@ Status: first `createSquadGroup` oRPC input/output boundary migrated; broader bo
 
 ## Goal
 
-Move API boundary request/response schemas from zod toward Effect Schema while preserving the established oRPC frontend contract and TanStack Query ergonomics.
+Move API boundary request/response schemas from zod toward Effect Schema while moving the frontend away from oRPC and TanStack React Query to Effect Atom runtime-backed state.
 
 ## Accepted near-term strategy
 
@@ -27,7 +27,7 @@ Implemented for the first slice:
 
 - `squadBuilder.createSquadGroup` now uses Effect Schema converted through `Schema.toStandardSchemaV1` for oRPC input and output validation.
 - The create command boundary rejects excess properties through Effect parse options.
-- API and web type checks verify the existing router client and TanStack Query-facing inference still compile after the schema swap.
+- API and web type checks verify the shared `HttpApi` contracts and Effect Atom client/runtime wrappers compile after the schema swap.
 
 ## Compatibility verification
 

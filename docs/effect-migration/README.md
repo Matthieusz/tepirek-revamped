@@ -7,9 +7,10 @@ This folder tracks the planned migration of the backend toward Effect v4. The pl
 ## Current known decisions
 
 - Migrate backend business/application code from `better-result` style `Result<T, E>` orchestration toward Effect v4 typed error channels.
-- Keep **oRPC** initially as the HTTP/RPC contract and frontend TanStack Query integration layer.
-- Keep **Hono** initially as the thin Bun-hosted HTTP shell for CORS, better-auth, oRPC RPC, and oRPC OpenAPI routes.
-- Keep **evlog** during the initial Effect migration; evaluate replacement later as an observability-specific decision.
+- Remove **oRPC** route-by-route in favor of Effect `HttpApi` contracts and handlers.
+- Keep **Hono** as the thin Bun-hosted HTTP shell for CORS, better-auth, request/auth seams, and mounting Effect `HttpApi` handlers.
+- Fully remove **TanStack React Query** from the frontend end state. Frontend server state should use `@effect-atom/atom-react` runtime-backed atoms over shared Effect `HttpApi` client services, with query atoms, `Result` state rendering, and `Atom.optimistic` / `Atom.optimisticFn` for optimistic mutations.
+- Keep **evlog** at external auth/Hono seams during the migration; Effect-owned responsibilities should move toward Effect logging/tracing layers.
 - Use the project coding standards skill as the local style source of truth, especially `EFFECT.md`, `DOMAIN_MODELING.md`, and later `ERROR_HANDLING.md`, `OBSERVABILITY.md`, `BOUNDARIES_AND_PARSING.md`, `DESIGNING_MODULES.md`, `ASYNC_AND_WORKFLOWS.md`, and `TESTING_AND_VERIFICATION.md` when those concerns are planned in detail.
 - Use Effect Solutions documentation as external guidance for services/layers, tagged errors, and data modeling.
 - Target **Drizzle ORM `v1.0.0-rc.4`** as part of the migration path. Drizzle `v1.0.0-rc.1` introduced native Effect v4 support; `v1.0.0-rc.4` is the desired target version and includes Effect driver updates/fixes, additional Effect SQL driver support, and a required `effect` version bump to `4.0.0-beta.83`.

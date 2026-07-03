@@ -86,7 +86,7 @@ Consequences:
 - Inside migrated Effect modules, new refined values, tagged errors, config, and codecs use Effect Schema.
 - The first slice must not treat zod as the long-term schema target.
 - Add a near-term follow-up step to migrate oRPC boundary schemas to Effect Schema through oRPC Standard Schema support or a verified adapter.
-- Before changing oRPC schemas, verify exact installed versions and compatibility between oRPC, Effect Schema, OpenAPI generation, and frontend TanStack Query type inference.
+- Before changing remaining oRPC schemas, verify exact installed versions and compatibility between Effect `HttpApi`, Effect Schema, OpenAPI generation, and the frontend Effect Atom runtime/client pattern.
 
 ## Q7 — What triggers replacing zod at oRPC boundaries?
 

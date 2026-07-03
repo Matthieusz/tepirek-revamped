@@ -48,7 +48,7 @@ Status: draft.
 ## 5. Effect Schema boundary migration for `createSquadGroup`
 
 - Replace zod at the same procedure's oRPC input/output boundary after the reference slice is green.
-- Verify oRPC Standard Schema/Effect Schema adapter support, OpenAPI generation, and frontend TanStack Query inference.
+- Verify Effect `HttpApi` / Effect Schema support, OpenAPI generation, and frontend Effect Atom runtime/client integration.
 
 ## Rationale
 
