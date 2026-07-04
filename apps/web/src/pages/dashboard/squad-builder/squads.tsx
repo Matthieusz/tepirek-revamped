@@ -1,5 +1,9 @@
 import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { Link } from "@tanstack/react-router";
+import type {
+  SharedSquadGroupSummarySchema,
+  SquadGroupInvitationSummarySchema,
+} from "@tepirek-revamped/api/modules/squad-builder/schema/squad-group-sharing";
 import { Check, Loader2, Plus, Swords, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -15,7 +19,7 @@ import {
   incomingSquadGroupInvitesAtom,
   respondToSquadGroupInviteAtom,
   sharedSquadGroupsAtom,
-} from "@/lib/squad-builder-atoms";
+} from "@/lib/squad-builder/squad-group-sharing-atoms";
 import { sessionAtom } from "@/lib/user-atoms";
 import { formatDateTime } from "@/lib/utils";
 
@@ -27,23 +31,9 @@ interface SquadGroupSummary {
   readonly updatedAt: Date;
 }
 
-interface SharedSquadGroupSummary extends SquadGroupSummary {
-  readonly ownerUserId: string;
-  readonly ownerUserName: string;
-  readonly ownerUserImage: string | null;
-}
-
-interface SquadGroupInvitationSummary {
-  readonly invitationId: number;
-  readonly squadGroupId: number;
-  readonly squadGroupName: string;
-  readonly ownerUserId: string;
-  readonly ownerUserName: string;
-  readonly ownerUserImage: string | null;
-  readonly status: string;
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
-}
+type SharedSquadGroupSummary = typeof SharedSquadGroupSummarySchema.Type;
+type SquadGroupInvitationSummary =
+  typeof SquadGroupInvitationSummarySchema.Type;
 
 interface SquadGroupListFilterFormState {
   readonly nameQuery: string;

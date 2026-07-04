@@ -1,4 +1,11 @@
 import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
+import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/modules/squad-builder/schema/account-import";
+import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/modules/squad-builder/schema/account-refetch";
+import type {
+  AccountAccessInviteSummarySchema,
+  AccountInviteTargetSchema,
+  SharedMargonemAccountSummarySchema,
+} from "@tepirek-revamped/api/modules/squad-builder/schema/account-sharing";
 import {
   AlertTriangle,
   Check,
@@ -32,19 +39,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import {
+  confirmOwnedAccountImportAtom,
+  ownedAccountsAtom,
+  previewOwnedAccountImportsAtom,
+} from "@/lib/squad-builder/account-import-atoms";
+import {
+  applyAccountRefetchAtom,
+  previewAccountRefetchAtom,
+} from "@/lib/squad-builder/account-refetch-atoms";
+import {
   accountAccessGrantsAtom,
   accountInviteTargetsAtom,
-  applyAccountRefetchAtom,
-  confirmOwnedAccountImportAtom,
   incomingAccountInvitesAtom,
-  ownedAccountsAtom,
-  previewAccountRefetchAtom,
-  previewOwnedAccountImportsAtom,
   respondToAccountAccessInviteAtom,
   revokeAccountAccessAtom,
   sendAccountAccessInviteAtom,
   sharedAccountsAtom,
-} from "@/lib/squad-builder-atoms";
+} from "@/lib/squad-builder/account-sharing-atoms";
 import { sessionAtom } from "@/lib/user-atoms";
 import { formatDateTime } from "@/lib/utils";
 
@@ -88,43 +99,10 @@ type PreviewItem =
       readonly message: string;
     };
 
-interface OwnedAccount {
-  readonly accountId: number;
-  readonly profileId: number;
-  readonly displayName: string;
-  readonly generatedProfileUrl: string;
-  readonly lastFetchedAt: string;
-  readonly characterCount: number;
-}
-
-interface AccountInviteTarget {
-  readonly userId: string;
-  readonly name: string;
-  readonly image: string | null;
-}
-
-interface AccountAccessInvite {
-  readonly accessId: number;
-  readonly accountId: number;
-  readonly accountDisplayName: string;
-  readonly ownerUserName: string;
-  readonly ownerUserImage: string | null;
-  readonly generatedProfileUrl: string;
-  readonly status: "pending" | "accepted" | "declined" | "revoked";
-  readonly createdAt: string;
-  readonly updatedAt: string;
-}
-
-interface SharedAccount {
-  readonly accountId: number;
-  readonly profileId: number;
-  readonly displayName: string;
-  readonly generatedProfileUrl: string;
-  readonly ownerUserName: string;
-  readonly ownerUserImage: string | null;
-  readonly lastFetchedAt: string;
-  readonly characterCount: number;
-}
+type AccountAccessInvite = typeof AccountAccessInviteSummarySchema.Type;
+type AccountInviteTarget = typeof AccountInviteTargetSchema.Type;
+type OwnedAccount = typeof OwnedMargonemAccountSummarySchema.Type;
+type SharedAccount = typeof SharedMargonemAccountSummarySchema.Type;
 
 interface AccountRefetchPreview {
   readonly refetchPreviewId: number;
@@ -159,14 +137,16 @@ interface AccountRefetchPreview {
   };
 }
 
+type AccountRefetchPreviewApi = typeof PreviewAccountRefetchSuccess.Type;
+
 interface AccountAccessGrant {
   readonly accessId: number;
-  readonly userId: string;
-  readonly userName: string;
-  readonly userImage: string | null;
+  readonly createdAt: Date;
   readonly status: "pending" | "accepted";
-  readonly createdAt: string;
-  readonly updatedAt: string;
+  readonly updatedAt: Date;
+  readonly userId: string;
+  readonly userImage: string | null;
+  readonly userName: string;
 }
 
 const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
@@ -483,7 +463,10 @@ const AccountSharingPanel = ({
     trimmedQuery.length >= 2
       ? resultValueOr(searchResult, [] as readonly AccountInviteTarget[])
       : [];
-  const grants = resultValueOr(grantsResult, []).map((grant) => ({
+  const grants: readonly AccountAccessGrant[] = resultValueOr(
+    grantsResult,
+    []
+  ).map((grant) => ({
     accessId: grant.accessId,
     createdAt: grant.createdAt,
     status: grant.status,
@@ -491,7 +474,7 @@ const AccountSharingPanel = ({
     userId: grant.invitedUserId,
     userImage: grant.invitedUserImage,
     userName: grant.invitedUserName,
-  })) as unknown as readonly AccountAccessGrant[];
+  }));
 
   return (
     <div className="space-y-4">
@@ -672,6 +655,37 @@ interface OwnedAccountRowProps {
   readonly account: OwnedAccount;
 }
 
+const toAccountRefetchPreview = (
+  preview: AccountRefetchPreviewApi
+): AccountRefetchPreview => ({
+  diff: {
+    added: preview.diff.added.map(({ latest }) => ({
+      avatarUrl: latest.avatarUrl,
+      characterId: latest.characterId,
+      level: latest.level,
+      name: latest.name,
+      profession: latest.profession,
+    })),
+    changed: preview.diff.changed.map((character) => ({
+      changes: character.changes,
+      characterId: character.margonemCharacterId,
+      databaseCharacterId: character.databaseCharacterId,
+      name: character.latest.name,
+    })),
+    removed: preview.diff.removed.map(({ current }) => ({
+      affectedSquadCount: current.affectedSquadCount,
+      avatarUrl: current.avatarUrl,
+      characterId: current.margonemCharacterId,
+      databaseCharacterId: current.databaseCharacterId,
+      level: current.level,
+      name: current.name,
+      profession: current.profession,
+    })),
+    unchangedCount: preview.diff.unchangedCount,
+  },
+  refetchPreviewId: preview.refetchPreviewId,
+});
+
 const changeFieldLabel = (field: string): string => {
   switch (field) {
     case "name": {
@@ -764,9 +778,7 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
                     accountId: account.accountId,
                     actorUserId,
                   });
-                  setRefetchPreview(
-                    response as unknown as AccountRefetchPreview
-                  );
+                  setRefetchPreview(toAccountRefetchPreview(response));
                 } catch (error: unknown) {
                   toast.error(
                     toErrorMessage(
@@ -1013,8 +1025,8 @@ const InviteInboxPanel = () => {
 
   const invites = resultValueOr(
     invitesResult,
-    []
-  ) as unknown as readonly AccountAccessInvite[];
+    [] as readonly AccountAccessInvite[]
+  );
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
@@ -1155,10 +1167,7 @@ const SharedAccountsSkeleton = () => (
 const SharedAccountsPanel = () => {
   const actorUserId = useActorUserId();
   const sharedResult = useAtomValue(sharedAccountsAtom({ actorUserId }));
-  const accounts = resultValueOr(
-    sharedResult,
-    []
-  ) as unknown as readonly SharedAccount[];
+  const accounts = resultValueOr(sharedResult, [] as readonly SharedAccount[]);
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">

@@ -1,5 +1,9 @@
 import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
+import type {
+  SquadEditorInviteTargetSchema,
+  SquadGroupEditorGrantSummarySchema,
+} from "@tepirek-revamped/api/modules/squad-builder/schema/squad-group-sharing";
 import {
   ArrowLeft,
   ChevronDown,
@@ -25,15 +29,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import {
   availableSquadCharactersAtom,
-  revokeSquadGroupEditorAtom,
   saveSharedSquadGroupCharactersAtom,
   saveSquadGroupAtom,
   setSquadGroupVisibilityAtom,
-  squadEditorInviteTargetsAtom,
   squadGroupDetailAtom,
-  squadGroupEditorGrantsAtom,
+} from "@/lib/squad-builder/squad-group-atoms";
+import {
+  revokeSquadGroupEditorAtom,
   sendSquadGroupEditorInviteAtom,
-} from "@/lib/squad-builder-atoms";
+  squadEditorInviteTargetsAtom,
+  squadGroupEditorGrantsAtom,
+} from "@/lib/squad-builder/squad-group-sharing-atoms";
 import { sessionAtom } from "@/lib/user-atoms";
 
 const PROFESSION_LABELS: Record<string, string> = {
@@ -70,19 +76,8 @@ interface DraftSquad {
   readonly characters: readonly DraftCharacter[];
 }
 
-interface SquadEditorInviteTarget {
-  readonly userId: string;
-  readonly name: string;
-  readonly image: string | null;
-}
-
-interface SquadGroupEditorGrant {
-  readonly invitationId: number;
-  readonly userId: string;
-  readonly userName: string;
-  readonly userImage: string | null;
-  readonly status: "pending" | "accepted";
-}
+type SquadEditorInviteTarget = typeof SquadEditorInviteTargetSchema.Type;
+type SquadGroupEditorGrant = typeof SquadGroupEditorGrantSummarySchema.Type;
 
 interface SquadGroupDetailCharacter extends AvailableCharacter {
   readonly position: number;
@@ -136,7 +131,9 @@ export default function SquadBuilderEditorPage() {
   const detailResult = useAtomValue(
     squadGroupDetailAtom({ actorUserId, groupId })
   );
-  const detail = resultValueOr(detailResult) as SquadGroupDetail | undefined;
+  const detail = resultValueOr(detailResult) as
+    | SquadGroupDetail
+    | undefined;
   const accessRole = detail?.accessRole;
   const isOwner = accessRole === "owner";
   const isEditor = accessRole === "editor";
