@@ -6,8 +6,8 @@ import * as Layer from "effect/Layer";
 import { serviceUse } from "../../../effect/service-use.js";
 import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
+import { EffectAccountSharingStore } from "./account-sharing-store-service.js";
 import type { AccountInviteTarget } from "./account-sharing-store.js";
-import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
 import {
   accountInviteTargetSearchPolicy,
   InvalidAccountInviteTargetQuery,
@@ -16,7 +16,7 @@ import type { SearchAccountInviteTargetsInput } from "./search-account-invite-ta
 
 const parseAccountInviteTargetQuery = (
   input: string
-): Effect<string, InvalidAccountInviteTargetQuery, never> => {
+): Effect<string, InvalidAccountInviteTargetQuery> => {
   const trimmed = input.trim();
 
   if (trimmed.length < accountInviteTargetSearchPolicy.minQueryLength) {

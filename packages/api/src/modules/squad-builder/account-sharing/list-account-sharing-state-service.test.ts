@@ -10,11 +10,11 @@ import { parseMargonemProfileId } from "../margonem-profile-id.js";
 import { isOk } from "../result.js";
 import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
 import { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
-import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
+import { EffectAccountSharingStore } from "./account-sharing-store-service.js";
 import {
   layer as accountSharingStateLayer,
   use as accountSharingState,
-} from "./effect-list-account-sharing-state.js";
+} from "./list-account-sharing-state-service.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);

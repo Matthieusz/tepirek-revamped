@@ -5,8 +5,8 @@ import { TestClock } from "effect/testing";
 import { parseAppUserId } from "../app-user-id.js";
 import { isOk } from "../result.js";
 import { makeEffectAccountRefetchStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
-import { EffectAccountRefetchStore } from "./effect-account-refetch-store.js";
-import { EffectApplyAccountRefetch } from "./effect-apply-account-refetch.js";
+import { EffectAccountRefetchStore } from "./account-refetch-store-service.js";
+import { EffectApplyAccountRefetch } from "./apply-account-refetch-service.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-apply-refetch-user");

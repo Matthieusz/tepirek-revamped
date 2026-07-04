@@ -5,31 +5,31 @@ import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../http-api-contract.js";
-import { EffectConfirmOwnedAccountImport } from "./account-import/effect-confirm-owned-account-import.js";
-import { EffectPreviewMargonemProfileImport } from "./account-import/effect-preview-margonem-profile-import.js";
-import { EffectPreviewOwnedAccountImports } from "./account-import/effect-preview-owned-account-imports.js";
-import { EffectApplyAccountRefetch } from "./account-refetch/effect-apply-account-refetch.js";
-import { EffectPreviewAccountRefetch } from "./account-refetch/effect-preview-account-refetch.js";
+import { EffectConfirmOwnedAccountImport } from "./account-import/confirm-owned-account-import-service.js";
+import { EffectPreviewMargonemProfileImport } from "./account-import/preview-margonem-profile-import-service.js";
+import { EffectPreviewOwnedAccountImports } from "./account-import/preview-owned-account-imports-service.js";
+import { EffectApplyAccountRefetch } from "./account-refetch/apply-account-refetch-service.js";
+import { EffectPreviewAccountRefetch } from "./account-refetch/preview-account-refetch-service.js";
 import {
   layer as accountSharingStateLayer,
   use as accountSharingState,
-} from "./account-sharing/effect-list-account-sharing-state.js";
+} from "./account-sharing/list-account-sharing-state-service.js";
 import {
   layer as accountAccessInviteResponsesLayer,
   use as accountAccessInviteResponses,
-} from "./account-sharing/effect-respond-to-account-access-invite.js";
+} from "./account-sharing/respond-to-account-access-invite-service.js";
 import {
   layer as accountAccessRevocationsLayer,
   use as accountAccessRevocations,
-} from "./account-sharing/effect-revoke-account-access.js";
+} from "./account-sharing/revoke-account-access-service.js";
 import {
   layer as accountInviteTargetsLayer,
   use as accountInviteTargets,
-} from "./account-sharing/effect-search-account-invite-targets.js";
+} from "./account-sharing/search-account-invite-targets-service.js";
 import {
   layer as accountAccessInvitesLayer,
   use as accountAccessInvites,
-} from "./account-sharing/effect-send-account-access-invite.js";
+} from "./account-sharing/send-account-access-invite-service.js";
 import type { AppUserId } from "./app-user-id.js";
 import type { MargonemAccountAccessId } from "./margonem-account-access-id.js";
 import type { MargonemAccountId } from "./margonem-account-id.js";

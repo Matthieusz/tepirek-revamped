@@ -9,11 +9,11 @@ import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { isOk } from "../result.js";
 import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
 import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
-import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
+import { EffectAccountSharingStore } from "./account-sharing-store-service.js";
 import {
   layer as accountAccessRevocationsLayer,
   use as accountAccessRevocations,
-} from "./effect-revoke-account-access.js";
+} from "./revoke-account-access-service.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);

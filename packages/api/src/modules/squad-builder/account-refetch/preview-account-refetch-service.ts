@@ -16,7 +16,7 @@ import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-d
 import { parseMargonemProfileHtml } from "../margonem-profile-html-parser.js";
 import { toMargonemProfileUrl } from "../margonem-profile-url.js";
 import { isError } from "../result.js";
-import { EffectAccountRefetchStore } from "./effect-account-refetch-store.js";
+import { EffectAccountRefetchStore } from "./account-refetch-store-service.js";
 import type { PreviewAccountRefetchInput } from "./preview-account-refetch.js";
 import { pendingRefetchPolicy } from "./preview-account-refetch.js";
 

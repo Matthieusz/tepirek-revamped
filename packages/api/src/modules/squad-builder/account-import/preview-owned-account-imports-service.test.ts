@@ -8,8 +8,8 @@ import type { FirecrawlClient } from "../firecrawl-client.js";
 import { EffectFirecrawlConfig } from "../firecrawl-config.js";
 import { isOk, ok } from "../result.js";
 import { makeEffectAccountImportStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
-import { EffectAccountImportStore } from "./effect-account-import-store.js";
-import { EffectPreviewOwnedAccountImports } from "./effect-preview-owned-account-imports.js";
+import { EffectAccountImportStore } from "./account-import-store-service.js";
+import { EffectPreviewOwnedAccountImports } from "./preview-owned-account-imports-service.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-batch-user");

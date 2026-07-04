@@ -23,17 +23,17 @@ import {
   testDb,
 } from "../../../test/integration/database.js";
 import { parseAccountDisplayName } from "../account-display-name.js";
-import { EffectAccountImportStore } from "../account-import/effect-account-import-store.js";
-import { EffectConfirmOwnedAccountImport } from "../account-import/effect-confirm-owned-account-import.js";
+import { EffectAccountImportStore } from "../account-import/account-import-store-service.js";
+import { EffectConfirmOwnedAccountImport } from "../account-import/confirm-owned-account-import-service.js";
 import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts.js";
 import { systemClock } from "../account-import/preview-margonem-profile-import.js";
-import { EffectAccountRefetchStore } from "../account-refetch/effect-account-refetch-store.js";
-import { EffectApplyAccountRefetch } from "../account-refetch/effect-apply-account-refetch.js";
-import { use as accountSharingState } from "../account-sharing/effect-list-account-sharing-state.js";
-import { use as accountAccessInviteResponses } from "../account-sharing/effect-respond-to-account-access-invite.js";
-import { use as accountAccessRevocations } from "../account-sharing/effect-revoke-account-access.js";
-import { use as accountInviteTargets } from "../account-sharing/effect-search-account-invite-targets.js";
-import { use as accountAccessInvites } from "../account-sharing/effect-send-account-access-invite.js";
+import { EffectAccountRefetchStore } from "../account-refetch/account-refetch-store-service.js";
+import { EffectApplyAccountRefetch } from "../account-refetch/apply-account-refetch-service.js";
+import { use as accountSharingState } from "../account-sharing/list-account-sharing-state-service.js";
+import { use as accountAccessInviteResponses } from "../account-sharing/respond-to-account-access-invite-service.js";
+import { use as accountAccessRevocations } from "../account-sharing/revoke-account-access-service.js";
+import { use as accountInviteTargets } from "../account-sharing/search-account-invite-targets-service.js";
+import { use as accountAccessInvites } from "../account-sharing/send-account-access-invite-service.js";
 import { parseAppUserId } from "../app-user-id.js";
 import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
 import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";

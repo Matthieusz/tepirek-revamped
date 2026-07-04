@@ -6,12 +6,12 @@ import type { InvalidAccountDisplayName } from "../account-display-name.js";
 import type { AppUserId } from "../app-user-id.js";
 import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
 import { isError } from "../result.js";
+import { EffectAccountImportStore } from "./account-import-store-service.js";
 import type {
   DuplicateMargonemAccountError,
   PendingMargonemAccountImportNotFound,
   SquadBuilderPersistenceUnavailable,
 } from "./account-import-store.js";
-import { EffectAccountImportStore } from "./effect-account-import-store.js";
 
 /** Input for confirming an owned account import through Effect. */
 export interface EffectConfirmOwnedAccountImportInput {

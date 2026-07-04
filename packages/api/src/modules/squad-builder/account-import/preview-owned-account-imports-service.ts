@@ -12,12 +12,12 @@ import {
   toMargonemProfileUrl,
 } from "../margonem-profile-url.js";
 import { isError, isOk } from "../result.js";
+import { EffectAccountImportStore } from "./account-import-store-service.js";
 import type {
   DuplicateMargonemAccountError,
   ProfileAccessState,
 } from "./account-import-store.js";
-import { EffectAccountImportStore } from "./effect-account-import-store.js";
-import { EffectPreviewMargonemProfileImport } from "./effect-preview-margonem-profile-import.js";
+import { EffectPreviewMargonemProfileImport } from "./preview-margonem-profile-import-service.js";
 import type {
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportInput,

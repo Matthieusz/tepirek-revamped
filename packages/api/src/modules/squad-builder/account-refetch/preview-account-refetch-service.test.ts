@@ -9,8 +9,8 @@ import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import { EffectFirecrawlConfig } from "../firecrawl-config.js";
 import { isOk, ok } from "../result.js";
 import { makeEffectAccountRefetchStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
-import { EffectAccountRefetchStore } from "./effect-account-refetch-store.js";
-import { EffectPreviewAccountRefetch } from "./effect-preview-account-refetch.js";
+import { EffectAccountRefetchStore } from "./account-refetch-store-service.js";
+import { EffectPreviewAccountRefetch } from "./preview-account-refetch-service.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-refetch-user");

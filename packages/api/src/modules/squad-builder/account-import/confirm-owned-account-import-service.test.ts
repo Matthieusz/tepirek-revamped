@@ -7,8 +7,8 @@ import { parseMargonemProfileId } from "../margonem-profile-id.js";
 import { parsePendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
 import { isOk } from "../result.js";
 import { makeEffectAccountImportStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
-import { EffectAccountImportStore } from "./effect-account-import-store.js";
-import { EffectConfirmOwnedAccountImport } from "./effect-confirm-owned-account-import.js";
+import { EffectAccountImportStore } from "./account-import-store-service.js";
+import { EffectConfirmOwnedAccountImport } from "./confirm-owned-account-import-service.js";
 import type { Clock } from "./preview-margonem-profile-import.js";
 
 const parseTestUserId = () => {

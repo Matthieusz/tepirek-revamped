@@ -18,7 +18,7 @@ import {
   toMargonemProfileUrl,
 } from "../margonem-profile-url.js";
 import { isError } from "../result.js";
-import { EffectAccountImportStore } from "./effect-account-import-store.js";
+import { EffectAccountImportStore } from "./account-import-store-service.js";
 import { profileAccessStateToDuplicateError } from "./preview-margonem-profile-import.js";
 import type { PreviewMargonemProfileImportInput } from "./preview-margonem-profile-import.js";
 

@@ -18,7 +18,7 @@ import {
   parseAccountAccessStatus,
 } from "../account-access-status.js";
 import { parseAccountDisplayName } from "../account-display-name.js";
-import { EffectAccountSharingStore } from "../account-sharing/effect-account-sharing-store.js";
+import { EffectAccountSharingStore } from "../account-sharing/account-sharing-store-service.js";
 import type { AppUserId } from "../app-user-id.js";
 import { appUserIdToString, parseAppUserId } from "../app-user-id.js";
 import type { MargonemAccountAccessId } from "../margonem-account-access-id.js";
@@ -75,8 +75,7 @@ const listOwnedAccountsWithDatabase =
     actorUserId,
   }: ListOwnedMargonemAccountsInput): Effect.Effect<
     readonly OwnedMargonemAccountSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* listOwnedAccountsEffect() {
       const operation = "listOwnedAccounts" as const;
@@ -137,8 +136,7 @@ const searchInviteTargetsWithDatabase =
     query,
   }: SearchInviteTargetsStoreInput): Effect.Effect<
     readonly AccountInviteTarget[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* searchInviteTargetsEffect() {
       const operation = "searchInviteTargets" as const;
@@ -195,8 +193,7 @@ const findOwnedAccountForSharingWithDatabase =
     accountId,
   }: FindOwnedAccountForSharingInput): Effect.Effect<
     OwnedAccountForSharing,
-    MargonemAccountNotFound | EffectSquadBuilderPersistenceUnavailable,
-    never
+    MargonemAccountNotFound | EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* findOwnedAccountForSharingEffect() {
       const operation = "findOwnedAccountForSharing" as const;
@@ -250,8 +247,7 @@ const loadAccountAccessInviteSummaryWithDatabase =
     operation: EffectSquadGroupPersistenceOperation
   ): Effect.Effect<
     AccountAccessInviteSummary,
-    AccountAccessInviteNotFound | EffectSquadBuilderPersistenceUnavailable,
-    never
+    AccountAccessInviteNotFound | EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* loadAccountAccessInviteSummaryEffect() {
       const select = database
@@ -343,8 +339,7 @@ const findVerifiedInviteTargetWithDatabase =
     AccountInviteTarget,
     | InviteTargetNotFound
     | InviteTargetNotVerified
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* findVerifiedInviteTargetEffect() {
       const operation = "findVerifiedInviteTarget" as const;
@@ -393,9 +388,7 @@ const upsertAccountAccessInviteWithDatabase =
     readonly now: Date;
   }): Effect.Effect<
     AccountAccessInviteSummary,
-    | AccountAccessTransitionNotAllowed
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    AccountAccessTransitionNotAllowed | EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* upsertAccountAccessInviteEffect() {
       const operation = "upsertAccountAccessInvite" as const;
@@ -506,8 +499,7 @@ const listIncomingAccountInvitesWithDatabase =
     actorUserId,
   }: ListIncomingAccountInvitesInput): Effect.Effect<
     readonly AccountAccessInviteSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* listIncomingAccountInvitesEffect() {
       const operation = "listIncomingAccountInvites" as const;
@@ -552,8 +544,7 @@ const listSharedAccountsWithDatabase =
     actorUserId,
   }: ListSharedAccountsInput): Effect.Effect<
     readonly SharedMargonemAccountSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* listSharedAccountsEffect() {
       const operation = "listSharedAccounts" as const;
@@ -642,8 +633,7 @@ const listAccountAccessGrantsWithDatabase =
     readonly accountId: MargonemAccountId;
   }): Effect.Effect<
     readonly AccountAccessGrantSummary[],
-    EffectSquadBuilderPersistenceUnavailable,
-    never
+    EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* listAccountAccessGrantsEffect() {
       const operation = "listAccountAccessGrants" as const;
@@ -724,8 +714,7 @@ const respondToAccountAccessInviteWithDatabase =
     | AccountAccessInviteNotFound
     | ActorIsNotInviteRecipient
     | AccountAccessTransitionNotAllowed
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* respondToAccountAccessInviteEffect() {
       const operation = "respondToAccountAccessInvite" as const;
@@ -811,8 +800,7 @@ const revokeAccountAccessWithDatabase =
     | AccountAccessInviteNotFound
     | ActorDoesNotOwnMargonemAccount
     | AccountAccessTransitionNotAllowed
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
+    | EffectSquadBuilderPersistenceUnavailable
   > =>
     Effect.gen(function* revokeAccountAccessEffect() {
       const operation = "revokeAccountAccess" as const;

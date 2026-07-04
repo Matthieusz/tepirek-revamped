@@ -8,11 +8,12 @@ import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { isOk } from "../result.js";
 import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
-import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
+import { ActorIsNotInviteRecipient } from "../squad-groups/squad-group-errors.js";
+import { EffectAccountSharingStore } from "./account-sharing-store-service.js";
 import {
-  layer as accountAccessInvitesLayer,
-  use as accountAccessInvites,
-} from "./effect-send-account-access-invite.js";
+  layer as accountAccessInviteResponsesLayer,
+  use as accountAccessInviteResponses,
+} from "./respond-to-account-access-invite-service.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -48,101 +49,75 @@ const fixedClock = {
   now: () => new Date("2026-06-29T12:00:00.000Z"),
 };
 
-it.effect("sends an account access invite for a verified target", () => {
-  const actorUserId = parseTestUserId("effect-account-send-owner");
-  const targetUserId = parseTestUserId("effect-account-send-target");
-  const accountId = parseTestAccountId();
+it.effect("accepts an account access invite as the invited user", () => {
+  const actorUserId = parseTestUserId("effect-account-respond-recipient");
+  const ownerUserId = parseTestUserId("effect-account-respond-owner");
   const accessId = parseTestAccessId();
+  const accountId = parseTestAccountId();
   const store = makeEffectAccountSharingStoreTestService({
-    findOwnedAccountForSharing: (input) => {
-      expect(input.accountId).toBe(accountId);
-      expect(input.actorUserId).toBe(actorUserId);
-
-      return Effect.succeed({
-        accountId: input.accountId,
-        displayName: "Send account" as never,
-        ownerUserId: actorUserId,
-        profileId: 7_298_897 as never,
-      });
-    },
-    findVerifiedInviteTarget: (input) => {
-      expect(input.targetUserId).toBe(targetUserId);
-
-      return Effect.succeed({
-        image: null,
-        name: "Send Target",
-        userId: targetUserId,
-      });
-    },
-    upsertAccountAccessInvite: (input) => {
+    respondToAccountAccessInvite: (input) => {
       expect(input).toMatchObject({
-        accountId,
-        invitedUserId: targetUserId,
+        accessId,
+        invitedUserId: actorUserId,
         now: fixedClock.now(),
-        ownerUserId: actorUserId,
+        response: "accept",
       });
 
       return Effect.succeed({
         accessId,
-        accountDisplayName: "Send account" as never,
+        accountDisplayName: "Respond account" as never,
         accountId,
         createdAt: fixedClock.now(),
         generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
-        invitedUserId: targetUserId,
-        ownerUserId: actorUserId,
+        invitedUserId: actorUserId,
+        ownerUserId,
         ownerUserImage: null,
         ownerUserName: "owner",
-        status: "pending" as const,
+        status: "accepted" as const,
         updatedAt: fixedClock.now(),
       });
     },
   });
-  const testLayer = accountAccessInvitesLayer.pipe(
+  const testLayer = accountAccessInviteResponsesLayer.pipe(
     Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
   );
 
-  return Effect.gen(function* sendAccountAccessInviteEffect() {
+  return Effect.gen(function* respondToAccountAccessInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* accountAccessInvites.send({
-      accountId,
+    const invite = yield* accountAccessInviteResponses.respond({
+      accessId,
       actorUserId,
-      invitedUserId: targetUserId,
+      response: "accept",
     });
 
     expect(invite).toMatchObject({
       accessId,
-      invitedUserId: targetUserId,
-      status: "pending",
+      invitedUserId: actorUserId,
+      status: "accepted",
     });
   }).pipe(Effect.provide(testLayer));
 });
 
-it.effect("rejects self-invites before resolving the target", () => {
-  const actorUserId = parseTestUserId("effect-account-self-owner");
-  const accountId = parseTestAccountId();
+it.effect("surfaces invite recipient authorization failures", () => {
+  const actorUserId = parseTestUserId("effect-account-respond-attacker");
+  const accessId = parseTestAccessId();
   const store = makeEffectAccountSharingStoreTestService({
-    findOwnedAccountForSharing: () =>
-      Effect.succeed({
-        accountId,
-        displayName: "Self account" as never,
-        ownerUserId: actorUserId,
-        profileId: 7_298_897 as never,
-      }),
+    respondToAccountAccessInvite: () => new ActorIsNotInviteRecipient(),
   });
-  const testLayer = accountAccessInvitesLayer.pipe(
+  const testLayer = accountAccessInviteResponsesLayer.pipe(
     Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
   );
 
-  return Effect.gen(function* sendAccountAccessInviteEffect() {
+  return Effect.gen(function* respondToAccountAccessInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      accountAccessInvites.send({
-        accountId,
+      accountAccessInviteResponses.respond({
+        accessId,
         actorUserId,
-        invitedUserId: actorUserId,
+        response: "decline",
       })
     );
 
-    expect(error._tag).toBe("CannotInviteSelf");
+    expect(error._tag).toBe("ActorIsNotInviteRecipient");
   }).pipe(Effect.provide(testLayer));
 });

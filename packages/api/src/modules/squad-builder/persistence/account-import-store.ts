@@ -16,7 +16,7 @@ import {
   accountDisplayNameToString,
   parseAccountDisplayName,
 } from "../account-display-name.js";
-import { EffectAccountImportStore } from "../account-import/effect-account-import-store.js";
+import { EffectAccountImportStore } from "../account-import/account-import-store-service.js";
 import { appUserIdToString } from "../app-user-id.js";
 import { firecrawlYearMonthToString } from "../firecrawl-year-month.js";
 import {

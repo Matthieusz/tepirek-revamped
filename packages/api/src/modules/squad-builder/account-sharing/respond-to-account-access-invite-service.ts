@@ -6,8 +6,8 @@ import * as Layer from "effect/Layer";
 
 import { serviceUse } from "../../../effect/service-use.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
+import { EffectAccountSharingStore } from "./account-sharing-store-service.js";
 import type { AccountAccessInviteSummary } from "./account-sharing-store.js";
-import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
 import type { RespondToAccountAccessInviteInput } from "./respond-to-account-access-invite.js";
 
 export interface Interface {

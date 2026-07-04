@@ -6,11 +6,11 @@ import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { isOk } from "../result.js";
 import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
-import { EffectAccountSharingStore } from "./effect-account-sharing-store.js";
+import { EffectAccountSharingStore } from "./account-sharing-store-service.js";
 import {
   layer as accountInviteTargetsLayer,
   use as accountInviteTargets,
-} from "./effect-search-account-invite-targets.js";
+} from "./search-account-invite-targets-service.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);

@@ -1,8 +1,8 @@
 import * as Clock from "effect/Clock";
 import * as EffectRuntime from "effect/Effect";
 
+import { EffectAccountRefetchStore } from "./account-refetch-store-service.js";
 import type { ApplyAccountRefetchInput } from "./apply-account-refetch.js";
-import { EffectAccountRefetchStore } from "./effect-account-refetch-store.js";
 
 /** Effect service module that applies a saved pending account refetch. */
 export class EffectApplyAccountRefetch {
