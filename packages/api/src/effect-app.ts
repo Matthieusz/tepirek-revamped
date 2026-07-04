@@ -48,6 +48,7 @@ import { layer as squadGroupEditorInvitesLayer } from "./modules/squad-builder/s
 import type { EffectSquadGroupStore } from "./modules/squad-builder/squad-groups/squad-group-store.js";
 import { TodoStoreLayer } from "./modules/todo/todo-store.js";
 import type { TodoStore } from "./modules/todo/todo-store.js";
+import * as Observability from "./observability.js";
 
 /** Process-wide Layer memo map shared by production API Effect runtimes. */
 export const apiLayerMemoMap = Layer.makeMemoMapUnsafe();
@@ -129,9 +130,12 @@ const memoizeRuntime = <R, E>(
   layer: Layer.Layer<R, E>
 ): MemoizedRuntime<R, E> => {
   let runtime: ManagedRuntime.ManagedRuntime<R, E> | undefined;
+  const observedLayer = layer.pipe(Layer.provideMerge(Observability.layer));
 
   const getManagedRuntime = () => {
-    runtime ??= ManagedRuntime.make(layer, { memoMap: apiLayerMemoMap });
+    runtime ??= ManagedRuntime.make(observedLayer, {
+      memoMap: apiLayerMemoMap,
+    });
     return runtime;
   };
 
