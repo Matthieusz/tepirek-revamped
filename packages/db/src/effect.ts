@@ -1,6 +1,8 @@
 import * as Pg from "@effect/sql-pg/PgClient";
+import { EffectCache } from "drizzle-orm/cache/core/cache-effect";
 import * as PgDrizzle from "drizzle-orm/effect-postgres";
 import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import type { Success } from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
@@ -33,10 +35,16 @@ const DATE_TIME_TYPE_IDS = new Set([
   1182,
 ]);
 
+const DrizzleServicesLayer = Layer.merge(
+  EffectCache.Default,
+  PgDrizzle.EffectLogger.layer
+);
+
+const makeDrizzleDatabase = () =>
+  PgDrizzle.make({}).pipe(Effect.provide(DrizzleServicesLayer));
+
 /** Effect-native Drizzle database produced by `drizzle-orm/effect-postgres`. */
-export type EffectPgDatabase = Success<
-  ReturnType<typeof PgDrizzle.makeWithDefaults>
->;
+export type EffectPgDatabase = Success<ReturnType<typeof makeDrizzleDatabase>>;
 
 /** Context service for the Effect-native Drizzle PostgreSQL database. */
 export class EffectDatabase extends Context.Service<
@@ -67,7 +75,7 @@ export const EffectDatabaseLayer: Layer.Layer<
   EffectDatabase,
   never,
   Pg.PgClient
-> = Layer.effect(EffectDatabase, PgDrizzle.makeWithDefaults());
+> = Layer.effect(EffectDatabase, makeDrizzleDatabase());
 
 /** Create the live Effect database layer for application composition. */
 export const makeLiveDatabaseLayer = (databaseUrl: string) =>
