@@ -1,11 +1,11 @@
-/* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { ORPCError } from "@orpc/server";
 import { auth } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../http-api-contract.js";
+/* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
+import { AppError } from "../app-error.js";
 import { heroBetLedger } from "../hero-bet-ledger.js";
 import {
   VaultBadRequest,
@@ -53,7 +53,7 @@ const requireAdminSession = (request: HttpServerRequest) =>
   });
 
 const classifyVaultFailure = (cause: unknown, operation: string) => {
-  if (cause instanceof ORPCError) {
+  if (cause instanceof AppError) {
     if (cause.code === "BAD_REQUEST") {
       return new VaultBadRequest({ message: cause.message });
     }

@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
+import { Link } from "@tanstack/react-router";
 import { Check, Loader2, Plus, Swords, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -10,18 +10,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import {
+  incomingSquadGroupInvitesAtom,
+  respondToSquadGroupInviteAtom,
+  sharedSquadGroupsAtom,
+} from "@/lib/squad-builder-atoms";
+import { sessionAtom } from "@/lib/user-atoms";
 import { formatDateTime } from "@/lib/utils";
-import { orpc } from "@/utils/orpc";
 
 interface SquadGroupSummary {
   readonly groupId: number;
   readonly name: string;
   readonly squadCount: number;
   readonly characterCount: number;
-  readonly updatedAt: string;
+  readonly updatedAt: Date;
 }
 
 interface SharedSquadGroupSummary extends SquadGroupSummary {
+  readonly ownerUserId: string;
   readonly ownerUserName: string;
   readonly ownerUserImage: string | null;
 }
@@ -30,11 +37,12 @@ interface SquadGroupInvitationSummary {
   readonly invitationId: number;
   readonly squadGroupId: number;
   readonly squadGroupName: string;
+  readonly ownerUserId: string;
   readonly ownerUserName: string;
   readonly ownerUserImage: string | null;
   readonly status: string;
-  readonly createdAt: string;
-  readonly updatedAt: string;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
 }
 
 interface SquadGroupListFilterFormState {
@@ -55,20 +63,6 @@ const hasActiveFilters = (filters: SquadGroupListFilterFormState): boolean =>
   filters.nameQuery.trim().length > 0 ||
   filters.minLevel.trim().length > 0 ||
   filters.maxLevel.trim().length > 0;
-
-const toListFiltersInput = (filters: SquadGroupListFilterFormState) => {
-  const nameQuery = filters.nameQuery.trim();
-  const minLevel = filters.minLevel.trim();
-  const maxLevel = filters.maxLevel.trim();
-
-  return {
-    filters: {
-      ...(maxLevel.length === 0 ? {} : { maxLevel: Number(maxLevel) }),
-      ...(minLevel.length === 0 ? {} : { minLevel: Number(minLevel) }),
-      ...(nameQuery.length === 0 ? {} : { nameQuery }),
-    },
-  };
-};
 
 const userInitials = (name: string): string =>
   name
@@ -284,84 +278,69 @@ const SquadListTabs = ({
 
 // oxlint-disable-next-line complexity
 export default function SquadBuilderSquadsPage() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [activeTab, setActiveTab] = useState<SquadListTab>("mine");
   const [draftFilters, setDraftFilters] = useState(emptyFilterForm);
   const [appliedFilters, setAppliedFilters] = useState(emptyFilterForm);
   const [filterError, setFilterError] = useState<string | null>(null);
   const activeFilters = hasActiveFilters(appliedFilters);
-  const listFiltersInput = toListFiltersInput(appliedFilters);
+  const sessionResult = useAtomValue(sessionAtom);
+  const actorUserId =
+    sessionResult._tag === "Success" ? sessionResult.value.user.id : "";
+  const actorPayload = { actorUserId };
+  const sharedGroupsResult = useAtomValue(sharedSquadGroupsAtom(actorPayload));
+  const invitesResult = useAtomValue(
+    incomingSquadGroupInvitesAtom(actorPayload)
+  );
+  const respondToInvite = useAtomSet(respondToSquadGroupInviteAtom, {
+    mode: "promise",
+  });
 
-  const groupsQuery = useQuery(
-    orpc.squadBuilder.listMySquadGroups.queryOptions()
-  );
-  const sharedGroupsQuery = useQuery(
-    orpc.squadBuilder.listSharedSquadGroups.queryOptions({
-      input: listFiltersInput,
-    })
-  );
-  const globalGroupsQuery = useQuery(
-    orpc.squadBuilder.listGlobalSquadGroups.queryOptions({
-      input: listFiltersInput,
-    })
-  );
-  const invitesQuery = useQuery(
-    orpc.squadBuilder.listIncomingSquadGroupInvites.queryOptions()
-  );
+  const createMutation = {
+    isPending: false,
+    mutate: (_input: { readonly name: string }) => {
+      toast.error(
+        "Tworzenie grup składów nie zostało jeszcze przeniesione na Effect HttpApi."
+      );
+    },
+  };
 
-  const createMutation = useMutation(
-    orpc.squadBuilder.createSquadGroup.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: async (group) => {
-        toast.success("Grupa składów została utworzona");
-        setName("");
-        await queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.listMySquadGroups.queryKey(),
-        });
-        await navigate({
-          params: { groupId: String(group.groupId) },
-          to: "/dashboard/squad-builder/squads/$groupId",
-        });
-      },
-    })
-  );
+  const respondMutation = {
+    isPending: false,
+    mutate: (input: {
+      readonly invitationId: number;
+      readonly response: "accept" | "decline";
+    }) => {
+      const respond = async () => {
+        try {
+          await respondToInvite({ ...input, actorUserId });
+          toast.success("Zapisano odpowiedź na zaproszenie");
+        } catch (error: unknown) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Nie udało się zapisać odpowiedzi"
+          );
+        }
+      };
 
-  const respondMutation = useMutation(
-    orpc.squadBuilder.respondToSquadGroupInvite.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: async () => {
-        toast.success("Zapisano odpowiedź na zaproszenie");
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey:
-              orpc.squadBuilder.listIncomingSquadGroupInvites.queryKey(),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: orpc.squadBuilder.listSharedSquadGroups.queryKey(),
-          }),
-          queryClient.invalidateQueries({
-            queryKey:
-              orpc.squadBuilder.getPendingSquadGroupInviteCount.queryKey(),
-          }),
-        ]);
-      },
-    })
-  );
+      void respond();
+    },
+  };
 
-  const groups = (groupsQuery.data?.groups ??
-    []) as readonly SquadGroupSummary[];
-  const sharedGroups = (sharedGroupsQuery.data?.groups ??
-    []) as readonly SharedSquadGroupSummary[];
-  const globalGroups = (globalGroupsQuery.data?.groups ??
-    []) as readonly SharedSquadGroupSummary[];
-  const invites = (invitesQuery.data?.invites ??
-    []) as readonly SquadGroupInvitationSummary[];
+  const groups: readonly SquadGroupSummary[] = [];
+  const sharedGroups = resultValueOr(
+    sharedGroupsResult,
+    [] as readonly SharedSquadGroupSummary[]
+  );
+  const globalGroups: readonly SharedSquadGroupSummary[] = [];
+  const invites = resultValueOr(
+    invitesResult,
+    [] as readonly SquadGroupInvitationSummary[]
+  );
+  const groupsQuery = { isLoading: false };
+  const sharedGroupsQuery = { isLoading: resultIsLoading(sharedGroupsResult) };
+  const globalGroupsQuery = { isLoading: false };
   const trimmedName = name.trim();
 
   const applyFilters = (event: React.FormEvent) => {

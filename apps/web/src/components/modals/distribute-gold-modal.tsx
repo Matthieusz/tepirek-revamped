@@ -1,10 +1,10 @@
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { useForm } from "@tanstack/react-form";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Schema from "effect/Schema";
 import { Coins } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import {
   getEventSelectDisplay,
@@ -32,14 +32,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import {
+  effectSchemaValidator,
+  formErrorMessage,
+} from "@/lib/effect-schema-validator";
 import { getErrorMessage } from "@/lib/errors";
+import { eventsAtom } from "@/lib/event-atoms";
 import { ALL_FILTER } from "@/lib/event-hero-filter";
 import { parseGoldAmount } from "@/lib/gold";
-import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
-import { eventsApi } from "@/utils/events-api";
-import { heroesApi } from "@/utils/heroes-api";
-import { rankingApi } from "@/utils/ranking-api";
-import { vaultApi } from "@/utils/vault-api";
+import { heroesAtom } from "@/lib/hero-atoms";
+import { heroStatsAtom } from "@/lib/ranking-atoms";
+import { distributeGoldAtom } from "@/lib/vault-atoms";
+
+const DistributeGoldFormSchema = Schema.Struct({
+  goldAmount: Schema.NonEmptyString,
+});
 
 interface HeroStats {
   heroId: number;
@@ -143,7 +151,7 @@ export const DistributeGoldModal = ({
   const [open, setOpen] = useState(false);
   const [eventIdOverride, setEventIdOverride] = useState<string>();
   const [heroIdOverride, setHeroIdOverride] = useState<string>();
-  const queryClient = useQueryClient();
+  const distributeGold = useAtomSet(distributeGoldAtom, { mode: "promise" });
   const eventId = eventIdOverride ?? selectedEventId;
   const heroId = heroIdOverride ?? selectedHeroId;
 
@@ -156,15 +164,11 @@ export const DistributeGoldModal = ({
     setOpen(nextOpen);
   };
 
-  const { data: events } = useQuery({
-    queryFn: eventsApi.list,
-    queryKey: eventsApi.queryKey,
-  });
+  const events = [...resultValueOr(useAtomValue(eventsAtom), [])];
 
-  const { data: heroes, isPending: heroesLoading } = useQuery({
-    queryFn: heroesApi.list,
-    queryKey: heroesApi.queryKey,
-  });
+  const heroesResult = useAtomValue(heroesAtom);
+  const heroes = resultValueOr(heroesResult, []);
+  const heroesLoading = resultIsLoading(heroesResult);
 
   const filteredHeroes = (
     eventId === ALL_FILTER
@@ -172,15 +176,14 @@ export const DistributeGoldModal = ({
       : heroes?.filter((h) => h.eventId?.toString() === eventId)
   )?.toSorted((a, b) => a.level - b.level);
 
-  // Get hero stats when a specific hero is selected
-  const { data: heroStats, isPending: heroStatsPending } = useQuery({
-    enabled: heroId !== ALL_FILTER && open,
-    queryFn: () =>
-      rankingApi.getHeroStats({ heroId: Number.parseInt(heroId, 10) }),
-    queryKey: rankingApi.heroStatsQueryKey({
-      heroId: Number.parseInt(heroId, 10),
-    }),
-  });
+  const parsedHeroId = Number.parseInt(heroId, 10);
+  const heroStatsResult = useAtomValue(heroStatsAtom({ heroId: parsedHeroId }));
+  const heroStats =
+    heroId !== ALL_FILTER && open
+      ? resultValueOr(heroStatsResult, undefined)
+      : undefined;
+  const heroStatsPending =
+    heroId !== ALL_FILTER && open && resultIsLoading(heroStatsResult);
 
   const form = useForm({
     defaultValues: {
@@ -199,7 +202,7 @@ export const DistributeGoldModal = ({
           return;
         }
 
-        const result = await vaultApi.distributeGold({
+        const result = await distributeGold({
           goldAmount,
           heroId: Number.parseInt(heroId, 10),
         });
@@ -207,7 +210,6 @@ export const DistributeGoldModal = ({
         toast.success(
           `Rozdzielono ${goldAmount.toLocaleString("pl-PL")} złota dla ${result.usersUpdated} graczy`
         );
-        await invalidateBetLedgerQueries(queryClient);
         setOpen(false);
         form.reset();
       } catch (error) {
@@ -215,9 +217,7 @@ export const DistributeGoldModal = ({
       }
     },
     validators: {
-      onSubmit: z.object({
-        goldAmount: z.string().min(1, "Kwota złota jest wymagana"),
-      }),
+      onSubmit: effectSchemaValidator(DistributeGoldFormSchema),
     },
   });
 
@@ -336,8 +336,11 @@ export const DistributeGoldModal = ({
                       </p>
                     )}
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </>

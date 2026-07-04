@@ -1,9 +1,12 @@
-import { z } from "zod";
+import * as Schema from "effect/Schema";
 
-const searchSchema = z.object({
-  eventId: z.string().optional(),
-  heroId: z.string().optional(),
-  sortBy: z.enum(["points", "bets", "gold"]).optional(),
+const RankingSearchSchema = Schema.Struct({
+  eventId: Schema.optional(Schema.String),
+  heroId: Schema.optional(Schema.String),
+  sortBy: Schema.optional(Schema.Literals(["points", "bets", "gold"])),
 });
 
-export { searchSchema };
+export const searchSchema = (
+  search: unknown
+): typeof RankingSearchSchema.Type =>
+  Schema.decodeUnknownSync(RankingSearchSchema)(search);

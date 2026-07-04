@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
+import type { SkillSummary as SkillSummarySchema } from "@tepirek-revamped/api/modules/skills/http-api-contract";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -27,9 +28,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { isAdmin } from "@/lib/route-helpers";
-import { skillsApi } from "@/utils/skills-api";
-import type { SkillSummary } from "@/utils/skills-api";
+import {
+  deleteSkillFromRangeAtom,
+  skillProfessionsAtom,
+  skillRangeBySlugAtom,
+  skillsByRangeAtom,
+} from "@/lib/skill-atoms";
 
 const routeApi = getRouteApi("/dashboard/skills/$rangeName");
 
@@ -37,45 +43,39 @@ const RangeDetails = () => {
   const { rangeName } = routeApi.useParams();
   const { session } = routeApi.useRouteContext();
   const [skillToDelete, setSkillToDelete] = useState<SkillToDelete>(null);
-  const queryClient = useQueryClient();
-
   const isAdminUser = isAdmin(session);
 
-  const { data: rangeData, isLoading: rangeIsLoading } = useQuery({
-    queryFn: () => skillsApi.getRangeBySlug({ slug: rangeName }),
-    queryKey: skillsApi.rangeBySlugQueryKey(rangeName),
+  const rangeResult = useAtomValue(skillRangeBySlugAtom(rangeName));
+  const rangeData = resultValueOr(rangeResult, null);
+  const rangeIsLoading = resultIsLoading(rangeResult);
+  const professionsQueryData = resultValueOr(
+    useAtomValue(skillProfessionsAtom),
+    []
+  );
+  const skillsResult = useAtomValue(skillsByRangeAtom(rangeData?.id ?? 0));
+  const skillsByRangeData =
+    rangeData === null ? [] : resultValueOr(skillsResult, []);
+  const deleteSkill = useAtomSet(deleteSkillFromRangeAtom(rangeData?.id ?? 0), {
+    mode: "promise",
   });
-  const { data: professionsQueryData } = useQuery({
-    queryFn: skillsApi.listProfessions,
-    queryKey: skillsApi.professionsQueryKey,
-  });
-
-  const { data: skillsByRangeData } = useQuery({
-    enabled: rangeData !== null && rangeData !== undefined,
-    queryFn: () =>
-      rangeData
-        ? skillsApi.listSkillsByRange({ rangeId: rangeData.id })
-        : Promise.resolve([]),
-    queryKey: skillsApi.skillsByRangeQueryKey(rangeData?.id ?? 0),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await skillsApi.deleteSkill({ id });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteMutation = {
+    isPending: isDeleting,
+    mutate: (id: number) => {
+      void (async () => {
+        setIsDeleting(true);
+        try {
+          await deleteSkill({ id });
+          toast.success("Usunięto zestaw");
+          setSkillToDelete(null);
+        } catch {
+          toast.error("Błąd podczas usuwania");
+        } finally {
+          setIsDeleting(false);
+        }
+      })();
     },
-    onError: () => {
-      toast.error("Błąd podczas usuwania");
-    },
-    onSuccess: async () => {
-      toast.success("Usunięto zestaw");
-      if (skillToDelete?.rangeId !== undefined && skillToDelete.rangeId !== 0) {
-        await queryClient.invalidateQueries({
-          queryKey: skillsApi.skillsByRangeQueryKey(skillToDelete.rangeId),
-        });
-      }
-      setSkillToDelete(null);
-    },
-  });
+  };
 
   if (rangeIsLoading) {
     return (
@@ -96,6 +96,7 @@ const RangeDetails = () => {
   const currentRange = rangeData;
 
   const skillsData = skillsByRangeData ?? [];
+  type SkillSummary = typeof SkillSummarySchema.Type;
   const skillsGrouped: Record<number, SkillSummary[]> = {};
   for (const s of skillsData) {
     const key = s.professionId;
@@ -259,11 +260,7 @@ const RangeDetails = () => {
 
 export const Route = createFileRoute("/dashboard/skills/$rangeName")({
   component: RangeDetails,
-  loader: async ({ params }) => {
-    const slug = params.rangeName;
-    const data = await skillsApi.getRangeBySlug({ slug });
-    return { crumb: data?.name ?? slug };
-  },
+  loader: ({ params }) => ({ crumb: params.rangeName }),
 });
 
 type SkillToDelete = {

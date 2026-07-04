@@ -1,9 +1,9 @@
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { useForm } from "@tanstack/react-form";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Schema from "effect/Schema";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { HeroBetMemberPicker } from "@/components/events/hero-bet-member-picker";
 import { Button } from "@/components/ui/button";
@@ -16,10 +16,14 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import { editBetAtom } from "@/lib/bet-atoms";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import {
+  effectSchemaValidator,
+  formErrorMessage,
+} from "@/lib/effect-schema-validator";
 import { getErrorMessage } from "@/lib/errors";
-import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
-import { betApi } from "@/utils/bet-api";
-import { userApi } from "@/utils/user-api";
+import { verifiedUsersAtom } from "@/lib/user-atoms";
 
 interface EditBetModalProps {
   betId: number;
@@ -33,8 +37,8 @@ interface EditBetModalProps {
   trigger?: React.ReactNode;
 }
 
-const schema = z.object({
-  userIds: z.array(z.string()).min(1, "Wybierz przynajmniej jednego gracza"),
+const EditBetFormSchema = Schema.Struct({
+  userIds: Schema.NonEmptyArray(Schema.String),
 });
 
 export const EditBetModal = ({
@@ -45,38 +49,36 @@ export const EditBetModal = ({
   trigger,
 }: EditBetModalProps) => {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const editBet = useAtomSet(editBetAtom, { mode: "promise" });
 
   const currentMemberIds = currentMembers.map((m) => m.userId);
 
-  const { data: verifiedUsers, isPending: usersLoading } = useQuery({
-    queryFn: userApi.getVerified,
-    queryKey: userApi.getVerifiedQueryKey,
-  });
-
-  const editMutation = useMutation({
-    mutationFn: async (newUserIds: string[]) => {
-      await betApi.edit({ betId, newUserIds });
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-    onSuccess: async () => {
-      toast.success("Obstawienie zostało zaktualizowane");
-      await invalidateBetLedgerQueries(queryClient);
-      setOpen(false);
-    },
-  });
+  const verifiedUsersResult = useAtomValue(verifiedUsersAtom);
+  const verifiedUsers = [...resultValueOr(verifiedUsersResult, [])];
+  const usersLoading = resultIsLoading(verifiedUsersResult);
+  const [isEditing, setIsEditing] = useState(false);
 
   const form = useForm({
     defaultValues: {
       userIds: currentMemberIds,
     },
     onSubmit: async ({ value }) => {
-      await editMutation.mutateAsync(value.userIds);
+      setIsEditing(true);
+      try {
+        await editBet({
+          betId,
+          newUserIds: value.userIds as [string, ...string[]],
+        });
+        toast.success("Obstawienie zostało zaktualizowane");
+        setOpen(false);
+      } catch (error: unknown) {
+        toast.error(getErrorMessage(error));
+      } finally {
+        setIsEditing(false);
+      }
     },
     validators: {
-      onSubmit: schema,
+      onSubmit: effectSchemaValidator(EditBetFormSchema),
     },
   });
 
@@ -119,8 +121,11 @@ export const EditBetModal = ({
                   variant="edit"
                 />
                 {field.state.meta.errors.map((error) => (
-                  <p className="text-red-500 text-sm" key={error?.message}>
-                    {error?.message}
+                  <p
+                    className="text-red-500 text-sm"
+                    key={formErrorMessage(error)}
+                  >
+                    {formErrorMessage(error)}
                   </p>
                 ))}
               </div>
@@ -135,11 +140,11 @@ export const EditBetModal = ({
                     !state.canSubmit ||
                     state.isSubmitting ||
                     usersLoading ||
-                    editMutation.isPending
+                    isEditing
                   }
                   type="submit"
                 >
-                  {editMutation.isPending ? "Zapisywanie..." : "Zapisz zmiany"}
+                  {isEditing ? "Zapisywanie..." : "Zapisz zmiany"}
                 </Button>
               )}
             </form.Subscribe>

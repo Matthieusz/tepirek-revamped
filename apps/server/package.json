@@ -12,9 +12,6 @@
     "db:push": "pnpm --filter @tepirek-revamped/db run db:push"
   },
   "dependencies": {
-    "@orpc/openapi": "catalog:",
-    "@orpc/server": "catalog:",
-    "@orpc/zod": "catalog:",
     "@tepirek-revamped/api": "workspace:*",
     "@tepirek-revamped/auth": "workspace:*",
     "@tepirek-revamped/db": "workspace:*",

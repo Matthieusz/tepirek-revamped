@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import {
   CheckCircle2,
   Circle,
@@ -12,8 +12,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import {
+  createTodoAtom,
+  deleteTodoAtom,
+  todosAtom,
+  toggleTodoAtom,
+} from "@/lib/todo-atoms";
 import type { AuthSession } from "@/types/route";
-import { todoApi } from "@/utils/todo-api";
 
 interface TasksPageProps {
   session: AuthSession;
@@ -21,37 +27,42 @@ interface TasksPageProps {
 
 export default function TasksPage({ session }: TasksPageProps) {
   const [newTodoText, setNewTodoText] = useState("");
-  const queryClient = useQueryClient();
-
-  const { data: todosData, isLoading: todosIsLoading } = useQuery({
-    queryFn: todoApi.list,
-    queryKey: todoApi.queryKey,
-  });
-  const createMutation = useMutation({
-    mutationFn: todoApi.create,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: todoApi.queryKey,
-      });
-      setNewTodoText("");
-    },
-  });
-  const toggleMutation = useMutation({
-    mutationFn: todoApi.toggle,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: todoApi.queryKey,
-      });
-    },
-  });
-  const deleteMutation = useMutation({
-    mutationFn: todoApi.delete,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: todoApi.queryKey,
-      });
-    },
-  });
+  const [isMutating, setIsMutating] = useState(false);
+  const todosResult = useAtomValue(todosAtom);
+  const todosData = resultValueOr(todosResult, []);
+  const todosIsLoading = resultIsLoading(todosResult);
+  const createTodo = useAtomSet(createTodoAtom, { mode: "promise" });
+  const toggleTodo = useAtomSet(toggleTodoAtom, { mode: "promise" });
+  const deleteTodo = useAtomSet(deleteTodoAtom, { mode: "promise" });
+  const runMutation = (
+    action: () => Promise<unknown>,
+    onSuccess?: () => void
+  ) => {
+    void (async () => {
+      setIsMutating(true);
+      try {
+        await action();
+        onSuccess?.();
+      } finally {
+        setIsMutating(false);
+      }
+    })();
+  };
+  const createMutation = {
+    isPending: isMutating,
+    mutate: (input: { text: string }) =>
+      runMutation(
+        () => createTodo(input),
+        () => setNewTodoText("")
+      ),
+  };
+  const toggleMutation = {
+    mutate: (input: { id: number; completed: boolean }) =>
+      runMutation(() => toggleTodo(input)),
+  };
+  const deleteMutation = {
+    mutate: (input: { id: number }) => runMutation(() => deleteTodo(input)),
+  };
 
   const handleAddTodo = (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,6 +1,7 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAtomSet } from "@effect-atom/atom-react";
 import { createColumnHelper } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
+import type { Player as PlayerSchema } from "@tepirek-revamped/api/modules/user/http-api-contract";
 import {
   CheckCircle2,
   MoreHorizontal,
@@ -42,81 +43,43 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  deleteUserAtom,
+  setRoleAtom,
+  setVerifiedAtom,
+  updateUserNameAtom,
+} from "@/lib/user-atoms";
 import { formatDate } from "@/lib/utils";
-import { userApi } from "@/utils/user-api";
-import type { Player } from "@/utils/user-api";
+
+type Player = typeof PlayerSchema.Type;
 
 const ActionCell = ({ player }: { player: Player }) => {
-  const queryClient = useQueryClient();
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newName, setNewName] = useState("");
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const setVerified = useAtomSet(setVerifiedAtom, { mode: "promise" });
+  const setRole = useAtomSet(setRoleAtom, { mode: "promise" });
+  const updateUserName = useAtomSet(updateUserNameAtom, { mode: "promise" });
+  const removeUser = useAtomSet(deleteUserAtom, { mode: "promise" });
 
-  const toggleVerified = useMutation({
-    mutationFn: () =>
-      userApi.setVerified({
-        userId: player.id,
-        verified: !player.verified,
-      }),
-    onError: (e: Error) => {
-      toast.error(e.message);
-    },
-    onSuccess: async () => {
-      toast.success("Zmieniono status");
-      await queryClient.invalidateQueries({
-        queryKey: userApi.listQueryKey,
-      });
-    },
-  });
-  const changeRole = useMutation({
-    mutationFn: () =>
-      userApi.setRole({
-        role: player.role === "admin" ? "user" : "admin",
-        userId: player.id,
-      }),
-    onError: (e: Error) => {
-      toast.error(e.message);
-    },
-    onSuccess: async () => {
-      toast.success("Zmieniono rolę");
-      await queryClient.invalidateQueries({
-        queryKey: userApi.listQueryKey,
-      });
-    },
-  });
-  const updateName = useMutation({
-    mutationFn: () =>
-      userApi.updateUserName({
-        name: newName,
-        userId: player.id,
-      }),
-    onError: (e: Error) => {
-      toast.error(e.message);
-    },
-    onSuccess: async () => {
-      toast.success("Zmieniono nazwę użytkownika");
-      await queryClient.invalidateQueries({
-        queryKey: userApi.listQueryKey,
-      });
-      setShowRenameDialog(false);
-    },
-  });
-  const deleteUser = useMutation({
-    mutationFn: () =>
-      userApi.deleteUser({
-        userId: player.id,
-      }),
-    onError: (e: Error) => {
-      toast.error(e.message);
-    },
-    onSuccess: async () => {
-      toast.success("Usunięto użytkownika");
-      await queryClient.invalidateQueries({
-        queryKey: userApi.listQueryKey,
-      });
-      setShowDeleteDialog(false);
-    },
-  });
+  const runAction = (name: string, action: () => Promise<unknown>) => {
+    const run = async () => {
+      setPendingAction(name);
+      try {
+        await action();
+        toast.success("Zapisano zmiany");
+      } catch (error: unknown) {
+        toast.error(
+          error instanceof Error ? error.message : "Nie udało się zapisać zmian"
+        );
+      } finally {
+        setPendingAction(null);
+      }
+    };
+
+    void run();
+  };
 
   return (
     <>
@@ -132,9 +95,11 @@ const ActionCell = ({ player }: { player: Player }) => {
         <DropdownMenuContent align="end" className="min-w-48">
           <DropdownMenuLabel>Akcje</DropdownMenuLabel>
           <DropdownMenuItem
-            disabled={toggleVerified.isPending}
+            disabled={pendingAction === "verified"}
             onClick={() => {
-              toggleVerified.mutate();
+              runAction("verified", () =>
+                setVerified({ userId: player.id, verified: !player.verified })
+              );
             }}
           >
             {player.verified ? (
@@ -145,9 +110,14 @@ const ActionCell = ({ player }: { player: Player }) => {
             {player.verified ? "Odbierz weryfikację" : "Zweryfikuj"}
           </DropdownMenuItem>
           <DropdownMenuItem
-            disabled={changeRole.isPending}
+            disabled={pendingAction === "role"}
             onClick={() => {
-              changeRole.mutate();
+              runAction("role", () =>
+                setRole({
+                  role: player.role === "admin" ? "user" : "admin",
+                  userId: player.id,
+                })
+              );
             }}
           >
             <Shield className="mr-2 size-4" />
@@ -206,9 +176,14 @@ const ActionCell = ({ player }: { player: Player }) => {
               Anuluj
             </Button>
             <Button
-              disabled={!newName || newName.length < 2 || updateName.isPending}
+              disabled={
+                !newName || newName.length < 2 || pendingAction === "name"
+              }
               onClick={() => {
-                updateName.mutate();
+                runAction("name", async () => {
+                  await updateUserName({ name: newName, userId: player.id });
+                  setShowRenameDialog(false);
+                });
               }}
             >
               Zapisz
@@ -230,9 +205,12 @@ const ActionCell = ({ player }: { player: Player }) => {
             <AlertDialogCancel>Anuluj</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteUser.isPending}
+              disabled={pendingAction === "delete"}
               onClick={() => {
-                deleteUser.mutate();
+                runAction("delete", async () => {
+                  await removeUser({ userId: player.id });
+                  setShowDeleteDialog(false);
+                });
               }}
             >
               Usuń

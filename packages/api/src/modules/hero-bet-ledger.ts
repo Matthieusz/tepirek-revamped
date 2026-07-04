@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server";
 import { MIN_EARNINGS, POINTS_PER_HERO } from "@tepirek-revamped/config";
 import { db } from "@tepirek-revamped/db";
 import { user } from "@tepirek-revamped/db/schema/auth";
@@ -11,6 +10,8 @@ import {
 import { event } from "@tepirek-revamped/db/schema/event";
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
+
+import { AppError } from "./app-error.js";
 
 const calculatePointsPerMember = (memberCount: number) =>
   (Math.floor((POINTS_PER_HERO / memberCount) * 100) / 100).toFixed(2);
@@ -25,7 +26,7 @@ const getHeroEvent = async (heroId: number, message: string) => {
     .where(eq(hero.id, heroId));
 
   if (!heroData) {
-    throw new ORPCError("NOT_FOUND", { message });
+    throw new AppError("NOT_FOUND", { message });
   }
 
   return heroData;
@@ -33,14 +34,14 @@ const getHeroEvent = async (heroId: number, message: string) => {
 
 const validateVerifiedMemberIds = async (userIds: string[]) => {
   if (userIds.some((userId) => userId === "")) {
-    throw new ORPCError("BAD_REQUEST", {
+    throw new AppError("BAD_REQUEST", {
       message: "Wybierz tylko zweryfikowanych graczy",
     });
   }
 
   const uniqueUserIds = [...new Set(userIds)];
   if (uniqueUserIds.length !== userIds.length) {
-    throw new ORPCError("BAD_REQUEST", {
+    throw new AppError("BAD_REQUEST", {
       message: "Ten sam gracz nie może być wybrany dwa razy",
     });
   }
@@ -51,7 +52,7 @@ const validateVerifiedMemberIds = async (userIds: string[]) => {
     .where(and(inArray(user.id, uniqueUserIds), eq(user.verified, true)));
 
   if (rows.length !== uniqueUserIds.length) {
-    throw new ORPCError("BAD_REQUEST", {
+    throw new AppError("BAD_REQUEST", {
       message: "Wybierz tylko zweryfikowanych graczy",
     });
   }
@@ -155,7 +156,7 @@ export const heroBetLedger = {
         .returning();
 
       if (!bet) {
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        throw new AppError("INTERNAL_SERVER_ERROR", {
           message: "Nie udało się utworzyć obstawienia",
         });
       }
@@ -201,7 +202,7 @@ export const heroBetLedger = {
       .where(eq(heroBet.id, id));
 
     if (!betData) {
-      throw new ORPCError("NOT_FOUND", {
+      throw new AppError("NOT_FOUND", {
         message: "Obstawienie nie znalezione",
       });
     }
@@ -257,7 +258,7 @@ export const heroBetLedger = {
       .where(eq(userStats.heroId, heroId));
 
     if (heroUserStats.length === 0) {
-      throw new ORPCError("BAD_REQUEST", {
+      throw new AppError("BAD_REQUEST", {
         message: "Brak obstawień dla tego herosa",
       });
     }
@@ -268,7 +269,7 @@ export const heroBetLedger = {
     );
 
     if (totalPoints <= 0) {
-      throw new ORPCError("BAD_REQUEST", {
+      throw new AppError("BAD_REQUEST", {
         message: "Suma punktów musi być większa od zera",
       });
     }
@@ -309,7 +310,7 @@ export const heroBetLedger = {
       .where(eq(heroBet.id, betId));
 
     if (!betData) {
-      throw new ORPCError("NOT_FOUND", {
+      throw new AppError("NOT_FOUND", {
         message: "Obstawienie nie znalezione",
       });
     }
@@ -324,7 +325,7 @@ export const heroBetLedger = {
     );
 
     if (currentMembers.length === 0) {
-      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+      throw new AppError("INTERNAL_SERVER_ERROR", {
         message: "Obstawienie nie ma członków",
       });
     }
@@ -514,7 +515,7 @@ export const heroBetLedger = {
       .where(eq(hero.id, heroId));
 
     if (!heroInfo) {
-      throw new ORPCError("NOT_FOUND", { message: "Heros nie znaleziony" });
+      throw new AppError("NOT_FOUND", { message: "Heros nie znaleziony" });
     }
 
     return {

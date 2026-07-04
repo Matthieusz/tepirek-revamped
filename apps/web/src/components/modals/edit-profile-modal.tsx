@@ -1,8 +1,8 @@
+import { useAtomSet } from "@effect-atom/atom-react";
 import { useForm } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
+import { UpdateProfilePayload } from "@tepirek-revamped/api/modules/user/http-api-contract";
 import { useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,27 +16,24 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import {
+  effectSchemaValidator,
+  formErrorMessage,
+} from "@/lib/effect-schema-validator";
 import { getErrorMessage } from "@/lib/errors";
-import { userApi } from "@/utils/user-api";
+import { updateProfileAtom } from "@/lib/user-atoms";
 
 interface EditProfileModalProps {
   trigger: React.ReactNode;
   defaultName: string;
 }
 
-const schema = z.object({
-  name: z
-    .string()
-    .min(2, "Imię jest wymagane")
-    .max(24, "Maksymalna długość to 24 znaki"),
-});
-
 export const EditProfileModal = ({
   trigger,
   defaultName,
 }: EditProfileModalProps) => {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const updateProfile = useAtomSet(updateProfileAtom, { mode: "promise" });
 
   const form = useForm({
     defaultValues: {
@@ -44,20 +41,17 @@ export const EditProfileModal = ({
     },
     onSubmit: async ({ value }) => {
       try {
-        await userApi.updateProfile({
+        await updateProfile({
           name: value.name,
         });
         toast.success("Profil zaktualizowany");
-        await queryClient.invalidateQueries({
-          queryKey: userApi.sessionQueryKey,
-        });
         setOpen(false);
       } catch (error) {
         toast.error(getErrorMessage(error));
       }
     },
     validators: {
-      onSubmit: schema,
+      onSubmit: effectSchemaValidator(UpdateProfilePayload),
     },
   });
 
@@ -97,9 +91,9 @@ export const EditProfileModal = ({
                         {field.state.meta.errors.map((e) => (
                           <p
                             className="text-red-500 text-sm"
-                            key={`${field.name}-${e?.message}`}
+                            key={`${field.name}-${formErrorMessage(e)}`}
                           >
-                            {e?.message}
+                            {formErrorMessage(e)}
                           </p>
                         ))}
                       </div>

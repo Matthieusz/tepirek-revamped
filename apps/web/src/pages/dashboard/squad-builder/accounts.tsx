@@ -1,9 +1,4 @@
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import {
   AlertTriangle,
   Check,
@@ -35,8 +30,23 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import {
+  accountAccessGrantsAtom,
+  accountInviteTargetsAtom,
+  applyAccountRefetchAtom,
+  confirmOwnedAccountImportAtom,
+  incomingAccountInvitesAtom,
+  ownedAccountsAtom,
+  previewAccountRefetchAtom,
+  previewOwnedAccountImportsAtom,
+  respondToAccountAccessInviteAtom,
+  revokeAccountAccessAtom,
+  sendAccountAccessInviteAtom,
+  sharedAccountsAtom,
+} from "@/lib/squad-builder-atoms";
+import { sessionAtom } from "@/lib/user-atoms";
 import { formatDateTime } from "@/lib/utils";
-import { orpc } from "@/utils/orpc";
 
 const PROFESSION_LABELS: Record<string, string> = {
   bladeDancer: "Tancerz ostrzy",
@@ -169,6 +179,14 @@ const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
 
   return debounced;
 };
+
+const useActorUserId = (): string => {
+  const sessionResult = useAtomValue(sessionAtom);
+  return sessionResult._tag === "Success" ? sessionResult.value.user.id : "";
+};
+
+const toErrorMessage = (error: unknown, fallback: string): string =>
+  error instanceof Error ? error.message : fallback;
 
 const userInitials = (name: string): string =>
   name
@@ -441,65 +459,39 @@ const AccountSharingPanel = ({
   accountId,
   accountDisplayName,
 }: AccountSharingPanelProps) => {
-  const queryClient = useQueryClient();
+  const actorUserId = useActorUserId();
   const [query, setQuery] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [isRevoking, setIsRevoking] = useState(false);
   const debouncedQuery = useDebouncedValue(query, 250);
+  const trimmedQuery = debouncedQuery.trim();
 
-  const grantsQuery = useQuery(
-    orpc.squadBuilder.listAccountAccessGrants.queryOptions({
-      input: { accountId },
-    })
+  const grantsResult = useAtomValue(
+    accountAccessGrantsAtom({ accountId, actorUserId })
   );
-
-  const searchQuery = useQuery(
-    orpc.squadBuilder.searchAccountInviteTargets.queryOptions({
-      enabled: debouncedQuery.trim().length >= 2,
-      input: { accountId, query: debouncedQuery },
-      placeholderData: keepPreviousData,
-    })
+  const searchResult = useAtomValue(
+    accountInviteTargetsAtom({ accountId, actorUserId, query: trimmedQuery })
   );
+  const sendInvite = useAtomSet(sendAccountAccessInviteAtom, {
+    mode: "promise",
+  });
+  const revokeAccess = useAtomSet(revokeAccountAccessAtom, {
+    mode: "promise",
+  });
 
-  const sendMutation = useMutation(
-    orpc.squadBuilder.sendAccountAccessInvite.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: (_response, variables) => {
-        toast.success(`Zaproszenie wysłane do ${variables.invitedUserId}`);
-        void queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.listAccountAccessGrants.queryKey({
-            input: { accountId },
-          }),
-        });
-        setQuery("");
-      },
-    })
-  );
-
-  const revokeMutation = useMutation(
-    orpc.squadBuilder.revokeAccountAccess.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: (response) => {
-        toast.success(
-          response.removedSquadCharacterCount > 0
-            ? `Dostęp cofnięty. Usunięto ${response.removedSquadCharacterCount} postaci ze składów.`
-            : "Dostęp cofnięty."
-        );
-        void queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.listAccountAccessGrants.queryKey({
-            input: { accountId },
-          }),
-        });
-      },
-    })
-  );
-
-  const targets = (searchQuery.data?.users ??
-    []) as readonly AccountInviteTarget[];
-  const grants = (grantsQuery.data?.grants ??
-    []) as readonly AccountAccessGrant[];
+  const targets =
+    trimmedQuery.length >= 2
+      ? resultValueOr(searchResult, [] as readonly AccountInviteTarget[])
+      : [];
+  const grants = resultValueOr(grantsResult, []).map((grant) => ({
+    accessId: grant.accessId,
+    createdAt: grant.createdAt,
+    status: grant.status,
+    updatedAt: grant.updatedAt,
+    userId: grant.invitedUserId,
+    userImage: grant.invitedUserImage,
+    userName: grant.invitedUserName,
+  })) as unknown as readonly AccountAccessGrant[];
 
   return (
     <div className="space-y-4">
@@ -527,13 +519,13 @@ const AccountSharingPanel = ({
 
         {debouncedQuery.trim().length >= 2 && (
           <ul className="space-y-1">
-            {searchQuery.isLoading && (
+            {resultIsLoading(searchResult) && (
               <li className="flex items-center gap-2 text-muted-foreground text-xs">
                 <Loader2 className="size-3 animate-spin" />
                 Szukam…
               </li>
             )}
-            {!searchQuery.isLoading && targets.length === 0 && (
+            {!resultIsLoading(searchResult) && targets.length === 0 && (
               <li className="text-muted-foreground text-xs">
                 Brak pasujących zweryfikowanych użytkowników.
               </li>
@@ -553,12 +545,33 @@ const AccountSharingPanel = ({
                   <span className="truncate text-sm">{target.name}</span>
                 </div>
                 <Button
-                  disabled={sendMutation.isPending}
+                  disabled={isSending}
                   onClick={() => {
-                    void sendMutation.mutate({
-                      accountId,
-                      invitedUserId: target.userId,
-                    });
+                    const send = async () => {
+                      setIsSending(true);
+                      try {
+                        await sendInvite({
+                          accountId,
+                          actorUserId,
+                          invitedUserId: target.userId,
+                        });
+                        toast.success(
+                          `Zaproszenie wysłane do ${target.userId}`
+                        );
+                        setQuery("");
+                      } catch (error: unknown) {
+                        toast.error(
+                          toErrorMessage(
+                            error,
+                            "Nie udało się wysłać zaproszenia"
+                          )
+                        );
+                      } finally {
+                        setIsSending(false);
+                      }
+                    };
+
+                    void send();
                   }}
                   size="xs"
                   variant="outline"
@@ -578,13 +591,13 @@ const AccountSharingPanel = ({
         <h3 className="text-muted-foreground text-xs">
           Udostępnieni użytkownicy
         </h3>
-        {grantsQuery.isLoading && (
+        {resultIsLoading(grantsResult) && (
           <div className="flex items-center gap-2 text-muted-foreground text-xs">
             <Loader2 className="size-3 animate-spin" />
             Wczytywanie…
           </div>
         )}
-        {!grantsQuery.isLoading && grants.length === 0 && (
+        {!resultIsLoading(grantsResult) && grants.length === 0 && (
           <p className="text-muted-foreground text-xs">
             Nikt nie ma jeszcze dostępu do konta {accountDisplayName}.
           </p>
@@ -616,9 +629,30 @@ const AccountSharingPanel = ({
                 </div>
                 <Button
                   aria-label={`Cofnij dostęp dla ${grant.userName}`}
-                  disabled={revokeMutation.isPending}
+                  disabled={isRevoking}
                   onClick={() => {
-                    void revokeMutation.mutate({ accessId: grant.accessId });
+                    const revoke = async () => {
+                      setIsRevoking(true);
+                      try {
+                        const response = await revokeAccess({
+                          accessId: grant.accessId,
+                          actorUserId,
+                        });
+                        toast.success(
+                          response.removedSquadCharacterCount > 0
+                            ? `Dostęp cofnięty. Usunięto ${response.removedSquadCharacterCount} postaci ze składów.`
+                            : "Dostęp cofnięty."
+                        );
+                      } catch (error: unknown) {
+                        toast.error(
+                          toErrorMessage(error, "Nie udało się cofnąć dostępu")
+                        );
+                      } finally {
+                        setIsRevoking(false);
+                      }
+                    };
+
+                    void revoke();
                   }}
                   size="icon-sm"
                   variant="ghost"
@@ -671,40 +705,18 @@ const formatChangeValue = (value: string | number | null): string => {
 };
 
 const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
-  const queryClient = useQueryClient();
+  const actorUserId = useActorUserId();
   const [open, setOpen] = useState(false);
+  const [isPreviewingRefetch, setIsPreviewingRefetch] = useState(false);
+  const [isApplyingRefetch, setIsApplyingRefetch] = useState(false);
   const [refetchPreview, setRefetchPreview] =
     useState<AccountRefetchPreview | null>(null);
-
-  const previewRefetchMutation = useMutation(
-    orpc.squadBuilder.previewAccountRefetch.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: (response) => {
-        setRefetchPreview(response as AccountRefetchPreview);
-      },
-    })
-  );
-
-  const applyRefetchMutation = useMutation(
-    orpc.squadBuilder.applyAccountRefetch.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: (response) => {
-        toast.success(
-          response.removedSquadCharacterCount > 0
-            ? `Postacie odświeżone. Usunięto ${response.removedSquadCharacterCount} wpisów ze składów.`
-            : "Postacie zostały odświeżone."
-        );
-        setRefetchPreview(null);
-        void queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.listOwnedAccounts.queryKey(),
-        });
-      },
-    })
-  );
+  const previewRefetch = useAtomSet(previewAccountRefetchAtom, {
+    mode: "promise",
+  });
+  const applyRefetch = useAtomSet(applyAccountRefetchAtom, {
+    mode: "promise",
+  });
 
   const hasDiff =
     refetchPreview !== null &&
@@ -743,16 +755,36 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <Button
-            disabled={previewRefetchMutation.isPending}
+            disabled={isPreviewingRefetch}
             onClick={() => {
-              void previewRefetchMutation.mutate({
-                accountId: account.accountId,
-              });
+              const preview = async () => {
+                setIsPreviewingRefetch(true);
+                try {
+                  const response = await previewRefetch({
+                    accountId: account.accountId,
+                    actorUserId,
+                  });
+                  setRefetchPreview(
+                    response as unknown as AccountRefetchPreview
+                  );
+                } catch (error: unknown) {
+                  toast.error(
+                    toErrorMessage(
+                      error,
+                      "Nie udało się przygotować odświeżenia"
+                    )
+                  );
+                } finally {
+                  setIsPreviewingRefetch(false);
+                }
+              };
+
+              void preview();
             }}
             size="sm"
             variant="outline"
           >
-            {previewRefetchMutation.isPending ? (
+            {isPreviewingRefetch ? (
               <Loader2 className="size-3.5 animate-spin" />
             ) : (
               <RotateCw className="size-3.5" />
@@ -850,15 +882,38 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
 
             <div className="flex flex-wrap gap-2">
               <Button
-                disabled={applyRefetchMutation.isPending}
+                disabled={isApplyingRefetch}
                 onClick={() => {
-                  void applyRefetchMutation.mutate({
-                    refetchPreviewId: refetchPreview.refetchPreviewId,
-                  });
+                  const apply = async () => {
+                    setIsApplyingRefetch(true);
+                    try {
+                      const response = await applyRefetch({
+                        actorUserId,
+                        refetchPreviewId: refetchPreview.refetchPreviewId,
+                      });
+                      toast.success(
+                        response.removedSquadCharacterCount > 0
+                          ? `Postacie odświeżone. Usunięto ${response.removedSquadCharacterCount} wpisów ze składów.`
+                          : "Postacie zostały odświeżone."
+                      );
+                      setRefetchPreview(null);
+                    } catch (error: unknown) {
+                      toast.error(
+                        toErrorMessage(
+                          error,
+                          "Nie udało się zastosować odświeżenia"
+                        )
+                      );
+                    } finally {
+                      setIsApplyingRefetch(false);
+                    }
+                  };
+
+                  void apply();
                 }}
                 size="sm"
               >
-                {applyRefetchMutation.isPending ? (
+                {isApplyingRefetch ? (
                   <Loader2 className="size-3.5 animate-spin" />
                 ) : (
                   <Check className="size-3.5" />
@@ -866,7 +921,7 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
                 Zastosuj zmiany
               </Button>
               <Button
-                disabled={applyRefetchMutation.isPending}
+                disabled={isApplyingRefetch}
                 onClick={() => setRefetchPreview(null)}
                 size="sm"
                 variant="ghost"
@@ -947,34 +1002,19 @@ const InviteInboxSkeleton = () => (
 );
 
 const InviteInboxPanel = () => {
-  const queryClient = useQueryClient();
-  const invitesQuery = useQuery(
-    orpc.squadBuilder.listIncomingAccountInvites.queryOptions()
+  const actorUserId = useActorUserId();
+  const [isResponding, setIsResponding] = useState(false);
+  const invitesResult = useAtomValue(
+    incomingAccountInvitesAtom({ actorUserId })
   );
+  const respondToInvite = useAtomSet(respondToAccountAccessInviteAtom, {
+    mode: "promise",
+  });
 
-  const respondMutation = useMutation(
-    orpc.squadBuilder.respondToAccountAccessInvite.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: (_response, variables) => {
-        toast.success(
-          variables.response === "accept"
-            ? "Konto zostało zaakceptowane."
-            : "Zaproszenie odrzucone."
-        );
-        void queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.listIncomingAccountInvites.queryKey(),
-        });
-        void queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.listSharedAccounts.queryKey(),
-        });
-      },
-    })
-  );
-
-  const invites = (invitesQuery.data?.invites ??
-    []) as readonly AccountAccessInvite[];
+  const invites = resultValueOr(
+    invitesResult,
+    []
+  ) as unknown as readonly AccountAccessInvite[];
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
@@ -988,9 +1028,9 @@ const InviteInboxPanel = () => {
         </span>
       </div>
 
-      {invitesQuery.isLoading && <InviteInboxSkeleton />}
+      {resultIsLoading(invitesResult) && <InviteInboxSkeleton />}
 
-      {!invitesQuery.isLoading && invites.length === 0 && (
+      {!resultIsLoading(invitesResult) && invites.length === 0 && (
         <div className="px-5 py-8 text-center">
           <Inbox
             aria-hidden="true"
@@ -1036,12 +1076,28 @@ const InviteInboxPanel = () => {
               <div className="flex items-center gap-2">
                 <Button
                   aria-label={`Akceptuj dostęp do ${invite.accountDisplayName}`}
-                  disabled={respondMutation.isPending}
+                  disabled={isResponding}
                   onClick={() => {
-                    void respondMutation.mutate({
-                      accessId: invite.accessId,
-                      response: "accept",
-                    });
+                    void (async () => {
+                      setIsResponding(true);
+                      try {
+                        await respondToInvite({
+                          accessId: invite.accessId,
+                          actorUserId,
+                          response: "accept",
+                        });
+                        toast.success("Konto zostało zaakceptowane.");
+                      } catch (error: unknown) {
+                        toast.error(
+                          toErrorMessage(
+                            error,
+                            "Nie udało się odpowiedzieć na zaproszenie"
+                          )
+                        );
+                      } finally {
+                        setIsResponding(false);
+                      }
+                    })();
                   }}
                   size="sm"
                 >
@@ -1050,12 +1106,28 @@ const InviteInboxPanel = () => {
                 </Button>
                 <Button
                   aria-label={`Odrzuć dostęp do ${invite.accountDisplayName}`}
-                  disabled={respondMutation.isPending}
+                  disabled={isResponding}
                   onClick={() => {
-                    void respondMutation.mutate({
-                      accessId: invite.accessId,
-                      response: "decline",
-                    });
+                    void (async () => {
+                      setIsResponding(true);
+                      try {
+                        await respondToInvite({
+                          accessId: invite.accessId,
+                          actorUserId,
+                          response: "decline",
+                        });
+                        toast.success("Zaproszenie odrzucone.");
+                      } catch (error: unknown) {
+                        toast.error(
+                          toErrorMessage(
+                            error,
+                            "Nie udało się odpowiedzieć na zaproszenie"
+                          )
+                        );
+                      } finally {
+                        setIsResponding(false);
+                      }
+                    })();
                   }}
                   size="sm"
                   variant="ghost"
@@ -1081,11 +1153,12 @@ const SharedAccountsSkeleton = () => (
 );
 
 const SharedAccountsPanel = () => {
-  const sharedQuery = useQuery(
-    orpc.squadBuilder.listSharedAccounts.queryOptions()
-  );
-  const accounts = (sharedQuery.data?.accounts ??
-    []) as readonly SharedAccount[];
+  const actorUserId = useActorUserId();
+  const sharedResult = useAtomValue(sharedAccountsAtom({ actorUserId }));
+  const accounts = resultValueOr(
+    sharedResult,
+    []
+  ) as unknown as readonly SharedAccount[];
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
@@ -1099,9 +1172,9 @@ const SharedAccountsPanel = () => {
         </span>
       </div>
 
-      {sharedQuery.isLoading && <SharedAccountsSkeleton />}
+      {resultIsLoading(sharedResult) && <SharedAccountsSkeleton />}
 
-      {!sharedQuery.isLoading && accounts.length === 0 && (
+      {!resultIsLoading(sharedResult) && accounts.length === 0 && (
         <div className="px-5 py-8 text-center">
           <Users
             aria-hidden="true"
@@ -1169,59 +1242,21 @@ const SharedAccountsPanel = () => {
 };
 
 export default function SquadBuilderAccountsPage() {
-  const queryClient = useQueryClient();
+  const actorUserId = useActorUserId();
   const [urlsText, setUrlsText] = useState("");
   const [previewItems, setPreviewItems] = useState<readonly PreviewItem[]>([]);
   const [displayNames, setDisplayNames] = useState<Record<number, string>>({});
   const [confirmingId, setConfirmingId] = useState<number | null>(null);
+  const [isPreviewPending, setIsPreviewPending] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
-  const ownedAccountsQuery = useQuery(
-    orpc.squadBuilder.listOwnedAccounts.queryOptions()
-  );
-
-  const previewMutation = useMutation(
-    orpc.squadBuilder.previewOwnedAccountImports.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: (response) => {
-        const items = response.items as readonly PreviewItem[];
-        const initialNames: Record<number, string> = {};
-
-        for (const item of items) {
-          if (item.status === "success") {
-            initialNames[item.pendingImportId] = item.defaultDisplayName;
-          }
-        }
-
-        setPreviewItems(items);
-        setDisplayNames(initialNames);
-      },
-    })
-  );
-
-  const confirmMutation = useMutation(
-    orpc.squadBuilder.confirmOwnedAccountImport.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: (_response, variables) => {
-        setPreviewItems((current) =>
-          current.filter(
-            (item) =>
-              !(
-                item.status === "success" &&
-                item.pendingImportId === variables.pendingImportId
-              )
-          )
-        );
-        toast.success("Konto zostało zapisane");
-        void queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.listOwnedAccounts.queryKey(),
-        });
-      },
-    })
-  );
+  const ownedAccountsResult = useAtomValue(ownedAccountsAtom({ actorUserId }));
+  const previewImports = useAtomSet(previewOwnedAccountImportsAtom, {
+    mode: "promise",
+  });
+  const confirmImport = useAtomSet(confirmOwnedAccountImportAtom, {
+    mode: "promise",
+  });
 
   const profileLines = useMemo(
     () => urlsText.split("\n").filter((line) => line.trim().length > 0),
@@ -1231,7 +1266,7 @@ export default function SquadBuilderAccountsPage() {
   const canSubmit =
     profileLines.length > 0 &&
     profileLines.length <= MAX_PROFILE_URLS &&
-    !previewMutation.isPending;
+    !isPreviewPending;
 
   const handleSubmitPreview = (event: React.FormEvent) => {
     event.preventDefault();
@@ -1239,7 +1274,46 @@ export default function SquadBuilderAccountsPage() {
       return;
     }
 
-    void previewMutation.mutate({ profileUrls: urlsText.split("\n") });
+    void (async () => {
+      setIsPreviewPending(true);
+      try {
+        const response = await previewImports({
+          actorUserId,
+          profileUrls: urlsText.split("\n"),
+        });
+        const items = response.items.map((item) =>
+          item._tag === "PreviewSucceeded"
+            ? {
+                ...item,
+                characterCount: item.jarunaCharacters.length,
+                lastFetchedAt: item.lastFetchedAt.toISOString(),
+                status: "success" as const,
+              }
+            : {
+                errorTag: item.error._tag,
+                inputUrl: item.inputUrl,
+                lineNumber: item.lineNumber,
+                message:
+                  "message" in item.error
+                    ? String(item.error.message)
+                    : item.error._tag,
+                status: "error" as const,
+              }
+        );
+        const initialNames: Record<number, string> = {};
+        for (const item of items) {
+          if (item.status === "success") {
+            initialNames[item.pendingImportId] = item.defaultDisplayName;
+          }
+        }
+        setPreviewItems(items);
+        setDisplayNames(initialNames);
+      } catch (error: unknown) {
+        toast.error(toErrorMessage(error, "Nie udało się sprawdzić kont"));
+      } finally {
+        setIsPreviewPending(false);
+      }
+    })();
   };
 
   const handleClear = () => {
@@ -1257,16 +1331,37 @@ export default function SquadBuilderAccountsPage() {
     }
 
     setConfirmingId(item.pendingImportId);
-    void confirmMutation.mutate(
-      { displayName, pendingImportId: item.pendingImportId },
-      {
-        onSettled: () => setConfirmingId(null),
+    void (async () => {
+      setIsConfirming(true);
+      try {
+        await confirmImport({
+          actorUserId,
+          displayName,
+          pendingImportId: item.pendingImportId,
+        });
+        setPreviewItems((current) =>
+          current.filter(
+            (currentItem) =>
+              !(
+                currentItem.status === "success" &&
+                currentItem.pendingImportId === item.pendingImportId
+              )
+          )
+        );
+        toast.success("Konto zostało zapisane");
+      } catch (error: unknown) {
+        toast.error(toErrorMessage(error, "Nie udało się zapisać konta"));
+      } finally {
+        setIsConfirming(false);
+        setConfirmingId(null);
       }
-    );
+    })();
   };
 
-  const ownedAccounts = (ownedAccountsQuery.data?.accounts ??
-    []) as readonly OwnedAccount[];
+  const ownedAccounts = resultValueOr(
+    ownedAccountsResult,
+    [] as readonly OwnedAccount[]
+  );
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -1286,8 +1381,8 @@ export default function SquadBuilderAccountsPage() {
             canSubmit={canSubmit}
             confirmingId={confirmingId}
             displayNames={displayNames}
-            isConfirming={confirmMutation.isPending}
-            isPreviewPending={previewMutation.isPending}
+            isConfirming={isConfirming}
+            isPreviewPending={isPreviewPending}
             previewItems={previewItems}
             profileLineCount={profileLines.length}
             onClear={handleClear}
@@ -1304,7 +1399,7 @@ export default function SquadBuilderAccountsPage() {
           />
           <OwnedAccountsPanel
             accounts={ownedAccounts}
-            isLoading={ownedAccountsQuery.isLoading}
+            isLoading={resultIsLoading(ownedAccountsResult)}
           />
         </div>
         <div className="space-y-6">

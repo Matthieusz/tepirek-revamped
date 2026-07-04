@@ -4,6 +4,7 @@ import type {
   FormValidateOrFn,
   ReactFormExtendedApi,
 } from "@tanstack/react-form";
+import * as Schema from "effect/Schema";
 import {
   AlertTriangle,
   Calculator,
@@ -14,7 +15,6 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,24 +35,19 @@ import type {
 } from "@/lib/calculators/bounty";
 import type { AuthSession } from "@/types/route";
 
-const formSchema = z.object({
-  attackerLevel: z
-    .number()
-    .int({ message: "Musi być liczbą całkowitą" })
-    .min(MIN_LEVEL, { message: `Min: ${MIN_LEVEL}` })
-    .max(MAX_LEVEL, { message: `Max: ${MAX_LEVEL}` }),
-  victimLevel: z
-    .number()
-    .int({ message: "Musi być liczbą całkowitą" })
-    .min(MIN_LEVEL, { message: `Min: ${MIN_LEVEL}` })
-    .max(MAX_LEVEL, { message: `Max: ${MAX_LEVEL}` }),
+const LevelSchema = Schema.Number.check(
+  Schema.isInt(),
+  Schema.isBetween({ maximum: MAX_LEVEL, minimum: MIN_LEVEL })
+);
+const formSchema = Schema.Struct({
+  attackerLevel: LevelSchema,
+  victimLevel: LevelSchema,
 });
 
-const groupFormSchema = z.object({
-  attackerLevels: z
-    .string()
-    .min(1, { message: "Wprowadź poziomy atakujących" }),
-  defenderLevels: z.string().min(1, { message: "Wprowadź poziomy obrońców" }),
+const NonEmptyLevelsSchema = Schema.NonEmptyString;
+const groupFormSchema = Schema.Struct({
+  attackerLevels: NonEmptyLevelsSchema,
+  defenderLevels: NonEmptyLevelsSchema,
 });
 
 interface SingleFormValues {
@@ -130,12 +125,10 @@ const SingleMode = ({
           <form.Field
             name="attackerLevel"
             validators={{
-              onChange: ({ value }) => {
-                const parsed = formSchema.shape.attackerLevel.safeParse(value);
-                return parsed.success
+              onChange: ({ value }) =>
+                Schema.is(LevelSchema)(value)
                   ? undefined
-                  : parsed.error.issues[0]?.message;
-              },
+                  : `Podaj liczbę całkowitą od ${MIN_LEVEL} do ${MAX_LEVEL}`,
             }}
           >
             {(field) => (
@@ -173,12 +166,10 @@ const SingleMode = ({
           <form.Field
             name="victimLevel"
             validators={{
-              onChange: ({ value }) => {
-                const parsed = formSchema.shape.victimLevel.safeParse(value);
-                return parsed.success
+              onChange: ({ value }) =>
+                Schema.is(LevelSchema)(value)
                   ? undefined
-                  : parsed.error.issues[0]?.message;
-              },
+                  : `Podaj liczbę całkowitą od ${MIN_LEVEL} do ${MAX_LEVEL}`,
             }}
           >
             {(field) => (
@@ -330,10 +321,8 @@ const GroupMode = ({
             name="attackerLevels"
             validators={{
               onChange: ({ value }) => {
-                const parsed =
-                  groupFormSchema.shape.attackerLevels.safeParse(value);
-                if (!parsed.success) {
-                  return parsed.error.issues[0]?.message;
+                if (!Schema.is(NonEmptyLevelsSchema)(value)) {
+                  return "Wprowadź poziomy atakujących";
                 }
                 const levels = parseLevels(value);
                 if (levels.length === 0) {
@@ -377,10 +366,8 @@ const GroupMode = ({
             name="defenderLevels"
             validators={{
               onChange: ({ value }) => {
-                const parsed =
-                  groupFormSchema.shape.defenderLevels.safeParse(value);
-                if (!parsed.success) {
-                  return parsed.error.issues[0]?.message;
+                if (!Schema.is(NonEmptyLevelsSchema)(value)) {
+                  return "Wprowadź poziomy obrońców";
                 }
                 const levels = parseLevels(value);
                 if (levels.length === 0) {
@@ -556,7 +543,7 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
     defaultValues: {
       attackerLevel: 200,
       victimLevel: 150,
-    } satisfies z.infer<typeof formSchema>,
+    } satisfies typeof formSchema.Type,
     onSubmit: ({ value }) => {
       const minLevelDifference = calculateMinLevelDifference(
         value.attackerLevel
@@ -589,7 +576,7 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
     defaultValues: {
       attackerLevels: "200, 180, 160",
       defenderLevels: "150, 140",
-    } satisfies z.infer<typeof groupFormSchema>,
+    } satisfies typeof groupFormSchema.Type,
     onSubmit: ({ value }) => {
       const attackerLevels = parseLevels(value.attackerLevels);
       const defenderLevels = parseLevels(value.defenderLevels);

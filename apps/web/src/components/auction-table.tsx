@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import {
   AUCTION_SLOT_LEVELS,
   AUCTION_SLOT_ROUND_LABELS,
@@ -7,12 +7,17 @@ import {
 } from "@tepirek-revamped/config";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import { Loader2, Trash2 } from "lucide-react";
-import type React from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+  auctionSignupsAtom,
+  removeAuctionSignupAtom,
+  toggleAuctionSignupAtom,
+} from "@/lib/auction-atoms";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
-import { auctionApi } from "@/utils/auction-api";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -154,48 +159,64 @@ const AuctionTable: React.FC<AuctionTableProps> = ({
   currentUserId,
 }) => {
   const columns = getAuctionSlotColumns(profession, type);
-  const queryClient = useQueryClient();
-
-  const signupsQueryKey = auctionApi.signupsQueryKey({ profession, type });
-  const statsQueryKey = auctionApi.statsQueryKey({ profession, type });
-
-  const { data: signups, isPending } = useQuery({
-    queryFn: () => auctionApi.getSignups({ profession, type }),
-    queryKey: signupsQueryKey,
+  const signupsResult = useAtomValue(auctionSignupsAtom({ profession, type }));
+  const signups = resultValueOr(signupsResult, []);
+  const isPending = resultIsLoading(signupsResult);
+  const toggleAuctionSignup = useAtomSet(toggleAuctionSignupAtom, {
+    mode: "promise",
   });
-
-  const toggleMutation = useMutation({
-    mutationFn: (params: { level: number; round: number; column: number }) =>
-      auctionApi.toggleSignup({
-        profession,
-        type,
-        ...params,
-      }),
-    onError: () => {
-      toast.error("Wystąpił błąd");
-    },
-    onSuccess: async (result) => {
-      await queryClient.invalidateQueries({ queryKey: signupsQueryKey });
-      await queryClient.invalidateQueries({ queryKey: statsQueryKey });
-      toast.success(
-        result.action === "added"
-          ? "Zapisano na licytację"
-          : "Wypisano z licytacji"
-      );
-    },
+  const removeAuctionSignup = useAtomSet(removeAuctionSignupAtom, {
+    mode: "promise",
   });
-
-  const removeMutation = useMutation({
-    mutationFn: (id: number) => auctionApi.removeSignup({ id }),
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
+  const [isMutating, setIsMutating] = useState(false);
+  const [mutatingCell, setMutatingCell] = useState<{
+    readonly column: number;
+    readonly level: number;
+    readonly round: number;
+  } | null>(null);
+  const toggleMutation = {
+    isPending: isMutating,
+    variables: mutatingCell,
+    mutate: (params: { level: number; round: number; column: number }) => {
+      void (async () => {
+        setIsMutating(true);
+        setMutatingCell(params);
+        try {
+          const result = await toggleAuctionSignup({
+            profession,
+            type,
+            ...params,
+          });
+          toast.success(
+            result.action === "added"
+              ? "Zapisano na licytację"
+              : "Wypisano z licytacji"
+          );
+        } catch {
+          toast.error("Wystąpił błąd");
+        } finally {
+          setIsMutating(false);
+          setMutatingCell(null);
+        }
+      })();
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: signupsQueryKey });
-      await queryClient.invalidateQueries({ queryKey: statsQueryKey });
-      toast.success("Wypisano z licytacji");
+  };
+  const removeMutation = {
+    isPending: isMutating,
+    mutate: (id: number) => {
+      void (async () => {
+        setIsMutating(true);
+        try {
+          await removeAuctionSignup({ id });
+          toast.success("Wypisano z licytacji");
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error));
+        } finally {
+          setIsMutating(false);
+        }
+      })();
     },
-  });
+  };
 
   // Group signups by level-round-column for quick lookup
   const signupMap = new Map<string, SignupData[]>();

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { Plus, Sword, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -33,11 +33,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
+import { eventsAtom } from "@/lib/event-atoms";
+import { deleteHeroAtom, heroesAtom } from "@/lib/hero-atoms";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
-import { eventsApi } from "@/utils/events-api";
-import { heroesApi } from "@/utils/heroes-api";
 
 type HeroToDelete = {
   id: number;
@@ -51,15 +52,11 @@ interface EventsHeroesPageProps {
 export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
   const [heroToDelete, setHeroToDelete] = useState<HeroToDelete>(null);
   const [selectedEventId, setSelectedEventId] = useState("all");
-  const { data: heroes, isPending } = useQuery({
-    queryFn: heroesApi.list,
-    queryKey: heroesApi.queryKey,
-  });
-  const { data: events } = useQuery({
-    queryFn: eventsApi.list,
-    queryKey: eventsApi.queryKey,
-  });
-  const queryClient = useQueryClient();
+  const heroesResult = useAtomValue(heroesAtom);
+  const heroes = resultValueOr(heroesResult, []);
+  const isPending = resultIsLoading(heroesResult);
+  const events = [...resultValueOr(useAtomValue(eventsAtom), [])];
+  const deleteHero = useAtomSet(deleteHeroAtom, { mode: "promise" });
 
   const isAdminUser = isAdmin(session);
 
@@ -68,21 +65,24 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
       ? heroes
       : heroes?.filter((h) => h.eventId?.toString() === selectedEventId);
 
-  const deleteMutation = useMutation({
-    mutationFn: async (heroId: number) => {
-      await heroesApi.delete({ id: heroId });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteMutation = {
+    isPending: isDeleting,
+    mutate: (heroId: number) => {
+      void (async () => {
+        setIsDeleting(true);
+        try {
+          await deleteHero({ id: heroId });
+          toast.success("Heros został usunięty");
+          setHeroToDelete(null);
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error));
+        } finally {
+          setIsDeleting(false);
+        }
+      })();
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-    onSuccess: async () => {
-      toast.success("Heros został usunięty");
-      await queryClient.invalidateQueries({
-        queryKey: heroesApi.queryKey,
-      });
-      setHeroToDelete(null);
-    },
-  });
+  };
 
   if (isPending) {
     return (

@@ -15,7 +15,6 @@
     "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
-    "@orpc/server": "catalog:",
     "@tepirek-revamped/auth": "workspace:*",
     "@tepirek-revamped/config": "workspace:*",
     "@tepirek-revamped/db": "workspace:*",

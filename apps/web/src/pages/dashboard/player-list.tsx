@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "@effect-atom/atom-react";
 import { CheckCircle2, Clock, Search, Users } from "lucide-react";
 import { useState } from "react";
 
@@ -6,9 +6,10 @@ import { buildPlayerColumns } from "@/components/players-table/columns";
 import { PlayerTable } from "@/components/players-table/player-table";
 import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { isAdmin } from "@/lib/route-helpers";
+import { usersAtom } from "@/lib/user-atoms";
 import type { AuthSession } from "@/types/route";
-import { userApi } from "@/utils/user-api";
 
 interface PlayerListPageProps {
   session: AuthSession;
@@ -16,10 +17,9 @@ interface PlayerListPageProps {
 
 export default function PlayerListPage({ session }: PlayerListPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: playersData = [], isPending } = useQuery({
-    queryFn: userApi.list,
-    queryKey: userApi.listQueryKey,
-  });
+  const playersResult = useAtomValue(usersAtom);
+  const playersData = resultValueOr(playersResult, []);
+  const isPending = resultIsLoading(playersResult);
   const isAdminUser = isAdmin(session);
   const cols = buildPlayerColumns(isAdminUser);
 

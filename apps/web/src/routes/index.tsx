@@ -1,25 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "@effect-atom/atom-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Link2, LogIn, UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { serverUrl } from "@/lib/env";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import { healthAtom } from "@/lib/health-atoms";
 
 const HomeComponent = () => {
-  const { data: healthCheckData, isLoading: healthCheckIsLoading } = useQuery({
-    queryFn: async () => {
-      const response = await fetch(`${serverUrl}/health`, {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Health check failed");
-      }
-
-      return response.json() as Promise<"OK">;
-    },
-    queryKey: ["healthCheck"],
-  });
+  const healthResult = useAtomValue(healthAtom);
+  const healthCheckData = resultValueOr(healthResult);
+  const healthCheckIsLoading = resultIsLoading(healthResult);
 
   let statusText: string;
   let statusColor = "text-muted-foreground";

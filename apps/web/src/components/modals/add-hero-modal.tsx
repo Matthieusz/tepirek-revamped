@@ -1,8 +1,8 @@
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { useForm } from "@tanstack/react-form";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Schema from "effect/Schema";
 import { useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,9 +23,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import {
+  effectSchemaValidator,
+  formErrorMessage,
+} from "@/lib/effect-schema-validator";
 import { getErrorMessage } from "@/lib/errors";
-import { eventsApi } from "@/utils/events-api";
-import { heroesApi } from "@/utils/heroes-api";
+import { eventsAtom } from "@/lib/event-atoms";
+import { createHeroAtom } from "@/lib/hero-atoms";
 
 interface AddHeroModalProps {
   trigger: React.ReactNode;
@@ -38,6 +43,13 @@ interface AddHeroModal {
   eventId: string;
 }
 
+const AddHeroFormSchema = Schema.Struct({
+  eventId: Schema.NonEmptyString,
+  image: Schema.optional(Schema.String),
+  level: Schema.NonEmptyString,
+  name: Schema.NonEmptyString,
+});
+
 const defaultValues: AddHeroModal = {
   eventId: "",
   image: "",
@@ -47,11 +59,10 @@ const defaultValues: AddHeroModal = {
 
 export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const { data: events, isPending: eventsLoading } = useQuery({
-    queryFn: eventsApi.list,
-    queryKey: eventsApi.queryKey,
-  });
+  const createHero = useAtomSet(createHeroAtom, { mode: "promise" });
+  const eventsResult = useAtomValue(eventsAtom);
+  const events = resultValueOr(eventsResult, []);
+  const eventsLoading = resultIsLoading(eventsResult);
 
   const form = useForm({
     defaultValues: {
@@ -64,7 +75,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
           return;
         }
 
-        await heroesApi.create({
+        await createHero({
           eventId: Number.parseInt(value.eventId, 10),
           image: value.image ?? undefined,
           level: Number.parseInt(value.level, 10),
@@ -72,10 +83,6 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
         });
 
         toast.success("Heros utworzony pomyślnie");
-        // oxlint-disable-next-line @typescript-eslint/no-floating-promises
-        queryClient.invalidateQueries({
-          queryKey: heroesApi.queryKey,
-        });
         setOpen(false);
         form.reset();
       } catch (error) {
@@ -83,12 +90,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
       }
     },
     validators: {
-      onSubmit: z.object({
-        eventId: z.string().min(1, "Wybierz event"),
-        image: z.string().optional(),
-        level: z.string().min(1, "Poziom jest wymagany"),
-        name: z.string().min(1, "Nazwa herosa jest wymagana"),
-      }),
+      onSubmit: effectSchemaValidator(AddHeroFormSchema),
     },
   });
 
@@ -125,8 +127,11 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>
@@ -151,8 +156,11 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>
@@ -178,8 +186,11 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>
@@ -220,8 +231,11 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                       </SelectContent>
                     </Select>
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { format } from "date-fns/format";
 import { Calendar, Plus, Power, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -29,10 +29,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getEventIcon } from "@/lib/constants";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
+import {
+  deleteEventAtom,
+  eventsAtom,
+  toggleEventActiveAtom,
+} from "@/lib/event-atoms";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
-import { eventsApi } from "@/utils/events-api";
 
 type EventAction = {
   id: number;
@@ -47,47 +52,51 @@ interface EventsListPageProps {
 
 export default function EventsListPage({ session }: EventsListPageProps) {
   const [eventAction, setEventAction] = useState<EventAction>(null);
-  const { data: events, isPending } = useQuery({
-    queryFn: eventsApi.list,
-    queryKey: eventsApi.queryKey,
+  const eventsResult = useAtomValue(eventsAtom);
+  const events = resultValueOr(eventsResult, []);
+  const isPending = resultIsLoading(eventsResult);
+  const deleteEvent = useAtomSet(deleteEventAtom, { mode: "promise" });
+  const toggleEventActive = useAtomSet(toggleEventActiveAtom, {
+    mode: "promise",
   });
-  const queryClient = useQueryClient();
 
   const isAdminUser = isAdmin(session);
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await eventsApi.delete({ id });
+  const [actionPending, setActionPending] = useState(false);
+  const deleteMutation = {
+    isPending: actionPending,
+    mutate: (id: number) => {
+      void (async () => {
+        setActionPending(true);
+        try {
+          await deleteEvent({ id });
+          toast.success("Event został usunięty");
+          setEventAction(null);
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error));
+        } finally {
+          setActionPending(false);
+        }
+      })();
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
+  };
+  const toggleMutation = {
+    isPending: actionPending,
+    mutate: (input: { id: number; active: boolean }) => {
+      void (async () => {
+        setActionPending(true);
+        try {
+          await toggleEventActive(input);
+          toast.success("Status eventu został zmieniony");
+          setEventAction(null);
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error));
+        } finally {
+          setActionPending(false);
+        }
+      })();
     },
-    onSuccess: async () => {
-      toast.success("Event został usunięty");
-      await queryClient.invalidateQueries({
-        queryKey: eventsApi.queryKey,
-      });
-      setEventAction(null);
-    },
-  });
-
-  const toggleMutation = useMutation({
-    mutationFn: async ({ id, active }: { id: number; active: boolean }) => {
-      await eventsApi.toggleActive({ active, id });
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-    onSuccess: async () => {
-      toast.success("Status eventu został zmieniony");
-      await queryClient.invalidateQueries({
-        queryKey: eventsApi.queryKey,
-      });
-      setEventAction(null);
-    },
-  });
-
-  const actionPending = deleteMutation.isPending || toggleMutation.isPending;
+  };
 
   if (isPending) {
     return (

@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAtomSet } from "@effect-atom/atom-react";
 import { Link } from "@tanstack/react-router";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -23,9 +23,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getErrorMessage } from "@/lib/errors";
+import { deleteSkillRangeAtom } from "@/lib/skill-atoms";
 import { cn } from "@/lib/utils";
 import type { AuthUser } from "@/types/route";
-import { skillsApi } from "@/utils/skills-api";
 
 interface RangeCardProps {
   range: {
@@ -40,24 +40,28 @@ interface RangeCardProps {
 }
 
 export const RangeCard = ({ range, session, className }: RangeCardProps) => {
-  const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await skillsApi.deleteRange({ id });
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-    onSuccess: async () => {
-      toast.success("Przedział został usunięty");
-      await queryClient.invalidateQueries({
-        queryKey: skillsApi.rangesQueryKey,
-      });
-      setShowDeleteDialog(false);
-    },
+  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteSkillRange = useAtomSet(deleteSkillRangeAtom, {
+    mode: "promise",
   });
+  const deleteMutation = {
+    isPending: isDeleting,
+    mutate: (id: number) => {
+      void (async () => {
+        setIsDeleting(true);
+        try {
+          await deleteSkillRange({ id });
+          toast.success("Przedział został usunięty");
+          setShowDeleteDialog(false);
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error));
+        } finally {
+          setIsDeleting(false);
+        }
+      })();
+    },
+  };
 
   return (
     <>

@@ -1,8 +1,8 @@
+import { useAtomSet } from "@effect-atom/atom-react";
 import { useForm } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
+import { CreateAnnouncementPayload } from "@tepirek-revamped/api/modules/announcement/http-api-contract";
 import { useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,8 +17,12 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { createAnnouncementAtom } from "@/lib/announcement-atoms";
+import {
+  effectSchemaValidator,
+  formErrorMessage,
+} from "@/lib/effect-schema-validator";
 import { getErrorMessage } from "@/lib/errors";
-import { announcementApi } from "@/utils/announcement-api";
 
 interface AddAnnouncementModalProps {
   trigger: React.ReactNode;
@@ -28,7 +32,9 @@ export const AddAnnouncementModal = ({
   trigger,
 }: AddAnnouncementModalProps) => {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const createAnnouncement = useAtomSet(createAnnouncementAtom, {
+    mode: "promise",
+  });
 
   const form = useForm({
     defaultValues: {
@@ -37,15 +43,12 @@ export const AddAnnouncementModal = ({
     },
     onSubmit: async ({ value }) => {
       try {
-        await announcementApi.create({
+        await createAnnouncement({
           description: value.description,
           title: value.title,
         });
 
         toast.success("Ogłoszenie utworzone pomyślnie");
-        await queryClient.invalidateQueries({
-          queryKey: announcementApi.queryKey,
-        });
         setOpen(false);
         form.reset();
       } catch (error) {
@@ -53,10 +56,7 @@ export const AddAnnouncementModal = ({
       }
     },
     validators: {
-      onSubmit: z.object({
-        description: z.string().min(1, "Opis ogłoszenia jest wymagany"),
-        title: z.string().min(1, "Tytuł ogłoszenia jest wymagany"),
-      }),
+      onSubmit: effectSchemaValidator(CreateAnnouncementPayload),
     },
   });
 
@@ -93,8 +93,11 @@ export const AddAnnouncementModal = ({
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>
@@ -117,8 +120,11 @@ export const AddAnnouncementModal = ({
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>

@@ -1,7 +1,4 @@
-import type { QueryClient } from "@tanstack/react-query";
 import type { auth } from "@tepirek-revamped/auth";
-
-import type { orpc } from "@/utils/orpc";
 
 /**
  * Static data attached to routes for breadcrumbs and metadata
@@ -14,10 +11,7 @@ export interface RouteStaticData {
 /**
  * Context available in the router application
  */
-export interface RouterAppContext {
-  orpc: typeof orpc;
-  queryClient: QueryClient;
-}
+export type RouterAppContext = Record<string, never>;
 
 /**
  * Session type inferred from Better Auth

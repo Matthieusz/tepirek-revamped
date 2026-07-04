@@ -1,4 +1,3 @@
-import { QueryClientProvider } from "@tanstack/react-query";
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 
 import "./index.css";
@@ -6,15 +5,10 @@ import "./types/router";
 import NotFound from "./components/not-found";
 import { LoadingSpinner } from "./components/ui/loading-spinner";
 import { routeTree } from "./routeTree.gen";
-import { createAppQueryClient, orpc } from "./utils/orpc";
 
 export const getRouter = () => {
-  const queryClient = createAppQueryClient();
   const router = createTanStackRouter({
-    Wrap: ({ children }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    ),
-    context: { orpc, queryClient },
+    context: {},
     defaultNotFoundComponent: () => <NotFound />,
     defaultPendingComponent: () => <LoadingSpinner />,
     routeTree,

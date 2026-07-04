@@ -1,8 +1,8 @@
+import { useAtomSet } from "@effect-atom/atom-react";
 import { useForm } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
+import { CreateRangePayload } from "@tepirek-revamped/api/modules/skills/http-api-contract";
 import { useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,12 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import {
+  effectSchemaValidator,
+  formErrorMessage,
+} from "@/lib/effect-schema-validator";
 import { getErrorMessage } from "@/lib/errors";
-import { skillsApi } from "@/utils/skills-api";
+import { createSkillRangeAtom } from "@/lib/skill-atoms";
 
 interface AddEventModalProps {
   trigger: React.ReactNode;
@@ -37,7 +41,9 @@ const defaultValues: AddRangeModal = {
 
 export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const createSkillRange = useAtomSet(createSkillRangeAtom, {
+    mode: "promise",
+  });
 
   const form = useForm({
     defaultValues: {
@@ -45,16 +51,13 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
     },
     onSubmit: async ({ value }) => {
       try {
-        await skillsApi.createRange({
+        await createSkillRange({
           image: value.image ?? "",
           level: value.level,
           name: value.name,
         });
 
         toast.success("Przedział utworzony pomyślnie");
-        await queryClient.invalidateQueries({
-          queryKey: skillsApi.rangesQueryKey,
-        });
         setOpen(false);
         form.reset();
       } catch (error) {
@@ -62,11 +65,7 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
       }
     },
     validators: {
-      onSubmit: z.object({
-        image: z.string().min(2),
-        level: z.number().min(1, "Poziom jest wymagany"),
-        name: z.string().min(1, "Nazwa jest wymagana"),
-      }),
+      onSubmit: effectSchemaValidator(CreateRangePayload),
     },
   });
 
@@ -103,8 +102,11 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>
@@ -130,8 +132,11 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>
@@ -154,8 +159,11 @@ export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>

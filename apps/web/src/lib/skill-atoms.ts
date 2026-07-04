@@ -1,0 +1,153 @@
+import { Atom, Result } from "@effect-atom/atom-react";
+import type {
+  RangeSummary,
+  SkillSummary,
+} from "@tepirek-revamped/api/modules/skills/http-api-contract";
+import { Effect } from "effect";
+
+import {
+  AppHttpApiClient,
+  appHttpApiAtom,
+  appHttpApiFn,
+} from "@/lib/http-api-client-runtime";
+
+type SkillRange = typeof RangeSummary.Type;
+type Skill = typeof SkillSummary.Type;
+
+const emptySkillRanges: readonly SkillRange[] = [];
+const emptySkills: readonly Skill[] = [];
+
+const getSkillRangeListOrEmpty = (
+  result: Result.Result<readonly SkillRange[], unknown>
+) => (Result.isSuccess(result) ? result.value : emptySkillRanges);
+
+const getSkillListOrEmpty = (
+  result: Result.Result<readonly Skill[], unknown>
+) => (Result.isSuccess(result) ? result.value : emptySkills);
+
+const removeSkillRangeById = (
+  ranges: readonly SkillRange[],
+  input: { readonly id: number }
+) => ranges.filter((range) => range.id !== input.id);
+
+const removeSkillById = (
+  skills: readonly Skill[],
+  input: { readonly id: number }
+) => skills.filter((skill) => skill.id !== input.id);
+
+/** Resource atom for skill ranges. */
+export const skillRangesAtom = appHttpApiAtom(
+  Effect.gen(function* listSkillRangesEffect() {
+    const client = yield* AppHttpApiClient;
+    return yield* client.skills.listRanges({});
+  })
+);
+
+/** Resource atom for skill professions. */
+export const skillProfessionsAtom = appHttpApiAtom(
+  Effect.gen(function* listSkillProfessionsEffect() {
+    const client = yield* AppHttpApiClient;
+    return yield* client.skills.listProfessions({});
+  })
+);
+
+/** Resource atom for one skill range by slug. */
+export const skillRangeBySlugAtom = (slug: string) =>
+  appHttpApiAtom(
+    Effect.gen(function* getSkillRangeBySlugEffect() {
+      const client = yield* AppHttpApiClient;
+      return yield* client.skills.getRangeBySlug({ payload: { slug } });
+    })
+  );
+
+/** Resource atom for skills in one range. */
+export const skillsByRangeAtom = (rangeId: number) =>
+  appHttpApiAtom(
+    Effect.gen(function* listSkillsByRangeEffect() {
+      const client = yield* AppHttpApiClient;
+      return yield* client.skills.listSkillsByRange({ payload: { rangeId } });
+    })
+  );
+
+/** Mutation atom for creating a skill profession. */
+export const createSkillProfessionAtom = appHttpApiFn(
+  (payload: { readonly name: string }) =>
+    Effect.gen(function* createSkillProfessionEffect() {
+      const client = yield* AppHttpApiClient;
+      return yield* client.skills.createProfession({ payload });
+    })
+);
+
+/** Mutation atom for creating a skill range. */
+export const createSkillRangeAtom = appHttpApiFn(
+  (payload: {
+    readonly image: string;
+    readonly level: number;
+    readonly name: string;
+  }) =>
+    Effect.gen(function* createSkillRangeEffect() {
+      const client = yield* AppHttpApiClient;
+      return yield* client.skills.createRange({ payload });
+    })
+);
+
+/** Mutation atom for creating a skill. */
+export const createSkillAtom = appHttpApiFn(
+  (payload: {
+    readonly link: string;
+    readonly mastery: boolean;
+    readonly name: string;
+    readonly professionId: number;
+    readonly rangeId: number;
+  }) =>
+    Effect.gen(function* createSkillEffect() {
+      const client = yield* AppHttpApiClient;
+      return yield* client.skills.createSkill({ payload });
+    })
+);
+
+const deleteSkillRangeRequestAtom = appHttpApiFn(
+  (payload: { readonly id: number }) =>
+    Effect.gen(function* deleteSkillRangeEffect() {
+      const client = yield* AppHttpApiClient;
+      return yield* client.skills.deleteRange({ payload });
+    })
+);
+
+const deleteSkillRequestAtom = appHttpApiFn(
+  (payload: { readonly id: number }) =>
+    Effect.gen(function* deleteSkillEffect() {
+      const client = yield* AppHttpApiClient;
+      return yield* client.skills.deleteSkill({ payload });
+    })
+);
+
+/** Optimistic skill range list atom backed by the Result-returning range resource. */
+export const optimisticSkillRangesAtom = Atom.optimistic(
+  skillRangesAtom.pipe(Atom.map(getSkillRangeListOrEmpty))
+);
+
+/** Optimistic mutation atom for deleting a skill range from the list. */
+export const deleteSkillRangeAtom = Atom.optimisticFn(
+  optimisticSkillRangesAtom,
+  {
+    fn: deleteSkillRangeRequestAtom,
+    reducer: removeSkillRangeById,
+  }
+);
+
+/** Optimistic skill list atom backed by a Result-returning range detail resource. */
+export const optimisticSkillsByRangeAtom = (rangeId: number) =>
+  Atom.optimistic(
+    skillsByRangeAtom(rangeId).pipe(Atom.map(getSkillListOrEmpty))
+  );
+
+/** Optimistic mutation atom for deleting a skill from one range detail list. */
+export const deleteSkillFromRangeAtom = (rangeId: number) =>
+  Atom.optimisticFn(optimisticSkillsByRangeAtom(rangeId), {
+    fn: deleteSkillRequestAtom,
+    reducer: removeSkillById,
+  });
+
+/** Mutation atom for deleting a skill when the caller does not own a range list. */
+export const deleteSkillAtom = deleteSkillRequestAtom;

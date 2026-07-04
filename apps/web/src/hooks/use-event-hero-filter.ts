@@ -1,8 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "@effect-atom/atom-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback } from "react";
 
 import type { EventSelectOption } from "@/components/events/select-utils";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import { eventsAtom } from "@/lib/event-atoms";
 import {
   isHeroQueryEnabled,
   normalizeEventHeroFilter,
@@ -15,9 +17,8 @@ import type {
   EventHeroFilterState,
   FilterSelection,
 } from "@/lib/event-hero-filter";
+import { heroesByEventAtom } from "@/lib/hero-atoms";
 import { useFilterPersistence } from "@/lib/use-filter-persistence";
-import { eventsApi } from "@/utils/events-api";
-import { heroesApi } from "@/utils/heroes-api";
 
 /**
  * Route ids that share the Event/Hero URL search shape (eventId/heroId).
@@ -76,17 +77,13 @@ export const useEventHeroFilter = (
     urlHeroId: typeof urlHeroId === "string" ? urlHeroId : undefined,
   });
 
-  const { data: events } = useQuery({
-    queryFn: eventsApi.list,
-    queryKey: eventsApi.queryKey,
-  });
+  const eventsResult = useAtomValue(eventsAtom);
+  const events = [...resultValueOr(eventsResult, [])] as EventSelectOption[];
 
   const heroQueryEnabled = isHeroQueryEnabled(state);
-  const { data: heroes, isPending: heroesLoading } = useQuery({
-    enabled: heroQueryEnabled,
-    queryFn: () => heroesApi.listByEvent({ eventId: Number(state.eventId) }),
-    queryKey: heroesApi.byEventQueryKey(Number(state.eventId)),
-  });
+  const heroesResult = useAtomValue(heroesByEventAtom(Number(state.eventId)));
+  const heroes = heroQueryEnabled ? resultValueOr(heroesResult, []) : [];
+  const heroesLoading = heroQueryEnabled && resultIsLoading(heroesResult);
 
   const sortedHeroes = heroQueryEnabled ? sortHeroesByLevel(heroes) : [];
 

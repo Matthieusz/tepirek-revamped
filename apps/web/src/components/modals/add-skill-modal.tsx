@@ -1,8 +1,8 @@
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { useForm } from "@tanstack/react-form";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Schema from "effect/Schema";
 import { useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,14 +24,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { resultValueOr } from "@/lib/effect-atom-result";
+import {
+  effectSchemaValidator,
+  formErrorMessage,
+} from "@/lib/effect-schema-validator";
 import { getErrorMessage } from "@/lib/errors";
-import { skillsApi } from "@/utils/skills-api";
+import { createSkillAtom, skillProfessionsAtom } from "@/lib/skill-atoms";
 
 interface AddSkillModalProps {
   trigger: React.ReactNode;
   defaultRangeId: number;
   defaultProfessionId?: number;
 }
+
+const AddSkillFormSchema = Schema.Struct({
+  link: Schema.NonEmptyString,
+  mastery: Schema.Boolean,
+  name: Schema.NonEmptyString,
+  professionId: Schema.NonEmptyString,
+});
 
 const defaultValues = {
   link: "",
@@ -46,11 +58,8 @@ export const AddSkillModal = ({
   defaultProfessionId,
 }: AddSkillModalProps) => {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const { data: professionsData } = useQuery({
-    queryFn: skillsApi.listProfessions,
-    queryKey: skillsApi.professionsQueryKey,
-  });
+  const createSkill = useAtomSet(createSkillAtom, { mode: "promise" });
+  const professionsData = resultValueOr(useAtomValue(skillProfessionsAtom), []);
 
   const form = useForm({
     defaultValues: {
@@ -64,7 +73,7 @@ export const AddSkillModal = ({
           toast.error("Wybierz profesję!");
           return;
         }
-        await skillsApi.createSkill({
+        await createSkill({
           link: value.link,
           mastery: value.mastery,
           name: value.name,
@@ -72,9 +81,6 @@ export const AddSkillModal = ({
           rangeId: defaultRangeId,
         });
         toast.success("Zestaw utworzony");
-        await queryClient.invalidateQueries({
-          queryKey: skillsApi.skillsByRangeQueryKey(defaultRangeId),
-        });
         setOpen(false);
         form.reset();
       } catch (error) {
@@ -82,12 +88,7 @@ export const AddSkillModal = ({
       }
     },
     validators: {
-      onSubmit: z.object({
-        link: z.url("Podaj poprawny URL").min(1, "Link jest wymagany"),
-        mastery: z.boolean(),
-        name: z.string().min(1, "Nazwa jest wymagana"),
-        professionId: z.string().min(1, "Wybierz profesję"),
-      }),
+      onSubmit: effectSchemaValidator(AddSkillFormSchema),
     },
   });
 
@@ -126,8 +127,11 @@ export const AddSkillModal = ({
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>
@@ -150,8 +154,11 @@ export const AddSkillModal = ({
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>
@@ -186,9 +193,9 @@ export const AddSkillModal = ({
                       {field.state.meta.errors.map((error) => (
                         <p
                           className="text-red-500 text-sm"
-                          key={error?.message}
+                          key={formErrorMessage(error)}
                         >
-                          {error?.message}
+                          {formErrorMessage(error)}
                         </p>
                       ))}
                     </div>

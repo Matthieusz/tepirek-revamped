@@ -1,7 +1,8 @@
-import { z } from "zod";
+import * as Schema from "effect/Schema";
 
-const searchSchema = z.object({
-  eventId: z.string().optional(),
+const VaultSearchSchema = Schema.Struct({
+  eventId: Schema.optional(Schema.String),
 });
 
-export { searchSchema };
+export const searchSchema = (search: unknown): typeof VaultSearchSchema.Type =>
+  Schema.decodeUnknownSync(VaultSearchSchema)(search);

@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
+import * as Schema from "effect/Schema";
 import { Calculator, Unlink } from "lucide-react";
 import { useState } from "react";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,13 +51,19 @@ const rarityBonusText: Record<Rarity, string> = {
   zwykły: "brak bonusu",
 };
 
-const formSchema = z.object({
-  itemLevel: z
-    .number()
-    .int({ message: "Musi być liczbą całkowitą" })
-    .min(MIN_LEVEL, { message: `Min: ${MIN_LEVEL}` })
-    .max(MAX_LEVEL, { message: `Max: ${MAX_LEVEL}` }),
-  itemRarity: z.enum(["zwykły", "unikatowy", "heroiczny", "legendarny"]),
+const ItemLevelSchema = Schema.Number.check(
+  Schema.isInt(),
+  Schema.isBetween({ maximum: MAX_LEVEL, minimum: MIN_LEVEL })
+);
+const ItemRaritySchema = Schema.Literals([
+  "zwykły",
+  "unikatowy",
+  "heroiczny",
+  "legendarny",
+]);
+const formSchema = Schema.Struct({
+  itemLevel: ItemLevelSchema,
+  itemRarity: ItemRaritySchema,
 });
 
 interface CalculatorOdwPageProps {
@@ -79,7 +85,7 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
     defaultValues: {
       itemLevel: 280,
       itemRarity: "legendarny" as Rarity,
-    } satisfies z.infer<typeof formSchema>,
+    } satisfies typeof formSchema.Type,
     onSubmit: ({ value }) => {
       const { baseValue, totalCost, isCapped } = calculateUnbindCost(
         value.itemLevel,
@@ -134,12 +140,10 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
               <form.Field
                 name="itemLevel"
                 validators={{
-                  onChange: ({ value }) => {
-                    const parsed = formSchema.shape.itemLevel.safeParse(value);
-                    return parsed.success
+                  onChange: ({ value }) =>
+                    Schema.is(ItemLevelSchema)(value)
                       ? undefined
-                      : parsed.error.issues[0]?.message;
-                  },
+                      : `Podaj liczbę całkowitą od ${MIN_LEVEL} do ${MAX_LEVEL}`,
                 }}
               >
                 {(field) => (
@@ -171,12 +175,10 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
               <form.Field
                 name="itemRarity"
                 validators={{
-                  onChange: ({ value }) => {
-                    const parsed = formSchema.shape.itemRarity.safeParse(value);
-                    return parsed.success
+                  onChange: ({ value }) =>
+                    Schema.is(ItemRaritySchema)(value)
                       ? undefined
-                      : parsed.error.issues[0]?.message;
-                  },
+                      : "Wybierz poprawną rzadkość",
                 }}
               >
                 {(field) => (

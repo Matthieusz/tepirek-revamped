@@ -12,18 +12,6 @@ catalogs:
     '@effect/vitest':
       specifier: 4.0.0-beta.85
       version: 4.0.0-beta.85
-    '@orpc/client':
-      specifier: ^1.14.6
-      version: 1.14.6
-    '@orpc/openapi':
-      specifier: ^1.14.6
-      version: 1.14.6
-    '@orpc/server':
-      specifier: ^1.14.6
-      version: 1.14.6
-    '@orpc/zod':
-      specifier: ^1.14.6
-      version: 1.14.6
     better-auth:
       specifier: ^1.6.20
       version: 1.6.20
@@ -105,15 +93,6 @@ importers:
 
   apps/server:
     dependencies:
-      '@orpc/openapi':
-        specifier: 'catalog:'
-        version: 1.14.6(crossws@0.4.6(srvx@0.11.17))
-      '@orpc/server':
-        specifier: 'catalog:'
-        version: 1.14.6(crossws@0.4.6(srvx@0.11.17))
-      '@orpc/zod':
-        specifier: 'catalog:'
-        version: 1.14.6(@orpc/contract@1.14.6)(@orpc/server@1.14.6(crossws@0.4.6(srvx@0.11.17)))(crossws@0.4.6(srvx@0.11.17))(zod@4.4.3)
       '@tepirek-revamped/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -160,6 +139,9 @@ importers:
       '@base-ui/react':
         specifier: ^1.6.0
         version: 1.6.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(date-fns@4.4.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@effect-atom/atom-react':
+        specifier: ^0.5.0
+        version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(@effect/platform@0.94.5(effect@4.0.0-beta.85))(@effect/rpc@0.73.2(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)(react@19.1.0)(scheduler@0.27.0)
       '@fontsource-variable/inter':
         specifier: ^5.2.8
         version: 5.2.8
@@ -169,15 +151,6 @@ importers:
       '@fontsource-variable/source-serif-4':
         specifier: ^5.2.9
         version: 5.2.9
-      '@orpc/client':
-        specifier: 'catalog:'
-        version: 1.14.6
-      '@orpc/server':
-        specifier: 'catalog:'
-        version: 1.14.6(crossws@0.4.6(srvx@0.11.17))
-      '@orpc/tanstack-query':
-        specifier: ^1.14.6
-        version: 1.14.6(@orpc/client@1.14.6)(@tanstack/query-core@5.101.1)
       '@tailwindcss/vite':
         specifier: ^4.3.1
         version: 4.3.1(vite@8.1.0(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
@@ -187,9 +160,6 @@ importers:
       '@tanstack/react-hotkeys':
         specifier: ^0.10.0
         version: 0.10.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@tanstack/react-query':
-        specifier: ^5.101.1
-        version: 5.101.1(react@19.1.0)
       '@tanstack/react-router':
         specifier: ^1.170.16
         version: 1.170.16(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -247,6 +217,9 @@ importers:
       react-intersection-observer:
         specifier: ^10.0.3
         version: 10.0.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      scheduler:
+        specifier: ^0.27.0
+        version: 0.27.0
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -263,9 +236,6 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
-      '@tanstack/react-query-devtools':
-        specifier: ^5.101.1
-        version: 5.101.1(@tanstack/react-query@5.101.1(react@19.1.0))(react@19.1.0)
       '@tanstack/react-router-devtools':
         specifier: ^1.167.0
         version: 1.167.0(@tanstack/react-router@1.170.16(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@tanstack/router-core@1.171.13)(csstype@3.2.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -287,9 +257,6 @@ importers:
 
   packages/api:
     dependencies:
-      '@orpc/server':
-        specifier: 'catalog:'
-        version: 1.14.6(crossws@0.4.6(srvx@0.11.17))
       '@tepirek-revamped/auth':
         specifier: workspace:*
         version: link:../auth
@@ -604,9 +571,48 @@ packages:
   '@drizzle-team/brocli@0.12.0':
     resolution: {integrity: sha512-mlUE+rZ8CatQekLhnaiN91Iemdd+e2gFKooGlnRB3oPTL3VghLfX24dx7HrzMNeC1JrIB/0kpsfyty3f5HNfxQ==}
 
+  '@effect-atom/atom-react@0.5.0':
+    resolution: {integrity: sha512-aFfjWi4rEJCqfM12Oi36/EKaDm/W6n4/N6yM5vL0t/QozKhJhK05rQL/GY4XMxlH2eqkQ4ih8jBQa3Yyp0Fiqw==}
+    peerDependencies:
+      effect: ^3.19
+      react: '>=18 <20'
+      scheduler: '*'
+
+  '@effect-atom/atom@0.5.3':
+    resolution: {integrity: sha512-TRZv/i+YT3TtnN0oFORJqXdxSs1fc7lrJlH+1xZvDFyjC9hgoVnrcKbeZsDFmr6r0wYRqVo7U3IftxiQNjpNZA==}
+    peerDependencies:
+      '@effect/experimental': ^0.58.0
+      '@effect/platform': ^0.94.2
+      '@effect/rpc': ^0.73.0
+      effect: ^3.19.15
+
+  '@effect/experimental@0.58.0':
+    resolution: {integrity: sha512-IEP9sapjF6rFy5TkoqDPc86st/fnqUfjT7Xa3pWJrFGr1hzaMXHo+mWsYOZS9LAOVKnpHuVziDK97EP5qsCHVA==}
+    peerDependencies:
+      '@effect/platform': ^0.94.0
+      effect: ^3.19.13
+      ioredis: ^5
+      lmdb: ^3
+    peerDependenciesMeta:
+      ioredis:
+        optional: true
+      lmdb:
+        optional: true
+
   '@effect/language-service@0.86.2':
     resolution: {integrity: sha512-SaPln+8srOqDJDUwNTDmP5e+IYpEDr9+1epGznnsLqu8xvo6VnxyWARdeLpqvZJlb0Pgy9ca7ppqvvdWbHPXAg==}
     hasBin: true
+
+  '@effect/platform@0.94.5':
+    resolution: {integrity: sha512-z05APUiDDPbodhTkH/RJqOLoCU11bU2IZLfcwLFrld03+ob1VeqRnELQlmueLIYm6NZifHAtjl32V+GRt34y4A==}
+    peerDependencies:
+      effect: ^3.19.17
+
+  '@effect/rpc@0.73.2':
+    resolution: {integrity: sha512-td7LHDgBOYKg+VgGWEelD8rSAmvjXz7am17vfxZROX5qIYuvH7drL/z4p5xQFadhHZ7DYdlFpqdO9ggc77OCIw==}
+    peerDependencies:
+      '@effect/platform': ^0.94.5
+      effect: ^3.19.18
 
   '@effect/sql-pg@4.0.0-beta.85':
     resolution: {integrity: sha512-EqyvyPf2AgOhQzr+c9Enupn3/byVBQB6W3GdHXLPx/UBMt/xPudpI/lMXnU+PFG9EajN1TAEuCCWW8hiiEgAvg==}
@@ -1197,15 +1203,6 @@ packages:
   '@orpc/interop@1.14.6':
     resolution: {integrity: sha512-ZjNaHH9754uUkC98DHfm9HaGnniFnFRLdXXBWL2u+o1TVzEbiNX8dA5+oChxoSTUD3GiwpjLjAuTWXvrbhm4fA==}
 
-  '@orpc/json-schema@1.14.6':
-    resolution: {integrity: sha512-p79GOJ88DpOTsOaAQ8Ef/2J5455Yh2qp3KjY9q6858RozHuPSXHu7MSgE/bilkzbiuGNoen3frw7GSiKfYpKSA==}
-
-  '@orpc/openapi-client@1.14.6':
-    resolution: {integrity: sha512-Z0rdO+oVJTASat3fIQmLEjKnqRsjg4QsjRFwFamZ5W+Y076I3Lbp8XhVcMoHbKyfgm/TKnZu3y41b4NFfPBYiA==}
-
-  '@orpc/openapi@1.14.6':
-    resolution: {integrity: sha512-MdQ0KKLdvqZlmpUgw/6W/6dOfwo1GdtW2kE0VL/AJxqaeM6i3sygtIGAzEr6/CfhIJnfGHqo1jMzdlELQjCqYg==}
-
   '@orpc/server@1.14.6':
     resolution: {integrity: sha512-aHn8dW2clr/fRZzMLbRsZ1Pe4AYxg7YmM3tSZSAkPjn5/3UaHnpuwWeY7LYPok23CGYUmjidTmJQjm0zm+vgoA==}
     peerDependencies:
@@ -1247,19 +1244,6 @@ packages:
 
   '@orpc/standard-server@1.14.6':
     resolution: {integrity: sha512-75Oh4rAZb8K7P46d6v7R2JhjqjLLEo7Qs4+ABdF+f0m0uKM1oaykJWy7leqTJ+WaYm+uDbsZl/3nyWie9aeJTg==}
-
-  '@orpc/tanstack-query@1.14.6':
-    resolution: {integrity: sha512-uCu6iTT0MDyk+ihba65N2CT56XYMny2N389l8pC+NIOQ7dG46RF98MhaQEvFUQo3atZb6pkKNWkg7BaA1Z9o7g==}
-    peerDependencies:
-      '@orpc/client': 1.14.6
-      '@tanstack/query-core': '>=5.80.2'
-
-  '@orpc/zod@1.14.6':
-    resolution: {integrity: sha512-skGc5Qj6BLy3ir+VgYZZBJFlxDVAYoJPVymVPEOLawEVSf2mje0/oMPiaQJE4+CyVRSIXUHG8MoQnW0X1OoQ5w==}
-    peerDependencies:
-      '@orpc/contract': 1.14.6
-      '@orpc/server': 1.14.6
-      zod: '>=3.25.0'
 
   '@oxc-project/types@0.137.0':
     resolution: {integrity: sha512-WT+Gb24i8hmvo85AIv2oEYouEXkRlKAlT9WaCa3TfLgNCN+GhrJOGZuIlMouAh38Qe4QOx26eUOVsq70qXrywA==}
@@ -1927,12 +1911,6 @@ packages:
     resolution: {integrity: sha512-y/xtNPNt/YeyoVxE/JCx+T7yjEzpezmbb+toK8DDD1P4m7Kzs5YR956+7OKexG3f8aXgC3rLZl7b1V+yNUSy5w==}
     engines: {node: '>=18'}
 
-  '@tanstack/query-core@5.101.1':
-    resolution: {integrity: sha512-Y6Y92dkXtNqx67m2pMSxUsA3zOCwv862JexZRP8/EPwvKXMPu9m8rv43spiXWzOUIggQ3SQApttALStzhA8B4g==}
-
-  '@tanstack/query-devtools@5.101.1':
-    resolution: {integrity: sha512-37RQ9U2PxlXQiv1era2t+uHgVhmiyvxqTMu30+KoVf0rufiucu6rpGRKFJk61Wh5OAZFKqCQd6lxTzFWfLZiuQ==}
-
   '@tanstack/react-form@1.33.0':
     resolution: {integrity: sha512-unaee+VS4MvKo+s1dmgGUXI4902VeAhuaUbKsQbhFe3MceOpB3JpAUGCDpyzjQPXVFkFY0COKfLrUNX2XZYW4g==}
     peerDependencies:
@@ -1948,17 +1926,6 @@ packages:
     peerDependencies:
       react: '>=16.8'
       react-dom: '>=16.8'
-
-  '@tanstack/react-query-devtools@5.101.1':
-    resolution: {integrity: sha512-OXFR9XKdEslraq3cpl3kCUeNvTIq/xGWEZiFZdn2bLB/q4WxSALMEDKYZ5yYjMQytsfnQxwQYqV4qtVEf0nuog==}
-    peerDependencies:
-      '@tanstack/react-query': ^5.101.1
-      react: ^18 || ^19
-
-  '@tanstack/react-query@5.101.1':
-    resolution: {integrity: sha512-ZnONUuQKJe1bJMStXUL1s5uKN9FcfC28j5cK+iDZcdSHtUv1wtin1cGc/Oewhf2Oc4eKY7lggtpvT/AbMmhHew==}
-    peerDependencies:
-      react: ^18 || ^19
 
   '@tanstack/react-router-devtools@1.167.0':
     resolution: {integrity: sha512-nGw095EG7IHx0h5NtlEmzf6vcCTaFNPWdTSuDKazajhN0ct/v/TkekJ9J6KYUCeV1a8/2ZmToc58M+0rrOyn7w==}
@@ -2827,10 +2794,6 @@ packages:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
     engines: {node: '>=6'}
 
-  escape-string-regexp@5.0.0:
-    resolution: {integrity: sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw==}
-    engines: {node: '>=12'}
-
   estree-walker@3.0.3:
     resolution: {integrity: sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==}
 
@@ -3073,9 +3036,6 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  json-schema-typed@8.0.2:
-    resolution: {integrity: sha512-fQhoXdcvc3V28x7C7BMs4P5+kNlgUURe2jmUT1T//oBRMDrqy1QPelJimwZGo7Hg9VPV3EQV5Bnq4hbFy2vetA==}
-
   json5@2.2.3:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
     engines: {node: '>=6'}
@@ -3260,6 +3220,9 @@ packages:
   msgpackr-extract@3.0.4:
     resolution: {integrity: sha512-4kmO/MdyUIkLIvTPr8VHLil4AtoKIoniWPIEk5+CDy0xnWC84azhSFmuJ7PxZdsYtiP5kEeQsORAVIeMgxT+Hw==}
     hasBin: true
+
+  msgpackr@1.12.1:
+    resolution: {integrity: sha512-4EUH9tQHnMmEgzW/MdAP0KIfa1T9AF+htl0ffe2n5vb2EKn9y2co8ccpgWko6S52Jy1PQZKwRnx5/KkYjtd9MQ==}
 
   msgpackr@2.0.4:
     resolution: {integrity: sha512-o1C5KRmuRt+apqMr1HuGSqWStZoRBUpEsCsl15uM9VdAF1qHLtvMOU2En747EnTyEl6c4pzPewRMFF31s1CNbA==}
@@ -3605,6 +3568,9 @@ packages:
   scheduler@0.26.0:
     resolution: {integrity: sha512-NlHwttCI/l5gCPR3D1nNXtWABUmBwvZpEQiD4IXSbIDq8BzLIK/7Ir5gTFSGZDUu37K5cMNp0hFtzO38sC7gWA==}
 
+  scheduler@0.27.0:
+    resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
+
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
@@ -3909,6 +3875,10 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
+  uuid@11.1.1:
+    resolution: {integrity: sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ==}
+    hasBin: true
+
   uuid@14.0.1:
     resolution: {integrity: sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==}
     hasBin: true
@@ -4023,9 +3993,6 @@ packages:
     resolution: {integrity: sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w==}
     engines: {node: '>=8'}
     hasBin: true
-
-  wildcard-match@5.1.4:
-    resolution: {integrity: sha512-wldeCaczs8XXq7hj+5d/F38JE2r7EXgb6WQDM84RVwxy81T/sxB5e9+uZLK9Q9oNz1mlvjut+QtvgaOQFPVq/g==}
 
   xmlbuilder2@4.0.3:
     resolution: {integrity: sha512-bx8Q1STctnNaaDymWnkfQLKofs0mGNN7rLLapJlGuV3VlvegD7Ls4ggMjE3aUSWItCCzU0PEv45lI87iSigiCA==}
@@ -4283,7 +4250,44 @@ snapshots:
 
   '@drizzle-team/brocli@0.12.0': {}
 
+  '@effect-atom/atom-react@0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(@effect/platform@0.94.5(effect@4.0.0-beta.85))(@effect/rpc@0.73.2(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)(react@19.1.0)(scheduler@0.27.0)':
+    dependencies:
+      '@effect-atom/atom': 0.5.3(@effect/experimental@0.58.0(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(@effect/platform@0.94.5(effect@4.0.0-beta.85))(@effect/rpc@0.73.2(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)
+      effect: 4.0.0-beta.85
+      react: 19.1.0
+      scheduler: 0.27.0
+    transitivePeerDependencies:
+      - '@effect/experimental'
+      - '@effect/platform'
+      - '@effect/rpc'
+
+  '@effect-atom/atom@0.5.3(@effect/experimental@0.58.0(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(@effect/platform@0.94.5(effect@4.0.0-beta.85))(@effect/rpc@0.73.2(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)':
+    dependencies:
+      '@effect/experimental': 0.58.0(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)
+      '@effect/platform': 0.94.5(effect@4.0.0-beta.85)
+      '@effect/rpc': 0.73.2(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)
+      effect: 4.0.0-beta.85
+
+  '@effect/experimental@0.58.0(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)':
+    dependencies:
+      '@effect/platform': 0.94.5(effect@4.0.0-beta.85)
+      effect: 4.0.0-beta.85
+      uuid: 11.1.1
+
   '@effect/language-service@0.86.2': {}
+
+  '@effect/platform@0.94.5(effect@4.0.0-beta.85)':
+    dependencies:
+      effect: 4.0.0-beta.85
+      find-my-way-ts: 0.1.6
+      msgpackr: 1.12.1
+      multipasta: 0.2.7
+
+  '@effect/rpc@0.73.2(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)':
+    dependencies:
+      '@effect/platform': 0.94.5(effect@4.0.0-beta.85)
+      effect: 4.0.0-beta.85
+      msgpackr: 1.12.1
 
   '@effect/sql-pg@4.0.0-beta.85(effect@4.0.0-beta.85)':
     dependencies:
@@ -4653,6 +4657,7 @@ snapshots:
       '@orpc/standard-server-peer': 1.14.6
     transitivePeerDependencies:
       - '@opentelemetry/api'
+    optional: true
 
   '@orpc/contract@1.14.6':
     dependencies:
@@ -4662,48 +4667,10 @@ snapshots:
       openapi-types: 12.1.3
     transitivePeerDependencies:
       - '@opentelemetry/api'
+    optional: true
 
-  '@orpc/interop@1.14.6': {}
-
-  '@orpc/json-schema@1.14.6(crossws@0.4.6(srvx@0.11.17))':
-    dependencies:
-      '@orpc/contract': 1.14.6
-      '@orpc/interop': 1.14.6
-      '@orpc/openapi': 1.14.6(crossws@0.4.6(srvx@0.11.17))
-      '@orpc/server': 1.14.6(crossws@0.4.6(srvx@0.11.17))
-      '@orpc/shared': 1.14.6
-      json-schema-typed: 8.0.2
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - crossws
-      - fastify
-      - ws
-
-  '@orpc/openapi-client@1.14.6':
-    dependencies:
-      '@orpc/client': 1.14.6
-      '@orpc/contract': 1.14.6
-      '@orpc/shared': 1.14.6
-      '@orpc/standard-server': 1.14.6
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-
-  '@orpc/openapi@1.14.6(crossws@0.4.6(srvx@0.11.17))':
-    dependencies:
-      '@orpc/client': 1.14.6
-      '@orpc/contract': 1.14.6
-      '@orpc/interop': 1.14.6
-      '@orpc/openapi-client': 1.14.6
-      '@orpc/server': 1.14.6(crossws@0.4.6(srvx@0.11.17))
-      '@orpc/shared': 1.14.6
-      '@orpc/standard-server': 1.14.6
-      json-schema-typed: 8.0.2
-      rou3: 0.7.12
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - crossws
-      - fastify
-      - ws
+  '@orpc/interop@1.14.6':
+    optional: true
 
   '@orpc/server@1.14.6(crossws@0.4.6(srvx@0.11.17))':
     dependencies:
@@ -4723,11 +4690,13 @@ snapshots:
     transitivePeerDependencies:
       - '@opentelemetry/api'
       - fastify
+    optional: true
 
   '@orpc/shared@1.14.6':
     dependencies:
       radash: 12.1.1
       type-fest: 5.7.0
+    optional: true
 
   '@orpc/standard-server-aws-lambda@1.14.6':
     dependencies:
@@ -4737,6 +4706,7 @@ snapshots:
       '@orpc/standard-server-node': 1.14.6
     transitivePeerDependencies:
       - '@opentelemetry/api'
+    optional: true
 
   '@orpc/standard-server-fastify@1.14.6':
     dependencies:
@@ -4745,6 +4715,7 @@ snapshots:
       '@orpc/standard-server-node': 1.14.6
     transitivePeerDependencies:
       - '@opentelemetry/api'
+    optional: true
 
   '@orpc/standard-server-fetch@1.14.6':
     dependencies:
@@ -4752,6 +4723,7 @@ snapshots:
       '@orpc/standard-server': 1.14.6
     transitivePeerDependencies:
       - '@opentelemetry/api'
+    optional: true
 
   '@orpc/standard-server-node@1.14.6':
     dependencies:
@@ -4760,6 +4732,7 @@ snapshots:
       '@orpc/standard-server-fetch': 1.14.6
     transitivePeerDependencies:
       - '@opentelemetry/api'
+    optional: true
 
   '@orpc/standard-server-peer@1.14.6':
     dependencies:
@@ -4767,36 +4740,14 @@ snapshots:
       '@orpc/standard-server': 1.14.6
     transitivePeerDependencies:
       - '@opentelemetry/api'
+    optional: true
 
   '@orpc/standard-server@1.14.6':
     dependencies:
       '@orpc/shared': 1.14.6
     transitivePeerDependencies:
       - '@opentelemetry/api'
-
-  '@orpc/tanstack-query@1.14.6(@orpc/client@1.14.6)(@tanstack/query-core@5.101.1)':
-    dependencies:
-      '@orpc/client': 1.14.6
-      '@orpc/shared': 1.14.6
-      '@tanstack/query-core': 5.101.1
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-
-  '@orpc/zod@1.14.6(@orpc/contract@1.14.6)(@orpc/server@1.14.6(crossws@0.4.6(srvx@0.11.17)))(crossws@0.4.6(srvx@0.11.17))(zod@4.4.3)':
-    dependencies:
-      '@orpc/contract': 1.14.6
-      '@orpc/json-schema': 1.14.6(crossws@0.4.6(srvx@0.11.17))
-      '@orpc/openapi': 1.14.6(crossws@0.4.6(srvx@0.11.17))
-      '@orpc/server': 1.14.6(crossws@0.4.6(srvx@0.11.17))
-      '@orpc/shared': 1.14.6
-      escape-string-regexp: 5.0.0
-      wildcard-match: 5.1.4
-      zod: 4.4.3
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - crossws
-      - fastify
-      - ws
+    optional: true
 
   '@oxc-project/types@0.137.0': {}
 
@@ -5215,10 +5166,6 @@ snapshots:
 
   '@tanstack/pacer-lite@0.1.1': {}
 
-  '@tanstack/query-core@5.101.1': {}
-
-  '@tanstack/query-devtools@5.101.1': {}
-
   '@tanstack/react-form@1.33.0(@tanstack/react-start@1.168.26(crossws@0.4.6(srvx@0.11.17))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(vite@8.1.0(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@tanstack/form-core': 1.33.0
@@ -5235,17 +5182,6 @@ snapshots:
       '@tanstack/react-store': 0.11.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
-
-  '@tanstack/react-query-devtools@5.101.1(@tanstack/react-query@5.101.1(react@19.1.0))(react@19.1.0)':
-    dependencies:
-      '@tanstack/query-devtools': 5.101.1
-      '@tanstack/react-query': 5.101.1(react@19.1.0)
-      react: 19.1.0
-
-  '@tanstack/react-query@5.101.1(react@19.1.0)':
-    dependencies:
-      '@tanstack/query-core': 5.101.1
-      react: 19.1.0
 
   '@tanstack/react-router-devtools@1.167.0(@tanstack/react-router@1.170.16(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@tanstack/router-core@1.171.13)(csstype@3.2.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
@@ -5720,7 +5656,8 @@ snapshots:
 
   cookie-es@3.1.1: {}
 
-  cookie@1.1.1: {}
+  cookie@1.1.1:
+    optional: true
 
   cross-spawn@7.0.6:
     dependencies:
@@ -5932,8 +5869,6 @@ snapshots:
 
   escalade@3.2.0: {}
 
-  escape-string-regexp@5.0.0: {}
-
   estree-walker@3.0.3:
     dependencies:
       '@types/estree': 1.0.9
@@ -6102,8 +6037,6 @@ snapshots:
 
   jsesc@3.1.0: {}
 
-  json-schema-typed@8.0.2: {}
-
   json5@2.2.3: {}
 
   jsonc-parser@3.3.1: {}
@@ -6246,6 +6179,10 @@ snapshots:
       '@msgpackr-extract/msgpackr-extract-win32-x64': 3.0.4
     optional: true
 
+  msgpackr@1.12.1:
+    optionalDependencies:
+      msgpackr-extract: 3.0.4
+
   msgpackr@2.0.4:
     optionalDependencies:
       msgpackr-extract: 3.0.4
@@ -6340,7 +6277,8 @@ snapshots:
 
   ohash@2.0.11: {}
 
-  openapi-types@12.1.3: {}
+  openapi-types@12.1.3:
+    optional: true
 
   oxfmt@0.56.0:
     dependencies:
@@ -6500,7 +6438,8 @@ snapshots:
 
   quansync@1.0.0: {}
 
-  radash@12.1.1: {}
+  radash@12.1.1:
+    optional: true
 
   react-day-picker@10.0.1(@types/react@19.2.17)(react@19.1.0):
     dependencies:
@@ -6599,6 +6538,8 @@ snapshots:
 
   scheduler@0.26.0: {}
 
+  scheduler@0.27.0: {}
+
   semver@6.3.1: {}
 
   semver@7.8.5: {}
@@ -6647,7 +6588,8 @@ snapshots:
 
   std-env@4.1.0: {}
 
-  tagged-tag@1.0.0: {}
+  tagged-tag@1.0.0:
+    optional: true
 
   tailwindcss@4.3.1: {}
 
@@ -6719,6 +6661,7 @@ snapshots:
   type-fest@5.7.0:
     dependencies:
       tagged-tag: 1.0.0
+    optional: true
 
   typescript-event-target@1.1.2: {}
 
@@ -6790,6 +6733,8 @@ snapshots:
     dependencies:
       react: 19.1.0
 
+  uuid@11.1.1: {}
+
   uuid@14.0.1: {}
 
   vaul@1.1.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
@@ -6857,8 +6802,6 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
-
-  wildcard-match@5.1.4: {}
 
   xmlbuilder2@4.0.3:
     dependencies:

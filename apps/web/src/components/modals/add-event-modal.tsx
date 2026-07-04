@@ -1,15 +1,15 @@
+import { useAtomSet } from "@effect-atom/atom-react";
 import { useForm } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   DEFAULT_EVENT_ICON_ID,
   EVENT_ICON_OPTIONS,
 } from "@tepirek-revamped/config";
 import type { EventIconId } from "@tepirek-revamped/config";
 import { format } from "date-fns";
+import * as Schema from "effect/Schema";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -30,13 +30,22 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { EVENT_ICON_MAP } from "@/lib/constants";
+import {
+  effectSchemaValidator,
+  formErrorMessage,
+} from "@/lib/effect-schema-validator";
 import { getErrorMessage } from "@/lib/errors";
+import { createEventAtom } from "@/lib/event-atoms";
 import { cn } from "@/lib/utils";
-import { eventsApi } from "@/utils/events-api";
 
 interface AddEventModalProps {
   trigger: React.ReactNode;
 }
+
+const AddEventFormSchema = Schema.Struct({
+  endTime: Schema.String,
+  name: Schema.NonEmptyString,
+});
 
 const EVENT_COLORS = [
   { id: "#22c55e", name: "Zielony" },
@@ -57,7 +66,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
     DEFAULT_EVENT_ICON_ID
   );
   const [selectedColor, setSelectedColor] = useState("#6366f1");
-  const queryClient = useQueryClient();
+  const createEvent = useAtomSet(createEventAtom, { mode: "promise" });
 
   const form = useForm({
     defaultValues: {
@@ -71,17 +80,14 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
           return;
         }
 
-        await eventsApi.create({
+        await createEvent({
           color: selectedColor,
-          endTime: date.toISOString(),
+          endTime: date,
           icon: selectedIcon,
           name: value.name,
         });
 
         toast.success("Event utworzony pomyślnie");
-        await queryClient.invalidateQueries({
-          queryKey: eventsApi.queryKey,
-        });
         setOpen(false);
         form.reset();
         setDate(undefined);
@@ -92,10 +98,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
       }
     },
     validators: {
-      onSubmit: z.object({
-        endTime: z.string(),
-        name: z.string().min(1, "Nazwa eventu jest wymagana"),
-      }),
+      onSubmit: effectSchemaValidator(AddEventFormSchema),
     },
   });
 
@@ -132,8 +135,11 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>
@@ -232,8 +238,11 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                       </PopoverContent>
                     </Popover>
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>

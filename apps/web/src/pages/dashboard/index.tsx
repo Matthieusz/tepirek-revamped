@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { Calendar, Megaphone, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -19,11 +19,15 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Separator } from "@/components/ui/separator";
+import {
+  announcementsAtom,
+  deleteAnnouncementAtom,
+} from "@/lib/announcement-atoms";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import type { AuthSession } from "@/types/route";
-import { announcementApi } from "@/utils/announcement-api";
 
 type AnnouncementToDelete = {
   id: number;
@@ -37,29 +41,33 @@ interface DashboardHomePageProps {
 export default function DashboardHomePage({ session }: DashboardHomePageProps) {
   const [announcementToDelete, setAnnouncementToDelete] =
     useState<AnnouncementToDelete>(null);
-  const { data: announcements, isPending } = useQuery({
-    queryFn: announcementApi.list,
-    queryKey: announcementApi.queryKey,
+  const announcementsResult = useAtomValue(announcementsAtom);
+  const announcements = resultValueOr(announcementsResult, []);
+  const isPending = resultIsLoading(announcementsResult);
+  const deleteAnnouncement = useAtomSet(deleteAnnouncementAtom, {
+    mode: "promise",
   });
-  const queryClient = useQueryClient();
 
   const isAdminUser = isAdmin(session);
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await announcementApi.delete({ id });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteMutation = {
+    isPending: isDeleting,
+    mutate: (id: number) => {
+      void (async () => {
+        setIsDeleting(true);
+        try {
+          await deleteAnnouncement({ id });
+          toast.success("Ogłoszenie zostało usunięte");
+          setAnnouncementToDelete(null);
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error));
+        } finally {
+          setIsDeleting(false);
+        }
+      })();
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-    onSuccess: async () => {
-      toast.success("Ogłoszenie zostało usunięte");
-      await queryClient.invalidateQueries({
-        queryKey: announcementApi.queryKey,
-      });
-      setAnnouncementToDelete(null);
-    },
-  });
+  };
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8">

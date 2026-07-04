@@ -1,7 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "@effect-atom/atom-react";
 
 import type { RankingItem } from "@/components/events/ranking-list";
-import { rankingApi } from "@/utils/ranking-api";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import { rankingAtom } from "@/lib/ranking-atoms";
 
 interface UseRankingDataParams {
   currentSortBy: "points" | "bets" | "gold";
@@ -39,14 +40,9 @@ export const useRankingData = ({
   currentSortBy,
   queryInputs,
 }: UseRankingDataParams) => {
-  const { data: rankingData, isPending: rankingLoading } = useQuery({
-    queryFn: () =>
-      rankingApi.getRanking({
-        eventId: queryInputs.eventId,
-        heroId: queryInputs.heroId,
-      }),
-    queryKey: rankingApi.rankingQueryKey(queryInputs),
-  });
+  const rankingResult = useAtomValue(rankingAtom(queryInputs));
+  const rankingData = resultValueOr(rankingResult);
+  const rankingLoading = resultIsLoading(rankingResult);
 
   const sortedRanking = sortRanking(
     rankingData?.ranking as RankingItem[] | undefined,

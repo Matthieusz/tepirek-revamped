@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { Check, Coins, User, Vault as VaultIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
@@ -18,14 +18,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { VaultUserCard } from "@/components/vault-user-card";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
+import { eventsAtom } from "@/lib/event-atoms";
 import { ALL_FILTER, toQueryInput } from "@/lib/event-hero-filter";
 import { formatVaultEarnings } from "@/lib/gold";
+import { oldestUnpaidEventAtom } from "@/lib/ranking-atoms";
 import { isAdmin } from "@/lib/route-helpers";
+import { togglePaidOutAtom, vaultAtom } from "@/lib/vault-atoms";
 import type { AuthSession } from "@/types/route";
-import { eventsApi } from "@/utils/events-api";
-import { rankingApi } from "@/utils/ranking-api";
-import { vaultApi } from "@/utils/vault-api";
 
 const routeApi = getRouteApi("/dashboard/events/vault");
 
@@ -33,23 +34,19 @@ interface EventsVaultPageProps {
   session: AuthSession;
 }
 
+// oxlint-disable-next-line complexity
 const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
   const { eventId: urlEventId } = routeApi.useSearch();
   const navigate = useNavigate({ from: "/dashboard/events/vault" });
   const hasInitializedRef = useRef(false);
-  const queryClient = useQueryClient();
+  const togglePaidOut = useAtomSet(togglePaidOutAtom, { mode: "promise" });
 
-  const { data: events } = useQuery({
-    queryFn: eventsApi.list,
-    queryKey: eventsApi.queryKey,
-  });
+  const events = [...resultValueOr(useAtomValue(eventsAtom), [])];
 
   // Get the oldest event with unpaid users
-  const { data: oldestUnpaidEventId, isPending: oldestUnpaidLoading } =
-    useQuery({
-      queryFn: rankingApi.getOldestUnpaidEvent,
-      queryKey: rankingApi.oldestUnpaidEventQueryKey,
-    });
+  const oldestUnpaidResult = useAtomValue(oldestUnpaidEventAtom);
+  const oldestUnpaidEventId = resultValueOr(oldestUnpaidResult);
+  const oldestUnpaidLoading = resultIsLoading(oldestUnpaidResult);
 
   // Auto-select the oldest unpaid event on initial load (only if no URL param)
   useEffect(() => {
@@ -82,43 +79,28 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
   const eventQueryInput = toQueryInput(effectiveEventId);
   const hasSpecificEvent = eventQueryInput !== undefined;
 
-  const { data: vault, isPending: vaultLoading } = useQuery({
-    enabled: hasInitialized,
-    queryFn: () => vaultApi.getVault({ eventId: eventQueryInput }),
-    queryKey: vaultApi.vaultQueryKey({ eventId: eventQueryInput }),
-  });
-
-  const toggleMutation = useMutation({
-    mutationFn: async ({
-      userId,
-      paidOut,
-    }: {
-      userId: string;
-      paidOut: boolean;
-    }) => {
-      if (!hasSpecificEvent) {
-        throw new Error("Wybierz konkretny event przed zmianą statusu wypłaty");
-      }
-      const selectedEventId = eventQueryInput;
-      await vaultApi.togglePaidOut({
-        eventId: selectedEventId,
-        paidOut,
-        userId,
-      });
+  const vaultResult = useAtomValue(vaultAtom({ eventId: eventQueryInput }));
+  const vault = hasInitialized ? resultValueOr(vaultResult, []) : [];
+  const vaultLoading = hasInitialized && resultIsLoading(vaultResult);
+  const toggleMutation = {
+    isPending: false,
+    mutate: ({ userId, paidOut }: { userId: string; paidOut: boolean }) => {
+      const run = async () => {
+        if (!hasSpecificEvent) {
+          toast.error("Wybierz konkretny event przed zmianą statusu wypłaty");
+          return;
+        }
+        const selectedEventId = eventQueryInput;
+        try {
+          await togglePaidOut({ eventId: selectedEventId, paidOut, userId });
+          toast.success("Status wypłaty zaktualizowany");
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error));
+        }
+      };
+      void run();
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: vaultApi.vaultQueryKey({ eventId: eventQueryInput }),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: rankingApi.oldestUnpaidEventQueryKey,
-      });
-      toast.success("Status wypłaty zaktualizowany");
-    },
-  });
+  };
 
   const isAdminUser = isAdmin(session);
 
@@ -184,7 +166,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
                 <div className="flex items-center gap-3">
                   <Avatar className="size-12 border-2 border-primary">
                     <AvatarImage
-                      alt={nextToPay.userName}
+                      alt={nextToPay.userName ?? ""}
                       src={nextToPay.userImage ?? undefined}
                     />
                     <AvatarFallback>
@@ -249,7 +231,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
                     {/* Avatar */}
                     <Avatar className="size-10 shrink-0 border border-border">
                       <AvatarImage
-                        alt={player.userName}
+                        alt={player.userName ?? ""}
                         src={player.userImage ?? undefined}
                       />
                       <AvatarFallback>
@@ -319,7 +301,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
                   }
                   totalEarnings={player.totalEarnings}
                   userImage={player.userImage}
-                  userName={player.userName}
+                  userName={player.userName ?? ""}
                 />
               ))}
             </div>

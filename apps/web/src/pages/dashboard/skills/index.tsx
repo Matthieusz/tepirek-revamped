@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "@effect-atom/atom-react";
 import { Plus } from "lucide-react";
 
 import { AddProfessionModal } from "@/components/modals/add-profession-modal";
@@ -6,19 +6,19 @@ import { AddRangeModal } from "@/components/modals/add-range-modal";
 import { RangeCard } from "@/components/skills/range-card";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { isAdmin } from "@/lib/route-helpers";
+import { skillRangesAtom } from "@/lib/skill-atoms";
 import type { AuthSession } from "@/types/route";
-import { skillsApi } from "@/utils/skills-api";
 
 interface SkillsIndexPageProps {
   session: AuthSession;
 }
 
 export default function SkillsIndexPage({ session }: SkillsIndexPageProps) {
-  const { data: ranges, isPending } = useQuery({
-    queryFn: skillsApi.listRanges,
-    queryKey: skillsApi.rangesQueryKey,
-  });
+  const rangesResult = useAtomValue(skillRangesAtom);
+  const ranges = resultValueOr(rangesResult, []);
+  const isPending = resultIsLoading(rangesResult);
 
   const isAdminUser = isAdmin(session);
 

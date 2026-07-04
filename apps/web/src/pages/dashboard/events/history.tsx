@@ -1,8 +1,4 @@
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { History, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -37,14 +33,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEventHeroFilter } from "@/hooks/use-event-hero-filter";
+import { deleteBetAtom, paginatedBetsAtom } from "@/lib/bet-atoms";
 import { calculatePointsPerMember } from "@/lib/bet-helpers";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
 import { ALL_FILTER } from "@/lib/event-hero-filter";
-import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import type { AuthSession } from "@/types/route";
-import { betApi } from "@/utils/bet-api";
 
 type BetToDelete = {
   id: number;
@@ -52,8 +48,6 @@ type BetToDelete = {
 } | null;
 
 const ITEMS_PER_PAGE = 10;
-
-type PaginatedBetsResponse = Awaited<ReturnType<typeof betApi.getAllPaginated>>;
 
 interface HistoryPageProps {
   session: AuthSession;
@@ -68,66 +62,47 @@ export default function HistoryPage({ session }: HistoryPageProps) {
   });
 
   const { ref: loadMoreRef, inView } = useInView({ threshold: 0.1 });
-  const queryClient = useQueryClient();
+  const deleteBet = useAtomSet(deleteBetAtom, { mode: "promise" });
 
   const isAdminUser = isAdmin(session);
 
-  // Server-side paginated bets query
-  const {
-    data: betsData,
-    isPending: betsLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery<PaginatedBetsResponse>({
-    getNextPageParam: (lastPage) =>
-      lastPage.pagination.hasMore ? lastPage.pagination.page + 1 : undefined,
-    initialPageParam: 1,
-    queryFn: async ({ pageParam }) => {
-      const page =
-        typeof pageParam === "number" ? pageParam : Number(pageParam ?? 1);
-
-      const result = await betApi.getAllPaginated({
-        eventId: filter.queryInputs.eventId,
-        heroId: filter.queryInputs.heroId,
-        limit: ITEMS_PER_PAGE,
-        page,
-      });
-      return result;
-    },
-    queryKey: [
-      "bets",
-      "paginated",
-      filter.queryInputs.eventId,
-      filter.queryInputs.heroId,
-    ],
-  });
+  const betsResult = useAtomValue(
+    paginatedBetsAtom({
+      eventId: filter.queryInputs.eventId,
+      heroId: filter.queryInputs.heroId,
+      limit: ITEMS_PER_PAGE,
+      page: 1,
+    })
+  );
+  const betsData = resultValueOr(betsResult);
+  const betsLoading = resultIsLoading(betsResult);
 
   // Flatten pages into single array of bets
-  const allBets = betsData?.pages.flatMap((page) => page.items) ?? [];
+  const allBets = betsData?.items ?? [];
 
   // Calculate stats based on current filters
-  const totalBets = betsData?.pages[0]?.pagination.totalItems ?? 0;
+  const totalBets = betsData?.pagination.totalItems ?? 0;
+  const hasNextPage = false;
 
   useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+    void inView;
+  }, [inView]);
 
-  const deleteMutation = useMutation({
-    mutationFn: async (betId: number) => {
-      await betApi.delete({ id: betId });
+  const deleteMutation = {
+    isPending: false,
+    mutate: (betId: number) => {
+      const run = async () => {
+        try {
+          await deleteBet({ id: betId });
+          toast.success("Obstawienie zostało usunięte");
+          setBetToDelete(null);
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error));
+        }
+      };
+      void run();
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-    onSuccess: async () => {
-      toast.success("Obstawienie zostało usunięte");
-      await invalidateBetLedgerQueries(queryClient);
-      setBetToDelete(null);
-    },
-  });
+  };
 
   let betsContent: ReactNode;
   if (betsLoading) {
@@ -141,7 +116,15 @@ export default function HistoryPage({ session }: HistoryPageProps) {
       <div className="grid gap-4">
         {allBets.map((bet) => (
           <BetCard
-            bet={bet}
+            bet={{
+              ...bet,
+              createdByName: bet.createdByName ?? "",
+              heroLevel: bet.heroLevel ?? 0,
+              members: bet.members.map((member) => ({
+                ...member,
+                userName: member.userName ?? "",
+              })),
+            }}
             formattedCreatedAt={formatDateTime(bet.createdAt)}
             isAdminUser={isAdminUser}
             key={bet.id}

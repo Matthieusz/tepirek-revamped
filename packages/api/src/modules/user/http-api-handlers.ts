@@ -1,5 +1,3 @@
-/* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { ORPCError } from "@orpc/server";
 import { auth } from "@tepirek-revamped/auth";
 import { db } from "@tepirek-revamped/db";
 import { account, user } from "@tepirek-revamped/db/schema/auth";
@@ -10,6 +8,8 @@ import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../http-api-contract.js";
+/* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
+import { AppError } from "../app-error.js";
 import { hasDiscordGuild } from "./discord-guild.js";
 import {
   UserBadRequest,
@@ -94,7 +94,7 @@ const loadTargetUser = async (
     .from(user)
     .where(eq(user.id, userId));
   if (!targetUser) {
-    throw new ORPCError("NOT_FOUND", { message: "Użytkownik nie istnieje" });
+    throw new AppError("NOT_FOUND", { message: "Użytkownik nie istnieje" });
   }
   return targetUser;
 };
@@ -122,11 +122,11 @@ const assertAdminMutationAllowed = async (
     return;
   }
   if (targetUser.id === actorId) {
-    throw new ORPCError("FORBIDDEN", { message: LAST_ADMIN_MESSAGE });
+    throw new AppError("FORBIDDEN", { message: LAST_ADMIN_MESSAGE });
   }
   const verifiedAdminCount = await countVerifiedAdmins(executor);
   if (verifiedAdminCount <= 1) {
-    throw new ORPCError("FORBIDDEN", { message: LAST_ADMIN_MESSAGE });
+    throw new AppError("FORBIDDEN", { message: LAST_ADMIN_MESSAGE });
   }
 };
 const updateAndReturnUser = async (
@@ -155,7 +155,7 @@ const mutateAdminAvailabilityUser = (
     return updateAndReturnUser(tx, eq(user.id, userId), next);
   });
 const classifyUserFailure = (cause: unknown, operation: string) => {
-  if (cause instanceof ORPCError) {
+  if (cause instanceof AppError) {
     if (cause.code === "BAD_REQUEST") {
       return new UserBadRequest({ message: cause.message });
     }
@@ -185,7 +185,7 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
           return yield* runUser("deleteUser", async () => {
             const targetUser = await loadTargetUser(db, payload.userId);
             if (targetUser.verified) {
-              throw new ORPCError("BAD_REQUEST", {
+              throw new AppError("BAD_REQUEST", {
                 message: "Nie można usunąć zweryfikowanego użytkownika",
               });
             }
@@ -260,7 +260,7 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
           return yield* runUser("verifyDiscordGuildMembership", async () => {
             const guildId = process.env.DISCORD_SERVER_ID;
             if (!guildId) {
-              throw new ORPCError("INTERNAL_SERVER_ERROR", {
+              throw new AppError("INTERNAL_SERVER_ERROR", {
                 message: "Brak konfiguracji serwera Discord",
               });
             }
@@ -274,7 +274,7 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
                 )
               );
             if (!discordAccount?.accessToken) {
-              throw new ORPCError("BAD_REQUEST", {
+              throw new AppError("BAD_REQUEST", {
                 message: "Połącz konto Discord, aby zweryfikować członkostwo",
               });
             }

@@ -1,8 +1,8 @@
+import { useAtomSet } from "@effect-atom/atom-react";
 import { useForm } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
+import { CreateProfessionPayload } from "@tepirek-revamped/api/modules/skills/http-api-contract";
 import { useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,12 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import {
+  effectSchemaValidator,
+  formErrorMessage,
+} from "@/lib/effect-schema-validator";
 import { getErrorMessage } from "@/lib/errors";
-import { skillsApi } from "@/utils/skills-api";
+import { createSkillProfessionAtom } from "@/lib/skill-atoms";
 
 interface AddProfessionModalProps {
   trigger: React.ReactNode;
@@ -29,19 +33,18 @@ const defaultValues = {
 
 export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const createSkillProfession = useAtomSet(createSkillProfessionAtom, {
+    mode: "promise",
+  });
 
   const form = useForm({
     defaultValues,
     onSubmit: async ({ value }) => {
       try {
-        await skillsApi.createProfession({
+        await createSkillProfession({
           name: value.name,
         });
         toast.success("Profesja utworzona");
-        await queryClient.invalidateQueries({
-          queryKey: skillsApi.professionsQueryKey,
-        });
         setOpen(false);
         form.reset();
       } catch (error) {
@@ -49,9 +52,7 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
       }
     },
     validators: {
-      onSubmit: z.object({
-        name: z.string().min(1, "Nazwa jest wymagana"),
-      }),
+      onSubmit: effectSchemaValidator(CreateProfessionPayload),
     },
   });
 
@@ -88,8 +89,11 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
                       value={field.state.value}
                     />
                     {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
+                      <p
+                        className="text-red-500 text-sm"
+                        key={formErrorMessage(error)}
+                      >
+                        {formErrorMessage(error)}
                       </p>
                     ))}
                   </div>

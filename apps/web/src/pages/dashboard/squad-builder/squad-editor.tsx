@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -22,7 +22,19 @@ import { CollapsibleTrigger } from "@/components/ui/collapsible-trigger";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { orpc } from "@/utils/orpc";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import {
+  availableSquadCharactersAtom,
+  revokeSquadGroupEditorAtom,
+  saveSharedSquadGroupCharactersAtom,
+  saveSquadGroupAtom,
+  setSquadGroupVisibilityAtom,
+  squadEditorInviteTargetsAtom,
+  squadGroupDetailAtom,
+  squadGroupEditorGrantsAtom,
+  sendSquadGroupEditorInviteAtom,
+} from "@/lib/squad-builder-atoms";
+import { sessionAtom } from "@/lib/user-atoms";
 
 const PROFESSION_LABELS: Record<string, string> = {
   bladeDancer: "Tancerz ostrzy",
@@ -72,6 +84,28 @@ interface SquadGroupEditorGrant {
   readonly status: "pending" | "accepted";
 }
 
+interface SquadGroupDetailCharacter extends AvailableCharacter {
+  readonly position: number;
+}
+
+interface SquadGroupDetailSquad {
+  readonly characters: readonly SquadGroupDetailCharacter[];
+  readonly name: string;
+  readonly position: number;
+  readonly squadId: number;
+}
+
+interface SquadGroupDetail {
+  readonly accessRole: "owner" | "editor" | "viewer";
+  readonly name: string;
+  readonly squads: readonly SquadGroupDetailSquad[];
+  readonly visibility: "private" | "global";
+}
+
+interface SavedSquadGroup {
+  readonly name: string;
+}
+
 const makeClientKey = (): string => crypto.randomUUID();
 
 const characterLabel = (character: AvailableCharacter): string =>
@@ -80,54 +114,62 @@ const characterLabel = (character: AvailableCharacter): string =>
 // oxlint-disable-next-line complexity
 export default function SquadBuilderEditorPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const params = useParams({
     from: "/dashboard/squad-builder/squads_/$groupId",
   });
   const groupId = Number(params.groupId);
+  const sessionResult = useAtomValue(sessionAtom);
+  const actorUserId =
+    sessionResult._tag === "Success" ? sessionResult.value.user.id : "";
   const [groupName, setGroupName] = useState("");
   const [squads, setSquads] = useState<readonly DraftSquad[]>([]);
   const [isDirty, setIsDirty] = useState(false);
   const [inviteQuery, setInviteQuery] = useState("");
   const [visibility, setVisibility] = useState<"private" | "global">("private");
   const [editorsOpen, setEditorsOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSavingShared, setIsSavingShared] = useState(false);
+  const [isSettingVisibility, setIsSettingVisibility] = useState(false);
+  const [isSendingInvite, setIsSendingInvite] = useState(false);
+  const [isRevokingInvite, setIsRevokingInvite] = useState(false);
 
-  const detailQuery = useQuery(
-    orpc.squadBuilder.getSquadGroupDetail.queryOptions({
-      enabled: Number.isSafeInteger(groupId) && groupId > 0,
-      input: { groupId },
-    })
+  const detailResult = useAtomValue(
+    squadGroupDetailAtom({ actorUserId, groupId })
   );
-
-  const accessRole = detailQuery.data?.accessRole;
+  const detail = resultValueOr(detailResult) as SquadGroupDetail | undefined;
+  const accessRole = detail?.accessRole;
   const isOwner = accessRole === "owner";
   const isEditor = accessRole === "editor";
   const isViewer = accessRole === "viewer";
   const canEditPlacements = isOwner || isEditor;
-
-  const availableQuery = useQuery(
-    orpc.squadBuilder.listAvailableSquadCharacters.queryOptions({
-      enabled:
-        canEditPlacements && Number.isSafeInteger(groupId) && groupId > 0,
-      input: { groupId },
-    })
+  const availableResult = useAtomValue(
+    availableSquadCharactersAtom({ actorUserId, groupId })
   );
-
-  const grantsQuery = useQuery(
-    orpc.squadBuilder.listSquadGroupEditorGrants.queryOptions({
-      enabled: isOwner && Number.isSafeInteger(groupId) && groupId > 0,
-      input: { groupId },
-    })
+  const grantsResult = useAtomValue(
+    squadGroupEditorGrantsAtom({ actorUserId, groupId })
   );
-  const inviteTargetsQuery = useQuery(
-    orpc.squadBuilder.searchSquadEditorInviteTargets.queryOptions({
-      enabled: isOwner && inviteQuery.trim().length >= 2,
-      input: { groupId, query: inviteQuery },
-    })
+  const inviteTargetsResult = useAtomValue(
+    squadEditorInviteTargetsAtom({ actorUserId, groupId, query: inviteQuery })
   );
+  const saveSquadGroup = useAtomSet(saveSquadGroupAtom, { mode: "promise" });
+  const saveSharedSquadGroupCharacters = useAtomSet(
+    saveSharedSquadGroupCharactersAtom,
+    { mode: "promise" }
+  );
+  const setSquadGroupVisibility = useAtomSet(setSquadGroupVisibilityAtom, {
+    mode: "promise",
+  });
+  const sendSquadGroupEditorInvite = useAtomSet(
+    sendSquadGroupEditorInviteAtom,
+    {
+      mode: "promise",
+    }
+  );
+  const revokeSquadGroupEditor = useAtomSet(revokeSquadGroupEditorAtom, {
+    mode: "promise",
+  });
 
   useEffect(() => {
-    const detail = detailQuery.data;
     if (detail === undefined || isDirty) {
       return;
     }
@@ -146,137 +188,131 @@ export default function SquadBuilderEditorPage() {
         squadId: squad.squadId,
       }))
     );
-  }, [detailQuery.data, isDirty]);
+  }, [detail, isDirty]);
 
-  const saveMutation = useMutation(
-    orpc.squadBuilder.saveSquadGroup.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: (detail) => {
-        toast.success("Grupa składów została zapisana");
-        setIsDirty(false);
-        setGroupName(detail.name);
-        setSquads(
-          detail.squads.map((squad) => ({
-            characters: squad.characters.map((character) => ({
-              characterId: character.characterId,
-              position: character.position,
-            })),
-            clientKey: `saved-${squad.squadId}`,
-            name: squad.name,
-            position: squad.position,
-            squadId: squad.squadId,
-          }))
-        );
-        void queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.listMySquadGroups.queryKey(),
-        });
-        void queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.getSquadGroupDetail.queryKey({
-            input: { groupId },
-          }),
-        });
-      },
-    })
-  );
-
-  const saveSharedMutation = useMutation(
-    orpc.squadBuilder.saveSharedSquadGroupCharacters.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: (detail) => {
-        toast.success("Skład został zapisany");
-        setIsDirty(false);
-        setGroupName(detail.name);
-        setSquads(
-          detail.squads.map((squad) => ({
-            characters: squad.characters.map((character) => ({
-              characterId: character.characterId,
-              position: character.position,
-            })),
-            clientKey: `saved-${squad.squadId}`,
-            name: squad.name,
-            position: squad.position,
-            squadId: squad.squadId,
-          }))
-        );
-        void queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.getSquadGroupDetail.queryKey({
-            input: { groupId },
-          }),
-        });
-      },
-    })
-  );
-
-  const visibilityMutation = useMutation(
-    orpc.squadBuilder.setSquadGroupVisibility.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: async (result) => {
-        toast.success("Widoczność została zmieniona");
-        setVisibility(result.visibility);
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: orpc.squadBuilder.getSquadGroupDetail.queryKey({
-              input: { groupId },
-            }),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: orpc.squadBuilder.listGlobalSquadGroups.queryKey(),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: orpc.squadBuilder.listMySquadGroups.queryKey(),
-          }),
-        ]);
-      },
-    })
-  );
-
-  const sendInviteMutation = useMutation(
-    orpc.squadBuilder.sendSquadGroupEditorInvite.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: async () => {
-        toast.success("Zaproszenie zostało wysłane");
-        setInviteQuery("");
-        await queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.listSquadGroupEditorGrants.queryKey({
-            input: { groupId },
-          }),
-        });
-      },
-    })
-  );
-
-  const revokeInviteMutation = useMutation(
-    orpc.squadBuilder.revokeSquadGroupEditor.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: async () => {
-        toast.success("Dostęp został cofnięty");
-        await queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.listSquadGroupEditorGrants.queryKey({
-            input: { groupId },
-          }),
-        });
-      },
-    })
-  );
+  const saveMutation = {
+    isPending: isSaving,
+    mutate: (input: unknown) => {
+      void (async () => {
+        setIsSaving(true);
+        try {
+          const saved = (await saveSquadGroup(input)) as SavedSquadGroup;
+          toast.success("Grupa składów została zapisana");
+          setIsDirty(false);
+          setGroupName(saved.name);
+        } catch (error: unknown) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Nie udało się zapisać grupy"
+          );
+        } finally {
+          setIsSaving(false);
+        }
+      })();
+    },
+  };
+  const saveSharedMutation = {
+    isPending: isSavingShared,
+    mutate: (input: unknown) => {
+      void (async () => {
+        setIsSavingShared(true);
+        try {
+          await saveSharedSquadGroupCharacters(input);
+          toast.success("Skład został zapisany");
+          setIsDirty(false);
+        } catch (error: unknown) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Nie udało się zapisać składu"
+          );
+        } finally {
+          setIsSavingShared(false);
+        }
+      })();
+    },
+  };
+  const visibilityMutation = {
+    isPending: isSettingVisibility,
+    mutate: (input: {
+      readonly groupId: number;
+      readonly visibility: "private" | "global";
+    }) => {
+      void (async () => {
+        setIsSettingVisibility(true);
+        try {
+          await setSquadGroupVisibility(input);
+          toast.success("Widoczność została zmieniona");
+          setVisibility(input.visibility);
+        } catch (error: unknown) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Nie udało się zmienić widoczności"
+          );
+        } finally {
+          setIsSettingVisibility(false);
+        }
+      })();
+    },
+  };
+  const sendInviteMutation = {
+    isPending: isSendingInvite,
+    mutate: (input: {
+      readonly groupId: number;
+      readonly invitedUserId: string;
+    }) => {
+      void (async () => {
+        setIsSendingInvite(true);
+        try {
+          await sendSquadGroupEditorInvite({ ...input, actorUserId });
+          toast.success("Zaproszenie zostało wysłane");
+          setInviteQuery("");
+        } catch (error: unknown) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Nie udało się wysłać zaproszenia"
+          );
+        } finally {
+          setIsSendingInvite(false);
+        }
+      })();
+    },
+  };
+  const revokeInviteMutation = {
+    isPending: isRevokingInvite,
+    mutate: (input: { readonly invitationId: number }) => {
+      void (async () => {
+        setIsRevokingInvite(true);
+        try {
+          await revokeSquadGroupEditor({ ...input, actorUserId });
+          toast.success("Dostęp został cofnięty");
+        } catch (error: unknown) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Nie udało się cofnąć dostępu"
+          );
+        } finally {
+          setIsRevokingInvite(false);
+        }
+      })();
+    },
+  };
 
   const availableCharacters = useMemo(
     () =>
-      (availableQuery.data?.characters ?? []) as readonly AvailableCharacter[],
-    [availableQuery.data?.characters]
+      resultValueOr(
+        availableResult,
+        [] as readonly AvailableCharacter[]
+      ) as readonly AvailableCharacter[],
+    [availableResult]
   );
   const availableById = useMemo(() => {
     const map = new Map<number, AvailableCharacter>();
-    for (const squad of detailQuery.data?.squads ?? []) {
+    for (const squad of detail?.squads ?? []) {
       for (const character of squad.characters) {
         map.set(character.characterId, {
           accountDisplayName: character.accountDisplayName,
@@ -295,12 +331,19 @@ export default function SquadBuilderEditorPage() {
       map.set(character.characterId, character);
     }
     return map;
-  }, [availableCharacters, detailQuery.data?.squads]);
+  }, [availableCharacters, detail?.squads]);
 
-  const inviteTargets = (inviteTargetsQuery.data?.users ??
-    []) as readonly SquadEditorInviteTarget[];
-  const editorGrants = (grantsQuery.data?.grants ??
-    []) as readonly SquadGroupEditorGrant[];
+  const inviteTargets =
+    inviteQuery.trim().length >= 2
+      ? resultValueOr(
+          inviteTargetsResult,
+          [] as readonly SquadEditorInviteTarget[]
+        )
+      : [];
+  const editorGrants = resultValueOr(
+    grantsResult,
+    [] as readonly SquadGroupEditorGrant[]
+  );
 
   const selectedCharacterIds = useMemo(() => {
     const ids = new Set<number>();
@@ -373,7 +416,7 @@ export default function SquadBuilderEditorPage() {
     });
   };
 
-  if (detailQuery.isLoading) {
+  if (resultIsLoading(detailResult)) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-64" />
@@ -382,7 +425,7 @@ export default function SquadBuilderEditorPage() {
     );
   }
 
-  if (detailQuery.isError) {
+  if (detailResult._tag === "Failure") {
     return (
       <p className="text-destructive text-sm">
         Nie udało się wczytać grupy składów.
@@ -811,20 +854,20 @@ export default function SquadBuilderEditorPage() {
                     składu.
                   </p>
                 )}
-                {availableQuery.isLoading && (
+                {resultIsLoading(availableResult) && (
                   <div className="space-y-2 px-1" aria-hidden="true">
                     <Skeleton className="h-12 w-full" />
                     <Skeleton className="h-12 w-full" />
                   </div>
                 )}
-                {!availableQuery.isLoading &&
+                {!resultIsLoading(availableResult) &&
                   availableCharacters.length === 0 && (
                     <p className="px-1 text-muted-foreground text-sm">
                       Brak dostępnych postaci z Jaruny. Dodaj konto na stronie
                       Konta.
                     </p>
                   )}
-                {!availableQuery.isLoading &&
+                {!resultIsLoading(availableResult) &&
                   availableCharacters.length > 0 && (
                     <ul className="divide-y divide-border/60">
                       {availableCharacters.map((character) => {

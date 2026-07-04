@@ -1,10 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "@effect-atom/atom-react";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import type { LucideIcon } from "lucide-react";
 import { Users } from "lucide-react";
 import type React from "react";
 
-import { auctionApi } from "@/utils/auction-api";
+import { auctionStatsAtom } from "@/lib/auction-atoms";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 
 import { Skeleton } from "./ui/skeleton";
 
@@ -23,10 +24,9 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
   profession,
   type,
 }) => {
-  const { data: stats, isPending } = useQuery({
-    queryFn: () => auctionApi.getStats({ profession, type }),
-    queryKey: auctionApi.statsQueryKey({ profession, type }),
-  });
+  const statsResult = useAtomValue(auctionStatsAtom({ profession, type }));
+  const stats = resultValueOr(statsResult, undefined);
+  const isPending = resultIsLoading(statsResult);
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between">

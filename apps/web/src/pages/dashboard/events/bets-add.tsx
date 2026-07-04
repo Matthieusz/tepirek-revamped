@@ -1,3 +1,4 @@
+import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import { useForm } from "@tanstack/react-form";
 import type {
   FormAsyncValidateOrFn,
@@ -5,11 +6,10 @@ import type {
   ReactFormExtendedApi,
 } from "@tanstack/react-form";
 import { useHotkey } from "@tanstack/react-hotkeys";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Schema from "effect/Schema";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { HeroBetMemberPicker } from "@/components/events/hero-bet-member-picker";
 import { HeroCardsGrid } from "@/components/events/hero-cards-grid";
@@ -25,15 +25,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { createBetAtom, latestBetForCopyAtom } from "@/lib/bet-atoms";
 import { getEventIcon } from "@/lib/constants";
+import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import {
+  effectSchemaValidator,
+  formErrorMessage,
+} from "@/lib/effect-schema-validator";
 import { getErrorMessage } from "@/lib/errors";
-import { invalidateBetLedgerQueries } from "@/lib/query-invalidation";
+import { eventsAtom } from "@/lib/event-atoms";
+import { heroesAtom } from "@/lib/hero-atoms";
 import { isAdmin } from "@/lib/route-helpers";
+import { verifiedUsersAtom } from "@/lib/user-atoms";
 import type { AuthSession } from "@/types/route";
-import { betApi } from "@/utils/bet-api";
-import { eventsApi } from "@/utils/events-api";
-import { heroesApi } from "@/utils/heroes-api";
-import { userApi } from "@/utils/user-api";
 
 interface AddBetForm {
   eventId: string;
@@ -83,14 +87,14 @@ const HeroSelection = ({
   );
 };
 
-const addBetFormSchema = z.object({
-  eventId: z.string().min(1, "Wybierz event"),
-  heroId: z.string().min(1, "Wybierz herosa"),
-  userIds: z.array(z.string()).min(1, "Wybierz przynajmniej jednego gracza"),
+const addBetFormSchema = Schema.Struct({
+  eventId: Schema.NonEmptyString,
+  heroId: Schema.NonEmptyString,
+  userIds: Schema.NonEmptyArray(Schema.String),
 });
 
 // Form API shape passed to the presentational component. The `onSubmit`
-// slot mirrors the exact zod schema validator used at the call site so the
+// slot mirrors the exact Effect Schema validator used at the call site so the
 // inferred form (whose TOnSubmit is that schema) stays assignable. The
 // AddBetForm data shape keeps `form.Field`/`form.Subscribe` fully typed.
 type AnyFormForBets = ReactFormExtendedApi<
@@ -100,7 +104,7 @@ type AnyFormForBets = ReactFormExtendedApi<
   FormAsyncValidateOrFn<AddBetForm> | undefined,
   FormValidateOrFn<AddBetForm> | undefined,
   FormAsyncValidateOrFn<AddBetForm> | undefined,
-  typeof addBetFormSchema,
+  ReturnType<typeof effectSchemaValidator>,
   FormAsyncValidateOrFn<AddBetForm> | undefined,
   FormValidateOrFn<AddBetForm> | undefined,
   FormAsyncValidateOrFn<AddBetForm> | undefined,
@@ -263,8 +267,11 @@ const BetsAddForm = ({
               selectedEventId={selectedEventId}
             />
             {field.state.meta.errors.map((error) => (
-              <p className="text-destructive text-sm" key={error?.message}>
-                {error?.message}
+              <p
+                className="text-destructive text-sm"
+                key={formErrorMessage(error)}
+              >
+                {formErrorMessage(error)}
               </p>
             ))}
           </div>
@@ -290,8 +297,11 @@ const BetsAddForm = ({
               variant="add"
             />
             {field.state.meta.errors.map((error) => (
-              <p className="text-destructive text-sm" key={error?.message}>
-                {error?.message}
+              <p
+                className="text-destructive text-sm"
+                key={formErrorMessage(error)}
+              >
+                {formErrorMessage(error)}
               </p>
             ))}
           </div>
@@ -313,32 +323,32 @@ interface BetsAddPageProps {
 
 export const BetsAddPage = ({ session }: BetsAddPageProps) => {
   const [selectedEventId, setSelectedEventId] = useState("");
-  const queryClient = useQueryClient();
+  const createBet = useAtomSet(createBetAtom, { mode: "promise" });
   const isAdminUser = isAdmin(session);
 
-  const { data: events, isPending: eventsLoading } = useQuery({
-    enabled: isAdminUser,
-    queryFn: eventsApi.list,
-    queryKey: eventsApi.queryKey,
-  });
+  const eventsResult = useAtomValue(eventsAtom);
+  const events = isAdminUser ? [...resultValueOr(eventsResult, [])] : undefined;
+  const eventsLoading = isAdminUser && resultIsLoading(eventsResult);
 
-  const { data: heroes, isPending: heroesLoading } = useQuery({
-    enabled: isAdminUser,
-    queryFn: heroesApi.list,
-    queryKey: heroesApi.queryKey,
-  });
+  const heroesResult = useAtomValue(heroesAtom);
+  const heroes = isAdminUser ? resultValueOr(heroesResult, []) : undefined;
+  const heroesLoading = isAdminUser && resultIsLoading(heroesResult);
 
-  const { data: verifiedUsers, isPending: usersLoading } = useQuery({
-    enabled: isAdminUser,
-    queryFn: userApi.getVerified,
-    queryKey: userApi.getVerifiedQueryKey,
-  });
+  const verifiedUsersResult = useAtomValue(verifiedUsersAtom);
+  const verifiedUsers = isAdminUser
+    ? [...resultValueOr(verifiedUsersResult, [])]
+    : undefined;
+  const usersLoading = isAdminUser && resultIsLoading(verifiedUsersResult);
 
-  const { data: latestBet, isPending: latestBetLoading } = useQuery({
-    enabled: isAdminUser,
-    queryFn: betApi.getLatestForCopy,
-    queryKey: betApi.latestForCopyQueryKey,
-  });
+  const latestBetResult = useAtomValue(latestBetForCopyAtom);
+  const latestBetRaw = isAdminUser
+    ? resultValueOr(latestBetResult, null)
+    : null;
+  const latestBet =
+    latestBetRaw === null
+      ? null
+      : { ...latestBetRaw, members: [...latestBetRaw.members] };
+  const latestBetLoading = isAdminUser && resultIsLoading(latestBetResult);
 
   const form = useForm({
     defaultValues: {
@@ -359,20 +369,19 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
           return;
         }
 
-        await betApi.create({
+        await createBet({
           heroId: Number.parseInt(value.heroId, 10),
-          userIds: value.userIds,
+          userIds: value.userIds as [string, ...string[]],
         });
 
         toast.success("Obstawienie dodano pomyślnie");
-        await invalidateBetLedgerQueries(queryClient);
         form.setFieldValue("userIds", []);
       } catch (error) {
         toast.error(getErrorMessage(error));
       }
     },
     validators: {
-      onSubmit: addBetFormSchema,
+      onSubmit: effectSchemaValidator(addBetFormSchema),
     },
   });
 
