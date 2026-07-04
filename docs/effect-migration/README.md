@@ -118,6 +118,7 @@ HTTP/RPC handlers should consume these services from the provided runtime/layers
 - `steps/07-implementation-sequence.md` — accepted initial implementation sequence.
 - `steps/08-module-layout.md` — accepted first structural split layout.
 - `steps/09-transaction-strategy.md` — accepted adapter-owned transaction strategy.
+- `steps/10-phase-6-effect-cleanup.md` — Phase 5 validation findings and Phase 6 cleanup work packages.
 
 ## Planning rule
 

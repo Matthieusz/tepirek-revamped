@@ -6,7 +6,7 @@ PR: https://github.com/Matthieusz/tepirek-revamped/pull/24
 
 ## Strategy
 
-A long-running draft PR tracks the migration across sessions. The PR body holds the phased roadmap (Phase 1–5) and acceptance criteria; this file records only the tracking strategy and draft policy. Creating branches, commits, pushes, or GitHub PRs is externally visible and should only happen after an explicit action request.
+A long-running draft PR tracks the migration across sessions. The PR body holds the phased roadmap and acceptance criteria. Phase 6 cleanup is drafted locally in `steps/10-phase-6-effect-cleanup.md` until the PR body is updated. This file records only the tracking strategy and draft policy. Creating branches, commits, pushes, or GitHub PRs is externally visible and should only happen after an explicit action request.
 
 ## Branch
 
@@ -35,6 +35,7 @@ Keep the PR as Draft until at least:
 
 - the squad-builder Effect `HttpApi` reference slice is green (Phase 2);
 - the frontend Effect Atom migration for squad-builder is green (Phase 5);
+- the Phase 6 cleanup plan is complete enough that the web app is type-green, placeholder atoms are gone, and Observability is real;
 - frontend type inference and OpenAPI generation compatibility have been verified (Effect `OpenApi.fromApi`).
 
 ## Splitting policy

@@ -2,7 +2,9 @@
 
 Status: superseded by the PR 24 roadmap.
 
-The review-driven next steps are now tracked as phased tasks in the PR 24 body: https://github.com/Matthieusz/tepirek-revamped/pull/24
+The review-driven next steps are tracked as phased tasks in the PR 24 body: https://github.com/Matthieusz/tepirek-revamped/pull/24
+
+Phase 5 was revalidated locally on 2026-07-04. The follow-up cleanup plan is in `steps/10-phase-6-effect-cleanup.md` and should be copied into the PR body after approval for an externally visible PR update.
 
 ## Resolution mapping
 

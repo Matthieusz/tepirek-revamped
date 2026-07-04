@@ -19,6 +19,7 @@ Status: draft; accepted as the go/no-go checklist before implementation starts.
 - [x] `steps/07-implementation-sequence.md` — implementation sequence.
 - [x] `steps/08-module-layout.md` — module layout.
 - [x] `steps/09-transaction-strategy.md` — transaction strategy.
+- [x] `steps/10-phase-6-effect-cleanup.md` — Phase 5 validation and cleanup plan.
 
 ### 3. Open risks are explicit
 
