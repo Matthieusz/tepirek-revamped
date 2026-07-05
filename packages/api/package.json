@@ -18,7 +18,6 @@
     "@tepirek-revamped/auth": "workspace:*",
     "@tepirek-revamped/config": "workspace:*",
     "@tepirek-revamped/db": "workspace:*",
-    "better-result": "^2.9.2",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
     "evlog": "^2.19.2",

@@ -266,9 +266,6 @@ importers:
       '@tepirek-revamped/db':
         specifier: workspace:*
         version: link:../db
-      better-result:
-        specifier: ^2.9.2
-        version: 2.9.2
       drizzle-orm:
         specifier: 'catalog:'
         version: 1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.85(effect@4.0.0-beta.85))(@types/pg@8.20.0)(bun-types@1.3.14)(effect@4.0.0-beta.85)(pg@8.22.0)(zod@4.4.3)
@@ -2312,9 +2309,6 @@ packages:
     peerDependenciesMeta:
       zod:
         optional: true
-
-  better-result@2.9.2:
-    resolution: {integrity: sha512-WIFoBPCdnTOdk9inkE1ZRvCZ4P0CpSkAiLlchC65N7n9DcjZ3NhqkBOlafzpOVnO8ixyi37kicmSJ3ENhPZl7Q==}
 
   birpc@4.0.0:
     resolution: {integrity: sha512-LShSxJP0KTmd101b6DRyGBj57LZxSDYWKitQNW/mi8GRMvZb078Uf9+pveax1DrVL89vm7mWe+TovdI/UDOuPw==}
@@ -5595,8 +5589,6 @@ snapshots:
       set-cookie-parser: 3.1.0
     optionalDependencies:
       zod: 4.4.3
-
-  better-result@2.9.2: {}
 
   birpc@4.0.0: {}
 
