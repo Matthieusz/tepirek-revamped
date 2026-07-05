@@ -4,11 +4,6 @@ import type {
   SquadEditorInviteTargetSchema,
   SquadGroupEditorGrantSummarySchema,
 } from "@tepirek-revamped/api/modules/squad-builder/schema/squad-group-sharing";
-import type {
-  SaveSharedSquadGroupCharactersPayload,
-  SaveSquadGroupPayload,
-  SetSquadGroupVisibilityPayload,
-} from "@tepirek-revamped/api/modules/squad-builder/schema/squad-groups";
 import {
   ArrowLeft,
   ChevronDown,
@@ -86,10 +81,37 @@ interface DraftSquad {
 
 type SquadEditorInviteTarget = typeof SquadEditorInviteTargetSchema.Type;
 type SquadGroupEditorGrant = typeof SquadGroupEditorGrantSummarySchema.Type;
-type SaveSquadGroupInput = typeof SaveSquadGroupPayload.Type;
-type SaveSharedSquadGroupCharactersInput =
-  typeof SaveSharedSquadGroupCharactersPayload.Type;
-type SetSquadGroupVisibilityInput = typeof SetSquadGroupVisibilityPayload.Type;
+interface SaveSquadGroupInput {
+  readonly actorUserId: string;
+  readonly groupId: number;
+  readonly name: string;
+  readonly squads: readonly {
+    readonly characters: readonly {
+      readonly characterId: number;
+      readonly position: number;
+    }[];
+    readonly clientKey: string;
+    readonly name: string;
+    readonly position: number;
+    readonly squadId?: number;
+  }[];
+}
+interface SaveSharedSquadGroupCharactersInput {
+  readonly actorUserId: string;
+  readonly groupId: number;
+  readonly squads: readonly {
+    readonly characters: readonly {
+      readonly characterId: number;
+      readonly position: number;
+    }[];
+    readonly squadId: number;
+  }[];
+}
+interface SetSquadGroupVisibilityInput {
+  readonly actorUserId: string;
+  readonly groupId: number;
+  readonly visibility: "private" | "global";
+}
 
 const makeClientKey = (): string => crypto.randomUUID();
 
