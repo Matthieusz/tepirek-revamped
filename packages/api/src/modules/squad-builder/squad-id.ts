@@ -1,9 +1,13 @@
-import { fail, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
-import { isPositiveInteger } from "./prelude.js";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
+
+import { PositiveInt } from "./positive-int.js";
 
 /** A persisted squad id. */
-export type SquadId = number & { readonly __brand: "SquadId" };
+export const SquadId = PositiveInt.pipe(Schema.brand("SquadId")).annotate({
+  identifier: "SquadId",
+});
+export type SquadId = typeof SquadId.Type;
 
 /** Expected failure when a squad id is invalid. */
 export interface InvalidSquadId {
@@ -11,13 +15,12 @@ export interface InvalidSquadId {
 }
 
 /** Parse a positive integer as a squad id. */
-export const parseSquadId = (
+export const parseSquadId = Effect.fn("SquadId.parse")(function* parseSquadId(
   input: number
-): Outcome<SquadId, InvalidSquadId> => {
-  if (!isPositiveInteger(input)) {
-    return fail({ _tag: "InvalidSquadId" });
-  }
-
-  // SAFETY: isPositiveInteger established the SquadId invariant.
-  return success(input as SquadId);
-};
+) {
+  return yield* Schema.decodeUnknownEffect(SquadId)(input).pipe(
+    Effect.catchTag("SchemaError", () =>
+      Effect.fail({ _tag: "InvalidSquadId" } as const)
+    )
+  );
+});

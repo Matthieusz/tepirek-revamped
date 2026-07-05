@@ -1227,17 +1227,17 @@ const getSquadGroupDetailWithDatabase =
       const squads = [];
 
       for (const row of squadRows) {
-        const squadId = parseSquadId(row.id);
-
-        if (isFailure(squadId)) {
-          return yield* failPersistence(operation, squadId.error);
-        }
+        const squadId = yield* parseSquadId(row.id).pipe(
+          Effect.catchTag("InvalidSquadId", (error) =>
+            failPersistence(operation, error)
+          )
+        );
 
         squads.push({
           characters: charactersBySquadId.get(row.id) ?? [],
           name: row.name,
           position: row.position,
-          squadId: squadId.value,
+          squadId,
         });
       }
 
