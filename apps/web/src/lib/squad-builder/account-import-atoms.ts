@@ -4,7 +4,6 @@ import type {
   PreviewMargonemProfileImportPayload,
   PreviewOwnedAccountImportsPayload,
 } from "@tepirek-revamped/api/modules/squad-builder/schema/account-import";
-import type { ActorPayload } from "@tepirek-revamped/api/modules/squad-builder/schema/common";
 import { Effect } from "effect";
 
 import {
@@ -14,7 +13,9 @@ import {
 } from "@/lib/http-api-client-runtime";
 import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
 
-type ActorInput = typeof ActorPayload.Type;
+interface ActorInput {
+  readonly actorUserId: string;
+}
 type ConfirmOwnedAccountImportInput =
   typeof ConfirmOwnedAccountImportPayload.Type;
 type PreviewMargonemProfileImportInput =

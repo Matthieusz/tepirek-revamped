@@ -6,7 +6,6 @@ import type {
   SearchAccountInviteTargetsPayload,
   SendAccountAccessInvitePayload,
 } from "@tepirek-revamped/api/modules/squad-builder/schema/account-sharing";
-import type { ActorPayload } from "@tepirek-revamped/api/modules/squad-builder/schema/common";
 import { Effect } from "effect";
 
 import {
@@ -17,7 +16,9 @@ import {
 import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
 
 type AccountAccessGrantsInput = typeof AccountAccessGrantsPayload.Type;
-type ActorInput = typeof ActorPayload.Type;
+interface ActorInput {
+  readonly actorUserId: string;
+}
 type RespondToAccountAccessInviteInput =
   typeof RespondToAccountAccessInvitePayload.Type;
 type RevokeAccountAccessInput = typeof RevokeAccountAccessPayload.Type;

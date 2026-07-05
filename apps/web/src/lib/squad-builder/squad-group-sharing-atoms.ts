@@ -1,5 +1,4 @@
 import { Atom } from "@effect-atom/atom-react";
-import type { ActorPayload } from "@tepirek-revamped/api/modules/squad-builder/schema/common";
 import type {
   RespondToSquadGroupInvitePayload,
   RevokeSquadGroupEditorPayload,
@@ -16,7 +15,9 @@ import {
 } from "@/lib/http-api-client-runtime";
 import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
 
-type ActorInput = typeof ActorPayload.Type;
+interface ActorInput {
+  readonly actorUserId: string;
+}
 type RespondToSquadGroupInviteInput =
   typeof RespondToSquadGroupInvitePayload.Type;
 type RevokeSquadGroupEditorInput = typeof RevokeSquadGroupEditorPayload.Type;
