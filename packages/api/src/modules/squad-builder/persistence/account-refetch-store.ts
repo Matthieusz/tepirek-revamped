@@ -271,27 +271,21 @@ const getAccountForRefetchWithDatabase =
         return yield* failPersistence(operation, displayName.error);
       }
 
-      const profileId = parseMargonemProfileId(account.profileId);
-
-      if (isFailure(profileId)) {
-        return yield* failPersistence(operation, profileId.error);
-      }
+      const profileId = yield* parseMargonemProfileId(account.profileId).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
 
       const currentCharacters: RefetchableMargonemAccount["currentCharacters"][number][] =
         [];
 
       for (const row of characterRows) {
-        const margonemCharacterId = parseMargonemCharacterId(row.characterId);
+        const margonemCharacterId = yield* parseMargonemCharacterId(
+          row.characterId
+        ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
-        if (isFailure(margonemCharacterId)) {
-          return yield* failPersistence(operation, margonemCharacterId.error);
-        }
-
-        const level = parsePositiveLevel(row.level);
-
-        if (isFailure(level)) {
-          return yield* failPersistence(operation, level.error);
-        }
+        const level = yield* parsePositiveLevel(row.level).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
         const profession = parseMargonemProfession(row.profession);
 
@@ -309,8 +303,8 @@ const getAccountForRefetchWithDatabase =
           affectedSquadCount: row.affectedSquadCount ?? 0,
           avatarUrl: row.avatarUrl,
           databaseCharacterId: row.id,
-          level: level.value,
-          margonemCharacterId: margonemCharacterId.value,
+          level,
+          margonemCharacterId,
           name: row.name,
           profession: profession.value,
           world: world.value,
@@ -321,7 +315,7 @@ const getAccountForRefetchWithDatabase =
         accountId,
         currentCharacters,
         displayName: displayName.value,
-        profileId: profileId.value,
+        profileId,
       };
     });
 
@@ -385,15 +379,11 @@ const createPendingRefetchWithDatabase =
             yield* persistenceQueryUnsafe(characterInsert);
           }
 
-          const pendingRefetchId = parsePendingMargonemAccountRefetchId(
+          const pendingRefetchId = yield* parsePendingMargonemAccountRefetchId(
             preview.id
-          );
+          ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
-          if (isFailure(pendingRefetchId)) {
-            return yield* failPersistence(operation, pendingRefetchId.error);
-          }
-
-          return { id: pendingRefetchId.value };
+          return { id: pendingRefetchId };
         })
       );
 
@@ -471,17 +461,13 @@ const findPendingRefetchForApplyWithDatabase =
       const latestCharacters = [];
 
       for (const row of characterRows) {
-        const characterId = parseMargonemCharacterId(row.characterId);
+        const characterId = yield* parseMargonemCharacterId(
+          row.characterId
+        ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
-        if (isFailure(characterId)) {
-          return yield* failPersistence(operation, characterId.error);
-        }
-
-        const level = parsePositiveLevel(row.level);
-
-        if (isFailure(level)) {
-          return yield* failPersistence(operation, level.error);
-        }
+        const level = yield* parsePositiveLevel(row.level).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
         const profession = parseMargonemProfession(row.profession);
 
@@ -497,37 +483,33 @@ const findPendingRefetchForApplyWithDatabase =
 
         latestCharacters.push({
           avatarUrl: row.avatarUrl,
-          characterId: characterId.value,
-          level: level.value,
+          characterId,
+          level,
           name: row.name,
           profession: profession.value,
           world: world.value,
         });
       }
 
-      const accountId = parseMargonemAccountId(preview.accountId);
-
-      if (isFailure(accountId)) {
-        return yield* failPersistence(operation, accountId.error);
-      }
+      const accountId = yield* parseMargonemAccountId(preview.accountId).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
 
       const persistedActorUserId = yield* parsePersistedAppUserId(
         operation,
         preview.actorUserId
       );
-      const profileId = parseMargonemProfileId(preview.profileId);
-
-      if (isFailure(profileId)) {
-        return yield* failPersistence(operation, profileId.error);
-      }
+      const profileId = yield* parseMargonemProfileId(preview.profileId).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
 
       return {
-        accountId: accountId.value,
+        accountId,
         actorUserId: persistedActorUserId,
         fetchedAt: preview.fetchedAt,
         id: refetchPreviewId,
         latestCharacters,
-        profileId: profileId.value,
+        profileId,
       };
     });
 

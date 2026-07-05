@@ -92,22 +92,17 @@ export const persistenceQueryUnsafe = <A>(
   self: Effect.Effect<A, unknown, unknown>
 ): Effect.Effect<A, unknown, never> => self as Effect.Effect<A, unknown, never>;
 
+// oxlint-disable promise/prefer-await-to-callbacks
 export const parsePersistedAppUserId = (
   operation: EffectSquadGroupPersistenceOperation,
   value: string
-): Effect.Effect<
-  AppUserId,
-  EffectSquadBuilderPersistenceUnavailable,
-  never
-> => {
-  const userId = parseAppUserId(value);
-
-  if (isFailure(userId)) {
-    return failPersistence(operation, userId.error);
-  }
-
-  return Effect.succeed(userId.value);
-};
+): Effect.Effect<AppUserId, EffectSquadBuilderPersistenceUnavailable, never> =>
+  parseAppUserId(value).pipe(
+    Effect.catchTag("InvalidAppUserId", (error) =>
+      failPersistence(operation, error)
+    )
+  );
+// oxlint-enable promise/prefer-await-to-callbacks
 
 export const namedStoreMethod = <Input, A, E, R>(
   name: string,

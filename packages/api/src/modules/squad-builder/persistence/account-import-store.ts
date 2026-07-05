@@ -383,17 +383,13 @@ const findPendingImportForConfirmationWithDatabase =
       const jarunaCharacters = [];
 
       for (const row of characterRows) {
-        const characterId = parseMargonemCharacterId(row.characterId);
+        const characterId = yield* parseMargonemCharacterId(
+          row.characterId
+        ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
-        if (isFailure(characterId)) {
-          return yield* failPersistence(operation, characterId.error);
-        }
-
-        const level = parsePositiveLevel(row.level);
-
-        if (isFailure(level)) {
-          return yield* failPersistence(operation, level.error);
-        }
+        const level = yield* parsePositiveLevel(row.level).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
         const profession = parseMargonemProfession(row.profession);
 
@@ -409,26 +405,24 @@ const findPendingImportForConfirmationWithDatabase =
 
         jarunaCharacters.push({
           avatarUrl: row.avatarUrl,
-          characterId: characterId.value,
-          level: level.value,
+          characterId,
+          level,
           name: row.name,
           profession: profession.value,
           world: world.value,
         });
       }
 
-      const profileId = parseMargonemProfileId(preview.profileId);
-
-      if (isFailure(profileId)) {
-        return yield* failPersistence(operation, profileId.error);
-      }
+      const profileId = yield* parseMargonemProfileId(preview.profileId).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
 
       return {
         actorUserId,
         fetchedAt: preview.fetchedAt,
         id: pendingImportId,
         jarunaCharacters,
-        profileId: profileId.value,
+        profileId,
       };
     });
 
@@ -582,19 +576,17 @@ const listOwnedAccountsWithDatabase =
           return yield* failPersistence(operation, displayName.error);
         }
 
-        const profileId = parseMargonemProfileId(row.profileId);
-
-        if (isFailure(profileId)) {
-          return yield* failPersistence(operation, profileId.error);
-        }
+        const profileId = yield* parseMargonemProfileId(row.profileId).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
         accounts.push({
           accountId: row.accountId,
           characterCount: row.characterCount ?? 0,
           displayName: displayName.value,
-          generatedProfileUrl: toMargonemProfileUrl(profileId.value),
+          generatedProfileUrl: toMargonemProfileUrl(profileId),
           lastFetchedAt: row.lastFetchedAt ?? row.createdAt,
-          profileId: profileId.value,
+          profileId,
         });
       }
 
