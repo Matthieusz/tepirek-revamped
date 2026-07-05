@@ -7,7 +7,6 @@ import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { parseMargonemProfileId } from "../margonem-profile-id.js";
-import { isSuccess } from "../outcome.js";
 import { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
 import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
@@ -16,55 +15,19 @@ import {
   use as accountSharingState,
 } from "./list-account-sharing-state-service.js";
 
-const parseTestUserId = (value: string) => {
-  const userId = parseAppUserId(value);
+const parseTestUserId = (value: string) =>
+  Effect.runSync(parseAppUserId(value));
 
-  if (!isSuccess(userId)) {
-    throw new Error("Expected test user id to be valid");
-  }
+const parseTestAccountId = () => Effect.runSync(parseMargonemAccountId(123));
 
-  return userId.value;
-};
+const parseTestAccessId = () =>
+  Effect.runSync(parseMargonemAccountAccessId(456));
 
-const parseTestAccountId = () => {
-  const accountId = parseMargonemAccountId(123);
+const parseTestDisplayName = () =>
+  Effect.runSync(parseAccountDisplayName("Effect shared account"));
 
-  if (!isSuccess(accountId)) {
-    throw new Error("Expected test account id to be valid");
-  }
-
-  return accountId.value;
-};
-
-const parseTestAccessId = () => {
-  const accessId = parseMargonemAccountAccessId(456);
-
-  if (!isSuccess(accessId)) {
-    throw new Error("Expected test access id to be valid");
-  }
-
-  return accessId.value;
-};
-
-const parseTestDisplayName = () => {
-  const displayName = parseAccountDisplayName("Effect shared account");
-
-  if (!isSuccess(displayName)) {
-    throw new Error("Expected test display name to be valid");
-  }
-
-  return displayName.value;
-};
-
-const parseTestProfileId = () => {
-  const profileId = parseMargonemProfileId(7_299_020);
-
-  if (!isSuccess(profileId)) {
-    throw new Error("Expected test profile id to be valid");
-  }
-
-  return profileId.value;
-};
+const parseTestProfileId = () =>
+  Effect.runSync(parseMargonemProfileId(7_299_020));
 
 it.effect("lists incoming account access invites for the actor", () => {
   const actorUserId = parseTestUserId("effect-account-invite-recipient");

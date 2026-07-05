@@ -1,5 +1,4 @@
-import { fail, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
+import * as Effect from "effect/Effect";
 
 /** A validated account display name shown to the user and stored. */
 export type AccountDisplayName = string & {
@@ -21,25 +20,25 @@ const accountDisplayNameRules = {
 /** Parse a user-facing account display name for storage. */
 export const parseAccountDisplayName = (
   input: string
-): Outcome<AccountDisplayName, InvalidAccountDisplayName> => {
+): Effect.Effect<AccountDisplayName, InvalidAccountDisplayName> => {
   const trimmed = accountDisplayNameRules.trim ? input.trim() : input;
 
   if (trimmed.length < accountDisplayNameRules.minLength) {
-    return fail({
+    return Effect.fail({
       _tag: "InvalidAccountDisplayName",
       message: "Nazwa konta nie może być pusta",
     });
   }
 
   if (trimmed.length > accountDisplayNameRules.maxLength) {
-    return fail({
+    return Effect.fail({
       _tag: "InvalidAccountDisplayName",
       message: `Nazwa konta może mieć maksymalnie ${accountDisplayNameRules.maxLength} znaków`,
     });
   }
 
   // SAFETY: trimmed non-empty length within maxLength established the invariant.
-  return success(trimmed as AccountDisplayName);
+  return Effect.succeed(trimmed as AccountDisplayName);
 };
 
 /** Convert an account display name to its primitive representation. */

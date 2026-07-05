@@ -1,11 +1,10 @@
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import type {
   MargonemCharacterId,
   PositiveLevel,
 } from "./margonem-profile-id.js";
-import { fail, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
 import { PositiveInt } from "./positive-int.js";
 
 /** The only Margonem world supported by squad builder v1. */
@@ -22,12 +21,12 @@ const knownWorlds: readonly MargonemWorld[] = ["jaruna"];
 /** Parse a persisted world string into the domain world type. */
 export const parseMargonemWorld = (
   value: string
-): Outcome<MargonemWorld, UnknownMargonemWorld> => {
+): Effect.Effect<MargonemWorld, UnknownMargonemWorld> => {
   if ((knownWorlds as readonly string[]).includes(value)) {
-    return success(value as MargonemWorld);
+    return Effect.succeed(value as MargonemWorld);
   }
 
-  return fail({ _tag: "UnknownMargonemWorld", value });
+  return Effect.fail({ _tag: "UnknownMargonemWorld", value });
 };
 
 /** Normalized Margonem profession. */
@@ -96,13 +95,16 @@ const cleanProfessionLabel = (label: string): string =>
 /** Normalize a Polish Margonem profession label into the app domain value. */
 export const parseMargonemProfession = (
   label: string
-): Outcome<MargonemProfession, UnknownMargonemProfession> => {
+): Effect.Effect<MargonemProfession, UnknownMargonemProfession> => {
   const cleanLabel = cleanProfessionLabel(label);
   const profession = professionLabels[cleanLabel];
 
   if (profession === undefined) {
-    return fail({ _tag: "UnknownMargonemProfession", label: cleanLabel });
+    return Effect.fail({
+      _tag: "UnknownMargonemProfession",
+      label: cleanLabel,
+    });
   }
 
-  return success(profession);
+  return Effect.succeed(profession);
 };

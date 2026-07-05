@@ -1,7 +1,5 @@
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-
-import { fail, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
 
 /** Lifecycle status of a `margonem_account_access` row. */
 export type AccountAccessStatus =
@@ -49,12 +47,12 @@ const isKnownStatus = (value: string): value is AccountAccessStatus =>
 /** Parse a persisted status string into the domain status. */
 export const parseAccountAccessStatus = (
   value: string
-): Outcome<AccountAccessStatus, InvalidAccountAccessStatus> => {
+): Effect.Effect<AccountAccessStatus, InvalidAccountAccessStatus> => {
   if (!isKnownStatus(value)) {
-    return fail({ _tag: "InvalidAccountAccessStatus", value });
+    return Effect.fail({ _tag: "InvalidAccountAccessStatus", value });
   }
 
-  return success(value);
+  return Effect.succeed(value);
 };
 
 /** Whether an access row may move from `from` to `to`. */

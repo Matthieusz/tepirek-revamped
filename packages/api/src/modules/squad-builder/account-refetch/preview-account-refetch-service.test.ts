@@ -7,20 +7,13 @@ import { FirecrawlClientService } from "../firecrawl-client-service.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
 import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import { FirecrawlConfigService } from "../firecrawl-config.js";
-import { isSuccess, success } from "../outcome.js";
+import { success } from "../outcome.js";
 import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import { preview } from "./preview-account-refetch-service.js";
 
-const parseTestUserId = () => {
-  const userId = parseAppUserId("effect-refetch-user");
-
-  if (!isSuccess(userId)) {
-    throw new Error("Expected test user id to be valid");
-  }
-
-  return userId.value;
-};
+const parseTestUserId = () =>
+  Effect.runSync(parseAppUserId("effect-refetch-user"));
 
 const htmlWithUpdatedJarunaCharacter = `
   <div class="profile-header__name"><span>informati</span></div>

@@ -4,7 +4,6 @@ import * as Layer from "effect/Layer";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
-import { isSuccess } from "../outcome.js";
 import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
@@ -12,25 +11,10 @@ import {
   use as accountInviteTargets,
 } from "./search-account-invite-targets-service.js";
 
-const parseTestUserId = (value: string) => {
-  const userId = parseAppUserId(value);
+const parseTestUserId = (value: string) =>
+  Effect.runSync(parseAppUserId(value));
 
-  if (!isSuccess(userId)) {
-    throw new Error("Expected test user id to be valid");
-  }
-
-  return userId.value;
-};
-
-const parseTestAccountId = () => {
-  const accountId = parseMargonemAccountId(123);
-
-  if (!isSuccess(accountId)) {
-    throw new Error("Expected test account id to be valid");
-  }
-
-  return accountId.value;
-};
+const parseTestAccountId = () => Effect.runSync(parseMargonemAccountId(123));
 
 it.effect("searches invite targets for an account owner", () => {
   const actorUserId = parseTestUserId("effect-account-search-owner");

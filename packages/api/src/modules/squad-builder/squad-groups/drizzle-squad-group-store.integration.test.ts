@@ -13,6 +13,7 @@ import {
   squadGroupInvitation,
 } from "@tepirek-revamped/db/schema/squad-builder";
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vitest";
 
 import { makeApiSquadBuilderLayer } from "../../../effect-app.js";
@@ -52,45 +53,17 @@ import { set as setSquadGroupVisibility } from "./set-squad-group-visibility.js"
 
 const apiTestLayer = makeApiSquadBuilderLayer(defaultTestDatabaseUrl);
 
-const parseTestUserId = (value: string) => {
-  const userId = parseAppUserId(value);
+const parseTestUserId = (value: string) =>
+  Effect.runSync(parseAppUserId(value));
 
-  if (!isSuccess(userId)) {
-    throw new Error("Expected test user id to be valid");
-  }
+const parseTestAccountId = (value: number) =>
+  Effect.runSync(parseMargonemAccountId(value));
 
-  return userId.value;
-};
+const parseTestProfileId = (value: number) =>
+  Effect.runSync(parseMargonemProfileId(value));
 
-const parseTestAccountId = (value: number) => {
-  const accountId = parseMargonemAccountId(value);
-
-  if (!isSuccess(accountId)) {
-    throw new Error("Expected test account id to be valid");
-  }
-
-  return accountId.value;
-};
-
-const parseTestProfileId = (value: number) => {
-  const profileId = parseMargonemProfileId(value);
-
-  if (!isSuccess(profileId)) {
-    throw new Error("Expected test profile id to be valid");
-  }
-
-  return profileId.value;
-};
-
-const parseTestCredits = (value: number) => {
-  const credits = parseFirecrawlCreditCount(value);
-
-  if (!isSuccess(credits)) {
-    throw new Error("Expected test Firecrawl credits to be valid");
-  }
-
-  return credits.value;
-};
+const parseTestCredits = (value: number) =>
+  Effect.runSync(parseFirecrawlCreditCount(value));
 
 describe("DrizzleSquadGroupStoreService integration", () => {
   it("creates a private squad group for the actor", async () => {

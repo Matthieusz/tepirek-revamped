@@ -3,7 +3,6 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import { parseAppUserId } from "../app-user-id.js";
-import { isSuccess } from "../outcome.js";
 import { parseSquadGroupId } from "../squad-group-id.js";
 import {
   layer as squadEditorInviteTargetsLayer,
@@ -12,25 +11,10 @@ import {
 import { SquadGroupStoreService } from "./squad-group-store.js";
 import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-support.js";
 
-const parseTestUserId = (value: string) => {
-  const userId = parseAppUserId(value);
+const parseTestUserId = (value: string) =>
+  Effect.runSync(parseAppUserId(value));
 
-  if (!isSuccess(userId)) {
-    throw new Error("Expected test user id to be valid");
-  }
-
-  return userId.value;
-};
-
-const parseTestGroupId = () => {
-  const groupId = parseSquadGroupId(123);
-
-  if (!isSuccess(groupId)) {
-    throw new Error("Expected test group id to be valid");
-  }
-
-  return groupId.value;
-};
+const parseTestGroupId = () => Effect.runSync(parseSquadGroupId(123));
 
 it.effect("searches squad editor invite targets for a group owner", () => {
   const actorUserId = parseTestUserId("effect-squad-search-owner");

@@ -1,5 +1,4 @@
-import { fail, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
+import * as Effect from "effect/Effect";
 
 /** Global discovery visibility for a squad group. */
 export type SquadGroupVisibility = "private" | "global";
@@ -12,10 +11,10 @@ export interface InvalidSquadGroupVisibility {
 /** Parse a squad group visibility into the domain value. */
 export const parseSquadGroupVisibility = (
   input: string
-): Outcome<SquadGroupVisibility, InvalidSquadGroupVisibility> => {
+): Effect.Effect<SquadGroupVisibility, InvalidSquadGroupVisibility> => {
   if (input === "private" || input === "global") {
-    return success(input);
+    return Effect.succeed(input);
   }
 
-  return fail({ _tag: "InvalidSquadGroupVisibility" });
+  return Effect.fail({ _tag: "InvalidSquadGroupVisibility" });
 };

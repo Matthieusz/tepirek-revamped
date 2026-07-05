@@ -3,20 +3,12 @@ import * as Effect from "effect/Effect";
 import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
-import { isSuccess } from "../outcome.js";
 import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import { apply } from "./apply-account-refetch-service.js";
 
-const parseTestUserId = () => {
-  const userId = parseAppUserId("effect-apply-refetch-user");
-
-  if (!isSuccess(userId)) {
-    throw new Error("Expected test user id to be valid");
-  }
-
-  return userId.value;
-};
+const parseTestUserId = () =>
+  Effect.runSync(parseAppUserId("effect-apply-refetch-user"));
 
 const fixedNow = new Date("2026-06-29T12:00:00.000Z");
 

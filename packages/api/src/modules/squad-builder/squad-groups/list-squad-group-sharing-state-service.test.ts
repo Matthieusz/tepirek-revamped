@@ -3,7 +3,6 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import { parseAppUserId } from "../app-user-id.js";
-import { isSuccess } from "../outcome.js";
 import { parseSquadGroupId } from "../squad-group-id.js";
 import { parseSquadGroupInvitationId } from "../squad-group-invitation-id.js";
 import { emptySquadGroupListFilters } from "../squad-group-list-filters.js";
@@ -16,45 +15,16 @@ import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.j
 import { SquadGroupStoreService } from "./squad-group-store.js";
 import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-support.js";
 
-const parseTestUserId = (value: string) => {
-  const userId = parseAppUserId(value);
+const parseTestUserId = (value: string) =>
+  Effect.runSync(parseAppUserId(value));
 
-  if (!isSuccess(userId)) {
-    throw new Error("Expected test user id to be valid");
-  }
+const parseTestGroupId = () => Effect.runSync(parseSquadGroupId(123));
 
-  return userId.value;
-};
+const parseTestInvitationId = () =>
+  Effect.runSync(parseSquadGroupInvitationId(456));
 
-const parseTestGroupId = () => {
-  const groupId = parseSquadGroupId(123);
-
-  if (!isSuccess(groupId)) {
-    throw new Error("Expected test squad group id to be valid");
-  }
-
-  return groupId.value;
-};
-
-const parseTestInvitationId = () => {
-  const invitationId = parseSquadGroupInvitationId(456);
-
-  if (!isSuccess(invitationId)) {
-    throw new Error("Expected test squad group invitation id to be valid");
-  }
-
-  return invitationId.value;
-};
-
-const parseTestGroupName = () => {
-  const name = parseSquadGroupName("Effect shared group");
-
-  if (!isSuccess(name)) {
-    throw new Error("Expected test squad group name to be valid");
-  }
-
-  return name.value;
-};
+const parseTestGroupName = () =>
+  Effect.runSync(parseSquadGroupName("Effect shared group"));
 
 it.effect("lists incoming squad group invites for the actor", () => {
   const actorUserId = parseTestUserId("effect-squad-invite-recipient");

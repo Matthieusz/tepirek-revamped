@@ -1,7 +1,5 @@
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-
-import { fail, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
 
 /** Lifecycle status of a squad group editor invitation. */
 export type SquadGroupInvitationStatus =
@@ -43,12 +41,15 @@ const isKnownStatus = (value: string): value is SquadGroupInvitationStatus =>
 /** Parse a persisted status string into the domain status. */
 export const parseSquadGroupInvitationStatus = (
   value: string
-): Outcome<SquadGroupInvitationStatus, InvalidSquadGroupInvitationStatus> => {
+): Effect.Effect<
+  SquadGroupInvitationStatus,
+  InvalidSquadGroupInvitationStatus
+> => {
   if (!isKnownStatus(value)) {
-    return fail({ _tag: "InvalidSquadGroupInvitationStatus", value });
+    return Effect.fail({ _tag: "InvalidSquadGroupInvitationStatus", value });
   }
 
-  return success(value);
+  return Effect.succeed(value);
 };
 
 /** Whether an invitation row may move from `from` to `to`. */

@@ -6,7 +6,6 @@ import { TestClock } from "effect/testing";
 import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
-import { isSuccess } from "../outcome.js";
 import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
 import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
@@ -15,35 +14,13 @@ import {
   use as accountAccessRevocations,
 } from "./revoke-account-access-service.js";
 
-const parseTestUserId = (value: string) => {
-  const userId = parseAppUserId(value);
+const parseTestUserId = (value: string) =>
+  Effect.runSync(parseAppUserId(value));
 
-  if (!isSuccess(userId)) {
-    throw new Error("Expected test user id to be valid");
-  }
+const parseTestAccountId = () => Effect.runSync(parseMargonemAccountId(123));
 
-  return userId.value;
-};
-
-const parseTestAccountId = () => {
-  const accountId = parseMargonemAccountId(123);
-
-  if (!isSuccess(accountId)) {
-    throw new Error("Expected test account id to be valid");
-  }
-
-  return accountId.value;
-};
-
-const parseTestAccessId = () => {
-  const accessId = parseMargonemAccountAccessId(456);
-
-  if (!isSuccess(accessId)) {
-    throw new Error("Expected test access id to be valid");
-  }
-
-  return accessId.value;
-};
+const parseTestAccessId = () =>
+  Effect.runSync(parseMargonemAccountAccessId(456));
 
 const fixedClock = {
   now: () => new Date("2026-06-29T12:00:00.000Z"),

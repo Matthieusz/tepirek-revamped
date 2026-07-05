@@ -6,20 +6,13 @@ import { parseAppUserId } from "../app-user-id.js";
 import { FirecrawlClientService } from "../firecrawl-client-service.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
 import { FirecrawlConfigService } from "../firecrawl-config.js";
-import { isSuccess, success } from "../outcome.js";
+import { success } from "../outcome.js";
 import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import { preview } from "./preview-owned-account-imports-service.js";
 
-const parseTestUserId = () => {
-  const userId = parseAppUserId("effect-batch-user");
-
-  if (!isSuccess(userId)) {
-    throw new Error("Expected test user id to be valid");
-  }
-
-  return userId.value;
-};
+const parseTestUserId = () =>
+  Effect.runSync(parseAppUserId("effect-batch-user"));
 
 const htmlWithJarunaCharacter = `
   <div class="profile-header__name"><span>informati</span></div>
