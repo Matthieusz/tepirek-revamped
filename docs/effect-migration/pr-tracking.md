@@ -8,6 +8,29 @@ PR: https://github.com/Matthieusz/tepirek-revamped/pull/24
 
 A long-running draft PR tracks the migration across sessions. The PR body holds the phased roadmap and acceptance criteria. Phase 6 cleanup is drafted locally in `steps/10-phase-6-effect-cleanup.md` until the PR body is updated. This file records only the tracking strategy and draft policy. Creating branches, commits, pushes, or GitHub PRs is externally visible and should only happen after an explicit action request.
 
+## Phase 6 PR-body update draft
+
+Use this concise block when updating PR 24:
+
+```md
+## Phase 6 — Effect cleanup
+
+Current status: `web`, `api`, and `server` type-check; direct oRPC/React Query source usage is gone; squad-builder placeholder atoms and missing CRUD/detail `HttpApi` endpoints have been replaced.
+
+Remaining cleanup before leaving Draft:
+
+1. Add final-handler integration tests for the six squad-builder endpoints used by the web app.
+2. Convert dependency-bearing squad-builder services from `Layer.succeed` wrappers to `Layer.effect` services that close over store/config/client dependencies.
+3. Reuse one `makeLiveDatabaseLayer(databaseUrl)` reference per app layer construction to avoid duplicate Effect Drizzle/Pg layers.
+4. Provide `Observability.layer` to the actual server `AppHttpApiLayer` before `HttpRouter.toWebHandler(...)`; complete OTLP resource metadata.
+5. Make squad-builder Effect Atom mutations refresh or optimistically update every visible affected list/detail/count atom.
+6. Keep schemas owned by domain/API slice files and let `http-api-contract.ts` compose them. Do not create a global schema dumping ground.
+7. Replace generic frontend Effect error rendering with tag-based domain mappers and one safe defect fallback.
+8. Treat remaining promise/AppError modules as legacy compatibility until each module is explicitly migrated end-to-end.
+
+Verification currently passing locally: `pnpm -F web check-types`, `pnpm -F @tepirek-revamped/api check-types`, `pnpm -F server check-types`, `pnpm -F @tepirek-revamped/api test`, `pnpm -F web test`, `pnpm check`.
+```
+
 ## Branch
 
 ```txt

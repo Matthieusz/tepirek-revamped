@@ -42,7 +42,7 @@ Built with TypeScript, end-to-end typesafety, and a monorepo setup that makes th
 
 ## 🏗️ What's under the hood
 
-This is a **Turborepo monorepo** with end-to-end typesafety. The frontend and backend share types through the `packages/api` layer, so there's no guessing about API contracts — change a type in one place and everything stays in sync.
+This is a **Turborepo monorepo** with end-to-end typesafety. The frontend and backend share Effect `HttpApi` contracts and schema-derived types through the `packages/api` layer, so there's no guessing about API contracts — change a schema in one place and everything stays in sync.
 
 ```
 tepirek-revamped/
@@ -51,7 +51,7 @@ tepirek-revamped/
 │   └── server/       # Backend (Hono + Bun, port 3000)
 │
 ├── packages/
-│   ├── api/          # Shared oRPC routers (end-to-end types)
+│   ├── api/          # Shared Effect HttpApi contracts, handlers, and services
 │   ├── auth/         # Better Auth config
 │   ├── db/           # Drizzle ORM + PostgreSQL schemas
 │   └── config/       # Shared TypeScript configs
@@ -61,15 +61,15 @@ tepirek-revamped/
 
 ### Tech choices
 
-| Layer        | What we use                | Why                                   |
-| ------------ | -------------------------- | ------------------------------------- |
-| **Frontend** | TanStack Start + React 19  | SSR, file-based routing, great DX     |
-| **Backend**  | Hono + Bun                 | Lightweight, fast, simple             |
-| **API**      | oRPC                       | End-to-end typesafety without codegen |
-| **Database** | PostgreSQL + Drizzle ORM   | Type-safe queries, no ORM bloat       |
-| **Auth**     | Better Auth                | Discord OAuth + email, zero fuss      |
-| **UI**       | shadcn/ui + Tailwind v4    | Accessible, customizable, no lock-in  |
-| **Linting**  | Ultracite (Oxlint + Oxfmt) | Fast, strict, zero-config             |
+| Layer        | What we use                | Why                                       |
+| ------------ | -------------------------- | ----------------------------------------- |
+| **Frontend** | TanStack Start + React 19  | SSR, file-based routing, great DX         |
+| **Backend**  | Hono + Bun                 | Lightweight, fast, simple                 |
+| **API**      | Effect HttpApi             | End-to-end typesafety from shared schemas |
+| **Database** | PostgreSQL + Drizzle ORM   | Type-safe queries, no ORM bloat           |
+| **Auth**     | Better Auth                | Discord OAuth + email, zero fuss          |
+| **UI**       | shadcn/ui + Tailwind v4    | Accessible, customizable, no lock-in      |
+| **Linting**  | Ultracite (Oxlint + Oxfmt) | Fast, strict, zero-config                 |
 
 ---
 

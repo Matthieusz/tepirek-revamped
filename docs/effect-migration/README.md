@@ -1,26 +1,30 @@
 # Effect v4 Backend Migration Plan
 
-Status: draft, multi-session planning artifact.
+Status: current migration notes plus archived planning artifacts.
 
-This folder tracks the planned migration of the backend toward Effect v4. The plan is intentionally split into small documented steps so work can span many sessions without losing decisions, open questions, or rationale.
+This folder tracks the backend migration toward Effect v4. The current target architecture is Effect `HttpApi` on the server, Effect-owned services/layers in `packages/api`, and Effect Atom runtime-backed frontend state. Older step documents are retained as historical planning notes only; they are not current implementation guidance when they conflict with this README or `steps/10-phase-6-effect-cleanup.md`.
+
+## Current Phase 6 status
+
+The branch is type-green for `web`, `api`, and `server`, and direct oRPC/React Query source usage is gone. Phase 6 is now an Effect cleanup phase, not a rescue phase: add missing squad-builder final-handler tests, close dependency-bearing services over layers, reuse database layers by identity, provide Observability to the actual server `HttpApi` handler, normalize schema ownership incrementally, and make Effect Atom mutation state coherent.
 
 ## Current known decisions
 
-- Migrate backend business/application code from `better-result` style `Result<T, E>` orchestration toward Effect v4 typed error channels.
-- Remove **oRPC** route-by-route in favor of Effect `HttpApi` contracts and handlers.
+- Migrate backend business/application code from `better-result` style `Result<T, E>` orchestration toward Effect v4 typed error channels where a responsibility is already Effect-owned.
+- Use Effect `HttpApi` contracts and handlers for API endpoints.
 - Keep **Hono** as the thin Bun-hosted HTTP shell for CORS, better-auth, request/auth seams, and mounting Effect `HttpApi` handlers.
-- Fully remove **TanStack React Query** from the frontend end state. Frontend server state should use `@effect-atom/atom-react` runtime-backed atoms over shared Effect `HttpApi` client services, with query atoms, `Result` state rendering, and `Atom.optimistic` / `Atom.optimisticFn` for optimistic mutations.
+- Frontend server state uses `@effect-atom/atom-react` runtime-backed atoms over shared Effect `HttpApi` client services, with query atoms, `Result` state rendering, and `Atom.optimistic` / `Atom.optimisticFn` for optimistic mutations.
 - Keep **evlog** at external auth/Hono seams during the migration; Effect-owned responsibilities should move toward Effect logging/tracing layers.
 - Use the project coding standards skill as the local style source of truth, especially `EFFECT.md`, `DOMAIN_MODELING.md`, and later `ERROR_HANDLING.md`, `OBSERVABILITY.md`, `BOUNDARIES_AND_PARSING.md`, `DESIGNING_MODULES.md`, `ASYNC_AND_WORKFLOWS.md`, and `TESTING_AND_VERIFICATION.md` when those concerns are planned in detail.
 - Use Effect Solutions documentation as external guidance for services/layers, tagged errors, and data modeling.
-- Target **Drizzle ORM `v1.0.0-rc.4`** as part of the migration path. Drizzle `v1.0.0-rc.1` introduced native Effect v4 support; `v1.0.0-rc.4` is the desired target version and includes Effect driver updates/fixes, additional Effect SQL driver support, and a required `effect` version bump to `4.0.0-beta.83`.
+- Drizzle ORM is on catalog `v1.0.0-rc.4`; Effect-related catalog packages are on `4.0.0-beta.85`. Re-check Effect Solutions/version-specific docs before applying newer examples.
 
 ## Current backend shape
 
-- `packages/api`: oRPC routers and domain/application modules.
+- `packages/api`: Effect `HttpApi` contracts/handlers and domain/application modules.
 - `packages/api/src/modules/squad-builder`: largest backend module and likely reference migration candidate.
-- `apps/server`: Bun + Hono edge that mounts better-auth, oRPC RPC, and oRPC OpenAPI handlers.
-- `apps/web`: TanStack Start frontend that consumes oRPC through `@orpc/tanstack-query`.
+- `apps/server`: Bun + Hono edge that mounts better-auth and Effect `HttpApi` handlers.
+- `apps/web`: TanStack Start frontend that consumes Effect `HttpApi` through Effect Atom runtime-backed atoms.
 
 ## Phase 2 Effect service module convention
 
@@ -88,7 +92,7 @@ export const layer = Layer.effect(
 );
 ```
 
-HTTP/RPC handlers should consume these services from the provided runtime/layers. They should not call `new SomeUseCase(...)` for services already migrated to this shape; construction belongs in layers and the server composition root.
+HTTP handlers should consume these services from the provided runtime/layers. They should not call `new SomeUseCase(...)` for services already migrated to this shape; construction belongs in layers and the server composition root.
 
 ## External references
 
@@ -108,17 +112,17 @@ HTTP/RPC handlers should consume these services from the provided runtime/layers
 - `open-questions.md` — grilling session questions, recommendations, and decisions.
 - `pr-tracking.md` — accepted long-running draft PR tracking strategy.
 - `pr-24-review-next-steps.md` — review-driven next steps for the current PR; runtime ownership is now moved to the server composition root.
-- `steps/00-foundation-and-decision-record.md` — initial decisions and setup work.
+- `steps/00-foundation-and-decision-record.md` — archived initial decisions and setup work; some boundary details are superseded by Effect `HttpApi`.
 - `steps/01-drizzle-effect-v4-upgrade.md` — Drizzle rc.4 and Effect dependency plan.
-- `steps/02-squad-builder-reference-migration.md` — reference module migration plan.
-- `steps/03-effect-schema-boundary-migration.md` — oRPC boundary schema migration plan.
+- `steps/02-squad-builder-reference-migration.md` — archived reference module migration plan; boundary details are superseded by Effect `HttpApi`.
+- `steps/03-effect-schema-boundary-migration.md` — archived schema-boundary migration notes; current boundary schemas are Effect `HttpApi`/Effect Schema.
 - `steps/04-observability-and-evlog.md` — evlog/Effect observability plan.
 - `steps/05-testing-strategy.md` — first-slice and later full-runtime testing plan.
-- `steps/06-error-model.md` — Effect tagged-error and oRPC mapping plan.
+- `steps/06-error-model.md` — archived Effect tagged-error mapping plan; current API mapping is Effect `HttpApi` typed errors.
 - `steps/07-implementation-sequence.md` — accepted initial implementation sequence.
 - `steps/08-module-layout.md` — accepted first structural split layout.
 - `steps/09-transaction-strategy.md` — accepted adapter-owned transaction strategy.
-- `steps/10-phase-6-effect-cleanup.md` — Phase 5 validation findings and Phase 6 cleanup work packages.
+- `steps/10-phase-6-effect-cleanup.md` — current Phase 6 Effect cleanup findings and small-agent work packages.
 
 ## Planning rule
 

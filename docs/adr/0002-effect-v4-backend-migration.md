@@ -1,6 +1,10 @@
 # Effect v4 backend migration
 
-We will migrate backend application and service code toward Effect v4 while preserving the existing oRPC/Hono HTTP edge during the initial migration.
+We will migrate backend application and service code toward Effect v4. The initial migration kept the previous RPC edge temporarily; the current target and user-facing guidance is Effect `HttpApi` mounted from the Hono server shell.
+
+## Status update
+
+This ADR records the original incremental migration decision. The transition has since moved past the temporary RPC bridge: current code should use Effect `HttpApi` contracts/handlers, Effect services/layers, and Effect Atom frontend state. Historical references below describe the starting point and first migration slice, not current implementation guidance. If the Decision section below says to keep oRPC or TanStack Query, read that as archived history superseded by `docs/effect-migration/README.md` and `docs/effect-migration/steps/10-phase-6-effect-cleanup.md`.
 
 ## Context
 

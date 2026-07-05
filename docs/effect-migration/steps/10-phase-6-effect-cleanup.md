@@ -1,79 +1,57 @@
 # Step 10 — Phase 6 Effect Cleanup
 
-Status: draft; created from PR 24 Phase 5 validation on 2026-07-04.
+Status: active cleanup plan; refreshed from local branch review on 2026-07-05.
 
-## Verdict
+## Review basis
 
-Phase 5 is still not complete. The migration made more real progress after the local file-structure cleanup, but the current branch is still not shippable because `apps/web` does not type-check and squad-builder CRUD/detail atoms are still placeholders.
+Checked against:
 
-Validated commands after local changes:
+- provided Effect Atom gist and optimistic-update demo;
+- `lucas-barake/effect-ai-chat-example` client runtime / atom patterns;
+- `ethanniser/effect-rpc-rx-example` service-backed reactive runtime pattern, adapted to `HttpApiClient` rather than RPC;
+- `anomalyco/opencode` observability split (`logging`, `otlp`, `shared`, top-level `Observability.layer`);
+- `effect-solutions` CLI guides: services/layers, data-modeling, error-handling, config, testing.
 
+Validated commands:
+
+- `pnpm -F web check-types` ✅
 - `pnpm -F @tepirek-revamped/api check-types` ✅
-- `pnpm -F @tepirek-revamped/api test` ✅ — 26 files / 67 tests
 - `pnpm -F server check-types` ✅
-- `pnpm -F web check-types` ❌
-  - `src/hooks/use-ranking-data.ts(44,23): Expected 2 arguments, but got 1.`
-  - `src/lib/effect-atom-result.ts(16,50): Expected 1 arguments, but got 0.`
-  - `src/pages/dashboard/events/history.tsx(77,20): Expected 2 arguments, but got 1.`
-  - `src/pages/dashboard/events/vault.tsx(48,31): Expected 2 arguments, but got 1.`
-  - `src/routes/index.tsx(11,27): Expected 2 arguments, but got 1.`
+- `pnpm -F @tepirek-revamped/api test` ✅ — 26 files / 67 tests
+- `pnpm -F web test` ✅ — 11 files / 98 tests
+- `pnpm check` ✅
 
-## Phase 5 completed
+## What is now done
 
-- `@effect-atom/atom-react` is installed in `apps/web`.
-- `apps/web/src/lib/http-api-client-runtime.ts` defines a browser `HttpApiClient` layer with `credentials: "include"` and exposes `Atom.runtime(...)` helpers.
-- Frontend source no longer imports oRPC or React Query.
-- `apps/web/package.json`, `apps/server/package.json`, and `packages/api/package.json` no longer declare direct `@orpc/*` or `@tanstack/react-query` dependencies.
-- Route groups now have web atoms under `apps/web/src/lib/*-atoms.ts`.
-- Squad-builder frontend atoms were split from the single `apps/web/src/lib/squad-builder-atoms.ts` file into sub-domain files under `apps/web/src/lib/squad-builder/`.
-- Squad-builder Effect Schemas were split from the monolithic contract into sub-domain files under `packages/api/src/modules/squad-builder/schema/`.
-- Several `effect-*` account-import/refetch/account-sharing service files were renamed to `*-service.ts` names.
-- The legacy `packages/api/src/routers/` folder has been deleted locally.
-- Several delete/toggle operations use `Atom.optimistic(...)` / `Atom.optimisticFn(...)`.
-- `packages/api/src/observability/*` exists and `packages/db/src/effect.ts` uses `PgDrizzle.EffectLogger.layer`.
+- `apps/web` type-checks.
+- `apps/web` source has no direct oRPC or React Query usage.
+- Direct `apps/web`, `apps/server`, and `packages/api` dependencies no longer include `@orpc/*` or `@tanstack/react-query`.
+- `apps/web/src/lib/http-api-client-runtime.ts` defines an Effect `HttpApiClient` service/layer and an Atom runtime with `credentials: "include"`.
+- Squad-builder frontend placeholder atoms were replaced with real `HttpApiClient` calls.
+- Squad-builder CRUD/detail `HttpApi` endpoints exist for owned accounts, group detail, available characters, save owner snapshot, save shared characters, and visibility.
+- Squad-builder schemas were split under `packages/api/src/modules/squad-builder/schema/`; `schema/squad-groups.ts` is no longer empty.
+- `packages/api/src/routers/` is gone from source.
+- Several list mutations refresh or optimistically update visible atoms.
+- Basic OTLP/logging/tracing modules exist under `packages/api/src/observability/`.
 
-## Phase 5 done wrong / incomplete
+## Ruthless findings
 
-1. **Web is not type-green.** Fix this before any broader cleanup.
-2. **Squad-builder frontend is still partially migrated.** The old single atom file was split, but placeholders remain:
-   - `ownedAccountsAtom` in `account-import-atoms.ts` returns `Effect.succeed([])`.
-   - `squadGroupDetailAtom` returns `Effect.succeed(undefined)`.
-   - `availableSquadCharactersAtom` returns `Effect.succeed([])`.
-   - `saveSquadGroupAtom`, `saveSharedSquadGroupCharactersAtom`, and `setSquadGroupVisibilityAtom` fail with raw `Error` values.
-3. **Backend `HttpApi` is missing squad-builder CRUD/detail endpoints that the frontend now needs.** Existing Effect service modules exist under `squad-groups/`, but the public contract only exposes account import/refetch/sharing and squad-group sharing.
-4. **Schema split is started but incomplete.** The new `schema/` folder is the right direction, but:
-   - `schema/squad-groups.ts` is an empty placeholder;
-   - web pages still define local API-shaped DTO/view interfaces for squad-builder detail/refetch/list shapes;
-   - `http-api-contract.ts` re-exports every schema submodule, which is convenient but risks keeping the contract as the de facto barrel/dumping ground.
+1. **The docs were lying.** Older migration files and root `README.md` still described oRPC/React Query as the current architecture. Keep historical notes clearly archived, but current guidance must say Effect `HttpApi` + Effect Atom.
+2. **Squad-builder endpoint coverage is not good enough.** The new endpoints exist, but `packages/api/src/http-api-routes.integration.test.ts` only exercises bet/ranking/vault through the final handler seam. The six squad-builder endpoints need caller-facing tests.
+3. **Schema ownership is improved, not settled.** Squad-builder has a good `schema/*` split. Other modules still define protocol schemas inside `http-api-contract.ts`. That is acceptable short term, but the target convention should be “schemas live in the owning domain/API slice, contract composes them”, not “everything in one global schema file”.
+4. **Some Effect services still hide dependency shape.** Files like `squad-groups/create-squad-group.ts` and `save-squad-group.ts` expose service methods via `Layer.succeed(...)`, while the method effects still require `SquadGroupStoreService`. Dependency-bearing services should acquire dependencies in `Layer.effect(...)` and return methods with dependencies closed over, matching Effect Solutions and the local README convention.
+5. **Layer construction duplicates database layers.** `makeApiLiveLayer(databaseUrl)` calls `makeLiveDatabaseLayer(databaseUrl)` repeatedly. Effect layer memoization is by layer object identity, so this can build separate pools/loggers instead of one shared database layer. Store the database layer once and provide that reference everywhere.
+6. **Observability is still not actually on the production `HttpApi` handler.** `makeRuntime(...)` provides `Observability.layer`, but `apps/server/src/index.ts` mounts `AppHttpApiLayer` with `makeApiLiveLayer(databaseUrl)` and `HttpServer.layerServices` only. Provide `Observability.layer` last to the actual `HttpRouter.toWebHandler(...)` layer.
+7. **OTLP resource metadata is incomplete.** `resource()` includes `service.instance.id` and `tepirek.run`, but not `deployment.environment.name`; document or add the env source. Keep built-in attributes authoritative when `OTEL_RESOURCE_ATTRIBUTES` conflicts.
+8. **Effect Atom construction is partly valid and partly wrong.** Not using `Atom.make` is not a problem by itself: `appHttpApiRuntime.atom(...)` is the runtime-backed equivalent for remote Effect resources and matches the service-backed runtime pattern in the references. The real problem is atom identity: parameterized resources like `rankingAtom(input)`, `vaultAtom(payload)`, `paginatedBetsAtom(input)`, `globalSquadGroupsAtom(payload)`, `accountInviteTargetsAtom(payload)`, and similar helpers create new atom objects from fresh object literals. They should be `Atom.family(...)` resources with stable primitive/Data keys.
+9. **Effect Atom cache behavior is inconsistent.** Some domains use `Atom.optimistic` / `Atom.optimisticFn`, some use `get.refresh`, and squad-builder sharing/account-sharing mutations often return server results without refreshing affected list/count atoms. Pick a simple per-domain pattern and make visible state correct.
+10. **Frontend error rendering is safer than before, but still too generic.** `getErrorMessage` maps many `_tag`s, but unknown `Error.message` is still surfaced. For Effect API failures prefer tag-based domain mappers plus one safe defect fallback.
+11. **`hero-bet-ledger.ts` is a legacy island and does not match the migrated codebase standard.** `packages/api/src/modules/hero-bet-ledger.ts` directly imports `db`, throws `AppError`, uses promise transactions, constructs time internally, returns raw query shapes, and is shared by bet/ranking/vault handlers through `Effect.tryPromise`. That is acceptable only as explicitly named legacy compatibility. If it is touched for migration, convert the whole ledger responsibility to an Effect service/layer with Effect database access, schema/tagged errors, row parsing, and final-handler tests.
+12. **Non-Effect backend usage remains by design, but must be named.** Several non-squad modules are `HttpApi` wrappers over promise-based legacy code (`AppError`, `Effect.tryPromise`, direct `db`). Do not rewrite all of it now. When a module becomes Effect-owned, move the whole responsibility to services/layers, typed errors, and Effect database access in that slice.
 
-   Define schemas once per bounded API/domain slice, not in one global dumping-ground file. Good target: `packages/api/src/modules/<domain>/<domain>-schema.ts` or `.../schema/*.ts`, consumed by contract, handlers, services, tests, and web. The contract should compose schemas; UI code should derive `typeof Schema.Type` or use named view projections from schema-derived DTOs.
+## File-structure verdict
 
-5. **File naming is improved but inconsistent.** Account import/refetch/sharing files now use `*-service.ts`, but squad-group sharing still has `effect-*` files and handlers still import them. Finish the rename or document why that sub-domain is intentionally delayed.
-6. **Handlers still instantiate Effect use-case classes.** `http-api-handlers.ts` constructs `new EffectPreview...()` and `new EffectConfirm...()`. That violates the target service/layer shape for migrated Effect responsibilities. Convert these to `Context.Service`/`Layer` modules like the account-sharing services.
-7. **Effect Atom usage is shallow.** Many mutation atoms only call the server and do not update or refresh the relevant resource atom. Use the referenced patterns: writable cache atom + `get.set(...)`, or `Atom.optimistic(...)` / `Atom.optimisticFn(...)` with explicit reducers. Do not leave stale lists after create/update/delete.
-8. **Typed errors are collapsed to generic strings.** UI should match known `Schema.TaggedErrorClass` tags and use safe defect fallback copy. Do not surface raw causes.
-9. **Observability is a stub.** `Otlp.loggers()` returns `[]`, `tracingLayer()` returns `Layer.empty`, and `apps/server/src/index.ts` provides `makeApiLiveLayer(databaseUrl)` to `AppHttpApiLayer` without providing `Observability.layer` last. Effect `HttpApi` request handling therefore does not get the intended logger/tracer layer.
-10. **Drizzle query logging is wired before the actual logging policy exists.** `PgDrizzle.EffectLogger.layer` is enabled, but there is no real OTLP/export/redaction policy yet and the `HttpApi` web handler is not under `Observability.layer`.
-11. **Legacy compatibility is mostly cleaned up but not finished.** `packages/api/src/routers/` is deleted locally, but `.github/copilot-instructions.md` still documents oRPC/React Query usage.
-
-## Phase 6 target
-
-Make the Effect migration boring and coherent:
-
-- web type-checks;
-- no placeholder atoms;
-- squad-builder CRUD/detail operations have real `HttpApi` endpoints;
-- schemas are defined once per domain/API slice and reused across backend + web;
-- Atom resources/mutations keep UI state correct without React Query cache ideas;
-- typed failures are rendered explicitly;
-- Observability is real and provided to the actual `HttpApi` web handler;
-- obsolete oRPC/router compatibility is removed.
-
-## File-structure review after local changes
-
-Current structure is improved but not final-clean.
-
-Good changes:
+Good current shape:
 
 ```txt
 apps/web/src/lib/squad-builder/
@@ -83,208 +61,234 @@ apps/web/src/lib/squad-builder/
   squad-group-atoms.ts
   squad-group-sharing-atoms.ts
 
-packages/api/src/modules/squad-builder/schema/
-  account-import.ts
-  account-refetch.ts
-  account-sharing.ts
-  common.ts
-  squad-group-sharing.ts
-  squad-groups.ts
+packages/api/src/modules/squad-builder/
+  http-api-contract.ts
+  http-api-handlers.ts
+  schema/
+    account-import.ts
+    account-refetch.ts
+    account-sharing.ts
+    common.ts
+    squad-group-sharing.ts
+    squad-groups.ts
 ```
 
-Required file-structure follow-up:
+Target rule:
 
-- Fill `schema/squad-groups.ts` with the owner/editor/public squad-group CRUD/detail schemas instead of keeping local DTO interfaces in pages.
-- Rename remaining `squad-groups/effect-*.ts` service files to `*-service.ts` or a clearer domain capability name.
-- Rename store service tags from `EffectAccountImportStore`, `EffectAccountRefetchStore`, and `EffectAccountSharingStore` to names without the `Effect` prefix once the old non-Effect stores are gone or clearly compatibility-only.
-- Convert `EffectConfirmOwnedAccountImport`, `EffectPreview...`, and `EffectApply...` class use cases to service/layer modules. File names are better, but the module shape is still not the target Effect shape.
-- Keep `http-api-contract.ts` as a contract composer. Do not let `export * from "./schema/..."` turn it into the preferred web import barrel; import schemas from their owning `schema/*` files.
-- Delete or refresh `.github/copilot-instructions.md`; it still tells agents to use oRPC + React Query.
+- Define schemas once in the owning domain/API slice.
+- Keep `http-api-contract.ts` as a composer, not the schema dumping ground.
+- Do not create one global `schemas.ts` barrel.
+- Keep protocol DTO schemas separate from persistence row projections.
+- Web imports schema-derived types from stable owning schema modules.
 
 ## Small-agent work packages
 
-### 6.1 — Make `apps/web` type-green first
+### 6.1 — Refresh stale docs and PR text
 
-Scope: no feature work.
-
-Instructions:
-
-1. Fix every `resultValueOr(...)` call to pass an explicit fallback, or change the helper signature if a no-fallback overload is deliberately wanted.
-2. Fix `resultViewState` so `getErrorMessage` is called with a valid argument or replaced with a local safe fallback string.
-3. Replace placeholder `Effect.succeed(...)` atoms in `account-import-atoms.ts` and `squad-group-atoms.ts` with real endpoint calls from work package 6.2, or with typed temporary `Option`/`null` success and explicit UI handling only if absolutely needed. Do not use `unknown`.
-4. Run `pnpm -F web check-types`.
-
-Acceptance:
-
-- `pnpm -F web check-types` passes.
-- No new casts are added.
-
-### 6.2 — Add missing squad-builder `HttpApi` endpoints
-
-Scope: backend contract + handlers + tests only.
-
-Endpoints to expose from existing service/store capabilities:
-
-- list owned Margonem accounts;
-- get squad group detail;
-- list available squad characters for a group;
-- save owner squad group snapshot;
-- save editor/shared squad characters;
-- set squad group visibility.
+Scope: docs only.
 
 Instructions:
 
-1. Add schemas beside the squad-builder sub-domain that owns them. Do not enlarge the monolithic contract with more ad hoc hand-written DTOs unless splitting is done in the same change.
-2. Reuse existing Effect service modules under `packages/api/src/modules/squad-builder/squad-groups/` and `account-import/` where they exist.
-3. Handlers must be thin `Effect` programs that call services. No constructor-injected use-case classes in handlers.
-4. Persisted rows must still be parsed in persistence adapters.
-5. Add route/handler tests through the `HttpApi` handler seam.
+1. Update root `README.md` to describe `packages/api` as shared Effect `HttpApi` contracts/handlers, not oRPC routers.
+2. Mark early migration docs with oRPC/React Query as archived where they conflict with this file.
+3. Update `docs/effect-migration/pr-tracking.md` with a Phase 6 PR-body section copied from this plan.
+4. Do not edit source code.
 
 Acceptance:
 
+- Grep for `oRPC` / `React Query` in current guidance only finds archived-history notes or explicit cleanup references.
+- Current architecture docs say Effect `HttpApi`, Effect services/layers, Effect Atom.
+
+### 6.2 — Add final-handler tests for squad-builder `HttpApi`
+
+Scope: `packages/api` tests.
+
+Instructions:
+
+1. Add tests through the same final seam as `packages/api/src/http-api-routes.integration.test.ts`: `HttpRouter.toWebHandler(AppHttpApiLayer.pipe(...))`.
+2. Cover the six endpoints the web now depends on:
+   - `POST /squad-builder/account-imports/owned`;
+   - `POST /squad-builder/squad-groups/detail`;
+   - `POST /squad-builder/squad-groups/characters`;
+   - `POST /squad-builder/squad-groups/save`;
+   - `POST /squad-builder/squad-groups/save-shared`;
+   - `POST /squad-builder/squad-groups/visibility`.
+3. Seed via existing integration builders/helpers. Do not mock handlers or services.
+4. Assert success status and one representative response shape per endpoint.
+
+Acceptance:
+
+- `pnpm -F @tepirek-revamped/api test` passes.
+- The six squad-builder endpoints are tested through the mounted `HttpApi` handler, not just service/store units.
+
+### 6.3 — Close dependency-bearing service methods over layers
+
+Scope: squad-builder service modules only.
+
+Instructions:
+
+1. Find service modules using `Layer.succeed(Service, { method })` where `method` still requires a store/config/client service.
+2. Convert each to `Layer.effect(Service, Effect.gen(...))`.
+3. Inside the layer, `yield*` dependencies once and define `Effect.fn("Domain.operation")` methods that close over them.
+4. Keep pure parser/domain helpers outside the service layer.
+5. Do not rename every file in the same change unless the touched module name is actively misleading.
+
+Acceptance:
+
+- Touched public service methods no longer expose persistence/config/client requirements in their `R` channel.
+- Handlers still call `use.method(...)` and do not instantiate classes.
+- `pnpm -F @tepirek-revamped/api check-types` and targeted service tests pass.
+
+### 6.4 — Reuse one database layer per app layer construction
+
+Scope: `packages/api/src/effect-app.ts`.
+
+Instructions:
+
+1. In `makeApiLiveLayer(databaseUrl)`, create `const databaseLayer = makeLiveDatabaseLayer(databaseUrl)` once.
+2. Provide that same layer reference to every store layer.
+3. In `makeApiSquadBuilderLayer(databaseUrl)`, also avoid constructing duplicate database layers.
+4. Do not change runtime memo-map behavior beyond this.
+
+Acceptance:
+
+- `makeLiveDatabaseLayer(databaseUrl)` is called once per composed live layer function.
 - `pnpm -F @tepirek-revamped/api check-types` passes.
-- Targeted API tests for the six endpoints pass.
-- Web atoms can call real endpoints without placeholder `Effect.succeed(...)` or `Effect.fail(new Error(...))`.
 
-### 6.3 — Replace squad-builder placeholder atoms and casts
+### 6.5 — Provide Observability to the real server handler
 
-Scope: `apps/web/src/lib/squad-builder/*-atoms.ts`, `accounts.tsx`, `squad-editor.tsx`, `squads.tsx`.
+Scope: `packages/api/src/observability/*`, `apps/server/src/index.ts`, tests if needed.
 
 Instructions:
 
-1. Replace all placeholder atoms with real `HttpApiClient` calls.
-2. Derive UI types from exported Effect Schemas (`typeof SomeSchema.Type`), not duplicated interfaces.
-3. Remove `as unknown as ...` and broad `as SomeDto` casts. If a projection is needed, write a named projection function from the parsed API type to the UI view model.
-4. Convert local manual pending booleans to Effect Atom result/waiting state where practical. Do not block this package on a full component redesign.
-5. Refresh/update the affected atoms after successful import/refetch/invite/revoke/save operations.
+1. Provide `Observability.layer` last to the `AppHttpApiLayer` used by `HttpRouter.toWebHandler(...)` in `apps/server/src/index.ts`.
+2. Keep Hono/evlog around the external edge; do not replace Hono.
+3. Ensure `resource()` includes `serviceName`, `serviceVersion`, `deployment.environment.name`, `service.instance.id`, and `tepirek.run`.
+4. Keep `OTEL_RESOURCE_ATTRIBUTES` merge behavior safe: invalid env drops env attributes, built-in attributes win conflicts.
+5. Add a cheap test for resource parsing/precedence and, if practical, current logger installation.
 
 Acceptance:
 
-- No `Effect.succeed([])` / `Effect.succeed(undefined)` placeholders remain in `apps/web/src/lib/squad-builder/*-atoms.ts`.
-- No `Effect.fail(new Error(...not migrated...))` remains in `apps/web/src/lib/squad-builder/*-atoms.ts`.
-- `accounts.tsx` and `squad-editor.tsx` no longer cast API results through `unknown`.
-- Squad-builder flows still render loading/error/empty states explicitly.
-
-### 6.4 — Normalize schema ownership
-
-Scope: file structure and imports, not behavior.
-
-Target structure pattern:
-
-```txt
-packages/api/src/modules/<domain>/
-  <domain>-schema.ts          # exported DTO/domain boundary schemas
-  http-api-contract.ts        # composes endpoint groups from schemas
-  http-api-handlers.ts        # handler layer only
-```
-
-For squad-builder, split by sub-domain:
-
-```txt
-packages/api/src/modules/squad-builder/
-  schema/common.ts
-  schema/account-import.ts
-  schema/account-refetch.ts
-  schema/account-sharing.ts
-  schema/squad-groups.ts
-  schema/squad-group-sharing.ts
-  http-api-contract.ts
-```
-
-Instructions:
-
-1. Do not create `schemas.ts` as a global dumping ground.
-2. Keep protocol DTOs separate from persistence row projections.
-3. Export schemas that web needs from stable module paths.
-4. Update web imports to derive types from those schemas.
-
-Acceptance:
-
-- `squad-builder/http-api-contract.ts` stops being the schema dumping ground.
-- Web no longer defines duplicate API DTO interfaces for squad-builder.
-- `pnpm -F @tepirek-revamped/api check-types` and `pnpm -F web check-types` pass.
-
-### 6.5 — Make Effect Atom cache behavior correct
-
-Scope: web atoms and the call sites they serve.
-
-Instructions:
-
-1. For list resources, choose one pattern per domain:
-   - writable cache atom with tagged update messages and `get.set(...)`; or
-   - `Atom.optimistic(...)` / `Atom.optimisticFn(...)` with explicit reducers; or
-   - explicit `useAtomRefresh` after mutation if optimistic state is not worth it.
-2. Apply the chosen pattern to create/update/delete/toggle operations so the visible UI is not stale.
-3. Keep reducers small and domain-specific. No generic invalidation utility.
-4. Follow the referenced Effect Atom demos: mutations update the resource atom through Atom context/registry instead of React Query-style cache keys.
-
-Acceptance:
-
-- Creating an announcement/event/hero/skill/todo updates or refreshes the visible list.
-- Deleting/toggling keeps the current list coherent and rolls back on failure where optimistic state is used.
-- No React Query cache terminology or helper remains.
-
-### 6.6 — Typed frontend error rendering
-
-Scope: error mapping helpers and touched components.
-
-Instructions:
-
-1. Add small per-domain error message mappers using `_tag`/`Match` for known API failures.
-2. Defects use one safe fallback message.
-3. Do not show `cause`, serialized defects, SQL, environment, tokens, or raw unknown values to users.
-4. Keep better-auth form zod errors separate unless intentionally migrated.
-
-Acceptance:
-
-- At least squad-builder, event, bet, vault, and user mutation errors are tag-mapped.
-- `resultViewState` no longer treats every typed failure as an opaque unknown string.
-
-### 6.7 — Finish Observability for actual `HttpApi` runtime
-
-Scope: `packages/api/src/observability/*`, `packages/api/src/effect-app.ts`, `apps/server/src/index.ts`, package deps if required.
-
-Instructions:
-
-1. Mirror opencode's split, but with project env names:
-   - `TEPIREK_LOG_LEVEL`;
-   - `TEPIREK_PRINT_LOGS`;
-   - `OTEL_EXPORTER_OTLP_ENDPOINT`;
-   - `OTEL_EXPORTER_OTLP_HEADERS`;
-   - `OTEL_RESOURCE_ATTRIBUTES`.
-2. Implement OTLP logs with `OtlpLogger.make(...)` gated by `OTEL_EXPORTER_OTLP_ENDPOINT`.
-3. Implement tracing with `@effect/opentelemetry/NodeSdk` only if the dependency is added and verified under Bun/server runtime. If not, document why tracing is deferred and keep logs real.
-4. Resource attributes must include `serviceName`, `serviceVersion`, `deployment.environment.name`, `service.instance.id`, and `tepirek.run`, merged with `OTEL_RESOURCE_ATTRIBUTES`.
-5. Provide `Observability.layer` last to the actual `AppHttpApiLayer` web handler in `apps/server/src/index.ts`, not only inside `makeRuntime(...)`.
-6. Re-check `packages/db/src/effect.ts` query logging once the logger is real.
-
-Acceptance:
-
-- With `TEPIREK_PRINT_LOGS=1`, Effect `HttpApi` handler logs are emitted through the project formatter.
-- With `OTEL_EXPORTER_OTLP_ENDPOINT` set, logs export to OTLP.
-- `AppHttpApiLayer` is under `Observability.layer` in production.
+- With `TEPIREK_PRINT_LOGS=1`, Effect `HttpApi` logs use the project formatter.
+- With `OTEL_EXPORTER_OTLP_ENDPOINT`, OTLP log/tracing layers are constructed.
 - `pnpm -F @tepirek-revamped/api check-types` and `pnpm -F server check-types` pass.
 
-### 6.8 — Remove router-era compatibility
+### 6.6 — Fix Effect Atom identity before tuning cache behavior
 
-Scope: cleanup after 6.1–6.7 are green.
+Scope: `apps/web/src/lib/*-atoms.ts`, especially parameterized resource helpers.
 
 Instructions:
 
-1. Delete or rename `packages/api/src/routers/*` compatibility files after confirming no public import needs `AppRouter`.
-2. Remove stale lockfile oRPC entries only if they are not transitive peer metadata from `evlog`.
-3. Keep better-auth and Hono; replacing Hono is out of scope.
+1. Do **not** rewrite runtime-backed remote resources from `appHttpApiRuntime.atom(...)` to bare `Atom.make(...)`. Runtime-backed atoms are correct because they provide `AppHttpApiClient` through the Atom runtime.
+2. Wrap every parameterized resource atom in `Atom.family(...)` so the same logical query gets the same atom identity.
+3. For primitive keys, use the primitive directly: `Atom.family((rangeId: number) => appHttpApiAtom(...))`.
+4. For compound keys, do not pass fresh object literals as atom identity. Use a stable key string or an Effect `Data.Class` key, following the referenced Effect Atom guidance.
+5. Cover at least: ranking, hero stats, vault, paginated bets, auction signups/stats, global squad groups, invite target searches, account grants, shared groups/accounts, and any other helper that currently returns `appHttpApiAtom(...)` from a function.
+6. Leave component-local form/draft state in React where it is truly local. Introduce `Atom.make` / `Atom.writable` only for shared atom-owned local state or writable cache overlays.
 
 Acceptance:
 
-- Grep finds no `AppRouter`, `runOrpcEffect`, or direct `@orpc/*` source usage.
-- Direct package dependencies stay clear of oRPC and React Query.
-- Full intended verification passes: `pnpm fix`, `pnpm check-types`, targeted tests, and smoke test.
+- Grep shows parameterized remote resources use `Atom.family(...)` or a documented stable keyed wrapper.
+- Re-rendering a page with the same logical query does not construct a fresh remote resource atom.
+- `pnpm -F web check-types` passes.
+
+### 6.7 — Make squad-builder Atom state coherent
+
+Scope: `apps/web/src/lib/squad-builder/*-atoms.ts` and direct call sites.
+
+Instructions:
+
+1. For each mutation, list the resource atoms that become stale.
+2. Use the smallest correct pattern:
+   - `get.refresh(...)` after success for low-frequency mutations;
+   - `Atom.optimistic(...)` / `Atom.optimisticFn(...)` where rollback matters and reducers are obvious.
+3. Fix account-sharing and squad-group-sharing mutations first: invite/respond/revoke should refresh incoming/shared/grant/count atoms that the UI displays.
+4. Do not introduce React Query-style cache keys or a generic invalidation framework.
+
+Acceptance:
+
+- Invites, revokes, group saves, visibility changes, imports, and refetches leave visible squad-builder state current after success.
+- Failed optimistic mutations roll back or leave the previous successful state visible.
+- `pnpm -F web check-types` passes.
+
+### 6.8 — Replace generic frontend error display with domain mappers
+
+Scope: `apps/web/src/lib/errors.ts` and touched components.
+
+Instructions:
+
+1. Keep `_tag` matching as the main path.
+2. Add small domain mapper sections for squad-builder, event/bet/vault, skills, and user.
+3. Stop surfacing arbitrary `Error.message` for Effect API failures. Unknown defects get one safe fallback.
+4. Do not expose `cause`, SQL, serialized defects, tokens, URLs with secrets, or raw unknown values.
+
+Acceptance:
+
+- Known API tagged errors render specific Polish copy.
+- Unknown Effect failures render the safe fallback.
+- Existing `apps/web/src/lib/errors.test.ts` is extended and passes.
+
+### 6.9 — Normalize schema ownership incrementally
+
+Scope: file structure/imports only for one non-squad module at a time.
+
+Instructions:
+
+1. Pick one small module, preferably `announcement` or `todo`.
+2. Move protocol schemas and typed errors from `http-api-contract.ts` to `<domain>-schema.ts` in the same module folder.
+3. Keep `http-api-contract.ts` composing endpoints from those schemas.
+4. Update web imports to the schema file if they need schema-derived types.
+5. Do not create a global schema barrel.
+
+Acceptance:
+
+- One module demonstrates the normalized schema pattern outside squad-builder.
+- API/web type-checks pass.
+
+### 6.10 — Name and contain remaining non-Effect code
+
+Scope: documentation and touched modules only.
+
+Instructions:
+
+1. Do not big-bang rewrite legacy promise modules.
+2. When touching a non-Effect module that already has `HttpApi` wrappers, keep legacy promise code behind the handler boundary unless the task explicitly migrates that module.
+3. When explicitly migrating a module, move all of that responsibility to:
+   - Effect service/layer;
+   - Effect database access;
+   - `Schema.TaggedErrorClass` failures;
+   - schema-derived protocol DTOs;
+   - `@effect/vitest` tests or existing final-handler integration tests.
+
+Acceptance:
+
+- No new half-migrated module mixes constructor injection, hidden globals, raw promise failures, and Effect services in the same responsibility.
+- New migration plans identify the boundary being converted.
+
+### 6.11 — Plan `hero-bet-ledger.ts` as its own migration slice
+
+Scope: plan first; implementation only after tests exist.
+
+Instructions:
+
+1. Treat `packages/api/src/modules/hero-bet-ledger.ts` as the shared legacy backend for bet, ranking, and vault. Do not make drive-by edits inside unrelated cleanup.
+2. Before refactoring, add characterization tests for create/edit/delete bet, distribute gold, ranking, vault, and payout toggling through final `HttpApi` handlers.
+3. Split contracts by capability if needed, but keep one coherent ledger service boundary for the shared invariants around points, earnings, and payouts.
+4. Replace thrown `AppError` expected failures with `Schema.TaggedErrorClass` errors in the Effect error channel.
+5. Replace direct `db` imports with an Effect service/layer that uses the Effect database layer.
+6. Parse persisted rows at adapter seams and keep protocol DTO schemas owned by their module schema files.
+7. Keep transaction ownership in the persistence adapter/service layer. Do not scatter production layer construction inside domain operations.
+
+Acceptance:
+
+- Existing bet/ranking/vault user behavior is covered before the refactor.
+- The migrated ledger exposes Effect methods with precise typed errors and no raw promise throws for expected failures.
+- Bet/ranking/vault handlers remain thin `HttpApi` handlers that call the ledger service.
 
 ## Reference rules applied
 
-- Effect Solutions: use `Context.Service`/`Layer`, `Schema.Class`/`Schema.TaggedErrorClass`, `Config`/`Redacted`, and `@effect/vitest` scoped tests.
-- `effect-tanstack-start` / `effect-monorepo`: shared domain/API schemas are the source of truth and clients are built from protocol contracts.
-- Effect Atom optimistic demo and gist: resource atoms should be writable/optimistic and mutations should update atom state through Atom context/registry or reducers.
-- `effect-rpc-rx-example`: client runtime lives in a service layer, exposed through a reactive runtime; adapt to `HttpApiClient`, not RPC.
-- opencode: Observability is a real layer provided last to the server route graph; OTLP is endpoint-gated.
+- Effect Solutions: `Context.Service`/`Layer`, layer memoization by identity, `Schema.Class`/`Schema.TaggedErrorClass`, `Config`/`Redacted`, `@effect/vitest`.
+- Effect Atom gist/demo: resource atoms should be writable/refreshed/optimistic through Atom context or reducers; no React Query cache vocabulary.
+- `effect-ai-chat-example`: client APIs live behind service layers; atom functions update local/remote state explicitly.
+- `effect-rpc-rx-example`: client runtime is service-backed; this repo adapts that idea to `HttpApiClient`, not RPC.
+- opencode: observability is a real top-level layer, with logging/OTLP/resource parsing split into small modules and provided to the app runtime/route graph.
