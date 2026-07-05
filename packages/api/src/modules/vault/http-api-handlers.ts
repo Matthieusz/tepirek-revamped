@@ -1,3 +1,4 @@
+// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import { auth } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
@@ -5,8 +6,8 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../http-api-contract.js";
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { AppError } from "../app-error.js";
-import { heroBetLedger } from "../hero-bet-ledger.js";
+import { HeroBetLedger } from "../hero-bet-ledger.js";
+import type { HeroBetLedgerError } from "../hero-bet-ledger.js";
 import {
   VaultBadRequest,
   VaultForbidden,
@@ -52,25 +53,29 @@ const requireAdminSession = (request: HttpServerRequest) =>
     return session;
   });
 
-const classifyVaultFailure = (cause: unknown, operation: string) => {
-  if (cause instanceof AppError) {
-    if (cause.code === "BAD_REQUEST") {
-      return new VaultBadRequest({ message: cause.message });
-    }
-    if (cause.code === "NOT_FOUND") {
-      return new VaultNotFound({ message: cause.message });
-    }
-    if (cause.code === "FORBIDDEN") {
-      return new VaultForbidden({ message: cause.message });
-    }
+const classifyVaultFailure = (error: HeroBetLedgerError, operation: string) => {
+  if (error._tag === "HeroBetLedgerBadRequest") {
+    return new VaultBadRequest({ message: error.message });
   }
-  return new VaultPersistenceUnavailable({ cause, operation });
+  if (error._tag === "HeroBetLedgerNotFound") {
+    return new VaultNotFound({ message: error.message });
+  }
+  if (error._tag === "HeroBetLedgerPersistenceUnavailable") {
+    return new VaultPersistenceUnavailable({
+      cause: error.cause,
+      operation: error.operation,
+    });
+  }
+  return new VaultPersistenceUnavailable({ cause: error, operation });
 };
-const runLedger = <A>(operation: string, work: () => Promise<A>) =>
-  Effect.tryPromise({
-    catch: (cause) => classifyVaultFailure(cause, operation),
-    try: work,
-  });
+
+const mapLedgerError = <A>(
+  operation: string,
+  effect: Effect.Effect<A, HeroBetLedgerError>
+) =>
+  effect.pipe(
+    Effect.mapError((error) => classifyVaultFailure(error, operation))
+  );
 
 export const VaultHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
@@ -79,33 +84,41 @@ export const VaultHttpApiHandlers = HttpApiBuilder.group(
     handlers
       .handle("distributeGold", ({ payload, request }) =>
         Effect.gen(function* VaultHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireAdminSession(request);
-          return yield* runLedger("distributeGold", () =>
-            heroBetLedger.distributeGold(payload)
+          return yield* mapLedgerError(
+            "distributeGold",
+            ledger.distributeGold(payload)
           );
         })
       )
       .handle("getUserStats", ({ payload, request }) =>
         Effect.gen(function* VaultHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireVerifiedSession(request);
-          return yield* runLedger("getUserStats", () =>
-            heroBetLedger.getUserStats(payload.eventId)
+          return yield* mapLedgerError(
+            "getUserStats",
+            ledger.getUserStats(payload.eventId)
           );
         })
       )
       .handle("getVault", ({ payload, request }) =>
         Effect.gen(function* VaultHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireVerifiedSession(request);
-          return yield* runLedger("getVault", () =>
-            heroBetLedger.getVault(payload.eventId)
+          return yield* mapLedgerError(
+            "getVault",
+            ledger.getVault(payload.eventId)
           );
         })
       )
       .handle("togglePaidOut", ({ payload, request }) =>
         Effect.gen(function* VaultHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireAdminSession(request);
-          return yield* runLedger("togglePaidOut", () =>
-            heroBetLedger.togglePaidOut(payload)
+          return yield* mapLedgerError(
+            "togglePaidOut",
+            ledger.togglePaidOut(payload)
           );
         })
       )

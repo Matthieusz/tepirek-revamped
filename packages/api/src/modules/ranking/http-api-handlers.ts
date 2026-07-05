@@ -1,3 +1,4 @@
+// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import { auth } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
@@ -5,8 +6,8 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../http-api-contract.js";
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { AppError } from "../app-error.js";
-import { heroBetLedger } from "../hero-bet-ledger.js";
+import { HeroBetLedger } from "../hero-bet-ledger.js";
+import type { HeroBetLedgerError } from "../hero-bet-ledger.js";
 import {
   RankingForbidden,
   RankingNotFound,
@@ -46,21 +47,29 @@ const requireVerifiedSession = (
     return session;
   });
 
-const classifyRankingFailure = (cause: unknown, operation: string) => {
-  if (cause instanceof AppError && cause.code === "NOT_FOUND") {
-    return new RankingNotFound({ message: cause.message });
+const classifyRankingFailure = (
+  error: HeroBetLedgerError,
+  operation: string
+) => {
+  if (error._tag === "HeroBetLedgerNotFound") {
+    return new RankingNotFound({ message: error.message });
   }
-  if (cause instanceof AppError && cause.code === "FORBIDDEN") {
-    return new RankingForbidden({ message: cause.message });
+  if (error._tag === "HeroBetLedgerPersistenceUnavailable") {
+    return new RankingPersistenceUnavailable({
+      cause: error.cause,
+      operation: error.operation,
+    });
   }
-  return new RankingPersistenceUnavailable({ cause, operation });
+  return new RankingPersistenceUnavailable({ cause: error, operation });
 };
 
-const runLedger = <A>(operation: string, work: () => Promise<A>) =>
-  Effect.tryPromise({
-    catch: (cause) => classifyRankingFailure(cause, operation),
-    try: work,
-  });
+const mapLedgerError = <A>(
+  operation: string,
+  effect: Effect.Effect<A, HeroBetLedgerError>
+) =>
+  effect.pipe(
+    Effect.mapError((error) => classifyRankingFailure(error, operation))
+  );
 
 export const RankingHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
@@ -69,25 +78,31 @@ export const RankingHttpApiHandlers = HttpApiBuilder.group(
     handlers
       .handle("getHeroStats", ({ payload, request }) =>
         Effect.gen(function* RankingHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireVerifiedSession(request);
-          return yield* runLedger("getHeroStats", () =>
-            heroBetLedger.getHeroStats(payload.heroId)
+          return yield* mapLedgerError(
+            "getHeroStats",
+            ledger.getHeroStats(payload.heroId)
           );
         })
       )
       .handle("getOldestUnpaidEvent", ({ request }) =>
         Effect.gen(function* RankingHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireVerifiedSession(request);
-          return yield* runLedger("getOldestUnpaidEvent", () =>
-            heroBetLedger.getOldestUnpaidEvent()
+          return yield* mapLedgerError(
+            "getOldestUnpaidEvent",
+            ledger.getOldestUnpaidEvent()
           );
         })
       )
       .handle("getRanking", ({ payload, request }) =>
         Effect.gen(function* RankingHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireVerifiedSession(request);
-          return yield* runLedger("getRanking", () =>
-            heroBetLedger.getRanking(payload)
+          return yield* mapLedgerError(
+            "getRanking",
+            ledger.getRanking(payload)
           );
         })
       )

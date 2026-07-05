@@ -1,3 +1,4 @@
+// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import { auth } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
@@ -5,8 +6,8 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../http-api-contract.js";
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { AppError } from "../app-error.js";
-import { heroBetLedger } from "../hero-bet-ledger.js";
+import { HeroBetLedger } from "../hero-bet-ledger.js";
+import type { HeroBetLedgerError } from "../hero-bet-ledger.js";
 import {
   BetBadRequest,
   BetForbidden,
@@ -57,26 +58,27 @@ const requireAdminSession = (request: HttpServerRequest) =>
     return session;
   });
 
-const classifyBetFailure = (cause: unknown, operation: string) => {
-  if (cause instanceof AppError) {
-    if (cause.code === "BAD_REQUEST") {
-      return new BetBadRequest({ message: cause.message });
-    }
-    if (cause.code === "NOT_FOUND") {
-      return new BetNotFound({ message: cause.message });
-    }
-    if (cause.code === "FORBIDDEN") {
-      return new BetForbidden({ message: cause.message });
-    }
+const classifyBetFailure = (error: HeroBetLedgerError, operation: string) => {
+  if (error._tag === "HeroBetLedgerBadRequest") {
+    return new BetBadRequest({ message: error.message });
   }
-  return new BetPersistenceUnavailable({ cause, operation });
+  if (error._tag === "HeroBetLedgerNotFound") {
+    return new BetNotFound({ message: error.message });
+  }
+  if (error._tag === "HeroBetLedgerPersistenceUnavailable") {
+    return new BetPersistenceUnavailable({
+      cause: error.cause,
+      operation: error.operation,
+    });
+  }
+  return new BetPersistenceUnavailable({ cause: error, operation });
 };
 
-const runLedger = <A>(operation: string, work: () => Promise<A>) =>
-  Effect.tryPromise({
-    catch: (cause) => classifyBetFailure(cause, operation),
-    try: work,
-  });
+const mapLedgerError = <A>(
+  operation: string,
+  effect: Effect.Effect<A, HeroBetLedgerError>
+) =>
+  effect.pipe(Effect.mapError((error) => classifyBetFailure(error, operation)));
 
 export const BetHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
@@ -85,48 +87,55 @@ export const BetHttpApiHandlers = HttpApiBuilder.group(
     handlers
       .handle("create", ({ payload, request }) =>
         Effect.gen(function* BetHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           const session = yield* requireAdminSession(request);
-          return yield* runLedger("createBet", () =>
-            heroBetLedger.createBet({
+          return yield* mapLedgerError(
+            "createBet",
+            ledger.createBet({
               createdBy: session.user.id,
               heroId: payload.heroId,
-              userIds: [...payload.userIds],
+              userIds: payload.userIds,
             })
           );
         })
       )
       .handle("delete", ({ payload, request }) =>
         Effect.gen(function* BetHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireAdminSession(request);
-          return yield* runLedger("deleteBet", () =>
-            heroBetLedger.deleteBet(payload.id)
+          return yield* mapLedgerError(
+            "deleteBet",
+            ledger.deleteBet(payload.id)
           );
         })
       )
       .handle("edit", ({ payload, request }) =>
         Effect.gen(function* BetHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireAdminSession(request);
-          return yield* runLedger("editBet", () =>
-            heroBetLedger.editBet({
+          return yield* mapLedgerError(
+            "editBet",
+            ledger.editBet({
               betId: payload.betId,
-              newUserIds: [...payload.newUserIds],
+              newUserIds: payload.newUserIds,
             })
           );
         })
       )
       .handle("getAll", ({ request }) =>
         Effect.gen(function* BetHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireVerifiedSession(request);
-          return yield* runLedger("getAllBets", () =>
-            heroBetLedger.getAllBets()
-          );
+          return yield* mapLedgerError("getAllBets", ledger.getAllBets());
         })
       )
       .handle("getAllPaginated", ({ payload, request }) =>
         Effect.gen(function* BetHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireVerifiedSession(request);
-          return yield* runLedger("getPaginatedBets", () =>
-            heroBetLedger.getPaginatedBets({
+          return yield* mapLedgerError(
+            "getPaginatedBets",
+            ledger.getPaginatedBets({
               eventId: payload.eventId,
               heroId: payload.heroId,
               limit: payload.limit ?? 10,
@@ -137,25 +146,31 @@ export const BetHttpApiHandlers = HttpApiBuilder.group(
       )
       .handle("getBetMembers", ({ payload, request }) =>
         Effect.gen(function* BetHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireVerifiedSession(request);
-          return yield* runLedger("getBetMembers", () =>
-            heroBetLedger.getBetMembers(payload.betId)
+          return yield* mapLedgerError(
+            "getBetMembers",
+            ledger.getBetMembers(payload.betId)
           );
         })
       )
       .handle("getByEvent", ({ payload, request }) =>
         Effect.gen(function* BetHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireVerifiedSession(request);
-          return yield* runLedger("getBetsByEvent", () =>
-            heroBetLedger.getBetsByEvent(payload.eventId)
+          return yield* mapLedgerError(
+            "getBetsByEvent",
+            ledger.getBetsByEvent(payload.eventId)
           );
         })
       )
       .handle("getLatestForCopy", ({ request }) =>
         Effect.gen(function* BetHttpApiHandlers() {
+          const ledger = yield* HeroBetLedger;
           yield* requireVerifiedSession(request);
-          return yield* runLedger("getLatestBetForCopy", () =>
-            heroBetLedger.getLatestBetForCopy()
+          return yield* mapLedgerError(
+            "getLatestBetForCopy",
+            ledger.getLatestBetForCopy()
           );
         })
       )

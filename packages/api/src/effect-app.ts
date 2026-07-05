@@ -13,6 +13,8 @@ import { AuctionStoreLayer } from "./modules/auction/auction-store.js";
 import type { AuctionStore } from "./modules/auction/auction-store.js";
 import { EventStoreLayer } from "./modules/event/event-store.js";
 import type { EventStore } from "./modules/event/event-store.js";
+import { HeroBetLedgerLayer } from "./modules/hero-bet-ledger.js";
+import type { HeroBetLedger } from "./modules/hero-bet-ledger.js";
 import { HeroesStoreLayer } from "./modules/heroes/heroes-store.js";
 import type { HeroesStore } from "./modules/heroes/heroes-store.js";
 import { SkillsStoreLayer } from "./modules/skills/skills-store.js";
@@ -72,6 +74,7 @@ const makeApiSquadBuilderLayerWithDatabase = (
     | AnnouncementStore
     | TodoStore
     | HeroesStore
+    | HeroBetLedger
     | EventStore
     | SkillsStore
     | AuctionStore
@@ -113,6 +116,7 @@ export const makeApiLiveLayer = (
     AnnouncementStoreLayer.pipe(Layer.provide(databaseLayer)),
     TodoStoreLayer.pipe(Layer.provide(databaseLayer)),
     HeroesStoreLayer.pipe(Layer.provide(databaseLayer)),
+    HeroBetLedgerLayer.pipe(Layer.provide(databaseLayer)),
     EventStoreLayer.pipe(Layer.provide(databaseLayer)),
     SkillsStoreLayer.pipe(Layer.provide(databaseLayer)),
     AuctionStoreLayer.pipe(Layer.provide(databaseLayer)),
@@ -191,6 +195,7 @@ type SquadBuilderServices =
   | AnnouncementStore
   | TodoStore
   | HeroesStore
+  | HeroBetLedger
   | EventStore
   | SkillsStore
   | AuctionStore
