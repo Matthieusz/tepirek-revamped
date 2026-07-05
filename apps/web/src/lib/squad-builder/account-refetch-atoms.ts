@@ -1,16 +1,23 @@
-import type {
-  ApplyAccountRefetchPayload,
-  PreviewAccountRefetchPayload,
-} from "@tepirek-revamped/api/modules/squad-builder/schema/account-refetch";
 import { Effect } from "effect";
 
 import { AppHttpApiClient, appHttpApiFn } from "@/lib/http-api-client-runtime";
 import { refreshVisibleOwnedAccountAtoms } from "@/lib/squad-builder/account-import-atoms";
 import { refreshVisibleAccountSharingAtoms } from "@/lib/squad-builder/account-sharing-atoms";
+import {
+  asAppUserId,
+  asMargonemAccountId,
+  asPendingMargonemAccountRefetchId,
+} from "@/lib/squad-builder/branded-ids";
 import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
 
-type ApplyAccountRefetchInput = typeof ApplyAccountRefetchPayload.Type;
-type PreviewAccountRefetchInput = typeof PreviewAccountRefetchPayload.Type;
+interface ApplyAccountRefetchInput {
+  readonly actorUserId: string;
+  readonly refetchPreviewId: number;
+}
+interface PreviewAccountRefetchInput {
+  readonly accountId: number;
+  readonly actorUserId: string;
+}
 
 /** Mutation atom for previewing account refetch. */
 export const previewAccountRefetchAtom = appHttpApiFn(
@@ -18,7 +25,10 @@ export const previewAccountRefetchAtom = appHttpApiFn(
     Effect.gen(function* previewAccountRefetchEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.squadBuilderAccountRefetch.previewAccountRefetch({
-        payload,
+        payload: {
+          accountId: asMargonemAccountId(payload.accountId),
+          actorUserId: asAppUserId(payload.actorUserId),
+        },
       });
     })
 );
@@ -30,7 +40,12 @@ export const applyAccountRefetchAtom = appHttpApiFn(
       const client = yield* AppHttpApiClient;
       const result =
         yield* client.squadBuilderAccountRefetch.applyAccountRefetch({
-          payload,
+          payload: {
+            actorUserId: asAppUserId(payload.actorUserId),
+            refetchPreviewId: asPendingMargonemAccountRefetchId(
+              payload.refetchPreviewId
+            ),
+          },
         });
       refreshVisibleOwnedAccountAtoms(get, payload.actorUserId);
       refreshVisibleAccountSharingAtoms(get, {
