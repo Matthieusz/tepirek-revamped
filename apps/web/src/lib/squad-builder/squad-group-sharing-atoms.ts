@@ -1,11 +1,4 @@
 import { Atom } from "@effect-atom/atom-react";
-import type {
-  RespondToSquadGroupInvitePayload,
-  RevokeSquadGroupEditorPayload,
-  SearchSquadEditorInviteTargetsPayload,
-  SendSquadGroupEditorInvitePayload,
-  SquadGroupEditorGrantsPayload,
-} from "@tepirek-revamped/api/modules/squad-builder/schema/squad-group-sharing";
 import { Effect } from "effect";
 
 import {
@@ -13,19 +6,39 @@ import {
   appHttpApiAtom,
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
+import {
+  asAppUserId,
+  asSquadGroupId,
+  asSquadGroupInvitationId,
+} from "@/lib/squad-builder/branded-ids";
 import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
 
 interface ActorInput {
   readonly actorUserId: string;
 }
-type RespondToSquadGroupInviteInput =
-  typeof RespondToSquadGroupInvitePayload.Type;
-type RevokeSquadGroupEditorInput = typeof RevokeSquadGroupEditorPayload.Type;
-type SearchSquadEditorInviteTargetsInput =
-  typeof SearchSquadEditorInviteTargetsPayload.Type;
-type SendSquadGroupEditorInviteInput =
-  typeof SendSquadGroupEditorInvitePayload.Type;
-type SquadGroupEditorGrantsInput = typeof SquadGroupEditorGrantsPayload.Type;
+interface RespondToSquadGroupInviteInput {
+  readonly actorUserId: string;
+  readonly invitationId: number;
+  readonly response: "accept" | "decline";
+}
+interface RevokeSquadGroupEditorInput {
+  readonly actorUserId: string;
+  readonly invitationId: number;
+}
+interface SearchSquadEditorInviteTargetsInput {
+  readonly actorUserId: string;
+  readonly groupId: number;
+  readonly query: string;
+}
+interface SendSquadGroupEditorInviteInput {
+  readonly actorUserId: string;
+  readonly groupId: number;
+  readonly invitedUserId: string;
+}
+interface SquadGroupEditorGrantsInput {
+  readonly actorUserId: string;
+  readonly groupId: number;
+}
 
 type SquadGroupEditorGrantsKey = string;
 type SquadEditorInviteTargetsKey = string;
@@ -101,7 +114,7 @@ const incomingSquadGroupInvitesByActorAtom = Atom.family(
         const client = yield* AppHttpApiClient;
         return yield* client.squadBuilderSquadGroupSharing.listIncomingSquadGroupInvites(
           {
-            payload: { actorUserId },
+            payload: { actorUserId: asAppUserId(actorUserId) },
           }
         );
       })
@@ -119,7 +132,7 @@ const sharedSquadGroupsByActorAtom = Atom.family((actorUserId: string) =>
     Effect.gen(function* listSharedSquadGroupsEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.squadBuilderSquadGroupSharing.listSharedSquadGroups({
-        payload: { actorUserId },
+        payload: { actorUserId: asAppUserId(actorUserId) },
       });
     })
   )
@@ -139,7 +152,10 @@ const squadGroupEditorGrantsByKeyAtom = Atom.family(
         const client = yield* AppHttpApiClient;
         return yield* client.squadBuilderSquadGroupSharing.listSquadGroupEditorGrants(
           {
-            payload,
+            payload: {
+              actorUserId: asAppUserId(payload.actorUserId),
+              groupId: asSquadGroupId(payload.groupId),
+            },
           }
         );
       })
@@ -163,7 +179,7 @@ const pendingSquadGroupInviteCountByActorAtom = Atom.family(
         const client = yield* AppHttpApiClient;
         return yield* client.squadBuilderSquadGroupSharing.countPendingSquadGroupInvites(
           {
-            payload: { actorUserId },
+            payload: { actorUserId: asAppUserId(actorUserId) },
           }
         );
       })
@@ -182,7 +198,13 @@ const squadEditorInviteTargetsByKeyAtom = Atom.family(
       Effect.gen(function* searchSquadEditorInviteTargetsEffect() {
         const client = yield* AppHttpApiClient;
         return yield* client.squadBuilderSquadGroupSharing.searchSquadEditorInviteTargets(
-          { payload }
+          {
+            payload: {
+              actorUserId: asAppUserId(payload.actorUserId),
+              groupId: asSquadGroupId(payload.groupId),
+              query: payload.query,
+            },
+          }
         );
       })
     );
@@ -248,7 +270,11 @@ export const respondToSquadGroupInviteAtom = appHttpApiFn(
       const client = yield* AppHttpApiClient;
       const invite =
         yield* client.squadBuilderSquadGroupSharing.respondToSquadGroupInvite({
-          payload,
+          payload: {
+            actorUserId: asAppUserId(payload.actorUserId),
+            invitationId: asSquadGroupInvitationId(payload.invitationId),
+            response: payload.response,
+          },
         });
       refreshVisibleSquadGroupSharingAtoms(get, {
         actorUserId: payload.actorUserId,
@@ -273,7 +299,11 @@ export const sendSquadGroupEditorInviteAtom = appHttpApiFn(
       const client = yield* AppHttpApiClient;
       const invite =
         yield* client.squadBuilderSquadGroupSharing.sendSquadGroupEditorInvite({
-          payload,
+          payload: {
+            actorUserId: asAppUserId(payload.actorUserId),
+            groupId: asSquadGroupId(payload.groupId),
+            invitedUserId: asAppUserId(payload.invitedUserId),
+          },
         });
       refreshVisibleSquadGroupSharingAtoms(get, {
         actorUserId: payload.actorUserId,
@@ -292,7 +322,10 @@ export const revokeSquadGroupEditorAtom = appHttpApiFn(
       const client = yield* AppHttpApiClient;
       const invite =
         yield* client.squadBuilderSquadGroupSharing.revokeSquadGroupEditor({
-          payload,
+          payload: {
+            actorUserId: asAppUserId(payload.actorUserId),
+            invitationId: asSquadGroupInvitationId(payload.invitationId),
+          },
         });
       refreshVisibleSquadGroupSharingAtoms(get, {
         actorUserId: payload.actorUserId,
