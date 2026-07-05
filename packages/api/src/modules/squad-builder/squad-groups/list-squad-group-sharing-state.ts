@@ -2,30 +2,22 @@ import type { AppUserId } from "../app-user-id.js";
 import type { SquadGroupId } from "../squad-group-id.js";
 import type { SquadGroupListFilters } from "../squad-group-list-filters.js";
 
-export const ListSquadGroupSharingState = {
-  countPendingInvites(_input: {
+export interface ListSquadGroupSharingState {
+  readonly countPendingInvites: (input: {
     readonly actorUserId: AppUserId;
-  }): Promise<void> {
-    return Promise.resolve();
-  },
+  }) => Promise<void>;
 
-  listEditorGrants(_input: {
+  readonly listEditorGrants: (input: {
     readonly actorUserId: AppUserId;
     readonly groupId: SquadGroupId;
-  }): Promise<void> {
-    return Promise.resolve();
-  },
+  }) => Promise<void>;
 
-  listIncomingInvites(_input: {
+  readonly listIncomingInvites: (input: {
     readonly actorUserId: AppUserId;
-  }): Promise<void> {
-    return Promise.resolve();
-  },
+  }) => Promise<void>;
 
-  listSharedGroups(_input: {
+  readonly listSharedGroups: (input: {
     readonly actorUserId: AppUserId;
     readonly filters?: SquadGroupListFilters;
-  }): Promise<void> {
-    return Promise.resolve();
-  },
-};
+  }) => Promise<void>;
+}
