@@ -48,14 +48,22 @@ import { layer as squadGroupEditorInvitesLayer } from "./modules/squad-builder/s
 import type { SquadGroupStoreService } from "./modules/squad-builder/squad-groups/squad-group-store.js";
 import { TodoStoreLayer } from "./modules/todo/todo-store.js";
 import type { TodoStore } from "./modules/todo/todo-store.js";
+import { DiscordVerificationConfig } from "./modules/user/discord-verification-config.js";
+import type { DiscordVerificationConfig as DiscordVerificationConfigService } from "./modules/user/discord-verification-config.js";
+import { DiscordGuildVerifierLiveLayer } from "./modules/user/discord-verification-service.js";
+import type { DiscordGuildVerifier } from "./modules/user/discord-verification-service.js";
+import { UserStoreLayer } from "./modules/user/user-store.js";
+import type { UserStore } from "./modules/user/user-store.js";
 import * as Observability from "./observability.js";
 
 /** Process-wide Layer memo map shared by production API Effect runtimes. */
 export const apiLayerMemoMap = Layer.makeMemoMapUnsafe();
 
 /** Live Layer for Effect-based API modules. */
-export const makeApiSquadBuilderLayer = (
-  databaseUrl: string
+type LiveDatabaseLayer = ReturnType<typeof makeLiveDatabaseLayer>;
+
+const makeApiSquadBuilderLayerWithDatabase = (
+  databaseLayer: LiveDatabaseLayer
 ): Layer.Layer<
   Exclude<
     SquadBuilderServices,
@@ -67,11 +75,14 @@ export const makeApiSquadBuilderLayer = (
     | EventStore
     | SkillsStore
     | AuctionStore
+    | UserStore
+    | DiscordGuildVerifier
+    | DiscordVerificationConfigService
   >,
   SqlError
 > => {
   const storeLayer = DrizzleSquadBuilderStoresLayer.pipe(
-    Layer.provide(makeLiveDatabaseLayer(databaseUrl))
+    Layer.provide(databaseLayer)
   );
 
   return Layer.mergeAll(
@@ -89,24 +100,33 @@ export const makeApiSquadBuilderLayer = (
   );
 };
 
+export const makeApiSquadBuilderLayer = (databaseUrl: string) =>
+  makeApiSquadBuilderLayerWithDatabase(makeLiveDatabaseLayer(databaseUrl));
+
 export const makeApiLiveLayer = (
   databaseUrl: string
-): Layer.Layer<SquadBuilderServices, SqlError | ConfigError> =>
-  Layer.mergeAll(
-    makeApiSquadBuilderLayer(databaseUrl),
-    AnnouncementStoreLayer.pipe(
-      Layer.provide(makeLiveDatabaseLayer(databaseUrl))
+): Layer.Layer<SquadBuilderServices, SqlError | ConfigError> => {
+  const databaseLayer = makeLiveDatabaseLayer(databaseUrl);
+
+  return Layer.mergeAll(
+    makeApiSquadBuilderLayerWithDatabase(databaseLayer),
+    AnnouncementStoreLayer.pipe(Layer.provide(databaseLayer)),
+    TodoStoreLayer.pipe(Layer.provide(databaseLayer)),
+    HeroesStoreLayer.pipe(Layer.provide(databaseLayer)),
+    EventStoreLayer.pipe(Layer.provide(databaseLayer)),
+    SkillsStoreLayer.pipe(Layer.provide(databaseLayer)),
+    AuctionStoreLayer.pipe(Layer.provide(databaseLayer)),
+    UserStoreLayer.pipe(Layer.provide(databaseLayer)),
+    DiscordVerificationConfig.layer,
+    DiscordGuildVerifierLiveLayer.pipe(
+      Layer.provide(DiscordVerificationConfig.layer)
     ),
-    TodoStoreLayer.pipe(Layer.provide(makeLiveDatabaseLayer(databaseUrl))),
-    HeroesStoreLayer.pipe(Layer.provide(makeLiveDatabaseLayer(databaseUrl))),
-    EventStoreLayer.pipe(Layer.provide(makeLiveDatabaseLayer(databaseUrl))),
-    SkillsStoreLayer.pipe(Layer.provide(makeLiveDatabaseLayer(databaseUrl))),
-    AuctionStoreLayer.pipe(Layer.provide(makeLiveDatabaseLayer(databaseUrl))),
     FirecrawlConfigServiceLiveLayer,
     FirecrawlClientServiceLiveLayer.pipe(
       Layer.provide(FirecrawlConfigServiceLiveLayer)
     )
   );
+};
 
 export interface ApiRuntime<I, S, E> {
   readonly dispose: () => Promise<void>;
@@ -174,6 +194,9 @@ type SquadBuilderServices =
   | EventStore
   | SkillsStore
   | AuctionStore
+  | UserStore
+  | DiscordGuildVerifier
+  | DiscordVerificationConfigService
   | SquadGroupStoreService
   | AccountImportStoreService
   | AccountRefetchStoreService
