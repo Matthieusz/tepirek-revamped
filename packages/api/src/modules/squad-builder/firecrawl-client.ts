@@ -1,3 +1,4 @@
+import * as Effect from "effect/Effect";
 import { Firecrawl } from "firecrawl";
 import type { Document } from "firecrawl";
 
@@ -10,8 +11,6 @@ import {
 import type { FirecrawlScrapeError } from "./firecrawl-errors.js";
 import type { MargonemProfileId } from "./margonem-profile-id.js";
 import { toMargonemProfileUrl } from "./margonem-profile-url.js";
-import { fail, isFailure, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
 
 /** Successful Firecrawl scrape output used by squad-builder. */
 export interface FirecrawlScrapeSuccess {
@@ -38,7 +37,7 @@ export interface FirecrawlClient {
   readonly scrapeProfileHtml: (
     profileId: MargonemProfileId,
     options?: { readonly signal?: AbortSignal }
-  ) => Promise<Outcome<FirecrawlScrapeSuccess, FirecrawlScrapeError>>;
+  ) => Promise<FirecrawlScrapeSuccess>;
 }
 
 /** Firecrawl SDK-backed implementation of profile HTML scraping. */
@@ -48,44 +47,33 @@ const isSignalAborted = (signal: AbortSignal | undefined): boolean =>
 const parseFirecrawlDocument = (
   profileId: MargonemProfileId,
   document: Document
-): Outcome<FirecrawlScrapeSuccess, FirecrawlScrapeError> => {
+): FirecrawlScrapeSuccess => {
   if (typeof document.html !== "string" || document.html.length === 0) {
-    return fail(
-      new FirecrawlResponseNotParseable({
-        cause: new Error("Firecrawl response did not include HTML"),
-        profileId,
-      })
-    );
+    throw new FirecrawlResponseNotParseable({
+      cause: new Error("Firecrawl response did not include HTML"),
+      profileId,
+    });
   }
 
   const rawCredits = document.metadata?.creditsUsed;
 
   if (rawCredits !== undefined) {
-    const parsedCredits = parseFirecrawlCreditCount(rawCredits);
+    const parsedCredits = Effect.runSync(parseFirecrawlCreditCount(rawCredits));
 
-    if (isFailure(parsedCredits)) {
-      return fail(
-        new FirecrawlResponseNotParseable({
-          cause: new Error("Firecrawl response included invalid creditsUsed"),
-          profileId,
-        })
-      );
-    }
-
-    return success({
+    return {
       html: document.html,
       metadata: {
         cacheState: document.metadata?.cacheState,
         contentType: document.metadata?.contentType,
-        creditsUsed: parsedCredits.value,
+        creditsUsed: parsedCredits,
         sourceURL: document.metadata?.sourceURL,
         statusCode: document.metadata?.statusCode,
         url: document.metadata?.url,
       },
-    });
+    };
   }
 
-  return success({
+  return {
     html: document.html,
     metadata: {
       cacheState: document.metadata?.cacheState,
@@ -95,7 +83,7 @@ const parseFirecrawlDocument = (
       statusCode: document.metadata?.statusCode,
       url: document.metadata?.url,
     },
-  });
+  };
 };
 
 export class FirecrawlSdkClient implements FirecrawlClient {
@@ -109,14 +97,12 @@ export class FirecrawlSdkClient implements FirecrawlClient {
   async scrapeProfileHtml(
     profileId: MargonemProfileId,
     options: { readonly signal?: AbortSignal } = {}
-  ): Promise<Outcome<FirecrawlScrapeSuccess, FirecrawlScrapeError>> {
+  ): Promise<FirecrawlScrapeSuccess> {
     if (isSignalAborted(options.signal)) {
-      return fail(
-        new RequestCancelled({
-          cause: options.signal?.reason,
-          profileId,
-        })
-      );
+      throw new RequestCancelled({
+        cause: options.signal?.reason,
+        profileId,
+      });
     }
 
     try {
@@ -131,31 +117,33 @@ export class FirecrawlSdkClient implements FirecrawlClient {
       );
 
       if (isSignalAborted(options.signal)) {
-        return fail(
-          new RequestCancelled({
-            cause: options.signal?.reason,
-            profileId,
-          })
-        );
+        throw new RequestCancelled({
+          cause: options.signal?.reason,
+          profileId,
+        });
       }
 
       return parseFirecrawlDocument(profileId, document);
     } catch (error: unknown) {
-      if (isSignalAborted(options.signal)) {
-        return fail(
-          new RequestCancelled({
-            cause: error,
-            profileId,
-          })
-        );
+      if (error instanceof RequestCancelled) {
+        throw error;
       }
 
-      return fail(
-        new FirecrawlRequestFailed({
+      if (error instanceof FirecrawlResponseNotParseable) {
+        throw error;
+      }
+
+      if (isSignalAborted(options.signal)) {
+        throw new RequestCancelled({
           cause: error,
           profileId,
-        })
-      );
+        });
+      }
+
+      throw new FirecrawlRequestFailed({
+        cause: error,
+        profileId,
+      });
     }
   }
 }

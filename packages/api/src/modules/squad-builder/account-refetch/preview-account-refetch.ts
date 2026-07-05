@@ -1,34 +1,15 @@
-import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
-import { FirecrawlResponseNotParseable } from "../firecrawl-client.js";
-import type {
-  FirecrawlClient,
-  FirecrawlScrapeError,
-} from "../firecrawl-client.js";
-import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
-import type {
-  FirecrawlConfig,
-  FirecrawlCreditCount,
-} from "../firecrawl-config.js";
-import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
+import type { FirecrawlScrapeError } from "../firecrawl-client.js";
+import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import type { MargonemAccountId } from "../margonem-account-id.js";
-import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff.js";
 import type { MargonemAccountRefetchDiff } from "../margonem-account-refetch-diff.js";
-import { parseMargonemProfileHtml } from "../margonem-profile-html-parser.js";
 import type { ParseMargonemProfileHtmlError } from "../margonem-profile-html-parser.js";
 import type { MargonemProfileId } from "../margonem-profile-id.js";
-import { toMargonemProfileUrl } from "../margonem-profile-url.js";
-import { fail, isFailure, success } from "../outcome.js";
-import type { Outcome } from "../outcome.js";
 import type { PendingMargonemAccountRefetchId } from "../pending-margonem-account-refetch-id.js";
 import type {
   ActorDoesNotOwnMargonemAccount,
   FirecrawlBudgetError,
-  FirecrawlRequestLedger,
   MargonemAccountNotFound,
-  MargonemAccountOwnerAuthorizer,
-  PendingMargonemAccountRefetchStore,
-  RefetchableMargonemAccountReader,
   SquadBuilderPersistenceUnavailable,
 } from "./account-refetch-store.js";
 
@@ -62,162 +43,3 @@ export type PreviewAccountRefetchError =
 export const pendingRefetchPolicy = {
   expiresAfterMinutes: 30,
 } as const;
-
-const addMinutes = (date: Date, minutes: number): Date =>
-  new Date(date.getTime() + minutes * 60 * 1000);
-
-/** Service module that previews a manual saved-account refetch. */
-export class PreviewAccountRefetch {
-  private readonly authorizer: MargonemAccountOwnerAuthorizer;
-  private readonly accountReader: RefetchableMargonemAccountReader;
-  private readonly refetchStore: PendingMargonemAccountRefetchStore;
-  private readonly ledger: FirecrawlRequestLedger;
-  private readonly firecrawl: FirecrawlClient;
-  private readonly clock: Clock;
-  private readonly config: FirecrawlConfig;
-
-  constructor(
-    authorizer: MargonemAccountOwnerAuthorizer,
-    accountReader: RefetchableMargonemAccountReader,
-    refetchStore: PendingMargonemAccountRefetchStore,
-    ledger: FirecrawlRequestLedger,
-    firecrawl: FirecrawlClient,
-    clock: Clock,
-    config: FirecrawlConfig
-  ) {
-    this.authorizer = authorizer;
-    this.accountReader = accountReader;
-    this.refetchStore = refetchStore;
-    this.ledger = ledger;
-    this.firecrawl = firecrawl;
-    this.clock = clock;
-    this.config = config;
-  }
-
-  /** Fetch latest account HTML and store a pending refetch diff for owner confirmation. */
-  async preview(
-    input: PreviewAccountRefetchInput,
-    options: { readonly signal?: AbortSignal } = {}
-  ): Promise<Outcome<PreviewAccountRefetchOutput, PreviewAccountRefetchError>> {
-    const authorized = await this.authorizer.authorizeOwner(input);
-
-    if (isFailure(authorized)) {
-      return fail(authorized.error);
-    }
-
-    const account = await this.accountReader.getAccountForRefetch(input);
-
-    if (isFailure(account)) {
-      return fail(account.error);
-    }
-
-    const yearMonth = firecrawlYearMonthFromDate(this.clock.now());
-    const reservedRequest = await this.ledger.reserveRequest({
-      monthlyRequestBudget: this.config.monthlyRequestBudget,
-      profileId: account.value.profileId,
-      requestedByUserId: input.actorUserId,
-      yearMonth,
-    });
-
-    if (isFailure(reservedRequest)) {
-      return fail(reservedRequest.error);
-    }
-
-    const scrapedProfile = await this.firecrawl.scrapeProfileHtml(
-      account.value.profileId,
-      options
-    );
-
-    if (isFailure(scrapedProfile)) {
-      const markFailed = await this.ledger.markRequestFailed({
-        errorTag: scrapedProfile.error._tag,
-        requestId: reservedRequest.value.requestId,
-      });
-
-      if (isFailure(markFailed)) {
-        return fail(markFailed.error);
-      }
-
-      return fail(scrapedProfile.error);
-    }
-
-    const creditsUsed = parseFirecrawlCreditCount(
-      scrapedProfile.value.metadata.creditsUsed ?? 1
-    );
-
-    if (isFailure(creditsUsed)) {
-      const markFailed = await this.ledger.markRequestFailed({
-        errorTag: creditsUsed.error._tag,
-        requestId: reservedRequest.value.requestId,
-      });
-
-      if (isFailure(markFailed)) {
-        return fail(markFailed.error);
-      }
-
-      return fail(
-        new FirecrawlResponseNotParseable({
-          cause: new Error("Invalid Firecrawl creditsUsed"),
-          profileId: account.value.profileId,
-        })
-      );
-    }
-
-    const markSucceeded = await this.ledger.markRequestSucceeded({
-      cacheState: scrapedProfile.value.metadata.cacheState ?? null,
-      creditsUsed: creditsUsed.value,
-      firecrawlStatusCode: scrapedProfile.value.metadata.statusCode ?? null,
-      requestId: reservedRequest.value.requestId,
-    });
-
-    if (isFailure(markSucceeded)) {
-      return fail(markSucceeded.error);
-    }
-
-    const parsedHtml = parseMargonemProfileHtml({
-      html: scrapedProfile.value.html,
-      profileId: account.value.profileId,
-    });
-
-    if (isFailure(parsedHtml)) {
-      return fail(parsedHtml.error);
-    }
-
-    const fetchedAt = this.clock.now();
-    const diff = computeMargonemAccountRefetchDiff({
-      accountId: account.value.accountId,
-      currentCharacters: account.value.currentCharacters,
-      fetchedAt,
-      latestCharacters: parsedHtml.value.jarunaCharacters,
-      profileId: account.value.profileId,
-    });
-
-    const pending = await this.refetchStore.createPendingRefetch({
-      accountId: account.value.accountId,
-      actorUserId: input.actorUserId,
-      diff,
-      expiresAt: addMinutes(
-        fetchedAt,
-        pendingRefetchPolicy.expiresAfterMinutes
-      ),
-      fetchedAt,
-      firecrawlCreditsUsed: creditsUsed.value,
-      latestCharacters: parsedHtml.value.jarunaCharacters,
-      profileId: account.value.profileId,
-    });
-
-    if (isFailure(pending)) {
-      return fail(pending.error);
-    }
-
-    return success({
-      accountId: account.value.accountId,
-      diff,
-      fetchedAt,
-      firecrawlCreditsUsed: creditsUsed.value,
-      generatedProfileUrl: toMargonemProfileUrl(account.value.profileId),
-      profileId: account.value.profileId,
-      refetchPreviewId: pending.value.id,
-    });
-  }
-}

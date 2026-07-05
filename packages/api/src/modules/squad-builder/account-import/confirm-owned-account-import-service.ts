@@ -7,7 +7,6 @@ import { serviceUse } from "../../../effect/service-use.js";
 import { parseAccountDisplayName } from "../account-display-name.js";
 import type { InvalidAccountDisplayName } from "../account-display-name.js";
 import type { AppUserId } from "../app-user-id.js";
-import { isFailure } from "../outcome.js";
 import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import type {
@@ -39,11 +38,7 @@ export const confirm = EffectRuntime.fn("AccountImport.confirm")(
   function* confirmOwnedAccountImportEffect(
     input: ConfirmOwnedAccountImportServiceInput
   ) {
-    const displayName = parseAccountDisplayName(input.displayName);
-
-    if (isFailure(displayName)) {
-      return yield* EffectRuntime.fail(displayName.error);
-    }
+    const displayName = yield* parseAccountDisplayName(input.displayName);
 
     const now = yield* currentDate;
     const pending = yield* AccountImportStoreService.use((store) =>
@@ -57,7 +52,7 @@ export const confirm = EffectRuntime.fn("AccountImport.confirm")(
     return yield* AccountImportStoreService.use((store) =>
       store.createOwnedAccountFromPendingImport({
         actorUserId: input.actorUserId,
-        displayName: displayName.value,
+        displayName,
         pending,
       })
     );

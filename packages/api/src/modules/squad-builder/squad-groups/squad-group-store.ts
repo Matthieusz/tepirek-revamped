@@ -18,7 +18,6 @@ import type {
   ProfileAccessState,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
-  SquadBuilderPersistenceUnavailable,
 } from "../account-import/account-import-store.js";
 import type {
   ApplyRefetchedAccountInput,
@@ -50,9 +49,7 @@ import type {
 import type { AppUserId } from "../app-user-id.js";
 import type { MargonemAccountId } from "../margonem-account-id.js";
 import type { MargonemProfession } from "../margonem-character.js";
-import type { Outcome } from "../outcome.js";
 import type {
-  SquadGroupAccess,
   SquadGroupAccessRole,
   SquadGroupOwnerAccess,
 } from "../squad-group-access.js";
@@ -67,10 +64,7 @@ import type {
 import type { SquadGroupVisibility } from "../squad-group-visibility.js";
 import type { SquadId } from "../squad-id.js";
 import type { SquadGroupName } from "../squad-name.js";
-import type {
-  SharedSquadGroupCharactersSnapshot,
-  SharedSquadGroupSaveError,
-} from "./save-shared-squad-group-characters.js";
+import type { SharedSquadGroupCharactersSnapshot } from "./save-shared-squad-group-characters.js";
 import type {
   AccountAccessInviteNotFound,
   AccountAccessTransitionNotAllowed,
@@ -331,209 +325,6 @@ export interface SaveSharedSquadGroupCharactersStoreInput {
   readonly groupId: SquadGroupId;
   readonly snapshot: SharedSquadGroupCharactersSnapshot;
   readonly now: Date;
-}
-
-/** Persistence capability for squad group editing. */
-export interface SquadGroupStore {
-  readonly createSquadGroup: (
-    input: CreateSquadGroupStoreInput
-  ) => Promise<Outcome<SquadGroupSummary, SquadBuilderPersistenceUnavailable>>;
-  readonly listMySquadGroups: (
-    input: ListMySquadGroupsInput
-  ) => Promise<
-    Outcome<readonly SquadGroupSummary[], SquadBuilderPersistenceUnavailable>
-  >;
-  readonly getSquadGroupDetail: (
-    input: GetSquadGroupDetailInput
-  ) => Promise<
-    Outcome<
-      SquadGroupDetail,
-      | SquadGroupNotFound
-      | ActorCannotViewSquadGroup
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly listAvailableCharactersForOwner: (
-    input: ListAvailableCharactersForOwnerInput
-  ) => Promise<
-    Outcome<
-      readonly AvailableSquadCharacter[],
-      SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly saveSquadGroupSnapshot: (
-    input: SaveSquadGroupSnapshotStoreInput
-  ) => Promise<
-    Outcome<
-      SquadGroupDetail,
-      | SquadGroupNotFound
-      | ActorDoesNotOwnSquadGroup
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
-}
-
-/** Persistence capability for squad group sharing/editing by invited users. */
-export interface GlobalSquadVisibilityStore {
-  readonly setSquadGroupVisibility: (
-    input: SetSquadGroupVisibilityStoreInput
-  ) => Promise<
-    Outcome<
-      SquadGroupVisibilityChange,
-      | SquadGroupNotFound
-      | ActorDoesNotOwnSquadGroup
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly listGlobalSquadGroups: (
-    input: ListGlobalSquadGroupsInput
-  ) => Promise<
-    Outcome<
-      readonly GlobalSquadGroupSummary[],
-      SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly authorizeSquadGroupViewer: (
-    input: AuthorizeSquadGroupViewerInput
-  ) => Promise<
-    Outcome<
-      SquadGroupAccess,
-      | SquadGroupNotFound
-      | ActorCannotViewSquadGroup
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
-}
-
-export interface SquadGroupSharingStore {
-  readonly authorizeSquadGroupOwner: (input: {
-    readonly actorUserId: AppUserId;
-    readonly groupId: SquadGroupId;
-  }) => Promise<
-    Outcome<
-      SquadGroupOwnerAccess,
-      | SquadGroupNotFound
-      | ActorDoesNotOwnSquadGroup
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly authorizeSquadGroupViewer: (input: {
-    readonly actorUserId: AppUserId;
-    readonly groupId: SquadGroupId;
-  }) => Promise<
-    Outcome<
-      SquadGroupAccess,
-      | SquadGroupNotFound
-      | ActorCannotViewSquadGroup
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly authorizeSquadGroupEditor: (input: {
-    readonly actorUserId: AppUserId;
-    readonly groupId: SquadGroupId;
-  }) => Promise<
-    Outcome<
-      SquadGroupAccess,
-      | SquadGroupNotFound
-      | ActorCannotEditSquadGroup
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly searchSquadEditorInviteTargets: (
-    input: SearchSquadEditorInviteTargetsStoreInput
-  ) => Promise<
-    Outcome<
-      readonly SquadEditorInviteTarget[],
-      SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly findVerifiedSquadEditorInviteTarget: (input: {
-    readonly targetUserId: AppUserId;
-  }) => Promise<
-    Outcome<
-      SquadEditorInviteTarget,
-      | { readonly _tag: "SquadEditorInviteTargetNotFound" }
-      | { readonly _tag: "SquadEditorInviteTargetNotVerified" }
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly upsertSquadGroupEditorInvite: (
-    input: UpsertSquadGroupEditorInviteInput
-  ) => Promise<
-    Outcome<
-      SquadGroupInvitationSummary,
-      | {
-          readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
-          readonly currentStatus: SquadGroupInvitationStatus;
-          readonly attempted: string;
-        }
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly listIncomingSquadGroupInvites: (input: {
-    readonly actorUserId: AppUserId;
-  }) => Promise<
-    Outcome<
-      readonly SquadGroupInvitationSummary[],
-      SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly getPendingSquadGroupInviteCount: (input: {
-    readonly actorUserId: AppUserId;
-  }) => Promise<Outcome<number, SquadBuilderPersistenceUnavailable>>;
-  readonly respondToSquadGroupInvite: (
-    input: RespondToSquadGroupInviteStoreInput
-  ) => Promise<
-    Outcome<
-      SquadGroupInvitationSummary,
-      | { readonly _tag: "SquadGroupInvitationNotFound" }
-      | { readonly _tag: "ActorIsNotSquadGroupInviteRecipient" }
-      | {
-          readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
-          readonly currentStatus: SquadGroupInvitationStatus;
-          readonly attempted: string;
-        }
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly revokeSquadGroupEditor: (
-    input: RevokeSquadGroupEditorStoreInput
-  ) => Promise<
-    Outcome<
-      SquadGroupInvitationSummary,
-      | { readonly _tag: "SquadGroupInvitationNotFound" }
-      | ActorDoesNotOwnSquadGroup
-      | {
-          readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
-          readonly currentStatus: SquadGroupInvitationStatus;
-          readonly attempted: string;
-        }
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly listSharedSquadGroups: (input: {
-    readonly actorUserId: AppUserId;
-    readonly filters: SquadGroupListFilters;
-  }) => Promise<
-    Outcome<
-      readonly SharedSquadGroupSummary[],
-      SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly listSquadGroupEditorGrants: (input: {
-    readonly actorUserId: AppUserId;
-    readonly groupId: SquadGroupId;
-  }) => Promise<
-    Outcome<
-      readonly SquadGroupEditorGrantSummary[],
-      | SquadGroupNotFound
-      | ActorDoesNotOwnSquadGroup
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
-  readonly saveSharedSquadGroupCharacters: (
-    input: SaveSharedSquadGroupCharactersStoreInput
-  ) => Promise<Outcome<SquadGroupDetail, SharedSquadGroupSaveError>>;
 }
 
 export interface SquadBuilderStoreServiceShape {
@@ -868,11 +659,6 @@ export class SquadGroupStoreService extends Context.Service<
   SquadGroupStoreServiceShape
 >()("@tepirek-revamped/api/squad-builder/SquadGroupStoreService") {}
 
-/** Squad group persistence contracts used by group editing, sharing, and visibility services. */
-export type SquadGroupsPersistenceStore = SquadGroupStore &
-  SquadGroupSharingStore &
-  GlobalSquadVisibilityStore;
-
 export type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,
@@ -910,7 +696,6 @@ export type {
   RevokeAccountAccessStoreInput,
   SearchInviteTargetsStoreInput,
   SharedMargonemAccountSummary,
-  SquadBuilderPersistenceUnavailable,
   UpsertAccountAccessInviteInput,
   VerifiedInviteTarget,
 };

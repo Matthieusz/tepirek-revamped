@@ -49,7 +49,6 @@ import {
 import type { AppUserId } from "./app-user-id.js";
 import type { MargonemAccountAccessId } from "./margonem-account-access-id.js";
 import type { MargonemAccountId } from "./margonem-account-id.js";
-import { isFailure } from "./outcome.js";
 import type { PendingMargonemAccountImportId } from "./pending-margonem-account-import-id.js";
 import type { PendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id.js";
 import type { SquadGroupId } from "./squad-group-id.js";
@@ -220,19 +219,15 @@ const squadGroupHandlers = HttpApiBuilder.group(
         withRequestCorrelation(
           request,
           Effect.gen(function* listGlobalSquadGroupsEffect() {
-            const filters = parseSquadGroupListFilters({
+            const filters = yield* parseSquadGroupListFilters({
               maxLevel: payload.maxLevel,
               minLevel: payload.minLevel,
               nameQuery: payload.nameQuery,
             });
 
-            if (isFailure(filters)) {
-              return yield* Effect.fail(filters.error);
-            }
-
             return yield* listGlobalSquadGroups.list({
               actorUserId: toAppUserId(payload.actorUserId),
-              filters: filters.value,
+              filters,
             });
           })
         )

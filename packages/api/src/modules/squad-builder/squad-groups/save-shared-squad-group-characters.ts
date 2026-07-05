@@ -3,6 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import { serviceUse } from "../../../effect/service-use.js";
+import type { SquadBuilderPersistenceUnavailable } from "../account-import/account-import-store.js";
 import { systemClock } from "../account-import/preview-margonem-profile-import.js";
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
@@ -21,7 +22,6 @@ import {
 } from "./squad-group-errors.js";
 import type {
   ActorCannotViewSquadGroup,
-  SquadBuilderPersistenceUnavailable,
   SquadGroupNotFound,
 } from "./squad-group-store.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";

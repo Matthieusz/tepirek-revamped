@@ -1,12 +1,19 @@
 import * as Effect from "effect/Effect";
 
 import { parseMargonemProfession } from "./margonem-character.js";
-import type { MargonemCharacterPreview } from "./margonem-character.js";
+import type {
+  MargonemCharacterPreview,
+  MargonemProfession,
+} from "./margonem-character.js";
 import {
   parseMargonemCharacterId,
   parsePositiveLevel,
 } from "./margonem-profile-id.js";
-import type { MargonemProfileId } from "./margonem-profile-id.js";
+import type {
+  MargonemCharacterId,
+  MargonemProfileId,
+  PositiveLevel,
+} from "./margonem-profile-id.js";
 
 /** Parsed Jaruna-only Margonem profile data from Firecrawl HTML. */
 export interface ParsedMargonemProfile {

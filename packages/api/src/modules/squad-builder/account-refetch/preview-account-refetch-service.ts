@@ -5,10 +5,7 @@ import * as Layer from "effect/Layer";
 
 import { serviceUse } from "../../../effect/service-use.js";
 import { FirecrawlClientService } from "../firecrawl-client-service.js";
-import {
-  FirecrawlRequestFailed,
-  FirecrawlResponseNotParseable,
-} from "../firecrawl-client.js";
+import { FirecrawlResponseNotParseable } from "../firecrawl-client.js";
 import type { FirecrawlScrapeError } from "../firecrawl-client.js";
 import {
   FirecrawlConfigService,
@@ -18,7 +15,6 @@ import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
 import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff.js";
 import { parseMargonemProfileHtml } from "../margonem-profile-html-parser.js";
 import { toMargonemProfileUrl } from "../margonem-profile-url.js";
-import { isFailure } from "../outcome.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import type { PreviewAccountRefetchInput } from "./preview-account-refetch.js";
 import { pendingRefetchPolicy } from "./preview-account-refetch.js";
@@ -47,60 +43,55 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
         yearMonth,
       })
     );
-    const scrapedProfileResult = yield* EffectRuntime.tryPromise({
-      catch: (cause) =>
-        new FirecrawlRequestFailed({
-          cause,
-          profileId: account.profileId,
-        }) satisfies FirecrawlScrapeError,
+    const scrapedProfile = yield* EffectRuntime.tryPromise({
+      catch: (cause: unknown) => cause as FirecrawlScrapeError,
       try: () => firecrawl.scrapeProfileHtml(account.profileId, options),
-    });
-
-    if (isFailure(scrapedProfileResult)) {
-      yield* AccountRefetchStoreService.use((store) =>
-        store.markRequestFailed({
-          errorTag: scrapedProfileResult.error._tag,
-          requestId: reservedRequest.requestId,
-        })
-      );
-      return yield* scrapedProfileResult.error;
-    }
-
-    const scrapedProfile = scrapedProfileResult.value;
-    const creditsUsed = parseFirecrawlCreditCount(
-      scrapedProfile.metadata.creditsUsed ?? 1
+    }).pipe(
+      EffectRuntime.catch((error) =>
+        AccountRefetchStoreService.use((store) =>
+          store.markRequestFailed({
+            errorTag: error._tag,
+            requestId: reservedRequest.requestId,
+          })
+        ).pipe(EffectRuntime.andThen(EffectRuntime.fail(error)))
+      )
     );
 
-    if (isFailure(creditsUsed)) {
-      yield* AccountRefetchStoreService.use((store) =>
-        store.markRequestFailed({
-          errorTag: creditsUsed.error._tag,
-          requestId: reservedRequest.requestId,
-        })
-      );
-      return yield* new FirecrawlResponseNotParseable({
-        cause: new Error("Invalid Firecrawl creditsUsed"),
-        profileId: account.profileId,
-      });
-    }
+    const creditsUsed = yield* parseFirecrawlCreditCount(
+      scrapedProfile.metadata.creditsUsed ?? 1
+    ).pipe(
+      EffectRuntime.catch(() =>
+        AccountRefetchStoreService.use((store) =>
+          store.markRequestFailed({
+            errorTag: "FirecrawlResponseNotParseable",
+            requestId: reservedRequest.requestId,
+          })
+        ).pipe(
+          EffectRuntime.andThen(
+            EffectRuntime.fail(
+              new FirecrawlResponseNotParseable({
+                cause: new Error("Invalid Firecrawl creditsUsed"),
+                profileId: account.profileId,
+              })
+            )
+          )
+        )
+      )
+    );
 
     yield* AccountRefetchStoreService.use((store) =>
       store.markRequestSucceeded({
         cacheState: scrapedProfile.metadata.cacheState ?? null,
-        creditsUsed: creditsUsed.value,
+        creditsUsed,
         firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
         requestId: reservedRequest.requestId,
       })
     );
 
-    const parsedHtml = parseMargonemProfileHtml({
+    const parsedHtml = yield* parseMargonemProfileHtml({
       html: scrapedProfile.html,
       profileId: account.profileId,
     });
-
-    if (isFailure(parsedHtml)) {
-      return yield* EffectRuntime.fail(parsedHtml.error);
-    }
 
     const fetchedTimeMillis = yield* ClockRuntime.currentTimeMillis;
     const fetchedAt = new Date(fetchedTimeMillis);
@@ -108,7 +99,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
       accountId: account.accountId,
       currentCharacters: account.currentCharacters,
       fetchedAt,
-      latestCharacters: parsedHtml.value.jarunaCharacters,
+      latestCharacters: parsedHtml.jarunaCharacters,
       profileId: account.profileId,
     });
     const pending = yield* AccountRefetchStoreService.use((store) =>
@@ -121,8 +112,8 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
           pendingRefetchPolicy.expiresAfterMinutes
         ),
         fetchedAt,
-        firecrawlCreditsUsed: creditsUsed.value,
-        latestCharacters: parsedHtml.value.jarunaCharacters,
+        firecrawlCreditsUsed: creditsUsed,
+        latestCharacters: parsedHtml.jarunaCharacters,
         profileId: account.profileId,
       })
     );
@@ -131,7 +122,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
       accountId: account.accountId,
       diff,
       fetchedAt,
-      firecrawlCreditsUsed: creditsUsed.value,
+      firecrawlCreditsUsed: creditsUsed,
       generatedProfileUrl: toMargonemProfileUrl(account.profileId),
       profileId: account.profileId,
       refetchPreviewId: pending.id,

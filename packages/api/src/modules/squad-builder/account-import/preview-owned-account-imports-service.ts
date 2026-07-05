@@ -14,7 +14,6 @@ import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
 } from "../margonem-profile-url.js";
-import { isFailure, isSuccess } from "../outcome.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import type {
   DuplicateMargonemAccountError,
@@ -76,18 +75,20 @@ const defaultDisplayNameFor = (
   suggestedAccountName: string,
   profileId: MargonemProfileId
 ): AccountDisplayName => {
-  const parsed = parseAccountDisplayName(suggestedAccountName);
+  const parsed = EffectRuntime.runSyncExit(
+    parseAccountDisplayName(suggestedAccountName)
+  );
 
-  if (isSuccess(parsed)) {
+  if (parsed._tag === "Success") {
     return parsed.value;
   }
 
-  const fallback = parseAccountDisplayName(
-    `Profil ${profileIdToNumber(profileId)}`
+  const fallback = EffectRuntime.runSyncExit(
+    parseAccountDisplayName(`Profil ${profileIdToNumber(profileId)}`)
   );
 
   // SAFETY: the fallback template always produces a valid display name.
-  return isSuccess(fallback)
+  return fallback._tag === "Success"
     ? fallback.value
     : (suggestedAccountName as AccountDisplayName);
 };
@@ -214,18 +215,26 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
     const firstLineForProfileId = new Map<number, number>();
 
     for (const line of nonBlankLines) {
-      const parsedProfileId = parseMargonemProfileUrl(line.inputUrl);
+      const parsedProfileId = yield* EffectRuntime.match(
+        parseMargonemProfileUrl(line.inputUrl),
+        {
+          onFailure: (error) => {
+            failures.push({
+              error,
+              inputUrl: line.inputUrl,
+              lineNumber: line.lineNumber,
+            });
+            return null;
+          },
+          onSuccess: (value) => value,
+        }
+      );
 
-      if (isFailure(parsedProfileId)) {
-        failures.push({
-          error: parsedProfileId.error,
-          inputUrl: line.inputUrl,
-          lineNumber: line.lineNumber,
-        });
+      if (parsedProfileId === null) {
         continue;
       }
 
-      const profileIdNumber = profileIdToNumber(parsedProfileId.value);
+      const profileIdNumber = profileIdToNumber(parsedProfileId);
       const firstLineNumber = firstLineForProfileId.get(profileIdNumber);
 
       if (firstLineNumber !== undefined) {
@@ -243,7 +252,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
       parsedLines.push({
         inputUrl: line.inputUrl,
         lineNumber: line.lineNumber,
-        profileId: parsedProfileId.value,
+        profileId: parsedProfileId,
       });
     }
 
