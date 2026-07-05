@@ -6,6 +6,7 @@ import {
 import { AppHttpApi } from "@tepirek-revamped/api/http-api-contract";
 import { AppHttpApiLayer } from "@tepirek-revamped/api/http-api-handlers";
 import { HealthHttpApiLayer } from "@tepirek-revamped/api/modules/health/http-api-handlers";
+import * as Observability from "@tepirek-revamped/api/observability";
 import { auth } from "@tepirek-revamped/auth";
 import * as Layer from "effect/Layer";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
@@ -55,7 +56,8 @@ export const disposeApiEffectRuntime = async (): Promise<void> => {
 // toWebHandler; this narrows the exported web handler to the Hono boundary.
 const appHttpApiLayer = AppHttpApiLayer.pipe(
   Layer.provide(makeApiLiveLayer(databaseUrl)),
-  Layer.provide(HttpServer.layerServices)
+  Layer.provide(HttpServer.layerServices),
+  Layer.provideMerge(Observability.layer)
 ) as Layer.Layer<HttpRouter.HttpRouter>;
 
 const appHttpApi = HttpRouter.toWebHandler(appHttpApiLayer, {

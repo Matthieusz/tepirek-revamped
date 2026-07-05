@@ -64,6 +64,11 @@ const otlpUrl = (path: "logs" | "traces"): string | undefined => {
   return `${endpoint.replace(/\/+$/u, "")}/v1/${path}`;
 };
 
+const deploymentEnvironmentName = (): string =>
+  process.env.OTEL_DEPLOYMENT_ENVIRONMENT_NAME ??
+  process.env.NODE_ENV ??
+  "development";
+
 export const resource = (): {
   readonly attributes: Record<string, string>;
   readonly serviceName: string;
@@ -71,6 +76,7 @@ export const resource = (): {
 } => ({
   attributes: {
     ...parseResourceAttributes(),
+    "deployment.environment.name": deploymentEnvironmentName(),
     "service.instance.id": runId,
     "tepirek.run": runId,
   },
