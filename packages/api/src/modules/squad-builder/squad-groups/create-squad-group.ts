@@ -4,7 +4,6 @@ import * as Layer from "effect/Layer";
 
 import { serviceUse } from "../../../effect/service-use.js";
 import type { AppUserId } from "../app-user-id.js";
-import { isFailure } from "../outcome.js";
 import { parseSquadGroupName } from "../squad-name.js";
 import type { InvalidSquadGroupName } from "../squad-name.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
@@ -27,15 +26,11 @@ const makeCreate = (store: SquadGroupStoreServiceShape) =>
   Effect.fn("SquadGroups.create")(function* createSquadGroup(
     input: CreateSquadGroupInput
   ) {
-    const name = parseSquadGroupName(input.name);
-
-    if (isFailure(name)) {
-      return yield* name.error;
-    }
+    const name = yield* parseSquadGroupName(input.name);
 
     return yield* store.createSquadGroup({
       actorUserId: input.actorUserId,
-      name: name.value,
+      name,
     });
   });
 

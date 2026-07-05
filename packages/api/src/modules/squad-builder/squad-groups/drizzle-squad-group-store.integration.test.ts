@@ -14,6 +14,7 @@ import {
 } from "@tepirek-revamped/db/schema/squad-builder";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { describe, expect, it } from "vitest";
 
 import { makeApiSquadBuilderLayer } from "../../../effect-app.js";
@@ -40,7 +41,6 @@ import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff.js";
 import { parseMargonemProfileId } from "../margonem-profile-id.js";
-import { isSuccess } from "../outcome.js";
 import { create as createSquadGroup } from "./create-squad-group.js";
 import { list as listAvailableSquadCharacters } from "./list-available-squad-characters.js";
 import { list as listGlobalSquadGroups } from "./list-global-squad-groups.js";
@@ -323,9 +323,11 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
   it("creates pending account imports through the Effect store", async () => {
     const member = await createVerifiedMember({ id: "effect-pending-user" });
-    const displayName = parseAccountDisplayName("Effect pending");
+    const displayName = Effect.runSyncExit(
+      parseAccountDisplayName("Effect pending")
+    );
 
-    if (!isSuccess(displayName)) {
+    if (Exit.isFailure(displayName)) {
       throw new Error("Expected display name to be valid");
     }
 

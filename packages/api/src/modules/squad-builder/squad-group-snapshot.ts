@@ -1,3 +1,5 @@
+import * as Effect from "effect/Effect";
+
 import type { AccountDisplayName } from "./account-display-name.js";
 import type { AppUserId } from "./app-user-id.js";
 import type { MargonemAccountId } from "./margonem-account-id.js";
@@ -9,8 +11,6 @@ import type {
   MargonemCharacterId,
   PositiveLevel,
 } from "./margonem-profile-id.js";
-import { fail, isFailure, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
 import type { SquadGroupId } from "./squad-group-id.js";
 import type { SquadId } from "./squad-id.js";
 import { parseSquadGroupName, parseSquadName } from "./squad-name.js";
@@ -124,16 +124,16 @@ const maxCharactersPerSquad = 10;
 
 const parsePosition = (
   input: number
-): Outcome<number, SquadGroupValidationError> => {
+): Effect.Effect<number, SquadGroupValidationError> => {
   if (!Number.isSafeInteger(input) || input < 0) {
-    return fail({
+    return Effect.fail({
       _tag: "InvalidSquadSnapshot",
       message:
         "Pozycje składów i postaci muszą być nieujemnymi liczbami całkowitymi",
     });
   }
 
-  return success(input);
+  return Effect.succeed(input);
 };
 
 /** Validate a squad group snapshot against accessible Jaruna characters and group rules. */
@@ -142,14 +142,15 @@ export const validateSquadGroupSnapshot = ({
   groupId,
   name,
   squads,
-}: ValidateSquadGroupSnapshotInput): Outcome<
+}: ValidateSquadGroupSnapshotInput): Effect.Effect<
   SquadGroupDraftSnapshot,
   SquadGroupValidationError
 > => {
-  const parsedName = parseSquadGroupName(name);
-
-  if (isFailure(parsedName)) {
-    return fail(parsedName.error);
+  let parsedName: SquadGroupName;
+  try {
+    parsedName = Effect.runSync(parseSquadGroupName(name));
+  } catch (error) {
+    return Effect.fail(error as SquadGroupValidationError);
   }
 
   const availableByCharacterId = new Map<number, AvailableSquadCharacter>();
@@ -162,24 +163,23 @@ export const validateSquadGroupSnapshot = ({
 
   for (const squad of squads) {
     if (squad.clientKey.trim().length === 0) {
-      return fail({
+      return Effect.fail({
         _tag: "InvalidSquadSnapshot",
         message: "Każdy skład musi mieć klucz klienta",
       });
     }
 
-    const parsedSquadName = parseSquadName(squad.name);
-    if (isFailure(parsedSquadName)) {
-      return fail(parsedSquadName.error);
-    }
-
-    const parsedSquadPosition = parsePosition(squad.position);
-    if (isFailure(parsedSquadPosition)) {
-      return fail(parsedSquadPosition.error);
+    let parsedSquadName: SquadName;
+    let parsedSquadPosition: number;
+    try {
+      parsedSquadName = Effect.runSync(parseSquadName(squad.name));
+      parsedSquadPosition = Effect.runSync(parsePosition(squad.position));
+    } catch (error) {
+      return Effect.fail(error as SquadGroupValidationError);
     }
 
     if (squad.characters.length > maxCharactersPerSquad) {
-      return fail({
+      return Effect.fail({
         _tag: "TooManyCharactersInSquad",
         maxCharacters: maxCharactersPerSquad,
         squadClientKey: squad.clientKey,
@@ -191,30 +191,34 @@ export const validateSquadGroupSnapshot = ({
     const parsedCharacters: SquadCharacterDraftPlacement[] = [];
 
     for (const character of squad.characters) {
-      const parsedCharacterPosition = parsePosition(character.position);
-      if (isFailure(parsedCharacterPosition)) {
-        return fail(parsedCharacterPosition.error);
+      let parsedCharacterPosition: number;
+      try {
+        parsedCharacterPosition = Effect.runSync(
+          parsePosition(character.position)
+        );
+      } catch (error) {
+        return Effect.fail(error as SquadGroupValidationError);
       }
 
       const availableCharacter = availableByCharacterId.get(
         character.characterId
       );
       if (availableCharacter === undefined) {
-        return fail({
+        return Effect.fail({
           _tag: "SquadCharacterNotAccessible",
           characterId: character.characterId,
         });
       }
 
       if (availableCharacter.world !== "jaruna") {
-        return fail({
+        return Effect.fail({
           _tag: "SquadCharacterNotJaruna",
           characterId: character.characterId,
         });
       }
 
       if (squadCharacterIds.has(character.characterId)) {
-        return fail({
+        return Effect.fail({
           _tag: "DuplicateCharacterInSquad",
           characterId: character.characterId,
           squadClientKey: squad.clientKey,
@@ -222,14 +226,14 @@ export const validateSquadGroupSnapshot = ({
       }
 
       if (groupCharacterIds.has(character.characterId)) {
-        return fail({
+        return Effect.fail({
           _tag: "DuplicateCharacterInSquadGroup",
           characterId: character.characterId,
         });
       }
 
       if (squadAccountIds.has(availableCharacter.accountId)) {
-        return fail({
+        return Effect.fail({
           _tag: "DuplicateAccountInSquad",
           accountId: availableCharacter.accountId,
           squadClientKey: squad.clientKey,
@@ -241,22 +245,22 @@ export const validateSquadGroupSnapshot = ({
       squadAccountIds.add(availableCharacter.accountId);
       parsedCharacters.push({
         characterId: character.characterId,
-        position: parsedCharacterPosition.value as CharacterPosition,
+        position: parsedCharacterPosition as CharacterPosition,
       });
     }
 
     parsedSquads.push({
       characters: parsedCharacters,
       clientKey: squad.clientKey,
-      name: parsedSquadName.value,
-      position: parsedSquadPosition.value as SquadPosition,
+      name: parsedSquadName,
+      position: parsedSquadPosition as SquadPosition,
       ...(squad.squadId === undefined ? {} : { squadId: squad.squadId }),
     });
   }
 
-  return success({
+  return Effect.succeed({
     groupId,
-    name: parsedName.value,
+    name: parsedName,
     squads: parsedSquads,
   });
 };

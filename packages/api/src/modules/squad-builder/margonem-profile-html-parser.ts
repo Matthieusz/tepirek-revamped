@@ -131,50 +131,33 @@ const parseJarunaCharacterRow = (
     });
   }
 
-  const characterId = Effect.runSyncExit(
-    parseMargonemCharacterId(Number(characterIdText))
-  );
-  const level = Effect.runSyncExit(parsePositiveLevel(Number(levelText)));
-  const profession = Effect.runSyncExit(
-    parseMargonemProfession(professionLabel)
-  );
+  let parsedCharacterId: MargonemCharacterId;
+  let parsedLevel: PositiveLevel;
+  let parsedProfession: MargonemProfession;
 
-  if (characterId._tag === "Failure") {
+  try {
+    parsedCharacterId = Effect.runSync(
+      parseMargonemCharacterId(Number(characterIdText))
+    );
+    parsedLevel = Effect.runSync(parsePositiveLevel(Number(levelText)));
+    parsedProfession = Effect.runSync(parseMargonemProfession(professionLabel));
+  } catch {
     return Effect.fail({
       _tag: "MargonemCharacterRowInvalid",
       profileId,
-      safeReason: "invalid character id",
-    });
-  }
-
-  if (level._tag === "Failure") {
-    return Effect.fail({
-      _tag: "MargonemCharacterRowInvalid",
-      profileId,
-      safeReason: "invalid character level",
-    });
-  }
-
-  if (profession._tag === "Failure") {
-    return Effect.fail({
-      _tag: "MargonemCharacterRowInvalid",
-      profileId,
-      safeReason: "unknown profession label",
+      safeReason: "invalid character attributes",
     });
   }
 
   return Effect.succeed({
     avatarUrl: extractAvatarUrl(rowHtml),
-    characterId: characterId.value,
-    level: level.value,
+    characterId: parsedCharacterId,
+    level: parsedLevel,
     name: decodeHtmlEntities(name.trim()),
-    profession: profession.value,
+    profession: parsedProfession,
     world: "jaruna",
   });
 };
-
-const runRow = (profileId: MargonemProfileId, rowHtml: string) =>
-  Effect.runSyncExit(parseJarunaCharacterRow(profileId, rowHtml));
 
 /** Parse Firecrawl HTML into a Jaruna-only profile preview. */
 export const parseMargonemProfileHtml = ({
@@ -202,14 +185,15 @@ export const parseMargonemProfileHtml = ({
   const jarunaCharacters: MargonemCharacterPreview[] = [];
 
   for (const rowHtml of rowMatches) {
-    const parsedCharacter = runRow(profileId, rowHtml);
-
-    if (parsedCharacter._tag === "Failure") {
-      return Effect.fail(parsedCharacter.cause);
-    }
-
-    if (parsedCharacter.value !== null) {
-      jarunaCharacters.push(parsedCharacter.value);
+    try {
+      const parsedCharacter = Effect.runSync(
+        parseJarunaCharacterRow(profileId, rowHtml)
+      );
+      if (parsedCharacter !== null) {
+        jarunaCharacters.push(parsedCharacter);
+      }
+    } catch (error) {
+      return Effect.fail(error as ParseMargonemProfileHtmlError);
     }
   }
 

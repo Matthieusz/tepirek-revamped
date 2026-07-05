@@ -6,7 +6,6 @@ import { serviceUse } from "../../../effect/service-use.js";
 import { systemClock } from "../account-import/preview-margonem-profile-import.js";
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
-import { isFailure } from "../outcome.js";
 import type { SquadGroupId } from "../squad-group-id.js";
 import type {
   SquadCharacterDraftPlacement,
@@ -123,7 +122,7 @@ const makeSaveWithStoreService = (clock: Clock) =>
         submittedBySquadId.set(submitted.squadId, submitted);
       }
 
-      const validation = validateSquadGroupSnapshot({
+      const validation = yield* validateSquadGroupSnapshot({
         actorUserId: detail.ownerUserId,
         availableCharacters,
         groupId: input.groupId,
@@ -137,10 +136,6 @@ const makeSaveWithStoreService = (clock: Clock) =>
         })),
       });
 
-      if (isFailure(validation)) {
-        return yield* Effect.fail(validation.error);
-      }
-
       return yield* SquadGroupStoreService.use((store) =>
         store.saveSharedSquadGroupCharacters({
           actorUserId: input.actorUserId,
@@ -148,7 +143,7 @@ const makeSaveWithStoreService = (clock: Clock) =>
           now: clock.now(),
           snapshot: {
             groupId: input.groupId,
-            squads: validation.value.squads.map((squad) => ({
+            squads: validation.squads.map((squad) => ({
               characters: squad.characters,
               squadId: squad.squadId as SquadId,
             })),

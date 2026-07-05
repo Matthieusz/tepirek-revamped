@@ -6,7 +6,6 @@ import { serviceUse } from "../../../effect/service-use.js";
 import { systemClock } from "../account-import/preview-margonem-profile-import.js";
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
-import { isFailure } from "../outcome.js";
 import type { SquadGroupId } from "../squad-group-id.js";
 import type {
   SaveSquadInput,
@@ -56,7 +55,7 @@ const makeSave = (clock: Clock) =>
       })
     );
 
-    const snapshot = validateSquadGroupSnapshot({
+    const snapshot = yield* validateSquadGroupSnapshot({
       actorUserId: input.actorUserId,
       availableCharacters,
       groupId: input.groupId,
@@ -64,16 +63,12 @@ const makeSave = (clock: Clock) =>
       squads: input.squads,
     });
 
-    if (isFailure(snapshot)) {
-      return yield* Effect.fail(snapshot.error);
-    }
-
     return yield* SquadGroupStoreService.use((store) =>
       store.saveSquadGroupSnapshot({
         actorUserId: input.actorUserId,
         availableCharacters,
         now: clock.now(),
-        snapshot: snapshot.value,
+        snapshot,
       })
     );
   });

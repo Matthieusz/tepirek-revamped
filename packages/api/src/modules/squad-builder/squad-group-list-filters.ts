@@ -1,5 +1,4 @@
-import { fail, isFailure, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
+import * as Effect from "effect/Effect";
 
 /** Normalized text query for browsing squad groups. */
 export type SquadGroupNameQuery = string & {
@@ -76,56 +75,66 @@ export const squadGroupLevelBoundToNumber = (
   bound: SquadGroupLevelBound
 ): number => bound;
 
-type ParsedOptional<T> =
-  | { readonly _tag: "Absent" }
-  | { readonly _tag: "Present"; readonly value: T };
-
 const normalizeNameQuery = (value: string): string =>
   value.trim().replaceAll(/\s+/gu, " ");
 
 const parseNameQuery = (
   value: string | null | undefined
-): Outcome<ParsedOptional<SquadGroupNameQuery>, InvalidSquadGroupNameQuery> => {
+): Effect.Effect<
+  | { readonly _tag: "Absent" }
+  | {
+      readonly _tag: "Present";
+      readonly value: SquadGroupNameQuery;
+    },
+  InvalidSquadGroupNameQuery
+> => {
   if (value === undefined || value === null) {
-    return success({ _tag: "Absent" });
+    return Effect.succeed({ _tag: "Absent" as const });
   }
 
   const normalized = normalizeNameQuery(value);
   if (normalized.length === 0) {
-    return success({ _tag: "Absent" });
+    return Effect.succeed({ _tag: "Absent" as const });
   }
 
   if (normalized.length < squadGroupListFilterPolicy.nameQueryMinLength) {
-    return fail({
+    return Effect.fail({
       _tag: "InvalidSquadGroupNameQuery",
       message: `Wpisz co najmniej ${squadGroupListFilterPolicy.nameQueryMinLength} znaki nazwy składu.`,
     });
   }
 
   if (normalized.length > squadGroupListFilterPolicy.nameQueryMaxLength) {
-    return fail({
+    return Effect.fail({
       _tag: "InvalidSquadGroupNameQuery",
       message: `Nazwa składu może mieć maksymalnie ${squadGroupListFilterPolicy.nameQueryMaxLength} znaków.`,
     });
   }
 
   // SAFETY: length and normalization invariants were established above.
-  return success({ _tag: "Present", value: normalized as SquadGroupNameQuery });
+  return Effect.succeed({
+    _tag: "Present" as const,
+    value: normalized as SquadGroupNameQuery,
+  });
 };
 
 const parseLevelBound = (
   value: number | null | undefined,
   fieldName: "minLevel" | "maxLevel"
-): Outcome<
-  ParsedOptional<SquadGroupLevelBound>,
+): Effect.Effect<
+  | { readonly _tag: "Absent" }
+  | {
+      readonly _tag: "Present";
+      readonly value: SquadGroupLevelBound;
+    },
   InvalidSquadGroupLevelRange
 > => {
   if (value === undefined || value === null) {
-    return success({ _tag: "Absent" });
+    return Effect.succeed({ _tag: "Absent" as const });
   }
 
   if (!Number.isInteger(value)) {
-    return fail({
+    return Effect.fail({
       _tag: "InvalidSquadGroupLevelRange",
       message: "Poziom postaci musi być liczbą całkowitą.",
     });
@@ -135,63 +144,61 @@ const parseLevelBound = (
     value < squadGroupListFilterPolicy.minAllowedLevel ||
     value > squadGroupListFilterPolicy.maxAllowedLevel
   ) {
-    return fail({
+    return Effect.fail({
       _tag: "InvalidSquadGroupLevelRange",
       message: `Poziom ${fieldName === "minLevel" ? "od" : "do"} musi być w zakresie ${squadGroupListFilterPolicy.minAllowedLevel}-${squadGroupListFilterPolicy.maxAllowedLevel}.`,
     });
   }
 
   // SAFETY: integer and allowed-range invariants were established above.
-  return success({ _tag: "Present", value: value as SquadGroupLevelBound });
+  return Effect.succeed({
+    _tag: "Present" as const,
+    value: value as SquadGroupLevelBound,
+  });
 };
+
+type ParsedOptional<T> =
+  | { readonly _tag: "Absent" }
+  | { readonly _tag: "Present"; readonly value: T };
 
 /** Parse and normalize squad group list filters before store access. */
 export const parseSquadGroupListFilters = (
   input: ParseSquadGroupListFiltersInput = {}
-): Outcome<SquadGroupListFilters, SquadGroupListFilterError> => {
-  const nameQuery = parseNameQuery(input.nameQuery);
-  if (isFailure(nameQuery)) {
-    return fail(nameQuery.error);
-  }
+): Effect.Effect<SquadGroupListFilters, SquadGroupListFilterError> => {
+  let nameQuery: ParsedOptional<SquadGroupNameQuery>;
+  let minLevel: ParsedOptional<SquadGroupLevelBound>;
+  let maxLevel: ParsedOptional<SquadGroupLevelBound>;
 
-  const minLevel = parseLevelBound(input.minLevel, "minLevel");
-  if (isFailure(minLevel)) {
-    return fail(minLevel.error);
-  }
-
-  const maxLevel = parseLevelBound(input.maxLevel, "maxLevel");
-  if (isFailure(maxLevel)) {
-    return fail(maxLevel.error);
+  try {
+    nameQuery = Effect.runSync(parseNameQuery(input.nameQuery));
+    minLevel = Effect.runSync(parseLevelBound(input.minLevel, "minLevel"));
+    maxLevel = Effect.runSync(parseLevelBound(input.maxLevel, "maxLevel"));
+  } catch (error) {
+    return Effect.fail(error as SquadGroupListFilterError);
   }
 
   if (
-    minLevel.value._tag === "Present" &&
-    maxLevel.value._tag === "Present" &&
-    minLevel.value.value > maxLevel.value.value
+    minLevel._tag === "Present" &&
+    maxLevel._tag === "Present" &&
+    minLevel.value > maxLevel.value
   ) {
-    return fail({
+    return Effect.fail({
       _tag: "InvalidSquadGroupLevelRange",
       message: "Poziom od nie może być większy niż poziom do.",
     });
   }
 
   const levelRange: SquadGroupLevelRange =
-    minLevel.value._tag === "Absent" && maxLevel.value._tag === "Absent"
+    minLevel._tag === "Absent" && maxLevel._tag === "Absent"
       ? { _tag: "AnyLevel" }
       : {
           _tag: "BoundedLevelRange",
-          ...(maxLevel.value._tag === "Absent"
-            ? {}
-            : { maxLevel: maxLevel.value.value }),
-          ...(minLevel.value._tag === "Absent"
-            ? {}
-            : { minLevel: minLevel.value.value }),
+          ...(maxLevel._tag === "Absent" ? {} : { maxLevel: maxLevel.value }),
+          ...(minLevel._tag === "Absent" ? {} : { minLevel: minLevel.value }),
         };
 
-  return success({
+  return Effect.succeed({
     levelRange,
-    ...(nameQuery.value._tag === "Absent"
-      ? {}
-      : { nameQuery: nameQuery.value.value }),
+    ...(nameQuery._tag === "Absent" ? {} : { nameQuery: nameQuery.value }),
   });
 };

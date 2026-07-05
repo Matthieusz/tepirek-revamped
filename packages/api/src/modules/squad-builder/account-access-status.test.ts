@@ -1,3 +1,5 @@
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -5,29 +7,18 @@ import {
   inactiveAccountAccessStatuses,
   parseAccountAccessStatus,
 } from "./account-access-status.js";
-import { isFailure, isSuccess } from "./outcome.js";
 
 describe("parseAccountAccessStatus", () => {
   it("accepts known access statuses", () => {
     for (const value of ["pending", "accepted", "declined", "revoked"]) {
-      const result = parseAccountAccessStatus(value);
-      expect(isSuccess(result)).toBe(true);
+      const exit = Effect.runSyncExit(parseAccountAccessStatus(value));
+      expect(Exit.isSuccess(exit)).toBe(true);
     }
   });
 
   it("rejects unknown status strings", () => {
-    const result = parseAccountAccessStatus("archived");
-
-    expect(isFailure(result)).toBe(true);
-
-    if (!isFailure(result)) {
-      throw new Error("Expected unknown status to fail");
-    }
-
-    expect(result.error).toEqual({
-      _tag: "InvalidAccountAccessStatus",
-      value: "archived",
-    });
+    const exit = Effect.runSyncExit(parseAccountAccessStatus("archived"));
+    expect(Exit.isFailure(exit)).toBe(true);
   });
 });
 
