@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { parseMargonemProfileHtml } from "./margonem-profile-html-parser.js";
 import { parseMargonemProfileId } from "./margonem-profile-id.js";
-import { isError, isOk } from "./result.js";
+import { isFailure, isSuccess } from "./outcome.js";
 
 const parseFixtureProfileId = () => {
   const profileId = parseMargonemProfileId(7_298_897);
 
-  if (!isOk(profileId)) {
+  if (!isSuccess(profileId)) {
     throw new Error("Expected test profile id to be valid");
   }
 
@@ -21,9 +21,9 @@ describe("Margonem profile HTML parser", () => {
       profileId: parseFixtureProfileId(),
     });
 
-    expect(isError(parsed)).toBe(true);
+    expect(isFailure(parsed)).toBe(true);
 
-    if (!isError(parsed)) {
+    if (!isFailure(parsed)) {
       throw new Error("Expected profile HTML parsing to fail");
     }
 

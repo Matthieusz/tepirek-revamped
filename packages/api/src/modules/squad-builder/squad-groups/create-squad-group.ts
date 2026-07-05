@@ -4,7 +4,7 @@ import * as Layer from "effect/Layer";
 
 import { serviceUse } from "../../../effect/service-use.js";
 import type { AppUserId } from "../app-user-id.js";
-import { isError } from "../result.js";
+import { isFailure } from "../outcome.js";
 import { parseSquadGroupName } from "../squad-name.js";
 import type { InvalidSquadGroupName } from "../squad-name.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
@@ -29,7 +29,7 @@ const makeCreate = (store: SquadGroupStoreServiceShape) =>
   ) {
     const name = parseSquadGroupName(input.name);
 
-    if (isError(name)) {
+    if (isFailure(name)) {
       return yield* name.error;
     }
 

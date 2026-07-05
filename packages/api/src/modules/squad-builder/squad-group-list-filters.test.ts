@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isError, isOk } from "./result.js";
+import { isFailure, isSuccess } from "./outcome.js";
 import {
   parseSquadGroupListFilters,
   squadGroupLevelBoundToNumber,
@@ -11,8 +11,8 @@ describe("parseSquadGroupListFilters", () => {
   it("parses missing squad group list filters as an unfiltered query", () => {
     const result = parseSquadGroupListFilters({});
 
-    expect(isOk(result)).toBe(true);
-    if (!isOk(result)) {
+    expect(isSuccess(result)).toBe(true);
+    if (!isSuccess(result)) {
       throw new Error("Expected empty filters to parse");
     }
 
@@ -24,8 +24,8 @@ describe("parseSquadGroupListFilters", () => {
       nameQuery: "  Smoki   jaruna ",
     });
 
-    expect(isOk(result)).toBe(true);
-    if (!isOk(result)) {
+    expect(isSuccess(result)).toBe(true);
+    if (!isSuccess(result)) {
       throw new Error("Expected name query to parse");
     }
 
@@ -41,8 +41,8 @@ describe("parseSquadGroupListFilters", () => {
   it("rejects a one-character squad group name query", () => {
     const result = parseSquadGroupListFilters({ nameQuery: "a" });
 
-    expect(isError(result)).toBe(true);
-    if (!isError(result)) {
+    expect(isFailure(result)).toBe(true);
+    if (!isFailure(result)) {
       throw new Error("Expected one-character name query to fail");
     }
     expect(result.error._tag).toBe("InvalidSquadGroupNameQuery");
@@ -51,8 +51,8 @@ describe("parseSquadGroupListFilters", () => {
   it("rejects an overlong squad group name query", () => {
     const result = parseSquadGroupListFilters({ nameQuery: "a".repeat(81) });
 
-    expect(isError(result)).toBe(true);
-    if (!isError(result)) {
+    expect(isFailure(result)).toBe(true);
+    if (!isFailure(result)) {
       throw new Error("Expected overlong name query to fail");
     }
     expect(result.error._tag).toBe("InvalidSquadGroupNameQuery");
@@ -61,8 +61,8 @@ describe("parseSquadGroupListFilters", () => {
   it("parses an inclusive min and max level range", () => {
     const result = parseSquadGroupListFilters({ maxLevel: 180, minLevel: 120 });
 
-    expect(isOk(result)).toBe(true);
-    if (!isOk(result)) {
+    expect(isSuccess(result)).toBe(true);
+    if (!isSuccess(result)) {
       throw new Error("Expected level range to parse");
     }
 
@@ -88,16 +88,16 @@ describe("parseSquadGroupListFilters", () => {
     const minOnly = parseSquadGroupListFilters({ minLevel: 120 });
     const maxOnly = parseSquadGroupListFilters({ maxLevel: 180 });
 
-    expect(isOk(minOnly)).toBe(true);
-    expect(isOk(maxOnly)).toBe(true);
+    expect(isSuccess(minOnly)).toBe(true);
+    expect(isSuccess(maxOnly)).toBe(true);
   });
 
   it("rejects non-integer, out-of-policy, or reversed level ranges", () => {
-    expect(isError(parseSquadGroupListFilters({ minLevel: 1.5 }))).toBe(true);
-    expect(isError(parseSquadGroupListFilters({ minLevel: 0 }))).toBe(true);
-    expect(isError(parseSquadGroupListFilters({ maxLevel: 501 }))).toBe(true);
+    expect(isFailure(parseSquadGroupListFilters({ minLevel: 1.5 }))).toBe(true);
+    expect(isFailure(parseSquadGroupListFilters({ minLevel: 0 }))).toBe(true);
+    expect(isFailure(parseSquadGroupListFilters({ maxLevel: 501 }))).toBe(true);
     expect(
-      isError(parseSquadGroupListFilters({ maxLevel: 120, minLevel: 180 }))
+      isFailure(parseSquadGroupListFilters({ maxLevel: 120, minLevel: 180 }))
     ).toBe(true);
   });
 });

@@ -5,8 +5,8 @@ import {
   parsePositiveLevel,
 } from "./margonem-profile-id.js";
 import type { MargonemProfileId } from "./margonem-profile-id.js";
-import { err, isError, ok } from "./result.js";
-import type { Result } from "./result.js";
+import { fail, isFailure, success } from "./outcome.js";
+import type { Outcome } from "./outcome.js";
 
 /** Parsed Jaruna-only Margonem profile data from Firecrawl HTML. */
 export interface ParsedMargonemProfile {
@@ -96,11 +96,11 @@ const extractAvatarUrl = (rowHtml: string): string | null => {
 const parseJarunaCharacterRow = (
   profileId: MargonemProfileId,
   rowHtml: string
-): Result<MargonemCharacterPreview | null, ParseMargonemProfileHtmlError> => {
+): Outcome<MargonemCharacterPreview | null, ParseMargonemProfileHtmlError> => {
   const world = extractAttribute(rowHtml, "data-world");
 
   if (world !== "#jaruna") {
-    return ok(null);
+    return success(null);
   }
 
   const characterIdText = extractAttribute(rowHtml, "data-id");
@@ -113,7 +113,7 @@ const parseJarunaCharacterRow = (
     name === undefined ||
     levelText === undefined
   ) {
-    return err({
+    return fail({
       _tag: "MargonemCharacterRowInvalid",
       profileId,
       safeReason: "missing required character row attributes",
@@ -121,7 +121,7 @@ const parseJarunaCharacterRow = (
   }
 
   if (professionLabel === undefined) {
-    return err({
+    return fail({
       _tag: "MargonemCharacterRowInvalid",
       profileId,
       safeReason: "missing profession label",
@@ -132,31 +132,31 @@ const parseJarunaCharacterRow = (
   const level = parsePositiveLevel(Number(levelText));
   const profession = parseMargonemProfession(professionLabel);
 
-  if (isError(characterId)) {
-    return err({
+  if (isFailure(characterId)) {
+    return fail({
       _tag: "MargonemCharacterRowInvalid",
       profileId,
       safeReason: "invalid character id",
     });
   }
 
-  if (isError(level)) {
-    return err({
+  if (isFailure(level)) {
+    return fail({
       _tag: "MargonemCharacterRowInvalid",
       profileId,
       safeReason: "invalid character level",
     });
   }
 
-  if (isError(profession)) {
-    return err({
+  if (isFailure(profession)) {
+    return fail({
       _tag: "MargonemCharacterRowInvalid",
       profileId,
       safeReason: "unknown profession label",
     });
   }
 
-  return ok({
+  return success({
     avatarUrl: extractAvatarUrl(rowHtml),
     characterId: characterId.value,
     level: level.value,
@@ -170,14 +170,14 @@ const parseJarunaCharacterRow = (
 export const parseMargonemProfileHtml = ({
   html,
   profileId,
-}: ParseMargonemProfileHtmlInput): Result<
+}: ParseMargonemProfileHtmlInput): Outcome<
   ParsedMargonemProfile,
   ParseMargonemProfileHtmlError
 > => {
   const suggestedAccountName = extractProfileName(html);
 
   if (suggestedAccountName === undefined) {
-    return err({ _tag: "MargonemProfileNameNotFound", profileId });
+    return fail({ _tag: "MargonemProfileNameNotFound", profileId });
   }
 
   const rowMatches = Array.from(
@@ -186,7 +186,7 @@ export const parseMargonemProfileHtml = ({
   );
 
   if (rowMatches.length === 0) {
-    return err({ _tag: "MargonemCharacterRowsNotFound", profileId });
+    return fail({ _tag: "MargonemCharacterRowsNotFound", profileId });
   }
 
   const jarunaCharacters: MargonemCharacterPreview[] = [];
@@ -194,8 +194,8 @@ export const parseMargonemProfileHtml = ({
   for (const rowHtml of rowMatches) {
     const parsedCharacter = parseJarunaCharacterRow(profileId, rowHtml);
 
-    if (isError(parsedCharacter)) {
-      return err(parsedCharacter.error);
+    if (isFailure(parsedCharacter)) {
+      return fail(parsedCharacter.error);
     }
 
     if (parsedCharacter.value !== null) {
@@ -203,7 +203,7 @@ export const parseMargonemProfileHtml = ({
     }
   }
 
-  return ok({
+  return success({
     jarunaCharacters,
     profileId,
     suggestedAccountName,

@@ -1,8 +1,8 @@
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
 import type { MargonemAccountAccessId } from "../margonem-account-access-id.js";
-import { err, isError, ok } from "../result.js";
-import type { Result } from "../result.js";
+import { fail, isFailure, success } from "../outcome.js";
+import type { Outcome } from "../outcome.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
 import type {
   AccountAccessInviteSummary,
@@ -29,7 +29,7 @@ export class RespondToAccountAccessInvite {
   /** Accept or decline an account access invite as the invited user. */
   async respond(
     input: RespondToAccountAccessInviteInput
-  ): Promise<Result<AccountAccessInviteSummary, AccountSharingError>> {
+  ): Promise<Outcome<AccountAccessInviteSummary, AccountSharingError>> {
     const now = this.clock.now();
     const result = await this.store.respondToAccountAccessInvite({
       accessId: input.accessId,
@@ -38,10 +38,10 @@ export class RespondToAccountAccessInvite {
       response: input.response,
     });
 
-    if (isError(result)) {
-      return err(result.error);
+    if (isFailure(result)) {
+      return fail(result.error);
     }
 
-    return ok(result.value);
+    return success(result.value);
   }
 }

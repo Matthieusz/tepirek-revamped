@@ -49,7 +49,7 @@ import {
 } from "../margonem-account-id.js";
 import { parseMargonemProfileId } from "../margonem-profile-id.js";
 import { toMargonemProfileUrl } from "../margonem-profile-url.js";
-import { isError } from "../result.js";
+import { isFailure } from "../outcome.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
 import {
   AccountAccessInviteNotFound,
@@ -105,13 +105,13 @@ const listOwnedAccountsWithDatabase =
       for (const row of rows) {
         const displayName = parseAccountDisplayName(row.displayName);
 
-        if (isError(displayName)) {
+        if (isFailure(displayName)) {
           return yield* failPersistence(operation, displayName.error);
         }
 
         const profileId = parseMargonemProfileId(row.profileId);
 
-        if (isError(profileId)) {
+        if (isFailure(profileId)) {
           return yield* failPersistence(operation, profileId.error);
         }
 
@@ -173,7 +173,7 @@ const searchInviteTargetsWithDatabase =
       for (const row of rows) {
         const userId = parseAppUserId(row.userId);
 
-        if (isError(userId)) {
+        if (isFailure(userId)) {
           return yield* failPersistence(operation, userId.error);
         }
 
@@ -216,19 +216,19 @@ const findOwnedAccountForSharingWithDatabase =
 
       const displayName = parseAccountDisplayName(account.displayName);
 
-      if (isError(displayName)) {
+      if (isFailure(displayName)) {
         return yield* failPersistence(operation, displayName.error);
       }
 
       const ownerUserId = parseAppUserId(account.ownerUserId);
 
-      if (isError(ownerUserId)) {
+      if (isFailure(ownerUserId)) {
         return yield* failPersistence(operation, ownerUserId.error);
       }
 
       const profileId = parseMargonemProfileId(account.profileId);
 
-      if (isError(profileId)) {
+      if (isFailure(profileId)) {
         return yield* failPersistence(operation, profileId.error);
       }
 
@@ -281,7 +281,7 @@ const loadAccountAccessInviteSummaryWithDatabase =
 
       const status = parseAccountAccessStatus(row.status);
 
-      if (isError(status)) {
+      if (isFailure(status)) {
         return yield* failPersistence(operation, status.error);
       }
 
@@ -289,19 +289,19 @@ const loadAccountAccessInviteSummaryWithDatabase =
         row.accountDisplayName
       );
 
-      if (isError(accountDisplayName)) {
+      if (isFailure(accountDisplayName)) {
         return yield* failPersistence(operation, accountDisplayName.error);
       }
 
       const accountId = parseMargonemAccountId(row.accountId);
 
-      if (isError(accountId)) {
+      if (isFailure(accountId)) {
         return yield* failPersistence(operation, accountId.error);
       }
 
       const profileId = parseMargonemProfileId(row.profileId);
 
-      if (isError(profileId)) {
+      if (isFailure(profileId)) {
         return yield* failPersistence(operation, profileId.error);
       }
 
@@ -440,7 +440,7 @@ const upsertAccountAccessInviteWithDatabase =
 
           const status = parseAccountAccessStatus(existing.status);
 
-          if (isError(status)) {
+          if (isFailure(status)) {
             return yield* failPersistence(operation, status.error);
           }
 
@@ -478,7 +478,7 @@ const upsertAccountAccessInviteWithDatabase =
 
       const accessId = parseMargonemAccountAccessId(upserted);
 
-      if (isError(accessId)) {
+      if (isFailure(accessId)) {
         return yield* failPersistence(operation, accessId.error);
       }
 
@@ -520,7 +520,7 @@ const listIncomingAccountInvitesWithDatabase =
       for (const row of rows) {
         const accessId = parseMargonemAccountAccessId(row.id);
 
-        if (isError(accessId)) {
+        if (isFailure(accessId)) {
           return yield* failPersistence(operation, accessId.error);
         }
 
@@ -587,25 +587,25 @@ const listSharedAccountsWithDatabase =
       for (const row of rows) {
         const accountId = parseMargonemAccountId(row.accountId);
 
-        if (isError(accountId)) {
+        if (isFailure(accountId)) {
           return yield* failPersistence(operation, accountId.error);
         }
 
         const displayName = parseAccountDisplayName(row.displayName);
 
-        if (isError(displayName)) {
+        if (isFailure(displayName)) {
           return yield* failPersistence(operation, displayName.error);
         }
 
         const profileId = parseMargonemProfileId(row.profileId);
 
-        if (isError(profileId)) {
+        if (isFailure(profileId)) {
           return yield* failPersistence(operation, profileId.error);
         }
 
         const ownerUserId = parseAppUserId(row.ownerId);
 
-        if (isError(ownerUserId)) {
+        if (isFailure(ownerUserId)) {
           return yield* failPersistence(operation, ownerUserId.error);
         }
 
@@ -666,7 +666,7 @@ const listAccountAccessGrantsWithDatabase =
       for (const row of rows) {
         const status = parseAccountAccessStatus(row.status);
 
-        if (isError(status)) {
+        if (isFailure(status)) {
           return yield* failPersistence(operation, status.error);
         }
 
@@ -679,7 +679,7 @@ const listAccountAccessGrantsWithDatabase =
 
         const accessId = parseMargonemAccountAccessId(row.accessId);
 
-        if (isError(accessId)) {
+        if (isFailure(accessId)) {
           return yield* failPersistence(operation, accessId.error);
         }
 
@@ -744,7 +744,7 @@ const respondToAccountAccessInviteWithDatabase =
 
           const status = parseAccountAccessStatus(existing.status);
 
-          if (isError(status)) {
+          if (isFailure(status)) {
             return yield* failPersistence(operation, status.error);
           }
 
@@ -844,7 +844,7 @@ const revokeAccountAccessWithDatabase =
 
           const status = parseAccountAccessStatus(access.status);
 
-          if (isError(status)) {
+          if (isFailure(status)) {
             return yield* failPersistence(operation, status.error);
           }
 
@@ -939,7 +939,7 @@ const revokeAccountAccessWithDatabase =
 
       const accountId = parseMargonemAccountId(revoked.accountId);
 
-      if (isError(accountId)) {
+      if (isFailure(accountId)) {
         return yield* failPersistence(operation, accountId.error);
       }
 

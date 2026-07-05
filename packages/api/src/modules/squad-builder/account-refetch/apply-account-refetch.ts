@@ -2,9 +2,9 @@ import type { Clock } from "../account-import/preview-margonem-profile-import.js
 import type { AppUserId } from "../app-user-id.js";
 import type { MargonemAccountId } from "../margonem-account-id.js";
 import type { MargonemProfileId } from "../margonem-profile-id.js";
+import { fail, isFailure, success } from "../outcome.js";
+import type { Outcome } from "../outcome.js";
 import type { PendingMargonemAccountRefetchId } from "../pending-margonem-account-refetch-id.js";
-import { err, isError, ok } from "../result.js";
-import type { Result } from "../result.js";
 import type {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
@@ -61,7 +61,7 @@ export class ApplyAccountRefetch {
   /** Apply a previously previewed account refetch to account and character storage. */
   async apply(
     input: ApplyAccountRefetchInput
-  ): Promise<Result<ApplyAccountRefetchOutput, ApplyAccountRefetchError>> {
+  ): Promise<Outcome<ApplyAccountRefetchOutput, ApplyAccountRefetchError>> {
     const now = this.clock.now();
     const pending = await this.refetchStore.findPendingRefetchForApply({
       actorUserId: input.actorUserId,
@@ -69,8 +69,8 @@ export class ApplyAccountRefetch {
       refetchPreviewId: input.refetchPreviewId,
     });
 
-    if (isError(pending)) {
-      return err(pending.error);
+    if (isFailure(pending)) {
+      return fail(pending.error);
     }
 
     const authorized = await this.authorizer.authorizeOwner({
@@ -78,8 +78,8 @@ export class ApplyAccountRefetch {
       actorUserId: input.actorUserId,
     });
 
-    if (isError(authorized)) {
-      return err(authorized.error);
+    if (isFailure(authorized)) {
+      return fail(authorized.error);
     }
 
     const applied = await this.accountWriter.applyRefetchedAccount({
@@ -88,8 +88,8 @@ export class ApplyAccountRefetch {
       pendingRefetch: pending.value,
     });
 
-    if (isError(applied)) {
-      return err(applied.error);
+    if (isFailure(applied)) {
+      return fail(applied.error);
     }
 
     const marked = await this.refetchStore.markPendingRefetchApplied({
@@ -97,10 +97,10 @@ export class ApplyAccountRefetch {
       refetchPreviewId: input.refetchPreviewId,
     });
 
-    if (isError(marked)) {
-      return err(marked.error);
+    if (isFailure(marked)) {
+      return fail(marked.error);
     }
 
-    return ok(applied.value);
+    return success(applied.value);
   }
 }

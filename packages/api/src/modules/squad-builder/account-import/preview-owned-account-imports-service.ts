@@ -14,7 +14,7 @@ import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
 } from "../margonem-profile-url.js";
-import { isError, isOk } from "../result.js";
+import { isFailure, isSuccess } from "../outcome.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import type {
   DuplicateMargonemAccountError,
@@ -78,7 +78,7 @@ const defaultDisplayNameFor = (
 ): AccountDisplayName => {
   const parsed = parseAccountDisplayName(suggestedAccountName);
 
-  if (isOk(parsed)) {
+  if (isSuccess(parsed)) {
     return parsed.value;
   }
 
@@ -87,7 +87,7 @@ const defaultDisplayNameFor = (
   );
 
   // SAFETY: the fallback template always produces a valid display name.
-  return isOk(fallback)
+  return isSuccess(fallback)
     ? fallback.value
     : (suggestedAccountName as AccountDisplayName);
 };
@@ -115,11 +115,13 @@ const accessStateToLineError = (
   }
 };
 
-const toFailedItem = (failure: LineFailure): PreviewOwnedAccountImportItem => ({
+const toFailedItem = (
+  lineFailure: LineFailure
+): PreviewOwnedAccountImportItem => ({
   _tag: "PreviewFailed",
-  error: failure.error,
-  inputUrl: failure.inputUrl,
-  lineNumber: failure.lineNumber,
+  error: lineFailure.error,
+  inputUrl: lineFailure.inputUrl,
+  lineNumber: lineFailure.lineNumber,
 });
 
 const persistPendingImport = ({
@@ -214,7 +216,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
     for (const line of nonBlankLines) {
       const parsedProfileId = parseMargonemProfileUrl(line.inputUrl);
 
-      if (isError(parsedProfileId)) {
+      if (isFailure(parsedProfileId)) {
         failures.push({
           error: parsedProfileId.error,
           inputUrl: line.inputUrl,
@@ -337,8 +339,8 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
 
     const itemsByLine = new Map<number, PreviewOwnedAccountImportItem>();
 
-    for (const failure of failures) {
-      itemsByLine.set(failure.lineNumber, toFailedItem(failure));
+    for (const lineFailure of failures) {
+      itemsByLine.set(lineFailure.lineNumber, toFailedItem(lineFailure));
     }
 
     for (const result of fetchedItems) {

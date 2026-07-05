@@ -1,5 +1,5 @@
-import { err, isError, ok } from "./result.js";
-import type { Result } from "./result.js";
+import { fail, isFailure, success } from "./outcome.js";
+import type { Outcome } from "./outcome.js";
 
 /** Normalized text query for browsing squad groups. */
 export type SquadGroupNameQuery = string & {
@@ -85,47 +85,47 @@ const normalizeNameQuery = (value: string): string =>
 
 const parseNameQuery = (
   value: string | null | undefined
-): Result<ParsedOptional<SquadGroupNameQuery>, InvalidSquadGroupNameQuery> => {
+): Outcome<ParsedOptional<SquadGroupNameQuery>, InvalidSquadGroupNameQuery> => {
   if (value === undefined || value === null) {
-    return ok({ _tag: "Absent" });
+    return success({ _tag: "Absent" });
   }
 
   const normalized = normalizeNameQuery(value);
   if (normalized.length === 0) {
-    return ok({ _tag: "Absent" });
+    return success({ _tag: "Absent" });
   }
 
   if (normalized.length < squadGroupListFilterPolicy.nameQueryMinLength) {
-    return err({
+    return fail({
       _tag: "InvalidSquadGroupNameQuery",
       message: `Wpisz co najmniej ${squadGroupListFilterPolicy.nameQueryMinLength} znaki nazwy składu.`,
     });
   }
 
   if (normalized.length > squadGroupListFilterPolicy.nameQueryMaxLength) {
-    return err({
+    return fail({
       _tag: "InvalidSquadGroupNameQuery",
       message: `Nazwa składu może mieć maksymalnie ${squadGroupListFilterPolicy.nameQueryMaxLength} znaków.`,
     });
   }
 
   // SAFETY: length and normalization invariants were established above.
-  return ok({ _tag: "Present", value: normalized as SquadGroupNameQuery });
+  return success({ _tag: "Present", value: normalized as SquadGroupNameQuery });
 };
 
 const parseLevelBound = (
   value: number | null | undefined,
   fieldName: "minLevel" | "maxLevel"
-): Result<
+): Outcome<
   ParsedOptional<SquadGroupLevelBound>,
   InvalidSquadGroupLevelRange
 > => {
   if (value === undefined || value === null) {
-    return ok({ _tag: "Absent" });
+    return success({ _tag: "Absent" });
   }
 
   if (!Number.isInteger(value)) {
-    return err({
+    return fail({
       _tag: "InvalidSquadGroupLevelRange",
       message: "Poziom postaci musi być liczbą całkowitą.",
     });
@@ -135,33 +135,33 @@ const parseLevelBound = (
     value < squadGroupListFilterPolicy.minAllowedLevel ||
     value > squadGroupListFilterPolicy.maxAllowedLevel
   ) {
-    return err({
+    return fail({
       _tag: "InvalidSquadGroupLevelRange",
       message: `Poziom ${fieldName === "minLevel" ? "od" : "do"} musi być w zakresie ${squadGroupListFilterPolicy.minAllowedLevel}-${squadGroupListFilterPolicy.maxAllowedLevel}.`,
     });
   }
 
   // SAFETY: integer and allowed-range invariants were established above.
-  return ok({ _tag: "Present", value: value as SquadGroupLevelBound });
+  return success({ _tag: "Present", value: value as SquadGroupLevelBound });
 };
 
 /** Parse and normalize squad group list filters before store access. */
 export const parseSquadGroupListFilters = (
   input: ParseSquadGroupListFiltersInput = {}
-): Result<SquadGroupListFilters, SquadGroupListFilterError> => {
+): Outcome<SquadGroupListFilters, SquadGroupListFilterError> => {
   const nameQuery = parseNameQuery(input.nameQuery);
-  if (isError(nameQuery)) {
-    return err(nameQuery.error);
+  if (isFailure(nameQuery)) {
+    return fail(nameQuery.error);
   }
 
   const minLevel = parseLevelBound(input.minLevel, "minLevel");
-  if (isError(minLevel)) {
-    return err(minLevel.error);
+  if (isFailure(minLevel)) {
+    return fail(minLevel.error);
   }
 
   const maxLevel = parseLevelBound(input.maxLevel, "maxLevel");
-  if (isError(maxLevel)) {
-    return err(maxLevel.error);
+  if (isFailure(maxLevel)) {
+    return fail(maxLevel.error);
   }
 
   if (
@@ -169,7 +169,7 @@ export const parseSquadGroupListFilters = (
     maxLevel.value._tag === "Present" &&
     minLevel.value.value > maxLevel.value.value
   ) {
-    return err({
+    return fail({
       _tag: "InvalidSquadGroupLevelRange",
       message: "Poziom od nie może być większy niż poziom do.",
     });
@@ -188,7 +188,7 @@ export const parseSquadGroupListFilters = (
             : { minLevel: minLevel.value.value }),
         };
 
-  return ok({
+  return success({
     levelRange,
     ...(nameQuery.value._tag === "Absent"
       ? {}

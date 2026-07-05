@@ -4,8 +4,8 @@ import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemProfileId } from "../margonem-profile-id.js";
+import { isSuccess } from "../outcome.js";
 import { parsePendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
-import { isOk } from "../result.js";
 import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import { confirm } from "./confirm-owned-account-import-service.js";
@@ -14,7 +14,7 @@ import type { Clock } from "./preview-margonem-profile-import.js";
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-confirm-user");
 
-  if (!isOk(userId)) {
+  if (!isSuccess(userId)) {
     throw new Error("Expected test user id to be valid");
   }
 
@@ -24,7 +24,7 @@ const parseTestUserId = () => {
 const parseTestPendingId = () => {
   const id = parsePendingMargonemAccountImportId(42);
 
-  if (!isOk(id)) {
+  if (!isSuccess(id)) {
     throw new Error("Expected pending id to be valid");
   }
 
@@ -34,7 +34,7 @@ const parseTestPendingId = () => {
 const parseTestProfileId = () => {
   const profileId = parseMargonemProfileId(7_298_897);
 
-  if (!isOk(profileId)) {
+  if (!isSuccess(profileId)) {
     throw new Error("Expected profile id to be valid");
   }
 

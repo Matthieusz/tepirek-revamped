@@ -1,5 +1,5 @@
-import { err, ok } from "./result.js";
-import type { Result } from "./result.js";
+import { fail, success } from "./outcome.js";
+import type { Outcome } from "./outcome.js";
 
 /** Global discovery visibility for a squad group. */
 export type SquadGroupVisibility = "private" | "global";
@@ -12,10 +12,10 @@ export interface InvalidSquadGroupVisibility {
 /** Parse a squad group visibility into the domain value. */
 export const parseSquadGroupVisibility = (
   input: string
-): Result<SquadGroupVisibility, InvalidSquadGroupVisibility> => {
+): Outcome<SquadGroupVisibility, InvalidSquadGroupVisibility> => {
   if (input === "private" || input === "global") {
-    return ok(input);
+    return success(input);
   }
 
-  return err({ _tag: "InvalidSquadGroupVisibility" });
+  return fail({ _tag: "InvalidSquadGroupVisibility" });
 };

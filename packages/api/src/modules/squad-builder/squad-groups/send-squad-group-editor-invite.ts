@@ -1,7 +1,7 @@
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
-import { err, isError, ok } from "../result.js";
-import type { Result } from "../result.js";
+import { fail, isFailure, success } from "../outcome.js";
+import type { Outcome } from "../outcome.js";
 import type { SquadGroupId } from "../squad-group-id.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import type {
@@ -23,26 +23,26 @@ export class SendSquadGroupEditorInvite {
     readonly actorUserId: AppUserId;
     readonly groupId: SquadGroupId;
     readonly invitedUserId: AppUserId;
-  }): Promise<Result<SquadGroupInvitationSummary, SquadGroupSharingError>> {
+  }): Promise<Outcome<SquadGroupInvitationSummary, SquadGroupSharingError>> {
     const access = await this.store.authorizeSquadGroupOwner({
       actorUserId: input.actorUserId,
       groupId: input.groupId,
     });
 
-    if (isError(access)) {
-      return err(access.error);
+    if (isFailure(access)) {
+      return fail(access.error);
     }
 
     if (input.actorUserId === input.invitedUserId) {
-      return err({ _tag: "CannotInviteSelf" });
+      return fail({ _tag: "CannotInviteSelf" });
     }
 
     const target = await this.store.findVerifiedSquadEditorInviteTarget({
       targetUserId: input.invitedUserId,
     });
 
-    if (isError(target)) {
-      return err(target.error);
+    if (isFailure(target)) {
+      return fail(target.error);
     }
 
     const invite = await this.store.upsertSquadGroupEditorInvite({
@@ -52,10 +52,10 @@ export class SendSquadGroupEditorInvite {
       ownerUserId: input.actorUserId,
     });
 
-    if (isError(invite)) {
-      return err(invite.error);
+    if (isFailure(invite)) {
+      return fail(invite.error);
     }
 
-    return ok(invite.value);
+    return success(invite.value);
   }
 }

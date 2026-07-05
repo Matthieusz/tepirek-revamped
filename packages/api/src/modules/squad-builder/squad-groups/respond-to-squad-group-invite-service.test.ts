@@ -4,7 +4,7 @@ import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
-import { isOk } from "../result.js";
+import { isSuccess } from "../outcome.js";
 import { parseSquadGroupId } from "../squad-group-id.js";
 import { parseSquadGroupInvitationId } from "../squad-group-invitation-id.js";
 import { parseSquadGroupName } from "../squad-name.js";
@@ -19,7 +19,7 @@ import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
 
-  if (!isOk(userId)) {
+  if (!isSuccess(userId)) {
     throw new Error("Expected test user id to be valid");
   }
 
@@ -29,7 +29,7 @@ const parseTestUserId = (value: string) => {
 const parseTestGroupId = () => {
   const groupId = parseSquadGroupId(123);
 
-  if (!isOk(groupId)) {
+  if (!isSuccess(groupId)) {
     throw new Error("Expected test group id to be valid");
   }
 
@@ -39,7 +39,7 @@ const parseTestGroupId = () => {
 const parseTestInvitationId = () => {
   const invitationId = parseSquadGroupInvitationId(456);
 
-  if (!isOk(invitationId)) {
+  if (!isSuccess(invitationId)) {
     throw new Error("Expected test invitation id to be valid");
   }
 
@@ -49,7 +49,7 @@ const parseTestInvitationId = () => {
 const parseTestGroupName = () => {
   const groupName = parseSquadGroupName("Effect respond group");
 
-  if (!isOk(groupName)) {
+  if (!isSuccess(groupName)) {
     throw new Error("Expected test group name to be valid");
   }
 

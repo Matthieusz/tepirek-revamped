@@ -5,22 +5,22 @@ import {
   inactiveAccountAccessStatuses,
   parseAccountAccessStatus,
 } from "./account-access-status.js";
-import { isError, isOk } from "./result.js";
+import { isFailure, isSuccess } from "./outcome.js";
 
 describe("parseAccountAccessStatus", () => {
   it("accepts known access statuses", () => {
     for (const value of ["pending", "accepted", "declined", "revoked"]) {
       const result = parseAccountAccessStatus(value);
-      expect(isOk(result)).toBe(true);
+      expect(isSuccess(result)).toBe(true);
     }
   });
 
   it("rejects unknown status strings", () => {
     const result = parseAccountAccessStatus("archived");
 
-    expect(isError(result)).toBe(true);
+    expect(isFailure(result)).toBe(true);
 
-    if (!isError(result)) {
+    if (!isFailure(result)) {
       throw new Error("Expected unknown status to fail");
     }
 

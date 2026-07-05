@@ -48,11 +48,11 @@ import {
   parsePositiveLevel,
   profileIdToNumber,
 } from "../margonem-profile-id.js";
+import { isFailure } from "../outcome.js";
 import {
   parsePendingMargonemAccountRefetchId,
   pendingRefetchIdToNumber,
 } from "../pending-margonem-account-refetch-id.js";
-import { isError } from "../result.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
 import {
   ActorDoesNotOwnMargonemAccount,
@@ -267,13 +267,13 @@ const getAccountForRefetchWithDatabase =
 
       const displayName = parseAccountDisplayName(account.displayName);
 
-      if (isError(displayName)) {
+      if (isFailure(displayName)) {
         return yield* failPersistence(operation, displayName.error);
       }
 
       const profileId = parseMargonemProfileId(account.profileId);
 
-      if (isError(profileId)) {
+      if (isFailure(profileId)) {
         return yield* failPersistence(operation, profileId.error);
       }
 
@@ -283,25 +283,25 @@ const getAccountForRefetchWithDatabase =
       for (const row of characterRows) {
         const margonemCharacterId = parseMargonemCharacterId(row.characterId);
 
-        if (isError(margonemCharacterId)) {
+        if (isFailure(margonemCharacterId)) {
           return yield* failPersistence(operation, margonemCharacterId.error);
         }
 
         const level = parsePositiveLevel(row.level);
 
-        if (isError(level)) {
+        if (isFailure(level)) {
           return yield* failPersistence(operation, level.error);
         }
 
         const profession = parseMargonemProfession(row.profession);
 
-        if (isError(profession)) {
+        if (isFailure(profession)) {
           return yield* failPersistence(operation, profession.error);
         }
 
         const world = parseMargonemWorld(row.world);
 
-        if (isError(world)) {
+        if (isFailure(world)) {
           return yield* failPersistence(operation, world.error);
         }
 
@@ -389,7 +389,7 @@ const createPendingRefetchWithDatabase =
             preview.id
           );
 
-          if (isError(pendingRefetchId)) {
+          if (isFailure(pendingRefetchId)) {
             return yield* failPersistence(operation, pendingRefetchId.error);
           }
 
@@ -473,25 +473,25 @@ const findPendingRefetchForApplyWithDatabase =
       for (const row of characterRows) {
         const characterId = parseMargonemCharacterId(row.characterId);
 
-        if (isError(characterId)) {
+        if (isFailure(characterId)) {
           return yield* failPersistence(operation, characterId.error);
         }
 
         const level = parsePositiveLevel(row.level);
 
-        if (isError(level)) {
+        if (isFailure(level)) {
           return yield* failPersistence(operation, level.error);
         }
 
         const profession = parseMargonemProfession(row.profession);
 
-        if (isError(profession)) {
+        if (isFailure(profession)) {
           return yield* failPersistence(operation, profession.error);
         }
 
         const world = parseMargonemWorld(row.world);
 
-        if (isError(world)) {
+        if (isFailure(world)) {
           return yield* failPersistence(operation, world.error);
         }
 
@@ -507,7 +507,7 @@ const findPendingRefetchForApplyWithDatabase =
 
       const accountId = parseMargonemAccountId(preview.accountId);
 
-      if (isError(accountId)) {
+      if (isFailure(accountId)) {
         return yield* failPersistence(operation, accountId.error);
       }
 
@@ -517,7 +517,7 @@ const findPendingRefetchForApplyWithDatabase =
       );
       const profileId = parseMargonemProfileId(preview.profileId);
 
-      if (isError(profileId)) {
+      if (isFailure(profileId)) {
         return yield* failPersistence(operation, profileId.error);
       }
 

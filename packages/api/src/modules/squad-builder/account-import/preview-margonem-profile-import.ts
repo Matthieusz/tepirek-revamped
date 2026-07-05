@@ -19,8 +19,8 @@ import {
   toMargonemProfileUrl,
 } from "../margonem-profile-url.js";
 import type { ParseMargonemProfileUrlError } from "../margonem-profile-url.js";
-import { err, isError, ok } from "../result.js";
-import type { Result } from "../result.js";
+import { fail, isFailure, success } from "../outcome.js";
+import type { Outcome } from "../outcome.js";
 import type {
   DuplicateMargonemAccountError,
   FirecrawlBudgetError,
@@ -65,10 +65,10 @@ export type PreviewMargonemProfileImportError =
 /** Service module that previews one Margonem profile import without saving it. */
 const failPreview = (
   error: PreviewMargonemProfileImportError
-): Result<
+): Outcome<
   PreviewMargonemProfileImportOutput,
   PreviewMargonemProfileImportError
-> => err(error);
+> => fail(error);
 
 export const profileAccessStateToDuplicateError = (
   state: ProfileAccessState
@@ -119,14 +119,14 @@ export class PreviewMargonemProfileImport {
     input: PreviewMargonemProfileImportInput,
     options: { readonly signal?: AbortSignal } = {}
   ): Promise<
-    Result<
+    Outcome<
       PreviewMargonemProfileImportOutput,
       PreviewMargonemProfileImportError
     >
   > {
     const parsedProfileId = parseMargonemProfileUrl(input.profileUrl);
 
-    if (isError(parsedProfileId)) {
+    if (isFailure(parsedProfileId)) {
       return failPreview(parsedProfileId.error);
     }
 
@@ -136,7 +136,7 @@ export class PreviewMargonemProfileImport {
       profileId,
     });
 
-    if (isError(accessState)) {
+    if (isFailure(accessState)) {
       return failPreview(accessState.error);
     }
 
@@ -156,7 +156,7 @@ export class PreviewMargonemProfileImport {
       yearMonth,
     });
 
-    if (isError(reservedRequest)) {
+    if (isFailure(reservedRequest)) {
       return failPreview(reservedRequest.error);
     }
 
@@ -165,13 +165,13 @@ export class PreviewMargonemProfileImport {
       options
     );
 
-    if (isError(scrapedProfile)) {
+    if (isFailure(scrapedProfile)) {
       const markFailed = await this.ledger.markRequestFailed({
         errorTag: scrapedProfile.error._tag,
         requestId: reservedRequest.value.requestId,
       });
 
-      if (isError(markFailed)) {
+      if (isFailure(markFailed)) {
         return failPreview(markFailed.error);
       }
 
@@ -182,13 +182,13 @@ export class PreviewMargonemProfileImport {
       scrapedProfile.value.metadata.creditsUsed ?? 1
     );
 
-    if (isError(creditsUsed)) {
+    if (isFailure(creditsUsed)) {
       const markFailed = await this.ledger.markRequestFailed({
         errorTag: creditsUsed.error._tag,
         requestId: reservedRequest.value.requestId,
       });
 
-      if (isError(markFailed)) {
+      if (isFailure(markFailed)) {
         return failPreview(markFailed.error);
       }
 
@@ -207,7 +207,7 @@ export class PreviewMargonemProfileImport {
       requestId: reservedRequest.value.requestId,
     });
 
-    if (isError(markSucceeded)) {
+    if (isFailure(markSucceeded)) {
       return failPreview(markSucceeded.error);
     }
 
@@ -216,11 +216,11 @@ export class PreviewMargonemProfileImport {
       profileId,
     });
 
-    if (isError(parsedHtml)) {
+    if (isFailure(parsedHtml)) {
       return failPreview(parsedHtml.error);
     }
 
-    return ok({
+    return success({
       firecrawlCreditsUsed: creditsUsed.value,
       generatedProfileUrl: toMargonemProfileUrl(profileId),
       jarunaCharacters: parsedHtml.value.jarunaCharacters,

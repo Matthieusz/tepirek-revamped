@@ -1,7 +1,7 @@
+import { fail, success } from "./outcome.js";
+import type { Outcome } from "./outcome.js";
 import { PositiveInt } from "./positive-int.js";
 import { isPositiveInteger } from "./prelude.js";
-import { err, ok } from "./result.js";
-import type { Result } from "./result.js";
 
 /** A validated pending Margonem account refetch preview id. */
 export type PendingMargonemAccountRefetchId = number & {
@@ -21,16 +21,16 @@ export interface InvalidPendingMargonemAccountRefetchId {
 /** Parse a positive integer as a pending Margonem account refetch id. */
 export const parsePendingMargonemAccountRefetchId = (
   input: number
-): Result<
+): Outcome<
   PendingMargonemAccountRefetchId,
   InvalidPendingMargonemAccountRefetchId
 > => {
   if (!isPositiveInteger(input)) {
-    return err({ _tag: "InvalidPendingMargonemAccountRefetchId" });
+    return fail({ _tag: "InvalidPendingMargonemAccountRefetchId" });
   }
 
   // SAFETY: isPositiveInteger established the PendingMargonemAccountRefetchId invariant.
-  return ok(input as PendingMargonemAccountRefetchId);
+  return success(input as PendingMargonemAccountRefetchId);
 };
 
 /** Convert a pending refetch id to its primitive representation. */

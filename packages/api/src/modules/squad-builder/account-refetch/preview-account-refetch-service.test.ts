@@ -7,7 +7,7 @@ import { FirecrawlClientService } from "../firecrawl-client-service.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
 import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import { FirecrawlConfigService } from "../firecrawl-config.js";
-import { isOk, ok } from "../result.js";
+import { isSuccess, success } from "../outcome.js";
 import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import { preview } from "./preview-account-refetch-service.js";
@@ -15,7 +15,7 @@ import { preview } from "./preview-account-refetch-service.js";
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-refetch-user");
 
-  if (!isOk(userId)) {
+  if (!isSuccess(userId)) {
     throw new Error("Expected test user id to be valid");
   }
 
@@ -36,7 +36,7 @@ it.effect("previews account refetch and stores the pending diff", () => {
   const firecrawl: FirecrawlClient = {
     scrapeProfileHtml: () =>
       Promise.resolve(
-        ok({
+        success({
           html: htmlWithUpdatedJarunaCharacter,
           metadata: {
             cacheState: "miss",

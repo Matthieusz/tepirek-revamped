@@ -22,8 +22,8 @@ import type {
 } from "../margonem-account-refetch-diff.js";
 import type { MargonemCharacterPreview } from "../margonem-character.js";
 import type { MargonemProfileId } from "../margonem-profile-id.js";
+import type { Outcome } from "../outcome.js";
 import type { PendingMargonemAccountRefetchId } from "../pending-margonem-account-refetch-id.js";
-import type { Result } from "../result.js";
 import type { ApplyAccountRefetchOutput } from "./apply-account-refetch.js";
 
 /** Account and current character state needed for a manual refetch preview. */
@@ -40,7 +40,7 @@ export interface RefetchableMargonemAccountReader {
     readonly actorUserId: AppUserId;
     readonly accountId: MargonemAccountId;
   }) => Promise<
-    Result<
+    Outcome<
       RefetchableMargonemAccount,
       | MargonemAccountNotFound
       | ActorDoesNotOwnMargonemAccount
@@ -99,13 +99,13 @@ export interface PendingMargonemAccountRefetchStore {
   readonly createPendingRefetch: (
     input: CreatePendingMargonemAccountRefetchInput
   ) => Promise<
-    Result<PendingMargonemAccountRefetch, SquadBuilderPersistenceUnavailable>
+    Outcome<PendingMargonemAccountRefetch, SquadBuilderPersistenceUnavailable>
   >;
 
   readonly findPendingRefetchForApply: (
     input: FindPendingMargonemAccountRefetchInput
   ) => Promise<
-    Result<
+    Outcome<
       PendingMargonemAccountRefetchForApply,
       PendingMargonemAccountRefetchNotFound | SquadBuilderPersistenceUnavailable
     >
@@ -113,7 +113,7 @@ export interface PendingMargonemAccountRefetchStore {
 
   readonly markPendingRefetchApplied: (
     input: MarkPendingMargonemAccountRefetchAppliedInput
-  ) => Promise<Result<void, SquadBuilderPersistenceUnavailable>>;
+  ) => Promise<Outcome<void, SquadBuilderPersistenceUnavailable>>;
 }
 
 /** Input for transactionally applying pending refetch data. */
@@ -128,7 +128,7 @@ export interface RefetchedMargonemAccountWriter {
   readonly applyRefetchedAccount: (
     input: ApplyRefetchedAccountInput
   ) => Promise<
-    Result<ApplyAccountRefetchOutput, SquadBuilderPersistenceUnavailable>
+    Outcome<ApplyAccountRefetchOutput, SquadBuilderPersistenceUnavailable>
   >;
 }
 

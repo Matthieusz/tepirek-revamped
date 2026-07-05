@@ -4,7 +4,7 @@ import * as Layer from "effect/Layer";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
-import { isOk } from "../result.js";
+import { isSuccess } from "../outcome.js";
 import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
@@ -15,7 +15,7 @@ import {
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
 
-  if (!isOk(userId)) {
+  if (!isSuccess(userId)) {
     throw new Error("Expected test user id to be valid");
   }
 
@@ -25,7 +25,7 @@ const parseTestUserId = (value: string) => {
 const parseTestAccountId = () => {
   const accountId = parseMargonemAccountId(123);
 
-  if (!isOk(accountId)) {
+  if (!isSuccess(accountId)) {
     throw new Error("Expected test account id to be valid");
   }
 

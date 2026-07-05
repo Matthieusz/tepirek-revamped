@@ -2,7 +2,7 @@ import * as Effect from "effect/Effect";
 
 import type { AppUserId } from "../app-user-id.js";
 import { parseAppUserId } from "../app-user-id.js";
-import { isError } from "../result.js";
+import { isFailure } from "../outcome.js";
 import { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
 import { parseSquadGroupName } from "../squad-name.js";
 
@@ -102,7 +102,7 @@ export const parsePersistedAppUserId = (
 > => {
   const userId = parseAppUserId(value);
 
-  if (isError(userId)) {
+  if (isFailure(userId)) {
     return failPersistence(operation, userId.error);
   }
 
@@ -123,7 +123,7 @@ export const parsePersistedSquadGroupName = (
 ) => {
   const name = parseSquadGroupName(value);
 
-  if (isError(name)) {
+  if (isFailure(name)) {
     return failPersistence(operation, name.error);
   }
 

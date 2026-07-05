@@ -6,7 +6,7 @@ import { TestClock } from "effect/testing";
 import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
-import { isOk } from "../result.js";
+import { isSuccess } from "../outcome.js";
 import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
 import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
@@ -18,7 +18,7 @@ import {
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
 
-  if (!isOk(userId)) {
+  if (!isSuccess(userId)) {
     throw new Error("Expected test user id to be valid");
   }
 
@@ -28,7 +28,7 @@ const parseTestUserId = (value: string) => {
 const parseTestAccountId = () => {
   const accountId = parseMargonemAccountId(123);
 
-  if (!isOk(accountId)) {
+  if (!isSuccess(accountId)) {
     throw new Error("Expected test account id to be valid");
   }
 
@@ -38,7 +38,7 @@ const parseTestAccountId = () => {
 const parseTestAccessId = () => {
   const accessId = parseMargonemAccountAccessId(456);
 
-  if (!isOk(accessId)) {
+  if (!isSuccess(accessId)) {
     throw new Error("Expected test access id to be valid");
   }
 

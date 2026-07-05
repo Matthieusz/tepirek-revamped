@@ -4,7 +4,7 @@ import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
 } from "./margonem-profile-url.js";
-import { isError, isOk } from "./result.js";
+import { isFailure, isSuccess } from "./outcome.js";
 
 describe("Margonem profile URL parsing", () => {
   it("extracts the numeric profile id from canonical and anchored profile URLs", () => {
@@ -15,10 +15,10 @@ describe("Margonem profile URL parsing", () => {
       "https://www.margonem.pl/profile/view,7298897#char_1296625,jaruna"
     );
 
-    expect(isOk(canonical)).toBe(true);
-    expect(isOk(anchored)).toBe(true);
+    expect(isSuccess(canonical)).toBe(true);
+    expect(isSuccess(anchored)).toBe(true);
 
-    if (!isOk(canonical) || !isOk(anchored)) {
+    if (!isSuccess(canonical) || !isSuccess(anchored)) {
       throw new Error("Expected profile URL parsing to succeed");
     }
 
@@ -31,7 +31,7 @@ describe("Margonem profile URL parsing", () => {
       "https://example.com/profile/view,7298897"
     );
 
-    expect(isError(parsed)).toBe(true);
+    expect(isFailure(parsed)).toBe(true);
   });
 
   it("generates canonical profile URLs from profile ids", () => {
@@ -39,7 +39,7 @@ describe("Margonem profile URL parsing", () => {
       "https://www.margonem.pl/profile/view,7298897#char_1296625,jaruna"
     );
 
-    if (!isOk(parsed)) {
+    if (!isSuccess(parsed)) {
       throw new Error("Expected profile URL parsing to succeed");
     }
 

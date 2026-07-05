@@ -48,8 +48,8 @@ import {
   profileIdToNumber,
 } from "../margonem-profile-id.js";
 import { toMargonemProfileUrl } from "../margonem-profile-url.js";
+import { isFailure } from "../outcome.js";
 import { pendingImportIdToNumber } from "../pending-margonem-account-import-id.js";
-import { isError } from "../result.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
 import { PendingMargonemAccountImportNotFound } from "../squad-groups/squad-group-errors.js";
 import {
@@ -385,25 +385,25 @@ const findPendingImportForConfirmationWithDatabase =
       for (const row of characterRows) {
         const characterId = parseMargonemCharacterId(row.characterId);
 
-        if (isError(characterId)) {
+        if (isFailure(characterId)) {
           return yield* failPersistence(operation, characterId.error);
         }
 
         const level = parsePositiveLevel(row.level);
 
-        if (isError(level)) {
+        if (isFailure(level)) {
           return yield* failPersistence(operation, level.error);
         }
 
         const profession = parseMargonemProfession(row.profession);
 
-        if (isError(profession)) {
+        if (isFailure(profession)) {
           return yield* failPersistence(operation, profession.error);
         }
 
         const world = parseMargonemWorld(row.world);
 
-        if (isError(world)) {
+        if (isFailure(world)) {
           return yield* failPersistence(operation, world.error);
         }
 
@@ -419,7 +419,7 @@ const findPendingImportForConfirmationWithDatabase =
 
       const profileId = parseMargonemProfileId(preview.profileId);
 
-      if (isError(profileId)) {
+      if (isFailure(profileId)) {
         return yield* failPersistence(operation, profileId.error);
       }
 
@@ -578,13 +578,13 @@ const listOwnedAccountsWithDatabase =
       for (const row of rows) {
         const displayName = parseAccountDisplayName(row.displayName);
 
-        if (isError(displayName)) {
+        if (isFailure(displayName)) {
           return yield* failPersistence(operation, displayName.error);
         }
 
         const profileId = parseMargonemProfileId(row.profileId);
 
-        if (isError(profileId)) {
+        if (isFailure(profileId)) {
           return yield* failPersistence(operation, profileId.error);
         }
 

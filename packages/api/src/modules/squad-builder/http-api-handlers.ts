@@ -49,9 +49,9 @@ import {
 import type { AppUserId } from "./app-user-id.js";
 import type { MargonemAccountAccessId } from "./margonem-account-access-id.js";
 import type { MargonemAccountId } from "./margonem-account-id.js";
+import { isFailure } from "./outcome.js";
 import type { PendingMargonemAccountImportId } from "./pending-margonem-account-import-id.js";
 import type { PendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id.js";
-import { isError } from "./result.js";
 import type { SquadGroupId } from "./squad-group-id.js";
 import type { SquadGroupInvitationId } from "./squad-group-invitation-id.js";
 import { parseSquadGroupListFilters } from "./squad-group-list-filters.js";
@@ -226,7 +226,7 @@ const squadGroupHandlers = HttpApiBuilder.group(
               nameQuery: payload.nameQuery,
             });
 
-            if (isError(filters)) {
+            if (isFailure(filters)) {
               return yield* Effect.fail(filters.error);
             }
 

@@ -1,6 +1,6 @@
+import { fail, success } from "./outcome.js";
+import type { Outcome } from "./outcome.js";
 import { isPositiveInteger } from "./prelude.js";
-import { err, ok } from "./result.js";
-import type { Result } from "./result.js";
 
 /** A persisted squad id. */
 export type SquadId = number & { readonly __brand: "SquadId" };
@@ -13,11 +13,11 @@ export interface InvalidSquadId {
 /** Parse a positive integer as a squad id. */
 export const parseSquadId = (
   input: number
-): Result<SquadId, InvalidSquadId> => {
+): Outcome<SquadId, InvalidSquadId> => {
   if (!isPositiveInteger(input)) {
-    return err({ _tag: "InvalidSquadId" });
+    return fail({ _tag: "InvalidSquadId" });
   }
 
   // SAFETY: isPositiveInteger established the SquadId invariant.
-  return ok(input as SquadId);
+  return success(input as SquadId);
 };

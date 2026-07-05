@@ -7,8 +7,8 @@ import { serviceUse } from "../../../effect/service-use.js";
 import { parseAccountDisplayName } from "../account-display-name.js";
 import type { InvalidAccountDisplayName } from "../account-display-name.js";
 import type { AppUserId } from "../app-user-id.js";
+import { isFailure } from "../outcome.js";
 import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
-import { isError } from "../result.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import type {
   DuplicateMargonemAccountError,
@@ -41,7 +41,7 @@ export const confirm = EffectRuntime.fn("AccountImport.confirm")(
   ) {
     const displayName = parseAccountDisplayName(input.displayName);
 
-    if (isError(displayName)) {
+    if (isFailure(displayName)) {
       return yield* EffectRuntime.fail(displayName.error);
     }
 

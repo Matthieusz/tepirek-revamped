@@ -18,9 +18,9 @@ import { parseMargonemProfileHtml } from "../margonem-profile-html-parser.js";
 import type { ParseMargonemProfileHtmlError } from "../margonem-profile-html-parser.js";
 import type { MargonemProfileId } from "../margonem-profile-id.js";
 import { toMargonemProfileUrl } from "../margonem-profile-url.js";
+import { fail, isFailure, success } from "../outcome.js";
+import type { Outcome } from "../outcome.js";
 import type { PendingMargonemAccountRefetchId } from "../pending-margonem-account-refetch-id.js";
-import { err, isError, ok } from "../result.js";
-import type { Result } from "../result.js";
 import type {
   ActorDoesNotOwnMargonemAccount,
   FirecrawlBudgetError,
@@ -98,17 +98,17 @@ export class PreviewAccountRefetch {
   async preview(
     input: PreviewAccountRefetchInput,
     options: { readonly signal?: AbortSignal } = {}
-  ): Promise<Result<PreviewAccountRefetchOutput, PreviewAccountRefetchError>> {
+  ): Promise<Outcome<PreviewAccountRefetchOutput, PreviewAccountRefetchError>> {
     const authorized = await this.authorizer.authorizeOwner(input);
 
-    if (isError(authorized)) {
-      return err(authorized.error);
+    if (isFailure(authorized)) {
+      return fail(authorized.error);
     }
 
     const account = await this.accountReader.getAccountForRefetch(input);
 
-    if (isError(account)) {
-      return err(account.error);
+    if (isFailure(account)) {
+      return fail(account.error);
     }
 
     const yearMonth = firecrawlYearMonthFromDate(this.clock.now());
@@ -119,8 +119,8 @@ export class PreviewAccountRefetch {
       yearMonth,
     });
 
-    if (isError(reservedRequest)) {
-      return err(reservedRequest.error);
+    if (isFailure(reservedRequest)) {
+      return fail(reservedRequest.error);
     }
 
     const scrapedProfile = await this.firecrawl.scrapeProfileHtml(
@@ -128,34 +128,34 @@ export class PreviewAccountRefetch {
       options
     );
 
-    if (isError(scrapedProfile)) {
+    if (isFailure(scrapedProfile)) {
       const markFailed = await this.ledger.markRequestFailed({
         errorTag: scrapedProfile.error._tag,
         requestId: reservedRequest.value.requestId,
       });
 
-      if (isError(markFailed)) {
-        return err(markFailed.error);
+      if (isFailure(markFailed)) {
+        return fail(markFailed.error);
       }
 
-      return err(scrapedProfile.error);
+      return fail(scrapedProfile.error);
     }
 
     const creditsUsed = parseFirecrawlCreditCount(
       scrapedProfile.value.metadata.creditsUsed ?? 1
     );
 
-    if (isError(creditsUsed)) {
+    if (isFailure(creditsUsed)) {
       const markFailed = await this.ledger.markRequestFailed({
         errorTag: creditsUsed.error._tag,
         requestId: reservedRequest.value.requestId,
       });
 
-      if (isError(markFailed)) {
-        return err(markFailed.error);
+      if (isFailure(markFailed)) {
+        return fail(markFailed.error);
       }
 
-      return err(
+      return fail(
         new FirecrawlResponseNotParseable({
           cause: new Error("Invalid Firecrawl creditsUsed"),
           profileId: account.value.profileId,
@@ -170,8 +170,8 @@ export class PreviewAccountRefetch {
       requestId: reservedRequest.value.requestId,
     });
 
-    if (isError(markSucceeded)) {
-      return err(markSucceeded.error);
+    if (isFailure(markSucceeded)) {
+      return fail(markSucceeded.error);
     }
 
     const parsedHtml = parseMargonemProfileHtml({
@@ -179,8 +179,8 @@ export class PreviewAccountRefetch {
       profileId: account.value.profileId,
     });
 
-    if (isError(parsedHtml)) {
-      return err(parsedHtml.error);
+    if (isFailure(parsedHtml)) {
+      return fail(parsedHtml.error);
     }
 
     const fetchedAt = this.clock.now();
@@ -206,11 +206,11 @@ export class PreviewAccountRefetch {
       profileId: account.value.profileId,
     });
 
-    if (isError(pending)) {
-      return err(pending.error);
+    if (isFailure(pending)) {
+      return fail(pending.error);
     }
 
-    return ok({
+    return success({
       accountId: account.value.accountId,
       diff,
       fetchedAt,

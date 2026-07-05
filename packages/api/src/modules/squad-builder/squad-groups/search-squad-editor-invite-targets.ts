@@ -3,8 +3,8 @@ import {
   InvalidAccountInviteTargetQuery,
 } from "../account-sharing/search-account-invite-targets.js";
 import type { AppUserId } from "../app-user-id.js";
-import { err, isError, ok } from "../result.js";
-import type { Result } from "../result.js";
+import { fail, isFailure, success } from "../outcome.js";
+import type { Outcome } from "../outcome.js";
 import type { SquadGroupId } from "../squad-group-id.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import type {
@@ -14,11 +14,11 @@ import type {
 
 const parseQuery = (
   input: string
-): Result<string, InvalidAccountInviteTargetQuery> => {
+): Outcome<string, InvalidAccountInviteTargetQuery> => {
   const trimmed = input.trim();
 
   if (trimmed.length < accountInviteTargetSearchPolicy.minQueryLength) {
-    return err(
+    return fail(
       new InvalidAccountInviteTargetQuery({
         message: `Wpisz co najmniej ${accountInviteTargetSearchPolicy.minQueryLength} znaki`,
       })
@@ -26,14 +26,14 @@ const parseQuery = (
   }
 
   if (trimmed.length > accountInviteTargetSearchPolicy.maxQueryLength) {
-    return err(
+    return fail(
       new InvalidAccountInviteTargetQuery({
         message: `Zapytanie może mieć maksymalnie ${accountInviteTargetSearchPolicy.maxQueryLength} znaków`,
       })
     );
   }
 
-  return ok(trimmed);
+  return success(trimmed);
 };
 
 /** Search verified users the squad group owner may invite as editors. */
@@ -49,12 +49,12 @@ export class SearchSquadEditorInviteTargets {
     readonly groupId: SquadGroupId;
     readonly query: string;
   }): Promise<
-    Result<readonly SquadEditorInviteTarget[], SquadGroupSharingError>
+    Outcome<readonly SquadEditorInviteTarget[], SquadGroupSharingError>
   > {
     const query = parseQuery(input.query);
 
-    if (isError(query)) {
-      return err(query.error);
+    if (isFailure(query)) {
+      return fail(query.error);
     }
 
     const access = await this.store.authorizeSquadGroupOwner({
@@ -62,8 +62,8 @@ export class SearchSquadEditorInviteTargets {
       groupId: input.groupId,
     });
 
-    if (isError(access)) {
-      return err(access.error);
+    if (isFailure(access)) {
+      return fail(access.error);
     }
 
     const targets = await this.store.searchSquadEditorInviteTargets({
@@ -73,10 +73,10 @@ export class SearchSquadEditorInviteTargets {
       query: query.value,
     });
 
-    if (isError(targets)) {
-      return err(targets.error);
+    if (isFailure(targets)) {
+      return fail(targets.error);
     }
 
-    return ok(targets.value);
+    return success(targets.value);
   }
 }

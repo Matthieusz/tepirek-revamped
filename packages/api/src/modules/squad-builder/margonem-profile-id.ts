@@ -1,7 +1,7 @@
+import { fail, success } from "./outcome.js";
+import type { Outcome } from "./outcome.js";
 import { PositiveInt } from "./positive-int.js";
 import { isPositiveInteger } from "./prelude.js";
-import { err, ok } from "./result.js";
-import type { Result } from "./result.js";
 
 /** A parsed Margonem profile id. */
 export type MargonemProfileId = number & {
@@ -40,37 +40,37 @@ export interface InvalidPositiveInteger {
 /** Parse a positive integer as a Margonem profile id. */
 export const parseMargonemProfileId = (
   value: number
-): Result<MargonemProfileId, InvalidPositiveInteger> => {
+): Outcome<MargonemProfileId, InvalidPositiveInteger> => {
   if (!isPositiveInteger(value)) {
-    return err({ _tag: "InvalidPositiveInteger", field: "profileId" });
+    return fail({ _tag: "InvalidPositiveInteger", field: "profileId" });
   }
 
   // SAFETY: isPositiveInteger established the MargonemProfileId invariant.
-  return ok(value as MargonemProfileId);
+  return success(value as MargonemProfileId);
 };
 
 /** Parse a positive integer as a Margonem character id. */
 export const parseMargonemCharacterId = (
   value: number
-): Result<MargonemCharacterId, InvalidPositiveInteger> => {
+): Outcome<MargonemCharacterId, InvalidPositiveInteger> => {
   if (!isPositiveInteger(value)) {
-    return err({ _tag: "InvalidPositiveInteger", field: "characterId" });
+    return fail({ _tag: "InvalidPositiveInteger", field: "characterId" });
   }
 
   // SAFETY: isPositiveInteger established the MargonemCharacterId invariant.
-  return ok(value as MargonemCharacterId);
+  return success(value as MargonemCharacterId);
 };
 
 /** Parse a positive integer as a character level. */
 export const parsePositiveLevel = (
   value: number
-): Result<PositiveLevel, InvalidPositiveInteger> => {
+): Outcome<PositiveLevel, InvalidPositiveInteger> => {
   if (!isPositiveInteger(value)) {
-    return err({ _tag: "InvalidPositiveInteger", field: "level" });
+    return fail({ _tag: "InvalidPositiveInteger", field: "level" });
   }
 
   // SAFETY: isPositiveInteger established the PositiveLevel invariant.
-  return ok(value as PositiveLevel);
+  return success(value as PositiveLevel);
 };
 
 /** Convert a Margonem profile id to its primitive representation. */

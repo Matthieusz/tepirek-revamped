@@ -6,7 +6,7 @@ import { serviceUse } from "../../../effect/service-use.js";
 import { systemClock } from "../account-import/preview-margonem-profile-import.js";
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
-import { isError } from "../result.js";
+import { isFailure } from "../outcome.js";
 import type { SquadGroupId } from "../squad-group-id.js";
 import type {
   SquadCharacterDraftPlacement,
@@ -137,7 +137,7 @@ const makeSaveWithStoreService = (clock: Clock) =>
         })),
       });
 
-      if (isError(validation)) {
+      if (isFailure(validation)) {
         return yield* Effect.fail(validation.error);
       }
 

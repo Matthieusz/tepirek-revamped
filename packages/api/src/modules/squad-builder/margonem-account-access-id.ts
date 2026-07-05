@@ -1,7 +1,7 @@
+import { fail, success } from "./outcome.js";
+import type { Outcome } from "./outcome.js";
 import { PositiveInt } from "./positive-int.js";
 import { isPositiveInteger } from "./prelude.js";
-import { err, ok } from "./result.js";
-import type { Result } from "./result.js";
 
 /** A persisted Margonem account access row id. */
 export type MargonemAccountAccessId = number & {
@@ -21,13 +21,13 @@ export interface InvalidMargonemAccountAccessId {
 /** Parse a positive integer as a Margonem account access id. */
 export const parseMargonemAccountAccessId = (
   input: number
-): Result<MargonemAccountAccessId, InvalidMargonemAccountAccessId> => {
+): Outcome<MargonemAccountAccessId, InvalidMargonemAccountAccessId> => {
   if (!isPositiveInteger(input)) {
-    return err({ _tag: "InvalidMargonemAccountAccessId" });
+    return fail({ _tag: "InvalidMargonemAccountAccessId" });
   }
 
   // SAFETY: isPositiveInteger established the MargonemAccountAccessId invariant.
-  return ok(input as MargonemAccountAccessId);
+  return success(input as MargonemAccountAccessId);
 };
 
 /** Convert a Margonem account access id to its primitive representation. */

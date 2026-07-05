@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import { parseAppUserId } from "../app-user-id.js";
-import { isOk } from "../result.js";
+import { isSuccess } from "../outcome.js";
 import { parseSquadGroupId } from "../squad-group-id.js";
 import {
   layer as squadEditorInviteTargetsLayer,
@@ -15,7 +15,7 @@ import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
 
-  if (!isOk(userId)) {
+  if (!isSuccess(userId)) {
     throw new Error("Expected test user id to be valid");
   }
 
@@ -25,7 +25,7 @@ const parseTestUserId = (value: string) => {
 const parseTestGroupId = () => {
   const groupId = parseSquadGroupId(123);
 
-  if (!isOk(groupId)) {
+  if (!isSuccess(groupId)) {
     throw new Error("Expected test group id to be valid");
   }
 

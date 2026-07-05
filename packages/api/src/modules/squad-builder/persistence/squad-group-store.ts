@@ -45,7 +45,7 @@ import {
   parseMargonemCharacterId,
   parsePositiveLevel,
 } from "../margonem-profile-id.js";
-import { isError } from "../result.js";
+import { isFailure } from "../outcome.js";
 import type {
   SquadGroupAccess,
   SquadGroupOwnerAccess,
@@ -160,7 +160,7 @@ const createSquadGroupWithDatabase =
 
       const groupId = parseSquadGroupId(created.id);
 
-      if (isError(groupId)) {
+      if (isFailure(groupId)) {
         return yield* failPersistence("createSquadGroup", groupId.error);
       }
 
@@ -205,13 +205,13 @@ const listMySquadGroupsWithDatabase =
       for (const row of rows) {
         const groupId = parseSquadGroupId(row.groupId);
 
-        if (isError(groupId)) {
+        if (isFailure(groupId)) {
           return yield* failPersistence("listMySquadGroups", groupId.error);
         }
 
         const name = parseSquadGroupName(row.name);
 
-        if (isError(name)) {
+        if (isFailure(name)) {
           return yield* failPersistence("listMySquadGroups", name.error);
         }
 
@@ -312,7 +312,7 @@ const searchSquadEditorInviteTargetsWithDatabase =
       for (const row of rows) {
         const userId = parseAppUserId(row.userId);
 
-        if (isError(userId)) {
+        if (isFailure(userId)) {
           return yield* failPersistence(operation, userId.error);
         }
 
@@ -418,7 +418,7 @@ const loadSquadGroupInvitationSummaryWithDatabase =
 
       const status = parseSquadGroupInvitationStatus(row.status);
 
-      if (isError(status)) {
+      if (isFailure(status)) {
         return yield* failPersistence(operation, status.error);
       }
 
@@ -426,13 +426,13 @@ const loadSquadGroupInvitationSummaryWithDatabase =
         row.invitationId
       );
 
-      if (isError(persistedInvitationId)) {
+      if (isFailure(persistedInvitationId)) {
         return yield* failPersistence(operation, persistedInvitationId.error);
       }
 
       const persistedGroupId = parseSquadGroupId(row.squadGroupId);
 
-      if (isError(persistedGroupId)) {
+      if (isFailure(persistedGroupId)) {
         return yield* failPersistence(operation, persistedGroupId.error);
       }
 
@@ -521,7 +521,7 @@ const upsertSquadGroupEditorInviteWithDatabase =
 
           const status = parseSquadGroupInvitationStatus(existing.status);
 
-          if (isError(status)) {
+          if (isFailure(status)) {
             return yield* failPersistence(operation, status.error);
           }
 
@@ -559,7 +559,7 @@ const upsertSquadGroupEditorInviteWithDatabase =
 
       const invitationId = parseSquadGroupInvitationId(upserted);
 
-      if (isError(invitationId)) {
+      if (isFailure(invitationId)) {
         return yield* failPersistence(operation, invitationId.error);
       }
 
@@ -617,7 +617,7 @@ const respondToSquadGroupInviteWithDatabase =
 
           const status = parseSquadGroupInvitationStatus(existing.status);
 
-          if (isError(status)) {
+          if (isFailure(status)) {
             return yield* failPersistence(operation, status.error);
           }
 
@@ -708,7 +708,7 @@ const revokeSquadGroupEditorWithDatabase =
 
           const status = parseSquadGroupInvitationStatus(existing.status);
 
-          if (isError(status)) {
+          if (isFailure(status)) {
             return yield* failPersistence(operation, status.error);
           }
 
@@ -783,7 +783,7 @@ const listIncomingSquadGroupInvitesWithDatabase =
       for (const row of rows) {
         const invitationId = parseSquadGroupInvitationId(row.id);
 
-        if (isError(invitationId)) {
+        if (isFailure(invitationId)) {
           return yield* failPersistence(operation, invitationId.error);
         }
 
@@ -878,7 +878,7 @@ const listSquadGroupEditorGrantsWithDatabase =
       for (const row of rows) {
         const status = parseSquadGroupInvitationStatus(row.status);
 
-        if (isError(status)) {
+        if (isFailure(status)) {
           return yield* failPersistence(operation, status.error);
         }
 
@@ -893,7 +893,7 @@ const listSquadGroupEditorGrantsWithDatabase =
 
         const invitationId = parseSquadGroupInvitationId(row.invitationId);
 
-        if (isError(invitationId)) {
+        if (isFailure(invitationId)) {
           return yield* failPersistence(operation, invitationId.error);
         }
 
@@ -972,37 +972,37 @@ const listAvailableCharactersForOwnerWithDatabase =
           row.accountDisplayName
         );
 
-        if (isError(accountDisplayName)) {
+        if (isFailure(accountDisplayName)) {
           return yield* failPersistence(operation, accountDisplayName.error);
         }
 
         const accountId = parseMargonemAccountId(row.accountId);
 
-        if (isError(accountId)) {
+        if (isFailure(accountId)) {
           return yield* failPersistence(operation, accountId.error);
         }
 
         const accountOwnerUserId = parseAppUserId(row.accountOwnerUserId);
 
-        if (isError(accountOwnerUserId)) {
+        if (isFailure(accountOwnerUserId)) {
           return yield* failPersistence(operation, accountOwnerUserId.error);
         }
 
         const level = parsePositiveLevel(row.level);
 
-        if (isError(level)) {
+        if (isFailure(level)) {
           return yield* failPersistence(operation, level.error);
         }
 
         const profession = parseMargonemProfession(row.profession);
 
-        if (isError(profession)) {
+        if (isFailure(profession)) {
           return yield* failPersistence(operation, profession.error);
         }
 
         const world = parseMargonemWorld(row.world);
 
-        if (isError(world)) {
+        if (isFailure(world)) {
           return yield* failPersistence(operation, world.error);
         }
 
@@ -1010,7 +1010,7 @@ const listAvailableCharactersForOwnerWithDatabase =
           row.margonemCharacterId
         );
 
-        if (isError(margonemCharacterId)) {
+        if (isFailure(margonemCharacterId)) {
           return yield* failPersistence(operation, margonemCharacterId.error);
         }
 
@@ -1076,7 +1076,7 @@ const getSquadGroupDetailWithDatabase =
       );
       const visibility = parseSquadGroupVisibility(group.visibility);
 
-      if (isError(visibility)) {
+      if (isFailure(visibility)) {
         return yield* failPersistence(operation, visibility.error);
       }
 
@@ -1119,7 +1119,7 @@ const getSquadGroupDetailWithDatabase =
         } else {
           const invitationId = parseSquadGroupInvitationId(invite.id);
 
-          if (isError(invitationId)) {
+          if (isFailure(invitationId)) {
             return yield* failPersistence(operation, invitationId.error);
           }
 
@@ -1183,19 +1183,19 @@ const getSquadGroupDetailWithDatabase =
           placement.accountDisplayName
         );
 
-        if (isError(accountDisplayName)) {
+        if (isFailure(accountDisplayName)) {
           return yield* failPersistence(operation, accountDisplayName.error);
         }
 
         const level = parsePositiveLevel(placement.level);
 
-        if (isError(level)) {
+        if (isFailure(level)) {
           return yield* failPersistence(operation, level.error);
         }
 
         const profession = parseMargonemProfession(placement.profession);
 
-        if (isError(profession)) {
+        if (isFailure(profession)) {
           return yield* failPersistence(operation, profession.error);
         }
 
@@ -1203,7 +1203,7 @@ const getSquadGroupDetailWithDatabase =
           placement.margonemCharacterId
         );
 
-        if (isError(margonemCharacterId)) {
+        if (isFailure(margonemCharacterId)) {
           return yield* failPersistence(operation, margonemCharacterId.error);
         }
 
@@ -1229,7 +1229,7 @@ const getSquadGroupDetailWithDatabase =
       for (const row of squadRows) {
         const squadId = parseSquadId(row.id);
 
-        if (isError(squadId)) {
+        if (isFailure(squadId)) {
           return yield* failPersistence(operation, squadId.error);
         }
 
@@ -1377,7 +1377,7 @@ const listSharedSquadGroupsWithDatabase =
       for (const row of rows) {
         const groupId = parseSquadGroupId(row.groupId);
 
-        if (isError(groupId)) {
+        if (isFailure(groupId)) {
           return yield* failPersistence(operation, groupId.error);
         }
 
@@ -1772,13 +1772,13 @@ const listGlobalSquadGroupsWithDatabase =
       for (const row of rows) {
         const groupId = parseSquadGroupId(row.groupId);
 
-        if (isError(groupId)) {
+        if (isFailure(groupId)) {
           return yield* failPersistence(operation, groupId.error);
         }
 
         const name = parseSquadGroupName(row.name);
 
-        if (isError(name)) {
+        if (isFailure(name)) {
           return yield* failPersistence(operation, name.error);
         }
 

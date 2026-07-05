@@ -1,8 +1,8 @@
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
 import type { MargonemAccountAccessId } from "../margonem-account-access-id.js";
-import { err, isError, ok } from "../result.js";
-import type { Result } from "../result.js";
+import { fail, isFailure, success } from "../outcome.js";
+import type { Outcome } from "../outcome.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
 import type {
   AccountSharingStore,
@@ -28,7 +28,7 @@ export class RevokeAccountAccess {
   /** Revoke pending or accepted account access as the account owner. */
   async revoke(
     input: RevokeAccountAccessInput
-  ): Promise<Result<RevokeAccountAccessResult, AccountSharingError>> {
+  ): Promise<Outcome<RevokeAccountAccessResult, AccountSharingError>> {
     const now = this.clock.now();
     const result = await this.store.revokeAccountAccess({
       accessId: input.accessId,
@@ -36,10 +36,10 @@ export class RevokeAccountAccess {
       ownerUserId: input.actorUserId,
     });
 
-    if (isError(result)) {
-      return err(result.error);
+    if (isFailure(result)) {
+      return fail(result.error);
     }
 
-    return ok(result.value);
+    return success(result.value);
   }
 }

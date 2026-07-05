@@ -1,7 +1,7 @@
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
-import { err, isError, ok } from "../result.js";
-import type { Result } from "../result.js";
+import { fail, isFailure, success } from "../outcome.js";
+import type { Outcome } from "../outcome.js";
 import type { SquadGroupInvitationId } from "../squad-group-invitation-id.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import type {
@@ -22,17 +22,17 @@ export class RevokeSquadGroupEditor {
   async revoke(input: {
     readonly actorUserId: AppUserId;
     readonly invitationId: SquadGroupInvitationId;
-  }): Promise<Result<SquadGroupInvitationSummary, SquadGroupSharingError>> {
+  }): Promise<Outcome<SquadGroupInvitationSummary, SquadGroupSharingError>> {
     const result = await this.store.revokeSquadGroupEditor({
       invitationId: input.invitationId,
       now: this.clock.now(),
       ownerUserId: input.actorUserId,
     });
 
-    if (isError(result)) {
-      return err(result.error);
+    if (isFailure(result)) {
+      return fail(result.error);
     }
 
-    return ok(result.value);
+    return success(result.value);
   }
 }

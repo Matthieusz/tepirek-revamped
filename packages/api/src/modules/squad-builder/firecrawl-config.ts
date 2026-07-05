@@ -5,8 +5,8 @@ import * as Layer from "effect/Layer";
 import type { Redacted } from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
-import { err, ok } from "./result.js";
-import type { Result } from "./result.js";
+import { fail, success } from "./outcome.js";
+import type { Outcome } from "./outcome.js";
 
 /** Number of Firecrawl credits consumed by a scrape. */
 export type FirecrawlCreditCount = number & {
@@ -34,16 +34,16 @@ export interface ParseFirecrawlConfigError {
 /** Parse a number into a Firecrawl credit count. */
 export const parseFirecrawlCreditCount = (
   input: number
-): Result<FirecrawlCreditCount, ParseFirecrawlConfigError> => {
+): Outcome<FirecrawlCreditCount, ParseFirecrawlConfigError> => {
   if (!Number.isSafeInteger(input) || input < 0) {
-    return err({
+    return fail({
       _tag: "InvalidFirecrawlConfig",
       message: "Firecrawl credits used must be a non-negative integer",
     });
   }
 
   // SAFETY: non-negative integer establishes FirecrawlCreditCount.
-  return ok(input as FirecrawlCreditCount);
+  return success(input as FirecrawlCreditCount);
 };
 
 const MonthlyRequestBudget = Schema.Int.check(

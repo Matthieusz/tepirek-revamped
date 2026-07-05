@@ -1,7 +1,7 @@
+import { fail, success } from "./outcome.js";
+import type { Outcome } from "./outcome.js";
 import { PositiveInt } from "./positive-int.js";
 import { isPositiveInteger } from "./prelude.js";
-import { err, ok } from "./result.js";
-import type { Result } from "./result.js";
 
 /** A validated pending Margonem account import id. */
 export type PendingMargonemAccountImportId = number & {
@@ -21,16 +21,16 @@ export interface InvalidPendingMargonemAccountImportId {
 /** Parse a positive integer as a pending Margonem account import id. */
 export const parsePendingMargonemAccountImportId = (
   input: number
-): Result<
+): Outcome<
   PendingMargonemAccountImportId,
   InvalidPendingMargonemAccountImportId
 > => {
   if (!isPositiveInteger(input)) {
-    return err({ _tag: "InvalidPendingMargonemAccountImportId" });
+    return fail({ _tag: "InvalidPendingMargonemAccountImportId" });
   }
 
   // SAFETY: isPositiveInteger established the PendingMargonemAccountImportId invariant.
-  return ok(input as PendingMargonemAccountImportId);
+  return success(input as PendingMargonemAccountImportId);
 };
 
 /** Convert a pending import id to its primitive representation. */

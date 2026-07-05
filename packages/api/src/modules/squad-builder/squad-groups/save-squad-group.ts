@@ -6,7 +6,7 @@ import { serviceUse } from "../../../effect/service-use.js";
 import { systemClock } from "../account-import/preview-margonem-profile-import.js";
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
-import { isError } from "../result.js";
+import { isFailure } from "../outcome.js";
 import type { SquadGroupId } from "../squad-group-id.js";
 import type {
   SaveSquadInput,
@@ -64,7 +64,7 @@ const makeSave = (clock: Clock) =>
       squads: input.squads,
     });
 
-    if (isError(snapshot)) {
+    if (isFailure(snapshot)) {
       return yield* Effect.fail(snapshot.error);
     }
 

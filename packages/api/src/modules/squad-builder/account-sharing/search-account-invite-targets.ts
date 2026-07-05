@@ -2,8 +2,8 @@ import * as Schema from "effect/Schema";
 
 import type { AppUserId } from "../app-user-id.js";
 import type { MargonemAccountId } from "../margonem-account-id.js";
-import { err, isError, ok } from "../result.js";
-import type { Result } from "../result.js";
+import { fail, isFailure, success } from "../outcome.js";
+import type { Outcome } from "../outcome.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
 import type {
   AccountInviteTarget,
@@ -33,11 +33,11 @@ export interface SearchAccountInviteTargetsInput {
 
 const parseAccountInviteTargetQuery = (
   input: string
-): Result<string, InvalidAccountInviteTargetQuery> => {
+): Outcome<string, InvalidAccountInviteTargetQuery> => {
   const trimmed = input.trim();
 
   if (trimmed.length < accountInviteTargetSearchPolicy.minQueryLength) {
-    return err(
+    return fail(
       new InvalidAccountInviteTargetQuery({
         message: `Wpisz co najmniej ${accountInviteTargetSearchPolicy.minQueryLength} znaki`,
       })
@@ -45,14 +45,14 @@ const parseAccountInviteTargetQuery = (
   }
 
   if (trimmed.length > accountInviteTargetSearchPolicy.maxQueryLength) {
-    return err(
+    return fail(
       new InvalidAccountInviteTargetQuery({
         message: `Zapytanie może mieć maksymalnie ${accountInviteTargetSearchPolicy.maxQueryLength} znaków`,
       })
     );
   }
 
-  return ok(trimmed);
+  return success(trimmed);
 };
 
 // oxlint-disable-next-line max-classes-per-file — Domain error schema collocated with the service that uses it.
@@ -66,11 +66,11 @@ export class SearchAccountInviteTargets {
   /** Search verified users the account owner may invite. */
   async search(
     input: SearchAccountInviteTargetsInput
-  ): Promise<Result<readonly AccountInviteTarget[], AccountSharingError>> {
+  ): Promise<Outcome<readonly AccountInviteTarget[], AccountSharingError>> {
     const query = parseAccountInviteTargetQuery(input.query);
 
-    if (isError(query)) {
-      return err(query.error);
+    if (isFailure(query)) {
+      return fail(query.error);
     }
 
     const owned = await this.store.findOwnedAccountForSharing({
@@ -78,12 +78,12 @@ export class SearchAccountInviteTargets {
       actorUserId: input.actorUserId,
     });
 
-    if (isError(owned)) {
-      return err(owned.error);
+    if (isFailure(owned)) {
+      return fail(owned.error);
     }
 
     if (owned.value.ownerUserId !== input.actorUserId) {
-      return err({ _tag: "ActorDoesNotOwnMargonemAccount" });
+      return fail({ _tag: "ActorDoesNotOwnMargonemAccount" });
     }
 
     const targets = await this.store.searchInviteTargets({
@@ -92,10 +92,10 @@ export class SearchAccountInviteTargets {
       query: query.value,
     });
 
-    if (isError(targets)) {
-      return err(targets.error);
+    if (isFailure(targets)) {
+      return fail(targets.error);
     }
 
-    return ok(targets.value);
+    return success(targets.value);
   }
 }

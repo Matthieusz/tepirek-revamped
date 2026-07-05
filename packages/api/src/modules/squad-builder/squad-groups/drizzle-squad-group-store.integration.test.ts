@@ -39,7 +39,7 @@ import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff.js";
 import { parseMargonemProfileId } from "../margonem-profile-id.js";
-import { isOk } from "../result.js";
+import { isSuccess } from "../outcome.js";
 import { create as createSquadGroup } from "./create-squad-group.js";
 import { list as listAvailableSquadCharacters } from "./list-available-squad-characters.js";
 import { list as listGlobalSquadGroups } from "./list-global-squad-groups.js";
@@ -55,7 +55,7 @@ const apiTestLayer = makeApiSquadBuilderLayer(defaultTestDatabaseUrl);
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
 
-  if (!isOk(userId)) {
+  if (!isSuccess(userId)) {
     throw new Error("Expected test user id to be valid");
   }
 
@@ -65,7 +65,7 @@ const parseTestUserId = (value: string) => {
 const parseTestAccountId = (value: number) => {
   const accountId = parseMargonemAccountId(value);
 
-  if (!isOk(accountId)) {
+  if (!isSuccess(accountId)) {
     throw new Error("Expected test account id to be valid");
   }
 
@@ -75,7 +75,7 @@ const parseTestAccountId = (value: number) => {
 const parseTestProfileId = (value: number) => {
   const profileId = parseMargonemProfileId(value);
 
-  if (!isOk(profileId)) {
+  if (!isSuccess(profileId)) {
     throw new Error("Expected test profile id to be valid");
   }
 
@@ -85,7 +85,7 @@ const parseTestProfileId = (value: number) => {
 const parseTestCredits = (value: number) => {
   const credits = parseFirecrawlCreditCount(value);
 
-  if (!isOk(credits)) {
+  if (!isSuccess(credits)) {
     throw new Error("Expected test Firecrawl credits to be valid");
   }
 
@@ -352,7 +352,7 @@ describe("DrizzleSquadGroupStoreService integration", () => {
     const member = await createVerifiedMember({ id: "effect-pending-user" });
     const displayName = parseAccountDisplayName("Effect pending");
 
-    if (!isOk(displayName)) {
+    if (!isSuccess(displayName)) {
       throw new Error("Expected display name to be valid");
     }
 

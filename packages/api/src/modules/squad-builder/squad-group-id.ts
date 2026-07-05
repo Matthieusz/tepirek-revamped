@@ -1,7 +1,7 @@
+import { fail, success } from "./outcome.js";
+import type { Outcome } from "./outcome.js";
 import { PositiveInt } from "./positive-int.js";
 import { isPositiveInteger } from "./prelude.js";
-import { err, ok } from "./result.js";
-import type { Result } from "./result.js";
 
 /** A persisted squad group id. */
 export type SquadGroupId = number & { readonly __brand: "SquadGroupId" };
@@ -19,13 +19,13 @@ export interface InvalidSquadGroupId {
 /** Parse a positive integer as a squad group id. */
 export const parseSquadGroupId = (
   input: number
-): Result<SquadGroupId, InvalidSquadGroupId> => {
+): Outcome<SquadGroupId, InvalidSquadGroupId> => {
   if (!isPositiveInteger(input)) {
-    return err({ _tag: "InvalidSquadGroupId" });
+    return fail({ _tag: "InvalidSquadGroupId" });
   }
 
   // SAFETY: isPositiveInteger established the SquadGroupId invariant.
-  return ok(input as SquadGroupId);
+  return success(input as SquadGroupId);
 };
 
 /** Convert a squad group id to its primitive representation. */

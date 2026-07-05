@@ -1,9 +1,9 @@
 import { parseAccountDisplayName } from "../account-display-name.js";
 import type { InvalidAccountDisplayName } from "../account-display-name.js";
 import type { AppUserId } from "../app-user-id.js";
+import { fail, isFailure, success } from "../outcome.js";
+import type { Outcome } from "../outcome.js";
 import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
-import { err, isError, ok } from "../result.js";
-import type { Result } from "../result.js";
 import type {
   DuplicateMargonemAccountError,
   OwnedMargonemAccountSummary,
@@ -48,12 +48,12 @@ export class ConfirmOwnedAccountImport {
   async confirm(
     input: ConfirmOwnedAccountImportInput
   ): Promise<
-    Result<OwnedMargonemAccountSummary, ConfirmOwnedAccountImportError>
+    Outcome<OwnedMargonemAccountSummary, ConfirmOwnedAccountImportError>
   > {
     const displayName = parseAccountDisplayName(input.displayName);
 
-    if (isError(displayName)) {
-      return err(displayName.error);
+    if (isFailure(displayName)) {
+      return fail(displayName.error);
     }
 
     const now = this.clock.now();
@@ -63,8 +63,8 @@ export class ConfirmOwnedAccountImport {
       pendingImportId: input.pendingImportId,
     });
 
-    if (isError(pending)) {
-      return err(pending.error);
+    if (isFailure(pending)) {
+      return fail(pending.error);
     }
 
     const created = await this.accounts.createOwnedAccountFromPendingImport({
@@ -73,10 +73,10 @@ export class ConfirmOwnedAccountImport {
       pending: pending.value,
     });
 
-    if (isError(created)) {
-      return err(created.error);
+    if (isFailure(created)) {
+      return fail(created.error);
     }
 
-    return ok(created.value);
+    return success(created.value);
   }
 }

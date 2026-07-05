@@ -10,8 +10,8 @@ import {
 import type { FirecrawlScrapeError } from "./firecrawl-errors.js";
 import type { MargonemProfileId } from "./margonem-profile-id.js";
 import { toMargonemProfileUrl } from "./margonem-profile-url.js";
-import { err, isError, ok } from "./result.js";
-import type { Result } from "./result.js";
+import { fail, isFailure, success } from "./outcome.js";
+import type { Outcome } from "./outcome.js";
 
 /** Successful Firecrawl scrape output used by squad-builder. */
 export interface FirecrawlScrapeSuccess {
@@ -38,7 +38,7 @@ export interface FirecrawlClient {
   readonly scrapeProfileHtml: (
     profileId: MargonemProfileId,
     options?: { readonly signal?: AbortSignal }
-  ) => Promise<Result<FirecrawlScrapeSuccess, FirecrawlScrapeError>>;
+  ) => Promise<Outcome<FirecrawlScrapeSuccess, FirecrawlScrapeError>>;
 }
 
 /** Firecrawl SDK-backed implementation of profile HTML scraping. */
@@ -48,9 +48,9 @@ const isSignalAborted = (signal: AbortSignal | undefined): boolean =>
 const parseFirecrawlDocument = (
   profileId: MargonemProfileId,
   document: Document
-): Result<FirecrawlScrapeSuccess, FirecrawlScrapeError> => {
+): Outcome<FirecrawlScrapeSuccess, FirecrawlScrapeError> => {
   if (typeof document.html !== "string" || document.html.length === 0) {
-    return err(
+    return fail(
       new FirecrawlResponseNotParseable({
         cause: new Error("Firecrawl response did not include HTML"),
         profileId,
@@ -63,8 +63,8 @@ const parseFirecrawlDocument = (
   if (rawCredits !== undefined) {
     const parsedCredits = parseFirecrawlCreditCount(rawCredits);
 
-    if (isError(parsedCredits)) {
-      return err(
+    if (isFailure(parsedCredits)) {
+      return fail(
         new FirecrawlResponseNotParseable({
           cause: new Error("Firecrawl response included invalid creditsUsed"),
           profileId,
@@ -72,7 +72,7 @@ const parseFirecrawlDocument = (
       );
     }
 
-    return ok({
+    return success({
       html: document.html,
       metadata: {
         cacheState: document.metadata?.cacheState,
@@ -85,7 +85,7 @@ const parseFirecrawlDocument = (
     });
   }
 
-  return ok({
+  return success({
     html: document.html,
     metadata: {
       cacheState: document.metadata?.cacheState,
@@ -109,9 +109,9 @@ export class FirecrawlSdkClient implements FirecrawlClient {
   async scrapeProfileHtml(
     profileId: MargonemProfileId,
     options: { readonly signal?: AbortSignal } = {}
-  ): Promise<Result<FirecrawlScrapeSuccess, FirecrawlScrapeError>> {
+  ): Promise<Outcome<FirecrawlScrapeSuccess, FirecrawlScrapeError>> {
     if (isSignalAborted(options.signal)) {
-      return err(
+      return fail(
         new RequestCancelled({
           cause: options.signal?.reason,
           profileId,
@@ -131,7 +131,7 @@ export class FirecrawlSdkClient implements FirecrawlClient {
       );
 
       if (isSignalAborted(options.signal)) {
-        return err(
+        return fail(
           new RequestCancelled({
             cause: options.signal?.reason,
             profileId,
@@ -142,7 +142,7 @@ export class FirecrawlSdkClient implements FirecrawlClient {
       return parseFirecrawlDocument(profileId, document);
     } catch (error: unknown) {
       if (isSignalAborted(options.signal)) {
-        return err(
+        return fail(
           new RequestCancelled({
             cause: error,
             profileId,
@@ -150,7 +150,7 @@ export class FirecrawlSdkClient implements FirecrawlClient {
         );
       }
 
-      return err(
+      return fail(
         new FirecrawlRequestFailed({
           cause: error,
           profileId,

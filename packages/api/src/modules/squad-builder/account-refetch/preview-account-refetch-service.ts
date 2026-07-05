@@ -18,7 +18,7 @@ import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
 import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff.js";
 import { parseMargonemProfileHtml } from "../margonem-profile-html-parser.js";
 import { toMargonemProfileUrl } from "../margonem-profile-url.js";
-import { isError } from "../result.js";
+import { isFailure } from "../outcome.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import type { PreviewAccountRefetchInput } from "./preview-account-refetch.js";
 import { pendingRefetchPolicy } from "./preview-account-refetch.js";
@@ -56,7 +56,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
       try: () => firecrawl.scrapeProfileHtml(account.profileId, options),
     });
 
-    if (isError(scrapedProfileResult)) {
+    if (isFailure(scrapedProfileResult)) {
       yield* AccountRefetchStoreService.use((store) =>
         store.markRequestFailed({
           errorTag: scrapedProfileResult.error._tag,
@@ -71,7 +71,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
       scrapedProfile.metadata.creditsUsed ?? 1
     );
 
-    if (isError(creditsUsed)) {
+    if (isFailure(creditsUsed)) {
       yield* AccountRefetchStoreService.use((store) =>
         store.markRequestFailed({
           errorTag: creditsUsed.error._tag,
@@ -98,7 +98,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
       profileId: account.profileId,
     });
 
-    if (isError(parsedHtml)) {
+    if (isFailure(parsedHtml)) {
       return yield* EffectRuntime.fail(parsedHtml.error);
     }
 

@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
-import { isOk } from "../result.js";
+import { isSuccess } from "../outcome.js";
 import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import { apply } from "./apply-account-refetch-service.js";
@@ -11,7 +11,7 @@ import { apply } from "./apply-account-refetch-service.js";
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-apply-refetch-user");
 
-  if (!isOk(userId)) {
+  if (!isSuccess(userId)) {
     throw new Error("Expected test user id to be valid");
   }
 

@@ -9,8 +9,8 @@ import type {
   MargonemCharacterId,
   PositiveLevel,
 } from "./margonem-profile-id.js";
-import { err, isError, ok } from "./result.js";
-import type { Result } from "./result.js";
+import { fail, isFailure, success } from "./outcome.js";
+import type { Outcome } from "./outcome.js";
 import type { SquadGroupId } from "./squad-group-id.js";
 import type { SquadId } from "./squad-id.js";
 import { parseSquadGroupName, parseSquadName } from "./squad-name.js";
@@ -124,16 +124,16 @@ const maxCharactersPerSquad = 10;
 
 const parsePosition = (
   input: number
-): Result<number, SquadGroupValidationError> => {
+): Outcome<number, SquadGroupValidationError> => {
   if (!Number.isSafeInteger(input) || input < 0) {
-    return err({
+    return fail({
       _tag: "InvalidSquadSnapshot",
       message:
         "Pozycje składów i postaci muszą być nieujemnymi liczbami całkowitymi",
     });
   }
 
-  return ok(input);
+  return success(input);
 };
 
 /** Validate a squad group snapshot against accessible Jaruna characters and group rules. */
@@ -142,14 +142,14 @@ export const validateSquadGroupSnapshot = ({
   groupId,
   name,
   squads,
-}: ValidateSquadGroupSnapshotInput): Result<
+}: ValidateSquadGroupSnapshotInput): Outcome<
   SquadGroupDraftSnapshot,
   SquadGroupValidationError
 > => {
   const parsedName = parseSquadGroupName(name);
 
-  if (isError(parsedName)) {
-    return err(parsedName.error);
+  if (isFailure(parsedName)) {
+    return fail(parsedName.error);
   }
 
   const availableByCharacterId = new Map<number, AvailableSquadCharacter>();
@@ -162,24 +162,24 @@ export const validateSquadGroupSnapshot = ({
 
   for (const squad of squads) {
     if (squad.clientKey.trim().length === 0) {
-      return err({
+      return fail({
         _tag: "InvalidSquadSnapshot",
         message: "Każdy skład musi mieć klucz klienta",
       });
     }
 
     const parsedSquadName = parseSquadName(squad.name);
-    if (isError(parsedSquadName)) {
-      return err(parsedSquadName.error);
+    if (isFailure(parsedSquadName)) {
+      return fail(parsedSquadName.error);
     }
 
     const parsedSquadPosition = parsePosition(squad.position);
-    if (isError(parsedSquadPosition)) {
-      return err(parsedSquadPosition.error);
+    if (isFailure(parsedSquadPosition)) {
+      return fail(parsedSquadPosition.error);
     }
 
     if (squad.characters.length > maxCharactersPerSquad) {
-      return err({
+      return fail({
         _tag: "TooManyCharactersInSquad",
         maxCharacters: maxCharactersPerSquad,
         squadClientKey: squad.clientKey,
@@ -192,29 +192,29 @@ export const validateSquadGroupSnapshot = ({
 
     for (const character of squad.characters) {
       const parsedCharacterPosition = parsePosition(character.position);
-      if (isError(parsedCharacterPosition)) {
-        return err(parsedCharacterPosition.error);
+      if (isFailure(parsedCharacterPosition)) {
+        return fail(parsedCharacterPosition.error);
       }
 
       const availableCharacter = availableByCharacterId.get(
         character.characterId
       );
       if (availableCharacter === undefined) {
-        return err({
+        return fail({
           _tag: "SquadCharacterNotAccessible",
           characterId: character.characterId,
         });
       }
 
       if (availableCharacter.world !== "jaruna") {
-        return err({
+        return fail({
           _tag: "SquadCharacterNotJaruna",
           characterId: character.characterId,
         });
       }
 
       if (squadCharacterIds.has(character.characterId)) {
-        return err({
+        return fail({
           _tag: "DuplicateCharacterInSquad",
           characterId: character.characterId,
           squadClientKey: squad.clientKey,
@@ -222,14 +222,14 @@ export const validateSquadGroupSnapshot = ({
       }
 
       if (groupCharacterIds.has(character.characterId)) {
-        return err({
+        return fail({
           _tag: "DuplicateCharacterInSquadGroup",
           characterId: character.characterId,
         });
       }
 
       if (squadAccountIds.has(availableCharacter.accountId)) {
-        return err({
+        return fail({
           _tag: "DuplicateAccountInSquad",
           accountId: availableCharacter.accountId,
           squadClientKey: squad.clientKey,
@@ -254,7 +254,7 @@ export const validateSquadGroupSnapshot = ({
     });
   }
 
-  return ok({
+  return success({
     groupId,
     name: parsedName.value,
     squads: parsedSquads,

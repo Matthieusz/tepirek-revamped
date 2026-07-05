@@ -50,7 +50,7 @@ import type {
 import type { AppUserId } from "../app-user-id.js";
 import type { MargonemAccountId } from "../margonem-account-id.js";
 import type { MargonemProfession } from "../margonem-character.js";
-import type { Result } from "../result.js";
+import type { Outcome } from "../outcome.js";
 import type {
   SquadGroupAccess,
   SquadGroupAccessRole,
@@ -337,16 +337,16 @@ export interface SaveSharedSquadGroupCharactersStoreInput {
 export interface SquadGroupStore {
   readonly createSquadGroup: (
     input: CreateSquadGroupStoreInput
-  ) => Promise<Result<SquadGroupSummary, SquadBuilderPersistenceUnavailable>>;
+  ) => Promise<Outcome<SquadGroupSummary, SquadBuilderPersistenceUnavailable>>;
   readonly listMySquadGroups: (
     input: ListMySquadGroupsInput
   ) => Promise<
-    Result<readonly SquadGroupSummary[], SquadBuilderPersistenceUnavailable>
+    Outcome<readonly SquadGroupSummary[], SquadBuilderPersistenceUnavailable>
   >;
   readonly getSquadGroupDetail: (
     input: GetSquadGroupDetailInput
   ) => Promise<
-    Result<
+    Outcome<
       SquadGroupDetail,
       | SquadGroupNotFound
       | ActorCannotViewSquadGroup
@@ -356,7 +356,7 @@ export interface SquadGroupStore {
   readonly listAvailableCharactersForOwner: (
     input: ListAvailableCharactersForOwnerInput
   ) => Promise<
-    Result<
+    Outcome<
       readonly AvailableSquadCharacter[],
       SquadBuilderPersistenceUnavailable
     >
@@ -364,7 +364,7 @@ export interface SquadGroupStore {
   readonly saveSquadGroupSnapshot: (
     input: SaveSquadGroupSnapshotStoreInput
   ) => Promise<
-    Result<
+    Outcome<
       SquadGroupDetail,
       | SquadGroupNotFound
       | ActorDoesNotOwnSquadGroup
@@ -378,7 +378,7 @@ export interface GlobalSquadVisibilityStore {
   readonly setSquadGroupVisibility: (
     input: SetSquadGroupVisibilityStoreInput
   ) => Promise<
-    Result<
+    Outcome<
       SquadGroupVisibilityChange,
       | SquadGroupNotFound
       | ActorDoesNotOwnSquadGroup
@@ -388,7 +388,7 @@ export interface GlobalSquadVisibilityStore {
   readonly listGlobalSquadGroups: (
     input: ListGlobalSquadGroupsInput
   ) => Promise<
-    Result<
+    Outcome<
       readonly GlobalSquadGroupSummary[],
       SquadBuilderPersistenceUnavailable
     >
@@ -396,7 +396,7 @@ export interface GlobalSquadVisibilityStore {
   readonly authorizeSquadGroupViewer: (
     input: AuthorizeSquadGroupViewerInput
   ) => Promise<
-    Result<
+    Outcome<
       SquadGroupAccess,
       | SquadGroupNotFound
       | ActorCannotViewSquadGroup
@@ -410,7 +410,7 @@ export interface SquadGroupSharingStore {
     readonly actorUserId: AppUserId;
     readonly groupId: SquadGroupId;
   }) => Promise<
-    Result<
+    Outcome<
       SquadGroupOwnerAccess,
       | SquadGroupNotFound
       | ActorDoesNotOwnSquadGroup
@@ -421,7 +421,7 @@ export interface SquadGroupSharingStore {
     readonly actorUserId: AppUserId;
     readonly groupId: SquadGroupId;
   }) => Promise<
-    Result<
+    Outcome<
       SquadGroupAccess,
       | SquadGroupNotFound
       | ActorCannotViewSquadGroup
@@ -432,7 +432,7 @@ export interface SquadGroupSharingStore {
     readonly actorUserId: AppUserId;
     readonly groupId: SquadGroupId;
   }) => Promise<
-    Result<
+    Outcome<
       SquadGroupAccess,
       | SquadGroupNotFound
       | ActorCannotEditSquadGroup
@@ -442,7 +442,7 @@ export interface SquadGroupSharingStore {
   readonly searchSquadEditorInviteTargets: (
     input: SearchSquadEditorInviteTargetsStoreInput
   ) => Promise<
-    Result<
+    Outcome<
       readonly SquadEditorInviteTarget[],
       SquadBuilderPersistenceUnavailable
     >
@@ -450,7 +450,7 @@ export interface SquadGroupSharingStore {
   readonly findVerifiedSquadEditorInviteTarget: (input: {
     readonly targetUserId: AppUserId;
   }) => Promise<
-    Result<
+    Outcome<
       SquadEditorInviteTarget,
       | { readonly _tag: "SquadEditorInviteTargetNotFound" }
       | { readonly _tag: "SquadEditorInviteTargetNotVerified" }
@@ -460,7 +460,7 @@ export interface SquadGroupSharingStore {
   readonly upsertSquadGroupEditorInvite: (
     input: UpsertSquadGroupEditorInviteInput
   ) => Promise<
-    Result<
+    Outcome<
       SquadGroupInvitationSummary,
       | {
           readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
@@ -473,18 +473,18 @@ export interface SquadGroupSharingStore {
   readonly listIncomingSquadGroupInvites: (input: {
     readonly actorUserId: AppUserId;
   }) => Promise<
-    Result<
+    Outcome<
       readonly SquadGroupInvitationSummary[],
       SquadBuilderPersistenceUnavailable
     >
   >;
   readonly getPendingSquadGroupInviteCount: (input: {
     readonly actorUserId: AppUserId;
-  }) => Promise<Result<number, SquadBuilderPersistenceUnavailable>>;
+  }) => Promise<Outcome<number, SquadBuilderPersistenceUnavailable>>;
   readonly respondToSquadGroupInvite: (
     input: RespondToSquadGroupInviteStoreInput
   ) => Promise<
-    Result<
+    Outcome<
       SquadGroupInvitationSummary,
       | { readonly _tag: "SquadGroupInvitationNotFound" }
       | { readonly _tag: "ActorIsNotSquadGroupInviteRecipient" }
@@ -499,7 +499,7 @@ export interface SquadGroupSharingStore {
   readonly revokeSquadGroupEditor: (
     input: RevokeSquadGroupEditorStoreInput
   ) => Promise<
-    Result<
+    Outcome<
       SquadGroupInvitationSummary,
       | { readonly _tag: "SquadGroupInvitationNotFound" }
       | ActorDoesNotOwnSquadGroup
@@ -515,7 +515,7 @@ export interface SquadGroupSharingStore {
     readonly actorUserId: AppUserId;
     readonly filters: SquadGroupListFilters;
   }) => Promise<
-    Result<
+    Outcome<
       readonly SharedSquadGroupSummary[],
       SquadBuilderPersistenceUnavailable
     >
@@ -524,7 +524,7 @@ export interface SquadGroupSharingStore {
     readonly actorUserId: AppUserId;
     readonly groupId: SquadGroupId;
   }) => Promise<
-    Result<
+    Outcome<
       readonly SquadGroupEditorGrantSummary[],
       | SquadGroupNotFound
       | ActorDoesNotOwnSquadGroup
@@ -533,7 +533,7 @@ export interface SquadGroupSharingStore {
   >;
   readonly saveSharedSquadGroupCharacters: (
     input: SaveSharedSquadGroupCharactersStoreInput
-  ) => Promise<Result<SquadGroupDetail, SharedSquadGroupSaveError>>;
+  ) => Promise<Outcome<SquadGroupDetail, SharedSquadGroupSaveError>>;
 }
 
 export interface SquadBuilderStoreServiceShape {

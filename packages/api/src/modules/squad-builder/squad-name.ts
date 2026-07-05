@@ -1,7 +1,7 @@
 import * as Schema from "effect/Schema";
 
-import { err, ok } from "./result.js";
-import type { Result } from "./result.js";
+import { fail, success } from "./outcome.js";
+import type { Outcome } from "./outcome.js";
 
 /** A validated squad group name. */
 export type SquadGroupName = string & { readonly __brand: "SquadGroupName" };
@@ -33,11 +33,11 @@ export const squadBuilderNamingPolicy = {
 /** Parse and normalize a squad group name. */
 export const parseSquadGroupName = (
   input: string
-): Result<SquadGroupName, InvalidSquadGroupName> => {
+): Outcome<SquadGroupName, InvalidSquadGroupName> => {
   const name = squadBuilderNamingPolicy.trim ? input.trim() : input;
 
   if (name.length === 0) {
-    return err(
+    return fail(
       new InvalidSquadGroupName({
         message: "Nazwa grupy składów jest wymagana",
       })
@@ -45,7 +45,7 @@ export const parseSquadGroupName = (
   }
 
   if (name.length > squadBuilderNamingPolicy.squadGroupNameMaxLength) {
-    return err(
+    return fail(
       new InvalidSquadGroupName({
         message: `Nazwa grupy składów może mieć maksymalnie ${squadBuilderNamingPolicy.squadGroupNameMaxLength} znaków`,
       })
@@ -53,31 +53,31 @@ export const parseSquadGroupName = (
   }
 
   // SAFETY: non-empty trimmed string within max length established the invariant.
-  return ok(name as SquadGroupName);
+  return success(name as SquadGroupName);
 };
 
 /** Parse and normalize a squad name. */
 export const parseSquadName = (
   input: string
-): Result<SquadName, InvalidSquadName> => {
+): Outcome<SquadName, InvalidSquadName> => {
   const name = squadBuilderNamingPolicy.trim ? input.trim() : input;
 
   if (name.length === 0) {
-    return err({
+    return fail({
       _tag: "InvalidSquadName",
       message: "Nazwa składu jest wymagana",
     });
   }
 
   if (name.length > squadBuilderNamingPolicy.squadNameMaxLength) {
-    return err({
+    return fail({
       _tag: "InvalidSquadName",
       message: `Nazwa składu może mieć maksymalnie ${squadBuilderNamingPolicy.squadNameMaxLength} znaków`,
     });
   }
 
   // SAFETY: non-empty trimmed string within max length established the invariant.
-  return ok(name as SquadName);
+  return success(name as SquadName);
 };
 
 /** Convert a squad group name to its primitive representation. */

@@ -10,7 +10,7 @@ import type { AppUserId } from "../app-user-id.js";
 import type { MargonemAccountAccessId } from "../margonem-account-access-id.js";
 import type { MargonemAccountId } from "../margonem-account-id.js";
 import type { MargonemProfileId } from "../margonem-profile-id.js";
-import type { Result } from "../result.js";
+import type { Outcome } from "../outcome.js";
 
 /** Expected authorization failures for account sharing operations. */
 export type AccountSharingAuthorizationError =
@@ -169,7 +169,7 @@ export interface MargonemAccountOwnerAuthorizer {
     readonly actorUserId: AppUserId;
     readonly accountId: MargonemAccountId;
   }) => Promise<
-    Result<
+    Outcome<
       OwnedAccountForSharing,
       | MargonemAccountNotFound
       | ActorDoesNotOwnMargonemAccount
@@ -183,13 +183,13 @@ export interface AccountSharingStore {
   readonly searchInviteTargets: (
     input: SearchInviteTargetsStoreInput
   ) => Promise<
-    Result<readonly AccountInviteTarget[], SquadBuilderPersistenceUnavailable>
+    Outcome<readonly AccountInviteTarget[], SquadBuilderPersistenceUnavailable>
   >;
 
   readonly findOwnedAccountForSharing: (
     input: FindOwnedAccountForSharingInput
   ) => Promise<
-    Result<
+    Outcome<
       OwnedAccountForSharing,
       MargonemAccountNotFound | SquadBuilderPersistenceUnavailable
     >
@@ -198,7 +198,7 @@ export interface AccountSharingStore {
   readonly findVerifiedInviteTarget: (
     input: FindVerifiedInviteTargetInput
   ) => Promise<
-    Result<
+    Outcome<
       VerifiedInviteTarget,
       | { readonly _tag: "InviteTargetNotFound" }
       | { readonly _tag: "InviteTargetNotVerified" }
@@ -209,7 +209,7 @@ export interface AccountSharingStore {
   readonly upsertAccountAccessInvite: (
     input: UpsertAccountAccessInviteInput
   ) => Promise<
-    Result<
+    Outcome<
       AccountAccessInviteSummary,
       | {
           readonly _tag: "AccountAccessTransitionNotAllowed";
@@ -223,7 +223,7 @@ export interface AccountSharingStore {
   readonly listIncomingAccountInvites: (
     input: ListIncomingAccountInvitesInput
   ) => Promise<
-    Result<
+    Outcome<
       readonly AccountAccessInviteSummary[],
       SquadBuilderPersistenceUnavailable
     >
@@ -232,7 +232,7 @@ export interface AccountSharingStore {
   readonly respondToAccountAccessInvite: (
     input: RespondToAccountAccessInviteStoreInput
   ) => Promise<
-    Result<
+    Outcome<
       AccountAccessInviteSummary,
       | { readonly _tag: "AccountAccessInviteNotFound" }
       | { readonly _tag: "ActorIsNotInviteRecipient" }
@@ -248,7 +248,7 @@ export interface AccountSharingStore {
   readonly revokeAccountAccess: (
     input: RevokeAccountAccessStoreInput
   ) => Promise<
-    Result<
+    Outcome<
       RevokeAccountAccessResult,
       | { readonly _tag: "AccountAccessInviteNotFound" }
       | ActorDoesNotOwnMargonemAccount
@@ -264,7 +264,7 @@ export interface AccountSharingStore {
   readonly listSharedAccounts: (
     input: ListSharedAccountsInput
   ) => Promise<
-    Result<
+    Outcome<
       readonly SharedMargonemAccountSummary[],
       SquadBuilderPersistenceUnavailable
     >
@@ -273,7 +273,7 @@ export interface AccountSharingStore {
   readonly listAccountAccessGrants: (
     input: ListAccountAccessGrantsInput
   ) => Promise<
-    Result<
+    Outcome<
       readonly AccountAccessGrantSummary[],
       SquadBuilderPersistenceUnavailable
     >

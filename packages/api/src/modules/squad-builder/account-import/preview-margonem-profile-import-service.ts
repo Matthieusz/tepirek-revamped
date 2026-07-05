@@ -20,7 +20,7 @@ import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
 } from "../margonem-profile-url.js";
-import { isError } from "../result.js";
+import { isFailure } from "../outcome.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import { profileAccessStateToDuplicateError } from "./preview-margonem-profile-import.js";
 import type { PreviewMargonemProfileImportInput } from "./preview-margonem-profile-import.js";
@@ -35,7 +35,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
     const firecrawl = yield* FirecrawlClientService;
     const parsedProfileId = parseMargonemProfileUrl(input.profileUrl);
 
-    if (isError(parsedProfileId)) {
+    if (isFailure(parsedProfileId)) {
       return yield* EffectRuntime.fail(parsedProfileId.error);
     }
 
@@ -71,7 +71,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
       try: () => firecrawl.scrapeProfileHtml(profileId, options),
     });
 
-    if (isError(scrapedProfileResult)) {
+    if (isFailure(scrapedProfileResult)) {
       yield* AccountImportStoreService.use((store) =>
         store.markRequestFailed({
           errorTag: scrapedProfileResult.error._tag,
@@ -86,7 +86,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
       scrapedProfile.metadata.creditsUsed ?? 1
     );
 
-    if (isError(creditsUsed)) {
+    if (isFailure(creditsUsed)) {
       yield* AccountImportStoreService.use((store) =>
         store.markRequestFailed({
           errorTag: creditsUsed.error._tag,
@@ -113,7 +113,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
       profileId,
     });
 
-    if (isError(parsedHtml)) {
+    if (isFailure(parsedHtml)) {
       return yield* EffectRuntime.fail(parsedHtml.error);
     }
 

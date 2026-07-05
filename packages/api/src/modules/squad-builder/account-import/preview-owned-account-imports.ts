@@ -15,9 +15,9 @@ import {
   toMargonemProfileUrl,
 } from "../margonem-profile-url.js";
 import type { ParseMargonemProfileUrlError } from "../margonem-profile-url.js";
+import { fail, isFailure, isSuccess, success } from "../outcome.js";
+import type { Outcome } from "../outcome.js";
 import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
-import { err, isError, isOk, ok } from "../result.js";
-import type { Result } from "../result.js";
 import type {
   DuplicateMargonemAccountError,
   FirecrawlBudgetError,
@@ -124,7 +124,7 @@ export interface SingleMargonemProfilePreview {
     input: PreviewMargonemProfileImportInput,
     options?: { readonly signal?: AbortSignal }
   ) => Promise<
-    Result<
+    Outcome<
       PreviewMargonemProfileImportOutput,
       PreviewMargonemProfileImportError
     >
@@ -151,7 +151,7 @@ const defaultDisplayNameFor = (
 ): AccountDisplayName => {
   const parsed = parseAccountDisplayName(suggestedAccountName);
 
-  if (isOk(parsed)) {
+  if (isSuccess(parsed)) {
     return parsed.value;
   }
 
@@ -160,7 +160,7 @@ const defaultDisplayNameFor = (
   );
 
   // SAFETY: the fallback template always produces a valid display name.
-  return isOk(fallback)
+  return isSuccess(fallback)
     ? fallback.value
     : (suggestedAccountName as AccountDisplayName);
 };
@@ -212,18 +212,18 @@ export class PreviewOwnedAccountImports {
     input: PreviewOwnedAccountImportsInput,
     options: { readonly signal?: AbortSignal } = {}
   ): Promise<
-    Result<PreviewOwnedAccountImportsOutput, PreviewOwnedAccountImportsError>
+    Outcome<PreviewOwnedAccountImportsOutput, PreviewOwnedAccountImportsError>
   > {
     const nonBlankLines = input.profileUrls
       .map((url, index) => ({ inputUrl: url, lineNumber: index + 1 }))
       .filter((line) => !isEmpty(line.inputUrl));
 
     if (nonBlankLines.length === 0) {
-      return err(new EmptyProfileUrlBatch());
+      return fail(new EmptyProfileUrlBatch());
     }
 
     if (nonBlankLines.length > batchImportPolicy.maxProfileUrls) {
-      return err(
+      return fail(
         new TooManyProfileUrlsInBatch({
           maxUrls: batchImportPolicy.maxProfileUrls,
         })
@@ -237,7 +237,7 @@ export class PreviewOwnedAccountImports {
     for (const line of nonBlankLines) {
       const parsedProfileId = parseMargonemProfileUrl(line.inputUrl);
 
-      if (isError(parsedProfileId)) {
+      if (isFailure(parsedProfileId)) {
         failures.push({
           error: parsedProfileId.error,
           inputUrl: line.inputUrl,
@@ -286,7 +286,7 @@ export class PreviewOwnedAccountImports {
         continue;
       }
 
-      if (isError(accessState)) {
+      if (isFailure(accessState)) {
         failures.push({
           error: accessState.error,
           inputUrl: line.inputUrl,
@@ -317,12 +317,12 @@ export class PreviewOwnedAccountImports {
 
     const itemsByLine = new Map<number, PreviewOwnedAccountImportItem>();
 
-    for (const failure of failures) {
-      itemsByLine.set(failure.lineNumber, {
+    for (const lineFailure of failures) {
+      itemsByLine.set(lineFailure.lineNumber, {
         _tag: "PreviewFailed",
-        error: failure.error,
-        inputUrl: failure.inputUrl,
-        lineNumber: failure.lineNumber,
+        error: lineFailure.error,
+        inputUrl: lineFailure.inputUrl,
+        lineNumber: lineFailure.lineNumber,
       });
     }
 
@@ -336,7 +336,7 @@ export class PreviewOwnedAccountImports {
         (item): item is PreviewOwnedAccountImportItem => item !== undefined
       );
 
-    return ok({ items });
+    return success({ items });
   }
 
   private async fetchAvailableLines(
@@ -393,7 +393,7 @@ export class PreviewOwnedAccountImports {
           options.signal === undefined ? {} : { signal: options.signal }
         );
 
-        if (isError(preview)) {
+        if (isFailure(preview)) {
           if (preview.error._tag === "FirecrawlMonthlyBudgetExhausted") {
             budgetExhaustedError = preview.error;
           }
@@ -475,7 +475,7 @@ export class PreviewOwnedAccountImports {
       suggestedAccountName: preview.suggestedAccountName,
     });
 
-    if (isError(created)) {
+    if (isFailure(created)) {
       return {
         _tag: "PreviewFailed",
         error: created.error,

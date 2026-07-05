@@ -7,7 +7,7 @@ import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { parseMargonemProfileId } from "../margonem-profile-id.js";
-import { isOk } from "../result.js";
+import { isSuccess } from "../outcome.js";
 import { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
 import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
@@ -19,7 +19,7 @@ import {
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
 
-  if (!isOk(userId)) {
+  if (!isSuccess(userId)) {
     throw new Error("Expected test user id to be valid");
   }
 
@@ -29,7 +29,7 @@ const parseTestUserId = (value: string) => {
 const parseTestAccountId = () => {
   const accountId = parseMargonemAccountId(123);
 
-  if (!isOk(accountId)) {
+  if (!isSuccess(accountId)) {
     throw new Error("Expected test account id to be valid");
   }
 
@@ -39,7 +39,7 @@ const parseTestAccountId = () => {
 const parseTestAccessId = () => {
   const accessId = parseMargonemAccountAccessId(456);
 
-  if (!isOk(accessId)) {
+  if (!isSuccess(accessId)) {
     throw new Error("Expected test access id to be valid");
   }
 
@@ -49,7 +49,7 @@ const parseTestAccessId = () => {
 const parseTestDisplayName = () => {
   const displayName = parseAccountDisplayName("Effect shared account");
 
-  if (!isOk(displayName)) {
+  if (!isSuccess(displayName)) {
     throw new Error("Expected test display name to be valid");
   }
 
@@ -59,7 +59,7 @@ const parseTestDisplayName = () => {
 const parseTestProfileId = () => {
   const profileId = parseMargonemProfileId(7_299_020);
 
-  if (!isOk(profileId)) {
+  if (!isSuccess(profileId)) {
     throw new Error("Expected test profile id to be valid");
   }
 

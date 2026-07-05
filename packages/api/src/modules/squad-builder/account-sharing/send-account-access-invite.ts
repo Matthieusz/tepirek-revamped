@@ -1,8 +1,8 @@
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
 import type { MargonemAccountId } from "../margonem-account-id.js";
-import { err, isError, ok } from "../result.js";
-import type { Result } from "../result.js";
+import { fail, isFailure, success } from "../outcome.js";
+import type { Outcome } from "../outcome.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
 import type {
   AccountAccessInviteSummary,
@@ -29,30 +29,30 @@ export class SendAccountAccessInvite {
   /** Send or re-send an account access invitation. */
   async send(
     input: SendAccountAccessInviteInput
-  ): Promise<Result<AccountAccessInviteSummary, AccountSharingError>> {
+  ): Promise<Outcome<AccountAccessInviteSummary, AccountSharingError>> {
     const owned = await this.store.findOwnedAccountForSharing({
       accountId: input.accountId,
       actorUserId: input.actorUserId,
     });
 
-    if (isError(owned)) {
-      return err(owned.error);
+    if (isFailure(owned)) {
+      return fail(owned.error);
     }
 
     if (owned.value.ownerUserId !== input.actorUserId) {
-      return err({ _tag: "ActorDoesNotOwnMargonemAccount" });
+      return fail({ _tag: "ActorDoesNotOwnMargonemAccount" });
     }
 
     if (input.actorUserId === input.invitedUserId) {
-      return err({ _tag: "CannotInviteSelf" });
+      return fail({ _tag: "CannotInviteSelf" });
     }
 
     const target = await this.store.findVerifiedInviteTarget({
       targetUserId: input.invitedUserId,
     });
 
-    if (isError(target)) {
-      return err(target.error);
+    if (isFailure(target)) {
+      return fail(target.error);
     }
 
     const now = this.clock.now();
@@ -63,10 +63,10 @@ export class SendAccountAccessInvite {
       ownerUserId: input.actorUserId,
     });
 
-    if (isError(invite)) {
-      return err(invite.error);
+    if (isFailure(invite)) {
+      return fail(invite.error);
     }
 
-    return ok(invite.value);
+    return success(invite.value);
   }
 }
