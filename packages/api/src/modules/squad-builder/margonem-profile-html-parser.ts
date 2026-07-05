@@ -1,3 +1,6 @@
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+
 import { parseMargonemProfession } from "./margonem-character.js";
 import type { MargonemCharacterPreview } from "./margonem-character.js";
 import {
@@ -128,11 +131,13 @@ const parseJarunaCharacterRow = (
     });
   }
 
-  const characterId = parseMargonemCharacterId(Number(characterIdText));
-  const level = parsePositiveLevel(Number(levelText));
+  const characterId = Effect.runSyncExit(
+    parseMargonemCharacterId(Number(characterIdText))
+  );
+  const level = Effect.runSyncExit(parsePositiveLevel(Number(levelText)));
   const profession = parseMargonemProfession(professionLabel);
 
-  if (isFailure(characterId)) {
+  if (Exit.isFailure(characterId)) {
     return fail({
       _tag: "MargonemCharacterRowInvalid",
       profileId,
@@ -140,7 +145,7 @@ const parseJarunaCharacterRow = (
     });
   }
 
-  if (isFailure(level)) {
+  if (Exit.isFailure(level)) {
     return fail({
       _tag: "MargonemCharacterRowInvalid",
       profileId,

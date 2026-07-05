@@ -1,17 +1,20 @@
-import { fail, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
+
 import { PositiveInt } from "./positive-int.js";
-import { isPositiveInteger } from "./prelude.js";
 
 /** A validated pending Margonem account import id. */
-export type PendingMargonemAccountImportId = number & {
-  readonly __brand: "PendingMargonemAccountImportId";
-};
-
-/** HTTP/API schema for a validated pending account import id. */
-export const PendingMargonemAccountImportIdSchema = PositiveInt.annotate({
+export const PendingMargonemAccountImportId = PositiveInt.pipe(
+  Schema.brand("PendingMargonemAccountImportId")
+).annotate({
   identifier: "PendingMargonemAccountImportId",
 });
+export type PendingMargonemAccountImportId =
+  typeof PendingMargonemAccountImportId.Type;
+
+/** HTTP/API schema for a validated pending account import id. */
+export const PendingMargonemAccountImportIdSchema =
+  PendingMargonemAccountImportId;
 
 /** Expected failure when a pending import id is not a positive integer. */
 export interface InvalidPendingMargonemAccountImportId {
@@ -19,19 +22,17 @@ export interface InvalidPendingMargonemAccountImportId {
 }
 
 /** Parse a positive integer as a pending Margonem account import id. */
-export const parsePendingMargonemAccountImportId = (
-  input: number
-): Outcome<
-  PendingMargonemAccountImportId,
-  InvalidPendingMargonemAccountImportId
-> => {
-  if (!isPositiveInteger(input)) {
-    return fail({ _tag: "InvalidPendingMargonemAccountImportId" });
-  }
-
-  // SAFETY: isPositiveInteger established the PendingMargonemAccountImportId invariant.
-  return success(input as PendingMargonemAccountImportId);
-};
+export const parsePendingMargonemAccountImportId = Effect.fn(
+  "PendingMargonemAccountImportId.parse"
+)(function* parsePendingMargonemAccountImportId(input: number) {
+  return yield* Schema.decodeUnknownEffect(PendingMargonemAccountImportId)(
+    input
+  ).pipe(
+    Effect.catchTag("SchemaError", () =>
+      Effect.fail({ _tag: "InvalidPendingMargonemAccountImportId" } as const)
+    )
+  );
+});
 
 /** Convert a pending import id to its primitive representation. */
 export const pendingImportIdToNumber = (

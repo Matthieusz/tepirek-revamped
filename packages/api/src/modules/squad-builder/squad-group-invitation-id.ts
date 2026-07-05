@@ -1,17 +1,18 @@
-import { fail, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
+
 import { PositiveInt } from "./positive-int.js";
-import { isPositiveInteger } from "./prelude.js";
 
 /** A persisted squad group invitation id. */
-export type SquadGroupInvitationId = number & {
-  readonly __brand: "SquadGroupInvitationId";
-};
-
-/** HTTP/API schema for a persisted squad group invitation id. */
-export const SquadGroupInvitationIdSchema = PositiveInt.annotate({
+export const SquadGroupInvitationId = PositiveInt.pipe(
+  Schema.brand("SquadGroupInvitationId")
+).annotate({
   identifier: "SquadGroupInvitationId",
 });
+export type SquadGroupInvitationId = typeof SquadGroupInvitationId.Type;
+
+/** HTTP/API schema for a persisted squad group invitation id. */
+export const SquadGroupInvitationIdSchema = SquadGroupInvitationId;
 
 /** Expected failure when a squad group invitation id is invalid. */
 export interface InvalidSquadGroupInvitationId {
@@ -19,16 +20,15 @@ export interface InvalidSquadGroupInvitationId {
 }
 
 /** Parse a positive integer as a squad group invitation id. */
-export const parseSquadGroupInvitationId = (
-  input: number
-): Outcome<SquadGroupInvitationId, InvalidSquadGroupInvitationId> => {
-  if (!isPositiveInteger(input)) {
-    return fail({ _tag: "InvalidSquadGroupInvitationId" });
-  }
-
-  // SAFETY: isPositiveInteger established the SquadGroupInvitationId invariant.
-  return success(input as SquadGroupInvitationId);
-};
+export const parseSquadGroupInvitationId = Effect.fn(
+  "SquadGroupInvitationId.parse"
+)(function* parseSquadGroupInvitationId(input: number) {
+  return yield* Schema.decodeUnknownEffect(SquadGroupInvitationId)(input).pipe(
+    Effect.catchTag("SchemaError", () =>
+      Effect.fail({ _tag: "InvalidSquadGroupInvitationId" } as const)
+    )
+  );
+});
 
 /** Convert a squad group invitation id to its primitive representation. */
 export const squadGroupInvitationIdToNumber = (

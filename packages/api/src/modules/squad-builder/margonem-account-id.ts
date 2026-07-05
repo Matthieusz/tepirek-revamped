@@ -1,12 +1,15 @@
-import { fail, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
+
 import { PositiveInt } from "./positive-int.js";
-import { isPositiveInteger } from "./prelude.js";
 
 /** A persisted Margonem account row id. */
-export type MargonemAccountId = number & {
-  readonly __brand: "MargonemAccountId";
-};
+export const MargonemAccountId = PositiveInt.pipe(
+  Schema.brand("MargonemAccountId")
+).annotate({
+  identifier: "MargonemAccountId",
+});
+export type MargonemAccountId = typeof MargonemAccountId.Type;
 
 /** HTTP/API schema for a persisted Margonem account row id. */
 export const MargonemAccountIdSchema = PositiveInt.annotate({
@@ -19,16 +22,15 @@ export interface InvalidMargonemAccountId {
 }
 
 /** Parse a positive integer as a Margonem account id. */
-export const parseMargonemAccountId = (
-  input: number
-): Outcome<MargonemAccountId, InvalidMargonemAccountId> => {
-  if (!isPositiveInteger(input)) {
-    return fail({ _tag: "InvalidMargonemAccountId" });
+export const parseMargonemAccountId = Effect.fn("MargonemAccountId.parse")(
+  function* parseMargonemAccountId(input: number) {
+    return yield* Schema.decodeUnknownEffect(MargonemAccountId)(input).pipe(
+      Effect.catchTag("SchemaError", () =>
+        Effect.fail({ _tag: "InvalidMargonemAccountId" } as const)
+      )
+    );
   }
-
-  // SAFETY: isPositiveInteger established the MargonemAccountId invariant.
-  return success(input as MargonemAccountId);
-};
+);
 
 /** Convert a Margonem account id to its primitive representation. */
 export const margonemAccountIdToNumber = (id: MargonemAccountId): number => id;

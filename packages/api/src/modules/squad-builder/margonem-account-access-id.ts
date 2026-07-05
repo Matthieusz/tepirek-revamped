@@ -1,17 +1,18 @@
-import { fail, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
+
 import { PositiveInt } from "./positive-int.js";
-import { isPositiveInteger } from "./prelude.js";
 
 /** A persisted Margonem account access row id. */
-export type MargonemAccountAccessId = number & {
-  readonly __brand: "MargonemAccountAccessId";
-};
-
-/** HTTP/API schema for a persisted Margonem account access row id. */
-export const MargonemAccountAccessIdSchema = PositiveInt.annotate({
+export const MargonemAccountAccessId = PositiveInt.pipe(
+  Schema.brand("MargonemAccountAccessId")
+).annotate({
   identifier: "MargonemAccountAccessId",
 });
+export type MargonemAccountAccessId = typeof MargonemAccountAccessId.Type;
+
+/** HTTP/API schema for a persisted Margonem account access row id. */
+export const MargonemAccountAccessIdSchema = MargonemAccountAccessId;
 
 /** Expected failure when an account access id is not a positive integer. */
 export interface InvalidMargonemAccountAccessId {
@@ -19,16 +20,15 @@ export interface InvalidMargonemAccountAccessId {
 }
 
 /** Parse a positive integer as a Margonem account access id. */
-export const parseMargonemAccountAccessId = (
-  input: number
-): Outcome<MargonemAccountAccessId, InvalidMargonemAccountAccessId> => {
-  if (!isPositiveInteger(input)) {
-    return fail({ _tag: "InvalidMargonemAccountAccessId" });
-  }
-
-  // SAFETY: isPositiveInteger established the MargonemAccountAccessId invariant.
-  return success(input as MargonemAccountAccessId);
-};
+export const parseMargonemAccountAccessId = Effect.fn(
+  "MargonemAccountAccessId.parse"
+)(function* parseMargonemAccountAccessId(input: number) {
+  return yield* Schema.decodeUnknownEffect(MargonemAccountAccessId)(input).pipe(
+    Effect.catchTag("SchemaError", () =>
+      Effect.fail({ _tag: "InvalidMargonemAccountAccessId" } as const)
+    )
+  );
+});
 
 /** Convert a Margonem account access id to its primitive representation. */
 export const margonemAccountAccessIdToNumber = (

@@ -1,15 +1,18 @@
-import { fail, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
+
 import { PositiveInt } from "./positive-int.js";
-import { isPositiveInteger } from "./prelude.js";
 
 /** A persisted squad group id. */
-export type SquadGroupId = number & { readonly __brand: "SquadGroupId" };
-
-/** HTTP/API schema for a persisted squad group id. */
-export const SquadGroupIdSchema = PositiveInt.annotate({
+export const SquadGroupId = PositiveInt.pipe(
+  Schema.brand("SquadGroupId")
+).annotate({
   identifier: "SquadGroupId",
 });
+export type SquadGroupId = typeof SquadGroupId.Type;
+
+/** HTTP/API schema for a persisted squad group id. */
+export const SquadGroupIdSchema = SquadGroupId;
 
 /** Expected failure when a squad group id is invalid. */
 export interface InvalidSquadGroupId {
@@ -17,16 +20,15 @@ export interface InvalidSquadGroupId {
 }
 
 /** Parse a positive integer as a squad group id. */
-export const parseSquadGroupId = (
-  input: number
-): Outcome<SquadGroupId, InvalidSquadGroupId> => {
-  if (!isPositiveInteger(input)) {
-    return fail({ _tag: "InvalidSquadGroupId" });
+export const parseSquadGroupId = Effect.fn("SquadGroupId.parse")(
+  function* parseSquadGroupId(input: number) {
+    return yield* Schema.decodeUnknownEffect(SquadGroupId)(input).pipe(
+      Effect.catchTag("SchemaError", () =>
+        Effect.fail({ _tag: "InvalidSquadGroupId" } as const)
+      )
+    );
   }
-
-  // SAFETY: isPositiveInteger established the SquadGroupId invariant.
-  return success(input as SquadGroupId);
-};
+);
 
 /** Convert a squad group id to its primitive representation. */
 export const squadGroupIdToNumber = (id: SquadGroupId): number => id;

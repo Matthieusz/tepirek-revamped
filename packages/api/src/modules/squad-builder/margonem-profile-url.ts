@@ -1,6 +1,9 @@
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+
 import { parseMargonemProfileId } from "./margonem-profile-id.js";
 import type { MargonemProfileId } from "./margonem-profile-id.js";
-import { fail, isFailure, success } from "./outcome.js";
+import { fail, success } from "./outcome.js";
 import type { Outcome } from "./outcome.js";
 
 /** Expected failure when a Margonem profile URL cannot be parsed. */
@@ -49,9 +52,9 @@ export const parseMargonemProfileUrl = (
   }
 
   const profileId = Number(profileIdText);
-  const parsedProfileId = parseMargonemProfileId(profileId);
+  const parsedProfileId = Effect.runSyncExit(parseMargonemProfileId(profileId));
 
-  if (isFailure(parsedProfileId)) {
+  if (Exit.isFailure(parsedProfileId)) {
     return fail({
       _tag: "MissingMargonemProfileId",
       message: "Margonem profile id is invalid",
