@@ -6,7 +6,7 @@ import * as Layer from "effect/Layer";
 import { serviceUse } from "../../../effect/service-use.js";
 import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
-import { EffectAccountSharingStore } from "./account-sharing-store-service.js";
+import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import type { AccountInviteTarget } from "./account-sharing-store.js";
 import {
   accountInviteTargetSearchPolicy,
@@ -45,7 +45,8 @@ export interface Interface {
   ) => Effect<readonly AccountInviteTarget[], AccountSharingError>;
 }
 
-/** Effect service module that searches verified users an owner may invite. */
+/** Service module that searches verified users an owner may invite. */
+// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/AccountInviteTargets"
 ) {}
@@ -55,7 +56,7 @@ export const use = serviceUse(Service);
 export const layer = Layer.effect(
   Service,
   EffectRuntime.gen(function* makeAccountInviteTargetsService() {
-    const store = yield* EffectAccountSharingStore;
+    const store = yield* AccountSharingStoreService;
 
     return {
       search: EffectRuntime.fn("AccountInviteTargets.search")(

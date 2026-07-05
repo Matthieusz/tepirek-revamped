@@ -1,14 +1,17 @@
 import * as ClockRuntime from "effect/Clock";
+import * as Context from "effect/Context";
 import * as EffectRuntime from "effect/Effect";
+import * as Layer from "effect/Layer";
 
-import { EffectFirecrawlClient } from "../effect-firecrawl-client.js";
+import { serviceUse } from "../../../effect/service-use.js";
+import { FirecrawlClientService } from "../firecrawl-client-service.js";
 import {
   FirecrawlRequestFailed,
   FirecrawlResponseNotParseable,
 } from "../firecrawl-client.js";
 import type { FirecrawlScrapeError } from "../firecrawl-client.js";
 import {
-  EffectFirecrawlConfig,
+  FirecrawlConfigService,
   parseFirecrawlCreditCount,
 } from "../firecrawl-config.js";
 import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
@@ -16,16 +19,16 @@ import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-d
 import { parseMargonemProfileHtml } from "../margonem-profile-html-parser.js";
 import { toMargonemProfileUrl } from "../margonem-profile-url.js";
 import { isError } from "../result.js";
-import { EffectAccountRefetchStore } from "./account-refetch-store-service.js";
+import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import type { PreviewAccountRefetchInput } from "./preview-account-refetch.js";
 import { pendingRefetchPolicy } from "./preview-account-refetch.js";
 
 const addMinutes = (date: Date, minutes: number): Date =>
   new Date(date.getTime() + minutes * 60_000);
 
-/** Effect service module that previews a manual saved-account refetch. */
-export class EffectPreviewAccountRefetch {
-  readonly serviceName = "EffectPreviewAccountRefetch";
+/** Service module that previews a manual saved-account refetch. */
+export class PreviewAccountRefetchService {
+  readonly serviceName = "PreviewAccountRefetchService";
 
   /** Fetch latest account HTML and store a pending refetch diff for owner confirmation. */
   readonly preview = EffectRuntime.fn("AccountRefetch.preview")(
@@ -33,14 +36,14 @@ export class EffectPreviewAccountRefetch {
       input: PreviewAccountRefetchInput,
       options: { readonly signal?: AbortSignal } = {}
     ) {
-      const config = yield* EffectFirecrawlConfig;
-      const firecrawl = yield* EffectFirecrawlClient;
-      const account = yield* EffectAccountRefetchStore.use((store) =>
+      const config = yield* FirecrawlConfigService;
+      const firecrawl = yield* FirecrawlClientService;
+      const account = yield* AccountRefetchStoreService.use((store) =>
         store.getAccountForRefetch(input)
       );
       const requestTimeMillis = yield* ClockRuntime.currentTimeMillis;
       const yearMonth = firecrawlYearMonthFromDate(new Date(requestTimeMillis));
-      const reservedRequest = yield* EffectAccountRefetchStore.use((store) =>
+      const reservedRequest = yield* AccountRefetchStoreService.use((store) =>
         store.reserveRequest({
           monthlyRequestBudget: config.monthlyRequestBudget,
           profileId: account.profileId,
@@ -58,7 +61,7 @@ export class EffectPreviewAccountRefetch {
       });
 
       if (isError(scrapedProfileResult)) {
-        yield* EffectAccountRefetchStore.use((store) =>
+        yield* AccountRefetchStoreService.use((store) =>
           store.markRequestFailed({
             errorTag: scrapedProfileResult.error._tag,
             requestId: reservedRequest.requestId,
@@ -73,7 +76,7 @@ export class EffectPreviewAccountRefetch {
       );
 
       if (isError(creditsUsed)) {
-        yield* EffectAccountRefetchStore.use((store) =>
+        yield* AccountRefetchStoreService.use((store) =>
           store.markRequestFailed({
             errorTag: creditsUsed.error._tag,
             requestId: reservedRequest.requestId,
@@ -85,7 +88,7 @@ export class EffectPreviewAccountRefetch {
         });
       }
 
-      yield* EffectAccountRefetchStore.use((store) =>
+      yield* AccountRefetchStoreService.use((store) =>
         store.markRequestSucceeded({
           cacheState: scrapedProfile.metadata.cacheState ?? null,
           creditsUsed: creditsUsed.value,
@@ -112,7 +115,7 @@ export class EffectPreviewAccountRefetch {
         latestCharacters: parsedHtml.value.jarunaCharacters,
         profileId: account.profileId,
       });
-      const pending = yield* EffectAccountRefetchStore.use((store) =>
+      const pending = yield* AccountRefetchStoreService.use((store) =>
         store.createPendingRefetch({
           accountId: account.accountId,
           actorUserId: input.actorUserId,
@@ -140,3 +143,19 @@ export class EffectPreviewAccountRefetch {
     }
   );
 }
+
+export interface Interface {
+  readonly preview: PreviewAccountRefetchService["preview"];
+}
+
+// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
+export class Service extends Context.Service<Service, Interface>()(
+  "@tepirek-revamped/api/squad-builder/PreviewAccountRefetchService"
+) {}
+
+export const use = serviceUse(Service);
+
+export const layer = Layer.sync(Service, () => {
+  const service = new PreviewAccountRefetchService();
+  return { preview: service.preview };
+});

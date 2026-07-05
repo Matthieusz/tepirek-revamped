@@ -6,6 +6,57 @@ const conflictMessage =
   "Nie można zapisać zmian, bo zasób został już zmieniony.";
 const validationMessage = "Sprawdź dane i spróbuj ponownie.";
 
+const taggedFailureMessages: Readonly<Record<string, string>> = {
+  AccountAccessInviteNotFound: "Nie znaleziono zaproszenia do konta.",
+  AccountAccessTransitionNotAllowed:
+    "Nie można już zmienić statusu tego zaproszenia.",
+  ActorCannotEditSquadGroup: "Nie możesz edytować tej grupy składów.",
+  ActorCannotViewSquadGroup: "Nie masz dostępu do tej grupy składów.",
+  ActorDoesNotOwnMargonemAccount: "Możesz zarządzać tylko własnymi kontami.",
+  ActorDoesNotOwnSquadGroup: "Możesz zarządzać tylko własnymi grupami składów.",
+  ActorIsNotInviteRecipient:
+    "To zaproszenie jest przypisane do innego użytkownika.",
+  ActorIsNotSquadGroupInviteRecipient:
+    "To zaproszenie do grupy jest przypisane do innego użytkownika.",
+  CannotInviteSelf: "Nie możesz zaprosić samego siebie.",
+  DuplicateProfileInBatchError:
+    "Ten profil występuje na liście więcej niż raz.",
+  EditorCannotChangeSquadStructure:
+    "Edytor nie może zmieniać struktury składu w tej grupie.",
+  EmptyProfileUrlBatch: "Wklej co najmniej jeden link do profilu.",
+  FirecrawlRequestFailed: "Nie udało się pobrać profilu Margonem.",
+  FirecrawlResponseNotParseable:
+    "Nie udało się odczytać danych z profilu Margonem.",
+  InvalidAccountInviteTargetQuery:
+    "Wpisz co najmniej 2 znaki, aby wyszukać użytkownika.",
+  InvalidMargonemProfileUrl: "Podaj poprawny link do profilu Margonem.",
+  InvalidSquadGroupName: "Podaj poprawną nazwę grupy składów.",
+  InviteTargetNotFound: "Nie znaleziono użytkownika do zaproszenia.",
+  InviteTargetNotVerified: "Możesz zaprosić tylko zweryfikowanego użytkownika.",
+  MargonemAccountNotFound: "Nie znaleziono konta Margonem.",
+  MargonemCharacterRowInvalid: "Profil zawiera nieprawidłowe dane postaci.",
+  MargonemCharacterRowsNotFound: "Nie znaleziono postaci na tym profilu.",
+  MargonemProfileNameNotFound: "Nie znaleziono nazwy profilu Margonem.",
+  MissingMargonemProfileId: "Link nie zawiera identyfikatora profilu Margonem.",
+  PendingMargonemAccountImportNotFound:
+    "Nie znaleziono oczekującego importu konta.",
+  PendingMargonemAccountRefetchNotFound:
+    "Nie znaleziono oczekującego odświeżenia konta.",
+  RequestCancelled: "Przerwano pobieranie danych.",
+  SquadBuilderPersistenceUnavailable:
+    "Nie udało się zapisać zmian kont i składów. Spróbuj ponownie później.",
+  SquadCharacterNotAccessible: "Nie masz dostępu do tej postaci.",
+  SquadEditorInviteTargetNotFound: "Nie znaleziono edytora do zaproszenia.",
+  SquadEditorInviteTargetNotVerified:
+    "Możesz zaprosić tylko zweryfikowanego edytora.",
+  SquadGroupInvitationNotFound: "Nie znaleziono zaproszenia do grupy składów.",
+  SquadGroupInvitationTransitionNotAllowed:
+    "Nie można już zmienić statusu tego zaproszenia do grupy.",
+  SquadGroupNotFound: "Nie znaleziono grupy składów.",
+  SquadNotInGroup: "Ten skład nie należy do wybranej grupy.",
+  TooManyProfileUrlsInBatch: "Wklej maksymalnie 20 linków do profili naraz.",
+};
+
 type KnownTaggedFailure =
   | { readonly _tag: "BetBadRequest"; readonly message?: string }
   | { readonly _tag: "SkillsBadRequest"; readonly message?: string }
@@ -64,6 +115,11 @@ const getKnownTaggedErrorMessage = (failure: KnownTaggedFailure): string => {
 };
 
 const getTaggedErrorMessage = (failure: TaggedFailure): string => {
+  const mappedMessage = taggedFailureMessages[failure._tag];
+  if (mappedMessage !== undefined) {
+    return mappedMessage;
+  }
+
   if (failure._tag.endsWith("Unauthorized")) {
     return unauthorizedMessage;
   }
@@ -79,7 +135,10 @@ const getTaggedErrorMessage = (failure: TaggedFailure): string => {
   return fallbackErrorMessage;
 };
 
-export const getErrorMessage = (error: unknown): string => {
+export const getErrorMessage = (
+  error: unknown,
+  fallback = fallbackErrorMessage
+): string => {
   if (isTaggedFailure(error)) {
     return getTaggedErrorMessage(error);
   }
@@ -88,5 +147,5 @@ export const getErrorMessage = (error: unknown): string => {
     return error.message;
   }
 
-  return fallbackErrorMessage;
+  return fallback;
 };

@@ -123,7 +123,7 @@ export type {
   SquadNotInGroup,
 } from "./squad-group-errors.js";
 
-export interface EffectSquadBuilderStoreShape {
+export interface SquadBuilderStoreServiceShape {
   readonly createSquadGroup: (
     input: CreateSquadGroupStoreInput
   ) => Effect<SquadGroupSummary, EffectSquadBuilderPersistenceUnavailable>;
@@ -390,8 +390,8 @@ export interface EffectSquadBuilderStoreShape {
   >;
 }
 
-export type EffectSquadGroupStoreShape = Pick<
-  EffectSquadBuilderStoreShape,
+export type SquadGroupStoreServiceShape = Pick<
+  SquadBuilderStoreServiceShape,
   | "authorizeSquadGroupOwner"
   | "createSquadGroup"
   | "findVerifiedSquadEditorInviteTarget"
@@ -412,8 +412,8 @@ export type EffectSquadGroupStoreShape = Pick<
   | "upsertSquadGroupEditorInvite"
 >;
 
-export type EffectAccountImportStoreShape = Pick<
-  EffectSquadBuilderStoreShape,
+export type AccountImportStoreServiceShape = Pick<
+  SquadBuilderStoreServiceShape,
   | "createOwnedAccountFromPendingImport"
   | "createPendingImport"
   | "findPendingImportForConfirmation"
@@ -424,8 +424,8 @@ export type EffectAccountImportStoreShape = Pick<
   | "reserveRequest"
 >;
 
-export type EffectAccountRefetchStoreShape = Pick<
-  EffectSquadBuilderStoreShape,
+export type AccountRefetchStoreServiceShape = Pick<
+  SquadBuilderStoreServiceShape,
   | "applyRefetchedAccount"
   | "createPendingRefetch"
   | "findPendingRefetchForApply"
@@ -436,8 +436,8 @@ export type EffectAccountRefetchStoreShape = Pick<
   | "reserveRequest"
 >;
 
-export type EffectAccountSharingStoreShape = Pick<
-  EffectSquadBuilderStoreShape,
+export type AccountSharingStoreServiceShape = Pick<
+  SquadBuilderStoreServiceShape,
   | "findOwnedAccountForSharing"
   | "findVerifiedInviteTarget"
   | "listAccountAccessGrants"
@@ -450,10 +450,10 @@ export type EffectAccountSharingStoreShape = Pick<
   | "upsertAccountAccessInvite"
 >;
 
-export class EffectSquadGroupStore extends Context.Service<
-  EffectSquadGroupStore,
-  EffectSquadGroupStoreShape
->()("@tepirek-revamped/api/squad-builder/EffectSquadGroupStore") {}
+export class SquadGroupStoreService extends Context.Service<
+  SquadGroupStoreService,
+  SquadGroupStoreServiceShape
+>()("@tepirek-revamped/api/squad-builder/SquadGroupStoreService") {}
 
 /** Squad group persistence contracts used by group editing, sharing, and visibility services. */
 export type SquadGroupsPersistenceStore = SquadGroupStore &

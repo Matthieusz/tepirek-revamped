@@ -38,10 +38,12 @@ export const todosAtom = appHttpApiAtom(
 
 /** Mutation atom for creating a todo. */
 export const createTodoAtom = appHttpApiFn(
-  (payload: { readonly text: string }) =>
+  (payload: { readonly text: string }, get) =>
     Effect.gen(function* createTodoEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.todo.createTodo({ payload });
+      const todo = yield* client.todo.createTodo({ payload });
+      get.refresh(todosAtom);
+      return todo;
     })
 );
 

@@ -22,8 +22,9 @@ import { Separator } from "@/components/ui/separator";
 import {
   announcementsAtom,
   deleteAnnouncementAtom,
+  optimisticAnnouncementsAtom,
 } from "@/lib/announcement-atoms";
-import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import { resultIsLoading } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
@@ -42,7 +43,7 @@ export default function DashboardHomePage({ session }: DashboardHomePageProps) {
   const [announcementToDelete, setAnnouncementToDelete] =
     useState<AnnouncementToDelete>(null);
   const announcementsResult = useAtomValue(announcementsAtom);
-  const announcements = resultValueOr(announcementsResult, []);
+  const announcements = useAtomValue(optimisticAnnouncementsAtom);
   const isPending = resultIsLoading(announcementsResult);
   const deleteAnnouncement = useAtomSet(deleteAnnouncementAtom, {
     mode: "promise",

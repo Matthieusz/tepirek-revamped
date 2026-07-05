@@ -31,10 +31,14 @@ export const announcementsAtom = appHttpApiAtom(
 
 /** Mutation atom for creating an announcement. */
 export const createAnnouncementAtom = appHttpApiFn(
-  (payload: { readonly description: string; readonly title: string }) =>
+  (payload: { readonly description: string; readonly title: string }, get) =>
     Effect.gen(function* createAnnouncementEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.announcement.createAnnouncement({ payload });
+      const announcement = yield* client.announcement.createAnnouncement({
+        payload,
+      });
+      get.refresh(announcementsAtom);
+      return announcement;
     })
 );
 

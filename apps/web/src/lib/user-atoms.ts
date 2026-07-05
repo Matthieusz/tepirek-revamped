@@ -32,48 +32,69 @@ export const usersAtom = appHttpApiAtom(
 
 /** Mutation atom for updating the current user's profile. */
 export const updateProfileAtom = appHttpApiFn(
-  (payload: { readonly name: string }) =>
+  (payload: { readonly name: string }, get) =>
     Effect.gen(function* updateProfileEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.user.updateProfile({ payload });
+      const profile = yield* client.user.updateProfile({ payload });
+      get.refresh(sessionAtom);
+      get.refresh(usersAtom);
+      get.refresh(verifiedUsersAtom);
+      return profile;
     })
 );
 
 export const setVerifiedAtom = appHttpApiFn(
-  (payload: { readonly userId: string; readonly verified: boolean }) =>
+  (payload: { readonly userId: string; readonly verified: boolean }, get) =>
     Effect.gen(function* setVerifiedEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.user.setVerified({ payload });
+      const user = yield* client.user.setVerified({ payload });
+      get.refresh(usersAtom);
+      get.refresh(verifiedUsersAtom);
+      return user;
     })
 );
 
 export const setRoleAtom = appHttpApiFn(
-  (payload: { readonly role: "admin" | "user"; readonly userId: string }) =>
+  (
+    payload: { readonly role: "admin" | "user"; readonly userId: string },
+    get
+  ) =>
     Effect.gen(function* setRoleEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.user.setRole({ payload });
+      const user = yield* client.user.setRole({ payload });
+      get.refresh(usersAtom);
+      get.refresh(verifiedUsersAtom);
+      return user;
     })
 );
 
 export const updateUserNameAtom = appHttpApiFn(
-  (payload: { readonly name: string; readonly userId: string }) =>
+  (payload: { readonly name: string; readonly userId: string }, get) =>
     Effect.gen(function* updateUserNameEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.user.updateUserName({ payload });
+      const user = yield* client.user.updateUserName({ payload });
+      get.refresh(usersAtom);
+      get.refresh(verifiedUsersAtom);
+      return user;
     })
 );
 
 export const deleteUserAtom = appHttpApiFn(
-  (payload: { readonly userId: string }) =>
+  (payload: { readonly userId: string }, get) =>
     Effect.gen(function* deleteUserEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.user.deleteUser({ payload });
+      const user = yield* client.user.deleteUser({ payload });
+      get.refresh(usersAtom);
+      get.refresh(verifiedUsersAtom);
+      return user;
     })
 );
 
-export const verifyDiscordGuildMembershipAtom = appHttpApiFn(() =>
+export const verifyDiscordGuildMembershipAtom = appHttpApiFn((_, get) =>
   Effect.gen(function* verifyDiscordGuildMembershipEffect() {
     const client = yield* AppHttpApiClient;
-    return yield* client.user.verifyDiscordGuildMembership({});
+    const session = yield* client.user.verifyDiscordGuildMembership({});
+    get.refresh(sessionAtom);
+    return session;
   })
 );

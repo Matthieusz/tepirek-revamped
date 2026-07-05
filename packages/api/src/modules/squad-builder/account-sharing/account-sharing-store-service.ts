@@ -1,8 +1,8 @@
 import * as Context from "effect/Context";
 
-import type { EffectAccountSharingStoreShape } from "../squad-groups/squad-group-store.js";
+import type { AccountSharingStoreServiceShape } from "../squad-groups/squad-group-store.js";
 
-export class EffectAccountSharingStore extends Context.Service<
-  EffectAccountSharingStore,
-  EffectAccountSharingStoreShape
->()("@tepirek-revamped/api/squad-builder/EffectAccountSharingStore") {}
+export class AccountSharingStoreService extends Context.Service<
+  AccountSharingStoreService,
+  AccountSharingStoreServiceShape
+>()("@tepirek-revamped/api/squad-builder/AccountSharingStoreService") {}

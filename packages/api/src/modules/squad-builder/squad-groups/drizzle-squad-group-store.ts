@@ -1,7 +1,7 @@
 export {
-  DrizzleEffectAccountImportStoreLayer,
-  DrizzleEffectAccountRefetchStoreLayer,
-  DrizzleEffectAccountSharingStoreLayer,
-  DrizzleEffectSquadBuilderStoresLayer,
-  DrizzleEffectSquadGroupStoreLayer,
+  DrizzleAccountImportStoreServiceLayer,
+  DrizzleAccountRefetchStoreServiceLayer,
+  DrizzleAccountSharingStoreServiceLayer,
+  DrizzleSquadBuilderStoresLayer,
+  DrizzleSquadGroupStoreServiceLayer,
 } from "../persistence/squad-builder-stores-layer.js";

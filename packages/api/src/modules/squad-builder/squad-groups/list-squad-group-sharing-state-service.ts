@@ -7,7 +7,7 @@ import { serviceUse } from "../../../effect/service-use.js";
 import { emptySquadGroupListFilters } from "../squad-group-list-filters.js";
 import type { ListSquadGroupSharingState } from "./list-squad-group-sharing-state.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
-import { EffectSquadGroupStore } from "./squad-group-store.js";
+import { SquadGroupStoreService } from "./squad-group-store.js";
 import type {
   SharedSquadGroupSummary,
   SquadGroupEditorGrantSummary,
@@ -36,7 +36,8 @@ export interface Interface {
   ) => Effect<number, SquadGroupSharingError>;
 }
 
-/** Effect service module that reads squad group sharing state for the actor. */
+/** Service module that reads squad group sharing state for the actor. */
+// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/SquadGroupSharingState"
 ) {}
@@ -46,7 +47,7 @@ export const use = serviceUse(Service);
 export const layer = Layer.effect(
   Service,
   EffectRuntime.gen(function* makeSquadGroupSharingStateService() {
-    const store = yield* EffectSquadGroupStore;
+    const store = yield* SquadGroupStoreService;
 
     return {
       countPendingInvites: EffectRuntime.fn(

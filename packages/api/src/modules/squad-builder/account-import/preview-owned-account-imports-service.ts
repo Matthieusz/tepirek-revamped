@@ -1,7 +1,10 @@
 import * as ClockRuntime from "effect/Clock";
+import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
+import * as Layer from "effect/Layer";
 
+import { serviceUse } from "../../../effect/service-use.js";
 import { parseAccountDisplayName } from "../account-display-name.js";
 import type { AccountDisplayName } from "../account-display-name.js";
 import type { AppUserId } from "../app-user-id.js";
@@ -12,12 +15,12 @@ import {
   toMargonemProfileUrl,
 } from "../margonem-profile-url.js";
 import { isError, isOk } from "../result.js";
-import { EffectAccountImportStore } from "./account-import-store-service.js";
+import { AccountImportStoreService } from "./account-import-store-service.js";
 import type {
   DuplicateMargonemAccountError,
   ProfileAccessState,
 } from "./account-import-store.js";
-import { EffectPreviewMargonemProfileImport } from "./preview-margonem-profile-import-service.js";
+import { PreviewMargonemProfileImportService } from "./preview-margonem-profile-import-service.js";
 import type {
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportInput,
@@ -63,7 +66,7 @@ export interface EffectSingleMargonemProfilePreview {
   ) => Effect<
     PreviewMargonemProfileImportOutput,
     PreviewMargonemProfileImportError,
-    EffectAccountImportStore
+    AccountImportStoreService
   >;
 }
 
@@ -134,7 +137,7 @@ const persistPendingImport = ({
 }): Effect<
   { readonly lineNumber: number; readonly item: PreviewOwnedAccountImportItem },
   never,
-  EffectAccountImportStore
+  AccountImportStoreService
 > => {
   const expiresAt = new Date(
     now.getTime() + pendingImportPolicy.expiresAfterMinutes * 60_000
@@ -144,7 +147,7 @@ const persistPendingImport = ({
     preview.profileId
   );
 
-  return EffectAccountImportStore.use((store) =>
+  return AccountImportStoreService.use((store) =>
     store.createPendingImport({
       actorUserId,
       defaultDisplayName,
@@ -182,9 +185,9 @@ const persistPendingImport = ({
   );
 };
 
-/** Effect service module that previews and persists pending owned-account imports. */
-export class EffectPreviewOwnedAccountImports {
-  readonly serviceName = "EffectPreviewOwnedAccountImports";
+/** Service module that previews and persists pending owned-account imports. */
+export class PreviewOwnedAccountImportsService {
+  readonly serviceName = "PreviewOwnedAccountImportsService";
 
   /** Preview and persist pending imports for a batch of pasted profile URLs. */
   readonly preview = EffectRuntime.fn("AccountImport.previewBatch")(
@@ -192,7 +195,7 @@ export class EffectPreviewOwnedAccountImports {
       input: PreviewOwnedAccountImportsInput,
       options: { readonly signal?: AbortSignal } = {}
     ) {
-      const singlePreview = new EffectPreviewMargonemProfileImport();
+      const singlePreview = new PreviewMargonemProfileImportService();
 
       const currentTimeMillis = yield* ClockRuntime.currentTimeMillis;
       const now = new Date(currentTimeMillis);
@@ -250,7 +253,7 @@ export class EffectPreviewOwnedAccountImports {
 
       const accessResults = yield* EffectRuntime.all(
         parsedLines.map((line) =>
-          EffectAccountImportStore.use((store) =>
+          AccountImportStoreService.use((store) =>
             store.findProfileAccessState({
               actorUserId: input.actorUserId,
               profileId: line.profileId,
@@ -360,3 +363,19 @@ export class EffectPreviewOwnedAccountImports {
     }
   );
 }
+
+export interface Interface {
+  readonly preview: PreviewOwnedAccountImportsService["preview"];
+}
+
+// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
+export class Service extends Context.Service<Service, Interface>()(
+  "@tepirek-revamped/api/squad-builder/PreviewOwnedAccountImportsService"
+) {}
+
+export const use = serviceUse(Service);
+
+export const layer = Layer.sync(Service, () => {
+  const service = new PreviewOwnedAccountImportsService();
+  return { preview: service.preview };
+});

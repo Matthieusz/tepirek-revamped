@@ -3,13 +3,13 @@ import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 
 import { parseAppUserId } from "../app-user-id.js";
-import { EffectFirecrawlClient } from "../effect-firecrawl-client.js";
+import { FirecrawlClientService } from "../firecrawl-client-service.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
-import { EffectFirecrawlConfig } from "../firecrawl-config.js";
+import { FirecrawlConfigService } from "../firecrawl-config.js";
 import { isOk, ok } from "../result.js";
-import { makeEffectAccountImportStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
-import { EffectAccountImportStore } from "./account-import-store-service.js";
-import { EffectPreviewOwnedAccountImports } from "./preview-owned-account-imports-service.js";
+import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
+import { AccountImportStoreService } from "./account-import-store-service.js";
+import { PreviewOwnedAccountImportsService } from "./preview-owned-account-imports-service.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-batch-user");
@@ -30,7 +30,7 @@ const htmlWithJarunaCharacter = `
 `;
 
 it.effect(
-  "previews owned account imports and persists successful lines through Effect services",
+  "previews owned account imports and persists successful lines through services",
   () => {
     const actorUserId = parseTestUserId();
     const firecrawl: FirecrawlClient = {
@@ -46,7 +46,7 @@ it.effect(
           })
         ),
     };
-    const store = makeEffectAccountImportStoreTestService({
+    const store = makeAccountImportStoreServiceTestService({
       createPendingImport: (input) =>
         Effect.succeed({ id: 123 as never, profileId: input.profileId }),
       findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),
@@ -62,7 +62,7 @@ it.effect(
           requestId: 123,
         }),
     });
-    const service = new EffectPreviewOwnedAccountImports();
+    const service = new PreviewOwnedAccountImportsService();
 
     return Effect.gen(function* previewBatchEffect() {
       const output = yield* service.preview({
@@ -84,12 +84,12 @@ it.effect(
         error: { _tag: "DuplicateProfileInBatch" },
       });
     }).pipe(
-      Effect.provideService(EffectFirecrawlConfig)({
+      Effect.provideService(FirecrawlConfigService)({
         apiKey: Redacted.make("test-key"),
         monthlyRequestBudget: 900,
       }),
-      Effect.provideService(EffectFirecrawlClient)(firecrawl),
-      Effect.provideService(EffectAccountImportStore)(store)
+      Effect.provideService(FirecrawlClientService)(firecrawl),
+      Effect.provideService(AccountImportStoreService)(store)
     );
   }
 );

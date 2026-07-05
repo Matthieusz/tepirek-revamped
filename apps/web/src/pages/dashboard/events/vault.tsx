@@ -25,7 +25,11 @@ import { ALL_FILTER, toQueryInput } from "@/lib/event-hero-filter";
 import { formatVaultEarnings } from "@/lib/gold";
 import { oldestUnpaidEventAtom } from "@/lib/ranking-atoms";
 import { isAdmin } from "@/lib/route-helpers";
-import { togglePaidOutAtom, vaultAtom } from "@/lib/vault-atoms";
+import {
+  optimisticVaultAtom,
+  togglePaidOutInVaultAtom,
+  vaultAtom,
+} from "@/lib/vault-atoms";
 import type { AuthSession } from "@/types/route";
 
 const routeApi = getRouteApi("/dashboard/events/vault");
@@ -39,8 +43,6 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
   const { eventId: urlEventId } = routeApi.useSearch();
   const navigate = useNavigate({ from: "/dashboard/events/vault" });
   const hasInitializedRef = useRef(false);
-  const togglePaidOut = useAtomSet(togglePaidOutAtom, { mode: "promise" });
-
   const events = [...resultValueOr(useAtomValue(eventsAtom), [])];
 
   // Get the oldest event with unpaid users
@@ -78,9 +80,14 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
   const hasInitialized = hasInitializedRef.current;
   const eventQueryInput = toQueryInput(effectiveEventId);
   const hasSpecificEvent = eventQueryInput !== undefined;
+  const vaultInput = { eventId: eventQueryInput };
+  const togglePaidOut = useAtomSet(togglePaidOutInVaultAtom(vaultInput), {
+    mode: "promise",
+  });
 
-  const vaultResult = useAtomValue(vaultAtom({ eventId: eventQueryInput }));
-  const vault = hasInitialized ? resultValueOr(vaultResult, []) : [];
+  const vaultResult = useAtomValue(vaultAtom(vaultInput));
+  const optimisticVault = useAtomValue(optimisticVaultAtom(vaultInput));
+  const vault = hasInitialized ? optimisticVault : [];
   const vaultLoading = hasInitialized && resultIsLoading(vaultResult);
   const toggleMutation = {
     isPending: false,

@@ -13,20 +13,31 @@ export const resultViewState = <A>(
   result: Result.Result<A, unknown>
 ): ResultViewState<A> =>
   Result.matchWithWaiting(result, {
-    onDefect: () => ({ _tag: "Failure", message: getErrorMessage() }),
+    onDefect: (defect) => ({
+      _tag: "Failure",
+      message: getErrorMessage(defect),
+    }),
     onError: (error) => ({ _tag: "Failure", message: getErrorMessage(error) }),
     onSuccess: ({ value }) => ({ _tag: "Success", value }),
     onWaiting: () => ({ _tag: "Loading" }),
   });
 
+/** Extracts successful Effect Atom resource data when available. */
+export function resultValueOr<A>(
+  result: Result.Result<A, unknown>
+): A | undefined;
 /** Extracts successful Effect Atom resource data with a stable fallback. */
-export const resultValueOr = <A>(
+export function resultValueOr<A>(
   result: Result.Result<A, unknown>,
   fallback: A
-): A => {
+): A;
+export function resultValueOr<A>(
+  result: Result.Result<A, unknown>,
+  fallback?: A
+): A | undefined {
   const state = resultViewState(result);
   return state._tag === "Success" ? state.value : fallback;
-};
+}
 
 /** True while an Effect Atom resource is waiting for its current value. */
 export const resultIsLoading = (

@@ -10,7 +10,7 @@ import {
   CannotInviteSelf,
 } from "../squad-groups/squad-group-errors.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
-import { EffectAccountSharingStore } from "./account-sharing-store-service.js";
+import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import type { AccountAccessInviteSummary } from "./account-sharing-store.js";
 import type { SendAccountAccessInviteInput } from "./send-account-access-invite.js";
 
@@ -21,7 +21,8 @@ export interface Interface {
   ) => Effect<AccountAccessInviteSummary, AccountSharingError>;
 }
 
-/** Effect service module that sends account access invites as the account owner. */
+/** Service module that sends account access invites as the account owner. */
+// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/AccountAccessInvites"
 ) {}
@@ -31,7 +32,7 @@ export const use = serviceUse(Service);
 export const layer = Layer.effect(
   Service,
   EffectRuntime.gen(function* makeAccountAccessInvitesService() {
-    const store = yield* EffectAccountSharingStore;
+    const store = yield* AccountSharingStoreService;
 
     return {
       send: EffectRuntime.fn("AccountAccessInvites.send")(

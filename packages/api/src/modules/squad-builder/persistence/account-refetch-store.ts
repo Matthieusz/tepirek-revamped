@@ -14,7 +14,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import { parseAccountDisplayName } from "../account-display-name.js";
-import { EffectAccountRefetchStore } from "../account-refetch/account-refetch-store-service.js";
+import { AccountRefetchStoreService } from "../account-refetch/account-refetch-store-service.js";
 import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch.js";
 import type { AppUserId } from "../app-user-id.js";
 import { appUserIdToString } from "../app-user-id.js";
@@ -758,14 +758,14 @@ const applyRefetchedAccountWithDatabase =
       return yield* persistenceQuery(operation, transaction);
     });
 
-export const DrizzleEffectAccountRefetchStoreLayer: Layer.Layer<
-  EffectAccountRefetchStore,
+export const DrizzleAccountRefetchStoreServiceLayer: Layer.Layer<
+  AccountRefetchStoreService,
   never,
   EffectDatabase
 > = Layer.effect(
-  EffectAccountRefetchStore,
+  AccountRefetchStoreService,
   EffectDatabase.useSync((database) =>
-    EffectAccountRefetchStore.of({
+    AccountRefetchStoreService.of({
       applyRefetchedAccount: namedStoreMethod(
         "AccountRefetchStore.applyRefetchedAccount",
         applyRefetchedAccountWithDatabase(database)

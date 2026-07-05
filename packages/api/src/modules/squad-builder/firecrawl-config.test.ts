@@ -4,18 +4,18 @@ import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 
 import {
-  EffectFirecrawlConfig,
-  EffectFirecrawlConfigLiveLayer,
+  FirecrawlConfigService,
+  FirecrawlConfigServiceLiveLayer,
 } from "./firecrawl-config.js";
 
 it.effect("loads Firecrawl config from Effect Config with default budget", () =>
   Effect.gen(function* firecrawlConfigEffect() {
-    const config = yield* EffectFirecrawlConfig;
+    const config = yield* FirecrawlConfigService;
 
     expect(Redacted.value(config.apiKey)).toBe("test-key");
     expect(config.monthlyRequestBudget).toBe(900);
   }).pipe(
-    Effect.provide(EffectFirecrawlConfigLiveLayer),
+    Effect.provide(FirecrawlConfigServiceLiveLayer),
     Effect.provideService(
       ConfigProvider.ConfigProvider,
       ConfigProvider.fromUnknown({ FIRECRAWL_API_KEY: "test-key" })
@@ -24,8 +24,8 @@ it.effect("loads Firecrawl config from Effect Config with default budget", () =>
 );
 
 it.effect("fails layer construction for invalid Firecrawl budget", () => {
-  const program = EffectFirecrawlConfig.pipe(
-    Effect.provide(EffectFirecrawlConfigLiveLayer),
+  const program = FirecrawlConfigService.pipe(
+    Effect.provide(FirecrawlConfigServiceLiveLayer),
     Effect.provideService(
       ConfigProvider.ConfigProvider,
       ConfigProvider.fromUnknown({

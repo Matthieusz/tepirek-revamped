@@ -10,7 +10,7 @@ import {
 } from "../account-sharing/search-account-invite-targets.js";
 import type { SearchSquadEditorInviteTargets } from "./search-squad-editor-invite-targets.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
-import { EffectSquadGroupStore } from "./squad-group-store.js";
+import { SquadGroupStoreService } from "./squad-group-store.js";
 import type { SquadEditorInviteTarget } from "./squad-group-store.js";
 
 const parseSquadEditorInviteTargetQuery = (
@@ -44,7 +44,8 @@ export interface Interface {
   ) => Effect<readonly SquadEditorInviteTarget[], SquadGroupSharingError>;
 }
 
-/** Effect service module that searches verified users a squad group owner may invite as editors. */
+/** Service module that searches verified users a squad group owner may invite as editors. */
+// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/SquadEditorInviteTargets"
 ) {}
@@ -54,7 +55,7 @@ export const use = serviceUse(Service);
 export const layer = Layer.effect(
   Service,
   EffectRuntime.gen(function* makeSquadEditorInviteTargetsService() {
-    const store = yield* EffectSquadGroupStore;
+    const store = yield* SquadGroupStoreService;
 
     return {
       search: EffectRuntime.fn("SquadGroupEditorInvites.searchTargets")(

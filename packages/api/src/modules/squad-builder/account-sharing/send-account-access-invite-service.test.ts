@@ -7,8 +7,8 @@ import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { isOk } from "../result.js";
-import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
-import { EffectAccountSharingStore } from "./account-sharing-store-service.js";
+import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
+import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
   layer as accountAccessInvitesLayer,
   use as accountAccessInvites,
@@ -53,7 +53,7 @@ it.effect("sends an account access invite for a verified target", () => {
   const targetUserId = parseTestUserId("effect-account-send-target");
   const accountId = parseTestAccountId();
   const accessId = parseTestAccessId();
-  const store = makeEffectAccountSharingStoreTestService({
+  const store = makeAccountSharingStoreServiceTestService({
     findOwnedAccountForSharing: (input) => {
       expect(input.accountId).toBe(accountId);
       expect(input.actorUserId).toBe(actorUserId);
@@ -98,7 +98,7 @@ it.effect("sends an account access invite for a verified target", () => {
     },
   });
   const testLayer = accountAccessInvitesLayer.pipe(
-    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
   );
 
   return Effect.gen(function* sendAccountAccessInviteEffect() {
@@ -120,7 +120,7 @@ it.effect("sends an account access invite for a verified target", () => {
 it.effect("rejects self-invites before resolving the target", () => {
   const actorUserId = parseTestUserId("effect-account-self-owner");
   const accountId = parseTestAccountId();
-  const store = makeEffectAccountSharingStoreTestService({
+  const store = makeAccountSharingStoreServiceTestService({
     findOwnedAccountForSharing: () =>
       Effect.succeed({
         accountId,
@@ -130,7 +130,7 @@ it.effect("rejects self-invites before resolving the target", () => {
       }),
   });
   const testLayer = accountAccessInvitesLayer.pipe(
-    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
   );
 
   return Effect.gen(function* sendAccountAccessInviteEffect() {

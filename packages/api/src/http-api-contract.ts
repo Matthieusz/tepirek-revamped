@@ -11,6 +11,7 @@ import { SkillsHttpApiGroup } from "./modules/skills/http-api-contract.js";
 import {
   SquadBuilderAccountImportGroup,
   SquadBuilderAccountRefetchGroup,
+  SquadBuilderSquadGroupGroup,
   SquadBuilderAccountSharingGroup,
   SquadBuilderSquadGroupSharingGroup,
 } from "./modules/squad-builder/http-api-contract.js";
@@ -33,6 +34,7 @@ export const AppHttpApi = HttpApi.make("tepirekApi")
   .add(VaultHttpApiGroup)
   .add(SquadBuilderAccountImportGroup)
   .add(SquadBuilderAccountRefetchGroup)
+  .add(SquadBuilderSquadGroupGroup)
   .add(SquadBuilderAccountSharingGroup)
   .add(SquadBuilderSquadGroupSharingGroup);
 

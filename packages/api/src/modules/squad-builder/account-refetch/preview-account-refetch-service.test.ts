@@ -3,14 +3,14 @@ import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 
 import { parseAppUserId } from "../app-user-id.js";
-import { EffectFirecrawlClient } from "../effect-firecrawl-client.js";
+import { FirecrawlClientService } from "../firecrawl-client-service.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
 import type { FirecrawlCreditCount } from "../firecrawl-config.js";
-import { EffectFirecrawlConfig } from "../firecrawl-config.js";
+import { FirecrawlConfigService } from "../firecrawl-config.js";
 import { isOk, ok } from "../result.js";
-import { makeEffectAccountRefetchStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
-import { EffectAccountRefetchStore } from "./account-refetch-store-service.js";
-import { EffectPreviewAccountRefetch } from "./preview-account-refetch-service.js";
+import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
+import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
+import { PreviewAccountRefetchService } from "./preview-account-refetch-service.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-refetch-user");
@@ -46,7 +46,7 @@ it.effect("previews account refetch and stores the pending diff", () => {
         })
       ),
   };
-  const store = makeEffectAccountRefetchStoreTestService({
+  const store = makeAccountRefetchStoreServiceTestService({
     createPendingRefetch: (input) => {
       expect(input.latestCharacters).toHaveLength(1);
       expect(input.diff.changed).toHaveLength(1);
@@ -83,7 +83,7 @@ it.effect("previews account refetch and stores the pending diff", () => {
         requestId: 123,
       }),
   });
-  const service = new EffectPreviewAccountRefetch();
+  const service = new PreviewAccountRefetchService();
 
   return Effect.gen(function* previewRefetchEffect() {
     const preview = yield* service.preview({
@@ -100,11 +100,11 @@ it.effect("previews account refetch and stores the pending diff", () => {
     expect(preview.diff.changed).toHaveLength(1);
     expect(createdPendingIds).toEqual([456]);
   }).pipe(
-    Effect.provideService(EffectFirecrawlConfig)({
+    Effect.provideService(FirecrawlConfigService)({
       apiKey: Redacted.make("test-key"),
       monthlyRequestBudget: 900,
     }),
-    Effect.provideService(EffectFirecrawlClient)(firecrawl),
-    Effect.provideService(EffectAccountRefetchStore)(store)
+    Effect.provideService(FirecrawlClientService)(firecrawl),
+    Effect.provideService(AccountRefetchStoreService)(store)
   );
 });

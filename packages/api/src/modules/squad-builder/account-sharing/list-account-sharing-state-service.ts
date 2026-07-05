@@ -6,7 +6,7 @@ import * as Layer from "effect/Layer";
 import { serviceUse } from "../../../effect/service-use.js";
 import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
-import { EffectAccountSharingStore } from "./account-sharing-store-service.js";
+import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,
@@ -35,7 +35,8 @@ export interface Interface {
   ) => Effect<readonly AccountAccessGrantSummary[], AccountSharingError>;
 }
 
-/** Effect service module that reads account sharing state for the actor. */
+/** Service module that reads account sharing state for the actor. */
+// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/AccountSharingState"
 ) {}
@@ -45,7 +46,7 @@ export const use = serviceUse(Service);
 export const layer = Layer.effect(
   Service,
   EffectRuntime.gen(function* makeAccountSharingStateService() {
-    const store = yield* EffectAccountSharingStore;
+    const store = yield* AccountSharingStoreService;
 
     return {
       listAccountAccessGrants: EffectRuntime.fn(

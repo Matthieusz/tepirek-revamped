@@ -71,38 +71,50 @@ export const skillsByRangeAtom = (rangeId: number) =>
 
 /** Mutation atom for creating a skill profession. */
 export const createSkillProfessionAtom = appHttpApiFn(
-  (payload: { readonly name: string }) =>
+  (payload: { readonly name: string }, get) =>
     Effect.gen(function* createSkillProfessionEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.skills.createProfession({ payload });
+      const profession = yield* client.skills.createProfession({ payload });
+      get.refresh(skillProfessionsAtom);
+      return profession;
     })
 );
 
 /** Mutation atom for creating a skill range. */
 export const createSkillRangeAtom = appHttpApiFn(
-  (payload: {
-    readonly image: string;
-    readonly level: number;
-    readonly name: string;
-  }) =>
+  (
+    payload: {
+      readonly image: string;
+      readonly level: number;
+      readonly name: string;
+    },
+    get
+  ) =>
     Effect.gen(function* createSkillRangeEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.skills.createRange({ payload });
+      const range = yield* client.skills.createRange({ payload });
+      get.refresh(skillRangesAtom);
+      return range;
     })
 );
 
 /** Mutation atom for creating a skill. */
 export const createSkillAtom = appHttpApiFn(
-  (payload: {
-    readonly link: string;
-    readonly mastery: boolean;
-    readonly name: string;
-    readonly professionId: number;
-    readonly rangeId: number;
-  }) =>
+  (
+    payload: {
+      readonly link: string;
+      readonly mastery: boolean;
+      readonly name: string;
+      readonly professionId: number;
+      readonly rangeId: number;
+    },
+    get
+  ) =>
     Effect.gen(function* createSkillEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.skills.createSkill({ payload });
+      const skill = yield* client.skills.createSkill({ payload });
+      get.refresh(skillsByRangeAtom(payload.rangeId));
+      return skill;
     })
 );
 

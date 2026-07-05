@@ -32,7 +32,7 @@ const persistenceQuery = <A>(
   operation: string,
   self: Effect.Effect<A, unknown, unknown>
 ): Effect.Effect<A, EventPersistenceUnavailable> =>
-  (self as Effect.Effect<A, unknown, never>).pipe(
+  (self as Effect.Effect<A, unknown>).pipe(
     Effect.mapError(
       (cause) => new EventPersistenceUnavailable({ cause, operation })
     )

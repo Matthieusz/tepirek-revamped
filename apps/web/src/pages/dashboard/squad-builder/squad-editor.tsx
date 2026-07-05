@@ -4,6 +4,11 @@ import type {
   SquadEditorInviteTargetSchema,
   SquadGroupEditorGrantSummarySchema,
 } from "@tepirek-revamped/api/modules/squad-builder/schema/squad-group-sharing";
+import type {
+  SaveSharedSquadGroupCharactersPayload,
+  SaveSquadGroupPayload,
+  SetSquadGroupVisibilityPayload,
+} from "@tepirek-revamped/api/modules/squad-builder/schema/squad-groups";
 import {
   ArrowLeft,
   ChevronDown,
@@ -27,6 +32,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import { getErrorMessage } from "@/lib/errors";
+import type { AvailableSquadCharacter } from "@/lib/squad-builder/squad-group-atoms";
 import {
   availableSquadCharactersAtom,
   saveSharedSquadGroupCharactersAtom,
@@ -51,17 +58,18 @@ const PROFESSION_LABELS: Record<string, string> = {
   warrior: "Wojownik",
 };
 
-interface AvailableCharacter {
-  readonly characterId: number;
-  readonly accountId: number;
-  readonly accountDisplayName: string;
-  readonly accountOwnerUserName: string;
-  readonly accountOwnerUserImage: string | null;
-  readonly name: string;
-  readonly level: number;
-  readonly profession: string;
-  readonly avatarUrl: string | null;
-}
+type AvailableCharacter = Pick<
+  AvailableSquadCharacter,
+  | "accountDisplayName"
+  | "accountId"
+  | "accountOwnerUserImage"
+  | "accountOwnerUserName"
+  | "avatarUrl"
+  | "characterId"
+  | "level"
+  | "name"
+  | "profession"
+>;
 
 interface DraftCharacter {
   readonly characterId: number;
@@ -78,28 +86,10 @@ interface DraftSquad {
 
 type SquadEditorInviteTarget = typeof SquadEditorInviteTargetSchema.Type;
 type SquadGroupEditorGrant = typeof SquadGroupEditorGrantSummarySchema.Type;
-
-interface SquadGroupDetailCharacter extends AvailableCharacter {
-  readonly position: number;
-}
-
-interface SquadGroupDetailSquad {
-  readonly characters: readonly SquadGroupDetailCharacter[];
-  readonly name: string;
-  readonly position: number;
-  readonly squadId: number;
-}
-
-interface SquadGroupDetail {
-  readonly accessRole: "owner" | "editor" | "viewer";
-  readonly name: string;
-  readonly squads: readonly SquadGroupDetailSquad[];
-  readonly visibility: "private" | "global";
-}
-
-interface SavedSquadGroup {
-  readonly name: string;
-}
+type SaveSquadGroupInput = typeof SaveSquadGroupPayload.Type;
+type SaveSharedSquadGroupCharactersInput =
+  typeof SaveSharedSquadGroupCharactersPayload.Type;
+type SetSquadGroupVisibilityInput = typeof SetSquadGroupVisibilityPayload.Type;
 
 const makeClientKey = (): string => crypto.randomUUID();
 
@@ -131,9 +121,7 @@ export default function SquadBuilderEditorPage() {
   const detailResult = useAtomValue(
     squadGroupDetailAtom({ actorUserId, groupId })
   );
-  const detail = resultValueOr(detailResult) as
-    | SquadGroupDetail
-    | undefined;
+  const detail = resultValueOr(detailResult);
   const accessRole = detail?.accessRole;
   const isOwner = accessRole === "owner";
   const isEditor = accessRole === "editor";
@@ -189,20 +177,16 @@ export default function SquadBuilderEditorPage() {
 
   const saveMutation = {
     isPending: isSaving,
-    mutate: (input: unknown) => {
+    mutate: (input: SaveSquadGroupInput) => {
       void (async () => {
         setIsSaving(true);
         try {
-          const saved = (await saveSquadGroup(input)) as SavedSquadGroup;
+          const saved = await saveSquadGroup(input);
           toast.success("Grupa składów została zapisana");
           setIsDirty(false);
           setGroupName(saved.name);
         } catch (error: unknown) {
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : "Nie udało się zapisać grupy"
-          );
+          toast.error(getErrorMessage(error, "Nie udało się zapisać grupy"));
         } finally {
           setIsSaving(false);
         }
@@ -211,7 +195,7 @@ export default function SquadBuilderEditorPage() {
   };
   const saveSharedMutation = {
     isPending: isSavingShared,
-    mutate: (input: unknown) => {
+    mutate: (input: SaveSharedSquadGroupCharactersInput) => {
       void (async () => {
         setIsSavingShared(true);
         try {
@@ -219,11 +203,7 @@ export default function SquadBuilderEditorPage() {
           toast.success("Skład został zapisany");
           setIsDirty(false);
         } catch (error: unknown) {
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : "Nie udało się zapisać składu"
-          );
+          toast.error(getErrorMessage(error, "Nie udało się zapisać składu"));
         } finally {
           setIsSavingShared(false);
         }
@@ -232,10 +212,7 @@ export default function SquadBuilderEditorPage() {
   };
   const visibilityMutation = {
     isPending: isSettingVisibility,
-    mutate: (input: {
-      readonly groupId: number;
-      readonly visibility: "private" | "global";
-    }) => {
+    mutate: (input: SetSquadGroupVisibilityInput) => {
       void (async () => {
         setIsSettingVisibility(true);
         try {
@@ -244,9 +221,7 @@ export default function SquadBuilderEditorPage() {
           setVisibility(input.visibility);
         } catch (error: unknown) {
           toast.error(
-            error instanceof Error
-              ? error.message
-              : "Nie udało się zmienić widoczności"
+            getErrorMessage(error, "Nie udało się zmienić widoczności")
           );
         } finally {
           setIsSettingVisibility(false);
@@ -268,9 +243,7 @@ export default function SquadBuilderEditorPage() {
           setInviteQuery("");
         } catch (error: unknown) {
           toast.error(
-            error instanceof Error
-              ? error.message
-              : "Nie udało się wysłać zaproszenia"
+            getErrorMessage(error, "Nie udało się wysłać zaproszenia")
           );
         } finally {
           setIsSendingInvite(false);
@@ -287,11 +260,7 @@ export default function SquadBuilderEditorPage() {
           await revokeSquadGroupEditor({ ...input, actorUserId });
           toast.success("Dostęp został cofnięty");
         } catch (error: unknown) {
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : "Nie udało się cofnąć dostępu"
-          );
+          toast.error(getErrorMessage(error, "Nie udało się cofnąć dostępu"));
         } finally {
           setIsRevokingInvite(false);
         }
@@ -300,11 +269,7 @@ export default function SquadBuilderEditorPage() {
   };
 
   const availableCharacters = useMemo(
-    () =>
-      resultValueOr(
-        availableResult,
-        [] as readonly AvailableCharacter[]
-      ) as readonly AvailableCharacter[],
+    () => resultValueOr(availableResult, []),
     [availableResult]
   );
   const availableById = useMemo(() => {
@@ -383,21 +348,29 @@ export default function SquadBuilderEditorPage() {
 
     if (isEditor) {
       void saveSharedMutation.mutate({
+        actorUserId,
         groupId,
-        squads: squads
-          .filter((squad) => squad.squadId !== undefined)
-          .map((squad) => ({
-            characters: squad.characters.map((character, characterIndex) => ({
-              characterId: character.characterId,
-              position: characterIndex,
-            })),
-            squadId: squad.squadId as number,
-          })),
+        squads: squads.flatMap((squad) => {
+          if (squad.squadId === undefined) {
+            return [];
+          }
+
+          return [
+            {
+              characters: squad.characters.map((character, characterIndex) => ({
+                characterId: character.characterId,
+                position: characterIndex,
+              })),
+              squadId: squad.squadId,
+            },
+          ];
+        }),
       });
       return;
     }
 
     void saveMutation.mutate({
+      actorUserId,
       groupId,
       name: trimmedName,
       squads: squads.map((squad, squadIndex) => ({
@@ -505,7 +478,11 @@ export default function SquadBuilderEditorPage() {
                 visibilityMutation.isPending || visibility === "private"
               }
               onClick={() =>
-                visibilityMutation.mutate({ groupId, visibility: "private" })
+                visibilityMutation.mutate({
+                  actorUserId,
+                  groupId,
+                  visibility: "private",
+                })
               }
               size="sm"
               type="button"
@@ -516,7 +493,11 @@ export default function SquadBuilderEditorPage() {
             <Button
               disabled={visibilityMutation.isPending || visibility === "global"}
               onClick={() =>
-                visibilityMutation.mutate({ groupId, visibility: "global" })
+                visibilityMutation.mutate({
+                  actorUserId,
+                  groupId,
+                  visibility: "global",
+                })
               }
               size="sm"
               type="button"

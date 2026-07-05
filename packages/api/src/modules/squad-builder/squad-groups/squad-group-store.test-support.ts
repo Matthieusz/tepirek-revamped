@@ -1,14 +1,14 @@
 import * as Effect from "effect/Effect";
 
-import type { EffectSquadBuilderStoreShape } from "./squad-group-store.js";
+import type { SquadBuilderStoreServiceShape } from "./squad-group-store.js";
 
-const unhandledStoreCall = (operation: keyof EffectSquadBuilderStoreShape) =>
-  Effect.die(new Error(`Unexpected EffectSquadGroupStore.${operation} call`));
+const unhandledStoreCall = (operation: keyof SquadBuilderStoreServiceShape) =>
+  Effect.die(new Error(`Unexpected SquadGroupStoreService.${operation} call`));
 
 /** Build an Effect squad-group store test service with explicit operation overrides. */
 const makeEffectStoreTestService = (
-  overrides: Partial<EffectSquadBuilderStoreShape>
-): EffectSquadBuilderStoreShape => ({
+  overrides: Partial<SquadBuilderStoreServiceShape>
+): SquadBuilderStoreServiceShape => ({
   applyRefetchedAccount: () => unhandledStoreCall("applyRefetchedAccount"),
   authorizeSquadGroupOwner: () =>
     unhandledStoreCall("authorizeSquadGroupOwner"),
@@ -71,10 +71,10 @@ const makeEffectStoreTestService = (
   ...overrides,
 });
 
-export const makeEffectSquadGroupStoreTestService = makeEffectStoreTestService;
-export const makeEffectAccountImportStoreTestService =
+export const makeSquadGroupStoreServiceTestService = makeEffectStoreTestService;
+export const makeAccountImportStoreServiceTestService =
   makeEffectStoreTestService;
-export const makeEffectAccountRefetchStoreTestService =
+export const makeAccountRefetchStoreServiceTestService =
   makeEffectStoreTestService;
-export const makeEffectAccountSharingStoreTestService =
+export const makeAccountSharingStoreServiceTestService =
   makeEffectStoreTestService;

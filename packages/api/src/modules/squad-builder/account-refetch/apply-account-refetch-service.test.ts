@@ -4,9 +4,9 @@ import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../app-user-id.js";
 import { isOk } from "../result.js";
-import { makeEffectAccountRefetchStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
-import { EffectAccountRefetchStore } from "./account-refetch-store-service.js";
-import { EffectApplyAccountRefetch } from "./apply-account-refetch-service.js";
+import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
+import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
+import { ApplyAccountRefetchService } from "./apply-account-refetch-service.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-apply-refetch-user");
@@ -23,7 +23,7 @@ const fixedNow = new Date("2026-06-29T12:00:00.000Z");
 it.effect("applies a pending account refetch and marks it applied", () => {
   const actorUserId = parseTestUserId();
   const appliedRefetchIds: number[] = [];
-  const store = makeEffectAccountRefetchStoreTestService({
+  const store = makeAccountRefetchStoreServiceTestService({
     applyRefetchedAccount: (input) => {
       expect(input.now).toEqual(fixedNow);
       expect(input.pendingRefetch.accountId).toBe(123);
@@ -64,7 +64,7 @@ it.effect("applies a pending account refetch and marks it applied", () => {
       return Effect.void;
     },
   });
-  const service = new EffectApplyAccountRefetch();
+  const service = new ApplyAccountRefetchService();
 
   return Effect.gen(function* applyRefetchEffect() {
     yield* TestClock.setTime(fixedNow.getTime());
@@ -81,5 +81,5 @@ it.effect("applies a pending account refetch and marks it applied", () => {
       updatedCharacterCount: 1,
     });
     expect(appliedRefetchIds).toEqual([456]);
-  }).pipe(Effect.provideService(EffectAccountRefetchStore)(store));
+  }).pipe(Effect.provideService(AccountRefetchStoreService)(store));
 });

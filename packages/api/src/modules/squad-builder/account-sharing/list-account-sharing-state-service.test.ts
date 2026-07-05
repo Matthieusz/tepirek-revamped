@@ -8,9 +8,9 @@ import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { parseMargonemProfileId } from "../margonem-profile-id.js";
 import { isOk } from "../result.js";
-import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
 import { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
-import { EffectAccountSharingStore } from "./account-sharing-store-service.js";
+import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
+import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
   layer as accountSharingStateLayer,
   use as accountSharingState,
@@ -72,7 +72,7 @@ it.effect("lists incoming account access invites for the actor", () => {
   const accessId = parseTestAccessId();
   const accountId = parseTestAccountId();
   const createdAt = new Date("2026-06-29T12:00:00.000Z");
-  const store = makeEffectAccountSharingStoreTestService({
+  const store = makeAccountSharingStoreServiceTestService({
     listIncomingAccountInvites: (input) => {
       expect(input).toMatchObject({ actorUserId });
 
@@ -94,7 +94,7 @@ it.effect("lists incoming account access invites for the actor", () => {
     },
   });
   const testLayer = accountSharingStateLayer.pipe(
-    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
   );
 
   return Effect.gen(function* listIncomingAccountInvitesEffect() {
@@ -115,7 +115,7 @@ it.effect("lists incoming account access invites for the actor", () => {
 
 it.effect("surfaces persistence failures", () => {
   const actorUserId = parseTestUserId("effect-account-invite-error");
-  const store = makeEffectAccountSharingStoreTestService({
+  const store = makeAccountSharingStoreServiceTestService({
     listIncomingAccountInvites: () =>
       Effect.fail(
         new EffectSquadBuilderPersistenceUnavailable({
@@ -126,7 +126,7 @@ it.effect("surfaces persistence failures", () => {
       ),
   });
   const testLayer = accountSharingStateLayer.pipe(
-    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
   );
 
   return Effect.gen(function* listIncomingAccountInvitesEffect() {
@@ -143,7 +143,7 @@ it.effect("lists shared accounts for the actor", () => {
   const ownerUserId = parseTestUserId("effect-shared-account-owner");
   const accountId = parseTestAccountId();
   const createdAt = new Date("2026-06-29T12:00:00.000Z");
-  const store = makeEffectAccountSharingStoreTestService({
+  const store = makeAccountSharingStoreServiceTestService({
     listSharedAccounts: (input) => {
       expect(input).toMatchObject({ actorUserId });
 
@@ -163,7 +163,7 @@ it.effect("lists shared accounts for the actor", () => {
     },
   });
   const testLayer = accountSharingStateLayer.pipe(
-    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
   );
 
   return Effect.gen(function* listSharedAccountsEffect() {
@@ -187,7 +187,7 @@ it.effect("lists account access grants for an owned account", () => {
   const accountId = parseTestAccountId();
   const accessId = parseTestAccessId();
   const createdAt = new Date("2026-06-29T12:00:00.000Z");
-  const store = makeEffectAccountSharingStoreTestService({
+  const store = makeAccountSharingStoreServiceTestService({
     findOwnedAccountForSharing: (input) => {
       expect(input).toMatchObject({ accountId, actorUserId });
 
@@ -215,7 +215,7 @@ it.effect("lists account access grants for an owned account", () => {
     },
   });
   const testLayer = accountSharingStateLayer.pipe(
-    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
   );
 
   return Effect.gen(function* listAccountAccessGrantsEffect() {
@@ -239,7 +239,7 @@ it.effect(
     const actorUserId = parseTestUserId("effect-grants-attacker");
     const ownerUserId = parseTestUserId("effect-grants-real-owner");
     const accountId = parseTestAccountId();
-    const store = makeEffectAccountSharingStoreTestService({
+    const store = makeAccountSharingStoreServiceTestService({
       findOwnedAccountForSharing: () =>
         Effect.succeed({
           accountId,
@@ -249,7 +249,7 @@ it.effect(
         }),
     });
     const testLayer = accountSharingStateLayer.pipe(
-      Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+      Layer.provide(Layer.succeed(AccountSharingStoreService, store))
     );
 
     return Effect.gen(function* listAccountAccessGrantsForbiddenEffect() {

@@ -7,9 +7,9 @@ import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { isOk } from "../result.js";
-import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
 import { ActorIsNotInviteRecipient } from "../squad-groups/squad-group-errors.js";
-import { EffectAccountSharingStore } from "./account-sharing-store-service.js";
+import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
+import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
   layer as accountAccessInviteResponsesLayer,
   use as accountAccessInviteResponses,
@@ -54,7 +54,7 @@ it.effect("accepts an account access invite as the invited user", () => {
   const ownerUserId = parseTestUserId("effect-account-respond-owner");
   const accessId = parseTestAccessId();
   const accountId = parseTestAccountId();
-  const store = makeEffectAccountSharingStoreTestService({
+  const store = makeAccountSharingStoreServiceTestService({
     respondToAccountAccessInvite: (input) => {
       expect(input).toMatchObject({
         accessId,
@@ -79,7 +79,7 @@ it.effect("accepts an account access invite as the invited user", () => {
     },
   });
   const testLayer = accountAccessInviteResponsesLayer.pipe(
-    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
   );
 
   return Effect.gen(function* respondToAccountAccessInviteEffect() {
@@ -101,11 +101,11 @@ it.effect("accepts an account access invite as the invited user", () => {
 it.effect("surfaces invite recipient authorization failures", () => {
   const actorUserId = parseTestUserId("effect-account-respond-attacker");
   const accessId = parseTestAccessId();
-  const store = makeEffectAccountSharingStoreTestService({
+  const store = makeAccountSharingStoreServiceTestService({
     respondToAccountAccessInvite: () => new ActorIsNotInviteRecipient(),
   });
   const testLayer = accountAccessInviteResponsesLayer.pipe(
-    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
   );
 
   return Effect.gen(function* respondToAccountAccessInviteEffect() {

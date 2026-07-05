@@ -33,9 +33,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEventHeroFilter } from "@/hooks/use-event-hero-filter";
-import { deleteBetAtom, paginatedBetsAtom } from "@/lib/bet-atoms";
+import {
+  deleteBetFromPageAtom,
+  optimisticPaginatedBetsAtom,
+  paginatedBetsAtom,
+} from "@/lib/bet-atoms";
 import { calculatePointsPerMember } from "@/lib/bet-helpers";
-import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import { resultIsLoading } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
 import { ALL_FILTER } from "@/lib/event-hero-filter";
 import { isAdmin } from "@/lib/route-helpers";
@@ -62,19 +66,20 @@ export default function HistoryPage({ session }: HistoryPageProps) {
   });
 
   const { ref: loadMoreRef, inView } = useInView({ threshold: 0.1 });
-  const deleteBet = useAtomSet(deleteBetAtom, { mode: "promise" });
+  const betPageInput = {
+    eventId: filter.queryInputs.eventId,
+    heroId: filter.queryInputs.heroId,
+    limit: ITEMS_PER_PAGE,
+    page: 1,
+  };
+  const deleteBet = useAtomSet(deleteBetFromPageAtom(betPageInput), {
+    mode: "promise",
+  });
 
   const isAdminUser = isAdmin(session);
 
-  const betsResult = useAtomValue(
-    paginatedBetsAtom({
-      eventId: filter.queryInputs.eventId,
-      heroId: filter.queryInputs.heroId,
-      limit: ITEMS_PER_PAGE,
-      page: 1,
-    })
-  );
-  const betsData = resultValueOr(betsResult);
+  const betsResult = useAtomValue(paginatedBetsAtom(betPageInput));
+  const betsData = useAtomValue(optimisticPaginatedBetsAtom(betPageInput));
   const betsLoading = resultIsLoading(betsResult);
 
   // Flatten pages into single array of bets

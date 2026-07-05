@@ -7,9 +7,9 @@ import { parseAppUserId } from "../app-user-id.js";
 import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
 import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { isOk } from "../result.js";
-import { makeEffectAccountSharingStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
 import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
-import { EffectAccountSharingStore } from "./account-sharing-store-service.js";
+import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
+import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
   layer as accountAccessRevocationsLayer,
   use as accountAccessRevocations,
@@ -54,7 +54,7 @@ it.effect("revokes account access as the account owner", () => {
   const revokedUserId = parseTestUserId("effect-account-revoke-recipient");
   const accessId = parseTestAccessId();
   const accountId = parseTestAccountId();
-  const store = makeEffectAccountSharingStoreTestService({
+  const store = makeAccountSharingStoreServiceTestService({
     revokeAccountAccess: (input) => {
       expect(input).toMatchObject({
         accessId,
@@ -71,7 +71,7 @@ it.effect("revokes account access as the account owner", () => {
     },
   });
   const testLayer = accountAccessRevocationsLayer.pipe(
-    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
   );
 
   return Effect.gen(function* revokeAccountAccessEffect() {
@@ -93,11 +93,11 @@ it.effect("revokes account access as the account owner", () => {
 it.effect("surfaces owner authorization failures", () => {
   const actorUserId = parseTestUserId("effect-account-revoke-attacker");
   const accessId = parseTestAccessId();
-  const store = makeEffectAccountSharingStoreTestService({
+  const store = makeAccountSharingStoreServiceTestService({
     revokeAccountAccess: () => new ActorDoesNotOwnMargonemAccount(),
   });
   const testLayer = accountAccessRevocationsLayer.pipe(
-    Layer.provide(Layer.succeed(EffectAccountSharingStore, store))
+    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
   );
 
   return Effect.gen(function* revokeAccountAccessEffect() {

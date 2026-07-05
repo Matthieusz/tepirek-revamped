@@ -8,9 +8,9 @@ import { parseSquadGroupId } from "../squad-group-id.js";
 import {
   layer as squadEditorInviteTargetsLayer,
   use as squadEditorInviteTargets,
-} from "./effect-search-squad-editor-invite-targets.js";
-import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
-import { EffectSquadGroupStore } from "./squad-group-store.js";
+} from "./search-squad-editor-invite-targets-service.js";
+import { SquadGroupStoreService } from "./squad-group-store.js";
+import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-support.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -36,7 +36,7 @@ it.effect("searches squad editor invite targets for a group owner", () => {
   const actorUserId = parseTestUserId("effect-squad-search-owner");
   const targetUserId = parseTestUserId("effect-squad-search-target");
   const groupId = parseTestGroupId();
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeSquadGroupStoreServiceTestService({
     authorizeSquadGroupOwner: (input) => {
       expect(input.actorUserId).toBe(actorUserId);
       expect(input.groupId).toBe(groupId);
@@ -64,7 +64,7 @@ it.effect("searches squad editor invite targets for a group owner", () => {
     },
   });
   const testLayer = squadEditorInviteTargetsLayer.pipe(
-    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
   );
 
   return Effect.gen(function* searchSquadEditorInviteTargetsEffect() {

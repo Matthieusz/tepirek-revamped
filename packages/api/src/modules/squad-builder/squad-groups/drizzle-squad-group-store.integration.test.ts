@@ -23,12 +23,12 @@ import {
   testDb,
 } from "../../../test/integration/database.js";
 import { parseAccountDisplayName } from "../account-display-name.js";
-import { EffectAccountImportStore } from "../account-import/account-import-store-service.js";
-import { EffectConfirmOwnedAccountImport } from "../account-import/confirm-owned-account-import-service.js";
+import { AccountImportStoreService } from "../account-import/account-import-store-service.js";
+import { ConfirmOwnedAccountImportService } from "../account-import/confirm-owned-account-import-service.js";
 import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts.js";
 import { systemClock } from "../account-import/preview-margonem-profile-import.js";
-import { EffectAccountRefetchStore } from "../account-refetch/account-refetch-store-service.js";
-import { EffectApplyAccountRefetch } from "../account-refetch/apply-account-refetch-service.js";
+import { AccountRefetchStoreService } from "../account-refetch/account-refetch-store-service.js";
+import { ApplyAccountRefetchService } from "../account-refetch/apply-account-refetch-service.js";
 import { use as accountSharingState } from "../account-sharing/list-account-sharing-state-service.js";
 import { use as accountAccessInviteResponses } from "../account-sharing/respond-to-account-access-invite-service.js";
 import { use as accountAccessRevocations } from "../account-sharing/revoke-account-access-service.js";
@@ -42,13 +42,13 @@ import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-d
 import { parseMargonemProfileId } from "../margonem-profile-id.js";
 import { isOk } from "../result.js";
 import { CreateSquadGroup } from "./create-squad-group.js";
-import { use as squadGroupEditorInviteResponses } from "./effect-respond-to-squad-group-invite.js";
-import { use as squadGroupEditorRevocations } from "./effect-revoke-squad-group-editor.js";
-import { use as squadGroupEditorInvites } from "./effect-send-squad-group-editor-invite.js";
 import { ListAvailableSquadCharacters } from "./list-available-squad-characters.js";
 import { ListGlobalSquadGroups } from "./list-global-squad-groups.js";
 import { ListSquadGroups } from "./list-squad-groups.js";
+import { use as squadGroupEditorInviteResponses } from "./respond-to-squad-group-invite-service.js";
+import { use as squadGroupEditorRevocations } from "./revoke-squad-group-editor-service.js";
 import { SaveSquadGroup } from "./save-squad-group.js";
+import { use as squadGroupEditorInvites } from "./send-squad-group-editor-invite-service.js";
 import { SetSquadGroupVisibility } from "./set-squad-group-visibility.js";
 
 const apiTestLayer = makeApiSquadBuilderLayer(defaultTestDatabaseUrl);
@@ -93,7 +93,7 @@ const parseTestCredits = (value: number) => {
   return credits.value;
 };
 
-describe("DrizzleEffectSquadGroupStore integration", () => {
+describe("DrizzleSquadGroupStoreService integration", () => {
   it("creates a private squad group for the actor", async () => {
     const member = await createVerifiedMember({ id: "effect-create-owner" });
     const service = new CreateSquadGroup();
@@ -359,7 +359,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
     const pending = await liveEffect(
       apiTestLayer,
-      EffectAccountImportStore.use((store) =>
+      AccountImportStoreService.use((store) =>
         store.createPendingImport({
           actorUserId: parseTestUserId(member.id),
           defaultDisplayName: displayName.value,
@@ -435,7 +435,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
     const loaded = await liveEffect(
       apiTestLayer,
-      EffectAccountRefetchStore.use((store) =>
+      AccountRefetchStoreService.use((store) =>
         store.getAccountForRefetch({
           accountId: account.id as never,
           actorUserId: parseTestUserId(member.id),
@@ -456,7 +456,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
     ];
     const pending = await liveEffect(
       apiTestLayer,
-      EffectAccountRefetchStore.use((store) =>
+      AccountRefetchStoreService.use((store) =>
         store.createPendingRefetch({
           accountId: loaded.accountId,
           actorUserId: parseTestUserId(member.id),
@@ -508,7 +508,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
   it("applies pending account refetches through the Effect store", async () => {
     const member = await createVerifiedMember({ id: "effect-apply-owner" });
-    const service = new EffectApplyAccountRefetch();
+    const service = new ApplyAccountRefetchService();
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -670,7 +670,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
   it("confirms pending account imports through the Effect store", async () => {
     const member = await createVerifiedMember({ id: "effect-confirm-user" });
-    const service = new EffectConfirmOwnedAccountImport();
+    const service = new ConfirmOwnedAccountImportService();
     const [pending] = await testDb
       .insert(margonemAccountImportPreview)
       .values({
@@ -744,7 +744,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
     const reserved = await liveEffect(
       apiTestLayer,
-      EffectAccountImportStore.use((store) =>
+      AccountImportStoreService.use((store) =>
         store.reserveRequest({
           monthlyRequestBudget: 10,
           profileId,
@@ -756,7 +756,7 @@ describe("DrizzleEffectSquadGroupStore integration", () => {
 
     await liveEffect(
       apiTestLayer,
-      EffectAccountImportStore.use((store) =>
+      AccountImportStoreService.use((store) =>
         store.markRequestSucceeded({
           cacheState: "hit",
           creditsUsed: parseTestCredits(1),

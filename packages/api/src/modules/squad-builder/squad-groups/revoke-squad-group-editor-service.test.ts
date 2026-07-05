@@ -9,12 +9,12 @@ import { parseSquadGroupId } from "../squad-group-id.js";
 import { parseSquadGroupInvitationId } from "../squad-group-invitation-id.js";
 import { parseSquadGroupName } from "../squad-name.js";
 import {
-  layer as squadGroupEditorInviteResponsesLayer,
-  use as squadGroupEditorInviteResponses,
-} from "./effect-respond-to-squad-group-invite.js";
-import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
-import { ActorIsNotSquadGroupInviteRecipient } from "./squad-group-errors.js";
-import { EffectSquadGroupStore } from "./squad-group-store.js";
+  layer as squadGroupEditorRevocationsLayer,
+  use as squadGroupEditorRevocations,
+} from "./revoke-squad-group-editor-service.js";
+import { ActorDoesNotOwnSquadGroup } from "./squad-group-errors.js";
+import { SquadGroupStoreService } from "./squad-group-store.js";
+import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-support.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -47,7 +47,7 @@ const parseTestInvitationId = () => {
 };
 
 const parseTestGroupName = () => {
-  const groupName = parseSquadGroupName("Effect respond group");
+  const groupName = parseSquadGroupName("Effect revoke group");
 
   if (!isOk(groupName)) {
     throw new Error("Expected test group name to be valid");
@@ -60,74 +60,70 @@ const fixedClock = {
   now: () => new Date("2026-06-29T12:00:00.000Z"),
 };
 
-it.effect("accepts a squad group editor invite as the invited user", () => {
-  const actorUserId = parseTestUserId("effect-squad-respond-recipient");
-  const ownerUserId = parseTestUserId("effect-squad-respond-owner");
+it.effect("revokes a squad group editor invite as the owner", () => {
+  const actorUserId = parseTestUserId("effect-squad-revoke-owner");
   const invitationId = parseTestInvitationId();
   const squadGroupId = parseTestGroupId();
   const squadGroupName = parseTestGroupName();
-  const store = makeEffectSquadGroupStoreTestService({
-    respondToSquadGroupInvite: (input) => {
+  const store = makeSquadGroupStoreServiceTestService({
+    revokeSquadGroupEditor: (input) => {
       expect(input).toMatchObject({
         invitationId,
-        invitedUserId: actorUserId,
         now: fixedClock.now(),
-        response: "accept",
+        ownerUserId: actorUserId,
       });
 
       return Effect.succeed({
         createdAt: fixedClock.now(),
         invitationId,
-        ownerUserId,
+        ownerUserId: actorUserId,
         ownerUserImage: null,
         ownerUserName: "owner",
         squadGroupId,
         squadGroupName,
-        status: "accepted" as const,
+        status: "revoked" as const,
         updatedAt: fixedClock.now(),
       });
     },
   });
-  const testLayer = squadGroupEditorInviteResponsesLayer.pipe(
-    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+  const testLayer = squadGroupEditorRevocationsLayer.pipe(
+    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
   );
 
-  return Effect.gen(function* respondToSquadGroupInviteEffect() {
+  return Effect.gen(function* revokeSquadGroupEditorEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* squadGroupEditorInviteResponses.respond({
+    const invite = yield* squadGroupEditorRevocations.revoke({
       actorUserId,
       invitationId,
-      response: "accept",
     });
 
     expect(invite).toMatchObject({
       invitationId,
       squadGroupId,
-      status: "accepted",
+      status: "revoked",
     });
   }).pipe(Effect.provide(testLayer));
 });
 
-it.effect("surfaces squad invite recipient authorization failures", () => {
-  const actorUserId = parseTestUserId("effect-squad-respond-attacker");
+it.effect("surfaces squad group ownership failures", () => {
+  const actorUserId = parseTestUserId("effect-squad-revoke-attacker");
   const invitationId = parseTestInvitationId();
-  const store = makeEffectSquadGroupStoreTestService({
-    respondToSquadGroupInvite: () => new ActorIsNotSquadGroupInviteRecipient(),
+  const store = makeSquadGroupStoreServiceTestService({
+    revokeSquadGroupEditor: () => new ActorDoesNotOwnSquadGroup(),
   });
-  const testLayer = squadGroupEditorInviteResponsesLayer.pipe(
-    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+  const testLayer = squadGroupEditorRevocationsLayer.pipe(
+    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
   );
 
-  return Effect.gen(function* respondToSquadGroupInviteEffect() {
+  return Effect.gen(function* revokeSquadGroupEditorEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      squadGroupEditorInviteResponses.respond({
+      squadGroupEditorRevocations.revoke({
         actorUserId,
         invitationId,
-        response: "decline",
       })
     );
 
-    expect(error._tag).toBe("ActorIsNotSquadGroupInviteRecipient");
+    expect(error._tag).toBe("ActorDoesNotOwnSquadGroup");
   }).pipe(Effect.provide(testLayer));
 });

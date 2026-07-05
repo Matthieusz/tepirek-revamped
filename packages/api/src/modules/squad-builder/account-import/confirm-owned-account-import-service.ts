@@ -1,34 +1,37 @@
 import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
 import * as EffectRuntime from "effect/Effect";
+import * as Layer from "effect/Layer";
 
+import { serviceUse } from "../../../effect/service-use.js";
 import { parseAccountDisplayName } from "../account-display-name.js";
 import type { InvalidAccountDisplayName } from "../account-display-name.js";
 import type { AppUserId } from "../app-user-id.js";
 import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
 import { isError } from "../result.js";
-import { EffectAccountImportStore } from "./account-import-store-service.js";
+import { AccountImportStoreService } from "./account-import-store-service.js";
 import type {
   DuplicateMargonemAccountError,
   PendingMargonemAccountImportNotFound,
   SquadBuilderPersistenceUnavailable,
 } from "./account-import-store.js";
 
-/** Input for confirming an owned account import through Effect. */
-export interface EffectConfirmOwnedAccountImportInput {
+/** Input for confirming an owned account import through the service. */
+export interface ConfirmOwnedAccountImportServiceInput {
   readonly actorUserId: AppUserId;
   readonly pendingImportId: PendingMargonemAccountImportId;
   readonly displayName: string;
 }
 
 /** Expected failures returned by the Effect confirm owned account import service. */
-export type EffectConfirmOwnedAccountImportError =
+export type ConfirmOwnedAccountImportServiceError =
   | InvalidAccountDisplayName
   | PendingMargonemAccountImportNotFound
   | DuplicateMargonemAccountError
   | SquadBuilderPersistenceUnavailable;
 
-/** Effect service module that confirms a pending import into an owned account. */
-export class EffectConfirmOwnedAccountImport {
+/** Service module that confirms a pending import into an owned account. */
+export class ConfirmOwnedAccountImportService {
   private readonly currentDate = Clock.currentTimeMillis.pipe(
     EffectRuntime.map((milliseconds) => new Date(milliseconds))
   );
@@ -36,8 +39,8 @@ export class EffectConfirmOwnedAccountImport {
   /** Save a previously previewed Margonem account and its Jaruna characters. */
   readonly confirm = EffectRuntime.fn("AccountImport.confirm")(
     function* confirmOwnedAccountImportEffect(
-      this: EffectConfirmOwnedAccountImport,
-      input: EffectConfirmOwnedAccountImportInput
+      this: ConfirmOwnedAccountImportService,
+      input: ConfirmOwnedAccountImportServiceInput
     ) {
       const { currentDate } = this;
       const displayName = parseAccountDisplayName(input.displayName);
@@ -47,7 +50,7 @@ export class EffectConfirmOwnedAccountImport {
       }
 
       const now = yield* currentDate;
-      const pending = yield* EffectAccountImportStore.use((store) =>
+      const pending = yield* AccountImportStoreService.use((store) =>
         store.findPendingImportForConfirmation({
           actorUserId: input.actorUserId,
           now,
@@ -55,7 +58,7 @@ export class EffectConfirmOwnedAccountImport {
         })
       );
 
-      return yield* EffectAccountImportStore.use((store) =>
+      return yield* AccountImportStoreService.use((store) =>
         store.createOwnedAccountFromPendingImport({
           actorUserId: input.actorUserId,
           displayName: displayName.value,
@@ -65,3 +68,19 @@ export class EffectConfirmOwnedAccountImport {
     }
   );
 }
+
+export interface Interface {
+  readonly confirm: ConfirmOwnedAccountImportService["confirm"];
+}
+
+// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
+export class Service extends Context.Service<Service, Interface>()(
+  "@tepirek-revamped/api/squad-builder/ConfirmOwnedAccountImportService"
+) {}
+
+export const use = serviceUse(Service);
+
+export const layer = Layer.sync(Service, () => {
+  const service = new ConfirmOwnedAccountImportService();
+  return { confirm: service.confirm };
+});

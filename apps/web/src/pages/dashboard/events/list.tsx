@@ -29,11 +29,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getEventIcon } from "@/lib/constants";
-import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import { resultIsLoading } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
 import {
   deleteEventAtom,
   eventsAtom,
+  optimisticEventsAtom,
   toggleEventActiveAtom,
 } from "@/lib/event-atoms";
 import { isAdmin } from "@/lib/route-helpers";
@@ -53,7 +54,7 @@ interface EventsListPageProps {
 export default function EventsListPage({ session }: EventsListPageProps) {
   const [eventAction, setEventAction] = useState<EventAction>(null);
   const eventsResult = useAtomValue(eventsAtom);
-  const events = resultValueOr(eventsResult, []);
+  const events = useAtomValue(optimisticEventsAtom);
   const isPending = resultIsLoading(eventsResult);
   const deleteEvent = useAtomSet(deleteEventAtom, { mode: "promise" });
   const toggleEventActive = useAtomSet(toggleEventActiveAtom, {

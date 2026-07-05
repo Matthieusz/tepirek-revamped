@@ -8,7 +8,7 @@ import { serviceUse } from "../../../effect/service-use.js";
 import type { SendSquadGroupEditorInvite } from "./send-squad-group-editor-invite.js";
 import { CannotInviteSelf } from "./squad-group-errors.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
-import { EffectSquadGroupStore } from "./squad-group-store.js";
+import { SquadGroupStoreService } from "./squad-group-store.js";
 import type { SquadGroupInvitationSummary } from "./squad-group-store.js";
 
 export interface Interface {
@@ -18,7 +18,8 @@ export interface Interface {
   ) => Effect<SquadGroupInvitationSummary, SquadGroupSharingError>;
 }
 
-/** Effect service module that sends squad group editor invitations as the group owner. */
+/** Service module that sends squad group editor invitations as the group owner. */
+// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/SquadGroupEditorInvites"
 ) {}
@@ -28,7 +29,7 @@ export const use = serviceUse(Service);
 export const layer = Layer.effect(
   Service,
   EffectRuntime.gen(function* makeSquadGroupEditorInvitesService() {
-    const store = yield* EffectSquadGroupStore;
+    const store = yield* SquadGroupStoreService;
 
     return {
       send: EffectRuntime.fn("SquadGroupEditorInvites.send")(

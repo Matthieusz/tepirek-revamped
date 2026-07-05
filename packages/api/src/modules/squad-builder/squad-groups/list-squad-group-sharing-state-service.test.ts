@@ -11,10 +11,10 @@ import { parseSquadGroupName } from "../squad-name.js";
 import {
   layer as squadGroupSharingStateLayer,
   use as squadGroupSharingState,
-} from "./effect-list-squad-group-sharing-state.js";
-import { makeEffectSquadGroupStoreTestService } from "./effect-squad-group-store.test-support.js";
+} from "./list-squad-group-sharing-state-service.js";
 import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
-import { EffectSquadGroupStore } from "./squad-group-store.js";
+import { SquadGroupStoreService } from "./squad-group-store.js";
+import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-support.js";
 
 const parseTestUserId = (value: string) => {
   const userId = parseAppUserId(value);
@@ -62,7 +62,7 @@ it.effect("lists incoming squad group invites for the actor", () => {
   const invitationId = parseTestInvitationId();
   const squadGroupId = parseTestGroupId();
   const createdAt = new Date("2026-06-29T12:00:00.000Z");
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeSquadGroupStoreServiceTestService({
     listIncomingSquadGroupInvites: (input) => {
       expect(input).toMatchObject({ actorUserId });
 
@@ -82,7 +82,7 @@ it.effect("lists incoming squad group invites for the actor", () => {
     },
   });
   const testLayer = squadGroupSharingStateLayer.pipe(
-    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
   );
 
   return Effect.gen(function* listIncomingSquadGroupInvitesEffect() {
@@ -102,7 +102,7 @@ it.effect("lists incoming squad group invites for the actor", () => {
 
 it.effect("surfaces squad group sharing persistence failures", () => {
   const actorUserId = parseTestUserId("effect-squad-invite-error");
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeSquadGroupStoreServiceTestService({
     listIncomingSquadGroupInvites: () =>
       Effect.fail(
         new EffectSquadBuilderPersistenceUnavailable({
@@ -113,7 +113,7 @@ it.effect("surfaces squad group sharing persistence failures", () => {
       ),
   });
   const testLayer = squadGroupSharingStateLayer.pipe(
-    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
   );
 
   return Effect.gen(function* listIncomingSquadGroupInvitesFailureEffect() {
@@ -130,7 +130,7 @@ it.effect("lists shared squad groups for the actor", () => {
   const ownerUserId = parseTestUserId("effect-shared-squad-owner");
   const groupId = parseTestGroupId();
   const updatedAt = new Date("2026-06-29T12:00:00.000Z");
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeSquadGroupStoreServiceTestService({
     listSharedSquadGroups: (input) => {
       expect(input).toMatchObject({
         actorUserId,
@@ -152,7 +152,7 @@ it.effect("lists shared squad groups for the actor", () => {
     },
   });
   const testLayer = squadGroupSharingStateLayer.pipe(
-    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
   );
 
   return Effect.gen(function* listSharedSquadGroupsEffect() {
@@ -176,7 +176,7 @@ it.effect("lists squad group editor grants", () => {
   const groupId = parseTestGroupId();
   const invitationId = parseTestInvitationId();
   const createdAt = new Date("2026-06-29T12:00:00.000Z");
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeSquadGroupStoreServiceTestService({
     listSquadGroupEditorGrants: (input) => {
       expect(input).toMatchObject({ actorUserId, groupId });
 
@@ -194,7 +194,7 @@ it.effect("lists squad group editor grants", () => {
     },
   });
   const testLayer = squadGroupSharingStateLayer.pipe(
-    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
   );
 
   return Effect.gen(function* listSquadGroupEditorGrantsEffect() {
@@ -214,7 +214,7 @@ it.effect("lists squad group editor grants", () => {
 
 it.effect("counts pending squad group invites", () => {
   const actorUserId = parseTestUserId("effect-squad-invite-count");
-  const store = makeEffectSquadGroupStoreTestService({
+  const store = makeSquadGroupStoreServiceTestService({
     getPendingSquadGroupInviteCount: (input) => {
       expect(input).toMatchObject({ actorUserId });
 
@@ -222,7 +222,7 @@ it.effect("counts pending squad group invites", () => {
     },
   });
   const testLayer = squadGroupSharingStateLayer.pipe(
-    Layer.provide(Layer.succeed(EffectSquadGroupStore, store))
+    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
   );
 
   return Effect.gen(function* getPendingSquadGroupInviteCountEffect() {

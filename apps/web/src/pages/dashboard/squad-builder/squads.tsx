@@ -15,6 +15,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import { getErrorMessage } from "@/lib/errors";
+import {
+  createSquadGroupAtom,
+  globalSquadGroupsAtom,
+  ownedSquadGroupsAtom,
+} from "@/lib/squad-builder/squad-group-atoms";
+import type {
+  GlobalSquadGroupSummary,
+  SquadGroupSummary,
+} from "@/lib/squad-builder/squad-group-atoms";
 import {
   incomingSquadGroupInvitesAtom,
   respondToSquadGroupInviteAtom,
@@ -22,14 +32,6 @@ import {
 } from "@/lib/squad-builder/squad-group-sharing-atoms";
 import { sessionAtom } from "@/lib/user-atoms";
 import { formatDateTime } from "@/lib/utils";
-
-interface SquadGroupSummary {
-  readonly groupId: number;
-  readonly name: string;
-  readonly squadCount: number;
-  readonly characterCount: number;
-  readonly updatedAt: Date;
-}
 
 type SharedSquadGroupSummary = typeof SharedSquadGroupSummarySchema.Type;
 type SquadGroupInvitationSummary =
@@ -279,19 +281,50 @@ export default function SquadBuilderSquadsPage() {
     sessionResult._tag === "Success" ? sessionResult.value.user.id : "";
   const actorPayload = { actorUserId };
   const sharedGroupsResult = useAtomValue(sharedSquadGroupsAtom(actorPayload));
+  const groupsResult = useAtomValue(ownedSquadGroupsAtom(actorPayload));
+  const globalGroupsResult = useAtomValue(
+    globalSquadGroupsAtom({
+      actorUserId,
+      maxLevel:
+        appliedFilters.maxLevel.trim().length === 0
+          ? null
+          : Number(appliedFilters.maxLevel),
+      minLevel:
+        appliedFilters.minLevel.trim().length === 0
+          ? null
+          : Number(appliedFilters.minLevel),
+      nameQuery:
+        appliedFilters.nameQuery.trim().length === 0
+          ? null
+          : appliedFilters.nameQuery,
+    })
+  );
   const invitesResult = useAtomValue(
     incomingSquadGroupInvitesAtom(actorPayload)
   );
+  const createSquadGroup = useAtomSet(createSquadGroupAtom, {
+    mode: "promise",
+  });
   const respondToInvite = useAtomSet(respondToSquadGroupInviteAtom, {
     mode: "promise",
   });
 
   const createMutation = {
     isPending: false,
-    mutate: (_input: { readonly name: string }) => {
-      toast.error(
-        "Tworzenie grup składów nie zostało jeszcze przeniesione na Effect HttpApi."
-      );
+    mutate: (input: { readonly name: string }) => {
+      const create = async () => {
+        try {
+          await createSquadGroup({ ...input, actorUserId });
+          toast.success("Grupa składów została utworzona");
+          setName("");
+        } catch (error: unknown) {
+          toast.error(
+            getErrorMessage(error, "Nie udało się utworzyć grupy składów")
+          );
+        }
+      };
+
+      void create();
     },
   };
 
@@ -307,9 +340,7 @@ export default function SquadBuilderSquadsPage() {
           toast.success("Zapisano odpowiedź na zaproszenie");
         } catch (error: unknown) {
           toast.error(
-            error instanceof Error
-              ? error.message
-              : "Nie udało się zapisać odpowiedzi"
+            getErrorMessage(error, "Nie udało się zapisać odpowiedzi")
           );
         }
       };
@@ -318,19 +349,25 @@ export default function SquadBuilderSquadsPage() {
     },
   };
 
-  const groups: readonly SquadGroupSummary[] = [];
+  const groups = resultValueOr(
+    groupsResult,
+    [] as readonly SquadGroupSummary[]
+  );
   const sharedGroups = resultValueOr(
     sharedGroupsResult,
     [] as readonly SharedSquadGroupSummary[]
   );
-  const globalGroups: readonly SharedSquadGroupSummary[] = [];
+  const globalGroups = resultValueOr(
+    globalGroupsResult,
+    [] as readonly GlobalSquadGroupSummary[]
+  );
   const invites = resultValueOr(
     invitesResult,
     [] as readonly SquadGroupInvitationSummary[]
   );
-  const groupsQuery = { isLoading: false };
+  const groupsQuery = { isLoading: resultIsLoading(groupsResult) };
   const sharedGroupsQuery = { isLoading: resultIsLoading(sharedGroupsResult) };
-  const globalGroupsQuery = { isLoading: false };
+  const globalGroupsQuery = { isLoading: resultIsLoading(globalGroupsResult) };
   const trimmedName = name.trim();
 
   const applyFilters = (event: React.FormEvent) => {

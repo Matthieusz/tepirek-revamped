@@ -19,11 +19,11 @@ export interface FirecrawlConfig {
   readonly monthlyRequestBudget: number;
 }
 
-/** Effect service tag for Firecrawl-backed scraping configuration. */
-export class EffectFirecrawlConfig extends Context.Service<
-  EffectFirecrawlConfig,
+/** Service tag for Firecrawl-backed scraping configuration. */
+export class FirecrawlConfigService extends Context.Service<
+  FirecrawlConfigService,
   FirecrawlConfig
->()("@tepirek-revamped/api/squad-builder/EffectFirecrawlConfig") {}
+>()("@tepirek-revamped/api/squad-builder/FirecrawlConfigService") {}
 
 /** Expected failure when Firecrawl config is missing or unsafe. */
 export interface ParseFirecrawlConfigError {
@@ -61,13 +61,13 @@ const firecrawlConfig = Config.all({
   ).pipe(Config.withDefault(900)),
 });
 
-/** Live Firecrawl config layer parsed at the Effect runtime boundary. */
-export const EffectFirecrawlConfigLiveLayer: Layer.Layer<
-  EffectFirecrawlConfig,
+/** Live Firecrawl config layer parsed at the runtime boundary. */
+export const FirecrawlConfigServiceLiveLayer: Layer.Layer<
+  FirecrawlConfigService,
   Config.ConfigError
 > = Layer.effect(
-  EffectFirecrawlConfig,
+  FirecrawlConfigService,
   EffectRuntime.gen(function* makeFirecrawlConfig() {
-    return EffectFirecrawlConfig.of(yield* firecrawlConfig);
+    return FirecrawlConfigService.of(yield* firecrawlConfig);
   })
 );

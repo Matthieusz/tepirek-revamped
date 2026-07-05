@@ -43,45 +43,19 @@ import {
   SquadGroupEditorGrantSummarySchema,
   SquadGroupInvitationSummarySchema,
 } from "./schema/squad-group-sharing.js";
-
-export { ActorPayload, SquadBuilderServiceError } from "./schema/common.js";
-export {
-  ConfirmOwnedAccountImportPayload,
-  OwnedMargonemAccountSummarySchema,
-  PreviewMargonemProfileImportPayload,
-  PreviewMargonemProfileImportSuccess,
-  PreviewOwnedAccountImportsPayload,
-  PreviewOwnedAccountImportsSuccess,
-} from "./schema/account-import.js";
-export {
-  ApplyAccountRefetchPayload,
-  ApplyAccountRefetchSuccess,
-  PreviewAccountRefetchPayload,
-  PreviewAccountRefetchSuccess,
-} from "./schema/account-refetch.js";
-export {
-  AccountAccessGrantSummarySchema,
-  AccountAccessGrantsPayload,
-  AccountAccessInviteSummarySchema,
-  AccountInviteTargetSchema,
-  RespondToAccountAccessInvitePayload,
-  RevokeAccountAccessPayload,
-  RevokeAccountAccessSuccess,
-  SearchAccountInviteTargetsPayload,
-  SendAccountAccessInvitePayload,
-  SharedMargonemAccountSummarySchema,
-} from "./schema/account-sharing.js";
-export {
-  RespondToSquadGroupInvitePayload,
-  RevokeSquadGroupEditorPayload,
-  SearchSquadEditorInviteTargetsPayload,
-  SendSquadGroupEditorInvitePayload,
-  SharedSquadGroupSummarySchema,
-  SquadEditorInviteTargetSchema,
-  SquadGroupEditorGrantSummarySchema,
-  SquadGroupEditorGrantsPayload,
-  SquadGroupInvitationSummarySchema,
-} from "./schema/squad-group-sharing.js";
+import {
+  AvailableSquadCharacterSchema,
+  CreateSquadGroupPayload,
+  GlobalSquadGroupSummarySchema,
+  ListGlobalSquadGroupsPayload,
+  SaveSharedSquadGroupCharactersPayload,
+  SaveSquadGroupPayload,
+  SetSquadGroupVisibilityPayload,
+  SquadGroupDetailSchema,
+  SquadGroupIdPayload,
+  SquadGroupSummarySchema,
+  SquadGroupVisibilityChangeSchema,
+} from "./schema/squad-groups.js";
 
 export const SquadBuilderAccountImportGroup = HttpApiGroup.make(
   "squadBuilderAccountImport"
@@ -101,9 +75,61 @@ export const SquadBuilderAccountImportGroup = HttpApiGroup.make(
       error: SquadBuilderServiceError,
       payload: ConfirmOwnedAccountImportPayload,
       success: OwnedMargonemAccountSummarySchema,
+    }),
+    HttpApiEndpoint.post("listOwnedAccounts", "/owned", {
+      error: SquadBuilderServiceError,
+      payload: ActorPayload,
+      success: Schema.Array(OwnedMargonemAccountSummarySchema),
     })
   )
   .prefix("/squad-builder/account-imports");
+
+export const SquadBuilderSquadGroupGroup = HttpApiGroup.make(
+  "squadBuilderSquadGroup"
+)
+  .add(
+    HttpApiEndpoint.post("createSquadGroup", "/", {
+      error: SquadBuilderServiceError,
+      payload: CreateSquadGroupPayload,
+      success: SquadGroupSummarySchema,
+    }),
+    HttpApiEndpoint.post("listOwnedSquadGroups", "/owned", {
+      error: SquadBuilderServiceError,
+      payload: ActorPayload,
+      success: Schema.Array(SquadGroupSummarySchema),
+    }),
+    HttpApiEndpoint.post("listGlobalSquadGroups", "/global", {
+      error: SquadBuilderServiceError,
+      payload: ListGlobalSquadGroupsPayload,
+      success: Schema.Array(GlobalSquadGroupSummarySchema),
+    }),
+    HttpApiEndpoint.post("getSquadGroupDetail", "/detail", {
+      error: SquadBuilderServiceError,
+      payload: SquadGroupIdPayload,
+      success: SquadGroupDetailSchema,
+    }),
+    HttpApiEndpoint.post("listAvailableSquadCharacters", "/characters", {
+      error: SquadBuilderServiceError,
+      payload: SquadGroupIdPayload,
+      success: Schema.Array(AvailableSquadCharacterSchema),
+    }),
+    HttpApiEndpoint.post("saveSquadGroup", "/save", {
+      error: SquadBuilderServiceError,
+      payload: SaveSquadGroupPayload,
+      success: SquadGroupDetailSchema,
+    }),
+    HttpApiEndpoint.post("saveSharedSquadGroupCharacters", "/save-shared", {
+      error: SquadBuilderServiceError,
+      payload: SaveSharedSquadGroupCharactersPayload,
+      success: SquadGroupDetailSchema,
+    }),
+    HttpApiEndpoint.post("setSquadGroupVisibility", "/visibility", {
+      error: SquadBuilderServiceError,
+      payload: SetSquadGroupVisibilityPayload,
+      success: SquadGroupVisibilityChangeSchema,
+    })
+  )
+  .prefix("/squad-builder/squad-groups");
 
 export const SquadBuilderAccountRefetchGroup = HttpApiGroup.make(
   "squadBuilderAccountRefetch"
@@ -230,6 +256,7 @@ export const SquadBuilderSquadGroupSharingGroup = HttpApiGroup.make(
 export const SquadBuilderHttpApi = HttpApi.make("squadBuilder")
   .add(SquadBuilderAccountImportGroup)
   .add(SquadBuilderAccountRefetchGroup)
+  .add(SquadBuilderSquadGroupGroup)
   .add(SquadBuilderAccountSharingGroup)
   .add(SquadBuilderSquadGroupSharingGroup);
 

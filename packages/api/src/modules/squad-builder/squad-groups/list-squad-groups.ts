@@ -1,13 +1,18 @@
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
+import { serviceUse } from "../../../effect/service-use.js";
 import type { AppUserId } from "../app-user-id.js";
 import type { SquadGroupId } from "../squad-group-id.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import type {
   ActorCannotViewSquadGroup,
+  SquadGroupDetail,
   SquadGroupNotFound,
+  SquadGroupSummary,
 } from "./squad-group-store.js";
-import { EffectSquadGroupStore } from "./squad-group-store.js";
+import { SquadGroupStoreService } from "./squad-group-store.js";
 
 /** Expected failures returned by listing actor-owned squad groups. */
 export type ListMySquadGroupsError = EffectSquadBuilderPersistenceUnavailable;
@@ -23,7 +28,7 @@ export class ListSquadGroups {
   /** List squad groups owned by the actor. */
   readonly listMine = Effect.fn("SquadGroups.listMine")(
     (input: { readonly actorUserId: AppUserId }) =>
-      EffectSquadGroupStore.use((store) => store.listMySquadGroups(input))
+      SquadGroupStoreService.use((store) => store.listMySquadGroups(input))
   );
 
   /** Load a squad group the actor can view. */
@@ -31,6 +36,42 @@ export class ListSquadGroups {
     (input: {
       readonly actorUserId: AppUserId;
       readonly groupId: SquadGroupId;
-    }) => EffectSquadGroupStore.use((store) => store.getSquadGroupDetail(input))
+    }) =>
+      SquadGroupStoreService.use((store) => store.getSquadGroupDetail(input))
   );
 }
+
+export interface Interface {
+  readonly listMine: (input: {
+    readonly actorUserId: AppUserId;
+  }) => Effect.Effect<readonly SquadGroupSummary[], ListMySquadGroupsError>;
+  readonly getMine: (input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+  }) => Effect.Effect<SquadGroupDetail, GetSquadGroupDetailError>;
+}
+
+// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
+export class Service extends Context.Service<Service, Interface>()(
+  "@tepirek-revamped/api/squad-builder/ListSquadGroupsService"
+) {}
+
+export const use = serviceUse(Service);
+
+export const layer = Layer.effect(
+  Service,
+  Effect.gen(function* makeService() {
+    const store = yield* SquadGroupStoreService;
+    const service = new ListSquadGroups();
+    return {
+      getMine: (input) =>
+        service
+          .getMine(input)
+          .pipe(Effect.provideService(SquadGroupStoreService, store)),
+      listMine: (input) =>
+        service
+          .listMine(input)
+          .pipe(Effect.provideService(SquadGroupStoreService, store)),
+    };
+  })
+);

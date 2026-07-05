@@ -17,9 +17,9 @@ import { HeroesStoreLayer } from "./modules/heroes/heroes-store.js";
 import type { HeroesStore } from "./modules/heroes/heroes-store.js";
 import { SkillsStoreLayer } from "./modules/skills/skills-store.js";
 import type { SkillsStore } from "./modules/skills/skills-store.js";
-import type { EffectAccountImportStore } from "./modules/squad-builder/account-import/account-import-store-service.js";
-import type { EffectAccountRefetchStore } from "./modules/squad-builder/account-refetch/account-refetch-store-service.js";
-import type { EffectAccountSharingStore } from "./modules/squad-builder/account-sharing/account-sharing-store-service.js";
+import type { AccountImportStoreService } from "./modules/squad-builder/account-import/account-import-store-service.js";
+import type { AccountRefetchStoreService } from "./modules/squad-builder/account-refetch/account-refetch-store-service.js";
+import type { AccountSharingStoreService } from "./modules/squad-builder/account-sharing/account-sharing-store-service.js";
 import type { Service as AccountSharingState } from "./modules/squad-builder/account-sharing/list-account-sharing-state-service.js";
 import { layer as accountSharingStateLayer } from "./modules/squad-builder/account-sharing/list-account-sharing-state-service.js";
 import type { Service as AccountAccessInviteResponses } from "./modules/squad-builder/account-sharing/respond-to-account-access-invite-service.js";
@@ -30,22 +30,22 @@ import type { Service as AccountInviteTargets } from "./modules/squad-builder/ac
 import { layer as accountInviteTargetsLayer } from "./modules/squad-builder/account-sharing/search-account-invite-targets-service.js";
 import type { Service as AccountAccessInvites } from "./modules/squad-builder/account-sharing/send-account-access-invite-service.js";
 import { layer as accountAccessInvitesLayer } from "./modules/squad-builder/account-sharing/send-account-access-invite-service.js";
-import { EffectFirecrawlClientLiveLayer } from "./modules/squad-builder/effect-firecrawl-client.js";
-import type { EffectFirecrawlClient } from "./modules/squad-builder/effect-firecrawl-client.js";
-import { EffectFirecrawlConfigLiveLayer } from "./modules/squad-builder/firecrawl-config.js";
-import type { EffectFirecrawlConfig } from "./modules/squad-builder/firecrawl-config.js";
-import { DrizzleEffectSquadBuilderStoresLayer } from "./modules/squad-builder/squad-groups/drizzle-squad-group-store.js";
-import type { Service as SquadGroupSharingState } from "./modules/squad-builder/squad-groups/effect-list-squad-group-sharing-state.js";
-import { layer as squadGroupSharingStateLayer } from "./modules/squad-builder/squad-groups/effect-list-squad-group-sharing-state.js";
-import type { Service as SquadGroupEditorInviteResponses } from "./modules/squad-builder/squad-groups/effect-respond-to-squad-group-invite.js";
-import { layer as squadGroupEditorInviteResponsesLayer } from "./modules/squad-builder/squad-groups/effect-respond-to-squad-group-invite.js";
-import type { Service as SquadGroupEditorRevocations } from "./modules/squad-builder/squad-groups/effect-revoke-squad-group-editor.js";
-import { layer as squadGroupEditorRevocationsLayer } from "./modules/squad-builder/squad-groups/effect-revoke-squad-group-editor.js";
-import type { Service as SquadEditorInviteTargets } from "./modules/squad-builder/squad-groups/effect-search-squad-editor-invite-targets.js";
-import { layer as squadEditorInviteTargetsLayer } from "./modules/squad-builder/squad-groups/effect-search-squad-editor-invite-targets.js";
-import type { Service as SquadGroupEditorInvites } from "./modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite.js";
-import { layer as squadGroupEditorInvitesLayer } from "./modules/squad-builder/squad-groups/effect-send-squad-group-editor-invite.js";
-import type { EffectSquadGroupStore } from "./modules/squad-builder/squad-groups/squad-group-store.js";
+import { FirecrawlClientServiceLiveLayer } from "./modules/squad-builder/firecrawl-client-service.js";
+import type { FirecrawlClientService } from "./modules/squad-builder/firecrawl-client-service.js";
+import { FirecrawlConfigServiceLiveLayer } from "./modules/squad-builder/firecrawl-config.js";
+import type { FirecrawlConfigService } from "./modules/squad-builder/firecrawl-config.js";
+import { DrizzleSquadBuilderStoresLayer } from "./modules/squad-builder/squad-groups/drizzle-squad-group-store.js";
+import type { Service as SquadGroupSharingState } from "./modules/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
+import { layer as squadGroupSharingStateLayer } from "./modules/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
+import type { Service as SquadGroupEditorInviteResponses } from "./modules/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
+import { layer as squadGroupEditorInviteResponsesLayer } from "./modules/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
+import type { Service as SquadGroupEditorRevocations } from "./modules/squad-builder/squad-groups/revoke-squad-group-editor-service.js";
+import { layer as squadGroupEditorRevocationsLayer } from "./modules/squad-builder/squad-groups/revoke-squad-group-editor-service.js";
+import type { Service as SquadEditorInviteTargets } from "./modules/squad-builder/squad-groups/search-squad-editor-invite-targets-service.js";
+import { layer as squadEditorInviteTargetsLayer } from "./modules/squad-builder/squad-groups/search-squad-editor-invite-targets-service.js";
+import type { Service as SquadGroupEditorInvites } from "./modules/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
+import { layer as squadGroupEditorInvitesLayer } from "./modules/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
+import type { SquadGroupStoreService } from "./modules/squad-builder/squad-groups/squad-group-store.js";
 import { TodoStoreLayer } from "./modules/todo/todo-store.js";
 import type { TodoStore } from "./modules/todo/todo-store.js";
 import * as Observability from "./observability.js";
@@ -59,8 +59,8 @@ export const makeApiSquadBuilderLayer = (
 ): Layer.Layer<
   Exclude<
     SquadBuilderServices,
-    | EffectFirecrawlClient
-    | EffectFirecrawlConfig
+    | FirecrawlClientService
+    | FirecrawlConfigService
     | AnnouncementStore
     | TodoStore
     | HeroesStore
@@ -70,7 +70,7 @@ export const makeApiSquadBuilderLayer = (
   >,
   SqlError
 > => {
-  const storeLayer = DrizzleEffectSquadBuilderStoresLayer.pipe(
+  const storeLayer = DrizzleSquadBuilderStoresLayer.pipe(
     Layer.provide(makeLiveDatabaseLayer(databaseUrl))
   );
 
@@ -102,9 +102,9 @@ export const makeApiLiveLayer = (
     EventStoreLayer.pipe(Layer.provide(makeLiveDatabaseLayer(databaseUrl))),
     SkillsStoreLayer.pipe(Layer.provide(makeLiveDatabaseLayer(databaseUrl))),
     AuctionStoreLayer.pipe(Layer.provide(makeLiveDatabaseLayer(databaseUrl))),
-    EffectFirecrawlConfigLiveLayer,
-    EffectFirecrawlClientLiveLayer.pipe(
-      Layer.provide(EffectFirecrawlConfigLiveLayer)
+    FirecrawlConfigServiceLiveLayer,
+    FirecrawlClientServiceLiveLayer.pipe(
+      Layer.provide(FirecrawlConfigServiceLiveLayer)
     )
   );
 
@@ -174,12 +174,12 @@ type SquadBuilderServices =
   | EventStore
   | SkillsStore
   | AuctionStore
-  | EffectSquadGroupStore
-  | EffectAccountImportStore
-  | EffectAccountRefetchStore
-  | EffectAccountSharingStore
-  | EffectFirecrawlClient
-  | EffectFirecrawlConfig
+  | SquadGroupStoreService
+  | AccountImportStoreService
+  | AccountRefetchStoreService
+  | AccountSharingStoreService
+  | FirecrawlClientService
+  | FirecrawlConfigService
   | AccountInviteTargets
   | AccountAccessInvites
   | AccountAccessInviteResponses

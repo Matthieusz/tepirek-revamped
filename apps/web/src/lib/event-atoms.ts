@@ -42,15 +42,20 @@ export const eventsAtom = appHttpApiAtom(
 
 /** Mutation atom for creating an event. */
 export const createEventAtom = appHttpApiFn(
-  (payload: {
-    readonly color?: string;
-    readonly endTime: Date;
-    readonly icon?: EventIconId;
-    readonly name: string;
-  }) =>
+  (
+    payload: {
+      readonly color?: string;
+      readonly endTime: Date;
+      readonly icon?: EventIconId;
+      readonly name: string;
+    },
+    get
+  ) =>
     Effect.gen(function* createEventEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.event.createEvent({ payload });
+      const event = yield* client.event.createEvent({ payload });
+      get.refresh(eventsAtom);
+      return event;
     })
 );
 

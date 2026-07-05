@@ -16,7 +16,7 @@ import {
   accountDisplayNameToString,
   parseAccountDisplayName,
 } from "../account-display-name.js";
-import { EffectAccountImportStore } from "../account-import/account-import-store-service.js";
+import { AccountImportStoreService } from "../account-import/account-import-store-service.js";
 import { appUserIdToString } from "../app-user-id.js";
 import { firecrawlYearMonthToString } from "../firecrawl-year-month.js";
 import {
@@ -601,14 +601,14 @@ const listOwnedAccountsWithDatabase =
       return accounts;
     });
 
-export const DrizzleEffectAccountImportStoreLayer: Layer.Layer<
-  EffectAccountImportStore,
+export const DrizzleAccountImportStoreServiceLayer: Layer.Layer<
+  AccountImportStoreService,
   never,
   EffectDatabase
 > = Layer.effect(
-  EffectAccountImportStore,
+  AccountImportStoreService,
   EffectDatabase.useSync((database) =>
-    EffectAccountImportStore.of({
+    AccountImportStoreService.of({
       createOwnedAccountFromPendingImport: namedStoreMethod(
         "AccountImportStore.createOwnedAccountFromPendingImport",
         createOwnedAccountFromPendingImportWithDatabase(database)

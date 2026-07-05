@@ -18,7 +18,7 @@ import {
   parseAccountAccessStatus,
 } from "../account-access-status.js";
 import { parseAccountDisplayName } from "../account-display-name.js";
-import { EffectAccountSharingStore } from "../account-sharing/account-sharing-store-service.js";
+import { AccountSharingStoreService } from "../account-sharing/account-sharing-store-service.js";
 import type { AppUserId } from "../app-user-id.js";
 import { appUserIdToString, parseAppUserId } from "../app-user-id.js";
 import type { MargonemAccountAccessId } from "../margonem-account-access-id.js";
@@ -956,14 +956,14 @@ const revokeAccountAccessWithDatabase =
       };
     });
 
-export const DrizzleEffectAccountSharingStoreLayer: Layer.Layer<
-  EffectAccountSharingStore,
+export const DrizzleAccountSharingStoreServiceLayer: Layer.Layer<
+  AccountSharingStoreService,
   never,
   EffectDatabase
 > = Layer.effect(
-  EffectAccountSharingStore,
+  AccountSharingStoreService,
   EffectDatabase.useSync((database) =>
-    EffectAccountSharingStore.of({
+    AccountSharingStoreService.of({
       findOwnedAccountForSharing: namedStoreMethod(
         "AccountSharingStore.findOwnedAccountForSharing",
         findOwnedAccountForSharingWithDatabase(database)

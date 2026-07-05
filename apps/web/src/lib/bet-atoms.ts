@@ -68,13 +68,18 @@ export const latestBetForCopyAtom = appHttpApiAtom(
 
 /** Mutation atom for creating a bet. */
 export const createBetAtom = appHttpApiFn(
-  (payload: {
-    readonly heroId: number;
-    readonly userIds: readonly [string, ...string[]];
-  }) =>
+  (
+    payload: {
+      readonly heroId: number;
+      readonly userIds: readonly [string, ...string[]];
+    },
+    get
+  ) =>
     Effect.gen(function* createBetEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.bet.create({ payload });
+      const bet = yield* client.bet.create({ payload });
+      get.refresh(latestBetForCopyAtom);
+      return bet;
     })
 );
 

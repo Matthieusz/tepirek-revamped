@@ -36,7 +36,11 @@ import {
 import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
 import { eventsAtom } from "@/lib/event-atoms";
-import { deleteHeroAtom, heroesAtom } from "@/lib/hero-atoms";
+import {
+  deleteHeroAtom,
+  heroesAtom,
+  optimisticHeroesAtom,
+} from "@/lib/hero-atoms";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 
@@ -53,7 +57,7 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
   const [heroToDelete, setHeroToDelete] = useState<HeroToDelete>(null);
   const [selectedEventId, setSelectedEventId] = useState("all");
   const heroesResult = useAtomValue(heroesAtom);
-  const heroes = resultValueOr(heroesResult, []);
+  const heroes = useAtomValue(optimisticHeroesAtom);
   const isPending = resultIsLoading(heroesResult);
   const events = [...resultValueOr(useAtomValue(eventsAtom), [])];
   const deleteHero = useAtomSet(deleteHeroAtom, { mode: "promise" });

@@ -2,6 +2,7 @@ import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
 import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/modules/squad-builder/schema/account-import";
 import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/modules/squad-builder/schema/account-refetch";
 import type {
+  AccountAccessGrantSummarySchema,
   AccountAccessInviteSummarySchema,
   AccountInviteTargetSchema,
   SharedMargonemAccountSummarySchema,
@@ -38,6 +39,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import { getErrorMessage } from "@/lib/errors";
 import {
   confirmOwnedAccountImportAtom,
   ownedAccountsAtom,
@@ -139,15 +141,7 @@ interface AccountRefetchPreview {
 
 type AccountRefetchPreviewApi = typeof PreviewAccountRefetchSuccess.Type;
 
-interface AccountAccessGrant {
-  readonly accessId: number;
-  readonly createdAt: Date;
-  readonly status: "pending" | "accepted";
-  readonly updatedAt: Date;
-  readonly userId: string;
-  readonly userImage: string | null;
-  readonly userName: string;
-}
+type AccountAccessGrant = typeof AccountAccessGrantSummarySchema.Type;
 
 const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
   const [debounced, setDebounced] = useState(value);
@@ -164,9 +158,6 @@ const useActorUserId = (): string => {
   const sessionResult = useAtomValue(sessionAtom);
   return sessionResult._tag === "Success" ? sessionResult.value.user.id : "";
 };
-
-const toErrorMessage = (error: unknown, fallback: string): string =>
-  error instanceof Error ? error.message : fallback;
 
 const userInitials = (name: string): string =>
   name
@@ -463,18 +454,7 @@ const AccountSharingPanel = ({
     trimmedQuery.length >= 2
       ? resultValueOr(searchResult, [] as readonly AccountInviteTarget[])
       : [];
-  const grants: readonly AccountAccessGrant[] = resultValueOr(
-    grantsResult,
-    []
-  ).map((grant) => ({
-    accessId: grant.accessId,
-    createdAt: grant.createdAt,
-    status: grant.status,
-    updatedAt: grant.updatedAt,
-    userId: grant.invitedUserId,
-    userImage: grant.invitedUserImage,
-    userName: grant.invitedUserName,
-  }));
+  const grants: readonly AccountAccessGrant[] = resultValueOr(grantsResult, []);
 
   return (
     <div className="space-y-4">
@@ -544,7 +524,7 @@ const AccountSharingPanel = ({
                         setQuery("");
                       } catch (error: unknown) {
                         toast.error(
-                          toErrorMessage(
+                          getErrorMessage(
                             error,
                             "Nie udało się wysłać zaproszenia"
                           )
@@ -594,14 +574,19 @@ const AccountSharingPanel = ({
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <Avatar size="sm">
-                    {grant.userImage ? (
-                      <AvatarImage alt={grant.userName} src={grant.userImage} />
+                    {grant.invitedUserImage ? (
+                      <AvatarImage
+                        alt={grant.invitedUserName}
+                        src={grant.invitedUserImage}
+                      />
                     ) : null}
                     <AvatarFallback>
-                      {userInitials(grant.userName)}
+                      {userInitials(grant.invitedUserName)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="truncate text-sm">{grant.userName}</span>
+                  <span className="truncate text-sm">
+                    {grant.invitedUserName}
+                  </span>
                   <Badge
                     variant={
                       grant.status === "accepted" ? "default" : "secondary"
@@ -611,7 +596,7 @@ const AccountSharingPanel = ({
                   </Badge>
                 </div>
                 <Button
-                  aria-label={`Cofnij dostęp dla ${grant.userName}`}
+                  aria-label={`Cofnij dostęp dla ${grant.invitedUserName}`}
                   disabled={isRevoking}
                   onClick={() => {
                     const revoke = async () => {
@@ -628,7 +613,7 @@ const AccountSharingPanel = ({
                         );
                       } catch (error: unknown) {
                         toast.error(
-                          toErrorMessage(error, "Nie udało się cofnąć dostępu")
+                          getErrorMessage(error, "Nie udało się cofnąć dostępu")
                         );
                       } finally {
                         setIsRevoking(false);
@@ -781,7 +766,7 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
                   setRefetchPreview(toAccountRefetchPreview(response));
                 } catch (error: unknown) {
                   toast.error(
-                    toErrorMessage(
+                    getErrorMessage(
                       error,
                       "Nie udało się przygotować odświeżenia"
                     )
@@ -911,7 +896,7 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
                       setRefetchPreview(null);
                     } catch (error: unknown) {
                       toast.error(
-                        toErrorMessage(
+                        getErrorMessage(
                           error,
                           "Nie udało się zastosować odświeżenia"
                         )
@@ -1101,7 +1086,7 @@ const InviteInboxPanel = () => {
                         toast.success("Konto zostało zaakceptowane.");
                       } catch (error: unknown) {
                         toast.error(
-                          toErrorMessage(
+                          getErrorMessage(
                             error,
                             "Nie udało się odpowiedzieć na zaproszenie"
                           )
@@ -1131,7 +1116,7 @@ const InviteInboxPanel = () => {
                         toast.success("Zaproszenie odrzucone.");
                       } catch (error: unknown) {
                         toast.error(
-                          toErrorMessage(
+                          getErrorMessage(
                             error,
                             "Nie udało się odpowiedzieć na zaproszenie"
                           )
@@ -1302,10 +1287,7 @@ export default function SquadBuilderAccountsPage() {
                 errorTag: item.error._tag,
                 inputUrl: item.inputUrl,
                 lineNumber: item.lineNumber,
-                message:
-                  "message" in item.error
-                    ? String(item.error.message)
-                    : item.error._tag,
+                message: getErrorMessage(item.error),
                 status: "error" as const,
               }
         );
@@ -1318,7 +1300,7 @@ export default function SquadBuilderAccountsPage() {
         setPreviewItems(items);
         setDisplayNames(initialNames);
       } catch (error: unknown) {
-        toast.error(toErrorMessage(error, "Nie udało się sprawdzić kont"));
+        toast.error(getErrorMessage(error, "Nie udało się sprawdzić kont"));
       } finally {
         setIsPreviewPending(false);
       }
@@ -1359,7 +1341,7 @@ export default function SquadBuilderAccountsPage() {
         );
         toast.success("Konto zostało zapisane");
       } catch (error: unknown) {
-        toast.error(toErrorMessage(error, "Nie udało się zapisać konta"));
+        toast.error(getErrorMessage(error, "Nie udało się zapisać konta"));
       } finally {
         setIsConfirming(false);
         setConfirmingId(null);

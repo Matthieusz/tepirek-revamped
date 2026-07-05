@@ -6,12 +6,13 @@ export const effectSchemaValidator =
     schema: Schema.Decoder<unknown, never>
   ): ((input: { readonly value: unknown }) => string | undefined) =>
   ({ value }) => {
+    let errorMessage: string | undefined;
     try {
       Schema.decodeUnknownSync(schema)(value);
-      return;
     } catch {
-      return "Nieprawidłowe dane formularza";
+      errorMessage = "Nieprawidłowe dane formularza";
     }
+    return errorMessage;
   };
 
 /** Converts TanStack Form validation errors to renderable text. */

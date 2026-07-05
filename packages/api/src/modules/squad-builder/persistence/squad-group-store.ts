@@ -106,7 +106,7 @@ import type {
   SquadGroupVisibilityChange,
   UpsertSquadGroupEditorInviteInput,
 } from "../squad-groups/squad-group-store.js";
-import { EffectSquadGroupStore } from "../squad-groups/squad-group-store.js";
+import { SquadGroupStoreService } from "../squad-groups/squad-group-store.js";
 import { parseSquadId } from "../squad-id.js";
 import {
   parseSquadGroupName,
@@ -1862,14 +1862,14 @@ const setSquadGroupVisibilityWithDatabase =
       return { groupId, updatedAt: updated.updatedAt, visibility };
     });
 
-export const DrizzleEffectSquadGroupStoreLayer: Layer.Layer<
-  EffectSquadGroupStore,
+export const DrizzleSquadGroupStoreServiceLayer: Layer.Layer<
+  SquadGroupStoreService,
   never,
   EffectDatabase
 > = Layer.effect(
-  EffectSquadGroupStore,
+  SquadGroupStoreService,
   EffectDatabase.useSync((database) =>
-    EffectSquadGroupStore.of({
+    SquadGroupStoreService.of({
       authorizeSquadGroupOwner: namedStoreMethod(
         "SquadGroupStore.authorizeSquadGroupOwner",
         authorizeSquadGroupOwnerWithDatabase(database)

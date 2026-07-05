@@ -1,8 +1,8 @@
 import * as Context from "effect/Context";
 
-import type { EffectAccountRefetchStoreShape } from "../squad-groups/squad-group-store.js";
+import type { AccountRefetchStoreServiceShape } from "../squad-groups/squad-group-store.js";
 
-export class EffectAccountRefetchStore extends Context.Service<
-  EffectAccountRefetchStore,
-  EffectAccountRefetchStoreShape
->()("@tepirek-revamped/api/squad-builder/EffectAccountRefetchStore") {}
+export class AccountRefetchStoreService extends Context.Service<
+  AccountRefetchStoreService,
+  AccountRefetchStoreServiceShape
+>()("@tepirek-revamped/api/squad-builder/AccountRefetchStoreService") {}

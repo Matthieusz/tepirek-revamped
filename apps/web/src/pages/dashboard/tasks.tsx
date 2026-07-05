@@ -12,10 +12,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import { resultIsLoading } from "@/lib/effect-atom-result";
 import {
   createTodoAtom,
   deleteTodoAtom,
+  optimisticTodosAtom,
   todosAtom,
   toggleTodoAtom,
 } from "@/lib/todo-atoms";
@@ -29,7 +30,7 @@ export default function TasksPage({ session }: TasksPageProps) {
   const [newTodoText, setNewTodoText] = useState("");
   const [isMutating, setIsMutating] = useState(false);
   const todosResult = useAtomValue(todosAtom);
-  const todosData = resultValueOr(todosResult, []);
+  const todosData = useAtomValue(optimisticTodosAtom);
   const todosIsLoading = resultIsLoading(todosResult);
   const createTodo = useAtomSet(createTodoAtom, { mode: "promise" });
   const toggleTodo = useAtomSet(toggleTodoAtom, { mode: "promise" });

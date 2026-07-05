@@ -1,3 +1,4 @@
+import { Atom } from "@effect-atom/atom-react";
 import type {
   ConfirmOwnedAccountImportPayload,
   PreviewMargonemProfileImportPayload,
@@ -20,9 +21,20 @@ type PreviewMargonemProfileImportInput =
 type PreviewOwnedAccountImportsInput =
   typeof PreviewOwnedAccountImportsPayload.Type;
 
-/** Resource atom for owned accounts. Not available in HttpApi yet. */
-export const ownedAccountsAtom = (_payload: ActorInput) =>
-  appHttpApiAtom(Effect.succeed([]));
+const ownedAccountsByActorAtom = Atom.family((actorUserId: string) =>
+  appHttpApiAtom(
+    Effect.gen(function* listOwnedAccountsEffect() {
+      const client = yield* AppHttpApiClient;
+      return yield* client.squadBuilderAccountImport.listOwnedAccounts({
+        payload: { actorUserId },
+      });
+    })
+  )
+);
+
+/** Resource atom for owned accounts. */
+export const ownedAccountsAtom = (payload: ActorInput) =>
+  ownedAccountsByActorAtom(payload.actorUserId);
 
 /** Mutation atom for previewing a profile import. */
 export const previewMargonemProfileImportAtom = appHttpApiFn(
@@ -52,11 +64,14 @@ export const previewOwnedAccountImportsAtom = appHttpApiFn(
 
 /** Mutation atom for confirming an owned account import. */
 export const confirmOwnedAccountImportAtom = appHttpApiFn(
-  (payload: ConfirmOwnedAccountImportInput) =>
+  (payload: ConfirmOwnedAccountImportInput, get) =>
     Effect.gen(function* confirmOwnedAccountImportEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.squadBuilderAccountImport.confirmOwnedAccountImport({
-        payload,
-      });
+      const result =
+        yield* client.squadBuilderAccountImport.confirmOwnedAccountImport({
+          payload,
+        });
+      get.refresh(ownedAccountsAtom({ actorUserId: payload.actorUserId }));
+      return result;
     })
 );

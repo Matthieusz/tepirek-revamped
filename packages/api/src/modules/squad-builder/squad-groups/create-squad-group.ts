@@ -1,11 +1,14 @@
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
+import { serviceUse } from "../../../effect/service-use.js";
 import type { AppUserId } from "../app-user-id.js";
 import { isError } from "../result.js";
 import { parseSquadGroupName } from "../squad-name.js";
 import type { InvalidSquadGroupName } from "../squad-name.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
-import { EffectSquadGroupStore } from "./squad-group-store.js";
+import { SquadGroupStoreService } from "./squad-group-store.js";
 
 /** Input for creating an empty squad group. */
 export interface CreateSquadGroupInput {
@@ -30,7 +33,7 @@ export class CreateSquadGroup {
       return yield* name.error;
     }
 
-    return yield* EffectSquadGroupStore.use((store) =>
+    return yield* SquadGroupStoreService.use((store) =>
       store.createSquadGroup({
         actorUserId: input.actorUserId,
         name: name.value,
@@ -38,3 +41,19 @@ export class CreateSquadGroup {
     );
   });
 }
+
+export interface Interface {
+  readonly create: CreateSquadGroup["create"];
+}
+
+// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
+export class Service extends Context.Service<Service, Interface>()(
+  "@tepirek-revamped/api/squad-builder/CreateSquadGroupService"
+) {}
+
+export const use = serviceUse(Service);
+
+export const layer = Layer.sync(Service, () => {
+  const service = new CreateSquadGroup();
+  return { create: service.create };
+});

@@ -3,13 +3,13 @@ import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 
 import { parseAppUserId } from "../app-user-id.js";
-import { EffectFirecrawlClient } from "../effect-firecrawl-client.js";
+import { FirecrawlClientService } from "../firecrawl-client-service.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
-import { EffectFirecrawlConfig } from "../firecrawl-config.js";
+import { FirecrawlConfigService } from "../firecrawl-config.js";
 import { isOk, ok } from "../result.js";
-import { makeEffectAccountImportStoreTestService } from "../squad-groups/effect-squad-group-store.test-support.js";
-import { EffectAccountImportStore } from "./account-import-store-service.js";
-import { EffectPreviewMargonemProfileImport } from "./preview-margonem-profile-import-service.js";
+import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
+import { AccountImportStoreService } from "./account-import-store-service.js";
+import { PreviewMargonemProfileImportService } from "./preview-margonem-profile-import-service.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-preview-user");
@@ -29,62 +29,59 @@ const htmlWithJarunaCharacter = `
   </li>
 `;
 
-it.effect(
-  "previews an available Margonem profile through Effect services",
-  () => {
-    const actorUserId = parseTestUserId();
-    const succeededRequestIds: number[] = [];
-    const firecrawl: FirecrawlClient = {
-      scrapeProfileHtml: () =>
-        Promise.resolve(
-          ok({
-            html: htmlWithJarunaCharacter,
-            metadata: {
-              cacheState: "hit",
-              creditsUsed: 1,
-              statusCode: 200,
-            },
-          })
-        ),
-    };
-    const store = makeEffectAccountImportStoreTestService({
-      findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),
-      markRequestSucceeded: (input) => {
-        succeededRequestIds.push(input.requestId);
-        return Effect.void;
-      },
-      reserveRequest: (input) =>
-        Effect.succeed({
-          budgetState: {
-            monthlyRequestBudget: input.monthlyRequestBudget,
-            remainingRequests: input.monthlyRequestBudget - 1,
-            usedRequests: 1,
-            yearMonth: input.yearMonth,
+it.effect("previews an available Margonem profile through services", () => {
+  const actorUserId = parseTestUserId();
+  const succeededRequestIds: number[] = [];
+  const firecrawl: FirecrawlClient = {
+    scrapeProfileHtml: () =>
+      Promise.resolve(
+        ok({
+          html: htmlWithJarunaCharacter,
+          metadata: {
+            cacheState: "hit",
+            creditsUsed: 1,
+            statusCode: 200,
           },
-          requestId: 123,
-        }),
-    });
-    const service = new EffectPreviewMargonemProfileImport();
-
-    return Effect.gen(function* previewEffect() {
-      const preview = yield* service.preview({
-        actorUserId,
-        profileUrl: "https://www.margonem.pl/profile/view,7298897",
-      });
-
-      expect(preview).toMatchObject({
-        generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
-        suggestedAccountName: "informati",
-      });
-      expect(preview.jarunaCharacters).toHaveLength(1);
-      expect(succeededRequestIds).toEqual([123]);
-    }).pipe(
-      Effect.provideService(EffectFirecrawlConfig)({
-        apiKey: Redacted.make("test-key"),
-        monthlyRequestBudget: 900,
+        })
+      ),
+  };
+  const store = makeAccountImportStoreServiceTestService({
+    findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),
+    markRequestSucceeded: (input) => {
+      succeededRequestIds.push(input.requestId);
+      return Effect.void;
+    },
+    reserveRequest: (input) =>
+      Effect.succeed({
+        budgetState: {
+          monthlyRequestBudget: input.monthlyRequestBudget,
+          remainingRequests: input.monthlyRequestBudget - 1,
+          usedRequests: 1,
+          yearMonth: input.yearMonth,
+        },
+        requestId: 123,
       }),
-      Effect.provideService(EffectFirecrawlClient)(firecrawl),
-      Effect.provideService(EffectAccountImportStore)(store)
-    );
-  }
-);
+  });
+  const service = new PreviewMargonemProfileImportService();
+
+  return Effect.gen(function* previewEffect() {
+    const preview = yield* service.preview({
+      actorUserId,
+      profileUrl: "https://www.margonem.pl/profile/view,7298897",
+    });
+
+    expect(preview).toMatchObject({
+      generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
+      suggestedAccountName: "informati",
+    });
+    expect(preview.jarunaCharacters).toHaveLength(1);
+    expect(succeededRequestIds).toEqual([123]);
+  }).pipe(
+    Effect.provideService(FirecrawlConfigService)({
+      apiKey: Redacted.make("test-key"),
+      monthlyRequestBudget: 900,
+    }),
+    Effect.provideService(FirecrawlClientService)(firecrawl),
+    Effect.provideService(AccountImportStoreService)(store)
+  );
+});

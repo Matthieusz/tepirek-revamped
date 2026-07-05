@@ -1,5 +1,9 @@
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
+import { serviceUse } from "../../../effect/service-use.js";
+import { systemClock } from "../account-import/preview-margonem-profile-import.js";
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { AppUserId } from "../app-user-id.js";
 import { err, isError, ok } from "../result.js";
@@ -25,7 +29,7 @@ import type {
   SquadGroupSharingStore,
   SquadGroupStore,
 } from "./squad-group-store.js";
-import { EffectSquadGroupStore } from "./squad-group-store.js";
+import { SquadGroupStoreService } from "./squad-group-store.js";
 
 export interface SharedSquadCharactersInput {
   readonly squadId: SquadId;
@@ -107,7 +111,7 @@ export class SaveSharedSquadGroupCharacters {
   ): Promise<Result<SquadGroupDetail, SharedSquadGroupSaveError>> {
     if (this.sharingStore === undefined || this.squadStore === undefined) {
       throw new Error(
-        "Legacy save requires sharing and squad stores; use saveEffect for Effect runtime"
+        "Legacy save requires sharing and squad stores; use saveWithStoreService for service runtime"
       );
     }
 
@@ -201,14 +205,14 @@ export class SaveSharedSquadGroupCharacters {
     return ok(result.value);
   }
 
-  readonly saveEffect = Effect.fn("SquadGroups.saveSharedCharacters")(
+  readonly saveWithStoreService = Effect.fn("SquadGroups.saveSharedCharacters")(
     function* saveSharedSquadGroupCharacters(
       this: SaveSharedSquadGroupCharacters,
       input: SaveSharedSquadGroupCharactersInput
     ) {
       const { clock } = this;
 
-      const detail = yield* EffectSquadGroupStore.use((store) =>
+      const detail = yield* SquadGroupStoreService.use((store) =>
         store.getSquadGroupDetail({
           actorUserId: input.actorUserId,
           groupId: input.groupId,
@@ -239,7 +243,7 @@ export class SaveSharedSquadGroupCharacters {
         return yield* new EditorCannotChangeSquadStructure();
       }
 
-      const availableCharacters = yield* EffectSquadGroupStore.use((store) =>
+      const availableCharacters = yield* SquadGroupStoreService.use((store) =>
         store.listAvailableCharactersForOwner({
           ownerUserId: detail.ownerUserId,
         })
@@ -268,7 +272,7 @@ export class SaveSharedSquadGroupCharacters {
         return yield* Effect.fail(validation.error);
       }
 
-      return yield* EffectSquadGroupStore.use((store) =>
+      return yield* SquadGroupStoreService.use((store) =>
         store.saveSharedSquadGroupCharacters({
           actorUserId: input.actorUserId,
           groupId: input.groupId,
@@ -285,3 +289,23 @@ export class SaveSharedSquadGroupCharacters {
     }
   );
 }
+
+export interface Interface {
+  readonly saveWithStoreService: SaveSharedSquadGroupCharacters["saveWithStoreService"];
+}
+
+// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
+export class Service extends Context.Service<Service, Interface>()(
+  "@tepirek-revamped/api/squad-builder/SaveSharedSquadGroupCharactersService"
+) {}
+
+export const use = serviceUse(Service);
+
+export const layer = Layer.sync(Service, () => {
+  const service = new SaveSharedSquadGroupCharacters(
+    undefined,
+    undefined,
+    systemClock
+  );
+  return { saveWithStoreService: service.saveWithStoreService };
+});

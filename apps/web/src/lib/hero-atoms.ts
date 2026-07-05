@@ -39,15 +39,20 @@ export const heroesByEventAtom = (eventId: number) =>
 
 /** Mutation atom for creating a hero. */
 export const createHeroAtom = appHttpApiFn(
-  (payload: {
-    readonly eventId: number;
-    readonly image?: string;
-    readonly level?: number;
-    readonly name: string;
-  }) =>
+  (
+    payload: {
+      readonly eventId: number;
+      readonly image?: string;
+      readonly level?: number;
+      readonly name: string;
+    },
+    get
+  ) =>
     Effect.gen(function* createHeroEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.heroes.createHero({ payload });
+      const hero = yield* client.heroes.createHero({ payload });
+      get.refresh(heroesAtom);
+      return hero;
     })
 );
 

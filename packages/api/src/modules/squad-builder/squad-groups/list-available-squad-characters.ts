@@ -7,7 +7,7 @@ import type {
   ActorCannotViewSquadGroup,
   SquadGroupNotFound,
 } from "./squad-group-store.js";
-import { EffectSquadGroupStore } from "./squad-group-store.js";
+import { SquadGroupStoreService } from "./squad-group-store.js";
 
 /** Expected failures returned by listing available squad characters. */
 export type ListAvailableSquadCharactersError =
@@ -23,11 +23,11 @@ export class ListAvailableSquadCharacters {
       readonly actorUserId: AppUserId;
       readonly groupId: SquadGroupId;
     }) {
-      const group = yield* EffectSquadGroupStore.use((store) =>
+      const group = yield* SquadGroupStoreService.use((store) =>
         store.getSquadGroupDetail(input)
       );
 
-      return yield* EffectSquadGroupStore.use((store) =>
+      return yield* SquadGroupStoreService.use((store) =>
         store.listAvailableCharactersForOwner({
           ownerUserId: group.ownerUserId,
         })
