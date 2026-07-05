@@ -173,18 +173,21 @@ const parseJarunaCharacterRow = (
   });
 };
 
+const runRow = (profileId: MargonemProfileId, rowHtml: string) =>
+  Effect.runSyncExit(parseJarunaCharacterRow(profileId, rowHtml));
+
 /** Parse Firecrawl HTML into a Jaruna-only profile preview. */
 export const parseMargonemProfileHtml = ({
   html,
   profileId,
-}: ParseMargonemProfileHtmlInput): Outcome<
+}: ParseMargonemProfileHtmlInput): Effect.Effect<
   ParsedMargonemProfile,
   ParseMargonemProfileHtmlError
 > => {
   const suggestedAccountName = extractProfileName(html);
 
   if (suggestedAccountName === undefined) {
-    return fail({ _tag: "MargonemProfileNameNotFound", profileId });
+    return Effect.fail({ _tag: "MargonemProfileNameNotFound", profileId });
   }
 
   const rowMatches = Array.from(
@@ -193,16 +196,16 @@ export const parseMargonemProfileHtml = ({
   );
 
   if (rowMatches.length === 0) {
-    return fail({ _tag: "MargonemCharacterRowsNotFound", profileId });
+    return Effect.fail({ _tag: "MargonemCharacterRowsNotFound", profileId });
   }
 
   const jarunaCharacters: MargonemCharacterPreview[] = [];
 
   for (const rowHtml of rowMatches) {
-    const parsedCharacter = parseJarunaCharacterRow(profileId, rowHtml);
+    const parsedCharacter = runRow(profileId, rowHtml);
 
-    if (isFailure(parsedCharacter)) {
-      return fail(parsedCharacter.error);
+    if (parsedCharacter._tag === "Failure") {
+      return Effect.fail(parsedCharacter.cause);
     }
 
     if (parsedCharacter.value !== null) {
@@ -210,7 +213,7 @@ export const parseMargonemProfileHtml = ({
     }
   }
 
-  return success({
+  return Effect.succeed({
     jarunaCharacters,
     profileId,
     suggestedAccountName,
