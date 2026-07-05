@@ -6,7 +6,6 @@ import { parseAppUserId } from "../app-user-id.js";
 import { FirecrawlClientService } from "../firecrawl-client-service.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
 import { FirecrawlConfigService } from "../firecrawl-config.js";
-import { success } from "../outcome.js";
 import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import { preview } from "./preview-margonem-profile-import-service.js";
@@ -27,16 +26,14 @@ it.effect("previews an available Margonem profile through services", () => {
   const succeededRequestIds: number[] = [];
   const firecrawl: FirecrawlClient = {
     scrapeProfileHtml: () =>
-      Promise.resolve(
-        success({
-          html: htmlWithJarunaCharacter,
-          metadata: {
-            cacheState: "hit",
-            creditsUsed: 1,
-            statusCode: 200,
-          },
-        })
-      ),
+      Promise.resolve({
+        html: htmlWithJarunaCharacter,
+        metadata: {
+          cacheState: "hit",
+          creditsUsed: 1,
+          statusCode: 200,
+        },
+      }),
   };
   const store = makeAccountImportStoreServiceTestService({
     findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),

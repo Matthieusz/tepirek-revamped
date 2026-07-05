@@ -6,7 +6,6 @@ import { parseAppUserId } from "../app-user-id.js";
 import { FirecrawlClientService } from "../firecrawl-client-service.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
 import { FirecrawlConfigService } from "../firecrawl-config.js";
-import { success } from "../outcome.js";
 import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import { preview } from "./preview-owned-account-imports-service.js";
@@ -28,16 +27,14 @@ it.effect(
     const actorUserId = parseTestUserId();
     const firecrawl: FirecrawlClient = {
       scrapeProfileHtml: () =>
-        Promise.resolve(
-          success({
-            html: htmlWithJarunaCharacter,
-            metadata: {
-              cacheState: "hit",
-              creditsUsed: 1,
-              statusCode: 200,
-            },
-          })
-        ),
+        Promise.resolve({
+          html: htmlWithJarunaCharacter,
+          metadata: {
+            cacheState: "hit",
+            creditsUsed: 1,
+            statusCode: 200,
+          },
+        }),
     };
     const store = makeAccountImportStoreServiceTestService({
       createPendingImport: (input) =>

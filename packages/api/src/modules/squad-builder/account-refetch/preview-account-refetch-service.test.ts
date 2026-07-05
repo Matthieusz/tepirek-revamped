@@ -7,7 +7,6 @@ import { FirecrawlClientService } from "../firecrawl-client-service.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
 import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import { FirecrawlConfigService } from "../firecrawl-config.js";
-import { success } from "../outcome.js";
 import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import { preview } from "./preview-account-refetch-service.js";
@@ -28,16 +27,14 @@ it.effect("previews account refetch and stores the pending diff", () => {
   const createdPendingIds: number[] = [];
   const firecrawl: FirecrawlClient = {
     scrapeProfileHtml: () =>
-      Promise.resolve(
-        success({
-          html: htmlWithUpdatedJarunaCharacter,
-          metadata: {
-            cacheState: "miss",
-            creditsUsed: 1,
-            statusCode: 200,
-          },
-        })
-      ),
+      Promise.resolve({
+        html: htmlWithUpdatedJarunaCharacter,
+        metadata: {
+          cacheState: "miss",
+          creditsUsed: 1,
+          statusCode: 200,
+        },
+      }),
   };
   const store = makeAccountRefetchStoreServiceTestService({
     createPendingRefetch: (input) => {
