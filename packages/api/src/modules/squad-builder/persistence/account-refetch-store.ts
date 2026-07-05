@@ -48,7 +48,6 @@ import {
   parsePositiveLevel,
   profileIdToNumber,
 } from "../margonem-profile-id.js";
-import { isFailure } from "../outcome.js";
 import {
   parsePendingMargonemAccountRefetchId,
   pendingRefetchIdToNumber,
@@ -265,11 +264,9 @@ const getAccountForRefetchWithDatabase =
         .groupBy(margonemCharacter.id);
       const characterRows = yield* persistenceQuery(operation, characterSelect);
 
-      const displayName = parseAccountDisplayName(account.displayName);
-
-      if (isFailure(displayName)) {
-        return yield* failPersistence(operation, displayName.error);
-      }
+      const displayName = yield* parseAccountDisplayName(
+        account.displayName
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
       const profileId = yield* parseMargonemProfileId(account.profileId).pipe(
         Effect.catch((error) => failPersistence(operation, error))
@@ -287,17 +284,13 @@ const getAccountForRefetchWithDatabase =
           Effect.catch((error) => failPersistence(operation, error))
         );
 
-        const profession = parseMargonemProfession(row.profession);
+        const profession = yield* parseMargonemProfession(row.profession).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
-        if (isFailure(profession)) {
-          return yield* failPersistence(operation, profession.error);
-        }
-
-        const world = parseMargonemWorld(row.world);
-
-        if (isFailure(world)) {
-          return yield* failPersistence(operation, world.error);
-        }
+        const world = yield* parseMargonemWorld(row.world).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
         currentCharacters.push({
           affectedSquadCount: row.affectedSquadCount ?? 0,
@@ -306,15 +299,15 @@ const getAccountForRefetchWithDatabase =
           level,
           margonemCharacterId,
           name: row.name,
-          profession: profession.value,
-          world: world.value,
+          profession,
+          world,
         });
       }
 
       return {
         accountId,
         currentCharacters,
-        displayName: displayName.value,
+        displayName,
         profileId,
       };
     });
@@ -469,25 +462,21 @@ const findPendingRefetchForApplyWithDatabase =
           Effect.catch((error) => failPersistence(operation, error))
         );
 
-        const profession = parseMargonemProfession(row.profession);
+        const profession = yield* parseMargonemProfession(row.profession).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
-        if (isFailure(profession)) {
-          return yield* failPersistence(operation, profession.error);
-        }
-
-        const world = parseMargonemWorld(row.world);
-
-        if (isFailure(world)) {
-          return yield* failPersistence(operation, world.error);
-        }
+        const world = yield* parseMargonemWorld(row.world).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
         latestCharacters.push({
           avatarUrl: row.avatarUrl,
           characterId,
           level,
           name: row.name,
-          profession: profession.value,
-          world: world.value,
+          profession,
+          world,
         });
       }
 

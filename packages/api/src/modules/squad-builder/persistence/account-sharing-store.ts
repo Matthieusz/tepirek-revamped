@@ -49,7 +49,6 @@ import {
 } from "../margonem-account-id.js";
 import { parseMargonemProfileId } from "../margonem-profile-id.js";
 import { toMargonemProfileUrl } from "../margonem-profile-url.js";
-import { isFailure } from "../outcome.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
 import {
   AccountAccessInviteNotFound,
@@ -103,11 +102,9 @@ const listOwnedAccountsWithDatabase =
       const accounts: OwnedMargonemAccountSummary[] = [];
 
       for (const row of rows) {
-        const displayName = parseAccountDisplayName(row.displayName);
-
-        if (isFailure(displayName)) {
-          return yield* failPersistence(operation, displayName.error);
-        }
+        const displayName = yield* parseAccountDisplayName(
+          row.displayName
+        ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
         const profileId = yield* parseMargonemProfileId(row.profileId).pipe(
           Effect.catch((error) => failPersistence(operation, error))
@@ -116,7 +113,7 @@ const listOwnedAccountsWithDatabase =
         accounts.push({
           accountId: row.accountId,
           characterCount: row.characterCount ?? 0,
-          displayName: displayName.value,
+          displayName,
           generatedProfileUrl: toMargonemProfileUrl(profileId),
           lastFetchedAt: row.lastFetchedAt ?? row.createdAt,
           profileId,
@@ -210,11 +207,9 @@ const findOwnedAccountForSharingWithDatabase =
         return yield* new MargonemAccountNotFound();
       }
 
-      const displayName = parseAccountDisplayName(account.displayName);
-
-      if (isFailure(displayName)) {
-        return yield* failPersistence(operation, displayName.error);
-      }
+      const displayName = yield* parseAccountDisplayName(
+        account.displayName
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
       const ownerUserId = yield* parseAppUserId(account.ownerUserId).pipe(
         Effect.catch((error) => failPersistence(operation, error))
@@ -226,7 +221,7 @@ const findOwnedAccountForSharingWithDatabase =
 
       return {
         accountId,
-        displayName: displayName.value,
+        displayName,
         ownerUserId,
         profileId,
       };
@@ -271,19 +266,13 @@ const loadAccountAccessInviteSummaryWithDatabase =
         return yield* new AccountAccessInviteNotFound();
       }
 
-      const status = parseAccountAccessStatus(row.status);
-
-      if (isFailure(status)) {
-        return yield* failPersistence(operation, status.error);
-      }
-
-      const accountDisplayName = parseAccountDisplayName(
-        row.accountDisplayName
+      const status = yield* parseAccountAccessStatus(row.status).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
       );
 
-      if (isFailure(accountDisplayName)) {
-        return yield* failPersistence(operation, accountDisplayName.error);
-      }
+      const accountDisplayName = yield* parseAccountDisplayName(
+        row.accountDisplayName
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
       const accountId = yield* parseMargonemAccountId(row.accountId).pipe(
         Effect.catch((error) => failPersistence(operation, error))
@@ -304,7 +293,7 @@ const loadAccountAccessInviteSummaryWithDatabase =
 
       return {
         accessId,
-        accountDisplayName: accountDisplayName.value,
+        accountDisplayName,
         accountId,
         createdAt: row.createdAt,
         generatedProfileUrl: toMargonemProfileUrl(profileId),
@@ -312,7 +301,7 @@ const loadAccountAccessInviteSummaryWithDatabase =
         ownerUserId,
         ownerUserImage: row.ownerImage,
         ownerUserName: row.ownerName,
-        status: status.value,
+        status,
         updatedAt: row.updatedAt,
       };
     });
@@ -426,16 +415,14 @@ const upsertAccountAccessInviteWithDatabase =
             return inserted.id;
           }
 
-          const status = parseAccountAccessStatus(existing.status);
+          const status = yield* parseAccountAccessStatus(existing.status).pipe(
+            Effect.catch((error) => failPersistence(operation, error))
+          );
 
-          if (isFailure(status)) {
-            return yield* failPersistence(operation, status.error);
-          }
-
-          if (!canTransitionAccountAccess(status.value, "pending")) {
+          if (!canTransitionAccountAccess(status, "pending")) {
             return new AccountAccessTransitionNotAllowed({
               attempted: "pending",
-              currentStatus: status.value,
+              currentStatus: status,
             });
           }
 
@@ -573,11 +560,9 @@ const listSharedAccountsWithDatabase =
           Effect.catch((error) => failPersistence(operation, error))
         );
 
-        const displayName = parseAccountDisplayName(row.displayName);
-
-        if (isFailure(displayName)) {
-          return yield* failPersistence(operation, displayName.error);
-        }
+        const displayName = yield* parseAccountDisplayName(
+          row.displayName
+        ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
         const profileId = yield* parseMargonemProfileId(row.profileId).pipe(
           Effect.catch((error) => failPersistence(operation, error))
@@ -590,7 +575,7 @@ const listSharedAccountsWithDatabase =
         accounts.push({
           accountId,
           characterCount: row.characterCount ?? 0,
-          displayName: displayName.value,
+          displayName,
           generatedProfileUrl: toMargonemProfileUrl(profileId),
           lastFetchedAt: row.lastFetchedAt ?? row.createdAt,
           ownerUserId,
@@ -642,16 +627,14 @@ const listAccountAccessGrantsWithDatabase =
       const grants: AccountAccessGrantSummary[] = [];
 
       for (const row of rows) {
-        const status = parseAccountAccessStatus(row.status);
+        const status = yield* parseAccountAccessStatus(row.status).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
-        if (isFailure(status)) {
-          return yield* failPersistence(operation, status.error);
-        }
-
-        if (status.value !== "pending" && status.value !== "accepted") {
+        if (status !== "pending" && status !== "accepted") {
           return yield* failPersistence(
             operation,
-            new Error(`Unexpected account access status: ${status.value}`)
+            new Error(`Unexpected account access status: ${status}`)
           );
         }
 
@@ -670,7 +653,7 @@ const listAccountAccessGrantsWithDatabase =
           invitedUserId,
           invitedUserImage: row.image,
           invitedUserName: row.name,
-          status: status.value,
+          status,
           updatedAt: row.updatedAt,
         });
       }
@@ -718,19 +701,17 @@ const respondToAccountAccessInviteWithDatabase =
             return new ActorIsNotInviteRecipient();
           }
 
-          const status = parseAccountAccessStatus(existing.status);
-
-          if (isFailure(status)) {
-            return yield* failPersistence(operation, status.error);
-          }
+          const status = yield* parseAccountAccessStatus(existing.status).pipe(
+            Effect.catch((error) => failPersistence(operation, error))
+          );
 
           const nextStatus: AccountAccessStatus =
             response === "accept" ? "accepted" : "declined";
 
-          if (!canTransitionAccountAccess(status.value, nextStatus)) {
+          if (!canTransitionAccountAccess(status, nextStatus)) {
             return new AccountAccessTransitionNotAllowed({
               attempted: nextStatus,
-              currentStatus: status.value,
+              currentStatus: status,
             });
           }
 
@@ -818,16 +799,14 @@ const revokeAccountAccessWithDatabase =
             return new ActorDoesNotOwnMargonemAccount();
           }
 
-          const status = parseAccountAccessStatus(access.status);
+          const status = yield* parseAccountAccessStatus(access.status).pipe(
+            Effect.catch((error) => failPersistence(operation, error))
+          );
 
-          if (isFailure(status)) {
-            return yield* failPersistence(operation, status.error);
-          }
-
-          if (!canTransitionAccountAccess(status.value, "revoked")) {
+          if (!canTransitionAccountAccess(status, "revoked")) {
             return new AccountAccessTransitionNotAllowed({
               attempted: "revoked",
-              currentStatus: status.value,
+              currentStatus: status,
             });
           }
 
@@ -840,7 +819,7 @@ const revokeAccountAccessWithDatabase =
 
           let removedSquadCharacterCount = 0;
 
-          if (status.value === "accepted") {
+          if (status === "accepted") {
             const characterSelect = tx
               .select({ id: margonemCharacter.id })
               .from(margonemCharacter)

@@ -48,7 +48,6 @@ import {
   profileIdToNumber,
 } from "../margonem-profile-id.js";
 import { toMargonemProfileUrl } from "../margonem-profile-url.js";
-import { isFailure } from "../outcome.js";
 import { pendingImportIdToNumber } from "../pending-margonem-account-import-id.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
 import { PendingMargonemAccountImportNotFound } from "../squad-groups/squad-group-errors.js";
@@ -391,25 +390,21 @@ const findPendingImportForConfirmationWithDatabase =
           Effect.catch((error) => failPersistence(operation, error))
         );
 
-        const profession = parseMargonemProfession(row.profession);
+        const profession = yield* parseMargonemProfession(row.profession).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
-        if (isFailure(profession)) {
-          return yield* failPersistence(operation, profession.error);
-        }
-
-        const world = parseMargonemWorld(row.world);
-
-        if (isFailure(world)) {
-          return yield* failPersistence(operation, world.error);
-        }
+        const world = yield* parseMargonemWorld(row.world).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
         jarunaCharacters.push({
           avatarUrl: row.avatarUrl,
           characterId,
           level,
           name: row.name,
-          profession: profession.value,
-          world: world.value,
+          profession,
+          world,
         });
       }
 
@@ -570,11 +565,9 @@ const listOwnedAccountsWithDatabase =
       const accounts: OwnedMargonemAccountSummary[] = [];
 
       for (const row of rows) {
-        const displayName = parseAccountDisplayName(row.displayName);
-
-        if (isFailure(displayName)) {
-          return yield* failPersistence(operation, displayName.error);
-        }
+        const displayName = yield* parseAccountDisplayName(
+          row.displayName
+        ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
         const profileId = yield* parseMargonemProfileId(row.profileId).pipe(
           Effect.catch((error) => failPersistence(operation, error))
@@ -583,7 +576,7 @@ const listOwnedAccountsWithDatabase =
         accounts.push({
           accountId: row.accountId,
           characterCount: row.characterCount ?? 0,
-          displayName: displayName.value,
+          displayName,
           generatedProfileUrl: toMargonemProfileUrl(profileId),
           lastFetchedAt: row.lastFetchedAt ?? row.createdAt,
           profileId,

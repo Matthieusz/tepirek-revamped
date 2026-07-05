@@ -45,7 +45,6 @@ import {
   parseMargonemCharacterId,
   parsePositiveLevel,
 } from "../margonem-profile-id.js";
-import { isFailure } from "../outcome.js";
 import type {
   SquadGroupAccess,
   SquadGroupOwnerAccess,
@@ -205,16 +204,14 @@ const listMySquadGroupsWithDatabase =
           Effect.catch((error) => failPersistence("listMySquadGroups", error))
         );
 
-        const name = parseSquadGroupName(row.name);
-
-        if (isFailure(name)) {
-          return yield* failPersistence("listMySquadGroups", name.error);
-        }
+        const name = yield* parseSquadGroupName(row.name).pipe(
+          Effect.catch((error) => failPersistence("listMySquadGroups", error))
+        );
 
         groups.push({
           characterCount: row.characterCount ?? 0,
           groupId,
-          name: name.value,
+          name,
           squadCount: row.squadCount ?? 0,
           updatedAt: row.updatedAt,
         });
@@ -410,11 +407,9 @@ const loadSquadGroupInvitationSummaryWithDatabase =
         return yield* new SquadGroupInvitationNotFound();
       }
 
-      const status = parseSquadGroupInvitationStatus(row.status);
-
-      if (isFailure(status)) {
-        return yield* failPersistence(operation, status.error);
-      }
+      const status = yield* parseSquadGroupInvitationStatus(row.status).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
 
       const persistedInvitationId = yield* parseSquadGroupInvitationId(
         row.invitationId
@@ -441,7 +436,7 @@ const loadSquadGroupInvitationSummaryWithDatabase =
         ownerUserName: row.ownerName,
         squadGroupId: persistedGroupId,
         squadGroupName,
-        status: status.value,
+        status,
         updatedAt: row.updatedAt,
       };
     });
@@ -507,16 +502,14 @@ const upsertSquadGroupEditorInviteWithDatabase =
             return inserted.id;
           }
 
-          const status = parseSquadGroupInvitationStatus(existing.status);
+          const status = yield* parseSquadGroupInvitationStatus(
+            existing.status
+          ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
-          if (isFailure(status)) {
-            return yield* failPersistence(operation, status.error);
-          }
-
-          if (!canTransitionSquadGroupInvitation(status.value, "pending")) {
+          if (!canTransitionSquadGroupInvitation(status, "pending")) {
             return new SquadGroupInvitationTransitionNotAllowed({
               attempted: "pending",
-              currentStatus: status.value,
+              currentStatus: status,
             });
           }
 
@@ -601,19 +594,17 @@ const respondToSquadGroupInviteWithDatabase =
             return new ActorIsNotSquadGroupInviteRecipient();
           }
 
-          const status = parseSquadGroupInvitationStatus(existing.status);
-
-          if (isFailure(status)) {
-            return yield* failPersistence(operation, status.error);
-          }
+          const status = yield* parseSquadGroupInvitationStatus(
+            existing.status
+          ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
           const nextStatus: SquadGroupInvitationStatus =
             response === "accept" ? "accepted" : "declined";
 
-          if (!canTransitionSquadGroupInvitation(status.value, nextStatus)) {
+          if (!canTransitionSquadGroupInvitation(status, nextStatus)) {
             return new SquadGroupInvitationTransitionNotAllowed({
               attempted: nextStatus,
-              currentStatus: status.value,
+              currentStatus: status,
             });
           }
 
@@ -692,16 +683,14 @@ const revokeSquadGroupEditorWithDatabase =
             return new ActorDoesNotOwnSquadGroup();
           }
 
-          const status = parseSquadGroupInvitationStatus(existing.status);
+          const status = yield* parseSquadGroupInvitationStatus(
+            existing.status
+          ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
-          if (isFailure(status)) {
-            return yield* failPersistence(operation, status.error);
-          }
-
-          if (!canTransitionSquadGroupInvitation(status.value, "revoked")) {
+          if (!canTransitionSquadGroupInvitation(status, "revoked")) {
             return new SquadGroupInvitationTransitionNotAllowed({
               attempted: "revoked",
-              currentStatus: status.value,
+              currentStatus: status,
             });
           }
 
@@ -860,18 +849,14 @@ const listSquadGroupEditorGrantsWithDatabase =
       const grants: SquadGroupEditorGrantSummary[] = [];
 
       for (const row of rows) {
-        const status = parseSquadGroupInvitationStatus(row.status);
+        const status = yield* parseSquadGroupInvitationStatus(row.status).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
-        if (isFailure(status)) {
-          return yield* failPersistence(operation, status.error);
-        }
-
-        if (status.value !== "pending" && status.value !== "accepted") {
+        if (status !== "pending" && status !== "accepted") {
           return yield* failPersistence(
             operation,
-            new Error(
-              `Unexpected squad group invitation status: ${status.value}`
-            )
+            new Error(`Unexpected squad group invitation status: ${status}`)
           );
         }
 
@@ -884,7 +869,7 @@ const listSquadGroupEditorGrantsWithDatabase =
         grants.push({
           createdAt: row.createdAt,
           invitationId,
-          status: status.value,
+          status,
           updatedAt: row.updatedAt,
           userId,
           userImage: row.image,
@@ -950,13 +935,9 @@ const listAvailableCharactersForOwnerWithDatabase =
       const characters: AvailableSquadCharacter[] = [];
 
       for (const row of rows) {
-        const accountDisplayName = parseAccountDisplayName(
+        const accountDisplayName = yield* parseAccountDisplayName(
           row.accountDisplayName
-        );
-
-        if (isFailure(accountDisplayName)) {
-          return yield* failPersistence(operation, accountDisplayName.error);
-        }
+        ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
         const accountId = yield* parseMargonemAccountId(row.accountId).pipe(
           Effect.catch((error) => failPersistence(operation, error))
@@ -970,24 +951,20 @@ const listAvailableCharactersForOwnerWithDatabase =
           Effect.catch((error) => failPersistence(operation, error))
         );
 
-        const profession = parseMargonemProfession(row.profession);
+        const profession = yield* parseMargonemProfession(row.profession).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
-        if (isFailure(profession)) {
-          return yield* failPersistence(operation, profession.error);
-        }
-
-        const world = parseMargonemWorld(row.world);
-
-        if (isFailure(world)) {
-          return yield* failPersistence(operation, world.error);
-        }
+        const world = yield* parseMargonemWorld(row.world).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
         const margonemCharacterId = yield* parseMargonemCharacterId(
           row.margonemCharacterId
         ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
         characters.push({
-          accountDisplayName: accountDisplayName.value,
+          accountDisplayName,
           accountId,
           accountOwnerUserId,
           accountOwnerUserImage: row.accountOwnerUserImage,
@@ -997,8 +974,8 @@ const listAvailableCharactersForOwnerWithDatabase =
           level,
           margonemCharacterId,
           name: row.name,
-          profession: profession.value,
-          world: world.value,
+          profession,
+          world,
         });
       }
 
@@ -1046,11 +1023,9 @@ const getSquadGroupDetailWithDatabase =
         operation,
         group.name
       );
-      const visibility = parseSquadGroupVisibility(group.visibility);
-
-      if (isFailure(visibility)) {
-        return yield* failPersistence(operation, visibility.error);
-      }
+      const visibility = yield* parseSquadGroupVisibility(
+        group.visibility
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
       let access: SquadGroupAccess;
 
@@ -1078,7 +1053,7 @@ const getSquadGroupDetailWithDatabase =
         const [invite] = inviteRows;
 
         if (invite === undefined) {
-          if (visibility.value !== "global") {
+          if (visibility !== "global") {
             return yield* new ActorCannotViewSquadGroup();
           }
 
@@ -1149,30 +1124,24 @@ const getSquadGroupDetailWithDatabase =
 
       for (const placement of placementRows) {
         const current = charactersBySquadId.get(placement.squadId) ?? [];
-        const accountDisplayName = parseAccountDisplayName(
+        const accountDisplayName = yield* parseAccountDisplayName(
           placement.accountDisplayName
-        );
-
-        if (isFailure(accountDisplayName)) {
-          return yield* failPersistence(operation, accountDisplayName.error);
-        }
+        ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
         const level = yield* parsePositiveLevel(placement.level).pipe(
           Effect.catch((error) => failPersistence(operation, error))
         );
 
-        const profession = parseMargonemProfession(placement.profession);
-
-        if (isFailure(profession)) {
-          return yield* failPersistence(operation, profession.error);
-        }
+        const profession = yield* parseMargonemProfession(
+          placement.profession
+        ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
         const margonemCharacterId = yield* parseMargonemCharacterId(
           placement.margonemCharacterId
         ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
         current.push({
-          accountDisplayName: accountDisplayName.value,
+          accountDisplayName,
           accountId: placement.accountId as MargonemAccountId,
           accountOwnerUserImage: placement.accountOwnerUserImage,
           accountOwnerUserName: placement.accountOwnerUserName,
@@ -1183,7 +1152,7 @@ const getSquadGroupDetailWithDatabase =
           name: placement.name,
           placementId: placement.placementId,
           position: placement.position,
-          profession: profession.value,
+          profession,
         });
         charactersBySquadId.set(placement.squadId, current);
       }
@@ -1212,7 +1181,7 @@ const getSquadGroupDetailWithDatabase =
         ownerUserId,
         squads,
         updatedAt: group.updatedAt,
-        visibility: visibility.value,
+        visibility,
       };
     });
 
@@ -1736,11 +1705,9 @@ const listGlobalSquadGroupsWithDatabase =
           Effect.catch((error) => failPersistence(operation, error))
         );
 
-        const name = parseSquadGroupName(row.name);
-
-        if (isFailure(name)) {
-          return yield* failPersistence(operation, name.error);
-        }
+        const name = yield* parseSquadGroupName(row.name).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
 
         const ownerUserId = yield* parsePersistedAppUserId(
           operation,
@@ -1750,7 +1717,7 @@ const listGlobalSquadGroupsWithDatabase =
         groups.push({
           characterCount: row.characterCount ?? 0,
           groupId,
-          name: name.value,
+          name,
           ownerUserId,
           ownerUserImage: row.ownerImage,
           ownerUserName: row.ownerName,

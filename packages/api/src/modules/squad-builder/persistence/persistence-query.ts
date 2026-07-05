@@ -2,7 +2,6 @@ import * as Effect from "effect/Effect";
 
 import type { AppUserId } from "../app-user-id.js";
 import { parseAppUserId } from "../app-user-id.js";
-import { isFailure } from "../outcome.js";
 import { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
 import { parseSquadGroupName } from "../squad-name.js";
 
@@ -112,15 +111,19 @@ export const namedStoreMethod = <Input, A, E, R>(
     return yield* method(input);
   });
 
+// oxlint-disable promise/prefer-await-to-callbacks
 export const parsePersistedSquadGroupName = (
   operation: EffectSquadGroupPersistenceOperation,
   value: string
-) => {
-  const name = parseSquadGroupName(value);
-
-  if (isFailure(name)) {
-    return failPersistence(operation, name.error);
-  }
-
-  return Effect.succeed(name.value);
-};
+) =>
+  parseSquadGroupName(value).pipe(
+    Effect.mapError(
+      (error) =>
+        new EffectSquadBuilderPersistenceUnavailable({
+          cause: error,
+          operation,
+          provider: "postgres",
+        })
+    )
+  );
+// oxlint-enable promise/prefer-await-to-callbacks
