@@ -1,5 +1,4 @@
-import { fail, isFailure, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
+import * as Effect from "effect/Effect";
 
 /** A Firecrawl budget month formatted as YYYY-MM. */
 export type FirecrawlYearMonth = string & {
@@ -16,26 +15,20 @@ const yearMonthPattern = /^\d{4}-\d{2}$/u;
 /** Parse a YYYY-MM Firecrawl budget month. */
 export const parseFirecrawlYearMonth = (
   input: string
-): Outcome<FirecrawlYearMonth, InvalidFirecrawlYearMonth> => {
+): Effect.Effect<FirecrawlYearMonth, InvalidFirecrawlYearMonth> => {
   if (!yearMonthPattern.test(input)) {
-    return fail({ _tag: "InvalidFirecrawlYearMonth" });
+    return Effect.fail({ _tag: "InvalidFirecrawlYearMonth" });
   }
 
   // SAFETY: yearMonthPattern established the FirecrawlYearMonth invariant.
-  return success(input as FirecrawlYearMonth);
+  return Effect.succeed(input as FirecrawlYearMonth);
 };
 
 /** Get the UTC Firecrawl budget month for a date. */
 export const firecrawlYearMonthFromDate = (date: Date): FirecrawlYearMonth => {
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const parsed = parseFirecrawlYearMonth(`${year}-${month}`);
-
-  if (isFailure(parsed)) {
-    throw new Error("Failed to construct Firecrawl year-month");
-  }
-
-  return parsed.value;
+  return Effect.runSync(parseFirecrawlYearMonth(`${year}-${month}`));
 };
 
 /** Convert a Firecrawl budget month to its primitive representation. */

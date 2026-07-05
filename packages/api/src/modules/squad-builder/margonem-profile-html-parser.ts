@@ -1,5 +1,4 @@
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 
 import { parseMargonemProfession } from "./margonem-character.js";
 import type { MargonemCharacterPreview } from "./margonem-character.js";
@@ -8,8 +7,6 @@ import {
   parsePositiveLevel,
 } from "./margonem-profile-id.js";
 import type { MargonemProfileId } from "./margonem-profile-id.js";
-import { fail, isFailure, success } from "./outcome.js";
-import type { Outcome } from "./outcome.js";
 
 /** Parsed Jaruna-only Margonem profile data from Firecrawl HTML. */
 export interface ParsedMargonemProfile {
@@ -99,11 +96,14 @@ const extractAvatarUrl = (rowHtml: string): string | null => {
 const parseJarunaCharacterRow = (
   profileId: MargonemProfileId,
   rowHtml: string
-): Outcome<MargonemCharacterPreview | null, ParseMargonemProfileHtmlError> => {
+): Effect.Effect<
+  MargonemCharacterPreview | null,
+  ParseMargonemProfileHtmlError
+> => {
   const world = extractAttribute(rowHtml, "data-world");
 
   if (world !== "#jaruna") {
-    return success(null);
+    return Effect.succeed(null);
   }
 
   const characterIdText = extractAttribute(rowHtml, "data-id");
@@ -116,7 +116,7 @@ const parseJarunaCharacterRow = (
     name === undefined ||
     levelText === undefined
   ) {
-    return fail({
+    return Effect.fail({
       _tag: "MargonemCharacterRowInvalid",
       profileId,
       safeReason: "missing required character row attributes",
@@ -124,7 +124,7 @@ const parseJarunaCharacterRow = (
   }
 
   if (professionLabel === undefined) {
-    return fail({
+    return Effect.fail({
       _tag: "MargonemCharacterRowInvalid",
       profileId,
       safeReason: "missing profession label",
@@ -135,33 +135,35 @@ const parseJarunaCharacterRow = (
     parseMargonemCharacterId(Number(characterIdText))
   );
   const level = Effect.runSyncExit(parsePositiveLevel(Number(levelText)));
-  const profession = parseMargonemProfession(professionLabel);
+  const profession = Effect.runSyncExit(
+    parseMargonemProfession(professionLabel)
+  );
 
-  if (Exit.isFailure(characterId)) {
-    return fail({
+  if (characterId._tag === "Failure") {
+    return Effect.fail({
       _tag: "MargonemCharacterRowInvalid",
       profileId,
       safeReason: "invalid character id",
     });
   }
 
-  if (Exit.isFailure(level)) {
-    return fail({
+  if (level._tag === "Failure") {
+    return Effect.fail({
       _tag: "MargonemCharacterRowInvalid",
       profileId,
       safeReason: "invalid character level",
     });
   }
 
-  if (isFailure(profession)) {
-    return fail({
+  if (profession._tag === "Failure") {
+    return Effect.fail({
       _tag: "MargonemCharacterRowInvalid",
       profileId,
       safeReason: "unknown profession label",
     });
   }
 
-  return success({
+  return Effect.succeed({
     avatarUrl: extractAvatarUrl(rowHtml),
     characterId: characterId.value,
     level: level.value,
