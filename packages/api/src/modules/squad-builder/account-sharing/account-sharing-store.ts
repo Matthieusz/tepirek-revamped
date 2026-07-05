@@ -10,8 +10,6 @@ import type { AppUserId } from "../app-user-id.js";
 import type { MargonemAccountAccessId } from "../margonem-account-access-id.js";
 import type { MargonemAccountId } from "../margonem-account-id.js";
 import type { MargonemProfileId } from "../margonem-profile-id.js";
-import type { Outcome } from "../outcome.js";
-
 /** Expected authorization failures for account sharing operations. */
 export type AccountSharingAuthorizationError =
   | { readonly _tag: "MargonemAccountNotFound" }
@@ -168,116 +166,46 @@ export interface MargonemAccountOwnerAuthorizer {
   readonly authorizeOwner: (input: {
     readonly actorUserId: AppUserId;
     readonly accountId: MargonemAccountId;
-  }) => Promise<
-    Outcome<
-      OwnedAccountForSharing,
-      | MargonemAccountNotFound
-      | ActorDoesNotOwnMargonemAccount
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
+  }) => Promise<OwnedAccountForSharing>;
 }
 
 /** Persistence capability for account sharing. */
 export interface AccountSharingStore {
   readonly searchInviteTargets: (
     input: SearchInviteTargetsStoreInput
-  ) => Promise<
-    Outcome<readonly AccountInviteTarget[], SquadBuilderPersistenceUnavailable>
-  >;
+  ) => Promise<readonly AccountInviteTarget[]>;
 
   readonly findOwnedAccountForSharing: (
     input: FindOwnedAccountForSharingInput
-  ) => Promise<
-    Outcome<
-      OwnedAccountForSharing,
-      MargonemAccountNotFound | SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Promise<OwnedAccountForSharing>;
 
   readonly findVerifiedInviteTarget: (
     input: FindVerifiedInviteTargetInput
-  ) => Promise<
-    Outcome<
-      VerifiedInviteTarget,
-      | { readonly _tag: "InviteTargetNotFound" }
-      | { readonly _tag: "InviteTargetNotVerified" }
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Promise<VerifiedInviteTarget>;
 
   readonly upsertAccountAccessInvite: (
     input: UpsertAccountAccessInviteInput
-  ) => Promise<
-    Outcome<
-      AccountAccessInviteSummary,
-      | {
-          readonly _tag: "AccountAccessTransitionNotAllowed";
-          readonly currentStatus: AccountAccessStatus;
-          readonly attempted: string;
-        }
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Promise<AccountAccessInviteSummary>;
 
   readonly listIncomingAccountInvites: (
     input: ListIncomingAccountInvitesInput
-  ) => Promise<
-    Outcome<
-      readonly AccountAccessInviteSummary[],
-      SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Promise<readonly AccountAccessInviteSummary[]>;
 
   readonly respondToAccountAccessInvite: (
     input: RespondToAccountAccessInviteStoreInput
-  ) => Promise<
-    Outcome<
-      AccountAccessInviteSummary,
-      | { readonly _tag: "AccountAccessInviteNotFound" }
-      | { readonly _tag: "ActorIsNotInviteRecipient" }
-      | {
-          readonly _tag: "AccountAccessTransitionNotAllowed";
-          readonly currentStatus: AccountAccessStatus;
-          readonly attempted: string;
-        }
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Promise<AccountAccessInviteSummary>;
 
   readonly revokeAccountAccess: (
     input: RevokeAccountAccessStoreInput
-  ) => Promise<
-    Outcome<
-      RevokeAccountAccessResult,
-      | { readonly _tag: "AccountAccessInviteNotFound" }
-      | ActorDoesNotOwnMargonemAccount
-      | {
-          readonly _tag: "AccountAccessTransitionNotAllowed";
-          readonly currentStatus: AccountAccessStatus;
-          readonly attempted: string;
-        }
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Promise<RevokeAccountAccessResult>;
 
   readonly listSharedAccounts: (
     input: ListSharedAccountsInput
-  ) => Promise<
-    Outcome<
-      readonly SharedMargonemAccountSummary[],
-      SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Promise<readonly SharedMargonemAccountSummary[]>;
 
   readonly listAccountAccessGrants: (
     input: ListAccountAccessGrantsInput
-  ) => Promise<
-    Outcome<
-      readonly AccountAccessGrantSummary[],
-      SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Promise<readonly AccountAccessGrantSummary[]>;
 }
 
 /** Account sharing persistence contracts used by invite and grant services. */

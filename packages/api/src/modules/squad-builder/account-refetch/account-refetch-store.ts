@@ -22,7 +22,6 @@ import type {
 } from "../margonem-account-refetch-diff.js";
 import type { MargonemCharacterPreview } from "../margonem-character.js";
 import type { MargonemProfileId } from "../margonem-profile-id.js";
-import type { Outcome } from "../outcome.js";
 import type { PendingMargonemAccountRefetchId } from "../pending-margonem-account-refetch-id.js";
 import type { ApplyAccountRefetchOutput } from "./apply-account-refetch.js";
 
@@ -39,14 +38,7 @@ export interface RefetchableMargonemAccountReader {
   readonly getAccountForRefetch: (input: {
     readonly actorUserId: AppUserId;
     readonly accountId: MargonemAccountId;
-  }) => Promise<
-    Outcome<
-      RefetchableMargonemAccount,
-      | MargonemAccountNotFound
-      | ActorDoesNotOwnMargonemAccount
-      | SquadBuilderPersistenceUnavailable
-    >
-  >;
+  }) => Promise<RefetchableMargonemAccount>;
 }
 
 /** Expected failure when a pending refetch cannot be applied. */
@@ -98,22 +90,15 @@ export interface MarkPendingMargonemAccountRefetchAppliedInput {
 export interface PendingMargonemAccountRefetchStore {
   readonly createPendingRefetch: (
     input: CreatePendingMargonemAccountRefetchInput
-  ) => Promise<
-    Outcome<PendingMargonemAccountRefetch, SquadBuilderPersistenceUnavailable>
-  >;
+  ) => Promise<PendingMargonemAccountRefetch>;
 
   readonly findPendingRefetchForApply: (
     input: FindPendingMargonemAccountRefetchInput
-  ) => Promise<
-    Outcome<
-      PendingMargonemAccountRefetchForApply,
-      PendingMargonemAccountRefetchNotFound | SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Promise<PendingMargonemAccountRefetchForApply>;
 
   readonly markPendingRefetchApplied: (
     input: MarkPendingMargonemAccountRefetchAppliedInput
-  ) => Promise<Outcome<void, SquadBuilderPersistenceUnavailable>>;
+  ) => Promise<void>;
 }
 
 /** Input for transactionally applying pending refetch data. */
@@ -127,9 +112,7 @@ export interface ApplyRefetchedAccountInput {
 export interface RefetchedMargonemAccountWriter {
   readonly applyRefetchedAccount: (
     input: ApplyRefetchedAccountInput
-  ) => Promise<
-    Outcome<ApplyAccountRefetchOutput, SquadBuilderPersistenceUnavailable>
-  >;
+  ) => Promise<ApplyAccountRefetchOutput>;
 }
 
 /** Account refetch persistence contracts used by preview and apply services. */

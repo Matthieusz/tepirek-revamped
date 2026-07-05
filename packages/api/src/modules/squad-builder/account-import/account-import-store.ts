@@ -4,7 +4,6 @@ import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import type { FirecrawlYearMonth } from "../firecrawl-year-month.js";
 import type { MargonemCharacterPreview } from "../margonem-character.js";
 import type { MargonemProfileId } from "../margonem-profile-id.js";
-import type { Outcome } from "../outcome.js";
 import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
 
 /** Access state for a Margonem profile relative to the current user. */
@@ -31,7 +30,7 @@ export interface FindProfileAccessStateInput {
 export interface SquadBuilderAccountLookup {
   readonly findProfileAccessState: (
     input: FindProfileAccessStateInput
-  ) => Promise<Outcome<ProfileAccessState, SquadBuilderPersistenceUnavailable>>;
+  ) => Promise<ProfileAccessState>;
 }
 
 /** Current state of Firecrawl monthly budget usage. */
@@ -84,15 +83,15 @@ export interface MarkFirecrawlRequestFailedInput {
 export interface FirecrawlRequestLedger {
   readonly reserveRequest: (
     input: ReserveFirecrawlRequestInput
-  ) => Promise<Outcome<ReservedFirecrawlRequest, FirecrawlBudgetError>>;
+  ) => Promise<ReservedFirecrawlRequest>;
 
   readonly markRequestSucceeded: (
     input: MarkFirecrawlRequestSucceededInput
-  ) => Promise<Outcome<void, SquadBuilderPersistenceUnavailable>>;
+  ) => Promise<void>;
 
   readonly markRequestFailed: (
     input: MarkFirecrawlRequestFailedInput
-  ) => Promise<Outcome<void, SquadBuilderPersistenceUnavailable>>;
+  ) => Promise<void>;
 }
 
 /** Expected duplicate/access failures for owned account imports. */
@@ -151,22 +150,15 @@ export interface MarkPendingMargonemAccountImportConfirmedInput {
 export interface PendingMargonemAccountImportStore {
   readonly createPendingImport: (
     input: CreatePendingMargonemAccountImportInput
-  ) => Promise<
-    Outcome<PendingMargonemAccountImport, SquadBuilderPersistenceUnavailable>
-  >;
+  ) => Promise<PendingMargonemAccountImport>;
 
   readonly findPendingImportForConfirmation: (
     input: FindPendingMargonemAccountImportInput
-  ) => Promise<
-    Outcome<
-      PendingMargonemAccountImportForConfirmation,
-      PendingMargonemAccountImportNotFound | SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Promise<PendingMargonemAccountImportForConfirmation>;
 
   readonly markPendingImportConfirmed: (
     input: MarkPendingMargonemAccountImportConfirmedInput
-  ) => Promise<Outcome<void, SquadBuilderPersistenceUnavailable>>;
+  ) => Promise<void>;
 }
 
 /** Read model for one owned Margonem account. */
@@ -190,12 +182,7 @@ export interface CreateOwnedAccountFromPendingImportInput {
 export interface OwnedMargonemAccountWriter {
   readonly createOwnedAccountFromPendingImport: (
     input: CreateOwnedAccountFromPendingImportInput
-  ) => Promise<
-    Outcome<
-      OwnedMargonemAccountSummary,
-      DuplicateMargonemAccountError | SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Promise<OwnedMargonemAccountSummary>;
 }
 
 /** Input for listing owned Margonem accounts. */
@@ -207,12 +194,7 @@ export interface ListOwnedMargonemAccountsInput {
 export interface OwnedMargonemAccountReader {
   readonly listOwnedAccounts: (
     input: ListOwnedMargonemAccountsInput
-  ) => Promise<
-    Outcome<
-      readonly OwnedMargonemAccountSummary[],
-      SquadBuilderPersistenceUnavailable
-    >
-  >;
+  ) => Promise<readonly OwnedMargonemAccountSummary[]>;
 }
 
 /** Account import persistence contracts used by profile preview and confirmation services. */
