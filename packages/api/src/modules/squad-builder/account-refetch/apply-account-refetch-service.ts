@@ -4,6 +4,7 @@ import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import { serviceUse } from "../../../effect/service-use.js";
+import type { AccountRefetchStoreServiceShape } from "../squad-groups/squad-group-store.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import type { ApplyAccountRefetchInput } from "./apply-account-refetch.js";
 
@@ -12,45 +13,46 @@ const currentDate = Clock.currentTimeMillis.pipe(
 );
 
 /** Apply a previously previewed account refetch to account and character storage. */
-export const apply = EffectRuntime.fn("AccountRefetch.apply")(
-  function* applyAccountRefetchEffect(input: ApplyAccountRefetchInput) {
+const makeApply = (store: AccountRefetchStoreServiceShape) =>
+  EffectRuntime.fn("AccountRefetch.apply")(function* applyAccountRefetchEffect(
+    input: ApplyAccountRefetchInput
+  ) {
     const now = yield* currentDate;
-    const pending = yield* AccountRefetchStoreService.use((store) =>
-      store.findPendingRefetchForApply({
-        actorUserId: input.actorUserId,
-        now,
-        refetchPreviewId: input.refetchPreviewId,
-      })
-    );
+    const pending = yield* store.findPendingRefetchForApply({
+      actorUserId: input.actorUserId,
+      now,
+      refetchPreviewId: input.refetchPreviewId,
+    });
 
-    yield* AccountRefetchStoreService.use((store) =>
-      store.getAccountForRefetch({
-        accountId: pending.accountId,
-        actorUserId: input.actorUserId,
-      })
-    );
+    yield* store.getAccountForRefetch({
+      accountId: pending.accountId,
+      actorUserId: input.actorUserId,
+    });
 
-    const applied = yield* AccountRefetchStoreService.use((store) =>
-      store.applyRefetchedAccount({
-        actorUserId: input.actorUserId,
-        now,
-        pendingRefetch: pending,
-      })
-    );
+    const applied = yield* store.applyRefetchedAccount({
+      actorUserId: input.actorUserId,
+      now,
+      pendingRefetch: pending,
+    });
 
-    yield* AccountRefetchStoreService.use((store) =>
-      store.markPendingRefetchApplied({
-        appliedAt: now,
-        refetchPreviewId: input.refetchPreviewId,
-      })
-    );
+    yield* store.markPendingRefetchApplied({
+      appliedAt: now,
+      refetchPreviewId: input.refetchPreviewId,
+    });
 
     return applied;
+  });
+
+/** Apply a previously previewed account refetch to account and character storage. */
+export const apply = EffectRuntime.fn("AccountRefetch.apply")(
+  function* applyAccountRefetchEffect(input: ApplyAccountRefetchInput) {
+    const store = yield* AccountRefetchStoreService;
+    return yield* makeApply(store)(input);
   }
 );
 
 export interface Interface {
-  readonly apply: typeof apply;
+  readonly apply: ReturnType<typeof makeApply>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
@@ -60,4 +62,10 @@ export class Service extends Context.Service<Service, Interface>()(
 
 export const use = serviceUse(Service);
 
-export const layer = Layer.succeed(Service, { apply });
+export const layer = Layer.effect(
+  Service,
+  EffectRuntime.gen(function* layer() {
+    const store = yield* AccountRefetchStoreService;
+    return { apply: makeApply(store) };
+  })
+);

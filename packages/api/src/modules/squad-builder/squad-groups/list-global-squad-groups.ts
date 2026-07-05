@@ -10,24 +10,35 @@ import {
 } from "../squad-group-list-filters.js";
 import type { SquadGroupListFilters } from "../squad-group-list-filters.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
+import type { SquadGroupStoreServiceShape } from "./squad-group-store.js";
 
 /** List globally visible squad groups for a verified actor. */
-export const list = Effect.fn("SquadGroups.listGlobal")(
-  (input: {
-    readonly actorUserId: AppUserId;
-    readonly filters?: SquadGroupListFilters;
-  }) =>
-    SquadGroupStoreService.use((store) =>
+const makeList = (store: SquadGroupStoreServiceShape) =>
+  Effect.fn("SquadGroups.listGlobal")(
+    (input: {
+      readonly actorUserId: AppUserId;
+      readonly filters?: SquadGroupListFilters;
+    }) =>
       store.listGlobalSquadGroups({
         actorUserId: input.actorUserId,
         filters: input.filters ?? emptySquadGroupListFilters,
         limit: squadGroupListFilterPolicy.defaultLimit,
       })
-    )
+  );
+
+/** List globally visible squad groups for a verified actor. */
+export const list = Effect.fn("SquadGroups.listGlobal")(
+  function* listGlobalSquadGroups(input: {
+    readonly actorUserId: AppUserId;
+    readonly filters?: SquadGroupListFilters;
+  }) {
+    const store = yield* SquadGroupStoreService;
+    return yield* makeList(store)(input);
+  }
 );
 
 export interface Interface {
-  readonly list: typeof list;
+  readonly list: ReturnType<typeof makeList>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
@@ -37,4 +48,10 @@ export class Service extends Context.Service<Service, Interface>()(
 
 export const use = serviceUse(Service);
 
-export const layer = Layer.succeed(Service, { list });
+export const layer = Layer.effect(
+  Service,
+  Effect.gen(function* layer() {
+    const store = yield* SquadGroupStoreService;
+    return { list: makeList(store) };
+  })
+);

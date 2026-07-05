@@ -150,4 +150,12 @@ export class Service extends Context.Service<Service, Interface>()(
 
 export const use = serviceUse(Service);
 
-export const layer = Layer.succeed(Service, { preview });
+export const layer = Layer.effect(
+  Service,
+  EffectRuntime.gen(function* layer() {
+    yield* AccountRefetchStoreService;
+    yield* FirecrawlConfigService;
+    yield* FirecrawlClientService;
+    return { preview };
+  })
+);

@@ -92,4 +92,10 @@ export class Service extends Context.Service<Service, Interface>()(
 
 export const use = serviceUse(Service);
 
-export const layer = Layer.succeed(Service, { save });
+export const layer = Layer.effect(
+  Service,
+  Effect.gen(function* layer() {
+    yield* SquadGroupStoreService;
+    return { save };
+  })
+);

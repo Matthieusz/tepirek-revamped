@@ -12,43 +12,48 @@ import type {
   SquadGroupVisibility,
 } from "../squad-group-visibility.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
-import type {
-  ActorCannotViewSquadGroup,
-  ActorDoesNotOwnSquadGroup,
-  SquadGroupNotFound,
-} from "./squad-group-store.js";
-import { SquadGroupStoreService } from "./squad-group-store.js";
+import * as SquadGroupStore from "./squad-group-store.js";
 
 /** Expected failures for global squad visibility operations. */
 export type GlobalSquadVisibilityError =
-  | SquadGroupNotFound
-  | ActorDoesNotOwnSquadGroup
-  | ActorCannotViewSquadGroup
+  | SquadGroupStore.SquadGroupNotFound
+  | SquadGroupStore.ActorDoesNotOwnSquadGroup
+  | SquadGroupStore.ActorCannotViewSquadGroup
   | InvalidSquadGroupVisibility
   | EffectSquadBuilderPersistenceUnavailable;
 
-const makeSet = (clock: Clock) =>
+const makeSet = (
+  store: SquadGroupStore.SquadGroupStoreServiceShape,
+  clock: Clock
+) =>
   Effect.fn("SquadGroups.setVisibility")(
     (input: {
       readonly actorUserId: AppUserId;
       readonly groupId: SquadGroupId;
       readonly visibility: SquadGroupVisibility;
     }) =>
-      SquadGroupStoreService.use((store) =>
-        store.setSquadGroupVisibility({
-          actorUserId: input.actorUserId,
-          groupId: input.groupId,
-          now: clock.now(),
-          visibility: input.visibility,
-        })
-      )
+      store.setSquadGroupVisibility({
+        actorUserId: input.actorUserId,
+        groupId: input.groupId,
+        now: clock.now(),
+        visibility: input.visibility,
+      })
   );
 
 /** Change squad group visibility as the owner. */
-export const set = makeSet(systemClock);
+export const set = Effect.fn("SquadGroups.setVisibility")(
+  function* setSquadGroupVisibility(input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+    readonly visibility: SquadGroupVisibility;
+  }) {
+    const store = yield* SquadGroupStore.SquadGroupStoreService;
+    return yield* makeSet(store, systemClock)(input);
+  }
+);
 
 export interface Interface {
-  readonly set: typeof set;
+  readonly set: ReturnType<typeof makeSet>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
@@ -58,4 +63,10 @@ export class Service extends Context.Service<Service, Interface>()(
 
 export const use = serviceUse(Service);
 
-export const layer = Layer.succeed(Service, { set });
+export const layer = Layer.effect(
+  Service,
+  Effect.gen(function* layer() {
+    const store = yield* SquadGroupStore.SquadGroupStoreService;
+    return { set: makeSet(store, systemClock) };
+  })
+);

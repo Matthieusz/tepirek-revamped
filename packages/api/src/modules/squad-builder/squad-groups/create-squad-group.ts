@@ -9,6 +9,7 @@ import { parseSquadGroupName } from "../squad-name.js";
 import type { InvalidSquadGroupName } from "../squad-name.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
+import type { SquadGroupStoreServiceShape } from "./squad-group-store.js";
 
 /** Input for creating an empty squad group. */
 export interface CreateSquadGroupInput {
@@ -22,25 +23,32 @@ export type CreateSquadGroupError =
   | EffectSquadBuilderPersistenceUnavailable;
 
 /** Create an empty private squad group owned by the actor. */
-export const create = Effect.fn("SquadGroups.create")(
-  function* createSquadGroup(input: CreateSquadGroupInput) {
+const makeCreate = (store: SquadGroupStoreServiceShape) =>
+  Effect.fn("SquadGroups.create")(function* createSquadGroup(
+    input: CreateSquadGroupInput
+  ) {
     const name = parseSquadGroupName(input.name);
 
     if (isError(name)) {
       return yield* name.error;
     }
 
-    return yield* SquadGroupStoreService.use((store) =>
-      store.createSquadGroup({
-        actorUserId: input.actorUserId,
-        name: name.value,
-      })
-    );
+    return yield* store.createSquadGroup({
+      actorUserId: input.actorUserId,
+      name: name.value,
+    });
+  });
+
+/** Create an empty private squad group owned by the actor. */
+export const create = Effect.fn("SquadGroups.create")(
+  function* createSquadGroup(input: CreateSquadGroupInput) {
+    const store = yield* SquadGroupStoreService;
+    return yield* makeCreate(store)(input);
   }
 );
 
 export interface Interface {
-  readonly create: typeof create;
+  readonly create: ReturnType<typeof makeCreate>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
@@ -50,4 +58,10 @@ export class Service extends Context.Service<Service, Interface>()(
 
 export const use = serviceUse(Service);
 
-export const layer = Layer.succeed(Service, { create });
+export const layer = Layer.effect(
+  Service,
+  Effect.gen(function* layer() {
+    const store = yield* SquadGroupStoreService;
+    return { create: makeCreate(store) };
+  })
+);
