@@ -29,13 +29,17 @@ export const heroesAtom = appHttpApiAtom(
 );
 
 /** Resource atom for heroes in one event. */
-export const heroesByEventAtom = (eventId: number) =>
+const heroesByEventIdAtom = Atom.family((eventId: number) =>
   appHttpApiAtom(
     Effect.gen(function* listHeroesByEventEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.heroes.listHeroesByEvent({ payload: { eventId } });
     })
-  );
+  )
+);
+
+export const heroesByEventAtom = (eventId: number) =>
+  heroesByEventIdAtom(eventId);
 
 /** Mutation atom for creating a hero. */
 export const createHeroAtom = appHttpApiFn(

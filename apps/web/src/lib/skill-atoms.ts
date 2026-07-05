@@ -52,22 +52,30 @@ export const skillProfessionsAtom = appHttpApiAtom(
 );
 
 /** Resource atom for one skill range by slug. */
-export const skillRangeBySlugAtom = (slug: string) =>
+const skillRangeBySlugFamilyAtom = Atom.family((slug: string) =>
   appHttpApiAtom(
     Effect.gen(function* getSkillRangeBySlugEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.skills.getRangeBySlug({ payload: { slug } });
     })
-  );
+  )
+);
+
+export const skillRangeBySlugAtom = (slug: string) =>
+  skillRangeBySlugFamilyAtom(slug);
 
 /** Resource atom for skills in one range. */
-export const skillsByRangeAtom = (rangeId: number) =>
+const skillsByRangeIdAtom = Atom.family((rangeId: number) =>
   appHttpApiAtom(
     Effect.gen(function* listSkillsByRangeEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.skills.listSkillsByRange({ payload: { rangeId } });
     })
-  );
+  )
+);
+
+export const skillsByRangeAtom = (rangeId: number) =>
+  skillsByRangeIdAtom(rangeId);
 
 /** Mutation atom for creating a skill profession. */
 export const createSkillProfessionAtom = appHttpApiFn(
@@ -149,17 +157,25 @@ export const deleteSkillRangeAtom = Atom.optimisticFn(
 );
 
 /** Optimistic skill list atom backed by a Result-returning range detail resource. */
-export const optimisticSkillsByRangeAtom = (rangeId: number) =>
+const optimisticSkillsByRangeIdAtom = Atom.family((rangeId: number) =>
   Atom.optimistic(
     skillsByRangeAtom(rangeId).pipe(Atom.map(getSkillListOrEmpty))
-  );
+  )
+);
+
+export const optimisticSkillsByRangeAtom = (rangeId: number) =>
+  optimisticSkillsByRangeIdAtom(rangeId);
 
 /** Optimistic mutation atom for deleting a skill from one range detail list. */
-export const deleteSkillFromRangeAtom = (rangeId: number) =>
+const deleteSkillFromRangeIdAtom = Atom.family((rangeId: number) =>
   Atom.optimisticFn(optimisticSkillsByRangeAtom(rangeId), {
     fn: deleteSkillRequestAtom,
     reducer: removeSkillById,
-  });
+  })
+);
+
+export const deleteSkillFromRangeAtom = (rangeId: number) =>
+  deleteSkillFromRangeIdAtom(rangeId);
 
 /** Mutation atom for deleting a skill when the caller does not own a range list. */
 export const deleteSkillAtom = deleteSkillRequestAtom;

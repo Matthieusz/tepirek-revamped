@@ -38,6 +38,45 @@ type SaveSharedSquadGroupCharactersInput =
   typeof SaveSharedSquadGroupCharactersPayload.Type;
 type SetSquadGroupVisibilityInput = typeof SetSquadGroupVisibilityPayload.Type;
 
+type ListGlobalSquadGroupsKey = string;
+
+interface RefreshVisibleSquadGroupAtomsOptions {
+  readonly actorUserId?: string;
+  readonly groupId?: number;
+}
+
+const visibleOwnedSquadGroupActorIds = new Set<string>();
+const visibleGlobalSquadGroupKeys = new Set<ListGlobalSquadGroupsKey>();
+const visibleSquadGroupDetailKeys = new Set<string>();
+const visibleAvailableSquadCharacterKeys = new Set<string>();
+
+const globalSquadGroupsKey = (
+  payload: ListGlobalSquadGroupsInput
+): ListGlobalSquadGroupsKey =>
+  JSON.stringify([
+    payload.actorUserId,
+    payload.maxLevel ?? null,
+    payload.minLevel ?? null,
+    payload.nameQuery ?? null,
+  ]);
+
+const globalSquadGroupsPayloadFromKey = (
+  key: ListGlobalSquadGroupsKey
+): ListGlobalSquadGroupsInput => {
+  const [actorUserId, maxLevel, minLevel, nameQuery] = JSON.parse(key) as [
+    string,
+    number | null,
+    number | null,
+    string | null,
+  ];
+  return {
+    actorUserId,
+    maxLevel,
+    minLevel,
+    nameQuery,
+  };
+};
+
 const squadGroupIdKey = (payload: SquadGroupIdInput): string =>
   `${payload.actorUserId}:${payload.groupId}`;
 
@@ -50,6 +89,18 @@ const groupPayloadFromMutation = (payload: SquadGroupIdInput) => ({
   actorUserId: payload.actorUserId,
   groupId: payload.groupId,
 });
+
+const squadGroupIdKeyMatches = (
+  key: string,
+  options: RefreshVisibleSquadGroupAtomsOptions
+): boolean => {
+  const payload = squadGroupIdPayloadFromKey(key);
+  return (
+    (options.actorUserId === undefined ||
+      payload.actorUserId === options.actorUserId) &&
+    (options.groupId === undefined || payload.groupId === options.groupId)
+  );
+};
 
 const ownedSquadGroupsByActorAtom = Atom.family((actorUserId: string) =>
   appHttpApiAtom(
@@ -64,29 +115,30 @@ const ownedSquadGroupsByActorAtom = Atom.family((actorUserId: string) =>
 
 export const ownedSquadGroupsAtom = (payload: {
   readonly actorUserId: string;
-}) => ownedSquadGroupsByActorAtom(payload.actorUserId);
+}) => {
+  visibleOwnedSquadGroupActorIds.add(payload.actorUserId);
+  return ownedSquadGroupsByActorAtom(payload.actorUserId);
+};
 
-export const createSquadGroupAtom = appHttpApiFn(
-  (payload: CreateSquadGroupInput, get) =>
-    Effect.gen(function* createSquadGroupEffect() {
-      const client = yield* AppHttpApiClient;
-      const squadGroup = yield* client.squadBuilderSquadGroup.createSquadGroup({
-        payload,
-      });
-      get.refresh(ownedSquadGroupsAtom({ actorUserId: payload.actorUserId }));
-      return squadGroup;
-    })
+const globalSquadGroupsByKeyAtom = Atom.family(
+  (key: ListGlobalSquadGroupsKey) => {
+    const payload = globalSquadGroupsPayloadFromKey(key);
+    return appHttpApiAtom(
+      Effect.gen(function* listGlobalSquadGroupsEffect() {
+        const client = yield* AppHttpApiClient;
+        return yield* client.squadBuilderSquadGroup.listGlobalSquadGroups({
+          payload,
+        });
+      })
+    );
+  }
 );
 
-export const globalSquadGroupsAtom = (payload: ListGlobalSquadGroupsInput) =>
-  appHttpApiAtom(
-    Effect.gen(function* listGlobalSquadGroupsEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.squadBuilderSquadGroup.listGlobalSquadGroups({
-        payload,
-      });
-    })
-  );
+export const globalSquadGroupsAtom = (payload: ListGlobalSquadGroupsInput) => {
+  const key = globalSquadGroupsKey(payload);
+  visibleGlobalSquadGroupKeys.add(key);
+  return globalSquadGroupsByKeyAtom(key);
+};
 
 const squadGroupDetailByKeyAtom = Atom.family((key: string) => {
   const payload = squadGroupIdPayloadFromKey(key);
@@ -100,8 +152,11 @@ const squadGroupDetailByKeyAtom = Atom.family((key: string) => {
   );
 });
 
-export const squadGroupDetailAtom = (payload: SquadGroupIdInput) =>
-  squadGroupDetailByKeyAtom(squadGroupIdKey(payload));
+export const squadGroupDetailAtom = (payload: SquadGroupIdInput) => {
+  const key = squadGroupIdKey(payload);
+  visibleSquadGroupDetailKeys.add(key);
+  return squadGroupDetailByKeyAtom(key);
+};
 
 const availableSquadCharactersByKeyAtom = Atom.family((key: string) => {
   const payload = squadGroupIdPayloadFromKey(key);
@@ -115,8 +170,53 @@ const availableSquadCharactersByKeyAtom = Atom.family((key: string) => {
   );
 });
 
-export const availableSquadCharactersAtom = (payload: SquadGroupIdInput) =>
-  availableSquadCharactersByKeyAtom(squadGroupIdKey(payload));
+export const availableSquadCharactersAtom = (payload: SquadGroupIdInput) => {
+  const key = squadGroupIdKey(payload);
+  visibleAvailableSquadCharacterKeys.add(key);
+  return availableSquadCharactersByKeyAtom(key);
+};
+
+export const refreshVisibleSquadGroupAtoms = (
+  get: Atom.FnContext,
+  options: RefreshVisibleSquadGroupAtomsOptions = {}
+) => {
+  for (const actorUserId of visibleOwnedSquadGroupActorIds) {
+    if (
+      options.actorUserId === undefined ||
+      actorUserId === options.actorUserId
+    ) {
+      get.refresh(ownedSquadGroupsByActorAtom(actorUserId));
+    }
+  }
+
+  for (const key of visibleGlobalSquadGroupKeys) {
+    get.refresh(globalSquadGroupsByKeyAtom(key));
+  }
+
+  for (const key of visibleSquadGroupDetailKeys) {
+    if (squadGroupIdKeyMatches(key, options)) {
+      get.refresh(squadGroupDetailByKeyAtom(key));
+    }
+  }
+
+  for (const key of visibleAvailableSquadCharacterKeys) {
+    if (squadGroupIdKeyMatches(key, options)) {
+      get.refresh(availableSquadCharactersByKeyAtom(key));
+    }
+  }
+};
+
+export const createSquadGroupAtom = appHttpApiFn(
+  (payload: CreateSquadGroupInput, get) =>
+    Effect.gen(function* createSquadGroupEffect() {
+      const client = yield* AppHttpApiClient;
+      const squadGroup = yield* client.squadBuilderSquadGroup.createSquadGroup({
+        payload,
+      });
+      refreshVisibleSquadGroupAtoms(get, { actorUserId: payload.actorUserId });
+      return squadGroup;
+    })
+);
 
 export const saveSquadGroupAtom = appHttpApiFn(
   (payload: SaveSquadGroupInput, get) =>
@@ -126,9 +226,7 @@ export const saveSquadGroupAtom = appHttpApiFn(
         payload,
       });
       const groupPayload = groupPayloadFromMutation(payload);
-      get.refresh(squadGroupDetailAtom(groupPayload));
-      get.refresh(availableSquadCharactersAtom(groupPayload));
-      get.refresh(ownedSquadGroupsAtom({ actorUserId: payload.actorUserId }));
+      refreshVisibleSquadGroupAtoms(get, groupPayload);
       return squadGroup;
     })
 );
@@ -142,8 +240,7 @@ export const saveSharedSquadGroupCharactersAtom = appHttpApiFn(
           payload,
         });
       const groupPayload = groupPayloadFromMutation(payload);
-      get.refresh(squadGroupDetailAtom(groupPayload));
-      get.refresh(availableSquadCharactersAtom(groupPayload));
+      refreshVisibleSquadGroupAtoms(get, groupPayload);
       return squadGroup;
     })
 );
@@ -157,8 +254,7 @@ export const setSquadGroupVisibilityAtom = appHttpApiFn(
           payload,
         });
       const groupPayload = groupPayloadFromMutation(payload);
-      get.refresh(squadGroupDetailAtom(groupPayload));
-      get.refresh(ownedSquadGroupsAtom({ actorUserId: payload.actorUserId }));
+      refreshVisibleSquadGroupAtoms(get, groupPayload);
       return visibility;
     })
 );

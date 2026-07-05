@@ -17,6 +17,31 @@ interface PaginatedBetInput {
   readonly page?: number;
 }
 
+type PaginatedBetKey = string;
+
+const paginatedBetKey = (input: PaginatedBetInput): PaginatedBetKey =>
+  JSON.stringify([
+    input.eventId ?? null,
+    input.heroId ?? null,
+    input.limit ?? null,
+    input.page ?? null,
+  ]);
+
+const paginatedBetInputFromKey = (key: PaginatedBetKey): PaginatedBetInput => {
+  const [eventId, heroId, limit, page] = JSON.parse(key) as [
+    number | null,
+    number | null,
+    number | null,
+    number | null,
+  ];
+  return {
+    eventId: eventId ?? undefined,
+    heroId: heroId ?? undefined,
+    limit: limit ?? undefined,
+    page: page ?? undefined,
+  };
+};
+
 const emptyPaginatedBets: PaginatedBetList = {
   items: [],
   pagination: {
@@ -50,13 +75,18 @@ const removeBetFromPage = (
 };
 
 /** Resource atom for paginated bets. */
-export const paginatedBetsAtom = (input: PaginatedBetInput) =>
-  appHttpApiAtom(
+const paginatedBetsByKeyAtom = Atom.family((key: PaginatedBetKey) => {
+  const payload = paginatedBetInputFromKey(key);
+  return appHttpApiAtom(
     Effect.gen(function* getAllPaginatedBetsEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.bet.getAllPaginated({ payload: input });
+      return yield* client.bet.getAllPaginated({ payload });
     })
   );
+});
+
+export const paginatedBetsAtom = (input: PaginatedBetInput) =>
+  paginatedBetsByKeyAtom(paginatedBetKey(input));
 
 /** Resource atom for the latest bet used by copy-member flows. */
 export const latestBetForCopyAtom = appHttpApiAtom(
@@ -91,19 +121,27 @@ const deleteBetRequestAtom = appHttpApiFn((payload: { readonly id: number }) =>
 );
 
 /** Optimistic paginated bet atom backed by a Result-returning page resource. */
-export const optimisticPaginatedBetsAtom = (input: PaginatedBetInput) =>
+const optimisticPaginatedBetsByKeyAtom = Atom.family((key: PaginatedBetKey) =>
   Atom.optimistic(
-    paginatedBetsAtom(input).pipe(Atom.map(getPaginatedBetsOrEmpty))
-  );
+    paginatedBetsByKeyAtom(key).pipe(Atom.map(getPaginatedBetsOrEmpty))
+  )
+);
+
+export const optimisticPaginatedBetsAtom = (input: PaginatedBetInput) =>
+  optimisticPaginatedBetsByKeyAtom(paginatedBetKey(input));
 
 /** Optimistic mutation atom for deleting a bet from one page. */
-export const deleteBetFromPageAtom = (input: PaginatedBetInput) =>
-  optimisticPaginatedBetsAtom(input).pipe(
+const deleteBetFromPageByKeyAtom = Atom.family((key: PaginatedBetKey) =>
+  optimisticPaginatedBetsByKeyAtom(key).pipe(
     Atom.optimisticFn({
       fn: deleteBetRequestAtom,
       reducer: removeBetFromPage,
     })
-  );
+  )
+);
+
+export const deleteBetFromPageAtom = (input: PaginatedBetInput) =>
+  deleteBetFromPageByKeyAtom(paginatedBetKey(input));
 
 /** Mutation atom for deleting a bet when the caller does not own a page list. */
 export const deleteBetAtom = deleteBetRequestAtom;

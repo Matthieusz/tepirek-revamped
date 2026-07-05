@@ -10,6 +10,18 @@ import {
 
 type VaultEntry = typeof VaultRow.Type;
 
+interface VaultInput {
+  readonly eventId?: number;
+}
+
+type VaultKey = string;
+
+const vaultKey = (payload: VaultInput): VaultKey =>
+  String(payload.eventId ?? "all");
+
+const vaultInputFromKey = (key: VaultKey): VaultInput =>
+  key === "all" ? {} : { eventId: Number(key) };
+
 const emptyVaultRows: readonly VaultEntry[] = [];
 
 const getVaultRowsOrEmpty = (
@@ -25,22 +37,32 @@ const setPaidOutForUser = (
   );
 
 /** Resource atom for vault rows, optionally filtered by event. */
-export const vaultAtom = (payload: { readonly eventId?: number }) =>
-  appHttpApiAtom(
+const vaultByKeyAtom = Atom.family((key: VaultKey) => {
+  const payload = vaultInputFromKey(key);
+  return appHttpApiAtom(
     Effect.gen(function* getVaultEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.vault.getVault({ payload });
     })
   );
+});
+
+export const vaultAtom = (payload: VaultInput) =>
+  vaultByKeyAtom(vaultKey(payload));
 
 /** Resource atom for user stats rows, optionally filtered by event. */
-export const userStatsAtom = (payload: { readonly eventId?: number }) =>
-  appHttpApiAtom(
+const userStatsByKeyAtom = Atom.family((key: VaultKey) => {
+  const payload = vaultInputFromKey(key);
+  return appHttpApiAtom(
     Effect.gen(function* getUserStatsEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.vault.getUserStats({ payload });
     })
   );
+});
+
+export const userStatsAtom = (payload: VaultInput) =>
+  userStatsByKeyAtom(vaultKey(payload));
 
 /** Mutation atom for distributing gold for one hero. */
 export const distributeGoldAtom = appHttpApiFn(
@@ -64,19 +86,25 @@ const togglePaidOutRequestAtom = appHttpApiFn(
 );
 
 /** Optimistic vault list atom backed by a Result-returning vault resource. */
-export const optimisticVaultAtom = (payload: { readonly eventId?: number }) =>
-  Atom.optimistic(vaultAtom(payload).pipe(Atom.map(getVaultRowsOrEmpty)));
+const optimisticVaultByKeyAtom = Atom.family((key: VaultKey) =>
+  Atom.optimistic(vaultByKeyAtom(key).pipe(Atom.map(getVaultRowsOrEmpty)))
+);
+
+export const optimisticVaultAtom = (payload: VaultInput) =>
+  optimisticVaultByKeyAtom(vaultKey(payload));
 
 /** Optimistic mutation atom for toggling a user's paid-out state in a vault list. */
-export const togglePaidOutInVaultAtom = (payload: {
-  readonly eventId?: number;
-}) =>
-  optimisticVaultAtom(payload).pipe(
+const togglePaidOutInVaultByKeyAtom = Atom.family((key: VaultKey) =>
+  optimisticVaultByKeyAtom(key).pipe(
     Atom.optimisticFn({
       fn: togglePaidOutRequestAtom,
       reducer: setPaidOutForUser,
     })
-  );
+  )
+);
+
+export const togglePaidOutInVaultAtom = (payload: VaultInput) =>
+  togglePaidOutInVaultByKeyAtom(vaultKey(payload));
 
 /** Mutation atom for toggling paid-out state when the caller does not own a vault list. */
 export const togglePaidOutAtom = togglePaidOutRequestAtom;

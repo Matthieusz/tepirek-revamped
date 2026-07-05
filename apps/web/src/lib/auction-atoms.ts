@@ -27,23 +27,43 @@ interface AuctionGroupInput {
   readonly type: AuctionType;
 }
 
+type AuctionGroupKey = string;
+
+const auctionGroupKey = (payload: AuctionGroupInput): AuctionGroupKey =>
+  `${payload.profession}:${payload.type}`;
+
+const auctionGroupInputFromKey = (key: AuctionGroupKey): AuctionGroupInput => {
+  const [profession, type] = key.split(":") as [AuctionProfession, AuctionType];
+  return { profession, type };
+};
+
 /** Resource atom for auction signups in one group. */
-export const auctionSignupsAtom = (payload: AuctionGroupInput) =>
-  appHttpApiAtom(
+const auctionSignupsByGroupAtom = Atom.family((key: AuctionGroupKey) => {
+  const payload = auctionGroupInputFromKey(key);
+  return appHttpApiAtom(
     Effect.gen(function* getAuctionSignupsEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.auction.getAuctionSignups({ payload });
     })
   );
+});
+
+export const auctionSignupsAtom = (payload: AuctionGroupInput) =>
+  auctionSignupsByGroupAtom(auctionGroupKey(payload));
 
 /** Resource atom for auction stats in one group. */
-export const auctionStatsAtom = (payload: AuctionGroupInput) =>
-  appHttpApiAtom(
+const auctionStatsByGroupAtom = Atom.family((key: AuctionGroupKey) => {
+  const payload = auctionGroupInputFromKey(key);
+  return appHttpApiAtom(
     Effect.gen(function* getAuctionStatsEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.auction.getAuctionStats({ payload });
     })
   );
+});
+
+export const auctionStatsAtom = (payload: AuctionGroupInput) =>
+  auctionStatsByGroupAtom(auctionGroupKey(payload));
 
 /** Mutation atom for toggling an auction signup. */
 export const toggleAuctionSignupAtom = appHttpApiFn(
@@ -69,19 +89,29 @@ const removeAuctionSignupRequestAtom = appHttpApiFn(
 );
 
 /** Optimistic auction signup list atom backed by a Result-returning group resource. */
+const optimisticAuctionSignupsByGroupAtom = Atom.family(
+  (key: AuctionGroupKey) =>
+    Atom.optimistic(
+      auctionSignupsByGroupAtom(key).pipe(Atom.map(getAuctionSignupListOrEmpty))
+    )
+);
+
 export const optimisticAuctionSignupsAtom = (payload: AuctionGroupInput) =>
-  Atom.optimistic(
-    auctionSignupsAtom(payload).pipe(Atom.map(getAuctionSignupListOrEmpty))
-  );
+  optimisticAuctionSignupsByGroupAtom(auctionGroupKey(payload));
 
 /** Optimistic mutation atom for removing a signup from one auction group. */
+const removeAuctionSignupFromGroupByGroupAtom = Atom.family(
+  (key: AuctionGroupKey) =>
+    optimisticAuctionSignupsByGroupAtom(key).pipe(
+      Atom.optimisticFn({
+        fn: removeAuctionSignupRequestAtom,
+        reducer: removeAuctionSignupById,
+      })
+    )
+);
+
 export const removeAuctionSignupFromGroupAtom = (payload: AuctionGroupInput) =>
-  optimisticAuctionSignupsAtom(payload).pipe(
-    Atom.optimisticFn({
-      fn: removeAuctionSignupRequestAtom,
-      reducer: removeAuctionSignupById,
-    })
-  );
+  removeAuctionSignupFromGroupByGroupAtom(auctionGroupKey(payload));
 
 /** Mutation atom for removing a signup when the caller does not own a group list. */
 export const removeAuctionSignupAtom = removeAuctionSignupRequestAtom;

@@ -12,6 +12,7 @@ import {
   appHttpApiAtom,
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
+import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
 
 type ActorInput = typeof ActorPayload.Type;
 type ConfirmOwnedAccountImportInput =
@@ -20,6 +21,8 @@ type PreviewMargonemProfileImportInput =
   typeof PreviewMargonemProfileImportPayload.Type;
 type PreviewOwnedAccountImportsInput =
   typeof PreviewOwnedAccountImportsPayload.Type;
+
+const visibleOwnedAccountActorIds = new Set<string>();
 
 const ownedAccountsByActorAtom = Atom.family((actorUserId: string) =>
   appHttpApiAtom(
@@ -33,8 +36,21 @@ const ownedAccountsByActorAtom = Atom.family((actorUserId: string) =>
 );
 
 /** Resource atom for owned accounts. */
-export const ownedAccountsAtom = (payload: ActorInput) =>
-  ownedAccountsByActorAtom(payload.actorUserId);
+export const ownedAccountsAtom = (payload: ActorInput) => {
+  visibleOwnedAccountActorIds.add(payload.actorUserId);
+  return ownedAccountsByActorAtom(payload.actorUserId);
+};
+
+export const refreshVisibleOwnedAccountAtoms = (
+  get: Atom.FnContext,
+  actorUserId?: string
+) => {
+  for (const visibleActorUserId of visibleOwnedAccountActorIds) {
+    if (actorUserId === undefined || visibleActorUserId === actorUserId) {
+      get.refresh(ownedAccountsByActorAtom(visibleActorUserId));
+    }
+  }
+};
 
 /** Mutation atom for previewing a profile import. */
 export const previewMargonemProfileImportAtom = appHttpApiFn(
@@ -71,7 +87,8 @@ export const confirmOwnedAccountImportAtom = appHttpApiFn(
         yield* client.squadBuilderAccountImport.confirmOwnedAccountImport({
           payload,
         });
-      get.refresh(ownedAccountsAtom({ actorUserId: payload.actorUserId }));
+      refreshVisibleOwnedAccountAtoms(get, payload.actorUserId);
+      refreshVisibleSquadGroupAtoms(get, { actorUserId: payload.actorUserId });
       return result;
     })
 );
