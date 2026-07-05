@@ -8,7 +8,7 @@ import { parsePendingMargonemAccountImportId } from "../pending-margonem-account
 import { isOk } from "../result.js";
 import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
-import { ConfirmOwnedAccountImportService } from "./confirm-owned-account-import-service.js";
+import { confirm } from "./confirm-owned-account-import-service.js";
 import type { Clock } from "./preview-margonem-profile-import.js";
 
 const parseTestUserId = () => {
@@ -49,7 +49,7 @@ it.effect("confirms a pending owned account import through services", () => {
   const actorUserId = parseTestUserId();
   const pendingImportId = parseTestPendingId();
   const profileId = parseTestProfileId();
-  const service = new ConfirmOwnedAccountImportService();
+  const service = { confirm };
   const store = makeAccountImportStoreServiceTestService({
     createOwnedAccountFromPendingImport: ({ displayName, pending }) =>
       Effect.succeed({

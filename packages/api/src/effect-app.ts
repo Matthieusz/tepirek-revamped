@@ -208,7 +208,3 @@ export const makeApiRuntime = (databaseUrl: string) => {
     ) => memoized.getManagedRuntime().runPromiseExit(effect, options),
   };
 };
-
-/** Compatibility factory for oRPC bridge call sites that still need ManagedRuntime. */
-export const makeApiManagedRuntime = (databaseUrl: string) =>
-  makeApiRuntime(databaseUrl).getManagedRuntime();

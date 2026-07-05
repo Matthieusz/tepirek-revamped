@@ -12,15 +12,12 @@ export interface ListOwnedMargonemAccountsInput {
 /** Expected failures returned by the list owned accounts service. */
 export type ListOwnedMargonemAccountsError = SquadBuilderPersistenceUnavailable;
 
-/** Service module that lists Margonem accounts owned by the actor. */
-export class ListOwnedMargonemAccounts {
-  /** List Margonem accounts owned by the actor. */
-  readonly list = Effect.fn("AccountImport.listOwnedAccounts")(
-    (input: ListOwnedMargonemAccountsInput) =>
-      AccountImportStoreService.use((store) =>
-        store.listOwnedAccounts({
-          actorUserId: input.actorUserId,
-        })
-      )
-  );
-}
+/** List Margonem accounts owned by the actor. */
+export const list = Effect.fn("AccountImport.listOwnedAccounts")(
+  (input: ListOwnedMargonemAccountsInput) =>
+    AccountImportStoreService.use((store) =>
+      store.listOwnedAccounts({
+        actorUserId: input.actorUserId,
+      })
+    )
+);

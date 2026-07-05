@@ -24,11 +24,10 @@ import {
 } from "../../../test/integration/database.js";
 import { parseAccountDisplayName } from "../account-display-name.js";
 import { AccountImportStoreService } from "../account-import/account-import-store-service.js";
-import { ConfirmOwnedAccountImportService } from "../account-import/confirm-owned-account-import-service.js";
-import { ListOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts.js";
-import { systemClock } from "../account-import/preview-margonem-profile-import.js";
+import { confirm as confirmOwnedAccountImport } from "../account-import/confirm-owned-account-import-service.js";
+import { list as listOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts.js";
 import { AccountRefetchStoreService } from "../account-refetch/account-refetch-store-service.js";
-import { ApplyAccountRefetchService } from "../account-refetch/apply-account-refetch-service.js";
+import { apply as applyAccountRefetch } from "../account-refetch/apply-account-refetch-service.js";
 import { use as accountSharingState } from "../account-sharing/list-account-sharing-state-service.js";
 import { use as accountAccessInviteResponses } from "../account-sharing/respond-to-account-access-invite-service.js";
 import { use as accountAccessRevocations } from "../account-sharing/revoke-account-access-service.js";
@@ -41,15 +40,15 @@ import { parseMargonemAccountId } from "../margonem-account-id.js";
 import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff.js";
 import { parseMargonemProfileId } from "../margonem-profile-id.js";
 import { isOk } from "../result.js";
-import { CreateSquadGroup } from "./create-squad-group.js";
-import { ListAvailableSquadCharacters } from "./list-available-squad-characters.js";
-import { ListGlobalSquadGroups } from "./list-global-squad-groups.js";
-import { ListSquadGroups } from "./list-squad-groups.js";
+import { create as createSquadGroup } from "./create-squad-group.js";
+import { list as listAvailableSquadCharacters } from "./list-available-squad-characters.js";
+import { list as listGlobalSquadGroups } from "./list-global-squad-groups.js";
+import { getMine, listMine } from "./list-squad-groups.js";
 import { use as squadGroupEditorInviteResponses } from "./respond-to-squad-group-invite-service.js";
 import { use as squadGroupEditorRevocations } from "./revoke-squad-group-editor-service.js";
-import { SaveSquadGroup } from "./save-squad-group.js";
+import { save as saveSquadGroup } from "./save-squad-group.js";
 import { use as squadGroupEditorInvites } from "./send-squad-group-editor-invite-service.js";
-import { SetSquadGroupVisibility } from "./set-squad-group-visibility.js";
+import { set as setSquadGroupVisibility } from "./set-squad-group-visibility.js";
 
 const apiTestLayer = makeApiSquadBuilderLayer(defaultTestDatabaseUrl);
 
@@ -96,7 +95,7 @@ const parseTestCredits = (value: number) => {
 describe("DrizzleSquadGroupStoreService integration", () => {
   it("creates a private squad group for the actor", async () => {
     const member = await createVerifiedMember({ id: "effect-create-owner" });
-    const service = new CreateSquadGroup();
+    const service = { create: createSquadGroup };
 
     const created = await liveEffect(
       apiTestLayer,
@@ -132,8 +131,8 @@ describe("DrizzleSquadGroupStoreService integration", () => {
   it("lists only squad groups owned by the actor", async () => {
     const member = await createVerifiedMember({ id: "effect-list-owner" });
     const other = await createVerifiedMember({ id: "effect-list-other" });
-    const service = new CreateSquadGroup();
-    const listService = new ListSquadGroups();
+    const service = { create: createSquadGroup };
+    const listService = { getMine, listMine };
 
     await liveEffect(
       apiTestLayer,
@@ -171,8 +170,8 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
   it("loads a squad group detail for the owner", async () => {
     const member = await createVerifiedMember({ id: "effect-detail-owner" });
-    const service = new CreateSquadGroup();
-    const listService = new ListSquadGroups();
+    const service = { create: createSquadGroup };
+    const listService = { getMine, listMine };
 
     const created = await liveEffect(
       apiTestLayer,
@@ -202,8 +201,8 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
   it("saves a squad group snapshot through the Effect store", async () => {
     const member = await createVerifiedMember({ id: "effect-save-owner" });
-    const createService = new CreateSquadGroup();
-    const saveService = new SaveSquadGroup(systemClock);
+    const createService = { create: createSquadGroup };
+    const saveService = { save: saveSquadGroup };
 
     const created = await liveEffect(
       apiTestLayer,
@@ -240,8 +239,8 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
   it("lists available Jaruna characters for the squad group owner", async () => {
     const member = await createVerifiedMember({ id: "effect-available-owner" });
-    const service = new CreateSquadGroup();
-    const listService = new ListAvailableSquadCharacters();
+    const service = { create: createSquadGroup };
+    const listService = { list: listAvailableSquadCharacters };
 
     const created = await liveEffect(
       apiTestLayer,
@@ -302,7 +301,7 @@ describe("DrizzleSquadGroupStoreService integration", () => {
   it("lists only Margonem accounts owned by the actor", async () => {
     const member = await createVerifiedMember({ id: "effect-owned-owner" });
     const other = await createVerifiedMember({ id: "effect-owned-other" });
-    const service = new ListOwnedMargonemAccounts();
+    const service = { list: listOwnedMargonemAccounts };
 
     const [ownedAccount] = await testDb
       .insert(margonemAccount)
@@ -508,7 +507,7 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
   it("applies pending account refetches through the Effect store", async () => {
     const member = await createVerifiedMember({ id: "effect-apply-owner" });
-    const service = new ApplyAccountRefetchService();
+    const service = { apply: applyAccountRefetch };
     const [account] = await testDb
       .insert(margonemAccount)
       .values({
@@ -670,7 +669,7 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
   it("confirms pending account imports through the Effect store", async () => {
     const member = await createVerifiedMember({ id: "effect-confirm-user" });
-    const service = new ConfirmOwnedAccountImportService();
+    const service = { confirm: confirmOwnedAccountImport };
     const [pending] = await testDb
       .insert(margonemAccountImportPreview)
       .values({
@@ -789,8 +788,8 @@ describe("DrizzleSquadGroupStoreService integration", () => {
     const member = await createVerifiedMember({
       id: "effect-visibility-owner",
     });
-    const createService = new CreateSquadGroup();
-    const visibilityService = new SetSquadGroupVisibility(systemClock);
+    const createService = { create: createSquadGroup };
+    const visibilityService = { set: setSquadGroupVisibility };
 
     const created = await liveEffect(
       apiTestLayer,
@@ -926,7 +925,7 @@ describe("DrizzleSquadGroupStoreService integration", () => {
       id: "effect-store-squad-send-target",
       name: "Effect Store Squad Send Target",
     });
-    const createService = new CreateSquadGroup();
+    const createService = { create: createSquadGroup };
     const group = await liveEffect(
       apiTestLayer,
       createService.create({
@@ -988,7 +987,7 @@ describe("DrizzleSquadGroupStoreService integration", () => {
       id: "effect-store-squad-respond-target",
       name: "Effect Store Squad Respond Target",
     });
-    const createService = new CreateSquadGroup();
+    const createService = { create: createSquadGroup };
     const group = await liveEffect(
       apiTestLayer,
       createService.create({
@@ -1037,7 +1036,7 @@ describe("DrizzleSquadGroupStoreService integration", () => {
       id: "effect-store-squad-revoke-target",
       name: "Effect Store Squad Revoke Target",
     });
-    const createService = new CreateSquadGroup();
+    const createService = { create: createSquadGroup };
     const group = await liveEffect(
       apiTestLayer,
       createService.create({
@@ -1363,9 +1362,9 @@ describe("DrizzleSquadGroupStoreService integration", () => {
   it("lists globally visible squad groups", async () => {
     const member = await createVerifiedMember({ id: "effect-global-owner" });
     const other = await createVerifiedMember({ id: "effect-global-other" });
-    const createService = new CreateSquadGroup();
-    const visibilityService = new SetSquadGroupVisibility(systemClock);
-    const listGlobalService = new ListGlobalSquadGroups();
+    const createService = { create: createSquadGroup };
+    const visibilityService = { set: setSquadGroupVisibility };
+    const listGlobalService = { list: listGlobalSquadGroups };
 
     const globalGroup = await liveEffect(
       apiTestLayer,

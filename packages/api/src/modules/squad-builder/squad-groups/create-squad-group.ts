@@ -21,12 +21,9 @@ export type CreateSquadGroupError =
   | InvalidSquadGroupName
   | EffectSquadBuilderPersistenceUnavailable;
 
-/** Service module for creating personal squad groups. */
-export class CreateSquadGroup {
-  /** Create an empty private squad group owned by the actor. */
-  readonly create = Effect.fn("SquadGroups.create")(function* createSquadGroup(
-    input: CreateSquadGroupInput
-  ) {
+/** Create an empty private squad group owned by the actor. */
+export const create = Effect.fn("SquadGroups.create")(
+  function* createSquadGroup(input: CreateSquadGroupInput) {
     const name = parseSquadGroupName(input.name);
 
     if (isError(name)) {
@@ -39,11 +36,11 @@ export class CreateSquadGroup {
         name: name.value,
       })
     );
-  });
-}
+  }
+);
 
 export interface Interface {
-  readonly create: CreateSquadGroup["create"];
+  readonly create: typeof create;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
@@ -53,7 +50,4 @@ export class Service extends Context.Service<Service, Interface>()(
 
 export const use = serviceUse(Service);
 
-export const layer = Layer.sync(Service, () => {
-  const service = new CreateSquadGroup();
-  return { create: service.create };
-});
+export const layer = Layer.succeed(Service, { create });

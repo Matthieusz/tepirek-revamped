@@ -23,23 +23,19 @@ export type GetSquadGroupDetailError =
   | ActorCannotViewSquadGroup
   | EffectSquadBuilderPersistenceUnavailable;
 
-/** Service module for listing and loading squad groups owned by an actor. */
-export class ListSquadGroups {
-  /** List squad groups owned by the actor. */
-  readonly listMine = Effect.fn("SquadGroups.listMine")(
-    (input: { readonly actorUserId: AppUserId }) =>
-      SquadGroupStoreService.use((store) => store.listMySquadGroups(input))
-  );
+/** List squad groups owned by the actor. */
+export const listMine = Effect.fn("SquadGroups.listMine")(
+  (input: { readonly actorUserId: AppUserId }) =>
+    SquadGroupStoreService.use((store) => store.listMySquadGroups(input))
+);
 
-  /** Load a squad group the actor can view. */
-  readonly getMine = Effect.fn("SquadGroups.getMine")(
-    (input: {
-      readonly actorUserId: AppUserId;
-      readonly groupId: SquadGroupId;
-    }) =>
-      SquadGroupStoreService.use((store) => store.getSquadGroupDetail(input))
-  );
-}
+/** Load a squad group the actor can view. */
+export const getMine = Effect.fn("SquadGroups.getMine")(
+  (input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+  }) => SquadGroupStoreService.use((store) => store.getSquadGroupDetail(input))
+);
 
 export interface Interface {
   readonly listMine: (input: {
@@ -62,16 +58,15 @@ export const layer = Layer.effect(
   Service,
   Effect.gen(function* makeService() {
     const store = yield* SquadGroupStoreService;
-    const service = new ListSquadGroups();
     return {
       getMine: (input) =>
-        service
-          .getMine(input)
-          .pipe(Effect.provideService(SquadGroupStoreService, store)),
+        getMine(input).pipe(
+          Effect.provideService(SquadGroupStoreService, store)
+        ),
       listMine: (input) =>
-        service
-          .listMine(input)
-          .pipe(Effect.provideService(SquadGroupStoreService, store)),
+        listMine(input).pipe(
+          Effect.provideService(SquadGroupStoreService, store)
+        ),
     };
   })
 );

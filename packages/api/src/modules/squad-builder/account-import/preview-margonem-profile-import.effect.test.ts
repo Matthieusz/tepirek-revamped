@@ -9,7 +9,7 @@ import { FirecrawlConfigService } from "../firecrawl-config.js";
 import { isOk, ok } from "../result.js";
 import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
-import { PreviewMargonemProfileImportService } from "./preview-margonem-profile-import-service.js";
+import { preview } from "./preview-margonem-profile-import-service.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-preview-user");
@@ -62,19 +62,19 @@ it.effect("previews an available Margonem profile through services", () => {
         requestId: 123,
       }),
   });
-  const service = new PreviewMargonemProfileImportService();
+  const service = { preview };
 
   return Effect.gen(function* previewEffect() {
-    const preview = yield* service.preview({
+    const profilePreview = yield* service.preview({
       actorUserId,
       profileUrl: "https://www.margonem.pl/profile/view,7298897",
     });
 
-    expect(preview).toMatchObject({
+    expect(profilePreview).toMatchObject({
       generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
       suggestedAccountName: "informati",
     });
-    expect(preview.jarunaCharacters).toHaveLength(1);
+    expect(profilePreview.jarunaCharacters).toHaveLength(1);
     expect(succeededRequestIds).toEqual([123]);
   }).pipe(
     Effect.provideService(FirecrawlConfigService)({

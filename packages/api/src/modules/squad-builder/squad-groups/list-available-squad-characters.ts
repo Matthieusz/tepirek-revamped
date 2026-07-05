@@ -15,23 +15,20 @@ export type ListAvailableSquadCharactersError =
   | ActorCannotViewSquadGroup
   | EffectSquadBuilderPersistenceUnavailable;
 
-/** Service module for listing accessible Jaruna characters for a squad group owner. */
-export class ListAvailableSquadCharacters {
-  /** List Jaruna characters accessible to the squad group owner. */
-  readonly list = Effect.fn("SquadGroups.listAvailableCharacters")(
-    function* listAvailableSquadCharacters(input: {
-      readonly actorUserId: AppUserId;
-      readonly groupId: SquadGroupId;
-    }) {
-      const group = yield* SquadGroupStoreService.use((store) =>
-        store.getSquadGroupDetail(input)
-      );
+/** List Jaruna characters accessible to the squad group owner. */
+export const list = Effect.fn("SquadGroups.listAvailableCharacters")(
+  function* listAvailableSquadCharacters(input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+  }) {
+    const group = yield* SquadGroupStoreService.use((store) =>
+      store.getSquadGroupDetail(input)
+    );
 
-      return yield* SquadGroupStoreService.use((store) =>
-        store.listAvailableCharactersForOwner({
-          ownerUserId: group.ownerUserId,
-        })
-      );
-    }
-  );
-}
+    return yield* SquadGroupStoreService.use((store) =>
+      store.listAvailableCharactersForOwner({
+        ownerUserId: group.ownerUserId,
+      })
+    );
+  }
+);

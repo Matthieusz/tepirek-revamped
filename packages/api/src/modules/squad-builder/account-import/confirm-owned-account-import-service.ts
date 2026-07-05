@@ -30,47 +30,42 @@ export type ConfirmOwnedAccountImportServiceError =
   | DuplicateMargonemAccountError
   | SquadBuilderPersistenceUnavailable;
 
-/** Service module that confirms a pending import into an owned account. */
-export class ConfirmOwnedAccountImportService {
-  private readonly currentDate = Clock.currentTimeMillis.pipe(
-    EffectRuntime.map((milliseconds) => new Date(milliseconds))
-  );
+const currentDate = Clock.currentTimeMillis.pipe(
+  EffectRuntime.map((milliseconds) => new Date(milliseconds))
+);
 
-  /** Save a previously previewed Margonem account and its Jaruna characters. */
-  readonly confirm = EffectRuntime.fn("AccountImport.confirm")(
-    function* confirmOwnedAccountImportEffect(
-      this: ConfirmOwnedAccountImportService,
-      input: ConfirmOwnedAccountImportServiceInput
-    ) {
-      const { currentDate } = this;
-      const displayName = parseAccountDisplayName(input.displayName);
+/** Save a previously previewed Margonem account and its Jaruna characters. */
+export const confirm = EffectRuntime.fn("AccountImport.confirm")(
+  function* confirmOwnedAccountImportEffect(
+    input: ConfirmOwnedAccountImportServiceInput
+  ) {
+    const displayName = parseAccountDisplayName(input.displayName);
 
-      if (isError(displayName)) {
-        return yield* EffectRuntime.fail(displayName.error);
-      }
-
-      const now = yield* currentDate;
-      const pending = yield* AccountImportStoreService.use((store) =>
-        store.findPendingImportForConfirmation({
-          actorUserId: input.actorUserId,
-          now,
-          pendingImportId: input.pendingImportId,
-        })
-      );
-
-      return yield* AccountImportStoreService.use((store) =>
-        store.createOwnedAccountFromPendingImport({
-          actorUserId: input.actorUserId,
-          displayName: displayName.value,
-          pending,
-        })
-      );
+    if (isError(displayName)) {
+      return yield* EffectRuntime.fail(displayName.error);
     }
-  );
-}
+
+    const now = yield* currentDate;
+    const pending = yield* AccountImportStoreService.use((store) =>
+      store.findPendingImportForConfirmation({
+        actorUserId: input.actorUserId,
+        now,
+        pendingImportId: input.pendingImportId,
+      })
+    );
+
+    return yield* AccountImportStoreService.use((store) =>
+      store.createOwnedAccountFromPendingImport({
+        actorUserId: input.actorUserId,
+        displayName: displayName.value,
+        pending,
+      })
+    );
+  }
+);
 
 export interface Interface {
-  readonly confirm: ConfirmOwnedAccountImportService["confirm"];
+  readonly confirm: typeof confirm;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
@@ -80,7 +75,4 @@ export class Service extends Context.Service<Service, Interface>()(
 
 export const use = serviceUse(Service);
 
-export const layer = Layer.sync(Service, () => {
-  const service = new ConfirmOwnedAccountImportService();
-  return { confirm: service.confirm };
-});
+export const layer = Layer.succeed(Service, { confirm });

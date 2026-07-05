@@ -54,7 +54,7 @@ Validated commands after local changes:
 8. **Typed errors are collapsed to generic strings.** UI should match known `Schema.TaggedErrorClass` tags and use safe defect fallback copy. Do not surface raw causes.
 9. **Observability is a stub.** `Otlp.loggers()` returns `[]`, `tracingLayer()` returns `Layer.empty`, and `apps/server/src/index.ts` provides `makeApiLiveLayer(databaseUrl)` to `AppHttpApiLayer` without providing `Observability.layer` last. Effect `HttpApi` request handling therefore does not get the intended logger/tracer layer.
 10. **Drizzle query logging is wired before the actual logging policy exists.** `PgDrizzle.EffectLogger.layer` is enabled, but there is no real OTLP/export/redaction policy yet and the `HttpApi` web handler is not under `Observability.layer`.
-11. **Legacy compatibility is mostly cleaned up but not finished.** `packages/api/src/routers/` is deleted locally, but `packages/api/src/effect-app.ts` still exports `makeApiManagedRuntime` and `.github/copilot-instructions.md` still documents oRPC/React Query usage.
+11. **Legacy compatibility is mostly cleaned up but not finished.** `packages/api/src/routers/` is deleted locally, but `.github/copilot-instructions.md` still documents oRPC/React Query usage.
 
 ## Phase 6 target
 
@@ -271,14 +271,13 @@ Scope: cleanup after 6.1–6.7 are green.
 
 Instructions:
 
-1. Delete `makeApiManagedRuntime` if no call site remains.
-2. Delete or rename `packages/api/src/routers/*` compatibility files after confirming no public import needs `AppRouter`.
-3. Remove stale lockfile oRPC entries only if they are not transitive peer metadata from `evlog`.
-4. Keep better-auth and Hono; replacing Hono is out of scope.
+1. Delete or rename `packages/api/src/routers/*` compatibility files after confirming no public import needs `AppRouter`.
+2. Remove stale lockfile oRPC entries only if they are not transitive peer metadata from `evlog`.
+3. Keep better-auth and Hono; replacing Hono is out of scope.
 
 Acceptance:
 
-- Grep finds no `AppRouter`, `makeApiManagedRuntime`, `runOrpcEffect`, or direct `@orpc/*` source usage.
+- Grep finds no `AppRouter`, `runOrpcEffect`, or direct `@orpc/*` source usage.
 - Direct package dependencies stay clear of oRPC and React Query.
 - Full intended verification passes: `pnpm fix`, `pnpm check-types`, targeted tests, and smoke test.
 

@@ -26,126 +26,121 @@ import { pendingRefetchPolicy } from "./preview-account-refetch.js";
 const addMinutes = (date: Date, minutes: number): Date =>
   new Date(date.getTime() + minutes * 60_000);
 
-/** Service module that previews a manual saved-account refetch. */
-export class PreviewAccountRefetchService {
-  readonly serviceName = "PreviewAccountRefetchService";
-
-  /** Fetch latest account HTML and store a pending refetch diff for owner confirmation. */
-  readonly preview = EffectRuntime.fn("AccountRefetch.preview")(
-    function* previewAccountRefetchEffect(
-      input: PreviewAccountRefetchInput,
-      options: { readonly signal?: AbortSignal } = {}
-    ) {
-      const config = yield* FirecrawlConfigService;
-      const firecrawl = yield* FirecrawlClientService;
-      const account = yield* AccountRefetchStoreService.use((store) =>
-        store.getAccountForRefetch(input)
-      );
-      const requestTimeMillis = yield* ClockRuntime.currentTimeMillis;
-      const yearMonth = firecrawlYearMonthFromDate(new Date(requestTimeMillis));
-      const reservedRequest = yield* AccountRefetchStoreService.use((store) =>
-        store.reserveRequest({
-          monthlyRequestBudget: config.monthlyRequestBudget,
+/** Fetch latest account HTML and store a pending refetch diff for owner confirmation. */
+export const preview = EffectRuntime.fn("AccountRefetch.preview")(
+  function* previewAccountRefetchEffect(
+    input: PreviewAccountRefetchInput,
+    options: { readonly signal?: AbortSignal } = {}
+  ) {
+    const config = yield* FirecrawlConfigService;
+    const firecrawl = yield* FirecrawlClientService;
+    const account = yield* AccountRefetchStoreService.use((store) =>
+      store.getAccountForRefetch(input)
+    );
+    const requestTimeMillis = yield* ClockRuntime.currentTimeMillis;
+    const yearMonth = firecrawlYearMonthFromDate(new Date(requestTimeMillis));
+    const reservedRequest = yield* AccountRefetchStoreService.use((store) =>
+      store.reserveRequest({
+        monthlyRequestBudget: config.monthlyRequestBudget,
+        profileId: account.profileId,
+        requestedByUserId: input.actorUserId,
+        yearMonth,
+      })
+    );
+    const scrapedProfileResult = yield* EffectRuntime.tryPromise({
+      catch: (cause) =>
+        new FirecrawlRequestFailed({
+          cause,
           profileId: account.profileId,
-          requestedByUserId: input.actorUserId,
-          yearMonth,
-        })
-      );
-      const scrapedProfileResult = yield* EffectRuntime.tryPromise({
-        catch: (cause) =>
-          new FirecrawlRequestFailed({
-            cause,
-            profileId: account.profileId,
-          }) satisfies FirecrawlScrapeError,
-        try: () => firecrawl.scrapeProfileHtml(account.profileId, options),
-      });
+        }) satisfies FirecrawlScrapeError,
+      try: () => firecrawl.scrapeProfileHtml(account.profileId, options),
+    });
 
-      if (isError(scrapedProfileResult)) {
-        yield* AccountRefetchStoreService.use((store) =>
-          store.markRequestFailed({
-            errorTag: scrapedProfileResult.error._tag,
-            requestId: reservedRequest.requestId,
-          })
-        );
-        return yield* scrapedProfileResult.error;
-      }
-
-      const scrapedProfile = scrapedProfileResult.value;
-      const creditsUsed = parseFirecrawlCreditCount(
-        scrapedProfile.metadata.creditsUsed ?? 1
-      );
-
-      if (isError(creditsUsed)) {
-        yield* AccountRefetchStoreService.use((store) =>
-          store.markRequestFailed({
-            errorTag: creditsUsed.error._tag,
-            requestId: reservedRequest.requestId,
-          })
-        );
-        return yield* new FirecrawlResponseNotParseable({
-          cause: new Error("Invalid Firecrawl creditsUsed"),
-          profileId: account.profileId,
-        });
-      }
-
+    if (isError(scrapedProfileResult)) {
       yield* AccountRefetchStoreService.use((store) =>
-        store.markRequestSucceeded({
-          cacheState: scrapedProfile.metadata.cacheState ?? null,
-          creditsUsed: creditsUsed.value,
-          firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
+        store.markRequestFailed({
+          errorTag: scrapedProfileResult.error._tag,
           requestId: reservedRequest.requestId,
         })
       );
+      return yield* scrapedProfileResult.error;
+    }
 
-      const parsedHtml = parseMargonemProfileHtml({
-        html: scrapedProfile.html,
-        profileId: account.profileId,
-      });
+    const scrapedProfile = scrapedProfileResult.value;
+    const creditsUsed = parseFirecrawlCreditCount(
+      scrapedProfile.metadata.creditsUsed ?? 1
+    );
 
-      if (isError(parsedHtml)) {
-        return yield* EffectRuntime.fail(parsedHtml.error);
-      }
-
-      const fetchedTimeMillis = yield* ClockRuntime.currentTimeMillis;
-      const fetchedAt = new Date(fetchedTimeMillis);
-      const diff = computeMargonemAccountRefetchDiff({
-        accountId: account.accountId,
-        currentCharacters: account.currentCharacters,
-        fetchedAt,
-        latestCharacters: parsedHtml.value.jarunaCharacters,
-        profileId: account.profileId,
-      });
-      const pending = yield* AccountRefetchStoreService.use((store) =>
-        store.createPendingRefetch({
-          accountId: account.accountId,
-          actorUserId: input.actorUserId,
-          diff,
-          expiresAt: addMinutes(
-            fetchedAt,
-            pendingRefetchPolicy.expiresAfterMinutes
-          ),
-          fetchedAt,
-          firecrawlCreditsUsed: creditsUsed.value,
-          latestCharacters: parsedHtml.value.jarunaCharacters,
-          profileId: account.profileId,
+    if (isError(creditsUsed)) {
+      yield* AccountRefetchStoreService.use((store) =>
+        store.markRequestFailed({
+          errorTag: creditsUsed.error._tag,
+          requestId: reservedRequest.requestId,
         })
       );
+      return yield* new FirecrawlResponseNotParseable({
+        cause: new Error("Invalid Firecrawl creditsUsed"),
+        profileId: account.profileId,
+      });
+    }
 
-      return {
+    yield* AccountRefetchStoreService.use((store) =>
+      store.markRequestSucceeded({
+        cacheState: scrapedProfile.metadata.cacheState ?? null,
+        creditsUsed: creditsUsed.value,
+        firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
+        requestId: reservedRequest.requestId,
+      })
+    );
+
+    const parsedHtml = parseMargonemProfileHtml({
+      html: scrapedProfile.html,
+      profileId: account.profileId,
+    });
+
+    if (isError(parsedHtml)) {
+      return yield* EffectRuntime.fail(parsedHtml.error);
+    }
+
+    const fetchedTimeMillis = yield* ClockRuntime.currentTimeMillis;
+    const fetchedAt = new Date(fetchedTimeMillis);
+    const diff = computeMargonemAccountRefetchDiff({
+      accountId: account.accountId,
+      currentCharacters: account.currentCharacters,
+      fetchedAt,
+      latestCharacters: parsedHtml.value.jarunaCharacters,
+      profileId: account.profileId,
+    });
+    const pending = yield* AccountRefetchStoreService.use((store) =>
+      store.createPendingRefetch({
         accountId: account.accountId,
+        actorUserId: input.actorUserId,
         diff,
+        expiresAt: addMinutes(
+          fetchedAt,
+          pendingRefetchPolicy.expiresAfterMinutes
+        ),
         fetchedAt,
         firecrawlCreditsUsed: creditsUsed.value,
-        generatedProfileUrl: toMargonemProfileUrl(account.profileId),
+        latestCharacters: parsedHtml.value.jarunaCharacters,
         profileId: account.profileId,
-        refetchPreviewId: pending.id,
-      };
-    }
-  );
-}
+      })
+    );
+
+    return {
+      accountId: account.accountId,
+      diff,
+      fetchedAt,
+      firecrawlCreditsUsed: creditsUsed.value,
+      generatedProfileUrl: toMargonemProfileUrl(account.profileId),
+      profileId: account.profileId,
+      refetchPreviewId: pending.id,
+    };
+  }
+);
 
 export interface Interface {
-  readonly preview: PreviewAccountRefetchService["preview"];
+  readonly preview: typeof preview;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
@@ -155,7 +150,4 @@ export class Service extends Context.Service<Service, Interface>()(
 
 export const use = serviceUse(Service);
 
-export const layer = Layer.sync(Service, () => {
-  const service = new PreviewAccountRefetchService();
-  return { preview: service.preview };
-});
+export const layer = Layer.succeed(Service, { preview });

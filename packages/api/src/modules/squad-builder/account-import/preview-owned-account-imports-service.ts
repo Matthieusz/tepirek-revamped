@@ -20,7 +20,7 @@ import type {
   DuplicateMargonemAccountError,
   ProfileAccessState,
 } from "./account-import-store.js";
-import { PreviewMargonemProfileImportService } from "./preview-margonem-profile-import-service.js";
+import { preview as previewMargonemProfileImport } from "./preview-margonem-profile-import-service.js";
 import type {
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportInput,
@@ -185,187 +185,178 @@ const persistPendingImport = ({
   );
 };
 
-/** Service module that previews and persists pending owned-account imports. */
-export class PreviewOwnedAccountImportsService {
-  readonly serviceName = "PreviewOwnedAccountImportsService";
+/** Preview and persist pending imports for a batch of pasted profile URLs. */
+export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
+  function* previewBatchEffect(
+    input: PreviewOwnedAccountImportsInput,
+    options: { readonly signal?: AbortSignal } = {}
+  ) {
+    const currentTimeMillis = yield* ClockRuntime.currentTimeMillis;
+    const now = new Date(currentTimeMillis);
+    const nonBlankLines = input.profileUrls
+      .map((url, index) => ({ inputUrl: url, lineNumber: index + 1 }))
+      .filter((line) => !isEmpty(line.inputUrl));
 
-  /** Preview and persist pending imports for a batch of pasted profile URLs. */
-  readonly preview = EffectRuntime.fn("AccountImport.previewBatch")(
-    function* previewBatchEffect(
-      input: PreviewOwnedAccountImportsInput,
-      options: { readonly signal?: AbortSignal } = {}
-    ) {
-      const singlePreview = new PreviewMargonemProfileImportService();
+    if (nonBlankLines.length === 0) {
+      return yield* new EmptyProfileUrlBatch();
+    }
 
-      const currentTimeMillis = yield* ClockRuntime.currentTimeMillis;
-      const now = new Date(currentTimeMillis);
-      const nonBlankLines = input.profileUrls
-        .map((url, index) => ({ inputUrl: url, lineNumber: index + 1 }))
-        .filter((line) => !isEmpty(line.inputUrl));
+    if (nonBlankLines.length > batchImportPolicy.maxProfileUrls) {
+      return yield* new TooManyProfileUrlsInBatch({
+        maxUrls: batchImportPolicy.maxProfileUrls,
+      });
+    }
 
-      if (nonBlankLines.length === 0) {
-        return yield* new EmptyProfileUrlBatch();
-      }
+    const failures: LineFailure[] = [];
+    const parsedLines: ParsedLine[] = [];
+    const firstLineForProfileId = new Map<number, number>();
 
-      if (nonBlankLines.length > batchImportPolicy.maxProfileUrls) {
-        return yield* new TooManyProfileUrlsInBatch({
-          maxUrls: batchImportPolicy.maxProfileUrls,
-        });
-      }
+    for (const line of nonBlankLines) {
+      const parsedProfileId = parseMargonemProfileUrl(line.inputUrl);
 
-      const failures: LineFailure[] = [];
-      const parsedLines: ParsedLine[] = [];
-      const firstLineForProfileId = new Map<number, number>();
-
-      for (const line of nonBlankLines) {
-        const parsedProfileId = parseMargonemProfileUrl(line.inputUrl);
-
-        if (isError(parsedProfileId)) {
-          failures.push({
-            error: parsedProfileId.error,
-            inputUrl: line.inputUrl,
-            lineNumber: line.lineNumber,
-          });
-          continue;
-        }
-
-        const profileIdNumber = profileIdToNumber(parsedProfileId.value);
-        const firstLineNumber = firstLineForProfileId.get(profileIdNumber);
-
-        if (firstLineNumber !== undefined) {
-          failures.push({
-            error: new DuplicateProfileInBatchError({
-              firstLineNumber,
-            }),
-            inputUrl: line.inputUrl,
-            lineNumber: line.lineNumber,
-          });
-          continue;
-        }
-
-        firstLineForProfileId.set(profileIdNumber, line.lineNumber);
-        parsedLines.push({
+      if (isError(parsedProfileId)) {
+        failures.push({
+          error: parsedProfileId.error,
           inputUrl: line.inputUrl,
           lineNumber: line.lineNumber,
-          profileId: parsedProfileId.value,
         });
+        continue;
       }
 
-      const accessResults = yield* EffectRuntime.all(
-        parsedLines.map((line) =>
-          AccountImportStoreService.use((store) =>
-            store.findProfileAccessState({
-              actorUserId: input.actorUserId,
+      const profileIdNumber = profileIdToNumber(parsedProfileId.value);
+      const firstLineNumber = firstLineForProfileId.get(profileIdNumber);
+
+      if (firstLineNumber !== undefined) {
+        failures.push({
+          error: new DuplicateProfileInBatchError({
+            firstLineNumber,
+          }),
+          inputUrl: line.inputUrl,
+          lineNumber: line.lineNumber,
+        });
+        continue;
+      }
+
+      firstLineForProfileId.set(profileIdNumber, line.lineNumber);
+      parsedLines.push({
+        inputUrl: line.inputUrl,
+        lineNumber: line.lineNumber,
+        profileId: parsedProfileId.value,
+      });
+    }
+
+    const accessResults = yield* EffectRuntime.all(
+      parsedLines.map((line) =>
+        AccountImportStoreService.use((store) =>
+          store.findProfileAccessState({
+            actorUserId: input.actorUserId,
+            profileId: line.profileId,
+          })
+        ).pipe(
+          EffectRuntime.match({
+            onFailure: (error) => ({
+              _tag: "LineFailure" as const,
+              error,
+              inputUrl: line.inputUrl,
+              lineNumber: line.lineNumber,
+            }),
+            onSuccess: (state) => ({
+              _tag: "AccessState" as const,
+              inputUrl: line.inputUrl,
+              lineNumber: line.lineNumber,
               profileId: line.profileId,
-            })
-          ).pipe(
-            EffectRuntime.match({
-              onFailure: (error) => ({
-                _tag: "LineFailure" as const,
-                error,
-                inputUrl: line.inputUrl,
-                lineNumber: line.lineNumber,
-              }),
-              onSuccess: (state) => ({
-                _tag: "AccessState" as const,
-                inputUrl: line.inputUrl,
-                lineNumber: line.lineNumber,
-                profileId: line.profileId,
-                state,
-              }),
-            })
-          )
+              state,
+            }),
+          })
         )
-      );
+      )
+    );
 
-      const availableLines: ParsedLine[] = [];
+    const availableLines: ParsedLine[] = [];
 
-      for (const result of accessResults) {
-        if (result._tag === "LineFailure") {
-          failures.push({
-            error: result.error,
-            inputUrl: result.inputUrl,
-            lineNumber: result.lineNumber,
-          });
-          continue;
-        }
-
-        const lineError = accessStateToLineError(result.state);
-
-        if (lineError !== undefined) {
-          failures.push({
-            error: lineError,
-            inputUrl: result.inputUrl,
-            lineNumber: result.lineNumber,
-          });
-          continue;
-        }
-
-        availableLines.push({
+    for (const result of accessResults) {
+      if (result._tag === "LineFailure") {
+        failures.push({
+          error: result.error,
           inputUrl: result.inputUrl,
           lineNumber: result.lineNumber,
-          profileId: result.profileId,
         });
+        continue;
       }
 
-      const fetchedItems = yield* EffectRuntime.all(
-        availableLines.map((line) =>
-          singlePreview
-            .preview(
-              {
+      const lineError = accessStateToLineError(result.state);
+
+      if (lineError !== undefined) {
+        failures.push({
+          error: lineError,
+          inputUrl: result.inputUrl,
+          lineNumber: result.lineNumber,
+        });
+        continue;
+      }
+
+      availableLines.push({
+        inputUrl: result.inputUrl,
+        lineNumber: result.lineNumber,
+        profileId: result.profileId,
+      });
+    }
+
+    const fetchedItems = yield* EffectRuntime.all(
+      availableLines.map((line) =>
+        previewMargonemProfileImport(
+          {
+            actorUserId: input.actorUserId,
+            profileUrl: line.inputUrl,
+          },
+          options.signal === undefined ? {} : { signal: options.signal }
+        ).pipe(
+          EffectRuntime.matchEffect({
+            onFailure: (error) =>
+              EffectRuntime.succeed({
+                item: toFailedItem({
+                  error,
+                  inputUrl: line.inputUrl,
+                  lineNumber: line.lineNumber,
+                }),
+                lineNumber: line.lineNumber,
+              }),
+            onSuccess: (profilePreview) =>
+              persistPendingImport({
                 actorUserId: input.actorUserId,
-                profileUrl: line.inputUrl,
-              },
-              options.signal === undefined ? {} : { signal: options.signal }
-            )
-            .pipe(
-              EffectRuntime.matchEffect({
-                onFailure: (error) =>
-                  EffectRuntime.succeed({
-                    item: toFailedItem({
-                      error,
-                      inputUrl: line.inputUrl,
-                      lineNumber: line.lineNumber,
-                    }),
-                    lineNumber: line.lineNumber,
-                  }),
-                onSuccess: (preview) =>
-                  persistPendingImport({
-                    actorUserId: input.actorUserId,
-                    inputUrl: line.inputUrl,
-                    lineNumber: line.lineNumber,
-                    now,
-                    preview,
-                  }),
-              })
-            )
-        ),
-        { concurrency: batchImportPolicy.fetchConcurrency }
+                inputUrl: line.inputUrl,
+                lineNumber: line.lineNumber,
+                now,
+                preview: profilePreview,
+              }),
+          })
+        )
+      ),
+      { concurrency: batchImportPolicy.fetchConcurrency }
+    );
+
+    const itemsByLine = new Map<number, PreviewOwnedAccountImportItem>();
+
+    for (const failure of failures) {
+      itemsByLine.set(failure.lineNumber, toFailedItem(failure));
+    }
+
+    for (const result of fetchedItems) {
+      itemsByLine.set(result.lineNumber, result.item);
+    }
+
+    const items = nonBlankLines
+      .map((line) => itemsByLine.get(line.lineNumber))
+      .filter(
+        (item): item is PreviewOwnedAccountImportItem => item !== undefined
       );
 
-      const itemsByLine = new Map<number, PreviewOwnedAccountImportItem>();
-
-      for (const failure of failures) {
-        itemsByLine.set(failure.lineNumber, toFailedItem(failure));
-      }
-
-      for (const result of fetchedItems) {
-        itemsByLine.set(result.lineNumber, result.item);
-      }
-
-      const items = nonBlankLines
-        .map((line) => itemsByLine.get(line.lineNumber))
-        .filter(
-          (item): item is PreviewOwnedAccountImportItem => item !== undefined
-        );
-
-      return { items };
-    }
-  );
-}
+    return { items };
+  }
+);
 
 export interface Interface {
-  readonly preview: PreviewOwnedAccountImportsService["preview"];
+  readonly preview: typeof preview;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
@@ -375,7 +366,4 @@ export class Service extends Context.Service<Service, Interface>()(
 
 export const use = serviceUse(Service);
 
-export const layer = Layer.sync(Service, () => {
-  const service = new PreviewOwnedAccountImportsService();
-  return { preview: service.preview };
-});
+export const layer = Layer.succeed(Service, { preview });

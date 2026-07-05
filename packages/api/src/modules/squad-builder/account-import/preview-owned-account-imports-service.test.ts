@@ -9,7 +9,7 @@ import { FirecrawlConfigService } from "../firecrawl-config.js";
 import { isOk, ok } from "../result.js";
 import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
-import { PreviewOwnedAccountImportsService } from "./preview-owned-account-imports-service.js";
+import { preview } from "./preview-owned-account-imports-service.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-batch-user");
@@ -62,7 +62,7 @@ it.effect(
           requestId: 123,
         }),
     });
-    const service = new PreviewOwnedAccountImportsService();
+    const service = { preview };
 
     return Effect.gen(function* previewBatchEffect() {
       const output = yield* service.preview({

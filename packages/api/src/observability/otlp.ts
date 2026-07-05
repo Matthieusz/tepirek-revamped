@@ -1,4 +1,8 @@
-import { Layer } from "effect";
+import { Effect, Layer } from "effect";
+import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
+import * as OtlpLogger from "effect/unstable/observability/OtlpLogger";
+import * as OtlpSerialization from "effect/unstable/observability/OtlpSerialization";
+import * as OtlpTracer from "effect/unstable/observability/OtlpTracer";
 
 import { runId } from "./shared.js";
 
@@ -47,6 +51,19 @@ const parseResourceAttributes = (): Record<string, string> => {
 export const endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
 export const headers = parseHeaders(process.env.OTEL_EXPORTER_OTLP_HEADERS);
 
+const otlpSupportLayer = Layer.merge(
+  FetchHttpClient.layer,
+  OtlpSerialization.layerJson
+);
+
+const otlpUrl = (path: "logs" | "traces"): string | undefined => {
+  if (!endpoint) {
+    return undefined;
+  }
+
+  return `${endpoint.replace(/\/+$/u, "")}/v1/${path}`;
+};
+
 export const resource = (): {
   readonly attributes: Record<string, string>;
   readonly serviceName: string;
@@ -61,6 +78,30 @@ export const resource = (): {
   serviceVersion: process.env.npm_package_version ?? "0.0.0",
 });
 
-export const loggers = () => [];
+export const loggers = () => {
+  const url = otlpUrl("logs");
 
-export const tracingLayer = () => Promise.resolve(Layer.empty);
+  return url === undefined
+    ? []
+    : [
+        OtlpLogger.make({
+          headers,
+          resource: resource(),
+          url,
+        }).pipe(Effect.provide(otlpSupportLayer)),
+      ];
+};
+
+export const tracingLayer = () => {
+  const url = otlpUrl("traces");
+
+  return Promise.resolve(
+    url === undefined
+      ? Layer.empty
+      : OtlpTracer.layer({
+          headers,
+          resource: resource(),
+          url,
+        }).pipe(Layer.provide(otlpSupportLayer))
+  );
+};

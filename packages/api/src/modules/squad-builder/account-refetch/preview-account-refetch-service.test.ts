@@ -10,7 +10,7 @@ import { FirecrawlConfigService } from "../firecrawl-config.js";
 import { isOk, ok } from "../result.js";
 import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
-import { PreviewAccountRefetchService } from "./preview-account-refetch-service.js";
+import { preview } from "./preview-account-refetch-service.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-refetch-user");
@@ -83,21 +83,21 @@ it.effect("previews account refetch and stores the pending diff", () => {
         requestId: 123,
       }),
   });
-  const service = new PreviewAccountRefetchService();
+  const service = { preview };
 
   return Effect.gen(function* previewRefetchEffect() {
-    const preview = yield* service.preview({
+    const refetchPreview = yield* service.preview({
       accountId: 123 as never,
       actorUserId,
     });
 
-    expect(preview).toMatchObject({
+    expect(refetchPreview).toMatchObject({
       accountId: 123,
       firecrawlCreditsUsed: 1 as FirecrawlCreditCount,
       generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
       refetchPreviewId: 456,
     });
-    expect(preview.diff.changed).toHaveLength(1);
+    expect(refetchPreview.diff.changed).toHaveLength(1);
     expect(createdPendingIds).toEqual([456]);
   }).pipe(
     Effect.provideService(FirecrawlConfigService)({

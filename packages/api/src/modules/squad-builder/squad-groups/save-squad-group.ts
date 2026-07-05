@@ -39,21 +39,10 @@ export type SaveSquadGroupError =
   | SquadGroupValidationError
   | EffectSquadBuilderPersistenceUnavailable;
 
-/** Service module that validates and atomically saves squad group snapshots. */
-export class SaveSquadGroup {
-  private readonly clock: Clock;
-
-  constructor(clock: Clock) {
-    this.clock = clock;
-  }
-
-  /** Validate and atomically save a full squad group snapshot. */
-  readonly save = Effect.fn("SquadGroups.save")(function* saveSquadGroup(
-    this: SaveSquadGroup,
+const makeSave = (clock: Clock) =>
+  Effect.fn("SquadGroups.save")(function* saveSquadGroup(
     input: SaveSquadGroupInput
   ) {
-    const { clock } = this;
-
     yield* SquadGroupStoreService.use((store) =>
       store.getSquadGroupDetail({
         actorUserId: input.actorUserId,
@@ -88,10 +77,12 @@ export class SaveSquadGroup {
       })
     );
   });
-}
+
+/** Validate and atomically save a full squad group snapshot. */
+export const save = makeSave(systemClock);
 
 export interface Interface {
-  readonly save: SaveSquadGroup["save"];
+  readonly save: typeof save;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
@@ -101,7 +92,4 @@ export class Service extends Context.Service<Service, Interface>()(
 
 export const use = serviceUse(Service);
 
-export const layer = Layer.sync(Service, () => {
-  const service = new SaveSquadGroup(systemClock);
-  return { save: service.save };
-});
+export const layer = Layer.succeed(Service, { save });

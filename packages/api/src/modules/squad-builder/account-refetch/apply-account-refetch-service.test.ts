@@ -6,7 +6,7 @@ import { parseAppUserId } from "../app-user-id.js";
 import { isOk } from "../result.js";
 import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
-import { ApplyAccountRefetchService } from "./apply-account-refetch-service.js";
+import { apply } from "./apply-account-refetch-service.js";
 
 const parseTestUserId = () => {
   const userId = parseAppUserId("effect-apply-refetch-user");
@@ -64,7 +64,7 @@ it.effect("applies a pending account refetch and marks it applied", () => {
       return Effect.void;
     },
   });
-  const service = new ApplyAccountRefetchService();
+  const service = { apply };
 
   return Effect.gen(function* applyRefetchEffect() {
     yield* TestClock.setTime(fixedNow.getTime());

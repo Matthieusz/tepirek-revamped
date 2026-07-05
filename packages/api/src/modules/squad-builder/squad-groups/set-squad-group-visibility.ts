@@ -27,38 +27,28 @@ export type GlobalSquadVisibilityError =
   | InvalidSquadGroupVisibility
   | EffectSquadBuilderPersistenceUnavailable;
 
-/** Service module for owner-only squad group visibility changes. */
-export class SetSquadGroupVisibility {
-  private readonly clock: Clock;
-
-  constructor(clock: Clock) {
-    this.clock = clock;
-  }
-
-  /** Change squad group visibility as the owner. */
-  readonly set = Effect.fn("SquadGroups.setVisibility")(
-    function setSquadGroupVisibility(
-      this: SetSquadGroupVisibility,
-      input: {
-        readonly actorUserId: AppUserId;
-        readonly groupId: SquadGroupId;
-        readonly visibility: SquadGroupVisibility;
-      }
-    ) {
-      return SquadGroupStoreService.use((store) =>
+const makeSet = (clock: Clock) =>
+  Effect.fn("SquadGroups.setVisibility")(
+    (input: {
+      readonly actorUserId: AppUserId;
+      readonly groupId: SquadGroupId;
+      readonly visibility: SquadGroupVisibility;
+    }) =>
+      SquadGroupStoreService.use((store) =>
         store.setSquadGroupVisibility({
           actorUserId: input.actorUserId,
           groupId: input.groupId,
-          now: this.clock.now(),
+          now: clock.now(),
           visibility: input.visibility,
         })
-      );
-    }
+      )
   );
-}
+
+/** Change squad group visibility as the owner. */
+export const set = makeSet(systemClock);
 
 export interface Interface {
-  readonly set: SetSquadGroupVisibility["set"];
+  readonly set: typeof set;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
@@ -68,7 +58,4 @@ export class Service extends Context.Service<Service, Interface>()(
 
 export const use = serviceUse(Service);
 
-export const layer = Layer.sync(Service, () => {
-  const service = new SetSquadGroupVisibility(systemClock);
-  return { set: service.set };
-});
+export const layer = Layer.succeed(Service, { set });
