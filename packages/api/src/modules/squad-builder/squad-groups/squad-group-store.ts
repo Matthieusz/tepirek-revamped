@@ -1,79 +1,76 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
-import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch.js";
-import type { AppUserId } from "../app-user-id.js";
-import type { MargonemAccountId } from "../margonem-account-id.js";
+import type { AccountDisplayName } from "../account-display-name.js";
 import type {
-  AccountAccessInviteSummary,
-  AccountAccessGrantSummary,
-  AccountInviteTarget,
-  ApplyRefetchedAccountInput,
-  AuthorizeSquadGroupViewerInput,
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
-  CreatePendingMargonemAccountRefetchInput,
-  CreateSquadGroupStoreInput,
   DuplicateMargonemAccountError,
-  FindOwnedAccountForSharingInput,
   FindPendingMargonemAccountImportInput,
-  FindVerifiedInviteTargetInput,
   FindProfileAccessStateInput,
   FirecrawlBudgetError,
-  GetSquadGroupDetailInput,
-  GlobalSquadGroupSummary,
-  GlobalSquadVisibilityStore,
-  ListAvailableCharactersForOwnerInput,
-  ListIncomingAccountInvitesInput,
-  ListAccountAccessGrantsInput,
-  ListGlobalSquadGroupsInput,
-  ListMySquadGroupsInput,
   ListOwnedMargonemAccountsInput,
-  ListSharedAccountsInput,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
-  MarkPendingMargonemAccountRefetchAppliedInput,
   OwnedMargonemAccountSummary,
-  OwnedAccountForSharing,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
-  PendingMargonemAccountRefetch,
-  PendingMargonemAccountRefetchForApply,
   ProfileAccessState,
-  RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
-  SaveSharedSquadGroupCharactersStoreInput,
-  SaveSquadGroupSnapshotStoreInput,
-  SearchInviteTargetsStoreInput,
-  SearchSquadEditorInviteTargetsStoreInput,
-  SetSquadGroupVisibilityStoreInput,
-  SharedMargonemAccountSummary,
-  SharedSquadGroupSummary,
   SquadBuilderPersistenceUnavailable,
-  SquadDetail,
-  SquadEditorInviteTarget,
-  SquadGroupCharacter,
-  SquadGroupDetail,
-  SquadGroupEditorGrantSummary,
-  SquadGroupInvitationSummary,
-  SquadGroupSharingAuthorizationError,
-  SquadGroupSharingStore,
-  SquadGroupStore,
-  SquadGroupSummary,
-  SquadGroupVisibilityChange,
-  UpsertAccountAccessInviteInput,
-  UpsertSquadGroupEditorInviteInput,
-  VerifiedInviteTarget,
+} from "../account-import/account-import-store.js";
+import type {
+  ApplyRefetchedAccountInput,
+  CreatePendingMargonemAccountRefetchInput,
+  MarkPendingMargonemAccountRefetchAppliedInput,
+  PendingMargonemAccountRefetch,
+  PendingMargonemAccountRefetchForApply,
+  RefetchableMargonemAccount,
+} from "../account-refetch/account-refetch-store.js";
+import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch.js";
+import type {
+  AccountAccessGrantSummary,
+  AccountAccessInviteSummary,
+  AccountInviteTarget,
+  FindOwnedAccountForSharingInput,
+  FindVerifiedInviteTargetInput,
+  ListAccountAccessGrantsInput,
+  ListIncomingAccountInvitesInput,
+  ListSharedAccountsInput,
+  OwnedAccountForSharing,
   RespondToAccountAccessInviteStoreInput,
-  RespondToSquadGroupInviteStoreInput,
   RevokeAccountAccessResult,
   RevokeAccountAccessStoreInput,
-  RevokeSquadGroupEditorStoreInput,
-} from "../squad-builder-store.js";
-import type { SquadGroupOwnerAccess } from "../squad-group-access.js";
+  SearchInviteTargetsStoreInput,
+  SharedMargonemAccountSummary,
+  UpsertAccountAccessInviteInput,
+  VerifiedInviteTarget,
+} from "../account-sharing/account-sharing-store.js";
+import type { AppUserId } from "../app-user-id.js";
+import type { MargonemAccountId } from "../margonem-account-id.js";
+import type { MargonemProfession } from "../margonem-character.js";
+import type { Result } from "../result.js";
+import type {
+  SquadGroupAccess,
+  SquadGroupAccessRole,
+  SquadGroupOwnerAccess,
+} from "../squad-group-access.js";
 import type { SquadGroupId } from "../squad-group-id.js";
-import type { AvailableSquadCharacter } from "../squad-group-snapshot.js";
+import type { SquadGroupInvitationId } from "../squad-group-invitation-id.js";
+import type { SquadGroupInvitationStatus } from "../squad-group-invitation-status.js";
+import type { SquadGroupListFilters } from "../squad-group-list-filters.js";
+import type {
+  AvailableSquadCharacter,
+  SquadGroupDraftSnapshot,
+} from "../squad-group-snapshot.js";
+import type { SquadGroupVisibility } from "../squad-group-visibility.js";
+import type { SquadId } from "../squad-id.js";
+import type { SquadGroupName } from "../squad-name.js";
+import type {
+  SharedSquadGroupCharactersSnapshot,
+  SharedSquadGroupSaveError,
+} from "./save-shared-squad-group-characters.js";
 import type {
   AccountAccessInviteNotFound,
   AccountAccessTransitionNotAllowed,
@@ -122,6 +119,422 @@ export type {
   SquadGroupNotFound,
   SquadNotInGroup,
 } from "./squad-group-errors.js";
+
+/** Expected authorization failures for squad group sharing operations. */
+export type SquadGroupSharingAuthorizationError =
+  | SquadGroupNotFound
+  | ActorDoesNotOwnSquadGroup
+  | ActorCannotViewSquadGroup
+  | ActorCannotEditSquadGroup
+  | { readonly _tag: "CannotInviteSelf" }
+  | { readonly _tag: "SquadEditorInviteTargetNotFound" }
+  | { readonly _tag: "SquadEditorInviteTargetNotVerified" }
+  | { readonly _tag: "SquadGroupInvitationNotFound" }
+  | { readonly _tag: "ActorIsNotSquadGroupInviteRecipient" }
+  | {
+      readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
+      readonly currentStatus: SquadGroupInvitationStatus;
+      readonly attempted: string;
+    };
+
+/** Summary row for a squad group list. */
+export interface SquadGroupSummary {
+  readonly groupId: SquadGroupId;
+  readonly name: SquadGroupName;
+  readonly squadCount: number;
+  readonly characterCount: number;
+  readonly updatedAt: Date;
+}
+
+/** Character placement shown in a saved squad group detail. */
+export interface SquadGroupCharacter {
+  readonly placementId: number;
+  readonly characterId: number;
+  readonly margonemCharacterId: number;
+  readonly accountId: MargonemAccountId;
+  readonly accountDisplayName: AccountDisplayName;
+  readonly accountOwnerUserName: string;
+  readonly accountOwnerUserImage: string | null;
+  readonly name: string;
+  readonly level: number;
+  readonly profession: MargonemProfession;
+  readonly avatarUrl: string | null;
+  readonly position: number;
+}
+
+/** Saved squad shown in a squad group detail. */
+export interface SquadDetail {
+  readonly squadId: SquadId;
+  readonly name: string;
+  readonly position: number;
+  readonly characters: readonly SquadGroupCharacter[];
+}
+
+/** Full saved squad group detail. */
+export interface SquadGroupDetail {
+  readonly accessRole: SquadGroupAccessRole;
+  readonly groupId: SquadGroupId;
+  readonly name: string;
+  readonly ownerUserId: AppUserId;
+  readonly visibility: SquadGroupVisibility;
+  readonly updatedAt: Date;
+  readonly squads: readonly SquadDetail[];
+}
+
+/** Read model for a squad editor invite search result. */
+export interface SquadEditorInviteTarget {
+  readonly userId: AppUserId;
+  readonly name: string;
+  readonly image: string | null;
+}
+
+/** Summary row for an incoming squad group invitation. */
+export interface SquadGroupInvitationSummary {
+  readonly invitationId: SquadGroupInvitationId;
+  readonly squadGroupId: SquadGroupId;
+  readonly squadGroupName: SquadGroupName;
+  readonly ownerUserId: AppUserId;
+  readonly ownerUserName: string;
+  readonly ownerUserImage: string | null;
+  readonly status: SquadGroupInvitationStatus;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+}
+
+/** Summary row for squad group owner's grant list. */
+export interface SquadGroupEditorGrantSummary {
+  readonly invitationId: SquadGroupInvitationId;
+  readonly userId: AppUserId;
+  readonly userName: string;
+  readonly userImage: string | null;
+  readonly status: Extract<SquadGroupInvitationStatus, "pending" | "accepted">;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+}
+
+/** Summary row for a squad group shared with the actor. */
+export interface SharedSquadGroupSummary {
+  readonly groupId: SquadGroupId;
+  readonly name: SquadGroupName;
+  readonly ownerUserId: AppUserId;
+  readonly ownerUserName: string;
+  readonly ownerUserImage: string | null;
+  readonly squadCount: number;
+  readonly characterCount: number;
+  readonly updatedAt: Date;
+}
+
+/** Summary row for a globally visible squad group. */
+export interface GlobalSquadGroupSummary {
+  readonly groupId: SquadGroupId;
+  readonly name: SquadGroupName;
+  readonly ownerUserId: AppUserId;
+  readonly ownerUserName: string;
+  readonly ownerUserImage: string | null;
+  readonly squadCount: number;
+  readonly characterCount: number;
+  readonly updatedAt: Date;
+}
+
+/** Store input for changing squad group visibility. */
+export interface SetSquadGroupVisibilityStoreInput {
+  readonly actorUserId: AppUserId;
+  readonly groupId: SquadGroupId;
+  readonly visibility: SquadGroupVisibility;
+  readonly now: Date;
+}
+
+/** Result of changing squad group visibility. */
+export interface SquadGroupVisibilityChange {
+  readonly groupId: SquadGroupId;
+  readonly visibility: SquadGroupVisibility;
+  readonly updatedAt: Date;
+}
+
+/** Store input for listing global squad groups. */
+export interface ListGlobalSquadGroupsInput {
+  readonly actorUserId: AppUserId;
+  readonly filters: SquadGroupListFilters;
+  readonly limit: number;
+}
+
+/** Store input for authorizing squad group viewer access. */
+export interface AuthorizeSquadGroupViewerInput {
+  readonly actorUserId: AppUserId;
+  readonly groupId: SquadGroupId;
+}
+
+/** Store input for creating a squad group. */
+export interface CreateSquadGroupStoreInput {
+  readonly actorUserId: AppUserId;
+  readonly name: SquadGroupName;
+}
+
+/** Store input for listing actor-owned squad groups. */
+export interface ListMySquadGroupsInput {
+  readonly actorUserId: AppUserId;
+}
+
+/** Store input for loading a squad group detail. */
+export interface GetSquadGroupDetailInput {
+  readonly actorUserId: AppUserId;
+  readonly groupId: SquadGroupId;
+}
+
+/** Store input for listing available characters for a group owner. */
+export interface ListAvailableCharactersForOwnerInput {
+  readonly ownerUserId: AppUserId;
+}
+
+/** Store input for saving a parsed squad group snapshot. */
+export interface SaveSquadGroupSnapshotStoreInput {
+  readonly actorUserId: AppUserId;
+  readonly snapshot: SquadGroupDraftSnapshot;
+  readonly availableCharacters: readonly AvailableSquadCharacter[];
+  readonly now: Date;
+}
+
+/** Store input for searching squad editor invite targets. */
+export interface SearchSquadEditorInviteTargetsStoreInput {
+  readonly groupId: SquadGroupId;
+  readonly ownerUserId: AppUserId;
+  readonly query: string;
+  readonly maxResults: number;
+}
+
+/** Store input for upserting a squad group editor invitation. */
+export interface UpsertSquadGroupEditorInviteInput {
+  readonly groupId: SquadGroupId;
+  readonly ownerUserId: AppUserId;
+  readonly invitedUserId: AppUserId;
+  readonly now: Date;
+}
+
+/** Store input for responding to a squad group invitation. */
+export interface RespondToSquadGroupInviteStoreInput {
+  readonly invitationId: SquadGroupInvitationId;
+  readonly invitedUserId: AppUserId;
+  readonly response: "accept" | "decline";
+  readonly now: Date;
+}
+
+/** Store input for revoking a squad group editor invitation. */
+export interface RevokeSquadGroupEditorStoreInput {
+  readonly invitationId: SquadGroupInvitationId;
+  readonly ownerUserId: AppUserId;
+  readonly now: Date;
+}
+
+/** Store input for saving shared squad group characters. */
+export interface SaveSharedSquadGroupCharactersStoreInput {
+  readonly actorUserId: AppUserId;
+  readonly groupId: SquadGroupId;
+  readonly snapshot: SharedSquadGroupCharactersSnapshot;
+  readonly now: Date;
+}
+
+/** Persistence capability for squad group editing. */
+export interface SquadGroupStore {
+  readonly createSquadGroup: (
+    input: CreateSquadGroupStoreInput
+  ) => Promise<Result<SquadGroupSummary, SquadBuilderPersistenceUnavailable>>;
+  readonly listMySquadGroups: (
+    input: ListMySquadGroupsInput
+  ) => Promise<
+    Result<readonly SquadGroupSummary[], SquadBuilderPersistenceUnavailable>
+  >;
+  readonly getSquadGroupDetail: (
+    input: GetSquadGroupDetailInput
+  ) => Promise<
+    Result<
+      SquadGroupDetail,
+      | SquadGroupNotFound
+      | ActorCannotViewSquadGroup
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly listAvailableCharactersForOwner: (
+    input: ListAvailableCharactersForOwnerInput
+  ) => Promise<
+    Result<
+      readonly AvailableSquadCharacter[],
+      SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly saveSquadGroupSnapshot: (
+    input: SaveSquadGroupSnapshotStoreInput
+  ) => Promise<
+    Result<
+      SquadGroupDetail,
+      | SquadGroupNotFound
+      | ActorDoesNotOwnSquadGroup
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+}
+
+/** Persistence capability for squad group sharing/editing by invited users. */
+export interface GlobalSquadVisibilityStore {
+  readonly setSquadGroupVisibility: (
+    input: SetSquadGroupVisibilityStoreInput
+  ) => Promise<
+    Result<
+      SquadGroupVisibilityChange,
+      | SquadGroupNotFound
+      | ActorDoesNotOwnSquadGroup
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly listGlobalSquadGroups: (
+    input: ListGlobalSquadGroupsInput
+  ) => Promise<
+    Result<
+      readonly GlobalSquadGroupSummary[],
+      SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly authorizeSquadGroupViewer: (
+    input: AuthorizeSquadGroupViewerInput
+  ) => Promise<
+    Result<
+      SquadGroupAccess,
+      | SquadGroupNotFound
+      | ActorCannotViewSquadGroup
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+}
+
+export interface SquadGroupSharingStore {
+  readonly authorizeSquadGroupOwner: (input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+  }) => Promise<
+    Result<
+      SquadGroupOwnerAccess,
+      | SquadGroupNotFound
+      | ActorDoesNotOwnSquadGroup
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly authorizeSquadGroupViewer: (input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+  }) => Promise<
+    Result<
+      SquadGroupAccess,
+      | SquadGroupNotFound
+      | ActorCannotViewSquadGroup
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly authorizeSquadGroupEditor: (input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+  }) => Promise<
+    Result<
+      SquadGroupAccess,
+      | SquadGroupNotFound
+      | ActorCannotEditSquadGroup
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly searchSquadEditorInviteTargets: (
+    input: SearchSquadEditorInviteTargetsStoreInput
+  ) => Promise<
+    Result<
+      readonly SquadEditorInviteTarget[],
+      SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly findVerifiedSquadEditorInviteTarget: (input: {
+    readonly targetUserId: AppUserId;
+  }) => Promise<
+    Result<
+      SquadEditorInviteTarget,
+      | { readonly _tag: "SquadEditorInviteTargetNotFound" }
+      | { readonly _tag: "SquadEditorInviteTargetNotVerified" }
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly upsertSquadGroupEditorInvite: (
+    input: UpsertSquadGroupEditorInviteInput
+  ) => Promise<
+    Result<
+      SquadGroupInvitationSummary,
+      | {
+          readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
+          readonly currentStatus: SquadGroupInvitationStatus;
+          readonly attempted: string;
+        }
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly listIncomingSquadGroupInvites: (input: {
+    readonly actorUserId: AppUserId;
+  }) => Promise<
+    Result<
+      readonly SquadGroupInvitationSummary[],
+      SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly getPendingSquadGroupInviteCount: (input: {
+    readonly actorUserId: AppUserId;
+  }) => Promise<Result<number, SquadBuilderPersistenceUnavailable>>;
+  readonly respondToSquadGroupInvite: (
+    input: RespondToSquadGroupInviteStoreInput
+  ) => Promise<
+    Result<
+      SquadGroupInvitationSummary,
+      | { readonly _tag: "SquadGroupInvitationNotFound" }
+      | { readonly _tag: "ActorIsNotSquadGroupInviteRecipient" }
+      | {
+          readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
+          readonly currentStatus: SquadGroupInvitationStatus;
+          readonly attempted: string;
+        }
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly revokeSquadGroupEditor: (
+    input: RevokeSquadGroupEditorStoreInput
+  ) => Promise<
+    Result<
+      SquadGroupInvitationSummary,
+      | { readonly _tag: "SquadGroupInvitationNotFound" }
+      | ActorDoesNotOwnSquadGroup
+      | {
+          readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
+          readonly currentStatus: SquadGroupInvitationStatus;
+          readonly attempted: string;
+        }
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly listSharedSquadGroups: (input: {
+    readonly actorUserId: AppUserId;
+    readonly filters: SquadGroupListFilters;
+  }) => Promise<
+    Result<
+      readonly SharedSquadGroupSummary[],
+      SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly listSquadGroupEditorGrants: (input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+  }) => Promise<
+    Result<
+      readonly SquadGroupEditorGrantSummary[],
+      | SquadGroupNotFound
+      | ActorDoesNotOwnSquadGroup
+      | SquadBuilderPersistenceUnavailable
+    >
+  >;
+  readonly saveSharedSquadGroupCharacters: (
+    input: SaveSharedSquadGroupCharactersStoreInput
+  ) => Promise<Result<SquadGroupDetail, SharedSquadGroupSaveError>>;
+}
 
 export interface SquadBuilderStoreServiceShape {
   readonly createSquadGroup: (
@@ -461,37 +874,29 @@ export type SquadGroupsPersistenceStore = SquadGroupStore &
   GlobalSquadVisibilityStore;
 
 export type {
-  AccountAccessInviteSummary,
   AccountAccessGrantSummary,
+  AccountAccessInviteSummary,
   AccountInviteTarget,
   ApplyRefetchedAccountInput,
-  AuthorizeSquadGroupViewerInput,
   AvailableSquadCharacter,
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
   CreatePendingMargonemAccountRefetchInput,
-  CreateSquadGroupStoreInput,
   DuplicateMargonemAccountError,
   FindOwnedAccountForSharingInput,
   FindPendingMargonemAccountImportInput,
-  FindVerifiedInviteTargetInput,
   FindProfileAccessStateInput,
+  FindVerifiedInviteTargetInput,
   FirecrawlBudgetError,
-  GetSquadGroupDetailInput,
-  GlobalSquadGroupSummary,
-  GlobalSquadVisibilityStore,
-  ListAvailableCharactersForOwnerInput,
-  ListIncomingAccountInvitesInput,
   ListAccountAccessGrantsInput,
-  ListGlobalSquadGroupsInput,
-  ListMySquadGroupsInput,
+  ListIncomingAccountInvitesInput,
   ListOwnedMargonemAccountsInput,
   ListSharedAccountsInput,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
   MarkPendingMargonemAccountRefetchAppliedInput,
-  OwnedMargonemAccountSummary,
   OwnedAccountForSharing,
+  OwnedMargonemAccountSummary,
   PendingMargonemAccountImport,
   PendingMargonemAccountImportForConfirmation,
   PendingMargonemAccountRefetch,
@@ -501,30 +906,11 @@ export type {
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
   RespondToAccountAccessInviteStoreInput,
-  RespondToSquadGroupInviteStoreInput,
   RevokeAccountAccessResult,
   RevokeAccountAccessStoreInput,
-  RevokeSquadGroupEditorStoreInput,
-  SaveSharedSquadGroupCharactersStoreInput,
-  SaveSquadGroupSnapshotStoreInput,
   SearchInviteTargetsStoreInput,
-  SearchSquadEditorInviteTargetsStoreInput,
-  SetSquadGroupVisibilityStoreInput,
   SharedMargonemAccountSummary,
-  SharedSquadGroupSummary,
   SquadBuilderPersistenceUnavailable,
-  SquadDetail,
-  SquadEditorInviteTarget,
-  SquadGroupCharacter,
-  SquadGroupDetail,
-  SquadGroupEditorGrantSummary,
-  SquadGroupInvitationSummary,
-  SquadGroupSharingAuthorizationError,
-  SquadGroupSharingStore,
-  SquadGroupStore,
-  SquadGroupSummary,
-  SquadGroupVisibilityChange,
   UpsertAccountAccessInviteInput,
-  UpsertSquadGroupEditorInviteInput,
   VerifiedInviteTarget,
 };

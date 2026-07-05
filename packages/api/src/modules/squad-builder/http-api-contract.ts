@@ -5,6 +5,7 @@ import {
   HttpApiGroup,
 } from "effect/unstable/httpapi";
 
+import { AppUserIdSchema } from "./app-user-id.js";
 import {
   ConfirmOwnedAccountImportPayload,
   OwnedMargonemAccountSummarySchema,
@@ -31,7 +32,6 @@ import {
   SendAccountAccessInvitePayload,
   SharedMargonemAccountSummarySchema,
 } from "./schema/account-sharing.js";
-import { ActorPayload, SquadBuilderServiceError } from "./schema/common.js";
 import {
   RespondToSquadGroupInvitePayload,
   RevokeSquadGroupEditorPayload,
@@ -56,6 +56,9 @@ import {
   SquadGroupSummarySchema,
   SquadGroupVisibilityChangeSchema,
 } from "./schema/squad-groups.js";
+
+const ActorPayload = Schema.Struct({ actorUserId: AppUserIdSchema });
+const SquadBuilderServiceError = Schema.Struct({ _tag: Schema.String });
 
 export const SquadBuilderAccountImportGroup = HttpApiGroup.make(
   "squadBuilderAccountImport"

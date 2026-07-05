@@ -1,3 +1,5 @@
+import * as Schema from "effect/Schema";
+
 import { err, ok } from "./result.js";
 import type { Result } from "./result.js";
 
@@ -7,6 +9,20 @@ export type SquadGroupInvitationStatus =
   | "accepted"
   | "declined"
   | "revoked";
+
+/** HTTP/API schema for squad-group editor invitation status. */
+export const SquadGroupInvitationStatusSchema = Schema.Literals([
+  "pending",
+  "accepted",
+  "declined",
+  "revoked",
+]);
+
+/** HTTP/API schema for invitation statuses that grant editor access. */
+export const ActiveSquadGroupInvitationStatusSchema = Schema.Literals([
+  "pending",
+  "accepted",
+]);
 
 /** Expected failure when a persisted squad group invitation status is unknown. */
 export interface InvalidSquadGroupInvitationStatus {

@@ -1,13 +1,11 @@
 import * as Schema from "effect/Schema";
 
-import {
-  AppUserIdSchema,
-  MargonemAccountIdSchema,
-  MargonemCharacterPreviewSchema,
-  MargonemProfileIdSchema,
-  PendingMargonemAccountImportIdSchema,
-  PositiveInt,
-} from "./common.js";
+import { AppUserIdSchema } from "../app-user-id.js";
+import { MargonemAccountIdSchema } from "../margonem-account-id.js";
+import { MargonemCharacterPreviewSchema } from "../margonem-character.js";
+import { MargonemProfileIdSchema } from "../margonem-profile-id.js";
+import { PendingMargonemAccountImportIdSchema } from "../pending-margonem-account-import-id.js";
+import { PositiveInt } from "../positive-int.js";
 
 export const PreviewMargonemProfileImportPayload = Schema.Struct({
   actorUserId: AppUserIdSchema,

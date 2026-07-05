@@ -1,7 +1,10 @@
+import * as Schema from "effect/Schema";
+
 import type {
   MargonemCharacterId,
   PositiveLevel,
 } from "./margonem-profile-id.js";
+import { PositiveInt } from "./positive-int.js";
 import { err, ok } from "./result.js";
 import type { Result } from "./result.js";
 
@@ -36,6 +39,16 @@ export type MargonemProfession =
   | "hunter"
   | "tracker";
 
+/** HTTP/API schema for a normalized Margonem profession. */
+export const MargonemProfessionSchema = Schema.Literals([
+  "warrior",
+  "paladin",
+  "bladeDancer",
+  "mage",
+  "hunter",
+  "tracker",
+]);
+
 /** A Jaruna character parsed from a Margonem profile. */
 export interface MargonemCharacterPreview {
   readonly characterId: MargonemCharacterId;
@@ -45,6 +58,16 @@ export interface MargonemCharacterPreview {
   readonly world: MargonemWorld;
   readonly avatarUrl: string | null;
 }
+
+/** HTTP/API schema for a Jaruna character parsed from a Margonem profile. */
+export const MargonemCharacterPreviewSchema = Schema.Struct({
+  avatarUrl: Schema.NullOr(Schema.String),
+  characterId: PositiveInt,
+  level: PositiveInt,
+  name: Schema.String,
+  profession: MargonemProfessionSchema,
+  world: Schema.String,
+});
 
 /** Expected failure when a profession label cannot be normalized. */
 export interface UnknownMargonemProfession {

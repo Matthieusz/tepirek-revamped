@@ -1,3 +1,4 @@
+import { PositiveInt } from "./positive-int.js";
 import { isPositiveInteger } from "./prelude.js";
 import { err, ok } from "./result.js";
 import type { Result } from "./result.js";
@@ -6,6 +7,11 @@ import type { Result } from "./result.js";
 export type PendingMargonemAccountRefetchId = number & {
   readonly __brand: "PendingMargonemAccountRefetchId";
 };
+
+/** HTTP/API schema for a validated pending account refetch preview id. */
+export const PendingMargonemAccountRefetchIdSchema = PositiveInt.annotate({
+  identifier: "PendingMargonemAccountRefetchId",
+});
 
 /** Expected failure when a pending refetch id is not a positive integer. */
 export interface InvalidPendingMargonemAccountRefetchId {

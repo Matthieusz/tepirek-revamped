@@ -1,3 +1,5 @@
+import * as Schema from "effect/Schema";
+
 import { err, ok } from "./result.js";
 import type { Result } from "./result.js";
 
@@ -7,6 +9,20 @@ export type AccountAccessStatus =
   | "accepted"
   | "declined"
   | "revoked";
+
+/** HTTP/API schema for account-access lifecycle status. */
+export const AccountAccessStatusSchema = Schema.Literals([
+  "pending",
+  "accepted",
+  "declined",
+  "revoked",
+]);
+
+/** HTTP/API schema for account-access statuses that grant account access. */
+export const ActiveAccountAccessStatusSchema = Schema.Literals([
+  "pending",
+  "accepted",
+]);
 
 /** Statuses that grant the recipient no character usage. */
 export const inactiveAccountAccessStatuses: readonly AccountAccessStatus[] = [

@@ -1,8 +1,15 @@
+import * as Schema from "effect/Schema";
+
 import { err, ok } from "./result.js";
 import type { Result } from "./result.js";
 
 /** A parsed BetterAuth application user id. */
 export type AppUserId = string & { readonly __brand: "AppUserId" };
+
+/** HTTP/API schema for a BetterAuth application user id. */
+export const AppUserIdSchema = Schema.NonEmptyString.annotate({
+  identifier: "AppUserId",
+});
 
 /** Failure returned when an app user id is missing or empty. */
 export interface InvalidAppUserId {

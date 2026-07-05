@@ -1,9 +1,15 @@
+import { PositiveInt } from "./positive-int.js";
 import { isPositiveInteger } from "./prelude.js";
 import { err, ok } from "./result.js";
 import type { Result } from "./result.js";
 
 /** A persisted squad group id. */
 export type SquadGroupId = number & { readonly __brand: "SquadGroupId" };
+
+/** HTTP/API schema for a persisted squad group id. */
+export const SquadGroupIdSchema = PositiveInt.annotate({
+  identifier: "SquadGroupId",
+});
 
 /** Expected failure when a squad group id is invalid. */
 export interface InvalidSquadGroupId {

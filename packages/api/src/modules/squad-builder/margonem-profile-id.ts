@@ -1,3 +1,4 @@
+import { PositiveInt } from "./positive-int.js";
 import { isPositiveInteger } from "./prelude.js";
 import { err, ok } from "./result.js";
 import type { Result } from "./result.js";
@@ -6,6 +7,21 @@ import type { Result } from "./result.js";
 export type MargonemProfileId = number & {
   readonly __brand: "MargonemProfileId";
 };
+
+/** HTTP/API schema for a parsed Margonem profile id. */
+export const MargonemProfileIdSchema = PositiveInt.annotate({
+  identifier: "MargonemProfileId",
+});
+
+/** HTTP/API schema for a parsed Margonem character id. */
+export const MargonemCharacterIdSchema = PositiveInt.annotate({
+  identifier: "MargonemCharacterId",
+});
+
+/** HTTP/API schema for a positive character level. */
+export const PositiveLevelSchema = PositiveInt.annotate({
+  identifier: "PositiveLevel",
+});
 
 /** A parsed Margonem character id. */
 export type MargonemCharacterId = number & {

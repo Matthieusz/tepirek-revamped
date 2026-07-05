@@ -1,3 +1,4 @@
+import { PositiveInt } from "./positive-int.js";
 import { isPositiveInteger } from "./prelude.js";
 import { err, ok } from "./result.js";
 import type { Result } from "./result.js";
@@ -6,6 +7,11 @@ import type { Result } from "./result.js";
 export type MargonemAccountId = number & {
   readonly __brand: "MargonemAccountId";
 };
+
+/** HTTP/API schema for a persisted Margonem account row id. */
+export const MargonemAccountIdSchema = PositiveInt.annotate({
+  identifier: "MargonemAccountId",
+});
 
 /** Expected failure when an account id is not a positive integer. */
 export interface InvalidMargonemAccountId {

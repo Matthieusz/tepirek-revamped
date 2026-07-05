@@ -3,12 +3,14 @@ import * as Schema from "effect/Schema";
 import {
   AccountAccessStatusSchema,
   ActiveAccountAccessStatusSchema,
-  AppUserIdSchema,
-  InviteResponseSchema,
-  MargonemAccountAccessIdSchema,
-  MargonemAccountIdSchema,
-  MargonemProfileIdSchema,
-} from "./common.js";
+} from "../account-access-status.js";
+import { AppUserIdSchema } from "../app-user-id.js";
+import { MargonemAccountAccessIdSchema } from "../margonem-account-access-id.js";
+import { MargonemAccountIdSchema } from "../margonem-account-id.js";
+import { MargonemProfileIdSchema } from "../margonem-profile-id.js";
+
+/** HTTP/API schema for an invite response command. */
+export const InviteResponseSchema = Schema.Literals(["accept", "decline"]);
 
 export const AccountInviteTargetSchema = Schema.Struct({
   image: Schema.NullOr(Schema.String),
