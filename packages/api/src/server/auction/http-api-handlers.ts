@@ -8,7 +8,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 import {
   AuctionStore,
   AuctionStoreLayer,
-} from "../../modules/auction/auction-store.js";
+} from "../../adapters/auction/auction-store.js";
 import {
   AuctionForbidden,
   AuctionUnauthorized,
