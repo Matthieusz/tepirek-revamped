@@ -4,7 +4,7 @@ import * as Layer from "effect/Layer";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { AppHttpApi } from "../../http-api-contract.js";
+import { AppHttpApi } from "../../protocol/http-api-contract.js";
 import { AccountImportStoreService } from "./account-import/account-import-store-service.js";
 import {
   layer as confirmOwnedAccountImportLayer,

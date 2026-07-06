@@ -1,5 +1,5 @@
 import { Atom } from "@effect-atom/atom-react";
-import { AppHttpApi } from "@tepirek-revamped/api/http-api-contract";
+import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { Effect, Layer } from "effect";
 import * as Context from "effect/Context";
 import { FetchHttpClient } from "effect/unstable/http";

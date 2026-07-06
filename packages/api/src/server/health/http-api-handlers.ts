@@ -1,8 +1,8 @@
 import { Effect, Layer } from "effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { AppHttpApi } from "../../http-api-contract.js";
-import { HealthHttpApi } from "./http-api-contract.js";
+import { HealthHttpApi } from "../../protocol/health/http-api-contract.js";
+import { AppHttpApi } from "../../protocol/http-api-contract.js";
 
 export const AppHealthHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,

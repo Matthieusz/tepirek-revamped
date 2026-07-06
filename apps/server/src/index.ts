@@ -3,10 +3,10 @@ import {
   makeApiLiveLayer,
   makeApiRuntime,
 } from "@tepirek-revamped/api/effect-app";
-import { AppHttpApi } from "@tepirek-revamped/api/http-api-contract";
-import { AppHttpApiLayer } from "@tepirek-revamped/api/http-api-handlers";
-import { HealthHttpApiLayer } from "@tepirek-revamped/api/modules/health/http-api-handlers";
 import * as Observability from "@tepirek-revamped/api/observability";
+import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
+import { HealthHttpApiLayer } from "@tepirek-revamped/api/server/health/http-api-handlers";
+import { AppHttpApiLayer } from "@tepirek-revamped/api/server/http-api-handlers";
 import { auth } from "@tepirek-revamped/auth";
 import * as Layer from "effect/Layer";
 import { HttpRouter, HttpServer } from "effect/unstable/http";

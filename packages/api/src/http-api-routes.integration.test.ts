@@ -5,7 +5,7 @@ import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
 
 import { makeApiLiveLayer } from "./effect-app.js";
-import { AppHttpApiLayer } from "./http-api-handlers.js";
+import { AppHttpApiLayer } from "./server/http-api-handlers.js";
 import {
   createHero,
   createVerifiedMember,
