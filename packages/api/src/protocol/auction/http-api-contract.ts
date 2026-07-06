@@ -6,11 +6,7 @@ import {
 } from "@tepirek-revamped/config";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import * as Schema from "effect/Schema";
-import {
-  HttpApiEndpoint,
-  HttpApiGroup,
-  HttpApiSchema,
-} from "effect/unstable/httpapi";
+import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 const PositiveInt = Schema.Number.check(
   Schema.isInt(),
@@ -73,31 +69,36 @@ export const RemoveAuctionSignupSuccess = Schema.Struct({
 
 export class AuctionUnauthorized extends Schema.TaggedErrorClass<AuctionUnauthorized>()(
   "AuctionUnauthorized",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 401 }
 ) {}
 export class AuctionForbidden extends Schema.TaggedErrorClass<AuctionForbidden>()(
   "AuctionForbidden",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 403 }
 ) {}
 export class AuctionNotFound extends Schema.TaggedErrorClass<AuctionNotFound>()(
   "AuctionNotFound",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 404 }
 ) {}
 export class AuctionConflict extends Schema.TaggedErrorClass<AuctionConflict>()(
   "AuctionConflict",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 409 }
 ) {}
 export class AuctionPersistenceUnavailable extends Schema.TaggedErrorClass<AuctionPersistenceUnavailable>()(
   "AuctionPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String }
+  { cause: Schema.Defect(), operation: Schema.String },
+  { httpApiStatus: 500 }
 ) {}
 
 export const AuctionError = Schema.Union([
-  AuctionUnauthorized.pipe(HttpApiSchema.status(401)),
-  AuctionForbidden.pipe(HttpApiSchema.status(403)),
-  AuctionNotFound.pipe(HttpApiSchema.status(404)),
-  AuctionConflict.pipe(HttpApiSchema.status(409)),
-  AuctionPersistenceUnavailable.pipe(HttpApiSchema.status(500)),
+  AuctionUnauthorized,
+  AuctionForbidden,
+  AuctionNotFound,
+  AuctionConflict,
+  AuctionPersistenceUnavailable,
 ]);
 
 export const AuctionHttpApiGroup = HttpApiGroup.make("auction")

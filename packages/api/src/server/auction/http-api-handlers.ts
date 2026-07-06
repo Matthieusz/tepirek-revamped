@@ -5,9 +5,15 @@ import * as Layer from "effect/Layer";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import {
+  AuctionStore,
+  AuctionStoreLayer,
+} from "../../modules/auction/auction-store.js";
+import {
+  AuctionForbidden,
+  AuctionUnauthorized,
+} from "../../protocol/auction/http-api-contract.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
-import { AuctionStore, AuctionStoreLayer } from "./auction-store.js";
-import { AuctionForbidden, AuctionUnauthorized } from "./http-api-contract.js";
 
 const headersFromRequest = (request: HttpServerRequest): Headers => {
   const headers = new Headers();

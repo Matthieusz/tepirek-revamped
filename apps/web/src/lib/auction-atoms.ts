@@ -1,5 +1,5 @@
 import { Atom, Result } from "@effect-atom/atom-react";
-import type { AuctionSignupSummary } from "@tepirek-revamped/api/modules/auction/http-api-contract";
+import type { AuctionSignupSummary } from "@tepirek-revamped/api/protocol/auction/http-api-contract";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import { Effect } from "effect";
 

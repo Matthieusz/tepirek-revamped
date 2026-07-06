@@ -14,7 +14,7 @@ import {
   AuctionForbidden,
   AuctionNotFound,
   AuctionPersistenceUnavailable,
-} from "./http-api-contract.js";
+} from "../../protocol/auction/http-api-contract.js";
 
 export interface AuctionGroupInput {
   readonly profession: string;

@@ -1,7 +1,6 @@
 import * as Layer from "effect/Layer";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { AuctionHttpApiHandlers } from "../modules/auction/http-api-handlers.js";
 import { BetHttpApiHandlers } from "../modules/bet/http-api-handlers.js";
 import { RankingHttpApiHandlers } from "../modules/ranking/http-api-handlers.js";
 import { SquadBuilderHttpApiHandlers } from "../modules/squad-builder/http-api-handlers.js";
@@ -9,6 +8,7 @@ import { UserHttpApiHandlers } from "../modules/user/http-api-handlers.js";
 import { VaultHttpApiHandlers } from "../modules/vault/http-api-handlers.js";
 import { AppHttpApi } from "../protocol/http-api-contract.js";
 import { AnnouncementHttpApiHandlers } from "./announcement/http-api-handlers.js";
+import { AuctionHttpApiHandlers } from "./auction/http-api-handlers.js";
 import { EventHttpApiHandlers } from "./event/http-api-handlers.js";
 import { AppHealthHttpApiHandlers } from "./health/http-api-handlers.js";
 import { HeroesHttpApiHandlers } from "./heroes/http-api-handlers.js";
