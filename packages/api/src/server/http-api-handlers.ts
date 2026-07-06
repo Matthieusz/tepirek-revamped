@@ -11,6 +11,7 @@ import { AppHealthHttpApiHandlers } from "./health/http-api-handlers.js";
 import { HeroesHttpApiHandlers } from "./heroes/http-api-handlers.js";
 import { RankingHttpApiHandlers } from "./ranking/http-api-handlers.js";
 import { SkillsHttpApiHandlers } from "./skills/http-api-handlers.js";
+import { SquadBuilderAccountImportHttpApiHandlers } from "./squad-builder/account-import/http-api-handlers.js";
 import { TodoHttpApiHandlers } from "./todo/http-api-handlers.js";
 import { UserHttpApiHandlers } from "./user/http-api-handlers.js";
 import { VaultHttpApiHandlers } from "./vault/http-api-handlers.js";
@@ -28,7 +29,8 @@ export const AppHttpApiHandlers = Layer.mergeAll(
   RankingHttpApiHandlers,
   UserHttpApiHandlers,
   VaultHttpApiHandlers,
-  SquadBuilderHttpApiHandlers
+  SquadBuilderHttpApiHandlers,
+  SquadBuilderAccountImportHttpApiHandlers
 );
 
 export const AppHttpApiLayer = HttpApiBuilder.layer(AppHttpApi).pipe(

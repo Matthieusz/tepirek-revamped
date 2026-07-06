@@ -5,19 +5,6 @@ import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
-import { AccountImportStoreService } from "./account-import/account-import-store-service.js";
-import {
-  layer as confirmOwnedAccountImportLayer,
-  use as confirmOwnedAccountImport,
-} from "./account-import/confirm-owned-account-import-service.js";
-import {
-  layer as previewMargonemProfileImportLayer,
-  use as previewMargonemProfileImport,
-} from "./account-import/preview-margonem-profile-import-service.js";
-import {
-  layer as previewOwnedAccountImportsLayer,
-  use as previewOwnedAccountImports,
-} from "./account-import/preview-owned-account-imports-service.js";
 import {
   layer as applyAccountRefetchLayer,
   use as applyAccountRefetch,
@@ -49,7 +36,6 @@ import {
 import type { AppUserId } from "./app-user-id.js";
 import type { MargonemAccountAccessId } from "./margonem-account-access-id.js";
 import type { MargonemAccountId } from "./margonem-account-id.js";
-import type { PendingMargonemAccountImportId } from "./pending-margonem-account-import-id.js";
 import type { PendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id.js";
 import type { SquadGroupId } from "./squad-group-id.js";
 import type { SquadGroupInvitationId } from "./squad-group-invitation-id.js";
@@ -113,10 +99,6 @@ const toMargonemAccountAccessId = (value: number): MargonemAccountAccessId =>
   // SAFETY: HttpApi decoded this value with MargonemAccountAccessIdSchema before the handler runs.
   value as MargonemAccountAccessId;
 
-const toPendingImportId = (value: number): PendingMargonemAccountImportId =>
-  // SAFETY: HttpApi decoded this value with PendingMargonemAccountImportIdSchema before the handler runs.
-  value as PendingMargonemAccountImportId;
-
 const toPendingRefetchId = (value: number): PendingMargonemAccountRefetchId =>
   // SAFETY: HttpApi decoded this value with PendingMargonemAccountRefetchIdSchema before the handler runs.
   value as PendingMargonemAccountRefetchId;
@@ -147,51 +129,6 @@ const withRequestCorrelation = <A, E, R>(
     Effect.tap(() => Effect.annotateCurrentSpan("request.id", requestId))
   );
 };
-
-const accountImportHandlers = HttpApiBuilder.group(
-  AppHttpApi,
-  "squadBuilderAccountImport",
-  (handlers) =>
-    handlers
-      .handle("previewMargonemProfileImport", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          previewMargonemProfileImport.preview({
-            actorUserId: toAppUserId(payload.actorUserId),
-            profileUrl: payload.profileUrl,
-          })
-        )
-      )
-      .handle("previewOwnedAccountImports", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          previewOwnedAccountImports.preview({
-            actorUserId: toAppUserId(payload.actorUserId),
-            profileUrls: payload.profileUrls,
-          })
-        )
-      )
-      .handle("confirmOwnedAccountImport", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          confirmOwnedAccountImport.confirm({
-            actorUserId: toAppUserId(payload.actorUserId),
-            displayName: payload.displayName,
-            pendingImportId: toPendingImportId(payload.pendingImportId),
-          })
-        )
-      )
-      .handle("listOwnedAccounts", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          AccountImportStoreService.use((store) =>
-            store.listOwnedAccounts({
-              actorUserId: toAppUserId(payload.actorUserId),
-            })
-          )
-        )
-      )
-);
 
 const squadGroupHandlers = HttpApiBuilder.group(
   AppHttpApi,
@@ -481,7 +418,6 @@ const squadGroupSharingHandlers = HttpApiBuilder.group(
 );
 
 export const SquadBuilderHttpApiHandlers = Layer.mergeAll(
-  accountImportHandlers,
   accountRefetchHandlers,
   squadGroupHandlers,
   accountSharingHandlers,
@@ -489,9 +425,6 @@ export const SquadBuilderHttpApiHandlers = Layer.mergeAll(
 ).pipe(
   Layer.provide(
     Layer.mergeAll(
-      previewMargonemProfileImportLayer,
-      previewOwnedAccountImportsLayer,
-      confirmOwnedAccountImportLayer,
       previewAccountRefetchLayer,
       applyAccountRefetchLayer,
       createSquadGroupLayer,

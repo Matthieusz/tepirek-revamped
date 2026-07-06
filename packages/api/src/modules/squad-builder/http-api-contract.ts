@@ -7,14 +7,6 @@ import {
 
 import { AppUserIdSchema } from "./app-user-id.js";
 import {
-  ConfirmOwnedAccountImportPayload,
-  OwnedMargonemAccountSummarySchema,
-  PreviewMargonemProfileImportPayload,
-  PreviewMargonemProfileImportSuccess,
-  PreviewOwnedAccountImportsPayload,
-  PreviewOwnedAccountImportsSuccess,
-} from "./schema/account-import.js";
-import {
   ApplyAccountRefetchPayload,
   ApplyAccountRefetchSuccess,
   PreviewAccountRefetchPayload,
@@ -59,33 +51,6 @@ import {
 
 const ActorPayload = Schema.Struct({ actorUserId: AppUserIdSchema });
 const SquadBuilderServiceError = Schema.Struct({ _tag: Schema.String });
-
-export const SquadBuilderAccountImportGroup = HttpApiGroup.make(
-  "squadBuilderAccountImport"
-)
-  .add(
-    HttpApiEndpoint.post("previewMargonemProfileImport", "/preview-profile", {
-      error: SquadBuilderServiceError,
-      payload: PreviewMargonemProfileImportPayload,
-      success: PreviewMargonemProfileImportSuccess,
-    }),
-    HttpApiEndpoint.post("previewOwnedAccountImports", "/preview-owned", {
-      error: SquadBuilderServiceError,
-      payload: PreviewOwnedAccountImportsPayload,
-      success: PreviewOwnedAccountImportsSuccess,
-    }),
-    HttpApiEndpoint.post("confirmOwnedAccountImport", "/confirm-owned", {
-      error: SquadBuilderServiceError,
-      payload: ConfirmOwnedAccountImportPayload,
-      success: OwnedMargonemAccountSummarySchema,
-    }),
-    HttpApiEndpoint.post("listOwnedAccounts", "/owned", {
-      error: SquadBuilderServiceError,
-      payload: ActorPayload,
-      success: Schema.Array(OwnedMargonemAccountSummarySchema),
-    })
-  )
-  .prefix("/squad-builder/account-imports");
 
 export const SquadBuilderSquadGroupGroup = HttpApiGroup.make(
   "squadBuilderSquadGroup"
@@ -257,7 +222,6 @@ export const SquadBuilderSquadGroupSharingGroup = HttpApiGroup.make(
   .prefix("/squad-builder/squad-group-sharing");
 
 export const SquadBuilderHttpApi = HttpApi.make("squadBuilder")
-  .add(SquadBuilderAccountImportGroup)
   .add(SquadBuilderAccountRefetchGroup)
   .add(SquadBuilderSquadGroupGroup)
   .add(SquadBuilderAccountSharingGroup)
