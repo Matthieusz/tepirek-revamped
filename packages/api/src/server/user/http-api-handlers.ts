@@ -3,9 +3,9 @@ import * as Effect from "effect/Effect";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import { UserStore } from "../../adapters/user/user-store.js";
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import { DiscordGuildVerifier } from "../../modules/user/discord-verification-service.js";
-import { UserStore } from "../../modules/user/user-store.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
 import {
   UserForbidden,
