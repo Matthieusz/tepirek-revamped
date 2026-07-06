@@ -1,9 +1,9 @@
 import * as Effect from "effect/Effect";
 
-import type { AppUserId } from "../app-user-id.js";
-import { parseAppUserId } from "../app-user-id.js";
-import { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
-import { parseSquadGroupName } from "../squad-name.js";
+import type { AppUserId } from "../../../modules/squad-builder/app-user-id.js";
+import { parseAppUserId } from "../../../modules/squad-builder/app-user-id.js";
+import { EffectSquadBuilderPersistenceUnavailable } from "../../../modules/squad-builder/squad-groups/squad-group-errors.js";
+import { parseSquadGroupName } from "../../../modules/squad-builder/squad-name.js";
 
 export type EffectSquadGroupPersistenceOperation =
   | "applyRefetchedAccount"

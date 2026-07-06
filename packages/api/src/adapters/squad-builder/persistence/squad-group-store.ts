@@ -29,43 +29,49 @@ import {
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { parseAccountDisplayName } from "../account-display-name.js";
-import type { AppUserId } from "../app-user-id.js";
-import { appUserIdToString, parseAppUserId } from "../app-user-id.js";
-import type { MargonemAccountId } from "../margonem-account-id.js";
+import { parseAccountDisplayName } from "../../../modules/squad-builder/account-display-name.js";
+import type { AppUserId } from "../../../modules/squad-builder/app-user-id.js";
+import {
+  appUserIdToString,
+  parseAppUserId,
+} from "../../../modules/squad-builder/app-user-id.js";
+import type { MargonemAccountId } from "../../../modules/squad-builder/margonem-account-id.js";
 import {
   margonemAccountIdToNumber,
   parseMargonemAccountId,
-} from "../margonem-account-id.js";
+} from "../../../modules/squad-builder/margonem-account-id.js";
 import {
   parseMargonemProfession,
   parseMargonemWorld,
-} from "../margonem-character.js";
+} from "../../../modules/squad-builder/margonem-character.js";
 import {
   parseMargonemCharacterId,
   parsePositiveLevel,
-} from "../margonem-profile-id.js";
+} from "../../../modules/squad-builder/margonem-profile-id.js";
 import type {
   SquadGroupAccess,
   SquadGroupOwnerAccess,
-} from "../squad-group-access.js";
-import type { SquadGroupId } from "../squad-group-id.js";
-import { parseSquadGroupId, squadGroupIdToNumber } from "../squad-group-id.js";
-import type { SquadGroupInvitationId } from "../squad-group-invitation-id.js";
+} from "../../../modules/squad-builder/squad-group-access.js";
+import type { SquadGroupId } from "../../../modules/squad-builder/squad-group-id.js";
+import {
+  parseSquadGroupId,
+  squadGroupIdToNumber,
+} from "../../../modules/squad-builder/squad-group-id.js";
+import type { SquadGroupInvitationId } from "../../../modules/squad-builder/squad-group-invitation-id.js";
 import {
   parseSquadGroupInvitationId,
   squadGroupInvitationIdToNumber,
-} from "../squad-group-invitation-id.js";
-import type { SquadGroupInvitationStatus } from "../squad-group-invitation-status.js";
+} from "../../../modules/squad-builder/squad-group-invitation-id.js";
+import type { SquadGroupInvitationStatus } from "../../../modules/squad-builder/squad-group-invitation-status.js";
 import {
   canTransitionSquadGroupInvitation,
   parseSquadGroupInvitationStatus,
-} from "../squad-group-invitation-status.js";
+} from "../../../modules/squad-builder/squad-group-invitation-status.js";
 import {
   squadGroupLevelBoundToNumber,
   squadGroupNameQueryToString,
-} from "../squad-group-list-filters.js";
-import { parseSquadGroupVisibility } from "../squad-group-visibility.js";
+} from "../../../modules/squad-builder/squad-group-list-filters.js";
+import { parseSquadGroupVisibility } from "../../../modules/squad-builder/squad-group-visibility.js";
 import {
   ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
@@ -80,7 +86,7 @@ import {
   SquadGroupInvitationTransitionNotAllowed,
   SquadGroupNotFound,
   SquadNotInGroup,
-} from "../squad-groups/squad-group-errors.js";
+} from "../../../modules/squad-builder/squad-groups/squad-group-errors.js";
 import type {
   AvailableSquadCharacter,
   CreateSquadGroupStoreInput,
@@ -104,14 +110,14 @@ import type {
   SquadGroupSummary,
   SquadGroupVisibilityChange,
   UpsertSquadGroupEditorInviteInput,
-} from "../squad-groups/squad-group-store.js";
-import { SquadGroupStoreService } from "../squad-groups/squad-group-store.js";
-import { parseSquadId } from "../squad-id.js";
+} from "../../../modules/squad-builder/squad-groups/squad-group-store.js";
+import { SquadGroupStoreService } from "../../../modules/squad-builder/squad-groups/squad-group-store.js";
+import { parseSquadId } from "../../../modules/squad-builder/squad-id.js";
 import {
   parseSquadGroupName,
   squadGroupNameToString,
   squadNameToString,
-} from "../squad-name.js";
+} from "../../../modules/squad-builder/squad-name.js";
 import {
   escapeLikePattern,
   failPersistence,

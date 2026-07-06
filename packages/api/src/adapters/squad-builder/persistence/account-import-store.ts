@@ -15,8 +15,8 @@ import * as Layer from "effect/Layer";
 import {
   accountDisplayNameToString,
   parseAccountDisplayName,
-} from "../account-display-name.js";
-import { AccountImportStoreService } from "../account-import/account-import-store-service.js";
+} from "../../../modules/squad-builder/account-display-name.js";
+import { AccountImportStoreService } from "../../../modules/squad-builder/account-import/account-import-store-service.js";
 import type {
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
@@ -32,13 +32,13 @@ import type {
   ProfileAccessState,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
-} from "../account-import/account-import-store.js";
-import { appUserIdToString } from "../app-user-id.js";
-import { firecrawlYearMonthToString } from "../firecrawl-year-month.js";
+} from "../../../modules/squad-builder/account-import/account-import-store.js";
+import { appUserIdToString } from "../../../modules/squad-builder/app-user-id.js";
+import { firecrawlYearMonthToString } from "../../../modules/squad-builder/firecrawl-year-month.js";
 import {
   parseMargonemProfession,
   parseMargonemWorld,
-} from "../margonem-character.js";
+} from "../../../modules/squad-builder/margonem-character.js";
 import {
   characterIdToNumber,
   levelToNumber,
@@ -46,11 +46,11 @@ import {
   parseMargonemProfileId,
   parsePositiveLevel,
   profileIdToNumber,
-} from "../margonem-profile-id.js";
-import { toMargonemProfileUrl } from "../margonem-profile-url.js";
-import { pendingImportIdToNumber } from "../pending-margonem-account-import-id.js";
-import type { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
-import { PendingMargonemAccountImportNotFound } from "../squad-groups/squad-group-errors.js";
+} from "../../../modules/squad-builder/margonem-profile-id.js";
+import { toMargonemProfileUrl } from "../../../modules/squad-builder/margonem-profile-url.js";
+import { pendingImportIdToNumber } from "../../../modules/squad-builder/pending-margonem-account-import-id.js";
+import type { EffectSquadBuilderPersistenceUnavailable } from "../../../modules/squad-builder/squad-groups/squad-group-errors.js";
+import { PendingMargonemAccountImportNotFound } from "../../../modules/squad-builder/squad-groups/squad-group-errors.js";
 import {
   failPersistence,
   namedStoreMethod,

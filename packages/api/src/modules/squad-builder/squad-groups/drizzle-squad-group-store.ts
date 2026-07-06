@@ -4,4 +4,4 @@ export {
   DrizzleAccountSharingStoreServiceLayer,
   DrizzleSquadBuilderStoresLayer,
   DrizzleSquadGroupStoreServiceLayer,
-} from "../persistence/squad-builder-stores-layer.js";
+} from "../../../adapters/squad-builder/persistence/squad-builder-stores-layer.js";

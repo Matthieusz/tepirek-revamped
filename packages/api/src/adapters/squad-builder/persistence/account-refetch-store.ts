@@ -13,8 +13,8 @@ import { and, count, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { parseAccountDisplayName } from "../account-display-name.js";
-import { AccountRefetchStoreService } from "../account-refetch/account-refetch-store-service.js";
+import { parseAccountDisplayName } from "../../../modules/squad-builder/account-display-name.js";
+import { AccountRefetchStoreService } from "../../../modules/squad-builder/account-refetch/account-refetch-store-service.js";
 import type {
   ApplyRefetchedAccountInput,
   CreatePendingMargonemAccountRefetchInput,
@@ -26,20 +26,20 @@ import type {
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
-} from "../account-refetch/account-refetch-store.js";
-import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch.js";
-import type { AppUserId } from "../app-user-id.js";
-import { appUserIdToString } from "../app-user-id.js";
-import { firecrawlYearMonthToString } from "../firecrawl-year-month.js";
-import type { MargonemAccountId } from "../margonem-account-id.js";
+} from "../../../modules/squad-builder/account-refetch/account-refetch-store.js";
+import type { ApplyAccountRefetchOutput } from "../../../modules/squad-builder/account-refetch/apply-account-refetch.js";
+import type { AppUserId } from "../../../modules/squad-builder/app-user-id.js";
+import { appUserIdToString } from "../../../modules/squad-builder/app-user-id.js";
+import { firecrawlYearMonthToString } from "../../../modules/squad-builder/firecrawl-year-month.js";
+import type { MargonemAccountId } from "../../../modules/squad-builder/margonem-account-id.js";
 import {
   margonemAccountIdToNumber,
   parseMargonemAccountId,
-} from "../margonem-account-id.js";
+} from "../../../modules/squad-builder/margonem-account-id.js";
 import {
   parseMargonemProfession,
   parseMargonemWorld,
-} from "../margonem-character.js";
+} from "../../../modules/squad-builder/margonem-character.js";
 import {
   characterIdToNumber,
   levelToNumber,
@@ -47,17 +47,17 @@ import {
   parseMargonemProfileId,
   parsePositiveLevel,
   profileIdToNumber,
-} from "../margonem-profile-id.js";
+} from "../../../modules/squad-builder/margonem-profile-id.js";
 import {
   parsePendingMargonemAccountRefetchId,
   pendingRefetchIdToNumber,
-} from "../pending-margonem-account-refetch-id.js";
-import type { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
+} from "../../../modules/squad-builder/pending-margonem-account-refetch-id.js";
+import type { EffectSquadBuilderPersistenceUnavailable } from "../../../modules/squad-builder/squad-groups/squad-group-errors.js";
 import {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
   PendingMargonemAccountRefetchNotFound,
-} from "../squad-groups/squad-group-errors.js";
+} from "../../../modules/squad-builder/squad-groups/squad-group-errors.js";
 import {
   failPersistence,
   namedStoreMethod,
