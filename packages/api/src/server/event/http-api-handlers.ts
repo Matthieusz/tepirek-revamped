@@ -8,7 +8,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 import {
   EventStore,
   EventStoreLayer,
-} from "../../modules/event/event-store.js";
+} from "../../adapters/event/event-store.js";
 import {
   EventForbidden,
   EventUnauthorized,

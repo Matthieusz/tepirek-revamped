@@ -11,12 +11,12 @@ import { AnnouncementStoreLayer } from "./adapters/announcement/announcement-sto
 import type { AnnouncementStore } from "./adapters/announcement/announcement-store.js";
 import { AuctionStoreLayer } from "./adapters/auction/auction-store.js";
 import type { AuctionStore } from "./adapters/auction/auction-store.js";
+import { EventStoreLayer } from "./adapters/event/event-store.js";
+import type { EventStore } from "./adapters/event/event-store.js";
 import { TodoStoreLayer } from "./adapters/todo/todo-store.js";
 import type { TodoStore } from "./adapters/todo/todo-store.js";
 import { UserStoreLayer } from "./adapters/user/user-store.js";
 import type { UserStore } from "./adapters/user/user-store.js";
-import { EventStoreLayer } from "./modules/event/event-store.js";
-import type { EventStore } from "./modules/event/event-store.js";
 import { HeroBetLedgerLayer } from "./modules/hero-bet-ledger.js";
 import type { HeroBetLedger } from "./modules/hero-bet-ledger.js";
 import { HeroesStoreLayer } from "./modules/heroes/heroes-store.js";
