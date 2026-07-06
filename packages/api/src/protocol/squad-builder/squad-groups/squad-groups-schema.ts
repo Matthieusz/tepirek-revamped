@@ -1,10 +1,10 @@
 import * as Schema from "effect/Schema";
 
-import { AppUserIdSchema } from "../app-user-id.js";
-import { MargonemAccountIdSchema } from "../margonem-account-id.js";
-import { MargonemProfessionSchema } from "../margonem-character.js";
-import { PositiveInt } from "../positive-int.js";
-import { SquadGroupIdSchema } from "../squad-group-id.js";
+import { AppUserIdSchema } from "../../../modules/squad-builder/app-user-id.js";
+import { MargonemAccountIdSchema } from "../../../modules/squad-builder/margonem-account-id.js";
+import { MargonemProfessionSchema } from "../../../modules/squad-builder/margonem-character.js";
+import { PositiveInt } from "../../../modules/squad-builder/positive-int.js";
+import { SquadGroupIdSchema } from "../../../modules/squad-builder/squad-group-id.js";
 
 export const SquadGroupIdPayload = Schema.Struct({
   actorUserId: AppUserIdSchema,

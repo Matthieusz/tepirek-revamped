@@ -5,7 +5,7 @@ import type {
   SquadGroupDetailCharacterSchema,
   SquadGroupDetailSchema,
   SquadGroupSummarySchema,
-} from "@tepirek-revamped/api/modules/squad-builder/schema/squad-groups";
+} from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
 import { Effect } from "effect";
 
 import {

@@ -14,7 +14,7 @@ import {
   SquadGroupIdPayload,
   SquadGroupSummarySchema,
   SquadGroupVisibilityChangeSchema,
-} from "../../../modules/squad-builder/schema/squad-groups.js";
+} from "./squad-groups-schema.js";
 
 export class SquadBuilderUnauthorized extends Schema.TaggedErrorClass<SquadBuilderUnauthorized>()(
   "SquadBuilderUnauthorized",
