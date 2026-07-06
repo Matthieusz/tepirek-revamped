@@ -19,6 +19,7 @@ import { HeroesStoreLayer } from "./adapters/heroes/heroes-store.js";
 import type { HeroesStore } from "./adapters/heroes/heroes-store.js";
 import { SkillsStoreLayer } from "./adapters/skills/skills-store.js";
 import type { SkillsStore } from "./adapters/skills/skills-store.js";
+import { DrizzleSquadBuilderStoresLayer } from "./adapters/squad-builder/persistence/squad-builder-stores-layer.js";
 import { TodoStoreLayer } from "./adapters/todo/todo-store.js";
 import type { TodoStore } from "./adapters/todo/todo-store.js";
 import { UserStoreLayer } from "./adapters/user/user-store.js";
@@ -40,7 +41,6 @@ import { FirecrawlClientServiceLiveLayer } from "./modules/squad-builder/firecra
 import type { FirecrawlClientService } from "./modules/squad-builder/firecrawl-client-service.js";
 import { FirecrawlConfigServiceLiveLayer } from "./modules/squad-builder/firecrawl-config.js";
 import type { FirecrawlConfigService } from "./modules/squad-builder/firecrawl-config.js";
-import { DrizzleSquadBuilderStoresLayer } from "./modules/squad-builder/squad-groups/drizzle-squad-group-store.js";
 import type { Service as SquadGroupSharingState } from "./modules/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
 import { layer as squadGroupSharingStateLayer } from "./modules/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
 import type { Service as SquadGroupEditorInviteResponses } from "./modules/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
