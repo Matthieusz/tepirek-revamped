@@ -5,7 +5,7 @@ import * as Layer from "effect/Layer";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { TodoStore, TodoStoreLayer } from "../../modules/todo/todo-store.js";
+import { TodoStore, TodoStoreLayer } from "../../adapters/todo/todo-store.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
 import {
   TodoForbidden,
