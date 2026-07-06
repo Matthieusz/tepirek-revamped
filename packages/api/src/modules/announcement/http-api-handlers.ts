@@ -5,15 +5,15 @@ import * as Layer from "effect/Layer";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import {
+  AnnouncementForbidden,
+  AnnouncementUnauthorized,
+} from "../../protocol/announcement/http-api-contract.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
 import {
   AnnouncementStore,
   AnnouncementStoreLayer,
 } from "./announcement-store.js";
-import {
-  AnnouncementForbidden,
-  AnnouncementUnauthorized,
-} from "./http-api-contract.js";
 
 const headersFromRequest = (request: HttpServerRequest): Headers => {
   const headers = new Headers();

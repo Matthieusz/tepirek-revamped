@@ -9,7 +9,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { AnnouncementPersistenceUnavailable } from "./http-api-contract.js";
+import { AnnouncementPersistenceUnavailable } from "../../protocol/announcement/http-api-contract.js";
 
 export interface CreateAnnouncementInput {
   readonly description: string;

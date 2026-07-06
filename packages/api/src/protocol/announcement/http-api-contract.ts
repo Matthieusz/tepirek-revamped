@@ -1,10 +1,6 @@
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import * as Schema from "effect/Schema";
-import {
-  HttpApiEndpoint,
-  HttpApiGroup,
-  HttpApiSchema,
-} from "effect/unstable/httpapi";
+import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 const { NonEmptyString } = Schema;
 const PositiveInt = Schema.Number.check(
@@ -38,16 +34,14 @@ export const AnnouncementSummary = Schema.Struct({
 
 export class AnnouncementUnauthorized extends Schema.TaggedErrorClass<AnnouncementUnauthorized>()(
   "AnnouncementUnauthorized",
-  {
-    message: Schema.String,
-  }
+  { message: Schema.String },
+  { httpApiStatus: 401 }
 ) {}
 
 export class AnnouncementForbidden extends Schema.TaggedErrorClass<AnnouncementForbidden>()(
   "AnnouncementForbidden",
-  {
-    message: Schema.String,
-  }
+  { message: Schema.String },
+  { httpApiStatus: 403 }
 ) {}
 
 export class AnnouncementPersistenceUnavailable extends Schema.TaggedErrorClass<AnnouncementPersistenceUnavailable>()(
@@ -55,13 +49,14 @@ export class AnnouncementPersistenceUnavailable extends Schema.TaggedErrorClass<
   {
     cause: Schema.Defect(),
     operation: Schema.String,
-  }
+  },
+  { httpApiStatus: 500 }
 ) {}
 
 export const AnnouncementError = Schema.Union([
-  AnnouncementUnauthorized.pipe(HttpApiSchema.status(401)),
-  AnnouncementForbidden.pipe(HttpApiSchema.status(403)),
-  AnnouncementPersistenceUnavailable.pipe(HttpApiSchema.status(500)),
+  AnnouncementUnauthorized,
+  AnnouncementForbidden,
+  AnnouncementPersistenceUnavailable,
 ]);
 
 export const AnnouncementHttpApiGroup = HttpApiGroup.make("announcement")

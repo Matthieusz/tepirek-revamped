@@ -1,6 +1,5 @@
 import { HttpApi } from "effect/unstable/httpapi";
 
-import { AnnouncementHttpApiGroup } from "../modules/announcement/http-api-contract.js";
 import { AuctionHttpApiGroup } from "../modules/auction/http-api-contract.js";
 import { BetHttpApiGroup } from "../modules/bet/http-api-contract.js";
 import { EventHttpApiGroup } from "../modules/event/http-api-contract.js";
@@ -17,6 +16,7 @@ import {
 import { TodoHttpApiGroup } from "../modules/todo/http-api-contract.js";
 import { UserHttpApiGroup } from "../modules/user/http-api-contract.js";
 import { VaultHttpApiGroup } from "../modules/vault/http-api-contract.js";
+import { AnnouncementHttpApiGroup } from "./announcement/http-api-contract.js";
 import { HealthHttpApiGroup } from "./health/http-api-contract.js";
 
 /** Application-level Effect HttpApi contract for migrated API groups. */

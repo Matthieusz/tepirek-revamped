@@ -1,5 +1,5 @@
 import { Atom, Result } from "@effect-atom/atom-react";
-import type { AnnouncementSummary } from "@tepirek-revamped/api/modules/announcement/http-api-contract";
+import type { AnnouncementSummary } from "@tepirek-revamped/api/protocol/announcement/http-api-contract";
 import { Effect } from "effect";
 
 import {
