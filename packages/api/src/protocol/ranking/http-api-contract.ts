@@ -1,10 +1,6 @@
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import * as Schema from "effect/Schema";
-import {
-  HttpApiEndpoint,
-  HttpApiGroup,
-  HttpApiSchema,
-} from "effect/unstable/httpapi";
+import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 const PositiveInt = Schema.Number.check(
   Schema.isInt(),
@@ -40,26 +36,30 @@ export const RankingResult = Schema.Struct({
 
 export class RankingUnauthorized extends Schema.TaggedErrorClass<RankingUnauthorized>()(
   "RankingUnauthorized",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 401 }
 ) {}
 export class RankingForbidden extends Schema.TaggedErrorClass<RankingForbidden>()(
   "RankingForbidden",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 403 }
 ) {}
 export class RankingNotFound extends Schema.TaggedErrorClass<RankingNotFound>()(
   "RankingNotFound",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 404 }
 ) {}
 export class RankingPersistenceUnavailable extends Schema.TaggedErrorClass<RankingPersistenceUnavailable>()(
   "RankingPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String }
+  { cause: Schema.Defect(), operation: Schema.String },
+  { httpApiStatus: 500 }
 ) {}
 
 export const RankingError = Schema.Union([
-  RankingUnauthorized.pipe(HttpApiSchema.status(401)),
-  RankingForbidden.pipe(HttpApiSchema.status(403)),
-  RankingNotFound.pipe(HttpApiSchema.status(404)),
-  RankingPersistenceUnavailable.pipe(HttpApiSchema.status(500)),
+  RankingUnauthorized,
+  RankingForbidden,
+  RankingNotFound,
+  RankingPersistenceUnavailable,
 ]);
 
 export const RankingHttpApiGroup = HttpApiGroup.make("ranking")
