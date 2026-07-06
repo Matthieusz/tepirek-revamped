@@ -30,23 +30,10 @@ import type { MargonemAccountAccessId } from "./margonem-account-access-id.js";
 import type { MargonemAccountId } from "./margonem-account-id.js";
 import type { SquadGroupId } from "./squad-group-id.js";
 import type { SquadGroupInvitationId } from "./squad-group-invitation-id.js";
-import { parseSquadGroupListFilters } from "./squad-group-list-filters.js";
-import {
-  layer as createSquadGroupLayer,
-  use as createSquadGroup,
-} from "./squad-groups/create-squad-group.js";
-import {
-  layer as listGlobalSquadGroupsLayer,
-  use as listGlobalSquadGroups,
-} from "./squad-groups/list-global-squad-groups.js";
 import {
   layer as squadGroupSharingStateLayer,
   use as squadGroupSharingState,
 } from "./squad-groups/list-squad-group-sharing-state-service.js";
-import {
-  layer as listSquadGroupsLayer,
-  use as listSquadGroups,
-} from "./squad-groups/list-squad-groups.js";
 import {
   layer as squadGroupEditorInviteResponsesLayer,
   use as squadGroupEditorInviteResponses,
@@ -56,14 +43,6 @@ import {
   use as squadGroupEditorRevocations,
 } from "./squad-groups/revoke-squad-group-editor-service.js";
 import {
-  layer as saveSharedSquadGroupCharactersLayer,
-  use as saveSharedSquadGroupCharacters,
-} from "./squad-groups/save-shared-squad-group-characters.js";
-import {
-  layer as saveSquadGroupLayer,
-  use as saveSquadGroup,
-} from "./squad-groups/save-squad-group.js";
-import {
   layer as squadEditorInviteTargetsLayer,
   use as squadEditorInviteTargets,
 } from "./squad-groups/search-squad-editor-invite-targets-service.js";
@@ -71,12 +50,6 @@ import {
   layer as squadGroupEditorInvitesLayer,
   use as squadGroupEditorInvites,
 } from "./squad-groups/send-squad-group-editor-invite-service.js";
-import {
-  layer as setSquadGroupVisibilityLayer,
-  use as setSquadGroupVisibility,
-} from "./squad-groups/set-squad-group-visibility.js";
-import { SquadGroupStoreService } from "./squad-groups/squad-group-store.js";
-import type { SquadId } from "./squad-id.js";
 
 const toAppUserId = (value: string): AppUserId =>
   // SAFETY: HttpApi decoded this value with AppUserIdSchema before the handler runs.
@@ -93,10 +66,6 @@ const toMargonemAccountAccessId = (value: number): MargonemAccountAccessId =>
 const toSquadGroupId = (value: number): SquadGroupId =>
   // SAFETY: HttpApi decoded this value with SquadGroupIdSchema before the handler runs.
   value as SquadGroupId;
-
-const toSquadId = (value: number): SquadId =>
-  // SAFETY: HttpApi decoded this value with PositiveInt before the handler runs.
-  value as SquadId;
 
 const toSquadGroupInvitationId = (value: number): SquadGroupInvitationId =>
   // SAFETY: HttpApi decoded this value with SquadGroupInvitationIdSchema before the handler runs.
@@ -116,118 +85,6 @@ const withRequestCorrelation = <A, E, R>(
     Effect.tap(() => Effect.annotateCurrentSpan("request.id", requestId))
   );
 };
-
-const squadGroupHandlers = HttpApiBuilder.group(
-  AppHttpApi,
-  "squadBuilderSquadGroup",
-  (handlers) =>
-    handlers
-      .handle("createSquadGroup", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          createSquadGroup.create({
-            actorUserId: toAppUserId(payload.actorUserId),
-            name: payload.name,
-          })
-        )
-      )
-      .handle("listOwnedSquadGroups", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          listSquadGroups.listMine({
-            actorUserId: toAppUserId(payload.actorUserId),
-          })
-        )
-      )
-      .handle("listGlobalSquadGroups", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          Effect.gen(function* listGlobalSquadGroupsEffect() {
-            const filters = yield* parseSquadGroupListFilters({
-              maxLevel: payload.maxLevel,
-              minLevel: payload.minLevel,
-              nameQuery: payload.nameQuery,
-            });
-
-            return yield* listGlobalSquadGroups.list({
-              actorUserId: toAppUserId(payload.actorUserId),
-              filters,
-            });
-          })
-        )
-      )
-      .handle("getSquadGroupDetail", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          SquadGroupStoreService.use((store) =>
-            store.getSquadGroupDetail({
-              actorUserId: toAppUserId(payload.actorUserId),
-              groupId: toSquadGroupId(payload.groupId),
-            })
-          )
-        )
-      )
-      .handle("listAvailableSquadCharacters", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          Effect.gen(function* listAvailableSquadCharacters() {
-            const detail = yield* SquadGroupStoreService.use((store) =>
-              store.getSquadGroupDetail({
-                actorUserId: toAppUserId(payload.actorUserId),
-                groupId: toSquadGroupId(payload.groupId),
-              })
-            );
-            return yield* SquadGroupStoreService.use((store) =>
-              store.listAvailableCharactersForOwner({
-                ownerUserId: detail.ownerUserId,
-              })
-            );
-          })
-        )
-      )
-      .handle("saveSquadGroup", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          saveSquadGroup.save({
-            actorUserId: toAppUserId(payload.actorUserId),
-            groupId: toSquadGroupId(payload.groupId),
-            name: payload.name,
-            squads: payload.squads.map((squad) => ({
-              characters: squad.characters,
-              clientKey: squad.clientKey,
-              name: squad.name,
-              position: squad.position,
-              ...(squad.squadId === undefined
-                ? {}
-                : { squadId: toSquadId(squad.squadId) }),
-            })),
-          })
-        )
-      )
-      .handle("saveSharedSquadGroupCharacters", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          saveSharedSquadGroupCharacters.saveWithStoreService({
-            actorUserId: toAppUserId(payload.actorUserId),
-            groupId: toSquadGroupId(payload.groupId),
-            squads: payload.squads.map((squad) => ({
-              characters: squad.characters,
-              squadId: toSquadId(squad.squadId),
-            })),
-          })
-        )
-      )
-      .handle("setSquadGroupVisibility", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          setSquadGroupVisibility.set({
-            actorUserId: toAppUserId(payload.actorUserId),
-            groupId: toSquadGroupId(payload.groupId),
-            visibility: payload.visibility,
-          })
-        )
-      )
-);
 
 const accountSharingHandlers = HttpApiBuilder.group(
   AppHttpApi,
@@ -380,18 +237,11 @@ const squadGroupSharingHandlers = HttpApiBuilder.group(
 );
 
 export const SquadBuilderHttpApiHandlers = Layer.mergeAll(
-  squadGroupHandlers,
   accountSharingHandlers,
   squadGroupSharingHandlers
 ).pipe(
   Layer.provide(
     Layer.mergeAll(
-      createSquadGroupLayer,
-      listSquadGroupsLayer,
-      listGlobalSquadGroupsLayer,
-      saveSquadGroupLayer,
-      saveSharedSquadGroupCharactersLayer,
-      setSquadGroupVisibilityLayer,
       accountInviteTargetsLayer,
       accountAccessInvitesLayer,
       accountAccessInviteResponsesLayer,

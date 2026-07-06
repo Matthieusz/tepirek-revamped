@@ -29,69 +29,9 @@ import {
   SquadGroupEditorGrantSummarySchema,
   SquadGroupInvitationSummarySchema,
 } from "./schema/squad-group-sharing.js";
-import {
-  AvailableSquadCharacterSchema,
-  CreateSquadGroupPayload,
-  GlobalSquadGroupSummarySchema,
-  ListGlobalSquadGroupsPayload,
-  SaveSharedSquadGroupCharactersPayload,
-  SaveSquadGroupPayload,
-  SetSquadGroupVisibilityPayload,
-  SquadGroupDetailSchema,
-  SquadGroupIdPayload,
-  SquadGroupSummarySchema,
-  SquadGroupVisibilityChangeSchema,
-} from "./schema/squad-groups.js";
 
 const ActorPayload = Schema.Struct({ actorUserId: AppUserIdSchema });
 const SquadBuilderServiceError = Schema.Struct({ _tag: Schema.String });
-
-export const SquadBuilderSquadGroupGroup = HttpApiGroup.make(
-  "squadBuilderSquadGroup"
-)
-  .add(
-    HttpApiEndpoint.post("createSquadGroup", "/", {
-      error: SquadBuilderServiceError,
-      payload: CreateSquadGroupPayload,
-      success: SquadGroupSummarySchema,
-    }),
-    HttpApiEndpoint.post("listOwnedSquadGroups", "/owned", {
-      error: SquadBuilderServiceError,
-      payload: ActorPayload,
-      success: Schema.Array(SquadGroupSummarySchema),
-    }),
-    HttpApiEndpoint.post("listGlobalSquadGroups", "/global", {
-      error: SquadBuilderServiceError,
-      payload: ListGlobalSquadGroupsPayload,
-      success: Schema.Array(GlobalSquadGroupSummarySchema),
-    }),
-    HttpApiEndpoint.post("getSquadGroupDetail", "/detail", {
-      error: SquadBuilderServiceError,
-      payload: SquadGroupIdPayload,
-      success: SquadGroupDetailSchema,
-    }),
-    HttpApiEndpoint.post("listAvailableSquadCharacters", "/characters", {
-      error: SquadBuilderServiceError,
-      payload: SquadGroupIdPayload,
-      success: Schema.Array(AvailableSquadCharacterSchema),
-    }),
-    HttpApiEndpoint.post("saveSquadGroup", "/save", {
-      error: SquadBuilderServiceError,
-      payload: SaveSquadGroupPayload,
-      success: SquadGroupDetailSchema,
-    }),
-    HttpApiEndpoint.post("saveSharedSquadGroupCharacters", "/save-shared", {
-      error: SquadBuilderServiceError,
-      payload: SaveSharedSquadGroupCharactersPayload,
-      success: SquadGroupDetailSchema,
-    }),
-    HttpApiEndpoint.post("setSquadGroupVisibility", "/visibility", {
-      error: SquadBuilderServiceError,
-      payload: SetSquadGroupVisibilityPayload,
-      success: SquadGroupVisibilityChangeSchema,
-    })
-  )
-  .prefix("/squad-builder/squad-groups");
 
 export const SquadBuilderAccountSharingGroup = HttpApiGroup.make(
   "squadBuilderAccountSharing"
@@ -199,7 +139,6 @@ export const SquadBuilderSquadGroupSharingGroup = HttpApiGroup.make(
   .prefix("/squad-builder/squad-group-sharing");
 
 export const SquadBuilderHttpApi = HttpApi.make("squadBuilder")
-  .add(SquadBuilderSquadGroupGroup)
   .add(SquadBuilderAccountSharingGroup)
   .add(SquadBuilderSquadGroupSharingGroup);
 
