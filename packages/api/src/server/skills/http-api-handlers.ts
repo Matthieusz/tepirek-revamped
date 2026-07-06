@@ -8,7 +8,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 import {
   SkillsStore,
   SkillsStoreLayer,
-} from "../../modules/skills/skills-store.js";
+} from "../../adapters/skills/skills-store.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
 import {
   SkillsForbidden,
