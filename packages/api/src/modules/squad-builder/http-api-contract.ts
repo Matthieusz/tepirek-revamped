@@ -7,12 +7,6 @@ import {
 
 import { AppUserIdSchema } from "./app-user-id.js";
 import {
-  ApplyAccountRefetchPayload,
-  ApplyAccountRefetchSuccess,
-  PreviewAccountRefetchPayload,
-  PreviewAccountRefetchSuccess,
-} from "./schema/account-refetch.js";
-import {
   AccountAccessGrantSummarySchema,
   AccountAccessGrantsPayload,
   AccountAccessInviteSummarySchema,
@@ -98,23 +92,6 @@ export const SquadBuilderSquadGroupGroup = HttpApiGroup.make(
     })
   )
   .prefix("/squad-builder/squad-groups");
-
-export const SquadBuilderAccountRefetchGroup = HttpApiGroup.make(
-  "squadBuilderAccountRefetch"
-)
-  .add(
-    HttpApiEndpoint.post("previewAccountRefetch", "/preview", {
-      error: SquadBuilderServiceError,
-      payload: PreviewAccountRefetchPayload,
-      success: PreviewAccountRefetchSuccess,
-    }),
-    HttpApiEndpoint.post("applyAccountRefetch", "/apply", {
-      error: SquadBuilderServiceError,
-      payload: ApplyAccountRefetchPayload,
-      success: ApplyAccountRefetchSuccess,
-    })
-  )
-  .prefix("/squad-builder/account-refetches");
 
 export const SquadBuilderAccountSharingGroup = HttpApiGroup.make(
   "squadBuilderAccountSharing"
@@ -222,7 +199,6 @@ export const SquadBuilderSquadGroupSharingGroup = HttpApiGroup.make(
   .prefix("/squad-builder/squad-group-sharing");
 
 export const SquadBuilderHttpApi = HttpApi.make("squadBuilder")
-  .add(SquadBuilderAccountRefetchGroup)
   .add(SquadBuilderSquadGroupGroup)
   .add(SquadBuilderAccountSharingGroup)
   .add(SquadBuilderSquadGroupSharingGroup);

@@ -6,14 +6,6 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
 import {
-  layer as applyAccountRefetchLayer,
-  use as applyAccountRefetch,
-} from "./account-refetch/apply-account-refetch-service.js";
-import {
-  layer as previewAccountRefetchLayer,
-  use as previewAccountRefetch,
-} from "./account-refetch/preview-account-refetch-service.js";
-import {
   layer as accountSharingStateLayer,
   use as accountSharingState,
 } from "./account-sharing/list-account-sharing-state-service.js";
@@ -36,7 +28,6 @@ import {
 import type { AppUserId } from "./app-user-id.js";
 import type { MargonemAccountAccessId } from "./margonem-account-access-id.js";
 import type { MargonemAccountId } from "./margonem-account-id.js";
-import type { PendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id.js";
 import type { SquadGroupId } from "./squad-group-id.js";
 import type { SquadGroupInvitationId } from "./squad-group-invitation-id.js";
 import { parseSquadGroupListFilters } from "./squad-group-list-filters.js";
@@ -98,10 +89,6 @@ const toMargonemAccountId = (value: number): MargonemAccountId =>
 const toMargonemAccountAccessId = (value: number): MargonemAccountAccessId =>
   // SAFETY: HttpApi decoded this value with MargonemAccountAccessIdSchema before the handler runs.
   value as MargonemAccountAccessId;
-
-const toPendingRefetchId = (value: number): PendingMargonemAccountRefetchId =>
-  // SAFETY: HttpApi decoded this value with PendingMargonemAccountRefetchIdSchema before the handler runs.
-  value as PendingMargonemAccountRefetchId;
 
 const toSquadGroupId = (value: number): SquadGroupId =>
   // SAFETY: HttpApi decoded this value with SquadGroupIdSchema before the handler runs.
@@ -237,31 +224,6 @@ const squadGroupHandlers = HttpApiBuilder.group(
             actorUserId: toAppUserId(payload.actorUserId),
             groupId: toSquadGroupId(payload.groupId),
             visibility: payload.visibility,
-          })
-        )
-      )
-);
-
-const accountRefetchHandlers = HttpApiBuilder.group(
-  AppHttpApi,
-  "squadBuilderAccountRefetch",
-  (handlers) =>
-    handlers
-      .handle("previewAccountRefetch", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          previewAccountRefetch.preview({
-            accountId: toMargonemAccountId(payload.accountId),
-            actorUserId: toAppUserId(payload.actorUserId),
-          })
-        )
-      )
-      .handle("applyAccountRefetch", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          applyAccountRefetch.apply({
-            actorUserId: toAppUserId(payload.actorUserId),
-            refetchPreviewId: toPendingRefetchId(payload.refetchPreviewId),
           })
         )
       )
@@ -418,15 +380,12 @@ const squadGroupSharingHandlers = HttpApiBuilder.group(
 );
 
 export const SquadBuilderHttpApiHandlers = Layer.mergeAll(
-  accountRefetchHandlers,
   squadGroupHandlers,
   accountSharingHandlers,
   squadGroupSharingHandlers
 ).pipe(
   Layer.provide(
     Layer.mergeAll(
-      previewAccountRefetchLayer,
-      applyAccountRefetchLayer,
       createSquadGroupLayer,
       listSquadGroupsLayer,
       listGlobalSquadGroupsLayer,
