@@ -1,10 +1,6 @@
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import * as Schema from "effect/Schema";
-import {
-  HttpApiEndpoint,
-  HttpApiGroup,
-  HttpApiSchema,
-} from "effect/unstable/httpapi";
+import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 const PositiveInt = Schema.Number.check(
   Schema.isInt(),
@@ -35,16 +31,14 @@ export const TodoSummary = Schema.Struct({
 
 export class TodoUnauthorized extends Schema.TaggedErrorClass<TodoUnauthorized>()(
   "TodoUnauthorized",
-  {
-    message: Schema.String,
-  }
+  { message: Schema.String },
+  { httpApiStatus: 401 }
 ) {}
 
 export class TodoForbidden extends Schema.TaggedErrorClass<TodoForbidden>()(
   "TodoForbidden",
-  {
-    message: Schema.String,
-  }
+  { message: Schema.String },
+  { httpApiStatus: 403 }
 ) {}
 
 export class TodoPersistenceUnavailable extends Schema.TaggedErrorClass<TodoPersistenceUnavailable>()(
@@ -52,13 +46,14 @@ export class TodoPersistenceUnavailable extends Schema.TaggedErrorClass<TodoPers
   {
     cause: Schema.Defect(),
     operation: Schema.String,
-  }
+  },
+  { httpApiStatus: 500 }
 ) {}
 
 export const TodoError = Schema.Union([
-  TodoUnauthorized.pipe(HttpApiSchema.status(401)),
-  TodoForbidden.pipe(HttpApiSchema.status(403)),
-  TodoPersistenceUnavailable.pipe(HttpApiSchema.status(500)),
+  TodoUnauthorized,
+  TodoForbidden,
+  TodoPersistenceUnavailable,
 ]);
 
 export const TodoHttpApiGroup = HttpApiGroup.make("todo")

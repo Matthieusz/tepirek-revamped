@@ -1,5 +1,5 @@
 import { Atom, Result } from "@effect-atom/atom-react";
-import type { TodoSummary } from "@tepirek-revamped/api/modules/todo/http-api-contract";
+import type { TodoSummary } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
 import { Effect } from "effect";
 
 import {

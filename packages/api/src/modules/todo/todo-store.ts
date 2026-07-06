@@ -8,7 +8,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { TodoPersistenceUnavailable } from "./http-api-contract.js";
+import { TodoPersistenceUnavailable } from "../../protocol/todo/http-api-contract.js";
 
 export interface CreateTodoInput {
   readonly text: string;

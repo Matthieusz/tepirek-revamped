@@ -5,9 +5,12 @@ import * as Layer from "effect/Layer";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import { TodoStore, TodoStoreLayer } from "../../modules/todo/todo-store.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
-import { TodoForbidden, TodoUnauthorized } from "./http-api-contract.js";
-import { TodoStore, TodoStoreLayer } from "./todo-store.js";
+import {
+  TodoForbidden,
+  TodoUnauthorized,
+} from "../../protocol/todo/http-api-contract.js";
 
 const headersFromRequest = (request: HttpServerRequest): Headers => {
   const headers = new Headers();
