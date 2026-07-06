@@ -10,7 +10,7 @@ import {
   PreviewMargonemProfileImportSuccess,
   PreviewOwnedAccountImportsPayload,
   PreviewOwnedAccountImportsSuccess,
-} from "../../../modules/squad-builder/schema/account-import.js";
+} from "./account-import-schema.js";
 
 export class SquadBuilderUnauthorized extends Schema.TaggedErrorClass<SquadBuilderUnauthorized>()(
   "SquadBuilderUnauthorized",
