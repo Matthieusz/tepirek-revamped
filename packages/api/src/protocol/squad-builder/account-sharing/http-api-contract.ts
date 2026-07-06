@@ -14,7 +14,7 @@ import {
   SearchAccountInviteTargetsPayload,
   SendAccountAccessInvitePayload,
   SharedMargonemAccountSummarySchema,
-} from "../../../modules/squad-builder/schema/account-sharing.js";
+} from "./account-sharing-schema.js";
 
 export class SquadBuilderUnauthorized extends Schema.TaggedErrorClass<SquadBuilderUnauthorized>()(
   "SquadBuilderUnauthorized",
