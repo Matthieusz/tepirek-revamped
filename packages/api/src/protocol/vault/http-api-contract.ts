@@ -1,10 +1,6 @@
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import * as Schema from "effect/Schema";
-import {
-  HttpApiEndpoint,
-  HttpApiGroup,
-  HttpApiSchema,
-} from "effect/unstable/httpapi";
+import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 const PositiveNumber = Schema.Number.check(Schema.isGreaterThan(0));
 const PositiveInt = Schema.Number.check(
@@ -55,31 +51,36 @@ export const MutationSuccess = Schema.Struct({ success: Schema.Boolean });
 
 export class VaultUnauthorized extends Schema.TaggedErrorClass<VaultUnauthorized>()(
   "VaultUnauthorized",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 401 }
 ) {}
 export class VaultForbidden extends Schema.TaggedErrorClass<VaultForbidden>()(
   "VaultForbidden",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 403 }
 ) {}
 export class VaultBadRequest extends Schema.TaggedErrorClass<VaultBadRequest>()(
   "VaultBadRequest",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 400 }
 ) {}
 export class VaultNotFound extends Schema.TaggedErrorClass<VaultNotFound>()(
   "VaultNotFound",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 404 }
 ) {}
 export class VaultPersistenceUnavailable extends Schema.TaggedErrorClass<VaultPersistenceUnavailable>()(
   "VaultPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String }
+  { cause: Schema.Defect(), operation: Schema.String },
+  { httpApiStatus: 500 }
 ) {}
 
 export const VaultError = Schema.Union([
-  VaultUnauthorized.pipe(HttpApiSchema.status(401)),
-  VaultForbidden.pipe(HttpApiSchema.status(403)),
-  VaultBadRequest.pipe(HttpApiSchema.status(400)),
-  VaultNotFound.pipe(HttpApiSchema.status(404)),
-  VaultPersistenceUnavailable.pipe(HttpApiSchema.status(500)),
+  VaultUnauthorized,
+  VaultForbidden,
+  VaultBadRequest,
+  VaultNotFound,
+  VaultPersistenceUnavailable,
 ]);
 
 export const VaultHttpApiGroup = HttpApiGroup.make("vault")

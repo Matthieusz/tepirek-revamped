@@ -1,5 +1,5 @@
 import { Atom, Result } from "@effect-atom/atom-react";
-import type { VaultRow } from "@tepirek-revamped/api/modules/vault/http-api-contract";
+import type { VaultRow } from "@tepirek-revamped/api/protocol/vault/http-api-contract";
 import { Effect } from "effect";
 
 import {
