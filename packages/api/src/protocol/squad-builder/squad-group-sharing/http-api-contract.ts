@@ -1,11 +1,8 @@
+/* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import * as Schema from "effect/Schema";
-import {
-  HttpApi,
-  HttpApiEndpoint,
-  HttpApiGroup,
-} from "effect/unstable/httpapi";
+import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { AppUserIdSchema } from "./app-user-id.js";
+import { AppUserIdSchema } from "../../../modules/squad-builder/app-user-id.js";
 import {
   RespondToSquadGroupInvitePayload,
   RevokeSquadGroupEditorPayload,
@@ -16,10 +13,54 @@ import {
   SquadGroupEditorGrantsPayload,
   SquadGroupEditorGrantSummarySchema,
   SquadGroupInvitationSummarySchema,
-} from "./schema/squad-group-sharing.js";
+} from "../../../modules/squad-builder/schema/squad-group-sharing.js";
+
+export class SquadBuilderUnauthorized extends Schema.TaggedErrorClass<SquadBuilderUnauthorized>()(
+  "SquadBuilderUnauthorized",
+  { message: Schema.String },
+  { httpApiStatus: 401 }
+) {}
+
+export class SquadBuilderForbidden extends Schema.TaggedErrorClass<SquadBuilderForbidden>()(
+  "SquadBuilderForbidden",
+  { message: Schema.String },
+  { httpApiStatus: 403 }
+) {}
+
+export class SquadBuilderNotFound extends Schema.TaggedErrorClass<SquadBuilderNotFound>()(
+  "SquadBuilderNotFound",
+  { message: Schema.String },
+  { httpApiStatus: 404 }
+) {}
+
+export class SquadBuilderConflict extends Schema.TaggedErrorClass<SquadBuilderConflict>()(
+  "SquadBuilderConflict",
+  { message: Schema.String },
+  { httpApiStatus: 409 }
+) {}
+
+export class SquadBuilderInvalidInput extends Schema.TaggedErrorClass<SquadBuilderInvalidInput>()(
+  "SquadBuilderInvalidInput",
+  { message: Schema.String },
+  { httpApiStatus: 400 }
+) {}
+
+export class SquadBuilderPersistenceUnavailable extends Schema.TaggedErrorClass<SquadBuilderPersistenceUnavailable>()(
+  "SquadBuilderPersistenceUnavailable",
+  { cause: Schema.Defect(), operation: Schema.String },
+  { httpApiStatus: 503 }
+) {}
+
+export const SquadBuilderSquadGroupSharingError = Schema.Union([
+  SquadBuilderUnauthorized,
+  SquadBuilderForbidden,
+  SquadBuilderNotFound,
+  SquadBuilderConflict,
+  SquadBuilderInvalidInput,
+  SquadBuilderPersistenceUnavailable,
+]);
 
 const ActorPayload = Schema.Struct({ actorUserId: AppUserIdSchema });
-const SquadBuilderServiceError = Schema.Struct({ _tag: Schema.String });
 
 export const SquadBuilderSquadGroupSharingGroup = HttpApiGroup.make(
   "squadBuilderSquadGroupSharing"
@@ -29,13 +70,13 @@ export const SquadBuilderSquadGroupSharingGroup = HttpApiGroup.make(
       "searchSquadEditorInviteTargets",
       "/editor-targets/search",
       {
-        error: SquadBuilderServiceError,
+        error: SquadBuilderSquadGroupSharingError,
         payload: SearchSquadEditorInviteTargetsPayload,
         success: Schema.Array(SquadEditorInviteTargetSchema),
       }
     ),
     HttpApiEndpoint.post("sendSquadGroupEditorInvite", "/editor-invites", {
-      error: SquadBuilderServiceError,
+      error: SquadBuilderSquadGroupSharingError,
       payload: SendSquadGroupEditorInvitePayload,
       success: SquadGroupInvitationSummarySchema,
     }),
@@ -43,28 +84,28 @@ export const SquadBuilderSquadGroupSharingGroup = HttpApiGroup.make(
       "respondToSquadGroupInvite",
       "/editor-invites/respond",
       {
-        error: SquadBuilderServiceError,
+        error: SquadBuilderSquadGroupSharingError,
         payload: RespondToSquadGroupInvitePayload,
         success: SquadGroupInvitationSummarySchema,
       }
     ),
     HttpApiEndpoint.post("revokeSquadGroupEditor", "/editors/revoke", {
-      error: SquadBuilderServiceError,
+      error: SquadBuilderSquadGroupSharingError,
       payload: RevokeSquadGroupEditorPayload,
       success: SquadGroupInvitationSummarySchema,
     }),
     HttpApiEndpoint.post("listIncomingSquadGroupInvites", "/incoming-invites", {
-      error: SquadBuilderServiceError,
+      error: SquadBuilderSquadGroupSharingError,
       payload: ActorPayload,
       success: Schema.Array(SquadGroupInvitationSummarySchema),
     }),
     HttpApiEndpoint.post("listSharedSquadGroups", "/shared-groups", {
-      error: SquadBuilderServiceError,
+      error: SquadBuilderSquadGroupSharingError,
       payload: ActorPayload,
       success: Schema.Array(SharedSquadGroupSummarySchema),
     }),
     HttpApiEndpoint.post("listSquadGroupEditorGrants", "/editor-grants", {
-      error: SquadBuilderServiceError,
+      error: SquadBuilderSquadGroupSharingError,
       payload: SquadGroupEditorGrantsPayload,
       success: Schema.Array(SquadGroupEditorGrantSummarySchema),
     }),
@@ -72,16 +113,10 @@ export const SquadBuilderSquadGroupSharingGroup = HttpApiGroup.make(
       "countPendingSquadGroupInvites",
       "/pending-invite-count",
       {
-        error: SquadBuilderServiceError,
+        error: SquadBuilderSquadGroupSharingError,
         payload: ActorPayload,
         success: Schema.Number,
       }
     )
   )
   .prefix("/squad-builder/squad-group-sharing");
-
-export const SquadBuilderHttpApi = HttpApi.make("squadBuilder").add(
-  SquadBuilderSquadGroupSharingGroup
-);
-
-export type SquadBuilderHttpApi = typeof SquadBuilderHttpApi;
