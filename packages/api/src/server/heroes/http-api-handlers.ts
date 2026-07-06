@@ -8,7 +8,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 import {
   HeroesStore,
   HeroesStoreLayer,
-} from "../../modules/heroes/heroes-store.js";
+} from "../../adapters/heroes/heroes-store.js";
 import {
   HeroesForbidden,
   HeroesUnauthorized,
