@@ -8,7 +8,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { HeroesPersistenceUnavailable } from "./http-api-contract.js";
+import { HeroesPersistenceUnavailable } from "../../protocol/heroes/http-api-contract.js";
 
 export interface CreateHeroInput {
   readonly eventId: number;

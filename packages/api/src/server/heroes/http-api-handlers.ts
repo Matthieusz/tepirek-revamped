@@ -5,9 +5,15 @@ import * as Layer from "effect/Layer";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import {
+  HeroesStore,
+  HeroesStoreLayer,
+} from "../../modules/heroes/heroes-store.js";
+import {
+  HeroesForbidden,
+  HeroesUnauthorized,
+} from "../../protocol/heroes/http-api-contract.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
-import { HeroesStore, HeroesStoreLayer } from "./heroes-store.js";
-import { HeroesForbidden, HeroesUnauthorized } from "./http-api-contract.js";
 
 const headersFromRequest = (request: HttpServerRequest): Headers => {
   const headers = new Headers();

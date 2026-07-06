@@ -1,10 +1,6 @@
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import * as Schema from "effect/Schema";
-import {
-  HttpApiEndpoint,
-  HttpApiGroup,
-  HttpApiSchema,
-} from "effect/unstable/httpapi";
+import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 const PositiveInt = Schema.Number.check(
   Schema.isInt(),
@@ -38,21 +34,24 @@ export const HeroSummary = Schema.Struct({
 
 export class HeroesUnauthorized extends Schema.TaggedErrorClass<HeroesUnauthorized>()(
   "HeroesUnauthorized",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 401 }
 ) {}
 export class HeroesForbidden extends Schema.TaggedErrorClass<HeroesForbidden>()(
   "HeroesForbidden",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 403 }
 ) {}
 export class HeroesPersistenceUnavailable extends Schema.TaggedErrorClass<HeroesPersistenceUnavailable>()(
   "HeroesPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String }
+  { cause: Schema.Defect(), operation: Schema.String },
+  { httpApiStatus: 500 }
 ) {}
 
 export const HeroesError = Schema.Union([
-  HeroesUnauthorized.pipe(HttpApiSchema.status(401)),
-  HeroesForbidden.pipe(HttpApiSchema.status(403)),
-  HeroesPersistenceUnavailable.pipe(HttpApiSchema.status(500)),
+  HeroesUnauthorized,
+  HeroesForbidden,
+  HeroesPersistenceUnavailable,
 ]);
 
 export const HeroesHttpApiGroup = HttpApiGroup.make("heroes")
