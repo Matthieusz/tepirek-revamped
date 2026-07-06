@@ -5,8 +5,8 @@ import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { HeroBetLedger } from "../../modules/hero-bet-ledger.js";
-import type { HeroBetLedgerError } from "../../modules/hero-bet-ledger.js";
+import { HeroBetLedger } from "../../adapters/hero-bet-ledger.js";
+import type { HeroBetLedgerError } from "../../adapters/hero-bet-ledger.js";
 import {
   BetBadRequest,
   BetForbidden,

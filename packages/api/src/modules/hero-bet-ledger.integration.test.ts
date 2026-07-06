@@ -9,6 +9,11 @@ import type * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import {
+  HeroBetLedger,
+  HeroBetLedgerLayer,
+} from "../adapters/hero-bet-ledger.js";
+import type { HeroBetLedgerService } from "../adapters/hero-bet-ledger.js";
 import { liveEffect } from "../test/effect.js";
 import {
   createHero,
@@ -18,8 +23,6 @@ import {
   defaultTestDatabaseUrl,
   testDb,
 } from "../test/integration/database.js";
-import { HeroBetLedger, HeroBetLedgerLayer } from "./hero-bet-ledger.js";
-import type { HeroBetLedgerService } from "./hero-bet-ledger.js";
 
 const sortByUserId = <T extends { userId: string }>(rows: T[]) =>
   rows.toSorted((left, right) => left.userId.localeCompare(right.userId));
