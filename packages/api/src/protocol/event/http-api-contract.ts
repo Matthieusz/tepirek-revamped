@@ -4,11 +4,7 @@ import {
   EVENT_ICON_IDS,
 } from "@tepirek-revamped/config";
 import * as Schema from "effect/Schema";
-import {
-  HttpApiEndpoint,
-  HttpApiGroup,
-  HttpApiSchema,
-} from "effect/unstable/httpapi";
+import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 const PositiveInt = Schema.Number.check(
   Schema.isInt(),
@@ -41,21 +37,24 @@ export const EventSummary = Schema.Struct({
 
 export class EventUnauthorized extends Schema.TaggedErrorClass<EventUnauthorized>()(
   "EventUnauthorized",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 401 }
 ) {}
 export class EventForbidden extends Schema.TaggedErrorClass<EventForbidden>()(
   "EventForbidden",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 403 }
 ) {}
 export class EventPersistenceUnavailable extends Schema.TaggedErrorClass<EventPersistenceUnavailable>()(
   "EventPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String }
+  { cause: Schema.Defect(), operation: Schema.String },
+  { httpApiStatus: 500 }
 ) {}
 
 export const EventError = Schema.Union([
-  EventUnauthorized.pipe(HttpApiSchema.status(401)),
-  EventForbidden.pipe(HttpApiSchema.status(403)),
-  EventPersistenceUnavailable.pipe(HttpApiSchema.status(500)),
+  EventUnauthorized,
+  EventForbidden,
+  EventPersistenceUnavailable,
 ]);
 
 export const defaultEventColor = "#6366f1";

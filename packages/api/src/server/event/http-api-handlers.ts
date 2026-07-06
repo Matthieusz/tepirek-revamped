@@ -5,9 +5,15 @@ import * as Layer from "effect/Layer";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import {
+  EventStore,
+  EventStoreLayer,
+} from "../../modules/event/event-store.js";
+import {
+  EventForbidden,
+  EventUnauthorized,
+} from "../../protocol/event/http-api-contract.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
-import { EventStore, EventStoreLayer } from "./event-store.js";
-import { EventForbidden, EventUnauthorized } from "./http-api-contract.js";
 
 const headersFromRequest = (request: HttpServerRequest): Headers => {
   const headers = new Headers();

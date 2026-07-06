@@ -1,5 +1,5 @@
 import { Atom, Result } from "@effect-atom/atom-react";
-import type { EventSummary } from "@tepirek-revamped/api/modules/event/http-api-contract";
+import type { EventSummary } from "@tepirek-revamped/api/protocol/event/http-api-contract";
 import type { EVENT_ICON_IDS } from "@tepirek-revamped/config";
 import { Effect } from "effect";
 

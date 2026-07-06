@@ -3,7 +3,6 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AuctionHttpApiHandlers } from "../modules/auction/http-api-handlers.js";
 import { BetHttpApiHandlers } from "../modules/bet/http-api-handlers.js";
-import { EventHttpApiHandlers } from "../modules/event/http-api-handlers.js";
 import { HeroesHttpApiHandlers } from "../modules/heroes/http-api-handlers.js";
 import { RankingHttpApiHandlers } from "../modules/ranking/http-api-handlers.js";
 import { SkillsHttpApiHandlers } from "../modules/skills/http-api-handlers.js";
@@ -12,6 +11,7 @@ import { UserHttpApiHandlers } from "../modules/user/http-api-handlers.js";
 import { VaultHttpApiHandlers } from "../modules/vault/http-api-handlers.js";
 import { AppHttpApi } from "../protocol/http-api-contract.js";
 import { AnnouncementHttpApiHandlers } from "./announcement/http-api-handlers.js";
+import { EventHttpApiHandlers } from "./event/http-api-handlers.js";
 import { AppHealthHttpApiHandlers } from "./health/http-api-handlers.js";
 import { TodoHttpApiHandlers } from "./todo/http-api-handlers.js";
 

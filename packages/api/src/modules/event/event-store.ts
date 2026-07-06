@@ -12,7 +12,7 @@ import {
   defaultEventColor,
   defaultEventIcon,
   EventPersistenceUnavailable,
-} from "./http-api-contract.js";
+} from "../../protocol/event/http-api-contract.js";
 
 export interface CreateEventInput {
   readonly color?: string | undefined;
