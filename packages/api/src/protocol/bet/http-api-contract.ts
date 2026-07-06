@@ -1,10 +1,6 @@
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import * as Schema from "effect/Schema";
-import {
-  HttpApiEndpoint,
-  HttpApiGroup,
-  HttpApiSchema,
-} from "effect/unstable/httpapi";
+import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 const PositiveInt = Schema.Number.check(
   Schema.isInt(),
@@ -94,31 +90,36 @@ export const MutationSuccess = Schema.Struct({ success: Schema.Boolean });
 
 export class BetUnauthorized extends Schema.TaggedErrorClass<BetUnauthorized>()(
   "BetUnauthorized",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 401 }
 ) {}
 export class BetForbidden extends Schema.TaggedErrorClass<BetForbidden>()(
   "BetForbidden",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 403 }
 ) {}
 export class BetBadRequest extends Schema.TaggedErrorClass<BetBadRequest>()(
   "BetBadRequest",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 400 }
 ) {}
 export class BetNotFound extends Schema.TaggedErrorClass<BetNotFound>()(
   "BetNotFound",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 404 }
 ) {}
 export class BetPersistenceUnavailable extends Schema.TaggedErrorClass<BetPersistenceUnavailable>()(
   "BetPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String }
+  { cause: Schema.Defect(), operation: Schema.String },
+  { httpApiStatus: 500 }
 ) {}
 
 export const BetError = Schema.Union([
-  BetUnauthorized.pipe(HttpApiSchema.status(401)),
-  BetForbidden.pipe(HttpApiSchema.status(403)),
-  BetBadRequest.pipe(HttpApiSchema.status(400)),
-  BetNotFound.pipe(HttpApiSchema.status(404)),
-  BetPersistenceUnavailable.pipe(HttpApiSchema.status(500)),
+  BetUnauthorized,
+  BetForbidden,
+  BetBadRequest,
+  BetNotFound,
+  BetPersistenceUnavailable,
 ]);
 
 export const BetHttpApiGroup = HttpApiGroup.make("bet")

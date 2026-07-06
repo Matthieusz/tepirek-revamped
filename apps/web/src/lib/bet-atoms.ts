@@ -1,5 +1,5 @@
 import { Atom, Result } from "@effect-atom/atom-react";
-import type { PaginatedBets } from "@tepirek-revamped/api/modules/bet/http-api-contract";
+import type { PaginatedBets } from "@tepirek-revamped/api/protocol/bet/http-api-contract";
 import { Effect } from "effect";
 
 import {

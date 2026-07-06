@@ -1,11 +1,11 @@
 import * as Layer from "effect/Layer";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { BetHttpApiHandlers } from "../modules/bet/http-api-handlers.js";
 import { SquadBuilderHttpApiHandlers } from "../modules/squad-builder/http-api-handlers.js";
 import { AppHttpApi } from "../protocol/http-api-contract.js";
 import { AnnouncementHttpApiHandlers } from "./announcement/http-api-handlers.js";
 import { AuctionHttpApiHandlers } from "./auction/http-api-handlers.js";
+import { BetHttpApiHandlers } from "./bet/http-api-handlers.js";
 import { EventHttpApiHandlers } from "./event/http-api-handlers.js";
 import { AppHealthHttpApiHandlers } from "./health/http-api-handlers.js";
 import { HeroesHttpApiHandlers } from "./heroes/http-api-handlers.js";
