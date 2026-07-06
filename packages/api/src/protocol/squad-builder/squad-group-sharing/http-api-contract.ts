@@ -13,7 +13,7 @@ import {
   SquadGroupEditorGrantsPayload,
   SquadGroupEditorGrantSummarySchema,
   SquadGroupInvitationSummarySchema,
-} from "../../../modules/squad-builder/schema/squad-group-sharing.js";
+} from "./squad-group-sharing-schema.js";
 
 export class SquadBuilderUnauthorized extends Schema.TaggedErrorClass<SquadBuilderUnauthorized>()(
   "SquadBuilderUnauthorized",

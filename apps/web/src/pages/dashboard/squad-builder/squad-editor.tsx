@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import type {
   SquadEditorInviteTargetSchema,
   SquadGroupEditorGrantSummarySchema,
-} from "@tepirek-revamped/api/modules/squad-builder/schema/squad-group-sharing";
+} from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
 import {
   ArrowLeft,
   ChevronDown,

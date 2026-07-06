@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import type {
   SharedSquadGroupSummarySchema,
   SquadGroupInvitationSummarySchema,
-} from "@tepirek-revamped/api/modules/squad-builder/schema/squad-group-sharing";
+} from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
 import { Check, Loader2, Plus, Swords, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
