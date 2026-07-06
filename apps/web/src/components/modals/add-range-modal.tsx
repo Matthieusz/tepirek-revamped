@@ -1,6 +1,6 @@
 import { useAtomSet } from "@effect-atom/atom-react";
 import { useForm } from "@tanstack/react-form";
-import { CreateRangePayload } from "@tepirek-revamped/api/modules/skills/http-api-contract";
+import { CreateRangePayload } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
 import { useState } from "react";
 import { toast } from "sonner";
 

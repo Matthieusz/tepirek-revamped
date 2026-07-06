@@ -3,7 +3,6 @@ import { HttpApi } from "effect/unstable/httpapi";
 import { AuctionHttpApiGroup } from "../modules/auction/http-api-contract.js";
 import { BetHttpApiGroup } from "../modules/bet/http-api-contract.js";
 import { RankingHttpApiGroup } from "../modules/ranking/http-api-contract.js";
-import { SkillsHttpApiGroup } from "../modules/skills/http-api-contract.js";
 import {
   SquadBuilderAccountImportGroup,
   SquadBuilderAccountRefetchGroup,
@@ -17,6 +16,7 @@ import { AnnouncementHttpApiGroup } from "./announcement/http-api-contract.js";
 import { EventHttpApiGroup } from "./event/http-api-contract.js";
 import { HealthHttpApiGroup } from "./health/http-api-contract.js";
 import { HeroesHttpApiGroup } from "./heroes/http-api-contract.js";
+import { SkillsHttpApiGroup } from "./skills/http-api-contract.js";
 import { TodoHttpApiGroup } from "./todo/http-api-contract.js";
 
 /** Application-level Effect HttpApi contract for migrated API groups. */

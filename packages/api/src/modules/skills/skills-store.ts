@@ -14,7 +14,7 @@ import {
   SkillsBadRequest,
   SkillsConflict,
   SkillsPersistenceUnavailable,
-} from "./http-api-contract.js";
+} from "../../protocol/skills/http-api-contract.js";
 
 export interface CreateProfessionInput {
   readonly name: string;

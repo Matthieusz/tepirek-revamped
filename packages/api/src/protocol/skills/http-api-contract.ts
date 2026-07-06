@@ -1,10 +1,6 @@
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import * as Schema from "effect/Schema";
-import {
-  HttpApiEndpoint,
-  HttpApiGroup,
-  HttpApiSchema,
-} from "effect/unstable/httpapi";
+import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 const PositiveInt = Schema.Number.check(
   Schema.isInt(),
@@ -69,31 +65,36 @@ export const SkillSummary = Schema.Struct({
 
 export class SkillsUnauthorized extends Schema.TaggedErrorClass<SkillsUnauthorized>()(
   "SkillsUnauthorized",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 401 }
 ) {}
 export class SkillsForbidden extends Schema.TaggedErrorClass<SkillsForbidden>()(
   "SkillsForbidden",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 403 }
 ) {}
 export class SkillsBadRequest extends Schema.TaggedErrorClass<SkillsBadRequest>()(
   "SkillsBadRequest",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 400 }
 ) {}
 export class SkillsConflict extends Schema.TaggedErrorClass<SkillsConflict>()(
   "SkillsConflict",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 409 }
 ) {}
 export class SkillsPersistenceUnavailable extends Schema.TaggedErrorClass<SkillsPersistenceUnavailable>()(
   "SkillsPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String }
+  { cause: Schema.Defect(), operation: Schema.String },
+  { httpApiStatus: 500 }
 ) {}
 
 export const SkillsError = Schema.Union([
-  SkillsUnauthorized.pipe(HttpApiSchema.status(401)),
-  SkillsForbidden.pipe(HttpApiSchema.status(403)),
-  SkillsBadRequest.pipe(HttpApiSchema.status(400)),
-  SkillsConflict.pipe(HttpApiSchema.status(409)),
-  SkillsPersistenceUnavailable.pipe(HttpApiSchema.status(500)),
+  SkillsUnauthorized,
+  SkillsForbidden,
+  SkillsBadRequest,
+  SkillsConflict,
+  SkillsPersistenceUnavailable,
 ]);
 
 export const SkillsHttpApiGroup = HttpApiGroup.make("skills")

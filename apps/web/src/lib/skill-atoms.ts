@@ -2,7 +2,7 @@ import { Atom, Result } from "@effect-atom/atom-react";
 import type {
   RangeSummary,
   SkillSummary,
-} from "@tepirek-revamped/api/modules/skills/http-api-contract";
+} from "@tepirek-revamped/api/protocol/skills/http-api-contract";
 import { Effect } from "effect";
 
 import {

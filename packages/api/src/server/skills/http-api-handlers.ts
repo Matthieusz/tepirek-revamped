@@ -5,9 +5,15 @@ import * as Layer from "effect/Layer";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import {
+  SkillsStore,
+  SkillsStoreLayer,
+} from "../../modules/skills/skills-store.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
-import { SkillsForbidden, SkillsUnauthorized } from "./http-api-contract.js";
-import { SkillsStore, SkillsStoreLayer } from "./skills-store.js";
+import {
+  SkillsForbidden,
+  SkillsUnauthorized,
+} from "../../protocol/skills/http-api-contract.js";
 
 const headersFromRequest = (request: HttpServerRequest): Headers => {
   const headers = new Headers();
