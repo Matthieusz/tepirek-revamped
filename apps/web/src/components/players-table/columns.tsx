@@ -1,7 +1,7 @@
 import { useAtomSet } from "@effect-atom/atom-react";
 import { createColumnHelper } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Player as PlayerSchema } from "@tepirek-revamped/api/modules/user/http-api-contract";
+import type { Player as PlayerSchema } from "@tepirek-revamped/api/protocol/user/http-api-contract";
 import {
   CheckCircle2,
   MoreHorizontal,

@@ -13,7 +13,7 @@ import {
   UserForbidden,
   UserNotFound,
   UserPersistenceUnavailable,
-} from "./http-api-contract.js";
+} from "../../protocol/user/http-api-contract.js";
 
 const LAST_ADMIN_MESSAGE =
   "Nie można odebrać uprawnień ostatniemu administratorowi";

@@ -1,11 +1,7 @@
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import { USER_ROLES } from "@tepirek-revamped/config";
 import * as Schema from "effect/Schema";
-import {
-  HttpApiEndpoint,
-  HttpApiGroup,
-  HttpApiSchema,
-} from "effect/unstable/httpapi";
+import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 export const UserId = Schema.NonEmptyString;
 export const Role = Schema.Literals(USER_ROLES);
@@ -66,31 +62,36 @@ export const AuthenticatedSession = Schema.Struct({
 
 export class UserUnauthorized extends Schema.TaggedErrorClass<UserUnauthorized>()(
   "UserUnauthorized",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 401 }
 ) {}
 export class UserForbidden extends Schema.TaggedErrorClass<UserForbidden>()(
   "UserForbidden",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 403 }
 ) {}
 export class UserBadRequest extends Schema.TaggedErrorClass<UserBadRequest>()(
   "UserBadRequest",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 400 }
 ) {}
 export class UserNotFound extends Schema.TaggedErrorClass<UserNotFound>()(
   "UserNotFound",
-  { message: Schema.String }
+  { message: Schema.String },
+  { httpApiStatus: 404 }
 ) {}
 export class UserPersistenceUnavailable extends Schema.TaggedErrorClass<UserPersistenceUnavailable>()(
   "UserPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String }
+  { cause: Schema.Defect(), operation: Schema.String },
+  { httpApiStatus: 500 }
 ) {}
 
 export const UserError = Schema.Union([
-  UserUnauthorized.pipe(HttpApiSchema.status(401)),
-  UserForbidden.pipe(HttpApiSchema.status(403)),
-  UserBadRequest.pipe(HttpApiSchema.status(400)),
-  UserNotFound.pipe(HttpApiSchema.status(404)),
-  UserPersistenceUnavailable.pipe(HttpApiSchema.status(500)),
+  UserUnauthorized,
+  UserForbidden,
+  UserBadRequest,
+  UserNotFound,
+  UserPersistenceUnavailable,
 ]);
 
 export const UserHttpApiGroup = HttpApiGroup.make("user")

@@ -2,9 +2,9 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { UserPersistenceUnavailable } from "../../protocol/user/http-api-contract.js";
 import { hasDiscordGuild } from "./discord-guild.js";
 import { DiscordVerificationConfig } from "./discord-verification-config.js";
-import { UserPersistenceUnavailable } from "./http-api-contract.js";
 
 export class DiscordGuildVerifier extends Context.Service<
   DiscordGuildVerifier,
