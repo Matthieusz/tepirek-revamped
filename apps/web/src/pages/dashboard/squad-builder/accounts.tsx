@@ -1,5 +1,4 @@
 import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
-import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/modules/squad-builder/schema/account-refetch";
 import type {
   AccountAccessGrantSummarySchema,
   AccountAccessInviteSummarySchema,
@@ -7,6 +6,7 @@ import type {
   SharedMargonemAccountSummarySchema,
 } from "@tepirek-revamped/api/modules/squad-builder/schema/account-sharing";
 import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
+import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-refetch/account-refetch-schema";
 import {
   AlertTriangle,
   Check,

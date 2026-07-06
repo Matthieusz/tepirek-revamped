@@ -7,7 +7,7 @@ import {
   ApplyAccountRefetchSuccess,
   PreviewAccountRefetchPayload,
   PreviewAccountRefetchSuccess,
-} from "../../../modules/squad-builder/schema/account-refetch.js";
+} from "./account-refetch-schema.js";
 
 export class SquadBuilderUnauthorized extends Schema.TaggedErrorClass<SquadBuilderUnauthorized>()(
   "SquadBuilderUnauthorized",
