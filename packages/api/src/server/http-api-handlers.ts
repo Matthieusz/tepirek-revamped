@@ -13,6 +13,7 @@ import { RankingHttpApiHandlers } from "./ranking/http-api-handlers.js";
 import { SkillsHttpApiHandlers } from "./skills/http-api-handlers.js";
 import { SquadBuilderAccountImportHttpApiHandlers } from "./squad-builder/account-import/http-api-handlers.js";
 import { SquadBuilderAccountRefetchHttpApiHandlers } from "./squad-builder/account-refetch/http-api-handlers.js";
+import { SquadBuilderAccountSharingHttpApiHandlers } from "./squad-builder/account-sharing/http-api-handlers.js";
 import { SquadBuilderSquadGroupHttpApiHandlers } from "./squad-builder/squad-groups/http-api-handlers.js";
 import { TodoHttpApiHandlers } from "./todo/http-api-handlers.js";
 import { UserHttpApiHandlers } from "./user/http-api-handlers.js";
@@ -32,6 +33,7 @@ export const AppHttpApiHandlers = Layer.mergeAll(
   UserHttpApiHandlers,
   VaultHttpApiHandlers,
   SquadBuilderHttpApiHandlers,
+  SquadBuilderAccountSharingHttpApiHandlers,
   SquadBuilderSquadGroupHttpApiHandlers,
   SquadBuilderAccountImportHttpApiHandlers,
   SquadBuilderAccountRefetchHttpApiHandlers

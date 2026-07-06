@@ -5,29 +5,7 @@ import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
-import {
-  layer as accountSharingStateLayer,
-  use as accountSharingState,
-} from "./account-sharing/list-account-sharing-state-service.js";
-import {
-  layer as accountAccessInviteResponsesLayer,
-  use as accountAccessInviteResponses,
-} from "./account-sharing/respond-to-account-access-invite-service.js";
-import {
-  layer as accountAccessRevocationsLayer,
-  use as accountAccessRevocations,
-} from "./account-sharing/revoke-account-access-service.js";
-import {
-  layer as accountInviteTargetsLayer,
-  use as accountInviteTargets,
-} from "./account-sharing/search-account-invite-targets-service.js";
-import {
-  layer as accountAccessInvitesLayer,
-  use as accountAccessInvites,
-} from "./account-sharing/send-account-access-invite-service.js";
 import type { AppUserId } from "./app-user-id.js";
-import type { MargonemAccountAccessId } from "./margonem-account-access-id.js";
-import type { MargonemAccountId } from "./margonem-account-id.js";
 import type { SquadGroupId } from "./squad-group-id.js";
 import type { SquadGroupInvitationId } from "./squad-group-invitation-id.js";
 import {
@@ -55,14 +33,6 @@ const toAppUserId = (value: string): AppUserId =>
   // SAFETY: HttpApi decoded this value with AppUserIdSchema before the handler runs.
   value as AppUserId;
 
-const toMargonemAccountId = (value: number): MargonemAccountId =>
-  // SAFETY: HttpApi decoded this value with MargonemAccountIdSchema before the handler runs.
-  value as MargonemAccountId;
-
-const toMargonemAccountAccessId = (value: number): MargonemAccountAccessId =>
-  // SAFETY: HttpApi decoded this value with MargonemAccountAccessIdSchema before the handler runs.
-  value as MargonemAccountAccessId;
-
 const toSquadGroupId = (value: number): SquadGroupId =>
   // SAFETY: HttpApi decoded this value with SquadGroupIdSchema before the handler runs.
   value as SquadGroupId;
@@ -85,77 +55,6 @@ const withRequestCorrelation = <A, E, R>(
     Effect.tap(() => Effect.annotateCurrentSpan("request.id", requestId))
   );
 };
-
-const accountSharingHandlers = HttpApiBuilder.group(
-  AppHttpApi,
-  "squadBuilderAccountSharing",
-  (handlers) =>
-    handlers
-      .handle("searchAccountInviteTargets", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          accountInviteTargets.search({
-            accountId: toMargonemAccountId(payload.accountId),
-            actorUserId: toAppUserId(payload.actorUserId),
-            query: payload.query,
-          })
-        )
-      )
-      .handle("sendAccountAccessInvite", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          accountAccessInvites.send({
-            accountId: toMargonemAccountId(payload.accountId),
-            actorUserId: toAppUserId(payload.actorUserId),
-            invitedUserId: toAppUserId(payload.invitedUserId),
-          })
-        )
-      )
-      .handle("respondToAccountAccessInvite", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          accountAccessInviteResponses.respond({
-            accessId: toMargonemAccountAccessId(payload.accessId),
-            actorUserId: toAppUserId(payload.actorUserId),
-            response: payload.response,
-          })
-        )
-      )
-      .handle("revokeAccountAccess", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          accountAccessRevocations.revoke({
-            accessId: toMargonemAccountAccessId(payload.accessId),
-            actorUserId: toAppUserId(payload.actorUserId),
-          })
-        )
-      )
-      .handle("listIncomingAccountInvites", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          accountSharingState.listIncomingInvites({
-            actorUserId: toAppUserId(payload.actorUserId),
-          })
-        )
-      )
-      .handle("listSharedAccounts", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          accountSharingState.listSharedAccounts({
-            actorUserId: toAppUserId(payload.actorUserId),
-          })
-        )
-      )
-      .handle("listAccountAccessGrants", ({ payload, request }) =>
-        withRequestCorrelation(
-          request,
-          accountSharingState.listAccountAccessGrants({
-            accountId: toMargonemAccountId(payload.accountId),
-            actorUserId: toAppUserId(payload.actorUserId),
-          })
-        )
-      )
-);
 
 const squadGroupSharingHandlers = HttpApiBuilder.group(
   AppHttpApi,
@@ -237,16 +136,10 @@ const squadGroupSharingHandlers = HttpApiBuilder.group(
 );
 
 export const SquadBuilderHttpApiHandlers = Layer.mergeAll(
-  accountSharingHandlers,
   squadGroupSharingHandlers
 ).pipe(
   Layer.provide(
     Layer.mergeAll(
-      accountInviteTargetsLayer,
-      accountAccessInvitesLayer,
-      accountAccessInviteResponsesLayer,
-      accountAccessRevocationsLayer,
-      accountSharingStateLayer,
       squadEditorInviteTargetsLayer,
       squadGroupEditorInvitesLayer,
       squadGroupEditorInviteResponsesLayer,

@@ -1,9 +1,6 @@
 import { HttpApi } from "effect/unstable/httpapi";
 
-import {
-  SquadBuilderAccountSharingGroup,
-  SquadBuilderSquadGroupSharingGroup,
-} from "../modules/squad-builder/http-api-contract.js";
+import { SquadBuilderSquadGroupSharingGroup } from "../modules/squad-builder/http-api-contract.js";
 import { AnnouncementHttpApiGroup } from "./announcement/http-api-contract.js";
 import { AuctionHttpApiGroup } from "./auction/http-api-contract.js";
 import { BetHttpApiGroup } from "./bet/http-api-contract.js";
@@ -14,6 +11,7 @@ import { RankingHttpApiGroup } from "./ranking/http-api-contract.js";
 import { SkillsHttpApiGroup } from "./skills/http-api-contract.js";
 import { SquadBuilderAccountImportGroup } from "./squad-builder/account-import/http-api-contract.js";
 import { SquadBuilderAccountRefetchGroup } from "./squad-builder/account-refetch/http-api-contract.js";
+import { SquadBuilderAccountSharingGroup } from "./squad-builder/account-sharing/http-api-contract.js";
 import { SquadBuilderSquadGroupGroup } from "./squad-builder/squad-groups/http-api-contract.js";
 import { TodoHttpApiGroup } from "./todo/http-api-contract.js";
 import { UserHttpApiGroup } from "./user/http-api-contract.js";
