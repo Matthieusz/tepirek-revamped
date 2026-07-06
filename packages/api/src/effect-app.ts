@@ -7,8 +7,8 @@ import type { Exit } from "effect/Exit";
 import * as Layer from "effect/Layer";
 import type { SqlError } from "effect/unstable/sql/SqlError";
 
-import { AnnouncementStoreLayer } from "./modules/announcement/announcement-store.js";
-import type { AnnouncementStore } from "./modules/announcement/announcement-store.js";
+import { AnnouncementStoreLayer } from "./adapters/announcement/announcement-store.js";
+import type { AnnouncementStore } from "./adapters/announcement/announcement-store.js";
 import { AuctionStoreLayer } from "./modules/auction/auction-store.js";
 import type { AuctionStore } from "./modules/auction/auction-store.js";
 import { EventStoreLayer } from "./modules/event/event-store.js";

@@ -8,7 +8,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 import {
   AnnouncementStore,
   AnnouncementStoreLayer,
-} from "../../modules/announcement/announcement-store.js";
+} from "../../adapters/announcement/announcement-store.js";
 import {
   AnnouncementForbidden,
   AnnouncementUnauthorized,
