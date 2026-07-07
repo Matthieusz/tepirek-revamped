@@ -21,4 +21,11 @@ export default defineConfig(({ mode }) => ({
     },
     tsconfigPaths: true,
   },
+  ...(mode === "test" && {
+    define: {
+      "import.meta.env.VITE_SERVER_URL": JSON.stringify(
+        "http://localhost:3000"
+      ),
+    },
+  }),
 }));
