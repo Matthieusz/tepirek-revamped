@@ -171,7 +171,7 @@ pnpm db:start && pnpm db:push && pnpm dev
 
 `pnpm test:smoke` runs fast app-start and health checks. `pnpm test:integration` remains the primary confidence layer for guild-critical workflows.
 
-`pnpm test:integration` runs the API/router integration suite described in [`docs/adr/0001-api-router-integration-tests-with-real-postgres.md`](docs/adr/0001-api-router-integration-tests-with-real-postgres.md). By default, it starts a dedicated Docker Postgres database on port `5433`, applies the real schema, truncates application tables between tests, and stops the container after the suite completes.
+`pnpm test:integration` runs the API/router integration suite. By default, it starts a dedicated Docker Postgres database on port `5433`, applies the real schema, truncates application tables between tests, and stops the container after the suite completes.
 
 Set `TEST_DATABASE_URL` only when you want to connect to an already-running dedicated test database. Do not point it at your development database.
 
