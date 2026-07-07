@@ -16,6 +16,7 @@ import {
 } from "../../services/ranking/ranking-errors.js";
 import type {
   GetRankingInput,
+  RankingRow,
   RankingServiceInterface,
 } from "../../services/ranking/ranking-service.js";
 import { RankingService } from "../../services/ranking/ranking-service.js";
@@ -44,6 +45,18 @@ const buildUserStatsWhere = (input: {
   }
   return conditions.length > 0 ? and(...conditions) : undefined;
 };
+
+const normalizeRankingRow = (row: {
+  readonly totalBets: number | string;
+  readonly totalEarnings: string;
+  readonly totalPoints: string;
+  readonly userId: string;
+  readonly userImage: string | null;
+  readonly userName: string | null;
+}): RankingRow => ({
+  ...row,
+  totalBets: Number(row.totalBets),
+});
 
 const getHeroStatsWithDatabase =
   (database: EffectPgDatabase) => (heroId: number) =>
@@ -171,7 +184,11 @@ const getRankingWithDatabase =
           ? null
           : parsePointWorth(pointWorthRows[0]?.pointWorth ?? null);
 
-      return { pointWorth, ranking, totalBets };
+      return {
+        pointWorth,
+        ranking: ranking.map(normalizeRankingRow),
+        totalBets,
+      };
     });
 
 const makeService = (database: EffectPgDatabase): RankingServiceInterface => ({

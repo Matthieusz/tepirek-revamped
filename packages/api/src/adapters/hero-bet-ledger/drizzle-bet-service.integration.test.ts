@@ -264,7 +264,7 @@ describe("HeroBetLedger characterization", () => {
       pointWorth: 100_000_000,
       ranking: expect.arrayContaining([
         {
-          totalBets: "1",
+          totalBets: 1,
           totalEarnings: "1000000000.00",
           totalPoints: "10.00",
           userId: firstMember.id,
@@ -272,7 +272,7 @@ describe("HeroBetLedger characterization", () => {
           userName: "First Ledger Member",
         },
         {
-          totalBets: "1",
+          totalBets: 1,
           totalEarnings: "1000000000.00",
           totalPoints: "10.00",
           userId: secondMember.id,
