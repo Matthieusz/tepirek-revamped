@@ -90,14 +90,6 @@ export const toggleAuctionSignupAtom = appHttpApiFn(
     })
 );
 
-const removeAuctionSignupRequestAtom = appHttpApiFn(
-  (payload: { readonly id: number }) =>
-    Effect.gen(function* removeAuctionSignupEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.auction.removeAuctionSignup({ payload });
-    })
-);
-
 /** Optimistic auction signup list atom backed by a Result-returning group resource. */
 const optimisticAuctionSignupsByGroupAtom = Atom.family(
   (key: AuctionGroupKey) =>
@@ -132,6 +124,3 @@ const removeAuctionSignupFromGroupByGroupAtom = Atom.family(
 
 export const removeAuctionSignupFromGroupAtom = (payload: AuctionGroupInput) =>
   removeAuctionSignupFromGroupByGroupAtom(auctionGroupKey(payload));
-
-/** Mutation atom for removing a signup when the caller does not own a group list. */
-export const removeAuctionSignupAtom = removeAuctionSignupRequestAtom;

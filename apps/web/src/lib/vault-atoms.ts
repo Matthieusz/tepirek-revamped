@@ -7,6 +7,7 @@ import {
   appHttpApiAtom,
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
+import { oldestUnpaidEventAtom } from "@/lib/ranking-atoms";
 
 type VaultEntry = typeof VaultRow.Type;
 
@@ -64,24 +65,47 @@ const userStatsByKeyAtom = Atom.family((key: VaultKey) => {
 export const userStatsAtom = (payload: VaultInput) =>
   userStatsByKeyAtom(vaultKey(payload));
 
-/** Mutation atom for distributing gold for one hero. */
+/** Mutation atom for distributing gold for one hero. Refreshes affected vault resources on success. */
 export const distributeGoldAtom = appHttpApiFn(
-  (payload: { readonly goldAmount: number; readonly heroId: number }) =>
+  (
+    payload: {
+      readonly goldAmount: number;
+      readonly eventId?: number;
+      readonly heroId: number;
+    },
+    get
+  ) =>
     Effect.gen(function* distributeGoldEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.vault.distributeGold({ payload });
+      const result = yield* client.vault.distributeGold({
+        payload: { goldAmount: payload.goldAmount, heroId: payload.heroId },
+      });
+
+      if (payload.eventId !== undefined) {
+        const key = vaultKey({ eventId: payload.eventId });
+        get.refresh(vaultByKeyAtom(key));
+        get.refresh(userStatsByKeyAtom(key));
+      }
+      get.refresh(oldestUnpaidEventAtom);
+
+      return result;
     })
 );
 
 const togglePaidOutRequestAtom = appHttpApiFn(
-  (payload: {
-    readonly eventId: number;
-    readonly paidOut: boolean;
-    readonly userId: string;
-  }) =>
+  (
+    payload: {
+      readonly eventId: number;
+      readonly paidOut: boolean;
+      readonly userId: string;
+    },
+    get
+  ) =>
     Effect.gen(function* togglePaidOutEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.vault.togglePaidOut({ payload });
+      const result = yield* client.vault.togglePaidOut({ payload });
+      get.refresh(oldestUnpaidEventAtom);
+      return result;
     })
 );
 

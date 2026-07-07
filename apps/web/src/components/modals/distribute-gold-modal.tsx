@@ -204,6 +204,8 @@ export const DistributeGoldModal = ({
 
         const result = await distributeGold({
           goldAmount,
+          eventId:
+            eventId !== ALL_FILTER ? Number.parseInt(eventId, 10) : undefined,
           heroId: Number.parseInt(heroId, 10),
         });
 
