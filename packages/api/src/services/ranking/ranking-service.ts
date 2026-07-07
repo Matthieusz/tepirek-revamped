@@ -9,6 +9,21 @@ export interface GetRankingInput {
   readonly heroId?: number | undefined;
 }
 
+export interface RankingRow {
+  readonly totalBets: number;
+  readonly totalEarnings: string;
+  readonly totalPoints: string;
+  readonly userId: string;
+  readonly userImage: string | null;
+  readonly userName: string | null;
+}
+
+export interface RankingResult {
+  readonly pointWorth: number | null;
+  readonly ranking: readonly RankingRow[];
+  readonly totalBets: number;
+}
+
 export interface RankingServiceInterface {
   readonly getHeroStats: (heroId: number) => Effect<
     {
@@ -21,7 +36,9 @@ export interface RankingServiceInterface {
     RankingError
   >;
   readonly getOldestUnpaidEvent: () => Effect<number | null, RankingError>;
-  readonly getRanking: (input: GetRankingInput) => Effect<any, RankingError>;
+  readonly getRanking: (
+    input: GetRankingInput
+  ) => Effect<RankingResult, RankingError>;
 }
 
 export class RankingService extends Context.Service<
