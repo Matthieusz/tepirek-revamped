@@ -15,8 +15,10 @@ import {
   SquadBuilderConflict,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
+  SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
 } from "../../../protocol/squad-builder/account-sharing/http-api-contract.js";
+import type { AccountSharingError } from "../../../services/squad-builder/account-sharing/account-sharing-error.js";
 import {
   layer as accountSharingStateLayer,
   use as accountSharingState,
@@ -71,91 +73,42 @@ const withRequestCorrelation = <A, E, R>(
   );
 };
 
-const notFoundTags = new Set([
-  "MargonemAccountNotFound",
-  "AccountAccessInviteNotFound",
-  "InviteTargetNotFound",
-]);
-
-const forbiddenTags = new Set([
-  "ActorDoesNotOwnMargonemAccount",
-  "InviteTargetNotVerified",
-  "ActorIsNotInviteRecipient",
-]);
-
-const conflictTags = new Set(["AccountAccessTransitionNotAllowed"]);
-
-const invalidInputTags = new Set([
-  "CannotInviteSelf",
-  "InvalidMargonemAccountId",
-  "InvalidMargonemAccountAccessId",
-  "InvalidAppUserId",
-  "InvalidAccountInviteTargetQuery",
-]);
-
-const toSquadBuilderFail = (
-  error: unknown
-): Effect.Effect<never, ProtocolError, never> => {
-  if (typeof error !== "object" || error === null || !("_tag" in error)) {
-    return Effect.fail(
-      new SquadBuilderPersistenceUnavailable({
-        cause: new Error("Unknown error"),
+const mapAccountSharingError = (error: AccountSharingError): ProtocolError => {
+  switch (error._tag) {
+    case "MargonemAccountNotFound":
+    case "AccountAccessInviteNotFound":
+    case "InviteTargetNotFound": {
+      return new SquadBuilderNotFound({ message: error._tag });
+    }
+    case "ActorDoesNotOwnMargonemAccount":
+    case "InviteTargetNotVerified":
+    case "ActorIsNotInviteRecipient": {
+      return new SquadBuilderForbidden({ message: error._tag });
+    }
+    case "AccountAccessTransitionNotAllowed": {
+      return new SquadBuilderConflict({ message: error._tag });
+    }
+    case "CannotInviteSelf":
+    case "InvalidMargonemAccountId":
+    case "InvalidMargonemAccountAccessId":
+    case "InvalidAppUserId":
+    case "InvalidAccountInviteTargetQuery": {
+      return new SquadBuilderInvalidInput({ message: error._tag });
+    }
+    case "SquadBuilderPersistenceUnavailable": {
+      return new SquadBuilderPersistenceUnavailable({
+        cause: error.cause,
+        operation: error.operation,
+      });
+    }
+    default: {
+      return new SquadBuilderPersistenceUnavailable({
+        cause: new Error("Unreachable error tag"),
         operation: "unknown",
-      })
-    );
+      });
+    }
   }
-
-  const tagged = error as { _tag: string; cause?: unknown; operation?: string };
-
-  if (tagged._tag === "SquadBuilderPersistenceUnavailable") {
-    return Effect.fail(
-      new SquadBuilderPersistenceUnavailable({
-        cause: tagged.cause,
-        operation: tagged.operation ?? "unknown",
-      })
-    );
-  }
-
-  if (notFoundTags.has(tagged._tag)) {
-    return Effect.fail(
-      new SquadBuilderPersistenceUnavailable({
-        cause: new Error(tagged._tag),
-        operation: "unknown",
-      })
-    );
-  }
-
-  if (forbiddenTags.has(tagged._tag)) {
-    return Effect.fail(new SquadBuilderForbidden({ message: tagged._tag }));
-  }
-
-  if (conflictTags.has(tagged._tag)) {
-    return Effect.fail(new SquadBuilderConflict({ message: tagged._tag }));
-  }
-
-  if (invalidInputTags.has(tagged._tag)) {
-    return Effect.fail(new SquadBuilderInvalidInput({ message: tagged._tag }));
-  }
-
-  return Effect.fail(
-    new SquadBuilderPersistenceUnavailable({
-      cause: new Error(`Unknown error: ${tagged._tag}`),
-      operation: "unknown",
-    })
-  );
 };
-
-// oxlint-disable-next-line promise/valid-params, promise/prefer-await-to-then, promise/prefer-await-to-callbacks
-const withErrorMapping = <A, R>(
-  self: Effect.Effect<A, unknown, R>
-): Effect.Effect<A, ProtocolError, R> =>
-  Effect.catch(
-    self as Effect.Effect<A, unknown, never>,
-    (error) => toSquadBuilderFail(error)
-    // SAFETY: The protocol error type matches what HttpApi expects because the
-    // error union includes all error classes handled in toSquadBuilderFail.
-  ) as unknown as Effect.Effect<A, ProtocolError, R>;
-// oxlint-enable promise/valid-params, promise/prefer-await-to-then, promise/prefer-await-to-callbacks
 
 export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
@@ -165,100 +118,86 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
       .handle("searchAccountInviteTargets", ({ payload, request }) =>
         Effect.gen(function* searchAccountInviteTargetsHandler() {
           const session = yield* requireSquadBuilderSession(request);
-          return yield* withErrorMapping(
-            withRequestCorrelation(
-              request,
-              accountInviteTargets.search({
-                accountId: toMargonemAccountId(payload.accountId),
-                actorUserId: sessionAppUserId(session),
-                query: payload.query,
-              })
-            )
-          );
+          return yield* withRequestCorrelation(
+            request,
+            accountInviteTargets.search({
+              accountId: toMargonemAccountId(payload.accountId),
+              actorUserId: sessionAppUserId(session),
+              query: payload.query,
+            })
+          ).pipe(Effect.mapError(mapAccountSharingError));
         })
       )
       .handle("sendAccountAccessInvite", ({ payload, request }) =>
         Effect.gen(function* sendAccountAccessInviteHandler() {
           const session = yield* requireSquadBuilderSession(request);
-          return yield* withErrorMapping(
-            withRequestCorrelation(
-              request,
-              accountAccessInvites.send({
-                accountId: toMargonemAccountId(payload.accountId),
-                actorUserId: sessionAppUserId(session),
-                invitedUserId: toAppUserId(payload.invitedUserId),
-              })
-            )
-          );
+          return yield* withRequestCorrelation(
+            request,
+            accountAccessInvites.send({
+              accountId: toMargonemAccountId(payload.accountId),
+              actorUserId: sessionAppUserId(session),
+              invitedUserId: toAppUserId(payload.invitedUserId),
+            })
+          ).pipe(Effect.mapError(mapAccountSharingError));
         })
       )
       .handle("respondToAccountAccessInvite", ({ payload, request }) =>
         Effect.gen(function* respondToAccountAccessInviteHandler() {
           const session = yield* requireSquadBuilderSession(request);
-          return yield* withErrorMapping(
-            withRequestCorrelation(
-              request,
-              accountAccessInviteResponses.respond({
-                accessId: toMargonemAccountAccessId(payload.accessId),
-                actorUserId: sessionAppUserId(session),
-                response: payload.response,
-              })
-            )
-          );
+          return yield* withRequestCorrelation(
+            request,
+            accountAccessInviteResponses.respond({
+              accessId: toMargonemAccountAccessId(payload.accessId),
+              actorUserId: sessionAppUserId(session),
+              response: payload.response,
+            })
+          ).pipe(Effect.mapError(mapAccountSharingError));
         })
       )
       .handle("revokeAccountAccess", ({ payload, request }) =>
         Effect.gen(function* revokeAccountAccessHandler() {
           const session = yield* requireSquadBuilderSession(request);
-          return yield* withErrorMapping(
-            withRequestCorrelation(
-              request,
-              accountAccessRevocations.revoke({
-                accessId: toMargonemAccountAccessId(payload.accessId),
-                actorUserId: sessionAppUserId(session),
-              })
-            )
-          );
+          return yield* withRequestCorrelation(
+            request,
+            accountAccessRevocations.revoke({
+              accessId: toMargonemAccountAccessId(payload.accessId),
+              actorUserId: sessionAppUserId(session),
+            })
+          ).pipe(Effect.mapError(mapAccountSharingError));
         })
       )
       .handle("listIncomingAccountInvites", ({ request }) =>
         Effect.gen(function* listIncomingAccountInvitesHandler() {
           const session = yield* requireSquadBuilderSession(request);
-          return yield* withErrorMapping(
-            withRequestCorrelation(
-              request,
-              accountSharingState.listIncomingInvites({
-                actorUserId: sessionAppUserId(session),
-              })
-            )
-          );
+          return yield* withRequestCorrelation(
+            request,
+            accountSharingState.listIncomingInvites({
+              actorUserId: sessionAppUserId(session),
+            })
+          ).pipe(Effect.mapError(mapAccountSharingError));
         })
       )
       .handle("listSharedAccounts", ({ request }) =>
         Effect.gen(function* listSharedAccountsHandler() {
           const session = yield* requireSquadBuilderSession(request);
-          return yield* withErrorMapping(
-            withRequestCorrelation(
-              request,
-              accountSharingState.listSharedAccounts({
-                actorUserId: sessionAppUserId(session),
-              })
-            )
-          );
+          return yield* withRequestCorrelation(
+            request,
+            accountSharingState.listSharedAccounts({
+              actorUserId: sessionAppUserId(session),
+            })
+          ).pipe(Effect.mapError(mapAccountSharingError));
         })
       )
       .handle("listAccountAccessGrants", ({ payload, request }) =>
         Effect.gen(function* listAccountAccessGrantsHandler() {
           const session = yield* requireSquadBuilderSession(request);
-          return yield* withErrorMapping(
-            withRequestCorrelation(
-              request,
-              accountSharingState.listAccountAccessGrants({
-                accountId: toMargonemAccountId(payload.accountId),
-                actorUserId: sessionAppUserId(session),
-              })
-            )
-          );
+          return yield* withRequestCorrelation(
+            request,
+            accountSharingState.listAccountAccessGrants({
+              accountId: toMargonemAccountId(payload.accountId),
+              actorUserId: sessionAppUserId(session),
+            })
+          ).pipe(Effect.mapError(mapAccountSharingError));
         })
       )
 ).pipe(

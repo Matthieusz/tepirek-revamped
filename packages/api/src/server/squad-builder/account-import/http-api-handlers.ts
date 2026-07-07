@@ -17,6 +17,7 @@ import {
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/account-import/http-api-contract.js";
 import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store-service.js";
+import type { ConfirmOwnedAccountImportServiceError } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.js";
 import {
   layer as confirmOwnedAccountImportLayer,
   use as confirmOwnedAccountImport,
@@ -25,10 +26,12 @@ import {
   layer as previewMargonemProfileImportLayer,
   use as previewMargonemProfileImport,
 } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
+import type { PreviewMargonemProfileImportError } from "../../../services/squad-builder/account-import/preview-margonem-profile-import.js";
 import {
   layer as previewOwnedAccountImportsLayer,
   use as previewOwnedAccountImports,
 } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.js";
+import type { PreviewOwnedAccountImportsError } from "../../../services/squad-builder/account-import/preview-owned-account-imports.js";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -55,89 +58,52 @@ const withRequestCorrelation = <A, E, R>(
   );
 };
 
-const invalidInputTags = new Set([
-  "InvalidMargonemProfileUrl",
-  "MissingMargonemProfileId",
-  "MargonemProfileNameNotFound",
-  "MargonemCharacterRowsNotFound",
-  "MargonemCharacterRowInvalid",
-  "InvalidAccountDisplayName",
-  "EmptyProfileUrlBatch",
-  "TooManyProfileUrlsInBatch",
-]);
+type AccountImportHandlerError =
+  | PreviewMargonemProfileImportError
+  | PreviewOwnedAccountImportsError
+  | ConfirmOwnedAccountImportServiceError;
 
-const conflictTags = new Set([
-  "MargonemAccountAlreadyOwnedByActor",
-  "MargonemAccountAlreadySharedWithActor",
-  "MargonemAccountOwnedByAnotherUser",
-  "DuplicateProfileInBatch",
-]);
-
-const upstreamTags = new Set([
-  "FirecrawlMonthlyBudgetExhausted",
-  "FirecrawlRequestFailed",
-  "FirecrawlResponseNotParseable",
-  "RequestCancelled",
-]);
-
-const toSquadBuilderFail = (
-  error: unknown
-): Effect.Effect<never, ProtocolError, never> => {
-  if (typeof error !== "object" || error === null || !("_tag" in error)) {
-    return Effect.fail(
-      new SquadBuilderUpstreamUnavailable({ message: "Unknown error" })
-    );
+const mapAccountImportError = (
+  error: AccountImportHandlerError
+): ProtocolError => {
+  switch (error._tag) {
+    case "PendingMargonemAccountImportNotFound": {
+      return new SquadBuilderNotFound({ message: "Pending import not found" });
+    }
+    case "InvalidMargonemProfileUrl":
+    case "MissingMargonemProfileId":
+    case "MargonemProfileNameNotFound":
+    case "MargonemCharacterRowsNotFound":
+    case "MargonemCharacterRowInvalid":
+    case "InvalidAccountDisplayName":
+    case "EmptyProfileUrlBatch":
+    case "TooManyProfileUrlsInBatch": {
+      return new SquadBuilderInvalidInput({ message: error._tag });
+    }
+    case "MargonemAccountAlreadyOwnedByActor":
+    case "MargonemAccountAlreadySharedWithActor":
+    case "MargonemAccountOwnedByAnotherUser": {
+      return new SquadBuilderConflict({ message: error._tag });
+    }
+    case "FirecrawlMonthlyBudgetExhausted":
+    case "FirecrawlRequestFailed":
+    case "FirecrawlResponseNotParseable":
+    case "RequestCancelled": {
+      return new SquadBuilderUpstreamUnavailable({ message: error._tag });
+    }
+    case "SquadBuilderPersistenceUnavailable": {
+      return new SquadBuilderPersistenceUnavailable({
+        cause: error.cause,
+        operation: error.operation,
+      });
+    }
+    default: {
+      return new SquadBuilderUpstreamUnavailable({
+        message: "Unreachable error tag",
+      });
+    }
   }
-
-  const tagged = error as { _tag: string; cause?: unknown; operation?: string };
-
-  if (tagged._tag === "SquadBuilderPersistenceUnavailable") {
-    return Effect.fail(
-      new SquadBuilderPersistenceUnavailable({
-        cause: tagged.cause,
-        operation: tagged.operation ?? "unknown",
-      })
-    );
-  }
-
-  if (tagged._tag === "PendingMargonemAccountImportNotFound") {
-    return Effect.fail(
-      new SquadBuilderNotFound({ message: "Pending import not found" })
-    );
-  }
-
-  if (invalidInputTags.has(tagged._tag)) {
-    return Effect.fail(new SquadBuilderInvalidInput({ message: tagged._tag }));
-  }
-
-  if (conflictTags.has(tagged._tag)) {
-    return Effect.fail(new SquadBuilderConflict({ message: tagged._tag }));
-  }
-
-  if (upstreamTags.has(tagged._tag)) {
-    return Effect.fail(
-      new SquadBuilderUpstreamUnavailable({ message: tagged._tag })
-    );
-  }
-
-  return Effect.fail(
-    new SquadBuilderUpstreamUnavailable({
-      message: `Unknown error: ${tagged._tag}`,
-    })
-  );
 };
-
-// oxlint-disable-next-line promise/valid-params, promise/prefer-await-to-then, promise/prefer-await-to-callbacks
-const withErrorMapping = <A, R>(
-  self: Effect.Effect<A, unknown, R>
-): Effect.Effect<A, ProtocolError, R> =>
-  Effect.catch(
-    self as Effect.Effect<A, unknown, never>,
-    (error) => toSquadBuilderFail(error)
-    // SAFETY: The protocol error type matches what HttpApi expects because the
-    // error union includes all error classes handled in toSquadBuilderFail.
-  ) as unknown as Effect.Effect<A, ProtocolError, R>;
-// oxlint-enable promise/valid-params, promise/prefer-await-to-then, promise/prefer-await-to-callbacks
 
 export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
@@ -147,59 +113,51 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
       .handle("previewMargonemProfileImport", ({ payload, request }) =>
         Effect.gen(function* previewMargonemProfileImportHandler() {
           const session = yield* requireSquadBuilderSession(request);
-          return yield* withErrorMapping(
-            withRequestCorrelation(
-              request,
-              previewMargonemProfileImport.preview({
-                actorUserId: sessionAppUserId(session),
-                profileUrl: payload.profileUrl,
-              })
-            )
-          );
+          return yield* withRequestCorrelation(
+            request,
+            previewMargonemProfileImport.preview({
+              actorUserId: sessionAppUserId(session),
+              profileUrl: payload.profileUrl,
+            })
+          ).pipe(Effect.mapError(mapAccountImportError));
         })
       )
       .handle("previewOwnedAccountImports", ({ payload, request }) =>
         Effect.gen(function* previewOwnedAccountImportsHandler() {
           const session = yield* requireSquadBuilderSession(request);
-          return yield* withErrorMapping(
-            withRequestCorrelation(
-              request,
-              previewOwnedAccountImports.preview({
-                actorUserId: sessionAppUserId(session),
-                profileUrls: payload.profileUrls,
-              })
-            )
-          );
+          return yield* withRequestCorrelation(
+            request,
+            previewOwnedAccountImports.preview({
+              actorUserId: sessionAppUserId(session),
+              profileUrls: payload.profileUrls,
+            })
+          ).pipe(Effect.mapError(mapAccountImportError));
         })
       )
       .handle("confirmOwnedAccountImport", ({ payload, request }) =>
         Effect.gen(function* confirmOwnedAccountImportHandler() {
           const session = yield* requireSquadBuilderSession(request);
-          return yield* withErrorMapping(
-            withRequestCorrelation(
-              request,
-              confirmOwnedAccountImport.confirm({
-                actorUserId: sessionAppUserId(session),
-                displayName: payload.displayName,
-                pendingImportId: toPendingImportId(payload.pendingImportId),
-              })
-            )
-          );
+          return yield* withRequestCorrelation(
+            request,
+            confirmOwnedAccountImport.confirm({
+              actorUserId: sessionAppUserId(session),
+              displayName: payload.displayName,
+              pendingImportId: toPendingImportId(payload.pendingImportId),
+            })
+          ).pipe(Effect.mapError(mapAccountImportError));
         })
       )
       .handle("listOwnedAccounts", ({ request }) =>
         Effect.gen(function* listOwnedAccountsHandler() {
           const session = yield* requireSquadBuilderSession(request);
-          return yield* withErrorMapping(
-            withRequestCorrelation(
-              request,
-              AccountImportStoreService.use((store) =>
-                store.listOwnedAccounts({
-                  actorUserId: sessionAppUserId(session),
-                })
-              )
+          return yield* withRequestCorrelation(
+            request,
+            AccountImportStoreService.use((store) =>
+              store.listOwnedAccounts({
+                actorUserId: sessionAppUserId(session),
+              })
             )
-          );
+          ).pipe(Effect.mapError(mapAccountImportError));
         })
       )
 ).pipe(

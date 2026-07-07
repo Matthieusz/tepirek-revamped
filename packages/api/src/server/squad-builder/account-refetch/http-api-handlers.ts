@@ -21,10 +21,12 @@ import {
   layer as applyAccountRefetchLayer,
   use as applyAccountRefetch,
 } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.js";
+import type { ApplyAccountRefetchError } from "../../../services/squad-builder/account-refetch/apply-account-refetch.js";
 import {
   layer as previewAccountRefetchLayer,
   use as previewAccountRefetch,
 } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.js";
+import type { PreviewAccountRefetchError } from "../../../services/squad-builder/account-refetch/preview-account-refetch.js";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -55,82 +57,47 @@ const withRequestCorrelation = <A, E, R>(
   );
 };
 
-const invalidInputTags = new Set([
-  "MargonemProfileNameNotFound",
-  "MargonemCharacterRowsNotFound",
-  "MargonemCharacterRowInvalid",
-]);
+type AccountRefetchHandlerError =
+  | PreviewAccountRefetchError
+  | ApplyAccountRefetchError;
 
-const notFoundTags = new Set([
-  "MargonemAccountNotFound",
-  "PendingMargonemAccountRefetchNotFound",
-]);
-
-const upstreamTags = new Set([
-  "FirecrawlMonthlyBudgetExhausted",
-  "FirecrawlRequestFailed",
-  "FirecrawlResponseNotParseable",
-  "RequestCancelled",
-]);
-
-const toSquadBuilderFail = (
-  error: unknown
-): Effect.Effect<never, ProtocolError, never> => {
-  if (typeof error !== "object" || error === null || !("_tag" in error)) {
-    return Effect.fail(
-      new SquadBuilderUpstreamUnavailable({ message: "Unknown error" })
-    );
+const mapAccountRefetchError = (
+  error: AccountRefetchHandlerError
+): ProtocolError => {
+  switch (error._tag) {
+    case "MargonemAccountNotFound":
+    case "PendingMargonemAccountRefetchNotFound": {
+      return new SquadBuilderNotFound({ message: error._tag });
+    }
+    case "ActorDoesNotOwnMargonemAccount": {
+      return new SquadBuilderForbidden({
+        message: "Actor does not own the account",
+      });
+    }
+    case "MargonemProfileNameNotFound":
+    case "MargonemCharacterRowsNotFound":
+    case "MargonemCharacterRowInvalid": {
+      return new SquadBuilderInvalidInput({ message: error._tag });
+    }
+    case "FirecrawlMonthlyBudgetExhausted":
+    case "FirecrawlRequestFailed":
+    case "FirecrawlResponseNotParseable":
+    case "RequestCancelled": {
+      return new SquadBuilderUpstreamUnavailable({ message: error._tag });
+    }
+    case "SquadBuilderPersistenceUnavailable": {
+      return new SquadBuilderPersistenceUnavailable({
+        cause: error.cause,
+        operation: error.operation,
+      });
+    }
+    default: {
+      return new SquadBuilderUpstreamUnavailable({
+        message: "Unreachable error tag",
+      });
+    }
   }
-
-  const tagged = error as { _tag: string; cause?: unknown; operation?: string };
-
-  if (tagged._tag === "SquadBuilderPersistenceUnavailable") {
-    return Effect.fail(
-      new SquadBuilderPersistenceUnavailable({
-        cause: tagged.cause,
-        operation: tagged.operation ?? "unknown",
-      })
-    );
-  }
-
-  if (tagged._tag === "ActorDoesNotOwnMargonemAccount") {
-    return Effect.fail(
-      new SquadBuilderForbidden({ message: "Actor does not own the account" })
-    );
-  }
-
-  if (invalidInputTags.has(tagged._tag)) {
-    return Effect.fail(new SquadBuilderInvalidInput({ message: tagged._tag }));
-  }
-
-  if (notFoundTags.has(tagged._tag)) {
-    return Effect.fail(new SquadBuilderNotFound({ message: tagged._tag }));
-  }
-
-  if (upstreamTags.has(tagged._tag)) {
-    return Effect.fail(
-      new SquadBuilderUpstreamUnavailable({ message: tagged._tag })
-    );
-  }
-
-  return Effect.fail(
-    new SquadBuilderUpstreamUnavailable({
-      message: `Unknown error: ${tagged._tag}`,
-    })
-  );
 };
-
-// oxlint-disable-next-line promise/valid-params, promise/prefer-await-to-then, promise/prefer-await-to-callbacks
-const withErrorMapping = <A, R>(
-  self: Effect.Effect<A, unknown, R>
-): Effect.Effect<A, ProtocolError, R> =>
-  Effect.catch(
-    self as Effect.Effect<A, unknown, never>,
-    (error) => toSquadBuilderFail(error)
-    // SAFETY: The protocol error type matches what HttpApi expects because the
-    // error union includes all error classes handled in toSquadBuilderFail.
-  ) as unknown as Effect.Effect<A, ProtocolError, R>;
-// oxlint-enable promise/valid-params, promise/prefer-await-to-then, promise/prefer-await-to-callbacks
 
 export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
@@ -140,29 +107,25 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
       .handle("previewAccountRefetch", ({ payload, request }) =>
         Effect.gen(function* previewAccountRefetchHandler() {
           const session = yield* requireSquadBuilderSession(request);
-          return yield* withErrorMapping(
-            withRequestCorrelation(
-              request,
-              previewAccountRefetch.preview({
-                accountId: toMargonemAccountId(payload.accountId),
-                actorUserId: sessionAppUserId(session),
-              })
-            )
-          );
+          return yield* withRequestCorrelation(
+            request,
+            previewAccountRefetch.preview({
+              accountId: toMargonemAccountId(payload.accountId),
+              actorUserId: sessionAppUserId(session),
+            })
+          ).pipe(Effect.mapError(mapAccountRefetchError));
         })
       )
       .handle("applyAccountRefetch", ({ payload, request }) =>
         Effect.gen(function* applyAccountRefetchHandler() {
           const session = yield* requireSquadBuilderSession(request);
-          return yield* withErrorMapping(
-            withRequestCorrelation(
-              request,
-              applyAccountRefetch.apply({
-                actorUserId: sessionAppUserId(session),
-                refetchPreviewId: toPendingRefetchId(payload.refetchPreviewId),
-              })
-            )
-          );
+          return yield* withRequestCorrelation(
+            request,
+            applyAccountRefetch.apply({
+              actorUserId: sessionAppUserId(session),
+              refetchPreviewId: toPendingRefetchId(payload.refetchPreviewId),
+            })
+          ).pipe(Effect.mapError(mapAccountRefetchError));
         })
       )
 ).pipe(
