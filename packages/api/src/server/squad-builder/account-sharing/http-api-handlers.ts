@@ -9,26 +9,6 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
 import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import {
-  layer as accountSharingStateLayer,
-  use as accountSharingState,
-} from "../../../modules/squad-builder/account-sharing/list-account-sharing-state-service.js";
-import {
-  layer as accountAccessInviteResponsesLayer,
-  use as accountAccessInviteResponses,
-} from "../../../modules/squad-builder/account-sharing/respond-to-account-access-invite-service.js";
-import {
-  layer as accountAccessRevocationsLayer,
-  use as accountAccessRevocations,
-} from "../../../modules/squad-builder/account-sharing/revoke-account-access-service.js";
-import {
-  layer as accountInviteTargetsLayer,
-  use as accountInviteTargets,
-} from "../../../modules/squad-builder/account-sharing/search-account-invite-targets-service.js";
-import {
-  layer as accountAccessInvitesLayer,
-  use as accountAccessInvites,
-} from "../../../modules/squad-builder/account-sharing/send-account-access-invite-service.js";
 import { AppHttpApi } from "../../../protocol/http-api-contract.js";
 import type { SquadBuilderAccountSharingError } from "../../../protocol/squad-builder/account-sharing/http-api-contract.js";
 import {
@@ -38,6 +18,26 @@ import {
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
 } from "../../../protocol/squad-builder/account-sharing/http-api-contract.js";
+import {
+  layer as accountSharingStateLayer,
+  use as accountSharingState,
+} from "../../../services/squad-builder/account-sharing/list-account-sharing-state-service.js";
+import {
+  layer as accountAccessInviteResponsesLayer,
+  use as accountAccessInviteResponses,
+} from "../../../services/squad-builder/account-sharing/respond-to-account-access-invite-service.js";
+import {
+  layer as accountAccessRevocationsLayer,
+  use as accountAccessRevocations,
+} from "../../../services/squad-builder/account-sharing/revoke-account-access-service.js";
+import {
+  layer as accountInviteTargetsLayer,
+  use as accountInviteTargets,
+} from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.js";
+import {
+  layer as accountAccessInvitesLayer,
+  use as accountAccessInvites,
+} from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.js";
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderAccountSharingError>;
 

@@ -35,7 +35,7 @@ import {
 } from "../../../domain/squad-builder/margonem-account-id.js";
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.js";
-import { AccountSharingStoreService } from "../../../modules/squad-builder/account-sharing/account-sharing-store-service.js";
+import { AccountSharingStoreService } from "../../../services/squad-builder/account-sharing/account-sharing-store-service.js";
 import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,
@@ -51,8 +51,8 @@ import type {
   RevokeAccountAccessStoreInput,
   SearchInviteTargetsStoreInput,
   SharedMargonemAccountSummary,
-} from "../../../modules/squad-builder/account-sharing/account-sharing-store.js";
-import type { EffectSquadBuilderPersistenceUnavailable } from "../../../modules/squad-builder/squad-groups/squad-group-errors.js";
+} from "../../../services/squad-builder/account-sharing/account-sharing-store.js";
+import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
 import {
   AccountAccessInviteNotFound,
   AccountAccessTransitionNotAllowed,
@@ -61,7 +61,7 @@ import {
   InviteTargetNotFound,
   InviteTargetNotVerified,
   MargonemAccountNotFound,
-} from "../../../modules/squad-builder/squad-groups/squad-group-errors.js";
+} from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
 import {
   failPersistence,
   namedStoreMethod,

@@ -10,31 +10,6 @@ import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
 import { parseSquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
 import type { SquadId } from "../../../domain/squad-builder/squad-id.js";
-import {
-  layer as createSquadGroupLayer,
-  use as createSquadGroup,
-} from "../../../modules/squad-builder/squad-groups/create-squad-group.js";
-import {
-  layer as listGlobalSquadGroupsLayer,
-  use as listGlobalSquadGroups,
-} from "../../../modules/squad-builder/squad-groups/list-global-squad-groups.js";
-import {
-  layer as listSquadGroupsLayer,
-  use as listSquadGroups,
-} from "../../../modules/squad-builder/squad-groups/list-squad-groups.js";
-import {
-  layer as saveSharedSquadGroupCharactersLayer,
-  use as saveSharedSquadGroupCharacters,
-} from "../../../modules/squad-builder/squad-groups/save-shared-squad-group-characters.js";
-import {
-  layer as saveSquadGroupLayer,
-  use as saveSquadGroup,
-} from "../../../modules/squad-builder/squad-groups/save-squad-group.js";
-import {
-  layer as setSquadGroupVisibilityLayer,
-  use as setSquadGroupVisibility,
-} from "../../../modules/squad-builder/squad-groups/set-squad-group-visibility.js";
-import { SquadGroupStoreService } from "../../../modules/squad-builder/squad-groups/squad-group-store.js";
 import { AppHttpApi } from "../../../protocol/http-api-contract.js";
 import type { SquadBuilderSquadGroupError } from "../../../protocol/squad-builder/squad-groups/http-api-contract.js";
 import {
@@ -45,6 +20,31 @@ import {
   SquadBuilderConflict,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/squad-groups/http-api-contract.js";
+import {
+  layer as createSquadGroupLayer,
+  use as createSquadGroup,
+} from "../../../services/squad-builder/squad-groups/create-squad-group.js";
+import {
+  layer as listGlobalSquadGroupsLayer,
+  use as listGlobalSquadGroups,
+} from "../../../services/squad-builder/squad-groups/list-global-squad-groups.js";
+import {
+  layer as listSquadGroupsLayer,
+  use as listSquadGroups,
+} from "../../../services/squad-builder/squad-groups/list-squad-groups.js";
+import {
+  layer as saveSharedSquadGroupCharactersLayer,
+  use as saveSharedSquadGroupCharacters,
+} from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
+import {
+  layer as saveSquadGroupLayer,
+  use as saveSquadGroup,
+} from "../../../services/squad-builder/squad-groups/save-squad-group.js";
+import {
+  layer as setSquadGroupVisibilityLayer,
+  use as setSquadGroupVisibility,
+} from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.js";
+import { SquadGroupStoreService } from "../../../services/squad-builder/squad-groups/squad-group-store.js";
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderSquadGroupError>;
 

@@ -8,19 +8,6 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
-import { AccountImportStoreService } from "../../../modules/squad-builder/account-import/account-import-store-service.js";
-import {
-  layer as confirmOwnedAccountImportLayer,
-  use as confirmOwnedAccountImport,
-} from "../../../modules/squad-builder/account-import/confirm-owned-account-import-service.js";
-import {
-  layer as previewMargonemProfileImportLayer,
-  use as previewMargonemProfileImport,
-} from "../../../modules/squad-builder/account-import/preview-margonem-profile-import-service.js";
-import {
-  layer as previewOwnedAccountImportsLayer,
-  use as previewOwnedAccountImports,
-} from "../../../modules/squad-builder/account-import/preview-owned-account-imports-service.js";
 import { AppHttpApi } from "../../../protocol/http-api-contract.js";
 import type { SquadBuilderAccountImportError } from "../../../protocol/squad-builder/account-import/http-api-contract.js";
 import {
@@ -30,6 +17,19 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/account-import/http-api-contract.js";
+import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store-service.js";
+import {
+  layer as confirmOwnedAccountImportLayer,
+  use as confirmOwnedAccountImport,
+} from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.js";
+import {
+  layer as previewMargonemProfileImportLayer,
+  use as previewMargonemProfileImport,
+} from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
+import {
+  layer as previewOwnedAccountImportsLayer,
+  use as previewOwnedAccountImports,
+} from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.js";
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderAccountImportError>;
 

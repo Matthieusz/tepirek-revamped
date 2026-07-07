@@ -9,14 +9,6 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
-import {
-  layer as applyAccountRefetchLayer,
-  use as applyAccountRefetch,
-} from "../../../modules/squad-builder/account-refetch/apply-account-refetch-service.js";
-import {
-  layer as previewAccountRefetchLayer,
-  use as previewAccountRefetch,
-} from "../../../modules/squad-builder/account-refetch/preview-account-refetch-service.js";
 import { AppHttpApi } from "../../../protocol/http-api-contract.js";
 import type { SquadBuilderAccountRefetchError } from "../../../protocol/squad-builder/account-refetch/http-api-contract.js";
 import {
@@ -26,6 +18,14 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/account-refetch/http-api-contract.js";
+import {
+  layer as applyAccountRefetchLayer,
+  use as applyAccountRefetch,
+} from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.js";
+import {
+  layer as previewAccountRefetchLayer,
+  use as previewAccountRefetch,
+} from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.js";
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderAccountRefetchError>;
 

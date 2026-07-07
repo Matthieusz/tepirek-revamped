@@ -3,9 +3,9 @@ import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { FirecrawlClientService } from "../firecrawl-client-service.js";
-import type { FirecrawlClient } from "../firecrawl-client.js";
-import { FirecrawlConfigService } from "../firecrawl-config.js";
+import { FirecrawlClientService } from "../../../modules/squad-builder/firecrawl-client-service.js";
+import type { FirecrawlClient } from "../../../modules/squad-builder/firecrawl-client.js";
+import { FirecrawlConfigService } from "../../../modules/squad-builder/firecrawl-config.js";
 import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import { preview } from "./preview-owned-account-imports-service.js";

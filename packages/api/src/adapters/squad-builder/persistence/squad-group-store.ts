@@ -92,7 +92,7 @@ import {
   SquadGroupInvitationTransitionNotAllowed,
   SquadGroupNotFound,
   SquadNotInGroup,
-} from "../../../modules/squad-builder/squad-groups/squad-group-errors.js";
+} from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
 import type {
   AvailableSquadCharacter,
   CreateSquadGroupStoreInput,
@@ -116,8 +116,8 @@ import type {
   SquadGroupSummary,
   SquadGroupVisibilityChange,
   UpsertSquadGroupEditorInviteInput,
-} from "../../../modules/squad-builder/squad-groups/squad-group-store.js";
-import { SquadGroupStoreService } from "../../../modules/squad-builder/squad-groups/squad-group-store.js";
+} from "../../../services/squad-builder/squad-groups/squad-group-store.js";
+import { SquadGroupStoreService } from "../../../services/squad-builder/squad-groups/squad-group-store.js";
 import {
   escapeLikePattern,
   failPersistence,

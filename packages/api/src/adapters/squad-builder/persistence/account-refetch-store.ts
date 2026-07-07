@@ -38,7 +38,7 @@ import {
   parsePendingMargonemAccountRefetchId,
   pendingRefetchIdToNumber,
 } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
-import { AccountRefetchStoreService } from "../../../modules/squad-builder/account-refetch/account-refetch-store-service.js";
+import { AccountRefetchStoreService } from "../../../services/squad-builder/account-refetch/account-refetch-store-service.js";
 import type {
   ApplyRefetchedAccountInput,
   CreatePendingMargonemAccountRefetchInput,
@@ -50,14 +50,14 @@ import type {
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
-} from "../../../modules/squad-builder/account-refetch/account-refetch-store.js";
-import type { ApplyAccountRefetchOutput } from "../../../modules/squad-builder/account-refetch/apply-account-refetch.js";
-import type { EffectSquadBuilderPersistenceUnavailable } from "../../../modules/squad-builder/squad-groups/squad-group-errors.js";
+} from "../../../services/squad-builder/account-refetch/account-refetch-store.js";
+import type { ApplyAccountRefetchOutput } from "../../../services/squad-builder/account-refetch/apply-account-refetch.js";
+import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
 import {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
   PendingMargonemAccountRefetchNotFound,
-} from "../../../modules/squad-builder/squad-groups/squad-group-errors.js";
+} from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
 import {
   failPersistence,
   namedStoreMethod,

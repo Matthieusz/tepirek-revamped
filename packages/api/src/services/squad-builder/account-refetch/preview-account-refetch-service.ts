@@ -8,13 +8,13 @@ import { computeMargonemAccountRefetchDiff } from "../../../domain/squad-builder
 import { parseMargonemProfileHtml } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
 import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.js";
 import { serviceUse } from "../../../effect/service-use.js";
-import { FirecrawlClientService } from "../firecrawl-client-service.js";
-import { FirecrawlResponseNotParseable } from "../firecrawl-client.js";
-import type { FirecrawlScrapeError } from "../firecrawl-client.js";
+import { FirecrawlClientService } from "../../../modules/squad-builder/firecrawl-client-service.js";
+import { FirecrawlResponseNotParseable } from "../../../modules/squad-builder/firecrawl-client.js";
+import type { FirecrawlScrapeError } from "../../../modules/squad-builder/firecrawl-client.js";
 import {
   FirecrawlConfigService,
   parseFirecrawlCreditCount,
-} from "../firecrawl-config.js";
+} from "../../../modules/squad-builder/firecrawl-config.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import type { PreviewAccountRefetchInput } from "./preview-account-refetch.js";
 import { pendingRefetchPolicy } from "./preview-account-refetch.js";

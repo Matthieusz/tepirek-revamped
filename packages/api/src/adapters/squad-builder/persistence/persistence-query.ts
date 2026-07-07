@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
-import { EffectSquadBuilderPersistenceUnavailable } from "../../../modules/squad-builder/squad-groups/squad-group-errors.js";
+import { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
 
 export type EffectSquadGroupPersistenceOperation =
   | "applyRefetchedAccount"

@@ -9,26 +9,6 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
 import type { SquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.js";
-import {
-  layer as squadGroupSharingStateLayer,
-  use as squadGroupSharingState,
-} from "../../../modules/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
-import {
-  layer as squadGroupEditorInviteResponsesLayer,
-  use as squadGroupEditorInviteResponses,
-} from "../../../modules/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
-import {
-  layer as squadGroupEditorRevocationsLayer,
-  use as squadGroupEditorRevocations,
-} from "../../../modules/squad-builder/squad-groups/revoke-squad-group-editor-service.js";
-import {
-  layer as squadEditorInviteTargetsLayer,
-  use as squadEditorInviteTargets,
-} from "../../../modules/squad-builder/squad-groups/search-squad-editor-invite-targets-service.js";
-import {
-  layer as squadGroupEditorInvitesLayer,
-  use as squadGroupEditorInvites,
-} from "../../../modules/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
 import { AppHttpApi } from "../../../protocol/http-api-contract.js";
 import type { SquadBuilderSquadGroupSharingError } from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.js";
 import {
@@ -38,6 +18,26 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderConflict,
 } from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.js";
+import {
+  layer as squadGroupSharingStateLayer,
+  use as squadGroupSharingState,
+} from "../../../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
+import {
+  layer as squadGroupEditorInviteResponsesLayer,
+  use as squadGroupEditorInviteResponses,
+} from "../../../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
+import {
+  layer as squadGroupEditorRevocationsLayer,
+  use as squadGroupEditorRevocations,
+} from "../../../services/squad-builder/squad-groups/revoke-squad-group-editor-service.js";
+import {
+  layer as squadEditorInviteTargetsLayer,
+  use as squadEditorInviteTargets,
+} from "../../../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.js";
+import {
+  layer as squadGroupEditorInvitesLayer,
+  use as squadGroupEditorInvites,
+} from "../../../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
 
 type ProtocolError = Schema.Schema.Type<
   typeof SquadBuilderSquadGroupSharingError
