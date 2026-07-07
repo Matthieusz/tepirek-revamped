@@ -32,20 +32,15 @@ interface SendAccountAccessInviteInput {
 type AccountAccessGrantsKey = string;
 type AccountInviteTargetsKey = string;
 
-interface RefreshVisibleAccountSharingAtomsOptions {
-  readonly accountId?: number;
-  readonly actorUserId?: string;
-}
-
-const visibleIncomingAccountInviteActorIds = new Set<string>(["default"]);
-const visibleSharedAccountActorIds = new Set<string>(["default"]);
-const visibleAccountAccessGrantKeys = new Set<AccountAccessGrantsKey>();
-const visibleAccountInviteTargetKeys = new Set<AccountInviteTargetsKey>();
-
 const accountAccessGrantsKey = (
   accountId: number,
   actorUserId: string
 ): AccountAccessGrantsKey => `${accountId}:${actorUserId}`;
+
+const accountInviteTargetsKey = (
+  accountId: number,
+  query: string
+): AccountInviteTargetsKey => `${accountId}:${encodeURIComponent(query)}`;
 
 const incomingAccountInvitesByActorAtom = Atom.family((_actorUserId: string) =>
   appHttpApiAtom(
@@ -83,7 +78,7 @@ const accountAccessGrantsByKeyAtom = Atom.family(
           }
         );
       })
-    )
+    ).pipe(Atom.setIdleTTL("5 minutes"))
 );
 
 const accountInviteTargetsByKeyAtom = Atom.family(
@@ -101,7 +96,7 @@ const accountInviteTargetsByKeyAtom = Atom.family(
           }
         );
       })
-    )
+    ).pipe(Atom.setIdleTTL("5 minutes"))
 );
 
 export const incomingAccountInvitesAtom =
@@ -112,43 +107,26 @@ export const sharedAccountsAtom = sharedAccountsByActorAtom("default");
 export const accountAccessGrantsAtom = (
   accountId: number,
   actorUserId: string
-) => {
-  const key = accountAccessGrantsKey(accountId, actorUserId);
-  visibleAccountAccessGrantKeys.add(key);
-  return accountAccessGrantsByKeyAtom(key);
-};
+) =>
+  accountAccessGrantsByKeyAtom(accountAccessGrantsKey(accountId, actorUserId));
 
-export const accountInviteTargetsAtom = (accountId: number, query: string) => {
-  const key = `${accountId}:${encodeURIComponent(query)}`;
-  visibleAccountInviteTargetKeys.add(key);
-  return accountInviteTargetsByKeyAtom(key);
-};
+export const accountInviteTargetsAtom = (accountId: number, query: string) =>
+  accountInviteTargetsByKeyAtom(accountInviteTargetsKey(accountId, query));
 
 export const refreshVisibleAccountSharingAtoms = (
   get: Atom.FnContext,
-  options?: RefreshVisibleAccountSharingAtomsOptions
+  accountId?: number
 ) => {
-  const { accountId, actorUserId } = options ?? {};
+  get.refresh(incomingAccountInvitesByActorAtom("default"));
+  get.refresh(sharedAccountsByActorAtom("default"));
 
-  for (const visibleActorUserId of visibleIncomingAccountInviteActorIds) {
-    if (actorUserId === undefined || visibleActorUserId === actorUserId) {
-      get.refresh(incomingAccountInvitesByActorAtom(visibleActorUserId));
-    }
+  if (accountId !== undefined) {
+    get.refresh(
+      accountAccessGrantsByKeyAtom(accountAccessGrantsKey(accountId, "default"))
+    );
   }
 
-  for (const visibleActorUserId of visibleSharedAccountActorIds) {
-    if (actorUserId === undefined || visibleActorUserId === actorUserId) {
-      get.refresh(sharedAccountsByActorAtom(visibleActorUserId));
-    }
-  }
-
-  for (const visibleKey of visibleAccountAccessGrantKeys) {
-    if (accountId === undefined || visibleKey.startsWith(`${accountId}:`)) {
-      get.refresh(accountAccessGrantsByKeyAtom(visibleKey));
-    }
-  }
-
-  refreshVisibleSquadGroupAtoms(get, { actorUserId });
+  refreshVisibleSquadGroupAtoms(get, { actorUserId: "default" });
 };
 
 /** Mutation atom for searching account invite targets. */
@@ -179,7 +157,7 @@ export const sendAccountAccessInviteAtom = appHttpApiFn(
             invitedUserId: asAppUserId(payload.invitedUserId),
           },
         });
-      refreshVisibleAccountSharingAtoms(get, { accountId: payload.accountId });
+      refreshVisibleAccountSharingAtoms(get, payload.accountId);
       return result;
     })
 );
