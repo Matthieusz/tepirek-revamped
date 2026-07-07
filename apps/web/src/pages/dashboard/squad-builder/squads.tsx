@@ -276,11 +276,9 @@ export default function SquadBuilderSquadsPage() {
   const [appliedFilters, setAppliedFilters] = useState(emptyFilterForm);
   const [filterError, setFilterError] = useState<string | null>(null);
   const activeFilters = hasActiveFilters(appliedFilters);
-  const sessionResult = useAtomValue(sessionAtom);
-  const actorUserId =
-    sessionResult._tag === "Success" ? sessionResult.value.user.id : "";
-  const sharedGroupsResult = useAtomValue(sharedSquadGroupsAtom(actorUserId));
-  const groupsResult = useAtomValue(ownedSquadGroupsAtom(actorUserId));
+  useAtomValue(sessionAtom);
+  const sharedGroupsResult = useAtomValue(sharedSquadGroupsAtom);
+  const groupsResult = useAtomValue(ownedSquadGroupsAtom);
   const globalGroupsResult = useAtomValue(
     globalSquadGroupsAtom({
       maxLevel:
@@ -297,9 +295,7 @@ export default function SquadBuilderSquadsPage() {
           : appliedFilters.nameQuery,
     })
   );
-  const invitesResult = useAtomValue(
-    incomingSquadGroupInvitesAtom(actorUserId)
-  );
+  const invitesResult = useAtomValue(incomingSquadGroupInvitesAtom);
   const createSquadGroup = useAtomSet(createSquadGroupAtom, {
     mode: "promise",
   });

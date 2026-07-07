@@ -104,15 +104,10 @@ const accountInviteTargetsByKeyAtom = Atom.family(
     )
 );
 
-export const incomingAccountInvitesAtom = (actorUserId: string) => {
-  visibleIncomingAccountInviteActorIds.add(actorUserId);
-  return incomingAccountInvitesByActorAtom(actorUserId);
-};
+export const incomingAccountInvitesAtom =
+  incomingAccountInvitesByActorAtom("default");
 
-export const sharedAccountsAtom = (actorUserId: string) => {
-  visibleSharedAccountActorIds.add(actorUserId);
-  return sharedAccountsByActorAtom(actorUserId);
-};
+export const sharedAccountsAtom = sharedAccountsByActorAtom("default");
 
 export const accountAccessGrantsAtom = (
   accountId: number,

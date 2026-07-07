@@ -42,7 +42,6 @@ import {
   squadEditorInviteTargetsAtom,
   squadGroupEditorGrantsAtom,
 } from "@/lib/squad-builder/squad-group-sharing-atoms";
-import { sessionAtom } from "@/lib/user-atoms";
 
 const PROFESSION_LABELS: Record<string, string> = {
   bladeDancer: "Tancerz ostrzy",
@@ -82,7 +81,6 @@ interface DraftSquad {
 type SquadEditorInviteTarget = typeof SquadEditorInviteTargetSchema.Type;
 type SquadGroupEditorGrant = typeof SquadGroupEditorGrantSummarySchema.Type;
 interface SaveSquadGroupInput {
-  readonly actorUserId: string;
   readonly groupId: number;
   readonly name: string;
   readonly squads: readonly {
@@ -97,7 +95,6 @@ interface SaveSquadGroupInput {
   }[];
 }
 interface SaveSharedSquadGroupCharactersInput {
-  readonly actorUserId: string;
   readonly groupId: number;
   readonly squads: readonly {
     readonly characters: readonly {
@@ -108,7 +105,6 @@ interface SaveSharedSquadGroupCharactersInput {
   }[];
 }
 interface SetSquadGroupVisibilityInput {
-  readonly actorUserId: string;
   readonly groupId: number;
   readonly visibility: "private" | "global";
 }
@@ -125,9 +121,6 @@ export default function SquadBuilderEditorPage() {
     from: "/dashboard/squad-builder/squads_/$groupId",
   });
   const groupId = Number(params.groupId);
-  const sessionResult = useAtomValue(sessionAtom);
-  const actorUserId =
-    sessionResult._tag === "Success" ? sessionResult.value.user.id : "";
   const [groupName, setGroupName] = useState("");
   const [squads, setSquads] = useState<readonly DraftSquad[]>([]);
   const [isDirty, setIsDirty] = useState(false);
@@ -366,7 +359,6 @@ export default function SquadBuilderEditorPage() {
 
     if (isEditor) {
       void saveSharedMutation.mutate({
-        actorUserId,
         groupId,
         squads: squads.flatMap((squad) => {
           if (squad.squadId === undefined) {
@@ -388,7 +380,6 @@ export default function SquadBuilderEditorPage() {
     }
 
     void saveMutation.mutate({
-      actorUserId,
       groupId,
       name: trimmedName,
       squads: squads.map((squad, squadIndex) => ({
@@ -497,7 +488,6 @@ export default function SquadBuilderEditorPage() {
               }
               onClick={() =>
                 visibilityMutation.mutate({
-                  actorUserId,
                   groupId,
                   visibility: "private",
                 })
@@ -512,7 +502,6 @@ export default function SquadBuilderEditorPage() {
               disabled={visibilityMutation.isPending || visibility === "global"}
               onClick={() =>
                 visibilityMutation.mutate({
-                  actorUserId,
                   groupId,
                   visibility: "global",
                 })

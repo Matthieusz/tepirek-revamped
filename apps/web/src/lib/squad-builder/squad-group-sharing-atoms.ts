@@ -93,10 +93,8 @@ const incomingSquadGroupInvitesByActorAtom = Atom.family(
     )
 );
 
-export const incomingSquadGroupInvitesAtom = (actorUserId: string) => {
-  visibleIncomingSquadGroupInviteActorIds.add(actorUserId);
-  return incomingSquadGroupInvitesByActorAtom(actorUserId);
-};
+export const incomingSquadGroupInvitesAtom =
+  incomingSquadGroupInvitesByActorAtom("default");
 
 /** Resource atom for squad groups shared with the current actor. */
 const sharedSquadGroupsByActorAtom = Atom.family((_actorUserId: string) =>
@@ -110,10 +108,7 @@ const sharedSquadGroupsByActorAtom = Atom.family((_actorUserId: string) =>
   )
 );
 
-export const sharedSquadGroupsAtom = (actorUserId: string) => {
-  visibleSharedSquadGroupActorIds.add(actorUserId);
-  return sharedSquadGroupsByActorAtom(actorUserId);
-};
+export const sharedSquadGroupsAtom = sharedSquadGroupsByActorAtom("default");
 
 /** Resource atom for editor grants on one squad group. */
 const squadGroupEditorGrantsByKeyAtom = Atom.family(
@@ -157,10 +152,8 @@ const pendingSquadGroupInviteCountByActorAtom = Atom.family(
     )
 );
 
-export const pendingSquadGroupInviteCountAtom = (actorUserId: string) => {
-  visiblePendingSquadGroupInviteCountActorIds.add(actorUserId);
-  return pendingSquadGroupInviteCountByActorAtom(actorUserId);
-};
+export const pendingSquadGroupInviteCountAtom =
+  pendingSquadGroupInviteCountByActorAtom("default");
 
 const squadEditorInviteTargetsByKeyAtom = Atom.family(
   (key: SquadEditorInviteTargetsKey) => {

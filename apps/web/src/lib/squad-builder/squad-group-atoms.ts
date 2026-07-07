@@ -120,10 +120,7 @@ const ownedSquadGroupsByActorAtom = Atom.family((_actorUserId: string) =>
   )
 );
 
-export const ownedSquadGroupsAtom = (actorUserId: string) => {
-  visibleOwnedSquadGroupActorIds.add(actorUserId);
-  return ownedSquadGroupsByActorAtom(actorUserId);
-};
+export const ownedSquadGroupsAtom = ownedSquadGroupsByActorAtom("default");
 
 const globalSquadGroupsByKeyAtom = Atom.family(
   (key: ListGlobalSquadGroupsKey) => {

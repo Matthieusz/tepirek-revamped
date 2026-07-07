@@ -994,9 +994,8 @@ const InviteInboxSkeleton = () => (
 );
 
 const InviteInboxPanel = () => {
-  const actorUserId = useActorUserId();
   const [isResponding, setIsResponding] = useState(false);
-  const invitesResult = useAtomValue(incomingAccountInvitesAtom(actorUserId));
+  const invitesResult = useAtomValue(incomingAccountInvitesAtom);
   const respondToInvite = useAtomSet(respondToAccountAccessInviteAtom, {
     mode: "promise",
   });
@@ -1141,8 +1140,7 @@ const SharedAccountsSkeleton = () => (
 );
 
 const SharedAccountsPanel = () => {
-  const actorUserId = useActorUserId();
-  const sharedResult = useAtomValue(sharedAccountsAtom(actorUserId));
+  const sharedResult = useAtomValue(sharedAccountsAtom);
   const accounts = resultValueOr(sharedResult, [] as readonly SharedAccount[]);
 
   return (
@@ -1227,7 +1225,6 @@ const SharedAccountsPanel = () => {
 };
 
 export default function SquadBuilderAccountsPage() {
-  const actorUserId = useActorUserId();
   const [urlsText, setUrlsText] = useState("");
   const [previewItems, setPreviewItems] = useState<readonly PreviewItem[]>([]);
   const [displayNames, setDisplayNames] = useState<Record<number, string>>({});
@@ -1235,7 +1232,7 @@ export default function SquadBuilderAccountsPage() {
   const [isPreviewPending, setIsPreviewPending] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
 
-  const ownedAccountsResult = useAtomValue(ownedAccountsAtom(actorUserId));
+  const ownedAccountsResult = useAtomValue(ownedAccountsAtom);
   const previewImports = useAtomSet(previewOwnedAccountImportsAtom, {
     mode: "promise",
   });

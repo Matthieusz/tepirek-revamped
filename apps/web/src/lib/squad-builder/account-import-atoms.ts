@@ -1,4 +1,3 @@
-import { Atom } from "@effect-atom/atom-react";
 import { Effect } from "effect";
 
 import {
@@ -21,35 +20,15 @@ interface PreviewOwnedAccountImportsInput {
   readonly profileUrls: readonly string[];
 }
 
-const visibleOwnedAccountActorIds = new Set<string>();
-
-const ownedAccountsByActorAtom = Atom.family((_actorUserId: string) =>
-  appHttpApiAtom(
-    Effect.gen(function* listOwnedAccountsEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.squadBuilderAccountImport.listOwnedAccounts({
-        payload: {},
-      });
-    })
-  )
-);
-
 /** Resource atom for owned accounts. */
-export const ownedAccountsAtom = (actorUserId: string) => {
-  visibleOwnedAccountActorIds.add(actorUserId);
-  return ownedAccountsByActorAtom(actorUserId);
-};
-
-export const refreshVisibleOwnedAccountAtoms = (
-  get: Atom.FnContext,
-  actorUserId?: string
-) => {
-  for (const visibleActorUserId of visibleOwnedAccountActorIds) {
-    if (actorUserId === undefined || visibleActorUserId === actorUserId) {
-      get.refresh(ownedAccountsByActorAtom(visibleActorUserId));
-    }
-  }
-};
+export const ownedAccountsAtom = appHttpApiAtom(
+  Effect.gen(function* listOwnedAccountsEffect() {
+    const client = yield* AppHttpApiClient;
+    return yield* client.squadBuilderAccountImport.listOwnedAccounts({
+      payload: {},
+    });
+  })
+);
 
 /** Mutation atom for previewing a profile import. */
 export const previewMargonemProfileImportAtom = appHttpApiFn(
@@ -83,18 +62,16 @@ export const previewOwnedAccountImportsAtom = appHttpApiFn(
 
 /** Mutation atom for confirming an owned account import. */
 export const confirmOwnedAccountImportAtom = appHttpApiFn(
-  (payload: ConfirmOwnedAccountImportInput, _get) =>
+  (payload: ConfirmOwnedAccountImportInput) =>
     Effect.gen(function* confirmOwnedAccountImportEffect() {
       const client = yield* AppHttpApiClient;
-      const result =
-        yield* client.squadBuilderAccountImport.confirmOwnedAccountImport({
-          payload: {
-            displayName: payload.displayName,
-            pendingImportId: asPendingMargonemAccountImportId(
-              payload.pendingImportId
-            ),
-          },
-        });
-      return result;
+      return yield* client.squadBuilderAccountImport.confirmOwnedAccountImport({
+        payload: {
+          displayName: payload.displayName,
+          pendingImportId: asPendingMargonemAccountImportId(
+            payload.pendingImportId
+          ),
+        },
+      });
     })
 );
