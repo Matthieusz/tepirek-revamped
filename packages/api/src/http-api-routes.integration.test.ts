@@ -133,6 +133,25 @@ describe("migrated Effect HttpApi routes", () => {
       totalBets: 1,
       totalPoints: 20,
     });
+
+    const rankingResponse = await requestHttpApi(
+      "/ranking",
+      jsonPost({ heroId: hero.id }, cookie)
+    );
+
+    expect(rankingResponse.status).toBe(200);
+    await expect(rankingResponse.json()).resolves.toMatchObject({
+      pointWorth: 0,
+      ranking: [
+        {
+          totalBets: 1,
+          totalEarnings: "0.00",
+          totalPoints: "20.00",
+          userId: member.id,
+        },
+      ],
+      totalBets: 1,
+    });
   });
 
   it("serves vault routes through the final HttpApi handler seam", async () => {
