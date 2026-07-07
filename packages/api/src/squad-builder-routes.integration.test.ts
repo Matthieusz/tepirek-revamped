@@ -1,9 +1,11 @@
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
 
+import { SquadGroupSummarySchema } from "./protocol/squad-builder/squad-groups/squad-groups-schema.js";
 import { makeApiLiveLayer } from "./server/effect-app.js";
 import { AppHttpApiLayer } from "./server/http-api-handlers.js";
 import { testDb } from "./test/integration/database.js";
@@ -77,7 +79,7 @@ const jsonPost = (body: unknown, cookie?: string): RequestInit => ({
 });
 
 const expectUnauthorized = (response: Response) => {
-  expect(response.status).toBe(500);
+  expect(response.status).toBe(401);
   expect(response.headers.get("content-type")).toBe("application/json");
   return expect(response.json()).resolves.toMatchObject({
     _tag: "SquadBuilderUnauthorized",
@@ -128,7 +130,9 @@ describe("squad-builder squad-group route auth", () => {
       jsonPost({}, user1.cookie)
     );
     expect(user1OwnedResponse.status).toBe(200);
-    const user1Owned = await user1OwnedResponse.json();
+    const user1Owned = Schema.decodeUnknownSync(
+      Schema.Array(SquadGroupSummarySchema)
+    )(await user1OwnedResponse.json());
     expect(user1Owned).toHaveLength(1);
     expect(user1Owned[0]).toMatchObject({ name: "Spoofed Group" });
 
@@ -162,7 +166,9 @@ describe("squad-builder squad-group route auth", () => {
       jsonPost({}, user1.cookie)
     );
     expect(owned1.status).toBe(200);
-    const owned1Json = await owned1.json();
+    const owned1Json = Schema.decodeUnknownSync(
+      Schema.Array(SquadGroupSummarySchema)
+    )(await owned1.json());
     expect(owned1Json).toHaveLength(1);
     expect(owned1Json[0]).toMatchObject({ name: "User1 Group" });
 
@@ -171,7 +177,9 @@ describe("squad-builder squad-group route auth", () => {
       jsonPost({}, user2.cookie)
     );
     expect(owned2.status).toBe(200);
-    const owned2Json = await owned2.json();
+    const owned2Json = Schema.decodeUnknownSync(
+      Schema.Array(SquadGroupSummarySchema)
+    )(await owned2.json());
     expect(owned2Json).toHaveLength(1);
     expect(owned2Json[0]).toMatchObject({ name: "User2 Group" });
   });
