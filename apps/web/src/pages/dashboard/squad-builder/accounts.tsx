@@ -437,9 +437,11 @@ const AccountSharingPanel = ({
   const debouncedQuery = useDebouncedValue(query, 250);
   const trimmedQuery = debouncedQuery.trim();
 
-  const grantsResult = useAtomValue(accountAccessGrantsAtom({ accountId }));
+  const grantsResult = useAtomValue(
+    accountAccessGrantsAtom(accountId, actorUserId)
+  );
   const searchResult = useAtomValue(
-    accountInviteTargetsAtom({ accountId, query: trimmedQuery })
+    accountInviteTargetsAtom(accountId, trimmedQuery)
   );
   const sendInvite = useAtomSet(sendAccountAccessInviteAtom, {
     mode: "promise",
@@ -513,7 +515,6 @@ const AccountSharingPanel = ({
                       try {
                         await sendInvite({
                           accountId,
-                          actorUserId,
                           invitedUserId: target.userId,
                         });
                         toast.success(
@@ -602,7 +603,6 @@ const AccountSharingPanel = ({
                       try {
                         const response = await revokeAccess({
                           accessId: grant.accessId,
-                          actorUserId,
                         });
                         toast.success(
                           response.removedSquadCharacterCount > 0
@@ -702,7 +702,6 @@ const formatChangeValue = (value: string | number | null): string => {
 };
 
 const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
-  const actorUserId = useActorUserId();
   const [open, setOpen] = useState(false);
   const [isPreviewingRefetch, setIsPreviewingRefetch] = useState(false);
   const [isApplyingRefetch, setIsApplyingRefetch] = useState(false);
@@ -759,7 +758,6 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
                 try {
                   const response = await previewRefetch({
                     accountId: account.accountId,
-                    actorUserId,
                   });
                   setRefetchPreview(toAccountRefetchPreview(response));
                 } catch (error: unknown) {
@@ -883,7 +881,6 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
                     setIsApplyingRefetch(true);
                     try {
                       const response = await applyRefetch({
-                        actorUserId,
                         refetchPreviewId: refetchPreview.refetchPreviewId,
                       });
                       toast.success(
@@ -1076,7 +1073,6 @@ const InviteInboxPanel = () => {
                       try {
                         await respondToInvite({
                           accessId: invite.accessId,
-                          actorUserId,
                           response: "accept",
                         });
                         toast.success("Konto zostało zaakceptowane.");
@@ -1106,7 +1102,6 @@ const InviteInboxPanel = () => {
                       try {
                         await respondToInvite({
                           accessId: invite.accessId,
-                          actorUserId,
                           response: "decline",
                         });
                         toast.success("Zaproszenie odrzucone.");
@@ -1268,7 +1263,6 @@ export default function SquadBuilderAccountsPage() {
       setIsPreviewPending(true);
       try {
         const response = await previewImports({
-          actorUserId,
           profileUrls: urlsText.split("\n"),
         });
         const items = response.items.map((item) =>
@@ -1322,7 +1316,6 @@ export default function SquadBuilderAccountsPage() {
       setIsConfirming(true);
       try {
         await confirmImport({
-          actorUserId,
           displayName,
           pendingImportId: item.pendingImportId,
         });

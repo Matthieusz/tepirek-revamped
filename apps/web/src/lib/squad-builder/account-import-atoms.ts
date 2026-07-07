@@ -23,7 +23,7 @@ interface PreviewOwnedAccountImportsInput {
 
 const visibleOwnedAccountActorIds = new Set<string>();
 
-const ownedAccountsByActorAtom = Atom.family((actorUserId: string) =>
+const ownedAccountsByActorAtom = Atom.family((_actorUserId: string) =>
   appHttpApiAtom(
     Effect.gen(function* listOwnedAccountsEffect() {
       const client = yield* AppHttpApiClient;
@@ -83,7 +83,7 @@ export const previewOwnedAccountImportsAtom = appHttpApiFn(
 
 /** Mutation atom for confirming an owned account import. */
 export const confirmOwnedAccountImportAtom = appHttpApiFn(
-  (payload: ConfirmOwnedAccountImportInput, get) =>
+  (payload: ConfirmOwnedAccountImportInput, _get) =>
     Effect.gen(function* confirmOwnedAccountImportEffect() {
       const client = yield* AppHttpApiClient;
       const result =

@@ -150,11 +150,9 @@ export default function SquadBuilderEditorPage() {
   const availableResult = useAtomValue(
     availableSquadCharactersAtom({ groupId })
   );
-  const grantsResult = useAtomValue(
-    squadGroupEditorGrantsAtom({ actorUserId, groupId })
-  );
+  const grantsResult = useAtomValue(squadGroupEditorGrantsAtom({ groupId }));
   const inviteTargetsResult = useAtomValue(
-    squadEditorInviteTargetsAtom({ actorUserId, groupId, query: inviteQuery })
+    squadEditorInviteTargetsAtom({ groupId, query: inviteQuery })
   );
   const saveSquadGroup = useAtomSet(saveSquadGroupAtom, { mode: "promise" });
   const saveSharedSquadGroupCharacters = useAtomSet(
@@ -258,7 +256,7 @@ export default function SquadBuilderEditorPage() {
       void (async () => {
         setIsSendingInvite(true);
         try {
-          await sendSquadGroupEditorInvite({ ...input, actorUserId });
+          await sendSquadGroupEditorInvite(input);
           toast.success("Zaproszenie zostało wysłane");
           setInviteQuery("");
         } catch (error: unknown) {
@@ -277,7 +275,7 @@ export default function SquadBuilderEditorPage() {
       void (async () => {
         setIsRevokingInvite(true);
         try {
-          await revokeSquadGroupEditor({ ...input, actorUserId });
+          await revokeSquadGroupEditor(input);
           toast.success("Dostęp został cofnięty");
         } catch (error: unknown) {
           toast.error(getErrorMessage(error, "Nie udało się cofnąć dostępu"));

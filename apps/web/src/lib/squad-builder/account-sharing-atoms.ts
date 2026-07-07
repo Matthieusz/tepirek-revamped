@@ -13,9 +13,6 @@ import {
 } from "@/lib/squad-builder/branded-ids";
 import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
 
-interface AccountAccessGrantsInput {
-  readonly accountId: number;
-}
 interface RespondToAccountAccessInviteInput {
   readonly accessId: number;
   readonly response: "accept" | "decline";
@@ -177,7 +174,7 @@ export const searchAccountInviteTargetsAtom = appHttpApiFn(
 
 /** Mutation atom for sending account access invite. */
 export const sendAccountAccessInviteAtom = appHttpApiFn(
-  (payload: SendAccountAccessInviteInput, get) =>
+  (payload: SendAccountAccessInviteInput, _get) =>
     Effect.gen(function* sendAccountAccessInviteEffect() {
       const client = yield* AppHttpApiClient;
       const result =
@@ -193,7 +190,7 @@ export const sendAccountAccessInviteAtom = appHttpApiFn(
 
 /** Mutation atom for responding to account access invite. */
 export const respondToAccountAccessInviteAtom = appHttpApiFn(
-  (payload: RespondToAccountAccessInviteInput, get) =>
+  (payload: RespondToAccountAccessInviteInput, _get) =>
     Effect.gen(function* respondToAccountAccessInviteEffect() {
       const client = yield* AppHttpApiClient;
       const result =
@@ -209,7 +206,7 @@ export const respondToAccountAccessInviteAtom = appHttpApiFn(
 
 /** Mutation atom for revoking account access. */
 export const revokeAccountAccessAtom = appHttpApiFn(
-  (payload: RevokeAccountAccessInput, get) =>
+  (payload: RevokeAccountAccessInput, _get) =>
     Effect.gen(function* revokeAccountAccessEffect() {
       const client = yield* AppHttpApiClient;
       const result =

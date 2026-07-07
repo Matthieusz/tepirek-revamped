@@ -279,12 +279,10 @@ export default function SquadBuilderSquadsPage() {
   const sessionResult = useAtomValue(sessionAtom);
   const actorUserId =
     sessionResult._tag === "Success" ? sessionResult.value.user.id : "";
-  const actorPayload = { actorUserId };
-  const sharedGroupsResult = useAtomValue(sharedSquadGroupsAtom(actorPayload));
-  const groupsResult = useAtomValue(ownedSquadGroupsAtom(actorPayload));
+  const sharedGroupsResult = useAtomValue(sharedSquadGroupsAtom(actorUserId));
+  const groupsResult = useAtomValue(ownedSquadGroupsAtom(actorUserId));
   const globalGroupsResult = useAtomValue(
     globalSquadGroupsAtom({
-      actorUserId,
       maxLevel:
         appliedFilters.maxLevel.trim().length === 0
           ? null
@@ -300,7 +298,7 @@ export default function SquadBuilderSquadsPage() {
     })
   );
   const invitesResult = useAtomValue(
-    incomingSquadGroupInvitesAtom(actorPayload)
+    incomingSquadGroupInvitesAtom(actorUserId)
   );
   const createSquadGroup = useAtomSet(createSquadGroupAtom, {
     mode: "promise",
@@ -314,7 +312,7 @@ export default function SquadBuilderSquadsPage() {
     mutate: (input: { readonly name: string }) => {
       const create = async () => {
         try {
-          await createSquadGroup({ ...input, actorUserId });
+          await createSquadGroup(input);
           toast.success("Grupa składów została utworzona");
           setName("");
         } catch (error: unknown) {
@@ -336,7 +334,7 @@ export default function SquadBuilderSquadsPage() {
     }) => {
       const respond = async () => {
         try {
-          await respondToInvite({ ...input, actorUserId });
+          await respondToInvite(input);
           toast.success("Zapisano odpowiedź na zaproszenie");
         } catch (error: unknown) {
           toast.error(

@@ -74,7 +74,7 @@ const squadGroupEditorGrantsKeyMatches = (
 ): boolean => options.groupId === undefined || Number(key) === options.groupId;
 
 const squadEditorInviteTargetsKeyMatches = (
-  key: SquadEditorInviteTargetsKey,
+  _key: SquadEditorInviteTargetsKey,
   _options: RefreshVisibleSquadGroupSharingAtomsOptions
 ): boolean => true;
 
