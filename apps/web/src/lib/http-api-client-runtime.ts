@@ -31,10 +31,12 @@ export class AppHttpApiClient extends Context.Service<
 export const appHttpApiRuntime = Atom.runtime(AppHttpApiClient.layer);
 
 /** Convenience helper for creating runtime-backed API atoms. */
-export const appHttpApiAtom = appHttpApiRuntime.atom;
+export const appHttpApiAtom: typeof appHttpApiRuntime.atom =
+  appHttpApiRuntime.atom.bind(appHttpApiRuntime);
 
 /** Convenience helper for creating runtime-backed API mutation atoms. */
-export const appHttpApiFn = appHttpApiRuntime.fn;
+export const appHttpApiFn: typeof appHttpApiRuntime.fn =
+  appHttpApiRuntime.fn.bind(appHttpApiRuntime);
 
 /** Accessor for the typed Effect HttpApi client inside runtime-backed atoms. */
 export const useAppHttpApiClient = Effect.fn("useAppHttpApiClient")(

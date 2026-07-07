@@ -1,3 +1,4 @@
+import { RegistryProvider } from "@effect/atom-react";
 import {
   createRootRouteWithContext,
   HeadContent,
@@ -22,15 +23,17 @@ const RootDocument = () => (
       <HeadContent />
     </head>
     <body>
-      <div className="grid h-svh grid-rows-[auto_1fr]">
-        <Outlet />
-      </div>
-      <Toaster richColors />
-      {showDevtools ? (
-        <>
-          <TanStackRouterDevtools position="bottom-right" />
-        </>
-      ) : null}
+      <RegistryProvider>
+        <div className="grid h-svh grid-rows-[auto_1fr]">
+          <Outlet />
+        </div>
+        <Toaster richColors />
+        {showDevtools ? (
+          <>
+            <TanStackRouterDevtools position="bottom-right" />
+          </>
+        ) : null}
+      </RegistryProvider>
       <Scripts />
     </body>
   </html>
