@@ -8,7 +8,6 @@ import type {
 import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.js";
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
-import type { FirecrawlCreditCount } from "../../../modules/squad-builder/firecrawl-config.js";
 import type {
   FirecrawlBudgetError,
   FirecrawlRequestLedger,
@@ -23,6 +22,7 @@ import type {
   MargonemAccountNotFound,
   MargonemAccountOwnerAuthorizer,
 } from "../account-sharing/account-sharing-store.js";
+import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import type { ApplyAccountRefetchOutput } from "./apply-account-refetch.js";
 
 /** Account and current character state needed for a manual refetch preview. */

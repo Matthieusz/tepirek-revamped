@@ -24,7 +24,6 @@ import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-a
 import { computeMargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.js";
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import { makeApiSquadBuilderLayer } from "../../../effect-app.js";
-import { parseFirecrawlCreditCount } from "../../../modules/squad-builder/firecrawl-config.js";
 import { liveEffect } from "../../../test/effect.js";
 import { createVerifiedMember } from "../../../test/integration/builders.js";
 import {
@@ -41,6 +40,7 @@ import { use as accountAccessInviteResponses } from "../account-sharing/respond-
 import { use as accountAccessRevocations } from "../account-sharing/revoke-account-access-service.js";
 import { use as accountInviteTargets } from "../account-sharing/search-account-invite-targets-service.js";
 import { use as accountAccessInvites } from "../account-sharing/send-account-access-invite-service.js";
+import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
 import { create as createSquadGroup } from "./create-squad-group.js";
 import { list as listAvailableSquadCharacters } from "./list-available-squad-characters.js";
 import { list as listGlobalSquadGroups } from "./list-global-squad-groups.js";

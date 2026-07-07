@@ -3,10 +3,8 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 
-import {
-  FirecrawlConfigService,
-  FirecrawlConfigServiceLiveLayer,
-} from "./firecrawl-config.js";
+import { FirecrawlConfigService } from "../../../services/squad-builder/firecrawl-config.js";
+import { FirecrawlConfigServiceLiveLayer } from "./firecrawl-config.js";
 
 it.effect("loads Firecrawl config from Effect Config with default budget", () =>
   Effect.gen(function* firecrawlConfigEffect() {

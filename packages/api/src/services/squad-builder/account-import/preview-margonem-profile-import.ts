@@ -3,8 +3,8 @@ import type { MargonemCharacterPreview } from "../../../domain/squad-builder/mar
 import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import type { ParseMargonemProfileUrlError } from "../../../domain/squad-builder/margonem-profile-url.js";
-import type { FirecrawlScrapeError } from "../../../modules/squad-builder/firecrawl-client.js";
-import type { FirecrawlCreditCount } from "../../../modules/squad-builder/firecrawl-config.js";
+import type { FirecrawlScrapeError } from "../firecrawl-client.js";
+import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import type {
   DuplicateMargonemAccountError,
   FirecrawlBudgetError,

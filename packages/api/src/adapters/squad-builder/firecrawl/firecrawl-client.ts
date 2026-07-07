@@ -2,43 +2,18 @@ import * as Effect from "effect/Effect";
 import { Firecrawl } from "firecrawl";
 import type { Document } from "firecrawl";
 
-import type { MargonemProfileId } from "../../domain/squad-builder/margonem-profile-id.js";
-import { toMargonemProfileUrl } from "../../domain/squad-builder/margonem-profile-url.js";
-import { parseFirecrawlCreditCount } from "./firecrawl-config.js";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
+import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.js";
 import {
   FirecrawlRequestFailed,
   FirecrawlResponseNotParseable,
   RequestCancelled,
-} from "./firecrawl-errors.js";
-import type { FirecrawlScrapeError } from "./firecrawl-errors.js";
-
-/** Successful Firecrawl scrape output used by squad-builder. */
-export interface FirecrawlScrapeSuccess {
-  readonly html: string;
-  readonly metadata: {
-    readonly sourceURL?: string | undefined;
-    readonly url?: string | undefined;
-    readonly statusCode?: number | undefined;
-    readonly contentType?: string | undefined;
-    readonly cacheState?: string | undefined;
-    readonly creditsUsed?: number | undefined;
-  };
-}
-
-export {
-  FirecrawlRequestFailed,
-  FirecrawlResponseNotParseable,
-  RequestCancelled,
-};
-export type { FirecrawlScrapeError };
-
-/** Firecrawl capability consumed by the profile import preview service. */
-export interface FirecrawlClient {
-  readonly scrapeProfileHtml: (
-    profileId: MargonemProfileId,
-    options?: { readonly signal?: AbortSignal }
-  ) => Promise<FirecrawlScrapeSuccess>;
-}
+} from "../../../services/squad-builder/firecrawl-client.js";
+import type {
+  FirecrawlClient,
+  FirecrawlScrapeSuccess,
+} from "../../../services/squad-builder/firecrawl-client.js";
+import { parseFirecrawlCreditCount } from "../../../services/squad-builder/firecrawl-config.js";
 
 /** Firecrawl SDK-backed implementation of profile HTML scraping. */
 const isSignalAborted = (signal: AbortSignal | undefined): boolean =>

@@ -1,16 +1,9 @@
-import * as Context from "effect/Context";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 
-import type { FirecrawlClient } from "./firecrawl-client.js";
+import { FirecrawlClientService } from "../../../services/squad-builder/firecrawl-client.js";
+import { FirecrawlConfigService } from "../../../services/squad-builder/firecrawl-config.js";
 import { FirecrawlSdkClient } from "./firecrawl-client.js";
-import { FirecrawlConfigService } from "./firecrawl-config.js";
-
-/** Service tag for the Firecrawl profile-scraping capability. */
-export class FirecrawlClientService extends Context.Service<
-  FirecrawlClientService,
-  FirecrawlClient
->()("@tepirek-revamped/api/squad-builder/FirecrawlClientService") {}
 
 /** SDK-backed live Firecrawl client layer. */
 export const FirecrawlClientServiceLiveLayer: Layer.Layer<

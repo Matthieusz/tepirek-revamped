@@ -7,8 +7,8 @@ import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builde
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import type { ParseMargonemProfileUrlError } from "../../../domain/squad-builder/margonem-profile-url.js";
 import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
-import type { FirecrawlScrapeError } from "../../../modules/squad-builder/firecrawl-client.js";
-import type { FirecrawlCreditCount } from "../../../modules/squad-builder/firecrawl-config.js";
+import type { FirecrawlScrapeError } from "../firecrawl-client.js";
+import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import type {
   DuplicateMargonemAccountError,
   FirecrawlBudgetError,

@@ -4,8 +4,8 @@ import type { MargonemAccountRefetchDiff } from "../../../domain/squad-builder/m
 import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
-import type { FirecrawlScrapeError } from "../../../modules/squad-builder/firecrawl-client.js";
-import type { FirecrawlCreditCount } from "../../../modules/squad-builder/firecrawl-config.js";
+import type { FirecrawlScrapeError } from "../firecrawl-client.js";
+import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import type {
   ActorDoesNotOwnMargonemAccount,
   FirecrawlBudgetError,

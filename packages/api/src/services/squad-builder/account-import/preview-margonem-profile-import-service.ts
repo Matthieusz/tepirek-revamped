@@ -10,13 +10,15 @@ import {
   toMargonemProfileUrl,
 } from "../../../domain/squad-builder/margonem-profile-url.js";
 import { serviceUse } from "../../../effect/service-use.js";
-import { FirecrawlClientService } from "../../../modules/squad-builder/firecrawl-client-service.js";
-import { FirecrawlResponseNotParseable } from "../../../modules/squad-builder/firecrawl-client.js";
-import type { FirecrawlScrapeError } from "../../../modules/squad-builder/firecrawl-client.js";
+import {
+  FirecrawlClientService,
+  FirecrawlResponseNotParseable,
+} from "../firecrawl-client.js";
+import type { FirecrawlScrapeError } from "../firecrawl-client.js";
 import {
   FirecrawlConfigService,
   parseFirecrawlCreditCount,
-} from "../../../modules/squad-builder/firecrawl-config.js";
+} from "../firecrawl-config.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import { profileAccessStateToDuplicateError } from "./preview-margonem-profile-import.js";
 import type { PreviewMargonemProfileImportInput } from "./preview-margonem-profile-import.js";
