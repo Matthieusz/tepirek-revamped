@@ -139,9 +139,9 @@ importers:
       '@base-ui/react':
         specifier: ^1.6.0
         version: 1.6.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(date-fns@4.4.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@effect-atom/atom-react':
-        specifier: ^0.5.0
-        version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(@effect/platform@0.94.5(effect@4.0.0-beta.85))(@effect/rpc@0.73.2(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)(react@19.1.0)(scheduler@0.27.0)
+      '@effect/atom-react':
+        specifier: 4.0.0-beta.85
+        version: 4.0.0-beta.85(effect@4.0.0-beta.85)(react@19.1.0)(scheduler@0.27.0)
       '@fontsource-variable/inter':
         specifier: ^5.2.8
         version: 5.2.8
@@ -568,48 +568,16 @@ packages:
   '@drizzle-team/brocli@0.12.0':
     resolution: {integrity: sha512-mlUE+rZ8CatQekLhnaiN91Iemdd+e2gFKooGlnRB3oPTL3VghLfX24dx7HrzMNeC1JrIB/0kpsfyty3f5HNfxQ==}
 
-  '@effect-atom/atom-react@0.5.0':
-    resolution: {integrity: sha512-aFfjWi4rEJCqfM12Oi36/EKaDm/W6n4/N6yM5vL0t/QozKhJhK05rQL/GY4XMxlH2eqkQ4ih8jBQa3Yyp0Fiqw==}
+  '@effect/atom-react@4.0.0-beta.85':
+    resolution: {integrity: sha512-DsBau/iXF8GN6lpbObhwTsP0HcqzoaSJWzbewIUHp/SY2YeQV2bvo0IfPa0dhfwACZHZmhgzdPUaD7SpFyukmg==}
     peerDependencies:
-      effect: ^3.19
-      react: '>=18 <20'
+      effect: ^4.0.0-beta.85
+      react: ^19.2.4
       scheduler: '*'
-
-  '@effect-atom/atom@0.5.3':
-    resolution: {integrity: sha512-TRZv/i+YT3TtnN0oFORJqXdxSs1fc7lrJlH+1xZvDFyjC9hgoVnrcKbeZsDFmr6r0wYRqVo7U3IftxiQNjpNZA==}
-    peerDependencies:
-      '@effect/experimental': ^0.58.0
-      '@effect/platform': ^0.94.2
-      '@effect/rpc': ^0.73.0
-      effect: ^3.19.15
-
-  '@effect/experimental@0.58.0':
-    resolution: {integrity: sha512-IEP9sapjF6rFy5TkoqDPc86st/fnqUfjT7Xa3pWJrFGr1hzaMXHo+mWsYOZS9LAOVKnpHuVziDK97EP5qsCHVA==}
-    peerDependencies:
-      '@effect/platform': ^0.94.0
-      effect: ^3.19.13
-      ioredis: ^5
-      lmdb: ^3
-    peerDependenciesMeta:
-      ioredis:
-        optional: true
-      lmdb:
-        optional: true
 
   '@effect/language-service@0.86.2':
     resolution: {integrity: sha512-SaPln+8srOqDJDUwNTDmP5e+IYpEDr9+1epGznnsLqu8xvo6VnxyWARdeLpqvZJlb0Pgy9ca7ppqvvdWbHPXAg==}
     hasBin: true
-
-  '@effect/platform@0.94.5':
-    resolution: {integrity: sha512-z05APUiDDPbodhTkH/RJqOLoCU11bU2IZLfcwLFrld03+ob1VeqRnELQlmueLIYm6NZifHAtjl32V+GRt34y4A==}
-    peerDependencies:
-      effect: ^3.19.17
-
-  '@effect/rpc@0.73.2':
-    resolution: {integrity: sha512-td7LHDgBOYKg+VgGWEelD8rSAmvjXz7am17vfxZROX5qIYuvH7drL/z4p5xQFadhHZ7DYdlFpqdO9ggc77OCIw==}
-    peerDependencies:
-      '@effect/platform': ^0.94.5
-      effect: ^3.19.18
 
   '@effect/sql-pg@4.0.0-beta.85':
     resolution: {integrity: sha512-EqyvyPf2AgOhQzr+c9Enupn3/byVBQB6W3GdHXLPx/UBMt/xPudpI/lMXnU+PFG9EajN1TAEuCCWW8hiiEgAvg==}
@@ -3215,9 +3183,6 @@ packages:
     resolution: {integrity: sha512-4kmO/MdyUIkLIvTPr8VHLil4AtoKIoniWPIEk5+CDy0xnWC84azhSFmuJ7PxZdsYtiP5kEeQsORAVIeMgxT+Hw==}
     hasBin: true
 
-  msgpackr@1.12.1:
-    resolution: {integrity: sha512-4EUH9tQHnMmEgzW/MdAP0KIfa1T9AF+htl0ffe2n5vb2EKn9y2co8ccpgWko6S52Jy1PQZKwRnx5/KkYjtd9MQ==}
-
   msgpackr@2.0.4:
     resolution: {integrity: sha512-o1C5KRmuRt+apqMr1HuGSqWStZoRBUpEsCsl15uM9VdAF1qHLtvMOU2En747EnTyEl6c4pzPewRMFF31s1CNbA==}
 
@@ -3869,10 +3834,6 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  uuid@11.1.1:
-    resolution: {integrity: sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ==}
-    hasBin: true
-
   uuid@14.0.1:
     resolution: {integrity: sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==}
     hasBin: true
@@ -4244,44 +4205,13 @@ snapshots:
 
   '@drizzle-team/brocli@0.12.0': {}
 
-  '@effect-atom/atom-react@0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(@effect/platform@0.94.5(effect@4.0.0-beta.85))(@effect/rpc@0.73.2(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)(react@19.1.0)(scheduler@0.27.0)':
+  '@effect/atom-react@4.0.0-beta.85(effect@4.0.0-beta.85)(react@19.1.0)(scheduler@0.27.0)':
     dependencies:
-      '@effect-atom/atom': 0.5.3(@effect/experimental@0.58.0(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(@effect/platform@0.94.5(effect@4.0.0-beta.85))(@effect/rpc@0.73.2(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)
       effect: 4.0.0-beta.85
       react: 19.1.0
       scheduler: 0.27.0
-    transitivePeerDependencies:
-      - '@effect/experimental'
-      - '@effect/platform'
-      - '@effect/rpc'
-
-  '@effect-atom/atom@0.5.3(@effect/experimental@0.58.0(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(@effect/platform@0.94.5(effect@4.0.0-beta.85))(@effect/rpc@0.73.2(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)':
-    dependencies:
-      '@effect/experimental': 0.58.0(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)
-      '@effect/platform': 0.94.5(effect@4.0.0-beta.85)
-      '@effect/rpc': 0.73.2(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)
-      effect: 4.0.0-beta.85
-
-  '@effect/experimental@0.58.0(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)':
-    dependencies:
-      '@effect/platform': 0.94.5(effect@4.0.0-beta.85)
-      effect: 4.0.0-beta.85
-      uuid: 11.1.1
 
   '@effect/language-service@0.86.2': {}
-
-  '@effect/platform@0.94.5(effect@4.0.0-beta.85)':
-    dependencies:
-      effect: 4.0.0-beta.85
-      find-my-way-ts: 0.1.6
-      msgpackr: 1.12.1
-      multipasta: 0.2.7
-
-  '@effect/rpc@0.73.2(@effect/platform@0.94.5(effect@4.0.0-beta.85))(effect@4.0.0-beta.85)':
-    dependencies:
-      '@effect/platform': 0.94.5(effect@4.0.0-beta.85)
-      effect: 4.0.0-beta.85
-      msgpackr: 1.12.1
 
   '@effect/sql-pg@4.0.0-beta.85(effect@4.0.0-beta.85)':
     dependencies:
@@ -6171,10 +6101,6 @@ snapshots:
       '@msgpackr-extract/msgpackr-extract-win32-x64': 3.0.4
     optional: true
 
-  msgpackr@1.12.1:
-    optionalDependencies:
-      msgpackr-extract: 3.0.4
-
   msgpackr@2.0.4:
     optionalDependencies:
       msgpackr-extract: 3.0.4
@@ -6724,8 +6650,6 @@ snapshots:
   use-sync-external-store@1.6.0(react@19.1.0):
     dependencies:
       react: 19.1.0
-
-  uuid@11.1.1: {}
 
   uuid@14.0.1: {}
 
