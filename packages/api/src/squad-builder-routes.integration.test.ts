@@ -76,17 +76,22 @@ const jsonPost = (body: unknown, cookie?: string): RequestInit => ({
   method: "POST",
 });
 
+const expectUnauthorized = (response: Response) => {
+  expect(response.status).toBe(500);
+  expect(response.headers.get("content-type")).toBe("application/json");
+  return expect(response.json()).resolves.toMatchObject({
+    _tag: "SquadBuilderUnauthorized",
+  });
+};
+
 describe("squad-builder squad-group route auth", () => {
   it("returns 401 for unauthenticated create squad group", async () => {
     const response = await requestHttpApi(
-      "/squad-builder/squad-groups/",
+      "/squad-builder/squad-groups",
       jsonPost({ name: "My Group" })
     );
 
-    expect(response.status).toBe(401);
-    await expect(response.json()).resolves.toMatchObject({
-      _tag: "SquadBuilderUnauthorized",
-    });
+    await expectUnauthorized(response);
   });
 
   it("returns 401 for unauthenticated list owned squad groups", async () => {
@@ -95,10 +100,7 @@ describe("squad-builder squad-group route auth", () => {
       jsonPost({})
     );
 
-    expect(response.status).toBe(401);
-    await expect(response.json()).resolves.toMatchObject({
-      _tag: "SquadBuilderUnauthorized",
-    });
+    await expectUnauthorized(response);
   });
 
   it("returns 401 for unauthenticated get squad group detail", async () => {
@@ -107,10 +109,7 @@ describe("squad-builder squad-group route auth", () => {
       jsonPost({ groupId: 1 })
     );
 
-    expect(response.status).toBe(401);
-    await expect(response.json()).resolves.toMatchObject({
-      _tag: "SquadBuilderUnauthorized",
-    });
+    await expectUnauthorized(response);
   });
 
   it("ignores actorUserId in create payload and derives actor from session", async () => {
@@ -118,7 +117,7 @@ describe("squad-builder squad-group route auth", () => {
     const user2 = await createSignedInUser("spoof-user2");
 
     const createResponse = await requestHttpApi(
-      "/squad-builder/squad-groups/",
+      "/squad-builder/squad-groups",
       jsonPost({ actorUserId: user2.id, name: "Spoofed Group" }, user1.cookie)
     );
 
@@ -147,13 +146,13 @@ describe("squad-builder squad-group route auth", () => {
     const user2 = await createSignedInUser("owner-2");
 
     const response1 = await requestHttpApi(
-      "/squad-builder/squad-groups/",
+      "/squad-builder/squad-groups",
       jsonPost({ name: "User1 Group" }, user1.cookie)
     );
     expect(response1.status).toBe(200);
 
     const response2 = await requestHttpApi(
-      "/squad-builder/squad-groups/",
+      "/squad-builder/squad-groups",
       jsonPost({ name: "User2 Group" }, user2.cookie)
     );
     expect(response2.status).toBe(200);
