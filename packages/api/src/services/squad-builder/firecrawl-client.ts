@@ -1,5 +1,6 @@
 /* eslint-disable max-classes-per-file -- Firecrawl boundary error schemas are intentionally collocated for HttpApi contract reuse. */
 import * as Context from "effect/Context";
+import type { Effect } from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import type { MargonemProfileId } from "../../domain/squad-builder/margonem-profile-id.js";
@@ -22,7 +23,7 @@ export interface FirecrawlClient {
   readonly scrapeProfileHtml: (
     profileId: MargonemProfileId,
     options?: { readonly signal?: AbortSignal }
-  ) => Promise<FirecrawlScrapeSuccess>;
+  ) => Effect<FirecrawlScrapeSuccess, FirecrawlScrapeError>;
 }
 
 export class FirecrawlRequestFailed extends Schema.TaggedErrorClass<FirecrawlRequestFailed>()(

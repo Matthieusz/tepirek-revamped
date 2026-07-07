@@ -27,7 +27,7 @@ it.effect("previews account refetch and stores the pending diff", () => {
   const createdPendingIds: number[] = [];
   const firecrawl: FirecrawlClient = {
     scrapeProfileHtml: () =>
-      Promise.resolve({
+      Effect.succeed({
         html: htmlWithUpdatedJarunaCharacter,
         metadata: {
           cacheState: "miss",

@@ -27,7 +27,7 @@ it.effect(
     const actorUserId = parseTestUserId();
     const firecrawl: FirecrawlClient = {
       scrapeProfileHtml: () =>
-        Promise.resolve({
+        Effect.succeed({
           html: htmlWithJarunaCharacter,
           metadata: {
             cacheState: "hit",

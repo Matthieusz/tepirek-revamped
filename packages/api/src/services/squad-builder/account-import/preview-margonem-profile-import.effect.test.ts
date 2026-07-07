@@ -26,7 +26,7 @@ it.effect("previews an available Margonem profile through services", () => {
   const succeededRequestIds: number[] = [];
   const firecrawl: FirecrawlClient = {
     scrapeProfileHtml: () =>
-      Promise.resolve({
+      Effect.succeed({
         html: htmlWithJarunaCharacter,
         metadata: {
           cacheState: "hit",

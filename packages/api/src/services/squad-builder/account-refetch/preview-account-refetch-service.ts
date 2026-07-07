@@ -12,7 +12,6 @@ import {
   FirecrawlClientService,
   FirecrawlResponseNotParseable,
 } from "../firecrawl-client.js";
-import type { FirecrawlScrapeError } from "../firecrawl-client.js";
 import {
   FirecrawlConfigService,
   parseFirecrawlCreditCount,
@@ -45,19 +44,18 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
         yearMonth,
       })
     );
-    const scrapedProfile = yield* EffectRuntime.tryPromise({
-      catch: (cause: unknown) => cause as FirecrawlScrapeError,
-      try: () => firecrawl.scrapeProfileHtml(account.profileId, options),
-    }).pipe(
-      EffectRuntime.catch((error) =>
-        AccountRefetchStoreService.use((store) =>
-          store.markRequestFailed({
-            errorTag: error._tag,
-            requestId: reservedRequest.requestId,
-          })
-        ).pipe(EffectRuntime.andThen(EffectRuntime.fail(error)))
-      )
-    );
+    const scrapedProfile = yield* firecrawl
+      .scrapeProfileHtml(account.profileId, options)
+      .pipe(
+        EffectRuntime.catch((error) =>
+          AccountRefetchStoreService.use((store) =>
+            store.markRequestFailed({
+              errorTag: error._tag,
+              requestId: reservedRequest.requestId,
+            })
+          ).pipe(EffectRuntime.andThen(EffectRuntime.fail(error)))
+        )
+      );
 
     const creditsUsed = yield* parseFirecrawlCreditCount(
       scrapedProfile.metadata.creditsUsed ?? 1
