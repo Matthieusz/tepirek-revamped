@@ -38,6 +38,10 @@ import {
   layer as squadGroupEditorInvitesLayer,
   use as squadGroupEditorInvites,
 } from "../../../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
+import {
+  requireSquadBuilderSession,
+  sessionAppUserId,
+} from "../auth-helper.js";
 
 type ProtocolError = Schema.Schema.Type<
   typeof SquadBuilderSquadGroupSharingError
@@ -154,92 +158,116 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
     (handlers) =>
       handlers
         .handle("searchSquadEditorInviteTargets", ({ payload, request }) =>
-          withErrorMapping(
-            withRequestCorrelation(
-              request,
-              squadEditorInviteTargets.search({
-                actorUserId: toAppUserId(payload.actorUserId),
-                groupId: toSquadGroupId(payload.groupId),
-                query: payload.query,
-              })
-            )
-          )
+          Effect.gen(function* searchSquadEditorInviteTargetsHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withErrorMapping(
+              withRequestCorrelation(
+                request,
+                squadEditorInviteTargets.search({
+                  actorUserId: sessionAppUserId(session),
+                  groupId: toSquadGroupId(payload.groupId),
+                  query: payload.query,
+                })
+              )
+            );
+          })
         )
         .handle("sendSquadGroupEditorInvite", ({ payload, request }) =>
-          withErrorMapping(
-            withRequestCorrelation(
-              request,
-              squadGroupEditorInvites.send({
-                actorUserId: toAppUserId(payload.actorUserId),
-                groupId: toSquadGroupId(payload.groupId),
-                invitedUserId: toAppUserId(payload.invitedUserId),
-              })
-            )
-          )
+          Effect.gen(function* sendSquadGroupEditorInviteHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withErrorMapping(
+              withRequestCorrelation(
+                request,
+                squadGroupEditorInvites.send({
+                  actorUserId: sessionAppUserId(session),
+                  groupId: toSquadGroupId(payload.groupId),
+                  invitedUserId: toAppUserId(payload.invitedUserId),
+                })
+              )
+            );
+          })
         )
         .handle("respondToSquadGroupInvite", ({ payload, request }) =>
-          withErrorMapping(
-            withRequestCorrelation(
-              request,
-              squadGroupEditorInviteResponses.respond({
-                actorUserId: toAppUserId(payload.actorUserId),
-                invitationId: toSquadGroupInvitationId(payload.invitationId),
-                response: payload.response,
-              })
-            )
-          )
+          Effect.gen(function* respondToSquadGroupInviteHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withErrorMapping(
+              withRequestCorrelation(
+                request,
+                squadGroupEditorInviteResponses.respond({
+                  actorUserId: sessionAppUserId(session),
+                  invitationId: toSquadGroupInvitationId(payload.invitationId),
+                  response: payload.response,
+                })
+              )
+            );
+          })
         )
         .handle("revokeSquadGroupEditor", ({ payload, request }) =>
-          withErrorMapping(
-            withRequestCorrelation(
-              request,
-              squadGroupEditorRevocations.revoke({
-                actorUserId: toAppUserId(payload.actorUserId),
-                invitationId: toSquadGroupInvitationId(payload.invitationId),
-              })
-            )
-          )
+          Effect.gen(function* revokeSquadGroupEditorHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withErrorMapping(
+              withRequestCorrelation(
+                request,
+                squadGroupEditorRevocations.revoke({
+                  actorUserId: sessionAppUserId(session),
+                  invitationId: toSquadGroupInvitationId(payload.invitationId),
+                })
+              )
+            );
+          })
         )
-        .handle("listIncomingSquadGroupInvites", ({ payload, request }) =>
-          withErrorMapping(
-            withRequestCorrelation(
-              request,
-              squadGroupSharingState.listIncomingInvites({
-                actorUserId: toAppUserId(payload.actorUserId),
-              })
-            )
-          )
+        .handle("listIncomingSquadGroupInvites", ({ request }) =>
+          Effect.gen(function* listIncomingSquadGroupInvitesHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withErrorMapping(
+              withRequestCorrelation(
+                request,
+                squadGroupSharingState.listIncomingInvites({
+                  actorUserId: sessionAppUserId(session),
+                })
+              )
+            );
+          })
         )
-        .handle("listSharedSquadGroups", ({ payload, request }) =>
-          withErrorMapping(
-            withRequestCorrelation(
-              request,
-              squadGroupSharingState.listSharedGroups({
-                actorUserId: toAppUserId(payload.actorUserId),
-              })
-            )
-          )
+        .handle("listSharedSquadGroups", ({ request }) =>
+          Effect.gen(function* listSharedSquadGroupsHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withErrorMapping(
+              withRequestCorrelation(
+                request,
+                squadGroupSharingState.listSharedGroups({
+                  actorUserId: sessionAppUserId(session),
+                })
+              )
+            );
+          })
         )
         .handle("listSquadGroupEditorGrants", ({ payload, request }) =>
-          withErrorMapping(
-            withRequestCorrelation(
-              request,
-              squadGroupSharingState.listEditorGrants({
-                actorUserId: toAppUserId(payload.actorUserId),
-                groupId: toSquadGroupId(payload.groupId),
-              })
-            )
-          )
+          Effect.gen(function* listSquadGroupEditorGrantsHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withErrorMapping(
+              withRequestCorrelation(
+                request,
+                squadGroupSharingState.listEditorGrants({
+                  actorUserId: sessionAppUserId(session),
+                  groupId: toSquadGroupId(payload.groupId),
+                })
+              )
+            );
+          })
         )
-        .handle("countPendingSquadGroupInvites", ({ payload, request }) =>
-          withErrorMapping(
-            withRequestCorrelation(
-              request,
-              squadGroupSharingState.countPendingInvites({
-                actorUserId: toAppUserId(payload.actorUserId),
-              })
-            )
-          )
+        .handle("countPendingSquadGroupInvites", ({ request }) =>
+          Effect.gen(function* countPendingSquadGroupInvitesHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withErrorMapping(
+              withRequestCorrelation(
+                request,
+                squadGroupSharingState.countPendingInvites({
+                  actorUserId: sessionAppUserId(session),
+                })
+              )
+            );
+          })
         )
   ).pipe(
     Layer.provide(

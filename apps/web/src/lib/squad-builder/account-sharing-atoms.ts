@@ -13,30 +13,22 @@ import {
 } from "@/lib/squad-builder/branded-ids";
 import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
 
-interface ActorInput {
-  readonly actorUserId: string;
-}
 interface AccountAccessGrantsInput {
   readonly accountId: number;
-  readonly actorUserId: string;
 }
 interface RespondToAccountAccessInviteInput {
   readonly accessId: number;
-  readonly actorUserId: string;
   readonly response: "accept" | "decline";
 }
 interface RevokeAccountAccessInput {
   readonly accessId: number;
-  readonly actorUserId: string;
 }
 interface SearchAccountInviteTargetsInput {
   readonly accountId: number;
-  readonly actorUserId: string;
   readonly query: string;
 }
 interface SendAccountAccessInviteInput {
   readonly accountId: number;
-  readonly actorUserId: string;
   readonly invitedUserId: string;
 }
 
@@ -54,232 +46,164 @@ const visibleAccountAccessGrantKeys = new Set<AccountAccessGrantsKey>();
 const visibleAccountInviteTargetKeys = new Set<AccountInviteTargetsKey>();
 
 const accountAccessGrantsKey = (
-  payload: AccountAccessGrantsInput
-): AccountAccessGrantsKey => `${payload.actorUserId}:${payload.accountId}`;
+  accountId: number,
+  actorUserId: string
+): AccountAccessGrantsKey => `${accountId}:${actorUserId}`;
 
-const accountAccessGrantsPayloadFromKey = (
-  key: AccountAccessGrantsKey
-): AccountAccessGrantsInput => {
-  const [actorUserId = "", accountId = "0"] = key.split(":");
-  return { accountId: Number(accountId), actorUserId };
-};
-
-const accountInviteTargetsKey = (
-  payload: SearchAccountInviteTargetsInput
-): AccountInviteTargetsKey =>
-  JSON.stringify([payload.accountId, payload.actorUserId, payload.query]);
-
-const accountInviteTargetsPayloadFromKey = (
-  key: AccountInviteTargetsKey
-): SearchAccountInviteTargetsInput => {
-  const [accountId, actorUserId, query] = JSON.parse(key) as [
-    number,
-    string,
-    string,
-  ];
-  return { accountId, actorUserId, query };
-};
-
-const accountAccessGrantsKeyMatches = (
-  key: AccountAccessGrantsKey,
-  options: RefreshVisibleAccountSharingAtomsOptions
-): boolean => {
-  const payload = accountAccessGrantsPayloadFromKey(key);
-  return (
-    (options.actorUserId === undefined ||
-      payload.actorUserId === options.actorUserId) &&
-    (options.accountId === undefined || payload.accountId === options.accountId)
-  );
-};
-
-const accountInviteTargetsKeyMatches = (
-  key: AccountInviteTargetsKey,
-  options: RefreshVisibleAccountSharingAtomsOptions
-): boolean => {
-  const payload = accountInviteTargetsPayloadFromKey(key);
-  return (
-    (options.actorUserId === undefined ||
-      payload.actorUserId === options.actorUserId) &&
-    (options.accountId === undefined || payload.accountId === options.accountId)
-  );
-};
-
-/** Resource atom for incoming squad-builder account invitations. */
-const incomingAccountInvitesByActorAtom = Atom.family((actorUserId: string) =>
+const incomingAccountInvitesByActorAtom = Atom.family((_actorUserId: string) =>
   appHttpApiAtom(
-    Effect.gen(function* listIncomingAccountInvitesEffect() {
+    Effect.gen(function* incomingAccountInvitesEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.squadBuilderAccountSharing.listIncomingAccountInvites(
         {
-          payload: { actorUserId: asAppUserId(actorUserId) },
+          payload: {},
         }
       );
     })
   )
 );
 
-export const incomingAccountInvitesAtom = (payload: ActorInput) => {
-  visibleIncomingAccountInviteActorIds.add(payload.actorUserId);
-  return incomingAccountInvitesByActorAtom(payload.actorUserId);
-};
-
-/** Resource atom for accounts shared with the current actor. */
-const sharedAccountsByActorAtom = Atom.family((actorUserId: string) =>
+const sharedAccountsByActorAtom = Atom.family((_actorUserId: string) =>
   appHttpApiAtom(
-    Effect.gen(function* listSharedAccountsEffect() {
+    Effect.gen(function* sharedAccountsEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.squadBuilderAccountSharing.listSharedAccounts({
-        payload: { actorUserId: asAppUserId(actorUserId) },
+        payload: {},
       });
     })
   )
 );
 
-export const sharedAccountsAtom = (payload: ActorInput) => {
-  visibleSharedAccountActorIds.add(payload.actorUserId);
-  return sharedAccountsByActorAtom(payload.actorUserId);
-};
-
-/** Resource atom for access grants on one account. */
 const accountAccessGrantsByKeyAtom = Atom.family(
-  (key: AccountAccessGrantsKey) => {
-    const payload = accountAccessGrantsPayloadFromKey(key);
-    return appHttpApiAtom(
-      Effect.gen(function* listAccountAccessGrantsEffect() {
+  (key: AccountAccessGrantsKey) =>
+    appHttpApiAtom(
+      Effect.gen(function* accountAccessGrantsEffect() {
         const client = yield* AppHttpApiClient;
+        const [accountId] = key.split(":");
         return yield* client.squadBuilderAccountSharing.listAccountAccessGrants(
           {
+            payload: { accountId: asMargonemAccountId(Number(accountId)) },
+          }
+        );
+      })
+    )
+);
+
+const accountInviteTargetsByKeyAtom = Atom.family(
+  (_key: AccountInviteTargetsKey) =>
+    appHttpApiAtom(
+      Effect.gen(function* accountInviteTargetsEffect() {
+        const client = yield* AppHttpApiClient;
+        const [accountId, query] = _key.split(":");
+        return yield* client.squadBuilderAccountSharing.searchAccountInviteTargets(
+          {
             payload: {
-              accountId: asMargonemAccountId(payload.accountId),
-              actorUserId: asAppUserId(payload.actorUserId),
+              accountId: asMargonemAccountId(Number(accountId)),
+              query: decodeURIComponent(query),
             },
           }
         );
       })
-    );
-  }
+    )
 );
 
-export const accountAccessGrantsAtom = (payload: AccountAccessGrantsInput) => {
-  const key = accountAccessGrantsKey(payload);
+export const incomingAccountInvitesAtom = (actorUserId: string) => {
+  visibleIncomingAccountInviteActorIds.add(actorUserId);
+  return incomingAccountInvitesByActorAtom(actorUserId);
+};
+
+export const sharedAccountsAtom = (actorUserId: string) => {
+  visibleSharedAccountActorIds.add(actorUserId);
+  return sharedAccountsByActorAtom(actorUserId);
+};
+
+export const accountAccessGrantsAtom = (
+  accountId: number,
+  actorUserId: string
+) => {
+  const key = accountAccessGrantsKey(accountId, actorUserId);
   visibleAccountAccessGrantKeys.add(key);
   return accountAccessGrantsByKeyAtom(key);
 };
 
-/** Resource atom for account invite target search. */
-const accountInviteTargetsByKeyAtom = Atom.family(
-  (key: AccountInviteTargetsKey) => {
-    const payload = accountInviteTargetsPayloadFromKey(key);
-    return appHttpApiAtom(
-      Effect.gen(function* searchAccountInviteTargetsEffect() {
-        const client = yield* AppHttpApiClient;
-        return yield* client.squadBuilderAccountSharing.searchAccountInviteTargets(
-          {
-            payload: {
-              accountId: asMargonemAccountId(payload.accountId),
-              actorUserId: asAppUserId(payload.actorUserId),
-              query: payload.query,
-            },
-          }
-        );
-      })
-    );
-  }
-);
-
-export const accountInviteTargetsAtom = (
-  payload: SearchAccountInviteTargetsInput
-) => {
-  const key = accountInviteTargetsKey(payload);
+export const accountInviteTargetsAtom = (accountId: number, query: string) => {
+  const key = `${accountId}:${encodeURIComponent(query)}`;
   visibleAccountInviteTargetKeys.add(key);
   return accountInviteTargetsByKeyAtom(key);
 };
 
 export const refreshVisibleAccountSharingAtoms = (
   get: Atom.FnContext,
-  options: RefreshVisibleAccountSharingAtomsOptions = {}
+  options?: RefreshVisibleAccountSharingAtomsOptions
 ) => {
-  for (const actorUserId of visibleIncomingAccountInviteActorIds) {
-    if (
-      options.actorUserId === undefined ||
-      actorUserId === options.actorUserId
-    ) {
-      get.refresh(incomingAccountInvitesByActorAtom(actorUserId));
+  const { accountId, actorUserId } = options ?? {};
+
+  for (const visibleActorUserId of visibleIncomingAccountInviteActorIds) {
+    if (actorUserId === undefined || visibleActorUserId === actorUserId) {
+      get.refresh(incomingAccountInvitesByActorAtom(visibleActorUserId));
     }
   }
 
-  for (const actorUserId of visibleSharedAccountActorIds) {
-    if (
-      options.actorUserId === undefined ||
-      actorUserId === options.actorUserId
-    ) {
-      get.refresh(sharedAccountsByActorAtom(actorUserId));
+  for (const visibleActorUserId of visibleSharedAccountActorIds) {
+    if (actorUserId === undefined || visibleActorUserId === actorUserId) {
+      get.refresh(sharedAccountsByActorAtom(visibleActorUserId));
     }
   }
 
-  for (const key of visibleAccountAccessGrantKeys) {
-    if (accountAccessGrantsKeyMatches(key, options)) {
-      get.refresh(accountAccessGrantsByKeyAtom(key));
+  for (const visibleKey of visibleAccountAccessGrantKeys) {
+    if (accountId === undefined || visibleKey.startsWith(`${accountId}:`)) {
+      get.refresh(accountAccessGrantsByKeyAtom(visibleKey));
     }
   }
 
-  for (const key of visibleAccountInviteTargetKeys) {
-    if (accountInviteTargetsKeyMatches(key, options)) {
-      get.refresh(accountInviteTargetsByKeyAtom(key));
-    }
-  }
+  refreshVisibleSquadGroupAtoms(get, { actorUserId });
 };
 
-/** Mutation atom for sending an account access invite. */
+/** Mutation atom for searching account invite targets. */
+export const searchAccountInviteTargetsAtom = appHttpApiFn(
+  (payload: SearchAccountInviteTargetsInput) =>
+    Effect.gen(function* searchAccountInviteTargetsEffect() {
+      const client = yield* AppHttpApiClient;
+      return yield* client.squadBuilderAccountSharing.searchAccountInviteTargets(
+        {
+          payload: {
+            accountId: asMargonemAccountId(payload.accountId),
+            query: payload.query,
+          },
+        }
+      );
+    })
+);
+
+/** Mutation atom for sending account access invite. */
 export const sendAccountAccessInviteAtom = appHttpApiFn(
   (payload: SendAccountAccessInviteInput, get) =>
     Effect.gen(function* sendAccountAccessInviteEffect() {
       const client = yield* AppHttpApiClient;
-      const invite =
+      const result =
         yield* client.squadBuilderAccountSharing.sendAccountAccessInvite({
           payload: {
             accountId: asMargonemAccountId(payload.accountId),
-            actorUserId: asAppUserId(payload.actorUserId),
             invitedUserId: asAppUserId(payload.invitedUserId),
           },
         });
-      refreshVisibleAccountSharingAtoms(get, {
-        accountId: payload.accountId,
-        actorUserId: payload.actorUserId,
-      });
-      refreshVisibleAccountSharingAtoms(get, {
-        actorUserId: payload.invitedUserId,
-      });
-      return invite;
+      return result;
     })
 );
 
-/** Mutation atom for responding to an account access invite. */
+/** Mutation atom for responding to account access invite. */
 export const respondToAccountAccessInviteAtom = appHttpApiFn(
   (payload: RespondToAccountAccessInviteInput, get) =>
     Effect.gen(function* respondToAccountAccessInviteEffect() {
       const client = yield* AppHttpApiClient;
-      const invite =
+      const result =
         yield* client.squadBuilderAccountSharing.respondToAccountAccessInvite({
           payload: {
             accessId: asMargonemAccountAccessId(payload.accessId),
-            actorUserId: asAppUserId(payload.actorUserId),
             response: payload.response,
           },
         });
-      refreshVisibleAccountSharingAtoms(get, {
-        actorUserId: payload.actorUserId,
-      });
-      refreshVisibleAccountSharingAtoms(get, {
-        accountId: invite.accountId,
-        actorUserId: invite.ownerUserId,
-      });
-      if (payload.response === "accept") {
-        refreshVisibleSquadGroupAtoms(get, {
-          actorUserId: payload.actorUserId,
-        });
-      }
-      return invite;
+      return result;
     })
 );
 
@@ -288,24 +212,12 @@ export const revokeAccountAccessAtom = appHttpApiFn(
   (payload: RevokeAccountAccessInput, get) =>
     Effect.gen(function* revokeAccountAccessEffect() {
       const client = yield* AppHttpApiClient;
-      const revoked =
+      const result =
         yield* client.squadBuilderAccountSharing.revokeAccountAccess({
           payload: {
             accessId: asMargonemAccountAccessId(payload.accessId),
-            actorUserId: asAppUserId(payload.actorUserId),
           },
         });
-      refreshVisibleAccountSharingAtoms(get, {
-        accountId: revoked.accountId,
-        actorUserId: payload.actorUserId,
-      });
-      refreshVisibleAccountSharingAtoms(get, {
-        actorUserId: revoked.revokedUserId,
-      });
-      refreshVisibleSquadGroupAtoms(get, { actorUserId: payload.actorUserId });
-      refreshVisibleSquadGroupAtoms(get, {
-        actorUserId: revoked.revokedUserId,
-      });
-      return revoked;
+      return result;
     })
 );

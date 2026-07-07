@@ -2,7 +2,6 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.js";
 import {
   RespondToSquadGroupInvitePayload,
   RevokeSquadGroupEditorPayload,
@@ -14,6 +13,8 @@ import {
   SquadGroupEditorGrantSummarySchema,
   SquadGroupInvitationSummarySchema,
 } from "./squad-group-sharing-schema.js";
+
+const NoPayload = Schema.Struct({});
 
 export class SquadBuilderUnauthorized extends Schema.TaggedErrorClass<SquadBuilderUnauthorized>()(
   "SquadBuilderUnauthorized",
@@ -60,8 +61,6 @@ export const SquadBuilderSquadGroupSharingError = Schema.Union([
   SquadBuilderPersistenceUnavailable,
 ]);
 
-const ActorPayload = Schema.Struct({ actorUserId: AppUserIdSchema });
-
 export const SquadBuilderSquadGroupSharingGroup = HttpApiGroup.make(
   "squadBuilderSquadGroupSharing"
 )
@@ -96,12 +95,12 @@ export const SquadBuilderSquadGroupSharingGroup = HttpApiGroup.make(
     }),
     HttpApiEndpoint.post("listIncomingSquadGroupInvites", "/incoming-invites", {
       error: SquadBuilderSquadGroupSharingError,
-      payload: ActorPayload,
+      payload: NoPayload,
       success: Schema.Array(SquadGroupInvitationSummarySchema),
     }),
     HttpApiEndpoint.post("listSharedSquadGroups", "/shared-groups", {
       error: SquadBuilderSquadGroupSharingError,
-      payload: ActorPayload,
+      payload: NoPayload,
       success: Schema.Array(SharedSquadGroupSummarySchema),
     }),
     HttpApiEndpoint.post("listSquadGroupEditorGrants", "/editor-grants", {
@@ -114,7 +113,7 @@ export const SquadBuilderSquadGroupSharingGroup = HttpApiGroup.make(
       "/pending-invite-count",
       {
         error: SquadBuilderSquadGroupSharingError,
-        payload: ActorPayload,
+        payload: NoPayload,
         success: Schema.Number,
       }
     )

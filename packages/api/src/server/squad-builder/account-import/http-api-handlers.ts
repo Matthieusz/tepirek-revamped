@@ -6,7 +6,6 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
 import { AppHttpApi } from "../../../protocol/http-api-contract.js";
 import type { SquadBuilderAccountImportError } from "../../../protocol/squad-builder/account-import/http-api-contract.js";
@@ -30,12 +29,12 @@ import {
   layer as previewOwnedAccountImportsLayer,
   use as previewOwnedAccountImports,
 } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.js";
+import {
+  requireSquadBuilderSession,
+  sessionAppUserId,
+} from "../auth-helper.js";
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderAccountImportError>;
-
-const toAppUserId = (value: string): AppUserId =>
-  // SAFETY: HttpApi decoded this value with AppUserIdSchema before the handler runs.
-  value as AppUserId;
 
 const toPendingImportId = (value: number): PendingMargonemAccountImportId =>
   // SAFETY: HttpApi decoded this value with PendingMargonemAccountImportIdSchema before the handler runs.
@@ -146,50 +145,62 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
   (handlers) =>
     handlers
       .handle("previewMargonemProfileImport", ({ payload, request }) =>
-        withErrorMapping(
-          withRequestCorrelation(
-            request,
-            previewMargonemProfileImport.preview({
-              actorUserId: toAppUserId(payload.actorUserId),
-              profileUrl: payload.profileUrl,
-            })
-          )
-        )
-      )
-      .handle("previewOwnedAccountImports", ({ payload, request }) =>
-        withErrorMapping(
-          withRequestCorrelation(
-            request,
-            previewOwnedAccountImports.preview({
-              actorUserId: toAppUserId(payload.actorUserId),
-              profileUrls: payload.profileUrls,
-            })
-          )
-        )
-      )
-      .handle("confirmOwnedAccountImport", ({ payload, request }) =>
-        withErrorMapping(
-          withRequestCorrelation(
-            request,
-            confirmOwnedAccountImport.confirm({
-              actorUserId: toAppUserId(payload.actorUserId),
-              displayName: payload.displayName,
-              pendingImportId: toPendingImportId(payload.pendingImportId),
-            })
-          )
-        )
-      )
-      .handle("listOwnedAccounts", ({ payload, request }) =>
-        withErrorMapping(
-          withRequestCorrelation(
-            request,
-            AccountImportStoreService.use((store) =>
-              store.listOwnedAccounts({
-                actorUserId: toAppUserId(payload.actorUserId),
+        Effect.gen(function* previewMargonemProfileImportHandler() {
+          const session = yield* requireSquadBuilderSession(request);
+          return yield* withErrorMapping(
+            withRequestCorrelation(
+              request,
+              previewMargonemProfileImport.preview({
+                actorUserId: sessionAppUserId(session),
+                profileUrl: payload.profileUrl,
               })
             )
-          )
-        )
+          );
+        })
+      )
+      .handle("previewOwnedAccountImports", ({ payload, request }) =>
+        Effect.gen(function* previewOwnedAccountImportsHandler() {
+          const session = yield* requireSquadBuilderSession(request);
+          return yield* withErrorMapping(
+            withRequestCorrelation(
+              request,
+              previewOwnedAccountImports.preview({
+                actorUserId: sessionAppUserId(session),
+                profileUrls: payload.profileUrls,
+              })
+            )
+          );
+        })
+      )
+      .handle("confirmOwnedAccountImport", ({ payload, request }) =>
+        Effect.gen(function* confirmOwnedAccountImportHandler() {
+          const session = yield* requireSquadBuilderSession(request);
+          return yield* withErrorMapping(
+            withRequestCorrelation(
+              request,
+              confirmOwnedAccountImport.confirm({
+                actorUserId: sessionAppUserId(session),
+                displayName: payload.displayName,
+                pendingImportId: toPendingImportId(payload.pendingImportId),
+              })
+            )
+          );
+        })
+      )
+      .handle("listOwnedAccounts", ({ request }) =>
+        Effect.gen(function* listOwnedAccountsHandler() {
+          const session = yield* requireSquadBuilderSession(request);
+          return yield* withErrorMapping(
+            withRequestCorrelation(
+              request,
+              AccountImportStoreService.use((store) =>
+                store.listOwnedAccounts({
+                  actorUserId: sessionAppUserId(session),
+                })
+              )
+            )
+          );
+        })
       )
 ).pipe(
   Layer.provide(

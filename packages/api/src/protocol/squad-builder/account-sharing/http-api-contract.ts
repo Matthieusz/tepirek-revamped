@@ -2,7 +2,6 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.js";
 import {
   AccountAccessGrantSummarySchema,
   AccountAccessGrantsPayload,
@@ -61,8 +60,6 @@ export const SquadBuilderAccountSharingError = Schema.Union([
   SquadBuilderPersistenceUnavailable,
 ]);
 
-const ActorPayload = Schema.Struct({ actorUserId: AppUserIdSchema });
-
 export const SquadBuilderAccountSharingGroup = HttpApiGroup.make(
   "squadBuilderAccountSharing"
 )
@@ -93,12 +90,12 @@ export const SquadBuilderAccountSharingGroup = HttpApiGroup.make(
     }),
     HttpApiEndpoint.post("listIncomingAccountInvites", "/incoming-invites", {
       error: SquadBuilderAccountSharingError,
-      payload: ActorPayload,
+      payload: Schema.Struct({}),
       success: Schema.Array(AccountAccessInviteSummarySchema),
     }),
     HttpApiEndpoint.post("listSharedAccounts", "/shared-accounts", {
       error: SquadBuilderAccountSharingError,
-      payload: ActorPayload,
+      payload: Schema.Struct({}),
       success: Schema.Array(SharedMargonemAccountSummarySchema),
     }),
     HttpApiEndpoint.post("listAccountAccessGrants", "/access-grants", {

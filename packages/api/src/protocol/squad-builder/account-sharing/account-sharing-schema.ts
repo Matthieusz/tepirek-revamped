@@ -19,12 +19,10 @@ export const AccountInviteTargetSchema = Schema.Struct({
 });
 export const SearchAccountInviteTargetsPayload = Schema.Struct({
   accountId: MargonemAccountIdSchema,
-  actorUserId: AppUserIdSchema,
   query: Schema.String,
 });
 export const SendAccountAccessInvitePayload = Schema.Struct({
   accountId: MargonemAccountIdSchema,
-  actorUserId: AppUserIdSchema,
   invitedUserId: AppUserIdSchema,
 });
 export const AccountAccessInviteSummarySchema = Schema.Struct({
@@ -42,12 +40,10 @@ export const AccountAccessInviteSummarySchema = Schema.Struct({
 });
 export const RespondToAccountAccessInvitePayload = Schema.Struct({
   accessId: MargonemAccountAccessIdSchema,
-  actorUserId: AppUserIdSchema,
   response: InviteResponseSchema,
 });
 export const RevokeAccountAccessPayload = Schema.Struct({
   accessId: MargonemAccountAccessIdSchema,
-  actorUserId: AppUserIdSchema,
 });
 export const RevokeAccountAccessSuccess = Schema.Struct({
   accessId: MargonemAccountAccessIdSchema,
@@ -57,7 +53,6 @@ export const RevokeAccountAccessSuccess = Schema.Struct({
 });
 export const AccountAccessGrantsPayload = Schema.Struct({
   accountId: MargonemAccountIdSchema,
-  actorUserId: AppUserIdSchema,
 });
 export const SharedMargonemAccountSummarySchema = Schema.Struct({
   accountId: MargonemAccountIdSchema,

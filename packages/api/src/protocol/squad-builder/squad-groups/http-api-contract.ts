@@ -79,7 +79,7 @@ export const SquadBuilderSquadGroupGroup = HttpApiGroup.make(
     }),
     HttpApiEndpoint.post("listOwnedSquadGroups", "/owned", {
       error: SquadBuilderSquadGroupError,
-      payload: Schema.Struct({ actorUserId: Schema.String }),
+      payload: Schema.Struct({}),
       success: Schema.Array(SquadGroupSummarySchema),
     }),
     HttpApiEndpoint.post("listGlobalSquadGroups", "/global", {

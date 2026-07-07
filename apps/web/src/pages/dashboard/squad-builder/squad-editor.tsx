@@ -140,9 +140,7 @@ export default function SquadBuilderEditorPage() {
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [isRevokingInvite, setIsRevokingInvite] = useState(false);
 
-  const detailResult = useAtomValue(
-    squadGroupDetailAtom({ actorUserId, groupId })
-  );
+  const detailResult = useAtomValue(squadGroupDetailAtom({ groupId }));
   const detail = resultValueOr(detailResult);
   const accessRole = detail?.accessRole;
   const isOwner = accessRole === "owner";
@@ -150,7 +148,7 @@ export default function SquadBuilderEditorPage() {
   const isViewer = accessRole === "viewer";
   const canEditPlacements = isOwner || isEditor;
   const availableResult = useAtomValue(
-    availableSquadCharactersAtom({ actorUserId, groupId })
+    availableSquadCharactersAtom({ groupId })
   );
   const grantsResult = useAtomValue(
     squadGroupEditorGrantsAtom({ actorUserId, groupId })

@@ -11,32 +11,23 @@ import {
   asSquadGroupId,
   asSquadGroupInvitationId,
 } from "@/lib/squad-builder/branded-ids";
-import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
 
-interface ActorInput {
-  readonly actorUserId: string;
-}
 interface RespondToSquadGroupInviteInput {
-  readonly actorUserId: string;
   readonly invitationId: number;
   readonly response: "accept" | "decline";
 }
 interface RevokeSquadGroupEditorInput {
-  readonly actorUserId: string;
   readonly invitationId: number;
 }
 interface SearchSquadEditorInviteTargetsInput {
-  readonly actorUserId: string;
   readonly groupId: number;
   readonly query: string;
 }
 interface SendSquadGroupEditorInviteInput {
-  readonly actorUserId: string;
   readonly groupId: number;
   readonly invitedUserId: string;
 }
 interface SquadGroupEditorGrantsInput {
-  readonly actorUserId: string;
   readonly groupId: number;
 }
 
@@ -56,91 +47,72 @@ const visibleSquadEditorInviteTargetKeys =
   new Set<SquadEditorInviteTargetsKey>();
 
 const squadGroupEditorGrantsKey = (
-  payload: SquadGroupEditorGrantsInput
-): SquadGroupEditorGrantsKey => `${payload.actorUserId}:${payload.groupId}`;
+  groupId: number
+): SquadGroupEditorGrantsKey => `${groupId}`;
 
 const squadGroupEditorGrantsPayloadFromKey = (
   key: SquadGroupEditorGrantsKey
-): SquadGroupEditorGrantsInput => {
-  const [actorUserId = "", groupId = "0"] = key.split(":");
-  return { actorUserId, groupId: Number(groupId) };
-};
+): SquadGroupEditorGrantsInput => ({
+  groupId: Number(key),
+});
 
 const squadEditorInviteTargetsKey = (
   payload: SearchSquadEditorInviteTargetsInput
 ): SquadEditorInviteTargetsKey =>
-  JSON.stringify([payload.actorUserId, payload.groupId, payload.query]);
+  JSON.stringify([payload.groupId, payload.query]);
 
 const squadEditorInviteTargetsPayloadFromKey = (
   key: SquadEditorInviteTargetsKey
 ): SearchSquadEditorInviteTargetsInput => {
-  const [actorUserId, groupId, query] = JSON.parse(key) as [
-    string,
-    number,
-    string,
-  ];
-  return { actorUserId, groupId, query };
+  const [groupId, query] = JSON.parse(key) as [number, string];
+  return { groupId, query };
 };
 
 const squadGroupEditorGrantsKeyMatches = (
   key: SquadGroupEditorGrantsKey,
   options: RefreshVisibleSquadGroupSharingAtomsOptions
-): boolean => {
-  const payload = squadGroupEditorGrantsPayloadFromKey(key);
-  return (
-    (options.actorUserId === undefined ||
-      payload.actorUserId === options.actorUserId) &&
-    (options.groupId === undefined || payload.groupId === options.groupId)
-  );
-};
+): boolean => options.groupId === undefined || Number(key) === options.groupId;
 
 const squadEditorInviteTargetsKeyMatches = (
   key: SquadEditorInviteTargetsKey,
-  options: RefreshVisibleSquadGroupSharingAtomsOptions
-): boolean => {
-  const payload = squadEditorInviteTargetsPayloadFromKey(key);
-  return (
-    (options.actorUserId === undefined ||
-      payload.actorUserId === options.actorUserId) &&
-    (options.groupId === undefined || payload.groupId === options.groupId)
-  );
-};
+  _options: RefreshVisibleSquadGroupSharingAtomsOptions
+): boolean => true;
 
 /** Resource atom for incoming squad-group editor invitations. */
 const incomingSquadGroupInvitesByActorAtom = Atom.family(
-  (actorUserId: string) =>
+  (_actorUserId: string) =>
     appHttpApiAtom(
       Effect.gen(function* listIncomingSquadGroupInvitesEffect() {
         const client = yield* AppHttpApiClient;
         return yield* client.squadBuilderSquadGroupSharing.listIncomingSquadGroupInvites(
           {
-            payload: { actorUserId: asAppUserId(actorUserId) },
+            payload: {},
           }
         );
       })
     )
 );
 
-export const incomingSquadGroupInvitesAtom = (payload: ActorInput) => {
-  visibleIncomingSquadGroupInviteActorIds.add(payload.actorUserId);
-  return incomingSquadGroupInvitesByActorAtom(payload.actorUserId);
+export const incomingSquadGroupInvitesAtom = (actorUserId: string) => {
+  visibleIncomingSquadGroupInviteActorIds.add(actorUserId);
+  return incomingSquadGroupInvitesByActorAtom(actorUserId);
 };
 
 /** Resource atom for squad groups shared with the current actor. */
-const sharedSquadGroupsByActorAtom = Atom.family((actorUserId: string) =>
+const sharedSquadGroupsByActorAtom = Atom.family((_actorUserId: string) =>
   appHttpApiAtom(
     Effect.gen(function* listSharedSquadGroupsEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.squadBuilderSquadGroupSharing.listSharedSquadGroups({
-        payload: { actorUserId: asAppUserId(actorUserId) },
+        payload: {},
       });
     })
   )
 );
 
-export const sharedSquadGroupsAtom = (payload: ActorInput) => {
-  visibleSharedSquadGroupActorIds.add(payload.actorUserId);
-  return sharedSquadGroupsByActorAtom(payload.actorUserId);
+export const sharedSquadGroupsAtom = (actorUserId: string) => {
+  visibleSharedSquadGroupActorIds.add(actorUserId);
+  return sharedSquadGroupsByActorAtom(actorUserId);
 };
 
 /** Resource atom for editor grants on one squad group. */
@@ -153,7 +125,6 @@ const squadGroupEditorGrantsByKeyAtom = Atom.family(
         return yield* client.squadBuilderSquadGroupSharing.listSquadGroupEditorGrants(
           {
             payload: {
-              actorUserId: asAppUserId(payload.actorUserId),
               groupId: asSquadGroupId(payload.groupId),
             },
           }
@@ -166,29 +137,29 @@ const squadGroupEditorGrantsByKeyAtom = Atom.family(
 export const squadGroupEditorGrantsAtom = (
   payload: SquadGroupEditorGrantsInput
 ) => {
-  const key = squadGroupEditorGrantsKey(payload);
+  const key = squadGroupEditorGrantsKey(payload.groupId);
   visibleSquadGroupEditorGrantKeys.add(key);
   return squadGroupEditorGrantsByKeyAtom(key);
 };
 
 /** Resource atom for pending squad-group invite count. */
 const pendingSquadGroupInviteCountByActorAtom = Atom.family(
-  (actorUserId: string) =>
+  (_actorUserId: string) =>
     appHttpApiAtom(
       Effect.gen(function* countPendingSquadGroupInvitesEffect() {
         const client = yield* AppHttpApiClient;
         return yield* client.squadBuilderSquadGroupSharing.countPendingSquadGroupInvites(
           {
-            payload: { actorUserId: asAppUserId(actorUserId) },
+            payload: {},
           }
         );
       })
     )
 );
 
-export const pendingSquadGroupInviteCountAtom = (payload: ActorInput) => {
-  visiblePendingSquadGroupInviteCountActorIds.add(payload.actorUserId);
-  return pendingSquadGroupInviteCountByActorAtom(payload.actorUserId);
+export const pendingSquadGroupInviteCountAtom = (actorUserId: string) => {
+  visiblePendingSquadGroupInviteCountActorIds.add(actorUserId);
+  return pendingSquadGroupInviteCountByActorAtom(actorUserId);
 };
 
 const squadEditorInviteTargetsByKeyAtom = Atom.family(
@@ -200,7 +171,6 @@ const squadEditorInviteTargetsByKeyAtom = Atom.family(
         return yield* client.squadBuilderSquadGroupSharing.searchSquadEditorInviteTargets(
           {
             payload: {
-              actorUserId: asAppUserId(payload.actorUserId),
               groupId: asSquadGroupId(payload.groupId),
               query: payload.query,
             },
@@ -265,83 +235,45 @@ export const refreshVisibleSquadGroupSharingAtoms = (
 
 /** Mutation atom for responding to a squad-group invite. */
 export const respondToSquadGroupInviteAtom = appHttpApiFn(
-  (payload: RespondToSquadGroupInviteInput, get) =>
+  (payload: RespondToSquadGroupInviteInput) =>
     Effect.gen(function* respondToSquadGroupInviteEffect() {
       const client = yield* AppHttpApiClient;
-      const invite =
-        yield* client.squadBuilderSquadGroupSharing.respondToSquadGroupInvite({
+      return yield* client.squadBuilderSquadGroupSharing.respondToSquadGroupInvite(
+        {
           payload: {
-            actorUserId: asAppUserId(payload.actorUserId),
             invitationId: asSquadGroupInvitationId(payload.invitationId),
             response: payload.response,
           },
-        });
-      refreshVisibleSquadGroupSharingAtoms(get, {
-        actorUserId: payload.actorUserId,
-      });
-      refreshVisibleSquadGroupSharingAtoms(get, {
-        actorUserId: invite.ownerUserId,
-        groupId: invite.squadGroupId,
-      });
-      if (payload.response === "accept") {
-        refreshVisibleSquadGroupAtoms(get, {
-          actorUserId: payload.actorUserId,
-          groupId: invite.squadGroupId,
-        });
-      }
-      return invite;
+        }
+      );
     })
 );
 
 export const sendSquadGroupEditorInviteAtom = appHttpApiFn(
-  (payload: SendSquadGroupEditorInviteInput, get) =>
+  (payload: SendSquadGroupEditorInviteInput) =>
     Effect.gen(function* sendSquadGroupEditorInviteEffect() {
       const client = yield* AppHttpApiClient;
-      const invite =
-        yield* client.squadBuilderSquadGroupSharing.sendSquadGroupEditorInvite({
+      return yield* client.squadBuilderSquadGroupSharing.sendSquadGroupEditorInvite(
+        {
           payload: {
-            actorUserId: asAppUserId(payload.actorUserId),
             groupId: asSquadGroupId(payload.groupId),
             invitedUserId: asAppUserId(payload.invitedUserId),
           },
-        });
-      refreshVisibleSquadGroupSharingAtoms(get, {
-        actorUserId: payload.actorUserId,
-        groupId: payload.groupId,
-      });
-      refreshVisibleSquadGroupSharingAtoms(get, {
-        actorUserId: payload.invitedUserId,
-      });
-      return invite;
+        }
+      );
     })
 );
 
 export const revokeSquadGroupEditorAtom = appHttpApiFn(
-  (payload: RevokeSquadGroupEditorInput, get) =>
+  (payload: RevokeSquadGroupEditorInput) =>
     Effect.gen(function* revokeSquadGroupEditorEffect() {
       const client = yield* AppHttpApiClient;
-      const invite =
-        yield* client.squadBuilderSquadGroupSharing.revokeSquadGroupEditor({
+      return yield* client.squadBuilderSquadGroupSharing.revokeSquadGroupEditor(
+        {
           payload: {
-            actorUserId: asAppUserId(payload.actorUserId),
             invitationId: asSquadGroupInvitationId(payload.invitationId),
           },
-        });
-      refreshVisibleSquadGroupSharingAtoms(get, {
-        actorUserId: payload.actorUserId,
-        groupId: invite.squadGroupId,
-      });
-      refreshVisibleSquadGroupSharingAtoms(get, {
-        actorUserId: invite.ownerUserId,
-        groupId: invite.squadGroupId,
-      });
-      refreshVisibleSquadGroupSharingAtoms(get, {
-        actorUserId: invite.ownerUserId,
-      });
-      refreshVisibleSquadGroupAtoms(get, {
-        actorUserId: invite.ownerUserId,
-        groupId: invite.squadGroupId,
-      });
-      return invite;
+        }
+      );
     })
 );

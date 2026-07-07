@@ -1,6 +1,5 @@
 import * as Schema from "effect/Schema";
 
-import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.js";
 import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-account-id.js";
 import {
   MargonemCharacterPreviewSchema,
@@ -75,7 +74,6 @@ export const MargonemAccountRefetchDiffSchema = Schema.Struct({
 
 export const PreviewAccountRefetchPayload = Schema.Struct({
   accountId: MargonemAccountIdSchema,
-  actorUserId: AppUserIdSchema,
 });
 export const PreviewAccountRefetchSuccess = Schema.Struct({
   accountId: MargonemAccountIdSchema,
@@ -88,7 +86,6 @@ export const PreviewAccountRefetchSuccess = Schema.Struct({
 });
 
 export const ApplyAccountRefetchPayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   refetchPreviewId: PendingMargonemAccountRefetchIdSchema,
 });
 export const ApplyAccountRefetchSuccess = Schema.Struct({

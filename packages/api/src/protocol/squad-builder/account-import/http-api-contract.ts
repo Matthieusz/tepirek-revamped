@@ -2,7 +2,6 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.js";
 import {
   ConfirmOwnedAccountImportPayload,
   OwnedMargonemAccountSummarySchema,
@@ -54,8 +53,6 @@ export class SquadBuilderPersistenceUnavailable extends Schema.TaggedErrorClass<
   { httpApiStatus: 503 }
 ) {}
 
-const ActorPayload = Schema.Struct({ actorUserId: AppUserIdSchema });
-
 export const SquadBuilderAccountImportError = Schema.Union([
   SquadBuilderUnauthorized,
   SquadBuilderForbidden,
@@ -87,7 +84,7 @@ export const SquadBuilderAccountImportGroup = HttpApiGroup.make(
     }),
     HttpApiEndpoint.post("listOwnedAccounts", "/owned", {
       error: SquadBuilderAccountImportError,
-      payload: ActorPayload,
+      payload: Schema.Struct({}),
       success: Schema.Array(OwnedMargonemAccountSummarySchema),
     })
   )

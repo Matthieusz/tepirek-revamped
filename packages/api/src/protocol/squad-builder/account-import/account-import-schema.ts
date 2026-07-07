@@ -1,6 +1,5 @@
 import * as Schema from "effect/Schema";
 
-import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.js";
 import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-account-id.js";
 import { MargonemCharacterPreviewSchema } from "../../../domain/squad-builder/margonem-character.js";
 import { MargonemProfileIdSchema } from "../../../domain/squad-builder/margonem-profile-id.js";
@@ -8,7 +7,6 @@ import { PendingMargonemAccountImportIdSchema } from "../../../domain/squad-buil
 import { PositiveInt } from "../../../domain/squad-builder/positive-int.js";
 
 export const PreviewMargonemProfileImportPayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   profileUrl: Schema.String,
 });
 export const PreviewMargonemProfileImportSuccess = Schema.Struct({
@@ -21,7 +19,6 @@ export const PreviewMargonemProfileImportSuccess = Schema.Struct({
 });
 
 export const PreviewOwnedAccountImportsPayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   profileUrls: Schema.Array(Schema.String),
 });
 const PreviewOwnedAccountImportSucceeded = Schema.TaggedStruct(
@@ -99,7 +96,6 @@ export const PreviewOwnedAccountImportsSuccess = Schema.Struct({
 });
 
 export const ConfirmOwnedAccountImportPayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   displayName: Schema.String,
   pendingImportId: PendingMargonemAccountImportIdSchema,
 });

@@ -14,12 +14,10 @@ import {
 
 export const SquadEditorInviteTargetSchema = AccountInviteTargetSchema;
 export const SearchSquadEditorInviteTargetsPayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   groupId: SquadGroupIdSchema,
   query: Schema.String,
 });
 export const SendSquadGroupEditorInvitePayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   groupId: SquadGroupIdSchema,
   invitedUserId: AppUserIdSchema,
 });
@@ -35,16 +33,13 @@ export const SquadGroupInvitationSummarySchema = Schema.Struct({
   updatedAt: Schema.Date,
 });
 export const RespondToSquadGroupInvitePayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   invitationId: SquadGroupInvitationIdSchema,
   response: InviteResponseSchema,
 });
 export const RevokeSquadGroupEditorPayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   invitationId: SquadGroupInvitationIdSchema,
 });
 export const SquadGroupEditorGrantsPayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   groupId: SquadGroupIdSchema,
 });
 export const SharedSquadGroupSummarySchema = Schema.Struct({

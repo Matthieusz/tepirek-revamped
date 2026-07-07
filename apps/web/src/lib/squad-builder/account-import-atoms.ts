@@ -6,26 +6,18 @@ import {
   appHttpApiAtom,
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
-import {
-  asAppUserId,
-  asPendingMargonemAccountImportId,
-} from "@/lib/squad-builder/branded-ids";
-import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
+import { asPendingMargonemAccountImportId } from "@/lib/squad-builder/branded-ids";
 
-interface ActorInput {
-  readonly actorUserId: string;
-}
 interface ConfirmOwnedAccountImportInput {
-  readonly actorUserId: string;
   readonly displayName: string;
   readonly pendingImportId: number;
 }
+
 interface PreviewMargonemProfileImportInput {
-  readonly actorUserId: string;
   readonly profileUrl: string;
 }
+
 interface PreviewOwnedAccountImportsInput {
-  readonly actorUserId: string;
   readonly profileUrls: readonly string[];
 }
 
@@ -36,16 +28,16 @@ const ownedAccountsByActorAtom = Atom.family((actorUserId: string) =>
     Effect.gen(function* listOwnedAccountsEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.squadBuilderAccountImport.listOwnedAccounts({
-        payload: { actorUserId: asAppUserId(actorUserId) },
+        payload: {},
       });
     })
   )
 );
 
 /** Resource atom for owned accounts. */
-export const ownedAccountsAtom = (payload: ActorInput) => {
-  visibleOwnedAccountActorIds.add(payload.actorUserId);
-  return ownedAccountsByActorAtom(payload.actorUserId);
+export const ownedAccountsAtom = (actorUserId: string) => {
+  visibleOwnedAccountActorIds.add(actorUserId);
+  return ownedAccountsByActorAtom(actorUserId);
 };
 
 export const refreshVisibleOwnedAccountAtoms = (
@@ -67,7 +59,6 @@ export const previewMargonemProfileImportAtom = appHttpApiFn(
       return yield* client.squadBuilderAccountImport.previewMargonemProfileImport(
         {
           payload: {
-            actorUserId: asAppUserId(payload.actorUserId),
             profileUrl: payload.profileUrl,
           },
         }
@@ -83,7 +74,6 @@ export const previewOwnedAccountImportsAtom = appHttpApiFn(
       return yield* client.squadBuilderAccountImport.previewOwnedAccountImports(
         {
           payload: {
-            actorUserId: asAppUserId(payload.actorUserId),
             profileUrls: payload.profileUrls,
           },
         }
@@ -99,15 +89,12 @@ export const confirmOwnedAccountImportAtom = appHttpApiFn(
       const result =
         yield* client.squadBuilderAccountImport.confirmOwnedAccountImport({
           payload: {
-            actorUserId: asAppUserId(payload.actorUserId),
             displayName: payload.displayName,
             pendingImportId: asPendingMargonemAccountImportId(
               payload.pendingImportId
             ),
           },
         });
-      refreshVisibleOwnedAccountAtoms(get, payload.actorUserId);
-      refreshVisibleSquadGroupAtoms(get, { actorUserId: payload.actorUserId });
       return result;
     })
 );

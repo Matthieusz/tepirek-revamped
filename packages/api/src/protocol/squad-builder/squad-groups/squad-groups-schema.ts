@@ -7,12 +7,10 @@ import { PositiveInt } from "../../../domain/squad-builder/positive-int.js";
 import { SquadGroupIdSchema } from "../../../domain/squad-builder/squad-group-id.js";
 
 export const SquadGroupIdPayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   groupId: SquadGroupIdSchema,
 });
 
 export const CreateSquadGroupPayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   name: Schema.String,
 });
 
@@ -36,7 +34,6 @@ export const GlobalSquadGroupSummarySchema = Schema.Struct({
 });
 
 export const ListGlobalSquadGroupsPayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   maxLevel: Schema.optional(Schema.NullOr(Schema.Number)),
   minLevel: Schema.optional(Schema.NullOr(Schema.Number)),
   nameQuery: Schema.optional(Schema.NullOr(Schema.String)),
@@ -103,7 +100,6 @@ const SaveSquadPayload = Schema.Struct({
 });
 
 export const SaveSquadGroupPayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   groupId: SquadGroupIdSchema,
   name: Schema.String,
   squads: Schema.Array(SaveSquadPayload),
@@ -115,13 +111,11 @@ const SaveSharedSquadCharactersPayload = Schema.Struct({
 });
 
 export const SaveSharedSquadGroupCharactersPayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   groupId: SquadGroupIdSchema,
   squads: Schema.Array(SaveSharedSquadCharactersPayload),
 });
 
 export const SetSquadGroupVisibilityPayload = Schema.Struct({
-  actorUserId: AppUserIdSchema,
   groupId: SquadGroupIdSchema,
   visibility: Schema.Literals(["private", "global"]),
 });
