@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   auctionSignupsAtom,
-  removeAuctionSignupAtom,
+  removeAuctionSignupFromGroupAtom,
   toggleAuctionSignupAtom,
 } from "@/lib/auction-atoms";
 import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
@@ -165,9 +165,10 @@ const AuctionTable: React.FC<AuctionTableProps> = ({
   const toggleAuctionSignup = useAtomSet(toggleAuctionSignupAtom, {
     mode: "promise",
   });
-  const removeAuctionSignup = useAtomSet(removeAuctionSignupAtom, {
-    mode: "promise",
-  });
+  const removeAuctionSignup = useAtomSet(
+    removeAuctionSignupFromGroupAtom({ profession, type }),
+    { mode: "promise" }
+  );
   const [isMutating, setIsMutating] = useState(false);
   const [mutatingCell, setMutatingCell] = useState<{
     readonly column: number;

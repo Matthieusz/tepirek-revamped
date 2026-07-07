@@ -65,18 +65,28 @@ const auctionStatsByGroupAtom = Atom.family((key: AuctionGroupKey) => {
 export const auctionStatsAtom = (payload: AuctionGroupInput) =>
   auctionStatsByGroupAtom(auctionGroupKey(payload));
 
-/** Mutation atom for toggling an auction signup. */
+/** Mutation atom for toggling an auction signup. Refreshes the affected group on success. */
 export const toggleAuctionSignupAtom = appHttpApiFn(
-  (payload: {
-    readonly column: number;
-    readonly level: number;
-    readonly profession: AuctionProfession;
-    readonly round: number;
-    readonly type: AuctionType;
-  }) =>
+  (
+    payload: {
+      readonly column: number;
+      readonly level: number;
+      readonly profession: AuctionProfession;
+      readonly round: number;
+      readonly type: AuctionType;
+    },
+    get
+  ) =>
     Effect.gen(function* toggleAuctionSignupEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.auction.toggleAuctionSignup({ payload });
+      const result = yield* client.auction.toggleAuctionSignup({ payload });
+      const key = auctionGroupKey({
+        profession: payload.profession,
+        type: payload.type,
+      });
+      get.refresh(auctionSignupsByGroupAtom(key));
+      get.refresh(auctionStatsByGroupAtom(key));
+      return result;
     })
 );
 
@@ -99,12 +109,22 @@ const optimisticAuctionSignupsByGroupAtom = Atom.family(
 export const optimisticAuctionSignupsAtom = (payload: AuctionGroupInput) =>
   optimisticAuctionSignupsByGroupAtom(auctionGroupKey(payload));
 
-/** Optimistic mutation atom for removing a signup from one auction group. */
+/** Optimistic mutation atom for removing a signup from one auction group. Refreshes signups and stats on success. */
 const removeAuctionSignupFromGroupByGroupAtom = Atom.family(
   (key: AuctionGroupKey) =>
     optimisticAuctionSignupsByGroupAtom(key).pipe(
       Atom.optimisticFn({
-        fn: removeAuctionSignupRequestAtom,
+        fn: appHttpApiFn((payload: { readonly id: number }, get) =>
+          Effect.gen(function* removeAuctionSignupFromGroupEffect() {
+            const client = yield* AppHttpApiClient;
+            const result = yield* client.auction.removeAuctionSignup({
+              payload,
+            });
+            get.refresh(auctionSignupsByGroupAtom(key));
+            get.refresh(auctionStatsByGroupAtom(key));
+            return result;
+          })
+        ),
         reducer: removeAuctionSignupById,
       })
     )
