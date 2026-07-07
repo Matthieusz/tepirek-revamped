@@ -1,10 +1,13 @@
+import type { Atom } from "@effect-atom/atom-react";
 import { Effect } from "effect";
 
 import { AppHttpApiClient, appHttpApiFn } from "@/lib/http-api-client-runtime";
+import { ownedAccountsAtom } from "@/lib/squad-builder/account-import-atoms";
 import {
   asMargonemAccountId,
   asPendingMargonemAccountRefetchId,
 } from "@/lib/squad-builder/branded-ids";
+import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
 
 interface ApplyAccountRefetchInput {
   readonly refetchPreviewId: number;
@@ -26,9 +29,9 @@ export const previewAccountRefetchAtom = appHttpApiFn(
     })
 );
 
-/** Mutation atom for applying account refetch. */
+/** Mutation atom for applying account refetch. Refreshes owned accounts and squad group atoms on success. */
 export const applyAccountRefetchAtom = appHttpApiFn(
-  (payload: ApplyAccountRefetchInput) =>
+  (payload: ApplyAccountRefetchInput, get: Atom.FnContext) =>
     Effect.gen(function* applyAccountRefetchEffect() {
       const client = yield* AppHttpApiClient;
       const result =
@@ -39,6 +42,8 @@ export const applyAccountRefetchAtom = appHttpApiFn(
             ),
           },
         });
+      get.refresh(ownedAccountsAtom);
+      refreshVisibleSquadGroupAtoms(get);
       return result;
     })
 );

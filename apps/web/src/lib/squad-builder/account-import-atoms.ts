@@ -1,3 +1,4 @@
+import type { Atom } from "@effect-atom/atom-react";
 import { Effect } from "effect";
 
 import {
@@ -60,18 +61,21 @@ export const previewOwnedAccountImportsAtom = appHttpApiFn(
     })
 );
 
-/** Mutation atom for confirming an owned account import. */
+/** Mutation atom for confirming an owned account import. Refreshes owned accounts on success. */
 export const confirmOwnedAccountImportAtom = appHttpApiFn(
-  (payload: ConfirmOwnedAccountImportInput) =>
+  (payload: ConfirmOwnedAccountImportInput, get: Atom.FnContext) =>
     Effect.gen(function* confirmOwnedAccountImportEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.squadBuilderAccountImport.confirmOwnedAccountImport({
-        payload: {
-          displayName: payload.displayName,
-          pendingImportId: asPendingMargonemAccountImportId(
-            payload.pendingImportId
-          ),
-        },
-      });
+      const result =
+        yield* client.squadBuilderAccountImport.confirmOwnedAccountImport({
+          payload: {
+            displayName: payload.displayName,
+            pendingImportId: asPendingMargonemAccountImportId(
+              payload.pendingImportId
+            ),
+          },
+        });
+      get.refresh(ownedAccountsAtom);
+      return result;
     })
 );
