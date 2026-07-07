@@ -5,35 +5,73 @@ import {
   userStats,
 } from "@tepirek-revamped/db/schema/bet";
 import { eq } from "drizzle-orm";
-import type * as Effect from "effect/Effect";
+import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import {
-  HeroBetLedger,
-  HeroBetLedgerLayer,
-} from "../adapters/hero-bet-ledger.js";
-import type { HeroBetLedgerService } from "../adapters/hero-bet-ledger.js";
-import { liveEffect } from "../test/effect.js";
+import type { BetServiceInterface } from "../../services/bet/bet-service.js";
+import { BetService } from "../../services/bet/bet-service.js";
+import type { RankingServiceInterface } from "../../services/ranking/ranking-service.js";
+import { RankingService } from "../../services/ranking/ranking-service.js";
+import type { VaultServiceInterface } from "../../services/vault/vault-service.js";
+import { VaultService } from "../../services/vault/vault-service.js";
+import { liveEffect } from "../../test/effect.js";
 import {
   createHero,
   createVerifiedMember,
-} from "../test/integration/builders.js";
+} from "../../test/integration/builders.js";
 import {
   defaultTestDatabaseUrl,
   testDb,
-} from "../test/integration/database.js";
+} from "../../test/integration/database.js";
+import { DrizzleBetServiceLayer } from "./drizzle-bet-service.js";
+import { DrizzleRankingServiceLayer } from "./drizzle-ranking-service.js";
+import { DrizzleVaultServiceLayer } from "./drizzle-vault-service.js";
 
-const sortByUserId = <T extends { userId: string }>(rows: T[]) =>
-  rows.toSorted((left, right) => left.userId.localeCompare(right.userId));
+const sortByUserId = <T extends { userId: string }>(rows: readonly T[]) =>
+  (rows as T[]).toSorted((left, right) =>
+    left.userId.localeCompare(right.userId)
+  );
 
-const testLayer = HeroBetLedgerLayer.pipe(
-  Layer.provide(makeLiveDatabaseLayer(defaultTestDatabaseUrl))
+const databaseLayer = makeLiveDatabaseLayer(defaultTestDatabaseUrl);
+const testLayer = Layer.mergeAll(
+  DrizzleBetServiceLayer.pipe(Layer.provide(databaseLayer)),
+  DrizzleRankingServiceLayer.pipe(Layer.provide(databaseLayer)),
+  DrizzleVaultServiceLayer.pipe(Layer.provide(databaseLayer))
 );
 
-const withLedger = <A>(
-  f: (ledger: HeroBetLedgerService) => Effect.Effect<A, unknown>
-) => liveEffect(testLayer, HeroBetLedger.use(f));
+const withServices = <A>(
+  f: (svc: {
+    readonly createBet: BetServiceInterface["createBet"];
+    readonly deleteBet: BetServiceInterface["deleteBet"];
+    readonly editBet: BetServiceInterface["editBet"];
+    readonly getAllBets: BetServiceInterface["getAllBets"];
+    readonly getPaginatedBets: BetServiceInterface["getPaginatedBets"];
+    readonly getBetMembers: BetServiceInterface["getBetMembers"];
+    readonly getBetsByEvent: BetServiceInterface["getBetsByEvent"];
+    readonly getLatestBetForCopy: BetServiceInterface["getLatestBetForCopy"];
+    readonly getHeroStats: RankingServiceInterface["getHeroStats"];
+    readonly getOldestUnpaidEvent: RankingServiceInterface["getOldestUnpaidEvent"];
+    readonly getRanking: RankingServiceInterface["getRanking"];
+    readonly distributeGold: VaultServiceInterface["distributeGold"];
+    readonly getUserStats: VaultServiceInterface["getUserStats"];
+    readonly getVault: VaultServiceInterface["getVault"];
+    readonly togglePaidOut: VaultServiceInterface["togglePaidOut"];
+  }) => Effect.Effect<A, unknown>
+) =>
+  liveEffect(
+    testLayer,
+    Effect.gen(function* provideServices() {
+      const bet = yield* BetService;
+      const ranking = yield* RankingService;
+      const vault = yield* VaultService;
+      return yield* f({
+        ...bet,
+        ...ranking,
+        ...vault,
+      });
+    })
+  );
 
 const expectLedgerError = async (
   action: Promise<unknown>,
@@ -64,7 +102,7 @@ describe("HeroBetLedger characterization", () => {
     });
     const createdHero = await createHero({ name: "Ledger Create Hero" });
 
-    const bet = await withLedger((ledger) =>
+    const bet = await withServices((ledger) =>
       ledger.createBet({
         createdBy: creator.id,
         heroId: createdHero.id,
@@ -80,7 +118,9 @@ describe("HeroBetLedger characterization", () => {
     });
     expect(bet.id).toEqual(expect.any(Number));
 
-    const members = await withLedger((ledger) => ledger.getBetMembers(bet.id));
+    const members = await withServices((ledger) =>
+      ledger.getBetMembers(bet.id)
+    );
     expect(sortByUserId(members)).toEqual([
       { id: expect.any(Number), points: "6.66", userId: firstMember.id },
       { id: expect.any(Number), points: "6.66", userId: secondMember.id },
@@ -137,38 +177,38 @@ describe("HeroBetLedger characterization", () => {
     const createdHero = await createHero({ name: "Ledger Errors Hero" });
 
     await expectLedgerError(
-      withLedger((ledger) =>
+      withServices((ledger) =>
         ledger.createBet({
           createdBy: creator.id,
           heroId: createdHero.id,
           userIds: [member.id, member.id],
         })
       ),
-      "HeroBetLedgerBadRequest",
+      "BetBadRequest",
       "Ten sam gracz nie może być wybrany dwa razy"
     );
 
     await expectLedgerError(
-      withLedger((ledger) =>
+      withServices((ledger) =>
         ledger.createBet({
           createdBy: creator.id,
           heroId: createdHero.id,
           userIds: [""],
         })
       ),
-      "HeroBetLedgerBadRequest",
+      "BetBadRequest",
       "Wybierz tylko zweryfikowanych graczy"
     );
 
     await expectLedgerError(
-      withLedger((ledger) => ledger.deleteBet(123_456)),
-      "HeroBetLedgerNotFound",
+      withServices((ledger) => ledger.deleteBet(123_456)),
+      "BetNotFound",
       "Obstawienie nie znalezione"
     );
 
     await expectLedgerError(
-      withLedger((ledger) => ledger.getHeroStats(123_456)),
-      "HeroBetLedgerNotFound",
+      withServices((ledger) => ledger.getHeroStats(123_456)),
+      "RankingNotFound",
       "Heros nie znaleziony"
     );
   });
@@ -186,7 +226,7 @@ describe("HeroBetLedger characterization", () => {
       name: "Second Ledger Member",
     });
     const createdHero = await createHero({ name: "Ledger Distribution Hero" });
-    await withLedger((ledger) =>
+    await withServices((ledger) =>
       ledger.createBet({
         createdBy: creator.id,
         heroId: createdHero.id,
@@ -194,7 +234,7 @@ describe("HeroBetLedger characterization", () => {
       })
     );
 
-    const distribution = await withLedger((ledger) =>
+    const distribution = await withServices((ledger) =>
       ledger.distributeGold({
         goldAmount: 2_000_000_000,
         heroId: createdHero.id,
@@ -217,7 +257,7 @@ describe("HeroBetLedger characterization", () => {
       .where(eq(hero.id, createdHero.id));
     expect(heroStats).toEqual({ pointWorth: "100000000.000000" });
 
-    const ranking = await withLedger((ledger) =>
+    const ranking = await withServices((ledger) =>
       ledger.getRanking({ heroId: createdHero.id })
     );
     expect(ranking).toEqual({
@@ -243,7 +283,7 @@ describe("HeroBetLedger characterization", () => {
       totalBets: 1,
     });
 
-    const vaultBeforeToggle = await withLedger((ledger) =>
+    const vaultBeforeToggle = await withServices((ledger) =>
       ledger.getVault(createdHero.eventId)
     );
     expect(sortByUserId(vaultBeforeToggle)).toEqual([
@@ -264,7 +304,7 @@ describe("HeroBetLedger characterization", () => {
     ]);
 
     await expect(
-      withLedger((ledger) =>
+      withServices((ledger) =>
         ledger.togglePaidOut({
           eventId: createdHero.eventId,
           paidOut: true,
@@ -273,7 +313,7 @@ describe("HeroBetLedger characterization", () => {
       )
     ).resolves.toEqual({ success: true });
 
-    const vaultAfterToggle = await withLedger((ledger) =>
+    const vaultAfterToggle = await withServices((ledger) =>
       ledger.getVault(createdHero.eventId)
     );
     expect(
@@ -292,14 +332,14 @@ describe("HeroBetLedger characterization", () => {
     });
     const thirdMember = await createVerifiedMember({ id: "ledger-edit-third" });
     const createdHero = await createHero({ name: "Ledger Edit Hero" });
-    const bet = await withLedger((ledger) =>
+    const bet = await withServices((ledger) =>
       ledger.createBet({
         createdBy: creator.id,
         heroId: createdHero.id,
         userIds: [firstMember.id, secondMember.id],
       })
     );
-    await withLedger((ledger) =>
+    await withServices((ledger) =>
       ledger.distributeGold({
         goldAmount: 2_000_000_000,
         heroId: createdHero.id,
@@ -307,7 +347,7 @@ describe("HeroBetLedger characterization", () => {
     );
 
     await expect(
-      withLedger((ledger) =>
+      withServices((ledger) =>
         ledger.editBet({
           betId: bet.id,
           newUserIds: [secondMember.id, thirdMember.id],
@@ -315,7 +355,7 @@ describe("HeroBetLedger characterization", () => {
       )
     ).resolves.toEqual({ success: true });
 
-    const editedMembers = await withLedger((ledger) =>
+    const editedMembers = await withServices((ledger) =>
       ledger.getBetMembers(bet.id)
     );
     expect(sortByUserId(editedMembers)).toEqual([
@@ -349,7 +389,7 @@ describe("HeroBetLedger characterization", () => {
     ]);
 
     await expect(
-      withLedger((ledger) => ledger.deleteBet(bet.id))
+      withServices((ledger) => ledger.deleteBet(bet.id))
     ).resolves.toEqual({
       success: true,
     });
@@ -395,7 +435,7 @@ describe("HeroBetLedger characterization", () => {
     });
 
     vi.setSystemTime(new Date("2026-07-05T09:00:00.000Z"));
-    const olderBet = await withLedger((ledger) =>
+    const olderBet = await withServices((ledger) =>
       ledger.createBet({
         createdBy: creator.id,
         heroId: createdHero.id,
@@ -403,7 +443,7 @@ describe("HeroBetLedger characterization", () => {
       })
     );
     vi.setSystemTime(new Date("2026-07-05T10:00:00.000Z"));
-    const newerBet = await withLedger((ledger) =>
+    const newerBet = await withServices((ledger) =>
       ledger.createBet({
         createdBy: creator.id,
         heroId: createdHero.id,
@@ -411,7 +451,7 @@ describe("HeroBetLedger characterization", () => {
       })
     );
 
-    const page = await withLedger((ledger) =>
+    const page = await withServices((ledger) =>
       ledger.getPaginatedBets({
         eventId: createdHero.eventId,
         limit: 1,
@@ -453,7 +493,7 @@ describe("HeroBetLedger characterization", () => {
       },
     });
 
-    const latestBet = await withLedger((ledger) =>
+    const latestBet = await withServices((ledger) =>
       ledger.getLatestBetForCopy()
     );
     expect(latestBet).toEqual({
@@ -469,7 +509,7 @@ describe("HeroBetLedger characterization", () => {
       ],
     });
 
-    const secondPage = await withLedger((ledger) =>
+    const secondPage = await withServices((ledger) =>
       ledger.getPaginatedBets({
         eventId: createdHero.eventId,
         limit: 1,

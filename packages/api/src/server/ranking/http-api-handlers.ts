@@ -4,9 +4,6 @@ import * as Effect from "effect/Effect";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-/* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { HeroBetLedger } from "../../adapters/hero-bet-ledger.js";
-import type { HeroBetLedgerError } from "../../adapters/hero-bet-ledger.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
 import {
   RankingForbidden,
@@ -14,6 +11,9 @@ import {
   RankingPersistenceUnavailable,
   RankingUnauthorized,
 } from "../../protocol/ranking/http-api-contract.js";
+import type { RankingError } from "../../services/ranking/ranking-errors.js";
+/* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
+import { RankingService } from "../../services/ranking/ranking-service.js";
 
 const headersFromRequest = (request: HttpServerRequest): Headers => {
   const headers = new Headers();
@@ -47,14 +47,11 @@ const requireVerifiedSession = (
     return session;
   });
 
-const classifyRankingFailure = (
-  error: HeroBetLedgerError,
-  operation: string
-) => {
-  if (error._tag === "HeroBetLedgerNotFound") {
+const classifyRankingFailure = (error: RankingError, operation: string) => {
+  if (error._tag === "RankingNotFound") {
     return new RankingNotFound({ message: error.message });
   }
-  if (error._tag === "HeroBetLedgerPersistenceUnavailable") {
+  if (error._tag === "RankingPersistenceUnavailable") {
     return new RankingPersistenceUnavailable({
       cause: error.cause,
       operation: error.operation,
@@ -63,9 +60,9 @@ const classifyRankingFailure = (
   return new RankingPersistenceUnavailable({ cause: error, operation });
 };
 
-const mapLedgerError = <A>(
+const mapRankingError = <A>(
   operation: string,
-  effect: Effect.Effect<A, HeroBetLedgerError>
+  effect: Effect.Effect<A, RankingError>
 ) =>
   effect.pipe(
     Effect.mapError((error) => classifyRankingFailure(error, operation))
@@ -78,31 +75,31 @@ export const RankingHttpApiHandlers = HttpApiBuilder.group(
     handlers
       .handle("getHeroStats", ({ payload, request }) =>
         Effect.gen(function* RankingHttpApiHandlers() {
-          const ledger = yield* HeroBetLedger;
+          const rankingService = yield* RankingService;
           yield* requireVerifiedSession(request);
-          return yield* mapLedgerError(
+          return yield* mapRankingError(
             "getHeroStats",
-            ledger.getHeroStats(payload.heroId)
+            rankingService.getHeroStats(payload.heroId)
           );
         })
       )
       .handle("getOldestUnpaidEvent", ({ request }) =>
         Effect.gen(function* RankingHttpApiHandlers() {
-          const ledger = yield* HeroBetLedger;
+          const rankingService = yield* RankingService;
           yield* requireVerifiedSession(request);
-          return yield* mapLedgerError(
+          return yield* mapRankingError(
             "getOldestUnpaidEvent",
-            ledger.getOldestUnpaidEvent()
+            rankingService.getOldestUnpaidEvent()
           );
         })
       )
       .handle("getRanking", ({ payload, request }) =>
         Effect.gen(function* RankingHttpApiHandlers() {
-          const ledger = yield* HeroBetLedger;
+          const rankingService = yield* RankingService;
           yield* requireVerifiedSession(request);
-          return yield* mapLedgerError(
+          return yield* mapRankingError(
             "getRanking",
-            ledger.getRanking(payload)
+            rankingService.getRanking(payload)
           );
         })
       )

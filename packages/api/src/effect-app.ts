@@ -13,8 +13,9 @@ import { AuctionStoreLayer } from "./adapters/auction/auction-store.js";
 import type { AuctionStore } from "./adapters/auction/auction-store.js";
 import { EventStoreLayer } from "./adapters/event/event-store.js";
 import type { EventStore } from "./adapters/event/event-store.js";
-import { HeroBetLedgerLayer } from "./adapters/hero-bet-ledger.js";
-import type { HeroBetLedger } from "./adapters/hero-bet-ledger.js";
+import { DrizzleBetServiceLayer } from "./adapters/hero-bet-ledger/drizzle-bet-service.js";
+import { DrizzleRankingServiceLayer } from "./adapters/hero-bet-ledger/drizzle-ranking-service.js";
+import { DrizzleVaultServiceLayer } from "./adapters/hero-bet-ledger/drizzle-vault-service.js";
 import { HeroesStoreLayer } from "./adapters/heroes/heroes-store.js";
 import type { HeroesStore } from "./adapters/heroes/heroes-store.js";
 import { SkillsStoreLayer } from "./adapters/skills/skills-store.js";
@@ -31,6 +32,8 @@ import type { DiscordGuildVerifier } from "./adapters/user/discord-verification-
 import { UserStoreLayer } from "./adapters/user/user-store.js";
 import type { UserStore } from "./adapters/user/user-store.js";
 import * as Observability from "./observability.js";
+import type { BetService } from "./services/bet/bet-service.js";
+import type { RankingService } from "./services/ranking/ranking-service.js";
 import type { AccountImportStoreService } from "./services/squad-builder/account-import/account-import-store-service.js";
 import type { AccountRefetchStoreService } from "./services/squad-builder/account-refetch/account-refetch-store-service.js";
 import type { AccountSharingStoreService } from "./services/squad-builder/account-sharing/account-sharing-store-service.js";
@@ -57,6 +60,7 @@ import { layer as squadEditorInviteTargetsLayer } from "./services/squad-builder
 import type { Service as SquadGroupEditorInvites } from "./services/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
 import { layer as squadGroupEditorInvitesLayer } from "./services/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
 import type { SquadGroupStoreService } from "./services/squad-builder/squad-groups/squad-group-store.js";
+import type { VaultService } from "./services/vault/vault-service.js";
 
 /** Process-wide Layer memo map shared by production API Effect runtimes. */
 export const apiLayerMemoMap = Layer.makeMemoMapUnsafe();
@@ -74,7 +78,9 @@ const makeApiSquadBuilderLayerWithDatabase = (
     | AnnouncementStore
     | TodoStore
     | HeroesStore
-    | HeroBetLedger
+    | BetService
+    | RankingService
+    | VaultService
     | EventStore
     | SkillsStore
     | AuctionStore
@@ -116,7 +122,9 @@ export const makeApiLiveLayer = (
     AnnouncementStoreLayer.pipe(Layer.provide(databaseLayer)),
     TodoStoreLayer.pipe(Layer.provide(databaseLayer)),
     HeroesStoreLayer.pipe(Layer.provide(databaseLayer)),
-    HeroBetLedgerLayer.pipe(Layer.provide(databaseLayer)),
+    DrizzleBetServiceLayer.pipe(Layer.provide(databaseLayer)),
+    DrizzleRankingServiceLayer.pipe(Layer.provide(databaseLayer)),
+    DrizzleVaultServiceLayer.pipe(Layer.provide(databaseLayer)),
     EventStoreLayer.pipe(Layer.provide(databaseLayer)),
     SkillsStoreLayer.pipe(Layer.provide(databaseLayer)),
     AuctionStoreLayer.pipe(Layer.provide(databaseLayer)),
@@ -195,7 +203,9 @@ type SquadBuilderServices =
   | AnnouncementStore
   | TodoStore
   | HeroesStore
-  | HeroBetLedger
+  | BetService
+  | RankingService
+  | VaultService
   | EventStore
   | SkillsStore
   | AuctionStore
