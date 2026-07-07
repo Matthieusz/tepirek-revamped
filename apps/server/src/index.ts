@@ -1,10 +1,10 @@
 import "dotenv/config";
+import * as Observability from "@tepirek-revamped/api/observability";
+import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import {
   makeApiLiveLayer,
   makeApiRuntime,
-} from "@tepirek-revamped/api/effect-app";
-import * as Observability from "@tepirek-revamped/api/observability";
-import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
+} from "@tepirek-revamped/api/server/effect-app";
 import { HealthHttpApiLayer } from "@tepirek-revamped/api/server/health/http-api-handlers";
 import { AppHttpApiLayer } from "@tepirek-revamped/api/server/http-api-handlers";
 import { auth } from "@tepirek-revamped/auth";

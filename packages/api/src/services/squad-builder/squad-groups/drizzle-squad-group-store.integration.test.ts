@@ -23,7 +23,7 @@ import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecr
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import { computeMargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.js";
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
-import { makeApiSquadBuilderLayer } from "../../../effect-app.js";
+import { makeApiSquadBuilderLayer } from "../../../server/effect-app.js";
 import { liveEffect } from "../../../test/effect.js";
 import { createVerifiedMember } from "../../../test/integration/builders.js";
 import {
