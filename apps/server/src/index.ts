@@ -95,7 +95,15 @@ app.use("*", async (c, next) => {
 app.use(
   "/*",
   cors({
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: [
+      "Content-Type",
+      "Authorization",
+      "b3",
+      "traceparent",
+      "tracestate",
+      "baggage",
+      "x-request-id",
+    ],
     allowMethods: ["GET", "POST", "OPTIONS"],
     credentials: true,
     origin: corsOrigin,
