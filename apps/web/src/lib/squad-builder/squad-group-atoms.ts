@@ -69,7 +69,7 @@ interface RefreshVisibleSquadGroupAtomsOptions {
   readonly groupId?: number;
 }
 
-const visibleOwnedSquadGroupActorIds = new Set<string>();
+const visibleOwnedSquadGroupActorIds = new Set<string>(["default"]);
 const visibleGlobalSquadGroupKeys = new Set<ListGlobalSquadGroupsKey>();
 const visibleSquadGroupDetailKeys = new Set<string>();
 const visibleAvailableSquadCharacterKeys = new Set<string>();
@@ -217,7 +217,7 @@ export const refreshVisibleSquadGroupAtoms = (
 };
 
 export const createSquadGroupAtom = appHttpApiFn(
-  (payload: CreateSquadGroupInput) =>
+  (payload: CreateSquadGroupInput, get) =>
     Effect.gen(function* createSquadGroupEffect() {
       const client = yield* AppHttpApiClient;
       const squadGroup = yield* client.squadBuilderSquadGroup.createSquadGroup({
@@ -225,26 +225,29 @@ export const createSquadGroupAtom = appHttpApiFn(
           name: payload.name,
         },
       });
+      refreshVisibleSquadGroupAtoms(get);
       return squadGroup;
     })
 );
 
-export const saveSquadGroupAtom = appHttpApiFn((payload: SaveSquadGroupInput) =>
-  Effect.gen(function* saveSquadGroupEffect() {
-    const client = yield* AppHttpApiClient;
-    const squadGroup = yield* client.squadBuilderSquadGroup.saveSquadGroup({
-      payload: {
-        groupId: asSquadGroupId(payload.groupId),
-        name: payload.name,
-        squads: payload.squads,
-      },
-    });
-    return squadGroup;
-  })
+export const saveSquadGroupAtom = appHttpApiFn(
+  (payload: SaveSquadGroupInput, get) =>
+    Effect.gen(function* saveSquadGroupEffect() {
+      const client = yield* AppHttpApiClient;
+      const squadGroup = yield* client.squadBuilderSquadGroup.saveSquadGroup({
+        payload: {
+          groupId: asSquadGroupId(payload.groupId),
+          name: payload.name,
+          squads: payload.squads,
+        },
+      });
+      refreshVisibleSquadGroupAtoms(get, { groupId: payload.groupId });
+      return squadGroup;
+    })
 );
 
 export const saveSharedSquadGroupCharactersAtom = appHttpApiFn(
-  (payload: SaveSharedSquadGroupCharactersInput) =>
+  (payload: SaveSharedSquadGroupCharactersInput, get) =>
     Effect.gen(function* saveSharedSquadGroupCharactersEffect() {
       const client = yield* AppHttpApiClient;
       const squadGroup =
@@ -254,12 +257,13 @@ export const saveSharedSquadGroupCharactersAtom = appHttpApiFn(
             squads: payload.squads,
           },
         });
+      refreshVisibleSquadGroupAtoms(get, { groupId: payload.groupId });
       return squadGroup;
     })
 );
 
 export const setSquadGroupVisibilityAtom = appHttpApiFn(
-  (payload: SetSquadGroupVisibilityInput) =>
+  (payload: SetSquadGroupVisibilityInput, get) =>
     Effect.gen(function* setSquadGroupVisibilityEffect() {
       const client = yield* AppHttpApiClient;
       const visibility =
@@ -269,6 +273,7 @@ export const setSquadGroupVisibilityAtom = appHttpApiFn(
             visibility: payload.visibility,
           },
         });
+      refreshVisibleSquadGroupAtoms(get, { groupId: payload.groupId });
       return visibility;
     })
 );

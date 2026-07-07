@@ -37,8 +37,8 @@ interface RefreshVisibleAccountSharingAtomsOptions {
   readonly actorUserId?: string;
 }
 
-const visibleIncomingAccountInviteActorIds = new Set<string>();
-const visibleSharedAccountActorIds = new Set<string>();
+const visibleIncomingAccountInviteActorIds = new Set<string>(["default"]);
+const visibleSharedAccountActorIds = new Set<string>(["default"]);
 const visibleAccountAccessGrantKeys = new Set<AccountAccessGrantsKey>();
 const visibleAccountInviteTargetKeys = new Set<AccountInviteTargetsKey>();
 
@@ -169,7 +169,7 @@ export const searchAccountInviteTargetsAtom = appHttpApiFn(
 
 /** Mutation atom for sending account access invite. */
 export const sendAccountAccessInviteAtom = appHttpApiFn(
-  (payload: SendAccountAccessInviteInput, _get) =>
+  (payload: SendAccountAccessInviteInput, get) =>
     Effect.gen(function* sendAccountAccessInviteEffect() {
       const client = yield* AppHttpApiClient;
       const result =
@@ -179,13 +179,14 @@ export const sendAccountAccessInviteAtom = appHttpApiFn(
             invitedUserId: asAppUserId(payload.invitedUserId),
           },
         });
+      refreshVisibleAccountSharingAtoms(get, { accountId: payload.accountId });
       return result;
     })
 );
 
 /** Mutation atom for responding to account access invite. */
 export const respondToAccountAccessInviteAtom = appHttpApiFn(
-  (payload: RespondToAccountAccessInviteInput, _get) =>
+  (payload: RespondToAccountAccessInviteInput, get) =>
     Effect.gen(function* respondToAccountAccessInviteEffect() {
       const client = yield* AppHttpApiClient;
       const result =
@@ -195,13 +196,14 @@ export const respondToAccountAccessInviteAtom = appHttpApiFn(
             response: payload.response,
           },
         });
+      refreshVisibleAccountSharingAtoms(get);
       return result;
     })
 );
 
 /** Mutation atom for revoking account access. */
 export const revokeAccountAccessAtom = appHttpApiFn(
-  (payload: RevokeAccountAccessInput, _get) =>
+  (payload: RevokeAccountAccessInput, get) =>
     Effect.gen(function* revokeAccountAccessEffect() {
       const client = yield* AppHttpApiClient;
       const result =
@@ -210,6 +212,7 @@ export const revokeAccountAccessAtom = appHttpApiFn(
             accessId: asMargonemAccountAccessId(payload.accessId),
           },
         });
+      refreshVisibleAccountSharingAtoms(get);
       return result;
     })
 );
