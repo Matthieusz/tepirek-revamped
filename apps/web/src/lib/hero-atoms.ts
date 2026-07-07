@@ -38,8 +38,12 @@ const heroesByEventIdAtom = Atom.family((eventId: number) =>
   )
 );
 
-export const heroesByEventAtom = (eventId: number) =>
-  heroesByEventIdAtom(eventId);
+const disabledHeroesByEventAtom = Atom.make(
+  Result.success([] as readonly Hero[])
+);
+
+export const heroesByEventAtom = (eventId: number | null) =>
+  eventId === null ? disabledHeroesByEventAtom : heroesByEventIdAtom(eventId);
 
 /** Mutation atom for creating a hero. */
 export const createHeroAtom = appHttpApiFn(

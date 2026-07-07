@@ -81,7 +81,8 @@ export const useEventHeroFilter = (
   const events = [...resultValueOr(eventsResult, [])] as EventSelectOption[];
 
   const heroQueryEnabled = isHeroQueryEnabled(state);
-  const heroesResult = useAtomValue(heroesByEventAtom(Number(state.eventId)));
+  const heroEventId = heroQueryEnabled ? Number(state.eventId) : null;
+  const heroesResult = useAtomValue(heroesByEventAtom(heroEventId));
   const heroes = heroQueryEnabled ? resultValueOr(heroesResult, []) : [];
   const heroesLoading = heroQueryEnabled && resultIsLoading(heroesResult);
 
