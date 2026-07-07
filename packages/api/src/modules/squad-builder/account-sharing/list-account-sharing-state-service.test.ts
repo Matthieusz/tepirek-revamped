@@ -2,11 +2,11 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { parseAccountDisplayName } from "../account-display-name.js";
-import { parseAppUserId } from "../app-user-id.js";
-import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
-import { parseMargonemAccountId } from "../margonem-account-id.js";
-import { parseMargonemProfileId } from "../margonem-profile-id.js";
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import { parseMargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import { EffectSquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.js";
 import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";

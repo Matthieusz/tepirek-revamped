@@ -1,5 +1,5 @@
-import type { AppUserId } from "../app-user-id.js";
-import type { MargonemAccountId } from "../margonem-account-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 
 /** Input for listing incoming account invites. */
 export interface ListIncomingAccountInvitesInput {

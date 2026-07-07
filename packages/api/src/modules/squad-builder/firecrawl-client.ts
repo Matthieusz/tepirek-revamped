@@ -2,6 +2,8 @@ import * as Effect from "effect/Effect";
 import { Firecrawl } from "firecrawl";
 import type { Document } from "firecrawl";
 
+import type { MargonemProfileId } from "../../domain/squad-builder/margonem-profile-id.js";
+import { toMargonemProfileUrl } from "../../domain/squad-builder/margonem-profile-url.js";
 import { parseFirecrawlCreditCount } from "./firecrawl-config.js";
 import {
   FirecrawlRequestFailed,
@@ -9,8 +11,6 @@ import {
   RequestCancelled,
 } from "./firecrawl-errors.js";
 import type { FirecrawlScrapeError } from "./firecrawl-errors.js";
-import type { MargonemProfileId } from "./margonem-profile-id.js";
-import { toMargonemProfileUrl } from "./margonem-profile-url.js";
 
 /** Successful Firecrawl scrape output used by squad-builder. */
 export interface FirecrawlScrapeSuccess {

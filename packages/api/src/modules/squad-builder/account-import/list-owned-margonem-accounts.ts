@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect";
 
-import type { AppUserId } from "../app-user-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import type { SquadBuilderPersistenceUnavailable } from "./account-import-store.js";
 

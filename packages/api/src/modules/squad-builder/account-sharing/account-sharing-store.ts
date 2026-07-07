@@ -1,15 +1,15 @@
-import type { AccountAccessStatus } from "../account-access-status.js";
-import type { AccountDisplayName } from "../account-display-name.js";
+import type { AccountAccessStatus } from "../../../domain/squad-builder/account-access-status.js";
+import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import type {
   ListOwnedMargonemAccountsInput,
   OwnedMargonemAccountReader,
   OwnedMargonemAccountSummary,
   SquadBuilderPersistenceUnavailable,
 } from "../account-import/account-import-store.js";
-import type { AppUserId } from "../app-user-id.js";
-import type { MargonemAccountAccessId } from "../margonem-account-access-id.js";
-import type { MargonemAccountId } from "../margonem-account-id.js";
-import type { MargonemProfileId } from "../margonem-profile-id.js";
 /** Expected authorization failures for account sharing operations. */
 export type AccountSharingAuthorizationError =
   | { readonly _tag: "MargonemAccountNotFound" }

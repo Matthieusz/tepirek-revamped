@@ -1,10 +1,10 @@
-import type { AppUserId } from "../app-user-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.js";
+import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
+import type { ParseMargonemProfileUrlError } from "../../../domain/squad-builder/margonem-profile-url.js";
 import type { FirecrawlScrapeError } from "../firecrawl-client.js";
 import type { FirecrawlCreditCount } from "../firecrawl-config.js";
-import type { MargonemCharacterPreview } from "../margonem-character.js";
-import type { ParseMargonemProfileHtmlError } from "../margonem-profile-html-parser.js";
-import type { MargonemProfileId } from "../margonem-profile-id.js";
-import type { ParseMargonemProfileUrlError } from "../margonem-profile-url.js";
 import type {
   DuplicateMargonemAccountError,
   FirecrawlBudgetError,

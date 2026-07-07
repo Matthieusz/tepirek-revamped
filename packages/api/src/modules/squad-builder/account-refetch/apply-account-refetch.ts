@@ -1,7 +1,7 @@
-import type { AppUserId } from "../app-user-id.js";
-import type { MargonemAccountId } from "../margonem-account-id.js";
-import type { MargonemProfileId } from "../margonem-profile-id.js";
-import type { PendingMargonemAccountRefetchId } from "../pending-margonem-account-refetch-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
+import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
 import type {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,

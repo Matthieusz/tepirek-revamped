@@ -2,11 +2,11 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { parseAppUserId } from "../app-user-id.js";
-import { parseSquadGroupId } from "../squad-group-id.js";
-import { parseSquadGroupInvitationId } from "../squad-group-invitation-id.js";
-import { emptySquadGroupListFilters } from "../squad-group-list-filters.js";
-import { parseSquadGroupName } from "../squad-name.js";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
+import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.js";
+import { emptySquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
+import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
 import {
   layer as squadGroupSharingStateLayer,
   use as squadGroupSharingState,

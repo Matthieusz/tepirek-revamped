@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect";
 
-import type { AppUserId } from "../app-user-id.js";
-import type { SquadGroupId } from "../squad-group-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import type {
   ActorCannotViewSquadGroup,

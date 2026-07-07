@@ -6,6 +6,9 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import {
   layer as accountSharingStateLayer,
   use as accountSharingState,
@@ -26,9 +29,6 @@ import {
   layer as accountAccessInvitesLayer,
   use as accountAccessInvites,
 } from "../../../modules/squad-builder/account-sharing/send-account-access-invite-service.js";
-import type { AppUserId } from "../../../modules/squad-builder/app-user-id.js";
-import type { MargonemAccountAccessId } from "../../../modules/squad-builder/margonem-account-access-id.js";
-import type { MargonemAccountId } from "../../../modules/squad-builder/margonem-account-id.js";
 import { AppHttpApi } from "../../../protocol/http-api-contract.js";
 import type { SquadBuilderAccountSharingError } from "../../../protocol/squad-builder/account-sharing/http-api-contract.js";
 import {

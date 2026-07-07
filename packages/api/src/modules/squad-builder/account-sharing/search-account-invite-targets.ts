@@ -1,7 +1,7 @@
 import * as Schema from "effect/Schema";
 
-import type { AppUserId } from "../app-user-id.js";
-import type { MargonemAccountId } from "../margonem-account-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 
 /** Search policy for account invite target queries. */
 export const accountInviteTargetSearchPolicy = {

@@ -6,9 +6,10 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { AppUserId } from "../../../modules/squad-builder/app-user-id.js";
-import type { SquadGroupId } from "../../../modules/squad-builder/squad-group-id.js";
-import { parseSquadGroupListFilters } from "../../../modules/squad-builder/squad-group-list-filters.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
+import { parseSquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
+import type { SquadId } from "../../../domain/squad-builder/squad-id.js";
 import {
   layer as createSquadGroupLayer,
   use as createSquadGroup,
@@ -34,7 +35,6 @@ import {
   use as setSquadGroupVisibility,
 } from "../../../modules/squad-builder/squad-groups/set-squad-group-visibility.js";
 import { SquadGroupStoreService } from "../../../modules/squad-builder/squad-groups/squad-group-store.js";
-import type { SquadId } from "../../../modules/squad-builder/squad-id.js";
 import { AppHttpApi } from "../../../protocol/http-api-contract.js";
 import type { SquadBuilderSquadGroupError } from "../../../protocol/squad-builder/squad-groups/http-api-contract.js";
 import {

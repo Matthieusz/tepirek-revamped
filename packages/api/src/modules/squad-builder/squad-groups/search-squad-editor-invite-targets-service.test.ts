@@ -2,8 +2,8 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { parseAppUserId } from "../app-user-id.js";
-import { parseSquadGroupId } from "../squad-group-id.js";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
 import {
   layer as squadEditorInviteTargetsLayer,
   use as squadEditorInviteTargets,

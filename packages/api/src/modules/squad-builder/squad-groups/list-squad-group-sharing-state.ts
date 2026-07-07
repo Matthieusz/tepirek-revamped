@@ -1,6 +1,6 @@
-import type { AppUserId } from "../app-user-id.js";
-import type { SquadGroupId } from "../squad-group-id.js";
-import type { SquadGroupListFilters } from "../squad-group-list-filters.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
+import type { SquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
 
 export interface ListSquadGroupSharingState {
   readonly countPendingInvites: (input: {

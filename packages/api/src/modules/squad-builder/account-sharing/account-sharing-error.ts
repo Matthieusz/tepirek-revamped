@@ -1,6 +1,6 @@
-import type { InvalidAppUserId } from "../app-user-id.js";
-import type { InvalidMargonemAccountAccessId } from "../margonem-account-access-id.js";
-import type { InvalidMargonemAccountId } from "../margonem-account-id.js";
+import type { InvalidAppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { InvalidMargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
+import type { InvalidMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import type {
   AccountSharingAuthorizationError,
   AccountSharingStore,

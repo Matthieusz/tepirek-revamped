@@ -6,9 +6,9 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { AppUserId } from "../../../modules/squad-builder/app-user-id.js";
-import type { SquadGroupId } from "../../../modules/squad-builder/squad-group-id.js";
-import type { SquadGroupInvitationId } from "../../../modules/squad-builder/squad-group-invitation-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
+import type { SquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.js";
 import {
   layer as squadGroupSharingStateLayer,
   use as squadGroupSharingState,

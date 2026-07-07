@@ -3,9 +3,9 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 
-import { parseAppUserId } from "../app-user-id.js";
-import { parseMargonemAccountAccessId } from "../margonem-account-access-id.js";
-import { parseMargonemAccountId } from "../margonem-account-id.js";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import { parseMargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {

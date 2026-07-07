@@ -17,6 +17,12 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { describe, expect, it } from "vitest";
 
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.js";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import { computeMargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.js";
+import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import { makeApiSquadBuilderLayer } from "../../../effect-app.js";
 import { liveEffect } from "../../../test/effect.js";
 import { createVerifiedMember } from "../../../test/integration/builders.js";
@@ -24,7 +30,6 @@ import {
   defaultTestDatabaseUrl,
   testDb,
 } from "../../../test/integration/database.js";
-import { parseAccountDisplayName } from "../account-display-name.js";
 import { AccountImportStoreService } from "../account-import/account-import-store-service.js";
 import { confirm as confirmOwnedAccountImport } from "../account-import/confirm-owned-account-import-service.js";
 import { list as listOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts.js";
@@ -35,12 +40,7 @@ import { use as accountAccessInviteResponses } from "../account-sharing/respond-
 import { use as accountAccessRevocations } from "../account-sharing/revoke-account-access-service.js";
 import { use as accountInviteTargets } from "../account-sharing/search-account-invite-targets-service.js";
 import { use as accountAccessInvites } from "../account-sharing/send-account-access-invite-service.js";
-import { parseAppUserId } from "../app-user-id.js";
 import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
-import { firecrawlYearMonthFromDate } from "../firecrawl-year-month.js";
-import { parseMargonemAccountId } from "../margonem-account-id.js";
-import { computeMargonemAccountRefetchDiff } from "../margonem-account-refetch-diff.js";
-import { parseMargonemProfileId } from "../margonem-profile-id.js";
 import { create as createSquadGroup } from "./create-squad-group.js";
 import { list as listAvailableSquadCharacters } from "./list-available-squad-characters.js";
 import { list as listGlobalSquadGroups } from "./list-global-squad-groups.js";

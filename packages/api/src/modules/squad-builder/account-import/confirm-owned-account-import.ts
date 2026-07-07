@@ -1,6 +1,6 @@
-import type { InvalidAccountDisplayName } from "../account-display-name.js";
-import type { AppUserId } from "../app-user-id.js";
-import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
+import type { InvalidAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
 import type {
   DuplicateMargonemAccountError,
   PendingMargonemAccountImportNotFound,

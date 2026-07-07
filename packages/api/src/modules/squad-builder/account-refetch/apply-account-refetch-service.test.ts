@@ -2,7 +2,7 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { TestClock } from "effect/testing";
 
-import { parseAppUserId } from "../app-user-id.js";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import { apply } from "./apply-account-refetch-service.js";

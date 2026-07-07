@@ -2,13 +2,13 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { serviceUse } from "../../../effect/service-use.js";
-import type { AppUserId } from "../app-user-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import {
   emptySquadGroupListFilters,
   squadGroupListFilterPolicy,
-} from "../squad-group-list-filters.js";
-import type { SquadGroupListFilters } from "../squad-group-list-filters.js";
+} from "../../../domain/squad-builder/squad-group-list-filters.js";
+import type { SquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
+import { serviceUse } from "../../../effect/service-use.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
 import type { SquadGroupStoreServiceShape } from "./squad-group-store.js";
 

@@ -1,7 +1,25 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
-import type { AccountDisplayName } from "../account-display-name.js";
+import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import type { MargonemProfession } from "../../../domain/squad-builder/margonem-character.js";
+import type {
+  SquadGroupAccessRole,
+  SquadGroupOwnerAccess,
+} from "../../../domain/squad-builder/squad-group-access.js";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
+import type { SquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.js";
+import type { SquadGroupInvitationStatus } from "../../../domain/squad-builder/squad-group-invitation-status.js";
+import type { SquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
+import type {
+  AvailableSquadCharacter,
+  SquadGroupDraftSnapshot,
+} from "../../../domain/squad-builder/squad-group-snapshot.js";
+import type { SquadGroupVisibility } from "../../../domain/squad-builder/squad-group-visibility.js";
+import type { SquadId } from "../../../domain/squad-builder/squad-id.js";
+import type { SquadGroupName } from "../../../domain/squad-builder/squad-name.js";
 import type {
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
@@ -46,24 +64,6 @@ import type {
   UpsertAccountAccessInviteInput,
   VerifiedInviteTarget,
 } from "../account-sharing/account-sharing-store.js";
-import type { AppUserId } from "../app-user-id.js";
-import type { MargonemAccountId } from "../margonem-account-id.js";
-import type { MargonemProfession } from "../margonem-character.js";
-import type {
-  SquadGroupAccessRole,
-  SquadGroupOwnerAccess,
-} from "../squad-group-access.js";
-import type { SquadGroupId } from "../squad-group-id.js";
-import type { SquadGroupInvitationId } from "../squad-group-invitation-id.js";
-import type { SquadGroupInvitationStatus } from "../squad-group-invitation-status.js";
-import type { SquadGroupListFilters } from "../squad-group-list-filters.js";
-import type {
-  AvailableSquadCharacter,
-  SquadGroupDraftSnapshot,
-} from "../squad-group-snapshot.js";
-import type { SquadGroupVisibility } from "../squad-group-visibility.js";
-import type { SquadId } from "../squad-id.js";
-import type { SquadGroupName } from "../squad-name.js";
 import type { SharedSquadGroupCharactersSnapshot } from "./save-shared-squad-group-characters.js";
 import type {
   AccountAccessInviteNotFound,

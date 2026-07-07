@@ -2,7 +2,7 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { AppUserIdSchema } from "../../../modules/squad-builder/app-user-id.js";
+import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.js";
 import {
   AccountAccessGrantSummarySchema,
   AccountAccessGrantsPayload,

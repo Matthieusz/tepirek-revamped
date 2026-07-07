@@ -1,10 +1,10 @@
-import type { AccountDisplayName } from "../account-display-name.js";
-import type { AppUserId } from "../app-user-id.js";
+import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { FirecrawlYearMonth } from "../../../domain/squad-builder/firecrawl-year-month.js";
+import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.js";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
+import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
 import type { FirecrawlCreditCount } from "../firecrawl-config.js";
-import type { FirecrawlYearMonth } from "../firecrawl-year-month.js";
-import type { MargonemCharacterPreview } from "../margonem-character.js";
-import type { MargonemProfileId } from "../margonem-profile-id.js";
-import type { PendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
 
 /** Access state for a Margonem profile relative to the current user. */
 export type ProfileAccessState =

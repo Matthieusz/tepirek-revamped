@@ -4,16 +4,16 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { serviceUse } from "../../../effect/service-use.js";
-import { parseAccountDisplayName } from "../account-display-name.js";
-import type { AccountDisplayName } from "../account-display-name.js";
-import type { AppUserId } from "../app-user-id.js";
-import type { MargonemProfileId } from "../margonem-profile-id.js";
-import { profileIdToNumber } from "../margonem-profile-id.js";
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
+import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
+import { profileIdToNumber } from "../../../domain/squad-builder/margonem-profile-id.js";
 import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
-} from "../margonem-profile-url.js";
+} from "../../../domain/squad-builder/margonem-profile-url.js";
+import { serviceUse } from "../../../effect/service-use.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import type {
   DuplicateMargonemAccountError,

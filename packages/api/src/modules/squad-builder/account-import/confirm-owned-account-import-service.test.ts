@@ -2,9 +2,9 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { TestClock } from "effect/testing";
 
-import { parseAppUserId } from "../app-user-id.js";
-import { parseMargonemProfileId } from "../margonem-profile-id.js";
-import { parsePendingMargonemAccountImportId } from "../pending-margonem-account-import-id.js";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
+import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
 import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import { confirm } from "./confirm-owned-account-import-service.js";

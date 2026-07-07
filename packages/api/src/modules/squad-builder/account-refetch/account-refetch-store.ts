@@ -1,4 +1,13 @@
-import type { AccountDisplayName } from "../account-display-name.js";
+import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import type {
+  MargonemAccountRefetchDiff,
+  StoredMargonemCharacterSnapshot,
+} from "../../../domain/squad-builder/margonem-account-refetch-diff.js";
+import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.js";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
+import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
 import type {
   FirecrawlBudgetError,
   FirecrawlRequestLedger,
@@ -13,16 +22,7 @@ import type {
   MargonemAccountNotFound,
   MargonemAccountOwnerAuthorizer,
 } from "../account-sharing/account-sharing-store.js";
-import type { AppUserId } from "../app-user-id.js";
 import type { FirecrawlCreditCount } from "../firecrawl-config.js";
-import type { MargonemAccountId } from "../margonem-account-id.js";
-import type {
-  MargonemAccountRefetchDiff,
-  StoredMargonemCharacterSnapshot,
-} from "../margonem-account-refetch-diff.js";
-import type { MargonemCharacterPreview } from "../margonem-character.js";
-import type { MargonemProfileId } from "../margonem-profile-id.js";
-import type { PendingMargonemAccountRefetchId } from "../pending-margonem-account-refetch-id.js";
 import type { ApplyAccountRefetchOutput } from "./apply-account-refetch.js";
 
 /** Account and current character state needed for a manual refetch preview. */

@@ -1,12 +1,12 @@
 import * as Schema from "effect/Schema";
 
-import { AppUserIdSchema } from "../../../modules/squad-builder/app-user-id.js";
-import { SquadGroupIdSchema } from "../../../modules/squad-builder/squad-group-id.js";
-import { SquadGroupInvitationIdSchema } from "../../../modules/squad-builder/squad-group-invitation-id.js";
+import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.js";
+import { SquadGroupIdSchema } from "../../../domain/squad-builder/squad-group-id.js";
+import { SquadGroupInvitationIdSchema } from "../../../domain/squad-builder/squad-group-invitation-id.js";
 import {
   ActiveSquadGroupInvitationStatusSchema,
   SquadGroupInvitationStatusSchema,
-} from "../../../modules/squad-builder/squad-group-invitation-status.js";
+} from "../../../domain/squad-builder/squad-group-invitation-status.js";
 import {
   AccountInviteTargetSchema,
   InviteResponseSchema,

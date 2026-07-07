@@ -2,18 +2,18 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
+import type {
+  SquadCharacterDraftPlacement,
+  SquadGroupValidationError,
+} from "../../../domain/squad-builder/squad-group-snapshot.js";
+import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.js";
+import type { SquadId } from "../../../domain/squad-builder/squad-id.js";
 import { serviceUse } from "../../../effect/service-use.js";
 import type { SquadBuilderPersistenceUnavailable } from "../account-import/account-import-store.js";
 import { systemClock } from "../account-import/preview-margonem-profile-import.js";
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
-import type { AppUserId } from "../app-user-id.js";
-import type { SquadGroupId } from "../squad-group-id.js";
-import type {
-  SquadCharacterDraftPlacement,
-  SquadGroupValidationError,
-} from "../squad-group-snapshot.js";
-import { validateSquadGroupSnapshot } from "../squad-group-snapshot.js";
-import type { SquadId } from "../squad-id.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import {
   ActorCannotEditSquadGroup,

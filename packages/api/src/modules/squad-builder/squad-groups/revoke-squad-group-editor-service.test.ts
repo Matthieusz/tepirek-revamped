@@ -3,10 +3,10 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 
-import { parseAppUserId } from "../app-user-id.js";
-import { parseSquadGroupId } from "../squad-group-id.js";
-import { parseSquadGroupInvitationId } from "../squad-group-invitation-id.js";
-import { parseSquadGroupName } from "../squad-name.js";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
+import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.js";
+import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
 import {
   layer as squadGroupEditorRevocationsLayer,
   use as squadGroupEditorRevocations,

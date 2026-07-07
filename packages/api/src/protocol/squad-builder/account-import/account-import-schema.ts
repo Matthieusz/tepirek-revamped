@@ -1,11 +1,11 @@
 import * as Schema from "effect/Schema";
 
-import { AppUserIdSchema } from "../../../modules/squad-builder/app-user-id.js";
-import { MargonemAccountIdSchema } from "../../../modules/squad-builder/margonem-account-id.js";
-import { MargonemCharacterPreviewSchema } from "../../../modules/squad-builder/margonem-character.js";
-import { MargonemProfileIdSchema } from "../../../modules/squad-builder/margonem-profile-id.js";
-import { PendingMargonemAccountImportIdSchema } from "../../../modules/squad-builder/pending-margonem-account-import-id.js";
-import { PositiveInt } from "../../../modules/squad-builder/positive-int.js";
+import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.js";
+import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-account-id.js";
+import { MargonemCharacterPreviewSchema } from "../../../domain/squad-builder/margonem-character.js";
+import { MargonemProfileIdSchema } from "../../../domain/squad-builder/margonem-profile-id.js";
+import { PendingMargonemAccountImportIdSchema } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
+import { PositiveInt } from "../../../domain/squad-builder/positive-int.js";
 
 export const PreviewMargonemProfileImportPayload = Schema.Struct({
   actorUserId: AppUserIdSchema,

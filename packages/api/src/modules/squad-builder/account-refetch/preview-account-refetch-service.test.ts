@@ -2,7 +2,7 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 
-import { parseAppUserId } from "../app-user-id.js";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { FirecrawlClientService } from "../firecrawl-client-service.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
 import type { FirecrawlCreditCount } from "../firecrawl-config.js";
