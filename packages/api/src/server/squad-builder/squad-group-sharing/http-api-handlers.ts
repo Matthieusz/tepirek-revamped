@@ -14,7 +14,6 @@ import type { SquadBuilderSquadGroupSharingError } from "../../../protocol/squad
 import {
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
-  SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
   SquadBuilderConflict,
 } from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.js";
@@ -102,7 +101,12 @@ const toSquadBuilderFail = (
   error: unknown
 ): Effect.Effect<never, ProtocolError, never> => {
   if (typeof error !== "object" || error === null || !("_tag" in error)) {
-    return Effect.fail(new SquadBuilderNotFound({ message: "Unknown error" }));
+    return Effect.fail(
+      new SquadBuilderPersistenceUnavailable({
+        cause: new Error("Unknown error"),
+        operation: "unknown",
+      })
+    );
   }
 
   const tagged = error as { _tag: string; cause?: unknown; operation?: string };
@@ -117,7 +121,12 @@ const toSquadBuilderFail = (
   }
 
   if (notFoundTags.has(tagged._tag)) {
-    return Effect.fail(new SquadBuilderNotFound({ message: tagged._tag }));
+    return Effect.fail(
+      new SquadBuilderPersistenceUnavailable({
+        cause: new Error(tagged._tag),
+        operation: "unknown",
+      })
+    );
   }
 
   if (forbiddenTags.has(tagged._tag)) {
@@ -133,8 +142,9 @@ const toSquadBuilderFail = (
   }
 
   return Effect.fail(
-    new SquadBuilderNotFound({
-      message: `Unknown error: ${tagged._tag}`,
+    new SquadBuilderPersistenceUnavailable({
+      cause: new Error(`Unknown error: ${tagged._tag}`),
+      operation: "unknown",
     })
   );
 };
