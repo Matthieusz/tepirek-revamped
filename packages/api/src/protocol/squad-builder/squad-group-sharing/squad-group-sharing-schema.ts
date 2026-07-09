@@ -22,7 +22,7 @@ export const SendSquadGroupEditorInvitePayload = Schema.Struct({
   invitedUserId: AppUserIdSchema,
 });
 export const SquadGroupInvitationSummarySchema = Schema.Struct({
-  createdAt: Schema.Date,
+  createdAt: Schema.DateFromString,
   invitationId: SquadGroupInvitationIdSchema,
   ownerUserId: AppUserIdSchema,
   ownerUserImage: Schema.NullOr(Schema.String),
@@ -30,7 +30,7 @@ export const SquadGroupInvitationSummarySchema = Schema.Struct({
   squadGroupId: SquadGroupIdSchema,
   squadGroupName: Schema.String,
   status: SquadGroupInvitationStatusSchema,
-  updatedAt: Schema.Date,
+  updatedAt: Schema.DateFromString,
 });
 export const RespondToSquadGroupInvitePayload = Schema.Struct({
   invitationId: SquadGroupInvitationIdSchema,
@@ -50,13 +50,13 @@ export const SharedSquadGroupSummarySchema = Schema.Struct({
   ownerUserImage: Schema.NullOr(Schema.String),
   ownerUserName: Schema.String,
   squadCount: Schema.Number,
-  updatedAt: Schema.Date,
+  updatedAt: Schema.DateFromString,
 });
 export const SquadGroupEditorGrantSummarySchema = Schema.Struct({
-  createdAt: Schema.Date,
+  createdAt: Schema.DateFromString,
   invitationId: SquadGroupInvitationIdSchema,
   status: ActiveSquadGroupInvitationStatusSchema,
-  updatedAt: Schema.Date,
+  updatedAt: Schema.DateFromString,
   userId: AppUserIdSchema,
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.String,

@@ -36,7 +36,7 @@ export const BetMemberSummary = Schema.Struct({
   userName: Schema.NullOr(Schema.String),
 });
 export const BetSummary = Schema.Struct({
-  createdAt: Schema.Date,
+  createdAt: Schema.DateFromString,
   createdBy: Schema.String,
   createdByImage: Schema.NullOr(Schema.String),
   createdByName: Schema.NullOr(Schema.String),
@@ -50,7 +50,7 @@ export const BetSummary = Schema.Struct({
   members: Schema.Array(BetMemberSummary),
 });
 export const BetByEventSummary = Schema.Struct({
-  createdAt: Schema.Date,
+  createdAt: Schema.DateFromString,
   createdBy: Schema.String,
   eventId: PositiveInt,
   heroId: PositiveInt,
@@ -64,7 +64,7 @@ export const StoredBetMember = Schema.Struct({
   userId: Schema.String,
 });
 export const CreatedBet = Schema.Struct({
-  createdAt: Schema.Date,
+  createdAt: Schema.DateFromString,
   createdBy: UserId,
   heroId: PositiveInt,
   id: PositiveInt,

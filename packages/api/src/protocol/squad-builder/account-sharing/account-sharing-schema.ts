@@ -29,14 +29,14 @@ export const AccountAccessInviteSummarySchema = Schema.Struct({
   accessId: MargonemAccountAccessIdSchema,
   accountDisplayName: Schema.String,
   accountId: MargonemAccountIdSchema,
-  createdAt: Schema.Date,
+  createdAt: Schema.DateFromString,
   generatedProfileUrl: Schema.String,
   invitedUserId: AppUserIdSchema,
   ownerUserId: AppUserIdSchema,
   ownerUserImage: Schema.NullOr(Schema.String),
   ownerUserName: Schema.String,
   status: AccountAccessStatusSchema,
-  updatedAt: Schema.Date,
+  updatedAt: Schema.DateFromString,
 });
 export const RespondToAccountAccessInvitePayload = Schema.Struct({
   accessId: MargonemAccountAccessIdSchema,
@@ -59,7 +59,7 @@ export const SharedMargonemAccountSummarySchema = Schema.Struct({
   characterCount: Schema.Number,
   displayName: Schema.String,
   generatedProfileUrl: Schema.String,
-  lastFetchedAt: Schema.Date,
+  lastFetchedAt: Schema.DateFromString,
   ownerUserId: AppUserIdSchema,
   ownerUserImage: Schema.NullOr(Schema.String),
   ownerUserName: Schema.String,
@@ -67,10 +67,10 @@ export const SharedMargonemAccountSummarySchema = Schema.Struct({
 });
 export const AccountAccessGrantSummarySchema = Schema.Struct({
   accessId: MargonemAccountAccessIdSchema,
-  createdAt: Schema.Date,
+  createdAt: Schema.DateFromString,
   invitedUserId: AppUserIdSchema,
   invitedUserImage: Schema.NullOr(Schema.String),
   invitedUserName: Schema.String,
   status: ActiveAccountAccessStatusSchema,
-  updatedAt: Schema.Date,
+  updatedAt: Schema.DateFromString,
 });

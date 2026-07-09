@@ -25,7 +25,7 @@ export const AnnouncementAuthor = Schema.Struct({
   name: Schema.NullOr(Schema.String),
 });
 export const AnnouncementSummary = Schema.Struct({
-  createdAt: Schema.Date,
+  createdAt: Schema.DateFromString,
   description: Schema.String,
   id: AnnouncementIdSchema,
   title: Schema.String,

@@ -48,7 +48,7 @@ export const RemoveAuctionSignupPayload = Schema.Struct({
 
 export const AuctionSignupSummary = Schema.Struct({
   column: PositiveInt,
-  createdAt: Schema.Date,
+  createdAt: Schema.DateFromString,
   id: AuctionSignupIdSchema,
   level: PositiveInt,
   round: PositiveInt,

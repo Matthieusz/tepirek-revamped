@@ -13,7 +13,7 @@ export const PreviewMargonemProfileImportSuccess = Schema.Struct({
   firecrawlCreditsUsed: PositiveInt,
   generatedProfileUrl: Schema.String,
   jarunaCharacters: Schema.Array(MargonemCharacterPreviewSchema),
-  lastFetchedAt: Schema.Date,
+  lastFetchedAt: Schema.DateFromString,
   profileId: MargonemProfileIdSchema,
   suggestedAccountName: Schema.String,
 });
@@ -29,7 +29,7 @@ const PreviewOwnedAccountImportSucceeded = Schema.TaggedStruct(
     generatedProfileUrl: Schema.String,
     inputUrl: Schema.String,
     jarunaCharacters: Schema.Array(MargonemCharacterPreviewSchema),
-    lastFetchedAt: Schema.Date,
+    lastFetchedAt: Schema.DateFromString,
     lineNumber: PositiveInt,
     pendingImportId: PendingMargonemAccountImportIdSchema,
     profileId: MargonemProfileIdSchema,
@@ -104,6 +104,6 @@ export const OwnedMargonemAccountSummarySchema = Schema.Struct({
   characterCount: Schema.Number,
   displayName: Schema.String,
   generatedProfileUrl: Schema.String,
-  lastFetchedAt: Schema.Date,
+  lastFetchedAt: Schema.DateFromString,
   profileId: MargonemProfileIdSchema,
 });

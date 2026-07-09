@@ -66,7 +66,7 @@ export const MargonemAccountRefetchDiffSchema = Schema.Struct({
   accountId: MargonemAccountIdSchema,
   added: Schema.Array(AddedMargonemCharacterDiffSchema),
   changed: Schema.Array(ChangedMargonemCharacterDiffSchema),
-  fetchedAt: Schema.Date,
+  fetchedAt: Schema.DateFromString,
   profileId: MargonemProfileIdSchema,
   removed: Schema.Array(RemovedMargonemCharacterDiffSchema),
   unchangedCount: Schema.Number,
@@ -78,7 +78,7 @@ export const PreviewAccountRefetchPayload = Schema.Struct({
 export const PreviewAccountRefetchSuccess = Schema.Struct({
   accountId: MargonemAccountIdSchema,
   diff: MargonemAccountRefetchDiffSchema,
-  fetchedAt: Schema.Date,
+  fetchedAt: Schema.DateFromString,
   firecrawlCreditsUsed: PositiveInt,
   generatedProfileUrl: Schema.String,
   profileId: MargonemProfileIdSchema,
@@ -91,7 +91,7 @@ export const ApplyAccountRefetchPayload = Schema.Struct({
 export const ApplyAccountRefetchSuccess = Schema.Struct({
   accountId: MargonemAccountIdSchema,
   addedCharacterCount: Schema.Number,
-  lastFetchedAt: Schema.Date,
+  lastFetchedAt: Schema.DateFromString,
   profileId: MargonemProfileIdSchema,
   removedCharacterCount: Schema.Number,
   removedSquadCharacterCount: Schema.Number,

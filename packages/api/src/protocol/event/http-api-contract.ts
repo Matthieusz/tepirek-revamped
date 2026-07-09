@@ -29,7 +29,7 @@ export const ToggleEventActivePayload = Schema.Struct({
 export const EventSummary = Schema.Struct({
   active: Schema.NullOr(Schema.Boolean),
   color: Schema.String,
-  endTime: Schema.Date,
+  endTime: Schema.DateFromString,
   icon: Schema.String,
   id: EventIdSchema,
   name: Schema.String,

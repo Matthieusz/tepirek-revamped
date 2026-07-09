@@ -19,7 +19,7 @@ export const SquadGroupSummarySchema = Schema.Struct({
   groupId: SquadGroupIdSchema,
   name: Schema.String,
   squadCount: Schema.Number,
-  updatedAt: Schema.Date,
+  updatedAt: Schema.DateFromString,
 });
 
 export const GlobalSquadGroupSummarySchema = Schema.Struct({
@@ -30,7 +30,7 @@ export const GlobalSquadGroupSummarySchema = Schema.Struct({
   ownerUserImage: Schema.NullOr(Schema.String),
   ownerUserName: Schema.String,
   squadCount: Schema.Number,
-  updatedAt: Schema.Date,
+  updatedAt: Schema.DateFromString,
 });
 
 export const ListGlobalSquadGroupsPayload = Schema.Struct({
@@ -82,7 +82,7 @@ export const SquadGroupDetailSchema = Schema.Struct({
   name: Schema.String,
   ownerUserId: AppUserIdSchema,
   squads: Schema.Array(SquadDetailSchema),
-  updatedAt: Schema.Date,
+  updatedAt: Schema.DateFromString,
   visibility: Schema.Literals(["private", "global"]),
 });
 
@@ -122,6 +122,6 @@ export const SetSquadGroupVisibilityPayload = Schema.Struct({
 
 export const SquadGroupVisibilityChangeSchema = Schema.Struct({
   groupId: SquadGroupIdSchema,
-  updatedAt: Schema.Date,
+  updatedAt: Schema.DateFromString,
   visibility: Schema.Literals(["private", "global"]),
 });

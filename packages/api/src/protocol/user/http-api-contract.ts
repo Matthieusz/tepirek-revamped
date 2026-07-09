@@ -25,37 +25,37 @@ export const VerifiedMember = Schema.Struct({
   name: Schema.String,
 });
 export const Player = Schema.Struct({
-  createdAt: Schema.Date,
+  createdAt: Schema.DateFromString,
   id: UserId,
   image: Schema.NullOr(Schema.String),
   name: Schema.String,
   role: Schema.NullOr(Schema.String),
-  updatedAt: Schema.Date,
+  updatedAt: Schema.DateFromString,
   verified: Schema.Boolean,
 });
 export const MutatedUser = Schema.NullOr(Player);
 export const DiscordMembershipResult = Schema.Struct({ valid: Schema.Boolean });
 export const Session = Schema.Struct({
-  createdAt: Schema.Date,
-  expiresAt: Schema.Date,
+  createdAt: Schema.DateFromString,
+  expiresAt: Schema.DateFromString,
   id: Schema.NonEmptyString,
   ipAddress: Schema.optional(Schema.NullOr(Schema.String)),
   token: Schema.NonEmptyString,
-  updatedAt: Schema.Date,
+  updatedAt: Schema.DateFromString,
   userAgent: Schema.optional(Schema.NullOr(Schema.String)),
   userId: UserId,
 });
 export const AuthenticatedSession = Schema.Struct({
   session: Session,
   user: Schema.Struct({
-    createdAt: Schema.Date,
+    createdAt: Schema.DateFromString,
     email: Schema.String,
     emailVerified: Schema.Boolean,
     id: UserId,
     image: Schema.optional(Schema.NullOr(Schema.String)),
     name: Schema.String,
     role: Schema.optional(Schema.NullOr(Schema.String)),
-    updatedAt: Schema.Date,
+    updatedAt: Schema.DateFromString,
     verified: Schema.Boolean,
   }),
 });
