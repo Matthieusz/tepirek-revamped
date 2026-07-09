@@ -7,7 +7,6 @@ import { parseAccountDisplayName } from "../../../domain/squad-builder/account-d
 import type { InvalidAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
-import { serviceUse } from "../../../effect/service-use.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import type {
   DuplicateMargonemAccountError,
@@ -67,8 +66,6 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/ConfirmOwnedAccountImportService"
 ) {}
-
-export const use = serviceUse(Service);
 
 export const layer = Layer.effect(
   Service,

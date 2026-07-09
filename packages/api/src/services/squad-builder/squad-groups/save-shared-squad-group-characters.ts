@@ -10,7 +10,6 @@ import type {
 } from "../../../domain/squad-builder/squad-group-snapshot.js";
 import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.js";
 import type { SquadId } from "../../../domain/squad-builder/squad-id.js";
-import { serviceUse } from "../../../effect/service-use.js";
 import type { SquadBuilderPersistenceUnavailable } from "../account-import/account-import-store.js";
 import { systemClock } from "../account-import/preview-margonem-profile-import.js";
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
@@ -164,8 +163,6 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/SaveSharedSquadGroupCharactersService"
 ) {}
-
-export const use = serviceUse(Service);
 
 export const layer = Layer.effect(
   Service,

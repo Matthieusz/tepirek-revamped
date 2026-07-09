@@ -3,7 +3,6 @@ import * as Context from "effect/Context";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { serviceUse } from "../../../effect/service-use.js";
 import type { AccountRefetchStoreServiceShape } from "../squad-groups/squad-group-store.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import type { ApplyAccountRefetchInput } from "./apply-account-refetch.js";
@@ -59,8 +58,6 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/ApplyAccountRefetchService"
 ) {}
-
-export const use = serviceUse(Service);
 
 export const layer = Layer.effect(
   Service,

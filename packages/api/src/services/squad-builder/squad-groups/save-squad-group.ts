@@ -9,7 +9,6 @@ import type {
   SquadGroupValidationError,
 } from "../../../domain/squad-builder/squad-group-snapshot.js";
 import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.js";
-import { serviceUse } from "../../../effect/service-use.js";
 import { systemClock } from "../account-import/preview-margonem-profile-import.js";
 import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
@@ -84,8 +83,6 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/SaveSquadGroupService"
 ) {}
-
-export const use = serviceUse(Service);
 
 export const layer = Layer.effect(
   Service,

@@ -3,7 +3,6 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { serviceUse } from "../../../effect/service-use.js";
 import {
   accountInviteTargetSearchPolicy,
   InvalidAccountInviteTargetQuery,
@@ -49,8 +48,6 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/SquadEditorInviteTargets"
 ) {}
-
-export const use = serviceUse(Service);
 
 export const layer = Layer.effect(
   Service,

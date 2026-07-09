@@ -9,7 +9,7 @@ import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
 import {
   layer as squadGroupEditorInvitesLayer,
-  use as squadGroupEditorInvites,
+  Service as SquadGroupEditorInvitesService,
 } from "./send-squad-group-editor-invite-service.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
 import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-support.js";
@@ -81,8 +81,9 @@ it.effect("sends a squad group editor invite for a verified target", () => {
   );
 
   return Effect.gen(function* sendSquadGroupEditorInviteEffect() {
+    const svc = yield* SquadGroupEditorInvitesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* squadGroupEditorInvites.send({
+    const invite = yield* svc.send({
       actorUserId,
       groupId,
       invitedUserId: targetUserId,
@@ -113,9 +114,10 @@ it.effect("rejects self-invites before resolving the target", () => {
   );
 
   return Effect.gen(function* sendSquadGroupEditorInviteEffect() {
+    const svc = yield* SquadGroupEditorInvitesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      squadGroupEditorInvites.send({
+      svc.send({
         actorUserId,
         groupId,
         invitedUserId: actorUserId,

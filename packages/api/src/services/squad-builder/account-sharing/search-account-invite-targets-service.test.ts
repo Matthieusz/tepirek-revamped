@@ -8,7 +8,7 @@ import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
   layer as accountInviteTargetsLayer,
-  use as accountInviteTargets,
+  Service as AccountInviteTargetsService,
 } from "./search-account-invite-targets-service.js";
 
 const parseTestUserId = (value: string) =>
@@ -51,7 +51,8 @@ it.effect("searches invite targets for an account owner", () => {
   );
 
   return Effect.gen(function* searchInviteTargetsEffect() {
-    const targets = yield* accountInviteTargets.search({
+    const svc = yield* AccountInviteTargetsService;
+    const targets = yield* svc.search({
       accountId,
       actorUserId,
       query: "  Target  ",

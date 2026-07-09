@@ -16,9 +16,9 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/account-refetch/http-api-contract.js";
-import { use as applyAccountRefetch } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.js";
+import { Service as ApplyAccountRefetchService } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.js";
 import type { ApplyAccountRefetchError } from "../../../services/squad-builder/account-refetch/apply-account-refetch.js";
-import { use as previewAccountRefetch } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.js";
+import { Service as PreviewAccountRefetchService } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.js";
 import type { PreviewAccountRefetchError } from "../../../services/squad-builder/account-refetch/preview-account-refetch.js";
 import {
   requireSquadBuilderSession,
@@ -96,29 +96,34 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "squadBuilderAccountRefetch",
   (handlers) =>
-    handlers
-      .handle("previewAccountRefetch", ({ payload, request }) =>
-        Effect.gen(function* previewAccountRefetchHandler() {
-          const session = yield* requireSquadBuilderSession(request);
-          return yield* withRequestCorrelation(
-            request,
-            previewAccountRefetch.preview({
-              accountId: toMargonemAccountId(payload.accountId),
-              actorUserId: sessionAppUserId(session),
-            })
-          ).pipe(Effect.mapError(mapAccountRefetchError));
-        })
-      )
-      .handle("applyAccountRefetch", ({ payload, request }) =>
-        Effect.gen(function* applyAccountRefetchHandler() {
-          const session = yield* requireSquadBuilderSession(request);
-          return yield* withRequestCorrelation(
-            request,
-            applyAccountRefetch.apply({
-              actorUserId: sessionAppUserId(session),
-              refetchPreviewId: toPendingRefetchId(payload.refetchPreviewId),
-            })
-          ).pipe(Effect.mapError(mapAccountRefetchError));
-        })
-      )
+    Effect.gen(function* SquadBuilderAccountRefetchHttpApiHandlers() {
+      const previewAccountRefetchSvc = yield* PreviewAccountRefetchService;
+      const applyAccountRefetchSvc = yield* ApplyAccountRefetchService;
+
+      return handlers
+        .handle("previewAccountRefetch", ({ payload, request }) =>
+          Effect.gen(function* previewAccountRefetchHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withRequestCorrelation(
+              request,
+              previewAccountRefetchSvc.preview({
+                accountId: toMargonemAccountId(payload.accountId),
+                actorUserId: sessionAppUserId(session),
+              })
+            ).pipe(Effect.mapError(mapAccountRefetchError));
+          })
+        )
+        .handle("applyAccountRefetch", ({ payload, request }) =>
+          Effect.gen(function* applyAccountRefetchHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withRequestCorrelation(
+              request,
+              applyAccountRefetchSvc.apply({
+                actorUserId: sessionAppUserId(session),
+                refetchPreviewId: toPendingRefetchId(payload.refetchPreviewId),
+              })
+            ).pipe(Effect.mapError(mapAccountRefetchError));
+          })
+        );
+    })
 );

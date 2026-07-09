@@ -9,7 +9,7 @@ import { emptySquadGroupListFilters } from "../../../domain/squad-builder/squad-
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
 import {
   layer as squadGroupSharingStateLayer,
-  use as squadGroupSharingState,
+  Service as SquadGroupSharingStateService,
 } from "./list-squad-group-sharing-state-service.js";
 import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
@@ -56,7 +56,8 @@ it.effect("lists incoming squad group invites for the actor", () => {
   );
 
   return Effect.gen(function* listIncomingSquadGroupInvitesEffect() {
-    const invites = yield* squadGroupSharingState.listIncomingInvites({
+    const svc = yield* SquadGroupSharingStateService;
+    const invites = yield* svc.listIncomingInvites({
       actorUserId,
     });
 
@@ -87,9 +88,8 @@ it.effect("surfaces squad group sharing persistence failures", () => {
   );
 
   return Effect.gen(function* listIncomingSquadGroupInvitesFailureEffect() {
-    const error = yield* Effect.flip(
-      squadGroupSharingState.listIncomingInvites({ actorUserId })
-    );
+    const svc = yield* SquadGroupSharingStateService;
+    const error = yield* Effect.flip(svc.listIncomingInvites({ actorUserId }));
 
     expect(error._tag).toBe("SquadBuilderPersistenceUnavailable");
   }).pipe(Effect.provide(testLayer));
@@ -126,7 +126,8 @@ it.effect("lists shared squad groups for the actor", () => {
   );
 
   return Effect.gen(function* listSharedSquadGroupsEffect() {
-    const groups = yield* squadGroupSharingState.listSharedGroups({
+    const svc = yield* SquadGroupSharingStateService;
+    const groups = yield* svc.listSharedGroups({
       actorUserId,
     });
 
@@ -168,7 +169,8 @@ it.effect("lists squad group editor grants", () => {
   );
 
   return Effect.gen(function* listSquadGroupEditorGrantsEffect() {
-    const grants = yield* squadGroupSharingState.listEditorGrants({
+    const svc = yield* SquadGroupSharingStateService;
+    const grants = yield* svc.listEditorGrants({
       actorUserId,
       groupId,
     });
@@ -196,7 +198,8 @@ it.effect("counts pending squad group invites", () => {
   );
 
   return Effect.gen(function* getPendingSquadGroupInviteCountEffect() {
-    const count = yield* squadGroupSharingState.countPendingInvites({
+    const svc = yield* SquadGroupSharingStateService;
+    const count = yield* svc.countPendingInvites({
       actorUserId,
     });
 

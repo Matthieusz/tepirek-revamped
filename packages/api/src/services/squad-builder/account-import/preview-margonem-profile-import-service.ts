@@ -9,7 +9,6 @@ import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
 } from "../../../domain/squad-builder/margonem-profile-url.js";
-import { serviceUse } from "../../../effect/service-use.js";
 import {
   FirecrawlClientService,
   FirecrawlResponseNotParseable,
@@ -123,8 +122,6 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/PreviewMargonemProfileImportService"
 ) {}
-
-export const use = serviceUse(Service);
 
 export const layer = Layer.effect(
   Service,

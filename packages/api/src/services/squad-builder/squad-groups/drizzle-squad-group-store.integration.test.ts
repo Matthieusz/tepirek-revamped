@@ -35,20 +35,20 @@ import { confirm as confirmOwnedAccountImport } from "../account-import/confirm-
 import { list as listOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts.js";
 import { AccountRefetchStoreService } from "../account-refetch/account-refetch-store-service.js";
 import { apply as applyAccountRefetch } from "../account-refetch/apply-account-refetch-service.js";
-import { use as accountSharingState } from "../account-sharing/list-account-sharing-state-service.js";
-import { use as accountAccessInviteResponses } from "../account-sharing/respond-to-account-access-invite-service.js";
-import { use as accountAccessRevocations } from "../account-sharing/revoke-account-access-service.js";
-import { use as accountInviteTargets } from "../account-sharing/search-account-invite-targets-service.js";
-import { use as accountAccessInvites } from "../account-sharing/send-account-access-invite-service.js";
+import { Service as AccountSharingStateService } from "../account-sharing/list-account-sharing-state-service.js";
+import { Service as AccountAccessInviteResponsesService } from "../account-sharing/respond-to-account-access-invite-service.js";
+import { Service as AccountAccessRevocationsService } from "../account-sharing/revoke-account-access-service.js";
+import { Service as AccountInviteTargetsService } from "../account-sharing/search-account-invite-targets-service.js";
+import { Service as AccountAccessInvitesService } from "../account-sharing/send-account-access-invite-service.js";
 import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
 import { create as createSquadGroup } from "./create-squad-group.js";
 import { list as listAvailableSquadCharacters } from "./list-available-squad-characters.js";
 import { list as listGlobalSquadGroups } from "./list-global-squad-groups.js";
 import { getMine, listMine } from "./list-squad-groups.js";
-import { use as squadGroupEditorInviteResponses } from "./respond-to-squad-group-invite-service.js";
-import { use as squadGroupEditorRevocations } from "./revoke-squad-group-editor-service.js";
+import { Service as SquadGroupEditorInviteResponsesService } from "./respond-to-squad-group-invite-service.js";
+import { Service as SquadGroupEditorRevocationsService } from "./revoke-squad-group-editor-service.js";
 import { save as saveSquadGroup } from "./save-squad-group.js";
-import { use as squadGroupEditorInvites } from "./send-squad-group-editor-invite-service.js";
+import { Service as SquadGroupEditorInvitesService } from "./send-squad-group-editor-invite-service.js";
 import { set as setSquadGroupVisibility } from "./set-squad-group-visibility.js";
 
 const apiTestLayer = makeApiSquadBuilderLayer(defaultTestDatabaseUrl);
@@ -821,10 +821,13 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
     const targets = await liveEffect(
       apiTestLayer,
-      accountInviteTargets.search({
-        accountId: parseTestAccountId(account.id),
-        actorUserId: parseTestUserId(owner.id),
-        query: "Store Search",
+      Effect.gen(function* targets() {
+        const svc = yield* AccountInviteTargetsService;
+        return yield* svc.search({
+          accountId: parseTestAccountId(account.id),
+          actorUserId: parseTestUserId(owner.id),
+          query: "Store Search",
+        });
       })
     );
     const targetIds = targets.map((item) => item.userId);
@@ -857,10 +860,13 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
     const invite = await liveEffect(
       apiTestLayer,
-      accountAccessInvites.send({
-        accountId: parseTestAccountId(account.id),
-        actorUserId: parseTestUserId(owner.id),
-        invitedUserId: parseTestUserId(target.id),
+      Effect.gen(function* invite() {
+        const svc = yield* AccountAccessInvitesService;
+        return yield* svc.send({
+          accountId: parseTestAccountId(account.id),
+          actorUserId: parseTestUserId(owner.id),
+          invitedUserId: parseTestUserId(target.id),
+        });
       })
     );
 
@@ -882,10 +888,13 @@ describe("DrizzleSquadGroupStoreService integration", () => {
     await expect(
       liveEffect(
         apiTestLayer,
-        accountAccessInvites.send({
-          accountId: parseTestAccountId(account.id),
-          actorUserId: parseTestUserId(owner.id),
-          invitedUserId: parseTestUserId(target.id),
+        Effect.gen(function* sendDuplicateAccessInviteEffect() {
+          const svc = yield* AccountAccessInvitesService;
+          return yield* svc.send({
+            accountId: parseTestAccountId(account.id),
+            actorUserId: parseTestUserId(owner.id),
+            invitedUserId: parseTestUserId(target.id),
+          });
         })
       )
     ).rejects.toMatchObject({ _tag: "AccountAccessTransitionNotAllowed" });
@@ -911,10 +920,13 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
     const invite = await liveEffect(
       apiTestLayer,
-      squadGroupEditorInvites.send({
-        actorUserId: parseTestUserId(owner.id),
-        groupId: group.groupId,
-        invitedUserId: parseTestUserId(target.id),
+      Effect.gen(function* invite() {
+        const svc = yield* SquadGroupEditorInvitesService;
+        return yield* svc.send({
+          actorUserId: parseTestUserId(owner.id),
+          groupId: group.groupId,
+          invitedUserId: parseTestUserId(target.id),
+        });
       })
     );
 
@@ -942,10 +954,13 @@ describe("DrizzleSquadGroupStoreService integration", () => {
     await expect(
       liveEffect(
         apiTestLayer,
-        squadGroupEditorInvites.send({
-          actorUserId: parseTestUserId(owner.id),
-          groupId: group.groupId,
-          invitedUserId: parseTestUserId(target.id),
+        Effect.gen(function* sendDuplicateEditorInviteEffect() {
+          const svc = yield* SquadGroupEditorInvitesService;
+          return yield* svc.send({
+            actorUserId: parseTestUserId(owner.id),
+            groupId: group.groupId,
+            invitedUserId: parseTestUserId(target.id),
+          });
         })
       )
     ).rejects.toMatchObject({
@@ -972,18 +987,24 @@ describe("DrizzleSquadGroupStoreService integration", () => {
     );
     const invite = await liveEffect(
       apiTestLayer,
-      squadGroupEditorInvites.send({
-        actorUserId: parseTestUserId(owner.id),
-        groupId: group.groupId,
-        invitedUserId: parseTestUserId(target.id),
+      Effect.gen(function* invite() {
+        const svc = yield* SquadGroupEditorInvitesService;
+        return yield* svc.send({
+          actorUserId: parseTestUserId(owner.id),
+          groupId: group.groupId,
+          invitedUserId: parseTestUserId(target.id),
+        });
       })
     );
     const accepted = await liveEffect(
       apiTestLayer,
-      squadGroupEditorInviteResponses.respond({
-        actorUserId: parseTestUserId(target.id),
-        invitationId: invite.invitationId,
-        response: "accept",
+      Effect.gen(function* accepted() {
+        const svc = yield* SquadGroupEditorInviteResponsesService;
+        return yield* svc.respond({
+          actorUserId: parseTestUserId(target.id),
+          invitationId: invite.invitationId,
+          response: "accept",
+        });
       })
     );
 
@@ -1021,17 +1042,23 @@ describe("DrizzleSquadGroupStoreService integration", () => {
     );
     const invite = await liveEffect(
       apiTestLayer,
-      squadGroupEditorInvites.send({
-        actorUserId: parseTestUserId(owner.id),
-        groupId: group.groupId,
-        invitedUserId: parseTestUserId(target.id),
+      Effect.gen(function* invite() {
+        const svc = yield* SquadGroupEditorInvitesService;
+        return yield* svc.send({
+          actorUserId: parseTestUserId(owner.id),
+          groupId: group.groupId,
+          invitedUserId: parseTestUserId(target.id),
+        });
       })
     );
     const revoked = await liveEffect(
       apiTestLayer,
-      squadGroupEditorRevocations.revoke({
-        actorUserId: parseTestUserId(owner.id),
-        invitationId: invite.invitationId,
+      Effect.gen(function* revoked() {
+        const svc = yield* SquadGroupEditorRevocationsService;
+        return yield* svc.revoke({
+          actorUserId: parseTestUserId(owner.id),
+          invitationId: invite.invitationId,
+        });
       })
     );
 
@@ -1074,18 +1101,24 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
     const invite = await liveEffect(
       apiTestLayer,
-      accountAccessInvites.send({
-        accountId: parseTestAccountId(account.id),
-        actorUserId: parseTestUserId(owner.id),
-        invitedUserId: parseTestUserId(target.id),
+      Effect.gen(function* invite() {
+        const svc = yield* AccountAccessInvitesService;
+        return yield* svc.send({
+          accountId: parseTestAccountId(account.id),
+          actorUserId: parseTestUserId(owner.id),
+          invitedUserId: parseTestUserId(target.id),
+        });
       })
     );
     const accepted = await liveEffect(
       apiTestLayer,
-      accountAccessInviteResponses.respond({
-        accessId: invite.accessId,
-        actorUserId: parseTestUserId(target.id),
-        response: "accept",
+      Effect.gen(function* accepted() {
+        const svc = yield* AccountAccessInviteResponsesService;
+        return yield* svc.respond({
+          accessId: invite.accessId,
+          actorUserId: parseTestUserId(target.id),
+          response: "accept",
+        });
       })
     );
 
@@ -1145,8 +1178,11 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
     const accounts = await liveEffect(
       apiTestLayer,
-      accountSharingState.listSharedAccounts({
-        actorUserId: parseTestUserId(target.id),
+      Effect.gen(function* accounts() {
+        const svc = yield* AccountSharingStateService;
+        return yield* svc.listSharedAccounts({
+          actorUserId: parseTestUserId(target.id),
+        });
       })
     );
 
@@ -1202,9 +1238,12 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
     const grants = await liveEffect(
       apiTestLayer,
-      accountSharingState.listAccountAccessGrants({
-        accountId: parseTestAccountId(account.id),
-        actorUserId: parseTestUserId(owner.id),
+      Effect.gen(function* grants() {
+        const svc = yield* AccountSharingStateService;
+        return yield* svc.listAccountAccessGrants({
+          accountId: parseTestAccountId(account.id),
+          actorUserId: parseTestUserId(owner.id),
+        });
       })
     );
 
@@ -1283,18 +1322,24 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
     const invite = await liveEffect(
       apiTestLayer,
-      accountAccessInvites.send({
-        accountId: parseTestAccountId(account.id),
-        actorUserId: parseTestUserId(owner.id),
-        invitedUserId: parseTestUserId(target.id),
+      Effect.gen(function* invite() {
+        const svc = yield* AccountAccessInvitesService;
+        return yield* svc.send({
+          accountId: parseTestAccountId(account.id),
+          actorUserId: parseTestUserId(owner.id),
+          invitedUserId: parseTestUserId(target.id),
+        });
       })
     );
     await liveEffect(
       apiTestLayer,
-      accountAccessInviteResponses.respond({
-        accessId: invite.accessId,
-        actorUserId: parseTestUserId(target.id),
-        response: "accept",
+      Effect.gen(function* acceptAccountAccessInviteEffect() {
+        const svc = yield* AccountAccessInviteResponsesService;
+        return yield* svc.respond({
+          accessId: invite.accessId,
+          actorUserId: parseTestUserId(target.id),
+          response: "accept",
+        });
       })
     );
     await testDb.insert(squadCharacter).values({
@@ -1307,9 +1352,12 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
     const revoked = await liveEffect(
       apiTestLayer,
-      accountAccessRevocations.revoke({
-        accessId: invite.accessId,
-        actorUserId: parseTestUserId(owner.id),
+      Effect.gen(function* revoked() {
+        const svc = yield* AccountAccessRevocationsService;
+        return yield* svc.revoke({
+          accessId: invite.accessId,
+          actorUserId: parseTestUserId(owner.id),
+        });
       })
     );
 

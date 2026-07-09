@@ -4,7 +4,6 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { serviceUse } from "../../../effect/service-use.js";
 import type { SendSquadGroupEditorInvite } from "./send-squad-group-editor-invite.js";
 import { CannotInviteSelf } from "./squad-group-errors.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
@@ -23,8 +22,6 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/SquadGroupEditorInvites"
 ) {}
-
-export const use = serviceUse(Service);
 
 export const layer = Layer.effect(
   Service,

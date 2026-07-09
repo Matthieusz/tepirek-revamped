@@ -13,7 +13,6 @@ import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
 } from "../../../domain/squad-builder/margonem-profile-url.js";
-import { serviceUse } from "../../../effect/service-use.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import type {
   DuplicateMargonemAccountError,
@@ -374,8 +373,6 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/PreviewOwnedAccountImportsService"
 ) {}
-
-export const use = serviceUse(Service);
 
 export const layer = Layer.effect(
   Service,

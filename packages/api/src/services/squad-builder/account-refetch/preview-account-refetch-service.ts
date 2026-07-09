@@ -7,7 +7,6 @@ import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecr
 import { computeMargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.js";
 import { parseMargonemProfileHtml } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
 import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.js";
-import { serviceUse } from "../../../effect/service-use.js";
 import {
   FirecrawlClientService,
   FirecrawlResponseNotParseable,
@@ -138,8 +137,6 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/PreviewAccountRefetchService"
 ) {}
-
-export const use = serviceUse(Service);
 
 export const layer = Layer.effect(
   Service,

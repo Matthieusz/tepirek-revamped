@@ -5,7 +5,6 @@ import * as Layer from "effect/Layer";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
 import type { InvalidSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
-import { serviceUse } from "../../../effect/service-use.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
 import type { SquadGroupStoreServiceShape } from "./squad-group-store.js";
@@ -50,8 +49,6 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/CreateSquadGroupService"
 ) {}
-
-export const use = serviceUse(Service);
 
 export const layer = Layer.effect(
   Service,

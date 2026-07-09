@@ -10,7 +10,7 @@ import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
   layer as accountAccessInvitesLayer,
-  use as accountAccessInvites,
+  Service as AccountAccessInvitesService,
 } from "./send-account-access-invite-service.js";
 
 const parseTestUserId = (value: string) =>
@@ -79,8 +79,9 @@ it.effect("sends an account access invite for a verified target", () => {
   );
 
   return Effect.gen(function* sendAccountAccessInviteEffect() {
+    const svc = yield* AccountAccessInvitesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* accountAccessInvites.send({
+    const invite = yield* svc.send({
       accountId,
       actorUserId,
       invitedUserId: targetUserId,
@@ -111,9 +112,10 @@ it.effect("rejects self-invites before resolving the target", () => {
   );
 
   return Effect.gen(function* sendAccountAccessInviteEffect() {
+    const svc = yield* AccountAccessInvitesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      accountAccessInvites.send({
+      svc.send({
         accountId,
         actorUserId,
         invitedUserId: actorUserId,

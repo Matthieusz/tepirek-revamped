@@ -11,7 +11,7 @@ import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
   layer as accountAccessRevocationsLayer,
-  use as accountAccessRevocations,
+  Service as AccountAccessRevocationsService,
 } from "./revoke-account-access-service.js";
 
 const parseTestUserId = (value: string) =>
@@ -52,8 +52,9 @@ it.effect("revokes account access as the account owner", () => {
   );
 
   return Effect.gen(function* revokeAccountAccessEffect() {
+    const svc = yield* AccountAccessRevocationsService;
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const revoked = yield* accountAccessRevocations.revoke({
+    const revoked = yield* svc.revoke({
       accessId,
       actorUserId,
     });
@@ -78,9 +79,10 @@ it.effect("surfaces owner authorization failures", () => {
   );
 
   return Effect.gen(function* revokeAccountAccessEffect() {
+    const svc = yield* AccountAccessRevocationsService;
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      accountAccessRevocations.revoke({
+      svc.revoke({
         accessId,
         actorUserId,
       })

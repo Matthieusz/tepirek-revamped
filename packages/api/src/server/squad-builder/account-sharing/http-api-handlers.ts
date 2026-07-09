@@ -18,11 +18,11 @@ import {
   SquadBuilderPersistenceUnavailable,
 } from "../../../protocol/squad-builder/account-sharing/http-api-contract.js";
 import type { AccountSharingError } from "../../../services/squad-builder/account-sharing/account-sharing-error.js";
-import { use as accountSharingState } from "../../../services/squad-builder/account-sharing/list-account-sharing-state-service.js";
-import { use as accountAccessInviteResponses } from "../../../services/squad-builder/account-sharing/respond-to-account-access-invite-service.js";
-import { use as accountAccessRevocations } from "../../../services/squad-builder/account-sharing/revoke-account-access-service.js";
-import { use as accountInviteTargets } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.js";
-import { use as accountAccessInvites } from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.js";
+import { Service as AccountSharingStateService } from "../../../services/squad-builder/account-sharing/list-account-sharing-state-service.js";
+import { Service as AccountAccessInviteResponsesService } from "../../../services/squad-builder/account-sharing/respond-to-account-access-invite-service.js";
+import { Service as AccountAccessRevocationsService } from "../../../services/squad-builder/account-sharing/revoke-account-access-service.js";
+import { Service as AccountInviteTargetsService } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.js";
+import { Service as AccountAccessInvitesService } from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.js";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -98,90 +98,100 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "squadBuilderAccountSharing",
   (handlers) =>
-    handlers
-      .handle("searchAccountInviteTargets", ({ payload, request }) =>
-        Effect.gen(function* searchAccountInviteTargetsHandler() {
-          const session = yield* requireSquadBuilderSession(request);
-          return yield* withRequestCorrelation(
-            request,
-            accountInviteTargets.search({
-              accountId: toMargonemAccountId(payload.accountId),
-              actorUserId: sessionAppUserId(session),
-              query: payload.query,
-            })
-          ).pipe(Effect.mapError(mapAccountSharingError));
-        })
-      )
-      .handle("sendAccountAccessInvite", ({ payload, request }) =>
-        Effect.gen(function* sendAccountAccessInviteHandler() {
-          const session = yield* requireSquadBuilderSession(request);
-          return yield* withRequestCorrelation(
-            request,
-            accountAccessInvites.send({
-              accountId: toMargonemAccountId(payload.accountId),
-              actorUserId: sessionAppUserId(session),
-              invitedUserId: toAppUserId(payload.invitedUserId),
-            })
-          ).pipe(Effect.mapError(mapAccountSharingError));
-        })
-      )
-      .handle("respondToAccountAccessInvite", ({ payload, request }) =>
-        Effect.gen(function* respondToAccountAccessInviteHandler() {
-          const session = yield* requireSquadBuilderSession(request);
-          return yield* withRequestCorrelation(
-            request,
-            accountAccessInviteResponses.respond({
-              accessId: toMargonemAccountAccessId(payload.accessId),
-              actorUserId: sessionAppUserId(session),
-              response: payload.response,
-            })
-          ).pipe(Effect.mapError(mapAccountSharingError));
-        })
-      )
-      .handle("revokeAccountAccess", ({ payload, request }) =>
-        Effect.gen(function* revokeAccountAccessHandler() {
-          const session = yield* requireSquadBuilderSession(request);
-          return yield* withRequestCorrelation(
-            request,
-            accountAccessRevocations.revoke({
-              accessId: toMargonemAccountAccessId(payload.accessId),
-              actorUserId: sessionAppUserId(session),
-            })
-          ).pipe(Effect.mapError(mapAccountSharingError));
-        })
-      )
-      .handle("listIncomingAccountInvites", ({ request }) =>
-        Effect.gen(function* listIncomingAccountInvitesHandler() {
-          const session = yield* requireSquadBuilderSession(request);
-          return yield* withRequestCorrelation(
-            request,
-            accountSharingState.listIncomingInvites({
-              actorUserId: sessionAppUserId(session),
-            })
-          ).pipe(Effect.mapError(mapAccountSharingError));
-        })
-      )
-      .handle("listSharedAccounts", ({ request }) =>
-        Effect.gen(function* listSharedAccountsHandler() {
-          const session = yield* requireSquadBuilderSession(request);
-          return yield* withRequestCorrelation(
-            request,
-            accountSharingState.listSharedAccounts({
-              actorUserId: sessionAppUserId(session),
-            })
-          ).pipe(Effect.mapError(mapAccountSharingError));
-        })
-      )
-      .handle("listAccountAccessGrants", ({ payload, request }) =>
-        Effect.gen(function* listAccountAccessGrantsHandler() {
-          const session = yield* requireSquadBuilderSession(request);
-          return yield* withRequestCorrelation(
-            request,
-            accountSharingState.listAccountAccessGrants({
-              accountId: toMargonemAccountId(payload.accountId),
-              actorUserId: sessionAppUserId(session),
-            })
-          ).pipe(Effect.mapError(mapAccountSharingError));
-        })
-      )
+    Effect.gen(function* SquadBuilderAccountSharingHttpApiHandlers() {
+      const accountSharingStateSvc = yield* AccountSharingStateService;
+      const accountAccessInviteResponsesSvc =
+        yield* AccountAccessInviteResponsesService;
+      const accountAccessRevocationsSvc =
+        yield* AccountAccessRevocationsService;
+      const accountInviteTargetsSvc = yield* AccountInviteTargetsService;
+      const accountAccessInvitesSvc = yield* AccountAccessInvitesService;
+
+      return handlers
+        .handle("searchAccountInviteTargets", ({ payload, request }) =>
+          Effect.gen(function* searchAccountInviteTargetsHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withRequestCorrelation(
+              request,
+              accountInviteTargetsSvc.search({
+                accountId: toMargonemAccountId(payload.accountId),
+                actorUserId: sessionAppUserId(session),
+                query: payload.query,
+              })
+            ).pipe(Effect.mapError(mapAccountSharingError));
+          })
+        )
+        .handle("sendAccountAccessInvite", ({ payload, request }) =>
+          Effect.gen(function* sendAccountAccessInviteHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withRequestCorrelation(
+              request,
+              accountAccessInvitesSvc.send({
+                accountId: toMargonemAccountId(payload.accountId),
+                actorUserId: sessionAppUserId(session),
+                invitedUserId: toAppUserId(payload.invitedUserId),
+              })
+            ).pipe(Effect.mapError(mapAccountSharingError));
+          })
+        )
+        .handle("respondToAccountAccessInvite", ({ payload, request }) =>
+          Effect.gen(function* respondToAccountAccessInviteHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withRequestCorrelation(
+              request,
+              accountAccessInviteResponsesSvc.respond({
+                accessId: toMargonemAccountAccessId(payload.accessId),
+                actorUserId: sessionAppUserId(session),
+                response: payload.response,
+              })
+            ).pipe(Effect.mapError(mapAccountSharingError));
+          })
+        )
+        .handle("revokeAccountAccess", ({ payload, request }) =>
+          Effect.gen(function* revokeAccountAccessHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withRequestCorrelation(
+              request,
+              accountAccessRevocationsSvc.revoke({
+                accessId: toMargonemAccountAccessId(payload.accessId),
+                actorUserId: sessionAppUserId(session),
+              })
+            ).pipe(Effect.mapError(mapAccountSharingError));
+          })
+        )
+        .handle("listIncomingAccountInvites", ({ request }) =>
+          Effect.gen(function* listIncomingAccountInvitesHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withRequestCorrelation(
+              request,
+              accountSharingStateSvc.listIncomingInvites({
+                actorUserId: sessionAppUserId(session),
+              })
+            ).pipe(Effect.mapError(mapAccountSharingError));
+          })
+        )
+        .handle("listSharedAccounts", ({ request }) =>
+          Effect.gen(function* listSharedAccountsHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withRequestCorrelation(
+              request,
+              accountSharingStateSvc.listSharedAccounts({
+                actorUserId: sessionAppUserId(session),
+              })
+            ).pipe(Effect.mapError(mapAccountSharingError));
+          })
+        )
+        .handle("listAccountAccessGrants", ({ payload, request }) =>
+          Effect.gen(function* listAccountAccessGrantsHandler() {
+            const session = yield* requireSquadBuilderSession(request);
+            return yield* withRequestCorrelation(
+              request,
+              accountSharingStateSvc.listAccountAccessGrants({
+                accountId: toMargonemAccountId(payload.accountId),
+                actorUserId: sessionAppUserId(session),
+              })
+            ).pipe(Effect.mapError(mapAccountSharingError));
+          })
+        );
+    })
 );

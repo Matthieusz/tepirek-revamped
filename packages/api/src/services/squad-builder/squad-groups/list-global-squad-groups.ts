@@ -8,7 +8,6 @@ import {
   squadGroupListFilterPolicy,
 } from "../../../domain/squad-builder/squad-group-list-filters.js";
 import type { SquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
-import { serviceUse } from "../../../effect/service-use.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
 import type { SquadGroupStoreServiceShape } from "./squad-group-store.js";
 
@@ -45,8 +44,6 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/ListGlobalSquadGroupsService"
 ) {}
-
-export const use = serviceUse(Service);
 
 export const layer = Layer.effect(
   Service,

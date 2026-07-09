@@ -4,7 +4,6 @@ import * as Layer from "effect/Layer";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
-import { serviceUse } from "../../../effect/service-use.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import type {
   ActorCannotViewSquadGroup,
@@ -51,8 +50,6 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/ListSquadGroupsService"
 ) {}
-
-export const use = serviceUse(Service);
 
 export const layer = Layer.effect(
   Service,

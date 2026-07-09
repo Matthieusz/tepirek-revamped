@@ -11,7 +11,7 @@ import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
   layer as accountAccessInviteResponsesLayer,
-  use as accountAccessInviteResponses,
+  Service as AccountAccessInviteResponsesService,
 } from "./respond-to-account-access-invite-service.js";
 
 const parseTestUserId = (value: string) =>
@@ -60,8 +60,9 @@ it.effect("accepts an account access invite as the invited user", () => {
   );
 
   return Effect.gen(function* respondToAccountAccessInviteEffect() {
+    const svc = yield* AccountAccessInviteResponsesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* accountAccessInviteResponses.respond({
+    const invite = yield* svc.respond({
       accessId,
       actorUserId,
       response: "accept",
@@ -86,9 +87,10 @@ it.effect("surfaces invite recipient authorization failures", () => {
   );
 
   return Effect.gen(function* respondToAccountAccessInviteEffect() {
+    const svc = yield* AccountAccessInviteResponsesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      accountAccessInviteResponses.respond({
+      svc.respond({
         accessId,
         actorUserId,
         response: "decline",

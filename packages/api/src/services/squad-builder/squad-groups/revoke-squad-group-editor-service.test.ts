@@ -9,7 +9,7 @@ import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
 import {
   layer as squadGroupEditorRevocationsLayer,
-  use as squadGroupEditorRevocations,
+  Service as SquadGroupEditorRevocationsService,
 } from "./revoke-squad-group-editor-service.js";
 import { ActorDoesNotOwnSquadGroup } from "./squad-group-errors.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
@@ -61,8 +61,9 @@ it.effect("revokes a squad group editor invite as the owner", () => {
   );
 
   return Effect.gen(function* revokeSquadGroupEditorEffect() {
+    const svc = yield* SquadGroupEditorRevocationsService;
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* squadGroupEditorRevocations.revoke({
+    const invite = yield* svc.revoke({
       actorUserId,
       invitationId,
     });
@@ -86,9 +87,10 @@ it.effect("surfaces squad group ownership failures", () => {
   );
 
   return Effect.gen(function* revokeSquadGroupEditorEffect() {
+    const svc = yield* SquadGroupEditorRevocationsService;
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      squadGroupEditorRevocations.revoke({
+      svc.revoke({
         actorUserId,
         invitationId,
       })

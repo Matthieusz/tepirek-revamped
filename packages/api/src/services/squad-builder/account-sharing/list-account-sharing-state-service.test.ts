@@ -12,7 +12,7 @@ import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
   layer as accountSharingStateLayer,
-  use as accountSharingState,
+  Service as AccountSharingStateService,
 } from "./list-account-sharing-state-service.js";
 
 const parseTestUserId = (value: string) =>
@@ -61,7 +61,8 @@ it.effect("lists incoming account access invites for the actor", () => {
   );
 
   return Effect.gen(function* listIncomingAccountInvitesEffect() {
-    const invites = yield* accountSharingState.listIncomingInvites({
+    const svc = yield* AccountSharingStateService;
+    const invites = yield* svc.listIncomingInvites({
       actorUserId,
     });
 
@@ -93,9 +94,8 @@ it.effect("surfaces persistence failures", () => {
   );
 
   return Effect.gen(function* listIncomingAccountInvitesEffect() {
-    const error = yield* Effect.flip(
-      accountSharingState.listIncomingInvites({ actorUserId })
-    );
+    const svc = yield* AccountSharingStateService;
+    const error = yield* Effect.flip(svc.listIncomingInvites({ actorUserId }));
 
     expect(error._tag).toBe("SquadBuilderPersistenceUnavailable");
   }).pipe(Effect.provide(testLayer));
@@ -130,7 +130,8 @@ it.effect("lists shared accounts for the actor", () => {
   );
 
   return Effect.gen(function* listSharedAccountsEffect() {
-    const accounts = yield* accountSharingState.listSharedAccounts({
+    const svc = yield* AccountSharingStateService;
+    const accounts = yield* svc.listSharedAccounts({
       actorUserId,
     });
 
@@ -182,7 +183,8 @@ it.effect("lists account access grants for an owned account", () => {
   );
 
   return Effect.gen(function* listAccountAccessGrantsEffect() {
-    const grants = yield* accountSharingState.listAccountAccessGrants({
+    const svc = yield* AccountSharingStateService;
+    const grants = yield* svc.listAccountAccessGrants({
       accountId,
       actorUserId,
     });
@@ -216,8 +218,9 @@ it.effect(
     );
 
     return Effect.gen(function* listAccountAccessGrantsForbiddenEffect() {
+      const svc = yield* AccountSharingStateService;
       const error = yield* Effect.flip(
-        accountSharingState.listAccountAccessGrants({ accountId, actorUserId })
+        svc.listAccountAccessGrants({ accountId, actorUserId })
       );
 
       expect(error._tag).toBe("ActorDoesNotOwnMargonemAccount");

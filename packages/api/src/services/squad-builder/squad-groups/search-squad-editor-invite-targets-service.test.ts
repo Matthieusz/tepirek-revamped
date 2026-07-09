@@ -6,7 +6,7 @@ import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
 import {
   layer as squadEditorInviteTargetsLayer,
-  use as squadEditorInviteTargets,
+  Service as SquadEditorInviteTargetsService,
 } from "./search-squad-editor-invite-targets-service.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
 import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-support.js";
@@ -52,7 +52,8 @@ it.effect("searches squad editor invite targets for a group owner", () => {
   );
 
   return Effect.gen(function* searchSquadEditorInviteTargetsEffect() {
-    const targets = yield* squadEditorInviteTargets.search({
+    const svc = yield* SquadEditorInviteTargetsService;
+    const targets = yield* svc.search({
       actorUserId,
       groupId,
       query: "  Target  ",

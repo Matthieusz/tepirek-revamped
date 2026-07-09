@@ -9,7 +9,7 @@ import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
 import {
   layer as squadGroupEditorInviteResponsesLayer,
-  use as squadGroupEditorInviteResponses,
+  Service as SquadGroupEditorInviteResponsesService,
 } from "./respond-to-squad-group-invite-service.js";
 import { ActorIsNotSquadGroupInviteRecipient } from "./squad-group-errors.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
@@ -64,7 +64,8 @@ it.effect("accepts a squad group editor invite as the invited user", () => {
 
   return Effect.gen(function* respondToSquadGroupInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* squadGroupEditorInviteResponses.respond({
+    const svc = yield* SquadGroupEditorInviteResponsesService;
+    const invite = yield* svc.respond({
       actorUserId,
       invitationId,
       response: "accept",
@@ -89,9 +90,10 @@ it.effect("surfaces squad invite recipient authorization failures", () => {
   );
 
   return Effect.gen(function* respondToSquadGroupInviteEffect() {
+    const svc = yield* SquadGroupEditorInviteResponsesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      squadGroupEditorInviteResponses.respond({
+      svc.respond({
         actorUserId,
         invitationId,
         response: "decline",

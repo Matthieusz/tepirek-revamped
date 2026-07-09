@@ -4,7 +4,6 @@ import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import { emptySquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
-import { serviceUse } from "../../../effect/service-use.js";
 import type { ListSquadGroupSharingState } from "./list-squad-group-sharing-state.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
@@ -41,8 +40,6 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()(
   "@tepirek-revamped/api/squad-builder/SquadGroupSharingState"
 ) {}
-
-export const use = serviceUse(Service);
 
 export const layer = Layer.effect(
   Service,
