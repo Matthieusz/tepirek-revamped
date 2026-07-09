@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 /** A Firecrawl budget month formatted as YYYY-MM. */
 export type FirecrawlYearMonth = string & {
@@ -6,9 +7,10 @@ export type FirecrawlYearMonth = string & {
 };
 
 /** Expected failure when a Firecrawl budget month is invalid. */
-export interface InvalidFirecrawlYearMonth {
-  readonly _tag: "InvalidFirecrawlYearMonth";
-}
+export class InvalidFirecrawlYearMonth extends Schema.TaggedErrorClass<InvalidFirecrawlYearMonth>()(
+  "InvalidFirecrawlYearMonth",
+  {}
+) {}
 
 const yearMonthPattern = /^\d{4}-\d{2}$/u;
 
@@ -17,7 +19,7 @@ export const parseFirecrawlYearMonth = (
   input: string
 ): Effect.Effect<FirecrawlYearMonth, InvalidFirecrawlYearMonth> => {
   if (!yearMonthPattern.test(input)) {
-    return Effect.fail({ _tag: "InvalidFirecrawlYearMonth" });
+    return Effect.fail(new InvalidFirecrawlYearMonth());
   }
 
   // SAFETY: yearMonthPattern established the FirecrawlYearMonth invariant.
@@ -28,7 +30,8 @@ export const parseFirecrawlYearMonth = (
 export const firecrawlYearMonthFromDate = (date: Date): FirecrawlYearMonth => {
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  return Effect.runSync(parseFirecrawlYearMonth(`${year}-${month}`));
+  // SAFETY: year/month from Date always produce valid YYYY-MM.
+  return `${year}-${month}` as FirecrawlYearMonth;
 };
 
 /** Convert a Firecrawl budget month to its primitive representation. */

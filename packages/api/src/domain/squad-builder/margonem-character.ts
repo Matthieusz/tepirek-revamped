@@ -11,23 +11,25 @@ import { PositiveInt } from "./positive-int.js";
 export type MargonemWorld = "jaruna";
 
 /** Expected failure when a world string is not a known Margonem world. */
-export interface UnknownMargonemWorld {
-  readonly _tag: "UnknownMargonemWorld";
-  readonly value: string;
-}
+export class UnknownMargonemWorld extends Schema.TaggedErrorClass<UnknownMargonemWorld>()(
+  "UnknownMargonemWorld",
+  {
+    value: Schema.String,
+  }
+) {}
 
 const knownWorlds: readonly MargonemWorld[] = ["jaruna"];
 
 /** Parse a persisted world string into the domain world type. */
-export const parseMargonemWorld = (
-  value: string
-): Effect.Effect<MargonemWorld, UnknownMargonemWorld> => {
-  if ((knownWorlds as readonly string[]).includes(value)) {
-    return Effect.succeed(value as MargonemWorld);
-  }
+export const parseMargonemWorld = Effect.fn("MargonemWorld.parse")(
+  function* parseMargonemWorld(value: string) {
+    if ((knownWorlds as readonly string[]).includes(value)) {
+      return value as MargonemWorld;
+    }
 
-  return Effect.fail({ _tag: "UnknownMargonemWorld", value });
-};
+    return yield* new UnknownMargonemWorld({ value });
+  }
+);
 
 /** Normalized Margonem profession. */
 export type MargonemProfession =
@@ -69,10 +71,13 @@ export const MargonemCharacterPreviewSchema = Schema.Struct({
 });
 
 /** Expected failure when a profession label cannot be normalized. */
-export interface UnknownMargonemProfession {
-  readonly _tag: "UnknownMargonemProfession";
-  readonly label: string;
-}
+// oxlint-disable-next-line max-classes-per-file -- closely related domain errors
+export class UnknownMargonemProfession extends Schema.TaggedErrorClass<UnknownMargonemProfession>()(
+  "UnknownMargonemProfession",
+  {
+    label: Schema.String,
+  }
+) {}
 
 const professionLabels: Readonly<Record<string, MargonemProfession>> = {
   Mag: "mage",
@@ -93,18 +98,15 @@ const cleanProfessionLabel = (label: string): string =>
   label.replace(/,$/u, "").trim();
 
 /** Normalize a Polish Margonem profession label into the app domain value. */
-export const parseMargonemProfession = (
-  label: string
-): Effect.Effect<MargonemProfession, UnknownMargonemProfession> => {
-  const cleanLabel = cleanProfessionLabel(label);
-  const profession = professionLabels[cleanLabel];
+export const parseMargonemProfession = Effect.fn("MargonemProfession.parse")(
+  function* parseMargonemProfession(label: string) {
+    const cleanLabel = cleanProfessionLabel(label);
+    const profession = professionLabels[cleanLabel];
 
-  if (profession === undefined) {
-    return Effect.fail({
-      _tag: "UnknownMargonemProfession",
-      label: cleanLabel,
-    });
+    if (profession === undefined) {
+      return yield* new UnknownMargonemProfession({ label: cleanLabel });
+    }
+
+    return profession;
   }
-
-  return Effect.succeed(profession);
-};
+);

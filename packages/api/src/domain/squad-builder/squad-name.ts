@@ -2,10 +2,14 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 /** A validated squad group name. */
-export type SquadGroupName = string & { readonly __brand: "SquadGroupName" };
+export const SquadGroupName = Schema.String.pipe(
+  Schema.brand("SquadGroupName")
+);
+export type SquadGroupName = typeof SquadGroupName.Type;
 
 /** A validated squad name. */
-export type SquadName = string & { readonly __brand: "SquadName" };
+export const SquadName = Schema.String.pipe(Schema.brand("SquadName"));
+export type SquadName = typeof SquadName.Type;
 
 /** Expected failure when a squad group name is invalid. */
 export class InvalidSquadGroupName extends Schema.TaggedErrorClass<InvalidSquadGroupName>()(
@@ -16,10 +20,13 @@ export class InvalidSquadGroupName extends Schema.TaggedErrorClass<InvalidSquadG
 ) {}
 
 /** Expected failure when a squad name is invalid. */
-export interface InvalidSquadName {
-  readonly _tag: "InvalidSquadName";
-  readonly message: string;
-}
+// oxlint-disable-next-line max-classes-per-file -- closely related domain errors
+export class InvalidSquadName extends Schema.TaggedErrorClass<InvalidSquadName>()(
+  "InvalidSquadName",
+  {
+    message: Schema.String,
+  }
+) {}
 
 /** Naming limits used by squad builder. */
 export const squadBuilderNamingPolicy = {
@@ -29,54 +36,62 @@ export const squadBuilderNamingPolicy = {
 } as const;
 
 /** Parse and normalize a squad group name. */
-export const parseSquadGroupName = (
-  input: string
-): Effect.Effect<SquadGroupName, InvalidSquadGroupName> => {
-  const name = squadBuilderNamingPolicy.trim ? input.trim() : input;
+export const parseSquadGroupName = Effect.fn("SquadGroupName.parse")(
+  function* parseSquadGroupName(input: string) {
+    const name = squadBuilderNamingPolicy.trim ? input.trim() : input;
 
-  if (name.length === 0) {
-    return Effect.fail(
-      new InvalidSquadGroupName({
+    if (name.length === 0) {
+      return yield* new InvalidSquadGroupName({
         message: "Nazwa grupy składów jest wymagana",
-      })
-    );
-  }
+      });
+    }
 
-  if (name.length > squadBuilderNamingPolicy.squadGroupNameMaxLength) {
-    return Effect.fail(
-      new InvalidSquadGroupName({
+    if (name.length > squadBuilderNamingPolicy.squadGroupNameMaxLength) {
+      return yield* new InvalidSquadGroupName({
         message: `Nazwa grupy składów może mieć maksymalnie ${squadBuilderNamingPolicy.squadGroupNameMaxLength} znaków`,
-      })
+      });
+    }
+
+    return yield* Schema.decodeUnknownEffect(SquadGroupName)(name).pipe(
+      Effect.catchTag(
+        "SchemaError",
+        () =>
+          new InvalidSquadGroupName({
+            message: "Nieoczekiwany błąd walidacji nazwy grupy składów",
+          })
+      )
     );
   }
-
-  // SAFETY: non-empty trimmed string within max length established the invariant.
-  return Effect.succeed(name as SquadGroupName);
-};
+);
 
 /** Parse and normalize a squad name. */
-export const parseSquadName = (
-  input: string
-): Effect.Effect<SquadName, InvalidSquadName> => {
-  const name = squadBuilderNamingPolicy.trim ? input.trim() : input;
+export const parseSquadName = Effect.fn("SquadName.parse")(
+  function* parseSquadName(input: string) {
+    const name = squadBuilderNamingPolicy.trim ? input.trim() : input;
 
-  if (name.length === 0) {
-    return Effect.fail({
-      _tag: "InvalidSquadName",
-      message: "Nazwa składu jest wymagana",
-    });
+    if (name.length === 0) {
+      return yield* new InvalidSquadName({
+        message: "Nazwa składu jest wymagana",
+      });
+    }
+
+    if (name.length > squadBuilderNamingPolicy.squadNameMaxLength) {
+      return yield* new InvalidSquadName({
+        message: `Nazwa składu może mieć maksymalnie ${squadBuilderNamingPolicy.squadNameMaxLength} znaków`,
+      });
+    }
+
+    return yield* Schema.decodeUnknownEffect(SquadName)(name).pipe(
+      Effect.catchTag(
+        "SchemaError",
+        () =>
+          new InvalidSquadName({
+            message: "Nieoczekiwany błąd walidacji nazwy składu",
+          })
+      )
+    );
   }
-
-  if (name.length > squadBuilderNamingPolicy.squadNameMaxLength) {
-    return Effect.fail({
-      _tag: "InvalidSquadName",
-      message: `Nazwa składu może mieć maksymalnie ${squadBuilderNamingPolicy.squadNameMaxLength} znaków`,
-    });
-  }
-
-  // SAFETY: non-empty trimmed string within max length established the invariant.
-  return Effect.succeed(name as SquadName);
-};
+);
 
 /** Convert a squad group name to its primitive representation. */
 export const squadGroupNameToString = (name: SquadGroupName): string => name;

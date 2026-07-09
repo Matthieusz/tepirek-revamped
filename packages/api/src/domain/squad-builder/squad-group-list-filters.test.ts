@@ -1,6 +1,6 @@
+import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
-import { describe, expect, it } from "vitest";
+import { describe } from "vitest";
 
 import {
   parseSquadGroupListFilters,
@@ -9,105 +9,117 @@ import {
 } from "./squad-group-list-filters.js";
 
 describe("parseSquadGroupListFilters", () => {
-  it("parses missing squad group list filters as an unfiltered query", () => {
-    const exit = Effect.runSyncExit(parseSquadGroupListFilters({}));
-    expect(Exit.isSuccess(exit)).toBe(true);
-    if (!Exit.isSuccess(exit)) {
-      throw new Error("Expected empty filters to parse");
-    }
-    expect(exit.value).toEqual({ levelRange: { _tag: "AnyLevel" } });
-  });
+  it.effect(
+    "parses missing squad group list filters as an unfiltered query",
+    () =>
+      Effect.gen(function* filtersEmpty() {
+        const result = yield* parseSquadGroupListFilters({});
+        expect(result).toEqual({ levelRange: { _tag: "AnyLevel" } });
+      })
+  );
 
-  it("trims and normalizes a valid squad group name query", () => {
-    const exit = Effect.runSyncExit(
-      parseSquadGroupListFilters({ nameQuery: "  Smoki   jaruna " })
-    );
-    expect(Exit.isSuccess(exit)).toBe(true);
-    if (!Exit.isSuccess(exit)) {
-      throw new Error("Expected name query to parse");
-    }
-    expect(exit.value.nameQuery).toBeDefined();
-    if (exit.value.nameQuery === undefined) {
-      throw new Error("Expected parsed name query");
-    }
-    expect(squadGroupNameQueryToString(exit.value.nameQuery)).toBe(
-      "Smoki jaruna"
-    );
-  });
+  it.effect("trims and normalizes a valid squad group name query", () =>
+    Effect.gen(function* filtersNameQuery() {
+      const result = yield* parseSquadGroupListFilters({
+        nameQuery: "  Smoki   jaruna ",
+      });
+      expect(result.nameQuery).toBeDefined();
+      if (result.nameQuery === undefined) {
+        return;
+      }
+      expect(squadGroupNameQueryToString(result.nameQuery)).toBe(
+        "Smoki jaruna"
+      );
+    })
+  );
 
-  it("rejects a one-character squad group name query", () => {
-    const exit = Effect.runSyncExit(
-      parseSquadGroupListFilters({ nameQuery: "a" })
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("rejects a one-character squad group name query", () =>
+    Effect.gen(function* filtersRejectShortQuery() {
+      const result = yield* parseSquadGroupListFilters({
+        nameQuery: "a",
+      }).pipe(Effect.flip);
+      expect(result._tag).toBe("InvalidSquadGroupNameQuery");
+    })
+  );
 
-  it("rejects an overlong squad group name query", () => {
-    const exit = Effect.runSyncExit(
-      parseSquadGroupListFilters({ nameQuery: "a".repeat(81) })
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("rejects an overlong squad group name query", () =>
+    Effect.gen(function* filtersRejectLongQuery() {
+      const result = yield* parseSquadGroupListFilters({
+        nameQuery: "a".repeat(81),
+      }).pipe(Effect.flip);
+      expect(result._tag).toBe("InvalidSquadGroupNameQuery");
+    })
+  );
 
-  it("parses an inclusive min and max level range", () => {
-    const exit = Effect.runSyncExit(
-      parseSquadGroupListFilters({ maxLevel: 180, minLevel: 120 })
-    );
-    expect(Exit.isSuccess(exit)).toBe(true);
-    if (!Exit.isSuccess(exit)) {
-      throw new Error("Expected level range to parse");
-    }
-    expect(exit.value.levelRange._tag).toBe("BoundedLevelRange");
-    if (exit.value.levelRange._tag !== "BoundedLevelRange") {
-      throw new Error("Expected bounded range");
-    }
-    if (
-      exit.value.levelRange.minLevel === undefined ||
-      exit.value.levelRange.maxLevel === undefined
-    ) {
-      throw new Error("Expected two-sided range");
-    }
-    expect(squadGroupLevelBoundToNumber(exit.value.levelRange.minLevel)).toBe(
-      120
-    );
-    expect(squadGroupLevelBoundToNumber(exit.value.levelRange.maxLevel)).toBe(
-      180
-    );
-  });
+  it.effect("parses an inclusive min and max level range", () =>
+    Effect.gen(function* filtersBoundedRange() {
+      const result = yield* parseSquadGroupListFilters({
+        maxLevel: 180,
+        minLevel: 120,
+      });
+      expect(result.levelRange._tag).toBe("BoundedLevelRange");
+      if (result.levelRange._tag !== "BoundedLevelRange") {
+        return;
+      }
+      if (
+        result.levelRange.minLevel === undefined ||
+        result.levelRange.maxLevel === undefined
+      ) {
+        return;
+      }
+      expect(squadGroupLevelBoundToNumber(result.levelRange.minLevel)).toBe(
+        120
+      );
+      expect(squadGroupLevelBoundToNumber(result.levelRange.maxLevel)).toBe(
+        180
+      );
+    })
+  );
 
-  it("parses one-sided level ranges", () => {
-    const minExit = Effect.runSyncExit(
-      parseSquadGroupListFilters({ minLevel: 120 })
-    );
-    const maxExit = Effect.runSyncExit(
-      parseSquadGroupListFilters({ maxLevel: 180 })
-    );
-    expect(Exit.isSuccess(minExit)).toBe(true);
-    expect(Exit.isSuccess(maxExit)).toBe(true);
-  });
+  it.effect("parses one-sided level ranges", () =>
+    Effect.gen(function* filtersOneSidedRange() {
+      const minResult = yield* parseSquadGroupListFilters({ minLevel: 120 });
+      expect(minResult.levelRange._tag).toBe("BoundedLevelRange");
 
-  it("rejects non-integer, out-of-policy, or reversed level ranges", () => {
-    expect(
-      Exit.isFailure(
-        Effect.runSyncExit(parseSquadGroupListFilters({ minLevel: 1.5 }))
-      )
-    ).toBe(true);
-    expect(
-      Exit.isFailure(
-        Effect.runSyncExit(parseSquadGroupListFilters({ minLevel: 0 }))
-      )
-    ).toBe(true);
-    expect(
-      Exit.isFailure(
-        Effect.runSyncExit(parseSquadGroupListFilters({ maxLevel: 501 }))
-      )
-    ).toBe(true);
-    expect(
-      Exit.isFailure(
-        Effect.runSyncExit(
-          parseSquadGroupListFilters({ maxLevel: 120, minLevel: 180 })
-        )
-      )
-    ).toBe(true);
-  });
+      const maxResult = yield* parseSquadGroupListFilters({ maxLevel: 180 });
+      expect(maxResult.levelRange._tag).toBe("BoundedLevelRange");
+    })
+  );
+
+  it.effect("rejects non-integer level bound", () =>
+    Effect.gen(function* filtersRejectNonInteger() {
+      const result = yield* parseSquadGroupListFilters({
+        minLevel: 1.5,
+      }).pipe(Effect.flip);
+      expect(result._tag).toBe("InvalidSquadGroupLevelRange");
+    })
+  );
+
+  it.effect("rejects out-of-policy min level bound", () =>
+    Effect.gen(function* filtersRejectMinOutOfRange() {
+      const result = yield* parseSquadGroupListFilters({
+        minLevel: 0,
+      }).pipe(Effect.flip);
+      expect(result._tag).toBe("InvalidSquadGroupLevelRange");
+    })
+  );
+
+  it.effect("rejects out-of-policy max level bound", () =>
+    Effect.gen(function* filtersRejectMaxOutOfRange() {
+      const result = yield* parseSquadGroupListFilters({
+        maxLevel: 501,
+      }).pipe(Effect.flip);
+      expect(result._tag).toBe("InvalidSquadGroupLevelRange");
+    })
+  );
+
+  it.effect("rejects reversed level range", () =>
+    Effect.gen(function* filtersRejectReversed() {
+      const result = yield* parseSquadGroupListFilters({
+        maxLevel: 120,
+        minLevel: 180,
+      }).pipe(Effect.flip);
+      expect(result._tag).toBe("InvalidSquadGroupLevelRange");
+    })
+  );
 });

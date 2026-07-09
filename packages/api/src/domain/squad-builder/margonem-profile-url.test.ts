@@ -1,6 +1,6 @@
+import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
-import { describe, expect, it } from "vitest";
+import { describe } from "vitest";
 
 import {
   parseMargonemProfileUrl,
@@ -8,47 +8,39 @@ import {
 } from "./margonem-profile-url.js";
 
 describe("Margonem profile URL parsing", () => {
-  it("extracts the numeric profile id from canonical and anchored profile URLs", () => {
-    const canonical = Effect.runSyncExit(
-      parseMargonemProfileUrl("https://www.margonem.pl/profile/view,7298897")
-    );
-    const anchored = Effect.runSyncExit(
-      parseMargonemProfileUrl(
+  it.effect(
+    "extracts the numeric profile id from canonical and anchored profile URLs",
+    () =>
+      Effect.gen(function* profileUrlExtractId() {
+        const canonical = yield* parseMargonemProfileUrl(
+          "https://www.margonem.pl/profile/view,7298897"
+        );
+        const anchored = yield* parseMargonemProfileUrl(
+          "https://www.margonem.pl/profile/view,7298897#char_1296625,jaruna"
+        );
+
+        expect(canonical).toBe(7_298_897);
+        expect(anchored).toBe(7_298_897);
+      })
+  );
+
+  it.effect("rejects non-Margonem profile URLs", () =>
+    Effect.gen(function* profileUrlRejectNonMargonem() {
+      const result = yield* parseMargonemProfileUrl(
+        "https://example.com/profile/view,7298897"
+      ).pipe(Effect.flip);
+      expect(result._tag).toBe("InvalidMargonemProfileUrl");
+    })
+  );
+
+  it.effect("generates canonical profile URLs from profile ids", () =>
+    Effect.gen(function* profileUrlGenerateCanonical() {
+      const parsed = yield* parseMargonemProfileUrl(
         "https://www.margonem.pl/profile/view,7298897#char_1296625,jaruna"
-      )
-    );
-
-    expect(Exit.isSuccess(canonical)).toBe(true);
-    expect(Exit.isSuccess(anchored)).toBe(true);
-
-    if (!Exit.isSuccess(canonical) || !Exit.isSuccess(anchored)) {
-      throw new Error("Expected profile URL parsing to succeed");
-    }
-
-    expect(canonical.value).toBe(7_298_897);
-    expect(anchored.value).toBe(7_298_897);
-  });
-
-  it("rejects non-Margonem profile URLs", () => {
-    const exit = Effect.runSyncExit(
-      parseMargonemProfileUrl("https://example.com/profile/view,7298897")
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
-
-  it("generates canonical profile URLs from profile ids", () => {
-    const exit = Effect.runSyncExit(
-      parseMargonemProfileUrl(
-        "https://www.margonem.pl/profile/view,7298897#char_1296625,jaruna"
-      )
-    );
-
-    if (!Exit.isSuccess(exit)) {
-      throw new Error("Expected profile URL parsing to succeed");
-    }
-
-    expect(toMargonemProfileUrl(exit.value)).toBe(
-      "https://www.margonem.pl/profile/view,7298897"
-    );
-  });
+      );
+      expect(toMargonemProfileUrl(parsed)).toBe(
+        "https://www.margonem.pl/profile/view,7298897"
+      );
+    })
+  );
 });

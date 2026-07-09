@@ -1,65 +1,73 @@
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import { parseMargonemProfileId } from "./margonem-profile-id.js";
 import type { MargonemProfileId } from "./margonem-profile-id.js";
 
 /** Expected failure when a Margonem profile URL cannot be parsed. */
+export class InvalidMargonemProfileUrl extends Schema.TaggedErrorClass<InvalidMargonemProfileUrl>()(
+  "InvalidMargonemProfileUrl",
+  {
+    message: Schema.String,
+  }
+) {}
+
+/** Expected failure when a Margonem profile id is missing from a profile URL. */
+// oxlint-disable-next-line max-classes-per-file -- closely related domain errors
+export class MissingMargonemProfileId extends Schema.TaggedErrorClass<MissingMargonemProfileId>()(
+  "MissingMargonemProfileId",
+  {
+    message: Schema.String,
+  }
+) {}
+
+/** Expected failures while parsing a Margonem profile URL. */
 export type ParseMargonemProfileUrlError =
-  | {
-      readonly _tag: "InvalidMargonemProfileUrl";
-      readonly message: string;
-    }
-  | {
-      readonly _tag: "MissingMargonemProfileId";
-      readonly message: string;
-    };
+  | InvalidMargonemProfileUrl
+  | MissingMargonemProfileId;
 
 const profilePathPattern = /^\/profile\/view,(?<profileId>\d+)$/u;
 
 /** Parse a Margonem profile URL and return the canonical numeric profile id. */
 export const parseMargonemProfileUrl = (
   input: string
-): Effect.Effect<MargonemProfileId, ParseMargonemProfileUrlError> => {
-  let url: URL;
-
-  try {
-    url = new URL(input);
-  } catch {
-    return Effect.fail({
-      _tag: "InvalidMargonemProfileUrl",
-      message: "Invalid Margonem profile URL",
+): Effect.Effect<MargonemProfileId, ParseMargonemProfileUrlError> =>
+  Effect.gen(function* parseMargonemProfileUrlGen() {
+    const url = yield* Effect.try({
+      catch: () =>
+        new InvalidMargonemProfileUrl({
+          message: "Invalid Margonem profile URL",
+        }),
+      try: () => new URL(input),
     });
-  }
 
-  if (url.protocol !== "https:" || url.hostname !== "www.margonem.pl") {
-    return Effect.fail({
-      _tag: "InvalidMargonemProfileUrl",
-      message: "Expected a www.margonem.pl profile URL",
-    });
-  }
+    if (url.protocol !== "https:" || url.hostname !== "www.margonem.pl") {
+      return yield* new InvalidMargonemProfileUrl({
+        message: "Expected a www.margonem.pl profile URL",
+      });
+    }
 
-  const match = profilePathPattern.exec(url.pathname);
-  const profileIdText = match?.groups?.profileId;
+    const match = profilePathPattern.exec(url.pathname);
+    const profileIdText = match?.groups?.profileId;
 
-  if (profileIdText === undefined) {
-    return Effect.fail({
-      _tag: "MissingMargonemProfileId",
-      message: "Margonem profile id is missing",
-    });
-  }
+    if (profileIdText === undefined) {
+      return yield* new MissingMargonemProfileId({
+        message: "Margonem profile id is missing",
+      });
+    }
 
-  const profileId = Number(profileIdText);
-  const parsedProfileId = Effect.runSyncExit(parseMargonemProfileId(profileId));
+    const profileId = Number(profileIdText);
 
-  if (parsedProfileId._tag === "Failure") {
-    return Effect.fail({
-      _tag: "MissingMargonemProfileId",
-      message: "Margonem profile id is invalid",
-    });
-  }
-
-  return Effect.succeed(parsedProfileId.value);
-};
+    return yield* parseMargonemProfileId(profileId).pipe(
+      Effect.catchTag(
+        "InvalidPositiveInteger",
+        () =>
+          new MissingMargonemProfileId({
+            message: "Margonem profile id is invalid",
+          })
+      )
+    );
+  });
 
 /** Build the canonical Margonem profile URL used for Firecrawl and outbound links. */
 export const toMargonemProfileUrl = (profileId: MargonemProfileId): string =>

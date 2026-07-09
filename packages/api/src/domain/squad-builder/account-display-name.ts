@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 /** A validated account display name shown to the user and stored. */
 export type AccountDisplayName = string & {
@@ -6,10 +7,12 @@ export type AccountDisplayName = string & {
 };
 
 /** Expected failure when an account display name is not valid for storage. */
-export interface InvalidAccountDisplayName {
-  readonly _tag: "InvalidAccountDisplayName";
-  readonly message: string;
-}
+export class InvalidAccountDisplayName extends Schema.TaggedErrorClass<InvalidAccountDisplayName>()(
+  "InvalidAccountDisplayName",
+  {
+    message: Schema.String,
+  }
+) {}
 
 const accountDisplayNameRules = {
   maxLength: 80,
@@ -20,26 +23,25 @@ const accountDisplayNameRules = {
 /** Parse a user-facing account display name for storage. */
 export const parseAccountDisplayName = (
   input: string
-): Effect.Effect<AccountDisplayName, InvalidAccountDisplayName> => {
-  const trimmed = accountDisplayNameRules.trim ? input.trim() : input;
+): Effect.Effect<AccountDisplayName, InvalidAccountDisplayName> =>
+  Effect.gen(function* parseAccountDisplayNameGen() {
+    const trimmed = accountDisplayNameRules.trim ? input.trim() : input;
 
-  if (trimmed.length < accountDisplayNameRules.minLength) {
-    return Effect.fail({
-      _tag: "InvalidAccountDisplayName",
-      message: "Nazwa konta nie może być pusta",
-    });
-  }
+    if (trimmed.length < accountDisplayNameRules.minLength) {
+      return yield* new InvalidAccountDisplayName({
+        message: "Nazwa konta nie może być pusta",
+      });
+    }
 
-  if (trimmed.length > accountDisplayNameRules.maxLength) {
-    return Effect.fail({
-      _tag: "InvalidAccountDisplayName",
-      message: `Nazwa konta może mieć maksymalnie ${accountDisplayNameRules.maxLength} znaków`,
-    });
-  }
+    if (trimmed.length > accountDisplayNameRules.maxLength) {
+      return yield* new InvalidAccountDisplayName({
+        message: `Nazwa konta może mieć maksymalnie ${accountDisplayNameRules.maxLength} znaków`,
+      });
+    }
 
-  // SAFETY: trimmed non-empty length within maxLength established the invariant.
-  return Effect.succeed(trimmed as AccountDisplayName);
-};
+    // SAFETY: trimmed non-empty length within maxLength established the invariant.
+    return trimmed as AccountDisplayName;
+  });
 
 /** Convert an account display name to its primitive representation. */
 export const accountDisplayNameToString = (name: AccountDisplayName): string =>

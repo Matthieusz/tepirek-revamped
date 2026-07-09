@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { AccountDisplayName } from "./account-display-name.js";
 import type { AppUserId } from "./app-user-id.js";
@@ -22,12 +23,14 @@ import type {
 } from "./squad-name.js";
 
 /** Position of a squad inside a group snapshot. */
-export type SquadPosition = number & { readonly __brand: "SquadPosition" };
+export const SquadPosition = Schema.Number.pipe(Schema.brand("SquadPosition"));
+export type SquadPosition = typeof SquadPosition.Type;
 
 /** Position of a character inside one squad. */
-export type CharacterPosition = number & {
-  readonly __brand: "CharacterPosition";
-};
+export const CharacterPosition = Schema.Number.pipe(
+  Schema.brand("CharacterPosition")
+);
+export type CharacterPosition = typeof CharacterPosition.Type;
 
 /** Available character read model used by validation and UI projections. */
 export interface AvailableSquadCharacter {
@@ -137,130 +140,113 @@ const parsePosition = (
 };
 
 /** Validate a squad group snapshot against accessible Jaruna characters and group rules. */
-export const validateSquadGroupSnapshot = ({
-  availableCharacters,
-  groupId,
-  name,
-  squads,
-}: ValidateSquadGroupSnapshotInput): Effect.Effect<
-  SquadGroupDraftSnapshot,
-  SquadGroupValidationError
-> => {
-  let parsedName: SquadGroupName;
-  try {
-    parsedName = Effect.runSync(parseSquadGroupName(name));
-  } catch (error) {
-    return Effect.fail(error as SquadGroupValidationError);
-  }
+export const validateSquadGroupSnapshot = (
+  input: ValidateSquadGroupSnapshotInput
+): Effect.Effect<SquadGroupDraftSnapshot, SquadGroupValidationError> =>
+  Effect.gen(function* validateSquadGroupSnapshotGen() {
+    const { availableCharacters, groupId, name, squads } = input;
 
-  const availableByCharacterId = new Map<number, AvailableSquadCharacter>();
-  for (const character of availableCharacters) {
-    availableByCharacterId.set(character.characterId, character);
-  }
+    const parsedName = yield* parseSquadGroupName(name);
 
-  const groupCharacterIds = new Set<number>();
-  const parsedSquads: SquadDraftSnapshot[] = [];
-
-  for (const squad of squads) {
-    if (squad.clientKey.trim().length === 0) {
-      return Effect.fail({
-        _tag: "InvalidSquadSnapshot",
-        message: "Każdy skład musi mieć klucz klienta",
-      });
+    const availableByCharacterId = new Map<number, AvailableSquadCharacter>();
+    for (const character of availableCharacters) {
+      availableByCharacterId.set(character.characterId, character);
     }
 
-    let parsedSquadName: SquadName;
-    let parsedSquadPosition: number;
-    try {
-      parsedSquadName = Effect.runSync(parseSquadName(squad.name));
-      parsedSquadPosition = Effect.runSync(parsePosition(squad.position));
-    } catch (error) {
-      return Effect.fail(error as SquadGroupValidationError);
-    }
+    const groupCharacterIds = new Set<number>();
+    const parsedSquads: SquadDraftSnapshot[] = [];
 
-    if (squad.characters.length > maxCharactersPerSquad) {
-      return Effect.fail({
-        _tag: "TooManyCharactersInSquad",
-        maxCharacters: maxCharactersPerSquad,
-        squadClientKey: squad.clientKey,
-      });
-    }
+    for (const squad of squads) {
+      if (squad.clientKey.trim().length === 0) {
+        return yield* Effect.fail({
+          _tag: "InvalidSquadSnapshot",
+          message: "Każdy skład musi mieć klucz klienta",
+        } as const);
+      }
 
-    const squadCharacterIds = new Set<number>();
-    const squadAccountIds = new Set<number>();
-    const parsedCharacters: SquadCharacterDraftPlacement[] = [];
+      const parsedSquadName = yield* parseSquadName(squad.name);
+      const parsedSquadPosition = yield* parsePosition(squad.position);
 
-    for (const character of squad.characters) {
-      let parsedCharacterPosition: number;
-      try {
-        parsedCharacterPosition = Effect.runSync(
-          parsePosition(character.position)
+      if (squad.characters.length > maxCharactersPerSquad) {
+        return yield* Effect.fail({
+          _tag: "TooManyCharactersInSquad",
+          maxCharacters: maxCharactersPerSquad,
+          squadClientKey: squad.clientKey,
+        } as const);
+      }
+
+      const squadCharacterIds = new Set<number>();
+      const squadAccountIds = new Set<number>();
+      const parsedCharacters: SquadCharacterDraftPlacement[] = [];
+
+      for (const character of squad.characters) {
+        const parsedCharacterPosition = yield* parsePosition(
+          character.position
         );
-      } catch (error) {
-        return Effect.fail(error as SquadGroupValidationError);
-      }
 
-      const availableCharacter = availableByCharacterId.get(
-        character.characterId
-      );
-      if (availableCharacter === undefined) {
-        return Effect.fail({
-          _tag: "SquadCharacterNotAccessible",
+        const availableCharacter = availableByCharacterId.get(
+          character.characterId
+        );
+        if (availableCharacter === undefined) {
+          return yield* Effect.fail({
+            _tag: "SquadCharacterNotAccessible",
+            characterId: character.characterId,
+          } as const);
+        }
+
+        if (availableCharacter.world !== "jaruna") {
+          return yield* Effect.fail({
+            _tag: "SquadCharacterNotJaruna",
+            characterId: character.characterId,
+          } as const);
+        }
+
+        if (squadCharacterIds.has(character.characterId)) {
+          return yield* Effect.fail({
+            _tag: "DuplicateCharacterInSquad",
+            characterId: character.characterId,
+            squadClientKey: squad.clientKey,
+          } as const);
+        }
+
+        if (groupCharacterIds.has(character.characterId)) {
+          return yield* Effect.fail({
+            _tag: "DuplicateCharacterInSquadGroup",
+            characterId: character.characterId,
+          } as const);
+        }
+
+        if (squadAccountIds.has(availableCharacter.accountId)) {
+          return yield* Effect.fail({
+            _tag: "DuplicateAccountInSquad",
+            accountId: availableCharacter.accountId,
+            squadClientKey: squad.clientKey,
+          } as const);
+        }
+
+        squadCharacterIds.add(character.characterId);
+        groupCharacterIds.add(character.characterId);
+        squadAccountIds.add(availableCharacter.accountId);
+        // SAFETY: parsedCharacterPosition is a safe non-negative integer from parsePosition.
+        parsedCharacters.push({
           characterId: character.characterId,
+          position: parsedCharacterPosition as CharacterPosition,
         });
       }
 
-      if (availableCharacter.world !== "jaruna") {
-        return Effect.fail({
-          _tag: "SquadCharacterNotJaruna",
-          characterId: character.characterId,
-        });
-      }
-
-      if (squadCharacterIds.has(character.characterId)) {
-        return Effect.fail({
-          _tag: "DuplicateCharacterInSquad",
-          characterId: character.characterId,
-          squadClientKey: squad.clientKey,
-        });
-      }
-
-      if (groupCharacterIds.has(character.characterId)) {
-        return Effect.fail({
-          _tag: "DuplicateCharacterInSquadGroup",
-          characterId: character.characterId,
-        });
-      }
-
-      if (squadAccountIds.has(availableCharacter.accountId)) {
-        return Effect.fail({
-          _tag: "DuplicateAccountInSquad",
-          accountId: availableCharacter.accountId,
-          squadClientKey: squad.clientKey,
-        });
-      }
-
-      squadCharacterIds.add(character.characterId);
-      groupCharacterIds.add(character.characterId);
-      squadAccountIds.add(availableCharacter.accountId);
-      parsedCharacters.push({
-        characterId: character.characterId,
-        position: parsedCharacterPosition as CharacterPosition,
+      // SAFETY: parsedSquadPosition is a safe non-negative integer from parsePosition.
+      parsedSquads.push({
+        characters: parsedCharacters,
+        clientKey: squad.clientKey,
+        name: parsedSquadName,
+        position: parsedSquadPosition as SquadPosition,
+        ...(squad.squadId === undefined ? {} : { squadId: squad.squadId }),
       });
     }
 
-    parsedSquads.push({
-      characters: parsedCharacters,
-      clientKey: squad.clientKey,
-      name: parsedSquadName,
-      position: parsedSquadPosition as SquadPosition,
-      ...(squad.squadId === undefined ? {} : { squadId: squad.squadId }),
-    });
-  }
-
-  return Effect.succeed({
-    groupId,
-    name: parsedName,
-    squads: parsedSquads,
+    return {
+      groupId,
+      name: parsedName,
+      squads: parsedSquads,
+    };
   });
-};

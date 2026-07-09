@@ -12,6 +12,7 @@ export const MargonemAccountId = PositiveInt.pipe(
 export type MargonemAccountId = typeof MargonemAccountId.Type;
 
 /** HTTP/API schema for a persisted Margonem account row id. */
+// SAFETY: Unbranded export for protocol-boundary compatibility.
 export const MargonemAccountIdSchema = PositiveInt.annotate({
   identifier: "MargonemAccountId",
 });

@@ -1,45 +1,45 @@
+import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
-import { describe, expect, it } from "vitest";
+import { describe } from "vitest";
 
-import {
-  accountDisplayNameToString,
-  parseAccountDisplayName,
-} from "./account-display-name.js";
+import { parseAccountDisplayName } from "./account-display-name.js";
 
 describe("parseAccountDisplayName", () => {
-  it("trims and accepts a non-empty account display name", () => {
-    const exit = Effect.runSyncExit(parseAccountDisplayName("  informati  "));
+  it.effect("trims and accepts a non-empty account display name", () =>
+    Effect.gen(function* displayNameTrimAndAccept() {
+      const name = yield* parseAccountDisplayName("  informati  ");
+      expect(name).toBe("informati");
+    })
+  );
 
-    expect(Exit.isSuccess(exit)).toBe(true);
-    if (!Exit.isSuccess(exit)) {
-      throw new Error("Expected display name to be valid");
-    }
+  it.effect("rejects empty account display name", () =>
+    Effect.gen(function* displayNameRejectEmpty() {
+      const result = yield* parseAccountDisplayName("   ").pipe(Effect.flip);
+      expect(result._tag).toBe("InvalidAccountDisplayName");
+    })
+  );
 
-    expect(accountDisplayNameToString(exit.value)).toBe("informati");
-  });
+  it.effect("rejects empty string", () =>
+    Effect.gen(function* displayNameRejectBlank() {
+      const result = yield* parseAccountDisplayName("").pipe(Effect.flip);
+      expect(result._tag).toBe("InvalidAccountDisplayName");
+    })
+  );
 
-  it("rejects empty and overlong account display names", () => {
-    expect(
-      Exit.isFailure(Effect.runSyncExit(parseAccountDisplayName("   ")))
-    ).toBe(true);
-    expect(
-      Exit.isFailure(Effect.runSyncExit(parseAccountDisplayName("")))
-    ).toBe(true);
-    expect(
-      Exit.isFailure(
-        Effect.runSyncExit(parseAccountDisplayName("a".repeat(81)))
-      )
-    ).toBe(true);
+  it.effect("rejects overlong account display name", () =>
+    Effect.gen(function* displayNameRejectOverlong() {
+      const result = yield* parseAccountDisplayName("a".repeat(81)).pipe(
+        Effect.flip
+      );
+      expect(result._tag).toBe("InvalidAccountDisplayName");
+    })
+  );
 
-    const maxName = "a".repeat(80);
-    const maxExit = Effect.runSyncExit(parseAccountDisplayName(maxName));
-
-    expect(Exit.isSuccess(maxExit)).toBe(true);
-    if (!Exit.isSuccess(maxExit)) {
-      throw new Error("Expected 80-char display name to be valid");
-    }
-
-    expect(accountDisplayNameToString(maxExit.value)).toBe(maxName);
-  });
+  it.effect("accepts a name at the maximum boundary", () =>
+    Effect.gen(function* displayNameMaxBoundary() {
+      const maxName = "a".repeat(80);
+      const name = yield* parseAccountDisplayName(maxName);
+      expect(name).toBe(maxName);
+    })
+  );
 });
