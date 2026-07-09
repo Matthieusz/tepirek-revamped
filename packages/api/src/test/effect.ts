@@ -1,3 +1,29 @@
+/**
+ * Custom Effect runtime helpers for integration tests.
+ *
+ * Needed where `@effect/vitest` (`it.effect` / `it.live`) is not sufficient:
+ *
+ * 1. **Mixed DB-query and Effect-service tests** — integration tests in this
+ *    project seed data and assert on raw database rows (via `testDb`) *and*
+ *    call Effect services in the same test body. Wrapping every raw DB call in
+ *    `Effect.promise()` adds noise without value.
+ *
+ * 2. **`vi.useFakeTimers()` control** — some services use `new Date()`
+ *    internally (not `Clock.currentTimeMillis`). These tests control time via
+ *    `vi.useFakeTimers()` + `vi.setSystemTime()`, which is incompatible with
+ *    Effect's `TestClock`. `it.effect()` provides `TestClock` automatically;
+ *    `it.live()` provides the real clock. Neither supports `vi.useFakeTimers()`
+ *    style time manipulation at the JS-engine level.
+ *
+ * 3. **Promise-style assertions** — these tests use `await
+ *    expect(...).rejects.toMatchObject(...)` and similar patterns that expect
+ *    a plain Promise, not an Effect.
+ *
+ * For ordinary Effect unit tests, always prefer `it.effect()` from
+ * `@effect/vitest`. This module is only for integration-test boundaries where
+ * the above constraints apply.
+ */
+
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
