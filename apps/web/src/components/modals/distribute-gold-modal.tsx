@@ -176,7 +176,8 @@ export const DistributeGoldModal = ({
       : heroes?.filter((h) => h.eventId?.toString() === eventId)
   )?.toSorted((a, b) => a.level - b.level);
 
-  const parsedHeroId = Number.parseInt(heroId, 10);
+  const parsedHeroId =
+    heroId !== ALL_FILTER ? Number.parseInt(heroId, 10) : null;
   const heroStatsResult = useAtomValue(heroStatsAtom({ heroId: parsedHeroId }));
   const heroStats =
     heroId !== ALL_FILTER && open

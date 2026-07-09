@@ -1,4 +1,4 @@
-import { Atom } from "@effect-atom/atom-react";
+import { Atom, Result } from "@effect-atom/atom-react";
 import { Effect } from "effect";
 
 import {
@@ -35,6 +35,24 @@ const rankingByKeyAtom = Atom.family((key: RankingKey) => {
 export const rankingAtom = (payload: RankingInput) =>
   rankingByKeyAtom(rankingKey(payload));
 
+interface HeroStatsData {
+  readonly currentPointWorth: number;
+  readonly heroId: number;
+  readonly heroName: string;
+  readonly totalBets: number;
+  readonly totalPoints: number;
+}
+
+const HERO_STATS_PLACEHOLDER: HeroStatsData = {
+  currentPointWorth: 0,
+  heroId: 0,
+  heroName: "",
+  totalBets: 0,
+  totalPoints: 0,
+};
+
+const disabledHeroStatsAtom = Atom.make(Result.success(HERO_STATS_PLACEHOLDER));
+
 /** Resource atom for one hero's ranking statistics. */
 const heroStatsByHeroIdAtom = Atom.family((heroId: number) =>
   appHttpApiAtom(
@@ -45,8 +63,10 @@ const heroStatsByHeroIdAtom = Atom.family((heroId: number) =>
   )
 );
 
-export const heroStatsAtom = (payload: { readonly heroId: number }) =>
-  heroStatsByHeroIdAtom(payload.heroId);
+export const heroStatsAtom = (payload: { readonly heroId: number | null }) =>
+  payload.heroId === null
+    ? disabledHeroStatsAtom
+    : heroStatsByHeroIdAtom(payload.heroId);
 
 /** Resource atom for the oldest unpaid event id. */
 export const oldestUnpaidEventAtom = appHttpApiAtom(
