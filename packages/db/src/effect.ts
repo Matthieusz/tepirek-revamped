@@ -8,6 +8,11 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import { types } from "pg";
 
+import {
+  DatabaseUrlConfig,
+  DatabaseUrlConfigLayer,
+} from "./database-url-config.js";
+
 /**
  * PostgreSQL type OIDs for date/time types. `pg` parses these into JS `Date`
  * values by default (UTC-normalized); Drizzle's Effect PostgreSQL driver
@@ -70,12 +75,38 @@ export const makePgClientLayer = (databaseUrl: Redacted.Redacted) =>
 export const makePgClientLayerFromUrl = (databaseUrl: string) =>
   makePgClientLayer(Redacted.make(databaseUrl));
 
+/**
+ * Live PgClient layer that reads the database URL from DatabaseUrlConfig.
+ *
+ * Uses `Layer.unwrap` so the config service is resolved once during layer
+ * construction, matching the reference pattern in `pg-live.ts`.
+ */
+export const PgClientLiveFromConfig = Layer.unwrap(
+  Effect.gen(function* PgClientLiveFromConfig() {
+    const url = yield* DatabaseUrlConfig;
+    return makePgClientLayer(url);
+  })
+).pipe(Layer.orDie);
+
 /** Layer that provides the Effect-native Drizzle database from a PgClient. */
 export const EffectDatabaseLayer: Layer.Layer<
   EffectDatabase,
   never,
   Pg.PgClient
 > = Layer.effect(EffectDatabase, makeDrizzleDatabase());
+
+/**
+ * Live EffectDatabase layer that reads `DATABASE_URL` from Effect Config.
+ *
+ * Composes `DatabaseUrlConfig`, `PgClientLiveFromConfig`, and
+ * `EffectDatabaseLayer` so that the database URL is provided by config at
+ * the composition root rather than a raw process.env read.
+ */
+export const EffectDatabaseLiveFromConfig = EffectDatabaseLayer.pipe(
+  Layer.provide(
+    PgClientLiveFromConfig.pipe(Layer.provide(DatabaseUrlConfigLayer))
+  )
+);
 
 /** Create the live Effect database layer for application composition. */
 export const makeLiveDatabaseLayer = (databaseUrl: string) =>

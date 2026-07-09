@@ -4,7 +4,7 @@ import * as Layer from "effect/Layer";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
 
-import { makeApiLiveLayer } from "./server/effect-app.js";
+import { makeApiLiveLayerFromConfig } from "./server/effect-app.js";
 import { AppHttpApiLayer } from "./server/http-api-handlers.js";
 import {
   createHero,
@@ -17,13 +17,8 @@ process.env.BETTER_AUTH_URL ??= "http://localhost:3000";
 process.env.DISCORD_CLIENT_ID ??= "test-discord-client-id";
 process.env.DISCORD_CLIENT_SECRET ??= "test-discord-client-secret";
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL environment variable is required");
-}
-
 const appHttpApiLayer = AppHttpApiLayer.pipe(
-  Layer.provide(makeApiLiveLayer(databaseUrl)),
+  Layer.provide(makeApiLiveLayerFromConfig()),
   Layer.provide(HttpServer.layerServices)
 ) as Layer.Layer<HttpRouter.HttpRouter>;
 

@@ -1,4 +1,8 @@
-import { makeLiveDatabaseLayer } from "@tepirek-revamped/db/effect";
+import type { EffectDatabase } from "@tepirek-revamped/db/effect";
+import {
+  EffectDatabaseLiveFromConfig,
+  makeLiveDatabaseLayer,
+} from "@tepirek-revamped/db/effect";
 import { ManagedRuntime } from "effect";
 import type { ConfigError } from "effect/Config";
 import type * as Context from "effect/Context";
@@ -88,7 +92,7 @@ import type { VaultService } from "../services/vault/vault-service.js";
 export const apiLayerMemoMap = Layer.makeMemoMapUnsafe();
 
 const makeApiStableLayer = (
-  databaseLayer: ReturnType<typeof makeLiveDatabaseLayer>
+  databaseLayer: Layer.Layer<EffectDatabase, SqlError | ConfigError, never>
 ): Layer.Layer<SquadBuilderServices, SqlError | ConfigError> => {
   const databaseBackedStores = Layer.mergeAll(
     AnnouncementStoreLayer.pipe(Layer.provide(databaseLayer)),
@@ -167,6 +171,15 @@ export const makeApiSquadBuilderLayer = (databaseUrl: string) => {
 
 export const makeApiLiveLayer = (databaseUrl: string) =>
   makeApiStableLayer(makeLiveDatabaseLayer(databaseUrl));
+
+/**
+ * Build the full API live layer using Effect Config to read `DATABASE_URL`.
+ *
+ * Reads `DATABASE_URL` through `EffectDatabaseLiveFromConfig` at the
+ * composition root rather than a raw process.env read.
+ */
+export const makeApiLiveLayerFromConfig = () =>
+  makeApiStableLayer(EffectDatabaseLiveFromConfig);
 
 export interface ApiRuntime<I, S, E> {
   readonly dispose: () => Promise<void>;
@@ -271,6 +284,24 @@ type SquadBuilderServices =
 /** Shared runtime factory for Effect-based API modules (raw effect, composite layer). */
 export const makeApiRuntime = (databaseUrl: string) => {
   const memoized = memoizeRuntime(makeApiLiveLayer(databaseUrl));
+
+  return {
+    dispose: memoized.dispose,
+    getManagedRuntime: memoized.getManagedRuntime,
+    runPromise: <A, Err, R extends SquadBuilderServices>(
+      effect: Effect<A, Err, R>,
+      options?: RunOptions
+    ) => memoized.getManagedRuntime().runPromise(effect, options),
+    runPromiseExit: <A, Err, R extends SquadBuilderServices>(
+      effect: Effect<A, Err, R>,
+      options?: RunOptions
+    ) => memoized.getManagedRuntime().runPromiseExit(effect, options),
+  };
+};
+
+/** Shared runtime factory using Effect Config to read `DATABASE_URL`. */
+export const makeApiRuntimeFromConfig = () => {
+  const memoized = memoizeRuntime(makeApiLiveLayerFromConfig());
 
   return {
     dispose: memoized.dispose,

@@ -2,8 +2,8 @@ import "dotenv/config";
 import * as Observability from "@tepirek-revamped/api/observability";
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import {
-  makeApiLiveLayer,
-  makeApiRuntime,
+  makeApiLiveLayerFromConfig,
+  makeApiRuntimeFromConfig,
 } from "@tepirek-revamped/api/server/effect-app";
 import { HealthHttpApiLayer } from "@tepirek-revamped/api/server/health/http-api-handlers";
 import { AppHttpApiLayer } from "@tepirek-revamped/api/server/http-api-handlers";
@@ -27,25 +27,15 @@ initLogger({
 
 const app = new Hono<EvlogVariables>();
 
+// Startup-boundary env reads. Effect-managed code uses Config services
+// (e.g. DatabaseUrlConfig) rather than raw process.env access.
 const corsOrigin = process.env.CORS_ORIGIN;
-
 if (!corsOrigin) {
   throw new Error("CORS_ORIGIN environment variable is required");
 }
 
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL environment variable is required");
-}
-
-// Effect's default ConfigProvider snapshots process.env on first read. This
-// server reads required env at startup and builds long-lived runtimes from those
-// values. If a listener/request-app construction ever needs to re-read env after
-// startup (for example in tests that mutate process.env), provide
-// ConfigProvider.layer(ConfigProvider.fromEnv()) at that construction boundary.
 /** Shared Effect runtime for migrated API modules. */
-export const apiEffectRuntime = makeApiRuntime(databaseUrl);
+export const apiEffectRuntime = makeApiRuntimeFromConfig();
 
 export const disposeApiEffectRuntime = async (): Promise<void> => {
   await apiEffectRuntime.dispose();
@@ -55,7 +45,7 @@ export const disposeApiEffectRuntime = async (): Promise<void> => {
 // and HttpServer services required by the HttpApi layer before it reaches
 // toWebHandler; this narrows the exported web handler to the Hono boundary.
 const appHttpApiLayer = AppHttpApiLayer.pipe(
-  Layer.provide(makeApiLiveLayer(databaseUrl)),
+  Layer.provide(makeApiLiveLayerFromConfig()),
   Layer.provide(HttpServer.layerServices),
   Layer.provideMerge(Observability.layer)
 ) as Layer.Layer<HttpRouter.HttpRouter>;
