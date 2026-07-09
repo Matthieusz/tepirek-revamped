@@ -1,7 +1,6 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params -- Effect.catch uses callback pattern
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
@@ -20,37 +19,19 @@ import {
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/squad-groups/http-api-contract.js";
 import type { CreateSquadGroupError } from "../../../services/squad-builder/squad-groups/create-squad-group.js";
-import {
-  layer as createSquadGroupLayer,
-  use as createSquadGroup,
-} from "../../../services/squad-builder/squad-groups/create-squad-group.js";
-import {
-  layer as listGlobalSquadGroupsLayer,
-  use as listGlobalSquadGroups,
-} from "../../../services/squad-builder/squad-groups/list-global-squad-groups.js";
+import { use as createSquadGroup } from "../../../services/squad-builder/squad-groups/create-squad-group.js";
+import { use as listGlobalSquadGroups } from "../../../services/squad-builder/squad-groups/list-global-squad-groups.js";
 import type {
   GetSquadGroupDetailError,
   ListMySquadGroupsError,
 } from "../../../services/squad-builder/squad-groups/list-squad-groups.js";
-import {
-  layer as listSquadGroupsLayer,
-  use as listSquadGroups,
-} from "../../../services/squad-builder/squad-groups/list-squad-groups.js";
+import { use as listSquadGroups } from "../../../services/squad-builder/squad-groups/list-squad-groups.js";
 import type { EffectSharedSquadGroupSaveError } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
-import {
-  layer as saveSharedSquadGroupCharactersLayer,
-  use as saveSharedSquadGroupCharacters,
-} from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
+import { use as saveSharedSquadGroupCharacters } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
 import type { SaveSquadGroupError } from "../../../services/squad-builder/squad-groups/save-squad-group.js";
-import {
-  layer as saveSquadGroupLayer,
-  use as saveSquadGroup,
-} from "../../../services/squad-builder/squad-groups/save-squad-group.js";
+import { use as saveSquadGroup } from "../../../services/squad-builder/squad-groups/save-squad-group.js";
 import type { GlobalSquadVisibilityError } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.js";
-import {
-  layer as setSquadGroupVisibilityLayer,
-  use as setSquadGroupVisibility,
-} from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.js";
+import { use as setSquadGroupVisibility } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.js";
 import { SquadGroupStoreService } from "../../../services/squad-builder/squad-groups/squad-group-store.js";
 import {
   requireSquadBuilderSession,
@@ -265,15 +246,4 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
           ).pipe(Effect.mapError(mapSquadGroupsError));
         })
       )
-).pipe(
-  Layer.provide(
-    Layer.mergeAll(
-      createSquadGroupLayer,
-      listSquadGroupsLayer,
-      listGlobalSquadGroupsLayer,
-      saveSquadGroupLayer,
-      saveSharedSquadGroupCharactersLayer,
-      setSquadGroupVisibilityLayer
-    )
-  )
 );

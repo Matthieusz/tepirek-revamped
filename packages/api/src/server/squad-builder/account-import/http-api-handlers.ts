@@ -1,7 +1,6 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params -- Effect.catch uses callback pattern
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
@@ -18,19 +17,10 @@ import {
 } from "../../../protocol/squad-builder/account-import/http-api-contract.js";
 import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store-service.js";
 import type { ConfirmOwnedAccountImportServiceError } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.js";
-import {
-  layer as confirmOwnedAccountImportLayer,
-  use as confirmOwnedAccountImport,
-} from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.js";
-import {
-  layer as previewMargonemProfileImportLayer,
-  use as previewMargonemProfileImport,
-} from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
+import { use as confirmOwnedAccountImport } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.js";
+import { use as previewMargonemProfileImport } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
 import type { PreviewMargonemProfileImportError } from "../../../services/squad-builder/account-import/preview-margonem-profile-import.js";
-import {
-  layer as previewOwnedAccountImportsLayer,
-  use as previewOwnedAccountImports,
-} from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.js";
+import { use as previewOwnedAccountImports } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.js";
 import type { PreviewOwnedAccountImportsError } from "../../../services/squad-builder/account-import/preview-owned-account-imports.js";
 import {
   requireSquadBuilderSession,
@@ -160,12 +150,4 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
           ).pipe(Effect.mapError(mapAccountImportError));
         })
       )
-).pipe(
-  Layer.provide(
-    Layer.mergeAll(
-      previewMargonemProfileImportLayer,
-      previewOwnedAccountImportsLayer,
-      confirmOwnedAccountImportLayer
-    )
-  )
 );

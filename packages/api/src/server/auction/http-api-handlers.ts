@@ -1,14 +1,10 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import { auth } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import {
-  AuctionStore,
-  AuctionStoreLayer,
-} from "../../adapters/auction/auction-store.js";
+import { AuctionStore } from "../../adapters/auction/auction-store.js";
 import {
   AuctionForbidden,
   AuctionUnauthorized,
@@ -87,4 +83,4 @@ export const AuctionHttpApiHandlers = HttpApiBuilder.group(
           });
         })
       )
-).pipe(Layer.provide(AuctionStoreLayer));
+);

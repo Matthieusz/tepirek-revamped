@@ -1,11 +1,10 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import { auth } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { TodoStore, TodoStoreLayer } from "../../adapters/todo/todo-store.js";
+import { TodoStore } from "../../adapters/todo/todo-store.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
 import {
   TodoForbidden,
@@ -91,4 +90,4 @@ export const TodoHttpApiHandlers = HttpApiBuilder.group(
           });
         })
       )
-).pipe(Layer.provide(TodoStoreLayer));
+);

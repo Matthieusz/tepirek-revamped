@@ -1,7 +1,6 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params -- Effect.catch uses callback pattern
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
@@ -17,15 +16,9 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/account-refetch/http-api-contract.js";
-import {
-  layer as applyAccountRefetchLayer,
-  use as applyAccountRefetch,
-} from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.js";
+import { use as applyAccountRefetch } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.js";
 import type { ApplyAccountRefetchError } from "../../../services/squad-builder/account-refetch/apply-account-refetch.js";
-import {
-  layer as previewAccountRefetchLayer,
-  use as previewAccountRefetch,
-} from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.js";
+import { use as previewAccountRefetch } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.js";
 import type { PreviewAccountRefetchError } from "../../../services/squad-builder/account-refetch/preview-account-refetch.js";
 import {
   requireSquadBuilderSession,
@@ -128,8 +121,4 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
           ).pipe(Effect.mapError(mapAccountRefetchError));
         })
       )
-).pipe(
-  Layer.provide(
-    Layer.mergeAll(previewAccountRefetchLayer, applyAccountRefetchLayer)
-  )
 );

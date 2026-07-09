@@ -1,7 +1,6 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params -- Effect.catch uses callback pattern
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
@@ -18,26 +17,11 @@ import {
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
 } from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.js";
-import {
-  layer as squadGroupSharingStateLayer,
-  use as squadGroupSharingState,
-} from "../../../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
-import {
-  layer as squadGroupEditorInviteResponsesLayer,
-  use as squadGroupEditorInviteResponses,
-} from "../../../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
-import {
-  layer as squadGroupEditorRevocationsLayer,
-  use as squadGroupEditorRevocations,
-} from "../../../services/squad-builder/squad-groups/revoke-squad-group-editor-service.js";
-import {
-  layer as squadEditorInviteTargetsLayer,
-  use as squadEditorInviteTargets,
-} from "../../../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.js";
-import {
-  layer as squadGroupEditorInvitesLayer,
-  use as squadGroupEditorInvites,
-} from "../../../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
+import { use as squadGroupSharingState } from "../../../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
+import { use as squadGroupEditorInviteResponses } from "../../../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
+import { use as squadGroupEditorRevocations } from "../../../services/squad-builder/squad-groups/revoke-squad-group-editor-service.js";
+import { use as squadEditorInviteTargets } from "../../../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.js";
+import { use as squadGroupEditorInvites } from "../../../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
 import type { SquadGroupSharingError } from "../../../services/squad-builder/squad-groups/squad-group-sharing-error.js";
 import {
   requireSquadBuilderSession,
@@ -231,14 +215,4 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
             ).pipe(Effect.mapError(mapSquadGroupSharingError));
           })
         )
-  ).pipe(
-    Layer.provide(
-      Layer.mergeAll(
-        squadEditorInviteTargetsLayer,
-        squadGroupEditorInvitesLayer,
-        squadGroupEditorInviteResponsesLayer,
-        squadGroupEditorRevocationsLayer,
-        squadGroupSharingStateLayer
-      )
-    )
   );

@@ -1,14 +1,10 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import { auth } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import {
-  SkillsStore,
-  SkillsStoreLayer,
-} from "../../adapters/skills/skills-store.js";
+import { SkillsStore } from "../../adapters/skills/skills-store.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
 import {
   SkillsForbidden,
@@ -121,4 +117,4 @@ export const SkillsHttpApiHandlers = HttpApiBuilder.group(
           return yield* store.listSkillsByRange(payload);
         })
       )
-).pipe(Layer.provide(SkillsStoreLayer));
+);

@@ -1,7 +1,6 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params -- Effect.catch uses callback pattern
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
@@ -19,26 +18,11 @@ import {
   SquadBuilderPersistenceUnavailable,
 } from "../../../protocol/squad-builder/account-sharing/http-api-contract.js";
 import type { AccountSharingError } from "../../../services/squad-builder/account-sharing/account-sharing-error.js";
-import {
-  layer as accountSharingStateLayer,
-  use as accountSharingState,
-} from "../../../services/squad-builder/account-sharing/list-account-sharing-state-service.js";
-import {
-  layer as accountAccessInviteResponsesLayer,
-  use as accountAccessInviteResponses,
-} from "../../../services/squad-builder/account-sharing/respond-to-account-access-invite-service.js";
-import {
-  layer as accountAccessRevocationsLayer,
-  use as accountAccessRevocations,
-} from "../../../services/squad-builder/account-sharing/revoke-account-access-service.js";
-import {
-  layer as accountInviteTargetsLayer,
-  use as accountInviteTargets,
-} from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.js";
-import {
-  layer as accountAccessInvitesLayer,
-  use as accountAccessInvites,
-} from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.js";
+import { use as accountSharingState } from "../../../services/squad-builder/account-sharing/list-account-sharing-state-service.js";
+import { use as accountAccessInviteResponses } from "../../../services/squad-builder/account-sharing/respond-to-account-access-invite-service.js";
+import { use as accountAccessRevocations } from "../../../services/squad-builder/account-sharing/revoke-account-access-service.js";
+import { use as accountInviteTargets } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.js";
+import { use as accountAccessInvites } from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.js";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -200,14 +184,4 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
           ).pipe(Effect.mapError(mapAccountSharingError));
         })
       )
-).pipe(
-  Layer.provide(
-    Layer.mergeAll(
-      accountInviteTargetsLayer,
-      accountAccessInvitesLayer,
-      accountAccessInviteResponsesLayer,
-      accountAccessRevocationsLayer,
-      accountSharingStateLayer
-    )
-  )
 );

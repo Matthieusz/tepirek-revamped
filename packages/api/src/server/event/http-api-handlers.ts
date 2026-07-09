@@ -1,14 +1,10 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import { auth } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import {
-  EventStore,
-  EventStoreLayer,
-} from "../../adapters/event/event-store.js";
+import { EventStore } from "../../adapters/event/event-store.js";
 import {
   EventForbidden,
   EventUnauthorized,
@@ -89,4 +85,4 @@ export const EventHttpApiHandlers = HttpApiBuilder.group(
           yield* store.toggleActive(payload);
         })
       )
-).pipe(Layer.provide(EventStoreLayer));
+);

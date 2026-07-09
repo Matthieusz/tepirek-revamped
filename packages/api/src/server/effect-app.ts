@@ -35,7 +35,17 @@ import * as Observability from "../observability.js";
 import type { BetService } from "../services/bet/bet-service.js";
 import type { RankingService } from "../services/ranking/ranking-service.js";
 import type { AccountImportStoreService } from "../services/squad-builder/account-import/account-import-store-service.js";
+import { layer as confirmOwnedAccountImportLayer } from "../services/squad-builder/account-import/confirm-owned-account-import-service.js";
+import type { Service as ConfirmOwnedAccountImportServiceTag } from "../services/squad-builder/account-import/confirm-owned-account-import-service.js";
+import { layer as previewMargonemProfileImportLayer } from "../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
+import type { Service as PreviewMargonemProfileImportServiceTag } from "../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
+import { layer as previewOwnedAccountImportsLayer } from "../services/squad-builder/account-import/preview-owned-account-imports-service.js";
+import type { Service as PreviewOwnedAccountImportsServiceTag } from "../services/squad-builder/account-import/preview-owned-account-imports-service.js";
 import type { AccountRefetchStoreService } from "../services/squad-builder/account-refetch/account-refetch-store-service.js";
+import { layer as applyAccountRefetchLayer } from "../services/squad-builder/account-refetch/apply-account-refetch-service.js";
+import type { Service as ApplyAccountRefetchServiceTag } from "../services/squad-builder/account-refetch/apply-account-refetch-service.js";
+import { layer as previewAccountRefetchLayer } from "../services/squad-builder/account-refetch/preview-account-refetch-service.js";
+import type { Service as PreviewAccountRefetchServiceTag } from "../services/squad-builder/account-refetch/preview-account-refetch-service.js";
 import type { AccountSharingStoreService } from "../services/squad-builder/account-sharing/account-sharing-store-service.js";
 import type { Service as AccountSharingState } from "../services/squad-builder/account-sharing/list-account-sharing-state-service.js";
 import { layer as accountSharingStateLayer } from "../services/squad-builder/account-sharing/list-account-sharing-state-service.js";
@@ -49,76 +59,38 @@ import type { Service as AccountAccessInvites } from "../services/squad-builder/
 import { layer as accountAccessInvitesLayer } from "../services/squad-builder/account-sharing/send-account-access-invite-service.js";
 import type { FirecrawlClientService } from "../services/squad-builder/firecrawl-client.js";
 import type { FirecrawlConfigService } from "../services/squad-builder/firecrawl-config.js";
+import { layer as createSquadGroupLayer } from "../services/squad-builder/squad-groups/create-squad-group.js";
+import type { Service as CreateSquadGroupServiceTag } from "../services/squad-builder/squad-groups/create-squad-group.js";
+import { layer as listGlobalSquadGroupsLayer } from "../services/squad-builder/squad-groups/list-global-squad-groups.js";
+import type { Service as ListGlobalSquadGroupsServiceTag } from "../services/squad-builder/squad-groups/list-global-squad-groups.js";
 import type { Service as SquadGroupSharingState } from "../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
 import { layer as squadGroupSharingStateLayer } from "../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
+import { layer as listSquadGroupsLayer } from "../services/squad-builder/squad-groups/list-squad-groups.js";
+import type { Service as ListSquadGroupsServiceTag } from "../services/squad-builder/squad-groups/list-squad-groups.js";
 import type { Service as SquadGroupEditorInviteResponses } from "../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
 import { layer as squadGroupEditorInviteResponsesLayer } from "../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
 import type { Service as SquadGroupEditorRevocations } from "../services/squad-builder/squad-groups/revoke-squad-group-editor-service.js";
 import { layer as squadGroupEditorRevocationsLayer } from "../services/squad-builder/squad-groups/revoke-squad-group-editor-service.js";
+import { layer as saveSharedSquadGroupCharactersLayer } from "../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
+import type { Service as SaveSharedSquadGroupCharactersServiceTag } from "../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
+import { layer as saveSquadGroupLayer } from "../services/squad-builder/squad-groups/save-squad-group.js";
+import type { Service as SaveSquadGroupServiceTag } from "../services/squad-builder/squad-groups/save-squad-group.js";
 import type { Service as SquadEditorInviteTargets } from "../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.js";
 import { layer as squadEditorInviteTargetsLayer } from "../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.js";
 import type { Service as SquadGroupEditorInvites } from "../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
 import { layer as squadGroupEditorInvitesLayer } from "../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
+import { layer as setSquadGroupVisibilityLayer } from "../services/squad-builder/squad-groups/set-squad-group-visibility.js";
+import type { Service as SetSquadGroupVisibilityServiceTag } from "../services/squad-builder/squad-groups/set-squad-group-visibility.js";
 import type { SquadGroupStoreService } from "../services/squad-builder/squad-groups/squad-group-store.js";
 import type { VaultService } from "../services/vault/vault-service.js";
 
 /** Process-wide Layer memo map shared by production API Effect runtimes. */
 export const apiLayerMemoMap = Layer.makeMemoMapUnsafe();
 
-/** Live Layer for Effect-based API modules. */
-type LiveDatabaseLayer = ReturnType<typeof makeLiveDatabaseLayer>;
-
-const makeApiSquadBuilderLayerWithDatabase = (
-  databaseLayer: LiveDatabaseLayer
-): Layer.Layer<
-  Exclude<
-    SquadBuilderServices,
-    | FirecrawlClientService
-    | FirecrawlConfigService
-    | AnnouncementStore
-    | TodoStore
-    | HeroesStore
-    | BetService
-    | RankingService
-    | VaultService
-    | EventStore
-    | SkillsStore
-    | AuctionStore
-    | UserStore
-    | DiscordGuildVerifier
-    | DiscordVerificationConfigService
-  >,
-  SqlError
-> => {
-  const storeLayer = DrizzleSquadBuilderStoresLayer.pipe(
-    Layer.provide(databaseLayer)
-  );
-
-  return Layer.mergeAll(
-    storeLayer,
-    accountInviteTargetsLayer.pipe(Layer.provide(storeLayer)),
-    accountAccessInvitesLayer.pipe(Layer.provide(storeLayer)),
-    accountAccessInviteResponsesLayer.pipe(Layer.provide(storeLayer)),
-    accountAccessRevocationsLayer.pipe(Layer.provide(storeLayer)),
-    accountSharingStateLayer.pipe(Layer.provide(storeLayer)),
-    squadEditorInviteTargetsLayer.pipe(Layer.provide(storeLayer)),
-    squadGroupEditorInvitesLayer.pipe(Layer.provide(storeLayer)),
-    squadGroupEditorInviteResponsesLayer.pipe(Layer.provide(storeLayer)),
-    squadGroupEditorRevocationsLayer.pipe(Layer.provide(storeLayer)),
-    squadGroupSharingStateLayer.pipe(Layer.provide(storeLayer))
-  );
-};
-
-export const makeApiSquadBuilderLayer = (databaseUrl: string) =>
-  makeApiSquadBuilderLayerWithDatabase(makeLiveDatabaseLayer(databaseUrl));
-
-export const makeApiLiveLayer = (
-  databaseUrl: string
+const makeApiStableLayer = (
+  databaseLayer: ReturnType<typeof makeLiveDatabaseLayer>
 ): Layer.Layer<SquadBuilderServices, SqlError | ConfigError> => {
-  const databaseLayer = makeLiveDatabaseLayer(databaseUrl);
-
-  return Layer.mergeAll(
-    makeApiSquadBuilderLayerWithDatabase(databaseLayer),
+  const databaseBackedStores = Layer.mergeAll(
     AnnouncementStoreLayer.pipe(Layer.provide(databaseLayer)),
     TodoStoreLayer.pipe(Layer.provide(databaseLayer)),
     HeroesStoreLayer.pipe(Layer.provide(databaseLayer)),
@@ -132,13 +104,69 @@ export const makeApiLiveLayer = (
     DiscordVerificationConfig.layer,
     DiscordGuildVerifierLiveLayer.pipe(
       Layer.provide(DiscordVerificationConfig.layer)
+    )
+  );
+
+  const squadBuilderStores = DrizzleSquadBuilderStoresLayer.pipe(
+    Layer.provide(databaseLayer)
+  );
+
+  const squadBuilderSharing = Layer.mergeAll(
+    squadBuilderStores,
+    accountInviteTargetsLayer.pipe(Layer.provide(squadBuilderStores)),
+    accountAccessInvitesLayer.pipe(Layer.provide(squadBuilderStores)),
+    accountAccessInviteResponsesLayer.pipe(Layer.provide(squadBuilderStores)),
+    accountAccessRevocationsLayer.pipe(Layer.provide(squadBuilderStores)),
+    accountSharingStateLayer.pipe(Layer.provide(squadBuilderStores)),
+    squadEditorInviteTargetsLayer.pipe(Layer.provide(squadBuilderStores)),
+    squadGroupEditorInvitesLayer.pipe(Layer.provide(squadBuilderStores)),
+    squadGroupEditorInviteResponsesLayer.pipe(
+      Layer.provide(squadBuilderStores)
     ),
+    squadGroupEditorRevocationsLayer.pipe(Layer.provide(squadBuilderStores)),
+    squadGroupSharingStateLayer.pipe(Layer.provide(squadBuilderStores))
+  );
+
+  const firecrawlLayer = Layer.mergeAll(
     FirecrawlConfigServiceLiveLayer,
     FirecrawlClientServiceLiveLayer.pipe(
       Layer.provide(FirecrawlConfigServiceLiveLayer)
     )
   );
+
+  const stableServices = Layer.mergeAll(
+    databaseBackedStores,
+    squadBuilderSharing,
+    firecrawlLayer
+  );
+
+  const squadBuilderUseCases = Layer.mergeAll(
+    createSquadGroupLayer,
+    listSquadGroupsLayer,
+    listGlobalSquadGroupsLayer,
+    saveSquadGroupLayer,
+    saveSharedSquadGroupCharactersLayer,
+    setSquadGroupVisibilityLayer,
+    previewMargonemProfileImportLayer,
+    previewOwnedAccountImportsLayer,
+    confirmOwnedAccountImportLayer,
+    previewAccountRefetchLayer,
+    applyAccountRefetchLayer
+  );
+
+  return Layer.mergeAll(
+    stableServices,
+    squadBuilderUseCases.pipe(Layer.provideMerge(stableServices))
+  );
 };
+
+export const makeApiSquadBuilderLayer = (databaseUrl: string) => {
+  const databaseLayer = makeLiveDatabaseLayer(databaseUrl);
+  return makeApiStableLayer(databaseLayer);
+};
+
+export const makeApiLiveLayer = (databaseUrl: string) =>
+  makeApiStableLayer(makeLiveDatabaseLayer(databaseUrl));
 
 export interface ApiRuntime<I, S, E> {
   readonly dispose: () => Promise<void>;
@@ -227,7 +255,18 @@ type SquadBuilderServices =
   | SquadGroupEditorInvites
   | SquadGroupEditorInviteResponses
   | SquadGroupEditorRevocations
-  | SquadGroupSharingState;
+  | SquadGroupSharingState
+  | CreateSquadGroupServiceTag
+  | ListSquadGroupsServiceTag
+  | ListGlobalSquadGroupsServiceTag
+  | SaveSquadGroupServiceTag
+  | SaveSharedSquadGroupCharactersServiceTag
+  | SetSquadGroupVisibilityServiceTag
+  | PreviewMargonemProfileImportServiceTag
+  | PreviewOwnedAccountImportsServiceTag
+  | ConfirmOwnedAccountImportServiceTag
+  | PreviewAccountRefetchServiceTag
+  | ApplyAccountRefetchServiceTag;
 
 /** Shared runtime factory for Effect-based API modules (raw effect, composite layer). */
 export const makeApiRuntime = (databaseUrl: string) => {
