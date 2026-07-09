@@ -52,6 +52,37 @@ export const makeTestLayer = () => {
         return Effect.succeed(null);
       },
     },
+    skills: {
+      createProfession: record("skills", "createProfession"),
+      createRange: record("skills", "createRange"),
+      createSkill: record("skills", "createSkill"),
+      deleteRange: record("skills", "deleteRange"),
+      deleteSkill: record("skills", "deleteSkill"),
+      getRangeBySlug: ({ payload }: { readonly payload: unknown }) => {
+        calls.push({
+          args: payload,
+          group: "skills",
+          method: "getRangeBySlug",
+        });
+        return Effect.succeed({ id: 1, image: "", level: 1, name: "" });
+      },
+      listProfessions: () => {
+        calls.push({ args: {}, group: "skills", method: "listProfessions" });
+        return Effect.succeed([] as readonly unknown[]);
+      },
+      listRanges: () => {
+        calls.push({ args: {}, group: "skills", method: "listRanges" });
+        return Effect.succeed([] as readonly unknown[]);
+      },
+      listSkillsByRange: ({ payload }: { readonly payload: unknown }) => {
+        calls.push({
+          args: payload,
+          group: "skills",
+          method: "listSkillsByRange",
+        });
+        return Effect.succeed([] as readonly unknown[]);
+      },
+    },
     squadBuilderAccountImport: {
       confirmOwnedAccountImport: record(
         "squadBuilderAccountImport",
