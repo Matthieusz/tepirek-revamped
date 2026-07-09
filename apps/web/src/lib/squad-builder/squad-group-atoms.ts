@@ -69,8 +69,6 @@ interface RefreshVisibleSquadGroupAtomsOptions {
   readonly groupId?: number;
 }
 
-const visibleGlobalSquadGroupKeys = new Set<ListGlobalSquadGroupsKey>();
-
 const globalSquadGroupsKey = (
   payload: ListGlobalSquadGroupsInput
 ): ListGlobalSquadGroupsKey =>
@@ -128,11 +126,8 @@ const globalSquadGroupsByKeyAtom = Atom.family(
   }
 );
 
-export const globalSquadGroupsAtom = (payload: ListGlobalSquadGroupsInput) => {
-  const key = globalSquadGroupsKey(payload);
-  visibleGlobalSquadGroupKeys.add(key);
-  return globalSquadGroupsByKeyAtom(key);
-};
+export const globalSquadGroupsAtom = (payload: ListGlobalSquadGroupsInput) =>
+  globalSquadGroupsByKeyAtom(globalSquadGroupsKey(payload));
 
 const squadGroupDetailByKeyAtom = Atom.family((key: string) => {
   const payload = { groupId: Number(key) } as SquadGroupIdInput;
@@ -174,10 +169,6 @@ export const refreshVisibleSquadGroupAtoms = (
 ) => {
   get.refresh(ownedSquadGroupsByActorAtom("default"));
 
-  for (const key of visibleGlobalSquadGroupKeys) {
-    get.refresh(globalSquadGroupsByKeyAtom(key));
-  }
-
   if (options.groupId !== undefined) {
     const key = squadGroupIdKey(options.groupId);
     get.refresh(squadGroupDetailByKeyAtom(key));
@@ -195,9 +186,6 @@ export const createSquadGroupAtom = appHttpApiFn(
         },
       });
       get.refresh(ownedSquadGroupsByActorAtom("default"));
-      for (const key of visibleGlobalSquadGroupKeys) {
-        get.refresh(globalSquadGroupsByKeyAtom(key));
-      }
       return squadGroup;
     })
 );
@@ -254,9 +242,6 @@ export const setSquadGroupVisibilityAtom = appHttpApiFn(
           },
         });
       get.refresh(ownedSquadGroupsByActorAtom("default"));
-      for (const key of visibleGlobalSquadGroupKeys) {
-        get.refresh(globalSquadGroupsByKeyAtom(key));
-      }
       get.refresh(squadGroupDetailByKeyAtom(squadGroupIdKey(payload.groupId)));
       return visibility;
     })
