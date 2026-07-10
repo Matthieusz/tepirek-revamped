@@ -1,5 +1,5 @@
 import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import type {
   SharedSquadGroupSummarySchema,
   SquadGroupInvitationSummarySchema,
@@ -270,6 +270,7 @@ const SquadListTabs = ({
 
 // oxlint-disable-next-line complexity
 export default function SquadBuilderSquadsPage() {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [activeTab, setActiveTab] = useState<SquadListTab>("mine");
   const [draftFilters, setDraftFilters] = useState(emptyFilterForm);
@@ -308,9 +309,13 @@ export default function SquadBuilderSquadsPage() {
     mutate: (input: { readonly name: string }) => {
       const create = async () => {
         try {
-          await createSquadGroup(input);
+          const group = await createSquadGroup(input);
           toast.success("Grupa składów została utworzona");
           setName("");
+          await navigate({
+            params: { groupId: String(group.groupId) },
+            to: "/dashboard/squad-builder/squads/$groupId",
+          });
         } catch (error: unknown) {
           toast.error(
             getErrorMessage(error, "Nie udało się utworzyć grupy składów")

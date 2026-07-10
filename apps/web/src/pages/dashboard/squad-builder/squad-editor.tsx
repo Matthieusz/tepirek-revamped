@@ -114,13 +114,15 @@ const makeClientKey = (): string => crypto.randomUUID();
 const characterLabel = (character: AvailableCharacter): string =>
   `${character.name} ${character.level} ${PROFESSION_LABELS[character.profession] ?? character.profession}`;
 
+interface SquadBuilderEditorContentProps {
+  readonly groupId: number;
+}
+
 // oxlint-disable-next-line complexity
-export default function SquadBuilderEditorPage() {
+const SquadBuilderEditorContent = ({
+  groupId,
+}: SquadBuilderEditorContentProps) => {
   const navigate = useNavigate();
-  const params = useParams({
-    from: "/dashboard/squad-builder/squads_/$groupId",
-  });
-  const groupId = Number(params.groupId);
   const [groupName, setGroupName] = useState("");
   const [squads, setSquads] = useState<readonly DraftSquad[]>([]);
   const [isDirty, setIsDirty] = useState(false);
@@ -950,4 +952,21 @@ export default function SquadBuilderEditorPage() {
       </div>
     </div>
   );
+};
+
+export default function SquadBuilderEditorPage() {
+  const params = useParams({
+    from: "/dashboard/squad-builder/squads_/$groupId",
+  });
+  const groupId = Number(params.groupId);
+
+  if (!Number.isSafeInteger(groupId) || groupId <= 0) {
+    return (
+      <p className="text-destructive text-sm">
+        Nieprawidłowy identyfikator grupy składów.
+      </p>
+    );
+  }
+
+  return <SquadBuilderEditorContent groupId={groupId} />;
 }
