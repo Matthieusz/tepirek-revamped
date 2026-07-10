@@ -3,7 +3,7 @@ import * as Schema from "effect/Schema";
 /** Builds a TanStack Form validator from an Effect Schema. */
 export const effectSchemaValidator =
   (
-    schema: Schema.Decoder<unknown, never>
+    schema: Schema.ConstraintDecoder<unknown, never>
   ): ((input: { readonly value: unknown }) => string | undefined) =>
   ({ value }) => {
     let errorMessage: string | undefined;
