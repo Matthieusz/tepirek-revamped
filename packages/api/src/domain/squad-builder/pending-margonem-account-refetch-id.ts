@@ -17,9 +17,10 @@ export const PendingMargonemAccountRefetchIdSchema =
   PendingMargonemAccountRefetchId;
 
 /** Expected failure when a pending refetch id is not a positive integer. */
-export interface InvalidPendingMargonemAccountRefetchId {
-  readonly _tag: "InvalidPendingMargonemAccountRefetchId";
-}
+export class InvalidPendingMargonemAccountRefetchId extends Schema.TaggedErrorClass<InvalidPendingMargonemAccountRefetchId>()(
+  "InvalidPendingMargonemAccountRefetchId",
+  {}
+) {}
 
 /** Parse a positive integer as a pending Margonem account refetch id. */
 export const parsePendingMargonemAccountRefetchId = Effect.fn(
@@ -28,8 +29,9 @@ export const parsePendingMargonemAccountRefetchId = Effect.fn(
   return yield* Schema.decodeUnknownEffect(PendingMargonemAccountRefetchId)(
     input
   ).pipe(
-    Effect.catchTag("SchemaError", () =>
-      Effect.fail({ _tag: "InvalidPendingMargonemAccountRefetchId" } as const)
+    Effect.catchTag(
+      "SchemaError",
+      () => new InvalidPendingMargonemAccountRefetchId()
     )
   );
 });

@@ -5,10 +5,14 @@ import type {
   MargonemCharacterId,
   PositiveLevel,
 } from "./margonem-profile-id.js";
-import { PositiveInt } from "./positive-int.js";
+import {
+  MargonemCharacterIdSchema,
+  PositiveLevelSchema,
+} from "./margonem-profile-id.js";
 
 /** The only Margonem world supported by squad builder v1. */
-export type MargonemWorld = "jaruna";
+export const MargonemWorld = Schema.Literal("jaruna");
+export type MargonemWorld = typeof MargonemWorld.Type;
 
 /** Expected failure when a world string is not a known Margonem world. */
 export class UnknownMargonemWorld extends Schema.TaggedErrorClass<UnknownMargonemWorld>()(
@@ -18,13 +22,11 @@ export class UnknownMargonemWorld extends Schema.TaggedErrorClass<UnknownMargone
   }
 ) {}
 
-const knownWorlds: readonly MargonemWorld[] = ["jaruna"];
-
 /** Parse a persisted world string into the domain world type. */
 export const parseMargonemWorld = Effect.fn("MargonemWorld.parse")(
   function* parseMargonemWorld(value: string) {
-    if ((knownWorlds as readonly string[]).includes(value)) {
-      return value as MargonemWorld;
+    if (value === "jaruna") {
+      return MargonemWorld.make(value);
     }
 
     return yield* new UnknownMargonemWorld({ value });
@@ -63,11 +65,11 @@ export interface MargonemCharacterPreview {
 /** HTTP/API schema for a Jaruna character parsed from a Margonem profile. */
 export const MargonemCharacterPreviewSchema = Schema.Struct({
   avatarUrl: Schema.NullOr(Schema.String),
-  characterId: PositiveInt,
-  level: PositiveInt,
+  characterId: MargonemCharacterIdSchema,
+  level: PositiveLevelSchema,
   name: Schema.String,
   profession: MargonemProfessionSchema,
-  world: Schema.String,
+  world: MargonemWorld,
 });
 
 /** Expected failure when a profession label cannot be normalized. */

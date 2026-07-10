@@ -12,23 +12,19 @@ export const MargonemAccountId = PositiveInt.pipe(
 export type MargonemAccountId = typeof MargonemAccountId.Type;
 
 /** HTTP/API schema for a persisted Margonem account row id. */
-// SAFETY: Unbranded export for protocol-boundary compatibility.
-export const MargonemAccountIdSchema = PositiveInt.annotate({
-  identifier: "MargonemAccountId",
-});
+export const MargonemAccountIdSchema = MargonemAccountId;
 
 /** Expected failure when an account id is not a positive integer. */
-export interface InvalidMargonemAccountId {
-  readonly _tag: "InvalidMargonemAccountId";
-}
+export class InvalidMargonemAccountId extends Schema.TaggedErrorClass<InvalidMargonemAccountId>()(
+  "InvalidMargonemAccountId",
+  {}
+) {}
 
 /** Parse a positive integer as a Margonem account id. */
 export const parseMargonemAccountId = Effect.fn("MargonemAccountId.parse")(
   function* parseMargonemAccountId(input: number) {
     return yield* Schema.decodeUnknownEffect(MargonemAccountId)(input).pipe(
-      Effect.catchTag("SchemaError", () =>
-        Effect.fail({ _tag: "InvalidMargonemAccountId" } as const)
-      )
+      Effect.catchTag("SchemaError", () => new InvalidMargonemAccountId())
     );
   }
 );

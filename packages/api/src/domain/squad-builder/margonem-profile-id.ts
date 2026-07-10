@@ -12,10 +12,7 @@ export const MargonemProfileId = PositiveInt.pipe(
 export type MargonemProfileId = typeof MargonemProfileId.Type;
 
 /** HTTP/API schema for a parsed Margonem profile id. */
-// SAFETY: Unbranded export for protocol-boundary compatibility.
-export const MargonemProfileIdSchema = PositiveInt.annotate({
-  identifier: "MargonemProfileId",
-});
+export const MargonemProfileIdSchema = MargonemProfileId;
 
 /** A parsed Margonem character id. */
 export const MargonemCharacterId = PositiveInt.pipe(
@@ -26,10 +23,7 @@ export const MargonemCharacterId = PositiveInt.pipe(
 export type MargonemCharacterId = typeof MargonemCharacterId.Type;
 
 /** HTTP/API schema for a parsed Margonem character id. */
-// SAFETY: Unbranded export for protocol-boundary compatibility.
-export const MargonemCharacterIdSchema = PositiveInt.annotate({
-  identifier: "MargonemCharacterId",
-});
+export const MargonemCharacterIdSchema = MargonemCharacterId;
 
 /** A positive character level. */
 export const PositiveLevel = PositiveInt.pipe(
@@ -40,10 +34,7 @@ export const PositiveLevel = PositiveInt.pipe(
 export type PositiveLevel = typeof PositiveLevel.Type;
 
 /** HTTP/API schema for a positive character level. */
-// SAFETY: Unbranded export for protocol-boundary compatibility.
-export const PositiveLevelSchema = PositiveInt.annotate({
-  identifier: "PositiveLevel",
-});
+export const PositiveLevelSchema = PositiveLevel;
 
 /** Failure returned when a numeric id is not valid for the domain. */
 export class InvalidPositiveInteger extends Schema.TaggedErrorClass<InvalidPositiveInteger>()(

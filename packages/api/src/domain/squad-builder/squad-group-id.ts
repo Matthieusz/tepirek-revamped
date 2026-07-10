@@ -15,17 +15,16 @@ export type SquadGroupId = typeof SquadGroupId.Type;
 export const SquadGroupIdSchema = SquadGroupId;
 
 /** Expected failure when a squad group id is invalid. */
-export interface InvalidSquadGroupId {
-  readonly _tag: "InvalidSquadGroupId";
-}
+export class InvalidSquadGroupId extends Schema.TaggedErrorClass<InvalidSquadGroupId>()(
+  "InvalidSquadGroupId",
+  {}
+) {}
 
 /** Parse a positive integer as a squad group id. */
 export const parseSquadGroupId = Effect.fn("SquadGroupId.parse")(
   function* parseSquadGroupId(input: number) {
     return yield* Schema.decodeUnknownEffect(SquadGroupId)(input).pipe(
-      Effect.catchTag("SchemaError", () =>
-        Effect.fail({ _tag: "InvalidSquadGroupId" } as const)
-      )
+      Effect.catchTag("SchemaError", () => new InvalidSquadGroupId())
     );
   }
 );

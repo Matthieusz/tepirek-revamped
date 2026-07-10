@@ -1,13 +1,6 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-/** Lifecycle status of a `margonem_account_access` row. */
-export type AccountAccessStatus =
-  | "pending"
-  | "accepted"
-  | "declined"
-  | "revoked";
-
 /** HTTP/API schema for account-access lifecycle status. */
 export const AccountAccessStatusSchema = Schema.Literals([
   "pending",
@@ -15,6 +8,8 @@ export const AccountAccessStatusSchema = Schema.Literals([
   "declined",
   "revoked",
 ]);
+/** Lifecycle status of a `margonem_account_access` row. */
+export type AccountAccessStatus = typeof AccountAccessStatusSchema.Type;
 
 /** HTTP/API schema for account-access statuses that grant account access. */
 export const ActiveAccountAccessStatusSchema = Schema.Literals([
@@ -29,10 +24,10 @@ export const inactiveAccountAccessStatuses: readonly AccountAccessStatus[] = [
 ];
 
 /** Expected failure when a persisted status string is not a known status. */
-export interface InvalidAccountAccessStatus {
-  readonly _tag: "InvalidAccountAccessStatus";
-  readonly value: string;
-}
+export class InvalidAccountAccessStatus extends Schema.TaggedErrorClass<InvalidAccountAccessStatus>()(
+  "InvalidAccountAccessStatus",
+  { value: Schema.String }
+) {}
 
 const knownStatuses: readonly AccountAccessStatus[] = [
   "pending",
@@ -49,7 +44,7 @@ export const parseAccountAccessStatus = (
   value: string
 ): Effect.Effect<AccountAccessStatus, InvalidAccountAccessStatus> => {
   if (!isKnownStatus(value)) {
-    return Effect.fail({ _tag: "InvalidAccountAccessStatus", value });
+    return Effect.fail(new InvalidAccountAccessStatus({ value }));
   }
 
   return Effect.succeed(value);

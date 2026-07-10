@@ -15,18 +15,17 @@ export type MargonemAccountAccessId = typeof MargonemAccountAccessId.Type;
 export const MargonemAccountAccessIdSchema = MargonemAccountAccessId;
 
 /** Expected failure when an account access id is not a positive integer. */
-export interface InvalidMargonemAccountAccessId {
-  readonly _tag: "InvalidMargonemAccountAccessId";
-}
+export class InvalidMargonemAccountAccessId extends Schema.TaggedErrorClass<InvalidMargonemAccountAccessId>()(
+  "InvalidMargonemAccountAccessId",
+  {}
+) {}
 
 /** Parse a positive integer as a Margonem account access id. */
 export const parseMargonemAccountAccessId = Effect.fn(
   "MargonemAccountAccessId.parse"
 )(function* parseMargonemAccountAccessId(input: number) {
   return yield* Schema.decodeUnknownEffect(MargonemAccountAccessId)(input).pipe(
-    Effect.catchTag("SchemaError", () =>
-      Effect.fail({ _tag: "InvalidMargonemAccountAccessId" } as const)
-    )
+    Effect.catchTag("SchemaError", () => new InvalidMargonemAccountAccessId())
   );
 });
 

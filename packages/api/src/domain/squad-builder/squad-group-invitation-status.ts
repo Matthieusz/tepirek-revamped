@@ -1,13 +1,6 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-/** Lifecycle status of a squad group editor invitation. */
-export type SquadGroupInvitationStatus =
-  | "pending"
-  | "accepted"
-  | "declined"
-  | "revoked";
-
 /** HTTP/API schema for squad-group editor invitation status. */
 export const SquadGroupInvitationStatusSchema = Schema.Literals([
   "pending",
@@ -15,6 +8,9 @@ export const SquadGroupInvitationStatusSchema = Schema.Literals([
   "declined",
   "revoked",
 ]);
+/** Lifecycle status of a squad group editor invitation. */
+export type SquadGroupInvitationStatus =
+  typeof SquadGroupInvitationStatusSchema.Type;
 
 /** HTTP/API schema for invitation statuses that grant editor access. */
 export const ActiveSquadGroupInvitationStatusSchema = Schema.Literals([
@@ -23,10 +19,10 @@ export const ActiveSquadGroupInvitationStatusSchema = Schema.Literals([
 ]);
 
 /** Expected failure when a persisted squad group invitation status is unknown. */
-export interface InvalidSquadGroupInvitationStatus {
-  readonly _tag: "InvalidSquadGroupInvitationStatus";
-  readonly value: string;
-}
+export class InvalidSquadGroupInvitationStatus extends Schema.TaggedErrorClass<InvalidSquadGroupInvitationStatus>()(
+  "InvalidSquadGroupInvitationStatus",
+  { value: Schema.String }
+) {}
 
 const knownStatuses: readonly SquadGroupInvitationStatus[] = [
   "pending",
@@ -46,7 +42,7 @@ export const parseSquadGroupInvitationStatus = (
   InvalidSquadGroupInvitationStatus
 > => {
   if (!isKnownStatus(value)) {
-    return Effect.fail({ _tag: "InvalidSquadGroupInvitationStatus", value });
+    return Effect.fail(new InvalidSquadGroupInvitationStatus({ value }));
   }
 
   return Effect.succeed(value);

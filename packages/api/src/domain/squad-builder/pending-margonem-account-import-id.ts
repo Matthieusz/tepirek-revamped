@@ -17,9 +17,10 @@ export const PendingMargonemAccountImportIdSchema =
   PendingMargonemAccountImportId;
 
 /** Expected failure when a pending import id is not a positive integer. */
-export interface InvalidPendingMargonemAccountImportId {
-  readonly _tag: "InvalidPendingMargonemAccountImportId";
-}
+export class InvalidPendingMargonemAccountImportId extends Schema.TaggedErrorClass<InvalidPendingMargonemAccountImportId>()(
+  "InvalidPendingMargonemAccountImportId",
+  {}
+) {}
 
 /** Parse a positive integer as a pending Margonem account import id. */
 export const parsePendingMargonemAccountImportId = Effect.fn(
@@ -28,8 +29,9 @@ export const parsePendingMargonemAccountImportId = Effect.fn(
   return yield* Schema.decodeUnknownEffect(PendingMargonemAccountImportId)(
     input
   ).pipe(
-    Effect.catchTag("SchemaError", () =>
-      Effect.fail({ _tag: "InvalidPendingMargonemAccountImportId" } as const)
+    Effect.catchTag(
+      "SchemaError",
+      () => new InvalidPendingMargonemAccountImportId()
     )
   );
 });

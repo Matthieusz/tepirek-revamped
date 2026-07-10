@@ -1,19 +1,15 @@
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import { parseMargonemProfession } from "./margonem-character.js";
-import type {
-  MargonemCharacterPreview,
-  MargonemProfession,
-} from "./margonem-character.js";
+import type { MargonemCharacterPreview } from "./margonem-character.js";
 import {
+  MargonemProfileId,
   parseMargonemCharacterId,
   parsePositiveLevel,
 } from "./margonem-profile-id.js";
-import type {
-  MargonemCharacterId,
-  MargonemProfileId,
-  PositiveLevel,
-} from "./margonem-profile-id.js";
+
+// oxlint-disable max-classes-per-file -- closely related parser error variants share one boundary.
 
 /** Parsed Jaruna-only Margonem profile data from Firecrawl HTML. */
 export interface ParsedMargonemProfile {
@@ -28,21 +24,32 @@ export interface ParseMargonemProfileHtmlInput {
   readonly html: string;
 }
 
+/** Expected failure when a supported profile header has no account name. */
+export class MargonemProfileNameNotFound extends Schema.TaggedErrorClass<MargonemProfileNameNotFound>()(
+  "MargonemProfileNameNotFound",
+  { profileId: MargonemProfileId }
+) {}
+
+/** Expected failure when the profile has no character rows. */
+export class MargonemCharacterRowsNotFound extends Schema.TaggedErrorClass<MargonemCharacterRowsNotFound>()(
+  "MargonemCharacterRowsNotFound",
+  { profileId: MargonemProfileId }
+) {}
+
+/** Expected failure when a Jaruna character row has invalid attributes. */
+export class MargonemCharacterRowInvalid extends Schema.TaggedErrorClass<MargonemCharacterRowInvalid>()(
+  "MargonemCharacterRowInvalid",
+  {
+    profileId: MargonemProfileId,
+    safeReason: Schema.String,
+  }
+) {}
+
 /** Expected failure when Margonem profile HTML does not match the supported shape. */
 export type ParseMargonemProfileHtmlError =
-  | {
-      readonly _tag: "MargonemProfileNameNotFound";
-      readonly profileId: MargonemProfileId;
-    }
-  | {
-      readonly _tag: "MargonemCharacterRowsNotFound";
-      readonly profileId: MargonemProfileId;
-    }
-  | {
-      readonly _tag: "MargonemCharacterRowInvalid";
-      readonly profileId: MargonemProfileId;
-      readonly safeReason: string;
-    };
+  | MargonemProfileNameNotFound
+  | MargonemCharacterRowsNotFound
+  | MargonemCharacterRowInvalid;
 
 const profileNamePattern =
   /profile-header__name[\s\S]*?<span>\s*(?<name>[^<]+?)\s*<\/span>/u;
@@ -123,46 +130,47 @@ const parseJarunaCharacterRow = (
     name === undefined ||
     levelText === undefined
   ) {
-    return Effect.fail({
-      _tag: "MargonemCharacterRowInvalid",
-      profileId,
-      safeReason: "missing required character row attributes",
-    });
+    return Effect.fail(
+      new MargonemCharacterRowInvalid({
+        profileId,
+        safeReason: "missing required character row attributes",
+      })
+    );
   }
 
   if (professionLabel === undefined) {
-    return Effect.fail({
-      _tag: "MargonemCharacterRowInvalid",
-      profileId,
-      safeReason: "missing profession label",
-    });
-  }
-
-  let parsedCharacterId: MargonemCharacterId;
-  let parsedLevel: PositiveLevel;
-  let parsedProfession: MargonemProfession;
-
-  try {
-    parsedCharacterId = Effect.runSync(
-      parseMargonemCharacterId(Number(characterIdText))
+    return Effect.fail(
+      new MargonemCharacterRowInvalid({
+        profileId,
+        safeReason: "missing profession label",
+      })
     );
-    parsedLevel = Effect.runSync(parsePositiveLevel(Number(levelText)));
-    parsedProfession = Effect.runSync(parseMargonemProfession(professionLabel));
-  } catch {
-    return Effect.fail({
-      _tag: "MargonemCharacterRowInvalid",
-      profileId,
-      safeReason: "invalid character attributes",
-    });
   }
 
-  return Effect.succeed({
-    avatarUrl: extractAvatarUrl(rowHtml),
-    characterId: parsedCharacterId,
-    level: parsedLevel,
-    name: decodeHtmlEntities(name.trim()),
-    profession: parsedProfession,
-    world: "jaruna",
+  return Effect.gen(function* parseJarunaCharacterRowEffect() {
+    const invalidCharacter = () =>
+      new MargonemCharacterRowInvalid({
+        profileId,
+        safeReason: "invalid character attributes",
+      });
+    const parsedCharacterId = yield* parseMargonemCharacterId(
+      Number(characterIdText)
+    ).pipe(Effect.mapError(invalidCharacter));
+    const parsedLevel = yield* parsePositiveLevel(Number(levelText)).pipe(
+      Effect.mapError(invalidCharacter)
+    );
+    const parsedProfession = yield* parseMargonemProfession(
+      professionLabel
+    ).pipe(Effect.mapError(invalidCharacter));
+
+    return {
+      avatarUrl: extractAvatarUrl(rowHtml),
+      characterId: parsedCharacterId,
+      level: parsedLevel,
+      name: decodeHtmlEntities(name.trim()),
+      profession: parsedProfession,
+      world: "jaruna" as const,
+    };
   });
 };
 
@@ -173,40 +181,38 @@ export const parseMargonemProfileHtml = ({
 }: ParseMargonemProfileHtmlInput): Effect.Effect<
   ParsedMargonemProfile,
   ParseMargonemProfileHtmlError
-> => {
-  const suggestedAccountName = extractProfileName(html);
+> =>
+  Effect.gen(function* parseMargonemProfileHtmlEffect() {
+    const suggestedAccountName = extractProfileName(html);
 
-  if (suggestedAccountName === undefined) {
-    return Effect.fail({ _tag: "MargonemProfileNameNotFound", profileId });
-  }
+    if (suggestedAccountName === undefined) {
+      return yield* new MargonemProfileNameNotFound({ profileId });
+    }
 
-  const rowMatches = Array.from(
-    html.matchAll(characterRowPattern),
-    (match) => match[0]
-  );
+    const rowMatches = Array.from(
+      html.matchAll(characterRowPattern),
+      (match) => match[0]
+    );
 
-  if (rowMatches.length === 0) {
-    return Effect.fail({ _tag: "MargonemCharacterRowsNotFound", profileId });
-  }
+    if (rowMatches.length === 0) {
+      return yield* new MargonemCharacterRowsNotFound({ profileId });
+    }
 
-  const jarunaCharacters: MargonemCharacterPreview[] = [];
+    const jarunaCharacters: MargonemCharacterPreview[] = [];
 
-  for (const rowHtml of rowMatches) {
-    try {
-      const parsedCharacter = Effect.runSync(
-        parseJarunaCharacterRow(profileId, rowHtml)
+    for (const rowHtml of rowMatches) {
+      const parsedCharacter = yield* parseJarunaCharacterRow(
+        profileId,
+        rowHtml
       );
       if (parsedCharacter !== null) {
         jarunaCharacters.push(parsedCharacter);
       }
-    } catch (error) {
-      return Effect.fail(error as ParseMargonemProfileHtmlError);
     }
-  }
 
-  return Effect.succeed({
-    jarunaCharacters,
-    profileId,
-    suggestedAccountName,
+    return {
+      jarunaCharacters,
+      profileId,
+      suggestedAccountName,
+    };
   });
-};

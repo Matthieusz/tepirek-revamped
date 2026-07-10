@@ -1,6 +1,7 @@
 import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import type { FirecrawlYearMonth } from "../../../domain/squad-builder/firecrawl-year-month.js";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.js";
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
@@ -163,7 +164,7 @@ export interface PendingMargonemAccountImportStore {
 
 /** Read model for one owned Margonem account. */
 export interface OwnedMargonemAccountSummary {
-  readonly accountId: number;
+  readonly accountId: MargonemAccountId;
   readonly profileId: MargonemProfileId;
   readonly displayName: AccountDisplayName;
   readonly generatedProfileUrl: string;

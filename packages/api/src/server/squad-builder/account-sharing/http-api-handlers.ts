@@ -5,9 +5,6 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
-import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import { AppHttpApi } from "../../../protocol/http-api-contract.js";
 import type { SquadBuilderAccountSharingError } from "../../../protocol/squad-builder/account-sharing/http-api-contract.js";
 import {
@@ -29,18 +26,6 @@ import {
 } from "../auth-helper.js";
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderAccountSharingError>;
-
-const toAppUserId = (value: string): AppUserId =>
-  // SAFETY: HttpApi decoded this value with AppUserIdSchema before the handler runs.
-  value as AppUserId;
-
-const toMargonemAccountId = (value: number): MargonemAccountId =>
-  // SAFETY: HttpApi decoded this value with MargonemAccountIdSchema before the handler runs.
-  value as MargonemAccountId;
-
-const toMargonemAccountAccessId = (value: number): MargonemAccountAccessId =>
-  // SAFETY: HttpApi decoded this value with MargonemAccountAccessIdSchema before the handler runs.
-  value as MargonemAccountAccessId;
 
 const withRequestCorrelation = <A, E, R>(
   request: HttpServerRequest,
@@ -114,7 +99,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
             return yield* withRequestCorrelation(
               request,
               accountInviteTargetsSvc.search({
-                accountId: toMargonemAccountId(payload.accountId),
+                accountId: payload.accountId,
                 actorUserId: sessionAppUserId(session),
                 query: payload.query,
               })
@@ -127,9 +112,9 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
             return yield* withRequestCorrelation(
               request,
               accountAccessInvitesSvc.send({
-                accountId: toMargonemAccountId(payload.accountId),
+                accountId: payload.accountId,
                 actorUserId: sessionAppUserId(session),
-                invitedUserId: toAppUserId(payload.invitedUserId),
+                invitedUserId: payload.invitedUserId,
               })
             ).pipe(Effect.mapError(mapAccountSharingError));
           })
@@ -140,7 +125,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
             return yield* withRequestCorrelation(
               request,
               accountAccessInviteResponsesSvc.respond({
-                accessId: toMargonemAccountAccessId(payload.accessId),
+                accessId: payload.accessId,
                 actorUserId: sessionAppUserId(session),
                 response: payload.response,
               })
@@ -153,7 +138,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
             return yield* withRequestCorrelation(
               request,
               accountAccessRevocationsSvc.revoke({
-                accessId: toMargonemAccountAccessId(payload.accessId),
+                accessId: payload.accessId,
                 actorUserId: sessionAppUserId(session),
               })
             ).pipe(Effect.mapError(mapAccountSharingError));
@@ -187,7 +172,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
             return yield* withRequestCorrelation(
               request,
               accountSharingStateSvc.listAccountAccessGrants({
-                accountId: toMargonemAccountId(payload.accountId),
+                accountId: payload.accountId,
                 actorUserId: sessionAppUserId(session),
               })
             ).pipe(Effect.mapError(mapAccountSharingError));

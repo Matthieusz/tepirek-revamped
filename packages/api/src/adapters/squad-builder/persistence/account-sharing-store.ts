@@ -105,6 +105,10 @@ const listOwnedAccountsWithDatabase =
       const accounts: OwnedMargonemAccountSummary[] = [];
 
       for (const row of rows) {
+        const accountId = yield* parseMargonemAccountId(row.accountId).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
+
         const displayName = yield* parseAccountDisplayName(
           row.displayName
         ).pipe(Effect.catch((error) => failPersistence(operation, error)));
@@ -114,7 +118,7 @@ const listOwnedAccountsWithDatabase =
         );
 
         accounts.push({
-          accountId: row.accountId,
+          accountId,
           characterCount: row.characterCount ?? 0,
           displayName,
           generatedProfileUrl: toMargonemProfileUrl(profileId),

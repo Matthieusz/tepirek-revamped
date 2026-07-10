@@ -5,9 +5,6 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
-import type { SquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.js";
 import { AppHttpApi } from "../../../protocol/http-api-contract.js";
 import type { SquadBuilderSquadGroupSharingError } from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.js";
 import {
@@ -31,18 +28,6 @@ import {
 type ProtocolError = Schema.Schema.Type<
   typeof SquadBuilderSquadGroupSharingError
 >;
-
-const toAppUserId = (value: string): AppUserId =>
-  // SAFETY: HttpApi decoded this value with AppUserIdSchema before the handler runs.
-  value as AppUserId;
-
-const toSquadGroupId = (value: number): SquadGroupId =>
-  // SAFETY: HttpApi decoded this value with SquadGroupIdSchema before the handler runs.
-  value as SquadGroupId;
-
-const toSquadGroupInvitationId = (value: number): SquadGroupInvitationId =>
-  // SAFETY: HttpApi decoded this value with SquadGroupInvitationIdSchema before the handler runs.
-  value as SquadGroupInvitationId;
 
 const withRequestCorrelation = <A, E, R>(
   request: HttpServerRequest,
@@ -137,7 +122,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                 request,
                 squadEditorInviteTargetsSvc.search({
                   actorUserId: sessionAppUserId(session),
-                  groupId: toSquadGroupId(payload.groupId),
+                  groupId: payload.groupId,
                   query: payload.query,
                 })
               ).pipe(Effect.mapError(mapSquadGroupSharingError));
@@ -150,8 +135,8 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                 request,
                 squadGroupEditorInvitesSvc.send({
                   actorUserId: sessionAppUserId(session),
-                  groupId: toSquadGroupId(payload.groupId),
-                  invitedUserId: toAppUserId(payload.invitedUserId),
+                  groupId: payload.groupId,
+                  invitedUserId: payload.invitedUserId,
                 })
               ).pipe(Effect.mapError(mapSquadGroupSharingError));
             })
@@ -163,7 +148,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                 request,
                 squadGroupEditorInviteResponsesSvc.respond({
                   actorUserId: sessionAppUserId(session),
-                  invitationId: toSquadGroupInvitationId(payload.invitationId),
+                  invitationId: payload.invitationId,
                   response: payload.response,
                 })
               ).pipe(Effect.mapError(mapSquadGroupSharingError));
@@ -176,7 +161,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                 request,
                 squadGroupEditorRevocationsSvc.revoke({
                   actorUserId: sessionAppUserId(session),
-                  invitationId: toSquadGroupInvitationId(payload.invitationId),
+                  invitationId: payload.invitationId,
                 })
               ).pipe(Effect.mapError(mapSquadGroupSharingError));
             })
@@ -210,7 +195,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                 request,
                 squadGroupSharingStateSvc.listEditorGrants({
                   actorUserId: sessionAppUserId(session),
-                  groupId: toSquadGroupId(payload.groupId),
+                  groupId: payload.groupId,
                 })
               ).pipe(Effect.mapError(mapSquadGroupSharingError));
             })

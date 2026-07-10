@@ -5,7 +5,6 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
 import { AppHttpApi } from "../../../protocol/http-api-contract.js";
 import type { SquadBuilderAccountImportError } from "../../../protocol/squad-builder/account-import/http-api-contract.js";
 import {
@@ -28,10 +27,6 @@ import {
 } from "../auth-helper.js";
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderAccountImportError>;
-
-const toPendingImportId = (value: number): PendingMargonemAccountImportId =>
-  // SAFETY: HttpApi decoded this value with PendingMargonemAccountImportIdSchema before the handler runs.
-  value as PendingMargonemAccountImportId;
 
 const withRequestCorrelation = <A, E, R>(
   request: HttpServerRequest,
@@ -140,7 +135,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
               confirmOwnedAccountImportSvc.confirm({
                 actorUserId: sessionAppUserId(session),
                 displayName: payload.displayName,
-                pendingImportId: toPendingImportId(payload.pendingImportId),
+                pendingImportId: payload.pendingImportId,
               })
             ).pipe(Effect.mapError(mapAccountImportError));
           })

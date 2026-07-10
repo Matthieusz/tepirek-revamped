@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import type { MargonemAccountId } from "./margonem-account-id.js";
+import { MargonemAccountId } from "./margonem-account-id.js";
 import { computeMargonemAccountRefetchDiff } from "./margonem-account-refetch-diff.js";
 import type { StoredMargonemCharacterSnapshot } from "./margonem-account-refetch-diff.js";
 import type { MargonemCharacterPreview } from "./margonem-character.js";
-import type {
+import {
   MargonemCharacterId,
   MargonemProfileId,
   PositiveLevel,
 } from "./margonem-profile-id.js";
 
-const accountId = 1 as MargonemAccountId;
-const profileId = 7_298_897 as MargonemProfileId;
+const accountId = MargonemAccountId.make(1);
+const profileId = MargonemProfileId.make(7_298_897);
 const fetchedAt = new Date("2026-06-29T12:00:00.000Z");
 
 type StoredCharacterFixtureInput = Omit<
@@ -30,8 +30,8 @@ const storedCharacter = (
   affectedSquadCount: input.affectedSquadCount ?? 0,
   avatarUrl: input.avatarUrl ?? null,
   databaseCharacterId: input.databaseCharacterId,
-  level: (input.level ?? 100) as PositiveLevel,
-  margonemCharacterId: input.margonemCharacterId as MargonemCharacterId,
+  level: PositiveLevel.make(input.level ?? 100),
+  margonemCharacterId: MargonemCharacterId.make(input.margonemCharacterId),
   name: input.name,
   profession: input.profession ?? "tracker",
   world: input.world ?? "jaruna",
@@ -50,8 +50,8 @@ const latestCharacter = (
   input: LatestCharacterFixtureInput
 ): MargonemCharacterPreview => ({
   avatarUrl: input.avatarUrl ?? null,
-  characterId: input.characterId as MargonemCharacterId,
-  level: (input.level ?? 100) as PositiveLevel,
+  characterId: MargonemCharacterId.make(input.characterId),
+  level: PositiveLevel.make(input.level ?? 100),
   name: input.name,
   profession: input.profession ?? "tracker",
   world: input.world ?? "jaruna",

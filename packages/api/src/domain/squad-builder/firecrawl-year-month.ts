@@ -2,9 +2,10 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 /** A Firecrawl budget month formatted as YYYY-MM. */
-export type FirecrawlYearMonth = string & {
-  readonly __brand: "FirecrawlYearMonth";
-};
+export const FirecrawlYearMonth = Schema.String.pipe(
+  Schema.brand("FirecrawlYearMonth")
+);
+export type FirecrawlYearMonth = typeof FirecrawlYearMonth.Type;
 
 /** Expected failure when a Firecrawl budget month is invalid. */
 export class InvalidFirecrawlYearMonth extends Schema.TaggedErrorClass<InvalidFirecrawlYearMonth>()(
@@ -22,16 +23,14 @@ export const parseFirecrawlYearMonth = (
     return Effect.fail(new InvalidFirecrawlYearMonth());
   }
 
-  // SAFETY: yearMonthPattern established the FirecrawlYearMonth invariant.
-  return Effect.succeed(input as FirecrawlYearMonth);
+  return Effect.succeed(FirecrawlYearMonth.make(input));
 };
 
 /** Get the UTC Firecrawl budget month for a date. */
 export const firecrawlYearMonthFromDate = (date: Date): FirecrawlYearMonth => {
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  // SAFETY: year/month from Date always produce valid YYYY-MM.
-  return `${year}-${month}` as FirecrawlYearMonth;
+  return FirecrawlYearMonth.make(`${year}-${month}`);
 };
 
 /** Convert a Firecrawl budget month to its primitive representation. */

@@ -15,18 +15,17 @@ export type SquadGroupInvitationId = typeof SquadGroupInvitationId.Type;
 export const SquadGroupInvitationIdSchema = SquadGroupInvitationId;
 
 /** Expected failure when a squad group invitation id is invalid. */
-export interface InvalidSquadGroupInvitationId {
-  readonly _tag: "InvalidSquadGroupInvitationId";
-}
+export class InvalidSquadGroupInvitationId extends Schema.TaggedErrorClass<InvalidSquadGroupInvitationId>()(
+  "InvalidSquadGroupInvitationId",
+  {}
+) {}
 
 /** Parse a positive integer as a squad group invitation id. */
 export const parseSquadGroupInvitationId = Effect.fn(
   "SquadGroupInvitationId.parse"
 )(function* parseSquadGroupInvitationId(input: number) {
   return yield* Schema.decodeUnknownEffect(SquadGroupInvitationId)(input).pipe(
-    Effect.catchTag("SchemaError", () =>
-      Effect.fail({ _tag: "InvalidSquadGroupInvitationId" } as const)
-    )
+    Effect.catchTag("SchemaError", () => new InvalidSquadGroupInvitationId())
   );
 });
 

@@ -5,6 +5,8 @@ import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-
 import { MargonemProfessionSchema } from "../../../domain/squad-builder/margonem-character.js";
 import { PositiveInt } from "../../../domain/squad-builder/positive-int.js";
 import { SquadGroupIdSchema } from "../../../domain/squad-builder/squad-group-id.js";
+import { SquadGroupVisibilitySchema } from "../../../domain/squad-builder/squad-group-visibility.js";
+import { SquadIdSchema } from "../../../domain/squad-builder/squad-id.js";
 
 export const SquadGroupIdPayload = Schema.Struct({
   groupId: SquadGroupIdSchema,
@@ -96,7 +98,7 @@ const SaveSquadPayload = Schema.Struct({
   clientKey: Schema.String,
   name: Schema.String,
   position: Schema.Number,
-  squadId: Schema.optional(PositiveInt),
+  squadId: Schema.optional(SquadIdSchema),
 });
 
 export const SaveSquadGroupPayload = Schema.Struct({
@@ -107,7 +109,7 @@ export const SaveSquadGroupPayload = Schema.Struct({
 
 const SaveSharedSquadCharactersPayload = Schema.Struct({
   characters: Schema.Array(SquadCharacterPlacementPayload),
-  squadId: PositiveInt,
+  squadId: SquadIdSchema,
 });
 
 export const SaveSharedSquadGroupCharactersPayload = Schema.Struct({
@@ -117,11 +119,11 @@ export const SaveSharedSquadGroupCharactersPayload = Schema.Struct({
 
 export const SetSquadGroupVisibilityPayload = Schema.Struct({
   groupId: SquadGroupIdSchema,
-  visibility: Schema.Literals(["private", "global"]),
+  visibility: SquadGroupVisibilitySchema,
 });
 
 export const SquadGroupVisibilityChangeSchema = Schema.Struct({
   groupId: SquadGroupIdSchema,
   updatedAt: Schema.DateFromString,
-  visibility: Schema.Literals(["private", "global"]),
+  visibility: SquadGroupVisibilitySchema,
 });

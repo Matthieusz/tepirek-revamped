@@ -5,10 +5,8 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
 import type { SquadGroupListFilterError } from "../../../domain/squad-builder/squad-group-list-filters.js";
 import { parseSquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
-import type { SquadId } from "../../../domain/squad-builder/squad-id.js";
 import { AppHttpApi } from "../../../protocol/http-api-contract.js";
 import type { SquadBuilderSquadGroupError } from "../../../protocol/squad-builder/squad-groups/http-api-contract.js";
 import {
@@ -39,14 +37,6 @@ import {
 } from "../auth-helper.js";
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderSquadGroupError>;
-
-const toSquadGroupId = (value: number): SquadGroupId =>
-  // SAFETY: HttpApi decoded this value with SquadGroupIdSchema before the handler runs.
-  value as SquadGroupId;
-
-const toSquadId = (value: number): SquadId =>
-  // SAFETY: HttpApi decoded this value with PositiveInt before the handler runs.
-  value as SquadId;
 
 const withRequestCorrelation = <A, E, R>(
   request: HttpServerRequest,
@@ -177,7 +167,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
               SquadGroupStoreService.use((store) =>
                 store.getSquadGroupDetail({
                   actorUserId: sessionAppUserId(session),
-                  groupId: toSquadGroupId(payload.groupId),
+                  groupId: payload.groupId,
                 })
               )
             ).pipe(Effect.mapError(mapSquadGroupsError));
@@ -192,7 +182,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                 const detail = yield* SquadGroupStoreService.use((store) =>
                   store.getSquadGroupDetail({
                     actorUserId: sessionAppUserId(session),
-                    groupId: toSquadGroupId(payload.groupId),
+                    groupId: payload.groupId,
                   })
                 );
                 return yield* SquadGroupStoreService.use((store) =>
@@ -211,7 +201,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
               request,
               saveSquadGroupSvc.save({
                 actorUserId: sessionAppUserId(session),
-                groupId: toSquadGroupId(payload.groupId),
+                groupId: payload.groupId,
                 name: payload.name,
                 squads: payload.squads.map((squad) => ({
                   characters: squad.characters,
@@ -220,7 +210,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                   position: squad.position,
                   ...(squad.squadId === undefined
                     ? {}
-                    : { squadId: toSquadId(squad.squadId) }),
+                    : { squadId: squad.squadId }),
                 })),
               })
             ).pipe(Effect.mapError(mapSquadGroupsError));
@@ -233,10 +223,10 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
               request,
               saveSharedCharactersSvc.saveWithStoreService({
                 actorUserId: sessionAppUserId(session),
-                groupId: toSquadGroupId(payload.groupId),
+                groupId: payload.groupId,
                 squads: payload.squads.map((squad) => ({
                   characters: squad.characters,
-                  squadId: toSquadId(squad.squadId),
+                  squadId: squad.squadId,
                 })),
               })
             ).pipe(Effect.mapError(mapSquadGroupsError));
@@ -249,7 +239,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
               request,
               setVisibilitySvc.set({
                 actorUserId: sessionAppUserId(session),
-                groupId: toSquadGroupId(payload.groupId),
+                groupId: payload.groupId,
                 visibility: payload.visibility,
               })
             ).pipe(Effect.mapError(mapSquadGroupsError));

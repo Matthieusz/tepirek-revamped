@@ -13,17 +13,16 @@ export type AppUserId = typeof AppUserId.Type;
 export const AppUserIdSchema = AppUserId;
 
 /** Failure returned when an app user id is missing or empty. */
-export interface InvalidAppUserId {
-  readonly _tag: "InvalidAppUserId";
-}
+export class InvalidAppUserId extends Schema.TaggedErrorClass<InvalidAppUserId>()(
+  "InvalidAppUserId",
+  {}
+) {}
 
 /** Parse a BetterAuth user id into the squad-builder domain id. */
 export const parseAppUserId = Effect.fn("AppUserId.parse")(
   function* parseAppUserId(input: string) {
     return yield* Schema.decodeUnknownEffect(AppUserId)(input).pipe(
-      Effect.catchTag("SchemaError", () =>
-        Effect.fail({ _tag: "InvalidAppUserId" } as const)
-      )
+      Effect.catchTag("SchemaError", () => new InvalidAppUserId())
     );
   }
 );

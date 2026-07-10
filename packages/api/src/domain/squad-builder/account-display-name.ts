@@ -2,9 +2,10 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 /** A validated account display name shown to the user and stored. */
-export type AccountDisplayName = string & {
-  readonly __brand: "AccountDisplayName";
-};
+export const AccountDisplayName = Schema.String.pipe(
+  Schema.brand("AccountDisplayName")
+);
+export type AccountDisplayName = typeof AccountDisplayName.Type;
 
 /** Expected failure when an account display name is not valid for storage. */
 export class InvalidAccountDisplayName extends Schema.TaggedErrorClass<InvalidAccountDisplayName>()(
@@ -39,8 +40,7 @@ export const parseAccountDisplayName = (
       });
     }
 
-    // SAFETY: trimmed non-empty length within maxLength established the invariant.
-    return trimmed as AccountDisplayName;
+    return AccountDisplayName.make(trimmed);
   });
 
 /** Convert an account display name to its primitive representation. */

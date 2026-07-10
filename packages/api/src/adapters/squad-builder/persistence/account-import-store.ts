@@ -18,6 +18,7 @@ import {
 } from "../../../domain/squad-builder/account-display-name.js";
 import { appUserIdToString } from "../../../domain/squad-builder/app-user-id.js";
 import { firecrawlYearMonthToString } from "../../../domain/squad-builder/firecrawl-year-month.js";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import {
   parseMargonemProfession,
   parseMargonemWorld,
@@ -505,8 +506,12 @@ const createOwnedAccountFromPendingImportWithDatabase =
             );
           yield* persistenceQueryUnsafe(update);
 
+          const accountId = yield* parseMargonemAccountId(account.id).pipe(
+            Effect.catch((error) => failPersistence(operation, error))
+          );
+
           return {
-            accountId: account.id,
+            accountId,
             characterCount: pending.jarunaCharacters.length,
             displayName,
             generatedProfileUrl: toMargonemProfileUrl(pending.profileId),
@@ -565,6 +570,10 @@ const listOwnedAccountsWithDatabase =
       const accounts: OwnedMargonemAccountSummary[] = [];
 
       for (const row of rows) {
+        const accountId = yield* parseMargonemAccountId(row.accountId).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
+
         const displayName = yield* parseAccountDisplayName(
           row.displayName
         ).pipe(Effect.catch((error) => failPersistence(operation, error)));
@@ -574,7 +583,7 @@ const listOwnedAccountsWithDatabase =
         );
 
         accounts.push({
-          accountId: row.accountId,
+          accountId,
           characterCount: row.characterCount ?? 0,
           displayName,
           generatedProfileUrl: toMargonemProfileUrl(profileId),

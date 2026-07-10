@@ -3,6 +3,7 @@ import * as Effect from "effect/Effect";
 import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
 import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
@@ -16,6 +17,8 @@ const parseTestUserId = () =>
 const parseTestPendingId = () =>
   Effect.runSync(parsePendingMargonemAccountImportId(42));
 
+const parseTestAccountId = () => Effect.runSync(parseMargonemAccountId(123));
+
 const parseTestProfileId = () =>
   Effect.runSync(parseMargonemProfileId(7_298_897));
 
@@ -26,12 +29,13 @@ const fixedClock: Clock = {
 it.effect("confirms a pending owned account import through services", () => {
   const actorUserId = parseTestUserId();
   const pendingImportId = parseTestPendingId();
+  const accountId = parseTestAccountId();
   const profileId = parseTestProfileId();
   const service = { confirm };
   const store = makeAccountImportStoreServiceTestService({
     createOwnedAccountFromPendingImport: ({ displayName, pending }) =>
       Effect.succeed({
-        accountId: 123,
+        accountId,
         characterCount: pending.jarunaCharacters.length,
         displayName,
         generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
