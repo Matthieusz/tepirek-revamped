@@ -24,15 +24,15 @@ export class InvalidSquadGroupInvitationStatus extends Schema.TaggedErrorClass<I
   { value: Schema.String }
 ) {}
 
-const knownStatuses: readonly SquadGroupInvitationStatus[] = [
+const knownStatuses: ReadonlySet<string> = new Set<SquadGroupInvitationStatus>([
   "pending",
   "accepted",
   "declined",
   "revoked",
-];
+]);
 
 const isKnownStatus = (value: string): value is SquadGroupInvitationStatus =>
-  (knownStatuses as readonly string[]).includes(value);
+  knownStatuses.has(value);
 
 /** Parse a persisted status string into the domain status. */
 export const parseSquadGroupInvitationStatus = (

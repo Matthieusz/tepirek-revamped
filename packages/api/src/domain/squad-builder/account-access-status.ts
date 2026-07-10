@@ -29,15 +29,15 @@ export class InvalidAccountAccessStatus extends Schema.TaggedErrorClass<InvalidA
   { value: Schema.String }
 ) {}
 
-const knownStatuses: readonly AccountAccessStatus[] = [
+const knownStatuses: ReadonlySet<string> = new Set<AccountAccessStatus>([
   "pending",
   "accepted",
   "declined",
   "revoked",
-];
+]);
 
 const isKnownStatus = (value: string): value is AccountAccessStatus =>
-  (knownStatuses as readonly string[]).includes(value);
+  knownStatuses.has(value);
 
 /** Parse a persisted status string into the domain status. */
 export const parseAccountAccessStatus = (
