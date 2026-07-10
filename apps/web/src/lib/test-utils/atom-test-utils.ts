@@ -106,6 +106,25 @@ export const makeTestLayer = () => {
       ),
       previewAccountRefetch: () => Effect.succeed({}),
     },
+    squadBuilderSquadGroup: {
+      getSquadGroupDetail: record(
+        "squadBuilderSquadGroup",
+        "getSquadGroupDetail"
+      ),
+      listAvailableSquadCharacters: record(
+        "squadBuilderSquadGroup",
+        "listAvailableSquadCharacters"
+      ),
+      listOwnedSquadGroups: record(
+        "squadBuilderSquadGroup",
+        "listOwnedSquadGroups"
+      ),
+      saveSharedSquadGroupCharacters: record(
+        "squadBuilderSquadGroup",
+        "saveSharedSquadGroupCharacters"
+      ),
+      saveSquadGroup: record("squadBuilderSquadGroup", "saveSquadGroup"),
+    },
     vault: {
       distributeGold: record("vault", "distributeGold"),
       getUserStats: ({ payload }: { readonly payload: unknown }) => {

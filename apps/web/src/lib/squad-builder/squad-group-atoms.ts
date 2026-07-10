@@ -13,7 +13,7 @@ import {
   appHttpApiAtom,
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
-import { asSquadGroupId } from "@/lib/squad-builder/branded-ids";
+import { asSquadGroupId, asSquadId } from "@/lib/squad-builder/branded-ids";
 
 interface SquadGroupIdInput {
   readonly groupId: number;
@@ -198,7 +198,13 @@ export const saveSquadGroupAtom = appHttpApiFn(
         payload: {
           groupId: asSquadGroupId(payload.groupId),
           name: payload.name,
-          squads: payload.squads,
+          squads: payload.squads.map((squad) => ({
+            ...squad,
+            squadId:
+              squad.squadId === undefined
+                ? undefined
+                : asSquadId(squad.squadId),
+          })),
         },
       });
       get.refresh(ownedSquadGroupsByActorAtom("default"));
@@ -218,7 +224,10 @@ export const saveSharedSquadGroupCharactersAtom = appHttpApiFn(
         yield* client.squadBuilderSquadGroup.saveSharedSquadGroupCharacters({
           payload: {
             groupId: asSquadGroupId(payload.groupId),
-            squads: payload.squads,
+            squads: payload.squads.map((squad) => ({
+              ...squad,
+              squadId: asSquadId(squad.squadId),
+            })),
           },
         });
       get.refresh(ownedSquadGroupsByActorAtom("default"));

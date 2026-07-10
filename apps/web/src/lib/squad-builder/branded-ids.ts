@@ -5,6 +5,7 @@ import { PendingMargonemAccountImportIdSchema } from "@tepirek-revamped/api/doma
 import { PendingMargonemAccountRefetchIdSchema } from "@tepirek-revamped/api/domain/squad-builder/pending-margonem-account-refetch-id";
 import { SquadGroupIdSchema } from "@tepirek-revamped/api/domain/squad-builder/squad-group-id";
 import { SquadGroupInvitationIdSchema } from "@tepirek-revamped/api/domain/squad-builder/squad-group-invitation-id";
+import { SquadIdSchema } from "@tepirek-revamped/api/domain/squad-builder/squad-id";
 import * as Schema from "effect/Schema";
 
 /** Build an `AppUserId` from a plain string. */
@@ -14,6 +15,10 @@ export const asAppUserId = (value: string) =>
 /** Build a `SquadGroupId` from a plain number. */
 export const asSquadGroupId = (value: number) =>
   Schema.decodeUnknownSync(SquadGroupIdSchema)(value);
+
+/** Build a `SquadId` from a plain number. */
+export const asSquadId = (value: number) =>
+  Schema.decodeUnknownSync(SquadIdSchema)(value);
 
 /** Build a `MargonemAccountId` from a plain number. */
 export const asMargonemAccountId = (value: number) =>
