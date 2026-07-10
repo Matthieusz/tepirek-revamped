@@ -2,16 +2,33 @@
   "name": "@tepirek-revamped/api",
   "type": "module",
   "exports": {
-    ".": {
-      "default": "./src/index.ts"
+    "./adapters/*": {
+      "browser": null,
+      "default": "./src/adapters/*.ts"
     },
-    "./*": {
-      "default": "./src/*.ts"
+    "./domain/squad-builder/*": {
+      "default": "./src/domain/squad-builder/*.ts"
+    },
+    "./observability": {
+      "browser": null,
+      "default": "./src/observability.ts"
+    },
+    "./protocol/*": {
+      "default": "./src/protocol/*.ts"
+    },
+    "./server/*": {
+      "browser": null,
+      "default": "./src/server/*.ts"
+    },
+    "./services/*": {
+      "browser": null,
+      "default": "./src/services/*.ts"
     }
   },
   "scripts": {
+    "check-boundary": "node scripts/check-package-boundary.mjs",
     "check-types": "tsc --noEmit --composite false --declaration false --declarationMap false --rootDir src",
-    "test": "vitest run",
+    "test": "pnpm check-boundary && vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {

@@ -35,7 +35,7 @@ if (!corsOrigin) {
 }
 
 /** Shared Effect runtime for migrated API modules. */
-export const apiEffectRuntime = makeApiRuntimeFromConfig();
+const apiEffectRuntime = makeApiRuntimeFromConfig();
 
 export const disposeApiEffectRuntime = async (): Promise<void> => {
   await apiEffectRuntime.dispose();
