@@ -3,39 +3,59 @@ import { db } from "@tepirek-revamped/db";
 import * as schema from "@tepirek-revamped/db/schema/auth";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 
 export interface AuthEnv {
-  readonly betterAuthSecret: string;
+  readonly betterAuthSecret: Redacted.Redacted;
   readonly betterAuthUrl: string;
-  readonly discordClientId: string;
-  readonly discordClientSecret: string;
   readonly corsOrigin: string;
+  readonly discordClientId: string;
+  readonly discordClientSecret: Redacted.Redacted;
   readonly isProduction: boolean;
 }
 
-/**
- * Read auth environment variables at an explicit process boundary.
- *
- * Called at import time for the default `auth` export; call it explicitly
- * when constructing auth in tests or alternative setups.
- */
-const getEnvOrThrow = (key: string): string => {
-  const value = process.env[key];
-  if (value === undefined || value === "") {
-    throw new Error(`${key} is required`);
-  }
-  return value;
-};
-
-export const readAuthEnv = (): AuthEnv => ({
-  betterAuthSecret: getEnvOrThrow("BETTER_AUTH_SECRET"),
-  betterAuthUrl: getEnvOrThrow("BETTER_AUTH_URL"),
-  corsOrigin: process.env.CORS_ORIGIN ?? "",
-  discordClientId: getEnvOrThrow("DISCORD_CLIENT_ID"),
-  discordClientSecret: getEnvOrThrow("DISCORD_CLIENT_SECRET"),
-  isProduction: process.env.NODE_ENV === "production",
+const authEnvConfig = Config.all({
+  betterAuthSecret: Config.redacted("BETTER_AUTH_SECRET"),
+  betterAuthUrl: Config.string("BETTER_AUTH_URL"),
+  corsOrigin: Config.string("CORS_ORIGIN").pipe(Config.withDefault("")),
+  discordClientId: Config.string("DISCORD_CLIENT_ID"),
+  discordClientSecret: Config.redacted("DISCORD_CLIENT_SECRET"),
+  isProduction: Config.string("NODE_ENV").pipe(
+    Config.withDefault("development"),
+    Config.map((nodeEnv) => nodeEnv === "production")
+  ),
 });
 
+/**
+ * Effect config service for Better Auth's runtime configuration.
+ *
+ * Secrets remain redacted until `createAuth`, the synchronous Better Auth
+ * construction boundary that requires raw strings.
+ */
+export class AuthConfig extends Context.Service<AuthConfig, AuthEnv>()(
+  "@tepirek-revamped/auth/AuthConfig"
+) {}
+
+/** Live Better Auth config layer backed by Effect's environment provider. */
+export const AuthConfigLiveLayer = Layer.effect(AuthConfig, authEnvConfig);
+
+/**
+ * Read Better Auth configuration through Effect Config.
+ *
+ * Tests can provide `AuthConfig` directly instead of mutating process.env.
+ */
+export const readAuthEnv = AuthConfig;
+
+/**
+ * Pure Better Auth construction seam.
+ *
+ * Better Auth and its Drizzle adapter require synchronous raw strings, so
+ * secrets are unwrapped only while constructing that library instance.
+ */
 export const createAuth = (env: AuthEnv) =>
   betterAuth({
     advanced: env.isProduction
@@ -70,7 +90,7 @@ export const createAuth = (env: AuthEnv) =>
       max: 100,
       window: 60,
     },
-    secret: env.betterAuthSecret,
+    secret: Redacted.value(env.betterAuthSecret),
     session: {
       cookieCache: {
         enabled: true,
@@ -81,7 +101,7 @@ export const createAuth = (env: AuthEnv) =>
     socialProviders: {
       discord: {
         clientId: env.discordClientId,
-        clientSecret: env.discordClientSecret,
+        clientSecret: Redacted.value(env.discordClientSecret),
       },
     },
     trustedOrigins: [env.corsOrigin],
@@ -104,10 +124,16 @@ export const createAuth = (env: AuthEnv) =>
     },
   });
 
+/** Build Better Auth from the currently provided Effect config service. */
+export const makeAuth = readAuthEnv.pipe(Effect.map(createAuth));
+
 /**
- * Default auth instance, constructed from process.env at import time.
+ * Backward-compatible synchronous Better Auth boundary.
  *
- * This is a backward-compatible singleton. New code should prefer
- * `createAuth(readAuthEnv())` to make the env boundary explicit.
+ * Existing consumers need a ready Better Auth instance at module load. New
+ * Effect-managed code should use `makeAuth` and provide `AuthConfig` at its
+ * composition root instead.
  */
-export const auth = createAuth(readAuthEnv());
+export const auth = Effect.runSync(
+  makeAuth.pipe(Effect.provide(AuthConfigLiveLayer))
+);

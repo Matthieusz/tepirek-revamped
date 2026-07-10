@@ -1,5 +1,6 @@
 /**
- * Synchronous env helper for Drizzle CLI tooling boundary only.
+ * Synchronous env helper for Drizzle CLI and Better Auth's sync adapter
+ * boundaries only.
  *
  * Effect-managed code should use `Config.redacted("DATABASE_URL")` via
  * `DatabaseUrlConfig` from `@tepirek-revamped/db/effect` instead.
