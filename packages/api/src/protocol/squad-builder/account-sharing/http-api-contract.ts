@@ -3,6 +3,7 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import {
   SquadBuilderConflict,
+  SquadBuilderBaseErrors,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
@@ -32,13 +33,10 @@ export {
 };
 
 export const SquadBuilderAccountSharingError = Schema.Union([
-  SquadBuilderUnauthorized,
-  SquadBuilderForbidden,
-  SquadBuilderNotFound,
-  SquadBuilderConflict,
-  SquadBuilderInvalidInput,
-  SquadBuilderPersistenceUnavailable,
+  ...SquadBuilderBaseErrors,
 ]);
+
+export const SquadBuilderAccountSharingErrors = SquadBuilderBaseErrors;
 
 export const SquadBuilderAccountSharingGroup = HttpApiGroup.make(
   "squadBuilderAccountSharing"
@@ -48,38 +46,38 @@ export const SquadBuilderAccountSharingGroup = HttpApiGroup.make(
       "searchAccountInviteTargets",
       "/invite-targets/search",
       {
-        error: SquadBuilderAccountSharingError,
+        error: SquadBuilderAccountSharingErrors,
         payload: SearchAccountInviteTargetsPayload,
         success: Schema.Array(AccountInviteTargetSchema),
       }
     ),
     HttpApiEndpoint.post("sendAccountAccessInvite", "/invites", {
-      error: SquadBuilderAccountSharingError,
+      error: SquadBuilderAccountSharingErrors,
       payload: SendAccountAccessInvitePayload,
       success: AccountAccessInviteSummarySchema,
     }),
     HttpApiEndpoint.post("respondToAccountAccessInvite", "/invites/respond", {
-      error: SquadBuilderAccountSharingError,
+      error: SquadBuilderAccountSharingErrors,
       payload: RespondToAccountAccessInvitePayload,
       success: AccountAccessInviteSummarySchema,
     }),
     HttpApiEndpoint.post("revokeAccountAccess", "/access/revoke", {
-      error: SquadBuilderAccountSharingError,
+      error: SquadBuilderAccountSharingErrors,
       payload: RevokeAccountAccessPayload,
       success: RevokeAccountAccessSuccess,
     }),
     HttpApiEndpoint.post("listIncomingAccountInvites", "/incoming-invites", {
-      error: SquadBuilderAccountSharingError,
+      error: SquadBuilderAccountSharingErrors,
       payload: Schema.Struct({}),
       success: Schema.Array(AccountAccessInviteSummarySchema),
     }),
     HttpApiEndpoint.post("listSharedAccounts", "/shared-accounts", {
-      error: SquadBuilderAccountSharingError,
+      error: SquadBuilderAccountSharingErrors,
       payload: Schema.Struct({}),
       success: Schema.Array(SharedMargonemAccountSummarySchema),
     }),
     HttpApiEndpoint.post("listAccountAccessGrants", "/access-grants", {
-      error: SquadBuilderAccountSharingError,
+      error: SquadBuilderAccountSharingErrors,
       payload: AccountAccessGrantsPayload,
       success: Schema.Array(AccountAccessGrantSummarySchema),
     })

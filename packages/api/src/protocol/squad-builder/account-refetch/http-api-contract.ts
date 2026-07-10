@@ -3,6 +3,7 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import {
   SquadBuilderConflict,
+  SquadBuilderErrorsWithUpstream,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
@@ -28,26 +29,22 @@ export {
 };
 
 export const SquadBuilderAccountRefetchError = Schema.Union([
-  SquadBuilderUnauthorized,
-  SquadBuilderForbidden,
-  SquadBuilderNotFound,
-  SquadBuilderConflict,
-  SquadBuilderInvalidInput,
-  SquadBuilderUpstreamUnavailable,
-  SquadBuilderPersistenceUnavailable,
+  ...SquadBuilderErrorsWithUpstream,
 ]);
+
+export const SquadBuilderAccountRefetchErrors = SquadBuilderErrorsWithUpstream;
 
 export const SquadBuilderAccountRefetchGroup = HttpApiGroup.make(
   "squadBuilderAccountRefetch"
 )
   .add(
     HttpApiEndpoint.post("previewAccountRefetch", "/preview", {
-      error: SquadBuilderAccountRefetchError,
+      error: SquadBuilderAccountRefetchErrors,
       payload: PreviewAccountRefetchPayload,
       success: PreviewAccountRefetchSuccess,
     }),
     HttpApiEndpoint.post("applyAccountRefetch", "/apply", {
-      error: SquadBuilderAccountRefetchError,
+      error: SquadBuilderAccountRefetchErrors,
       payload: ApplyAccountRefetchPayload,
       success: ApplyAccountRefetchSuccess,
     })

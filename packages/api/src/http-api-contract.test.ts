@@ -13,6 +13,16 @@ const expectRoute = (method: HttpMethod, path: OpenApiPath) => {
   expect(appOpenApi.paths[path]?.[method]).toBeDefined();
 };
 
+const expectPostResponseStatuses = (
+  path: OpenApiPath,
+  expectedStatuses: readonly string[]
+) => {
+  const statuses = Object.keys(appOpenApi.paths[path]?.post?.responses ?? {});
+
+  expect(statuses).toEqual(expect.arrayContaining([...expectedStatuses]));
+  expect(statuses).not.toContain("500");
+};
+
 describe("AppHttpApi route contract", () => {
   it("exposes the migrated bet routes", () => {
     expectRoute("post", "/bet");
@@ -48,5 +58,46 @@ describe("AppHttpApi route contract", () => {
     expectRoute("post", "/vault/user-stats");
     expectRoute("post", "/vault");
     expectRoute("post", "/vault/toggle-paid-out");
+  });
+
+  it("preserves squad-builder endpoint error statuses", () => {
+    expectPostResponseStatuses("/squad-builder/squad-groups", [
+      "200",
+      "400",
+      "401",
+      "403",
+      "404",
+      "409",
+      "502",
+      "503",
+    ]);
+    expectPostResponseStatuses(
+      "/squad-builder/account-sharing/invite-targets/search",
+      ["200", "400", "401", "403", "404", "409", "503"]
+    );
+    expectPostResponseStatuses("/squad-builder/account-imports/owned", [
+      "200",
+      "400",
+      "401",
+      "403",
+      "404",
+      "409",
+      "502",
+      "503",
+    ]);
+    expectPostResponseStatuses("/squad-builder/account-refetches/preview", [
+      "200",
+      "400",
+      "401",
+      "403",
+      "404",
+      "409",
+      "502",
+      "503",
+    ]);
+    expectPostResponseStatuses(
+      "/squad-builder/squad-group-sharing/shared-groups",
+      ["200", "400", "401", "403", "404", "409", "503"]
+    );
   });
 });

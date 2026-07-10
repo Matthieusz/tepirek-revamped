@@ -3,6 +3,7 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import {
   SquadBuilderConflict,
+  SquadBuilderErrorsWithUpstream,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
@@ -30,36 +31,32 @@ export {
 };
 
 export const SquadBuilderAccountImportError = Schema.Union([
-  SquadBuilderUnauthorized,
-  SquadBuilderForbidden,
-  SquadBuilderNotFound,
-  SquadBuilderConflict,
-  SquadBuilderInvalidInput,
-  SquadBuilderUpstreamUnavailable,
-  SquadBuilderPersistenceUnavailable,
+  ...SquadBuilderErrorsWithUpstream,
 ]);
+
+export const SquadBuilderAccountImportErrors = SquadBuilderErrorsWithUpstream;
 
 export const SquadBuilderAccountImportGroup = HttpApiGroup.make(
   "squadBuilderAccountImport"
 )
   .add(
     HttpApiEndpoint.post("previewMargonemProfileImport", "/preview-profile", {
-      error: SquadBuilderAccountImportError,
+      error: SquadBuilderAccountImportErrors,
       payload: PreviewMargonemProfileImportPayload,
       success: PreviewMargonemProfileImportSuccess,
     }),
     HttpApiEndpoint.post("previewOwnedAccountImports", "/preview-owned", {
-      error: SquadBuilderAccountImportError,
+      error: SquadBuilderAccountImportErrors,
       payload: PreviewOwnedAccountImportsPayload,
       success: PreviewOwnedAccountImportsSuccess,
     }),
     HttpApiEndpoint.post("confirmOwnedAccountImport", "/confirm-owned", {
-      error: SquadBuilderAccountImportError,
+      error: SquadBuilderAccountImportErrors,
       payload: ConfirmOwnedAccountImportPayload,
       success: OwnedMargonemAccountSummarySchema,
     }),
     HttpApiEndpoint.post("listOwnedAccounts", "/owned", {
-      error: SquadBuilderAccountImportError,
+      error: SquadBuilderAccountImportErrors,
       payload: Schema.Struct({}),
       success: Schema.Array(OwnedMargonemAccountSummarySchema),
     })

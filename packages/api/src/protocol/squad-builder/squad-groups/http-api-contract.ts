@@ -3,6 +3,7 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import {
   SquadBuilderConflict,
+  SquadBuilderErrorsWithUpstream,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
@@ -34,15 +35,7 @@ export {
   SquadBuilderUpstreamUnavailable,
 };
 
-export const SquadBuilderSquadGroupErrors = [
-  SquadBuilderUnauthorized,
-  SquadBuilderForbidden,
-  SquadBuilderNotFound,
-  SquadBuilderConflict,
-  SquadBuilderInvalidInput,
-  SquadBuilderUpstreamUnavailable,
-  SquadBuilderPersistenceUnavailable,
-] as const;
+export const SquadBuilderSquadGroupErrors = SquadBuilderErrorsWithUpstream;
 
 export const SquadBuilderSquadGroupError = Schema.Union(
   SquadBuilderSquadGroupErrors
