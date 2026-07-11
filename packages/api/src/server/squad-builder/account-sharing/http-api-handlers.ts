@@ -95,7 +95,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
       return handlers
         .handle("searchAccountInviteTargets", ({ payload, request }) =>
           Effect.gen(function* searchAccountInviteTargetsHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               accountInviteTargetsSvc.search({
@@ -108,7 +108,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("sendAccountAccessInvite", ({ payload, request }) =>
           Effect.gen(function* sendAccountAccessInviteHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               accountAccessInvitesSvc.send({
@@ -121,7 +121,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("respondToAccountAccessInvite", ({ payload, request }) =>
           Effect.gen(function* respondToAccountAccessInviteHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               accountAccessInviteResponsesSvc.respond({
@@ -134,7 +134,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("revokeAccountAccess", ({ payload, request }) =>
           Effect.gen(function* revokeAccountAccessHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               accountAccessRevocationsSvc.revoke({
@@ -146,7 +146,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("listIncomingAccountInvites", ({ request }) =>
           Effect.gen(function* listIncomingAccountInvitesHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               accountSharingStateSvc.listIncomingInvites({
@@ -157,7 +157,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("listSharedAccounts", ({ request }) =>
           Effect.gen(function* listSharedAccountsHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               accountSharingStateSvc.listSharedAccounts({
@@ -168,7 +168,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("listAccountAccessGrants", ({ payload, request }) =>
           Effect.gen(function* listAccountAccessGrantsHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               accountSharingStateSvc.listAccountAccessGrants({

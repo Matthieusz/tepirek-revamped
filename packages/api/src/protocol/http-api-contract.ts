@@ -2,6 +2,7 @@ import { HttpApi } from "effect/unstable/httpapi";
 
 import { AnnouncementHttpApiGroup } from "./announcement/http-api-contract.js";
 import { AuctionHttpApiGroup } from "./auction/http-api-contract.js";
+import { SessionMiddleware } from "./auth/http-api-middleware.js";
 import { BetHttpApiGroup } from "./bet/http-api-contract.js";
 import { EventHttpApiGroup } from "./event/http-api-contract.js";
 import { HealthHttpApiGroup } from "./health/http-api-contract.js";
@@ -30,10 +31,10 @@ export const AppHttpApi = HttpApi.make("tepirekApi")
   .add(RankingHttpApiGroup)
   .add(UserHttpApiGroup)
   .add(VaultHttpApiGroup)
-  .add(SquadBuilderAccountImportGroup)
-  .add(SquadBuilderAccountRefetchGroup)
-  .add(SquadBuilderSquadGroupGroup)
-  .add(SquadBuilderAccountSharingGroup)
-  .add(SquadBuilderSquadGroupSharingGroup);
+  .add(SquadBuilderAccountImportGroup.middleware(SessionMiddleware))
+  .add(SquadBuilderAccountRefetchGroup.middleware(SessionMiddleware))
+  .add(SquadBuilderSquadGroupGroup.middleware(SessionMiddleware))
+  .add(SquadBuilderAccountSharingGroup.middleware(SessionMiddleware))
+  .add(SquadBuilderSquadGroupSharingGroup.middleware(SessionMiddleware));
 
 export type AppHttpApi = typeof AppHttpApi;

@@ -1,7 +1,5 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { auth } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
-import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { SkillsStore } from "../../adapters/skills/skills-store.js";
@@ -10,109 +8,83 @@ import {
   SkillsForbidden,
   SkillsUnauthorized,
 } from "../../protocol/skills/http-api-contract.js";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
 
-const headersFromRequest = (request: HttpServerRequest): Headers => {
-  const headers = new Headers();
-  for (const [name, value] of Object.entries(request.headers)) {
-    if (value !== undefined) {
-      headers.set(name, value);
-    }
-  }
-  return headers;
-};
-type Session = Awaited<ReturnType<typeof auth.api.getSession>>;
-const loadSession = (request: HttpServerRequest) =>
-  Effect.promise(() =>
-    auth.api.getSession({ headers: headersFromRequest(request) })
-  );
-const requireVerifiedSession = (
-  request: HttpServerRequest
-): Effect.Effect<NonNullable<Session>, SkillsUnauthorized | SkillsForbidden> =>
-  Effect.gen(function* requireVerifiedSession() {
-    const session = yield* loadSession(request);
-    if (!session?.user) {
-      return yield* new SkillsUnauthorized({ message: "UNAUTHORIZED" });
-    }
-    if (session.user.verified !== true) {
-      return yield* new SkillsForbidden({
+const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
+  {
+    forbidden: () => new SkillsForbidden({ message: "FORBIDDEN" }),
+    unauthorized: () => new SkillsUnauthorized({ message: "UNAUTHORIZED" }),
+    unverified: () =>
+      new SkillsForbidden({
         message: "Konto oczekuje na weryfikację",
-      });
-    }
-    return session;
-  });
-const requireAdminSession = (request: HttpServerRequest) =>
-  Effect.gen(function* requireAdminSession() {
-    const session = yield* requireVerifiedSession(request);
-    if (session.user.role !== "admin") {
-      return yield* new SkillsForbidden({ message: "FORBIDDEN" });
-    }
-    return session;
-  });
+      }),
+  }
+);
 
 export const SkillsHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "skills",
   (handlers) =>
     handlers
-      .handle("createProfession", ({ payload, request }) =>
+      .handle("createProfession", ({ payload }) =>
         Effect.gen(function* SkillsHttpApiHandlers() {
-          yield* requireAdminSession(request);
+          yield* requireAdminSession();
           const store = yield* SkillsStore;
           yield* store.createProfession(payload);
         })
       )
-      .handle("createRange", ({ payload, request }) =>
+      .handle("createRange", ({ payload }) =>
         Effect.gen(function* SkillsHttpApiHandlers() {
-          yield* requireAdminSession(request);
+          yield* requireAdminSession();
           const store = yield* SkillsStore;
           yield* store.createRange(payload);
         })
       )
-      .handle("createSkill", ({ payload, request }) =>
+      .handle("createSkill", ({ payload }) =>
         Effect.gen(function* SkillsHttpApiHandlers() {
-          const session = yield* requireVerifiedSession(request);
+          const session = yield* requireVerifiedSession();
           const store = yield* SkillsStore;
           yield* store.createSkill({ ...payload, userId: session.user.id });
         })
       )
-      .handle("deleteRange", ({ payload, request }) =>
+      .handle("deleteRange", ({ payload }) =>
         Effect.gen(function* SkillsHttpApiHandlers() {
-          yield* requireAdminSession(request);
+          yield* requireAdminSession();
           const store = yield* SkillsStore;
           yield* store.deleteRange(payload);
         })
       )
-      .handle("deleteSkill", ({ payload, request }) =>
+      .handle("deleteSkill", ({ payload }) =>
         Effect.gen(function* SkillsHttpApiHandlers() {
-          yield* requireAdminSession(request);
+          yield* requireAdminSession();
           const store = yield* SkillsStore;
           yield* store.deleteSkill(payload);
         })
       )
-      .handle("listProfessions", ({ request }) =>
+      .handle("listProfessions", () =>
         Effect.gen(function* SkillsHttpApiHandlers() {
-          yield* requireVerifiedSession(request);
+          yield* requireVerifiedSession();
           const store = yield* SkillsStore;
           return yield* store.listProfessions();
         })
       )
-      .handle("listRanges", ({ request }) =>
+      .handle("listRanges", () =>
         Effect.gen(function* SkillsHttpApiHandlers() {
-          yield* requireVerifiedSession(request);
+          yield* requireVerifiedSession();
           const store = yield* SkillsStore;
           return yield* store.listRanges();
         })
       )
-      .handle("getRangeBySlug", ({ payload, request }) =>
+      .handle("getRangeBySlug", ({ payload }) =>
         Effect.gen(function* SkillsHttpApiHandlers() {
-          yield* requireVerifiedSession(request);
+          yield* requireVerifiedSession();
           const store = yield* SkillsStore;
           return yield* store.getRangeBySlug(payload);
         })
       )
-      .handle("listSkillsByRange", ({ payload, request }) =>
+      .handle("listSkillsByRange", ({ payload }) =>
         Effect.gen(function* SkillsHttpApiHandlers() {
-          yield* requireVerifiedSession(request);
+          yield* requireVerifiedSession();
           const store = yield* SkillsStore;
           return yield* store.listSkillsByRange(payload);
         })

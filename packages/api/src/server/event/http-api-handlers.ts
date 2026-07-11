@@ -1,7 +1,5 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { auth } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
-import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { EventStore } from "../../adapters/event/event-store.js";
@@ -10,77 +8,48 @@ import {
   EventUnauthorized,
 } from "../../protocol/event/http-api-contract.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
 
-const headersFromRequest = (request: HttpServerRequest): Headers => {
-  const headers = new Headers();
-  for (const [name, value] of Object.entries(request.headers)) {
-    if (value !== undefined) {
-      headers.set(name, value);
-    }
-  }
-  return headers;
-};
-
-type Session = Awaited<ReturnType<typeof auth.api.getSession>>;
-const loadSession = (request: HttpServerRequest) =>
-  Effect.promise(() =>
-    auth.api.getSession({ headers: headersFromRequest(request) })
-  );
-
-const requireVerifiedSession = (
-  request: HttpServerRequest
-): Effect.Effect<NonNullable<Session>, EventUnauthorized | EventForbidden> =>
-  Effect.gen(function* requireVerifiedSession() {
-    const session = yield* loadSession(request);
-    if (!session?.user) {
-      return yield* new EventUnauthorized({ message: "UNAUTHORIZED" });
-    }
-    if (session.user.verified !== true) {
-      return yield* new EventForbidden({
+const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
+  {
+    forbidden: () => new EventForbidden({ message: "FORBIDDEN" }),
+    unauthorized: () => new EventUnauthorized({ message: "UNAUTHORIZED" }),
+    unverified: () =>
+      new EventForbidden({
         message: "Konto oczekuje na weryfikację",
-      });
-    }
-    return session;
-  });
-
-const requireAdminSession = (request: HttpServerRequest) =>
-  Effect.gen(function* requireAdminSession() {
-    const session = yield* requireVerifiedSession(request);
-    if (session.user.role !== "admin") {
-      return yield* new EventForbidden({ message: "FORBIDDEN" });
-    }
-    return session;
-  });
+      }),
+  }
+);
 
 export const EventHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "event",
   (handlers) =>
     handlers
-      .handle("createEvent", ({ payload, request }) =>
+      .handle("createEvent", ({ payload }) =>
         Effect.gen(function* EventHttpApiHandlers() {
-          yield* requireAdminSession(request);
+          yield* requireAdminSession();
           const store = yield* EventStore;
           yield* store.create(payload);
         })
       )
-      .handle("deleteEvent", ({ payload, request }) =>
+      .handle("deleteEvent", ({ payload }) =>
         Effect.gen(function* EventHttpApiHandlers() {
-          yield* requireAdminSession(request);
+          yield* requireAdminSession();
           const store = yield* EventStore;
           yield* store.delete(payload);
         })
       )
-      .handle("listEvents", ({ request }) =>
+      .handle("listEvents", () =>
         Effect.gen(function* EventHttpApiHandlers() {
-          yield* requireVerifiedSession(request);
+          yield* requireVerifiedSession();
           const store = yield* EventStore;
           return yield* store.list();
         })
       )
-      .handle("toggleEventActive", ({ payload, request }) =>
+      .handle("toggleEventActive", ({ payload }) =>
         Effect.gen(function* EventHttpApiHandlers() {
-          yield* requireAdminSession(request);
+          yield* requireAdminSession();
           const store = yield* EventStore;
           yield* store.toggleActive(payload);
         })

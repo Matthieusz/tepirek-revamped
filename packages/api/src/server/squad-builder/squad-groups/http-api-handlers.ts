@@ -118,7 +118,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
       return handlers
         .handle("createSquadGroup", ({ payload, request }) =>
           Effect.gen(function* createSquadGroupHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               createSquadGroupSvc.create({
@@ -130,7 +130,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("listOwnedSquadGroups", ({ request }) =>
           Effect.gen(function* listOwnedSquadGroupsHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               listSquadGroupsSvc.listMine({
@@ -141,7 +141,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("listGlobalSquadGroups", ({ payload, request }) =>
           Effect.gen(function* listGlobalSquadGroupsHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               Effect.gen(function* listGlobalSquadGroupsEffect() {
@@ -161,7 +161,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("getSquadGroupDetail", ({ payload, request }) =>
           Effect.gen(function* getSquadGroupDetailHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               SquadGroupStoreService.use((store) =>
@@ -175,7 +175,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("listAvailableSquadCharacters", ({ payload, request }) =>
           Effect.gen(function* listAvailableSquadCharactersHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               Effect.gen(function* listAvailableSquadCharacters() {
@@ -196,7 +196,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("saveSquadGroup", ({ payload, request }) =>
           Effect.gen(function* saveSquadGroupHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               saveSquadGroupSvc.save({
@@ -218,7 +218,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("saveSharedSquadGroupCharacters", ({ payload, request }) =>
           Effect.gen(function* saveSharedSquadGroupCharactersHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               saveSharedCharactersSvc.saveWithStoreService({
@@ -234,7 +234,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("setSquadGroupVisibility", ({ payload, request }) =>
           Effect.gen(function* setSquadGroupVisibilityHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               setVisibilitySvc.set({

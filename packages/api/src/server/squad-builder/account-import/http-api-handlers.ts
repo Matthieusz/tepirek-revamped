@@ -105,7 +105,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
       return handlers
         .handle("previewMargonemProfileImport", ({ payload, request }) =>
           Effect.gen(function* previewMargonemProfileImportHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               previewMargonemProfileImportSvc.preview({
@@ -117,7 +117,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("previewOwnedAccountImports", ({ payload, request }) =>
           Effect.gen(function* previewOwnedAccountImportsHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               previewOwnedAccountImportsSvc.preview({
@@ -129,7 +129,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("confirmOwnedAccountImport", ({ payload, request }) =>
           Effect.gen(function* confirmOwnedAccountImportHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               confirmOwnedAccountImportSvc.confirm({
@@ -142,7 +142,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("listOwnedAccounts", ({ request }) =>
           Effect.gen(function* listOwnedAccountsHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
               AccountImportStoreService.use((store) =>

@@ -1,6 +1,4 @@
-import { auth } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
-import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
@@ -11,55 +9,16 @@ import {
   UserForbidden,
   UserUnauthorized,
 } from "../../protocol/user/http-api-contract.js";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
 
-const headersFromRequest = (request: HttpServerRequest): Headers => {
-  const headers = new Headers();
-  for (const [name, value] of Object.entries(request.headers)) {
-    if (value !== undefined) {
-      headers.set(name, value);
-    }
-  }
-  return headers;
-};
-
-type Session = Awaited<ReturnType<typeof auth.api.getSession>>;
-
-const loadSession = (request: HttpServerRequest) =>
-  Effect.promise(() =>
-    auth.api.getSession({ headers: headersFromRequest(request) })
-  );
-
-const requireSession = (
-  request: HttpServerRequest
-): Effect.Effect<NonNullable<Session>, UserUnauthorized> =>
-  Effect.gen(function* requireSession() {
-    const session = yield* loadSession(request);
-    if (!session?.user) {
-      return yield* new UserUnauthorized({ message: "UNAUTHORIZED" });
-    }
-    return session;
-  });
-
-const requireVerifiedSession = (
-  request: HttpServerRequest
-): Effect.Effect<NonNullable<Session>, UserUnauthorized | UserForbidden> =>
-  Effect.gen(function* requireVerifiedSession() {
-    const session = yield* requireSession(request);
-    if (session.user.verified !== true) {
-      return yield* new UserForbidden({
+const { requireAdminSession, requireSession, requireVerifiedSession } =
+  makeAuthorizationPolicy({
+    forbidden: () => new UserForbidden({ message: "FORBIDDEN" }),
+    unauthorized: () => new UserUnauthorized({ message: "UNAUTHORIZED" }),
+    unverified: () =>
+      new UserForbidden({
         message: "Konto oczekuje na weryfikację",
-      });
-    }
-    return session;
-  });
-
-const requireAdminSession = (request: HttpServerRequest) =>
-  Effect.gen(function* requireAdminSession() {
-    const session = yield* requireVerifiedSession(request);
-    if (session.user.role !== "admin") {
-      return yield* new UserForbidden({ message: "FORBIDDEN" });
-    }
-    return session;
+      }),
   });
 
 export const UserHttpApiHandlers = HttpApiBuilder.group(
@@ -67,31 +26,31 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
   "user",
   (handlers) =>
     handlers
-      .handle("deleteUser", ({ payload, request }) =>
+      .handle("deleteUser", ({ payload }) =>
         Effect.gen(function* UserHttpApiHandlers() {
-          yield* requireAdminSession(request);
+          yield* requireAdminSession();
           const store = yield* UserStore;
           return yield* store.deleteUser(payload.userId);
         })
       )
-      .handle("getSession", ({ request }) => requireSession(request))
-      .handle("getVerified", ({ request }) =>
+      .handle("getSession", () => requireSession())
+      .handle("getVerified", () =>
         Effect.gen(function* UserHttpApiHandlers() {
-          yield* requireVerifiedSession(request);
+          yield* requireVerifiedSession();
           const store = yield* UserStore;
           return yield* store.getVerified();
         })
       )
-      .handle("list", ({ request }) =>
+      .handle("list", () =>
         Effect.gen(function* UserHttpApiHandlers() {
-          yield* requireVerifiedSession(request);
+          yield* requireVerifiedSession();
           const store = yield* UserStore;
           return yield* store.list();
         })
       )
-      .handle("setRole", ({ payload, request }) =>
+      .handle("setRole", ({ payload }) =>
         Effect.gen(function* UserHttpApiHandlers() {
-          const session = yield* requireAdminSession(request);
+          const session = yield* requireAdminSession();
           const store = yield* UserStore;
           return yield* store.setRole({
             actorId: session.user.id,
@@ -100,9 +59,9 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
           });
         })
       )
-      .handle("setVerified", ({ payload, request }) =>
+      .handle("setVerified", ({ payload }) =>
         Effect.gen(function* UserHttpApiHandlers() {
-          const session = yield* requireAdminSession(request);
+          const session = yield* requireAdminSession();
           const store = yield* UserStore;
           return yield* store.setVerified({
             actorId: session.user.id,
@@ -111,9 +70,9 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
           });
         })
       )
-      .handle("updateProfile", ({ payload, request }) =>
+      .handle("updateProfile", ({ payload }) =>
         Effect.gen(function* UserHttpApiHandlers() {
-          const session = yield* requireVerifiedSession(request);
+          const session = yield* requireVerifiedSession();
           const store = yield* UserStore;
           return yield* store.updateProfile({
             name: payload.name,
@@ -121,9 +80,9 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
           });
         })
       )
-      .handle("updateUserName", ({ payload, request }) =>
+      .handle("updateUserName", ({ payload }) =>
         Effect.gen(function* UserHttpApiHandlers() {
-          yield* requireAdminSession(request);
+          yield* requireAdminSession();
           const store = yield* UserStore;
           return yield* store.updateProfile({
             name: payload.name,
@@ -131,9 +90,9 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
           });
         })
       )
-      .handle("verifyDiscordGuildMembership", ({ request }) =>
+      .handle("verifyDiscordGuildMembership", () =>
         Effect.gen(function* UserHttpApiHandlers() {
-          const session = yield* requireSession(request);
+          const session = yield* requireSession();
           const store = yield* UserStore;
           const verifier = yield* DiscordGuildVerifier;
           const accessToken = yield* store.getDiscordAccessToken(

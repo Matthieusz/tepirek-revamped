@@ -117,7 +117,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
         return handlers
           .handle("searchSquadEditorInviteTargets", ({ payload, request }) =>
             Effect.gen(function* searchSquadEditorInviteTargetsHandler() {
-              const session = yield* requireSquadBuilderSession(request);
+              const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
                 squadEditorInviteTargetsSvc.search({
@@ -130,7 +130,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
           )
           .handle("sendSquadGroupEditorInvite", ({ payload, request }) =>
             Effect.gen(function* sendSquadGroupEditorInviteHandler() {
-              const session = yield* requireSquadBuilderSession(request);
+              const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
                 squadGroupEditorInvitesSvc.send({
@@ -143,7 +143,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
           )
           .handle("respondToSquadGroupInvite", ({ payload, request }) =>
             Effect.gen(function* respondToSquadGroupInviteHandler() {
-              const session = yield* requireSquadBuilderSession(request);
+              const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
                 squadGroupEditorInviteResponsesSvc.respond({
@@ -156,7 +156,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
           )
           .handle("revokeSquadGroupEditor", ({ payload, request }) =>
             Effect.gen(function* revokeSquadGroupEditorHandler() {
-              const session = yield* requireSquadBuilderSession(request);
+              const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
                 squadGroupEditorRevocationsSvc.revoke({
@@ -168,7 +168,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
           )
           .handle("listIncomingSquadGroupInvites", ({ request }) =>
             Effect.gen(function* listIncomingSquadGroupInvitesHandler() {
-              const session = yield* requireSquadBuilderSession(request);
+              const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
                 squadGroupSharingStateSvc.listIncomingInvites({
@@ -179,7 +179,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
           )
           .handle("listSharedSquadGroups", ({ request }) =>
             Effect.gen(function* listSharedSquadGroupsHandler() {
-              const session = yield* requireSquadBuilderSession(request);
+              const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
                 squadGroupSharingStateSvc.listSharedGroups({
@@ -190,7 +190,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
           )
           .handle("listSquadGroupEditorGrants", ({ payload, request }) =>
             Effect.gen(function* listSquadGroupEditorGrantsHandler() {
-              const session = yield* requireSquadBuilderSession(request);
+              const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
                 squadGroupSharingStateSvc.listEditorGrants({
@@ -202,7 +202,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
           )
           .handle("countPendingSquadGroupInvites", ({ request }) =>
             Effect.gen(function* countPendingSquadGroupInvitesHandler() {
-              const session = yield* requireSquadBuilderSession(request);
+              const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
                 squadGroupSharingStateSvc.countPendingInvites({

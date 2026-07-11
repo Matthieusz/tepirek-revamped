@@ -5,8 +5,8 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
 import { AppHttpApi } from "../../../protocol/http-api-contract.js";
 import type { SquadBuilderAccountRefetchError } from "../../../protocol/squad-builder/account-refetch/http-api-contract.js";
 import {
@@ -27,13 +27,8 @@ import {
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderAccountRefetchError>;
 
-const toMargonemAccountId = (value: number): MargonemAccountId =>
-  // SAFETY: HttpApi decoded this value with MargonemAccountIdSchema before the handler runs.
-  value as MargonemAccountId;
-
-const toPendingRefetchId = (value: number): PendingMargonemAccountRefetchId =>
-  // SAFETY: HttpApi decoded this value with PendingMargonemAccountRefetchIdSchema before the handler runs.
-  value as PendingMargonemAccountRefetchId;
+const mapInvalidId = () =>
+  new SquadBuilderInvalidInput({ message: "Invalid account refetch id" });
 
 const withRequestCorrelation = <A, E, R>(
   request: HttpServerRequest,
@@ -103,11 +98,14 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
       return handlers
         .handle("previewAccountRefetch", ({ payload, request }) =>
           Effect.gen(function* previewAccountRefetchHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
+            const accountId = yield* parseMargonemAccountId(
+              payload.accountId
+            ).pipe(Effect.mapError(mapInvalidId));
             return yield* withRequestCorrelation(
               request,
               previewAccountRefetchSvc.preview({
-                accountId: toMargonemAccountId(payload.accountId),
+                accountId,
                 actorUserId: sessionAppUserId(session),
               })
             ).pipe(Effect.mapError(mapAccountRefetchError));
@@ -115,12 +113,16 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
         )
         .handle("applyAccountRefetch", ({ payload, request }) =>
           Effect.gen(function* applyAccountRefetchHandler() {
-            const session = yield* requireSquadBuilderSession(request);
+            const session = yield* requireSquadBuilderSession();
+            const refetchPreviewId =
+              yield* parsePendingMargonemAccountRefetchId(
+                payload.refetchPreviewId
+              ).pipe(Effect.mapError(mapInvalidId));
             return yield* withRequestCorrelation(
               request,
               applyAccountRefetchSvc.apply({
                 actorUserId: sessionAppUserId(session),
-                refetchPreviewId: toPendingRefetchId(payload.refetchPreviewId),
+                refetchPreviewId,
               })
             ).pipe(Effect.mapError(mapAccountRefetchError));
           })

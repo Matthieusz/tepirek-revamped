@@ -2,6 +2,8 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
+import { SessionMiddleware } from "../auth/http-api-middleware.js";
+
 const PositiveNumber = Schema.Number.check(Schema.isGreaterThan(0));
 const PositiveInt = Schema.Number.check(
   Schema.isInt(),
@@ -106,4 +108,5 @@ export const VaultHttpApiGroup = HttpApiGroup.make("vault")
       success: MutationSuccess,
     })
   )
+  .middleware(SessionMiddleware)
   .prefix("/vault");

@@ -1,7 +1,5 @@
 // oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
-import { auth } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
-import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
@@ -15,43 +13,18 @@ import {
 import type { VaultError } from "../../services/vault/vault-errors.js";
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import { VaultService } from "../../services/vault/vault-service.js";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
 
-const headersFromRequest = (request: HttpServerRequest): Headers => {
-  const headers = new Headers();
-  for (const [name, value] of Object.entries(request.headers)) {
-    if (value !== undefined) {
-      headers.set(name, value);
-    }
-  }
-  return headers;
-};
-
-type Session = Awaited<ReturnType<typeof auth.api.getSession>>;
-const requireVerifiedSession = (
-  request: HttpServerRequest
-): Effect.Effect<NonNullable<Session>, VaultUnauthorized | VaultForbidden> =>
-  Effect.gen(function* requireVerifiedSession() {
-    const session = yield* Effect.promise(() =>
-      auth.api.getSession({ headers: headersFromRequest(request) })
-    );
-    if (!session?.user) {
-      return yield* new VaultUnauthorized({ message: "UNAUTHORIZED" });
-    }
-    if (session.user.verified !== true) {
-      return yield* new VaultForbidden({
+const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
+  {
+    forbidden: () => new VaultForbidden({ message: "FORBIDDEN" }),
+    unauthorized: () => new VaultUnauthorized({ message: "UNAUTHORIZED" }),
+    unverified: () =>
+      new VaultForbidden({
         message: "Konto oczekuje na weryfikację",
-      });
-    }
-    return session;
-  });
-const requireAdminSession = (request: HttpServerRequest) =>
-  Effect.gen(function* requireAdminSession() {
-    const session = yield* requireVerifiedSession(request);
-    if (session.user.role !== "admin") {
-      return yield* new VaultForbidden({ message: "FORBIDDEN" });
-    }
-    return session;
-  });
+      }),
+  }
+);
 
 const classifyVaultFailure = (error: VaultError, operation: string) => {
   if (error._tag === "VaultBadRequest") {
@@ -82,40 +55,40 @@ export const VaultHttpApiHandlers = HttpApiBuilder.group(
   "vault",
   (handlers) =>
     handlers
-      .handle("distributeGold", ({ payload, request }) =>
+      .handle("distributeGold", ({ payload }) =>
         Effect.gen(function* VaultHttpApiHandlers() {
           const vaultService = yield* VaultService;
-          yield* requireAdminSession(request);
+          yield* requireAdminSession();
           return yield* mapVaultError(
             "distributeGold",
             vaultService.distributeGold(payload)
           );
         })
       )
-      .handle("getUserStats", ({ payload, request }) =>
+      .handle("getUserStats", ({ payload }) =>
         Effect.gen(function* VaultHttpApiHandlers() {
           const vaultService = yield* VaultService;
-          yield* requireVerifiedSession(request);
+          yield* requireVerifiedSession();
           return yield* mapVaultError(
             "getUserStats",
             vaultService.getUserStats(payload.eventId)
           );
         })
       )
-      .handle("getVault", ({ payload, request }) =>
+      .handle("getVault", ({ payload }) =>
         Effect.gen(function* VaultHttpApiHandlers() {
           const vaultService = yield* VaultService;
-          yield* requireVerifiedSession(request);
+          yield* requireVerifiedSession();
           return yield* mapVaultError(
             "getVault",
             vaultService.getVault(payload.eventId)
           );
         })
       )
-      .handle("togglePaidOut", ({ payload, request }) =>
+      .handle("togglePaidOut", ({ payload }) =>
         Effect.gen(function* VaultHttpApiHandlers() {
           const vaultService = yield* VaultService;
-          yield* requireAdminSession(request);
+          yield* requireAdminSession();
           return yield* mapVaultError(
             "togglePaidOut",
             vaultService.togglePaidOut(payload)

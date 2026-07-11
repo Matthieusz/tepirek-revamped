@@ -2,6 +2,8 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
+import { SessionMiddleware } from "../auth/http-api-middleware.js";
+
 const PositiveInt = Schema.Number.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
@@ -79,4 +81,5 @@ export const RankingHttpApiGroup = HttpApiGroup.make("ranking")
       success: RankingResult,
     })
   )
+  .middleware(SessionMiddleware)
   .prefix("/ranking");

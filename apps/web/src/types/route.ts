@@ -1,4 +1,4 @@
-import type { auth } from "@tepirek-revamped/auth";
+import type { Auth } from "@tepirek-revamped/auth";
 
 /**
  * Static data attached to routes for breadcrumbs and metadata
@@ -18,8 +18,8 @@ export type RouterAppContext = Record<string, never>;
  * Uses auth.$Infer.Session to get the exact types from the auth configuration
  */
 export interface AuthSession {
-  session: typeof auth.$Infer.Session.session;
-  user: typeof auth.$Infer.Session.user;
+  session: Auth["$Infer"]["Session"]["session"];
+  user: Auth["$Infer"]["Session"]["user"];
 }
 
 /**

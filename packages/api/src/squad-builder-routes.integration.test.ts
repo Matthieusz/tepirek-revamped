@@ -6,8 +6,10 @@ import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
 
 import { SquadGroupSummarySchema } from "./protocol/squad-builder/squad-groups/squad-groups-schema.js";
+import { makeBetterAuthAdapterLayer } from "./server/auth/better-auth-adapter.js";
 import { makeApiLiveLayerFromConfig } from "./server/effect-app.js";
 import { AppHttpApiLayer } from "./server/http-api-handlers.js";
+import { testAuth } from "./test/integration/auth.js";
 import { testDb } from "./test/integration/database.js";
 
 process.env.BETTER_AUTH_SECRET ??= "test-secret";
@@ -16,9 +18,10 @@ process.env.DISCORD_CLIENT_ID ??= "test-discord-client-id";
 process.env.DISCORD_CLIENT_SECRET ??= "test-discord-client-secret";
 
 const appHttpApiLayer = AppHttpApiLayer.pipe(
-  Layer.provide(makeApiLiveLayerFromConfig()),
+  Layer.provideMerge(makeApiLiveLayerFromConfig()),
+  Layer.provideMerge(makeBetterAuthAdapterLayer(testAuth)),
   Layer.provide(HttpServer.layerServices)
-) as Layer.Layer<HttpRouter.HttpRouter>;
+);
 
 const appHttpApi = HttpRouter.toWebHandler(appHttpApiLayer, {
   disableLogger: true,
@@ -28,9 +31,8 @@ const requestHttpApi = (path: string, init?: RequestInit) =>
   appHttpApi.handler(new Request(`http://localhost:3000${path}`, init));
 
 const createSignedInUser = async (name: string) => {
-  const { auth } = await import("@tepirek-revamped/auth");
   const email = `${name}@example.com`;
-  const response = await auth.handler(
+  const response = await testAuth.handler(
     new Request("http://localhost:3000/api/auth/sign-up/email", {
       body: JSON.stringify({
         email,
