@@ -1,4 +1,4 @@
-import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { format } from "date-fns/format";
 import { Calendar, Plus, Power, Trash2 } from "lucide-react";
 import { useState } from "react";

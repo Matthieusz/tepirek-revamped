@@ -1,4 +1,4 @@
-import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import type { SkillSummary as SkillSummarySchema } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
 import { Plus } from "lucide-react";

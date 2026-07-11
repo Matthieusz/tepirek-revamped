@@ -1,4 +1,4 @@
-import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useForm } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
 import { Coins } from "lucide-react";
@@ -205,8 +205,7 @@ export const DistributeGoldModal = ({
 
         const result = await distributeGold({
           goldAmount,
-          eventId:
-            eventId !== ALL_FILTER ? Number.parseInt(eventId, 10) : undefined,
+          eventId: Number.parseInt(eventId, 10),
           heroId: Number.parseInt(heroId, 10),
         });
 

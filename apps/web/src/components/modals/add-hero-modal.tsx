@@ -1,4 +1,4 @@
-import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useForm } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
 import { useState } from "react";

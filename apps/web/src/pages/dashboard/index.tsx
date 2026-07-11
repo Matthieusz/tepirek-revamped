@@ -1,4 +1,4 @@
-import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Calendar, Megaphone, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

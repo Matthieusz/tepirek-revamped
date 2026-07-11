@@ -1,6 +1,7 @@
-import { Atom, Result } from "@effect-atom/atom-react";
 import type { PaginatedBets } from "@tepirek-revamped/api/protocol/bet/http-api-contract";
 import { Effect } from "effect";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,
@@ -54,8 +55,8 @@ const emptyPaginatedBets: PaginatedBetList = {
 };
 
 const getPaginatedBetsOrEmpty = (
-  result: Result.Result<PaginatedBetList, unknown>
-) => (Result.isSuccess(result) ? result.value : emptyPaginatedBets);
+  result: AsyncResult.AsyncResult<PaginatedBetList, unknown>
+) => (AsyncResult.isSuccess(result) ? result.value : emptyPaginatedBets);
 
 const removeBetFromPage = (
   current: PaginatedBetList,
@@ -148,12 +149,23 @@ export const deleteBetAtom = deleteBetRequestAtom;
 
 /** Mutation atom for editing a bet's members. */
 export const editBetAtom = appHttpApiFn(
-  (payload: {
-    readonly betId: number;
-    readonly newUserIds: readonly [string, ...string[]];
-  }) =>
+  (
+    payload: {
+      readonly betId: number;
+      readonly newUserIds: readonly [string, ...string[]];
+      readonly refreshInput: PaginatedBetInput;
+    },
+    get
+  ) =>
     Effect.gen(function* editBetEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.bet.edit({ payload });
+      const result = yield* client.bet.edit({
+        payload: {
+          betId: payload.betId,
+          newUserIds: payload.newUserIds,
+        },
+      });
+      get.refresh(paginatedBetsAtom(payload.refreshInput));
+      return result;
     })
 );

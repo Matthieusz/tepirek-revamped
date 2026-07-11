@@ -1,5 +1,10 @@
-import { Atom } from "@effect-atom/atom-react";
+import type {
+  AccountAccessGrantSummarySchema,
+  AccountInviteTargetSchema,
+} from "@tepirek-revamped/api/protocol/squad-builder/account-sharing/account-sharing-schema";
 import { Effect } from "effect";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,
@@ -19,6 +24,8 @@ interface RespondToAccountAccessInviteInput {
 }
 interface RevokeAccountAccessInput {
   readonly accessId: number;
+  readonly accountId: number;
+  readonly actorUserId: string;
 }
 interface SearchAccountInviteTargetsInput {
   readonly accountId: number;
@@ -26,11 +33,22 @@ interface SearchAccountInviteTargetsInput {
 }
 interface SendAccountAccessInviteInput {
   readonly accountId: number;
+  readonly actorUserId: string;
   readonly invitedUserId: string;
 }
 
 type AccountAccessGrantsKey = string;
 type AccountInviteTargetsKey = string;
+
+type AccountAccessGrant = typeof AccountAccessGrantSummarySchema.Type;
+type AccountInviteTarget = typeof AccountInviteTargetSchema.Type;
+
+const disabledAccountAccessGrantsAtom = Atom.make<
+  AsyncResult.AsyncResult<readonly AccountAccessGrant[], never>
+>(AsyncResult.success([]));
+const disabledAccountInviteTargetsAtom = Atom.make<
+  AsyncResult.AsyncResult<readonly AccountInviteTarget[], never>
+>(AsyncResult.success([]));
 
 const accountAccessGrantsKey = (
   accountId: number,
@@ -108,21 +126,32 @@ export const accountAccessGrantsAtom = (
   accountId: number,
   actorUserId: string
 ) =>
-  accountAccessGrantsByKeyAtom(accountAccessGrantsKey(accountId, actorUserId));
+  accountId > 0
+    ? accountAccessGrantsByKeyAtom(
+        accountAccessGrantsKey(accountId, actorUserId)
+      )
+    : disabledAccountAccessGrantsAtom;
 
 export const accountInviteTargetsAtom = (accountId: number, query: string) =>
-  accountInviteTargetsByKeyAtom(accountInviteTargetsKey(accountId, query));
+  accountId > 0
+    ? accountInviteTargetsByKeyAtom(accountInviteTargetsKey(accountId, query))
+    : disabledAccountInviteTargetsAtom;
 
 export const refreshVisibleAccountSharingAtoms = (
   get: Atom.FnContext,
-  accountId?: number
+  options: { readonly accountId?: number; readonly actorUserId?: string } = {}
 ) => {
   get.refresh(incomingAccountInvitesByActorAtom("default"));
   get.refresh(sharedAccountsByActorAtom("default"));
 
-  if (accountId !== undefined) {
+  if (options.accountId !== undefined && options.accountId > 0) {
     get.refresh(
-      accountAccessGrantsByKeyAtom(accountAccessGrantsKey(accountId, "default"))
+      accountAccessGrantsByKeyAtom(
+        accountAccessGrantsKey(
+          options.accountId,
+          options.actorUserId ?? "default"
+        )
+      )
     );
   }
 
@@ -157,7 +186,7 @@ export const sendAccountAccessInviteAtom = appHttpApiFn(
             invitedUserId: asAppUserId(payload.invitedUserId),
           },
         });
-      refreshVisibleAccountSharingAtoms(get, payload.accountId);
+      refreshVisibleAccountSharingAtoms(get, payload);
       return result;
     })
 );
@@ -190,7 +219,7 @@ export const revokeAccountAccessAtom = appHttpApiFn(
             accessId: asMargonemAccountAccessId(payload.accessId),
           },
         });
-      refreshVisibleAccountSharingAtoms(get);
+      refreshVisibleAccountSharingAtoms(get, payload);
       return result;
     })
 );

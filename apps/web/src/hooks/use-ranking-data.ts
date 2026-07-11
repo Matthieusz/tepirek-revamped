@@ -1,4 +1,4 @@
-import { useAtomValue } from "@effect-atom/atom-react";
+import { useAtomValue } from "@effect/atom-react";
 
 import type { RankingItem } from "@/components/events/ranking-list";
 import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";

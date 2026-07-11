@@ -1,9 +1,10 @@
-import { Atom, Result } from "@effect-atom/atom-react";
 import type {
   RangeSummary,
   SkillSummary,
 } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
 import { Effect } from "effect";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,
@@ -16,14 +17,15 @@ type Skill = typeof SkillSummary.Type;
 
 const emptySkillRanges: readonly SkillRange[] = [];
 const emptySkills: readonly Skill[] = [];
+const disabledSkillsByRangeAtom = Atom.make(AsyncResult.success(emptySkills));
 
 const getSkillRangeListOrEmpty = (
-  result: Result.Result<readonly SkillRange[], unknown>
-) => (Result.isSuccess(result) ? result.value : emptySkillRanges);
+  result: AsyncResult.AsyncResult<readonly SkillRange[], unknown>
+) => (AsyncResult.isSuccess(result) ? result.value : emptySkillRanges);
 
 const getSkillListOrEmpty = (
-  result: Result.Result<readonly Skill[], unknown>
-) => (Result.isSuccess(result) ? result.value : emptySkills);
+  result: AsyncResult.AsyncResult<readonly Skill[], unknown>
+) => (AsyncResult.isSuccess(result) ? result.value : emptySkills);
 
 const removeSkillRangeById = (
   ranges: readonly SkillRange[],
@@ -75,7 +77,7 @@ const skillsByRangeIdAtom = Atom.family((rangeId: number) =>
 );
 
 export const skillsByRangeAtom = (rangeId: number) =>
-  skillsByRangeIdAtom(rangeId);
+  rangeId > 0 ? skillsByRangeIdAtom(rangeId) : disabledSkillsByRangeAtom;
 
 /** Mutation atom for creating a skill profession. */
 export const createSkillProfessionAtom = appHttpApiFn(

@@ -1,4 +1,4 @@
-import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   AUCTION_SLOT_LEVELS,
   AUCTION_SLOT_ROUND_LABELS,

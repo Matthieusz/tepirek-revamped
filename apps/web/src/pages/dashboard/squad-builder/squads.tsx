@@ -1,4 +1,4 @@
-import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type {
   SharedSquadGroupSummarySchema,

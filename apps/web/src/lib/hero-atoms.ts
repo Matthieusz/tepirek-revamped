@@ -1,6 +1,7 @@
-import { Atom, Result } from "@effect-atom/atom-react";
 import type { HeroSummary } from "@tepirek-revamped/api/protocol/heroes/http-api-contract";
 import { Effect } from "effect";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,
@@ -12,8 +13,9 @@ type Hero = typeof HeroSummary.Type;
 
 const emptyHeroes: readonly Hero[] = [];
 
-const getHeroListOrEmpty = (result: Result.Result<readonly Hero[], unknown>) =>
-  Result.isSuccess(result) ? result.value : emptyHeroes;
+const getHeroListOrEmpty = (
+  result: AsyncResult.AsyncResult<readonly Hero[], unknown>
+) => (AsyncResult.isSuccess(result) ? result.value : emptyHeroes);
 
 const removeHeroById = (
   heroes: readonly Hero[],
@@ -39,11 +41,13 @@ const heroesByEventIdAtom = Atom.family((eventId: number) =>
 );
 
 const disabledHeroesByEventAtom = Atom.make(
-  Result.success([] as readonly Hero[])
+  AsyncResult.success([] as readonly Hero[])
 );
 
 export const heroesByEventAtom = (eventId: number | null) =>
-  eventId === null ? disabledHeroesByEventAtom : heroesByEventIdAtom(eventId);
+  eventId === null || eventId <= 0
+    ? disabledHeroesByEventAtom
+    : heroesByEventIdAtom(eventId);
 
 /** Mutation atom for creating a hero. */
 export const createHeroAtom = appHttpApiFn(

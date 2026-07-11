@@ -1,4 +1,4 @@
-import { useAtomValue } from "@effect-atom/atom-react";
+import { useAtomValue } from "@effect/atom-react";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import type { LucideIcon } from "lucide-react";
 import { Users } from "lucide-react";

@@ -1,6 +1,7 @@
-import { Atom, Result } from "@effect-atom/atom-react";
 import type { TodoSummary } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
 import { Effect } from "effect";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,
@@ -12,8 +13,9 @@ type Todo = typeof TodoSummary.Type;
 
 const emptyTodos: readonly Todo[] = [];
 
-const getTodoListOrEmpty = (result: Result.Result<readonly Todo[], unknown>) =>
-  Result.isSuccess(result) ? result.value : emptyTodos;
+const getTodoListOrEmpty = (
+  result: AsyncResult.AsyncResult<readonly Todo[], unknown>
+) => (AsyncResult.isSuccess(result) ? result.value : emptyTodos);
 
 const removeTodoById = (
   todos: readonly Todo[],

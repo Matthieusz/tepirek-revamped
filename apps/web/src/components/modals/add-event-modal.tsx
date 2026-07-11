@@ -1,4 +1,4 @@
-import { useAtomSet } from "@effect-atom/atom-react";
+import { useAtomSet } from "@effect/atom-react";
 import { useForm } from "@tanstack/react-form";
 import {
   DEFAULT_EVENT_ICON_ID,

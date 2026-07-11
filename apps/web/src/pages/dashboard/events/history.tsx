@@ -1,4 +1,4 @@
-import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { History, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -135,6 +135,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
             key={bet.id}
             onDeleteClick={setBetToDelete}
             pointsPerMember={calculatePointsPerMember(bet.memberCount)}
+            refreshInput={betPageInput}
           />
         ))}
 

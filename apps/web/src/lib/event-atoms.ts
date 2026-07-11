@@ -1,7 +1,8 @@
-import { Atom, Result } from "@effect-atom/atom-react";
 import type { EventSummary } from "@tepirek-revamped/api/protocol/event/http-api-contract";
 import type { EVENT_ICON_IDS } from "@tepirek-revamped/config";
 import { Effect } from "effect";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,
@@ -14,8 +15,8 @@ type Event = typeof EventSummary.Type;
 const emptyEvents: readonly Event[] = [];
 
 const getEventListOrEmpty = (
-  result: Result.Result<readonly Event[], unknown>
-) => (Result.isSuccess(result) ? result.value : emptyEvents);
+  result: AsyncResult.AsyncResult<readonly Event[], unknown>
+) => (AsyncResult.isSuccess(result) ? result.value : emptyEvents);
 
 const removeEventById = (
   events: readonly Event[],

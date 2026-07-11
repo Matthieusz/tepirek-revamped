@@ -42,6 +42,12 @@ export const makeTestLayer = () => {
         return Effect.succeed({ action: "added" as const });
       },
     },
+    bet: {
+      create: record("bet", "create"),
+      edit: record("bet", "edit"),
+      getAllPaginated: record("bet", "getAllPaginated"),
+      getLatestForCopy: record("bet", "getLatestForCopy"),
+    },
     ranking: {
       getOldestUnpaidEvent: () => {
         calls.push({
@@ -106,6 +112,20 @@ export const makeTestLayer = () => {
       ),
       previewAccountRefetch: () => Effect.succeed({}),
     },
+    squadBuilderAccountSharing: {
+      listAccountAccessGrants: record(
+        "squadBuilderAccountSharing",
+        "listAccountAccessGrants"
+      ),
+      revokeAccountAccess: record(
+        "squadBuilderAccountSharing",
+        "revokeAccountAccess"
+      ),
+      sendAccountAccessInvite: record(
+        "squadBuilderAccountSharing",
+        "sendAccountAccessInvite"
+      ),
+    },
     squadBuilderSquadGroup: {
       getSquadGroupDetail: record(
         "squadBuilderSquadGroup",
@@ -114,6 +134,10 @@ export const makeTestLayer = () => {
       listAvailableSquadCharacters: record(
         "squadBuilderSquadGroup",
         "listAvailableSquadCharacters"
+      ),
+      listGlobalSquadGroups: record(
+        "squadBuilderSquadGroup",
+        "listGlobalSquadGroups"
       ),
       listOwnedSquadGroups: record(
         "squadBuilderSquadGroup",
@@ -124,6 +148,32 @@ export const makeTestLayer = () => {
         "saveSharedSquadGroupCharacters"
       ),
       saveSquadGroup: record("squadBuilderSquadGroup", "saveSquadGroup"),
+      setSquadGroupVisibility: record(
+        "squadBuilderSquadGroup",
+        "setSquadGroupVisibility"
+      ),
+    },
+    squadBuilderSquadGroupSharing: {
+      countPendingSquadGroupInvites: record(
+        "squadBuilderSquadGroupSharing",
+        "countPendingSquadGroupInvites"
+      ),
+      listIncomingSquadGroupInvites: record(
+        "squadBuilderSquadGroupSharing",
+        "listIncomingSquadGroupInvites"
+      ),
+      listSharedSquadGroups: record(
+        "squadBuilderSquadGroupSharing",
+        "listSharedSquadGroups"
+      ),
+      listSquadGroupEditorGrants: record(
+        "squadBuilderSquadGroupSharing",
+        "listSquadGroupEditorGrants"
+      ),
+      revokeSquadGroupEditor: record(
+        "squadBuilderSquadGroupSharing",
+        "revokeSquadGroupEditor"
+      ),
     },
     vault: {
       distributeGold: record("vault", "distributeGold"),

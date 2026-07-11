@@ -1,7 +1,8 @@
-import { Atom, Result } from "@effect-atom/atom-react";
 import type { AuctionSignupSummary } from "@tepirek-revamped/api/protocol/auction/http-api-contract";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import { Effect } from "effect";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,
@@ -14,8 +15,8 @@ type AuctionSignup = typeof AuctionSignupSummary.Type;
 const emptyAuctionSignups: readonly AuctionSignup[] = [];
 
 const getAuctionSignupListOrEmpty = (
-  result: Result.Result<readonly AuctionSignup[], unknown>
-) => (Result.isSuccess(result) ? result.value : emptyAuctionSignups);
+  result: AsyncResult.AsyncResult<readonly AuctionSignup[], unknown>
+) => (AsyncResult.isSuccess(result) ? result.value : emptyAuctionSignups);
 
 const removeAuctionSignupById = (
   signups: readonly AuctionSignup[],

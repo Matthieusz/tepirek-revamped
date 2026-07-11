@@ -1,6 +1,7 @@
-import { Atom, Result } from "@effect-atom/atom-react";
 import type { AnnouncementSummary } from "@tepirek-revamped/api/protocol/announcement/http-api-contract";
 import { Effect } from "effect";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,
@@ -13,8 +14,8 @@ type Announcement = typeof AnnouncementSummary.Type;
 const emptyAnnouncements: readonly Announcement[] = [];
 
 const getAnnouncementListOrEmpty = (
-  result: Result.Result<readonly Announcement[], unknown>
-) => (Result.isSuccess(result) ? result.value : emptyAnnouncements);
+  result: AsyncResult.AsyncResult<readonly Announcement[], unknown>
+) => (AsyncResult.isSuccess(result) ? result.value : emptyAnnouncements);
 
 const removeAnnouncementById = (
   announcements: readonly Announcement[],

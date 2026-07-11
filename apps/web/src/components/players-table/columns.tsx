@@ -1,4 +1,4 @@
-import { useAtomSet } from "@effect-atom/atom-react";
+import { useAtomSet } from "@effect/atom-react";
 import { createColumnHelper } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Player as PlayerSchema } from "@tepirek-revamped/api/protocol/user/http-api-contract";

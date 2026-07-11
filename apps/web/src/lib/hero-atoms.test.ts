@@ -20,4 +20,9 @@ describe("hero atoms", () => {
 
     expect(disabledAtom).not.toBe(realAtom);
   });
+
+  it("uses the disabled atom for non-positive event IDs", () => {
+    expect(heroesByEventAtom(0)).toBe(heroesByEventAtom(null));
+    expect(heroesByEventAtom(-1)).toBe(heroesByEventAtom(null));
+  });
 });

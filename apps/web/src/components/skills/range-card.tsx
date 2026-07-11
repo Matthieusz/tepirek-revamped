@@ -1,4 +1,4 @@
-import { useAtomSet } from "@effect-atom/atom-react";
+import { useAtomSet } from "@effect/atom-react";
 import { Link } from "@tanstack/react-router";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";

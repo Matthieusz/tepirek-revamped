@@ -1,4 +1,4 @@
-import { useAtomValue } from "@effect-atom/atom-react";
+import { useAtomValue } from "@effect/atom-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback } from "react";
 

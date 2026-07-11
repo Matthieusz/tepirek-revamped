@@ -1,5 +1,10 @@
-import { Atom } from "@effect-atom/atom-react";
+import type {
+  SquadEditorInviteTargetSchema,
+  SquadGroupEditorGrantSummarySchema,
+} from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
 import { Effect } from "effect";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,
@@ -17,6 +22,7 @@ interface RespondToSquadGroupInviteInput {
   readonly response: "accept" | "decline";
 }
 interface RevokeSquadGroupEditorInput {
+  readonly groupId: number;
   readonly invitationId: number;
 }
 interface SearchSquadEditorInviteTargetsInput {
@@ -33,6 +39,16 @@ interface SquadGroupEditorGrantsInput {
 
 type SquadGroupEditorGrantsKey = string;
 type SquadEditorInviteTargetsKey = string;
+
+type SquadEditorInviteTarget = typeof SquadEditorInviteTargetSchema.Type;
+type SquadGroupEditorGrant = typeof SquadGroupEditorGrantSummarySchema.Type;
+
+const disabledSquadGroupEditorGrantsAtom = Atom.make<
+  AsyncResult.AsyncResult<readonly SquadGroupEditorGrant[], never>
+>(AsyncResult.success([]));
+const disabledSquadEditorInviteTargetsAtom = Atom.make<
+  AsyncResult.AsyncResult<readonly SquadEditorInviteTarget[], never>
+>(AsyncResult.success([]));
 
 interface RefreshVisibleSquadGroupSharingAtomsOptions {
   readonly actorUserId?: string;
@@ -107,7 +123,11 @@ const squadGroupEditorGrantsByKeyAtom = Atom.family(
 export const squadGroupEditorGrantsAtom = (
   payload: SquadGroupEditorGrantsInput
 ) =>
-  squadGroupEditorGrantsByKeyAtom(squadGroupEditorGrantsKey(payload.groupId));
+  payload.groupId > 0
+    ? squadGroupEditorGrantsByKeyAtom(
+        squadGroupEditorGrantsKey(payload.groupId)
+      )
+    : disabledSquadGroupEditorGrantsAtom;
 
 /** Resource atom for pending squad-group invite count. */
 const pendingSquadGroupInviteCountByActorAtom = Atom.family(
@@ -148,7 +168,10 @@ const squadEditorInviteTargetsByKeyAtom = Atom.family(
 
 export const squadEditorInviteTargetsAtom = (
   payload: SearchSquadEditorInviteTargetsInput
-) => squadEditorInviteTargetsByKeyAtom(squadEditorInviteTargetsKey(payload));
+) =>
+  payload.groupId > 0
+    ? squadEditorInviteTargetsByKeyAtom(squadEditorInviteTargetsKey(payload))
+    : disabledSquadEditorInviteTargetsAtom;
 
 export const refreshVisibleSquadGroupSharingAtoms = (
   get: Atom.FnContext,
@@ -158,7 +181,7 @@ export const refreshVisibleSquadGroupSharingAtoms = (
   get.refresh(sharedSquadGroupsByActorAtom("default"));
   get.refresh(pendingSquadGroupInviteCountByActorAtom("default"));
 
-  if (options.groupId !== undefined) {
+  if (options.groupId !== undefined && options.groupId > 0) {
     get.refresh(
       squadGroupEditorGrantsByKeyAtom(
         squadGroupEditorGrantsKey(options.groupId)
@@ -222,6 +245,11 @@ export const revokeSquadGroupEditorAtom = appHttpApiFn(
       get.refresh(incomingSquadGroupInvitesByActorAtom("default"));
       get.refresh(sharedSquadGroupsByActorAtom("default"));
       get.refresh(pendingSquadGroupInviteCountByActorAtom("default"));
+      get.refresh(
+        squadGroupEditorGrantsByKeyAtom(
+          squadGroupEditorGrantsKey(payload.groupId)
+        )
+      );
       return result;
     })
 );

@@ -83,7 +83,7 @@ describe("skill atoms", () => {
     });
   });
 
-  describe("skillsByRangeAtom mounts real API resource only when called", () => {
+  describe("skillsByRangeAtom mounts real API resources only for valid IDs", () => {
     it("skips API call for rangeId 0 when never mounted", async () => {
       const { calls, makeRegistry } = makeTestLayer();
       const registry = makeRegistry();
@@ -106,7 +106,7 @@ describe("skill atoms", () => {
       expect(callsForRange0).toHaveLength(0);
     });
 
-    it("mounted skillsByRangeAtom(0) does trigger an API call (no disabled-atom shortcut)", async () => {
+    it("does not call the API when an invalid range ID is mounted", async () => {
       const { calls, makeRegistry } = makeTestLayer();
       const registry = makeRegistry();
 
@@ -118,7 +118,7 @@ describe("skill atoms", () => {
           c.method === "listSkillsByRange" &&
           (c.args as { readonly rangeId?: number })?.rangeId === 0
       );
-      expect(callsForRange0).toHaveLength(1);
+      expect(callsForRange0).toHaveLength(0);
     });
   });
 

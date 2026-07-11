@@ -1,5 +1,5 @@
-import type { Atom } from "@effect-atom/atom-react";
 import { Effect } from "effect";
+import type * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,

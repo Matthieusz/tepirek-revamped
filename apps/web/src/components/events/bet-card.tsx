@@ -30,6 +30,12 @@ interface BetCardProps {
   onDeleteClick: (params: { id: number; heroName: string }) => void;
   pointsPerMember: number;
   formattedCreatedAt: string;
+  refreshInput: {
+    readonly eventId?: number;
+    readonly heroId?: number;
+    readonly limit?: number;
+    readonly page?: number;
+  };
 }
 
 export const BetCard = ({
@@ -38,6 +44,7 @@ export const BetCard = ({
   onDeleteClick,
   pointsPerMember,
   formattedCreatedAt,
+  refreshInput,
 }: BetCardProps) => (
   <Card className="overflow-hidden p-0">
     <CardContent className="p-4">
@@ -61,6 +68,7 @@ export const BetCard = ({
                 }))}
                 heroName={bet.heroName}
                 memberCount={bet.memberCount}
+                refreshInput={refreshInput}
                 trigger={
                   <Button size="icon" type="button" variant="ghost">
                     <Pencil className="size-4" />

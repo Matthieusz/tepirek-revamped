@@ -1,4 +1,4 @@
-import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import type {
   SquadEditorInviteTargetSchema,
@@ -270,7 +270,7 @@ const SquadBuilderEditorContent = ({
       void (async () => {
         setIsRevokingInvite(true);
         try {
-          await revokeSquadGroupEditor(input);
+          await revokeSquadGroupEditor({ ...input, groupId });
           toast.success("Dostęp został cofnięty");
         } catch (error: unknown) {
           toast.error(getErrorMessage(error, "Nie udało się cofnąć dostępu"));

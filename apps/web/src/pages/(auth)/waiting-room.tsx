@@ -1,4 +1,4 @@
-import { useAtomSet } from "@effect-atom/atom-react";
+import { useAtomSet } from "@effect/atom-react";
 import { useRouter } from "@tanstack/react-router";
 import { Loader2, LogOut, RefreshCw } from "lucide-react";
 import { useEffect, useRef } from "react";

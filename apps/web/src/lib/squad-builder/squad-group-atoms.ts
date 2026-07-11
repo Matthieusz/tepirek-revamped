@@ -1,4 +1,3 @@
-import { Atom } from "@effect-atom/atom-react";
 import type {
   AvailableSquadCharacterSchema,
   GlobalSquadGroupSummarySchema,
@@ -7,6 +6,8 @@ import type {
   SquadGroupSummarySchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
 import { Effect } from "effect";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,
@@ -95,6 +96,13 @@ const globalSquadGroupsPayloadFromKey = (
 
 const squadGroupIdKey = (groupId: number): string => `${groupId}`;
 
+const disabledSquadGroupDetailAtom = Atom.make<
+  AsyncResult.AsyncResult<SquadGroupDetail, never>
+>(AsyncResult.initial());
+const disabledAvailableSquadCharactersAtom = Atom.make<
+  AsyncResult.AsyncResult<readonly AvailableSquadCharacter[], never>
+>(AsyncResult.success([]));
+
 const ownedSquadGroupsByActorAtom = Atom.family((_actorUserId: string) =>
   appHttpApiAtom(
     Effect.gen(function* listOwnedSquadGroupsEffect() {
@@ -122,7 +130,7 @@ const globalSquadGroupsByKeyAtom = Atom.family(
           },
         });
       })
-    ).pipe(Atom.setIdleTTL("5 minutes"));
+    );
   }
 );
 
@@ -144,7 +152,9 @@ const squadGroupDetailByKeyAtom = Atom.family((key: string) => {
 });
 
 export const squadGroupDetailAtom = (payload: SquadGroupIdInput) =>
-  squadGroupDetailByKeyAtom(squadGroupIdKey(payload.groupId));
+  payload.groupId > 0
+    ? squadGroupDetailByKeyAtom(squadGroupIdKey(payload.groupId))
+    : disabledSquadGroupDetailAtom;
 
 const availableSquadCharactersByKeyAtom = Atom.family((key: string) => {
   const payload = { groupId: Number(key) } as SquadGroupIdInput;
@@ -161,7 +171,9 @@ const availableSquadCharactersByKeyAtom = Atom.family((key: string) => {
 });
 
 export const availableSquadCharactersAtom = (payload: SquadGroupIdInput) =>
-  availableSquadCharactersByKeyAtom(squadGroupIdKey(payload.groupId));
+  payload.groupId > 0
+    ? availableSquadCharactersByKeyAtom(squadGroupIdKey(payload.groupId))
+    : disabledAvailableSquadCharactersAtom;
 
 export const refreshVisibleSquadGroupAtoms = (
   get: Atom.FnContext,
@@ -169,7 +181,7 @@ export const refreshVisibleSquadGroupAtoms = (
 ) => {
   get.refresh(ownedSquadGroupsByActorAtom("default"));
 
-  if (options.groupId !== undefined) {
+  if (options.groupId !== undefined && options.groupId > 0) {
     const key = squadGroupIdKey(options.groupId);
     get.refresh(squadGroupDetailByKeyAtom(key));
     get.refresh(availableSquadCharactersByKeyAtom(key));

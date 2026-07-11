@@ -15,6 +15,8 @@ describe("vault atoms", () => {
 
     registry.mount(vaultAtom({ eventId: 5 }));
     registry.mount(userStatsAtom({ eventId: 5 }));
+    registry.mount(vaultAtom({}));
+    registry.mount(userStatsAtom({}));
     registry.mount(oldestUnpaidEventAtom);
     await flush();
 
@@ -34,44 +36,10 @@ describe("vault atoms", () => {
     await flush();
 
     expect(calls.filter((c) => c.method === "getVault")).toHaveLength(
-      vaultCallCount + 1
+      vaultCallCount + 2
     );
     expect(calls.filter((c) => c.method === "getUserStats")).toHaveLength(
-      userStatsCallCount + 1
-    );
-    expect(
-      calls.filter((c) => c.method === "getOldestUnpaidEvent")
-    ).toHaveLength(oldestCallCount + 1);
-  });
-
-  it("distributeGoldAtom without eventId only refreshes oldestUnpaidEvent", async () => {
-    const { calls, makeRegistry } = makeTestLayer();
-    const registry = makeRegistry();
-
-    registry.mount(vaultAtom({}));
-    registry.mount(userStatsAtom({}));
-    registry.mount(oldestUnpaidEventAtom);
-    await flush();
-
-    const vaultCallCount = calls.filter((c) => c.method === "getVault").length;
-    const userStatsCallCount = calls.filter(
-      (c) => c.method === "getUserStats"
-    ).length;
-    const oldestCallCount = calls.filter(
-      (c) => c.method === "getOldestUnpaidEvent"
-    ).length;
-
-    registry.set(distributeGoldAtom, {
-      goldAmount: 500,
-      heroId: 10,
-    });
-    await flush();
-
-    expect(calls.filter((c) => c.method === "getVault")).toHaveLength(
-      vaultCallCount
-    );
-    expect(calls.filter((c) => c.method === "getUserStats")).toHaveLength(
-      userStatsCallCount
+      userStatsCallCount + 2
     );
     expect(
       calls.filter((c) => c.method === "getOldestUnpaidEvent")

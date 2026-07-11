@@ -1,4 +1,4 @@
-import { useAtomValue } from "@effect-atom/atom-react";
+import { useAtomValue } from "@effect/atom-react";
 import { CheckCircle2, Clock, Search, Users } from "lucide-react";
 import { useState } from "react";
 

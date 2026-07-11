@@ -1,4 +1,4 @@
-import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useForm } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
 import { Pencil } from "lucide-react";
@@ -34,6 +34,12 @@ interface EditBetModalProps {
   }[];
   heroName: string;
   memberCount: number;
+  refreshInput: {
+    readonly eventId?: number;
+    readonly heroId?: number;
+    readonly limit?: number;
+    readonly page?: number;
+  };
   trigger?: React.ReactNode;
 }
 
@@ -46,6 +52,7 @@ export const EditBetModal = ({
   currentMembers,
   heroName,
   memberCount,
+  refreshInput,
   trigger,
 }: EditBetModalProps) => {
   const [open, setOpen] = useState(false);
@@ -68,6 +75,7 @@ export const EditBetModal = ({
         await editBet({
           betId,
           newUserIds: value.userIds as [string, ...string[]],
+          refreshInput,
         });
         toast.success("Obstawienie zostało zaktualizowane");
         setOpen(false);

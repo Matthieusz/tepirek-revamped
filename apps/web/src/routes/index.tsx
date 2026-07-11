@@ -1,4 +1,4 @@
-import { useAtomValue } from "@effect-atom/atom-react";
+import { useAtomValue } from "@effect/atom-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Link2, LogIn, UserPlus } from "lucide-react";
 

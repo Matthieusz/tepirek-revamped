@@ -1,8 +1,8 @@
-import { Result } from "@effect-atom/atom-react";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 
 import { getErrorMessage } from "@/lib/errors";
 
-/** Explicit UI state for an Effect Atom Result. */
+/** Explicit UI state for an Effect Atom AsyncResult. */
 export type ResultViewState<A> =
   | { readonly _tag: "Loading" }
   | { readonly _tag: "Failure"; readonly message: string }
@@ -10,9 +10,9 @@ export type ResultViewState<A> =
 
 /** Converts Effect Atom Result into an explicit UI state without leaking causes. */
 export const resultViewState = <A>(
-  result: Result.Result<A, unknown>
+  result: AsyncResult.AsyncResult<A, unknown>
 ): ResultViewState<A> =>
-  Result.matchWithWaiting(result, {
+  AsyncResult.matchWithWaiting(result, {
     onDefect: (defect) => ({
       _tag: "Failure",
       message: getErrorMessage(defect),
@@ -24,15 +24,15 @@ export const resultViewState = <A>(
 
 /** Extracts successful Effect Atom resource data when available. */
 export function resultValueOr<A>(
-  result: Result.Result<A, unknown>
+  result: AsyncResult.AsyncResult<A, unknown>
 ): A | undefined;
 /** Extracts successful Effect Atom resource data with a stable fallback. */
 export function resultValueOr<A>(
-  result: Result.Result<A, unknown>,
+  result: AsyncResult.AsyncResult<A, unknown>,
   fallback: A
 ): A;
 export function resultValueOr<A>(
-  result: Result.Result<A, unknown>,
+  result: AsyncResult.AsyncResult<A, unknown>,
   fallback?: A
 ): A | undefined {
   const state = resultViewState(result);
@@ -41,12 +41,12 @@ export function resultValueOr<A>(
 
 /** True while an Effect Atom resource is waiting for its current value. */
 export const resultIsLoading = (
-  result: Result.Result<unknown, unknown>
+  result: AsyncResult.AsyncResult<unknown, unknown>
 ): boolean => resultViewState(result)._tag === "Loading";
 
 /** Safe, user-facing error message for failed Effect Atom resource states. */
 export const resultErrorMessage = (
-  result: Result.Result<unknown, unknown>
+  result: AsyncResult.AsyncResult<unknown, unknown>
 ): string | undefined => {
   const state = resultViewState(result);
   return state._tag === "Failure" ? state.message : undefined;

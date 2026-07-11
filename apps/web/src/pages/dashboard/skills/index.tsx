@@ -1,4 +1,4 @@
-import { useAtomValue } from "@effect-atom/atom-react";
+import { useAtomValue } from "@effect/atom-react";
 import { Plus } from "lucide-react";
 
 import { AddProfessionModal } from "@/components/modals/add-profession-modal";

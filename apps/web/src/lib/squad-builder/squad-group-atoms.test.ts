@@ -1,12 +1,25 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  availableSquadCharactersAtom,
   saveSharedSquadGroupCharactersAtom,
   saveSquadGroupAtom,
+  squadGroupDetailAtom,
 } from "@/lib/squad-builder/squad-group-atoms";
 import { flush, makeTestLayer } from "@/lib/test-utils/atom-test-utils";
 
 describe("squad group atoms", () => {
+  it("does not mount group resources for invalid IDs", async () => {
+    const { calls, makeRegistry } = makeTestLayer();
+    const registry = makeRegistry();
+
+    registry.mount(squadGroupDetailAtom({ groupId: 0 }));
+    registry.mount(availableSquadCharactersAtom({ groupId: -1 }));
+    await flush();
+
+    expect(calls).toHaveLength(0);
+  });
+
   it("preserves missing IDs and brands existing IDs in save payloads", async () => {
     const { calls, makeRegistry } = makeTestLayer();
     const registry = makeRegistry();

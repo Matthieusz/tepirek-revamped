@@ -1,4 +1,4 @@
-import { useAtomSet, useAtomValue } from "@effect-atom/atom-react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { Check, Coins, User, Vault as VaultIcon } from "lucide-react";
 import { useEffect, useRef } from "react";

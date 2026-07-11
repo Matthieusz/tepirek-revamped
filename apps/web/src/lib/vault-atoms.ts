@@ -1,6 +1,7 @@
-import { Atom, Result } from "@effect-atom/atom-react";
 import type { VaultRow } from "@tepirek-revamped/api/protocol/vault/http-api-contract";
 import { Effect } from "effect";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,
@@ -26,8 +27,8 @@ const vaultInputFromKey = (key: VaultKey): VaultInput =>
 const emptyVaultRows: readonly VaultEntry[] = [];
 
 const getVaultRowsOrEmpty = (
-  result: Result.Result<readonly VaultEntry[], unknown>
-) => (Result.isSuccess(result) ? result.value : emptyVaultRows);
+  result: AsyncResult.AsyncResult<readonly VaultEntry[], unknown>
+) => (AsyncResult.isSuccess(result) ? result.value : emptyVaultRows);
 
 const setPaidOutForUser = (
   rows: readonly VaultEntry[],
@@ -70,7 +71,7 @@ export const distributeGoldAtom = appHttpApiFn(
   (
     payload: {
       readonly goldAmount: number;
-      readonly eventId?: number;
+      readonly eventId: number;
       readonly heroId: number;
     },
     get
@@ -81,11 +82,13 @@ export const distributeGoldAtom = appHttpApiFn(
         payload: { goldAmount: payload.goldAmount, heroId: payload.heroId },
       });
 
-      if (payload.eventId !== undefined) {
-        const key = vaultKey({ eventId: payload.eventId });
-        get.refresh(vaultByKeyAtom(key));
-        get.refresh(userStatsByKeyAtom(key));
-      }
+      const allKey = vaultKey({});
+      get.refresh(vaultByKeyAtom(allKey));
+      get.refresh(userStatsByKeyAtom(allKey));
+
+      const key = vaultKey({ eventId: payload.eventId });
+      get.refresh(vaultByKeyAtom(key));
+      get.refresh(userStatsByKeyAtom(key));
       get.refresh(oldestUnpaidEventAtom);
 
       return result;

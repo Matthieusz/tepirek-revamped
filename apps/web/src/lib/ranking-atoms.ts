@@ -1,5 +1,6 @@
-import { Atom, Result } from "@effect-atom/atom-react";
 import { Effect } from "effect";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,
@@ -51,7 +52,9 @@ const HERO_STATS_PLACEHOLDER: HeroStatsData = {
   totalPoints: 0,
 };
 
-const disabledHeroStatsAtom = Atom.make(Result.success(HERO_STATS_PLACEHOLDER));
+const disabledHeroStatsAtom = Atom.make(
+  AsyncResult.success(HERO_STATS_PLACEHOLDER)
+);
 
 /** Resource atom for one hero's ranking statistics. */
 const heroStatsByHeroIdAtom = Atom.family((heroId: number) =>
@@ -64,7 +67,7 @@ const heroStatsByHeroIdAtom = Atom.family((heroId: number) =>
 );
 
 export const heroStatsAtom = (payload: { readonly heroId: number | null }) =>
-  payload.heroId === null
+  payload.heroId === null || payload.heroId <= 0
     ? disabledHeroStatsAtom
     : heroStatsByHeroIdAtom(payload.heroId);
 

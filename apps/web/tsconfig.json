@@ -17,7 +17,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "paths": {
-      "@effect-atom/atom-react": ["./src/lib/effect-atom-react-compat.ts"],
       "@/*": ["./src/*"]
     },
     "strictNullChecks": true
