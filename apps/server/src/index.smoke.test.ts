@@ -13,7 +13,7 @@ process.env.DISCORD_CLIENT_SECRET = "test-discord-client-secret";
 
 const importApp = async () => {
   const module = await import("./index.js");
-  return module.default;
+  return module.app;
 };
 
 describe("server smoke", () => {

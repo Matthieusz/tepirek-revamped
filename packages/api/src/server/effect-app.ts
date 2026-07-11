@@ -3,11 +3,7 @@ import {
   EffectDatabaseLiveFromConfig,
   makeLiveDatabaseLayer,
 } from "@tepirek-revamped/db/effect";
-import { ManagedRuntime } from "effect";
 import type { ConfigError } from "effect/Config";
-import type * as Context from "effect/Context";
-import type { Effect, RunOptions } from "effect/Effect";
-import type { Exit } from "effect/Exit";
 import * as Layer from "effect/Layer";
 import type { SqlError } from "effect/unstable/sql/SqlError";
 
@@ -35,7 +31,6 @@ import { DiscordGuildVerifierLiveLayer } from "../adapters/user/discord-verifica
 import type { DiscordGuildVerifier } from "../adapters/user/discord-verification-service.js";
 import { UserStoreLayer } from "../adapters/user/user-store.js";
 import type { UserStore } from "../adapters/user/user-store.js";
-import * as Observability from "../observability.js";
 import type { BetService } from "../services/bet/bet-service.js";
 import type { RankingService } from "../services/ranking/ranking-service.js";
 import type { AccountImportStoreService } from "../services/squad-builder/account-import/account-import-store-service.js";
@@ -87,9 +82,6 @@ import { layer as setSquadGroupVisibilityLayer } from "../services/squad-builder
 import type { Service as SetSquadGroupVisibilityServiceTag } from "../services/squad-builder/squad-groups/set-squad-group-visibility.js";
 import type { SquadGroupStoreService } from "../services/squad-builder/squad-groups/squad-group-store.js";
 import type { VaultService } from "../services/vault/vault-service.js";
-
-/** Process-wide Layer memo map shared by production API Effect runtimes. */
-export const apiLayerMemoMap = Layer.makeMemoMapUnsafe();
 
 const makeApiStableLayer = (
   databaseLayer: Layer.Layer<EffectDatabase, SqlError | ConfigError, never>
@@ -181,65 +173,6 @@ export const makeApiLiveLayer = (databaseUrl: string) =>
 export const makeApiLiveLayerFromConfig = () =>
   makeApiStableLayer(EffectDatabaseLiveFromConfig);
 
-export interface ApiRuntime<I, S, E> {
-  readonly dispose: () => Promise<void>;
-  readonly getManagedRuntime: () => ManagedRuntime.ManagedRuntime<I, E>;
-  readonly runPromise: <A, Err>(
-    fn: (svc: S) => Effect<A, Err, I>,
-    options?: RunOptions
-  ) => Promise<A>;
-  readonly runPromiseExit: <A, Err>(
-    fn: (svc: S) => Effect<A, Err, I>,
-    options?: RunOptions
-  ) => Promise<Exit<A, Err | E>>;
-}
-
-interface MemoizedRuntime<R, E> {
-  readonly dispose: () => Promise<void>;
-  readonly getManagedRuntime: () => ManagedRuntime.ManagedRuntime<R, E>;
-}
-
-const memoizeRuntime = <R, E>(
-  layer: Layer.Layer<R, E>
-): MemoizedRuntime<R, E> => {
-  let runtime: ManagedRuntime.ManagedRuntime<R, E> | undefined;
-  const observedLayer = layer.pipe(Layer.provideMerge(Observability.layer));
-
-  const getManagedRuntime = () => {
-    runtime ??= ManagedRuntime.make(observedLayer, {
-      memoMap: apiLayerMemoMap,
-    });
-    return runtime;
-  };
-
-  return {
-    dispose: async () => {
-      if (runtime !== undefined) {
-        await runtime.dispose();
-        runtime = undefined;
-      }
-    },
-    getManagedRuntime,
-  };
-};
-
-/** Lazy, memoized production runtime factory for Effect-based API modules. */
-export const makeRuntime = <I, S, E>(
-  service: Context.Service<I, S>,
-  layer: Layer.Layer<I, E>
-): ApiRuntime<I, S, E> => {
-  const memoized = memoizeRuntime(layer);
-
-  return {
-    dispose: memoized.dispose,
-    getManagedRuntime: memoized.getManagedRuntime,
-    runPromise: (fn, options) =>
-      memoized.getManagedRuntime().runPromise(service.use(fn), options),
-    runPromiseExit: (fn, options) =>
-      memoized.getManagedRuntime().runPromiseExit(service.use(fn), options),
-  };
-};
-
 type SquadBuilderServices =
   | AnnouncementStore
   | TodoStore
@@ -280,39 +213,3 @@ type SquadBuilderServices =
   | ConfirmOwnedAccountImportServiceTag
   | PreviewAccountRefetchServiceTag
   | ApplyAccountRefetchServiceTag;
-
-/** Shared runtime factory for Effect-based API modules (raw effect, composite layer). */
-export const makeApiRuntime = (databaseUrl: string) => {
-  const memoized = memoizeRuntime(makeApiLiveLayer(databaseUrl));
-
-  return {
-    dispose: memoized.dispose,
-    getManagedRuntime: memoized.getManagedRuntime,
-    runPromise: <A, Err, R extends SquadBuilderServices>(
-      effect: Effect<A, Err, R>,
-      options?: RunOptions
-    ) => memoized.getManagedRuntime().runPromise(effect, options),
-    runPromiseExit: <A, Err, R extends SquadBuilderServices>(
-      effect: Effect<A, Err, R>,
-      options?: RunOptions
-    ) => memoized.getManagedRuntime().runPromiseExit(effect, options),
-  };
-};
-
-/** Shared runtime factory using Effect Config to read `DATABASE_URL`. */
-export const makeApiRuntimeFromConfig = () => {
-  const memoized = memoizeRuntime(makeApiLiveLayerFromConfig());
-
-  return {
-    dispose: memoized.dispose,
-    getManagedRuntime: memoized.getManagedRuntime,
-    runPromise: <A, Err, R extends SquadBuilderServices>(
-      effect: Effect<A, Err, R>,
-      options?: RunOptions
-    ) => memoized.getManagedRuntime().runPromise(effect, options),
-    runPromiseExit: <A, Err, R extends SquadBuilderServices>(
-      effect: Effect<A, Err, R>,
-      options?: RunOptions
-    ) => memoized.getManagedRuntime().runPromiseExit(effect, options),
-  };
-};

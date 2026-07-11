@@ -1,4 +1,4 @@
-import { db } from "@tepirek-revamped/db";
+import type { Database } from "@tepirek-revamped/db";
 // biome-ignore lint/performance/noNamespaceImport: <one time use>
 import * as schema from "@tepirek-revamped/db/schema/auth";
 import { betterAuth } from "better-auth";
@@ -56,7 +56,7 @@ export const readAuthEnv = AuthConfig;
  * Better Auth and its Drizzle adapter require synchronous raw strings, so
  * secrets are unwrapped only while constructing that library instance.
  */
-export const createAuth = (env: AuthEnv) =>
+export const createAuth = (env: AuthEnv, database: Database) =>
   betterAuth({
     advanced: env.isProduction
       ? {
@@ -72,7 +72,7 @@ export const createAuth = (env: AuthEnv) =>
         }
       : undefined,
     baseURL: env.betterAuthUrl,
-    database: drizzleAdapter(db, {
+    database: drizzleAdapter(database, {
       provider: "pg",
       schema,
     }),
@@ -124,16 +124,9 @@ export const createAuth = (env: AuthEnv) =>
     },
   });
 
-/** Build Better Auth from the currently provided Effect config service. */
-export const makeAuth = readAuthEnv.pipe(Effect.map(createAuth));
+/** Build Better Auth from provided config and database resources. */
+export const makeAuth = (database: Database) =>
+  readAuthEnv.pipe(Effect.map((env) => createAuth(env, database)));
 
-/**
- * Backward-compatible synchronous Better Auth boundary.
- *
- * Existing consumers need a ready Better Auth instance at module load. New
- * Effect-managed code should use `makeAuth` and provide `AuthConfig` at its
- * composition root instead.
- */
-export const auth = Effect.runSync(
-  makeAuth.pipe(Effect.provide(AuthConfigLiveLayer))
-);
+/** Better Auth instance constructed by the executable composition root. */
+export type Auth = ReturnType<typeof createAuth>;

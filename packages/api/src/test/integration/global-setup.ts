@@ -69,10 +69,7 @@ export const setup = async () => {
   await truncateApplicationTables();
 
   return async () => {
-    const { dbPool } = await import("@tepirek-revamped/db");
-
     await testPool.end();
-    await dbPool.end();
     stopManagedTestDatabase();
   };
 };

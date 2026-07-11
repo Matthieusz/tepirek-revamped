@@ -1,14 +1,20 @@
 import "dotenv/config";
 import * as Observability from "@tepirek-revamped/api/observability";
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
-import {
-  makeApiLiveLayerFromConfig,
-  makeApiRuntimeFromConfig,
-} from "@tepirek-revamped/api/server/effect-app";
+import { makeBetterAuthAdapterLayer } from "@tepirek-revamped/api/server/auth/better-auth-adapter";
+import { makeApiLiveLayerFromConfig } from "@tepirek-revamped/api/server/effect-app";
 import { HealthHttpApiLayer } from "@tepirek-revamped/api/server/health/http-api-handlers";
 import { AppHttpApiLayer } from "@tepirek-revamped/api/server/http-api-handlers";
-import { auth } from "@tepirek-revamped/auth";
+import {
+  AuthConfigLiveLayer,
+  createAuth,
+  readAuthEnv,
+} from "@tepirek-revamped/auth";
+import { createDatabase } from "@tepirek-revamped/db";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { OpenApi } from "effect/unstable/httpapi";
 import { initLogger, parseError } from "evlog";
@@ -20,6 +26,8 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
+
+import { makeShutdown } from "./server-lifecycle.js";
 
 initLogger({
   env: { service: "tepirek-server" },
@@ -34,21 +42,26 @@ if (!corsOrigin) {
   throw new Error("CORS_ORIGIN environment variable is required");
 }
 
-/** Shared Effect runtime for migrated API modules. */
-const apiEffectRuntime = makeApiRuntimeFromConfig();
-
-export const disposeApiEffectRuntime = async (): Promise<void> => {
-  await apiEffectRuntime.dispose();
-};
+const startupConfig = Effect.runSync(
+  Effect.all({
+    auth: readAuthEnv,
+    databaseUrl: Config.redacted("DATABASE_URL"),
+  }).pipe(Effect.provide(AuthConfigLiveLayer))
+);
+const { database, pool: dbPool } = createDatabase(
+  Redacted.value(startupConfig.databaseUrl)
+);
+const auth = createAuth(startupConfig.auth, database);
 
 // SAFETY: The production layer immediately provides the squad-builder services
 // and HttpServer services required by the HttpApi layer before it reaches
 // toWebHandler; this narrows the exported web handler to the Hono boundary.
 const appHttpApiLayer = AppHttpApiLayer.pipe(
-  Layer.provide(makeApiLiveLayerFromConfig()),
+  Layer.provideMerge(makeApiLiveLayerFromConfig()),
+  Layer.provideMerge(makeBetterAuthAdapterLayer(auth)),
   Layer.provide(HttpServer.layerServices),
-  Layer.provideMerge(Observability.layer)
-) as Layer.Layer<HttpRouter.HttpRouter>;
+  Layer.provide(Observability.layer)
+);
 
 const appHttpApi = HttpRouter.toWebHandler(appHttpApiLayer, {
   disableLogger: true,
@@ -56,15 +69,68 @@ const appHttpApi = HttpRouter.toWebHandler(appHttpApiLayer, {
 
 const healthHttpApiLayer = HealthHttpApiLayer.pipe(
   Layer.provide(HttpServer.layerServices)
-) as Layer.Layer<HttpRouter.HttpRouter>;
+);
 
 const healthHttpApi = HttpRouter.toWebHandler(healthHttpApiLayer, {
   disableLogger: true,
 });
 
-export const disposeAppHttpApi = async (): Promise<void> => {
-  await appHttpApi.dispose();
-  await healthHttpApi.dispose();
+/** Release every process-owned server resource exactly once. */
+export const shutdown = makeShutdown([
+  { dispose: appHttpApi.dispose },
+  { dispose: healthHttpApi.dispose },
+  { dispose: () => dbPool.end() },
+]);
+
+/** Gracefully stop the host and release all composition-root resources. */
+export const stopServer = async (
+  server: Bun.Server<unknown>
+): Promise<void> => {
+  try {
+    await server.stop();
+    await shutdown();
+  } catch (error) {
+    console.error("Failed to shut down server resources", error);
+    throw error;
+  }
+};
+
+/**
+ * Start the Hono-hosted Bun server and make this composition root own shutdown.
+ */
+export const startServer = async (): Promise<Bun.Server<unknown>> => {
+  let server: Bun.Server<unknown>;
+  try {
+    server = Bun.serve({
+      fetch: app.fetch,
+      id: "tepirek-server",
+    });
+  } catch (error) {
+    await shutdown();
+    throw error;
+  }
+
+  const handleShutdownSignal = async (): Promise<void> => {
+    try {
+      await stopServer(server);
+      process.exit(0);
+    } catch {
+      process.exit(1);
+    }
+  };
+
+  process.once("SIGINT", handleShutdownSignal);
+  process.once("SIGTERM", handleShutdownSignal);
+
+  if (import.meta.hot) {
+    import.meta.hot.dispose(async () => {
+      process.off("SIGINT", handleShutdownSignal);
+      process.off("SIGTERM", handleShutdownSignal);
+      await stopServer(server);
+    });
+  }
+
+  return server;
 };
 
 app.use(evlog());
@@ -155,4 +221,8 @@ app.onError((error, c) => {
   );
 });
 
-export default app;
+export { app };
+
+if (import.meta.main) {
+  await startServer();
+}
