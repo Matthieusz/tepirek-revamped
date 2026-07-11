@@ -53,7 +53,7 @@ export class RankingNotFound extends Schema.TaggedErrorClass<RankingNotFound>()(
 ) {}
 export class RankingPersistenceUnavailable extends Schema.TaggedErrorClass<RankingPersistenceUnavailable>()(
   "RankingPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String },
+  { operation: Schema.String },
   { httpApiStatus: 500 }
 ) {}
 

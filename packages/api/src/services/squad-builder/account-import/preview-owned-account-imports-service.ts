@@ -13,6 +13,7 @@ import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
 } from "../../../domain/squad-builder/margonem-profile-url.js";
+import { logSquadBuilderInternalFailure } from "../internal-error-logging.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import type {
   DuplicateMargonemAccountError,
@@ -163,27 +164,31 @@ const persistPendingImport = ({
       suggestedAccountName: preview.suggestedAccountName,
     })
   ).pipe(
-    EffectRuntime.match({
-      onFailure: (error) => ({
-        item: toFailedItem({ error, inputUrl, lineNumber }),
-        lineNumber,
-      }),
-      onSuccess: (created) => ({
-        item: {
-          _tag: "PreviewSucceeded" as const,
-          defaultDisplayName,
-          firecrawlCreditsUsed: preview.firecrawlCreditsUsed,
-          generatedProfileUrl: toMargonemProfileUrl(preview.profileId),
-          inputUrl,
-          jarunaCharacters: preview.jarunaCharacters,
-          lastFetchedAt: preview.lastFetchedAt,
+    EffectRuntime.matchEffect({
+      onFailure: (error) =>
+        logSquadBuilderInternalFailure(error).pipe(
+          EffectRuntime.as({
+            item: toFailedItem({ error, inputUrl, lineNumber }),
+            lineNumber,
+          })
+        ),
+      onSuccess: (created) =>
+        EffectRuntime.succeed({
+          item: {
+            _tag: "PreviewSucceeded" as const,
+            defaultDisplayName,
+            firecrawlCreditsUsed: preview.firecrawlCreditsUsed,
+            generatedProfileUrl: toMargonemProfileUrl(preview.profileId),
+            inputUrl,
+            jarunaCharacters: preview.jarunaCharacters,
+            lastFetchedAt: preview.lastFetchedAt,
+            lineNumber,
+            pendingImportId: created.id,
+            profileId: preview.profileId,
+            suggestedAccountName: preview.suggestedAccountName,
+          },
           lineNumber,
-          pendingImportId: created.id,
-          profileId: preview.profileId,
-          suggestedAccountName: preview.suggestedAccountName,
-        },
-        lineNumber,
-      }),
+        }),
     })
   );
 };
@@ -264,20 +269,24 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
             profileId: line.profileId,
           })
         ).pipe(
-          EffectRuntime.match({
-            onFailure: (error) => ({
-              _tag: "LineFailure" as const,
-              error,
-              inputUrl: line.inputUrl,
-              lineNumber: line.lineNumber,
-            }),
-            onSuccess: (state) => ({
-              _tag: "AccessState" as const,
-              inputUrl: line.inputUrl,
-              lineNumber: line.lineNumber,
-              profileId: line.profileId,
-              state,
-            }),
+          EffectRuntime.matchEffect({
+            onFailure: (error) =>
+              logSquadBuilderInternalFailure(error).pipe(
+                EffectRuntime.as({
+                  _tag: "LineFailure" as const,
+                  error,
+                  inputUrl: line.inputUrl,
+                  lineNumber: line.lineNumber,
+                })
+              ),
+            onSuccess: (state) =>
+              EffectRuntime.succeed({
+                _tag: "AccessState" as const,
+                inputUrl: line.inputUrl,
+                lineNumber: line.lineNumber,
+                profileId: line.profileId,
+                state,
+              }),
           })
         )
       )
@@ -324,14 +333,16 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
         ).pipe(
           EffectRuntime.matchEffect({
             onFailure: (error) =>
-              EffectRuntime.succeed({
-                item: toFailedItem({
-                  error,
-                  inputUrl: line.inputUrl,
+              logSquadBuilderInternalFailure(error).pipe(
+                EffectRuntime.as({
+                  item: toFailedItem({
+                    error,
+                    inputUrl: line.inputUrl,
+                    lineNumber: line.lineNumber,
+                  }),
                   lineNumber: line.lineNumber,
-                }),
-                lineNumber: line.lineNumber,
-              }),
+                })
+              ),
             onSuccess: (profilePreview) =>
               persistPendingImport({
                 actorUserId: input.actorUserId,

@@ -9,7 +9,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { AnnouncementPersistenceUnavailable } from "../../protocol/announcement/http-api-contract.js";
+import { AnnouncementStoreError } from "./announcement-store-error.js";
 
 export interface CreateAnnouncementInput {
   readonly description: string;
@@ -24,11 +24,9 @@ export interface DeleteAnnouncementInput {
 const persistenceQuery = <A>(
   operation: string,
   self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, AnnouncementPersistenceUnavailable> =>
+): Effect.Effect<A, AnnouncementStoreError> =>
   (self as Effect.Effect<A, unknown, never>).pipe(
-    Effect.mapError(
-      (cause) => new AnnouncementPersistenceUnavailable({ cause, operation })
-    )
+    Effect.mapError((cause) => new AnnouncementStoreError({ cause, operation }))
   );
 
 const createWithDatabase =
@@ -77,10 +75,10 @@ export class AnnouncementStore extends Context.Service<
   {
     readonly create: (
       input: CreateAnnouncementInput
-    ) => Effect.Effect<void, AnnouncementPersistenceUnavailable>;
+    ) => Effect.Effect<void, AnnouncementStoreError>;
     readonly delete: (
       input: DeleteAnnouncementInput
-    ) => Effect.Effect<void, AnnouncementPersistenceUnavailable>;
+    ) => Effect.Effect<void, AnnouncementStoreError>;
     readonly list: () => Effect.Effect<
       readonly {
         readonly createdAt: Date;
@@ -93,7 +91,7 @@ export class AnnouncementStore extends Context.Service<
           readonly name: string | null;
         } | null;
       }[],
-      AnnouncementPersistenceUnavailable
+      AnnouncementStoreError
     >;
   }
 >()("@tepirek-revamped/api/AnnouncementStore") {}

@@ -8,7 +8,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { TodoPersistenceUnavailable } from "../../protocol/todo/http-api-contract.js";
+import { TodoStoreError } from "./todo-store-error.js";
 
 export interface CreateTodoInput {
   readonly text: string;
@@ -33,11 +33,9 @@ export interface ToggleTodoInput {
 const persistenceQuery = <A>(
   operation: string,
   self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, TodoPersistenceUnavailable> =>
+): Effect.Effect<A, TodoStoreError> =>
   (self as Effect.Effect<A, unknown, never>).pipe(
-    Effect.mapError(
-      (cause) => new TodoPersistenceUnavailable({ cause, operation })
-    )
+    Effect.mapError((cause) => new TodoStoreError({ cause, operation }))
   );
 
 const createWithDatabase =
@@ -80,10 +78,10 @@ export class TodoStore extends Context.Service<
   {
     readonly create: (
       input: CreateTodoInput
-    ) => Effect.Effect<void, TodoPersistenceUnavailable>;
+    ) => Effect.Effect<void, TodoStoreError>;
     readonly delete: (
       input: DeleteTodoInput
-    ) => Effect.Effect<void, TodoPersistenceUnavailable>;
+    ) => Effect.Effect<void, TodoStoreError>;
     readonly list: (input: ListTodosInput) => Effect.Effect<
       readonly {
         readonly completed: boolean;
@@ -91,11 +89,11 @@ export class TodoStore extends Context.Service<
         readonly text: string;
         readonly userId: string;
       }[],
-      TodoPersistenceUnavailable
+      TodoStoreError
     >;
     readonly toggle: (
       input: ToggleTodoInput
-    ) => Effect.Effect<void, TodoPersistenceUnavailable>;
+    ) => Effect.Effect<void, TodoStoreError>;
   }
 >()("@tepirek-revamped/api/TodoStore") {}
 

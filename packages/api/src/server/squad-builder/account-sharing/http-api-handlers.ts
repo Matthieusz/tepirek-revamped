@@ -20,6 +20,7 @@ import { Service as AccountAccessInviteResponsesService } from "../../../service
 import { Service as AccountAccessRevocationsService } from "../../../services/squad-builder/account-sharing/revoke-account-access-service.js";
 import { Service as AccountInviteTargetsService } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.js";
 import { Service as AccountAccessInvitesService } from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.js";
+import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.js";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -66,13 +67,11 @@ const mapAccountSharingError = (error: AccountSharingError): ProtocolError => {
     }
     case "SquadBuilderPersistenceUnavailable": {
       return new SquadBuilderPersistenceUnavailable({
-        cause: error.cause,
         operation: error.operation,
       });
     }
     default: {
       return new SquadBuilderPersistenceUnavailable({
-        cause: new Error("Unreachable error tag"),
         operation: "unknown",
       });
     }
@@ -103,7 +102,10 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 query: payload.query,
               })
-            ).pipe(Effect.mapError(mapAccountSharingError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapAccountSharingError)
+            );
           })
         )
         .handle("sendAccountAccessInvite", ({ payload, request }) =>
@@ -116,7 +118,10 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 invitedUserId: payload.invitedUserId,
               })
-            ).pipe(Effect.mapError(mapAccountSharingError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapAccountSharingError)
+            );
           })
         )
         .handle("respondToAccountAccessInvite", ({ payload, request }) =>
@@ -129,7 +134,10 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 response: payload.response,
               })
-            ).pipe(Effect.mapError(mapAccountSharingError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapAccountSharingError)
+            );
           })
         )
         .handle("revokeAccountAccess", ({ payload, request }) =>
@@ -141,7 +149,10 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                 accessId: payload.accessId,
                 actorUserId: sessionAppUserId(session),
               })
-            ).pipe(Effect.mapError(mapAccountSharingError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapAccountSharingError)
+            );
           })
         )
         .handle("listIncomingAccountInvites", ({ request }) =>
@@ -152,7 +163,10 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
               accountSharingStateSvc.listIncomingInvites({
                 actorUserId: sessionAppUserId(session),
               })
-            ).pipe(Effect.mapError(mapAccountSharingError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapAccountSharingError)
+            );
           })
         )
         .handle("listSharedAccounts", ({ request }) =>
@@ -163,7 +177,10 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
               accountSharingStateSvc.listSharedAccounts({
                 actorUserId: sessionAppUserId(session),
               })
-            ).pipe(Effect.mapError(mapAccountSharingError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapAccountSharingError)
+            );
           })
         )
         .handle("listAccountAccessGrants", ({ payload, request }) =>
@@ -175,7 +192,10 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                 accountId: payload.accountId,
                 actorUserId: sessionAppUserId(session),
               })
-            ).pipe(Effect.mapError(mapAccountSharingError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapAccountSharingError)
+            );
           })
         );
     })

@@ -14,6 +14,7 @@ import {
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
 } from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.js";
+import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.js";
 import { Service as SquadGroupSharingStateService } from "../../../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
 import { Service as SquadGroupEditorInviteResponsesService } from "../../../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
 import { Service as SquadGroupEditorRevocationsService } from "../../../services/squad-builder/squad-groups/revoke-squad-group-editor-service.js";
@@ -85,13 +86,11 @@ const mapSquadGroupSharingError = (
     }
     case "SquadBuilderPersistenceUnavailable": {
       return new SquadBuilderPersistenceUnavailable({
-        cause: error.cause,
         operation: error.operation,
       });
     }
     default: {
       return new SquadBuilderPersistenceUnavailable({
-        cause: new Error("Unreachable error tag"),
         operation: "unknown",
       });
     }
@@ -125,7 +124,10 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                   groupId: payload.groupId,
                   query: payload.query,
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(
+                Effect.tapError(logSquadBuilderInternalFailure),
+                Effect.mapError(mapSquadGroupSharingError)
+              );
             })
           )
           .handle("sendSquadGroupEditorInvite", ({ payload, request }) =>
@@ -138,7 +140,10 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                   groupId: payload.groupId,
                   invitedUserId: payload.invitedUserId,
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(
+                Effect.tapError(logSquadBuilderInternalFailure),
+                Effect.mapError(mapSquadGroupSharingError)
+              );
             })
           )
           .handle("respondToSquadGroupInvite", ({ payload, request }) =>
@@ -151,7 +156,10 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                   invitationId: payload.invitationId,
                   response: payload.response,
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(
+                Effect.tapError(logSquadBuilderInternalFailure),
+                Effect.mapError(mapSquadGroupSharingError)
+              );
             })
           )
           .handle("revokeSquadGroupEditor", ({ payload, request }) =>
@@ -163,7 +171,10 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                   actorUserId: sessionAppUserId(session),
                   invitationId: payload.invitationId,
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(
+                Effect.tapError(logSquadBuilderInternalFailure),
+                Effect.mapError(mapSquadGroupSharingError)
+              );
             })
           )
           .handle("listIncomingSquadGroupInvites", ({ request }) =>
@@ -174,7 +185,10 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                 squadGroupSharingStateSvc.listIncomingInvites({
                   actorUserId: sessionAppUserId(session),
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(
+                Effect.tapError(logSquadBuilderInternalFailure),
+                Effect.mapError(mapSquadGroupSharingError)
+              );
             })
           )
           .handle("listSharedSquadGroups", ({ request }) =>
@@ -185,7 +199,10 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                 squadGroupSharingStateSvc.listSharedGroups({
                   actorUserId: sessionAppUserId(session),
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(
+                Effect.tapError(logSquadBuilderInternalFailure),
+                Effect.mapError(mapSquadGroupSharingError)
+              );
             })
           )
           .handle("listSquadGroupEditorGrants", ({ payload, request }) =>
@@ -197,7 +214,10 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                   actorUserId: sessionAppUserId(session),
                   groupId: payload.groupId,
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(
+                Effect.tapError(logSquadBuilderInternalFailure),
+                Effect.mapError(mapSquadGroupSharingError)
+              );
             })
           )
           .handle("countPendingSquadGroupInvites", ({ request }) =>
@@ -208,7 +228,10 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                 squadGroupSharingStateSvc.countPendingInvites({
                   actorUserId: sessionAppUserId(session),
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(
+                Effect.tapError(logSquadBuilderInternalFailure),
+                Effect.mapError(mapSquadGroupSharingError)
+              );
             })
           );
       })

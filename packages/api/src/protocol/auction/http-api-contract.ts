@@ -91,7 +91,7 @@ export class AuctionConflict extends Schema.TaggedErrorClass<AuctionConflict>()(
 ) {}
 export class AuctionPersistenceUnavailable extends Schema.TaggedErrorClass<AuctionPersistenceUnavailable>()(
   "AuctionPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String },
+  { operation: Schema.String },
   { httpApiStatus: 500 }
 ) {}
 

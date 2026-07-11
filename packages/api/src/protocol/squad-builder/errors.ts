@@ -39,7 +39,7 @@ export class SquadBuilderUpstreamUnavailable extends Schema.TaggedErrorClass<Squ
 
 export class SquadBuilderPersistenceUnavailable extends Schema.TaggedErrorClass<SquadBuilderPersistenceUnavailable>()(
   "SquadBuilderPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String },
+  { operation: Schema.String },
   { httpApiStatus: 503 }
 ) {}
 

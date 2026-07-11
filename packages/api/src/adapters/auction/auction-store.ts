@@ -13,8 +13,8 @@ import {
   AuctionConflict,
   AuctionForbidden,
   AuctionNotFound,
-  AuctionPersistenceUnavailable,
 } from "../../protocol/auction/http-api-contract.js";
+import { AuctionStoreError } from "./auction-store-error.js";
 
 export interface AuctionGroupInput {
   readonly profession: string;
@@ -36,11 +36,9 @@ export interface ToggleSignupInput {
 const persistenceQuery = <A>(
   operation: string,
   self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, AuctionPersistenceUnavailable> =>
+): Effect.Effect<A, AuctionStoreError> =>
   (self as Effect.Effect<A, unknown, never>).pipe(
-    Effect.mapError(
-      (cause) => new AuctionPersistenceUnavailable({ cause, operation })
-    )
+    Effect.mapError((cause) => new AuctionStoreError({ cause, operation }))
   );
 
 const getSignupsWithDatabase =
@@ -188,25 +186,25 @@ export class AuctionStore extends Context.Service<
         readonly userImage: string | null;
         readonly userName: string | null;
       }[],
-      AuctionPersistenceUnavailable
+      AuctionStoreError
     >;
     readonly getStats: (
       input: AuctionGroupInput
     ) => Effect.Effect<
       { readonly totalSignups: number; readonly uniqueUsers: number },
-      AuctionPersistenceUnavailable
+      AuctionStoreError
     >;
     readonly removeSignup: (
       input: RemoveSignupInput
     ) => Effect.Effect<
       { readonly success: true },
-      AuctionForbidden | AuctionNotFound | AuctionPersistenceUnavailable
+      AuctionForbidden | AuctionNotFound | AuctionStoreError
     >;
     readonly toggleSignup: (
       input: ToggleSignupInput
     ) => Effect.Effect<
       { readonly action: "added" | "removed" },
-      AuctionConflict | AuctionPersistenceUnavailable
+      AuctionConflict | AuctionStoreError
     >;
   }
 >()("@tepirek-revamped/api/AuctionStore") {}

@@ -48,10 +48,7 @@ export class AnnouncementForbidden extends Schema.TaggedErrorClass<AnnouncementF
 
 export class AnnouncementPersistenceUnavailable extends Schema.TaggedErrorClass<AnnouncementPersistenceUnavailable>()(
   "AnnouncementPersistenceUnavailable",
-  {
-    cause: Schema.Defect(),
-    operation: Schema.String,
-  },
+  { operation: Schema.String },
   { httpApiStatus: 500 }
 ) {}
 

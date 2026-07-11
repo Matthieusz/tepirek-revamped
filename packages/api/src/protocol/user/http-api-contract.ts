@@ -84,7 +84,7 @@ export class UserNotFound extends Schema.TaggedErrorClass<UserNotFound>()(
 ) {}
 export class UserPersistenceUnavailable extends Schema.TaggedErrorClass<UserPersistenceUnavailable>()(
   "UserPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String },
+  { operation: Schema.String },
   { httpApiStatus: 500 }
 ) {}
 

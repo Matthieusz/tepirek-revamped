@@ -13,8 +13,8 @@ import * as Layer from "effect/Layer";
 import {
   SkillsBadRequest,
   SkillsConflict,
-  SkillsPersistenceUnavailable,
 } from "../../protocol/skills/http-api-contract.js";
+import { SkillsStoreError } from "./skills-store-error.js";
 
 export interface CreateProfessionInput {
   readonly name: string;
@@ -45,11 +45,9 @@ export interface GetSkillsByRangeInput {
 const persistenceQuery = <A>(
   operation: string,
   self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, SkillsPersistenceUnavailable> =>
+): Effect.Effect<A, SkillsStoreError> =>
   (self as Effect.Effect<A, unknown, never>).pipe(
-    Effect.mapError(
-      (cause) => new SkillsPersistenceUnavailable({ cause, operation })
-    )
+    Effect.mapError((cause) => new SkillsStoreError({ cause, operation }))
   );
 
 const assertHttpUrl = (link: string) =>
@@ -170,36 +168,33 @@ export class SkillsStore extends Context.Service<
   {
     readonly createProfession: (
       input: CreateProfessionInput
-    ) => Effect.Effect<void, SkillsPersistenceUnavailable>;
+    ) => Effect.Effect<void, SkillsStoreError>;
     readonly createRange: (
       input: CreateRangeInput
     ) => Effect.Effect<
       void,
-      SkillsBadRequest | SkillsConflict | SkillsPersistenceUnavailable
+      SkillsBadRequest | SkillsConflict | SkillsStoreError
     >;
     readonly createSkill: (
       input: CreateSkillInput
-    ) => Effect.Effect<void, SkillsBadRequest | SkillsPersistenceUnavailable>;
+    ) => Effect.Effect<void, SkillsBadRequest | SkillsStoreError>;
     readonly deleteRange: (
       input: DeleteInput
-    ) => Effect.Effect<void, SkillsPersistenceUnavailable>;
+    ) => Effect.Effect<void, SkillsStoreError>;
     readonly deleteSkill: (
       input: DeleteInput
-    ) => Effect.Effect<void, SkillsPersistenceUnavailable>;
+    ) => Effect.Effect<void, SkillsStoreError>;
     readonly listProfessions: () => Effect.Effect<
       readonly (typeof professions.$inferSelect)[],
-      SkillsPersistenceUnavailable
+      SkillsStoreError
     >;
     readonly listRanges: () => Effect.Effect<
       readonly (typeof range.$inferSelect)[],
-      SkillsPersistenceUnavailable
+      SkillsStoreError
     >;
     readonly getRangeBySlug: (
       input: GetRangeBySlugInput
-    ) => Effect.Effect<
-      typeof range.$inferSelect | null,
-      SkillsPersistenceUnavailable
-    >;
+    ) => Effect.Effect<typeof range.$inferSelect | null, SkillsStoreError>;
     readonly listSkillsByRange: (input: GetSkillsByRangeInput) => Effect.Effect<
       readonly {
         readonly addedBy: string | null;
@@ -211,7 +206,7 @@ export class SkillsStore extends Context.Service<
         readonly professionId: number;
         readonly professionName: string;
       }[],
-      SkillsPersistenceUnavailable
+      SkillsStoreError
     >;
   }
 >()("@tepirek-revamped/api/SkillsStore") {}

@@ -73,7 +73,7 @@ export class VaultNotFound extends Schema.TaggedErrorClass<VaultNotFound>()(
 ) {}
 export class VaultPersistenceUnavailable extends Schema.TaggedErrorClass<VaultPersistenceUnavailable>()(
   "VaultPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String },
+  { operation: Schema.String },
   { httpApiStatus: 500 }
 ) {}
 

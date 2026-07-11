@@ -26,28 +26,27 @@ const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
   }
 );
 
-const classifyVaultFailure = (error: VaultError, operation: string) => {
-  if (error._tag === "VaultBadRequest") {
-    return new VaultBadRequest({ message: error.message });
-  }
-  if (error._tag === "VaultNotFound") {
-    return new VaultNotFound({ message: error.message });
-  }
-  if (error._tag === "VaultPersistenceUnavailable") {
-    return new VaultPersistenceUnavailable({
-      cause: error.cause,
-      operation: error.operation,
-    });
-  }
-  return new VaultPersistenceUnavailable({ cause: error, operation });
-};
-
 const mapVaultError = <A>(
   operation: string,
   effect: Effect.Effect<A, VaultError>
 ) =>
   effect.pipe(
-    Effect.mapError((error) => classifyVaultFailure(error, operation))
+    Effect.catchTags({
+      VaultBadRequest: (error) =>
+        Effect.fail(new VaultBadRequest({ message: error.message })),
+      VaultNotFound: (error) =>
+        Effect.fail(new VaultNotFound({ message: error.message })),
+      VaultPersistenceUnavailable: (error) =>
+        Effect.logError("Vault persistence operation failed").pipe(
+          Effect.annotateLogs({
+            errorTag: error._tag,
+            operation: error.operation,
+          }),
+          Effect.andThen(
+            Effect.fail(new VaultPersistenceUnavailable({ operation }))
+          )
+        ),
+    })
   );
 
 export const VaultHttpApiHandlers = HttpApiBuilder.group(

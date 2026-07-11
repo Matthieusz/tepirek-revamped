@@ -55,15 +55,12 @@ const PreviewOwnedAccountImportLineError = Schema.Union([
     yearMonth: Schema.String,
   }),
   Schema.TaggedStruct("FirecrawlRequestFailed", {
-    cause: Schema.Defect(),
     profileId: PositiveInt,
   }),
   Schema.TaggedStruct("FirecrawlResponseNotParseable", {
-    cause: Schema.Defect(),
     profileId: PositiveInt,
   }),
   Schema.TaggedStruct("RequestCancelled", {
-    cause: Schema.Defect(),
     profileId: PositiveInt,
   }),
   Schema.TaggedStruct("MargonemProfileNameNotFound", {
@@ -77,7 +74,6 @@ const PreviewOwnedAccountImportLineError = Schema.Union([
     safeReason: Schema.String,
   }),
   Schema.TaggedStruct("SquadBuilderPersistenceUnavailable", {
-    cause: Schema.Defect(),
     operation: Schema.String,
   }),
 ]);

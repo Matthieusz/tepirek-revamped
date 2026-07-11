@@ -112,7 +112,7 @@ export class BetNotFound extends Schema.TaggedErrorClass<BetNotFound>()(
 ) {}
 export class BetPersistenceUnavailable extends Schema.TaggedErrorClass<BetPersistenceUnavailable>()(
   "BetPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String },
+  { operation: Schema.String },
   { httpApiStatus: 500 }
 ) {}
 

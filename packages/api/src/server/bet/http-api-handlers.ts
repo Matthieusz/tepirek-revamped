@@ -26,27 +26,28 @@ const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
   }
 );
 
-const classifyBetFailure = (error: BetError, operation: string) => {
-  if (error._tag === "BetBadRequest") {
-    return new BetBadRequest({ message: error.message });
-  }
-  if (error._tag === "BetNotFound") {
-    return new BetNotFound({ message: error.message });
-  }
-  if (error._tag === "BetPersistenceUnavailable") {
-    return new BetPersistenceUnavailable({
-      cause: error.cause,
-      operation: error.operation,
-    });
-  }
-  return new BetPersistenceUnavailable({ cause: error, operation });
-};
-
 const mapBetError = <A>(
   operation: string,
   effect: Effect.Effect<A, BetError>
 ) =>
-  effect.pipe(Effect.mapError((error) => classifyBetFailure(error, operation)));
+  effect.pipe(
+    Effect.catchTags({
+      BetBadRequest: (error) =>
+        Effect.fail(new BetBadRequest({ message: error.message })),
+      BetNotFound: (error) =>
+        Effect.fail(new BetNotFound({ message: error.message })),
+      BetPersistenceUnavailable: (error) =>
+        Effect.logError("Bet persistence operation failed").pipe(
+          Effect.annotateLogs({
+            errorTag: error._tag,
+            operation: error.operation,
+          }),
+          Effect.andThen(
+            Effect.fail(new BetPersistenceUnavailable({ operation }))
+          )
+        ),
+    })
+  );
 
 export const BetHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,

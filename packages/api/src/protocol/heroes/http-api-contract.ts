@@ -46,7 +46,7 @@ export class HeroesForbidden extends Schema.TaggedErrorClass<HeroesForbidden>()(
 ) {}
 export class HeroesPersistenceUnavailable extends Schema.TaggedErrorClass<HeroesPersistenceUnavailable>()(
   "HeroesPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String },
+  { operation: Schema.String },
   { httpApiStatus: 500 }
 ) {}
 

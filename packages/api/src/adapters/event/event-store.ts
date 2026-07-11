@@ -11,8 +11,8 @@ import * as Layer from "effect/Layer";
 import {
   defaultEventColor,
   defaultEventIcon,
-  EventPersistenceUnavailable,
 } from "../../protocol/event/http-api-contract.js";
+import { EventStoreError } from "./event-store-error.js";
 
 export interface CreateEventInput {
   readonly color?: string | undefined;
@@ -31,11 +31,9 @@ export interface ToggleEventActiveInput {
 const persistenceQuery = <A>(
   operation: string,
   self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, EventPersistenceUnavailable> =>
+): Effect.Effect<A, EventStoreError> =>
   (self as Effect.Effect<A, unknown>).pipe(
-    Effect.mapError(
-      (cause) => new EventPersistenceUnavailable({ cause, operation })
-    )
+    Effect.mapError((cause) => new EventStoreError({ cause, operation }))
   );
 
 const createWithDatabase =
@@ -75,17 +73,17 @@ export class EventStore extends Context.Service<
   {
     readonly create: (
       input: CreateEventInput
-    ) => Effect.Effect<void, EventPersistenceUnavailable>;
+    ) => Effect.Effect<void, EventStoreError>;
     readonly delete: (
       input: DeleteEventInput
-    ) => Effect.Effect<void, EventPersistenceUnavailable>;
+    ) => Effect.Effect<void, EventStoreError>;
     readonly list: () => Effect.Effect<
       readonly (typeof event.$inferSelect)[],
-      EventPersistenceUnavailable
+      EventStoreError
     >;
     readonly toggleActive: (
       input: ToggleEventActiveInput
-    ) => Effect.Effect<void, EventPersistenceUnavailable>;
+    ) => Effect.Effect<void, EventStoreError>;
   }
 >()("@tepirek-revamped/api/EventStore") {}
 

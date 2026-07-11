@@ -12,8 +12,8 @@ import {
   UserBadRequest,
   UserForbidden,
   UserNotFound,
-  UserPersistenceUnavailable,
 } from "../../protocol/user/http-api-contract.js";
+import { UserAdapterError } from "./user-adapter-error.js";
 
 const LAST_ADMIN_MESSAGE =
   "Nie można odebrać uprawnień ostatniemu administratorowi";
@@ -74,11 +74,9 @@ export interface UpdateUserNameInput {
 const persistenceQuery = <A>(
   operation: string,
   self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, UserPersistenceUnavailable> =>
+): Effect.Effect<A, UserAdapterError> =>
   (self as Effect.Effect<A, unknown, never>).pipe(
-    Effect.mapError(
-      (cause) => new UserPersistenceUnavailable({ cause, operation })
-    )
+    Effect.mapError((cause) => new UserAdapterError({ cause, operation }))
   );
 
 const loadTargetUser = (
@@ -204,7 +202,7 @@ const deleteUserWithDatabase =
     userId: string
   ): Effect.Effect<
     { readonly success: true },
-    UserBadRequest | UserNotFound | UserPersistenceUnavailable
+    UserBadRequest | UserNotFound | UserAdapterError
   > =>
     Effect.gen(function* deleteUserEffect() {
       const targetUser = yield* loadTargetUser(database, userId);
@@ -258,9 +256,7 @@ const updateProfileWithDatabase =
 
 const getDiscordAccessTokenWithDatabase =
   (database: EffectPgDatabase) =>
-  (
-    userId: string
-  ): Effect.Effect<string, UserBadRequest | UserPersistenceUnavailable> =>
+  (userId: string): Effect.Effect<string, UserBadRequest | UserAdapterError> =>
     Effect.gen(function* getDiscordAccessTokenEffect() {
       const rows = yield* persistenceQuery(
         "getDiscordAccessToken",
@@ -284,7 +280,7 @@ const getDiscordAccessTokenWithDatabase =
 
 const markUserVerifiedWithDatabase =
   (database: EffectPgDatabase) =>
-  (userId: string): Effect.Effect<void, UserPersistenceUnavailable> =>
+  (userId: string): Effect.Effect<void, UserAdapterError> =>
     persistenceQuery(
       "markUserVerified",
       database
@@ -300,37 +296,34 @@ export class UserStore extends Context.Service<
       userId: string
     ) => Effect.Effect<
       { readonly success: true },
-      UserBadRequest | UserNotFound | UserPersistenceUnavailable
+      UserBadRequest | UserNotFound | UserAdapterError
     >;
     readonly getDiscordAccessToken: (
       userId: string
-    ) => Effect.Effect<string, UserBadRequest | UserPersistenceUnavailable>;
+    ) => Effect.Effect<string, UserBadRequest | UserAdapterError>;
     readonly getVerified: () => Effect.Effect<
       readonly VerifiedMember[],
-      UserPersistenceUnavailable
+      UserAdapterError
     >;
-    readonly list: () => Effect.Effect<
-      readonly Player[],
-      UserPersistenceUnavailable
-    >;
+    readonly list: () => Effect.Effect<readonly Player[], UserAdapterError>;
     readonly markUserVerified: (
       userId: string
-    ) => Effect.Effect<void, UserPersistenceUnavailable>;
+    ) => Effect.Effect<void, UserAdapterError>;
     readonly setRole: (
       input: SetUserRoleInput
     ) => Effect.Effect<
       Player | null,
-      UserForbidden | UserNotFound | UserPersistenceUnavailable
+      UserForbidden | UserNotFound | UserAdapterError
     >;
     readonly setVerified: (
       input: SetUserVerifiedInput
     ) => Effect.Effect<
       Player | null,
-      UserForbidden | UserNotFound | UserPersistenceUnavailable
+      UserForbidden | UserNotFound | UserAdapterError
     >;
     readonly updateProfile: (
       input: UpdateUserNameInput
-    ) => Effect.Effect<Player | null, UserPersistenceUnavailable>;
+    ) => Effect.Effect<Player | null, UserAdapterError>;
   }
 >()("@tepirek-revamped/api/UserStore") {}
 

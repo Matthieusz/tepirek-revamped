@@ -36,14 +36,41 @@ describe("getErrorMessage", () => {
     ).toBe("Nieprawidłowa nazwa");
   });
 
-  it("does not expose persistence causes or unknown values", () => {
+  it("maps persistence failures by stable tags without exposing fields", () => {
     for (const value of [
-      null,
-      undefined,
-      "błąd",
-      { message: "błąd" },
-      { _tag: "UserPersistenceUnavailable", cause: "secret dsn" },
+      { _tag: "AnnouncementPersistenceUnavailable", operation: "list" },
+      { _tag: "AuctionPersistenceUnavailable", operation: "list" },
+      { _tag: "BetPersistenceUnavailable", operation: "list" },
+      { _tag: "EventPersistenceUnavailable", operation: "list" },
+      { _tag: "HeroesPersistenceUnavailable", operation: "list" },
+      { _tag: "RankingPersistenceUnavailable", operation: "list" },
+      { _tag: "SkillsPersistenceUnavailable", operation: "list" },
+      { _tag: "TodoPersistenceUnavailable", operation: "list" },
+      {
+        _tag: "UserPersistenceUnavailable",
+        message: "secret dsn",
+        operation: "list",
+      },
+      { _tag: "VaultPersistenceUnavailable", operation: "list" },
     ]) {
+      expect(getErrorMessage(value)).toBe(
+        "Wystąpił błąd. Spróbuj ponownie później."
+      );
+    }
+
+    expect(
+      getErrorMessage({
+        _tag: "SquadBuilderPersistenceUnavailable",
+        message: "secret dsn",
+        operation: "listOwnedAccounts",
+      })
+    ).toBe(
+      "Nie udało się zapisać zmian kont i składów. Spróbuj ponownie później."
+    );
+  });
+
+  it("does not expose unknown values", () => {
+    for (const value of [null, undefined, "błąd", { message: "błąd" }]) {
       expect(getErrorMessage(value)).toBe(
         "Wystąpił błąd. Spróbuj ponownie później."
       );

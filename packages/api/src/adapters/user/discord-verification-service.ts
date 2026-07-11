@@ -2,25 +2,25 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { UserPersistenceUnavailable } from "../../protocol/user/http-api-contract.js";
 import { hasDiscordGuild } from "./discord-guild.js";
 import { DiscordVerificationConfig } from "./discord-verification-config.js";
+import { UserAdapterError } from "./user-adapter-error.js";
 
 export class DiscordGuildVerifier extends Context.Service<
   DiscordGuildVerifier,
   {
     readonly verifyMembership: (
       accessToken: string
-    ) => Effect.Effect<boolean, UserPersistenceUnavailable>;
+    ) => Effect.Effect<boolean, UserAdapterError>;
   }
 >()("@tepirek-revamped/api/user/DiscordGuildVerifier") {}
 
 const fetchDiscordGuilds = (
   accessToken: string
-): Effect.Effect<unknown, UserPersistenceUnavailable> =>
+): Effect.Effect<unknown, UserAdapterError> =>
   Effect.tryPromise({
     catch: (cause) =>
-      new UserPersistenceUnavailable({
+      new UserAdapterError({
         cause,
         operation: "verifyDiscordGuildMembership",
       }),

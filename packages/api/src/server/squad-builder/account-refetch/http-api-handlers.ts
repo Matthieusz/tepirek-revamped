@@ -20,6 +20,7 @@ import { Service as ApplyAccountRefetchService } from "../../../services/squad-b
 import type { ApplyAccountRefetchError } from "../../../services/squad-builder/account-refetch/apply-account-refetch.js";
 import { Service as PreviewAccountRefetchService } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.js";
 import type { PreviewAccountRefetchError } from "../../../services/squad-builder/account-refetch/preview-account-refetch.js";
+import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.js";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -75,7 +76,6 @@ const mapAccountRefetchError = (
     }
     case "SquadBuilderPersistenceUnavailable": {
       return new SquadBuilderPersistenceUnavailable({
-        cause: error.cause,
         operation: error.operation,
       });
     }
@@ -108,7 +108,10 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
                 accountId,
                 actorUserId: sessionAppUserId(session),
               })
-            ).pipe(Effect.mapError(mapAccountRefetchError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapAccountRefetchError)
+            );
           })
         )
         .handle("applyAccountRefetch", ({ payload, request }) =>
@@ -124,7 +127,10 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 refetchPreviewId,
               })
-            ).pipe(Effect.mapError(mapAccountRefetchError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapAccountRefetchError)
+            );
           })
         );
     })

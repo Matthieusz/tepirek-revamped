@@ -1,10 +1,13 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
+// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import type { AnnouncementStoreError } from "../../adapters/announcement/announcement-store-error.js";
 import { AnnouncementStore } from "../../adapters/announcement/announcement-store.js";
 import {
   AnnouncementForbidden,
+  AnnouncementPersistenceUnavailable,
   AnnouncementUnauthorized,
 } from "../../protocol/announcement/http-api-contract.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
@@ -22,6 +25,19 @@ const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
   }
 );
 
+const projectStoreError = Effect.fn(
+  "AnnouncementHttpApiHandlers.projectStoreError"
+)((error: AnnouncementStoreError) =>
+  Effect.gen(function* projectStoreError() {
+    yield* Effect.logError("Announcement persistence operation failed").pipe(
+      Effect.annotateLogs({ errorTag: error._tag, operation: error.operation })
+    );
+    return yield* new AnnouncementPersistenceUnavailable({
+      operation: error.operation,
+    });
+  })
+);
+
 export const AnnouncementHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "announcement",
@@ -32,11 +48,13 @@ export const AnnouncementHttpApiHandlers = HttpApiBuilder.group(
           const session = yield* requireAdminSession();
           const store = yield* AnnouncementStore;
 
-          yield* store.create({
-            description: payload.description,
-            title: payload.title,
-            userId: session.user.id,
-          });
+          yield* store
+            .create({
+              description: payload.description,
+              title: payload.title,
+              userId: session.user.id,
+            })
+            .pipe(Effect.catchTag("AnnouncementStoreError", projectStoreError));
         })
       )
       .handle("deleteAnnouncement", ({ payload }) =>
@@ -44,7 +62,9 @@ export const AnnouncementHttpApiHandlers = HttpApiBuilder.group(
           yield* requireAdminSession();
           const store = yield* AnnouncementStore;
 
-          yield* store.delete({ id: payload.id });
+          yield* store
+            .delete({ id: payload.id })
+            .pipe(Effect.catchTag("AnnouncementStoreError", projectStoreError));
         })
       )
       .handle("listAnnouncements", () =>
@@ -52,7 +72,9 @@ export const AnnouncementHttpApiHandlers = HttpApiBuilder.group(
           yield* requireVerifiedSession();
           const store = yield* AnnouncementStore;
 
-          return yield* store.list();
+          return yield* store
+            .list()
+            .pipe(Effect.catchTag("AnnouncementStoreError", projectStoreError));
         })
       )
 );

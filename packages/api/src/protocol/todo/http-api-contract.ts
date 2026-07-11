@@ -45,10 +45,7 @@ export class TodoForbidden extends Schema.TaggedErrorClass<TodoForbidden>()(
 
 export class TodoPersistenceUnavailable extends Schema.TaggedErrorClass<TodoPersistenceUnavailable>()(
   "TodoPersistenceUnavailable",
-  {
-    cause: Schema.Defect(),
-    operation: Schema.String,
-  },
+  { operation: Schema.String },
   { httpApiStatus: 500 }
 ) {}
 

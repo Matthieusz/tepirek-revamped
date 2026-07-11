@@ -8,7 +8,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { HeroesPersistenceUnavailable } from "../../protocol/heroes/http-api-contract.js";
+import { HeroesStoreError } from "./heroes-store-error.js";
 
 export interface CreateHeroInput {
   readonly eventId: number;
@@ -26,11 +26,9 @@ export interface ListHeroesByEventInput {
 const persistenceQuery = <A>(
   operation: string,
   self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, HeroesPersistenceUnavailable> =>
+): Effect.Effect<A, HeroesStoreError> =>
   (self as Effect.Effect<A, unknown, never>).pipe(
-    Effect.mapError(
-      (cause) => new HeroesPersistenceUnavailable({ cause, operation })
-    )
+    Effect.mapError((cause) => new HeroesStoreError({ cause, operation }))
   );
 
 const createWithDatabase =
@@ -67,20 +65,17 @@ export class HeroesStore extends Context.Service<
   {
     readonly create: (
       input: CreateHeroInput
-    ) => Effect.Effect<void, HeroesPersistenceUnavailable>;
+    ) => Effect.Effect<void, HeroesStoreError>;
     readonly delete: (
       input: DeleteHeroInput
-    ) => Effect.Effect<void, HeroesPersistenceUnavailable>;
+    ) => Effect.Effect<void, HeroesStoreError>;
     readonly list: () => Effect.Effect<
       readonly (typeof hero.$inferSelect)[],
-      HeroesPersistenceUnavailable
+      HeroesStoreError
     >;
     readonly listByEvent: (
       input: ListHeroesByEventInput
-    ) => Effect.Effect<
-      readonly (typeof hero.$inferSelect)[],
-      HeroesPersistenceUnavailable
-    >;
+    ) => Effect.Effect<readonly (typeof hero.$inferSelect)[], HeroesStoreError>;
   }
 >()("@tepirek-revamped/api/HeroesStore") {}
 

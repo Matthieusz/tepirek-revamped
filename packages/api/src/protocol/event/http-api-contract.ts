@@ -49,7 +49,7 @@ export class EventForbidden extends Schema.TaggedErrorClass<EventForbidden>()(
 ) {}
 export class EventPersistenceUnavailable extends Schema.TaggedErrorClass<EventPersistenceUnavailable>()(
   "EventPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String },
+  { operation: Schema.String },
   { httpApiStatus: 500 }
 ) {}
 

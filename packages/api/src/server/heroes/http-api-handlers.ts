@@ -1,10 +1,13 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
+// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import type { HeroesStoreError } from "../../adapters/heroes/heroes-store-error.js";
 import { HeroesStore } from "../../adapters/heroes/heroes-store.js";
 import {
   HeroesForbidden,
+  HeroesPersistenceUnavailable,
   HeroesUnauthorized,
 } from "../../protocol/heroes/http-api-contract.js";
 import { AppHttpApi } from "../../protocol/http-api-contract.js";
@@ -21,6 +24,21 @@ const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
   }
 );
 
+const projectStoreError = Effect.fn("HeroesHttpApiHandlers.projectStoreError")(
+  (error: HeroesStoreError) =>
+    Effect.gen(function* projectStoreError() {
+      yield* Effect.logError("Heroes persistence operation failed").pipe(
+        Effect.annotateLogs({
+          errorTag: error._tag,
+          operation: error.operation,
+        })
+      );
+      return yield* new HeroesPersistenceUnavailable({
+        operation: error.operation,
+      });
+    })
+);
+
 export const HeroesHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "heroes",
@@ -30,28 +48,36 @@ export const HeroesHttpApiHandlers = HttpApiBuilder.group(
         Effect.gen(function* HeroesHttpApiHandlers() {
           yield* requireAdminSession();
           const store = yield* HeroesStore;
-          yield* store.create(payload);
+          yield* store
+            .create(payload)
+            .pipe(Effect.catchTag("HeroesStoreError", projectStoreError));
         })
       )
       .handle("deleteHero", ({ payload }) =>
         Effect.gen(function* HeroesHttpApiHandlers() {
           yield* requireAdminSession();
           const store = yield* HeroesStore;
-          yield* store.delete(payload);
+          yield* store
+            .delete(payload)
+            .pipe(Effect.catchTag("HeroesStoreError", projectStoreError));
         })
       )
       .handle("listHeroes", () =>
         Effect.gen(function* HeroesHttpApiHandlers() {
           yield* requireVerifiedSession();
           const store = yield* HeroesStore;
-          return yield* store.list();
+          return yield* store
+            .list()
+            .pipe(Effect.catchTag("HeroesStoreError", projectStoreError));
         })
       )
       .handle("listHeroesByEvent", ({ payload }) =>
         Effect.gen(function* HeroesHttpApiHandlers() {
           yield* requireVerifiedSession();
           const store = yield* HeroesStore;
-          return yield* store.listByEvent(payload);
+          return yield* store
+            .listByEvent(payload)
+            .pipe(Effect.catchTag("HeroesStoreError", projectStoreError));
         })
       )
 );

@@ -87,7 +87,7 @@ export class SkillsConflict extends Schema.TaggedErrorClass<SkillsConflict>()(
 ) {}
 export class SkillsPersistenceUnavailable extends Schema.TaggedErrorClass<SkillsPersistenceUnavailable>()(
   "SkillsPersistenceUnavailable",
-  { cause: Schema.Defect(), operation: Schema.String },
+  { operation: Schema.String },
   { httpApiStatus: 500 }
 ) {}
 

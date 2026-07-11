@@ -1,12 +1,17 @@
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
 
+import { AnnouncementStoreError } from "./adapters/announcement/announcement-store-error.js";
+import { AnnouncementStore } from "./adapters/announcement/announcement-store.js";
 import { makeBetterAuthAdapterLayer } from "./server/auth/better-auth-adapter.js";
 import { makeApiLiveLayerFromConfig } from "./server/effect-app.js";
 import { AppHttpApiLayer } from "./server/http-api-handlers.js";
+import { Service as PreviewMargonemProfileImportService } from "./services/squad-builder/account-import/preview-margonem-profile-import-service.js";
+import { FirecrawlRequestFailed } from "./services/squad-builder/firecrawl-client.js";
 import { testAuth } from "./test/integration/auth.js";
 import {
   createHero,
@@ -31,6 +36,61 @@ const appHttpApi = HttpRouter.toWebHandler(appHttpApiLayer, {
 
 const requestHttpApi = (path: string, init?: RequestInit) =>
   appHttpApi.handler(new Request(`http://localhost:3000${path}`, init));
+
+const sensitivePersistenceCause = new Error(
+  "DatabaseError: relation users does not exist at postgres://admin:secret@database.internal/app"
+);
+const failingAnnouncementStoreLayer = Layer.succeed(
+  AnnouncementStore,
+  AnnouncementStore.of({
+    create: () =>
+      Effect.fail(
+        new AnnouncementStoreError({
+          cause: sensitivePersistenceCause,
+          operation: "createAnnouncement",
+        })
+      ),
+    delete: () =>
+      Effect.fail(
+        new AnnouncementStoreError({
+          cause: sensitivePersistenceCause,
+          operation: "deleteAnnouncement",
+        })
+      ),
+    list: () =>
+      Effect.fail(
+        new AnnouncementStoreError({
+          cause: sensitivePersistenceCause,
+          operation: "listAnnouncements",
+        })
+      ),
+  })
+);
+const failingProfilePreviewLayer = Layer.succeed(
+  PreviewMargonemProfileImportService,
+  PreviewMargonemProfileImportService.of({
+    preview: () =>
+      Effect.fail(
+        new FirecrawlRequestFailed({
+          cause: new Error(
+            "FetchError: https://provider.example/profile?token=secret"
+          ),
+          profileId: 123,
+        })
+      ),
+  })
+);
+const failingAnnouncementHttpApi = HttpRouter.toWebHandler(
+  AppHttpApiLayer.pipe(
+    Layer.provideMerge(
+      Layer.merge(failingAnnouncementStoreLayer, failingProfilePreviewLayer)
+    ),
+    Layer.provideMerge(makeApiLiveLayerFromConfig()),
+    Layer.provideMerge(makeBetterAuthAdapterLayer(testAuth)),
+    Layer.provide(HttpServer.layerServices)
+  ),
+  { disableLogger: true }
+);
 
 const createSignedInAdmin = async (name: string) => {
   const email = `${name}@example.com`;
@@ -80,6 +140,48 @@ const authenticatedGet = (cookie: string): RequestInit => ({
 });
 
 describe("migrated Effect HttpApi routes", () => {
+  it("redacts persistence causes from route responses", async () => {
+    const { cookie } = await createSignedInAdmin("redaction-admin");
+    const response = await failingAnnouncementHttpApi.handler(
+      new Request("http://localhost:3000/announcements", {
+        ...authenticatedGet(cookie),
+      })
+    );
+
+    expect(response.status).toBe(500);
+    const responseBody = await response.text();
+    expect(responseBody).toContain("AnnouncementPersistenceUnavailable");
+    expect(responseBody).toContain("listAnnouncements");
+    expect(responseBody).not.toContain("cause");
+    expect(responseBody).not.toContain("DatabaseError");
+    expect(responseBody).not.toContain("postgres://");
+    expect(responseBody).not.toContain("secret");
+    expect(responseBody).not.toContain("database.internal");
+  });
+
+  it("redacts upstream causes from route responses", async () => {
+    const { cookie } = await createSignedInAdmin("upstream-redaction-admin");
+    const response = await failingAnnouncementHttpApi.handler(
+      new Request(
+        "http://localhost:3000/squad-builder/account-imports/preview-profile",
+        jsonPost(
+          { profileUrl: "https://www.margonem.pl/profile/view,123" },
+          cookie
+        )
+      )
+    );
+
+    expect(response.status).toBe(502);
+    const responseBody = await response.text();
+    expect(responseBody).toContain("SquadBuilderUpstreamUnavailable");
+    expect(responseBody).toContain("FirecrawlRequestFailed");
+    expect(responseBody).not.toContain("cause");
+    expect(responseBody).not.toContain("FetchError");
+    expect(responseBody).not.toContain("provider.example");
+    expect(responseBody).not.toContain("token");
+    expect(responseBody).not.toContain("secret");
+  });
+
   it("serves bet routes through the final HttpApi handler seam", async () => {
     const admin = await createSignedInAdmin("bet-admin");
     const member = await createVerifiedMember({ id: "bet-member" });

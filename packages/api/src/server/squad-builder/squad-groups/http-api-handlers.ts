@@ -16,6 +16,7 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/squad-groups/http-api-contract.js";
+import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.js";
 import type { CreateSquadGroupError } from "../../../services/squad-builder/squad-groups/create-squad-group.js";
 import { Service as CreateSquadGroupService } from "../../../services/squad-builder/squad-groups/create-squad-group.js";
 import { Service as ListGlobalSquadGroupsService } from "../../../services/squad-builder/squad-groups/list-global-squad-groups.js";
@@ -90,7 +91,6 @@ const mapSquadGroupsError = (error: SquadGroupsHandlerError): ProtocolError => {
     }
     case "SquadBuilderPersistenceUnavailable": {
       return new SquadBuilderPersistenceUnavailable({
-        cause: error.cause,
         operation: error.operation,
       });
     }
@@ -125,7 +125,10 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 name: payload.name,
               })
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapSquadGroupsError)
+            );
           })
         )
         .handle("listOwnedSquadGroups", ({ request }) =>
@@ -136,7 +139,10 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
               listSquadGroupsSvc.listMine({
                 actorUserId: sessionAppUserId(session),
               })
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapSquadGroupsError)
+            );
           })
         )
         .handle("listGlobalSquadGroups", ({ payload, request }) =>
@@ -156,7 +162,10 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                   filters,
                 });
               })
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapSquadGroupsError)
+            );
           })
         )
         .handle("getSquadGroupDetail", ({ payload, request }) =>
@@ -170,7 +179,10 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                   groupId: payload.groupId,
                 })
               )
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapSquadGroupsError)
+            );
           })
         )
         .handle("listAvailableSquadCharacters", ({ payload, request }) =>
@@ -191,7 +203,10 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                   })
                 );
               })
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapSquadGroupsError)
+            );
           })
         )
         .handle("saveSquadGroup", ({ payload, request }) =>
@@ -213,7 +228,10 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                     : { squadId: squad.squadId }),
                 })),
               })
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapSquadGroupsError)
+            );
           })
         )
         .handle("saveSharedSquadGroupCharacters", ({ payload, request }) =>
@@ -229,7 +247,10 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                   squadId: squad.squadId,
                 })),
               })
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapSquadGroupsError)
+            );
           })
         )
         .handle("setSquadGroupVisibility", ({ payload, request }) =>
@@ -242,7 +263,10 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                 groupId: payload.groupId,
                 visibility: payload.visibility,
               })
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(
+              Effect.tapError(logSquadBuilderInternalFailure),
+              Effect.mapError(mapSquadGroupsError)
+            );
           })
         );
     })

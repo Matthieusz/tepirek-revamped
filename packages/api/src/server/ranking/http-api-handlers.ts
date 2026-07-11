@@ -1,4 +1,4 @@
-// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
+// oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then -- Effect combinators use callbacks for typed error mapping.
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
@@ -23,25 +23,25 @@ const { requireVerifiedSession } = makeAuthorizationPolicy({
     }),
 });
 
-const classifyRankingFailure = (error: RankingError, operation: string) => {
-  if (error._tag === "RankingNotFound") {
-    return new RankingNotFound({ message: error.message });
-  }
-  if (error._tag === "RankingPersistenceUnavailable") {
-    return new RankingPersistenceUnavailable({
-      cause: error.cause,
-      operation: error.operation,
-    });
-  }
-  return new RankingPersistenceUnavailable({ cause: error, operation });
-};
-
 const mapRankingError = <A>(
   operation: string,
   effect: Effect.Effect<A, RankingError>
 ) =>
   effect.pipe(
-    Effect.mapError((error) => classifyRankingFailure(error, operation))
+    Effect.catchTags({
+      RankingNotFound: (error) =>
+        Effect.fail(new RankingNotFound({ message: error.message })),
+      RankingPersistenceUnavailable: (error) =>
+        Effect.logError("Ranking persistence operation failed").pipe(
+          Effect.annotateLogs({
+            errorTag: error._tag,
+            operation: error.operation,
+          }),
+          Effect.andThen(
+            Effect.fail(new RankingPersistenceUnavailable({ operation }))
+          )
+        ),
+    })
   );
 
 export const RankingHttpApiHandlers = HttpApiBuilder.group(
