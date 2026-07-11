@@ -6,6 +6,7 @@ import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { professions, range, skills } from "@tepirek-revamped/db/schema/skills";
 import { eq } from "drizzle-orm";
+import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -42,11 +43,11 @@ export interface GetSkillsByRangeInput {
   readonly rangeId: number;
 }
 
-const persistenceQuery = <A>(
+const persistenceQuery = <A, R>(
   operation: string,
-  self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, SkillsStoreError> =>
-  (self as Effect.Effect<A, unknown, never>).pipe(
+  self: Effect.Effect<A, EffectDrizzleQueryError, R>
+): Effect.Effect<A, SkillsStoreError, R> =>
+  self.pipe(
     Effect.mapError((cause) => new SkillsStoreError({ cause, operation }))
   );
 

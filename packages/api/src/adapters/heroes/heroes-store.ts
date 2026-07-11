@@ -4,6 +4,7 @@ import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { hero } from "@tepirek-revamped/db/schema/bet";
 import { eq } from "drizzle-orm";
+import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -23,11 +24,11 @@ export interface ListHeroesByEventInput {
   readonly eventId: number;
 }
 
-const persistenceQuery = <A>(
+const persistenceQuery = <A, R>(
   operation: string,
-  self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, HeroesStoreError> =>
-  (self as Effect.Effect<A, unknown, never>).pipe(
+  self: Effect.Effect<A, EffectDrizzleQueryError, R>
+): Effect.Effect<A, HeroesStoreError, R> =>
+  self.pipe(
     Effect.mapError((cause) => new HeroesStoreError({ cause, operation }))
   );
 

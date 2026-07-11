@@ -4,6 +4,7 @@ import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { account, user } from "@tepirek-revamped/db/schema/auth";
 import type { SQL } from "drizzle-orm";
 import { and, eq, sql } from "drizzle-orm";
+import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -74,11 +75,11 @@ export interface UpdateUserNameInput {
   readonly userId: string;
 }
 
-const persistenceQuery = <A>(
+const persistenceQuery = <A, R>(
   operation: string,
-  self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, UserAdapterError> =>
-  (self as Effect.Effect<A, unknown, never>).pipe(
+  self: Effect.Effect<A, EffectDrizzleQueryError, R>
+): Effect.Effect<A, UserAdapterError, R> =>
+  self.pipe(
     Effect.mapError((cause) => new UserAdapterError({ cause, operation }))
   );
 
@@ -199,7 +200,24 @@ const mutateAdminAvailabilityUser = (
       })
     );
 
-    return yield* persistenceQuery("mutateAdminAvailabilityUser", transaction);
+    return yield* transaction.pipe(
+      Effect.catchTags({
+        EffectDrizzleQueryError: (cause) =>
+          Effect.fail(
+            new UserAdapterError({
+              cause,
+              operation: "mutateAdminAvailabilityUser",
+            })
+          ),
+        SqlError: (cause) =>
+          Effect.fail(
+            new UserAdapterError({
+              cause,
+              operation: "mutateAdminAvailabilityUser",
+            })
+          ),
+      })
+    );
   });
 
 const deleteUserWithDatabase =

@@ -5,6 +5,7 @@ import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { announcement } from "@tepirek-revamped/db/schema/announcement";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { desc, eq } from "drizzle-orm";
+import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -22,11 +23,11 @@ export interface DeleteAnnouncementInput {
   readonly id: number;
 }
 
-const persistenceQuery = <A>(
+const persistenceQuery = <A, R>(
   operation: string,
-  self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, AnnouncementStoreError> =>
-  (self as Effect.Effect<A, unknown, never>).pipe(
+  self: Effect.Effect<A, EffectDrizzleQueryError, R>
+): Effect.Effect<A, AnnouncementStoreError, R> =>
+  self.pipe(
     Effect.mapError((cause) => new AnnouncementStoreError({ cause, operation }))
   );
 

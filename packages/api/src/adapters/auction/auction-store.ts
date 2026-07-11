@@ -5,6 +5,7 @@ import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { auction } from "@tepirek-revamped/db/schema/auction";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { and, count, countDistinct, eq } from "drizzle-orm";
+import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -33,11 +34,11 @@ export interface ToggleSignupInput {
   readonly type: string;
 }
 
-const persistenceQuery = <A>(
+const persistenceQuery = <A, R>(
   operation: string,
-  self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, AuctionStoreError> =>
-  (self as Effect.Effect<A, unknown, never>).pipe(
+  self: Effect.Effect<A, EffectDrizzleQueryError, R>
+): Effect.Effect<A, AuctionStoreError, R> =>
+  self.pipe(
     Effect.mapError((cause) => new AuctionStoreError({ cause, operation }))
   );
 
