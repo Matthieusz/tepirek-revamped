@@ -1,4 +1,7 @@
+import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Effect from "effect/Effect";
+import { isSqlError } from "effect/unstable/sql/SqlError";
+import type { SqlError } from "effect/unstable/sql/SqlError";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
@@ -69,11 +72,38 @@ export const failPersistence = (
   );
 
 // oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
-export const persistenceQuery = <A, E, R>(
+export function persistenceQuery<A, R>(
+  operation: EffectSquadGroupPersistenceOperation,
+  self: Effect.Effect<A, EffectDrizzleQueryError, R>
+): Effect.Effect<A, EffectSquadBuilderPersistenceUnavailable, R>;
+export function persistenceQuery<A, E, R>(
   operation: EffectSquadGroupPersistenceOperation,
   self: Effect.Effect<A, E, R>
-): Effect.Effect<A, EffectSquadBuilderPersistenceUnavailable, R> =>
-  Effect.catch(self, (error) => failPersistence(operation, error));
+): Effect.Effect<
+  A,
+  | Exclude<E, EffectDrizzleQueryError | SqlError>
+  | EffectSquadBuilderPersistenceUnavailable,
+  R
+>;
+export function persistenceQuery<A, R>(
+  operation: EffectSquadGroupPersistenceOperation,
+  self: Effect.Effect<A, unknown, R>
+): Effect.Effect<A, unknown, R> {
+  return Effect.catch(self, (error) => {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "_tag" in error &&
+      error._tag === "EffectDrizzleQueryError"
+    ) {
+      return failPersistence(operation, error);
+    }
+
+    return isSqlError(error)
+      ? failPersistence(operation, error)
+      : Effect.fail(error);
+  });
+}
 // oxlint-enable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
 
 /** Preserve a query's typed Drizzle failure and environment inside a transaction. */
