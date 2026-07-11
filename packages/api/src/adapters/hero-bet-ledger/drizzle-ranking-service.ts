@@ -20,16 +20,21 @@ import type {
   RankingServiceInterface,
 } from "../../services/ranking/ranking-service.js";
 import { RankingService } from "../../services/ranking/ranking-service.js";
+import { mapPersistenceErrors } from "./persistence-query.js";
 import type { EffectPgDatabase } from "./persistence-query.js";
 
 const persistenceQuery = <A, E, R>(
   operation: string,
   self: Effect.Effect<A, E, R>
 ) =>
-  self.pipe(
-    Effect.mapError(
-      (cause) => new RankingPersistenceUnavailable({ cause, operation })
-    )
+  mapPersistenceErrors(
+    operation,
+    self,
+    (cause, failedOperation) =>
+      new RankingPersistenceUnavailable({
+        cause,
+        operation: failedOperation,
+      })
   );
 
 const buildUserStatsWhere = (input: {

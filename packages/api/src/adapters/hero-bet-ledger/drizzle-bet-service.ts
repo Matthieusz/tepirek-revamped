@@ -25,6 +25,7 @@ import type {
   GetPaginatedBetsInput,
 } from "../../services/bet/bet-service.js";
 import { BetService } from "../../services/bet/bet-service.js";
+import { mapPersistenceErrors } from "./persistence-query.js";
 import type {
   EffectPgDatabase,
   TransactionDatabase,
@@ -34,10 +35,14 @@ const persistenceQuery = <A, E, R>(
   operation: string,
   self: Effect.Effect<A, E, R>
 ) =>
-  self.pipe(
-    Effect.mapError(
-      (cause) => new BetPersistenceUnavailable({ cause, operation })
-    )
+  mapPersistenceErrors(
+    operation,
+    self,
+    (cause, failedOperation) =>
+      new BetPersistenceUnavailable({
+        cause,
+        operation: failedOperation,
+      })
   );
 
 const getHeroEventWithDatabase =
