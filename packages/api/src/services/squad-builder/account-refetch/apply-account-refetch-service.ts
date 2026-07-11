@@ -3,9 +3,42 @@ import * as Context from "effect/Context";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
+import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
 import type { AccountRefetchStoreServiceShape } from "../squad-groups/squad-group-store.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
-import type { ApplyAccountRefetchInput } from "./apply-account-refetch.js";
+import type {
+  ActorDoesNotOwnMargonemAccount,
+  MargonemAccountNotFound,
+  PendingMargonemAccountRefetchNotFound,
+  SquadBuilderPersistenceUnavailable,
+} from "./account-refetch-store.js";
+
+/** Input for applying a previously previewed account refetch. */
+export interface ApplyAccountRefetchInput {
+  readonly actorUserId: AppUserId;
+  readonly refetchPreviewId: PendingMargonemAccountRefetchId;
+}
+
+/** Result summary for applying a pending account refetch. */
+export interface ApplyAccountRefetchOutput {
+  readonly accountId: MargonemAccountId;
+  readonly profileId: MargonemProfileId;
+  readonly lastFetchedAt: Date;
+  readonly addedCharacterCount: number;
+  readonly updatedCharacterCount: number;
+  readonly removedCharacterCount: number;
+  readonly removedSquadCharacterCount: number;
+}
+
+/** Expected failures returned by the account refetch apply service. */
+export type ApplyAccountRefetchError =
+  | PendingMargonemAccountRefetchNotFound
+  | MargonemAccountNotFound
+  | ActorDoesNotOwnMargonemAccount
+  | SquadBuilderPersistenceUnavailable;
 
 const currentDate = Clock.currentTimeMillis.pipe(
   EffectRuntime.map((milliseconds) => new Date(milliseconds))
@@ -50,17 +83,18 @@ export const apply = EffectRuntime.fn("AccountRefetch.apply")(
   }
 );
 
-export interface Interface {
+export interface ApplyAccountRefetch {
   readonly apply: ReturnType<typeof makeApply>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/ApplyAccountRefetchService"
-) {}
+export class ApplyAccountRefetchService extends Context.Service<
+  ApplyAccountRefetchService,
+  ApplyAccountRefetch
+>()("@tepirek-revamped/api/squad-builder/ApplyAccountRefetchService") {}
 
 export const layer = Layer.effect(
-  Service,
+  ApplyAccountRefetchService,
   EffectRuntime.gen(function* layer() {
     const store = yield* AccountRefetchStoreService;
     return { apply: makeApply(store) };

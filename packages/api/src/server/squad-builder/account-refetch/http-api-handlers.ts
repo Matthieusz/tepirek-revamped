@@ -16,10 +16,10 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/account-refetch/http-api-contract.js";
-import { Service as ApplyAccountRefetchService } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.js";
-import type { ApplyAccountRefetchError } from "../../../services/squad-builder/account-refetch/apply-account-refetch.js";
-import { Service as PreviewAccountRefetchService } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.js";
-import type { PreviewAccountRefetchError } from "../../../services/squad-builder/account-refetch/preview-account-refetch.js";
+import { ApplyAccountRefetchService } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.js";
+import type { ApplyAccountRefetchError } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.js";
+import { PreviewAccountRefetchService } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.js";
+import type { PreviewAccountRefetchError } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.js";
 import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.js";
 import {
   requireSquadBuilderSession,

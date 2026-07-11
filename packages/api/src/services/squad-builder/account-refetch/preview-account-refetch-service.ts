@@ -3,21 +3,58 @@ import * as Context from "effect/Context";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.js";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import { computeMargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.js";
+import type { MargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.js";
 import { parseMargonemProfileHtml } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
+import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.js";
+import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
 import {
   FirecrawlClientService,
   FirecrawlResponseNotParseable,
 } from "../firecrawl-client.js";
+import type { FirecrawlScrapeError } from "../firecrawl-client.js";
 import {
   FirecrawlConfigService,
   parseFirecrawlCreditCount,
 } from "../firecrawl-config.js";
+import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
-import type { PreviewAccountRefetchInput } from "./preview-account-refetch.js";
-import { pendingRefetchPolicy } from "./preview-account-refetch.js";
+import type {
+  ActorDoesNotOwnMargonemAccount,
+  FirecrawlBudgetError,
+  MargonemAccountNotFound,
+  SquadBuilderPersistenceUnavailable,
+} from "./account-refetch-store.js";
+
+export interface PreviewAccountRefetchInput {
+  readonly actorUserId: AppUserId;
+  readonly accountId: MargonemAccountId;
+}
+
+export interface PreviewAccountRefetchOutput {
+  readonly refetchPreviewId: PendingMargonemAccountRefetchId;
+  readonly accountId: MargonemAccountId;
+  readonly profileId: MargonemProfileId;
+  readonly generatedProfileUrl: string;
+  readonly fetchedAt: Date;
+  readonly firecrawlCreditsUsed: FirecrawlCreditCount;
+  readonly diff: MargonemAccountRefetchDiff;
+}
+
+export type PreviewAccountRefetchError =
+  | MargonemAccountNotFound
+  | ActorDoesNotOwnMargonemAccount
+  | FirecrawlBudgetError
+  | FirecrawlScrapeError
+  | ParseMargonemProfileHtmlError
+  | SquadBuilderPersistenceUnavailable;
+
+const pendingRefetchPolicy = { expiresAfterMinutes: 30 } as const;
 
 const currentDate = ClockRuntime.currentTimeMillis.pipe(
   EffectRuntime.map((milliseconds) => new Date(milliseconds))
@@ -60,7 +97,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
                 requestId: reservedRequest.requestId,
               })
             );
-            return yield* EffectRuntime.fail(error);
+            return yield* error;
           })
         )
       );
@@ -78,12 +115,10 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
               requestId: reservedRequest.requestId,
             })
           );
-          return yield* EffectRuntime.fail(
-            new FirecrawlResponseNotParseable({
-              cause: new Error("Invalid Firecrawl creditsUsed"),
-              profileId: account.profileId,
-            })
-          );
+          return yield* new FirecrawlResponseNotParseable({
+            cause: new Error("Invalid Firecrawl creditsUsed"),
+            profileId: account.profileId,
+          });
         })
       )
     );
@@ -141,21 +176,39 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
   }
 );
 
-export interface Interface {
-  readonly preview: typeof preview;
+const makePreview = (
+  store: typeof AccountRefetchStoreService.Service,
+  config: typeof FirecrawlConfigService.Service,
+  firecrawl: typeof FirecrawlClientService.Service
+) =>
+  EffectRuntime.fn("AccountRefetch.preview")(
+    (
+      input: PreviewAccountRefetchInput,
+      options: { readonly signal?: AbortSignal } = {}
+    ) =>
+      preview(input, options).pipe(
+        EffectRuntime.provideService(AccountRefetchStoreService, store),
+        EffectRuntime.provideService(FirecrawlConfigService, config),
+        EffectRuntime.provideService(FirecrawlClientService, firecrawl)
+      )
+  );
+
+export interface PreviewAccountRefetch {
+  readonly preview: ReturnType<typeof makePreview>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/PreviewAccountRefetchService"
-) {}
+export class PreviewAccountRefetchService extends Context.Service<
+  PreviewAccountRefetchService,
+  PreviewAccountRefetch
+>()("@tepirek-revamped/api/squad-builder/PreviewAccountRefetchService") {}
 
 export const layer = Layer.effect(
-  Service,
+  PreviewAccountRefetchService,
   EffectRuntime.gen(function* layer() {
-    yield* AccountRefetchStoreService;
-    yield* FirecrawlConfigService;
-    yield* FirecrawlClientService;
-    return { preview };
+    const store = yield* AccountRefetchStoreService;
+    const config = yield* FirecrawlConfigService;
+    const firecrawl = yield* FirecrawlClientService;
+    return { preview: makePreview(store, config, firecrawl) };
   })
 );

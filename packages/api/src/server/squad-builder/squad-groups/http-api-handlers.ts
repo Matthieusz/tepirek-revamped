@@ -18,19 +18,19 @@ import {
 } from "../../../protocol/squad-builder/squad-groups/http-api-contract.js";
 import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.js";
 import type { CreateSquadGroupError } from "../../../services/squad-builder/squad-groups/create-squad-group.js";
-import { Service as CreateSquadGroupService } from "../../../services/squad-builder/squad-groups/create-squad-group.js";
-import { Service as ListGlobalSquadGroupsService } from "../../../services/squad-builder/squad-groups/list-global-squad-groups.js";
+import { CreateSquadGroupService } from "../../../services/squad-builder/squad-groups/create-squad-group.js";
+import { ListGlobalSquadGroupsService } from "../../../services/squad-builder/squad-groups/list-global-squad-groups.js";
 import type {
   GetSquadGroupDetailError,
   ListMySquadGroupsError,
 } from "../../../services/squad-builder/squad-groups/list-squad-groups.js";
-import { Service as ListSquadGroupsService } from "../../../services/squad-builder/squad-groups/list-squad-groups.js";
+import { ListSquadGroupsService } from "../../../services/squad-builder/squad-groups/list-squad-groups.js";
 import type { EffectSharedSquadGroupSaveError } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
-import { Service as SaveSharedSquadGroupCharactersService } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
+import { SaveSharedSquadGroupCharactersService } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
 import type { SaveSquadGroupError } from "../../../services/squad-builder/squad-groups/save-squad-group.js";
-import { Service as SaveSquadGroupService } from "../../../services/squad-builder/squad-groups/save-squad-group.js";
+import { SaveSquadGroupService } from "../../../services/squad-builder/squad-groups/save-squad-group.js";
 import type { GlobalSquadVisibilityError } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.js";
-import { Service as SetSquadGroupVisibilityService } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.js";
+import { SetSquadGroupVisibilityService } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.js";
 import { SquadGroupStoreService } from "../../../services/squad-builder/squad-groups/squad-group-store.js";
 import {
   requireSquadBuilderSession,

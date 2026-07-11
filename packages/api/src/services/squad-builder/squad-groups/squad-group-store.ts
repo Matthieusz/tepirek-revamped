@@ -45,7 +45,7 @@ import type {
   PendingMargonemAccountRefetchForApply,
   RefetchableMargonemAccount,
 } from "../account-refetch/account-refetch-store.js";
-import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch.js";
+import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch-service.js";
 import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,

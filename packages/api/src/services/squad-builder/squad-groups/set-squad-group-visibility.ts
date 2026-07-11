@@ -47,17 +47,18 @@ export const set = Effect.fn("SquadGroups.setVisibility")(
   }
 );
 
-export interface Interface {
+export interface SetSquadGroupVisibility {
   readonly set: ReturnType<typeof makeSet>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/SetSquadGroupVisibilityService"
-) {}
+export class SetSquadGroupVisibilityService extends Context.Service<
+  SetSquadGroupVisibilityService,
+  SetSquadGroupVisibility
+>()("@tepirek-revamped/api/squad-builder/SetSquadGroupVisibilityService") {}
 
 export const layer = Layer.effect(
-  Service,
+  SetSquadGroupVisibilityService,
   Effect.gen(function* layer() {
     const store = yield* SquadGroupStore.SquadGroupStoreService;
     return { set: makeSet(store) };

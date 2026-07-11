@@ -4,12 +4,20 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import type { AccountAccessInviteSummary } from "./account-sharing-store.js";
-import type { RespondToAccountAccessInviteInput } from "./respond-to-account-access-invite.js";
 
-export interface Interface {
+/** Input for responding to an account access invite. */
+export interface RespondToAccountAccessInviteInput {
+  readonly actorUserId: AppUserId;
+  readonly accessId: MargonemAccountAccessId;
+  readonly response: "accept" | "decline";
+}
+
+export interface AccountAccessInviteResponses {
   /** Accept or decline an account access invite as the invited user. */
   readonly respond: (
     input: RespondToAccountAccessInviteInput
@@ -18,12 +26,13 @@ export interface Interface {
 
 /** Service module that lets invited users accept or decline account access invites. */
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/AccountAccessInviteResponses"
-) {}
+export class AccountAccessInviteResponsesService extends Context.Service<
+  AccountAccessInviteResponsesService,
+  AccountAccessInviteResponses
+>()("@tepirek-revamped/api/squad-builder/AccountAccessInviteResponses") {}
 
 export const layer = Layer.effect(
-  Service,
+  AccountAccessInviteResponsesService,
   EffectRuntime.gen(function* makeAccountAccessInviteResponsesService() {
     const store = yield* AccountSharingStoreService;
 

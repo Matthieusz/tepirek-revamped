@@ -4,27 +4,31 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { SendSquadGroupEditorInvite } from "./send-squad-group-editor-invite.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
 import { CannotInviteSelf } from "./squad-group-errors.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
 import type { SquadGroupInvitationSummary } from "./squad-group-store.js";
 
-export interface Interface {
+export interface SquadGroupEditorInvites {
   /** Send or re-send a squad group editor invitation. */
-  readonly send: (
-    input: Parameters<SendSquadGroupEditorInvite["send"]>[0]
-  ) => Effect<SquadGroupInvitationSummary, SquadGroupSharingError>;
+  readonly send: (input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+    readonly invitedUserId: AppUserId;
+  }) => Effect<SquadGroupInvitationSummary, SquadGroupSharingError>;
 }
 
 /** Service module that sends squad group editor invitations as the group owner. */
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/SquadGroupEditorInvites"
-) {}
+export class SquadGroupEditorInvitesService extends Context.Service<
+  SquadGroupEditorInvitesService,
+  SquadGroupEditorInvites
+>()("@tepirek-revamped/api/squad-builder/SquadGroupEditorInvites") {}
 
 export const layer = Layer.effect(
-  Service,
+  SquadGroupEditorInvitesService,
   EffectRuntime.gen(function* makeSquadGroupEditorInvitesService() {
     const store = yield* SquadGroupStoreService;
 

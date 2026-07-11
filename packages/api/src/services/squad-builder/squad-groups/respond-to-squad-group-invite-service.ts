@@ -4,26 +4,30 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { RespondToSquadGroupInvite } from "./respond-to-squad-group-invite.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { SquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
 import type { SquadGroupInvitationSummary } from "./squad-group-store.js";
 
-export interface Interface {
+export interface SquadGroupEditorInviteResponses {
   /** Accept or decline a squad group editor invite as the invited user. */
-  readonly respond: (
-    input: Parameters<RespondToSquadGroupInvite["respond"]>[0]
-  ) => Effect<SquadGroupInvitationSummary, SquadGroupSharingError>;
+  readonly respond: (input: {
+    readonly actorUserId: AppUserId;
+    readonly invitationId: SquadGroupInvitationId;
+    readonly response: "accept" | "decline";
+  }) => Effect<SquadGroupInvitationSummary, SquadGroupSharingError>;
 }
 
 /** Service module that lets invited users accept or decline squad group editor invites. */
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/SquadGroupEditorInviteResponses"
-) {}
+export class SquadGroupEditorInviteResponsesService extends Context.Service<
+  SquadGroupEditorInviteResponsesService,
+  SquadGroupEditorInviteResponses
+>()("@tepirek-revamped/api/squad-builder/SquadGroupEditorInviteResponses") {}
 
 export const layer = Layer.effect(
-  Service,
+  SquadGroupEditorInviteResponsesService,
   EffectRuntime.gen(function* makeSquadGroupEditorInviteResponsesService() {
     const store = yield* SquadGroupStoreService;
 

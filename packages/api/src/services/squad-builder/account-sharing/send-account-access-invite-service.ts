@@ -4,6 +4,8 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import {
   ActorDoesNotOwnMargonemAccount,
   CannotInviteSelf,
@@ -11,9 +13,15 @@ import {
 import type { AccountSharingError } from "./account-sharing-error.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import type { AccountAccessInviteSummary } from "./account-sharing-store.js";
-import type { SendAccountAccessInviteInput } from "./send-account-access-invite.js";
 
-export interface Interface {
+/** Input for sending an account access invite. */
+export interface SendAccountAccessInviteInput {
+  readonly actorUserId: AppUserId;
+  readonly accountId: MargonemAccountId;
+  readonly invitedUserId: AppUserId;
+}
+
+export interface AccountAccessInvites {
   /** Send or re-send an account access invitation. */
   readonly send: (
     input: SendAccountAccessInviteInput
@@ -22,12 +30,13 @@ export interface Interface {
 
 /** Service module that sends account access invites as the account owner. */
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/AccountAccessInvites"
-) {}
+export class AccountAccessInvitesService extends Context.Service<
+  AccountAccessInvitesService,
+  AccountAccessInvites
+>()("@tepirek-revamped/api/squad-builder/AccountAccessInvites") {}
 
 export const layer = Layer.effect(
-  Service,
+  AccountAccessInvitesService,
   EffectRuntime.gen(function* makeAccountAccessInvitesService() {
     const store = yield* AccountSharingStoreService;
 

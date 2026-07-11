@@ -3,23 +3,82 @@ import * as Context from "effect/Context";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.js";
+import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.js";
 import { parseMargonemProfileHtml } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
+import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
 } from "../../../domain/squad-builder/margonem-profile-url.js";
+import type { ParseMargonemProfileUrlError } from "../../../domain/squad-builder/margonem-profile-url.js";
 import {
   FirecrawlClientService,
   FirecrawlResponseNotParseable,
 } from "../firecrawl-client.js";
+import type { FirecrawlScrapeError } from "../firecrawl-client.js";
 import {
   FirecrawlConfigService,
   parseFirecrawlCreditCount,
 } from "../firecrawl-config.js";
+import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
-import { profileAccessStateToDuplicateError } from "./preview-margonem-profile-import.js";
-import type { PreviewMargonemProfileImportInput } from "./preview-margonem-profile-import.js";
+import type {
+  DuplicateMargonemAccountError,
+  FirecrawlBudgetError,
+  ProfileAccessState,
+  SquadBuilderPersistenceUnavailable,
+} from "./account-import-store.js";
+
+/** Input for previewing a Margonem profile import. */
+export interface PreviewMargonemProfileImportInput {
+  readonly actorUserId: AppUserId;
+  readonly profileUrl: string;
+}
+
+/** Output returned before import confirmation. */
+export interface PreviewMargonemProfileImportOutput {
+  readonly profileId: MargonemProfileId;
+  readonly generatedProfileUrl: string;
+  readonly suggestedAccountName: string;
+  readonly lastFetchedAt: Date;
+  readonly firecrawlCreditsUsed: FirecrawlCreditCount;
+  readonly jarunaCharacters: readonly MargonemCharacterPreview[];
+}
+
+/** Expected failures returned by the profile import preview service. */
+export type PreviewMargonemProfileImportError =
+  | ParseMargonemProfileUrlError
+  | DuplicateMargonemAccountError
+  | FirecrawlBudgetError
+  | FirecrawlScrapeError
+  | ParseMargonemProfileHtmlError
+  | SquadBuilderPersistenceUnavailable;
+
+const profileAccessStateToDuplicateError = (
+  state: ProfileAccessState
+): DuplicateMargonemAccountError | undefined => {
+  switch (state._tag) {
+    case "Available": {
+      return undefined;
+    }
+    case "OwnedByActor": {
+      return { _tag: "MargonemAccountAlreadyOwnedByActor" };
+    }
+    case "OwnedByAnotherUser": {
+      return { _tag: "MargonemAccountOwnedByAnotherUser" };
+    }
+    case "SharedWithActor": {
+      return { _tag: "MargonemAccountAlreadySharedWithActor" };
+    }
+    default: {
+      const exhaustive: never = state;
+      return exhaustive;
+    }
+  }
+};
 
 const currentDate = ClockRuntime.currentTimeMillis.pipe(
   EffectRuntime.map((milliseconds) => new Date(milliseconds))
@@ -69,7 +128,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
                 requestId: reservedRequest.requestId,
               })
             );
-            return yield* EffectRuntime.fail(error);
+            return yield* error;
           })
         )
       );
@@ -87,12 +146,10 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
               requestId: reservedRequest.requestId,
             })
           );
-          return yield* EffectRuntime.fail(
-            new FirecrawlResponseNotParseable({
-              cause: new Error("Invalid Firecrawl creditsUsed"),
-              profileId,
-            })
-          );
+          return yield* new FirecrawlResponseNotParseable({
+            cause: new Error("Invalid Firecrawl creditsUsed"),
+            profileId,
+          });
         })
       )
     );
@@ -126,21 +183,41 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
   }
 );
 
-export interface Interface {
-  readonly preview: typeof preview;
+const makePreview = (
+  store: typeof AccountImportStoreService.Service,
+  config: typeof FirecrawlConfigService.Service,
+  firecrawl: typeof FirecrawlClientService.Service
+) =>
+  EffectRuntime.fn("AccountImport.previewProfile")(
+    (
+      input: PreviewMargonemProfileImportInput,
+      options: { readonly signal?: AbortSignal } = {}
+    ) =>
+      preview(input, options).pipe(
+        EffectRuntime.provideService(AccountImportStoreService, store),
+        EffectRuntime.provideService(FirecrawlConfigService, config),
+        EffectRuntime.provideService(FirecrawlClientService, firecrawl)
+      )
+  );
+
+export interface PreviewMargonemProfileImport {
+  readonly preview: ReturnType<typeof makePreview>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
+export class PreviewMargonemProfileImportService extends Context.Service<
+  PreviewMargonemProfileImportService,
+  PreviewMargonemProfileImport
+>()(
   "@tepirek-revamped/api/squad-builder/PreviewMargonemProfileImportService"
 ) {}
 
 export const layer = Layer.effect(
-  Service,
+  PreviewMargonemProfileImportService,
   EffectRuntime.gen(function* layer() {
-    yield* AccountImportStoreService;
-    yield* FirecrawlConfigService;
-    yield* FirecrawlClientService;
-    return { preview };
+    const store = yield* AccountImportStoreService;
+    const config = yield* FirecrawlConfigService;
+    const firecrawl = yield* FirecrawlClientService;
+    return { preview: makePreview(store, config, firecrawl) };
   })
 );

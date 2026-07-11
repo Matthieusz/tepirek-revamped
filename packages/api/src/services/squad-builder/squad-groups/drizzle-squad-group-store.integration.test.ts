@@ -41,20 +41,20 @@ import { confirm as confirmOwnedAccountImport } from "../account-import/confirm-
 import { list as listOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts.js";
 import { AccountRefetchStoreService } from "../account-refetch/account-refetch-store-service.js";
 import { apply as applyAccountRefetch } from "../account-refetch/apply-account-refetch-service.js";
-import { Service as AccountSharingStateService } from "../account-sharing/list-account-sharing-state-service.js";
-import { Service as AccountAccessInviteResponsesService } from "../account-sharing/respond-to-account-access-invite-service.js";
-import { Service as AccountAccessRevocationsService } from "../account-sharing/revoke-account-access-service.js";
-import { Service as AccountInviteTargetsService } from "../account-sharing/search-account-invite-targets-service.js";
-import { Service as AccountAccessInvitesService } from "../account-sharing/send-account-access-invite-service.js";
+import { AccountSharingStateService } from "../account-sharing/list-account-sharing-state-service.js";
+import { AccountAccessInviteResponsesService } from "../account-sharing/respond-to-account-access-invite-service.js";
+import { AccountAccessRevocationsService } from "../account-sharing/revoke-account-access-service.js";
+import { AccountInviteTargetsService } from "../account-sharing/search-account-invite-targets-service.js";
+import { AccountAccessInvitesService } from "../account-sharing/send-account-access-invite-service.js";
 import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
 import { create as createSquadGroup } from "./create-squad-group.js";
 import { list as listAvailableSquadCharacters } from "./list-available-squad-characters.js";
 import { list as listGlobalSquadGroups } from "./list-global-squad-groups.js";
 import { getMine, listMine } from "./list-squad-groups.js";
-import { Service as SquadGroupEditorInviteResponsesService } from "./respond-to-squad-group-invite-service.js";
-import { Service as SquadGroupEditorRevocationsService } from "./revoke-squad-group-editor-service.js";
+import { SquadGroupEditorInviteResponsesService } from "./respond-to-squad-group-invite-service.js";
+import { SquadGroupEditorRevocationsService } from "./revoke-squad-group-editor-service.js";
 import { save as saveSquadGroup } from "./save-squad-group.js";
-import { Service as SquadGroupEditorInvitesService } from "./send-squad-group-editor-invite-service.js";
+import { SquadGroupEditorInvitesService } from "./send-squad-group-editor-invite-service.js";
 import { set as setSquadGroupVisibility } from "./set-squad-group-visibility.js";
 
 const apiTestLayer = makeApiSquadBuilderLayer(defaultTestDatabaseUrl);

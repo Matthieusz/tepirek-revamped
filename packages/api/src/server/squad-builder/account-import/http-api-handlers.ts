@@ -15,12 +15,12 @@ import {
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/account-import/http-api-contract.js";
 import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store-service.js";
-import type { ConfirmOwnedAccountImportServiceError } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.js";
-import { Service as ConfirmOwnedAccountImportService } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.js";
-import { Service as PreviewMargonemProfileImportService } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
-import type { PreviewMargonemProfileImportError } from "../../../services/squad-builder/account-import/preview-margonem-profile-import.js";
-import { Service as PreviewOwnedAccountImportsService } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.js";
-import type { PreviewOwnedAccountImportsError } from "../../../services/squad-builder/account-import/preview-owned-account-imports.js";
+import { ConfirmOwnedAccountImportService } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.js";
+import type { ConfirmOwnedAccountImportError } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.js";
+import { PreviewMargonemProfileImportService } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
+import type { PreviewMargonemProfileImportError } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
+import { PreviewOwnedAccountImportsService } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.js";
+import type { PreviewOwnedAccountImportsError } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.js";
 import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.js";
 import {
   requireSquadBuilderSession,
@@ -47,7 +47,7 @@ const withRequestCorrelation = <A, E, R>(
 type AccountImportHandlerError =
   | PreviewMargonemProfileImportError
   | PreviewOwnedAccountImportsError
-  | ConfirmOwnedAccountImportServiceError;
+  | ConfirmOwnedAccountImportError;
 
 const mapAccountImportError = (
   error: AccountImportHandlerError

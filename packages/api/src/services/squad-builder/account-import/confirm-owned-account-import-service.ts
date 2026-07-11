@@ -15,14 +15,14 @@ import type {
 } from "./account-import-store.js";
 
 /** Input for confirming an owned account import through the service. */
-export interface ConfirmOwnedAccountImportServiceInput {
+export interface ConfirmOwnedAccountImportInput {
   readonly actorUserId: AppUserId;
   readonly pendingImportId: PendingMargonemAccountImportId;
   readonly displayName: string;
 }
 
 /** Expected failures returned by the Effect confirm owned account import service. */
-export type ConfirmOwnedAccountImportServiceError =
+export type ConfirmOwnedAccountImportError =
   | InvalidAccountDisplayName
   | PendingMargonemAccountImportNotFound
   | DuplicateMargonemAccountError
@@ -35,7 +35,7 @@ const currentDate = Clock.currentTimeMillis.pipe(
 /** Save a previously previewed Margonem account and its Jaruna characters. */
 export const confirm = EffectRuntime.fn("AccountImport.confirm")(
   function* confirmOwnedAccountImportEffect(
-    input: ConfirmOwnedAccountImportServiceInput
+    input: ConfirmOwnedAccountImportInput
   ) {
     const displayName = yield* parseAccountDisplayName(input.displayName);
 
@@ -59,19 +59,28 @@ export const confirm = EffectRuntime.fn("AccountImport.confirm")(
   }
 );
 
-export interface Interface {
-  readonly confirm: typeof confirm;
+const makeConfirm = (store: typeof AccountImportStoreService.Service) =>
+  EffectRuntime.fn("AccountImport.confirm")(
+    (input: ConfirmOwnedAccountImportInput) =>
+      confirm(input).pipe(
+        EffectRuntime.provideService(AccountImportStoreService, store)
+      )
+  );
+
+export interface ConfirmOwnedAccountImport {
+  readonly confirm: ReturnType<typeof makeConfirm>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/ConfirmOwnedAccountImportService"
-) {}
+export class ConfirmOwnedAccountImportService extends Context.Service<
+  ConfirmOwnedAccountImportService,
+  ConfirmOwnedAccountImport
+>()("@tepirek-revamped/api/squad-builder/ConfirmOwnedAccountImportService") {}
 
 export const layer = Layer.effect(
-  Service,
+  ConfirmOwnedAccountImportService,
   EffectRuntime.gen(function* layer() {
-    yield* AccountImportStoreService;
-    return { confirm };
+    const store = yield* AccountImportStoreService;
+    return { confirm: makeConfirm(store) };
   })
 );

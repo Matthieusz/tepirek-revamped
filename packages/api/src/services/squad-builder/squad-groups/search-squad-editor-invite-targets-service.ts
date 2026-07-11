@@ -3,61 +3,41 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import {
-  accountInviteTargetSearchPolicy,
-  InvalidAccountInviteTargetQuery,
-} from "../account-sharing/search-account-invite-targets.js";
-import type { SearchSquadEditorInviteTargets } from "./search-squad-editor-invite-targets.js";
+  inviteTargetSearchPolicy,
+  parseInviteTargetQuery,
+} from "../../../domain/squad-builder/invite-target-search.js";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
 import type { SquadEditorInviteTarget } from "./squad-group-store.js";
 
-const parseSquadEditorInviteTargetQuery = (
-  input: string
-): Effect<string, InvalidAccountInviteTargetQuery> => {
-  const trimmed = input.trim();
-
-  if (trimmed.length < accountInviteTargetSearchPolicy.minQueryLength) {
-    return EffectRuntime.fail(
-      new InvalidAccountInviteTargetQuery({
-        message: `Wpisz co najmniej ${accountInviteTargetSearchPolicy.minQueryLength} znaki`,
-      })
-    );
-  }
-
-  if (trimmed.length > accountInviteTargetSearchPolicy.maxQueryLength) {
-    return EffectRuntime.fail(
-      new InvalidAccountInviteTargetQuery({
-        message: `Zapytanie może mieć maksymalnie ${accountInviteTargetSearchPolicy.maxQueryLength} znaków`,
-      })
-    );
-  }
-
-  return EffectRuntime.succeed(trimmed);
-};
-
-export interface Interface {
+export interface SquadEditorInviteTargets {
   /** Search verified users the squad group owner may invite as editors. */
-  readonly search: (
-    input: Parameters<SearchSquadEditorInviteTargets["search"]>[0]
-  ) => Effect<readonly SquadEditorInviteTarget[], SquadGroupSharingError>;
+  readonly search: (input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+    readonly query: string;
+  }) => Effect<readonly SquadEditorInviteTarget[], SquadGroupSharingError>;
 }
 
 /** Service module that searches verified users a squad group owner may invite as editors. */
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/SquadEditorInviteTargets"
-) {}
+export class SquadEditorInviteTargetsService extends Context.Service<
+  SquadEditorInviteTargetsService,
+  SquadEditorInviteTargets
+>()("@tepirek-revamped/api/squad-builder/SquadEditorInviteTargets") {}
 
 export const layer = Layer.effect(
-  Service,
+  SquadEditorInviteTargetsService,
   EffectRuntime.gen(function* makeSquadEditorInviteTargetsService() {
     const store = yield* SquadGroupStoreService;
 
     return {
       search: EffectRuntime.fn("SquadGroupEditorInvites.searchTargets")(
         function* search(input) {
-          const query = yield* parseSquadEditorInviteTargetQuery(input.query);
+          const query = yield* parseInviteTargetQuery(input.query);
 
           yield* store.authorizeSquadGroupOwner({
             actorUserId: input.actorUserId,
@@ -66,7 +46,7 @@ export const layer = Layer.effect(
 
           return yield* store.searchSquadEditorInviteTargets({
             groupId: input.groupId,
-            maxResults: accountInviteTargetSearchPolicy.maxResults,
+            maxResults: inviteTargetSearchPolicy.maxResults,
             ownerUserId: input.actorUserId,
             query,
           });

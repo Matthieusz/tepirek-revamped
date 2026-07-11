@@ -41,17 +41,18 @@ export const create = Effect.fn("SquadGroups.create")(
   }
 );
 
-export interface Interface {
+export interface CreateSquadGroup {
   readonly create: ReturnType<typeof makeCreate>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/CreateSquadGroupService"
-) {}
+export class CreateSquadGroupService extends Context.Service<
+  CreateSquadGroupService,
+  CreateSquadGroup
+>()("@tepirek-revamped/api/squad-builder/CreateSquadGroupService") {}
 
 export const layer = Layer.effect(
-  Service,
+  CreateSquadGroupService,
   Effect.gen(function* layer() {
     const store = yield* SquadGroupStoreService;
     return { create: makeCreate(store) };

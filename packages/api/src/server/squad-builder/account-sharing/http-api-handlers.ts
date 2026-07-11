@@ -15,11 +15,11 @@ import {
   SquadBuilderPersistenceUnavailable,
 } from "../../../protocol/squad-builder/account-sharing/http-api-contract.js";
 import type { AccountSharingError } from "../../../services/squad-builder/account-sharing/account-sharing-error.js";
-import { Service as AccountSharingStateService } from "../../../services/squad-builder/account-sharing/list-account-sharing-state-service.js";
-import { Service as AccountAccessInviteResponsesService } from "../../../services/squad-builder/account-sharing/respond-to-account-access-invite-service.js";
-import { Service as AccountAccessRevocationsService } from "../../../services/squad-builder/account-sharing/revoke-account-access-service.js";
-import { Service as AccountInviteTargetsService } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.js";
-import { Service as AccountAccessInvitesService } from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.js";
+import { AccountSharingStateService } from "../../../services/squad-builder/account-sharing/list-account-sharing-state-service.js";
+import { AccountAccessInviteResponsesService } from "../../../services/squad-builder/account-sharing/respond-to-account-access-invite-service.js";
+import { AccountAccessRevocationsService } from "../../../services/squad-builder/account-sharing/revoke-account-access-service.js";
+import { AccountInviteTargetsService } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.js";
+import { AccountAccessInvitesService } from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.js";
 import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.js";
 import {
   requireSquadBuilderSession,

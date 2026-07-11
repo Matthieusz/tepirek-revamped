@@ -35,51 +35,51 @@ import type { BetService } from "../services/bet/bet-service.js";
 import type { RankingService } from "../services/ranking/ranking-service.js";
 import type { AccountImportStoreService } from "../services/squad-builder/account-import/account-import-store-service.js";
 import { layer as confirmOwnedAccountImportLayer } from "../services/squad-builder/account-import/confirm-owned-account-import-service.js";
-import type { Service as ConfirmOwnedAccountImportServiceTag } from "../services/squad-builder/account-import/confirm-owned-account-import-service.js";
+import type { ConfirmOwnedAccountImportService } from "../services/squad-builder/account-import/confirm-owned-account-import-service.js";
 import { layer as previewMargonemProfileImportLayer } from "../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
-import type { Service as PreviewMargonemProfileImportServiceTag } from "../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
+import type { PreviewMargonemProfileImportService } from "../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
 import { layer as previewOwnedAccountImportsLayer } from "../services/squad-builder/account-import/preview-owned-account-imports-service.js";
-import type { Service as PreviewOwnedAccountImportsServiceTag } from "../services/squad-builder/account-import/preview-owned-account-imports-service.js";
+import type { PreviewOwnedAccountImportsService } from "../services/squad-builder/account-import/preview-owned-account-imports-service.js";
 import type { AccountRefetchStoreService } from "../services/squad-builder/account-refetch/account-refetch-store-service.js";
 import { layer as applyAccountRefetchLayer } from "../services/squad-builder/account-refetch/apply-account-refetch-service.js";
-import type { Service as ApplyAccountRefetchServiceTag } from "../services/squad-builder/account-refetch/apply-account-refetch-service.js";
+import type { ApplyAccountRefetchService } from "../services/squad-builder/account-refetch/apply-account-refetch-service.js";
 import { layer as previewAccountRefetchLayer } from "../services/squad-builder/account-refetch/preview-account-refetch-service.js";
-import type { Service as PreviewAccountRefetchServiceTag } from "../services/squad-builder/account-refetch/preview-account-refetch-service.js";
+import type { PreviewAccountRefetchService } from "../services/squad-builder/account-refetch/preview-account-refetch-service.js";
 import type { AccountSharingStoreService } from "../services/squad-builder/account-sharing/account-sharing-store-service.js";
-import type { Service as AccountSharingState } from "../services/squad-builder/account-sharing/list-account-sharing-state-service.js";
+import type { AccountSharingStateService } from "../services/squad-builder/account-sharing/list-account-sharing-state-service.js";
 import { layer as accountSharingStateLayer } from "../services/squad-builder/account-sharing/list-account-sharing-state-service.js";
-import type { Service as AccountAccessInviteResponses } from "../services/squad-builder/account-sharing/respond-to-account-access-invite-service.js";
+import type { AccountAccessInviteResponsesService } from "../services/squad-builder/account-sharing/respond-to-account-access-invite-service.js";
 import { layer as accountAccessInviteResponsesLayer } from "../services/squad-builder/account-sharing/respond-to-account-access-invite-service.js";
-import type { Service as AccountAccessRevocations } from "../services/squad-builder/account-sharing/revoke-account-access-service.js";
+import type { AccountAccessRevocationsService } from "../services/squad-builder/account-sharing/revoke-account-access-service.js";
 import { layer as accountAccessRevocationsLayer } from "../services/squad-builder/account-sharing/revoke-account-access-service.js";
-import type { Service as AccountInviteTargets } from "../services/squad-builder/account-sharing/search-account-invite-targets-service.js";
+import type { AccountInviteTargetsService } from "../services/squad-builder/account-sharing/search-account-invite-targets-service.js";
 import { layer as accountInviteTargetsLayer } from "../services/squad-builder/account-sharing/search-account-invite-targets-service.js";
-import type { Service as AccountAccessInvites } from "../services/squad-builder/account-sharing/send-account-access-invite-service.js";
+import type { AccountAccessInvitesService } from "../services/squad-builder/account-sharing/send-account-access-invite-service.js";
 import { layer as accountAccessInvitesLayer } from "../services/squad-builder/account-sharing/send-account-access-invite-service.js";
 import type { FirecrawlClientService } from "../services/squad-builder/firecrawl-client.js";
 import type { FirecrawlConfigService } from "../services/squad-builder/firecrawl-config.js";
 import { layer as createSquadGroupLayer } from "../services/squad-builder/squad-groups/create-squad-group.js";
-import type { Service as CreateSquadGroupServiceTag } from "../services/squad-builder/squad-groups/create-squad-group.js";
+import type { CreateSquadGroupService } from "../services/squad-builder/squad-groups/create-squad-group.js";
 import { layer as listGlobalSquadGroupsLayer } from "../services/squad-builder/squad-groups/list-global-squad-groups.js";
-import type { Service as ListGlobalSquadGroupsServiceTag } from "../services/squad-builder/squad-groups/list-global-squad-groups.js";
-import type { Service as SquadGroupSharingState } from "../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
+import type { ListGlobalSquadGroupsService } from "../services/squad-builder/squad-groups/list-global-squad-groups.js";
+import type { SquadGroupSharingStateService } from "../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
 import { layer as squadGroupSharingStateLayer } from "../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
 import { layer as listSquadGroupsLayer } from "../services/squad-builder/squad-groups/list-squad-groups.js";
-import type { Service as ListSquadGroupsServiceTag } from "../services/squad-builder/squad-groups/list-squad-groups.js";
-import type { Service as SquadGroupEditorInviteResponses } from "../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
+import type { ListSquadGroupsService } from "../services/squad-builder/squad-groups/list-squad-groups.js";
+import type { SquadGroupEditorInviteResponsesService } from "../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
 import { layer as squadGroupEditorInviteResponsesLayer } from "../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
-import type { Service as SquadGroupEditorRevocations } from "../services/squad-builder/squad-groups/revoke-squad-group-editor-service.js";
+import type { SquadGroupEditorRevocationsService } from "../services/squad-builder/squad-groups/revoke-squad-group-editor-service.js";
 import { layer as squadGroupEditorRevocationsLayer } from "../services/squad-builder/squad-groups/revoke-squad-group-editor-service.js";
 import { layer as saveSharedSquadGroupCharactersLayer } from "../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
-import type { Service as SaveSharedSquadGroupCharactersServiceTag } from "../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
+import type { SaveSharedSquadGroupCharactersService } from "../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
 import { layer as saveSquadGroupLayer } from "../services/squad-builder/squad-groups/save-squad-group.js";
-import type { Service as SaveSquadGroupServiceTag } from "../services/squad-builder/squad-groups/save-squad-group.js";
-import type { Service as SquadEditorInviteTargets } from "../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.js";
+import type { SaveSquadGroupService } from "../services/squad-builder/squad-groups/save-squad-group.js";
+import type { SquadEditorInviteTargetsService } from "../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.js";
 import { layer as squadEditorInviteTargetsLayer } from "../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.js";
-import type { Service as SquadGroupEditorInvites } from "../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
+import type { SquadGroupEditorInvitesService } from "../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
 import { layer as squadGroupEditorInvitesLayer } from "../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
 import { layer as setSquadGroupVisibilityLayer } from "../services/squad-builder/squad-groups/set-squad-group-visibility.js";
-import type { Service as SetSquadGroupVisibilityServiceTag } from "../services/squad-builder/squad-groups/set-squad-group-visibility.js";
+import type { SetSquadGroupVisibilityService } from "../services/squad-builder/squad-groups/set-squad-group-visibility.js";
 import type { SquadGroupStoreService } from "../services/squad-builder/squad-groups/squad-group-store.js";
 import type { VaultService } from "../services/vault/vault-service.js";
 
@@ -192,24 +192,24 @@ type SquadBuilderServices =
   | AccountSharingStoreService
   | FirecrawlClientService
   | FirecrawlConfigService
-  | AccountInviteTargets
-  | AccountAccessInvites
-  | AccountAccessInviteResponses
-  | AccountAccessRevocations
-  | AccountSharingState
-  | SquadEditorInviteTargets
-  | SquadGroupEditorInvites
-  | SquadGroupEditorInviteResponses
-  | SquadGroupEditorRevocations
-  | SquadGroupSharingState
-  | CreateSquadGroupServiceTag
-  | ListSquadGroupsServiceTag
-  | ListGlobalSquadGroupsServiceTag
-  | SaveSquadGroupServiceTag
-  | SaveSharedSquadGroupCharactersServiceTag
-  | SetSquadGroupVisibilityServiceTag
-  | PreviewMargonemProfileImportServiceTag
-  | PreviewOwnedAccountImportsServiceTag
-  | ConfirmOwnedAccountImportServiceTag
-  | PreviewAccountRefetchServiceTag
-  | ApplyAccountRefetchServiceTag;
+  | AccountInviteTargetsService
+  | AccountAccessInvitesService
+  | AccountAccessInviteResponsesService
+  | AccountAccessRevocationsService
+  | AccountSharingStateService
+  | SquadEditorInviteTargetsService
+  | SquadGroupEditorInvitesService
+  | SquadGroupEditorInviteResponsesService
+  | SquadGroupEditorRevocationsService
+  | SquadGroupSharingStateService
+  | CreateSquadGroupService
+  | ListSquadGroupsService
+  | ListGlobalSquadGroupsService
+  | SaveSquadGroupService
+  | SaveSharedSquadGroupCharactersService
+  | SetSquadGroupVisibilityService
+  | PreviewMargonemProfileImportService
+  | PreviewOwnedAccountImportsService
+  | ConfirmOwnedAccountImportService
+  | PreviewAccountRefetchService
+  | ApplyAccountRefetchService;

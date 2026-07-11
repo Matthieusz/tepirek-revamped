@@ -11,7 +11,7 @@ import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
   layer as accountAccessRevocationsLayer,
-  Service as AccountAccessRevocationsService,
+  AccountAccessRevocationsService,
 } from "./revoke-account-access-service.js";
 
 const parseTestUserId = (value: string) =>

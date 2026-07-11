@@ -36,7 +36,7 @@ export const getMine = Effect.fn("SquadGroups.getMine")(
   }) => SquadGroupStoreService.use((store) => store.getSquadGroupDetail(input))
 );
 
-export interface Interface {
+export interface ListSquadGroups {
   readonly listMine: (input: {
     readonly actorUserId: AppUserId;
   }) => Effect.Effect<readonly SquadGroupSummary[], ListMySquadGroupsError>;
@@ -47,12 +47,13 @@ export interface Interface {
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/ListSquadGroupsService"
-) {}
+export class ListSquadGroupsService extends Context.Service<
+  ListSquadGroupsService,
+  ListSquadGroups
+>()("@tepirek-revamped/api/squad-builder/ListSquadGroupsService") {}
 
 export const layer = Layer.effect(
-  Service,
+  ListSquadGroupsService,
   Effect.gen(function* makeService() {
     const store = yield* SquadGroupStoreService;
     return {

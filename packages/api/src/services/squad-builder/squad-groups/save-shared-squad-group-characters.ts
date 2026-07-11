@@ -160,19 +160,32 @@ export const saveWithStoreService = Effect.fn(
   );
 });
 
-export interface Interface {
-  readonly saveWithStoreService: typeof saveWithStoreService;
+const makeSaveWithStoreService = (
+  store: typeof SquadGroupStoreService.Service
+) =>
+  Effect.fn("SquadGroups.saveSharedCharacters")(
+    (input: SaveSharedSquadGroupCharactersInput) =>
+      saveWithStoreService(input).pipe(
+        Effect.provideService(SquadGroupStoreService, store)
+      )
+  );
+
+export interface SaveSharedSquadGroupCharacters {
+  readonly saveWithStoreService: ReturnType<typeof makeSaveWithStoreService>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
+export class SaveSharedSquadGroupCharactersService extends Context.Service<
+  SaveSharedSquadGroupCharactersService,
+  SaveSharedSquadGroupCharacters
+>()(
   "@tepirek-revamped/api/squad-builder/SaveSharedSquadGroupCharactersService"
 ) {}
 
 export const layer = Layer.effect(
-  Service,
+  SaveSharedSquadGroupCharactersService,
   Effect.gen(function* layer() {
-    yield* SquadGroupStoreService;
-    return { saveWithStoreService };
+    const store = yield* SquadGroupStoreService;
+    return { saveWithStoreService: makeSaveWithStoreService(store) };
   })
 );

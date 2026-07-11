@@ -4,12 +4,19 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import type { RevokeAccountAccessResult } from "./account-sharing-store.js";
-import type { RevokeAccountAccessInput } from "./revoke-account-access.js";
 
-export interface Interface {
+/** Input for revoking account access. */
+export interface RevokeAccountAccessInput {
+  readonly actorUserId: AppUserId;
+  readonly accessId: MargonemAccountAccessId;
+}
+
+export interface AccountAccessRevocations {
   /** Revoke pending or accepted account access as the account owner. */
   readonly revoke: (
     input: RevokeAccountAccessInput
@@ -18,12 +25,13 @@ export interface Interface {
 
 /** Service module that revokes account access as the account owner. */
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/AccountAccessRevocations"
-) {}
+export class AccountAccessRevocationsService extends Context.Service<
+  AccountAccessRevocationsService,
+  AccountAccessRevocations
+>()("@tepirek-revamped/api/squad-builder/AccountAccessRevocations") {}
 
 export const layer = Layer.effect(
-  Service,
+  AccountAccessRevocationsService,
   EffectRuntime.gen(function* makeAccountAccessRevocationsService() {
     const store = yield* AccountSharingStoreService;
 

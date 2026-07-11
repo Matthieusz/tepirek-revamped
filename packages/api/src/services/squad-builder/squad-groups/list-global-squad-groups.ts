@@ -36,17 +36,18 @@ export const list = Effect.fn("SquadGroups.listGlobal")(
   }
 );
 
-export interface Interface {
+export interface ListGlobalSquadGroups {
   readonly list: ReturnType<typeof makeList>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/ListGlobalSquadGroupsService"
-) {}
+export class ListGlobalSquadGroupsService extends Context.Service<
+  ListGlobalSquadGroupsService,
+  ListGlobalSquadGroups
+>()("@tepirek-revamped/api/squad-builder/ListGlobalSquadGroupsService") {}
 
 export const layer = Layer.effect(
-  Service,
+  ListGlobalSquadGroupsService,
   Effect.gen(function* layer() {
     const store = yield* SquadGroupStoreService;
     return { list: makeList(store) };

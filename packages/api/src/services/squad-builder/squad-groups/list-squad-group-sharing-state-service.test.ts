@@ -9,7 +9,7 @@ import { emptySquadGroupListFilters } from "../../../domain/squad-builder/squad-
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
 import {
   layer as squadGroupSharingStateLayer,
-  Service as SquadGroupSharingStateService,
+  SquadGroupSharingStateService,
 } from "./list-squad-group-sharing-state-service.js";
 import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";

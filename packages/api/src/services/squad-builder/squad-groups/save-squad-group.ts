@@ -11,12 +11,7 @@ import type {
 } from "../../../domain/squad-builder/squad-group-snapshot.js";
 import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
-import type {
-  ActorCannotViewSquadGroup,
-  ActorDoesNotOwnSquadGroup,
-  SquadGroupNotFound,
-} from "./squad-group-store.js";
-import { SquadGroupStoreService } from "./squad-group-store.js";
+import * as SquadGroupStore from "./squad-group-store.js";
 
 export type { SaveSquadInput };
 
@@ -30,60 +25,63 @@ export interface SaveSquadGroupInput {
 
 /** Expected failures returned by squad group snapshot save. */
 export type SaveSquadGroupError =
-  | SquadGroupNotFound
-  | ActorCannotViewSquadGroup
-  | ActorDoesNotOwnSquadGroup
+  | SquadGroupStore.SquadGroupNotFound
+  | SquadGroupStore.ActorCannotViewSquadGroup
+  | SquadGroupStore.ActorDoesNotOwnSquadGroup
   | SquadGroupValidationError
   | EffectSquadBuilderPersistenceUnavailable;
 
-export const save = Effect.fn("SquadGroups.save")(function* saveSquadGroup(
-  input: SaveSquadGroupInput
-) {
-  yield* SquadGroupStoreService.use((store) =>
-    store.getSquadGroupDetail({
+const makeSave = (store: SquadGroupStore.SquadGroupStoreServiceShape) =>
+  Effect.fn("SquadGroups.save")(function* saveSquadGroup(
+    input: SaveSquadGroupInput
+  ) {
+    yield* store.getSquadGroupDetail({
       actorUserId: input.actorUserId,
       groupId: input.groupId,
-    })
-  );
+    });
 
-  const availableCharacters = yield* SquadGroupStoreService.use((store) =>
-    store.listAvailableCharactersForOwner({
+    const availableCharacters = yield* store.listAvailableCharactersForOwner({
       ownerUserId: input.actorUserId,
-    })
-  );
+    });
 
-  const snapshot = yield* validateSquadGroupSnapshot({
-    actorUserId: input.actorUserId,
-    availableCharacters,
-    groupId: input.groupId,
-    name: input.name,
-    squads: input.squads,
-  });
+    const snapshot = yield* validateSquadGroupSnapshot({
+      actorUserId: input.actorUserId,
+      availableCharacters,
+      groupId: input.groupId,
+      name: input.name,
+      squads: input.squads,
+    });
 
-  const now = new Date(yield* Clock.currentTimeMillis);
-  return yield* SquadGroupStoreService.use((store) =>
-    store.saveSquadGroupSnapshot({
+    const now = new Date(yield* Clock.currentTimeMillis);
+    return yield* store.saveSquadGroupSnapshot({
       actorUserId: input.actorUserId,
       availableCharacters,
       now,
       snapshot,
-    })
-  );
+    });
+  });
+
+export const save = Effect.fn("SquadGroups.save")(function* saveSquadGroup(
+  input: SaveSquadGroupInput
+) {
+  const store = yield* SquadGroupStore.SquadGroupStoreService;
+  return yield* makeSave(store)(input);
 });
 
-export interface Interface {
-  readonly save: typeof save;
+export interface SaveSquadGroup {
+  readonly save: ReturnType<typeof makeSave>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/SaveSquadGroupService"
-) {}
+export class SaveSquadGroupService extends Context.Service<
+  SaveSquadGroupService,
+  SaveSquadGroup
+>()("@tepirek-revamped/api/squad-builder/SaveSquadGroupService") {}
 
 export const layer = Layer.effect(
-  Service,
+  SaveSquadGroupService,
   Effect.gen(function* layer() {
-    yield* SquadGroupStoreService;
-    return { save };
+    const store = yield* SquadGroupStore.SquadGroupStoreService;
+    return { save: makeSave(store) };
   })
 );

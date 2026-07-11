@@ -6,7 +6,7 @@ import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
 import {
   layer as squadEditorInviteTargetsLayer,
-  Service as SquadEditorInviteTargetsService,
+  SquadEditorInviteTargetsService,
 } from "./search-squad-editor-invite-targets-service.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
 import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-support.js";

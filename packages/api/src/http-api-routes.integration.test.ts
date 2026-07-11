@@ -10,7 +10,7 @@ import { AnnouncementStore } from "./adapters/announcement/announcement-store.js
 import { makeBetterAuthAdapterLayer } from "./server/auth/better-auth-adapter.js";
 import { makeApiLiveLayerFromConfig } from "./server/effect-app.js";
 import { AppHttpApiLayer } from "./server/http-api-handlers.js";
-import { Service as PreviewMargonemProfileImportService } from "./services/squad-builder/account-import/preview-margonem-profile-import-service.js";
+import { PreviewMargonemProfileImportService } from "./services/squad-builder/account-import/preview-margonem-profile-import-service.js";
 import { FirecrawlRequestFailed } from "./services/squad-builder/firecrawl-client.js";
 import { testAuth } from "./test/integration/auth.js";
 import {

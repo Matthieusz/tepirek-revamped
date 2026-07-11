@@ -3,38 +3,107 @@ import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
 
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
 import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.js";
+import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import { profileIdToNumber } from "../../../domain/squad-builder/margonem-profile-id.js";
+import type { ParseMargonemProfileUrlError } from "../../../domain/squad-builder/margonem-profile-url.js";
 import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
 } from "../../../domain/squad-builder/margonem-profile-url.js";
+import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
+import { FirecrawlClientService } from "../firecrawl-client.js";
+import type { FirecrawlScrapeError } from "../firecrawl-client.js";
+import { FirecrawlConfigService } from "../firecrawl-config.js";
+import type { FirecrawlCreditCount } from "../firecrawl-config.js";
 import { logSquadBuilderInternalFailure } from "../internal-error-logging.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import type {
   DuplicateMargonemAccountError,
+  FirecrawlBudgetError,
   ProfileAccessState,
+  SquadBuilderPersistenceUnavailable,
 } from "./account-import-store.js";
 import { preview as previewMargonemProfileImport } from "./preview-margonem-profile-import-service.js";
 import type {
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportInput,
   PreviewMargonemProfileImportOutput,
-} from "./preview-margonem-profile-import.js";
-import {
-  DuplicateProfileInBatchError,
-  EmptyProfileUrlBatch,
-  TooManyProfileUrlsInBatch,
-} from "./preview-owned-account-imports.js";
-import type {
-  PreviewOwnedAccountImportItem,
-  PreviewOwnedAccountImportLineError,
-  PreviewOwnedAccountImportsInput,
-} from "./preview-owned-account-imports.js";
+} from "./preview-margonem-profile-import-service.js";
+
+export interface PreviewOwnedAccountImportsInput {
+  readonly actorUserId: AppUserId;
+  readonly profileUrls: readonly string[];
+}
+
+export interface PreviewOwnedAccountImportSuccess {
+  readonly _tag: "PreviewSucceeded";
+  readonly lineNumber: number;
+  readonly inputUrl: string;
+  readonly pendingImportId: PendingMargonemAccountImportId;
+  readonly profileId: MargonemProfileId;
+  readonly generatedProfileUrl: string;
+  readonly suggestedAccountName: string;
+  readonly defaultDisplayName: AccountDisplayName;
+  readonly lastFetchedAt: Date;
+  readonly firecrawlCreditsUsed: FirecrawlCreditCount;
+  readonly jarunaCharacters: readonly MargonemCharacterPreview[];
+}
+
+export class DuplicateProfileInBatchError extends Schema.TaggedErrorClass<DuplicateProfileInBatchError>()(
+  "DuplicateProfileInBatch",
+  { firstLineNumber: Schema.Number },
+  {}
+) {}
+
+export type PreviewOwnedAccountImportLineError =
+  | ParseMargonemProfileUrlError
+  | DuplicateProfileInBatchError
+  | DuplicateMargonemAccountError
+  | FirecrawlBudgetError
+  | FirecrawlScrapeError
+  | ParseMargonemProfileHtmlError
+  | SquadBuilderPersistenceUnavailable;
+
+export interface PreviewOwnedAccountImportFailure {
+  readonly _tag: "PreviewFailed";
+  readonly lineNumber: number;
+  readonly inputUrl: string;
+  readonly error: PreviewOwnedAccountImportLineError;
+}
+
+export type PreviewOwnedAccountImportItem =
+  | PreviewOwnedAccountImportSuccess
+  | PreviewOwnedAccountImportFailure;
+
+export interface PreviewOwnedAccountImportsOutput {
+  readonly items: readonly PreviewOwnedAccountImportItem[];
+}
+
+// oxlint-disable-next-line max-classes-per-file -- Batch policy errors live with the use case.
+export class TooManyProfileUrlsInBatch extends Schema.TaggedErrorClass<TooManyProfileUrlsInBatch>()(
+  "TooManyProfileUrlsInBatch",
+  { maxUrls: Schema.Number },
+  {}
+) {}
+
+// oxlint-disable-next-line max-classes-per-file -- Batch policy errors live with the use case.
+export class EmptyProfileUrlBatch extends Schema.TaggedErrorClass<EmptyProfileUrlBatch>()(
+  "EmptyProfileUrlBatch",
+  {},
+  {}
+) {}
+
+export type PreviewOwnedAccountImportsError =
+  | TooManyProfileUrlsInBatch
+  | EmptyProfileUrlBatch
+  | SquadBuilderPersistenceUnavailable;
 
 const batchImportPolicy = {
   fetchConcurrency: 2,
@@ -377,19 +446,39 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
   }
 );
 
-export interface Interface {
-  readonly preview: typeof preview;
+const makePreview = (
+  store: typeof AccountImportStoreService.Service,
+  config: typeof FirecrawlConfigService.Service,
+  firecrawl: typeof FirecrawlClientService.Service
+) =>
+  EffectRuntime.fn("AccountImport.previewBatch")(
+    (
+      input: PreviewOwnedAccountImportsInput,
+      options: { readonly signal?: AbortSignal } = {}
+    ) =>
+      preview(input, options).pipe(
+        EffectRuntime.provideService(AccountImportStoreService, store),
+        EffectRuntime.provideService(FirecrawlConfigService, config),
+        EffectRuntime.provideService(FirecrawlClientService, firecrawl)
+      )
+  );
+
+export interface PreviewOwnedAccountImports {
+  readonly preview: ReturnType<typeof makePreview>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/PreviewOwnedAccountImportsService"
-) {}
+export class PreviewOwnedAccountImportsService extends Context.Service<
+  PreviewOwnedAccountImportsService,
+  PreviewOwnedAccountImports
+>()("@tepirek-revamped/api/squad-builder/PreviewOwnedAccountImportsService") {}
 
 export const layer = Layer.effect(
-  Service,
+  PreviewOwnedAccountImportsService,
   EffectRuntime.gen(function* layer() {
-    yield* AccountImportStoreService;
-    return { preview };
+    const store = yield* AccountImportStoreService;
+    const config = yield* FirecrawlConfigService;
+    const firecrawl = yield* FirecrawlClientService;
+    return { preview: makePreview(store, config, firecrawl) };
   })
 );

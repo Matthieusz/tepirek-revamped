@@ -51,7 +51,7 @@ import type {
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
 } from "../../../services/squad-builder/account-refetch/account-refetch-store.js";
-import type { ApplyAccountRefetchOutput } from "../../../services/squad-builder/account-refetch/apply-account-refetch.js";
+import type { ApplyAccountRefetchOutput } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
 import {
   ActorDoesNotOwnMargonemAccount,

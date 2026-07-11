@@ -12,7 +12,7 @@ import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
   layer as accountAccessInviteResponsesLayer,
-  Service as AccountAccessInviteResponsesService,
+  AccountAccessInviteResponsesService,
 } from "./respond-to-account-access-invite-service.js";
 
 const parseTestUserId = (value: string) =>

@@ -9,7 +9,7 @@ import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
 import {
   layer as squadGroupEditorInviteResponsesLayer,
-  Service as SquadGroupEditorInviteResponsesService,
+  SquadGroupEditorInviteResponsesService,
 } from "./respond-to-squad-group-invite-service.js";
 import { ActorIsNotSquadGroupInviteRecipient } from "./squad-group-errors.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";

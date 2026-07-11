@@ -3,8 +3,10 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
 import { emptySquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
-import type { ListSquadGroupSharingState } from "./list-squad-group-sharing-state.js";
+import type { SquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
 import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
 import { SquadGroupStoreService } from "./squad-group-store.js";
 import type {
@@ -13,7 +15,27 @@ import type {
   SquadGroupInvitationSummary,
 } from "./squad-group-store.js";
 
-export interface Interface {
+export interface ListSquadGroupSharingState {
+  readonly countPendingInvites: (input: {
+    readonly actorUserId: AppUserId;
+  }) => Promise<void>;
+
+  readonly listEditorGrants: (input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+  }) => Promise<void>;
+
+  readonly listIncomingInvites: (input: {
+    readonly actorUserId: AppUserId;
+  }) => Promise<void>;
+
+  readonly listSharedGroups: (input: {
+    readonly actorUserId: AppUserId;
+    readonly filters?: SquadGroupListFilters;
+  }) => Promise<void>;
+}
+
+export interface SquadGroupSharingState {
   /** List pending squad group editor invites received by the actor. */
   readonly listIncomingInvites: (
     input: Parameters<ListSquadGroupSharingState["listIncomingInvites"]>[0]
@@ -37,12 +59,13 @@ export interface Interface {
 
 /** Service module that reads squad group sharing state for the actor. */
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/SquadGroupSharingState"
-) {}
+export class SquadGroupSharingStateService extends Context.Service<
+  SquadGroupSharingStateService,
+  SquadGroupSharingState
+>()("@tepirek-revamped/api/squad-builder/SquadGroupSharingState") {}
 
 export const layer = Layer.effect(
-  Service,
+  SquadGroupSharingStateService,
   EffectRuntime.gen(function* makeSquadGroupSharingStateService() {
     const store = yield* SquadGroupStoreService;
 

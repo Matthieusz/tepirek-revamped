@@ -3,6 +3,8 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
 import type { AccountSharingError } from "./account-sharing-error.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
@@ -11,13 +13,21 @@ import type {
   AccountAccessInviteSummary,
   SharedMargonemAccountSummary,
 } from "./account-sharing-store.js";
-import type {
-  ListAccountAccessGrantsInput,
-  ListIncomingAccountInvitesInput,
-  ListSharedAccountsInput,
-} from "./list-account-sharing-state.js";
 
-export interface Interface {
+export interface ListAccountAccessGrantsInput {
+  readonly actorUserId: AppUserId;
+  readonly accountId: MargonemAccountId;
+}
+
+export interface ListIncomingAccountInvitesInput {
+  readonly actorUserId: AppUserId;
+}
+
+export interface ListSharedAccountsInput {
+  readonly actorUserId: AppUserId;
+}
+
+export interface AccountSharingState {
   /** List pending account access invites received by the actor. */
   readonly listIncomingInvites: (
     input: ListIncomingAccountInvitesInput
@@ -36,12 +46,13 @@ export interface Interface {
 
 /** Service module that reads account sharing state for the actor. */
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class Service extends Context.Service<Service, Interface>()(
-  "@tepirek-revamped/api/squad-builder/AccountSharingState"
-) {}
+export class AccountSharingStateService extends Context.Service<
+  AccountSharingStateService,
+  AccountSharingState
+>()("@tepirek-revamped/api/squad-builder/AccountSharingState") {}
 
 export const layer = Layer.effect(
-  Service,
+  AccountSharingStateService,
   EffectRuntime.gen(function* makeAccountSharingStateService() {
     const store = yield* AccountSharingStoreService;
 

@@ -23,7 +23,7 @@ import type {
   MargonemAccountOwnerAuthorizer,
 } from "../account-sharing/account-sharing-store.js";
 import type { FirecrawlCreditCount } from "../firecrawl-config.js";
-import type { ApplyAccountRefetchOutput } from "./apply-account-refetch.js";
+import type { ApplyAccountRefetchOutput } from "./apply-account-refetch-service.js";
 
 /** Account and current character state needed for a manual refetch preview. */
 export interface RefetchableMargonemAccount {
