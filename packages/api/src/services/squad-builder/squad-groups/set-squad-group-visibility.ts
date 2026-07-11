@@ -1,3 +1,4 @@
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -8,8 +9,6 @@ import type {
   InvalidSquadGroupVisibility,
   SquadGroupVisibility,
 } from "../../../domain/squad-builder/squad-group-visibility.js";
-import { systemClock } from "../account-import/preview-margonem-profile-import.js";
-import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import * as SquadGroupStore from "./squad-group-store.js";
 
@@ -21,23 +20,20 @@ export type GlobalSquadVisibilityError =
   | InvalidSquadGroupVisibility
   | EffectSquadBuilderPersistenceUnavailable;
 
-const makeSet = (
-  store: SquadGroupStore.SquadGroupStoreServiceShape,
-  clock: Clock
-) =>
-  Effect.fn("SquadGroups.setVisibility")(
-    (input: {
-      readonly actorUserId: AppUserId;
-      readonly groupId: SquadGroupId;
-      readonly visibility: SquadGroupVisibility;
-    }) =>
-      store.setSquadGroupVisibility({
-        actorUserId: input.actorUserId,
-        groupId: input.groupId,
-        now: clock.now(),
-        visibility: input.visibility,
-      })
-  );
+const makeSet = (store: SquadGroupStore.SquadGroupStoreServiceShape) =>
+  Effect.fn("SquadGroups.setVisibility")(function* setVisibility(input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+    readonly visibility: SquadGroupVisibility;
+  }) {
+    const now = new Date(yield* Clock.currentTimeMillis);
+    return yield* store.setSquadGroupVisibility({
+      actorUserId: input.actorUserId,
+      groupId: input.groupId,
+      now,
+      visibility: input.visibility,
+    });
+  });
 
 /** Change squad group visibility as the owner. */
 export const set = Effect.fn("SquadGroups.setVisibility")(
@@ -47,7 +43,7 @@ export const set = Effect.fn("SquadGroups.setVisibility")(
     readonly visibility: SquadGroupVisibility;
   }) {
     const store = yield* SquadGroupStore.SquadGroupStoreService;
-    return yield* makeSet(store, systemClock)(input);
+    return yield* makeSet(store)(input);
   }
 );
 
@@ -64,6 +60,6 @@ export const layer = Layer.effect(
   Service,
   Effect.gen(function* layer() {
     const store = yield* SquadGroupStore.SquadGroupStoreService;
-    return { set: makeSet(store, systemClock) };
+    return { set: makeSet(store) };
   })
 );

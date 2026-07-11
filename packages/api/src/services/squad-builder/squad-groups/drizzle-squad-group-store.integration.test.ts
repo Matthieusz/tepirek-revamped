@@ -749,6 +749,7 @@ describe("DrizzleSquadGroupStoreService integration", () => {
       AccountImportStoreService.use((store) =>
         store.markRequestSucceeded({
           cacheState: "hit",
+          completedAt: new Date("2026-06-29T12:00:00.000Z"),
           creditsUsed: parseTestCredits(1),
           firecrawlStatusCode: 200,
           requestId: reserved.requestId,

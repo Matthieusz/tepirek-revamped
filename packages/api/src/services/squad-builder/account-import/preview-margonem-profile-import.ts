@@ -14,11 +14,6 @@ import type {
 
 export type { DuplicateMargonemAccountError };
 
-/** Clock dependency for deterministic time and Firecrawl budget months. */
-export interface Clock {
-  readonly now: () => Date;
-}
-
 /** Input for previewing a Margonem profile import. */
 export interface PreviewMargonemProfileImportInput {
   readonly actorUserId: AppUserId;
@@ -65,9 +60,4 @@ export const profileAccessStateToDuplicateError = (
       return exhaustive;
     }
   }
-};
-
-/** System clock implementation for production composition. */
-export const systemClock: Clock = {
-  now: () => new Date(),
 };

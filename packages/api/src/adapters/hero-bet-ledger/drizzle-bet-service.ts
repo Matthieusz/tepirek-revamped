@@ -147,7 +147,7 @@ const refreshEarningsForHero = (tx: TransactionDatabase, heroId: number) =>
 
 const createBetWithDatabase =
   (database: EffectPgDatabase) =>
-  ({ createdBy, heroId, userIds }: CreateBetInput) =>
+  ({ createdAt, createdBy, heroId, userIds }: CreateBetInput) =>
     Effect.gen(function* createBet() {
       const memberUserIds =
         yield* validateVerifiedMemberIdsWithDatabase(database)(userIds);
@@ -157,7 +157,6 @@ const createBetWithDatabase =
         heroId,
         "Nie znaleziono herosów"
       );
-
       return yield* persistenceQuery(
         "createBet",
         database.transaction((tx) =>
@@ -166,7 +165,7 @@ const createBetWithDatabase =
               tx
                 .insert(heroBet)
                 .values({
-                  createdAt: new Date(),
+                  createdAt,
                   createdBy,
                   heroId,
                   memberCount,

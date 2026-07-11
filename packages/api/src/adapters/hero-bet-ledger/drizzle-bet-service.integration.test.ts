@@ -7,7 +7,8 @@ import {
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { TestClock } from "effect/testing";
+import { describe, expect, it } from "vitest";
 
 import type { BetServiceInterface } from "../../services/bet/bet-service.js";
 import { BetService } from "../../services/bet/bet-service.js";
@@ -15,7 +16,7 @@ import type { RankingServiceInterface } from "../../services/ranking/ranking-ser
 import { RankingService } from "../../services/ranking/ranking-service.js";
 import type { VaultServiceInterface } from "../../services/vault/vault-service.js";
 import { VaultService } from "../../services/vault/vault-service.js";
-import { liveEffect } from "../../test/effect.js";
+import { testEffect } from "../../test/effect.js";
 import {
   createHero,
   createVerifiedMember,
@@ -57,11 +58,15 @@ const withServices = <A>(
     readonly getUserStats: VaultServiceInterface["getUserStats"];
     readonly getVault: VaultServiceInterface["getVault"];
     readonly togglePaidOut: VaultServiceInterface["togglePaidOut"];
-  }) => Effect.Effect<A, unknown>
+  }) => Effect.Effect<A, unknown>,
+  currentTime?: Date
 ) =>
-  liveEffect(
+  testEffect(
     testLayer,
     Effect.gen(function* provideServices() {
+      if (currentTime !== undefined) {
+        yield* TestClock.setTime(currentTime.getTime());
+      }
       const bet = yield* BetService;
       const ranking = yield* RankingService;
       const vault = yield* VaultService;
@@ -82,13 +87,8 @@ const expectLedgerError = async (
 };
 
 describe("HeroBetLedger characterization", () => {
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it("creates a bet with internally timestamped raw bet rows and per-member stats", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-07-05T10:11:12.000Z"));
+    const creationTime = new Date("2026-07-05T10:11:12.000Z");
 
     const creator = await createVerifiedMember({ id: "ledger-create-admin" });
     const firstMember = await createVerifiedMember({
@@ -102,12 +102,15 @@ describe("HeroBetLedger characterization", () => {
     });
     const createdHero = await createHero({ name: "Ledger Create Hero" });
 
-    const bet = await withServices((ledger) =>
-      ledger.createBet({
-        createdBy: creator.id,
-        heroId: createdHero.id,
-        userIds: [firstMember.id, secondMember.id, thirdMember.id],
-      })
+    const bet = await withServices(
+      (ledger) =>
+        ledger.createBet({
+          createdAt: creationTime,
+          createdBy: creator.id,
+          heroId: createdHero.id,
+          userIds: [firstMember.id, secondMember.id, thirdMember.id],
+        }),
+      creationTime
     );
 
     expect(bet).toMatchObject({
@@ -179,6 +182,7 @@ describe("HeroBetLedger characterization", () => {
     await expectLedgerError(
       withServices((ledger) =>
         ledger.createBet({
+          createdAt: new Date(0),
           createdBy: creator.id,
           heroId: createdHero.id,
           userIds: [member.id, member.id],
@@ -191,6 +195,7 @@ describe("HeroBetLedger characterization", () => {
     await expectLedgerError(
       withServices((ledger) =>
         ledger.createBet({
+          createdAt: new Date(0),
           createdBy: creator.id,
           heroId: createdHero.id,
           userIds: [""],
@@ -228,6 +233,7 @@ describe("HeroBetLedger characterization", () => {
     const createdHero = await createHero({ name: "Ledger Distribution Hero" });
     await withServices((ledger) =>
       ledger.createBet({
+        createdAt: new Date(0),
         createdBy: creator.id,
         heroId: createdHero.id,
         userIds: [firstMember.id, secondMember.id],
@@ -334,6 +340,7 @@ describe("HeroBetLedger characterization", () => {
     const createdHero = await createHero({ name: "Ledger Edit Hero" });
     const bet = await withServices((ledger) =>
       ledger.createBet({
+        createdAt: new Date(0),
         createdBy: creator.id,
         heroId: createdHero.id,
         userIds: [firstMember.id, secondMember.id],
@@ -417,7 +424,6 @@ describe("HeroBetLedger characterization", () => {
   });
 
   it("returns paginated bet row shapes with attached member rows", async () => {
-    vi.useFakeTimers();
     const creator = await createVerifiedMember({
       id: "ledger-page-admin",
       image: "https://example.com/admin.png",
@@ -434,21 +440,25 @@ describe("HeroBetLedger characterization", () => {
       name: "Ledger Page Hero",
     });
 
-    vi.setSystemTime(new Date("2026-07-05T09:00:00.000Z"));
-    const olderBet = await withServices((ledger) =>
-      ledger.createBet({
-        createdBy: creator.id,
-        heroId: createdHero.id,
-        userIds: [member.id],
-      })
+    const olderBet = await withServices(
+      (ledger) =>
+        ledger.createBet({
+          createdAt: new Date("2026-07-05T09:00:00.000Z"),
+          createdBy: creator.id,
+          heroId: createdHero.id,
+          userIds: [member.id],
+        }),
+      new Date("2026-07-05T09:00:00.000Z")
     );
-    vi.setSystemTime(new Date("2026-07-05T10:00:00.000Z"));
-    const newerBet = await withServices((ledger) =>
-      ledger.createBet({
-        createdBy: creator.id,
-        heroId: createdHero.id,
-        userIds: [member.id],
-      })
+    const newerBet = await withServices(
+      (ledger) =>
+        ledger.createBet({
+          createdAt: new Date("2026-07-05T10:00:00.000Z"),
+          createdBy: creator.id,
+          heroId: createdHero.id,
+          userIds: [member.id],
+        }),
+      new Date("2026-07-05T10:00:00.000Z")
     );
 
     const page = await withServices((ledger) =>

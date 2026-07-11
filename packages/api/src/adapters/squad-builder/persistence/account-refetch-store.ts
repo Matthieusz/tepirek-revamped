@@ -163,6 +163,7 @@ const markRequestSucceededWithDatabase =
   (database: EffectPgDatabase) =>
   ({
     cacheState,
+    completedAt,
     creditsUsed,
     firecrawlStatusCode,
     requestId,
@@ -176,7 +177,7 @@ const markRequestSucceededWithDatabase =
       .update(firecrawlProfileScrapeRequest)
       .set({
         cacheState,
-        completedAt: new Date(),
+        completedAt,
         creditsUsed,
         firecrawlStatusCode,
         status: "succeeded",
@@ -189,6 +190,7 @@ const markRequestSucceededWithDatabase =
 const markRequestFailedWithDatabase =
   (database: EffectPgDatabase) =>
   ({
+    completedAt,
     errorTag,
     requestId,
   }: MarkFirecrawlRequestFailedInput): Effect.Effect<
@@ -199,7 +201,7 @@ const markRequestFailedWithDatabase =
     const operation = "markRequestFailed" as const;
     const update = database
       .update(firecrawlProfileScrapeRequest)
-      .set({ completedAt: new Date(), errorTag, status: "failed" })
+      .set({ completedAt, errorTag, status: "failed" })
       .where(eq(firecrawlProfileScrapeRequest.id, requestId));
 
     return persistenceQuery(operation, update).pipe(Effect.asVoid);

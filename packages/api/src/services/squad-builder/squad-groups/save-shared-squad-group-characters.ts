@@ -1,3 +1,4 @@
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -11,8 +12,6 @@ import type {
 import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.js";
 import type { SquadId } from "../../../domain/squad-builder/squad-id.js";
 import type { SquadBuilderPersistenceUnavailable } from "../account-import/account-import-store.js";
-import { systemClock } from "../account-import/preview-margonem-profile-import.js";
-import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import {
   ActorCannotEditSquadGroup,
@@ -74,95 +73,92 @@ export type SharedSquadGroupSaveError =
   | SquadGroupValidationError
   | SquadBuilderPersistenceUnavailable;
 
-const makeSaveWithStoreService = (clock: Clock) =>
-  Effect.fn("SquadGroups.saveSharedCharacters")(
-    function* saveSharedSquadGroupCharacters(
-      input: SaveSharedSquadGroupCharactersInput
-    ) {
-      const detail = yield* SquadGroupStoreService.use((store) =>
-        store.getSquadGroupDetail({
-          actorUserId: input.actorUserId,
-          groupId: input.groupId,
-        })
-      );
-
-      if (detail.accessRole === "viewer") {
-        return yield* new ActorCannotEditSquadGroup();
-      }
-
-      const existingSquadIds = new Set<number>();
-      for (const squad of detail.squads) {
-        existingSquadIds.add(squad.squadId);
-      }
-
-      if (input.squads.length !== detail.squads.length) {
-        return yield* new EditorCannotChangeSquadStructure();
-      }
-
-      for (const submitted of input.squads) {
-        if (!existingSquadIds.has(submitted.squadId)) {
-          return yield* new SquadNotInGroup({ squadId: submitted.squadId });
-        }
-      }
-
-      const submittedIds = new Set(input.squads.map((squad) => squad.squadId));
-      if (submittedIds.size !== existingSquadIds.size) {
-        return yield* new EditorCannotChangeSquadStructure();
-      }
-
-      const availableCharacters = yield* SquadGroupStoreService.use((store) =>
-        store.listAvailableCharactersForOwner({
-          ownerUserId: detail.ownerUserId,
-        })
-      );
-
-      const submittedBySquadId = new Map<number, SharedSquadCharactersInput>();
-      for (const submitted of input.squads) {
-        submittedBySquadId.set(submitted.squadId, submitted);
-      }
-
-      const validation = yield* validateSquadGroupSnapshot({
-        actorUserId: detail.ownerUserId,
-        availableCharacters,
-        groupId: input.groupId,
-        name: detail.name,
-        squads: detail.squads.map((squad) => ({
-          characters: submittedBySquadId.get(squad.squadId)?.characters ?? [],
-          clientKey: `squad-${squad.squadId}`,
-          name: squad.name,
-          position: squad.position,
-          squadId: squad.squadId,
-        })),
-      });
-
-      const snapshotSquads: SharedSquadGroupCharactersSnapshot["squads"][number][] =
-        [];
-      for (const squad of validation.squads) {
-        if (squad.squadId === undefined) {
-          return yield* new EditorCannotChangeSquadStructure();
-        }
-        snapshotSquads.push({
-          characters: squad.characters,
-          squadId: squad.squadId,
-        });
-      }
-
-      return yield* SquadGroupStoreService.use((store) =>
-        store.saveSharedSquadGroupCharacters({
-          actorUserId: input.actorUserId,
-          groupId: input.groupId,
-          now: clock.now(),
-          snapshot: {
-            groupId: input.groupId,
-            squads: snapshotSquads,
-          },
-        })
-      );
-    }
+export const saveWithStoreService = Effect.fn(
+  "SquadGroups.saveSharedCharacters"
+)(function* saveSharedSquadGroupCharacters(
+  input: SaveSharedSquadGroupCharactersInput
+) {
+  const detail = yield* SquadGroupStoreService.use((store) =>
+    store.getSquadGroupDetail({
+      actorUserId: input.actorUserId,
+      groupId: input.groupId,
+    })
   );
 
-/** Save character placements in existing squads as owner or accepted editor. */
-export const saveWithStoreService = makeSaveWithStoreService(systemClock);
+  if (detail.accessRole === "viewer") {
+    return yield* new ActorCannotEditSquadGroup();
+  }
+
+  const existingSquadIds = new Set<number>();
+  for (const squad of detail.squads) {
+    existingSquadIds.add(squad.squadId);
+  }
+
+  if (input.squads.length !== detail.squads.length) {
+    return yield* new EditorCannotChangeSquadStructure();
+  }
+
+  for (const submitted of input.squads) {
+    if (!existingSquadIds.has(submitted.squadId)) {
+      return yield* new SquadNotInGroup({ squadId: submitted.squadId });
+    }
+  }
+
+  const submittedIds = new Set(input.squads.map((squad) => squad.squadId));
+  if (submittedIds.size !== existingSquadIds.size) {
+    return yield* new EditorCannotChangeSquadStructure();
+  }
+
+  const availableCharacters = yield* SquadGroupStoreService.use((store) =>
+    store.listAvailableCharactersForOwner({
+      ownerUserId: detail.ownerUserId,
+    })
+  );
+
+  const submittedBySquadId = new Map<number, SharedSquadCharactersInput>();
+  for (const submitted of input.squads) {
+    submittedBySquadId.set(submitted.squadId, submitted);
+  }
+
+  const validation = yield* validateSquadGroupSnapshot({
+    actorUserId: detail.ownerUserId,
+    availableCharacters,
+    groupId: input.groupId,
+    name: detail.name,
+    squads: detail.squads.map((squad) => ({
+      characters: submittedBySquadId.get(squad.squadId)?.characters ?? [],
+      clientKey: `squad-${squad.squadId}`,
+      name: squad.name,
+      position: squad.position,
+      squadId: squad.squadId,
+    })),
+  });
+
+  const snapshotSquads: SharedSquadGroupCharactersSnapshot["squads"][number][] =
+    [];
+  for (const squad of validation.squads) {
+    if (squad.squadId === undefined) {
+      return yield* new EditorCannotChangeSquadStructure();
+    }
+    snapshotSquads.push({
+      characters: squad.characters,
+      squadId: squad.squadId,
+    });
+  }
+
+  const now = new Date(yield* Clock.currentTimeMillis);
+  return yield* SquadGroupStoreService.use((store) =>
+    store.saveSharedSquadGroupCharacters({
+      actorUserId: input.actorUserId,
+      groupId: input.groupId,
+      now,
+      snapshot: {
+        groupId: input.groupId,
+        squads: snapshotSquads,
+      },
+    })
+  );
+});
 
 export interface Interface {
   readonly saveWithStoreService: typeof saveWithStoreService;

@@ -68,6 +68,7 @@ export interface ReservedFirecrawlRequest {
 
 /** Input for marking a reserved Firecrawl request as successful. */
 export interface MarkFirecrawlRequestSucceededInput {
+  readonly completedAt: Date;
   readonly requestId: number;
   readonly creditsUsed: FirecrawlCreditCount;
   readonly firecrawlStatusCode: number | null;
@@ -76,6 +77,7 @@ export interface MarkFirecrawlRequestSucceededInput {
 
 /** Input for marking a reserved Firecrawl request as failed. */
 export interface MarkFirecrawlRequestFailedInput {
+  readonly completedAt: Date;
   readonly requestId: number;
   readonly errorTag: string;
 }
@@ -175,6 +177,7 @@ export interface OwnedMargonemAccountSummary {
 /** Input for confirming a pending import into an owned account. */
 export interface CreateOwnedAccountFromPendingImportInput {
   readonly actorUserId: AppUserId;
+  readonly confirmedAt: Date;
   readonly pending: PendingMargonemAccountImportForConfirmation;
   readonly displayName: AccountDisplayName;
 }

@@ -1,3 +1,4 @@
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -9,8 +10,6 @@ import type {
   SquadGroupValidationError,
 } from "../../../domain/squad-builder/squad-group-snapshot.js";
 import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.js";
-import { systemClock } from "../account-import/preview-margonem-profile-import.js";
-import type { Clock } from "../account-import/preview-margonem-profile-import.js";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
 import type {
   ActorCannotViewSquadGroup,
@@ -37,43 +36,40 @@ export type SaveSquadGroupError =
   | SquadGroupValidationError
   | EffectSquadBuilderPersistenceUnavailable;
 
-const makeSave = (clock: Clock) =>
-  Effect.fn("SquadGroups.save")(function* saveSquadGroup(
-    input: SaveSquadGroupInput
-  ) {
-    yield* SquadGroupStoreService.use((store) =>
-      store.getSquadGroupDetail({
-        actorUserId: input.actorUserId,
-        groupId: input.groupId,
-      })
-    );
-
-    const availableCharacters = yield* SquadGroupStoreService.use((store) =>
-      store.listAvailableCharactersForOwner({
-        ownerUserId: input.actorUserId,
-      })
-    );
-
-    const snapshot = yield* validateSquadGroupSnapshot({
+export const save = Effect.fn("SquadGroups.save")(function* saveSquadGroup(
+  input: SaveSquadGroupInput
+) {
+  yield* SquadGroupStoreService.use((store) =>
+    store.getSquadGroupDetail({
       actorUserId: input.actorUserId,
-      availableCharacters,
       groupId: input.groupId,
-      name: input.name,
-      squads: input.squads,
-    });
+    })
+  );
 
-    return yield* SquadGroupStoreService.use((store) =>
-      store.saveSquadGroupSnapshot({
-        actorUserId: input.actorUserId,
-        availableCharacters,
-        now: clock.now(),
-        snapshot,
-      })
-    );
+  const availableCharacters = yield* SquadGroupStoreService.use((store) =>
+    store.listAvailableCharactersForOwner({
+      ownerUserId: input.actorUserId,
+    })
+  );
+
+  const snapshot = yield* validateSquadGroupSnapshot({
+    actorUserId: input.actorUserId,
+    availableCharacters,
+    groupId: input.groupId,
+    name: input.name,
+    squads: input.squads,
   });
 
-/** Validate and atomically save a full squad group snapshot. */
-export const save = makeSave(systemClock);
+  const now = new Date(yield* Clock.currentTimeMillis);
+  return yield* SquadGroupStoreService.use((store) =>
+    store.saveSquadGroupSnapshot({
+      actorUserId: input.actorUserId,
+      availableCharacters,
+      now,
+      snapshot,
+    })
+  );
+});
 
 export interface Interface {
   readonly save: typeof save;

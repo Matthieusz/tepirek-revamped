@@ -57,17 +57,20 @@ type UserMutationState = Partial<Pick<UserRow, "role" | "verified">>;
 export interface SetUserRoleInput {
   readonly actorId: string;
   readonly role: NonNullable<UserRow["role"]>;
+  readonly updatedAt: Date;
   readonly userId: string;
 }
 
 export interface SetUserVerifiedInput {
   readonly actorId: string;
+  readonly updatedAt: Date;
   readonly userId: string;
   readonly verified: boolean;
 }
 
 export interface UpdateUserNameInput {
   readonly name: string;
+  readonly updatedAt: Date;
   readonly userId: string;
 }
 
@@ -145,6 +148,7 @@ const updateAndReturnUser = (
   database: UserQueryExecutor,
   operation: string,
   where: SQL,
+  updatedAt: Date,
   values: Partial<typeof user.$inferInsert>
 ) =>
   Effect.gen(function* updateAndReturnUserEffect() {
@@ -152,7 +156,7 @@ const updateAndReturnUser = (
       operation,
       database
         .update(user)
-        .set({ updatedAt: new Date(), ...values })
+        .set({ updatedAt, ...values })
         .where(where)
     );
     const rows = yield* persistenceQuery(
@@ -168,6 +172,7 @@ const mutateAdminAvailabilityUser = (
   input: {
     readonly actorId: string;
     readonly next: UserMutationState;
+    readonly updatedAt: Date;
     readonly userId: string;
   }
 ) =>
@@ -188,6 +193,7 @@ const mutateAdminAvailabilityUser = (
           tx,
           "mutateAdminAvailabilityUser",
           eq(user.id, input.userId),
+          input.updatedAt,
           input.next
         );
       })
@@ -235,24 +241,34 @@ const listWithDatabase = (database: EffectPgDatabase) => () =>
 
 const setRoleWithDatabase =
   (database: EffectPgDatabase) =>
-  ({ actorId, role, userId }: SetUserRoleInput) =>
-    mutateAdminAvailabilityUser(database, { actorId, next: { role }, userId });
+  ({ actorId, role, updatedAt, userId }: SetUserRoleInput) =>
+    mutateAdminAvailabilityUser(database, {
+      actorId,
+      next: { role },
+      updatedAt,
+      userId,
+    });
 
 const setVerifiedWithDatabase =
   (database: EffectPgDatabase) =>
-  ({ actorId, userId, verified }: SetUserVerifiedInput) =>
+  ({ actorId, updatedAt, userId, verified }: SetUserVerifiedInput) =>
     mutateAdminAvailabilityUser(database, {
       actorId,
       next: { verified },
+      updatedAt,
       userId,
     });
 
 const updateProfileWithDatabase =
   (database: EffectPgDatabase) =>
-  ({ name, userId }: UpdateUserNameInput) =>
-    updateAndReturnUser(database, "updateProfile", eq(user.id, userId), {
-      name,
-    });
+  ({ name, updatedAt, userId }: UpdateUserNameInput) =>
+    updateAndReturnUser(
+      database,
+      "updateProfile",
+      eq(user.id, userId),
+      updatedAt,
+      { name }
+    );
 
 const getDiscordAccessTokenWithDatabase =
   (database: EffectPgDatabase) =>
@@ -280,13 +296,16 @@ const getDiscordAccessTokenWithDatabase =
 
 const markUserVerifiedWithDatabase =
   (database: EffectPgDatabase) =>
-  (userId: string): Effect.Effect<void, UserAdapterError> =>
+  (input: {
+    readonly updatedAt: Date;
+    readonly userId: string;
+  }): Effect.Effect<void, UserAdapterError> =>
     persistenceQuery(
       "markUserVerified",
       database
         .update(user)
-        .set({ updatedAt: new Date(), verified: true })
-        .where(eq(user.id, userId))
+        .set({ updatedAt: input.updatedAt, verified: true })
+        .where(eq(user.id, input.userId))
     ).pipe(Effect.asVoid);
 
 export class UserStore extends Context.Service<
@@ -306,9 +325,10 @@ export class UserStore extends Context.Service<
       UserAdapterError
     >;
     readonly list: () => Effect.Effect<readonly Player[], UserAdapterError>;
-    readonly markUserVerified: (
-      userId: string
-    ) => Effect.Effect<void, UserAdapterError>;
+    readonly markUserVerified: (input: {
+      readonly updatedAt: Date;
+      readonly userId: string;
+    }) => Effect.Effect<void, UserAdapterError>;
     readonly setRole: (
       input: SetUserRoleInput
     ) => Effect.Effect<

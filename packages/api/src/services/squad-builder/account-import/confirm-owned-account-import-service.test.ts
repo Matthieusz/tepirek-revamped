@@ -13,7 +13,6 @@ import { parsePendingMargonemAccountImportId } from "../../../domain/squad-build
 import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
 import { confirm } from "./confirm-owned-account-import-service.js";
-import type { Clock } from "./preview-margonem-profile-import.js";
 
 const parseTestUserId = () =>
   Effect.runSync(parseAppUserId("effect-confirm-user"));
@@ -26,9 +25,7 @@ const parseTestAccountId = () => Effect.runSync(parseMargonemAccountId(123));
 const parseTestProfileId = () =>
   Effect.runSync(parseMargonemProfileId(7_298_897));
 
-const fixedClock: Clock = {
-  now: () => new Date("2026-06-29T12:00:00.000Z"),
-};
+const FIXED_TIME = new Date("2026-06-29T12:00:00.000Z");
 
 it.effect("confirms a pending owned account import through services", () => {
   const actorUserId = parseTestUserId();
@@ -68,7 +65,7 @@ it.effect("confirms a pending owned account import through services", () => {
   });
 
   return Effect.gen(function* confirmEffect() {
-    yield* TestClock.setTime(fixedClock.now().getTime());
+    yield* TestClock.setTime(FIXED_TIME.getTime());
     const result = yield* service.confirm({
       actorUserId,
       displayName: "  informati  ",

@@ -1,5 +1,6 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
@@ -47,9 +48,11 @@ export const AnnouncementHttpApiHandlers = HttpApiBuilder.group(
         Effect.gen(function* AnnouncementHttpApiHandlers() {
           const session = yield* requireAdminSession();
           const store = yield* AnnouncementStore;
+          const createdAt = new Date(yield* Clock.currentTimeMillis);
 
           yield* store
             .create({
+              createdAt,
               description: payload.description,
               title: payload.title,
               userId: session.user.id,

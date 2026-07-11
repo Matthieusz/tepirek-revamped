@@ -1,4 +1,5 @@
 // oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
@@ -74,10 +75,12 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
         Effect.gen(function* UserHttpApiHandlers() {
           const session = yield* requireAdminSession();
           const store = yield* UserStore;
+          const updatedAt = new Date(yield* Clock.currentTimeMillis);
           return yield* store
             .setRole({
               actorId: session.user.id,
               role: payload.role,
+              updatedAt,
               userId: payload.userId,
             })
             .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
@@ -87,9 +90,11 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
         Effect.gen(function* UserHttpApiHandlers() {
           const session = yield* requireAdminSession();
           const store = yield* UserStore;
+          const updatedAt = new Date(yield* Clock.currentTimeMillis);
           return yield* store
             .setVerified({
               actorId: session.user.id,
+              updatedAt,
               userId: payload.userId,
               verified: payload.verified,
             })
@@ -100,9 +105,11 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
         Effect.gen(function* UserHttpApiHandlers() {
           const session = yield* requireVerifiedSession();
           const store = yield* UserStore;
+          const updatedAt = new Date(yield* Clock.currentTimeMillis);
           return yield* store
             .updateProfile({
               name: payload.name,
+              updatedAt,
               userId: session.user.id,
             })
             .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
@@ -112,9 +119,11 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
         Effect.gen(function* UserHttpApiHandlers() {
           yield* requireAdminSession();
           const store = yield* UserStore;
+          const updatedAt = new Date(yield* Clock.currentTimeMillis);
           return yield* store
             .updateProfile({
               name: payload.name,
+              updatedAt,
               userId: payload.userId,
             })
             .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
@@ -133,8 +142,9 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
 
           if (valid) {
+            const updatedAt = new Date(yield* Clock.currentTimeMillis);
             yield* store
-              .markUserVerified(session.user.id)
+              .markUserVerified({ updatedAt, userId: session.user.id })
               .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
           }
 

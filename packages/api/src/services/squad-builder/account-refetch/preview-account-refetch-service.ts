@@ -19,6 +19,10 @@ import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import type { PreviewAccountRefetchInput } from "./preview-account-refetch.js";
 import { pendingRefetchPolicy } from "./preview-account-refetch.js";
 
+const currentDate = ClockRuntime.currentTimeMillis.pipe(
+  EffectRuntime.map((milliseconds) => new Date(milliseconds))
+);
+
 const addMinutes = (date: Date, minutes: number): Date =>
   new Date(date.getTime() + minutes * 60_000);
 
@@ -47,12 +51,17 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
       .scrapeProfileHtml(account.profileId, options)
       .pipe(
         EffectRuntime.catch((error) =>
-          AccountRefetchStoreService.use((store) =>
-            store.markRequestFailed({
-              errorTag: error._tag,
-              requestId: reservedRequest.requestId,
-            })
-          ).pipe(EffectRuntime.andThen(EffectRuntime.fail(error)))
+          EffectRuntime.gen(function* markRequestFailed() {
+            const completedAt = yield* currentDate;
+            yield* AccountRefetchStoreService.use((store) =>
+              store.markRequestFailed({
+                completedAt,
+                errorTag: error._tag,
+                requestId: reservedRequest.requestId,
+              })
+            );
+            return yield* EffectRuntime.fail(error);
+          })
         )
       );
 
@@ -60,27 +69,30 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
       scrapedProfile.metadata.creditsUsed ?? 1
     ).pipe(
       EffectRuntime.catch(() =>
-        AccountRefetchStoreService.use((store) =>
-          store.markRequestFailed({
-            errorTag: "FirecrawlResponseNotParseable",
-            requestId: reservedRequest.requestId,
-          })
-        ).pipe(
-          EffectRuntime.andThen(
-            EffectRuntime.fail(
-              new FirecrawlResponseNotParseable({
-                cause: new Error("Invalid Firecrawl creditsUsed"),
-                profileId: account.profileId,
-              })
-            )
-          )
-        )
+        EffectRuntime.gen(function* markInvalidResponseFailed() {
+          const completedAt = yield* currentDate;
+          yield* AccountRefetchStoreService.use((store) =>
+            store.markRequestFailed({
+              completedAt,
+              errorTag: "FirecrawlResponseNotParseable",
+              requestId: reservedRequest.requestId,
+            })
+          );
+          return yield* EffectRuntime.fail(
+            new FirecrawlResponseNotParseable({
+              cause: new Error("Invalid Firecrawl creditsUsed"),
+              profileId: account.profileId,
+            })
+          );
+        })
       )
     );
 
+    const completedAt = yield* currentDate;
     yield* AccountRefetchStoreService.use((store) =>
       store.markRequestSucceeded({
         cacheState: scrapedProfile.metadata.cacheState ?? null,
+        completedAt,
         creditsUsed,
         firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
         requestId: reservedRequest.requestId,

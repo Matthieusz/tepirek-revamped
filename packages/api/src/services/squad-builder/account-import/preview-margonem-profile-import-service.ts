@@ -21,6 +21,10 @@ import { AccountImportStoreService } from "./account-import-store-service.js";
 import { profileAccessStateToDuplicateError } from "./preview-margonem-profile-import.js";
 import type { PreviewMargonemProfileImportInput } from "./preview-margonem-profile-import.js";
 
+const currentDate = ClockRuntime.currentTimeMillis.pipe(
+  EffectRuntime.map((milliseconds) => new Date(milliseconds))
+);
+
 /** Preview a Margonem profile import without saving the account. */
 export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
   function* previewEffect(
@@ -56,12 +60,17 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
       .scrapeProfileHtml(profileId, options)
       .pipe(
         EffectRuntime.catch((error) =>
-          AccountImportStoreService.use((store) =>
-            store.markRequestFailed({
-              errorTag: error._tag,
-              requestId: reservedRequest.requestId,
-            })
-          ).pipe(EffectRuntime.andThen(EffectRuntime.fail(error)))
+          EffectRuntime.gen(function* markRequestFailed() {
+            const completedAt = yield* currentDate;
+            yield* AccountImportStoreService.use((store) =>
+              store.markRequestFailed({
+                completedAt,
+                errorTag: error._tag,
+                requestId: reservedRequest.requestId,
+              })
+            );
+            return yield* EffectRuntime.fail(error);
+          })
         )
       );
 
@@ -69,27 +78,30 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
       scrapedProfile.metadata.creditsUsed ?? 1
     ).pipe(
       EffectRuntime.catch(() =>
-        AccountImportStoreService.use((store) =>
-          store.markRequestFailed({
-            errorTag: "FirecrawlResponseNotParseable",
-            requestId: reservedRequest.requestId,
-          })
-        ).pipe(
-          EffectRuntime.andThen(
-            EffectRuntime.fail(
-              new FirecrawlResponseNotParseable({
-                cause: new Error("Invalid Firecrawl creditsUsed"),
-                profileId,
-              })
-            )
-          )
-        )
+        EffectRuntime.gen(function* markInvalidResponseFailed() {
+          const completedAt = yield* currentDate;
+          yield* AccountImportStoreService.use((store) =>
+            store.markRequestFailed({
+              completedAt,
+              errorTag: "FirecrawlResponseNotParseable",
+              requestId: reservedRequest.requestId,
+            })
+          );
+          return yield* EffectRuntime.fail(
+            new FirecrawlResponseNotParseable({
+              cause: new Error("Invalid Firecrawl creditsUsed"),
+              profileId,
+            })
+          );
+        })
       )
     );
 
+    const completedAt = yield* currentDate;
     yield* AccountImportStoreService.use((store) =>
       store.markRequestSucceeded({
         cacheState: scrapedProfile.metadata.cacheState ?? null,
+        completedAt,
         creditsUsed,
         firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
         requestId: reservedRequest.requestId,

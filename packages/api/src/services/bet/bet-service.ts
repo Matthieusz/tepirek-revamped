@@ -5,6 +5,7 @@ import type { Effect } from "effect/Effect";
 import type { BetError } from "./bet-errors.js";
 
 export interface CreateBetInput {
+  readonly createdAt: Date;
   readonly createdBy: string;
   readonly heroId: number;
   readonly userIds: readonly string[];

@@ -1,4 +1,5 @@
 // oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
@@ -58,9 +59,11 @@ export const BetHttpApiHandlers = HttpApiBuilder.group(
         Effect.gen(function* BetHttpApiHandlers() {
           const betService = yield* BetService;
           const session = yield* requireAdminSession();
+          const createdAt = new Date(yield* Clock.currentTimeMillis);
           return yield* mapBetError(
             "createBet",
             betService.createBet({
+              createdAt,
               createdBy: session.user.id,
               heroId: payload.heroId,
               userIds: payload.userIds,

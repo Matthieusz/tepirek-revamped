@@ -8,14 +8,7 @@
  *    call Effect services in the same test body. Wrapping every raw DB call in
  *    `Effect.promise()` adds noise without value.
  *
- * 2. **`vi.useFakeTimers()` control** — some services use `new Date()`
- *    internally (not `Clock.currentTimeMillis`). These tests control time via
- *    `vi.useFakeTimers()` + `vi.setSystemTime()`, which is incompatible with
- *    Effect's `TestClock`. `it.effect()` provides `TestClock` automatically;
- *    `it.live()` provides the real clock. Neither supports `vi.useFakeTimers()`
- *    style time manipulation at the JS-engine level.
- *
- * 3. **Promise-style assertions** — these tests use `await
+ * 2. **Promise-style assertions** — these tests use `await
  *    expect(...).rejects.toMatchObject(...)` and similar patterns that expect
  *    a plain Promise, not an Effect.
  *

@@ -12,6 +12,7 @@ import * as Layer from "effect/Layer";
 import { AnnouncementStoreError } from "./announcement-store-error.js";
 
 export interface CreateAnnouncementInput {
+  readonly createdAt: Date;
   readonly description: string;
   readonly title: string;
   readonly userId: string;
@@ -31,11 +32,11 @@ const persistenceQuery = <A>(
 
 const createWithDatabase =
   (database: EffectPgDatabase) =>
-  ({ description, title, userId }: CreateAnnouncementInput) =>
+  ({ createdAt, description, title, userId }: CreateAnnouncementInput) =>
     persistenceQuery(
       "createAnnouncement",
       database.insert(announcement).values({
-        createdAt: new Date(),
+        createdAt,
         description,
         title,
         userId,

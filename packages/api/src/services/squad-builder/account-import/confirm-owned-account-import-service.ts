@@ -51,6 +51,7 @@ export const confirm = EffectRuntime.fn("AccountImport.confirm")(
     return yield* AccountImportStoreService.use((store) =>
       store.createOwnedAccountFromPendingImport({
         actorUserId: input.actorUserId,
+        confirmedAt: now,
         displayName,
         pending,
       })
