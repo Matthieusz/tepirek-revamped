@@ -135,6 +135,18 @@ const makeSaveWithStoreService = (clock: Clock) =>
         })),
       });
 
+      const snapshotSquads: SharedSquadGroupCharactersSnapshot["squads"][number][] =
+        [];
+      for (const squad of validation.squads) {
+        if (squad.squadId === undefined) {
+          return yield* new EditorCannotChangeSquadStructure();
+        }
+        snapshotSquads.push({
+          characters: squad.characters,
+          squadId: squad.squadId,
+        });
+      }
+
       return yield* SquadGroupStoreService.use((store) =>
         store.saveSharedSquadGroupCharacters({
           actorUserId: input.actorUserId,
@@ -142,10 +154,7 @@ const makeSaveWithStoreService = (clock: Clock) =>
           now: clock.now(),
           snapshot: {
             groupId: input.groupId,
-            squads: validation.squads.map((squad) => ({
-              characters: squad.characters,
-              squadId: squad.squadId as SquadId,
-            })),
+            squads: snapshotSquads,
           },
         })
       );

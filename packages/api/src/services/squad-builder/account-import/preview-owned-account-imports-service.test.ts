@@ -3,6 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
 import { FirecrawlClientService } from "../firecrawl-client.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
 import { FirecrawlConfigService } from "../firecrawl-config.js";
@@ -25,6 +26,9 @@ it.effect(
   "previews owned account imports and persists successful lines through services",
   () => {
     const actorUserId = parseTestUserId();
+    const pendingImportId = Effect.runSync(
+      parsePendingMargonemAccountImportId(123)
+    );
     const firecrawl: FirecrawlClient = {
       scrapeProfileHtml: () =>
         Effect.succeed({
@@ -38,7 +42,7 @@ it.effect(
     };
     const store = makeAccountImportStoreServiceTestService({
       createPendingImport: (input) =>
-        Effect.succeed({ id: 123 as never, profileId: input.profileId }),
+        Effect.succeed({ id: pendingImportId, profileId: input.profileId }),
       findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),
       markRequestSucceeded: () => Effect.void,
       reserveRequest: (input) =>

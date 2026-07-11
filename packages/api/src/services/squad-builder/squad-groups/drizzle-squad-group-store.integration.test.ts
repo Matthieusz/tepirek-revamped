@@ -22,7 +22,13 @@ import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.js";
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import { computeMargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.js";
-import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
+import {
+  parseMargonemCharacterId,
+  parseMargonemProfileId,
+  parsePositiveLevel,
+} from "../../../domain/squad-builder/margonem-profile-id.js";
+import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
+import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
 import { makeApiSquadBuilderLayer } from "../../../server/effect-app.js";
 import { liveEffect } from "../../../test/effect.js";
 import { createVerifiedMember } from "../../../test/integration/builders.js";
@@ -64,6 +70,12 @@ const parseTestProfileId = (value: number) =>
 
 const parseTestCredits = (value: number) =>
   Effect.runSync(parseFirecrawlCreditCount(value));
+
+const parseTestCharacterId = (value: number) =>
+  Effect.runSync(parseMargonemCharacterId(value));
+
+const parseTestLevel = (value: number) =>
+  Effect.runSync(parsePositiveLevel(value));
 
 describe("DrizzleSquadGroupStoreService integration", () => {
   it("creates a private squad group for the actor", async () => {
@@ -344,8 +356,8 @@ describe("DrizzleSquadGroupStoreService integration", () => {
           jarunaCharacters: [
             {
               avatarUrl: null,
-              characterId: 1_296_628 as never,
-              level: 301 as never,
+              characterId: parseTestCharacterId(1_296_628),
+              level: parseTestLevel(301),
               name: "pendingchar",
               profession: "tracker",
               world: "jaruna",
@@ -411,7 +423,7 @@ describe("DrizzleSquadGroupStoreService integration", () => {
       apiTestLayer,
       AccountRefetchStoreService.use((store) =>
         store.getAccountForRefetch({
-          accountId: account.id as never,
+          accountId: parseTestAccountId(account.id),
           actorUserId: parseTestUserId(member.id),
         })
       )
@@ -421,8 +433,8 @@ describe("DrizzleSquadGroupStoreService integration", () => {
     const latestCharacters = [
       {
         avatarUrl: null,
-        characterId: 1_296_630 as never,
-        level: 301 as never,
+        characterId: parseTestCharacterId(1_296_630),
+        level: parseTestLevel(301),
         name: "newrefetch",
         profession: "tracker" as const,
         world: "jaruna" as const,
@@ -599,7 +611,9 @@ describe("DrizzleSquadGroupStoreService integration", () => {
       apiTestLayer,
       service.apply({
         actorUserId: parseTestUserId(member.id),
-        refetchPreviewId: pending.id as never,
+        refetchPreviewId: Effect.runSync(
+          parsePendingMargonemAccountRefetchId(pending.id)
+        ),
       })
     );
 
@@ -677,7 +691,9 @@ describe("DrizzleSquadGroupStoreService integration", () => {
       service.confirm({
         actorUserId: parseTestUserId(member.id),
         displayName: "  Confirmed Effect  ",
-        pendingImportId: pending.id as never,
+        pendingImportId: Effect.runSync(
+          parsePendingMargonemAccountImportId(pending.id)
+        ),
       })
     );
 

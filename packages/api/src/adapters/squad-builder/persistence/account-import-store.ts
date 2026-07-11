@@ -32,7 +32,10 @@ import {
   profileIdToNumber,
 } from "../../../domain/squad-builder/margonem-profile-id.js";
 import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.js";
-import { pendingImportIdToNumber } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
+import {
+  parsePendingMargonemAccountImportId,
+  pendingImportIdToNumber,
+} from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
 import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store-service.js";
 import type {
   CreateOwnedAccountFromPendingImportInput,
@@ -311,8 +314,12 @@ const createPendingImportWithDatabase =
             yield* persistenceQueryUnsafe(characterInsert);
           }
 
+          const pendingImportId = yield* parsePendingMargonemAccountImportId(
+            preview.id
+          ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
           return {
-            id: preview.id as PendingMargonemAccountImport["id"],
+            id: pendingImportId,
             profileId,
           };
         })

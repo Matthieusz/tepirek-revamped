@@ -2,7 +2,11 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { TestClock } from "effect/testing";
 
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
+import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
 import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import { apply } from "./apply-account-refetch-service.js";
@@ -14,6 +18,12 @@ const fixedNow = new Date("2026-06-29T12:00:00.000Z");
 
 it.effect("applies a pending account refetch and marks it applied", () => {
   const actorUserId = parseTestUserId();
+  const accountId = Effect.runSync(parseMargonemAccountId(123));
+  const displayName = Effect.runSync(parseAccountDisplayName("apply-refetch"));
+  const profileId = Effect.runSync(parseMargonemProfileId(7_298_897));
+  const refetchPreviewId = Effect.runSync(
+    parsePendingMargonemAccountRefetchId(456)
+  );
   const appliedRefetchIds: number[] = [];
   const store = makeAccountRefetchStoreServiceTestService({
     applyRefetchedAccount: (input) => {
@@ -35,20 +45,20 @@ it.effect("applies a pending account refetch and marks it applied", () => {
       expect(input.refetchPreviewId).toBe(456);
 
       return Effect.succeed({
-        accountId: 123 as never,
+        accountId,
         actorUserId: input.actorUserId,
         fetchedAt: new Date("2026-06-29T11:55:00.000Z"),
         id: input.refetchPreviewId,
         latestCharacters: [],
-        profileId: 7_298_897 as never,
+        profileId,
       });
     },
     getAccountForRefetch: (input) =>
       Effect.succeed({
         accountId: input.accountId,
         currentCharacters: [],
-        displayName: "apply-refetch" as never,
-        profileId: 7_298_897 as never,
+        displayName,
+        profileId,
       }),
     markPendingRefetchApplied: (input) => {
       expect(input.appliedAt).toEqual(fixedNow);
@@ -62,7 +72,7 @@ it.effect("applies a pending account refetch and marks it applied", () => {
     yield* TestClock.setTime(fixedNow.getTime());
     const applied = yield* service.apply({
       actorUserId,
-      refetchPreviewId: 456 as never,
+      refetchPreviewId,
     });
 
     expect(applied).toMatchObject({

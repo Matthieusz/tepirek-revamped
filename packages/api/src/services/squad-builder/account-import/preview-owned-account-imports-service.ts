@@ -86,10 +86,11 @@ const defaultDisplayNameFor = (
     parseAccountDisplayName(`Profil ${profileIdToNumber(profileId)}`)
   );
 
-  // SAFETY: the fallback template always produces a valid display name.
-  return fallback._tag === "Success"
-    ? fallback.value
-    : (suggestedAccountName as AccountDisplayName);
+  if (fallback._tag === "Success") {
+    return fallback.value;
+  }
+
+  throw new Error("Generated profile display name violated its invariant");
 };
 
 const accessStateToLineError = (

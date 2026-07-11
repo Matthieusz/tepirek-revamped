@@ -3,6 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { parseMargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
@@ -31,6 +32,9 @@ it.effect("accepts an account access invite as the invited user", () => {
   const ownerUserId = parseTestUserId("effect-account-respond-owner");
   const accessId = parseTestAccessId();
   const accountId = parseTestAccountId();
+  const displayName = Effect.runSync(
+    parseAccountDisplayName("Respond account")
+  );
   const store = makeAccountSharingStoreServiceTestService({
     respondToAccountAccessInvite: (input) => {
       expect(input).toMatchObject({
@@ -42,7 +46,7 @@ it.effect("accepts an account access invite as the invited user", () => {
 
       return Effect.succeed({
         accessId,
-        accountDisplayName: "Respond account" as never,
+        accountDisplayName: displayName,
         accountId,
         createdAt: fixedClock.now(),
         generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",

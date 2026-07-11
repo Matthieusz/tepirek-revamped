@@ -4,7 +4,11 @@ import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
+import {
+  parseMargonemCharacterId,
+  parseMargonemProfileId,
+  parsePositiveLevel,
+} from "../../../domain/squad-builder/margonem-profile-id.js";
 import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
 import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountImportStoreService } from "./account-import-store-service.js";
@@ -31,6 +35,8 @@ it.effect("confirms a pending owned account import through services", () => {
   const pendingImportId = parseTestPendingId();
   const accountId = parseTestAccountId();
   const profileId = parseTestProfileId();
+  const characterId = Effect.runSync(parseMargonemCharacterId(1_296_625));
+  const level = Effect.runSync(parsePositiveLevel(315));
   const service = { confirm };
   const store = makeAccountImportStoreServiceTestService({
     createOwnedAccountFromPendingImport: ({ displayName, pending }) =>
@@ -50,8 +56,8 @@ it.effect("confirms a pending owned account import through services", () => {
         jarunaCharacters: [
           {
             avatarUrl: null,
-            characterId: 1_296_625 as never,
-            level: 315 as never,
+            characterId,
+            level,
             name: "informati",
             profession: "tracker",
             world: "jaruna",

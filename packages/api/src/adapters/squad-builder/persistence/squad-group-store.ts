@@ -35,7 +35,6 @@ import {
   appUserIdToString,
   parseAppUserId,
 } from "../../../domain/squad-builder/app-user-id.js";
-import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
 import {
   margonemAccountIdToNumber,
   parseMargonemAccountId,
@@ -1134,6 +1133,10 @@ const getSquadGroupDetailWithDatabase =
           placement.accountDisplayName
         ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
+        const accountId = yield* parseMargonemAccountId(
+          placement.accountId
+        ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
         const level = yield* parsePositiveLevel(placement.level).pipe(
           Effect.catch((error) => failPersistence(operation, error))
         );
@@ -1148,7 +1151,7 @@ const getSquadGroupDetailWithDatabase =
 
         current.push({
           accountDisplayName,
-          accountId: placement.accountId as MargonemAccountId,
+          accountId,
           accountOwnerUserImage: placement.accountOwnerUserImage,
           accountOwnerUserName: placement.accountOwnerUserName,
           avatarUrl: placement.avatarUrl,

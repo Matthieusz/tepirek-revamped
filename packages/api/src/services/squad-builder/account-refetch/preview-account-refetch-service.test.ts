@@ -2,11 +2,21 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import {
+  parseMargonemCharacterId,
+  parseMargonemProfileId,
+  parsePositiveLevel,
+} from "../../../domain/squad-builder/margonem-profile-id.js";
+import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
 import { FirecrawlClientService } from "../firecrawl-client.js";
 import type { FirecrawlClient } from "../firecrawl-client.js";
-import type { FirecrawlCreditCount } from "../firecrawl-config.js";
-import { FirecrawlConfigService } from "../firecrawl-config.js";
+import {
+  FirecrawlConfigService,
+  parseFirecrawlCreditCount,
+} from "../firecrawl-config.js";
 import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
 import { preview } from "./preview-account-refetch-service.js";
@@ -24,6 +34,17 @@ const htmlWithUpdatedJarunaCharacter = `
 
 it.effect("previews account refetch and stores the pending diff", () => {
   const actorUserId = parseTestUserId();
+  const accountId = Effect.runSync(parseMargonemAccountId(123));
+  const displayName = Effect.runSync(parseAccountDisplayName("informati"));
+  const firecrawlCreditsUsed = Effect.runSync(parseFirecrawlCreditCount(1));
+  const level = Effect.runSync(parsePositiveLevel(315));
+  const margonemCharacterId = Effect.runSync(
+    parseMargonemCharacterId(1_296_625)
+  );
+  const profileId = Effect.runSync(parseMargonemProfileId(7_298_897));
+  const refetchPreviewId = Effect.runSync(
+    parsePendingMargonemAccountRefetchId(456)
+  );
   const createdPendingIds: number[] = [];
   const firecrawl: FirecrawlClient = {
     scrapeProfileHtml: () =>
@@ -41,7 +62,7 @@ it.effect("previews account refetch and stores the pending diff", () => {
       expect(input.latestCharacters).toHaveLength(1);
       expect(input.diff.changed).toHaveLength(1);
       createdPendingIds.push(456);
-      return Effect.succeed({ id: 456 as never });
+      return Effect.succeed({ id: refetchPreviewId });
     },
     getAccountForRefetch: (input) =>
       Effect.succeed({
@@ -51,15 +72,15 @@ it.effect("previews account refetch and stores the pending diff", () => {
             affectedSquadCount: 0,
             avatarUrl: null,
             databaseCharacterId: 10,
-            level: 315 as never,
-            margonemCharacterId: 1_296_625 as never,
+            level,
+            margonemCharacterId,
             name: "informati",
             profession: "tracker",
             world: "jaruna",
           },
         ],
-        displayName: "informati" as never,
-        profileId: 7_298_897 as never,
+        displayName,
+        profileId,
       }),
     markRequestSucceeded: () => Effect.void,
     reserveRequest: (input) =>
@@ -77,13 +98,13 @@ it.effect("previews account refetch and stores the pending diff", () => {
 
   return Effect.gen(function* previewRefetchEffect() {
     const refetchPreview = yield* service.preview({
-      accountId: 123 as never,
+      accountId,
       actorUserId,
     });
 
     expect(refetchPreview).toMatchObject({
       accountId: 123,
-      firecrawlCreditsUsed: 1 as FirecrawlCreditCount,
+      firecrawlCreditsUsed,
       generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
       refetchPreviewId: 456,
     });

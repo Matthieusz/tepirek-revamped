@@ -2,8 +2,10 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
@@ -15,6 +17,8 @@ const parseTestUserId = (value: string) =>
   Effect.runSync(parseAppUserId(value));
 
 const parseTestAccountId = () => Effect.runSync(parseMargonemAccountId(123));
+const displayName = Effect.runSync(parseAccountDisplayName("Search account"));
+const profileId = Effect.runSync(parseMargonemProfileId(7_298_897));
 
 it.effect("searches invite targets for an account owner", () => {
   const actorUserId = parseTestUserId("effect-account-search-owner");
@@ -27,9 +31,9 @@ it.effect("searches invite targets for an account owner", () => {
 
       return Effect.succeed({
         accountId: input.accountId,
-        displayName: "Search account" as never,
+        displayName,
         ownerUserId: actorUserId,
-        profileId: 7_298_897 as never,
+        profileId,
       });
     },
     searchInviteTargets: (input) => {

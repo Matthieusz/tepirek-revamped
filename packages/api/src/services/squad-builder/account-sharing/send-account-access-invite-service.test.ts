@@ -3,9 +3,11 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
 import { parseMargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
 import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
 import { AccountSharingStoreService } from "./account-sharing-store-service.js";
 import {
@@ -21,6 +23,8 @@ const parseTestAccountId = () => Effect.runSync(parseMargonemAccountId(123));
 const parseTestAccessId = () =>
   Effect.runSync(parseMargonemAccountAccessId(456));
 
+const profileId = Effect.runSync(parseMargonemProfileId(7_298_897));
+
 const fixedClock = {
   now: () => new Date("2026-06-29T12:00:00.000Z"),
 };
@@ -30,6 +34,7 @@ it.effect("sends an account access invite for a verified target", () => {
   const targetUserId = parseTestUserId("effect-account-send-target");
   const accountId = parseTestAccountId();
   const accessId = parseTestAccessId();
+  const displayName = Effect.runSync(parseAccountDisplayName("Send account"));
   const store = makeAccountSharingStoreServiceTestService({
     findOwnedAccountForSharing: (input) => {
       expect(input.accountId).toBe(accountId);
@@ -37,9 +42,9 @@ it.effect("sends an account access invite for a verified target", () => {
 
       return Effect.succeed({
         accountId: input.accountId,
-        displayName: "Send account" as never,
+        displayName,
         ownerUserId: actorUserId,
-        profileId: 7_298_897 as never,
+        profileId,
       });
     },
     findVerifiedInviteTarget: (input) => {
@@ -61,7 +66,7 @@ it.effect("sends an account access invite for a verified target", () => {
 
       return Effect.succeed({
         accessId,
-        accountDisplayName: "Send account" as never,
+        accountDisplayName: displayName,
         accountId,
         createdAt: fixedClock.now(),
         generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
@@ -98,13 +103,14 @@ it.effect("sends an account access invite for a verified target", () => {
 it.effect("rejects self-invites before resolving the target", () => {
   const actorUserId = parseTestUserId("effect-account-self-owner");
   const accountId = parseTestAccountId();
+  const displayName = Effect.runSync(parseAccountDisplayName("Self account"));
   const store = makeAccountSharingStoreServiceTestService({
     findOwnedAccountForSharing: () =>
       Effect.succeed({
         accountId,
-        displayName: "Self account" as never,
+        displayName,
         ownerUserId: actorUserId,
-        profileId: 7_298_897 as never,
+        profileId,
       }),
   });
   const testLayer = accountAccessInvitesLayer.pipe(

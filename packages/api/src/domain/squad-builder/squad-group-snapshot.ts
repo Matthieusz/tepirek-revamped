@@ -23,11 +23,16 @@ import type {
 } from "./squad-name.js";
 
 /** Position of a squad inside a group snapshot. */
-export const SquadPosition = Schema.Number.pipe(Schema.brand("SquadPosition"));
+const Position = Schema.Number.check(
+  Schema.isInt(),
+  Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 0 })
+);
+
+export const SquadPosition = Position.pipe(Schema.brand("SquadPosition"));
 export type SquadPosition = typeof SquadPosition.Type;
 
 /** Position of a character inside one squad. */
-export const CharacterPosition = Schema.Number.pipe(
+export const CharacterPosition = Position.pipe(
   Schema.brand("CharacterPosition")
 );
 export type CharacterPosition = typeof CharacterPosition.Type;
@@ -125,19 +130,21 @@ export interface ValidateSquadGroupSnapshotInput {
 
 const maxCharactersPerSquad = 10;
 
-const parsePosition = (
-  input: number
-): Effect.Effect<number, SquadGroupValidationError> => {
-  if (!Number.isSafeInteger(input) || input < 0) {
-    return Effect.fail({
-      _tag: "InvalidSquadSnapshot",
-      message:
-        "Pozycje składów i postaci muszą być nieujemnymi liczbami całkowitymi",
-    });
-  }
+const invalidPosition = () => ({
+  _tag: "InvalidSquadSnapshot" as const,
+  message:
+    "Pozycje składów i postaci muszą być nieujemnymi liczbami całkowitymi",
+});
 
-  return Effect.succeed(input);
-};
+const parseSquadPosition = (input: number) =>
+  Schema.decodeUnknownEffect(SquadPosition)(input).pipe(
+    Effect.mapError(invalidPosition)
+  );
+
+const parseCharacterPosition = (input: number) =>
+  Schema.decodeUnknownEffect(CharacterPosition)(input).pipe(
+    Effect.mapError(invalidPosition)
+  );
 
 /** Validate a squad group snapshot against accessible Jaruna characters and group rules. */
 export const validateSquadGroupSnapshot = (
@@ -165,7 +172,7 @@ export const validateSquadGroupSnapshot = (
       }
 
       const parsedSquadName = yield* parseSquadName(squad.name);
-      const parsedSquadPosition = yield* parsePosition(squad.position);
+      const parsedSquadPosition = yield* parseSquadPosition(squad.position);
 
       if (squad.characters.length > maxCharactersPerSquad) {
         return yield* Effect.fail({
@@ -180,7 +187,7 @@ export const validateSquadGroupSnapshot = (
       const parsedCharacters: SquadCharacterDraftPlacement[] = [];
 
       for (const character of squad.characters) {
-        const parsedCharacterPosition = yield* parsePosition(
+        const parsedCharacterPosition = yield* parseCharacterPosition(
           character.position
         );
 
@@ -227,19 +234,17 @@ export const validateSquadGroupSnapshot = (
         squadCharacterIds.add(character.characterId);
         groupCharacterIds.add(character.characterId);
         squadAccountIds.add(availableCharacter.accountId);
-        // SAFETY: parsedCharacterPosition is a safe non-negative integer from parsePosition.
         parsedCharacters.push({
           characterId: character.characterId,
-          position: parsedCharacterPosition as CharacterPosition,
+          position: parsedCharacterPosition,
         });
       }
 
-      // SAFETY: parsedSquadPosition is a safe non-negative integer from parsePosition.
       parsedSquads.push({
         characters: parsedCharacters,
         clientKey: squad.clientKey,
         name: parsedSquadName,
-        position: parsedSquadPosition as SquadPosition,
+        position: parsedSquadPosition,
         ...(squad.squadId === undefined ? {} : { squadId: squad.squadId }),
       });
     }
