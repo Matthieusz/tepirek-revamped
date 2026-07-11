@@ -67,7 +67,6 @@ import {
   namedStoreMethod,
   parsePersistedAppUserId,
   persistenceQuery,
-  persistenceQueryUnsafe,
 } from "./persistence-query.js";
 import type { EffectSquadGroupPersistenceOperation } from "./persistence-query.js";
 
@@ -394,7 +393,7 @@ const upsertAccountAccessInviteWithDatabase =
               )
             )
             .limit(1);
-          const existingRows = yield* persistenceQueryUnsafe(existingSelect);
+          const existingRows = yield* existingSelect;
 
           const [existing] = existingRows;
 
@@ -408,7 +407,7 @@ const upsertAccountAccessInviteWithDatabase =
                 userId: invitedUser,
               })
               .returning({ id: margonemAccountAccess.id });
-            const insertedRows = yield* persistenceQueryUnsafe(insert);
+            const insertedRows = yield* insert;
 
             const [inserted] = insertedRows;
 
@@ -438,7 +437,7 @@ const upsertAccountAccessInviteWithDatabase =
             .set({ invitedByUserId: owner, status: "pending", updatedAt: now })
             .where(eq(margonemAccountAccess.id, existing.id))
             .returning({ id: margonemAccountAccess.id });
-          const updatedRows = yield* persistenceQueryUnsafe(update);
+          const updatedRows = yield* update;
 
           const [updated] = updatedRows;
 
@@ -696,7 +695,7 @@ const respondToAccountAccessInviteWithDatabase =
             .from(margonemAccountAccess)
             .where(eq(margonemAccountAccess.id, accessId))
             .limit(1);
-          const existingRows = yield* persistenceQueryUnsafe(existingSelect);
+          const existingRows = yield* existingSelect;
 
           const [existing] = existingRows;
 
@@ -727,7 +726,7 @@ const respondToAccountAccessInviteWithDatabase =
             .set({ status: nextStatus, updatedAt: now })
             .where(eq(margonemAccountAccess.id, existing.id))
             .returning({ id: margonemAccountAccess.id });
-          const updatedRows = yield* persistenceQueryUnsafe(update);
+          const updatedRows = yield* update;
 
           const [updated] = updatedRows;
 
@@ -781,7 +780,7 @@ const revokeAccountAccessWithDatabase =
             .from(margonemAccountAccess)
             .where(eq(margonemAccountAccess.id, accessIdNumber))
             .limit(1);
-          const accessRows = yield* persistenceQueryUnsafe(accessSelect);
+          const accessRows = yield* accessSelect;
 
           const [access] = accessRows;
 
@@ -794,7 +793,7 @@ const revokeAccountAccessWithDatabase =
             .from(margonemAccount)
             .where(eq(margonemAccount.id, access.accountId))
             .limit(1);
-          const accountRows = yield* persistenceQueryUnsafe(accountSelect);
+          const accountRows = yield* accountSelect;
 
           const [account] = accountRows;
 
@@ -817,12 +816,10 @@ const revokeAccountAccessWithDatabase =
             });
           }
 
-          yield* persistenceQueryUnsafe(
-            tx
-              .update(margonemAccountAccess)
-              .set({ status: "revoked", updatedAt: now })
-              .where(eq(margonemAccountAccess.id, accessIdNumber))
-          );
+          yield* tx
+            .update(margonemAccountAccess)
+            .set({ status: "revoked", updatedAt: now })
+            .where(eq(margonemAccountAccess.id, accessIdNumber));
 
           let removedSquadCharacterCount = 0;
 
@@ -831,8 +828,7 @@ const revokeAccountAccessWithDatabase =
               .select({ id: margonemCharacter.id })
               .from(margonemCharacter)
               .where(eq(margonemCharacter.accountId, access.accountId));
-            const accountCharacters =
-              yield* persistenceQueryUnsafe(characterSelect);
+            const accountCharacters = yield* characterSelect;
 
             const accountCharacterIds = accountCharacters.map(
               (character) => character.id
@@ -852,8 +848,7 @@ const revokeAccountAccessWithDatabase =
                     eq(squadGroup.ownerUserId, access.userId)
                   )
                 );
-              const affectedGroups =
-                yield* persistenceQueryUnsafe(affectedGroupSelect);
+              const affectedGroups = yield* affectedGroupSelect;
 
               const affectedGroupIds = [
                 ...new Set(affectedGroups.map((group) => group.groupId)),
@@ -869,18 +864,14 @@ const revokeAccountAccessWithDatabase =
                     )
                   )
                   .returning({ id: squadCharacter.id });
-                const removedPlacements = yield* persistenceQueryUnsafe(
-                  removedPlacementsDelete
-                );
+                const removedPlacements = yield* removedPlacementsDelete;
 
                 removedSquadCharacterCount = removedPlacements.length;
 
-                yield* persistenceQueryUnsafe(
-                  tx
-                    .update(squadGroup)
-                    .set({ updatedAt: now })
-                    .where(inArray(squadGroup.id, affectedGroupIds))
-                );
+                yield* tx
+                  .update(squadGroup)
+                  .set({ updatedAt: now })
+                  .where(inArray(squadGroup.id, affectedGroupIds));
               }
             }
           }

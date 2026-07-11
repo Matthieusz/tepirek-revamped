@@ -29,8 +29,6 @@ const persistenceQuery = <A, E, R>(
     )
   );
 
-const persistenceQueryUnsafe = <A, E, R>(self: Effect.Effect<A, E, R>) => self;
-
 const getHeroEventWithDatabase =
   (database: EffectPgDatabase) => (heroId: number, message: string) =>
     Effect.gen(function* getHeroEvent() {
@@ -87,20 +85,16 @@ const distributeGoldWithDatabase =
         "distributeGold",
         database.transaction((tx) =>
           Effect.gen(function* distributeGoldTransaction() {
-            yield* persistenceQueryUnsafe(
-              tx
-                .update(userStats)
-                .set({
-                  earnings: sql`ROUND((${userStats.points}) * ${storedPointWorth}, 2)`,
-                })
-                .where(eq(userStats.heroId, heroId))
-            );
-            yield* persistenceQueryUnsafe(
-              tx
-                .update(hero)
-                .set({ pointWorth: storedPointWorth })
-                .where(eq(hero.id, heroId))
-            );
+            yield* tx
+              .update(userStats)
+              .set({
+                earnings: sql`ROUND((${userStats.points}) * ${storedPointWorth}, 2)`,
+              })
+              .where(eq(userStats.heroId, heroId));
+            yield* tx
+              .update(hero)
+              .set({ pointWorth: storedPointWorth })
+              .where(eq(hero.id, heroId));
           })
         )
       );

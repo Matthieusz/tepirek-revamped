@@ -124,7 +124,6 @@ import {
   parsePersistedAppUserId,
   parsePersistedSquadGroupName,
   persistenceQuery,
-  persistenceQueryUnsafe,
 } from "./persistence-query.js";
 import type { EffectSquadGroupPersistenceOperation } from "./persistence-query.js";
 
@@ -479,7 +478,7 @@ const upsertSquadGroupEditorInviteWithDatabase =
               )
             )
             .limit(1);
-          const existingRows = yield* persistenceQueryUnsafe(existingSelect);
+          const existingRows = yield* existingSelect;
 
           const [existing] = existingRows;
 
@@ -493,7 +492,7 @@ const upsertSquadGroupEditorInviteWithDatabase =
                 status: "pending",
               })
               .returning({ id: squadGroupInvitation.id });
-            const insertedRows = yield* persistenceQueryUnsafe(insert);
+            const insertedRows = yield* insert;
 
             const [inserted] = insertedRows;
 
@@ -523,7 +522,7 @@ const upsertSquadGroupEditorInviteWithDatabase =
             .set({ invitedByUserId: owner, status: "pending", updatedAt: now })
             .where(eq(squadGroupInvitation.id, existing.id))
             .returning({ id: squadGroupInvitation.id });
-          const updatedRows = yield* persistenceQueryUnsafe(update);
+          const updatedRows = yield* update;
 
           const [updated] = updatedRows;
 
@@ -587,7 +586,7 @@ const respondToSquadGroupInviteWithDatabase =
             .from(squadGroupInvitation)
             .where(eq(squadGroupInvitation.id, invitationIdNumber))
             .limit(1);
-          const existingRows = yield* persistenceQueryUnsafe(existingSelect);
+          const existingRows = yield* existingSelect;
 
           const [existing] = existingRows;
 
@@ -618,7 +617,7 @@ const respondToSquadGroupInviteWithDatabase =
             .set({ status: nextStatus, updatedAt: now })
             .where(eq(squadGroupInvitation.id, existing.id))
             .returning({ id: squadGroupInvitation.id });
-          const updatedRows = yield* persistenceQueryUnsafe(update);
+          const updatedRows = yield* update;
 
           const [updated] = updatedRows;
 
@@ -676,7 +675,7 @@ const revokeSquadGroupEditorWithDatabase =
             )
             .where(eq(squadGroupInvitation.id, invitationIdNumber))
             .limit(1);
-          const existingRows = yield* persistenceQueryUnsafe(existingSelect);
+          const existingRows = yield* existingSelect;
 
           const [existing] = existingRows;
 
@@ -704,7 +703,7 @@ const revokeSquadGroupEditorWithDatabase =
             .set({ status: "revoked", updatedAt: now })
             .where(eq(squadGroupInvitation.id, invitationIdNumber))
             .returning({ id: squadGroupInvitation.id });
-          const updatedRows = yield* persistenceQueryUnsafe(update);
+          const updatedRows = yield* update;
 
           const [updated] = updatedRows;
 
@@ -1364,10 +1363,8 @@ const saveSharedSquadGroupCharactersWithDatabase =
       const actor = appUserIdToString(actorUserId);
       const transaction = database.transaction((tx) =>
         Effect.gen(function* saveSharedSquadGroupCharactersTransaction() {
-          yield* persistenceQueryUnsafe(
-            tx.execute(
-              sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
-            )
+          yield* tx.execute(
+            sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
           );
 
           const groupSelect = tx
@@ -1375,7 +1372,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
             .from(squadGroup)
             .where(eq(squadGroup.id, groupIdNumber))
             .limit(1);
-          const groupRows = yield* persistenceQueryUnsafe(groupSelect);
+          const groupRows = yield* groupSelect;
 
           const [group] = groupRows;
 
@@ -1395,7 +1392,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
                 )
               )
               .limit(1);
-            const inviteRows = yield* persistenceQueryUnsafe(inviteSelect);
+            const inviteRows = yield* inviteSelect;
 
             if (inviteRows[0] === undefined) {
               return new ActorCannotEditSquadGroup();
@@ -1406,8 +1403,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
             .select({ id: squad.id })
             .from(squad)
             .where(eq(squad.squadGroupId, groupIdNumber));
-          const existingSquads =
-            yield* persistenceQueryUnsafe(existingSquadSelect);
+          const existingSquads = yield* existingSquadSelect;
 
           const existingSquadIds = new Set(existingSquads.map((row) => row.id));
 
@@ -1421,11 +1417,9 @@ const saveSharedSquadGroupCharactersWithDatabase =
             }
           }
 
-          yield* persistenceQueryUnsafe(
-            tx
-              .delete(squadCharacter)
-              .where(eq(squadCharacter.squadGroupId, groupIdNumber))
-          );
+          yield* tx
+            .delete(squadCharacter)
+            .where(eq(squadCharacter.squadGroupId, groupIdNumber));
 
           const characterIds = snapshot.squads.flatMap((item) =>
             item.characters.map((character) => character.characterId)
@@ -1443,8 +1437,7 @@ const saveSharedSquadGroupCharactersWithDatabase =
               })
               .from(margonemCharacter)
               .where(inArray(margonemCharacter.id, characterIds));
-            const characterRows =
-              yield* persistenceQueryUnsafe(characterSelect);
+            const characterRows = yield* characterSelect;
 
             for (const character of characterRows) {
               charactersById.set(character.id, {
@@ -1476,17 +1469,13 @@ const saveSharedSquadGroupCharactersWithDatabase =
           }
 
           if (placements.length > 0) {
-            yield* persistenceQueryUnsafe(
-              tx.insert(squadCharacter).values(placements)
-            );
+            yield* tx.insert(squadCharacter).values(placements);
           }
 
-          yield* persistenceQueryUnsafe(
-            tx
-              .update(squadGroup)
-              .set({ updatedAt: now })
-              .where(eq(squadGroup.id, groupIdNumber))
-          );
+          yield* tx
+            .update(squadGroup)
+            .set({ updatedAt: now })
+            .where(eq(squadGroup.id, groupIdNumber));
 
           return { _tag: "Saved" as const };
         })
@@ -1545,10 +1534,8 @@ const saveSquadGroupSnapshotWithDatabase =
 
       const transaction = database.transaction((tx) =>
         Effect.gen(function* saveSquadGroupSnapshotTransaction() {
-          yield* persistenceQueryUnsafe(
-            tx.execute(
-              sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
-            )
+          yield* tx.execute(
+            sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
           );
 
           const groupSelect = tx
@@ -1556,7 +1543,7 @@ const saveSquadGroupSnapshotWithDatabase =
             .from(squadGroup)
             .where(eq(squadGroup.id, groupIdNumber))
             .limit(1);
-          const groupRows = yield* persistenceQueryUnsafe(groupSelect);
+          const groupRows = yield* groupSelect;
 
           const [group] = groupRows;
 
@@ -1568,19 +1555,15 @@ const saveSquadGroupSnapshotWithDatabase =
             return new ActorDoesNotOwnSquadGroup();
           }
 
-          yield* persistenceQueryUnsafe(
-            tx
-              .update(squadGroup)
-              .set({
-                name: squadGroupNameToString(snapshot.name),
-                updatedAt: now,
-              })
-              .where(eq(squadGroup.id, groupIdNumber))
-          );
+          yield* tx
+            .update(squadGroup)
+            .set({
+              name: squadGroupNameToString(snapshot.name),
+              updatedAt: now,
+            })
+            .where(eq(squadGroup.id, groupIdNumber));
 
-          yield* persistenceQueryUnsafe(
-            tx.delete(squad).where(eq(squad.squadGroupId, groupIdNumber))
-          );
+          yield* tx.delete(squad).where(eq(squad.squadGroupId, groupIdNumber));
 
           for (const squadSnapshot of snapshot.squads) {
             const insertSquad = tx
@@ -1592,8 +1575,7 @@ const saveSquadGroupSnapshotWithDatabase =
                 updatedAt: now,
               })
               .returning({ id: squad.id });
-            const insertedSquadRows =
-              yield* persistenceQueryUnsafe(insertSquad);
+            const insertedSquadRows = yield* insertSquad;
 
             const [insertedSquad] = insertedSquadRows;
 
@@ -1633,9 +1615,7 @@ const saveSquadGroupSnapshotWithDatabase =
               });
             }
 
-            yield* persistenceQueryUnsafe(
-              tx.insert(squadCharacter).values(placementRows)
-            );
+            yield* tx.insert(squadCharacter).values(placementRows);
           }
 
           return { _tag: "Saved" as const };

@@ -40,8 +40,6 @@ const persistenceQuery = <A, E, R>(
     )
   );
 
-const persistenceQueryUnsafe = <A, E, R>(self: Effect.Effect<A, E, R>) => self;
-
 const getHeroEventWithDatabase =
   (database: EffectPgDatabase) => (heroId: number, message: string) =>
     Effect.gen(function* getHeroEvent() {
@@ -124,24 +122,20 @@ const attachMembersToBetsWithDatabase =
 
 const refreshEarningsForHero = (tx: TransactionDatabase, heroId: number) =>
   Effect.gen(function* refreshEarningsForHero() {
-    const rows = yield* persistenceQueryUnsafe(
-      tx
-        .select({ pointWorth: hero.pointWorth })
-        .from(hero)
-        .where(eq(hero.id, heroId))
-    );
+    const rows = yield* tx
+      .select({ pointWorth: hero.pointWorth })
+      .from(hero)
+      .where(eq(hero.id, heroId));
     const [heroRow] = rows;
     if (heroRow === undefined || Number(heroRow.pointWorth) <= 0) {
       return;
     }
-    yield* persistenceQueryUnsafe(
-      tx
-        .update(userStats)
-        .set({
-          earnings: sql`ROUND((${userStats.points}) * ${heroRow.pointWorth}, 2)`,
-        })
-        .where(eq(userStats.heroId, heroId))
-    );
+    yield* tx
+      .update(userStats)
+      .set({
+        earnings: sql`ROUND((${userStats.points}) * ${heroRow.pointWorth}, 2)`,
+      })
+      .where(eq(userStats.heroId, heroId));
   });
 
 const createBetWithDatabase =
@@ -160,57 +154,47 @@ const createBetWithDatabase =
         "createBet",
         database.transaction((tx) =>
           Effect.gen(function* createBetTransaction() {
-            const insertedBets = yield* persistenceQueryUnsafe(
-              tx
-                .insert(heroBet)
-                .values({
-                  createdAt,
-                  createdBy,
-                  heroId,
-                  memberCount,
-                })
-                .returning()
-            );
+            const insertedBets = yield* tx
+              .insert(heroBet)
+              .values({
+                createdAt,
+                createdBy,
+                heroId,
+                memberCount,
+              })
+              .returning();
             const [bet] = insertedBets;
             if (bet === undefined) {
               return yield* new BetBadRequest({
                 message: "Nie udało się utworzyć obstawienia",
               });
             }
-            yield* persistenceQueryUnsafe(
-              tx.insert(heroBetMember).values(
+            yield* tx.insert(heroBetMember).values(
+              memberUserIds.map((userId) => ({
+                heroBetId: bet.id,
+                points: pointsPerMember,
+                userId,
+              }))
+            );
+            yield* tx
+              .insert(userStats)
+              .values(
                 memberUserIds.map((userId) => ({
-                  heroBetId: bet.id,
+                  bets: 1,
+                  earnings: "0",
+                  eventId: heroData.eventId,
+                  heroId,
                   points: pointsPerMember,
                   userId,
                 }))
               )
-            );
-            yield* persistenceQueryUnsafe(
-              tx
-                .insert(userStats)
-                .values(
-                  memberUserIds.map((userId) => ({
-                    bets: 1,
-                    earnings: "0",
-                    eventId: heroData.eventId,
-                    heroId,
-                    points: pointsPerMember,
-                    userId,
-                  }))
-                )
-                .onConflictDoUpdate({
-                  set: {
-                    bets: sql`${userStats.bets} + 1`,
-                    points: sql`${userStats.points} + ${pointsPerMember}`,
-                  },
-                  target: [
-                    userStats.userId,
-                    userStats.eventId,
-                    userStats.heroId,
-                  ],
-                })
-            );
+              .onConflictDoUpdate({
+                set: {
+                  bets: sql`${userStats.bets} + 1`,
+                  points: sql`${userStats.points} + ${pointsPerMember}`,
+                },
+                target: [userStats.userId, userStats.eventId, userStats.heroId],
+              });
             yield* refreshEarningsForHero(tx, heroId);
             return bet;
           })
@@ -249,25 +233,21 @@ const deleteBetWithDatabase = (database: EffectPgDatabase) => (id: number) =>
       database.transaction((tx) =>
         Effect.gen(function* deleteBetTransaction() {
           if (memberUserIds.length > 0) {
-            yield* persistenceQueryUnsafe(
-              tx
-                .update(userStats)
-                .set({
-                  bets: sql`${userStats.bets} - 1`,
-                  points: sql`${userStats.points} - COALESCE((SELECT ${heroBetMember.points} FROM ${heroBetMember} WHERE ${heroBetMember.heroBetId} = ${id} AND ${heroBetMember.userId} = ${userStats.userId} LIMIT 1), 0)`,
-                })
-                .where(
-                  and(
-                    eq(userStats.eventId, heroData.eventId),
-                    eq(userStats.heroId, betData.heroId),
-                    inArray(userStats.userId, memberUserIds)
-                  )
+            yield* tx
+              .update(userStats)
+              .set({
+                bets: sql`${userStats.bets} - 1`,
+                points: sql`${userStats.points} - COALESCE((SELECT ${heroBetMember.points} FROM ${heroBetMember} WHERE ${heroBetMember.heroBetId} = ${id} AND ${heroBetMember.userId} = ${userStats.userId} LIMIT 1), 0)`,
+              })
+              .where(
+                and(
+                  eq(userStats.eventId, heroData.eventId),
+                  eq(userStats.heroId, betData.heroId),
+                  inArray(userStats.userId, memberUserIds)
                 )
-            );
+              );
           }
-          yield* persistenceQueryUnsafe(
-            tx.delete(heroBet).where(eq(heroBet.id, id))
-          );
+          yield* tx.delete(heroBet).where(eq(heroBet.id, id));
           yield* refreshEarningsForHero(tx, betData.heroId);
         })
       )
@@ -339,106 +319,92 @@ const editBetWithDatabase =
               const removeUserIds = membersToRemove.map(
                 (member) => member.userId
               );
-              yield* persistenceQueryUnsafe(
-                tx
-                  .update(userStats)
-                  .set({
-                    bets: sql`${userStats.bets} - 1`,
-                    points: sql`${userStats.points} - COALESCE((SELECT ${heroBetMember.points} FROM ${heroBetMember} WHERE ${heroBetMember.heroBetId} = ${betId} AND ${heroBetMember.userId} = ${userStats.userId} LIMIT 1), 0)`,
-                  })
-                  .where(
-                    and(
-                      eq(userStats.eventId, heroData.eventId),
-                      eq(userStats.heroId, betData.heroId),
-                      inArray(userStats.userId, removeUserIds)
-                    )
+              yield* tx
+                .update(userStats)
+                .set({
+                  bets: sql`${userStats.bets} - 1`,
+                  points: sql`${userStats.points} - COALESCE((SELECT ${heroBetMember.points} FROM ${heroBetMember} WHERE ${heroBetMember.heroBetId} = ${betId} AND ${heroBetMember.userId} = ${userStats.userId} LIMIT 1), 0)`,
+                })
+                .where(
+                  and(
+                    eq(userStats.eventId, heroData.eventId),
+                    eq(userStats.heroId, betData.heroId),
+                    inArray(userStats.userId, removeUserIds)
                   )
-              );
-              yield* persistenceQueryUnsafe(
-                tx
-                  .delete(heroBetMember)
-                  .where(
-                    and(
-                      eq(heroBetMember.heroBetId, betId),
-                      inArray(heroBetMember.userId, removeUserIds)
-                    )
+                );
+              yield* tx
+                .delete(heroBetMember)
+                .where(
+                  and(
+                    eq(heroBetMember.heroBetId, betId),
+                    inArray(heroBetMember.userId, removeUserIds)
                   )
-              );
+                );
             }
             if (membersToAdd.length > 0) {
-              yield* persistenceQueryUnsafe(
-                tx.insert(heroBetMember).values(
+              yield* tx.insert(heroBetMember).values(
+                membersToAdd.map((userId) => ({
+                  heroBetId: betId,
+                  points: newPointsPerMember,
+                  userId,
+                }))
+              );
+              yield* tx
+                .insert(userStats)
+                .values(
                   membersToAdd.map((userId) => ({
-                    heroBetId: betId,
+                    bets: 1,
+                    earnings: "0",
+                    eventId: heroData.eventId,
+                    heroId: betData.heroId,
                     points: newPointsPerMember,
                     userId,
                   }))
                 )
-              );
-              yield* persistenceQueryUnsafe(
-                tx
-                  .insert(userStats)
-                  .values(
-                    membersToAdd.map((userId) => ({
-                      bets: 1,
-                      earnings: "0",
-                      eventId: heroData.eventId,
-                      heroId: betData.heroId,
-                      points: newPointsPerMember,
-                      userId,
-                    }))
-                  )
-                  .onConflictDoUpdate({
-                    set: {
-                      bets: sql`${userStats.bets} + 1`,
-                      points: sql`${userStats.points} + ${newPointsPerMember}`,
-                    },
-                    target: [
-                      userStats.userId,
-                      userStats.eventId,
-                      userStats.heroId,
-                    ],
-                  })
-              );
+                .onConflictDoUpdate({
+                  set: {
+                    bets: sql`${userStats.bets} + 1`,
+                    points: sql`${userStats.points} + ${newPointsPerMember}`,
+                  },
+                  target: [
+                    userStats.userId,
+                    userStats.eventId,
+                    userStats.heroId,
+                  ],
+                });
             }
             if (membersToKeep.length > 0) {
               const keepUserIds = membersToKeep.map((member) => member.userId);
               const pointsDiff =
                 Number(newPointsPerMember) - oldPointsPerMember;
-              yield* persistenceQueryUnsafe(
-                tx
-                  .update(heroBetMember)
-                  .set({ points: newPointsPerMember })
+              yield* tx
+                .update(heroBetMember)
+                .set({ points: newPointsPerMember })
+                .where(
+                  and(
+                    eq(heroBetMember.heroBetId, betId),
+                    inArray(heroBetMember.userId, keepUserIds)
+                  )
+                );
+              if (pointsDiff !== 0) {
+                yield* tx
+                  .update(userStats)
+                  .set({
+                    points: sql`${userStats.points} + ${pointsDiff.toFixed(2)}`,
+                  })
                   .where(
                     and(
-                      eq(heroBetMember.heroBetId, betId),
-                      inArray(heroBetMember.userId, keepUserIds)
+                      eq(userStats.eventId, heroData.eventId),
+                      eq(userStats.heroId, betData.heroId),
+                      inArray(userStats.userId, keepUserIds)
                     )
-                  )
-              );
-              if (pointsDiff !== 0) {
-                yield* persistenceQueryUnsafe(
-                  tx
-                    .update(userStats)
-                    .set({
-                      points: sql`${userStats.points} + ${pointsDiff.toFixed(2)}`,
-                    })
-                    .where(
-                      and(
-                        eq(userStats.eventId, heroData.eventId),
-                        eq(userStats.heroId, betData.heroId),
-                        inArray(userStats.userId, keepUserIds)
-                      )
-                    )
-                );
+                  );
               }
             }
-            yield* persistenceQueryUnsafe(
-              tx
-                .update(heroBet)
-                .set({ memberCount: newMemberCount })
-                .where(eq(heroBet.id, betId))
-            );
+            yield* tx
+              .update(heroBet)
+              .set({ memberCount: newMemberCount })
+              .where(eq(heroBet.id, betId));
             yield* refreshEarningsForHero(tx, betData.heroId);
           })
         )

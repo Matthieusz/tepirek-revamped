@@ -106,11 +106,6 @@ export function persistenceQuery<A, R>(
 }
 // oxlint-enable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
 
-/** Preserve a query's typed Drizzle failure and environment inside a transaction. */
-export const persistenceQueryUnsafe = <A, E, R>(
-  self: Effect.Effect<A, E, R>
-): Effect.Effect<A, E, R> => self;
-
 // oxlint-disable promise/prefer-await-to-callbacks
 export const parsePersistedAppUserId = (
   operation: EffectSquadGroupPersistenceOperation,

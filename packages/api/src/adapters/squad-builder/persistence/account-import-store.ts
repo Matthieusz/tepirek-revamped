@@ -59,7 +59,6 @@ import {
   failPersistence,
   namedStoreMethod,
   persistenceQuery,
-  persistenceQueryUnsafe,
   usedFirecrawlRequestStatuses,
 } from "./persistence-query.js";
 
@@ -138,10 +137,8 @@ const reserveRequestWithDatabase =
       const yearMonthText = firecrawlYearMonthToString(yearMonth);
       const transaction = database.transaction((tx) => {
         const transactionEffect = Effect.gen(function* reserveInTransaction() {
-          yield* persistenceQueryUnsafe(
-            tx.execute(
-              sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
-            )
+          yield* tx.execute(
+            sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
           );
           const usageSelect = tx
             .select({ usedRequests: count() })
@@ -155,7 +152,7 @@ const reserveRequestWithDatabase =
                 )
               )
             );
-          const usageRows = yield* persistenceQueryUnsafe(usageSelect);
+          const usageRows = yield* usageSelect;
 
           const usedRequests = usageRows[0]?.usedRequests ?? 0;
 
@@ -177,7 +174,7 @@ const reserveRequestWithDatabase =
               yearMonth: yearMonthText,
             })
             .returning({ id: firecrawlProfileScrapeRequest.id });
-          const insertedRows = yield* persistenceQueryUnsafe(insert);
+          const insertedRows = yield* insert;
 
           const [reserved] = insertedRows;
 
@@ -288,7 +285,7 @@ const createPendingImportWithDatabase =
               suggestedAccountName,
             })
             .returning({ id: margonemAccountImportPreview.id });
-          const insertedRows = yield* persistenceQueryUnsafe(insert);
+          const insertedRows = yield* insert;
 
           const [preview] = insertedRows;
 
@@ -313,7 +310,7 @@ const createPendingImportWithDatabase =
                   world: character.world,
                 }))
               );
-            yield* persistenceQueryUnsafe(characterInsert);
+            yield* characterInsert;
           }
 
           const pendingImportId = yield* parsePendingMargonemAccountImportId(
@@ -457,7 +454,7 @@ const createOwnedAccountFromPendingImportWithDatabase =
               )
             )
             .limit(1);
-          const existingRows = yield* persistenceQueryUnsafe(existingSelect);
+          const existingRows = yield* existingSelect;
 
           const [existing] = existingRows;
 
@@ -479,7 +476,7 @@ const createOwnedAccountFromPendingImportWithDatabase =
               createdAt: margonemAccount.createdAt,
               id: margonemAccount.id,
             });
-          const accountRows = yield* persistenceQueryUnsafe(insert);
+          const accountRows = yield* insert;
 
           const [account] = accountRows;
 
@@ -502,7 +499,7 @@ const createOwnedAccountFromPendingImportWithDatabase =
                 world: character.world,
               }))
             );
-            yield* persistenceQueryUnsafe(characterInsert);
+            yield* characterInsert;
           }
 
           const update = tx
@@ -514,7 +511,7 @@ const createOwnedAccountFromPendingImportWithDatabase =
                 pendingImportIdToNumber(pending.id)
               )
             );
-          yield* persistenceQueryUnsafe(update);
+          yield* update;
 
           const accountId = yield* parseMargonemAccountId(account.id).pipe(
             Effect.catch((error) => failPersistence(operation, error))

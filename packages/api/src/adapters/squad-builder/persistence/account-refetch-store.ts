@@ -63,7 +63,6 @@ import {
   namedStoreMethod,
   parsePersistedAppUserId,
   persistenceQuery,
-  persistenceQueryUnsafe,
   usedFirecrawlRequestStatuses,
 } from "./persistence-query.js";
 
@@ -90,10 +89,8 @@ const reserveRequestWithDatabase =
       const yearMonthText = firecrawlYearMonthToString(yearMonth);
       const transaction = database.transaction((tx) => {
         const transactionEffect = Effect.gen(function* reserveInTransaction() {
-          yield* persistenceQueryUnsafe(
-            tx.execute(
-              sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
-            )
+          yield* tx.execute(
+            sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
           );
           const usageSelect = tx
             .select({ usedRequests: count() })
@@ -107,7 +104,7 @@ const reserveRequestWithDatabase =
                 )
               )
             );
-          const usageRows = yield* persistenceQueryUnsafe(usageSelect);
+          const usageRows = yield* usageSelect;
 
           const usedRequests = usageRows[0]?.usedRequests ?? 0;
 
@@ -129,7 +126,7 @@ const reserveRequestWithDatabase =
               yearMonth: yearMonthText,
             })
             .returning({ id: firecrawlProfileScrapeRequest.id });
-          const insertedRows = yield* persistenceQueryUnsafe(insert);
+          const insertedRows = yield* insert;
 
           const [reserved] = insertedRows;
 
@@ -346,7 +343,7 @@ const createPendingRefetchWithDatabase =
               profileId: profileIdToNumber(profileId),
             })
             .returning({ id: margonemAccountRefetchPreview.id });
-          const insertedRows = yield* persistenceQueryUnsafe(insert);
+          const insertedRows = yield* insert;
 
           const [preview] = insertedRows;
 
@@ -371,7 +368,7 @@ const createPendingRefetchWithDatabase =
                   world: character.world,
                 }))
               );
-            yield* persistenceQueryUnsafe(characterInsert);
+            yield* characterInsert;
           }
 
           const pendingRefetchId = yield* parsePendingMargonemAccountRefetchId(
@@ -546,10 +543,8 @@ const applyRefetchedAccountWithDatabase =
             pendingRefetch.accountId
           );
 
-          yield* persistenceQueryUnsafe(
-            tx.execute(
-              sql`select pg_advisory_xact_lock(hashtext(${`margonem-refetch:${accountIdNumber}`}))`
-            )
+          yield* tx.execute(
+            sql`select pg_advisory_xact_lock(hashtext(${`margonem-refetch:${accountIdNumber}`}))`
           );
 
           const accountSelect = tx
@@ -562,7 +557,7 @@ const applyRefetchedAccountWithDatabase =
               )
             )
             .limit(1);
-          const accountRows = yield* persistenceQueryUnsafe(accountSelect);
+          const accountRows = yield* accountSelect;
 
           if (accountRows[0] === undefined) {
             return yield* failPersistence(
@@ -582,7 +577,7 @@ const applyRefetchedAccountWithDatabase =
             })
             .from(margonemCharacter)
             .where(eq(margonemCharacter.accountId, accountIdNumber));
-          const currentRows = yield* persistenceQueryUnsafe(currentSelect);
+          const currentRows = yield* currentSelect;
 
           const currentByCharacterId = new Map<
             number,
@@ -637,25 +632,21 @@ const applyRefetchedAccountWithDatabase =
           }
 
           if (charactersToInsert.length > 0) {
-            yield* persistenceQueryUnsafe(
-              tx.insert(margonemCharacter).values(charactersToInsert)
-            );
+            yield* tx.insert(margonemCharacter).values(charactersToInsert);
           }
 
           for (const character of charactersToUpdate) {
-            yield* persistenceQueryUnsafe(
-              tx
-                .update(margonemCharacter)
-                .set({
-                  avatarUrl: character.avatarUrl,
-                  level: character.level,
-                  name: character.name,
-                  profession: character.profession,
-                  updatedAt: now,
-                  world: character.world,
-                })
-                .where(eq(margonemCharacter.id, character.databaseCharacterId))
-            );
+            yield* tx
+              .update(margonemCharacter)
+              .set({
+                avatarUrl: character.avatarUrl,
+                level: character.level,
+                name: character.name,
+                profession: character.profession,
+                updatedAt: now,
+                world: character.world,
+              })
+              .where(eq(margonemCharacter.id, character.databaseCharacterId));
           }
 
           for (const current of currentRows) {
@@ -673,8 +664,7 @@ const applyRefetchedAccountWithDatabase =
               .where(
                 inArray(squadCharacter.characterId, removedDatabaseCharacterIds)
               );
-            const affectedGroups =
-              yield* persistenceQueryUnsafe(affectedGroupSelect);
+            const affectedGroups = yield* affectedGroupSelect;
 
             const affectedGroupIds = [
               ...new Set(affectedGroups.map((group) => group.groupId)),
@@ -685,36 +675,28 @@ const applyRefetchedAccountWithDatabase =
                 inArray(squadCharacter.characterId, removedDatabaseCharacterIds)
               )
               .returning({ id: squadCharacter.id });
-            const removedPlacements = yield* persistenceQueryUnsafe(
-              removedPlacementsDelete
-            );
+            const removedPlacements = yield* removedPlacementsDelete;
 
             removedSquadCharacterCount = removedPlacements.length;
 
             if (affectedGroupIds.length > 0) {
-              yield* persistenceQueryUnsafe(
-                tx
-                  .update(squadGroup)
-                  .set({ updatedAt: now })
-                  .where(inArray(squadGroup.id, affectedGroupIds))
-              );
+              yield* tx
+                .update(squadGroup)
+                .set({ updatedAt: now })
+                .where(inArray(squadGroup.id, affectedGroupIds));
             }
 
-            yield* persistenceQueryUnsafe(
-              tx
-                .delete(margonemCharacter)
-                .where(
-                  inArray(margonemCharacter.id, removedDatabaseCharacterIds)
-                )
-            );
+            yield* tx
+              .delete(margonemCharacter)
+              .where(
+                inArray(margonemCharacter.id, removedDatabaseCharacterIds)
+              );
           }
 
-          yield* persistenceQueryUnsafe(
-            tx
-              .update(margonemAccount)
-              .set({ lastFetchedAt: pendingRefetch.fetchedAt, updatedAt: now })
-              .where(eq(margonemAccount.id, accountIdNumber))
-          );
+          yield* tx
+            .update(margonemAccount)
+            .set({ lastFetchedAt: pendingRefetch.fetchedAt, updatedAt: now })
+            .where(eq(margonemAccount.id, accountIdNumber));
 
           return {
             accountId: pendingRefetch.accountId,
