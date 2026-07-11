@@ -22,9 +22,9 @@ import type {
 import { RankingService } from "../../services/ranking/ranking-service.js";
 import type { EffectPgDatabase } from "./persistence-query.js";
 
-const persistenceQuery = <A>(
+const persistenceQuery = <A, E, R>(
   operation: string,
-  self: Effect.Effect<A, unknown>
+  self: Effect.Effect<A, E, R>
 ) =>
   self.pipe(
     Effect.mapError(

@@ -69,27 +69,17 @@ export const failPersistence = (
   );
 
 // oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
-export const persistenceQuery = <A>(
+export const persistenceQuery = <A, E, R>(
   operation: EffectSquadGroupPersistenceOperation,
-  self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, EffectSquadBuilderPersistenceUnavailable, never> =>
-  // SAFETY: The second type parameter of the incoming Effect is widened to
-  // `unknown` by Drizzle's query builder but the actual runtime error type is
-  // always `never` (Drizzle throws, not returns typed errors). The cast
-  // narrows it so `Effect.catch` can catch any thrown error and rewrap it as
-  // `EffectSquadBuilderPersistenceUnavailable`.
-  Effect.catch(self as Effect.Effect<A, unknown, never>, (error) =>
-    failPersistence(operation, error)
-  );
+  self: Effect.Effect<A, E, R>
+): Effect.Effect<A, EffectSquadBuilderPersistenceUnavailable, R> =>
+  Effect.catch(self, (error) => failPersistence(operation, error));
 // oxlint-enable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
 
-// SAFETY: Same rationale as persistenceQuery — Drizzle query effects carry
-// `unknown` error type but never produce typed failures at runtime. The cast
-// erases the error parameter so callers can self-assemble their error type in
-// the gen block without false positive type mismatches.
-export const persistenceQueryUnsafe = <A>(
-  self: Effect.Effect<A, unknown, unknown>
-): Effect.Effect<A, unknown, never> => self as Effect.Effect<A, unknown, never>;
+/** Preserve a query's typed Drizzle failure and environment inside a transaction. */
+export const persistenceQueryUnsafe = <A, E, R>(
+  self: Effect.Effect<A, E, R>
+): Effect.Effect<A, E, R> => self;
 
 // oxlint-disable promise/prefer-await-to-callbacks
 export const parsePersistedAppUserId = (

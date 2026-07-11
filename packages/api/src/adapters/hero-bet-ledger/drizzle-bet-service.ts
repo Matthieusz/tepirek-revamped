@@ -30,9 +30,9 @@ import type {
   TransactionDatabase,
 } from "./persistence-query.js";
 
-const persistenceQuery = <A>(
+const persistenceQuery = <A, E, R>(
   operation: string,
-  self: Effect.Effect<A, unknown>
+  self: Effect.Effect<A, E, R>
 ) =>
   self.pipe(
     Effect.mapError(
@@ -40,8 +40,7 @@ const persistenceQuery = <A>(
     )
   );
 
-const persistenceQueryUnsafe = <A>(self: Effect.Effect<A, unknown>) =>
-  self as Effect.Effect<A, BetPersistenceUnavailable>;
+const persistenceQueryUnsafe = <A, E, R>(self: Effect.Effect<A, E, R>) => self;
 
 const getHeroEventWithDatabase =
   (database: EffectPgDatabase) => (heroId: number, message: string) =>

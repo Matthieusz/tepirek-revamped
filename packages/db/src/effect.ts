@@ -42,7 +42,7 @@ const DATE_TIME_TYPE_IDS = new Set([
 
 const DrizzleServicesLayer = Layer.merge(
   EffectCache.Default,
-  PgDrizzle.EffectLogger.layer
+  PgDrizzle.EffectLogger.Default
 );
 
 const makeDrizzleDatabase = () =>
