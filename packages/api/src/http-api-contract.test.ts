@@ -1,6 +1,7 @@
 import { OpenApi } from "effect/unstable/httpapi";
 import { describe, expect, it } from "vitest";
 
+import { HealthHttpApi } from "./protocol/health/http-api-contract.js";
 import { AppHttpApi } from "./protocol/http-api-contract.js";
 
 type OpenApiDocument = ReturnType<typeof OpenApi.fromApi>;
@@ -8,6 +9,7 @@ type OpenApiPath = keyof OpenApiDocument["paths"];
 type HttpMethod = keyof OpenApiDocument["paths"][OpenApiPath];
 
 const appOpenApi = OpenApi.fromApi(AppHttpApi);
+const healthOpenApi = OpenApi.fromApi(HealthHttpApi);
 
 const expectRoute = (method: HttpMethod, path: OpenApiPath) => {
   expect(appOpenApi.paths[path]?.[method]).toBeDefined();
@@ -24,6 +26,12 @@ const expectPostResponseStatuses = (
 };
 
 describe("AppHttpApi route contract", () => {
+  it("keeps liveness in its dependency-light standalone API", () => {
+    expect(appOpenApi.paths["/health"]).toBeUndefined();
+    expect(healthOpenApi.paths["/health"]?.get).toBeDefined();
+    expect(Object.keys(healthOpenApi.paths)).toEqual(["/health"]);
+  });
+
   it("exposes the migrated bet routes", () => {
     expectRoute("post", "/bet");
     expectRoute("post", "/bet/delete");

@@ -1,14 +1,14 @@
 import { Effect } from "effect";
 
 import {
-  AppHttpApiClient,
-  appHttpApiAtom,
-} from "@/lib/http-api-client-runtime";
+  HealthHttpApiClient,
+  healthHttpApiRuntime,
+} from "@/lib/health-http-api-client-runtime";
 
 /** Resource atom for the Effect HttpApi health check. */
-export const healthAtom = appHttpApiAtom(
+export const healthAtom = healthHttpApiRuntime.atom(
   Effect.gen(function* healthCheckEffect() {
-    const client = yield* AppHttpApiClient;
+    const client = yield* HealthHttpApiClient;
     return yield* client.health.healthCheck({});
   })
 );

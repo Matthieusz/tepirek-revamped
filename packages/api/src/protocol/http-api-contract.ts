@@ -5,7 +5,6 @@ import { AuctionHttpApiGroup } from "./auction/http-api-contract.js";
 import { SessionMiddleware } from "./auth/http-api-middleware.js";
 import { BetHttpApiGroup } from "./bet/http-api-contract.js";
 import { EventHttpApiGroup } from "./event/http-api-contract.js";
-import { HealthHttpApiGroup } from "./health/http-api-contract.js";
 import { HeroesHttpApiGroup } from "./heroes/http-api-contract.js";
 import { RankingHttpApiGroup } from "./ranking/http-api-contract.js";
 import { SkillsHttpApiGroup } from "./skills/http-api-contract.js";
@@ -20,7 +19,6 @@ import { VaultHttpApiGroup } from "./vault/http-api-contract.js";
 
 /** Application-level Effect HttpApi contract for migrated API groups. */
 export const AppHttpApi = HttpApi.make("tepirekApi")
-  .add(HealthHttpApiGroup)
   .add(AnnouncementHttpApiGroup)
   .add(TodoHttpApiGroup)
   .add(HeroesHttpApiGroup)
