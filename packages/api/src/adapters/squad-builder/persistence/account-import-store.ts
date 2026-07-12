@@ -54,7 +54,12 @@ import type {
   ReservedFirecrawlRequest,
 } from "../../../services/squad-builder/account-import/account-import-store.ts";
 import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
-import { PendingMargonemAccountImportNotFound } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
+import {
+  FirecrawlMonthlyBudgetExhausted,
+  MargonemAccountAlreadyOwnedByActor,
+  MargonemAccountOwnedByAnotherUser,
+  PendingMargonemAccountImportNotFound,
+} from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   failPersistence,
   namedStoreMethod,
@@ -123,13 +128,7 @@ const reserveRequestWithDatabase =
     yearMonth,
   }: ReserveFirecrawlRequestInput): Effect.Effect<
     ReservedFirecrawlRequest,
-    | {
-        readonly _tag: "FirecrawlMonthlyBudgetExhausted";
-        readonly yearMonth: typeof yearMonth;
-        readonly monthlyRequestBudget: number;
-        readonly usedRequests: number;
-      }
-    | EffectSquadBuilderPersistenceUnavailable,
+    FirecrawlMonthlyBudgetExhausted | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
     Effect.gen(function* reserveRequestEffect() {
@@ -157,8 +156,7 @@ const reserveRequestWithDatabase =
           const usedRequests = usageRows[0]?.usedRequests ?? 0;
 
           if (usedRequests >= monthlyRequestBudget) {
-            return yield* Effect.fail({
-              _tag: "FirecrawlMonthlyBudgetExhausted" as const,
+            return yield* new FirecrawlMonthlyBudgetExhausted({
               monthlyRequestBudget,
               usedRequests,
               yearMonth,
@@ -459,9 +457,10 @@ const createOwnedAccountFromPendingImportWithDatabase =
           const [existing] = existingRows;
 
           if (existing !== undefined) {
-            return existing.ownerUserId === appUserIdToString(actorUserId)
-              ? ({ _tag: "MargonemAccountAlreadyOwnedByActor" } as const)
-              : ({ _tag: "MargonemAccountOwnedByAnotherUser" } as const);
+            return yield* existing.ownerUserId ===
+            appUserIdToString(actorUserId)
+              ? new MargonemAccountAlreadyOwnedByActor()
+              : new MargonemAccountOwnedByAnotherUser();
           }
 
           const insert = tx
@@ -528,18 +527,7 @@ const createOwnedAccountFromPendingImportWithDatabase =
         })
       );
 
-      const result = yield* persistenceQuery(operation, transaction);
-
-      if (
-        "_tag" in result &&
-        (result._tag === "MargonemAccountAlreadyOwnedByActor" ||
-          result._tag === "MargonemAccountOwnedByAnotherUser" ||
-          result._tag === "MargonemAccountAlreadySharedWithActor")
-      ) {
-        return yield* Effect.fail(result);
-      }
-
-      return result;
+      return yield* persistenceQuery(operation, transaction);
     });
 
 const listOwnedAccountsWithDatabase =

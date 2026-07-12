@@ -24,6 +24,11 @@ import {
   parseFirecrawlCreditCount,
 } from "../firecrawl-config.ts";
 import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
+import {
+  MargonemAccountAlreadyOwnedByActor,
+  MargonemAccountAlreadySharedWithActor,
+  MargonemAccountOwnedByAnotherUser,
+} from "../squad-groups/squad-group-errors.ts";
 import { AccountImportStoreService } from "./account-import-store-service.ts";
 import type {
   DuplicateMargonemAccountError,
@@ -65,13 +70,13 @@ const profileAccessStateToDuplicateError = (
       return undefined;
     }
     case "OwnedByActor": {
-      return { _tag: "MargonemAccountAlreadyOwnedByActor" };
+      return new MargonemAccountAlreadyOwnedByActor();
     }
     case "OwnedByAnotherUser": {
-      return { _tag: "MargonemAccountOwnedByAnotherUser" };
+      return new MargonemAccountOwnedByAnotherUser();
     }
     case "SharedWithActor": {
-      return { _tag: "MargonemAccountAlreadySharedWithActor" };
+      return new MargonemAccountAlreadySharedWithActor();
     }
     default: {
       const exhaustive: never = state;

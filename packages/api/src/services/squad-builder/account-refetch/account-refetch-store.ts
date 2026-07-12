@@ -10,7 +10,6 @@ import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-p
 import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
 import type {
   FirecrawlBudgetError,
-  FirecrawlRequestLedger,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
   ReserveFirecrawlRequestInput,
@@ -20,10 +19,9 @@ import type {
 import type {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
-  MargonemAccountOwnerAuthorizer,
 } from "../account-sharing/account-sharing-store.ts";
 import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
-import type { ApplyAccountRefetchOutput } from "./apply-account-refetch-service.ts";
+import type { PendingMargonemAccountRefetchNotFound as CanonicalPendingMargonemAccountRefetchNotFound } from "../squad-groups/squad-group-errors.ts";
 
 /** Account and current character state needed for a manual refetch preview. */
 export interface RefetchableMargonemAccount {
@@ -33,18 +31,9 @@ export interface RefetchableMargonemAccount {
   readonly currentCharacters: readonly StoredMargonemCharacterSnapshot[];
 }
 
-/** Persistence capability for loading an account before manual refetch. */
-export interface RefetchableMargonemAccountReader {
-  readonly getAccountForRefetch: (input: {
-    readonly actorUserId: AppUserId;
-    readonly accountId: MargonemAccountId;
-  }) => Promise<RefetchableMargonemAccount>;
-}
-
 /** Expected failure when a pending refetch cannot be applied. */
-export interface PendingMargonemAccountRefetchNotFound {
-  readonly _tag: "PendingMargonemAccountRefetchNotFound";
-}
+export type PendingMargonemAccountRefetchNotFound =
+  CanonicalPendingMargonemAccountRefetchNotFound;
 
 /** Input for storing a manual refetch preview. */
 export interface CreatePendingMargonemAccountRefetchInput {
@@ -86,21 +75,6 @@ export interface MarkPendingMargonemAccountRefetchAppliedInput {
   readonly appliedAt: Date;
 }
 
-/** Persistence capability for pending account refetch previews. */
-export interface PendingMargonemAccountRefetchStore {
-  readonly createPendingRefetch: (
-    input: CreatePendingMargonemAccountRefetchInput
-  ) => Promise<PendingMargonemAccountRefetch>;
-
-  readonly findPendingRefetchForApply: (
-    input: FindPendingMargonemAccountRefetchInput
-  ) => Promise<PendingMargonemAccountRefetchForApply>;
-
-  readonly markPendingRefetchApplied: (
-    input: MarkPendingMargonemAccountRefetchAppliedInput
-  ) => Promise<void>;
-}
-
 /** Input for transactionally applying pending refetch data. */
 export interface ApplyRefetchedAccountInput {
   readonly actorUserId: AppUserId;
@@ -108,24 +82,10 @@ export interface ApplyRefetchedAccountInput {
   readonly now: Date;
 }
 
-/** Persistence capability for applying latest refetched account characters. */
-export interface RefetchedMargonemAccountWriter {
-  readonly applyRefetchedAccount: (
-    input: ApplyRefetchedAccountInput
-  ) => Promise<ApplyAccountRefetchOutput>;
-}
-
-/** Account refetch persistence contracts used by preview and apply services. */
-export type AccountRefetchStore = RefetchableMargonemAccountReader &
-  PendingMargonemAccountRefetchStore &
-  RefetchedMargonemAccountWriter;
-
 export type {
   ActorDoesNotOwnMargonemAccount,
   FirecrawlBudgetError,
-  FirecrawlRequestLedger,
   MargonemAccountNotFound,
-  MargonemAccountOwnerAuthorizer,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
   ReserveFirecrawlRequestInput,

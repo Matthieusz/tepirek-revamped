@@ -15,45 +15,39 @@ import type {
   SquadGroupInvitationSummary,
 } from "./squad-group-store.ts";
 
-export interface ListSquadGroupSharingState {
-  readonly countPendingInvites: (input: {
-    readonly actorUserId: AppUserId;
-  }) => Promise<void>;
+export interface ListSquadGroupInvitesInput {
+  readonly actorUserId: AppUserId;
+}
 
-  readonly listEditorGrants: (input: {
-    readonly actorUserId: AppUserId;
-    readonly groupId: SquadGroupId;
-  }) => Promise<void>;
+export interface ListSharedSquadGroupsInput {
+  readonly actorUserId: AppUserId;
+  readonly filters?: SquadGroupListFilters;
+}
 
-  readonly listIncomingInvites: (input: {
-    readonly actorUserId: AppUserId;
-  }) => Promise<void>;
-
-  readonly listSharedGroups: (input: {
-    readonly actorUserId: AppUserId;
-    readonly filters?: SquadGroupListFilters;
-  }) => Promise<void>;
+export interface ListSquadGroupEditorGrantsInput {
+  readonly actorUserId: AppUserId;
+  readonly groupId: SquadGroupId;
 }
 
 export interface SquadGroupSharingState {
   /** List pending squad group editor invites received by the actor. */
   readonly listIncomingInvites: (
-    input: Parameters<ListSquadGroupSharingState["listIncomingInvites"]>[0]
+    input: ListSquadGroupInvitesInput
   ) => Effect<readonly SquadGroupInvitationSummary[], SquadGroupSharingError>;
 
   /** List squad groups shared with the actor as accepted editor. */
   readonly listSharedGroups: (
-    input: Parameters<ListSquadGroupSharingState["listSharedGroups"]>[0]
+    input: ListSharedSquadGroupsInput
   ) => Effect<readonly SharedSquadGroupSummary[], SquadGroupSharingError>;
 
   /** List pending and accepted editor grants for an owned squad group. */
   readonly listEditorGrants: (
-    input: Parameters<ListSquadGroupSharingState["listEditorGrants"]>[0]
+    input: ListSquadGroupEditorGrantsInput
   ) => Effect<readonly SquadGroupEditorGrantSummary[], SquadGroupSharingError>;
 
   /** Count pending squad group editor invites received by the actor. */
   readonly countPendingInvites: (
-    input: Parameters<ListSquadGroupSharingState["countPendingInvites"]>[0]
+    input: ListSquadGroupInvitesInput
   ) => Effect<number, SquadGroupSharingError>;
 }
 

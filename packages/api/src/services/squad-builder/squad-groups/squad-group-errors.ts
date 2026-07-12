@@ -1,6 +1,8 @@
 /* eslint-disable max-classes-per-file -- Domain error schemas are intentionally collocated for HttpApi/OpenApi error unions. */
 import * as Schema from "effect/Schema";
 
+import { FirecrawlYearMonth } from "../../../domain/squad-builder/firecrawl-year-month.ts";
+
 const notFound = { httpApiStatus: 404 } as const;
 const forbidden = { httpApiStatus: 403 } as const;
 const badRequest = { httpApiStatus: 400 } as const;
@@ -154,6 +156,30 @@ export class PendingMargonemAccountRefetchNotFound extends Schema.TaggedErrorCla
   "PendingMargonemAccountRefetchNotFound",
   {},
   notFound
+) {}
+
+export class FirecrawlMonthlyBudgetExhausted extends Schema.TaggedErrorClass<FirecrawlMonthlyBudgetExhausted>()(
+  "FirecrawlMonthlyBudgetExhausted",
+  {
+    monthlyRequestBudget: Schema.Number,
+    usedRequests: Schema.Number,
+    yearMonth: FirecrawlYearMonth,
+  }
+) {}
+
+export class MargonemAccountAlreadyOwnedByActor extends Schema.TaggedErrorClass<MargonemAccountAlreadyOwnedByActor>()(
+  "MargonemAccountAlreadyOwnedByActor",
+  {}
+) {}
+
+export class MargonemAccountOwnedByAnotherUser extends Schema.TaggedErrorClass<MargonemAccountOwnedByAnotherUser>()(
+  "MargonemAccountOwnedByAnotherUser",
+  {}
+) {}
+
+export class MargonemAccountAlreadySharedWithActor extends Schema.TaggedErrorClass<MargonemAccountAlreadySharedWithActor>()(
+  "MargonemAccountAlreadySharedWithActor",
+  {}
 ) {}
 
 export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedErrorClass<EffectSquadBuilderPersistenceUnavailable>()(

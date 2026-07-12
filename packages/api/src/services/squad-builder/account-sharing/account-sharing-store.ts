@@ -6,24 +6,29 @@ import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-a
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import type {
   ListOwnedMargonemAccountsInput,
-  OwnedMargonemAccountReader,
   OwnedMargonemAccountSummary,
   SquadBuilderPersistenceUnavailable,
 } from "../account-import/account-import-store.ts";
+import type {
+  AccountAccessInviteNotFound,
+  AccountAccessTransitionNotAllowed,
+  ActorDoesNotOwnMargonemAccount,
+  ActorIsNotInviteRecipient,
+  CannotInviteSelf,
+  InviteTargetNotFound,
+  InviteTargetNotVerified,
+  MargonemAccountNotFound,
+} from "../squad-groups/squad-group-errors.ts";
 /** Expected authorization failures for account sharing operations. */
 export type AccountSharingAuthorizationError =
-  | { readonly _tag: "MargonemAccountNotFound" }
-  | { readonly _tag: "ActorDoesNotOwnMargonemAccount" }
-  | { readonly _tag: "CannotInviteSelf" }
-  | { readonly _tag: "InviteTargetNotFound" }
-  | { readonly _tag: "InviteTargetNotVerified" }
-  | { readonly _tag: "AccountAccessInviteNotFound" }
-  | { readonly _tag: "ActorIsNotInviteRecipient" }
-  | {
-      readonly _tag: "AccountAccessTransitionNotAllowed";
-      readonly currentStatus: AccountAccessStatus;
-      readonly attempted: string;
-    };
+  | MargonemAccountNotFound
+  | ActorDoesNotOwnMargonemAccount
+  | CannotInviteSelf
+  | InviteTargetNotFound
+  | InviteTargetNotVerified
+  | AccountAccessInviteNotFound
+  | ActorIsNotInviteRecipient
+  | AccountAccessTransitionNotAllowed;
 
 /** A verified user that may be invited to use an account. */
 export interface AccountInviteTarget {
@@ -152,69 +157,13 @@ export interface AccountAccessGrantSummary {
 }
 
 /** Expected failure when a Margonem account does not exist. */
-export interface MargonemAccountNotFound {
-  readonly _tag: "MargonemAccountNotFound";
-}
+export type { MargonemAccountNotFound };
 
 /** Expected failure when an actor is not the Margonem account owner. */
-export interface ActorDoesNotOwnMargonemAccount {
-  readonly _tag: "ActorDoesNotOwnMargonemAccount";
-}
-
-/** Owner-only authorization capability for a Margonem account. */
-export interface MargonemAccountOwnerAuthorizer {
-  readonly authorizeOwner: (input: {
-    readonly actorUserId: AppUserId;
-    readonly accountId: MargonemAccountId;
-  }) => Promise<OwnedAccountForSharing>;
-}
-
-/** Persistence capability for account sharing. */
-export interface AccountSharingStore {
-  readonly searchInviteTargets: (
-    input: SearchInviteTargetsStoreInput
-  ) => Promise<readonly AccountInviteTarget[]>;
-
-  readonly findOwnedAccountForSharing: (
-    input: FindOwnedAccountForSharingInput
-  ) => Promise<OwnedAccountForSharing>;
-
-  readonly findVerifiedInviteTarget: (
-    input: FindVerifiedInviteTargetInput
-  ) => Promise<VerifiedInviteTarget>;
-
-  readonly upsertAccountAccessInvite: (
-    input: UpsertAccountAccessInviteInput
-  ) => Promise<AccountAccessInviteSummary>;
-
-  readonly listIncomingAccountInvites: (
-    input: ListIncomingAccountInvitesInput
-  ) => Promise<readonly AccountAccessInviteSummary[]>;
-
-  readonly respondToAccountAccessInvite: (
-    input: RespondToAccountAccessInviteStoreInput
-  ) => Promise<AccountAccessInviteSummary>;
-
-  readonly revokeAccountAccess: (
-    input: RevokeAccountAccessStoreInput
-  ) => Promise<RevokeAccountAccessResult>;
-
-  readonly listSharedAccounts: (
-    input: ListSharedAccountsInput
-  ) => Promise<readonly SharedMargonemAccountSummary[]>;
-
-  readonly listAccountAccessGrants: (
-    input: ListAccountAccessGrantsInput
-  ) => Promise<readonly AccountAccessGrantSummary[]>;
-}
-
-/** Account sharing persistence contracts used by invite and grant services. */
-export type AccountSharingPersistenceStore = AccountSharingStore &
-  MargonemAccountOwnerAuthorizer;
+export type { ActorDoesNotOwnMargonemAccount };
 
 export type {
   ListOwnedMargonemAccountsInput,
-  OwnedMargonemAccountReader,
   OwnedMargonemAccountSummary,
   SquadBuilderPersistenceUnavailable,
 };

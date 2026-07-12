@@ -4,11 +4,10 @@ import type { InvalidMargonemAccountAccessId } from "../../../domain/squad-build
 import type { InvalidMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import type {
   AccountSharingAuthorizationError,
-  AccountSharingStore,
   SquadBuilderPersistenceUnavailable,
 } from "./account-sharing-store.ts";
 
-export type { AccountSharingStore, SquadBuilderPersistenceUnavailable };
+export type { SquadBuilderPersistenceUnavailable };
 
 /** All expected failures for account sharing services. */
 export type AccountSharingError =

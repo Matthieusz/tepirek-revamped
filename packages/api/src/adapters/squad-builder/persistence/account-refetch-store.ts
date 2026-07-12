@@ -55,6 +55,7 @@ import type { ApplyAccountRefetchOutput } from "../../../services/squad-builder/
 import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   ActorDoesNotOwnMargonemAccount,
+  FirecrawlMonthlyBudgetExhausted,
   MargonemAccountNotFound,
   PendingMargonemAccountRefetchNotFound,
 } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
@@ -75,13 +76,7 @@ const reserveRequestWithDatabase =
     yearMonth,
   }: ReserveFirecrawlRequestInput): Effect.Effect<
     ReservedFirecrawlRequest,
-    | {
-        readonly _tag: "FirecrawlMonthlyBudgetExhausted";
-        readonly yearMonth: typeof yearMonth;
-        readonly monthlyRequestBudget: number;
-        readonly usedRequests: number;
-      }
-    | EffectSquadBuilderPersistenceUnavailable,
+    FirecrawlMonthlyBudgetExhausted | EffectSquadBuilderPersistenceUnavailable,
     never
   > =>
     Effect.gen(function* reserveRequestEffect() {
@@ -109,8 +104,7 @@ const reserveRequestWithDatabase =
           const usedRequests = usageRows[0]?.usedRequests ?? 0;
 
           if (usedRequests >= monthlyRequestBudget) {
-            return yield* Effect.fail({
-              _tag: "FirecrawlMonthlyBudgetExhausted" as const,
+            return yield* new FirecrawlMonthlyBudgetExhausted({
               monthlyRequestBudget,
               usedRequests,
               yearMonth,
