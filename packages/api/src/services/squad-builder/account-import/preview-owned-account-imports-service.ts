@@ -35,7 +35,7 @@ import type {
   ProfileAccessState,
   SquadBuilderPersistenceUnavailable,
 } from "./account-import-store.ts";
-import { preview as previewMargonemProfileImport } from "./preview-margonem-profile-import-service.ts";
+import { makePreviewMargonemProfileImport } from "./preview-margonem-profile-import-service.ts";
 import type {
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportInput,
@@ -137,8 +137,7 @@ export interface EffectSingleMargonemProfilePreview {
     input: PreviewMargonemProfileImportInput
   ) => Effect<
     PreviewMargonemProfileImportOutput,
-    PreviewMargonemProfileImportError,
-    AccountImportStoreService
+    PreviewMargonemProfileImportError
   >;
 }
 
@@ -205,16 +204,18 @@ const persistPendingImport = ({
   lineNumber,
   now,
   preview,
+  store,
 }: {
   readonly actorUserId: AppUserId;
   readonly inputUrl: string;
   readonly lineNumber: number;
   readonly now: Date;
   readonly preview: PreviewMargonemProfileImportOutput;
+  readonly store: typeof AccountImportStoreService.Service;
 }): Effect<
   { readonly lineNumber: number; readonly item: PreviewOwnedAccountImportItem },
   never,
-  AccountImportStoreService
+  never
 > => {
   const expiresAt = new Date(
     now.getTime() + pendingImportPolicy.expiresAfterMinutes * 60_000
@@ -224,8 +225,8 @@ const persistPendingImport = ({
     preview.profileId
   );
 
-  return AccountImportStoreService.use((store) =>
-    store.createPendingImport({
+  return store
+    .createPendingImport({
       actorUserId,
       defaultDisplayName,
       expiresAt,
@@ -236,39 +237,44 @@ const persistPendingImport = ({
       profileId: preview.profileId,
       suggestedAccountName: preview.suggestedAccountName,
     })
-  ).pipe(
-    EffectRuntime.matchEffect({
-      onFailure: (error) =>
-        logSquadBuilderInternalFailure(error).pipe(
-          EffectRuntime.as({
-            item: toFailedItem({ error, inputUrl, lineNumber }),
+    .pipe(
+      EffectRuntime.matchEffect({
+        onFailure: (error) =>
+          logSquadBuilderInternalFailure(error).pipe(
+            EffectRuntime.as({
+              item: toFailedItem({ error, inputUrl, lineNumber }),
+              lineNumber,
+            })
+          ),
+        onSuccess: (created) =>
+          EffectRuntime.succeed({
+            item: {
+              _tag: "PreviewSucceeded" as const,
+              defaultDisplayName,
+              firecrawlCreditsUsed: preview.firecrawlCreditsUsed,
+              generatedProfileUrl: toMargonemProfileUrl(preview.profileId),
+              inputUrl,
+              jarunaCharacters: preview.jarunaCharacters,
+              lastFetchedAt: preview.lastFetchedAt,
+              lineNumber,
+              pendingImportId: created.id,
+              profileId: preview.profileId,
+              suggestedAccountName: preview.suggestedAccountName,
+            },
             lineNumber,
-          })
-        ),
-      onSuccess: (created) =>
-        EffectRuntime.succeed({
-          item: {
-            _tag: "PreviewSucceeded" as const,
-            defaultDisplayName,
-            firecrawlCreditsUsed: preview.firecrawlCreditsUsed,
-            generatedProfileUrl: toMargonemProfileUrl(preview.profileId),
-            inputUrl,
-            jarunaCharacters: preview.jarunaCharacters,
-            lastFetchedAt: preview.lastFetchedAt,
-            lineNumber,
-            pendingImportId: created.id,
-            profileId: preview.profileId,
-            suggestedAccountName: preview.suggestedAccountName,
-          },
-          lineNumber,
-        }),
-    })
-  );
+          }),
+      })
+    );
 };
 
 /** Preview and persist pending imports for a batch of pasted profile URLs. */
-export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
-  function* previewBatchEffect(input: PreviewOwnedAccountImportsInput) {
+const makePreview = (
+  store: typeof AccountImportStoreService.Service,
+  singleProfilePreview: EffectSingleMargonemProfilePreview
+) =>
+  EffectRuntime.fn("AccountImport.previewBatch")(function* previewBatchEffect(
+    input: PreviewOwnedAccountImportsInput
+  ) {
     const currentTimeMillis = yield* ClockRuntime.currentTimeMillis;
     const now = new Date(currentTimeMillis);
     const nonBlankLines = input.profileUrls
@@ -333,32 +339,32 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
 
     const accessResults = yield* EffectRuntime.all(
       parsedLines.map((line) =>
-        AccountImportStoreService.use((store) =>
-          store.findProfileAccessState({
+        store
+          .findProfileAccessState({
             actorUserId: input.actorUserId,
             profileId: line.profileId,
           })
-        ).pipe(
-          EffectRuntime.matchEffect({
-            onFailure: (error) =>
-              logSquadBuilderInternalFailure(error).pipe(
-                EffectRuntime.as({
-                  _tag: "LineFailure" as const,
-                  error,
+          .pipe(
+            EffectRuntime.matchEffect({
+              onFailure: (error) =>
+                logSquadBuilderInternalFailure(error).pipe(
+                  EffectRuntime.as({
+                    _tag: "LineFailure" as const,
+                    error,
+                    inputUrl: line.inputUrl,
+                    lineNumber: line.lineNumber,
+                  })
+                ),
+              onSuccess: (state) =>
+                EffectRuntime.succeed({
+                  _tag: "AccessState" as const,
                   inputUrl: line.inputUrl,
                   lineNumber: line.lineNumber,
-                })
-              ),
-            onSuccess: (state) =>
-              EffectRuntime.succeed({
-                _tag: "AccessState" as const,
-                inputUrl: line.inputUrl,
-                lineNumber: line.lineNumber,
-                profileId: line.profileId,
-                state,
-              }),
-          })
-        )
+                  profileId: line.profileId,
+                  state,
+                }),
+            })
+          )
       )
     );
 
@@ -394,32 +400,35 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
 
     const fetchedItems = yield* EffectRuntime.all(
       availableLines.map((line) =>
-        previewMargonemProfileImport({
-          actorUserId: input.actorUserId,
-          profileUrl: line.inputUrl,
-        }).pipe(
-          EffectRuntime.matchEffect({
-            onFailure: (error) =>
-              logSquadBuilderInternalFailure(error).pipe(
-                EffectRuntime.as({
-                  item: toFailedItem({
-                    error,
-                    inputUrl: line.inputUrl,
-                    lineNumber: line.lineNumber,
-                  }),
-                  lineNumber: line.lineNumber,
-                })
-              ),
-            onSuccess: (profilePreview) =>
-              persistPendingImport({
-                actorUserId: input.actorUserId,
-                inputUrl: line.inputUrl,
-                lineNumber: line.lineNumber,
-                now,
-                preview: profilePreview,
-              }),
+        singleProfilePreview
+          .preview({
+            actorUserId: input.actorUserId,
+            profileUrl: line.inputUrl,
           })
-        )
+          .pipe(
+            EffectRuntime.matchEffect({
+              onFailure: (error) =>
+                logSquadBuilderInternalFailure(error).pipe(
+                  EffectRuntime.as({
+                    item: toFailedItem({
+                      error,
+                      inputUrl: line.inputUrl,
+                      lineNumber: line.lineNumber,
+                    }),
+                    lineNumber: line.lineNumber,
+                  })
+                ),
+              onSuccess: (profilePreview) =>
+                persistPendingImport({
+                  actorUserId: input.actorUserId,
+                  inputUrl: line.inputUrl,
+                  lineNumber: line.lineNumber,
+                  now,
+                  preview: profilePreview,
+                  store,
+                }),
+            })
+          )
       ),
       { concurrency: batchImportPolicy.fetchConcurrency }
     );
@@ -441,22 +450,19 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
       );
 
     return { items };
-  }
-);
+  });
 
-const makePreview = (
-  store: typeof AccountImportStoreService.Service,
-  config: typeof FirecrawlConfigService.Service,
-  firecrawl: typeof FirecrawlClientService.Service
-) =>
-  EffectRuntime.fn("AccountImport.previewBatch")(
-    (input: PreviewOwnedAccountImportsInput) =>
-      preview(input).pipe(
-        EffectRuntime.provideService(AccountImportStoreService, store),
-        EffectRuntime.provideService(FirecrawlConfigService, config),
-        EffectRuntime.provideService(FirecrawlClientService, firecrawl)
-      )
-  );
+/** Integration seam that resolves dependencies from the Effect context. */
+export const preview = (input: PreviewOwnedAccountImportsInput) =>
+  EffectRuntime.gen(function* previewIntegration() {
+    const store = yield* AccountImportStoreService;
+    const config = yield* FirecrawlConfigService;
+    const firecrawl = yield* FirecrawlClientService;
+    const singleProfilePreview = {
+      preview: makePreviewMargonemProfileImport(store, config, firecrawl),
+    };
+    return yield* makePreview(store, singleProfilePreview)(input);
+  });
 
 export interface PreviewOwnedAccountImports {
   readonly preview: ReturnType<typeof makePreview>;
@@ -474,6 +480,9 @@ export const layer = Layer.effect(
     const store = yield* AccountImportStoreService;
     const config = yield* FirecrawlConfigService;
     const firecrawl = yield* FirecrawlClientService;
-    return { preview: makePreview(store, config, firecrawl) };
+    const singleProfilePreview = {
+      preview: makePreviewMargonemProfileImport(store, config, firecrawl),
+    };
+    return { preview: makePreview(store, singleProfilePreview) };
   })
 );

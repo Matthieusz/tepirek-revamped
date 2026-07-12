@@ -61,12 +61,9 @@ const makeSave = (store: SquadGroupStore.SquadGroupStoreServiceShape) =>
     });
   });
 
-export const save = Effect.fn("SquadGroups.save")(function* saveSquadGroup(
-  input: SaveSquadGroupInput
-) {
-  const store = yield* SquadGroupStore.SquadGroupStoreService;
-  return yield* makeSave(store)(input);
-});
+/** Integration seam that resolves the store from the Effect context. */
+export const save = (input: SaveSquadGroupInput) =>
+  SquadGroupStore.SquadGroupStoreService.use((store) => makeSave(store)(input));
 
 export interface SaveSquadGroup {
   readonly save: ReturnType<typeof makeSave>;

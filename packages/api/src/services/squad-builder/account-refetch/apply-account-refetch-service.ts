@@ -75,13 +75,9 @@ const makeApply = (store: AccountRefetchStoreServiceShape) =>
     return applied;
   });
 
-/** Apply a previously previewed account refetch to account and character storage. */
-export const apply = EffectRuntime.fn("AccountRefetch.apply")(
-  function* applyAccountRefetchEffect(input: ApplyAccountRefetchInput) {
-    const store = yield* AccountRefetchStoreService;
-    return yield* makeApply(store)(input);
-  }
-);
+/** Integration seam that resolves the store from the Effect context. */
+export const apply = (input: ApplyAccountRefetchInput) =>
+  AccountRefetchStoreService.use((store) => makeApply(store)(input));
 
 export interface ApplyAccountRefetch {
   readonly apply: ReturnType<typeof makeApply>;

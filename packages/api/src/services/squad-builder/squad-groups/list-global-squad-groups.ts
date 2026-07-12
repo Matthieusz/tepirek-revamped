@@ -25,16 +25,11 @@ const makeList = (store: SquadGroupStoreServiceShape) =>
       })
   );
 
-/** List globally visible squad groups for a verified actor. */
-export const list = Effect.fn("SquadGroups.listGlobal")(
-  function* listGlobalSquadGroups(input: {
-    readonly actorUserId: AppUserId;
-    readonly filters?: SquadGroupListFilters;
-  }) {
-    const store = yield* SquadGroupStoreService;
-    return yield* makeList(store)(input);
-  }
-);
+/** Integration seam that resolves the store from the Effect context. */
+export const list = (input: {
+  readonly actorUserId: AppUserId;
+  readonly filters?: SquadGroupListFilters;
+}) => SquadGroupStoreService.use((store) => makeList(store)(input));
 
 export interface ListGlobalSquadGroups {
   readonly list: ReturnType<typeof makeList>;

@@ -33,39 +33,32 @@ const currentDate = Clock.currentTimeMillis.pipe(
 );
 
 /** Save a previously previewed Margonem account and its Jaruna characters. */
-export const confirm = EffectRuntime.fn("AccountImport.confirm")(
-  function* confirmOwnedAccountImportEffect(
-    input: ConfirmOwnedAccountImportInput
-  ) {
-    const displayName = yield* parseAccountDisplayName(input.displayName);
+const makeConfirm = (store: typeof AccountImportStoreService.Service) =>
+  EffectRuntime.fn("AccountImport.confirm")(
+    function* confirmOwnedAccountImportEffect(
+      input: ConfirmOwnedAccountImportInput
+    ) {
+      const displayName = yield* parseAccountDisplayName(input.displayName);
 
-    const now = yield* currentDate;
-    const pending = yield* AccountImportStoreService.use((store) =>
-      store.findPendingImportForConfirmation({
+      const now = yield* currentDate;
+      const pending = yield* store.findPendingImportForConfirmation({
         actorUserId: input.actorUserId,
         now,
         pendingImportId: input.pendingImportId,
-      })
-    );
+      });
 
-    return yield* AccountImportStoreService.use((store) =>
-      store.createOwnedAccountFromPendingImport({
+      return yield* store.createOwnedAccountFromPendingImport({
         actorUserId: input.actorUserId,
         confirmedAt: now,
         displayName,
         pending,
-      })
-    );
-  }
-);
-
-const makeConfirm = (store: typeof AccountImportStoreService.Service) =>
-  EffectRuntime.fn("AccountImport.confirm")(
-    (input: ConfirmOwnedAccountImportInput) =>
-      confirm(input).pipe(
-        EffectRuntime.provideService(AccountImportStoreService, store)
-      )
+      });
+    }
   );
+
+/** Integration seam that resolves the store from the Effect context. */
+export const confirm = (input: ConfirmOwnedAccountImportInput) =>
+  AccountImportStoreService.use((store) => makeConfirm(store)(input));
 
 export interface ConfirmOwnedAccountImport {
   readonly confirm: ReturnType<typeof makeConfirm>;

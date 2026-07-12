@@ -90,17 +90,19 @@ const currentDate = ClockRuntime.currentTimeMillis.pipe(
 );
 
 /** Preview a Margonem profile import without saving the account. */
-export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
-  function* previewEffect(input: PreviewMargonemProfileImportInput) {
-    const config = yield* FirecrawlConfigService;
-    const firecrawl = yield* FirecrawlClientService;
+export const makePreviewMargonemProfileImport = (
+  store: typeof AccountImportStoreService.Service,
+  config: typeof FirecrawlConfigService.Service,
+  firecrawl: typeof FirecrawlClientService.Service
+) =>
+  EffectRuntime.fn("AccountImport.previewProfile")(function* previewEffect(
+    input: PreviewMargonemProfileImportInput
+  ) {
     const profileId = yield* parseMargonemProfileUrl(input.profileUrl);
-    const accessState = yield* AccountImportStoreService.use((store) =>
-      store.findProfileAccessState({
-        actorUserId: input.actorUserId,
-        profileId,
-      })
-    );
+    const accessState = yield* store.findProfileAccessState({
+      actorUserId: input.actorUserId,
+      profileId,
+    });
     const duplicateError = profileAccessStateToDuplicateError(accessState);
 
     if (duplicateError !== undefined) {
@@ -109,25 +111,21 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
 
     const requestTimeMillis = yield* ClockRuntime.currentTimeMillis;
     const yearMonth = firecrawlYearMonthFromDate(new Date(requestTimeMillis));
-    const reservedRequest = yield* AccountImportStoreService.use((store) =>
-      store.reserveRequest({
-        monthlyRequestBudget: config.monthlyRequestBudget,
-        profileId,
-        requestedByUserId: input.actorUserId,
-        yearMonth,
-      })
-    );
+    const reservedRequest = yield* store.reserveRequest({
+      monthlyRequestBudget: config.monthlyRequestBudget,
+      profileId,
+      requestedByUserId: input.actorUserId,
+      yearMonth,
+    });
     const scrapedProfile = yield* firecrawl.scrapeProfileHtml(profileId).pipe(
       EffectRuntime.catch((error) =>
         EffectRuntime.gen(function* markRequestFailed() {
           const completedAt = yield* currentDate;
-          yield* AccountImportStoreService.use((store) =>
-            store.markRequestFailed({
-              completedAt,
-              errorTag: error._tag,
-              requestId: reservedRequest.requestId,
-            })
-          );
+          yield* store.markRequestFailed({
+            completedAt,
+            errorTag: error._tag,
+            requestId: reservedRequest.requestId,
+          });
           return yield* error;
         })
       )
@@ -139,13 +137,11 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
       EffectRuntime.catch(() =>
         EffectRuntime.gen(function* markInvalidResponseFailed() {
           const completedAt = yield* currentDate;
-          yield* AccountImportStoreService.use((store) =>
-            store.markRequestFailed({
-              completedAt,
-              errorTag: "FirecrawlResponseNotParseable",
-              requestId: reservedRequest.requestId,
-            })
-          );
+          yield* store.markRequestFailed({
+            completedAt,
+            errorTag: "FirecrawlResponseNotParseable",
+            requestId: reservedRequest.requestId,
+          });
           return yield* new FirecrawlResponseNotParseable({
             cause: new Error("Invalid Firecrawl creditsUsed"),
             profileId,
@@ -155,15 +151,13 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
     );
 
     const completedAt = yield* currentDate;
-    yield* AccountImportStoreService.use((store) =>
-      store.markRequestSucceeded({
-        cacheState: scrapedProfile.metadata.cacheState ?? null,
-        completedAt,
-        creditsUsed,
-        firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
-        requestId: reservedRequest.requestId,
-      })
-    );
+    yield* store.markRequestSucceeded({
+      cacheState: scrapedProfile.metadata.cacheState ?? null,
+      completedAt,
+      creditsUsed,
+      firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
+      requestId: reservedRequest.requestId,
+    });
 
     const parsedHtml = yield* parseMargonemProfileHtml({
       html: scrapedProfile.html,
@@ -180,25 +174,23 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
       profileId,
       suggestedAccountName: parsedHtml.suggestedAccountName,
     };
-  }
-);
+  });
 
-const makePreview = (
-  store: typeof AccountImportStoreService.Service,
-  config: typeof FirecrawlConfigService.Service,
-  firecrawl: typeof FirecrawlClientService.Service
-) =>
-  EffectRuntime.fn("AccountImport.previewProfile")(
-    (input: PreviewMargonemProfileImportInput) =>
-      preview(input).pipe(
-        EffectRuntime.provideService(AccountImportStoreService, store),
-        EffectRuntime.provideService(FirecrawlConfigService, config),
-        EffectRuntime.provideService(FirecrawlClientService, firecrawl)
-      )
-  );
+/** Integration seam that resolves dependencies from the Effect context. */
+export const preview = (input: PreviewMargonemProfileImportInput) =>
+  EffectRuntime.gen(function* previewIntegration() {
+    const store = yield* AccountImportStoreService;
+    const config = yield* FirecrawlConfigService;
+    const firecrawl = yield* FirecrawlClientService;
+    return yield* makePreviewMargonemProfileImport(
+      store,
+      config,
+      firecrawl
+    )(input);
+  });
 
 export interface PreviewMargonemProfileImport {
-  readonly preview: ReturnType<typeof makePreview>;
+  readonly preview: ReturnType<typeof makePreviewMargonemProfileImport>;
 }
 
 // oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
@@ -215,6 +207,8 @@ export const layer = Layer.effect(
     const store = yield* AccountImportStoreService;
     const config = yield* FirecrawlConfigService;
     const firecrawl = yield* FirecrawlClientService;
-    return { preview: makePreview(store, config, firecrawl) };
+    return {
+      preview: makePreviewMargonemProfileImport(store, config, firecrawl),
+    };
   })
 );

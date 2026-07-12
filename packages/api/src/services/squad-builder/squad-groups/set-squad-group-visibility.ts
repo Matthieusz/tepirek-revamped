@@ -35,17 +35,13 @@ const makeSet = (store: SquadGroupStore.SquadGroupStoreServiceShape) =>
     });
   });
 
-/** Change squad group visibility as the owner. */
-export const set = Effect.fn("SquadGroups.setVisibility")(
-  function* setSquadGroupVisibility(input: {
-    readonly actorUserId: AppUserId;
-    readonly groupId: SquadGroupId;
-    readonly visibility: SquadGroupVisibility;
-  }) {
-    const store = yield* SquadGroupStore.SquadGroupStoreService;
-    return yield* makeSet(store)(input);
-  }
-);
+/** Integration seam that resolves the store from the Effect context. */
+export const set = (input: {
+  readonly actorUserId: AppUserId;
+  readonly groupId: SquadGroupId;
+  readonly visibility: SquadGroupVisibility;
+}) =>
+  SquadGroupStore.SquadGroupStoreService.use((store) => makeSet(store)(input));
 
 export interface SetSquadGroupVisibility {
   readonly set: ReturnType<typeof makeSet>;

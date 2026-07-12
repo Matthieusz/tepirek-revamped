@@ -33,13 +33,9 @@ const makeCreate = (store: SquadGroupStoreServiceShape) =>
     });
   });
 
-/** Create an empty private squad group owned by the actor. */
-export const create = Effect.fn("SquadGroups.create")(
-  function* createSquadGroup(input: CreateSquadGroupInput) {
-    const store = yield* SquadGroupStoreService;
-    return yield* makeCreate(store)(input);
-  }
-);
+/** Integration seam that resolves the store from the Effect context. */
+export const create = (input: CreateSquadGroupInput) =>
+  SquadGroupStoreService.use((store) => makeCreate(store)(input));
 
 export interface CreateSquadGroup {
   readonly create: ReturnType<typeof makeCreate>;

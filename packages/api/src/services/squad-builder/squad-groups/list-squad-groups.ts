@@ -22,20 +22,17 @@ export type GetSquadGroupDetailError =
   | ActorCannotViewSquadGroup
   | EffectSquadBuilderPersistenceUnavailable;
 
+/** Integration seam that resolves the store from the Effect context. */
+export const listMine = (input: { readonly actorUserId: AppUserId }) =>
+  SquadGroupStoreService.use((store) => store.listMySquadGroups(input));
+
+/** Integration seam that resolves the store from the Effect context. */
+export const getMine = (input: {
+  readonly actorUserId: AppUserId;
+  readonly groupId: SquadGroupId;
+}) => SquadGroupStoreService.use((store) => store.getSquadGroupDetail(input));
+
 /** List squad groups owned by the actor. */
-export const listMine = Effect.fn("SquadGroups.listMine")(
-  (input: { readonly actorUserId: AppUserId }) =>
-    SquadGroupStoreService.use((store) => store.listMySquadGroups(input))
-);
-
-/** Load a squad group the actor can view. */
-export const getMine = Effect.fn("SquadGroups.getMine")(
-  (input: {
-    readonly actorUserId: AppUserId;
-    readonly groupId: SquadGroupId;
-  }) => SquadGroupStoreService.use((store) => store.getSquadGroupDetail(input))
-);
-
 export interface ListSquadGroups {
   readonly listMine: (input: {
     readonly actorUserId: AppUserId;
@@ -57,14 +54,12 @@ export const layer = Layer.effect(
   Effect.gen(function* makeService() {
     const store = yield* SquadGroupStoreService;
     return {
-      getMine: (input) =>
-        getMine(input).pipe(
-          Effect.provideService(SquadGroupStoreService, store)
-        ),
-      listMine: (input) =>
-        listMine(input).pipe(
-          Effect.provideService(SquadGroupStoreService, store)
-        ),
+      getMine: Effect.fn("SquadGroups.getMine")((input) =>
+        store.getSquadGroupDetail(input)
+      ),
+      listMine: Effect.fn("SquadGroups.listMine")((input) =>
+        store.listMySquadGroups(input)
+      ),
     };
   })
 );
