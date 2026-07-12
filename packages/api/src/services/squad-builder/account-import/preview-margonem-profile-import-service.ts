@@ -106,7 +106,7 @@ export const makePreviewMargonemProfileImport = (
     const duplicateError = profileAccessStateToDuplicateError(accessState);
 
     if (duplicateError !== undefined) {
-      return yield* EffectRuntime.fail(duplicateError);
+      return yield* duplicateError;
     }
 
     const requestTimeMillis = yield* ClockRuntime.currentTimeMillis;
