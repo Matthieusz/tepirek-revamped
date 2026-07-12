@@ -4,6 +4,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
 import { FirecrawlConfigService } from "../../../services/squad-builder/firecrawl-config.js";
+import type { FirecrawlConfig } from "../../../services/squad-builder/firecrawl-config.js";
 
 const MonthlyRequestBudget = Schema.Int.check(
   Schema.isBetween({
@@ -12,7 +13,8 @@ const MonthlyRequestBudget = Schema.Int.check(
   })
 );
 
-const firecrawlConfig = Config.all({
+/** Firecrawl configuration parsed from the active Effect Config provider. */
+export const readFirecrawlConfig = Config.all({
   apiKey: Config.redacted("FIRECRAWL_API_KEY"),
   monthlyRequestBudget: Config.schema(
     MonthlyRequestBudget,
@@ -27,6 +29,10 @@ export const FirecrawlConfigServiceLiveLayer: Layer.Layer<
 > = Layer.effect(
   FirecrawlConfigService,
   EffectRuntime.gen(function* makeFirecrawlConfig() {
-    return FirecrawlConfigService.of(yield* firecrawlConfig);
+    return FirecrawlConfigService.of(yield* readFirecrawlConfig);
   })
 );
+
+/** Provide an already-parsed Firecrawl configuration. */
+export const makeFirecrawlConfigLayer = (config: FirecrawlConfig) =>
+  Layer.succeed(FirecrawlConfigService, config);

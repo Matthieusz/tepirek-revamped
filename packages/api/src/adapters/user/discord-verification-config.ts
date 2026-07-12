@@ -17,3 +17,13 @@ export class DiscordVerificationConfig extends Context.Service<
     )
   );
 }
+
+/** Discord guild configuration parsed from the active Config provider. */
+export const readDiscordVerificationConfig = Config.string(
+  "DISCORD_SERVER_ID"
+).pipe(Effect.map((guildId) => DiscordVerificationConfig.of({ guildId })));
+
+/** Provide an already-parsed Discord verification configuration. */
+export const makeDiscordVerificationConfigLayer = (config: {
+  readonly guildId: string;
+}) => Layer.succeed(DiscordVerificationConfig, config);

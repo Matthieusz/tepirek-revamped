@@ -1,21 +1,19 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { resource } from "./otlp.js";
 
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
-
 describe("OTLP resource metadata", () => {
   it("sets complete built-in resource metadata after parsed OTEL attributes", () => {
-    vi.stubEnv(
-      "OTEL_RESOURCE_ATTRIBUTES",
-      "deployment.environment.name=from-otel,service.instance.id=from-otel,tepirek.run=from-otel,custom.attribute=custom"
-    );
-    vi.stubEnv("OTEL_DEPLOYMENT_ENVIRONMENT_NAME", "test");
-    vi.stubEnv("npm_package_version", "1.2.3");
-
-    const metadata = resource();
+    const metadata = resource({
+      deploymentEnvironmentName: "test",
+      resourceAttributes: {
+        "custom.attribute": "custom",
+        "deployment.environment.name": "from-otel",
+        "service.instance.id": "from-otel",
+        "tepirek.run": "from-otel",
+      },
+      serviceVersion: "1.2.3",
+    });
 
     expect(metadata.serviceName).toBe("tepirek-revamped-api");
     expect(metadata.serviceVersion).toBe("1.2.3");

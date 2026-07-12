@@ -2,16 +2,11 @@ import "dotenv/config";
 import * as Observability from "@tepirek-revamped/api/observability";
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { makeBetterAuthAdapterLayer } from "@tepirek-revamped/api/server/auth/better-auth-adapter";
-import { makeApiLiveLayerFromConfig } from "@tepirek-revamped/api/server/effect-app";
+import { makeApiLiveLayerFromValues } from "@tepirek-revamped/api/server/effect-app";
 import { HealthHttpApiLayer } from "@tepirek-revamped/api/server/health/http-api-handlers";
 import { AppHttpApiLayer } from "@tepirek-revamped/api/server/http-api-handlers";
-import {
-  AuthConfigLiveLayer,
-  createAuth,
-  readAuthEnv,
-} from "@tepirek-revamped/auth";
+import { AuthConfigLiveLayer, createAuth } from "@tepirek-revamped/auth";
 import { createDatabase } from "@tepirek-revamped/db";
-import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
@@ -28,6 +23,7 @@ import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 import { makeShutdown } from "./server-lifecycle.js";
+import { readStartupConfig } from "./startup-config.js";
 
 initLogger({
   env: { service: "tepirek-server" },
@@ -35,19 +31,13 @@ initLogger({
 
 const app = new Hono<EvlogVariables>();
 
-// Startup-boundary env reads. Effect-managed code uses Config services
-// (e.g. DatabaseUrlConfig) rather than raw process.env access.
-const corsOrigin = process.env.CORS_ORIGIN;
-if (!corsOrigin) {
-  throw new Error("CORS_ORIGIN environment variable is required");
-}
-
+// The Hono host is the executable adapter boundary: all environment values
+// are parsed here before handlers or traffic can start. Observability remains
+// an adapter concern because its values configure external OTLP transports.
 const startupConfig = Effect.runSync(
-  Effect.all({
-    auth: readAuthEnv,
-    databaseUrl: Config.redacted("DATABASE_URL"),
-  }).pipe(Effect.provide(AuthConfigLiveLayer))
+  readStartupConfig.pipe(Effect.provide(AuthConfigLiveLayer))
 );
+const { corsOrigin } = startupConfig;
 const { database, pool: dbPool } = createDatabase(
   Redacted.value(startupConfig.databaseUrl)
 );
@@ -57,10 +47,16 @@ const auth = createAuth(startupConfig.auth, database);
 // and HttpServer services required by the HttpApi layer before it reaches
 // toWebHandler; this narrows the exported web handler to the Hono boundary.
 const appHttpApiLayer = AppHttpApiLayer.pipe(
-  Layer.provideMerge(makeApiLiveLayerFromConfig()),
+  Layer.provideMerge(
+    makeApiLiveLayerFromValues({
+      databaseUrl: Redacted.value(startupConfig.databaseUrl),
+      discordGuildId: startupConfig.discordGuildId,
+      firecrawl: startupConfig.firecrawl,
+    })
+  ),
   Layer.provideMerge(makeBetterAuthAdapterLayer(auth)),
   Layer.provide(HttpServer.layerServices),
-  Layer.provide(Observability.layer)
+  Layer.provide(Observability.makeLayer(startupConfig.observability))
 );
 
 const appHttpApi = HttpRouter.toWebHandler(appHttpApiLayer, {

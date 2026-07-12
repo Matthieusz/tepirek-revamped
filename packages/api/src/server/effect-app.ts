@@ -21,11 +21,17 @@ import type { HeroesStore } from "../adapters/heroes/heroes-store.js";
 import { SkillsStoreLayer } from "../adapters/skills/skills-store.js";
 import type { SkillsStore } from "../adapters/skills/skills-store.js";
 import { FirecrawlClientServiceLiveLayer } from "../adapters/squad-builder/firecrawl/firecrawl-client-service.js";
-import { FirecrawlConfigServiceLiveLayer } from "../adapters/squad-builder/firecrawl/firecrawl-config.js";
+import {
+  FirecrawlConfigServiceLiveLayer,
+  makeFirecrawlConfigLayer,
+} from "../adapters/squad-builder/firecrawl/firecrawl-config.js";
 import { DrizzleSquadBuilderStoresLayer } from "../adapters/squad-builder/persistence/squad-builder-stores-layer.js";
 import { TodoStoreLayer } from "../adapters/todo/todo-store.js";
 import type { TodoStore } from "../adapters/todo/todo-store.js";
-import { DiscordVerificationConfig } from "../adapters/user/discord-verification-config.js";
+import {
+  DiscordVerificationConfig,
+  makeDiscordVerificationConfigLayer,
+} from "../adapters/user/discord-verification-config.js";
 import type { DiscordVerificationConfig as DiscordVerificationConfigService } from "../adapters/user/discord-verification-config.js";
 import { DiscordGuildVerifierLiveLayer } from "../adapters/user/discord-verification-service.js";
 import type { DiscordGuildVerifier } from "../adapters/user/discord-verification-service.js";
@@ -57,7 +63,10 @@ import { layer as accountInviteTargetsLayer } from "../services/squad-builder/ac
 import type { AccountAccessInvitesService } from "../services/squad-builder/account-sharing/send-account-access-invite-service.js";
 import { layer as accountAccessInvitesLayer } from "../services/squad-builder/account-sharing/send-account-access-invite-service.js";
 import type { FirecrawlClientService } from "../services/squad-builder/firecrawl-client.js";
-import type { FirecrawlConfigService } from "../services/squad-builder/firecrawl-config.js";
+import type {
+  FirecrawlConfig,
+  FirecrawlConfigService,
+} from "../services/squad-builder/firecrawl-config.js";
 import { layer as createSquadGroupLayer } from "../services/squad-builder/squad-groups/create-squad-group.js";
 import type { CreateSquadGroupService } from "../services/squad-builder/squad-groups/create-squad-group.js";
 import { layer as listGlobalSquadGroupsLayer } from "../services/squad-builder/squad-groups/list-global-squad-groups.js";
@@ -84,7 +93,9 @@ import type { SquadGroupStoreService } from "../services/squad-builder/squad-gro
 import type { VaultService } from "../services/vault/vault-service.js";
 
 const makeApiStableLayer = (
-  databaseLayer: Layer.Layer<EffectDatabase, SqlError | ConfigError, never>
+  databaseLayer: Layer.Layer<EffectDatabase, SqlError | ConfigError, never>,
+  discordConfigLayer = DiscordVerificationConfig.layer,
+  firecrawlConfigLayer = FirecrawlConfigServiceLiveLayer
 ): Layer.Layer<SquadBuilderServices, SqlError | ConfigError> => {
   const databaseBackedStores = Layer.mergeAll(
     AnnouncementStoreLayer.pipe(Layer.provide(databaseLayer)),
@@ -97,10 +108,8 @@ const makeApiStableLayer = (
     SkillsStoreLayer.pipe(Layer.provide(databaseLayer)),
     AuctionStoreLayer.pipe(Layer.provide(databaseLayer)),
     UserStoreLayer.pipe(Layer.provide(databaseLayer)),
-    DiscordVerificationConfig.layer,
-    DiscordGuildVerifierLiveLayer.pipe(
-      Layer.provide(DiscordVerificationConfig.layer)
-    )
+    discordConfigLayer,
+    DiscordGuildVerifierLiveLayer.pipe(Layer.provide(discordConfigLayer))
   );
 
   const squadBuilderStores = DrizzleSquadBuilderStoresLayer.pipe(
@@ -124,10 +133,8 @@ const makeApiStableLayer = (
   );
 
   const firecrawlLayer = Layer.mergeAll(
-    FirecrawlConfigServiceLiveLayer,
-    FirecrawlClientServiceLiveLayer.pipe(
-      Layer.provide(FirecrawlConfigServiceLiveLayer)
-    )
+    firecrawlConfigLayer,
+    FirecrawlClientServiceLiveLayer.pipe(Layer.provide(firecrawlConfigLayer))
   );
 
   const stableServices = Layer.mergeAll(
@@ -163,6 +170,18 @@ export const makeApiSquadBuilderLayer = (databaseUrl: string) => {
 
 export const makeApiLiveLayer = (databaseUrl: string) =>
   makeApiStableLayer(makeLiveDatabaseLayer(databaseUrl));
+
+/** Build API services from configuration parsed by an executable boundary. */
+export const makeApiLiveLayerFromValues = (config: {
+  readonly databaseUrl: string;
+  readonly discordGuildId: string;
+  readonly firecrawl: FirecrawlConfig;
+}) =>
+  makeApiStableLayer(
+    makeLiveDatabaseLayer(config.databaseUrl),
+    makeDiscordVerificationConfigLayer({ guildId: config.discordGuildId }),
+    makeFirecrawlConfigLayer(config.firecrawl)
+  );
 
 /**
  * Build the full API live layer using Effect Config to read `DATABASE_URL`.

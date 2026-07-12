@@ -84,10 +84,8 @@ export const stderrLogger = makeStderrLogger();
 const isLogLevelName = (value: string): value is keyof typeof LOG_LEVELS =>
   value in LOG_LEVELS;
 
-export const minimumLogLevel = (): LogLevel => {
-  const value = process.env.TEPIREK_LOG_LEVEL?.toUpperCase();
-  return value && isLogLevelName(value) ? LOG_LEVELS[value] : LOG_LEVELS.INFO;
+/** Parse a configured minimum log level. */
+export const parseLogLevel = (value: string): LogLevel | undefined => {
+  const normalized = value.toUpperCase();
+  return isLogLevelName(normalized) ? LOG_LEVELS[normalized] : undefined;
 };
-
-export const loggers = () =>
-  process.env.TEPIREK_PRINT_LOGS === "1" ? [stderrLogger] : [];

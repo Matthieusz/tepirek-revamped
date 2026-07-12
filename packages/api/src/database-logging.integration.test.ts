@@ -74,7 +74,12 @@ describe("Effect database query logging", () => {
     try {
       const loggerLayer = makeLoggerLayer([
         makeStderrLogger((output) => stderrEntries.push(output)),
-        ...Otlp.loggers(`http://127.0.0.1:${address.port}`),
+        ...Otlp.loggers({
+          deploymentEnvironmentName: "test",
+          endpoint: `http://127.0.0.1:${address.port}`,
+          resourceAttributes: {},
+          serviceVersion: "test",
+        }),
       ]);
 
       await Effect.runPromise(

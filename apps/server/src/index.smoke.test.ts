@@ -10,6 +10,8 @@ process.env.DATABASE_URL =
   "postgresql://postgres:password@localhost:5433/tepirek-revamped-test";
 process.env.DISCORD_CLIENT_ID = "test-discord-client-id";
 process.env.DISCORD_CLIENT_SECRET = "test-discord-client-secret";
+process.env.DISCORD_SERVER_ID = "test-discord-server-id";
+process.env.FIRECRAWL_API_KEY = "test-firecrawl-api-key";
 
 const importApp = async () => {
   const module = await import("./index.js");
