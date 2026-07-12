@@ -1,4 +1,3 @@
-/* eslint-disable typescript/no-explicit-any -- Simplified service port types for broad Drizzle return shapes. */
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 

@@ -1,8 +1,14 @@
-/* eslint-disable typescript/no-explicit-any -- Simplified service port types for broad Drizzle return shapes. */
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
+import type {
+  LatestBetForCopy,
+  PaginatedBets,
+} from "../../protocol/bet/http-api-contract.ts";
 import type { BetError } from "./bet-errors.ts";
+
+export type LatestBetForCopyResult = typeof LatestBetForCopy.Type;
+export type PaginatedBetsResult = typeof PaginatedBets.Type;
 
 export interface CreateBetInput {
   readonly createdAt: Date;
@@ -64,7 +70,7 @@ export interface BetServiceInterface {
   >;
   readonly getPaginatedBets: (
     input: GetPaginatedBetsInput
-  ) => Effect<any, BetError>;
+  ) => Effect<PaginatedBetsResult, BetError>;
   readonly getBetMembers: (betId: number) => Effect<
     readonly {
       readonly id: number;
@@ -85,7 +91,7 @@ export interface BetServiceInterface {
     }[],
     BetError
   >;
-  readonly getLatestBetForCopy: () => Effect<any, BetError>;
+  readonly getLatestBetForCopy: () => Effect<LatestBetForCopyResult, BetError>;
 }
 
 export class BetService extends Context.Service<

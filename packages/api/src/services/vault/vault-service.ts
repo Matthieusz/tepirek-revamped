@@ -1,8 +1,10 @@
-/* eslint-disable typescript/no-explicit-any -- Simplified service port types for broad Drizzle return shapes. */
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
+import type { UserStatsRow } from "../../protocol/vault/http-api-contract.ts";
 import type { VaultError } from "./vault-errors.ts";
+
+export type UserStatsResultRow = typeof UserStatsRow.Type;
 
 export interface DistributeGoldInput {
   readonly goldAmount: number;
@@ -30,7 +32,7 @@ export interface VaultServiceInterface {
   >;
   readonly getUserStats: (
     eventId?: number
-  ) => Effect<readonly any[], VaultError>;
+  ) => Effect<readonly UserStatsResultRow[], VaultError>;
   readonly getVault: (eventId?: number) => Effect<
     readonly {
       readonly paidOut: boolean;
