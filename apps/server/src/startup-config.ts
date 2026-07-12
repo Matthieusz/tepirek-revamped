@@ -114,7 +114,7 @@ const readObservabilityConfig = Effect.gen(
         ...(endpoint === undefined ? {} : { endpoint }),
         ...(Object.keys(parsedHeaders).length === 0
           ? {}
-          : { headers: parsedHeaders }),
+          : { headers: values.headers }),
         minimumLogLevel,
         printLogs: values.printLogs === "1",
         resourceAttributes: parseEntries(

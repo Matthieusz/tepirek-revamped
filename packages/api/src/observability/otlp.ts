@@ -1,4 +1,5 @@
 import { Effect, Layer } from "effect";
+import * as Redacted from "effect/Redacted";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import * as OtlpLogger from "effect/unstable/observability/OtlpLogger";
 import * as OtlpSerialization from "effect/unstable/observability/OtlpSerialization";
@@ -9,10 +10,29 @@ import { runId } from "./shared.js";
 export interface OtlpConfig {
   readonly deploymentEnvironmentName: string;
   readonly endpoint?: string;
-  readonly headers?: Readonly<Record<string, string>>;
+  readonly headers?: Redacted.Redacted;
   readonly resourceAttributes: Readonly<Record<string, string>>;
   readonly serviceVersion: string;
 }
+
+const parseHeaders = (
+  headers: Redacted.Redacted | undefined
+): Record<string, string> | undefined => {
+  if (headers === undefined) {
+    return undefined;
+  }
+  return Object.fromEntries(
+    Redacted.value(headers)
+      .split(",")
+      .map((entry) => {
+        const separator = entry.indexOf("=");
+        return [
+          entry.slice(0, separator).trim(),
+          entry.slice(separator + 1).trim(),
+        ];
+      })
+  );
+};
 
 const otlpSupportLayer = Layer.merge(
   FetchHttpClient.layer,
@@ -55,7 +75,7 @@ export const loggers = (config: OtlpConfig) => {
     ? []
     : [
         OtlpLogger.make({
-          headers: config.headers,
+          headers: parseHeaders(config.headers),
           resource: resource(config),
           url,
         }).pipe(Effect.provide(otlpSupportLayer)),
@@ -70,7 +90,7 @@ export const tracingLayer = (config: OtlpConfig) => {
     url === undefined
       ? Layer.empty
       : OtlpTracer.layer({
-          headers: config.headers,
+          headers: parseHeaders(config.headers),
           resource: resource(config),
           url,
         }).pipe(Layer.provide(otlpSupportLayer))
