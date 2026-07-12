@@ -151,7 +151,7 @@ describe("getAvailableListState", () => {
   it("reports has-users when available users exist", () => {
     expect(
       getAvailableListState({
-        availableUsers: [users[0]],
+        availableUsers: [{ id: "u1", image: null, name: "Alice" }],
         users,
         usersLoading: false,
       })

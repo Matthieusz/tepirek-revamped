@@ -12,10 +12,10 @@ import {
 type PaginatedBetList = typeof PaginatedBets.Type;
 
 interface PaginatedBetInput {
-  readonly eventId?: number;
-  readonly heroId?: number;
-  readonly limit?: number;
-  readonly page?: number;
+  readonly eventId?: number | undefined;
+  readonly heroId?: number | undefined;
+  readonly limit?: number | undefined;
+  readonly page?: number | undefined;
 }
 
 type PaginatedBetKey = string;
@@ -28,7 +28,7 @@ const paginatedBetKey = (input: PaginatedBetInput): PaginatedBetKey =>
     input.page ?? null,
   ]);
 
-const paginatedBetInputFromKey = (key: PaginatedBetKey): PaginatedBetInput => {
+const paginatedBetInputFromKey = (key: PaginatedBetKey) => {
   const [eventId, heroId, limit, page] = JSON.parse(key) as [
     number | null,
     number | null,
@@ -36,10 +36,10 @@ const paginatedBetInputFromKey = (key: PaginatedBetKey): PaginatedBetInput => {
     number | null,
   ];
   return {
-    eventId: eventId ?? undefined,
-    heroId: heroId ?? undefined,
-    limit: limit ?? undefined,
-    page: page ?? undefined,
+    ...(eventId === null ? {} : { eventId }),
+    ...(heroId === null ? {} : { heroId }),
+    ...(limit === null ? {} : { limit }),
+    ...(page === null ? {} : { page }),
   };
 };
 

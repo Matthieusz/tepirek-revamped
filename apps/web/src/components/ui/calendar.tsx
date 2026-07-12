@@ -83,7 +83,7 @@ const Calendar = ({
         className
       )}
       captionLayout={captionLayout}
-      locale={locale}
+      {...(locale === undefined ? {} : { locale })}
       formatters={{
         formatMonthDropdown: (date) =>
           date.toLocaleString(locale?.code, { month: "short" }),
@@ -207,7 +207,10 @@ const Calendar = ({
           );
         },
         DayButton: ({ ...dayButtonProps }) => (
-          <CalendarDayButton locale={locale} {...dayButtonProps} />
+          <CalendarDayButton
+            {...(locale === undefined ? {} : { locale })}
+            {...dayButtonProps}
+          />
         ),
         Root: ({ className: rootClassName, rootRef, ...rootProps }) => (
           <div

@@ -36,7 +36,7 @@ const routeApi = getRouteApi("/dashboard/events/ranking");
 type RankingSort = "points" | "bets" | "gold";
 
 interface SortFilters extends Record<string, unknown> {
-  sortBy?: RankingSort;
+  sortBy?: RankingSort | undefined;
 }
 
 const buildRankingContent = (params: {

@@ -38,24 +38,27 @@ const ResponsiveDialog = ({
   const contextValue = useMemo(() => isMobile, [isMobile]);
 
   if (isMobile) {
+    const drawerProps = {
+      ...(onOpenChange === undefined ? {} : { onOpenChange }),
+      ...(open === undefined ? {} : { open }),
+    };
     return (
       <ResponsiveDialogContext.Provider value={contextValue}>
-        <Drawer
-          onOpenChange={onOpenChange}
-          open={open}
-          shouldScaleBackground={false}
-        >
+        <Drawer {...drawerProps} shouldScaleBackground={false}>
           {children}
         </Drawer>
       </ResponsiveDialogContext.Provider>
     );
   }
 
+  const dialogProps = {
+    ...(onOpenChange === undefined ? {} : { onOpenChange }),
+    ...(open === undefined ? {} : { open }),
+  };
+
   return (
     <ResponsiveDialogContext.Provider value={contextValue}>
-      <Dialog onOpenChange={onOpenChange} open={open}>
-        {children}
-      </Dialog>
+      <Dialog {...dialogProps}>{children}</Dialog>
     </ResponsiveDialogContext.Provider>
   );
 };

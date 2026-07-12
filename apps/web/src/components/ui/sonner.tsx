@@ -10,11 +10,12 @@ import { Toaster as Sonner } from "sonner";
 import type { ToasterProps } from "sonner";
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
+  const { theme } = useTheme();
+  const resolvedTheme = theme ?? "system";
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={resolvedTheme as NonNullable<ToasterProps["theme"]>}
       className="toaster group"
       icons={{
         error: <OctagonXIcon className="size-4" />,

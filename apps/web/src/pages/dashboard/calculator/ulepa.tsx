@@ -173,7 +173,7 @@ const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
                   {Math.floor(cost).toLocaleString("pl-PL")} pkt
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {Math.floor(result.cumulativeCosts[idx]).toLocaleString(
+                  {Math.floor(result.cumulativeCosts[idx] ?? 0).toLocaleString(
                     "pl-PL"
                   )}{" "}
                   pkt

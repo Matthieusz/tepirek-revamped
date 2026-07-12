@@ -67,8 +67,12 @@ export default function HistoryPage({ session }: HistoryPageProps) {
 
   const { ref: loadMoreRef, inView } = useInView({ threshold: 0.1 });
   const betPageInput = {
-    eventId: filter.queryInputs.eventId,
-    heroId: filter.queryInputs.heroId,
+    ...(filter.queryInputs.eventId === undefined
+      ? {}
+      : { eventId: filter.queryInputs.eventId }),
+    ...(filter.queryInputs.heroId === undefined
+      ? {}
+      : { heroId: filter.queryInputs.heroId }),
     limit: ITEMS_PER_PAGE,
     page: 1,
   };

@@ -21,6 +21,11 @@ export interface EventHeroFilterState {
   heroId: FilterSelection;
 }
 
+export interface EventHeroFilterUpdate extends Record<string, unknown> {
+  eventId?: FilterSelection | undefined;
+  heroId?: FilterSelection | undefined;
+}
+
 export const isAllFilter = (value: FilterSelection): boolean =>
   value === ALL_FILTER;
 
@@ -59,9 +64,9 @@ export const normalizeEventHeroFilter = (input: {
  * numeric strings fall back to `undefined` to match route search behavior.
  */
 export const toQueryInput = (
-  selection: FilterSelection
+  selection: FilterSelection | undefined
 ): number | undefined => {
-  if (isAllFilter(selection)) {
+  if (selection === undefined || isAllFilter(selection)) {
     return undefined;
   }
   const parsed = Number.parseInt(selection, 10);
@@ -107,7 +112,7 @@ export const isHeroQueryEnabled = (state: EventHeroFilterState): boolean =>
  */
 export const selectEventUpdate = (
   eventId: FilterSelection
-): Partial<EventHeroFilterState> => ({
+): EventHeroFilterUpdate => ({
   eventId: isAllFilter(eventId) ? undefined : eventId,
   heroId: undefined,
 });
@@ -119,7 +124,7 @@ export const selectEventUpdate = (
 export const selectHeroUpdate = (
   state: EventHeroFilterState,
   heroId: FilterSelection
-): Partial<EventHeroFilterState> => {
+): EventHeroFilterUpdate => {
   if (isAllFilter(state.eventId)) {
     return { heroId: undefined };
   }

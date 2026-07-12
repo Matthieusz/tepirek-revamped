@@ -77,7 +77,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
 
         await createHero({
           eventId: Number.parseInt(value.eventId, 10),
-          image: value.image ?? undefined,
+          ...(value.image ? { image: value.image } : {}),
           level: Number.parseInt(value.level, 10),
           name: value.name,
         });

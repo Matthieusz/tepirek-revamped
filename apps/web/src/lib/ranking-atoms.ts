@@ -8,8 +8,8 @@ import {
 } from "@/lib/http-api-client-runtime";
 
 interface RankingInput {
-  readonly eventId?: number;
-  readonly heroId?: number;
+  readonly eventId?: number | undefined;
+  readonly heroId?: number | undefined;
 }
 
 type RankingKey = string;
@@ -17,9 +17,12 @@ type RankingKey = string;
 const rankingKey = (payload: RankingInput): RankingKey =>
   JSON.stringify([payload.eventId ?? null, payload.heroId ?? null]);
 
-const rankingInputFromKey = (key: RankingKey): RankingInput => {
+const rankingInputFromKey = (key: RankingKey) => {
   const [eventId, heroId] = JSON.parse(key) as [number | null, number | null];
-  return { eventId: eventId ?? undefined, heroId: heroId ?? undefined };
+  return {
+    ...(eventId === null ? {} : { eventId }),
+    ...(heroId === null ? {} : { heroId }),
+  };
 };
 
 /** Resource atom for ranking data. */

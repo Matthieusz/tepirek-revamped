@@ -105,6 +105,9 @@ const accountInviteTargetsByKeyAtom = Atom.family(
       Effect.gen(function* accountInviteTargetsEffect() {
         const client = yield* AppHttpApiClient;
         const [accountId, query] = _key.split(":");
+        if (query === undefined) {
+          return [];
+        }
         return yield* client.squadBuilderAccountSharing.searchAccountInviteTargets(
           {
             payload: {

@@ -13,7 +13,7 @@ import { oldestUnpaidEventAtom } from "@/lib/ranking-atoms";
 type VaultEntry = typeof VaultRow.Type;
 
 interface VaultInput {
-  readonly eventId?: number;
+  readonly eventId?: number | undefined;
 }
 
 type VaultKey = string;
@@ -21,7 +21,7 @@ type VaultKey = string;
 const vaultKey = (payload: VaultInput): VaultKey =>
   String(payload.eventId ?? "all");
 
-const vaultInputFromKey = (key: VaultKey): VaultInput =>
+const vaultInputFromKey = (key: VaultKey) =>
   key === "all" ? {} : { eventId: Number(key) };
 
 const emptyVaultRows: readonly VaultEntry[] = [];
