@@ -4,7 +4,6 @@ import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { account, user } from "@tepirek-revamped/db/schema/auth";
 import type { SQL } from "drizzle-orm";
 import { and, eq, sql } from "drizzle-orm";
-import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -14,7 +13,8 @@ import {
   UserForbidden,
   UserNotFound,
 } from "../../protocol/user/http-api-contract.js";
-import { UserAdapterError } from "./user-adapter-error.js";
+import { userPersistenceQuery } from "./persistence-query.js";
+import type { UserAdapterError } from "./user-adapter-error.js";
 
 const LAST_ADMIN_MESSAGE =
   "Nie można odebrać uprawnień ostatniemu administratorowi";
@@ -75,20 +75,12 @@ export interface UpdateUserNameInput {
   readonly userId: string;
 }
 
-const persistenceQuery = <A, R>(
-  operation: string,
-  self: Effect.Effect<A, EffectDrizzleQueryError, R>
-): Effect.Effect<A, UserAdapterError, R> =>
-  self.pipe(
-    Effect.mapError((cause) => new UserAdapterError({ cause, operation }))
-  );
-
 const loadTargetUser = (
   database: Pick<UserQueryExecutor, "select">,
   userId: string
 ) =>
   Effect.gen(function* loadTargetUserEffect() {
-    const rows = yield* persistenceQuery(
+    const rows = yield* userPersistenceQuery(
       "loadTargetUser",
       database.select().from(user).where(eq(user.id, userId))
     );
@@ -103,7 +95,7 @@ const loadTargetUser = (
 
 const countVerifiedAdmins = (database: Pick<UserQueryExecutor, "select">) =>
   Effect.gen(function* countVerifiedAdminsEffect() {
-    const rows = yield* persistenceQuery(
+    const rows = yield* userPersistenceQuery(
       "countVerifiedAdmins",
       database
         .select({ count: sql<number>`count(*)` })
@@ -153,14 +145,14 @@ const updateAndReturnUser = (
   values: Partial<typeof user.$inferInsert>
 ) =>
   Effect.gen(function* updateAndReturnUserEffect() {
-    yield* persistenceQuery(
+    yield* userPersistenceQuery(
       operation,
       database
         .update(user)
         .set({ updatedAt, ...values })
         .where(where)
     );
-    const rows = yield* persistenceQuery(
+    const rows = yield* userPersistenceQuery(
       operation,
       database.select(playerListSelect).from(user).where(where)
     );
@@ -200,23 +192,9 @@ const mutateAdminAvailabilityUser = (
       })
     );
 
-    return yield* transaction.pipe(
-      Effect.catchTags({
-        EffectDrizzleQueryError: (cause) =>
-          Effect.fail(
-            new UserAdapterError({
-              cause,
-              operation: "mutateAdminAvailabilityUser",
-            })
-          ),
-        SqlError: (cause) =>
-          Effect.fail(
-            new UserAdapterError({
-              cause,
-              operation: "mutateAdminAvailabilityUser",
-            })
-          ),
-      })
+    return yield* userPersistenceQuery(
+      "mutateAdminAvailabilityUser",
+      transaction
     );
   });
 
@@ -237,7 +215,7 @@ const deleteUserWithDatabase =
         });
       }
 
-      yield* persistenceQuery(
+      yield* userPersistenceQuery(
         "deleteUser",
         database.delete(user).where(eq(user.id, userId))
       );
@@ -246,7 +224,7 @@ const deleteUserWithDatabase =
     });
 
 const getVerifiedWithDatabase = (database: EffectPgDatabase) => () =>
-  persistenceQuery(
+  userPersistenceQuery(
     "getVerified",
     database
       .select(verifiedMemberSelect)
@@ -255,7 +233,10 @@ const getVerifiedWithDatabase = (database: EffectPgDatabase) => () =>
   );
 
 const listWithDatabase = (database: EffectPgDatabase) => () =>
-  persistenceQuery("listUsers", database.select(playerListSelect).from(user));
+  userPersistenceQuery(
+    "listUsers",
+    database.select(playerListSelect).from(user)
+  );
 
 const setRoleWithDatabase =
   (database: EffectPgDatabase) =>
@@ -292,7 +273,7 @@ const getDiscordAccessTokenWithDatabase =
   (database: EffectPgDatabase) =>
   (userId: string): Effect.Effect<string, UserBadRequest | UserAdapterError> =>
     Effect.gen(function* getDiscordAccessTokenEffect() {
-      const rows = yield* persistenceQuery(
+      const rows = yield* userPersistenceQuery(
         "getDiscordAccessToken",
         database
           .select({ accessToken: account.accessToken })
@@ -318,7 +299,7 @@ const markUserVerifiedWithDatabase =
     readonly updatedAt: Date;
     readonly userId: string;
   }): Effect.Effect<void, UserAdapterError> =>
-    persistenceQuery(
+    userPersistenceQuery(
       "markUserVerified",
       database
         .update(user)
