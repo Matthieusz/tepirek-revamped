@@ -3,14 +3,14 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
 import type {
   InvalidSquadGroupVisibility,
   SquadGroupVisibility,
-} from "../../../domain/squad-builder/squad-group-visibility.js";
-import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
-import * as SquadGroupStore from "./squad-group-store.js";
+} from "../../../domain/squad-builder/squad-group-visibility.ts";
+import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.ts";
+import * as SquadGroupStore from "./squad-group-store.ts";
 
 /** Expected failures for global squad visibility operations. */
 export type GlobalSquadVisibilityError =

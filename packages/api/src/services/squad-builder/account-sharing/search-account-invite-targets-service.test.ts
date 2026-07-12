@@ -2,16 +2,16 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
-import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
-import { AccountSharingStoreService } from "./account-sharing-store-service.js";
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
+import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
+import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.ts";
+import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
 import {
   layer as accountInviteTargetsLayer,
   AccountInviteTargetsService,
-} from "./search-account-invite-targets-service.js";
+} from "./search-account-invite-targets-service.ts";
 
 const parseTestUserId = (value: string) =>
   Effect.runSync(parseAppUserId(value));

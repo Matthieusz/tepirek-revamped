@@ -3,7 +3,7 @@ import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Effect from "effect/Effect";
 import { SqlError, UnknownError } from "effect/unstable/sql/SqlError";
 
-import { persistenceQuery } from "./persistence-query.js";
+import { persistenceQuery } from "./persistence-query.ts";
 
 describe("persistenceQuery", () => {
   it.effect(

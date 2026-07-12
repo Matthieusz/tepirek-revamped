@@ -1,9 +1,9 @@
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 
-import { FirecrawlClientService } from "../../../services/squad-builder/firecrawl-client.js";
-import { FirecrawlConfigService } from "../../../services/squad-builder/firecrawl-config.js";
-import { FirecrawlSdkClient } from "./firecrawl-client.js";
+import { FirecrawlClientService } from "../../../services/squad-builder/firecrawl-client.ts";
+import { FirecrawlConfigService } from "../../../services/squad-builder/firecrawl-config.ts";
+import { FirecrawlSdkClient } from "./firecrawl-client.ts";
 
 /** SDK-backed live Firecrawl client layer. */
 export const FirecrawlClientServiceLiveLayer: Layer.Layer<

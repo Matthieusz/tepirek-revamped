@@ -3,10 +3,10 @@ import * as Effect from "effect/Effect";
 import { isSqlError } from "effect/unstable/sql/SqlError";
 import type { SqlError } from "effect/unstable/sql/SqlError";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
-import { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
+import { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 
 export type EffectSquadGroupPersistenceOperation =
   | "applyRefetchedAccount"

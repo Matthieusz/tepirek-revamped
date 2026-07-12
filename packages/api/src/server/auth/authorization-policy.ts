@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect";
 
-import { CurrentSession } from "../../protocol/auth/current-session.js";
+import { CurrentSession } from "../../protocol/auth/current-session.ts";
 
 export interface AuthorizationFailures<Unauthorized, Forbidden> {
   readonly forbidden: () => Forbidden;

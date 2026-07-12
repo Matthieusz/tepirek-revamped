@@ -1,26 +1,26 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import type { AccountDisplayName } from "./account-display-name.js";
-import type { AppUserId } from "./app-user-id.js";
-import type { MargonemAccountId } from "./margonem-account-id.js";
+import type { AccountDisplayName } from "./account-display-name.ts";
+import type { AppUserId } from "./app-user-id.ts";
+import type { MargonemAccountId } from "./margonem-account-id.ts";
 import type {
   MargonemProfession,
   MargonemWorld,
-} from "./margonem-character.js";
+} from "./margonem-character.ts";
 import type {
   MargonemCharacterId,
   PositiveLevel,
-} from "./margonem-profile-id.js";
-import type { SquadGroupId } from "./squad-group-id.js";
-import type { SquadId } from "./squad-id.js";
-import { parseSquadGroupName, parseSquadName } from "./squad-name.js";
+} from "./margonem-profile-id.ts";
+import type { SquadGroupId } from "./squad-group-id.ts";
+import type { SquadId } from "./squad-id.ts";
+import { parseSquadGroupName, parseSquadName } from "./squad-name.ts";
 import type {
   InvalidSquadGroupName,
   InvalidSquadName,
   SquadGroupName,
   SquadName,
-} from "./squad-name.js";
+} from "./squad-name.ts";
 
 /** Position of a squad inside a group snapshot. */
 const Position = Schema.Number.check(

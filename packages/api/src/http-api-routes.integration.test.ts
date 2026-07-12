@@ -5,19 +5,19 @@ import * as Layer from "effect/Layer";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
 
-import { AnnouncementStoreError } from "./adapters/announcement/announcement-store-error.js";
-import { AnnouncementStore } from "./adapters/announcement/announcement-store.js";
-import { makeBetterAuthAdapterLayer } from "./server/auth/better-auth-adapter.js";
-import { makeApiLiveLayerFromConfig } from "./server/effect-app.js";
-import { AppHttpApiLayer } from "./server/http-api-handlers.js";
-import { PreviewMargonemProfileImportService } from "./services/squad-builder/account-import/preview-margonem-profile-import-service.js";
-import { FirecrawlRequestFailed } from "./services/squad-builder/firecrawl-client.js";
-import { testAuth } from "./test/integration/auth.js";
+import { AnnouncementStoreError } from "./adapters/announcement/announcement-store-error.ts";
+import { AnnouncementStore } from "./adapters/announcement/announcement-store.ts";
+import { makeBetterAuthAdapterLayer } from "./server/auth/better-auth-adapter.ts";
+import { makeApiLiveLayerFromConfig } from "./server/effect-app.ts";
+import { AppHttpApiLayer } from "./server/http-api-handlers.ts";
+import { PreviewMargonemProfileImportService } from "./services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
+import { FirecrawlRequestFailed } from "./services/squad-builder/firecrawl-client.ts";
+import { testAuth } from "./test/integration/auth.ts";
 import {
   createHero,
   createVerifiedMember,
-} from "./test/integration/builders.js";
-import { testDb } from "./test/integration/database.js";
+} from "./test/integration/builders.ts";
+import { testDb } from "./test/integration/database.ts";
 
 process.env.BETTER_AUTH_SECRET ??= "test-secret";
 process.env.BETTER_AUTH_URL ??= "http://localhost:3000";

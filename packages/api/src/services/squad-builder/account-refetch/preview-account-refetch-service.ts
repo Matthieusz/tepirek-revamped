@@ -3,33 +3,33 @@ import * as Context from "effect/Context";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.js";
-import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import { computeMargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.js";
-import type { MargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.js";
-import { parseMargonemProfileHtml } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
-import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
-import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
-import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.js";
-import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.ts";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
+import { computeMargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.ts";
+import type { MargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.ts";
+import { parseMargonemProfileHtml } from "../../../domain/squad-builder/margonem-profile-html-parser.ts";
+import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.ts";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
+import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.ts";
+import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
 import {
   FirecrawlClientService,
   FirecrawlResponseNotParseable,
-} from "../firecrawl-client.js";
-import type { FirecrawlScrapeError } from "../firecrawl-client.js";
+} from "../firecrawl-client.ts";
+import type { FirecrawlScrapeError } from "../firecrawl-client.ts";
 import {
   FirecrawlConfigService,
   parseFirecrawlCreditCount,
-} from "../firecrawl-config.js";
-import type { FirecrawlCreditCount } from "../firecrawl-config.js";
-import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
+} from "../firecrawl-config.ts";
+import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
+import { AccountRefetchStoreService } from "./account-refetch-store-service.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
   FirecrawlBudgetError,
   MargonemAccountNotFound,
   SquadBuilderPersistenceUnavailable,
-} from "./account-refetch-store.js";
+} from "./account-refetch-store.ts";
 
 export interface PreviewAccountRefetchInput {
   readonly actorUserId: AppUserId;

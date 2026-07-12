@@ -10,13 +10,13 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUnauthorized,
   SquadBuilderUpstreamUnavailable,
-} from "../errors.js";
+} from "../errors.ts";
 import {
   ApplyAccountRefetchPayload,
   ApplyAccountRefetchSuccess,
   PreviewAccountRefetchPayload,
   PreviewAccountRefetchSuccess,
-} from "./account-refetch-schema.js";
+} from "./account-refetch-schema.ts";
 
 export {
   SquadBuilderConflict,

@@ -3,34 +3,34 @@ import * as Context from "effect/Context";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.js";
-import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.js";
-import { parseMargonemProfileHtml } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
-import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
-import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.ts";
+import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.ts";
+import { parseMargonemProfileHtml } from "../../../domain/squad-builder/margonem-profile-html-parser.ts";
+import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.ts";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
-} from "../../../domain/squad-builder/margonem-profile-url.js";
-import type { ParseMargonemProfileUrlError } from "../../../domain/squad-builder/margonem-profile-url.js";
+} from "../../../domain/squad-builder/margonem-profile-url.ts";
+import type { ParseMargonemProfileUrlError } from "../../../domain/squad-builder/margonem-profile-url.ts";
 import {
   FirecrawlClientService,
   FirecrawlResponseNotParseable,
-} from "../firecrawl-client.js";
-import type { FirecrawlScrapeError } from "../firecrawl-client.js";
+} from "../firecrawl-client.ts";
+import type { FirecrawlScrapeError } from "../firecrawl-client.ts";
 import {
   FirecrawlConfigService,
   parseFirecrawlCreditCount,
-} from "../firecrawl-config.js";
-import type { FirecrawlCreditCount } from "../firecrawl-config.js";
-import { AccountImportStoreService } from "./account-import-store-service.js";
+} from "../firecrawl-config.ts";
+import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
+import { AccountImportStoreService } from "./account-import-store-service.ts";
 import type {
   DuplicateMargonemAccountError,
   FirecrawlBudgetError,
   ProfileAccessState,
   SquadBuilderPersistenceUnavailable,
-} from "./account-import-store.js";
+} from "./account-import-store.ts";
 
 /** Input for previewing a Margonem profile import. */
 export interface PreviewMargonemProfileImportInput {

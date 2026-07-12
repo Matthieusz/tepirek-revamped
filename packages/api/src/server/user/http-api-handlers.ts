@@ -4,16 +4,16 @@ import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { DiscordGuildVerifier } from "../../adapters/user/discord-verification-service.js";
-import type { UserAdapterError } from "../../adapters/user/user-adapter-error.js";
-import { UserStore } from "../../adapters/user/user-store.js";
-import { AppHttpApi } from "../../protocol/http-api-contract.js";
+import { DiscordGuildVerifier } from "../../adapters/user/discord-verification-service.ts";
+import type { UserAdapterError } from "../../adapters/user/user-adapter-error.ts";
+import { UserStore } from "../../adapters/user/user-store.ts";
+import { AppHttpApi } from "../../protocol/http-api-contract.ts";
 import {
   UserForbidden,
   UserPersistenceUnavailable,
   UserUnauthorized,
-} from "../../protocol/user/http-api-contract.js";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
+} from "../../protocol/user/http-api-contract.ts";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireAdminSession, requireSession, requireVerifiedSession } =
   makeAuthorizationPolicy({

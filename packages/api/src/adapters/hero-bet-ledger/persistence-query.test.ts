@@ -6,10 +6,10 @@ import { SqlError, UnknownError } from "effect/unstable/sql/SqlError";
 import {
   BetBadRequest,
   BetPersistenceUnavailable,
-} from "../../services/bet/bet-errors.js";
-import { RankingPersistenceUnavailable } from "../../services/ranking/ranking-errors.js";
-import { VaultPersistenceUnavailable } from "../../services/vault/vault-errors.js";
-import { mapPersistenceErrors } from "./persistence-query.js";
+} from "../../services/bet/bet-errors.ts";
+import { RankingPersistenceUnavailable } from "../../services/ranking/ranking-errors.ts";
+import { VaultPersistenceUnavailable } from "../../services/vault/vault-errors.ts";
+import { mapPersistenceErrors } from "./persistence-query.ts";
 
 const drizzleError = new EffectDrizzleQueryError({
   cause: new Error("connection failed"),

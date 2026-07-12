@@ -6,7 +6,7 @@ import {
   canTransitionAccountAccess,
   inactiveAccountAccessStatuses,
   parseAccountAccessStatus,
-} from "./account-access-status.js";
+} from "./account-access-status.ts";
 
 describe("parseAccountAccessStatus", () => {
   it.effect("accepts known access statuses", () =>

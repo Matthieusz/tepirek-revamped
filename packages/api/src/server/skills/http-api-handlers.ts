@@ -3,15 +3,15 @@
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { SkillsStoreError } from "../../adapters/skills/skills-store-error.js";
-import { SkillsStore } from "../../adapters/skills/skills-store.js";
-import { AppHttpApi } from "../../protocol/http-api-contract.js";
+import type { SkillsStoreError } from "../../adapters/skills/skills-store-error.ts";
+import { SkillsStore } from "../../adapters/skills/skills-store.ts";
+import { AppHttpApi } from "../../protocol/http-api-contract.ts";
 import {
   SkillsForbidden,
   SkillsPersistenceUnavailable,
   SkillsUnauthorized,
-} from "../../protocol/skills/http-api-contract.js";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
+} from "../../protocol/skills/http-api-contract.ts";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
   {

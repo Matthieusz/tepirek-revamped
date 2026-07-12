@@ -3,15 +3,15 @@
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { AuctionStoreError } from "../../adapters/auction/auction-store-error.js";
-import { AuctionStore } from "../../adapters/auction/auction-store.js";
+import type { AuctionStoreError } from "../../adapters/auction/auction-store-error.ts";
+import { AuctionStore } from "../../adapters/auction/auction-store.ts";
 import {
   AuctionForbidden,
   AuctionPersistenceUnavailable,
   AuctionUnauthorized,
-} from "../../protocol/auction/http-api-contract.js";
-import { AppHttpApi } from "../../protocol/http-api-contract.js";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
+} from "../../protocol/auction/http-api-contract.ts";
+import { AppHttpApi } from "../../protocol/http-api-contract.ts";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireVerifiedSession } = makeAuthorizationPolicy({
   forbidden: () => new AuctionForbidden({ message: "FORBIDDEN" }),

@@ -11,9 +11,9 @@ import * as Layer from "effect/Layer";
 import {
   defaultEventColor,
   defaultEventIcon,
-} from "../../protocol/event/http-api-contract.js";
-import { makeDirectPersistenceQuery } from "../persistence-query.js";
-import { EventStoreError } from "./event-store-error.js";
+} from "../../protocol/event/http-api-contract.ts";
+import { makeDirectPersistenceQuery } from "../persistence-query.ts";
+import { EventStoreError } from "./event-store-error.ts";
 
 export interface CreateEventInput {
   readonly color?: string | undefined;

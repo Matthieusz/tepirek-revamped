@@ -5,7 +5,16 @@ export interface ServerResource {
 const disposeAll = async (
   resources: readonly ServerResource[]
 ): Promise<void> => {
-  await Promise.all(resources.map(({ dispose }) => dispose()));
+  const results = await Promise.allSettled(
+    resources.map(({ dispose }) => Promise.resolve().then(dispose))
+  );
+  const failures = results.flatMap((result) =>
+    result.status === "rejected" ? [result.reason] : []
+  );
+
+  if (failures.length > 0) {
+    throw new AggregateError(failures, "Failed to dispose server resources");
+  }
 };
 
 /** Create an idempotent shutdown operation for process-owned resources. */

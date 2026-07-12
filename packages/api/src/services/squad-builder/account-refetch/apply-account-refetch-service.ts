@@ -3,18 +3,18 @@ import * as Context from "effect/Context";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
-import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
-import type { AccountRefetchStoreServiceShape } from "../squad-groups/squad-group-store.js";
-import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
+import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
+import type { AccountRefetchStoreServiceShape } from "../squad-groups/squad-group-store.ts";
+import { AccountRefetchStoreService } from "./account-refetch-store-service.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
   PendingMargonemAccountRefetchNotFound,
   SquadBuilderPersistenceUnavailable,
-} from "./account-refetch-store.js";
+} from "./account-refetch-store.ts";
 
 /** Input for applying a previously previewed account refetch. */
 export interface ApplyAccountRefetchInput {

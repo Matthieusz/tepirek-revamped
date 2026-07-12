@@ -1,8 +1,8 @@
 import * as Effect from "effect/Effect";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { AccountImportStoreService } from "./account-import-store-service.js";
-import type { SquadBuilderPersistenceUnavailable } from "./account-import-store.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { AccountImportStoreService } from "./account-import-store-service.ts";
+import type { SquadBuilderPersistenceUnavailable } from "./account-import-store.ts";
 
 /** Input for listing owned Margonem accounts. */
 export interface ListOwnedMargonemAccountsInput {

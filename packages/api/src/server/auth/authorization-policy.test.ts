@@ -2,9 +2,9 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { AppUserId } from "../../domain/squad-builder/app-user-id.js";
-import { CurrentSession } from "../../protocol/auth/current-session.js";
-import { makeAuthorizationPolicy } from "./authorization-policy.js";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
+import { CurrentSession } from "../../protocol/auth/current-session.ts";
+import { makeAuthorizationPolicy } from "./authorization-policy.ts";
 
 const policy = makeAuthorizationPolicy({
   forbidden: () => "forbidden" as const,

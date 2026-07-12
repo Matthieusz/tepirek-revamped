@@ -8,6 +8,7 @@
     "lib": ["ESNext"],
     "verbatimModuleSyntax": true,
     "rewriteRelativeImportExtensions": true,
+    "allowImportingTsExtensions": true,
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,

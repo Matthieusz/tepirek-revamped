@@ -2,14 +2,14 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 
-import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
-import { FirecrawlClientService } from "../firecrawl-client.js";
-import type { FirecrawlClient } from "../firecrawl-client.js";
-import { FirecrawlConfigService } from "../firecrawl-config.js";
-import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
-import { AccountImportStoreService } from "./account-import-store-service.js";
-import { preview } from "./preview-owned-account-imports-service.js";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
+import { FirecrawlClientService } from "../firecrawl-client.ts";
+import type { FirecrawlClient } from "../firecrawl-client.ts";
+import { FirecrawlConfigService } from "../firecrawl-config.ts";
+import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.ts";
+import { AccountImportStoreService } from "./account-import-store-service.ts";
+import { preview } from "./preview-owned-account-imports-service.ts";
 
 const parseTestUserId = () =>
   Effect.runSync(parseAppUserId("effect-batch-user"));

@@ -2,12 +2,12 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
-import type { InvalidSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
-import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
-import { SquadGroupStoreService } from "./squad-group-store.js";
-import type { SquadGroupStoreServiceShape } from "./squad-group-store.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
+import type { InvalidSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
+import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.ts";
+import { SquadGroupStoreService } from "./squad-group-store.ts";
+import type { SquadGroupStoreServiceShape } from "./squad-group-store.ts";
 
 /** Input for creating an empty squad group. */
 export interface CreateSquadGroupInput {

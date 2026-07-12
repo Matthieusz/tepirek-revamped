@@ -5,7 +5,7 @@ import { describe } from "vitest";
 import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
-} from "./margonem-profile-url.js";
+} from "./margonem-profile-url.ts";
 
 describe("Margonem profile URL parsing", () => {
   it.effect(

@@ -1,8 +1,8 @@
 import { Effect, Layer, Logger, References } from "effect";
 import type { LogLevel } from "effect/LogLevel";
 
-import * as Logging from "./observability/logging.js";
-import * as Otlp from "./observability/otlp.js";
+import * as Logging from "./observability/logging.ts";
+import * as Otlp from "./observability/otlp.ts";
 
 export interface ObservabilityConfig extends Otlp.OtlpConfig {
   readonly minimumLogLevel: LogLevel;
@@ -39,4 +39,4 @@ export const makeLayer = (config: ObservabilityConfig) =>
     })
   );
 
-export { parseLogLevel } from "./observability/logging.js";
+export { parseLogLevel } from "./observability/logging.ts";

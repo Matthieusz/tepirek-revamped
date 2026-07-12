@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resource } from "./otlp.js";
+import { resource } from "./otlp.ts";
 
 describe("OTLP resource metadata", () => {
   it("sets complete built-in resource metadata after parsed OTEL attributes", () => {

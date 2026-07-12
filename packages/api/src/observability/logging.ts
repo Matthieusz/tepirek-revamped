@@ -1,7 +1,7 @@
 import { Formatter, Logger } from "effect";
 import type { LogLevel } from "effect/LogLevel";
 
-import { runId } from "./shared.js";
+import { runId } from "./shared.ts";
 
 const LOG_LEVELS = {
   DEBUG: "Debug",

@@ -5,26 +5,26 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { AppHttpApi } from "../../../protocol/http-api-contract.js";
-import type { SquadBuilderSquadGroupSharingError } from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.js";
+import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
+import type { SquadBuilderSquadGroupSharingError } from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.ts";
 import {
   SquadBuilderConflict,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
-} from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.js";
-import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.js";
-import { SquadGroupSharingStateService } from "../../../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.js";
-import { SquadGroupEditorInviteResponsesService } from "../../../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.js";
-import { SquadGroupEditorRevocationsService } from "../../../services/squad-builder/squad-groups/revoke-squad-group-editor-service.js";
-import { SquadEditorInviteTargetsService } from "../../../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.js";
-import { SquadGroupEditorInvitesService } from "../../../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.js";
-import type { SquadGroupSharingError } from "../../../services/squad-builder/squad-groups/squad-group-sharing-error.js";
+} from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.ts";
+import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.ts";
+import { SquadGroupSharingStateService } from "../../../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.ts";
+import { SquadGroupEditorInviteResponsesService } from "../../../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.ts";
+import { SquadGroupEditorRevocationsService } from "../../../services/squad-builder/squad-groups/revoke-squad-group-editor-service.ts";
+import { SquadEditorInviteTargetsService } from "../../../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.ts";
+import { SquadGroupEditorInvitesService } from "../../../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.ts";
+import type { SquadGroupSharingError } from "../../../services/squad-builder/squad-groups/squad-group-sharing-error.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
-} from "../auth-helper.js";
+} from "../auth-helper.ts";
 
 type ProtocolError = Schema.Schema.Type<
   typeof SquadBuilderSquadGroupSharingError

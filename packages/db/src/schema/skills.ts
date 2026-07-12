@@ -7,7 +7,7 @@ import {
   text,
 } from "drizzle-orm/pg-core";
 
-import { user } from "./auth.js";
+import { user } from "./auth.ts";
 
 export const range = pgTable("range", {
   id: serial("id").primaryKey(),

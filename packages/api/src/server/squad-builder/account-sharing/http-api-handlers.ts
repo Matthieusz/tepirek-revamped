@@ -5,26 +5,26 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { AppHttpApi } from "../../../protocol/http-api-contract.js";
-import type { SquadBuilderAccountSharingError } from "../../../protocol/squad-builder/account-sharing/http-api-contract.js";
+import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
+import type { SquadBuilderAccountSharingError } from "../../../protocol/squad-builder/account-sharing/http-api-contract.ts";
 import {
   SquadBuilderConflict,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
-} from "../../../protocol/squad-builder/account-sharing/http-api-contract.js";
-import type { AccountSharingError } from "../../../services/squad-builder/account-sharing/account-sharing-error.js";
-import { AccountSharingStateService } from "../../../services/squad-builder/account-sharing/list-account-sharing-state-service.js";
-import { AccountAccessInviteResponsesService } from "../../../services/squad-builder/account-sharing/respond-to-account-access-invite-service.js";
-import { AccountAccessRevocationsService } from "../../../services/squad-builder/account-sharing/revoke-account-access-service.js";
-import { AccountInviteTargetsService } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.js";
-import { AccountAccessInvitesService } from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.js";
-import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.js";
+} from "../../../protocol/squad-builder/account-sharing/http-api-contract.ts";
+import type { AccountSharingError } from "../../../services/squad-builder/account-sharing/account-sharing-error.ts";
+import { AccountSharingStateService } from "../../../services/squad-builder/account-sharing/list-account-sharing-state-service.ts";
+import { AccountAccessInviteResponsesService } from "../../../services/squad-builder/account-sharing/respond-to-account-access-invite-service.ts";
+import { AccountAccessRevocationsService } from "../../../services/squad-builder/account-sharing/revoke-account-access-service.ts";
+import { AccountInviteTargetsService } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.ts";
+import { AccountAccessInvitesService } from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.ts";
+import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
-} from "../auth-helper.js";
+} from "../auth-helper.ts";
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderAccountSharingError>;
 

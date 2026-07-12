@@ -1,6 +1,6 @@
 import * as Context from "effect/Context";
 
-import type { AccountImportStoreServiceShape } from "../squad-groups/squad-group-store.js";
+import type { AccountImportStoreServiceShape } from "../squad-groups/squad-group-store.ts";
 
 export class AccountImportStoreService extends Context.Service<
   AccountImportStoreService,

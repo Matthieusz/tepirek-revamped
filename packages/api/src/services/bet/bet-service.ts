@@ -2,7 +2,7 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
-import type { BetError } from "./bet-errors.js";
+import type { BetError } from "./bet-errors.ts";
 
 export interface CreateBetInput {
   readonly createdAt: Date;

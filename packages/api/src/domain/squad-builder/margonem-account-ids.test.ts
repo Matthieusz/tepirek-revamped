@@ -2,8 +2,8 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { describe } from "vitest";
 
-import { parseMargonemAccountAccessId } from "./margonem-account-access-id.js";
-import { parseMargonemAccountId } from "./margonem-account-id.js";
+import { parseMargonemAccountAccessId } from "./margonem-account-access-id.ts";
+import { parseMargonemAccountId } from "./margonem-account-id.ts";
 
 describe("parseMargonemAccountId", () => {
   it.effect("accepts positive integer account ids", () =>

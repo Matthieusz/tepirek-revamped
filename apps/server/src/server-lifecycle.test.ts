@@ -37,4 +37,31 @@ describe("server lifecycle", () => {
       "health-http-api",
     ]);
   });
+
+  it("awaits every finalizer before reporting disposal failures", async () => {
+    const calls: string[] = [];
+    const failure = new Error("app disposal failed");
+    const shutdown = makeShutdown([
+      {
+        dispose: () => Promise.reject(failure),
+      },
+      {
+        dispose: async () => {
+          await Promise.resolve();
+          calls.push("health-http-api");
+        },
+      },
+      {
+        dispose: async () => {
+          await Promise.resolve();
+          calls.push("database-pool");
+        },
+      },
+    ]);
+
+    await expect(shutdown()).rejects.toEqual(
+      new AggregateError([failure], "Failed to dispose server resources")
+    );
+    expect(calls.toSorted()).toEqual(["database-pool", "health-http-api"]);
+  });
 });

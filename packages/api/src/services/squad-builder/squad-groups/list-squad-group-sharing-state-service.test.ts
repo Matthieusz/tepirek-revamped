@@ -2,18 +2,18 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
-import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.js";
-import { emptySquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
-import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.js";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
+import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
+import { emptySquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.ts";
+import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
 import {
   layer as squadGroupSharingStateLayer,
   SquadGroupSharingStateService,
-} from "./list-squad-group-sharing-state-service.js";
-import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
-import { SquadGroupStoreService } from "./squad-group-store.js";
-import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-support.js";
+} from "./list-squad-group-sharing-state-service.ts";
+import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.ts";
+import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-support.ts";
+import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 const parseTestUserId = (value: string) =>
   Effect.runSync(parseAppUserId(value));

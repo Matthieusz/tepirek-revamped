@@ -5,37 +5,37 @@ import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
-import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.js";
-import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.js";
-import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
-import { profileIdToNumber } from "../../../domain/squad-builder/margonem-profile-id.js";
-import type { ParseMargonemProfileUrlError } from "../../../domain/squad-builder/margonem-profile-url.js";
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.ts";
+import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.ts";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
+import { profileIdToNumber } from "../../../domain/squad-builder/margonem-profile-id.ts";
+import type { ParseMargonemProfileUrlError } from "../../../domain/squad-builder/margonem-profile-url.ts";
 import {
   parseMargonemProfileUrl,
   toMargonemProfileUrl,
-} from "../../../domain/squad-builder/margonem-profile-url.js";
-import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
-import { FirecrawlClientService } from "../firecrawl-client.js";
-import type { FirecrawlScrapeError } from "../firecrawl-client.js";
-import { FirecrawlConfigService } from "../firecrawl-config.js";
-import type { FirecrawlCreditCount } from "../firecrawl-config.js";
-import { logSquadBuilderInternalFailure } from "../internal-error-logging.js";
-import { AccountImportStoreService } from "./account-import-store-service.js";
+} from "../../../domain/squad-builder/margonem-profile-url.ts";
+import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
+import { FirecrawlClientService } from "../firecrawl-client.ts";
+import type { FirecrawlScrapeError } from "../firecrawl-client.ts";
+import { FirecrawlConfigService } from "../firecrawl-config.ts";
+import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
+import { logSquadBuilderInternalFailure } from "../internal-error-logging.ts";
+import { AccountImportStoreService } from "./account-import-store-service.ts";
 import type {
   DuplicateMargonemAccountError,
   FirecrawlBudgetError,
   ProfileAccessState,
   SquadBuilderPersistenceUnavailable,
-} from "./account-import-store.js";
-import { preview as previewMargonemProfileImport } from "./preview-margonem-profile-import-service.js";
+} from "./account-import-store.ts";
+import { preview as previewMargonemProfileImport } from "./preview-margonem-profile-import-service.ts";
 import type {
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportInput,
   PreviewMargonemProfileImportOutput,
-} from "./preview-margonem-profile-import-service.js";
+} from "./preview-margonem-profile-import-service.ts";
 
 export interface PreviewOwnedAccountImportsInput {
   readonly actorUserId: AppUserId;

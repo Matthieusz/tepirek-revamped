@@ -4,15 +4,15 @@ import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { AnnouncementStoreError } from "../../adapters/announcement/announcement-store-error.js";
-import { AnnouncementStore } from "../../adapters/announcement/announcement-store.js";
+import type { AnnouncementStoreError } from "../../adapters/announcement/announcement-store-error.ts";
+import { AnnouncementStore } from "../../adapters/announcement/announcement-store.ts";
 import {
   AnnouncementForbidden,
   AnnouncementPersistenceUnavailable,
   AnnouncementUnauthorized,
-} from "../../protocol/announcement/http-api-contract.js";
-import { AppHttpApi } from "../../protocol/http-api-contract.js";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
+} from "../../protocol/announcement/http-api-contract.ts";
+import { AppHttpApi } from "../../protocol/http-api-contract.ts";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
   {

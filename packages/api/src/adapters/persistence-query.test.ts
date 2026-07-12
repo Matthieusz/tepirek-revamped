@@ -2,13 +2,13 @@ import { describe, expect, it } from "@effect/vitest";
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Effect from "effect/Effect";
 
-import { AnnouncementStoreError } from "./announcement/announcement-store-error.js";
-import { AuctionStoreError } from "./auction/auction-store-error.js";
-import { EventStoreError } from "./event/event-store-error.js";
-import { HeroesStoreError } from "./heroes/heroes-store-error.js";
-import { makeDirectPersistenceQuery } from "./persistence-query.js";
-import { SkillsStoreError } from "./skills/skills-store-error.js";
-import { TodoStoreError } from "./todo/todo-store-error.js";
+import { AnnouncementStoreError } from "./announcement/announcement-store-error.ts";
+import { AuctionStoreError } from "./auction/auction-store-error.ts";
+import { EventStoreError } from "./event/event-store-error.ts";
+import { HeroesStoreError } from "./heroes/heroes-store-error.ts";
+import { makeDirectPersistenceQuery } from "./persistence-query.ts";
+import { SkillsStoreError } from "./skills/skills-store-error.ts";
+import { TodoStoreError } from "./todo/todo-store-error.ts";
 
 interface ProjectedError {
   readonly _tag: string;

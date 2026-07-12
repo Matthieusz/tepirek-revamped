@@ -13,9 +13,9 @@ import * as Layer from "effect/Layer";
 import {
   SkillsBadRequest,
   SkillsConflict,
-} from "../../protocol/skills/http-api-contract.js";
-import { makeDirectPersistenceQuery } from "../persistence-query.js";
-import { SkillsStoreError } from "./skills-store-error.js";
+} from "../../protocol/skills/http-api-contract.ts";
+import { makeDirectPersistenceQuery } from "../persistence-query.ts";
+import { SkillsStoreError } from "./skills-store-error.ts";
 
 export interface CreateProfessionInput {
   readonly name: string;

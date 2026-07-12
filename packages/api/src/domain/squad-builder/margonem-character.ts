@@ -4,11 +4,11 @@ import * as Schema from "effect/Schema";
 import type {
   MargonemCharacterId,
   PositiveLevel,
-} from "./margonem-profile-id.js";
+} from "./margonem-profile-id.ts";
 import {
   MargonemCharacterIdSchema,
   PositiveLevelSchema,
-} from "./margonem-profile-id.js";
+} from "./margonem-profile-id.ts";
 
 /** The only Margonem world supported by squad builder v1. */
 export const MargonemWorld = Schema.Literal("jaruna");

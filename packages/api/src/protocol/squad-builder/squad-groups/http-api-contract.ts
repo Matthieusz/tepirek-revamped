@@ -10,7 +10,7 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUnauthorized,
   SquadBuilderUpstreamUnavailable,
-} from "../errors.js";
+} from "../errors.ts";
 import {
   AvailableSquadCharacterSchema,
   CreateSquadGroupPayload,
@@ -23,7 +23,7 @@ import {
   SquadGroupIdPayload,
   SquadGroupSummarySchema,
   SquadGroupVisibilityChangeSchema,
-} from "./squad-groups-schema.js";
+} from "./squad-groups-schema.ts";
 
 export {
   SquadBuilderConflict,

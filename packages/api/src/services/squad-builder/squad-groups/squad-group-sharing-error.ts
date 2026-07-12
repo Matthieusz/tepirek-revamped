@@ -1,11 +1,11 @@
-import type { InvalidAppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { InvalidAccountInviteTargetQuery } from "../../../domain/squad-builder/invite-target-search.js";
-import type { InvalidSquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
-import type { InvalidSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.js";
-import type { InvalidSquadId } from "../../../domain/squad-builder/squad-id.js";
-import type { SquadBuilderPersistenceUnavailable } from "../account-import/account-import-store.js";
-import type { SharedSquadGroupSaveError } from "./save-shared-squad-group-characters.js";
-import type { SquadGroupSharingAuthorizationError } from "./squad-group-store.js";
+import type { InvalidAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import type { InvalidAccountInviteTargetQuery } from "../../../domain/squad-builder/invite-target-search.ts";
+import type { InvalidSquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
+import type { InvalidSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
+import type { InvalidSquadId } from "../../../domain/squad-builder/squad-id.ts";
+import type { SquadBuilderPersistenceUnavailable } from "../account-import/account-import-store.ts";
+import type { SharedSquadGroupSaveError } from "./save-shared-squad-group-characters.ts";
+import type { SquadGroupSharingAuthorizationError } from "./squad-group-store.ts";
 
 /** All expected failures for squad group sharing services. */
 export type SquadGroupSharingError =

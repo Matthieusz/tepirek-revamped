@@ -2,19 +2,19 @@ import * as Effect from "effect/Effect";
 import { Firecrawl } from "firecrawl";
 import type { Document } from "firecrawl";
 
-import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
-import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.js";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
+import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.ts";
 import {
   FirecrawlRequestFailed,
   FirecrawlResponseNotParseable,
   RequestCancelled,
-} from "../../../services/squad-builder/firecrawl-client.js";
+} from "../../../services/squad-builder/firecrawl-client.ts";
 import type {
   FirecrawlClient,
   FirecrawlScrapeError,
   FirecrawlScrapeSuccess,
-} from "../../../services/squad-builder/firecrawl-client.js";
-import { parseFirecrawlCreditCount } from "../../../services/squad-builder/firecrawl-config.js";
+} from "../../../services/squad-builder/firecrawl-client.ts";
+import { parseFirecrawlCreditCount } from "../../../services/squad-builder/firecrawl-config.ts";
 
 /** Firecrawl SDK-backed implementation of profile HTML scraping. */
 const isSignalAborted = (signal: AbortSignal | undefined): boolean =>

@@ -13,19 +13,19 @@ import { and, count, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { appUserIdToString } from "../../../domain/squad-builder/app-user-id.js";
-import { firecrawlYearMonthToString } from "../../../domain/squad-builder/firecrawl-year-month.js";
-import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { appUserIdToString } from "../../../domain/squad-builder/app-user-id.ts";
+import { firecrawlYearMonthToString } from "../../../domain/squad-builder/firecrawl-year-month.ts";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import {
   margonemAccountIdToNumber,
   parseMargonemAccountId,
-} from "../../../domain/squad-builder/margonem-account-id.js";
+} from "../../../domain/squad-builder/margonem-account-id.ts";
 import {
   parseMargonemProfession,
   parseMargonemWorld,
-} from "../../../domain/squad-builder/margonem-character.js";
+} from "../../../domain/squad-builder/margonem-character.ts";
 import {
   characterIdToNumber,
   levelToNumber,
@@ -33,12 +33,12 @@ import {
   parseMargonemProfileId,
   parsePositiveLevel,
   profileIdToNumber,
-} from "../../../domain/squad-builder/margonem-profile-id.js";
+} from "../../../domain/squad-builder/margonem-profile-id.ts";
 import {
   parsePendingMargonemAccountRefetchId,
   pendingRefetchIdToNumber,
-} from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
-import { AccountRefetchStoreService } from "../../../services/squad-builder/account-refetch/account-refetch-store-service.js";
+} from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
+import { AccountRefetchStoreService } from "../../../services/squad-builder/account-refetch/account-refetch-store-service.ts";
 import type {
   ApplyRefetchedAccountInput,
   CreatePendingMargonemAccountRefetchInput,
@@ -50,21 +50,21 @@ import type {
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
-} from "../../../services/squad-builder/account-refetch/account-refetch-store.js";
-import type { ApplyAccountRefetchOutput } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.js";
-import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
+} from "../../../services/squad-builder/account-refetch/account-refetch-store.ts";
+import type { ApplyAccountRefetchOutput } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.ts";
+import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
   PendingMargonemAccountRefetchNotFound,
-} from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
+} from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   failPersistence,
   namedStoreMethod,
   parsePersistedAppUserId,
   persistenceQuery,
   usedFirecrawlRequestStatuses,
-} from "./persistence-query.js";
+} from "./persistence-query.ts";
 
 const reserveRequestWithDatabase =
   (database: EffectPgDatabase) =>

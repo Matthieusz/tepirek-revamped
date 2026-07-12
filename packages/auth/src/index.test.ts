@@ -9,7 +9,7 @@ describe("Better Auth config", () => {
     const { database, pool } = createDatabase(
       "postgresql://postgres:password@localhost:5433/tepirek-revamped-test"
     );
-    const { AuthConfig, makeAuth } = await import("./index.js");
+    const { AuthConfig, makeAuth } = await import("./index.ts");
 
     const auth = Effect.runSync(
       makeAuth(database).pipe(

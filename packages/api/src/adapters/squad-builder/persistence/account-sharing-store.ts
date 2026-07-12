@@ -12,30 +12,30 @@ import { and, desc, eq, ilike, inArray, ne, not, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { AccountAccessStatus } from "../../../domain/squad-builder/account-access-status.js";
+import type { AccountAccessStatus } from "../../../domain/squad-builder/account-access-status.ts";
 import {
   canTransitionAccountAccess,
   parseAccountAccessStatus,
-} from "../../../domain/squad-builder/account-access-status.js";
-import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+} from "../../../domain/squad-builder/account-access-status.ts";
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import {
   appUserIdToString,
   parseAppUserId,
-} from "../../../domain/squad-builder/app-user-id.js";
-import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
+} from "../../../domain/squad-builder/app-user-id.ts";
+import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
 import {
   margonemAccountAccessIdToNumber,
   parseMargonemAccountAccessId,
-} from "../../../domain/squad-builder/margonem-account-access-id.js";
-import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+} from "../../../domain/squad-builder/margonem-account-access-id.ts";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import {
   margonemAccountIdToNumber,
   parseMargonemAccountId,
-} from "../../../domain/squad-builder/margonem-account-id.js";
-import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
-import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.js";
-import { AccountSharingStoreService } from "../../../services/squad-builder/account-sharing/account-sharing-store-service.js";
+} from "../../../domain/squad-builder/margonem-account-id.ts";
+import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
+import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.ts";
+import { AccountSharingStoreService } from "../../../services/squad-builder/account-sharing/account-sharing-store-service.ts";
 import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,
@@ -51,8 +51,8 @@ import type {
   RevokeAccountAccessStoreInput,
   SearchInviteTargetsStoreInput,
   SharedMargonemAccountSummary,
-} from "../../../services/squad-builder/account-sharing/account-sharing-store.js";
-import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
+} from "../../../services/squad-builder/account-sharing/account-sharing-store.ts";
+import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   AccountAccessInviteNotFound,
   AccountAccessTransitionNotAllowed,
@@ -61,14 +61,14 @@ import {
   InviteTargetNotFound,
   InviteTargetNotVerified,
   MargonemAccountNotFound,
-} from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
+} from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   failPersistence,
   namedStoreMethod,
   parsePersistedAppUserId,
   persistenceQuery,
-} from "./persistence-query.js";
-import type { EffectSquadGroupPersistenceOperation } from "./persistence-query.js";
+} from "./persistence-query.ts";
+import type { EffectSquadGroupPersistenceOperation } from "./persistence-query.ts";
 
 const listOwnedAccountsWithDatabase =
   (database: EffectPgDatabase) =>

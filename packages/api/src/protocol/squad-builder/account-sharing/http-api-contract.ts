@@ -9,7 +9,7 @@ import {
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUnauthorized,
-} from "../errors.js";
+} from "../errors.ts";
 import {
   AccountAccessGrantSummarySchema,
   AccountAccessGrantsPayload,
@@ -21,7 +21,7 @@ import {
   SearchAccountInviteTargetsPayload,
   SendAccountAccessInvitePayload,
   SharedMargonemAccountSummarySchema,
-} from "./account-sharing-schema.js";
+} from "./account-sharing-schema.ts";
 
 export {
   SquadBuilderConflict,

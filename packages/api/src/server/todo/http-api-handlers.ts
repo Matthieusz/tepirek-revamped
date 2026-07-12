@@ -3,15 +3,15 @@
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { TodoStoreError } from "../../adapters/todo/todo-store-error.js";
-import { TodoStore } from "../../adapters/todo/todo-store.js";
-import { AppHttpApi } from "../../protocol/http-api-contract.js";
+import type { TodoStoreError } from "../../adapters/todo/todo-store-error.ts";
+import { TodoStore } from "../../adapters/todo/todo-store.ts";
+import { AppHttpApi } from "../../protocol/http-api-contract.ts";
 import {
   TodoForbidden,
   TodoPersistenceUnavailable,
   TodoUnauthorized,
-} from "../../protocol/todo/http-api-contract.js";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
+} from "../../protocol/todo/http-api-contract.ts";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireVerifiedSession } = makeAuthorizationPolicy({
   forbidden: () => new TodoForbidden({ message: "FORBIDDEN" }),

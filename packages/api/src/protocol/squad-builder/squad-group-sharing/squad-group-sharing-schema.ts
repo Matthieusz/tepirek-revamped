@@ -1,16 +1,16 @@
 import * as Schema from "effect/Schema";
 
-import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.js";
-import { SquadGroupIdSchema } from "../../../domain/squad-builder/squad-group-id.js";
-import { SquadGroupInvitationIdSchema } from "../../../domain/squad-builder/squad-group-invitation-id.js";
+import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.ts";
+import { SquadGroupIdSchema } from "../../../domain/squad-builder/squad-group-id.ts";
+import { SquadGroupInvitationIdSchema } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
 import {
   ActiveSquadGroupInvitationStatusSchema,
   SquadGroupInvitationStatusSchema,
-} from "../../../domain/squad-builder/squad-group-invitation-status.js";
+} from "../../../domain/squad-builder/squad-group-invitation-status.ts";
 import {
   AccountInviteTargetSchema,
   InviteResponseSchema,
-} from "../account-sharing/account-sharing-schema.js";
+} from "../account-sharing/account-sharing-schema.ts";
 
 export const SquadEditorInviteTargetSchema = AccountInviteTargetSchema;
 export const SearchSquadEditorInviteTargetsPayload = Schema.Struct({

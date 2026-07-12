@@ -1,7 +1,7 @@
-// oxlint-disable eslint/no-await-in-loop, eslint/no-nested-ternary, eslint/prefer-destructuring, eslint/prefer-named-capture-group, eslint/require-unicode-regexp, unicorn/import-style, unicorn/no-lonely-if -- Repository boundary script favors direct, dependency-free checks.
+// oxlint-disable eslint/no-await-in-loop, eslint/no-nested-ternary, eslint/prefer-destructuring, eslint/prefer-named-capture-group, eslint/require-unicode-regexp, unicorn/import-style -- Repository boundary script favors direct, dependency-free checks.
 import { spawnSync } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { relative, resolve, sep } from "node:path";
 
 const packageDirectory = resolve(import.meta.dirname, "..");
 const repositoryDirectory = resolve(packageDirectory, "../..");
@@ -38,6 +38,16 @@ const sourceFiles = async (directory) => {
   return files;
 };
 
+const productionTypeScriptFiles = async (directory) => {
+  const files = await sourceFiles(directory);
+  return files.filter(
+    (path) =>
+      !path.endsWith(".test.ts") &&
+      !path.endsWith(".test.tsx") &&
+      !path.includes(`${sep}test${sep}`)
+  );
+};
+
 for (const file of await sourceFiles(
   resolve(repositoryDirectory, "apps/web/src")
 )) {
@@ -55,22 +65,63 @@ for (const [subpath, conditions] of Object.entries(packageExports)) {
   if (typeof target !== "string") {
     fail(`Export ${subpath} has no default target`);
   }
-  if (
-    ["./adapters/*", "./observability", "./server/*", "./services/*"].includes(
-      subpath
-    )
-  ) {
-    if (conditions.browser !== null) {
-      fail(`Server-only export ${subpath} must be blocked in browsers`);
-    }
+  const isServerOnlyExport = [
+    "./adapters/*",
+    "./observability",
+    "./server/*",
+    "./services/*",
+  ].includes(subpath);
+  if (isServerOnlyExport && conditions.browser !== null) {
+    fail(`Server-only export ${subpath} must be blocked in browsers`);
   }
 }
 
-const runResolutionCheck = (
+const apiSpecifiers = async (exportPrefix, sourceDirectory) => {
+  const directory = resolve(packageDirectory, "src", sourceDirectory);
+  const files = await productionTypeScriptFiles(directory);
+  return files.map((path) => {
+    const subpath = relative(directory, path)
+      .replaceAll(sep, "/")
+      .replace(/\.tsx?$/, "");
+    return `@tepirek-revamped/api/${exportPrefix}/${subpath}`;
+  });
+};
+
+const packageSpecifiers = async (packageName, packagePath) => {
+  const sourceDirectory = resolve(repositoryDirectory, packagePath, "src");
+  const files = await productionTypeScriptFiles(sourceDirectory);
+  return [
+    packageName,
+    ...files
+      .filter((path) => relative(sourceDirectory, path) !== "index.ts")
+      .map((path) => {
+        const subpath = relative(sourceDirectory, path)
+          .replaceAll(sep, "/")
+          .replace(/\.tsx?$/, "");
+        return `${packageName}/${subpath}`;
+      }),
+  ];
+};
+
+const browserSpecifiers = [
+  ...(await apiSpecifiers("domain/squad-builder", "domain/squad-builder")),
+  ...(await apiSpecifiers("protocol", "protocol")),
+];
+const serverSpecifiers = [
+  ...(await apiSpecifiers("adapters", "adapters")),
+  "@tepirek-revamped/api/observability",
+  ...(await apiSpecifiers("server", "server")),
+  ...(await apiSpecifiers("services", "services")),
+  ...(await packageSpecifiers("@tepirek-revamped/auth", "packages/auth")),
+  "@tepirek-revamped/config",
+  ...(await packageSpecifiers("@tepirek-revamped/db", "packages/db")),
+];
+
+const runImportCheck = (
   runtime,
   workspace,
   conditions,
-  specifier,
+  specifiers,
   shouldResolve
 ) => {
   const args = [];
@@ -80,28 +131,28 @@ const runResolutionCheck = (
   } else {
     args.push("--eval");
   }
+
   const expression = shouldResolve
-    ? runtime === "bun"
-      ? `process.exit(Bun.resolveSync(${JSON.stringify(specifier)}, process.cwd()) ? 0 : 1)`
-      : `process.exit(import.meta.resolve(${JSON.stringify(specifier)}) ? 0 : 1)`
-    : `import(${JSON.stringify(specifier)}).then(() => process.exit(1), () => process.exit(0))`;
+    ? `for (const specifier of ${JSON.stringify(specifiers)}) { try { await import(specifier); } catch (error) { console.error(\`Failed to import \${specifier}\`, error); process.exit(1); } }`
+    : `import(${JSON.stringify(specifiers[0])}).then(() => process.exit(1), () => process.exit(0))`;
   args.push(expression);
+
   const result = spawnSync(runtime, args, {
     cwd: resolve(repositoryDirectory, workspace),
     stdio: "inherit",
   });
   if (result.status !== 0) {
-    fail(`${runtime} package export check failed from ${workspace}`);
+    fail(`${runtime} package import check failed from ${workspace}`);
   }
 };
 
-const contractSpecifier = "@tepirek-revamped/api/protocol/http-api-contract";
 const serverSpecifier = "@tepirek-revamped/api/server/effect-app";
+runImportCheck("node", "apps/web", ["browser"], [serverSpecifier], false);
+runImportCheck("node", "apps/web", ["browser"], browserSpecifiers, true);
+runImportCheck("bun", "apps/web", [], browserSpecifiers, true);
+runImportCheck("node", "apps/server", [], serverSpecifiers, true);
+runImportCheck("bun", "apps/server", [], serverSpecifiers, true);
 
-runResolutionCheck("node", "apps/web", ["browser"], serverSpecifier, false);
-runResolutionCheck("node", "apps/web", ["browser"], contractSpecifier, true);
-runResolutionCheck("bun", "apps/web", [], contractSpecifier, true);
-runResolutionCheck("node", "apps/server", [], serverSpecifier, true);
-runResolutionCheck("bun", "apps/server", [], serverSpecifier, true);
-
-console.log("API package boundary checks passed");
+console.log(
+  `API package boundary checks passed (${browserSpecifiers.length} browser exports, ${serverSpecifiers.length} server exports)`
+);

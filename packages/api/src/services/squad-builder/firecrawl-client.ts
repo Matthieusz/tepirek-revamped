@@ -3,7 +3,7 @@ import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import type { MargonemProfileId } from "../../domain/squad-builder/margonem-profile-id.js";
+import type { MargonemProfileId } from "../../domain/squad-builder/margonem-profile-id.ts";
 
 /** Successful Firecrawl scrape output used by squad-builder. */
 export interface FirecrawlScrapeSuccess {

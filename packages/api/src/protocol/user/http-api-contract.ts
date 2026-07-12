@@ -3,7 +3,7 @@ import { USER_ROLES } from "@tepirek-revamped/config";
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { SessionMiddleware } from "../auth/http-api-middleware.js";
+import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 export const UserId = Schema.NonEmptyString;
 export const Role = Schema.Literals(USER_ROLES);

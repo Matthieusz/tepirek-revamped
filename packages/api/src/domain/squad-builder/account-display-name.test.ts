@@ -2,7 +2,7 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { describe } from "vitest";
 
-import { parseAccountDisplayName } from "./account-display-name.js";
+import { parseAccountDisplayName } from "./account-display-name.ts";
 
 describe("parseAccountDisplayName", () => {
   it.effect("trims and accepts a non-empty account display name", () =>

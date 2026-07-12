@@ -1,10 +1,10 @@
-import type { AppUserId } from "../../domain/squad-builder/app-user-id.js";
-import type { RequestSession } from "../../protocol/auth/current-session.js";
+import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
+import type { RequestSession } from "../../protocol/auth/current-session.ts";
 import {
   SquadBuilderForbidden,
   SquadBuilderUnauthorized,
-} from "../../protocol/squad-builder/squad-groups/http-api-contract.js";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
+} from "../../protocol/squad-builder/squad-groups/http-api-contract.ts";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireVerifiedSession } = makeAuthorizationPolicy({
   forbidden: () => new SquadBuilderForbidden({ message: "FORBIDDEN" }),

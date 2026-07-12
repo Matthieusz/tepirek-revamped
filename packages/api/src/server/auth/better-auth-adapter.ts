@@ -3,9 +3,9 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { BetterAuthUnavailable } from "./better-auth-errors.js";
+import { BetterAuthUnavailable } from "./better-auth-errors.ts";
 
-export { BetterAuthUnavailable } from "./better-auth-errors.js";
+export { BetterAuthUnavailable } from "./better-auth-errors.ts";
 
 export type AuthSession = Awaited<ReturnType<Auth["api"]["getSession"]>>;
 

@@ -4,12 +4,12 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
-import { CannotInviteSelf } from "./squad-group-errors.js";
-import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
-import { SquadGroupStoreService } from "./squad-group-store.js";
-import type { SquadGroupInvitationSummary } from "./squad-group-store.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
+import { CannotInviteSelf } from "./squad-group-errors.ts";
+import type { SquadGroupSharingError } from "./squad-group-sharing-error.ts";
+import { SquadGroupStoreService } from "./squad-group-store.ts";
+import type { SquadGroupInvitationSummary } from "./squad-group-store.ts";
 
 export interface SquadGroupEditorInvites {
   /** Send or re-send a squad group editor invitation. */

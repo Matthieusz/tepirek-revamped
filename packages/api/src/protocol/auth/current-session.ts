@@ -1,7 +1,7 @@
 import type { Auth } from "@tepirek-revamped/auth";
 import * as Context from "effect/Context";
 
-import type { AppUserId } from "../../domain/squad-builder/app-user-id.js";
+import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 
 type BetterAuthSession = NonNullable<
   Awaited<ReturnType<Auth["api"]["getSession"]>>

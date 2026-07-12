@@ -1,12 +1,12 @@
 import * as Schema from "effect/Schema";
 
-import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.js";
-import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-account-id.js";
-import { MargonemProfessionSchema } from "../../../domain/squad-builder/margonem-character.js";
-import { PositiveInt } from "../../../domain/squad-builder/positive-int.js";
-import { SquadGroupIdSchema } from "../../../domain/squad-builder/squad-group-id.js";
-import { SquadGroupVisibilitySchema } from "../../../domain/squad-builder/squad-group-visibility.js";
-import { SquadIdSchema } from "../../../domain/squad-builder/squad-id.js";
+import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.ts";
+import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-account-id.ts";
+import { MargonemProfessionSchema } from "../../../domain/squad-builder/margonem-character.ts";
+import { PositiveInt } from "../../../domain/squad-builder/positive-int.ts";
+import { SquadGroupIdSchema } from "../../../domain/squad-builder/squad-group-id.ts";
+import { SquadGroupVisibilitySchema } from "../../../domain/squad-builder/squad-group-visibility.ts";
+import { SquadIdSchema } from "../../../domain/squad-builder/squad-id.ts";
 
 export const SquadGroupIdPayload = Schema.Struct({
   groupId: SquadGroupIdSchema,

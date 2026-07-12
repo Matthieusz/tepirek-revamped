@@ -13,9 +13,9 @@ import {
   AuctionConflict,
   AuctionForbidden,
   AuctionNotFound,
-} from "../../protocol/auction/http-api-contract.js";
-import { makeDirectPersistenceQuery } from "../persistence-query.js";
-import { AuctionStoreError } from "./auction-store-error.js";
+} from "../../protocol/auction/http-api-contract.ts";
+import { makeDirectPersistenceQuery } from "../persistence-query.ts";
+import { AuctionStoreError } from "./auction-store-error.ts";
 
 export interface AuctionGroupInput {
   readonly profession: string;

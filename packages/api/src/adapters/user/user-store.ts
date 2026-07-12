@@ -12,9 +12,9 @@ import {
   UserBadRequest,
   UserForbidden,
   UserNotFound,
-} from "../../protocol/user/http-api-contract.js";
-import { userPersistenceQuery } from "./persistence-query.js";
-import type { UserAdapterError } from "./user-adapter-error.js";
+} from "../../protocol/user/http-api-contract.ts";
+import { userPersistenceQuery } from "./persistence-query.ts";
+import type { UserAdapterError } from "./user-adapter-error.ts";
 
 const LAST_ADMIN_MESSAGE =
   "Nie można odebrać uprawnień ostatniemu administratorowi";

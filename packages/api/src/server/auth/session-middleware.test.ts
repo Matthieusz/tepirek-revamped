@@ -3,12 +3,12 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
-import { AppUserId } from "../../domain/squad-builder/app-user-id.js";
-import { InvalidSession } from "../../protocol/auth/invalid-session.js";
-import { SessionUnavailable } from "../../protocol/auth/session-unavailable.js";
-import { BetterAuthAdapter } from "./better-auth-adapter.js";
-import { BetterAuthUnavailable } from "./better-auth-errors.js";
-import { loadCurrentSession } from "./session-middleware.js";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
+import { InvalidSession } from "../../protocol/auth/invalid-session.ts";
+import { SessionUnavailable } from "../../protocol/auth/session-unavailable.ts";
+import { BetterAuthAdapter } from "./better-auth-adapter.ts";
+import { BetterAuthUnavailable } from "./better-auth-errors.ts";
+import { loadCurrentSession } from "./session-middleware.ts";
 
 const authenticatedSession = (userId: string) => ({
   session: {

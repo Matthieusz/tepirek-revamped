@@ -1,15 +1,15 @@
-import type { AccountAccessStatus } from "../../../domain/squad-builder/account-access-status.js";
-import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
-import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
+import type { AccountAccessStatus } from "../../../domain/squad-builder/account-access-status.ts";
+import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import type {
   ListOwnedMargonemAccountsInput,
   OwnedMargonemAccountReader,
   OwnedMargonemAccountSummary,
   SquadBuilderPersistenceUnavailable,
-} from "../account-import/account-import-store.js";
+} from "../account-import/account-import-store.ts";
 /** Expected authorization failures for account sharing operations. */
 export type AccountSharingAuthorizationError =
   | { readonly _tag: "MargonemAccountNotFound" }

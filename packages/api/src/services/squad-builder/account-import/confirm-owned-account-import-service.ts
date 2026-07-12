@@ -3,16 +3,16 @@ import * as Context from "effect/Context";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import type { InvalidAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
-import { AccountImportStoreService } from "./account-import-store-service.js";
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import type { InvalidAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
+import { AccountImportStoreService } from "./account-import-store-service.ts";
 import type {
   DuplicateMargonemAccountError,
   PendingMargonemAccountImportNotFound,
   SquadBuilderPersistenceUnavailable,
-} from "./account-import-store.js";
+} from "./account-import-store.ts";
 
 /** Input for confirming an owned account import through the service. */
 export interface ConfirmOwnedAccountImportInput {

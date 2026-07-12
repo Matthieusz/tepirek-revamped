@@ -17,45 +17,45 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { describe, expect, it } from "vitest";
 
-import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.js";
-import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import { computeMargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.js";
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.ts";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
+import { computeMargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.ts";
 import {
   parseMargonemCharacterId,
   parseMargonemProfileId,
   parsePositiveLevel,
-} from "../../../domain/squad-builder/margonem-profile-id.js";
-import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
-import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
-import { makeApiSquadBuilderLayer } from "../../../server/effect-app.js";
-import { liveEffect } from "../../../test/effect.js";
-import { createVerifiedMember } from "../../../test/integration/builders.js";
+} from "../../../domain/squad-builder/margonem-profile-id.ts";
+import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
+import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
+import { makeApiSquadBuilderLayer } from "../../../server/effect-app.ts";
+import { liveEffect } from "../../../test/effect.ts";
+import { createVerifiedMember } from "../../../test/integration/builders.ts";
 import {
   defaultTestDatabaseUrl,
   testDb,
-} from "../../../test/integration/database.js";
-import { AccountImportStoreService } from "../account-import/account-import-store-service.js";
-import { confirm as confirmOwnedAccountImport } from "../account-import/confirm-owned-account-import-service.js";
-import { list as listOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts.js";
-import { AccountRefetchStoreService } from "../account-refetch/account-refetch-store-service.js";
-import { apply as applyAccountRefetch } from "../account-refetch/apply-account-refetch-service.js";
-import { AccountSharingStateService } from "../account-sharing/list-account-sharing-state-service.js";
-import { AccountAccessInviteResponsesService } from "../account-sharing/respond-to-account-access-invite-service.js";
-import { AccountAccessRevocationsService } from "../account-sharing/revoke-account-access-service.js";
-import { AccountInviteTargetsService } from "../account-sharing/search-account-invite-targets-service.js";
-import { AccountAccessInvitesService } from "../account-sharing/send-account-access-invite-service.js";
-import { parseFirecrawlCreditCount } from "../firecrawl-config.js";
-import { create as createSquadGroup } from "./create-squad-group.js";
-import { list as listAvailableSquadCharacters } from "./list-available-squad-characters.js";
-import { list as listGlobalSquadGroups } from "./list-global-squad-groups.js";
-import { getMine, listMine } from "./list-squad-groups.js";
-import { SquadGroupEditorInviteResponsesService } from "./respond-to-squad-group-invite-service.js";
-import { SquadGroupEditorRevocationsService } from "./revoke-squad-group-editor-service.js";
-import { save as saveSquadGroup } from "./save-squad-group.js";
-import { SquadGroupEditorInvitesService } from "./send-squad-group-editor-invite-service.js";
-import { set as setSquadGroupVisibility } from "./set-squad-group-visibility.js";
+} from "../../../test/integration/database.ts";
+import { AccountImportStoreService } from "../account-import/account-import-store-service.ts";
+import { confirm as confirmOwnedAccountImport } from "../account-import/confirm-owned-account-import-service.ts";
+import { list as listOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts.ts";
+import { AccountRefetchStoreService } from "../account-refetch/account-refetch-store-service.ts";
+import { apply as applyAccountRefetch } from "../account-refetch/apply-account-refetch-service.ts";
+import { AccountSharingStateService } from "../account-sharing/list-account-sharing-state-service.ts";
+import { AccountAccessInviteResponsesService } from "../account-sharing/respond-to-account-access-invite-service.ts";
+import { AccountAccessRevocationsService } from "../account-sharing/revoke-account-access-service.ts";
+import { AccountInviteTargetsService } from "../account-sharing/search-account-invite-targets-service.ts";
+import { AccountAccessInvitesService } from "../account-sharing/send-account-access-invite-service.ts";
+import { parseFirecrawlCreditCount } from "../firecrawl-config.ts";
+import { create as createSquadGroup } from "./create-squad-group.ts";
+import { list as listAvailableSquadCharacters } from "./list-available-squad-characters.ts";
+import { list as listGlobalSquadGroups } from "./list-global-squad-groups.ts";
+import { getMine, listMine } from "./list-squad-groups.ts";
+import { SquadGroupEditorInviteResponsesService } from "./respond-to-squad-group-invite-service.ts";
+import { SquadGroupEditorRevocationsService } from "./revoke-squad-group-editor-service.ts";
+import { save as saveSquadGroup } from "./save-squad-group.ts";
+import { SquadGroupEditorInvitesService } from "./send-squad-group-editor-invite-service.ts";
+import { set as setSquadGroupVisibility } from "./set-squad-group-visibility.ts";
 
 const apiTestLayer = makeApiSquadBuilderLayer(defaultTestDatabaseUrl);
 

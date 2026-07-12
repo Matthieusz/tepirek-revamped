@@ -8,8 +8,8 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { makeDirectPersistenceQuery } from "../persistence-query.js";
-import { HeroesStoreError } from "./heroes-store-error.js";
+import { makeDirectPersistenceQuery } from "../persistence-query.ts";
+import { HeroesStoreError } from "./heroes-store-error.ts";
 
 export interface CreateHeroInput {
   readonly eventId: number;

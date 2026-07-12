@@ -2,10 +2,10 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { describe } from "vitest";
 
-import { parsePendingMargonemAccountImportId } from "./pending-margonem-account-import-id.js";
-import { parseSquadGroupId } from "./squad-group-id.js";
-import { parseSquadGroupInvitationId } from "./squad-group-invitation-id.js";
-import { parseSquadId } from "./squad-id.js";
+import { parsePendingMargonemAccountImportId } from "./pending-margonem-account-import-id.ts";
+import { parseSquadGroupId } from "./squad-group-id.ts";
+import { parseSquadGroupInvitationId } from "./squad-group-invitation-id.ts";
+import { parseSquadId } from "./squad-id.ts";
 
 const invalidPositiveIds = [0, -1, 1.5, Number.NaN] as const;
 

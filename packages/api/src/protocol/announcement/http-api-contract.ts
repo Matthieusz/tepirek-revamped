@@ -2,7 +2,7 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { SessionMiddleware } from "../auth/http-api-middleware.js";
+import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 const { NonEmptyString } = Schema;
 const PositiveInt = Schema.Number.check(

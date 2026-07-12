@@ -3,11 +3,11 @@ import * as Schema from "effect/Schema";
 import {
   AccountAccessStatusSchema,
   ActiveAccountAccessStatusSchema,
-} from "../../../domain/squad-builder/account-access-status.js";
-import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.js";
-import { MargonemAccountAccessIdSchema } from "../../../domain/squad-builder/margonem-account-access-id.js";
-import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-account-id.js";
-import { MargonemProfileIdSchema } from "../../../domain/squad-builder/margonem-profile-id.js";
+} from "../../../domain/squad-builder/account-access-status.ts";
+import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.ts";
+import { MargonemAccountAccessIdSchema } from "../../../domain/squad-builder/margonem-account-access-id.ts";
+import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-account-id.ts";
+import { MargonemProfileIdSchema } from "../../../domain/squad-builder/margonem-profile-id.ts";
 
 /** HTTP/API schema for an invite response command. */
 export const InviteResponseSchema = Schema.Literals(["accept", "decline"]);

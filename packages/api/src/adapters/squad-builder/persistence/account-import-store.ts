@@ -15,14 +15,14 @@ import * as Layer from "effect/Layer";
 import {
   accountDisplayNameToString,
   parseAccountDisplayName,
-} from "../../../domain/squad-builder/account-display-name.js";
-import { appUserIdToString } from "../../../domain/squad-builder/app-user-id.js";
-import { firecrawlYearMonthToString } from "../../../domain/squad-builder/firecrawl-year-month.js";
-import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+} from "../../../domain/squad-builder/account-display-name.ts";
+import { appUserIdToString } from "../../../domain/squad-builder/app-user-id.ts";
+import { firecrawlYearMonthToString } from "../../../domain/squad-builder/firecrawl-year-month.ts";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import {
   parseMargonemProfession,
   parseMargonemWorld,
-} from "../../../domain/squad-builder/margonem-character.js";
+} from "../../../domain/squad-builder/margonem-character.ts";
 import {
   characterIdToNumber,
   levelToNumber,
@@ -30,13 +30,13 @@ import {
   parseMargonemProfileId,
   parsePositiveLevel,
   profileIdToNumber,
-} from "../../../domain/squad-builder/margonem-profile-id.js";
-import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.js";
+} from "../../../domain/squad-builder/margonem-profile-id.ts";
+import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.ts";
 import {
   parsePendingMargonemAccountImportId,
   pendingImportIdToNumber,
-} from "../../../domain/squad-builder/pending-margonem-account-import-id.js";
-import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store-service.js";
+} from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
+import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store-service.ts";
 import type {
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
@@ -52,15 +52,15 @@ import type {
   ProfileAccessState,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
-} from "../../../services/squad-builder/account-import/account-import-store.js";
-import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
-import { PendingMargonemAccountImportNotFound } from "../../../services/squad-builder/squad-groups/squad-group-errors.js";
+} from "../../../services/squad-builder/account-import/account-import-store.ts";
+import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
+import { PendingMargonemAccountImportNotFound } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   failPersistence,
   namedStoreMethod,
   persistenceQuery,
   usedFirecrawlRequestStatuses,
-} from "./persistence-query.js";
+} from "./persistence-query.ts";
 
 const findProfileAccessStateWithDatabase =
   (database: EffectPgDatabase) =>

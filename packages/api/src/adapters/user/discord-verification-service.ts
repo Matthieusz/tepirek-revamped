@@ -2,9 +2,9 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { hasDiscordGuild } from "./discord-guild.js";
-import { DiscordVerificationConfig } from "./discord-verification-config.js";
-import { UserAdapterError } from "./user-adapter-error.js";
+import { hasDiscordGuild } from "./discord-guild.ts";
+import { DiscordVerificationConfig } from "./discord-verification-config.ts";
+import { UserAdapterError } from "./user-adapter-error.ts";
 
 export class DiscordGuildVerifier extends Context.Service<
   DiscordGuildVerifier,

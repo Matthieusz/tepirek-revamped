@@ -2,14 +2,14 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as HttpServerRequest from "effect/unstable/http/HttpServerRequest";
 
-import { parseAppUserId } from "../../domain/squad-builder/app-user-id.js";
+import { parseAppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
   CurrentSession,
   InvalidSession,
   SessionMiddleware,
   SessionUnavailable,
-} from "../../protocol/auth/http-api-middleware.js";
-import { BetterAuthAdapter } from "./better-auth-adapter.js";
+} from "../../protocol/auth/http-api-middleware.ts";
+import { BetterAuthAdapter } from "./better-auth-adapter.ts";
 
 const headersFromRequest = (
   request: HttpServerRequest.HttpServerRequest

@@ -10,7 +10,7 @@
     "./tsconfig.base.json": "./tsconfig.base.json"
   },
   "scripts": {
-    "check-types": "tsc --noEmit --strict --ignoreConfig src/index.ts",
+    "check-types": "tsc --noEmit --strict --allowImportingTsExtensions --ignoreConfig src/index.ts",
     "test": "vitest run"
   }
 }

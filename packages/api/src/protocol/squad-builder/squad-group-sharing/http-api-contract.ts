@@ -9,7 +9,7 @@ import {
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUnauthorized,
-} from "../errors.js";
+} from "../errors.ts";
 import {
   RespondToSquadGroupInvitePayload,
   RevokeSquadGroupEditorPayload,
@@ -20,7 +20,7 @@ import {
   SquadGroupEditorGrantsPayload,
   SquadGroupEditorGrantSummarySchema,
   SquadGroupInvitationSummarySchema,
-} from "./squad-group-sharing-schema.js";
+} from "./squad-group-sharing-schema.ts";
 
 const NoPayload = Schema.Struct({});
 

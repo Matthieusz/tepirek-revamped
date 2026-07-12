@@ -2,7 +2,7 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
-import type { VaultError } from "./vault-errors.js";
+import type { VaultError } from "./vault-errors.ts";
 
 export interface DistributeGoldInput {
   readonly goldAmount: number;

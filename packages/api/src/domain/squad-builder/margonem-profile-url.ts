@@ -1,8 +1,8 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { parseMargonemProfileId } from "./margonem-profile-id.js";
-import type { MargonemProfileId } from "./margonem-profile-id.js";
+import { parseMargonemProfileId } from "./margonem-profile-id.ts";
+import type { MargonemProfileId } from "./margonem-profile-id.ts";
 
 /** Expected failure when a Margonem profile URL cannot be parsed. */
 export class InvalidMargonemProfileUrl extends Schema.TaggedErrorClass<InvalidMargonemProfileUrl>()(

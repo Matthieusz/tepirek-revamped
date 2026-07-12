@@ -2,7 +2,7 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { describe } from "vitest";
 
-import { parsePendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id.js";
+import { parsePendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id.ts";
 
 describe("parsePendingMargonemAccountRefetchId", () => {
   it.effect("accepts positive integer pending refetch ids", () =>

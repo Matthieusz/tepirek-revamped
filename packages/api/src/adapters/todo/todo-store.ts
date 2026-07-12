@@ -8,8 +8,8 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { makeDirectPersistenceQuery } from "../persistence-query.js";
-import { TodoStoreError } from "./todo-store-error.js";
+import { makeDirectPersistenceQuery } from "../persistence-query.ts";
+import { TodoStoreError } from "./todo-store-error.ts";
 
 export interface CreateTodoInput {
   readonly text: string;

@@ -10,24 +10,24 @@ import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
-import type { BetServiceInterface } from "../../services/bet/bet-service.js";
-import { BetService } from "../../services/bet/bet-service.js";
-import type { RankingServiceInterface } from "../../services/ranking/ranking-service.js";
-import { RankingService } from "../../services/ranking/ranking-service.js";
-import type { VaultServiceInterface } from "../../services/vault/vault-service.js";
-import { VaultService } from "../../services/vault/vault-service.js";
-import { testEffect } from "../../test/effect.js";
+import type { BetServiceInterface } from "../../services/bet/bet-service.ts";
+import { BetService } from "../../services/bet/bet-service.ts";
+import type { RankingServiceInterface } from "../../services/ranking/ranking-service.ts";
+import { RankingService } from "../../services/ranking/ranking-service.ts";
+import type { VaultServiceInterface } from "../../services/vault/vault-service.ts";
+import { VaultService } from "../../services/vault/vault-service.ts";
+import { testEffect } from "../../test/effect.ts";
 import {
   createHero,
   createVerifiedMember,
-} from "../../test/integration/builders.js";
+} from "../../test/integration/builders.ts";
 import {
   defaultTestDatabaseUrl,
   testDb,
-} from "../../test/integration/database.js";
-import { DrizzleBetServiceLayer } from "./drizzle-bet-service.js";
-import { DrizzleRankingServiceLayer } from "./drizzle-ranking-service.js";
-import { DrizzleVaultServiceLayer } from "./drizzle-vault-service.js";
+} from "../../test/integration/database.ts";
+import { DrizzleBetServiceLayer } from "./drizzle-bet-service.ts";
+import { DrizzleRankingServiceLayer } from "./drizzle-ranking-service.ts";
+import { DrizzleVaultServiceLayer } from "./drizzle-vault-service.ts";
 
 const sortByUserId = <T extends { userId: string }>(rows: readonly T[]) =>
   (rows as T[]).toSorted((left, right) =>

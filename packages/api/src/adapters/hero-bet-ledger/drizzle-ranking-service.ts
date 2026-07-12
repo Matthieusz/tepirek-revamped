@@ -9,19 +9,19 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { parsePointWorth } from "../../domain/hero-bet-ledger/points.js";
+import { parsePointWorth } from "../../domain/hero-bet-ledger/points.ts";
 import {
   RankingNotFound,
   RankingPersistenceUnavailable,
-} from "../../services/ranking/ranking-errors.js";
+} from "../../services/ranking/ranking-errors.ts";
 import type {
   GetRankingInput,
   RankingRow,
   RankingServiceInterface,
-} from "../../services/ranking/ranking-service.js";
-import { RankingService } from "../../services/ranking/ranking-service.js";
-import { mapPersistenceErrors } from "./persistence-query.js";
-import type { EffectPgDatabase } from "./persistence-query.js";
+} from "../../services/ranking/ranking-service.ts";
+import { RankingService } from "../../services/ranking/ranking-service.ts";
+import { mapPersistenceErrors } from "./persistence-query.ts";
+import type { EffectPgDatabase } from "./persistence-query.ts";
 
 const persistenceQuery = <A, E, R>(
   operation: string,

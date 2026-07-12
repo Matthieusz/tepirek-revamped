@@ -1,13 +1,13 @@
-import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import type {
   MargonemAccountRefetchDiff,
   StoredMargonemCharacterSnapshot,
-} from "../../../domain/squad-builder/margonem-account-refetch-diff.js";
-import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.js";
-import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
-import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
+} from "../../../domain/squad-builder/margonem-account-refetch-diff.ts";
+import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.ts";
+import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
+import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
 import type {
   FirecrawlBudgetError,
   FirecrawlRequestLedger,
@@ -16,14 +16,14 @@ import type {
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
   SquadBuilderPersistenceUnavailable,
-} from "../account-import/account-import-store.js";
+} from "../account-import/account-import-store.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
   MargonemAccountOwnerAuthorizer,
-} from "../account-sharing/account-sharing-store.js";
-import type { FirecrawlCreditCount } from "../firecrawl-config.js";
-import type { ApplyAccountRefetchOutput } from "./apply-account-refetch-service.js";
+} from "../account-sharing/account-sharing-store.ts";
+import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
+import type { ApplyAccountRefetchOutput } from "./apply-account-refetch-service.ts";
 
 /** Account and current character state needed for a manual refetch preview. */
 export interface RefetchableMargonemAccount {

@@ -10,7 +10,7 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUnauthorized,
   SquadBuilderUpstreamUnavailable,
-} from "../errors.js";
+} from "../errors.ts";
 import {
   ConfirmOwnedAccountImportPayload,
   OwnedMargonemAccountSummarySchema,
@@ -18,7 +18,7 @@ import {
   PreviewMargonemProfileImportSuccess,
   PreviewOwnedAccountImportsPayload,
   PreviewOwnedAccountImportsSuccess,
-} from "./account-import-schema.js";
+} from "./account-import-schema.ts";
 
 export {
   SquadBuilderConflict,

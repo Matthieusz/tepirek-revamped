@@ -1,6 +1,6 @@
 import { beforeEach } from "vitest";
 
-import { truncateApplicationTables } from "./database.js";
+import { truncateApplicationTables } from "./database.ts";
 
 process.env.BETTER_AUTH_SECRET ??= "test-secret";
 process.env.BETTER_AUTH_URL ??= "http://localhost:3000";

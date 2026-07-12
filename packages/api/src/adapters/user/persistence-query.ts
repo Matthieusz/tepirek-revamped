@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import { isSqlError } from "effect/unstable/sql/SqlError";
 import type { SqlError } from "effect/unstable/sql/SqlError";
 
-import { UserAdapterError } from "./user-adapter-error.js";
+import { UserAdapterError } from "./user-adapter-error.ts";
 
 // oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
 /**

@@ -12,24 +12,24 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { calculatePointsPerMember } from "../../domain/hero-bet-ledger/points.js";
+import { calculatePointsPerMember } from "../../domain/hero-bet-ledger/points.ts";
 import {
   BetBadRequest,
   BetNotFound,
   BetPersistenceUnavailable,
-} from "../../services/bet/bet-errors.js";
+} from "../../services/bet/bet-errors.ts";
 import type {
   BetServiceInterface,
   CreateBetInput,
   EditBetInput,
   GetPaginatedBetsInput,
-} from "../../services/bet/bet-service.js";
-import { BetService } from "../../services/bet/bet-service.js";
-import { mapPersistenceErrors } from "./persistence-query.js";
+} from "../../services/bet/bet-service.ts";
+import { BetService } from "../../services/bet/bet-service.ts";
+import { mapPersistenceErrors } from "./persistence-query.ts";
 import type {
   EffectPgDatabase,
   TransactionDatabase,
-} from "./persistence-query.js";
+} from "./persistence-query.ts";
 
 const persistenceQuery = <A, E, R>(
   operation: string,

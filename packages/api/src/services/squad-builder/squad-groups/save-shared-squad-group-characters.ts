@@ -3,26 +3,26 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
 import type {
   SquadCharacterDraftPlacement,
   SquadGroupValidationError,
-} from "../../../domain/squad-builder/squad-group-snapshot.js";
-import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.js";
-import type { SquadId } from "../../../domain/squad-builder/squad-id.js";
-import type { SquadBuilderPersistenceUnavailable } from "../account-import/account-import-store.js";
-import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
+} from "../../../domain/squad-builder/squad-group-snapshot.ts";
+import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.ts";
+import type { SquadId } from "../../../domain/squad-builder/squad-id.ts";
+import type { SquadBuilderPersistenceUnavailable } from "../account-import/account-import-store.ts";
+import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.ts";
 import {
   ActorCannotEditSquadGroup,
   EditorCannotChangeSquadStructure,
   SquadNotInGroup,
-} from "./squad-group-errors.js";
+} from "./squad-group-errors.ts";
 import type {
   ActorCannotViewSquadGroup,
   SquadGroupNotFound,
-} from "./squad-group-store.js";
-import { SquadGroupStoreService } from "./squad-group-store.js";
+} from "./squad-group-store.ts";
+import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 export interface SharedSquadCharactersInput {
   readonly squadId: SquadId;

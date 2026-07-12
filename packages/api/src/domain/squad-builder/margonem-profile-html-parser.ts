@@ -1,13 +1,13 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { parseMargonemProfession } from "./margonem-character.js";
-import type { MargonemCharacterPreview } from "./margonem-character.js";
+import { parseMargonemProfession } from "./margonem-character.ts";
+import type { MargonemCharacterPreview } from "./margonem-character.ts";
 import {
   MargonemProfileId,
   parseMargonemCharacterId,
   parsePositiveLevel,
-} from "./margonem-profile-id.js";
+} from "./margonem-profile-id.ts";
 
 // oxlint-disable max-classes-per-file -- closely related parser error variants share one boundary.
 

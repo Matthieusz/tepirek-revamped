@@ -2,18 +2,18 @@
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { AppHttpApi } from "../../protocol/http-api-contract.js";
+import { AppHttpApi } from "../../protocol/http-api-contract.ts";
 import {
   VaultBadRequest,
   VaultForbidden,
   VaultNotFound,
   VaultPersistenceUnavailable,
   VaultUnauthorized,
-} from "../../protocol/vault/http-api-contract.js";
-import type { VaultError } from "../../services/vault/vault-errors.js";
+} from "../../protocol/vault/http-api-contract.ts";
+import type { VaultError } from "../../services/vault/vault-errors.ts";
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { VaultService } from "../../services/vault/vault-service.js";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
+import { VaultService } from "../../services/vault/vault-service.ts";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
   {

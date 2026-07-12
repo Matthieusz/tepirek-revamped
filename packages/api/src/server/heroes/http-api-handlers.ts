@@ -3,15 +3,15 @@
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { HeroesStoreError } from "../../adapters/heroes/heroes-store-error.js";
-import { HeroesStore } from "../../adapters/heroes/heroes-store.js";
+import type { HeroesStoreError } from "../../adapters/heroes/heroes-store-error.ts";
+import { HeroesStore } from "../../adapters/heroes/heroes-store.ts";
 import {
   HeroesForbidden,
   HeroesPersistenceUnavailable,
   HeroesUnauthorized,
-} from "../../protocol/heroes/http-api-contract.js";
-import { AppHttpApi } from "../../protocol/http-api-contract.js";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
+} from "../../protocol/heroes/http-api-contract.ts";
+import { AppHttpApi } from "../../protocol/http-api-contract.ts";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
   {

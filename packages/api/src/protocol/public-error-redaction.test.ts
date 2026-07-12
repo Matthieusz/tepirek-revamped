@@ -1,17 +1,17 @@
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
-import { AnnouncementPersistenceUnavailable } from "./announcement/http-api-contract.js";
-import { AuctionPersistenceUnavailable } from "./auction/http-api-contract.js";
-import { BetPersistenceUnavailable } from "./bet/http-api-contract.js";
-import { EventPersistenceUnavailable } from "./event/http-api-contract.js";
-import { HeroesPersistenceUnavailable } from "./heroes/http-api-contract.js";
-import { RankingPersistenceUnavailable } from "./ranking/http-api-contract.js";
-import { SkillsPersistenceUnavailable } from "./skills/http-api-contract.js";
-import { SquadBuilderPersistenceUnavailable } from "./squad-builder/errors.js";
-import { TodoPersistenceUnavailable } from "./todo/http-api-contract.js";
-import { UserPersistenceUnavailable } from "./user/http-api-contract.js";
-import { VaultPersistenceUnavailable } from "./vault/http-api-contract.js";
+import { AnnouncementPersistenceUnavailable } from "./announcement/http-api-contract.ts";
+import { AuctionPersistenceUnavailable } from "./auction/http-api-contract.ts";
+import { BetPersistenceUnavailable } from "./bet/http-api-contract.ts";
+import { EventPersistenceUnavailable } from "./event/http-api-contract.ts";
+import { HeroesPersistenceUnavailable } from "./heroes/http-api-contract.ts";
+import { RankingPersistenceUnavailable } from "./ranking/http-api-contract.ts";
+import { SkillsPersistenceUnavailable } from "./skills/http-api-contract.ts";
+import { SquadBuilderPersistenceUnavailable } from "./squad-builder/errors.ts";
+import { TodoPersistenceUnavailable } from "./todo/http-api-contract.ts";
+import { UserPersistenceUnavailable } from "./user/http-api-contract.ts";
+import { VaultPersistenceUnavailable } from "./vault/http-api-contract.ts";
 
 const sensitiveFragments = [
   "postgres://admin:secret@database.internal/app",

@@ -2,7 +2,7 @@ import { createAuth } from "@tepirek-revamped/auth";
 import type { AuthEnv } from "@tepirek-revamped/auth";
 import * as Redacted from "effect/Redacted";
 
-import { testDb } from "./database.js";
+import { testDb } from "./database.ts";
 
 const authEnv: AuthEnv = {
   betterAuthSecret: Redacted.make("test-secret"),

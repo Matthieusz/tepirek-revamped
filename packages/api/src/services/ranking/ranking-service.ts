@@ -2,7 +2,7 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
-import type { RankingError } from "./ranking-errors.js";
+import type { RankingError } from "./ranking-errors.ts";
 
 export interface GetRankingInput {
   readonly eventId?: number | undefined;

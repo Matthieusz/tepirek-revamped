@@ -3,13 +3,13 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { parseInviteTargetQuery } from "../../../domain/squad-builder/invite-target-search.js";
-import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
-import type { AccountSharingError } from "./account-sharing-error.js";
-import { AccountSharingStoreService } from "./account-sharing-store-service.js";
-import type { AccountInviteTarget } from "./account-sharing-store.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { parseInviteTargetQuery } from "../../../domain/squad-builder/invite-target-search.ts";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
+import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.ts";
+import type { AccountSharingError } from "./account-sharing-error.ts";
+import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
+import type { AccountInviteTarget } from "./account-sharing-store.ts";
 
 export interface SearchAccountInviteTargetsInput {
   readonly actorUserId: AppUserId;

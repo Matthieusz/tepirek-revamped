@@ -3,15 +3,15 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import {
   inviteTargetSearchPolicy,
   parseInviteTargetQuery,
-} from "../../../domain/squad-builder/invite-target-search.js";
-import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
-import type { SquadGroupSharingError } from "./squad-group-sharing-error.js";
-import { SquadGroupStoreService } from "./squad-group-store.js";
-import type { SquadEditorInviteTarget } from "./squad-group-store.js";
+} from "../../../domain/squad-builder/invite-target-search.ts";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
+import type { SquadGroupSharingError } from "./squad-group-sharing-error.ts";
+import { SquadGroupStoreService } from "./squad-group-store.ts";
+import type { SquadEditorInviteTarget } from "./squad-group-store.ts";
 
 export interface SquadEditorInviteTargets {
   /** Search verified users the squad group owner may invite as editors. */

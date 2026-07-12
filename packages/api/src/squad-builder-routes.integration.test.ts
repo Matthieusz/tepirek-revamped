@@ -5,12 +5,12 @@ import * as Schema from "effect/Schema";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
 
-import { SquadGroupSummarySchema } from "./protocol/squad-builder/squad-groups/squad-groups-schema.js";
-import { makeBetterAuthAdapterLayer } from "./server/auth/better-auth-adapter.js";
-import { makeApiLiveLayerFromConfig } from "./server/effect-app.js";
-import { AppHttpApiLayer } from "./server/http-api-handlers.js";
-import { testAuth } from "./test/integration/auth.js";
-import { testDb } from "./test/integration/database.js";
+import { SquadGroupSummarySchema } from "./protocol/squad-builder/squad-groups/squad-groups-schema.ts";
+import { makeBetterAuthAdapterLayer } from "./server/auth/better-auth-adapter.ts";
+import { makeApiLiveLayerFromConfig } from "./server/effect-app.ts";
+import { AppHttpApiLayer } from "./server/http-api-handlers.ts";
+import { testAuth } from "./test/integration/auth.ts";
+import { testDb } from "./test/integration/database.ts";
 
 process.env.BETTER_AUTH_SECRET ??= "test-secret";
 process.env.BETTER_AUTH_URL ??= "http://localhost:3000";

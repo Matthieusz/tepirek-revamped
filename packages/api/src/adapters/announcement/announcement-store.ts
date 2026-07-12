@@ -9,8 +9,8 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { makeDirectPersistenceQuery } from "../persistence-query.js";
-import { AnnouncementStoreError } from "./announcement-store-error.js";
+import { makeDirectPersistenceQuery } from "../persistence-query.ts";
+import { AnnouncementStoreError } from "./announcement-store-error.ts";
 
 export interface CreateAnnouncementInput {
   readonly createdAt: Date;

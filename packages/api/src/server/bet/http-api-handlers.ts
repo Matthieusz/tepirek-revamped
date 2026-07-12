@@ -9,12 +9,12 @@ import {
   BetNotFound,
   BetPersistenceUnavailable,
   BetUnauthorized,
-} from "../../protocol/bet/http-api-contract.js";
-import { AppHttpApi } from "../../protocol/http-api-contract.js";
-import type { BetError } from "../../services/bet/bet-errors.js";
+} from "../../protocol/bet/http-api-contract.ts";
+import { AppHttpApi } from "../../protocol/http-api-contract.ts";
+import type { BetError } from "../../services/bet/bet-errors.ts";
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { BetService } from "../../services/bet/bet-service.js";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
+import { BetService } from "../../services/bet/bet-service.ts";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
   {

@@ -5,26 +5,26 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
-import { AppHttpApi } from "../../../protocol/http-api-contract.js";
-import type { SquadBuilderAccountRefetchError } from "../../../protocol/squad-builder/account-refetch/http-api-contract.js";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
+import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
+import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
+import type { SquadBuilderAccountRefetchError } from "../../../protocol/squad-builder/account-refetch/http-api-contract.ts";
 import {
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
-} from "../../../protocol/squad-builder/account-refetch/http-api-contract.js";
-import { ApplyAccountRefetchService } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.js";
-import type { ApplyAccountRefetchError } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.js";
-import { PreviewAccountRefetchService } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.js";
-import type { PreviewAccountRefetchError } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.js";
-import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.js";
+} from "../../../protocol/squad-builder/account-refetch/http-api-contract.ts";
+import { ApplyAccountRefetchService } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.ts";
+import type { ApplyAccountRefetchError } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.ts";
+import { PreviewAccountRefetchService } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.ts";
+import type { PreviewAccountRefetchError } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.ts";
+import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
-} from "../auth-helper.js";
+} from "../auth-helper.ts";
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderAccountRefetchError>;
 

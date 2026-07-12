@@ -2,8 +2,8 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { describe } from "vitest";
 
-import { parseMargonemProfileHtml } from "./margonem-profile-html-parser.js";
-import { parseMargonemProfileId } from "./margonem-profile-id.js";
+import { parseMargonemProfileHtml } from "./margonem-profile-html-parser.ts";
+import { parseMargonemProfileId } from "./margonem-profile-id.ts";
 
 describe("Margonem profile HTML parser", () => {
   it.effect("returns a typed parser failure when profile name is missing", () =>

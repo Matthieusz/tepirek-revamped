@@ -3,8 +3,8 @@ import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
-import { FirecrawlConfigService } from "../../../services/squad-builder/firecrawl-config.js";
-import type { FirecrawlConfig } from "../../../services/squad-builder/firecrawl-config.js";
+import { FirecrawlConfigService } from "../../../services/squad-builder/firecrawl-config.ts";
+import type { FirecrawlConfig } from "../../../services/squad-builder/firecrawl-config.ts";
 
 const MonthlyRequestBudget = Schema.Int.check(
   Schema.isBetween({

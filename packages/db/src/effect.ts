@@ -11,7 +11,7 @@ import { types } from "pg";
 import {
   DatabaseUrlConfig,
   DatabaseUrlConfigLayer,
-} from "./database-url-config.js";
+} from "./database-url-config.ts";
 
 /**
  * PostgreSQL type OIDs for date/time types. `pg` parses these into JS `Date`

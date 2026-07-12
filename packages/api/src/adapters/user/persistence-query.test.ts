@@ -6,8 +6,8 @@ import { SqlError, UnknownError } from "effect/unstable/sql/SqlError";
 import {
   UserForbidden,
   UserNotFound,
-} from "../../protocol/user/http-api-contract.js";
-import { userPersistenceQuery } from "./persistence-query.js";
+} from "../../protocol/user/http-api-contract.ts";
+import { userPersistenceQuery } from "./persistence-query.ts";
 
 describe("userPersistenceQuery", () => {
   it.effect("projects direct Drizzle query failures", () =>

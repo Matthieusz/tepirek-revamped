@@ -1,13 +1,13 @@
 import * as Effect from "effect/Effect";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
-import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
+import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.ts";
 import type {
   ActorCannotViewSquadGroup,
   SquadGroupNotFound,
-} from "./squad-group-store.js";
-import { SquadGroupStoreService } from "./squad-group-store.js";
+} from "./squad-group-store.ts";
+import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 /** Expected failures returned by listing available squad characters. */
 export type ListAvailableSquadCharactersError =

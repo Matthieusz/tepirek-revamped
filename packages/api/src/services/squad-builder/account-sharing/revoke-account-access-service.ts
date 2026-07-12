@@ -4,11 +4,11 @@ import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
-import type { AccountSharingError } from "./account-sharing-error.js";
-import { AccountSharingStoreService } from "./account-sharing-store-service.js";
-import type { RevokeAccountAccessResult } from "./account-sharing-store.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
+import type { AccountSharingError } from "./account-sharing-error.ts";
+import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
+import type { RevokeAccountAccessResult } from "./account-sharing-store.ts";
 
 /** Input for revoking account access. */
 export interface RevokeAccountAccessInput {

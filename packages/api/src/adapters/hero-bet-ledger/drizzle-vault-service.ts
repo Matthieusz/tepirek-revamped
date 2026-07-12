@@ -10,15 +10,15 @@ import * as Layer from "effect/Layer";
 import {
   VaultBadRequest,
   VaultPersistenceUnavailable,
-} from "../../services/vault/vault-errors.js";
+} from "../../services/vault/vault-errors.ts";
 import type {
   DistributeGoldInput,
   TogglePaidOutInput,
   VaultServiceInterface,
-} from "../../services/vault/vault-service.js";
-import { VaultService } from "../../services/vault/vault-service.js";
-import { mapPersistenceErrors } from "./persistence-query.js";
-import type { EffectPgDatabase } from "./persistence-query.js";
+} from "../../services/vault/vault-service.ts";
+import { VaultService } from "../../services/vault/vault-service.ts";
+import { mapPersistenceErrors } from "./persistence-query.ts";
+import type { EffectPgDatabase } from "./persistence-query.ts";
 
 const persistenceQuery = <A, E, R>(
   operation: string,

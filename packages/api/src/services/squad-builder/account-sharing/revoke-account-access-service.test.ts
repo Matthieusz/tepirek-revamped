@@ -3,16 +3,16 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 
-import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { parseMargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
-import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.js";
-import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
-import { AccountSharingStoreService } from "./account-sharing-store-service.js";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { parseMargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
+import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.ts";
+import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.ts";
+import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
 import {
   layer as accountAccessRevocationsLayer,
   AccountAccessRevocationsService,
-} from "./revoke-account-access-service.js";
+} from "./revoke-account-access-service.ts";
 
 const parseTestUserId = (value: string) =>
   Effect.runSync(parseAppUserId(value));

@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect";
 import {
   BetterAuthAdapter,
   makeBetterAuthAdapterLayer,
-} from "./better-auth-adapter.js";
+} from "./better-auth-adapter.ts";
 
 it.effect("projects rejected Better Auth calls into a typed failure", () => {
   const cause = new Error("session store unavailable");

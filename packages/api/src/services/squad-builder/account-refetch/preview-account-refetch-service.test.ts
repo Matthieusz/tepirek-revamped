@@ -2,24 +2,24 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 
-import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import {
   parseMargonemCharacterId,
   parseMargonemProfileId,
   parsePositiveLevel,
-} from "../../../domain/squad-builder/margonem-profile-id.js";
-import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
-import { FirecrawlClientService } from "../firecrawl-client.js";
-import type { FirecrawlClient } from "../firecrawl-client.js";
+} from "../../../domain/squad-builder/margonem-profile-id.ts";
+import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
+import { FirecrawlClientService } from "../firecrawl-client.ts";
+import type { FirecrawlClient } from "../firecrawl-client.ts";
 import {
   FirecrawlConfigService,
   parseFirecrawlCreditCount,
-} from "../firecrawl-config.js";
-import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
-import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
-import { preview } from "./preview-account-refetch-service.js";
+} from "../firecrawl-config.ts";
+import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.ts";
+import { AccountRefetchStoreService } from "./account-refetch-store-service.ts";
+import { preview } from "./preview-account-refetch-service.ts";
 
 const parseTestUserId = () =>
   Effect.runSync(parseAppUserId("effect-refetch-user"));

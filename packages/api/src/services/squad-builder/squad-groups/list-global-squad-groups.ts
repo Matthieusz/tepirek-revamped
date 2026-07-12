@@ -2,14 +2,14 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import {
   emptySquadGroupListFilters,
   squadGroupListFilterPolicy,
-} from "../../../domain/squad-builder/squad-group-list-filters.js";
-import type { SquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
-import { SquadGroupStoreService } from "./squad-group-store.js";
-import type { SquadGroupStoreServiceShape } from "./squad-group-store.js";
+} from "../../../domain/squad-builder/squad-group-list-filters.ts";
+import type { SquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.ts";
+import { SquadGroupStoreService } from "./squad-group-store.ts";
+import type { SquadGroupStoreServiceShape } from "./squad-group-store.ts";
 
 /** List globally visible squad groups for a verified actor. */
 const makeList = (store: SquadGroupStoreServiceShape) =>

@@ -3,17 +3,17 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 
-import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { parseMargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.js";
-import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import { ActorIsNotInviteRecipient } from "../squad-groups/squad-group-errors.js";
-import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
-import { AccountSharingStoreService } from "./account-sharing-store-service.js";
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { parseMargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
+import { ActorIsNotInviteRecipient } from "../squad-groups/squad-group-errors.ts";
+import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.ts";
+import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
 import {
   layer as accountAccessInviteResponsesLayer,
   AccountAccessInviteResponsesService,
-} from "./respond-to-account-access-invite-service.js";
+} from "./respond-to-account-access-invite-service.ts";
 
 const parseTestUserId = (value: string) =>
   Effect.runSync(parseAppUserId(value));

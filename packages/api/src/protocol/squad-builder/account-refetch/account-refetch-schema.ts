@@ -1,13 +1,13 @@
 import * as Schema from "effect/Schema";
 
-import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-account-id.js";
+import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-account-id.ts";
 import {
   MargonemCharacterPreviewSchema,
   MargonemProfessionSchema,
-} from "../../../domain/squad-builder/margonem-character.js";
-import { MargonemProfileIdSchema } from "../../../domain/squad-builder/margonem-profile-id.js";
-import { PendingMargonemAccountRefetchIdSchema } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
-import { PositiveInt } from "../../../domain/squad-builder/positive-int.js";
+} from "../../../domain/squad-builder/margonem-character.ts";
+import { MargonemProfileIdSchema } from "../../../domain/squad-builder/margonem-profile-id.ts";
+import { PendingMargonemAccountRefetchIdSchema } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
+import { PositiveInt } from "../../../domain/squad-builder/positive-int.ts";
 
 const StoredMargonemCharacterSnapshotSchema = Schema.Struct({
   affectedSquadCount: Schema.Number,

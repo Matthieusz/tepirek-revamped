@@ -6,7 +6,7 @@ import {
   parseSquadGroupListFilters,
   squadGroupLevelBoundToNumber,
   squadGroupNameQueryToString,
-} from "./squad-group-list-filters.js";
+} from "./squad-group-list-filters.ts";
 
 describe("parseSquadGroupListFilters", () => {
   it.effect(

@@ -1,25 +1,25 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
-import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import type { AppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import type { MargonemProfession } from "../../../domain/squad-builder/margonem-character.js";
+import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
+import type { MargonemProfession } from "../../../domain/squad-builder/margonem-character.ts";
 import type {
   SquadGroupAccessRole,
   SquadGroupOwnerAccess,
-} from "../../../domain/squad-builder/squad-group-access.js";
-import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.js";
-import type { SquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.js";
-import type { SquadGroupInvitationStatus } from "../../../domain/squad-builder/squad-group-invitation-status.js";
-import type { SquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
+} from "../../../domain/squad-builder/squad-group-access.ts";
+import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
+import type { SquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
+import type { SquadGroupInvitationStatus } from "../../../domain/squad-builder/squad-group-invitation-status.ts";
+import type { SquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.ts";
 import type {
   AvailableSquadCharacter,
   SquadGroupDraftSnapshot,
-} from "../../../domain/squad-builder/squad-group-snapshot.js";
-import type { SquadGroupVisibility } from "../../../domain/squad-builder/squad-group-visibility.js";
-import type { SquadId } from "../../../domain/squad-builder/squad-id.js";
-import type { SquadGroupName } from "../../../domain/squad-builder/squad-name.js";
+} from "../../../domain/squad-builder/squad-group-snapshot.ts";
+import type { SquadGroupVisibility } from "../../../domain/squad-builder/squad-group-visibility.ts";
+import type { SquadId } from "../../../domain/squad-builder/squad-id.ts";
+import type { SquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
 import type {
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
@@ -36,7 +36,7 @@ import type {
   ProfileAccessState,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
-} from "../account-import/account-import-store.js";
+} from "../account-import/account-import-store.ts";
 import type {
   ApplyRefetchedAccountInput,
   CreatePendingMargonemAccountRefetchInput,
@@ -44,8 +44,8 @@ import type {
   PendingMargonemAccountRefetch,
   PendingMargonemAccountRefetchForApply,
   RefetchableMargonemAccount,
-} from "../account-refetch/account-refetch-store.js";
-import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch-service.js";
+} from "../account-refetch/account-refetch-store.ts";
+import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch-service.ts";
 import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,
@@ -63,8 +63,8 @@ import type {
   SharedMargonemAccountSummary,
   UpsertAccountAccessInviteInput,
   VerifiedInviteTarget,
-} from "../account-sharing/account-sharing-store.js";
-import type { SharedSquadGroupCharactersSnapshot } from "./save-shared-squad-group-characters.js";
+} from "../account-sharing/account-sharing-store.ts";
+import type { SharedSquadGroupCharactersSnapshot } from "./save-shared-squad-group-characters.ts";
 import type {
   AccountAccessInviteNotFound,
   AccountAccessTransitionNotAllowed,
@@ -88,7 +88,7 @@ import type {
   SquadGroupInvitationTransitionNotAllowed,
   SquadGroupNotFound,
   SquadNotInGroup,
-} from "./squad-group-errors.js";
+} from "./squad-group-errors.ts";
 
 export type {
   AccountAccessInviteNotFound,
@@ -112,7 +112,7 @@ export type {
   SquadGroupInvitationTransitionNotAllowed,
   SquadGroupNotFound,
   SquadNotInGroup,
-} from "./squad-group-errors.js";
+} from "./squad-group-errors.ts";
 
 /** Expected authorization failures for squad group sharing operations. */
 export type SquadGroupSharingAuthorizationError =

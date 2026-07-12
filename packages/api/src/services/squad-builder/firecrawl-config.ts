@@ -3,9 +3,9 @@ import * as EffectRuntime from "effect/Effect";
 import type { Redacted } from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
-import { ParseFirecrawlConfigError } from "./firecrawl-config-errors.js";
+import { ParseFirecrawlConfigError } from "./firecrawl-config-errors.ts";
 
-export { ParseFirecrawlConfigError } from "./firecrawl-config-errors.js";
+export { ParseFirecrawlConfigError } from "./firecrawl-config-errors.ts";
 
 /** Number of Firecrawl credits consumed by a scrape. */
 export const FirecrawlCreditCount = Schema.Number.check(

@@ -2,14 +2,14 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { TestClock } from "effect/testing";
 
-import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.js";
-import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.js";
-import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.js";
-import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.js";
-import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.js";
-import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.js";
-import { AccountRefetchStoreService } from "./account-refetch-store-service.js";
-import { apply } from "./apply-account-refetch-service.js";
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
+import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
+import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
+import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.ts";
+import { AccountRefetchStoreService } from "./account-refetch-store-service.ts";
+import { apply } from "./apply-account-refetch-service.ts";
 
 const parseTestUserId = () =>
   Effect.runSync(parseAppUserId("effect-apply-refetch-user"));

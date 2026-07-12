@@ -5,27 +5,27 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { AppHttpApi } from "../../../protocol/http-api-contract.js";
-import type { SquadBuilderAccountImportError } from "../../../protocol/squad-builder/account-import/http-api-contract.js";
+import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
+import type { SquadBuilderAccountImportError } from "../../../protocol/squad-builder/account-import/http-api-contract.ts";
 import {
   SquadBuilderConflict,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
-} from "../../../protocol/squad-builder/account-import/http-api-contract.js";
-import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store-service.js";
-import { ConfirmOwnedAccountImportService } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.js";
-import type { ConfirmOwnedAccountImportError } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.js";
-import { PreviewMargonemProfileImportService } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
-import type { PreviewMargonemProfileImportError } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.js";
-import { PreviewOwnedAccountImportsService } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.js";
-import type { PreviewOwnedAccountImportsError } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.js";
-import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.js";
+} from "../../../protocol/squad-builder/account-import/http-api-contract.ts";
+import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store-service.ts";
+import { ConfirmOwnedAccountImportService } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
+import type { ConfirmOwnedAccountImportError } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
+import { PreviewMargonemProfileImportService } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
+import type { PreviewMargonemProfileImportError } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
+import { PreviewOwnedAccountImportsService } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
+import type { PreviewOwnedAccountImportsError } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
+import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
-} from "../auth-helper.js";
+} from "../auth-helper.ts";
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderAccountImportError>;
 

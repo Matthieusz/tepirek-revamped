@@ -1,8 +1,8 @@
 import { OpenApi } from "effect/unstable/httpapi";
 import { describe, expect, it } from "vitest";
 
-import { HealthHttpApi } from "./protocol/health/http-api-contract.js";
-import { AppHttpApi } from "./protocol/http-api-contract.js";
+import { HealthHttpApi } from "./protocol/health/http-api-contract.ts";
+import { AppHttpApi } from "./protocol/http-api-contract.ts";
 
 type OpenApiDocument = ReturnType<typeof OpenApi.fromApi>;
 type OpenApiPath = keyof OpenApiDocument["paths"];

@@ -5,37 +5,37 @@ import type * as Schema from "effect/Schema";
 import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { SquadGroupListFilterError } from "../../../domain/squad-builder/squad-group-list-filters.js";
-import { parseSquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.js";
-import { AppHttpApi } from "../../../protocol/http-api-contract.js";
-import type { SquadBuilderSquadGroupError } from "../../../protocol/squad-builder/squad-groups/http-api-contract.js";
+import type { SquadGroupListFilterError } from "../../../domain/squad-builder/squad-group-list-filters.ts";
+import { parseSquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.ts";
+import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
+import type { SquadBuilderSquadGroupError } from "../../../protocol/squad-builder/squad-groups/http-api-contract.ts";
 import {
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
-} from "../../../protocol/squad-builder/squad-groups/http-api-contract.js";
-import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.js";
-import type { CreateSquadGroupError } from "../../../services/squad-builder/squad-groups/create-squad-group.js";
-import { CreateSquadGroupService } from "../../../services/squad-builder/squad-groups/create-squad-group.js";
-import { ListGlobalSquadGroupsService } from "../../../services/squad-builder/squad-groups/list-global-squad-groups.js";
+} from "../../../protocol/squad-builder/squad-groups/http-api-contract.ts";
+import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.ts";
+import type { CreateSquadGroupError } from "../../../services/squad-builder/squad-groups/create-squad-group.ts";
+import { CreateSquadGroupService } from "../../../services/squad-builder/squad-groups/create-squad-group.ts";
+import { ListGlobalSquadGroupsService } from "../../../services/squad-builder/squad-groups/list-global-squad-groups.ts";
 import type {
   GetSquadGroupDetailError,
   ListMySquadGroupsError,
-} from "../../../services/squad-builder/squad-groups/list-squad-groups.js";
-import { ListSquadGroupsService } from "../../../services/squad-builder/squad-groups/list-squad-groups.js";
-import type { EffectSharedSquadGroupSaveError } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
-import { SaveSharedSquadGroupCharactersService } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.js";
-import type { SaveSquadGroupError } from "../../../services/squad-builder/squad-groups/save-squad-group.js";
-import { SaveSquadGroupService } from "../../../services/squad-builder/squad-groups/save-squad-group.js";
-import type { GlobalSquadVisibilityError } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.js";
-import { SetSquadGroupVisibilityService } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.js";
-import { SquadGroupStoreService } from "../../../services/squad-builder/squad-groups/squad-group-store.js";
+} from "../../../services/squad-builder/squad-groups/list-squad-groups.ts";
+import { ListSquadGroupsService } from "../../../services/squad-builder/squad-groups/list-squad-groups.ts";
+import type { EffectSharedSquadGroupSaveError } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.ts";
+import { SaveSharedSquadGroupCharactersService } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.ts";
+import type { SaveSquadGroupError } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
+import { SaveSquadGroupService } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
+import type { GlobalSquadVisibilityError } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
+import { SetSquadGroupVisibilityService } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
+import { SquadGroupStoreService } from "../../../services/squad-builder/squad-groups/squad-group-store.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
-} from "../auth-helper.js";
+} from "../auth-helper.ts";
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderSquadGroupError>;
 

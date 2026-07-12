@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { PositiveInt } from "./positive-int.js";
+import { PositiveInt } from "./positive-int.ts";
 
 /** A persisted Margonem account access row id. */
 export const MargonemAccountAccessId = PositiveInt.pipe(

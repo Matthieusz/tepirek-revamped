@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { PositiveInt } from "./positive-int.js";
+import { PositiveInt } from "./positive-int.ts";
 
 /** A validated pending Margonem account refetch preview id. */
 export const PendingMargonemAccountRefetchId = PositiveInt.pipe(

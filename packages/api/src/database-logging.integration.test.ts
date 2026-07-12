@@ -13,12 +13,12 @@ import * as Logger from "effect/Logger";
 import * as References from "effect/References";
 import { describe, expect, it } from "vitest";
 
-import { userPersistenceQuery } from "./adapters/user/persistence-query.js";
-import { makeLoggerLayer } from "./observability.js";
-import { makeStderrLogger } from "./observability/logging.js";
-import * as Otlp from "./observability/otlp.js";
-import { createVerifiedMember } from "./test/integration/builders.js";
-import { defaultTestDatabaseUrl, testDb } from "./test/integration/database.js";
+import { userPersistenceQuery } from "./adapters/user/persistence-query.ts";
+import { makeLoggerLayer } from "./observability.ts";
+import { makeStderrLogger } from "./observability/logging.ts";
+import * as Otlp from "./observability/otlp.ts";
+import { createVerifiedMember } from "./test/integration/builders.ts";
+import { defaultTestDatabaseUrl, testDb } from "./test/integration/database.ts";
 
 const databaseLayer = makeLiveDatabaseLayer(defaultTestDatabaseUrl);
 

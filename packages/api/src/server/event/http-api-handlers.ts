@@ -3,15 +3,15 @@
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { EventStoreError } from "../../adapters/event/event-store-error.js";
-import { EventStore } from "../../adapters/event/event-store.js";
+import type { EventStoreError } from "../../adapters/event/event-store-error.ts";
+import { EventStore } from "../../adapters/event/event-store.ts";
 import {
   EventForbidden,
   EventPersistenceUnavailable,
   EventUnauthorized,
-} from "../../protocol/event/http-api-contract.js";
-import { AppHttpApi } from "../../protocol/http-api-contract.js";
-import { makeAuthorizationPolicy } from "../auth/authorization-policy.js";
+} from "../../protocol/event/http-api-contract.ts";
+import { AppHttpApi } from "../../protocol/http-api-contract.ts";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
   {
