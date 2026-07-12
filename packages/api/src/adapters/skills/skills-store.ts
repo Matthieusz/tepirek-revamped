@@ -6,7 +6,6 @@ import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { professions, range, skills } from "@tepirek-revamped/db/schema/skills";
 import { eq } from "drizzle-orm";
-import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -15,6 +14,7 @@ import {
   SkillsBadRequest,
   SkillsConflict,
 } from "../../protocol/skills/http-api-contract.js";
+import { makeDirectPersistenceQuery } from "../persistence-query.js";
 import { SkillsStoreError } from "./skills-store-error.js";
 
 export interface CreateProfessionInput {
@@ -43,13 +43,9 @@ export interface GetSkillsByRangeInput {
   readonly rangeId: number;
 }
 
-const persistenceQuery = <A, R>(
-  operation: string,
-  self: Effect.Effect<A, EffectDrizzleQueryError, R>
-): Effect.Effect<A, SkillsStoreError, R> =>
-  self.pipe(
-    Effect.mapError((cause) => new SkillsStoreError({ cause, operation }))
-  );
+const persistenceQuery = makeDirectPersistenceQuery(
+  (input) => new SkillsStoreError(input)
+);
 
 const assertHttpUrl = (link: string) =>
   Effect.try({

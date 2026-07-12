@@ -5,7 +5,6 @@ import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { auction } from "@tepirek-revamped/db/schema/auction";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { and, count, countDistinct, eq } from "drizzle-orm";
-import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -15,6 +14,7 @@ import {
   AuctionForbidden,
   AuctionNotFound,
 } from "../../protocol/auction/http-api-contract.js";
+import { makeDirectPersistenceQuery } from "../persistence-query.js";
 import { AuctionStoreError } from "./auction-store-error.js";
 
 export interface AuctionGroupInput {
@@ -34,13 +34,9 @@ export interface ToggleSignupInput {
   readonly type: string;
 }
 
-const persistenceQuery = <A, R>(
-  operation: string,
-  self: Effect.Effect<A, EffectDrizzleQueryError, R>
-): Effect.Effect<A, AuctionStoreError, R> =>
-  self.pipe(
-    Effect.mapError((cause) => new AuctionStoreError({ cause, operation }))
-  );
+const persistenceQuery = makeDirectPersistenceQuery(
+  (input) => new AuctionStoreError(input)
+);
 
 const getSignupsWithDatabase =
   (database: EffectPgDatabase) => (input: AuctionGroupInput) =>

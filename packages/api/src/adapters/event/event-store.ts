@@ -4,7 +4,6 @@ import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { event } from "@tepirek-revamped/db/schema/event";
 import { eq } from "drizzle-orm";
-import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -13,6 +12,7 @@ import {
   defaultEventColor,
   defaultEventIcon,
 } from "../../protocol/event/http-api-contract.js";
+import { makeDirectPersistenceQuery } from "../persistence-query.js";
 import { EventStoreError } from "./event-store-error.js";
 
 export interface CreateEventInput {
@@ -29,13 +29,9 @@ export interface ToggleEventActiveInput {
   readonly id: number;
 }
 
-const persistenceQuery = <A, R>(
-  operation: string,
-  self: Effect.Effect<A, EffectDrizzleQueryError, R>
-): Effect.Effect<A, EventStoreError, R> =>
-  self.pipe(
-    Effect.mapError((cause) => new EventStoreError({ cause, operation }))
-  );
+const persistenceQuery = makeDirectPersistenceQuery(
+  (input) => new EventStoreError(input)
+);
 
 const createWithDatabase =
   (database: EffectPgDatabase) =>

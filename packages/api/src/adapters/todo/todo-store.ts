@@ -4,11 +4,11 @@ import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { todo } from "@tepirek-revamped/db/schema/todo";
 import { and, eq } from "drizzle-orm";
-import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { makeDirectPersistenceQuery } from "../persistence-query.js";
 import { TodoStoreError } from "./todo-store-error.js";
 
 export interface CreateTodoInput {
@@ -31,13 +31,9 @@ export interface ToggleTodoInput {
   readonly userId: string;
 }
 
-const persistenceQuery = <A, R>(
-  operation: string,
-  self: Effect.Effect<A, EffectDrizzleQueryError, R>
-): Effect.Effect<A, TodoStoreError, R> =>
-  self.pipe(
-    Effect.mapError((cause) => new TodoStoreError({ cause, operation }))
-  );
+const persistenceQuery = makeDirectPersistenceQuery(
+  (input) => new TodoStoreError(input)
+);
 
 const createWithDatabase =
   (database: EffectPgDatabase) =>
