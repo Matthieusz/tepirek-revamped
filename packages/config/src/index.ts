@@ -23,7 +23,7 @@ export const EVENT_ICON_IDS = [
   "calendar",
 ] as const;
 
-type EventIconId = (typeof EVENT_ICON_IDS)[number];
+export type EventIconId = (typeof EVENT_ICON_IDS)[number];
 
 export const isEventIconId = (value: string): value is EventIconId =>
   EVENT_ICON_IDS.some((eventIconId) => eventIconId === value);

@@ -25,7 +25,8 @@
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tepirek-revamped/config": "workspace:*",

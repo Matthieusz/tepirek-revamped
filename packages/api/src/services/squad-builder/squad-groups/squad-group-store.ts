@@ -165,7 +165,7 @@ export interface SquadDetail {
 }
 
 /** Full saved squad group detail. */
-interface SquadGroupDetail {
+export interface SquadGroupDetail {
   readonly accessRole: SquadGroupAccessRole;
   readonly groupId: SquadGroupId;
   readonly name: string;
