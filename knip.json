@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "drizzle": false,
+  "exclude": ["duplicates"],
+  "ignore": [
+    "apps/web/src/components/ui/**",
+    "apps/web/src/lib/effect-atom-result.ts",
+    "apps/web/src/lib/route-helpers.ts",
+    "apps/web/src/lib/squad-builder/account-sharing-atoms.ts",
+    "apps/web/src/lib/squad-builder/squad-group-atoms.ts",
+    "apps/web/src/lib/squad-builder/squad-group-sharing-atoms.ts",
+    "apps/web/src/routes/__root.tsx",
+    "apps/web/src/types/route.ts",
+    "packages/api/src/test/integration/builders.ts",
+    "packages/db/drizzle.config.ts"
+  ],
+  "ignoreDependencies": ["dotenv"]
+}

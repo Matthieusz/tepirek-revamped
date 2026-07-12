@@ -9,7 +9,7 @@ import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 
 import { Skeleton } from "./ui/skeleton";
 
-export interface AuctionHeaderProps {
+interface AuctionHeaderProps {
   title: string;
   description: string;
   icon: LucideIcon;

@@ -31,7 +31,7 @@ import {
  * Router mutations and submission stay in the calling page/modal.
  */
 
-export interface HeroBetMemberPickerProps {
+interface HeroBetMemberPickerProps {
   users: SelectableUser[] | undefined;
   usersLoading: boolean;
   selectedUserIds: string[];

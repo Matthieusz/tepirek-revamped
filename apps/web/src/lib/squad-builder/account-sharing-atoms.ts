@@ -140,7 +140,7 @@ export const accountInviteTargetsAtom = (accountId: number, query: string) =>
     ? accountInviteTargetsByKeyAtom(accountInviteTargetsKey(accountId, query))
     : disabledAccountInviteTargetsAtom;
 
-export const refreshVisibleAccountSharingAtoms = (
+const refreshVisibleAccountSharingAtoms = (
   get: Atom.FnContext,
   options: { readonly accountId?: number; readonly actorUserId?: string } = {}
 ) => {

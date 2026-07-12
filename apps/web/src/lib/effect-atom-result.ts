@@ -3,13 +3,13 @@ import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { getErrorMessage } from "@/lib/errors";
 
 /** Explicit UI state for an Effect Atom AsyncResult. */
-export type ResultViewState<A> =
+type ResultViewState<A> =
   | { readonly _tag: "Loading" }
   | { readonly _tag: "Failure"; readonly message: string }
   | { readonly _tag: "Success"; readonly value: A };
 
 /** Converts Effect Atom Result into an explicit UI state without leaking causes. */
-export const resultViewState = <A>(
+const resultViewState = <A>(
   result: AsyncResult.AsyncResult<A, unknown>
 ): ResultViewState<A> =>
   AsyncResult.matchWithWaiting(result, {

@@ -6,13 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export interface BetCardMember {
+interface BetCardMember {
   userId: string;
   userName: string;
   userImage: string | null;
 }
 
-export interface BetCardData {
+interface BetCardData {
   id: number;
   heroName: string;
   heroLevel: number;

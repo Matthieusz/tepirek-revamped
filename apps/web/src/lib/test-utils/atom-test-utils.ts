@@ -3,14 +3,14 @@ import { setTimeout } from "node:timers/promises";
 import type { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { Effect, Layer } from "effect";
 import type { HttpApiClient } from "effect/unstable/httpapi";
-import { AsyncResult, Atom, AtomRegistry } from "effect/unstable/reactivity";
+import { Atom, AtomRegistry } from "effect/unstable/reactivity";
 
 import {
   AppHttpApiClient,
   appHttpApiRuntime,
 } from "@/lib/http-api-client-runtime";
 
-export interface ApiCall {
+interface ApiCall {
   readonly args: unknown;
   readonly group: string;
   readonly method: string;
@@ -224,4 +224,4 @@ const flush = async () => {
   await Promise.all(promises);
 };
 
-export { AsyncResult, flush };
+export { flush };

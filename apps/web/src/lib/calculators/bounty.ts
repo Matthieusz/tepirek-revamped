@@ -31,7 +31,7 @@ const GROUP_ATTACK_THRESHOLD_BASE = 15;
 const GROUP_ATTACK_THRESHOLD_MULTIPLIER = 0.1;
 const GROUP_ATTACK_THRESHOLD_OFFSET = 20;
 
-export interface GroupAttackPenaltyResult {
+interface GroupAttackPenaltyResult {
   maxAttackerLevel: number;
   avgAttackerLevel: number;
   avgDefenderLevel: number;

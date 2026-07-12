@@ -144,7 +144,7 @@ const CellContent: React.FC<CellContentProps> = ({
   );
 };
 
-export interface AuctionTableProps {
+interface AuctionTableProps {
   profession: AuctionProfession;
   type: AuctionType;
   currentUserId: string;

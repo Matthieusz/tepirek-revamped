@@ -29,14 +29,14 @@ type EventHeroFilterRouteId =
   | "/dashboard/events/history"
   | "/dashboard/events/ranking";
 
-export interface UseEventHeroFilterOptions {
+interface UseEventHeroFilterOptions {
   /** Route id, e.g. "/dashboard/events/ranking". */
   routeId: EventHeroFilterRouteId;
   /** localStorage key for persisted Event/Hero fallback. */
   persistenceKey: string;
 }
 
-export interface UseEventHeroFilterResult {
+interface UseEventHeroFilterResult {
   state: EventHeroFilterState;
   events: EventSelectOption[] | undefined;
   /** Heroes for the selected Event, sorted by level. Undefined when all Events. */

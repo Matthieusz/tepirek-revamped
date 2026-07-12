@@ -1,4 +1,4 @@
-export interface ServerResource {
+interface ServerResource {
   readonly dispose: () => Promise<void>;
 }
 

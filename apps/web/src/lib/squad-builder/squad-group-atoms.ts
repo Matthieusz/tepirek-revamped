@@ -22,7 +22,7 @@ interface SquadGroupIdInput {
 
 export type AvailableSquadCharacter = typeof AvailableSquadCharacterSchema.Type;
 export type GlobalSquadGroupSummary = typeof GlobalSquadGroupSummarySchema.Type;
-export type SquadGroupDetail = typeof SquadGroupDetailSchema.Type;
+type SquadGroupDetail = typeof SquadGroupDetailSchema.Type;
 export type SquadGroupDetailCharacter =
   typeof SquadGroupDetailCharacterSchema.Type;
 export type SquadGroupSummary = typeof SquadGroupSummarySchema.Type;

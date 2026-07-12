@@ -21,7 +21,7 @@ export interface EventHeroFilterState {
   heroId: FilterSelection;
 }
 
-export interface EventHeroFilterUpdate extends Record<string, unknown> {
+interface EventHeroFilterUpdate extends Record<string, unknown> {
   eventId?: FilterSelection | undefined;
   heroId?: FilterSelection | undefined;
 }

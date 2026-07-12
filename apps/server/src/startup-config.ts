@@ -10,7 +10,7 @@ import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
-export class StartupConfigurationError extends Schema.TaggedErrorClass<StartupConfigurationError>()(
+class StartupConfigurationError extends Schema.TaggedErrorClass<StartupConfigurationError>()(
   "StartupConfigurationError",
   {
     message: Schema.String,
@@ -18,7 +18,7 @@ export class StartupConfigurationError extends Schema.TaggedErrorClass<StartupCo
   }
 ) {}
 
-export interface StartupConfig {
+interface StartupConfig {
   readonly auth: AuthEnv;
   readonly corsOrigin: string;
   readonly databaseUrl: Redacted.Redacted;

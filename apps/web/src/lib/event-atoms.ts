@@ -31,7 +31,7 @@ const toggleEventById = (
     event.id === input.id ? { ...event, active: input.active } : event
   );
 
-export type EventIconId = (typeof EVENT_ICON_IDS)[number];
+type EventIconId = (typeof EVENT_ICON_IDS)[number];
 
 /** Resource atom for events. */
 export const eventsAtom = appHttpApiAtom(
