@@ -15,12 +15,19 @@ import type {
 } from "../../../services/squad-builder/firecrawl-client.ts";
 import { parseFirecrawlCreditCount } from "../../../services/squad-builder/firecrawl-config.ts";
 
+interface FirecrawlScraper {
+  readonly scrape: (
+    url: string,
+    options: { readonly formats: readonly ["html"] }
+  ) => Promise<Document>;
+}
+
 /** Firecrawl SDK-backed implementation of profile HTML scraping. */
 export class FirecrawlSdkClient implements FirecrawlClient {
-  private readonly firecrawl: Firecrawl;
+  private readonly firecrawl: FirecrawlScraper;
 
-  constructor(apiKey: string) {
-    this.firecrawl = new Firecrawl({ apiKey });
+  constructor(apiKey: string, firecrawl?: FirecrawlScraper) {
+    this.firecrawl = firecrawl ?? new Firecrawl({ apiKey });
   }
 
   /** Scrape canonical Margonem profile HTML through Firecrawl. */
