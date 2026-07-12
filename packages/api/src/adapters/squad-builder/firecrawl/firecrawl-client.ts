@@ -7,7 +7,6 @@ import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-pro
 import {
   FirecrawlRequestFailed,
   FirecrawlResponseNotParseable,
-  RequestCancelled,
 } from "../../../services/squad-builder/firecrawl-client.ts";
 import type {
   FirecrawlClient,
@@ -17,9 +16,6 @@ import type {
 import { parseFirecrawlCreditCount } from "../../../services/squad-builder/firecrawl-config.ts";
 
 /** Firecrawl SDK-backed implementation of profile HTML scraping. */
-const isSignalAborted = (signal: AbortSignal | undefined): boolean =>
-  signal?.aborted === true;
-
 export class FirecrawlSdkClient implements FirecrawlClient {
   private readonly firecrawl: Firecrawl;
 
@@ -29,44 +25,25 @@ export class FirecrawlSdkClient implements FirecrawlClient {
 
   /** Scrape canonical Margonem profile HTML through Firecrawl. */
   scrapeProfileHtml(
-    profileId: MargonemProfileId,
-    options: { readonly signal?: AbortSignal } = {}
+    profileId: MargonemProfileId
   ): Effect.Effect<FirecrawlScrapeSuccess, FirecrawlScrapeError> {
     const sdk = this.firecrawl;
 
     return Effect.gen(function* scrapeProfileHtmlEffect() {
-      // Check for cancellation before starting the request.
-      if (isSignalAborted(options.signal)) {
-        return yield* new RequestCancelled({
-          cause: options.signal?.reason,
-          profileId,
-        });
-      }
-
+      // firecrawl@4.28.3 does not expose AbortSignal support for scrape requests.
+      // Effect interruption therefore stops waiting for this promise, but cannot
+      // cancel the SDK's underlying HTTP request.
       const document: Document = yield* Effect.tryPromise({
-        catch: (cause: unknown) => {
-          if (cause instanceof RequestCancelled) {
-            return cause;
-          }
-
-          return new FirecrawlRequestFailed({
+        catch: (cause: unknown) =>
+          new FirecrawlRequestFailed({
             cause,
             profileId,
-          });
-        },
+          }),
         try: () =>
           sdk.scrape(toMargonemProfileUrl(profileId), {
             formats: ["html"],
           }),
       });
-
-      // Check for cancellation after the response arrives.
-      if (isSignalAborted(options.signal)) {
-        return yield* new RequestCancelled({
-          cause: options.signal?.reason,
-          profileId,
-        });
-      }
 
       // Validate the document has HTML content.
       if (typeof document.html !== "string" || document.html.length === 0) {

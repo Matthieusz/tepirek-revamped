@@ -60,9 +60,6 @@ const PreviewOwnedAccountImportLineError = Schema.Union([
   Schema.TaggedStruct("FirecrawlResponseNotParseable", {
     profileId: PositiveInt,
   }),
-  Schema.TaggedStruct("RequestCancelled", {
-    profileId: PositiveInt,
-  }),
   Schema.TaggedStruct("MargonemProfileNameNotFound", {
     profileId: MargonemProfileIdSchema,
   }),

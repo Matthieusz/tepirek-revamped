@@ -3,7 +3,6 @@ import * as Effect from "effect/Effect";
 const INTERNAL_FAILURE_TAGS = new Set([
   "FirecrawlRequestFailed",
   "FirecrawlResponseNotParseable",
-  "RequestCancelled",
   "SquadBuilderPersistenceUnavailable",
 ]);
 

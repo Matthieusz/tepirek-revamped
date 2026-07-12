@@ -129,8 +129,7 @@ interface LineFailure {
 /** Effect seam over the single-profile preview service for batch use. */
 export interface EffectSingleMargonemProfilePreview {
   readonly preview: (
-    input: PreviewMargonemProfileImportInput,
-    options?: { readonly signal?: AbortSignal }
+    input: PreviewMargonemProfileImportInput
   ) => Effect<
     PreviewMargonemProfileImportOutput,
     PreviewMargonemProfileImportError,
@@ -264,10 +263,7 @@ const persistPendingImport = ({
 
 /** Preview and persist pending imports for a batch of pasted profile URLs. */
 export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
-  function* previewBatchEffect(
-    input: PreviewOwnedAccountImportsInput,
-    options: { readonly signal?: AbortSignal } = {}
-  ) {
+  function* previewBatchEffect(input: PreviewOwnedAccountImportsInput) {
     const currentTimeMillis = yield* ClockRuntime.currentTimeMillis;
     const now = new Date(currentTimeMillis);
     const nonBlankLines = input.profileUrls
@@ -393,13 +389,10 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
 
     const fetchedItems = yield* EffectRuntime.all(
       availableLines.map((line) =>
-        previewMargonemProfileImport(
-          {
-            actorUserId: input.actorUserId,
-            profileUrl: line.inputUrl,
-          },
-          options.signal === undefined ? {} : { signal: options.signal }
-        ).pipe(
+        previewMargonemProfileImport({
+          actorUserId: input.actorUserId,
+          profileUrl: line.inputUrl,
+        }).pipe(
           EffectRuntime.matchEffect({
             onFailure: (error) =>
               logSquadBuilderInternalFailure(error).pipe(
@@ -452,11 +445,8 @@ const makePreview = (
   firecrawl: typeof FirecrawlClientService.Service
 ) =>
   EffectRuntime.fn("AccountImport.previewBatch")(
-    (
-      input: PreviewOwnedAccountImportsInput,
-      options: { readonly signal?: AbortSignal } = {}
-    ) =>
-      preview(input, options).pipe(
+    (input: PreviewOwnedAccountImportsInput) =>
+      preview(input).pipe(
         EffectRuntime.provideService(AccountImportStoreService, store),
         EffectRuntime.provideService(FirecrawlConfigService, config),
         EffectRuntime.provideService(FirecrawlClientService, firecrawl)

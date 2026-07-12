@@ -21,8 +21,7 @@ export interface FirecrawlScrapeSuccess {
 /** Firecrawl capability consumed by the profile import preview service. */
 export interface FirecrawlClient {
   readonly scrapeProfileHtml: (
-    profileId: MargonemProfileId,
-    options?: { readonly signal?: AbortSignal }
+    profileId: MargonemProfileId
   ) => Effect<FirecrawlScrapeSuccess, FirecrawlScrapeError>;
 }
 
@@ -44,20 +43,10 @@ export class FirecrawlResponseNotParseable extends Schema.TaggedErrorClass<Firec
   {}
 ) {}
 
-export class RequestCancelled extends Schema.TaggedErrorClass<RequestCancelled>()(
-  "RequestCancelled",
-  {
-    cause: Schema.Defect(),
-    profileId: Schema.Number,
-  },
-  {}
-) {}
-
 /** Expected failure returned by the Firecrawl adapter. */
 export type FirecrawlScrapeError =
   | FirecrawlRequestFailed
-  | FirecrawlResponseNotParseable
-  | RequestCancelled;
+  | FirecrawlResponseNotParseable;
 
 /** Service tag for the Firecrawl profile-scraping capability. */
 export class FirecrawlClientService extends Context.Service<

@@ -65,10 +65,7 @@ const addMinutes = (date: Date, minutes: number): Date =>
 
 /** Fetch latest account HTML and store a pending refetch diff for owner confirmation. */
 export const preview = EffectRuntime.fn("AccountRefetch.preview")(
-  function* previewAccountRefetchEffect(
-    input: PreviewAccountRefetchInput,
-    options: { readonly signal?: AbortSignal } = {}
-  ) {
+  function* previewAccountRefetchEffect(input: PreviewAccountRefetchInput) {
     const config = yield* FirecrawlConfigService;
     const firecrawl = yield* FirecrawlClientService;
     const account = yield* AccountRefetchStoreService.use((store) =>
@@ -85,7 +82,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
       })
     );
     const scrapedProfile = yield* firecrawl
-      .scrapeProfileHtml(account.profileId, options)
+      .scrapeProfileHtml(account.profileId)
       .pipe(
         EffectRuntime.catch((error) =>
           EffectRuntime.gen(function* markRequestFailed() {
@@ -182,11 +179,8 @@ const makePreview = (
   firecrawl: typeof FirecrawlClientService.Service
 ) =>
   EffectRuntime.fn("AccountRefetch.preview")(
-    (
-      input: PreviewAccountRefetchInput,
-      options: { readonly signal?: AbortSignal } = {}
-    ) =>
-      preview(input, options).pipe(
+    (input: PreviewAccountRefetchInput) =>
+      preview(input).pipe(
         EffectRuntime.provideService(AccountRefetchStoreService, store),
         EffectRuntime.provideService(FirecrawlConfigService, config),
         EffectRuntime.provideService(FirecrawlClientService, firecrawl)

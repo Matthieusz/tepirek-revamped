@@ -86,10 +86,7 @@ const currentDate = ClockRuntime.currentTimeMillis.pipe(
 
 /** Preview a Margonem profile import without saving the account. */
 export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
-  function* previewEffect(
-    input: PreviewMargonemProfileImportInput,
-    options: { readonly signal?: AbortSignal } = {}
-  ) {
+  function* previewEffect(input: PreviewMargonemProfileImportInput) {
     const config = yield* FirecrawlConfigService;
     const firecrawl = yield* FirecrawlClientService;
     const profileId = yield* parseMargonemProfileUrl(input.profileUrl);
@@ -115,23 +112,21 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
         yearMonth,
       })
     );
-    const scrapedProfile = yield* firecrawl
-      .scrapeProfileHtml(profileId, options)
-      .pipe(
-        EffectRuntime.catch((error) =>
-          EffectRuntime.gen(function* markRequestFailed() {
-            const completedAt = yield* currentDate;
-            yield* AccountImportStoreService.use((store) =>
-              store.markRequestFailed({
-                completedAt,
-                errorTag: error._tag,
-                requestId: reservedRequest.requestId,
-              })
-            );
-            return yield* error;
-          })
-        )
-      );
+    const scrapedProfile = yield* firecrawl.scrapeProfileHtml(profileId).pipe(
+      EffectRuntime.catch((error) =>
+        EffectRuntime.gen(function* markRequestFailed() {
+          const completedAt = yield* currentDate;
+          yield* AccountImportStoreService.use((store) =>
+            store.markRequestFailed({
+              completedAt,
+              errorTag: error._tag,
+              requestId: reservedRequest.requestId,
+            })
+          );
+          return yield* error;
+        })
+      )
+    );
 
     const creditsUsed = yield* parseFirecrawlCreditCount(
       scrapedProfile.metadata.creditsUsed ?? 1
@@ -189,11 +184,8 @@ const makePreview = (
   firecrawl: typeof FirecrawlClientService.Service
 ) =>
   EffectRuntime.fn("AccountImport.previewProfile")(
-    (
-      input: PreviewMargonemProfileImportInput,
-      options: { readonly signal?: AbortSignal } = {}
-    ) =>
-      preview(input, options).pipe(
+    (input: PreviewMargonemProfileImportInput) =>
+      preview(input).pipe(
         EffectRuntime.provideService(AccountImportStoreService, store),
         EffectRuntime.provideService(FirecrawlConfigService, config),
         EffectRuntime.provideService(FirecrawlClientService, firecrawl)

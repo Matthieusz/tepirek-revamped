@@ -42,7 +42,6 @@ const taggedFailureMessages: Readonly<Record<string, string>> = {
     "Nie znaleziono oczekującego importu konta.",
   PendingMargonemAccountRefetchNotFound:
     "Nie znaleziono oczekującego odświeżenia konta.",
-  RequestCancelled: "Przerwano pobieranie danych.",
   SquadBuilderPersistenceUnavailable:
     "Nie udało się zapisać zmian kont i składów. Spróbuj ponownie później.",
   SquadCharacterNotAccessible: "Nie masz dostępu do tej postaci.",

@@ -73,8 +73,7 @@ const mapAccountImportError = (
     }
     case "FirecrawlMonthlyBudgetExhausted":
     case "FirecrawlRequestFailed":
-    case "FirecrawlResponseNotParseable":
-    case "RequestCancelled": {
+    case "FirecrawlResponseNotParseable": {
       return new SquadBuilderUpstreamUnavailable({ message: error._tag });
     }
     case "SquadBuilderPersistenceUnavailable": {
