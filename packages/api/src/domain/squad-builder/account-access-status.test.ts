@@ -1,6 +1,6 @@
+import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
-import { describe, expect, it } from "vitest";
+import { describe } from "vitest";
 
 import {
   canTransitionAccountAccess,
@@ -9,17 +9,22 @@ import {
 } from "./account-access-status.js";
 
 describe("parseAccountAccessStatus", () => {
-  it("accepts known access statuses", () => {
-    for (const value of ["pending", "accepted", "declined", "revoked"]) {
-      const exit = Effect.runSyncExit(parseAccountAccessStatus(value));
-      expect(Exit.isSuccess(exit)).toBe(true);
-    }
-  });
+  it.effect("accepts known access statuses", () =>
+    Effect.gen(function* acceptKnownStatuses() {
+      for (const value of ["pending", "accepted", "declined", "revoked"]) {
+        expect(yield* parseAccountAccessStatus(value)).toBe(value);
+      }
+    })
+  );
 
-  it("rejects unknown status strings", () => {
-    const exit = Effect.runSyncExit(parseAccountAccessStatus("archived"));
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("rejects unknown status strings", () =>
+    Effect.gen(function* rejectUnknownStatus() {
+      const failure = yield* parseAccountAccessStatus("archived").pipe(
+        Effect.flip
+      );
+      expect(failure._tag).toBe("InvalidAccountAccessStatus");
+    })
+  );
 });
 
 describe("canTransitionAccountAccess", () => {

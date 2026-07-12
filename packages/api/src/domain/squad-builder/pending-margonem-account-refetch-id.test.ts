@@ -1,21 +1,24 @@
+import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
-import { describe, expect, it } from "vitest";
+import { describe } from "vitest";
 
 import { parsePendingMargonemAccountRefetchId } from "./pending-margonem-account-refetch-id.js";
 
 describe("parsePendingMargonemAccountRefetchId", () => {
-  it("accepts positive integer pending refetch ids", () => {
-    const exit = Effect.runSyncExit(parsePendingMargonemAccountRefetchId(123));
-    expect(Exit.isSuccess(exit)).toBe(true);
-  });
+  it.effect("accepts positive integer pending refetch ids", () =>
+    Effect.gen(function* acceptPositivePendingRefetchId() {
+      expect(yield* parsePendingMargonemAccountRefetchId(123)).toBe(123);
+    })
+  );
 
-  it("rejects non-positive or non-integer pending refetch ids", () => {
-    for (const value of [0, -1, 1.5, Number.NaN]) {
-      const exit = Effect.runSyncExit(
-        parsePendingMargonemAccountRefetchId(value)
-      );
-      expect(Exit.isFailure(exit)).toBe(true);
-    }
-  });
+  it.effect("rejects non-positive or non-integer pending refetch ids", () =>
+    Effect.gen(function* rejectInvalidPendingRefetchIds() {
+      for (const value of [0, -1, 1.5, Number.NaN]) {
+        const failure = yield* parsePendingMargonemAccountRefetchId(value).pipe(
+          Effect.flip
+        );
+        expect(failure._tag).toBe("InvalidPendingMargonemAccountRefetchId");
+      }
+    })
+  );
 });
