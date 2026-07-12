@@ -13,10 +13,6 @@ interface ConfirmOwnedAccountImportInput {
   readonly pendingImportId: number;
 }
 
-interface PreviewMargonemProfileImportInput {
-  readonly profileUrl: string;
-}
-
 interface PreviewOwnedAccountImportsInput {
   readonly profileUrls: readonly string[];
 }
@@ -29,21 +25,6 @@ export const ownedAccountsAtom = appHttpApiAtom(
       payload: {},
     });
   })
-);
-
-/** Mutation atom for previewing a profile import. */
-export const previewMargonemProfileImportAtom = appHttpApiFn(
-  (payload: PreviewMargonemProfileImportInput) =>
-    Effect.gen(function* previewMargonemProfileImportEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.squadBuilderAccountImport.previewMargonemProfileImport(
-        {
-          payload: {
-            profileUrl: payload.profileUrl,
-          },
-        }
-      );
-    })
 );
 
 /** Mutation atom for previewing owned account imports. */

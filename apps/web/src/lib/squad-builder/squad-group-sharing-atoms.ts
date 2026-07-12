@@ -144,9 +144,6 @@ const pendingSquadGroupInviteCountByActorAtom = Atom.family(
     )
 );
 
-export const pendingSquadGroupInviteCountAtom =
-  pendingSquadGroupInviteCountByActorAtom("default");
-
 const squadEditorInviteTargetsByKeyAtom = Atom.family(
   (key: SquadEditorInviteTargetsKey) => {
     const payload = squadEditorInviteTargetsPayloadFromKey(key);

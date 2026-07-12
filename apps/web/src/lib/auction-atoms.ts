@@ -99,9 +99,6 @@ const optimisticAuctionSignupsByGroupAtom = Atom.family(
     )
 );
 
-export const optimisticAuctionSignupsAtom = (payload: AuctionGroupInput) =>
-  optimisticAuctionSignupsByGroupAtom(auctionGroupKey(payload));
-
 /** Optimistic mutation atom for removing a signup from one auction group. Refreshes signups and stats on success. */
 const removeAuctionSignupFromGroupByGroupAtom = Atom.family(
   (key: AuctionGroupKey) =>

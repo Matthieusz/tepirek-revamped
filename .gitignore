@@ -1,5 +1,6 @@
 node_modules
 .turbo
+packages/api/dist
 apps/server/src/db/migrations
 apps/server/src/db/migrations/meta/_journal.json
 /plans

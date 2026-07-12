@@ -132,6 +132,3 @@ const togglePaidOutInVaultByKeyAtom = Atom.family((key: VaultKey) =>
 
 export const togglePaidOutInVaultAtom = (payload: VaultInput) =>
   togglePaidOutInVaultByKeyAtom(vaultKey(payload));
-
-/** Mutation atom for toggling paid-out state when the caller does not own a vault list. */
-export const togglePaidOutAtom = togglePaidOutRequestAtom;

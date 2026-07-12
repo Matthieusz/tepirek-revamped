@@ -37,10 +37,8 @@
     "@tepirek-revamped/db": "workspace:*",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
-    "evlog": "^2.19.2",
     "firecrawl": "^4.28.3",
-    "hono": "catalog:",
-    "zod": "catalog:"
+    "hono": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",

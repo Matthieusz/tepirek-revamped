@@ -144,9 +144,6 @@ const deleteBetFromPageByKeyAtom = Atom.family((key: PaginatedBetKey) =>
 export const deleteBetFromPageAtom = (input: PaginatedBetInput) =>
   deleteBetFromPageByKeyAtom(paginatedBetKey(input));
 
-/** Mutation atom for deleting a bet when the caller does not own a page list. */
-export const deleteBetAtom = deleteBetRequestAtom;
-
 /** Mutation atom for editing a bet's members. */
 export const editBetAtom = appHttpApiFn(
   (

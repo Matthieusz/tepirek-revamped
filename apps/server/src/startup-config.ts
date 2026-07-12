@@ -8,6 +8,15 @@ import type { AuthEnv } from "@tepirek-revamped/auth";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
+import * as Schema from "effect/Schema";
+
+export class StartupConfigurationError extends Schema.TaggedErrorClass<StartupConfigurationError>()(
+  "StartupConfigurationError",
+  {
+    message: Schema.String,
+    variable: Schema.String,
+  }
+) {}
 
 export interface StartupConfig {
   readonly auth: AuthEnv;
@@ -18,45 +27,49 @@ export interface StartupConfig {
   readonly observability: ObservabilityConfig;
 }
 
-const parseUrl = (name: string, value: string): string => {
-  try {
-    return new URL(value).toString();
-  } catch {
-    throw new Error(`${name} must be a valid absolute URL`);
-  }
-};
-
-const parseOrigin = (name: string, value: string): string => {
-  const url = parseUrl(name, value);
-  return new URL(url).origin;
-};
+const parseUrl = (name: string, value: string) =>
+  Effect.try({
+    catch: () =>
+      new StartupConfigurationError({
+        message: `${name} must be a valid absolute URL`,
+        variable: name,
+      }),
+    try: () => new URL(value).toString(),
+  });
 
 const parseEntries = (
   name: string,
   value: string,
   decode: boolean
-): Record<string, string> => {
-  if (value.length === 0) {
-    return {};
-  }
-
-  return Object.fromEntries(
-    value.split(",").map((entry) => {
-      const separator = entry.indexOf("=");
-      if (separator < 1 || separator === entry.length - 1) {
-        throw new Error(`${name} entries must use non-empty key=value pairs`);
+): Effect.Effect<Record<string, string>, StartupConfigurationError> =>
+  Effect.try({
+    catch: () =>
+      new StartupConfigurationError({
+        message: `${name} entries must use valid non-empty key=value pairs`,
+        variable: name,
+      }),
+    try: () => {
+      if (value.length === 0) {
+        return {};
       }
-      const key = entry.slice(0, separator).trim();
-      const entryValue = entry.slice(separator + 1).trim();
-      if (key.length === 0 || entryValue.length === 0) {
-        throw new Error(`${name} entries must use non-empty key=value pairs`);
-      }
-      return decode
-        ? [decodeURIComponent(key), decodeURIComponent(entryValue)]
-        : [key, entryValue];
-    })
-  );
-};
+      return Object.fromEntries(
+        value.split(",").map((entry) => {
+          const separator = entry.indexOf("=");
+          if (separator < 1 || separator === entry.length - 1) {
+            throw new Error("invalid entry");
+          }
+          const key = entry.slice(0, separator).trim();
+          const entryValue = entry.slice(separator + 1).trim();
+          if (key.length === 0 || entryValue.length === 0) {
+            throw new Error("invalid entry");
+          }
+          return decode
+            ? [decodeURIComponent(key), decodeURIComponent(entryValue)]
+            : [key, entryValue];
+        })
+      );
+    },
+  });
 
 const readObservabilityConfig = Effect.gen(
   function* readObservabilityConfigEffect() {
@@ -70,15 +83,17 @@ const readObservabilityConfig = Effect.gen(
       headers: Config.redacted("OTEL_EXPORTER_OTLP_HEADERS").pipe(
         Config.withDefault(Redacted.make(""))
       ),
-      logLevel: Config.string("TEPIREK_LOG_LEVEL").pipe(
-        Config.withDefault("INFO")
-      ),
+      logLevel: Config.schema(
+        Schema.Literals(["DEBUG", "INFO", "WARN", "ERROR"]),
+        "TEPIREK_LOG_LEVEL"
+      ).pipe(Config.withDefault("INFO")),
       nodeEnvironment: Config.string("NODE_ENV").pipe(
         Config.withDefault("development")
       ),
-      printLogs: Config.string("TEPIREK_PRINT_LOGS").pipe(
-        Config.withDefault("0")
-      ),
+      printLogs: Config.schema(
+        Schema.Literals(["0", "1"]),
+        "TEPIREK_PRINT_LOGS"
+      ).pipe(Config.withDefault("0")),
       resourceAttributes: Config.string("OTEL_RESOURCE_ATTRIBUTES").pipe(
         Config.withDefault("")
       ),
@@ -87,68 +102,64 @@ const readObservabilityConfig = Effect.gen(
       ),
     });
 
-    return yield* Effect.sync(() => {
-      const minimumLogLevel = parseLogLevel(values.logLevel);
-      if (minimumLogLevel === undefined) {
-        throw new Error(
-          "TEPIREK_LOG_LEVEL must be DEBUG, INFO, WARN, or ERROR"
-        );
-      }
-      if (values.printLogs !== "0" && values.printLogs !== "1") {
-        throw new Error("TEPIREK_PRINT_LOGS must be 0 or 1");
-      }
+    const minimumLogLevel = parseLogLevel(values.logLevel);
+    if (minimumLogLevel === undefined) {
+      return yield* new StartupConfigurationError({
+        message: "TEPIREK_LOG_LEVEL must be DEBUG, INFO, WARN, or ERROR",
+        variable: "TEPIREK_LOG_LEVEL",
+      });
+    }
+    const endpoint =
+      values.endpoint.length === 0
+        ? undefined
+        : yield* parseUrl("OTEL_EXPORTER_OTLP_ENDPOINT", values.endpoint);
+    const parsedHeaders = yield* parseEntries(
+      "OTEL_EXPORTER_OTLP_HEADERS",
+      Redacted.value(values.headers),
+      false
+    );
 
-      const endpoint =
-        values.endpoint.length === 0
-          ? undefined
-          : parseUrl("OTEL_EXPORTER_OTLP_ENDPOINT", values.endpoint);
-      const parsedHeaders = parseEntries(
-        "OTEL_EXPORTER_OTLP_HEADERS",
-        Redacted.value(values.headers),
-        false
-      );
-
-      return {
-        deploymentEnvironmentName:
-          values.deploymentEnvironmentName || values.nodeEnvironment,
-        ...(endpoint === undefined ? {} : { endpoint }),
-        ...(Object.keys(parsedHeaders).length === 0
-          ? {}
-          : { headers: values.headers }),
-        minimumLogLevel,
-        printLogs: values.printLogs === "1",
-        resourceAttributes: parseEntries(
-          "OTEL_RESOURCE_ATTRIBUTES",
-          values.resourceAttributes,
-          true
-        ),
-        serviceVersion: values.serviceVersion,
-      } satisfies ObservabilityConfig;
-    });
+    return {
+      deploymentEnvironmentName:
+        values.deploymentEnvironmentName || values.nodeEnvironment,
+      ...(endpoint === undefined ? {} : { endpoint }),
+      ...(Object.keys(parsedHeaders).length === 0
+        ? {}
+        : { headers: values.headers }),
+      minimumLogLevel,
+      printLogs: values.printLogs === "1",
+      resourceAttributes: yield* parseEntries(
+        "OTEL_RESOURCE_ATTRIBUTES",
+        values.resourceAttributes,
+        true
+      ),
+      serviceVersion: values.serviceVersion,
+    } satisfies ObservabilityConfig;
   }
 );
 
 /** Parse and validate every executable dependency before server startup. */
 export const readStartupConfig: Effect.Effect<
   StartupConfig,
-  Config.ConfigError,
+  Config.ConfigError | StartupConfigurationError,
   AuthConfig
 > = Effect.gen(function* readStartupConfigEffect() {
   const [auth, corsOrigin, databaseUrl, discord, firecrawl, observability] =
     yield* Effect.all([
       AuthConfig,
-      Config.string("CORS_ORIGIN"),
+      Config.schema(Schema.URLFromString, "CORS_ORIGIN"),
       Config.redacted("DATABASE_URL"),
       readDiscordVerificationConfig,
       readFirecrawlConfig,
       readObservabilityConfig,
     ] as const);
 
+  yield* parseUrl("BETTER_AUTH_URL", auth.betterAuthUrl);
+  yield* parseUrl("DATABASE_URL", Redacted.value(databaseUrl));
+
   return {
     auth,
-    corsOrigin: yield* Effect.sync(() =>
-      parseOrigin("CORS_ORIGIN", corsOrigin)
-    ),
+    corsOrigin: corsOrigin.origin,
     databaseUrl,
     discordGuildId: discord.guildId,
     firecrawl,

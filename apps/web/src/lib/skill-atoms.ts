@@ -178,6 +178,3 @@ const deleteSkillFromRangeIdAtom = Atom.family((rangeId: number) =>
 
 export const deleteSkillFromRangeAtom = (rangeId: number) =>
   deleteSkillFromRangeIdAtom(rangeId);
-
-/** Mutation atom for deleting a skill when the caller does not own a range list. */
-export const deleteSkillAtom = deleteSkillRequestAtom;

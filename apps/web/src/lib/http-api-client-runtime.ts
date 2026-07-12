@@ -1,5 +1,5 @@
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
-import { Effect, Layer } from "effect";
+import { Layer } from "effect";
 import * as Context from "effect/Context";
 import { FetchHttpClient } from "effect/unstable/http";
 import { HttpApiClient } from "effect/unstable/httpapi";
@@ -37,10 +37,3 @@ export const appHttpApiAtom: typeof appHttpApiRuntime.atom =
 /** Convenience helper for creating runtime-backed API mutation atoms. */
 export const appHttpApiFn: typeof appHttpApiRuntime.fn =
   appHttpApiRuntime.fn.bind(appHttpApiRuntime);
-
-/** Accessor for the typed Effect HttpApi client inside runtime-backed atoms. */
-export const useAppHttpApiClient = Effect.fn("useAppHttpApiClient")(
-  function* useAppHttpApiClientEffect() {
-    return yield* AppHttpApiClient;
-  }
-);

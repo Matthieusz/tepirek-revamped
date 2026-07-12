@@ -16,12 +16,10 @@
     "@tepirek-revamped/api": "workspace:*",
     "@tepirek-revamped/auth": "workspace:*",
     "@tepirek-revamped/db": "workspace:*",
-    "better-auth": "catalog:",
     "dotenv": "catalog:",
     "effect": "catalog:",
     "evlog": "^2.19.2",
-    "hono": "catalog:",
-    "zod": "catalog:"
+    "hono": "catalog:"
   },
   "devDependencies": {
     "@tepirek-revamped/config": "workspace:*",

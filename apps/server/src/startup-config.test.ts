@@ -1,6 +1,8 @@
 import { AuthConfigLiveLayer } from "@tepirek-revamped/auth";
+import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { describe, expect, it } from "vitest";
 
 import { readStartupConfig } from "./startup-config.js";
@@ -16,16 +18,31 @@ const validEnvironment = {
   FIRECRAWL_API_KEY: "firecrawl-secret",
 };
 
-const load = (environment: Record<string, string>) =>
-  Effect.runPromise(
-    readStartupConfig.pipe(
-      Effect.provide(AuthConfigLiveLayer),
-      Effect.provideService(
-        ConfigProvider.ConfigProvider,
-        ConfigProvider.fromUnknown(environment)
-      )
+const configuredStartup = (environment: Record<string, string>) =>
+  readStartupConfig.pipe(
+    Effect.provide(AuthConfigLiveLayer),
+    Effect.provideService(
+      ConfigProvider.ConfigProvider,
+      ConfigProvider.fromUnknown(environment)
     )
   );
+
+const load = (environment: Record<string, string>) =>
+  Effect.runPromise(configuredStartup(environment));
+
+const loadExit = (environment: Record<string, string>) =>
+  Effect.runPromise(Effect.exit(configuredStartup(environment)));
+
+const malformedConfigurations = [
+  ["BETTER_AUTH_URL", "not a URL"],
+  ["CORS_ORIGIN", "not a URL"],
+  ["DATABASE_URL", "not a URL"],
+  ["OTEL_EXPORTER_OTLP_ENDPOINT", "not a URL"],
+  ["OTEL_EXPORTER_OTLP_HEADERS", "missing-value="],
+  ["OTEL_RESOURCE_ATTRIBUTES", "invalid=%E0%A4%A"],
+  ["TEPIREK_LOG_LEVEL", "verbose"],
+  ["TEPIREK_PRINT_LOGS", "yes"],
+] as const;
 
 describe("startup config", () => {
   it("parses all executable configuration before startup", async () => {
@@ -37,28 +54,18 @@ describe("startup config", () => {
     expect(config.observability.deploymentEnvironmentName).toBe("development");
   });
 
-  it("rejects malformed executable and observability values", async () => {
-    await expect(
-      load({
+  for (const [variable, value] of malformedConfigurations) {
+    it(`keeps malformed ${variable} in the typed failure channel`, async () => {
+      const exit = await loadExit({
         ...validEnvironment,
-        CORS_ORIGIN: "not a URL",
-      })
-    ).rejects.toThrow("CORS_ORIGIN must be a valid absolute URL");
+        [variable]: value,
+      });
 
-    await expect(
-      load({
-        ...validEnvironment,
-        OTEL_EXPORTER_OTLP_HEADERS: "missing-value=",
-      })
-    ).rejects.toThrow(
-      "OTEL_EXPORTER_OTLP_HEADERS entries must use non-empty key=value pairs"
-    );
-
-    await expect(
-      load({
-        ...validEnvironment,
-        TEPIREK_LOG_LEVEL: "verbose",
-      })
-    ).rejects.toThrow("TEPIREK_LOG_LEVEL must be DEBUG, INFO, WARN, or ERROR");
-  });
+      expect(Exit.isFailure(exit)).toBe(true);
+      if (Exit.isFailure(exit)) {
+        expect(Cause.hasFails(exit.cause)).toBe(true);
+        expect(Cause.hasDies(exit.cause)).toBe(false);
+      }
+    });
+  }
 });
