@@ -56,12 +56,15 @@ const otlpSupportLayer = Layer.merge(
   OtlpSerialization.layerJson
 );
 
-const otlpUrl = (path: "logs" | "traces"): string | undefined => {
-  if (!endpoint) {
+const otlpUrl = (
+  path: "logs" | "traces",
+  otlpEndpoint: string | undefined
+): string | undefined => {
+  if (!otlpEndpoint) {
     return undefined;
   }
 
-  return `${endpoint.replace(/\/+$/u, "")}/v1/${path}`;
+  return `${otlpEndpoint.replace(/\/+$/u, "")}/v1/${path}`;
 };
 
 const deploymentEnvironmentName = (): string =>
@@ -84,8 +87,9 @@ export const resource = (): {
   serviceVersion: process.env.npm_package_version ?? "0.0.0",
 });
 
-export const loggers = () => {
-  const url = otlpUrl("logs");
+/** Build OTLP loggers for the configured or explicitly supplied endpoint. */
+export const loggers = (otlpEndpoint: string | undefined = endpoint) => {
+  const url = otlpUrl("logs", otlpEndpoint);
 
   return url === undefined
     ? []
@@ -98,8 +102,9 @@ export const loggers = () => {
       ];
 };
 
-export const tracingLayer = () => {
-  const url = otlpUrl("traces");
+/** Build the OTLP tracing layer for the configured or supplied endpoint. */
+export const tracingLayer = (otlpEndpoint: string | undefined = endpoint) => {
+  const url = otlpUrl("traces", otlpEndpoint);
 
   return Promise.resolve(
     url === undefined

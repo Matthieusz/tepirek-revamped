@@ -1,3 +1,6 @@
+import { once } from "node:events";
+import { createServer } from "node:http";
+
 import {
   EffectDatabase,
   makeLiveDatabaseLayer,
@@ -11,6 +14,9 @@ import * as References from "effect/References";
 import { describe, expect, it } from "vitest";
 
 import { userPersistenceQuery } from "./adapters/user/persistence-query.js";
+import { makeLoggerLayer } from "./observability.js";
+import { makeStderrLogger } from "./observability/logging.js";
+import * as Otlp from "./observability/otlp.js";
 import { createVerifiedMember } from "./test/integration/builders.js";
 import { defaultTestDatabaseUrl, testDb } from "./test/integration/database.js";
 
@@ -42,6 +48,61 @@ describe("Effect database query logging", () => {
     const serializedEntries = JSON.stringify(capturedEntries);
     expect(serializedEntries).not.toContain(secretParameter);
     expect(serializedEntries).not.toContain("params");
+  });
+
+  it("keeps parameters private with stderr and OTLP logging enabled", async () => {
+    const secretParameter = "combined-observability-secret-52d19c";
+    const sentinel = "combined-observability-enabled";
+    const stderrEntries: string[] = [];
+    const otlpRequests: string[] = [];
+    const collector = createServer((request, response) => {
+      const chunks: Buffer[] = [];
+      request.on("data", (chunk: Buffer) => chunks.push(chunk));
+      request.on("end", () => {
+        otlpRequests.push(Buffer.concat(chunks).toString("utf-8"));
+        response.writeHead(200).end();
+      });
+    });
+
+    collector.listen(0, "127.0.0.1");
+    await once(collector, "listening");
+    const address = collector.address();
+    if (address === null || typeof address === "string") {
+      throw new Error("Expected the local OTLP collector to use a TCP port");
+    }
+
+    try {
+      const loggerLayer = makeLoggerLayer([
+        makeStderrLogger((output) => stderrEntries.push(output)),
+        ...Otlp.loggers(`http://127.0.0.1:${address.port}`),
+      ]);
+
+      await Effect.runPromise(
+        Effect.scoped(
+          EffectDatabase.use((database) =>
+            Effect.gen(function* combinedObservabilityTest() {
+              yield* database.execute(
+                sql`select ${secretParameter}::text as value`
+              );
+              yield* Effect.log(sentinel);
+            })
+          ).pipe(Effect.provide(Layer.merge(databaseLayer, loggerLayer)))
+        )
+      );
+    } finally {
+      const closed = once(collector, "close");
+      collector.close();
+      await closed;
+    }
+
+    const stderrOutput = stderrEntries.join("\n");
+    const otlpOutput = otlpRequests.join("\n");
+    expect(stderrOutput).toContain(sentinel);
+    expect(otlpOutput).toContain(sentinel);
+    expect(stderrOutput).not.toContain(secretParameter);
+    expect(stderrOutput).not.toContain("params");
+    expect(otlpOutput).not.toContain(secretParameter);
+    expect(otlpOutput).not.toContain("params");
   });
 
   it("rolls back and safely projects a parameterized transaction failure", async () => {

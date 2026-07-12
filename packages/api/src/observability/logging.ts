@@ -73,9 +73,13 @@ const formatter = (id: string = runId) =>
     })
   );
 
-export const stderrLogger = Logger.make((options) =>
-  process.stderr.write(`${formatter().log(options)}\n`)
-);
+/** Create the structured stderr logger with an injectable output sink. */
+export const makeStderrLogger = (
+  write: (output: string) => unknown = (output) => process.stderr.write(output)
+) => Logger.make((options) => write(`${formatter().log(options)}\n`));
+
+/** Production structured logger writing to process stderr. */
+export const stderrLogger = makeStderrLogger();
 
 const isLogLevelName = (value: string): value is keyof typeof LOG_LEVELS =>
   value in LOG_LEVELS;
