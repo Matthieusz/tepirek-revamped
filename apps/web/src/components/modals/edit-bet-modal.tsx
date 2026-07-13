@@ -1,11 +1,18 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { useForm } from "@tanstack/react-form";
-import * as Schema from "effect/Schema";
+import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import * as Option from "effect/Option";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Pencil } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { HeroBetMemberPicker } from "@/components/events/hero-bet-member-picker";
+import type { SelectableUser } from "@/components/events/user-select-list";
+import {
+  EffectFieldError,
+  getFieldErrorId,
+  getFieldId,
+} from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
@@ -17,12 +24,8 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { editBetAtom } from "@/lib/bet-atoms";
-import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
-import {
-  effectSchemaValidator,
-  formErrorMessage,
-} from "@/lib/effect-schema-validator";
-import { getErrorMessage } from "@/lib/errors";
+import { NonEmptyUserIdsSchema } from "@/lib/form-schemas";
+import { formSubmission } from "@/lib/form-submission";
 import { verifiedUsersAtom } from "@/lib/user-atoms";
 
 interface EditBetModalProps {
@@ -43,9 +46,69 @@ interface EditBetModalProps {
   trigger?: React.ReactNode;
 }
 
-const EditBetFormSchema = Schema.Struct({
-  userIds: Schema.NonEmptyArray(Schema.String),
-});
+interface EditMembersFieldProps {
+  readonly currentMemberIds: string[];
+  readonly memberCount: number;
+  readonly users: SelectableUser[];
+  readonly usersLoading: boolean;
+}
+
+const EditMembersField: FormReact.FieldComponent<
+  readonly string[],
+  EditMembersFieldProps
+> = ({ field, props }) => {
+  const fieldId = getFieldId(field.path);
+  const errorId = getFieldErrorId(fieldId);
+  const hasError = Option.isSome(field.error);
+
+  return (
+    <fieldset
+      aria-describedby={hasError ? errorId : undefined}
+      aria-invalid={hasError}
+      aria-labelledby={`${fieldId}-label`}
+      className="grid gap-2 py-4"
+      id={fieldId}
+    >
+      <legend className="sr-only" id={`${fieldId}-label`}>
+        Gracze
+      </legend>
+      <HeroBetMemberPicker
+        clearEnabled
+        fieldName={field.path}
+        idPrefix={fieldId}
+        initialMemberIds={props.currentMemberIds}
+        onBlur={field.onBlur}
+        onChange={field.onChange}
+        pointsPreview={{ currentMemberCount: props.memberCount }}
+        restoreEnabled
+        selectedUserIds={[...field.value]}
+        users={props.users}
+        usersLoading={props.usersLoading}
+        variant="edit"
+      />
+      <EffectFieldError error={field.error} id={errorId} />
+    </fieldset>
+  );
+};
+
+const editBetFormBuilder = FormBuilder.empty.addField(
+  "userIds",
+  NonEmptyUserIdsSchema
+);
+
+interface BetUpdate {
+  readonly betId: number;
+  readonly newUserIds: readonly [string, ...string[]];
+  readonly refreshInput: EditBetModalProps["refreshInput"];
+}
+
+type EditBet = (update: BetUpdate) => Promise<unknown>;
+
+interface EditBetSubmitArgs {
+  readonly betId: number;
+  readonly editBet: EditBet;
+  readonly refreshInput: EditBetModalProps["refreshInput"];
+}
 
 export const EditBetModal = ({
   betId,
@@ -57,41 +120,60 @@ export const EditBetModal = ({
 }: EditBetModalProps) => {
   const [open, setOpen] = useState(false);
   const editBet = useAtomSet(editBetAtom, { mode: "promise" });
-
-  const currentMemberIds = currentMembers.map((m) => m.userId);
+  const currentMemberIds = useMemo(
+    () => currentMembers.map((member) => member.userId),
+    [currentMembers]
+  );
 
   const verifiedUsersResult = useAtomValue(verifiedUsersAtom);
-  const verifiedUsers = [...resultValueOr(verifiedUsersResult, [])];
-  const usersLoading = resultIsLoading(verifiedUsersResult);
-  const [isEditing, setIsEditing] = useState(false);
+  const verifiedUsers = AsyncResult.isSuccess(verifiedUsersResult)
+    ? Array.from(verifiedUsersResult.value)
+    : [];
+  const usersLoading = !AsyncResult.isSuccess(verifiedUsersResult);
+  const form = useMemo(
+    () =>
+      FormReact.make(editBetFormBuilder, {
+        fields: { userIds: EditMembersField },
+        mode: { validation: "onSubmit" },
+        onSubmit: (submitArgs: EditBetSubmitArgs, { decoded }) =>
+          formSubmission(() =>
+            submitArgs.editBet({
+              betId: submitArgs.betId,
+              newUserIds: decoded.userIds,
+              refreshInput: submitArgs.refreshInput,
+            })
+          ),
+      }),
+    []
+  );
+  const submit = useAtomSet(form.submit);
+  const reset = useAtomSet(form.reset);
+  const submitResult = useAtomValue(form.submit);
+  let submitLabel = "Zapisz zmiany";
+  if (usersLoading) {
+    submitLabel = "Ładowanie...";
+  }
+  if (submitResult.waiting) {
+    submitLabel = "Zapisywanie...";
+  }
 
-  const form = useForm({
-    defaultValues: {
-      userIds: currentMemberIds,
-    },
-    onSubmit: async ({ value }) => {
-      setIsEditing(true);
-      try {
-        await editBet({
-          betId,
-          newUserIds: value.userIds as [string, ...string[]],
-          refreshInput,
-        });
-        toast.success("Obstawienie zostało zaktualizowane");
-        setOpen(false);
-      } catch (error: unknown) {
-        toast.error(getErrorMessage(error));
-      } finally {
-        setIsEditing(false);
-      }
-    },
-    validators: {
-      onSubmit: effectSchemaValidator(EditBetFormSchema),
-    },
-  });
+  useEffect(() => {
+    if (AsyncResult.isSuccess(submitResult)) {
+      toast.success("Obstawienie zostało zaktualizowane");
+      reset();
+      setOpen(false);
+    }
+  }, [reset, submitResult]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      reset();
+    }
+    setOpen(nextOpen);
+  };
 
   return (
-    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+    <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>
         {trigger ?? (
           <Button size="icon" type="button" variant="ghost">
@@ -100,64 +182,44 @@ export const EditBetModal = ({
         )}
       </ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-[600px]">
-        <form
-          action={() => {
-            form.handleSubmit();
-          }}
+        <form.Initialize
+          defaultValues={{ userIds: currentMemberIds }}
+          key={currentMemberIds.join("\u0000")}
         >
-          <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>Edytuj obstawienie</ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>
-              Modyfikuj listę graczy obstawiających herosa &quot;{heroName}
-              &quot;.
-            </ResponsiveDialogDescription>
-          </ResponsiveDialogHeader>
+          <form action={() => submit({ betId, editBet, refreshInput })}>
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>Edytuj obstawienie</ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
+                Modyfikuj listę graczy obstawiających herosa &quot;{heroName}
+                &quot;.
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
 
-          <form.Field name="userIds">
-            {(field) => (
-              <div className="grid gap-4 py-4">
-                <HeroBetMemberPicker
-                  clearEnabled
-                  idPrefix="edit-user"
-                  initialMemberIds={currentMemberIds}
-                  onChange={field.handleChange}
-                  pointsPreview={{ currentMemberCount: memberCount }}
-                  restoreEnabled
-                  selectedUserIds={field.state.value}
-                  users={verifiedUsers}
-                  usersLoading={usersLoading}
-                  variant="edit"
-                />
-                {field.state.meta.errors.map((error) => (
-                  <p
-                    className="text-red-500 text-sm"
-                    key={formErrorMessage(error)}
-                  >
-                    {formErrorMessage(error)}
-                  </p>
-                ))}
-              </div>
-            )}
-          </form.Field>
+            <form.userIds
+              currentMemberIds={currentMemberIds}
+              memberCount={memberCount}
+              users={verifiedUsers}
+              usersLoading={usersLoading}
+            />
 
-          <ResponsiveDialogFooter>
-            <form.Subscribe>
-              {(state) => (
-                <Button
-                  disabled={
-                    !state.canSubmit ||
-                    state.isSubmitting ||
-                    usersLoading ||
-                    isEditing
-                  }
-                  type="submit"
-                >
-                  {isEditing ? "Zapisywanie..." : "Zapisz zmiany"}
-                </Button>
-              )}
-            </form.Subscribe>
-          </ResponsiveDialogFooter>
-        </form>
+            <ResponsiveDialogFooter>
+              <Button
+                disabled={submitResult.waiting}
+                onClick={() => handleOpenChange(false)}
+                type="button"
+                variant="outline"
+              >
+                Anuluj
+              </Button>
+              <Button
+                disabled={submitResult.waiting || usersLoading}
+                type="submit"
+              >
+                {submitLabel}
+              </Button>
+            </ResponsiveDialogFooter>
+          </form>
+        </form.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

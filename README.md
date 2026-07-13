@@ -71,6 +71,10 @@ tepirek-revamped/
 | **UI**       | shadcn/ui + Tailwind v4    | Accessible, customizable, no lock-in      |
 | **Linting**  | Ultracite (Oxlint + Oxfmt) | Fast, strict, zero-config                 |
 
+### Form architecture
+
+Validated submissions and mutations in `apps/web` use `@lucas-barake/effect-form-react` with Effect Schema as their source of truth. Local React state is reserved for transient controls such as search text and tab selection. Promise-based submissions go through the shared `formSubmission` bridge so expected failures stay in the Effect error channel; schema validation is rendered at the relevant field.
+
 ---
 
 ## 🚀 Getting Started

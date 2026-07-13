@@ -10,13 +10,19 @@ export interface SelectableUser {
 }
 
 interface UserSelectListProps {
-  users: SelectableUser[];
-  selectedUserIds: string[];
-  onToggleUser: (userId: string) => void;
+  readonly fieldName?: string;
+  readonly idPrefix: string;
+  readonly onBlur?: () => void;
+  readonly onToggleUser: (userId: string) => void;
+  readonly selectedUserIds: string[];
+  readonly users: SelectableUser[];
 }
 
 export const UserSelectList = ({
+  fieldName,
+  idPrefix,
   users,
+  onBlur,
   selectedUserIds,
   onToggleUser,
 }: UserSelectListProps) => (
@@ -28,12 +34,14 @@ export const UserSelectList = ({
             ? "border-primary bg-primary/5"
             : "border-border"
         }`}
-        htmlFor={`user-${user.id}`}
+        htmlFor={`${idPrefix}-${user.id}`}
         key={user.id}
       >
         <Checkbox
           checked={selectedUserIds.includes(user.id)}
-          id={`user-${user.id}`}
+          id={`${idPrefix}-${user.id}`}
+          {...(fieldName === undefined ? {} : { name: fieldName })}
+          onBlur={onBlur}
           onCheckedChange={() => {
             onToggleUser(user.id);
           }}

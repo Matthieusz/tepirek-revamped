@@ -29,3 +29,6 @@ minimumReleaseAgeExclude:
 onlyBuiltDependencies:
   - esbuild
   - msgpackr-extract
+
+overrides:
+  "@lucas-barake/effect-form-react>@lucas-barake/effect-form": 0.25.0-beta.6

@@ -1,11 +1,18 @@
-import { useForm } from "@tanstack/react-form";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Calculator, Sparkles, TrendingUp } from "lucide-react";
-import { useState } from "react";
 
+import {
+  EffectFieldFrame,
+  EffectNumberField,
+  getFieldErrorId,
+  getFieldId,
+} from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -28,12 +35,10 @@ import {
   formatGold,
 } from "@/lib/calculators/ulepa";
 import type { UlepaRarity } from "@/lib/calculators/ulepa";
+import { CalculatorItemLevelSchema } from "@/lib/form-schemas";
 import type { AuthSession } from "@/types/route";
 
 type Rarity = UlepaRarity;
-
-const MIN_LEVEL = 1;
-const MAX_LEVEL = 300;
 
 const rarityColors: Record<Rarity, string> = {
   heroiczny: "text-blue-500",
@@ -51,10 +56,6 @@ const rarityBgColors: Record<Rarity, string> = {
   zwykły: "bg-gray-500/10 border-gray-500/20",
 };
 
-const ItemLevelSchema = Schema.Number.check(
-  Schema.isInt(),
-  Schema.isBetween({ maximum: MAX_LEVEL, minimum: MIN_LEVEL })
-);
 const ItemRaritySchema = Schema.Literals([
   "zwykły",
   "unikatowy",
@@ -62,10 +63,55 @@ const ItemRaritySchema = Schema.Literals([
   "ulepszony",
   "legendarny",
 ]);
-const formSchema = Schema.Struct({
-  itemLevel: ItemLevelSchema,
-  itemRarity: ItemRaritySchema,
-});
+
+const ulepaFormBuilder = FormBuilder.empty
+  .addField("itemLevel", CalculatorItemLevelSchema)
+  .addField("itemRarity", ItemRaritySchema);
+
+interface UlepaRaritySelectProps {
+  readonly label: string;
+}
+
+const UlepaRaritySelect: FormReact.FieldComponent<
+  Rarity,
+  UlepaRaritySelectProps
+> = ({ field, props }) => {
+  const fieldId = getFieldId(field.path);
+  const errorId = getFieldErrorId(fieldId);
+  const hasError = Option.isSome(field.error);
+  return (
+    <EffectFieldFrame error={field.error} fieldId={fieldId} label={props.label}>
+      <Select
+        name={field.path}
+        onValueChange={(val) => {
+          const rarity = ULEPA_RARITIES.find((item) => item === val);
+          if (rarity !== undefined) {
+            field.onChange(rarity);
+          }
+        }}
+        value={field.value}
+      >
+        <SelectTrigger
+          aria-describedby={hasError ? errorId : undefined}
+          aria-invalid={hasError}
+          id={fieldId}
+          onBlur={field.onBlur}
+        >
+          <SelectValue placeholder="Wybierz rzadkość" />
+        </SelectTrigger>
+        <SelectContent>
+          {ULEPA_RARITIES.map((rarity) => (
+            <SelectItem key={rarity} value={rarity}>
+              <span className={`font-medium ${rarityColors[rarity]}`}>
+                {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </EffectFieldFrame>
+  );
+};
 
 interface CalculatorUlepaPageProps {
   session: AuthSession;
@@ -196,167 +242,73 @@ const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
   </div>
 );
 
-export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
-  const [result, setResult] = useState<{
-    differentialCosts: number[];
-    cumulativeCosts: number[];
-    totalUpgradeCost: number;
-    total75Percent: number;
-    upgradeGoldCost: number;
-    extractionGoldCost: number;
-    itemLevel: number;
-    itemRarity: Rarity;
-  } | null>(null);
+const ulepaForm = FormReact.make(ulepaFormBuilder, {
+  fields: { itemLevel: EffectNumberField, itemRarity: UlepaRaritySelect },
+  mode: { validation: "onChange" },
+  onSubmit: (_, { decoded }) =>
+    Effect.sync(() => ({
+      ...calculateUpgradeSummary(decoded.itemLevel, decoded.itemRarity),
+      itemLevel: decoded.itemLevel,
+      itemRarity: decoded.itemRarity,
+    })),
+});
 
-  const form = useForm({
-    defaultValues: {
-      itemLevel: ULEPA_DEFAULT_ITEM_LEVEL,
-      itemRarity: "legendarny",
-    } satisfies typeof formSchema.Type,
-    onSubmit: ({ value }) => {
-      const summary = calculateUpgradeSummary(
-        value.itemLevel,
-        value.itemRarity
-      );
-      setResult({
-        ...summary,
-        itemLevel: value.itemLevel,
-        itemRarity: value.itemRarity,
-      });
-    },
-  });
+export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
+  const submit = useAtomSet(ulepaForm.submit);
+  const submitResult = useAtomValue(ulepaForm.submit);
+  const result = AsyncResult.isSuccess(submitResult)
+    ? submitResult.value
+    : null;
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
-      <div>
-        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
-          Kalkulator ulepy
-        </h1>
-        <p className="text-muted-foreground">
-          Oblicz koszty ulepszenia przedmiotu na podstawie poziomu i rzadkości.
-        </p>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Input Form */}
-        <div className="rounded-xl border border-border bg-card">
-          <div className="border-b border-border p-6">
-            <h2 className="flex items-center gap-2 font-semibold text-base">
-              <Calculator className="size-5" />
-              Parametry przedmiotu
-            </h2>
-            <p className="text-muted-foreground text-sm">
-              Wprowadź poziom i wybierz rzadkość przedmiotu
-            </p>
-          </div>
-          <div className="p-6">
-            <form
-              className="grid gap-4"
-              action={async () => {
-                await form.handleSubmit();
-              }}
-            >
-              <form.Field
-                name="itemLevel"
-                validators={{
-                  onChange: ({ value }) =>
-                    Schema.is(ItemLevelSchema)(value)
-                      ? undefined
-                      : `Podaj liczbę całkowitą od ${MIN_LEVEL} do ${MAX_LEVEL}`,
-                }}
-              >
-                {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor="itemLevel">Poziom przedmiotu</Label>
-                    <Input
-                      aria-describedby="itemLevel-error"
-                      aria-invalid={field.state.meta.errors.length > 0}
-                      id="itemLevel"
-                      max={MAX_LEVEL}
-                      min={MIN_LEVEL}
-                      onChange={(e) => {
-                        field.handleChange(Number(e.target.value));
-                      }}
-                      type="number"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.length > 0 && (
-                      <div
-                        className="text-destructive text-sm"
-                        id="itemLevel-error"
-                      >
-                        {field.state.meta.errors[0]}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </form.Field>
-              <form.Field
-                name="itemRarity"
-                validators={{
-                  onChange: ({ value }) =>
-                    Schema.is(ItemRaritySchema)(value)
-                      ? undefined
-                      : "Wybierz poprawną rzadkość",
-                }}
-              >
-                {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor="itemRarity">Rzadkość przedmiotu</Label>
-                    <Select
-                      onValueChange={(val) => {
-                        if (val !== null) {
-                          field.handleChange(val);
-                        }
-                      }}
-                      value={field.state.value}
-                    >
-                      <SelectTrigger id="itemRarity">
-                        <SelectValue placeholder="Wybierz rzadkość" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ULEPA_RARITIES.map((rarity) => (
-                          <SelectItem key={rarity} value={rarity}>
-                            <span
-                              className={`font-medium ${rarityColors[rarity]}`}
-                            >
-                              {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {field.state.meta.errors.length > 0 && (
-                      <div className="text-destructive text-sm">
-                        {field.state.meta.errors[0]}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </form.Field>
-              <form.Subscribe
-                selector={(state) => [state.canSubmit, state.isSubmitting]}
-              >
-                {([canSubmit, isSubmitting]) => (
-                  <Button
-                    className="w-full"
-                    disabled={!canSubmit || isSubmitting}
-                    type="submit"
-                  >
-                    {isSubmitting ? "Obliczanie..." : "Oblicz koszty"}
-                  </Button>
-                )}
-              </form.Subscribe>
-            </form>
-          </div>
+    <ulepaForm.Initialize
+      defaultValues={{
+        itemLevel: ULEPA_DEFAULT_ITEM_LEVEL,
+        itemRarity: "legendarny" as Rarity,
+      }}
+    >
+      <div className="mx-auto w-full max-w-4xl space-y-6">
+        <div>
+          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+            Kalkulator ulepy
+          </h1>
+          <p className="text-muted-foreground">
+            Oblicz koszty ulepszenia przedmiotu na podstawie poziomu i
+            rzadkości.
+          </p>
         </div>
 
-        {/* Extraction Results */}
-        {result && <UlepaResults result={result} />}
-      </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="rounded-xl border border-border bg-card">
+            <div className="border-b border-border p-6">
+              <h2 className="flex items-center gap-2 font-semibold text-base">
+                <Calculator className="size-5" />
+                Parametry przedmiotu
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Wprowadź poziom i wybierz rzadkość przedmiotu
+              </p>
+            </div>
+            <div className="p-6">
+              <form action={() => submit()} className="grid gap-4">
+                <ulepaForm.itemLevel label="Poziom przedmiotu" />
+                <ulepaForm.itemRarity label="Rzadkość przedmiotu" />
+                <Button
+                  className="w-full"
+                  disabled={submitResult.waiting}
+                  type="submit"
+                >
+                  {submitResult.waiting ? "Obliczanie..." : "Oblicz koszty"}
+                </Button>
+              </form>
+            </div>
+          </div>
 
-      {/* Upgrade Costs Table */}
-      {result && <UlepaCostsTable result={result} />}
-    </div>
+          {result && <UlepaResults result={result} />}
+        </div>
+
+        {result && <UlepaCostsTable result={result} />}
+      </div>
+    </ulepaForm.Initialize>
   );
 }

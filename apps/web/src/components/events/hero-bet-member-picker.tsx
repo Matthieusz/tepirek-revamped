@@ -32,27 +32,29 @@ import {
  */
 
 interface HeroBetMemberPickerProps {
-  users: SelectableUser[] | undefined;
-  usersLoading: boolean;
-  selectedUserIds: string[];
-  onChange: (userIds: string[]) => void;
+  readonly fieldName?: string;
+  readonly users: SelectableUser[] | undefined;
+  readonly usersLoading: boolean;
+  readonly selectedUserIds: string[];
+  readonly onBlur?: () => void;
+  readonly onChange: (userIds: string[]) => void;
   /** Layout variant: "add" uses a card grid, "edit" uses a list + pills. */
-  variant: "add" | "edit";
+  readonly variant: "add" | "edit";
   /** Show the clear-selection action. */
-  clearEnabled?: boolean;
+  readonly clearEnabled?: boolean;
   /** Show the restore-to-initial action (edit flow). */
-  restoreEnabled?: boolean;
-  initialMemberIds?: string[];
+  readonly restoreEnabled?: boolean;
+  readonly initialMemberIds?: string[];
   /** Show the copy-last-bet action (add flow). */
-  copyLastBetEnabled?: boolean;
-  lastBet?: { members: { userId: string }[] } | undefined;
-  lastBetAvailable?: boolean;
+  readonly copyLastBetEnabled?: boolean;
+  readonly lastBet?: { members: { userId: string }[] } | undefined;
+  readonly lastBetAvailable?: boolean;
   /** Show the points preview (edit flow). */
-  pointsPreview?: {
+  readonly pointsPreview?: {
     currentMemberCount: number;
   };
   /** Accessible id prefix for checkbox/label pairing. */
-  idPrefix?: string;
+  readonly idPrefix?: string;
 }
 
 const AvailableListEmptyState = ({
@@ -84,6 +86,8 @@ export const HeroBetMemberPicker = ({
   users,
   usersLoading,
   selectedUserIds,
+  fieldName,
+  onBlur,
   onChange,
   variant,
   clearEnabled = false,
@@ -152,6 +156,7 @@ export const HeroBetMemberPicker = ({
               onClick={() => {
                 onChange(clearSelection());
               }}
+              onBlur={onBlur}
               size="sm"
               type="button"
               variant="outline"
@@ -172,6 +177,7 @@ export const HeroBetMemberPicker = ({
               onClick={() => {
                 onChange(restoreSelection(initialMemberIds));
               }}
+              onBlur={onBlur}
               size="sm"
               type="button"
               variant="outline"
@@ -186,6 +192,7 @@ export const HeroBetMemberPicker = ({
               onClick={() => {
                 onChange(copyLastBet(lastBet));
               }}
+              onBlur={onBlur}
               size="sm"
               type="button"
               variant="outline"
@@ -207,6 +214,7 @@ export const HeroBetMemberPicker = ({
             setSearchQuery(e.target.value);
           }}
           placeholder="Szukaj gracza..."
+          onBlur={onBlur}
           type="text"
           value={searchQuery}
         />
@@ -225,6 +233,9 @@ export const HeroBetMemberPicker = ({
         {listState === "has-users" ? (
           variant === "add" ? (
             <UserSelectList
+              {...(fieldName === undefined ? {} : { fieldName })}
+              idPrefix={idPrefix}
+              {...(onBlur === undefined ? {} : { onBlur })}
               onToggleUser={(userId) => {
                 onChange(toggleUser(userId, selectedUserIds));
               }}
@@ -241,6 +252,8 @@ export const HeroBetMemberPicker = ({
                 >
                   <Checkbox
                     id={`${idPrefix}-${user.id}`}
+                    {...(fieldName === undefined ? {} : { name: fieldName })}
+                    onBlur={onBlur}
                     onCheckedChange={() => {
                       onChange(toggleUser(user.id, selectedUserIds));
                     }}
@@ -266,7 +279,9 @@ export const HeroBetMemberPicker = ({
 
       {selectedUserIds.length > 0 && (
         <SelectedUsers
+          {...(fieldName === undefined ? {} : { fieldName })}
           idPrefix={idPrefix}
+          {...(onBlur === undefined ? {} : { onBlur })}
           onChange={onChange}
           selectedUserIds={selectedUserIds}
           selectedUsers={selectedUsers}
@@ -278,16 +293,20 @@ export const HeroBetMemberPicker = ({
 };
 
 interface SelectedUsersProps {
-  selectedUserIds: string[];
-  selectedUsers: SelectableUser[];
-  onChange: (userIds: string[]) => void;
-  variant: "add" | "edit";
-  idPrefix: string;
+  readonly fieldName?: string;
+  readonly idPrefix: string;
+  readonly onBlur?: () => void;
+  readonly onChange: (userIds: string[]) => void;
+  readonly selectedUserIds: string[];
+  readonly selectedUsers: SelectableUser[];
+  readonly variant: "add" | "edit";
 }
 
 const SelectedUsers = ({
   selectedUserIds,
   selectedUsers,
+  fieldName,
+  onBlur,
   onChange,
   variant,
   idPrefix,
@@ -313,6 +332,8 @@ const SelectedUsers = ({
                   <Checkbox
                     checked
                     id={`selected-${idPrefix}-${user.id}`}
+                    {...(fieldName === undefined ? {} : { name: fieldName })}
+                    onBlur={onBlur}
                     onCheckedChange={() => {
                       onChange(removeUser(user.id, selectedUserIds));
                     }}
@@ -357,6 +378,7 @@ const SelectedUsers = ({
               onClick={() => {
                 onChange(removeUser(user.id, selectedUserIds));
               }}
+              onBlur={onBlur}
               type="button"
             >
               <X className="size-3" />
