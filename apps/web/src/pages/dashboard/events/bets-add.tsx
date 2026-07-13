@@ -13,6 +13,11 @@ import { HeroCardsGrid } from "@/components/events/hero-cards-grid";
 import type { HeroCardOption } from "@/components/events/hero-cards-grid";
 import type { SelectableUser } from "@/components/events/user-select-list";
 import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import {
   EffectFieldError,
   EffectFieldFrame,
   getFieldErrorId,
@@ -317,6 +322,8 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
   const refreshLatestBet = useAtomRefresh(latestBetForCopyAtom);
   const submit = useAtomSet(addBetForm.submit);
   const submitResult = useAtomValue(addBetForm.submit);
+  const isDirty = useAtomValue(addBetForm.isDirty);
+  useEffectFormProtection(isDirty, submitResult.waiting);
   const clearHero = useAtomSet(
     addBetForm.getFieldAtoms(addBetForm.fields.heroId).setValue
   );
@@ -391,7 +398,12 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
 
                       <div className="rounded-xl border border-border bg-card p-6">
                         <addBetForm.Initialize defaultValues={defaultValues}>
-                          <form className="space-y-6" action={submitIfIdle}>
+                          <EffectForm
+                            action={submitIfIdle}
+                            className="space-y-6"
+                            submitResult={submitResult}
+                          >
+                            <EffectFormFeedback result={submitResult} />
                             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                               <addBetForm.eventId
                                 events={events}
@@ -438,7 +450,7 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
                               users={verifiedUsers}
                               usersLoading={usersLoading}
                             />
-                          </form>
+                          </EffectForm>
                         </addBetForm.Initialize>
                       </div>
                     </div>

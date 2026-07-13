@@ -5,6 +5,7 @@ import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { AlertTriangle, Calculator, Shield, User, Users } from "lucide-react";
 import { useState } from "react";
 
+import { EffectForm } from "@/components/forms/effect-form";
 import {
   EffectNumberField,
   EffectTextField,
@@ -316,7 +317,12 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
                 </p>
               </div>
               <div className="p-6">
-                <form action={() => singleSubmit()} className="mt-2 grid gap-4">
+                {/* Calculator input is disposable and intentionally has no draft blocker. */}
+                <EffectForm
+                  action={() => singleSubmit()}
+                  className="mt-2 grid gap-4"
+                  submitResult={singleSubmitResult}
+                >
                   <singleForm.attackerLevel label="Poziom atakującego" />
                   <singleForm.victimLevel label="Poziom ofiary" />
                   <Button
@@ -326,7 +332,7 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
                   >
                     {singleSubmitResult.waiting ? "Obliczanie..." : "Sprawdź"}
                   </Button>
-                </form>
+                </EffectForm>
               </div>
             </div>
 
@@ -352,7 +358,12 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
                 </p>
               </div>
               <div className="p-6">
-                <form action={() => groupSubmit()} className="mt-2 grid gap-4">
+                {/* Calculator input is disposable and intentionally has no draft blocker. */}
+                <EffectForm
+                  action={() => groupSubmit()}
+                  className="mt-2 grid gap-4"
+                  submitResult={groupSubmitResult}
+                >
                   <groupForm.attackerLevels label="Poziomy atakujących" />
                   <groupForm.defenderLevels label="Poziomy obrońców" />
                   <Button
@@ -362,7 +373,7 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
                   >
                     {groupSubmitResult.waiting ? "Obliczanie..." : "Sprawdź"}
                   </Button>
-                </form>
+                </EffectForm>
               </div>
             </div>
 

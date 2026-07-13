@@ -2,9 +2,14 @@ import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
 import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
 import {
   EffectNumberField,
   EffectStringSelectField,
@@ -74,6 +79,8 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
   const submit = useAtomSet(heroForm.submit, { mode: "promise" });
   const reset = useAtomSet(heroForm.reset);
   const submitResult = useAtomValue(heroForm.submit);
+  const isDirty = useAtomValue(heroForm.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
   let submitLabel = "Utwórz herosa";
   if (eventsLoading) {
     submitLabel = "Ładowanie...";
@@ -82,15 +89,27 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
     submitLabel = "Tworzenie...";
   }
 
-  const handleSubmit = async () => {
-    await submit(createHero);
-    toast.success("Heros utworzony pomyślnie");
-    reset();
-    setOpen(false);
+  useEffect(() => {
+    if (AsyncResult.isSuccess(submitResult)) {
+      toast.success("Heros utworzony pomyślnie");
+      reset();
+      setOpen(false);
+    }
+  }, [reset, submitResult]);
+
+  const handleSubmit = async (): Promise<void> => {
+    try {
+      await submit(createHero);
+    } catch {
+      // Effect Form owns the persistent failure message and keeps the draft.
+    }
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
+      }
       reset();
     }
     setOpen(nextOpen);
@@ -103,7 +122,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
         <heroForm.Initialize
           defaultValues={{ eventId: "", image: "", level: 1, name: "" }}
         >
-          <form action={handleSubmit}>
+          <EffectForm action={handleSubmit} submitResult={submitResult}>
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>Dodaj nowego herosa</ResponsiveDialogTitle>
               <ResponsiveDialogDescription>
@@ -131,6 +150,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                 placeholder="Wybierz event"
               />
             </div>
+            <EffectFormFeedback result={submitResult} />
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
@@ -147,7 +167,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
                 {submitLabel}
               </Button>
             </ResponsiveDialogFooter>
-          </form>
+          </EffectForm>
         </heroForm.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

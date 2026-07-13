@@ -72,7 +72,7 @@ describe("Effect Form fields", () => {
     const markup = renderToStaticMarkup(
       <EffectTextField
         field={makeStringField(Option.some("Nazwa jest wymagana"))}
-        props={{ label: "Nazwa" }}
+        props={{ label: "Nazwa", required: true }}
       />
     );
 
@@ -81,6 +81,8 @@ describe("Effect Form fields", () => {
     expect(markup).toContain('aria-invalid="true"');
     expect(markup).toContain('id="field-profile-name"');
     expect(markup).toContain('aria-describedby="field-profile-name-error"');
+    expect(markup).toContain('aria-required="true"');
+    expect(markup).not.toContain(' required=""');
     expect(markup).toContain('id="field-profile-name-error"');
     expect(markup).toContain("Nazwa jest wymagana");
   });
@@ -173,7 +175,7 @@ describe("Effect Form fields", () => {
     expect(markup).toContain("Potwierdź wybór");
   });
 
-  it("renders helper text and an announced error in the shared frame", () => {
+  it("renders helper text and an associated error in the shared frame", () => {
     const markup = renderToStaticMarkup(
       <EffectFieldFrame
         error={Option.some("Wartość jest wymagana")}
@@ -191,7 +193,7 @@ describe("Effect Form fields", () => {
 
     expect(markup).toContain('for="field-name"');
     expect(markup).toContain('id="field-name-helper"');
-    expect(markup).toContain('role="alert"');
+    expect(markup).not.toContain('role="alert"');
     expect(markup).toContain("Wartość jest wymagana");
   });
 

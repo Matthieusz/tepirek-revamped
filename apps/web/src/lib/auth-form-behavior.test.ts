@@ -19,7 +19,6 @@ vi.mock("sonner", () => ({
 
 describe("auth form behavior", () => {
   beforeEach(() => {
-    vi.mocked(toast.error).mockReset();
     vi.mocked(toast.success).mockReset();
   });
 
@@ -58,10 +57,7 @@ describe("auth form behavior", () => {
     });
     expect(error).not.toHaveProperty("url");
     expect(error).not.toHaveProperty("token");
-    expect(toast.error).toHaveBeenCalledOnce();
-    expect(toast.error).toHaveBeenCalledWith(
-      "Nie udało się połączyć z usługą uwierzytelniania"
-    );
+    expect(toast.success).not.toHaveBeenCalled();
   });
 
   it("translates provider-declared failures and reports them once", async () => {
@@ -89,8 +85,7 @@ describe("auth form behavior", () => {
       operation: "signup",
       status: 400,
     });
-    expect(toast.error).toHaveBeenCalledOnce();
-    expect(toast.error).toHaveBeenCalledWith("Niepoprawny e-mail");
+    expect(toast.success).not.toHaveBeenCalled();
   });
 
   it("invalidates before navigating after login", async () => {

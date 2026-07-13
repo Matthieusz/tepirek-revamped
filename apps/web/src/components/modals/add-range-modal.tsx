@@ -6,6 +6,11 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import {
   EffectNumberField,
   EffectTextField,
 } from "@/components/forms/effect-form-fields";
@@ -54,6 +59,8 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
   const submit = useAtomSet(rangeForm.submit);
   const reset = useAtomSet(rangeForm.reset);
   const submitResult = useAtomValue(rangeForm.submit);
+  const isDirty = useAtomValue(rangeForm.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
 
   useEffect(() => {
     if (AsyncResult.isSuccess(submitResult)) {
@@ -65,6 +72,9 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
+      }
       reset();
     }
     setOpen(nextOpen);
@@ -75,7 +85,10 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-106.25">
         <rangeForm.Initialize defaultValues={{ image: "", level: 1, name: "" }}>
-          <form action={() => submit(() => createSkillRange)}>
+          <EffectForm
+            action={() => submit(() => createSkillRange)}
+            submitResult={submitResult}
+          >
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>
                 Dodaj nowy przedział
@@ -95,6 +108,7 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
                 placeholder="Wpisz URL obrazka"
               />
             </div>
+            <EffectFormFeedback result={submitResult} />
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
@@ -108,7 +122,7 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
                 {submitResult.waiting ? "Tworzenie..." : "Utwórz przedział"}
               </Button>
             </ResponsiveDialogFooter>
-          </form>
+          </EffectForm>
         </rangeForm.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

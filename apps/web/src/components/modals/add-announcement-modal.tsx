@@ -6,6 +6,11 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import {
   EffectTextField,
   EffectTextareaField,
 } from "@/components/forms/effect-form-fields";
@@ -54,6 +59,8 @@ export const AddAnnouncementModal = ({
   const submit = useAtomSet(announcementForm.submit);
   const reset = useAtomSet(announcementForm.reset);
   const submitResult = useAtomValue(announcementForm.submit);
+  const isDirty = useAtomValue(announcementForm.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
 
   useEffect(() => {
     if (AsyncResult.isSuccess(submitResult)) {
@@ -65,6 +72,9 @@ export const AddAnnouncementModal = ({
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
+      }
       reset();
     }
     setOpen(nextOpen);
@@ -77,7 +87,10 @@ export const AddAnnouncementModal = ({
         <announcementForm.Initialize
           defaultValues={{ description: "", title: "" }}
         >
-          <form action={() => submit(() => createAnnouncement)}>
+          <EffectForm
+            action={() => submit(() => createAnnouncement)}
+            submitResult={submitResult}
+          >
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>
                 Dodaj nowe ogłoszenie
@@ -96,6 +109,7 @@ export const AddAnnouncementModal = ({
                 placeholder="Wpisz opis ogłoszenia"
               />
             </div>
+            <EffectFormFeedback result={submitResult} />
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
@@ -109,7 +123,7 @@ export const AddAnnouncementModal = ({
                 {submitResult.waiting ? "Tworzenie..." : "Dodaj ogłoszenie"}
               </Button>
             </ResponsiveDialogFooter>
-          </form>
+          </EffectForm>
         </announcementForm.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

@@ -6,6 +6,11 @@ import {
   BackToHomeButton,
   DiscordLoginButton,
 } from "@/components/auth-buttons";
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
 import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
@@ -59,6 +64,8 @@ export const SignUpForm = ({
     });
   const submit = useAtomSet(signupForm.submit);
   const submitResult = useAtomValue(signupForm.submit);
+  const isDirty = useAtomValue(signupForm.isDirty);
+  useEffectFormProtection(isDirty, submitResult.waiting);
 
   return (
     <signupForm.Initialize
@@ -88,10 +95,11 @@ export const SignUpForm = ({
             </div>
           </div>
 
-          <form
+          <EffectForm
             action={() =>
               submitWhenIdle(submitResult.waiting, () => submit(() => signup))
             }
+            submitResult={submitResult}
           >
             <div className="flex flex-col gap-5">
               <signupForm.name
@@ -113,6 +121,7 @@ export const SignUpForm = ({
                 required
                 type="password"
               />
+              <EffectFormFeedback result={submitResult} />
               <Button
                 className="h-11 w-full font-semibold"
                 disabled={submitResult.waiting}
@@ -121,7 +130,7 @@ export const SignUpForm = ({
                 {submitResult.waiting ? "Wysyłanie..." : "Utwórz konto"}
               </Button>
             </div>
-          </form>
+          </EffectForm>
         </div>
 
         <p className="text-center text-sm text-muted-foreground">

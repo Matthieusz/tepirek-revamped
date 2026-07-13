@@ -4,10 +4,16 @@ import { EVENT_ICON_OPTIONS } from "@tepirek-revamped/config";
 import type { EventIconId } from "@tepirek-revamped/config";
 import { format } from "date-fns";
 import * as Option from "effect/Option";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
 import {
   EffectFieldFrame,
   EffectTextField,
@@ -83,7 +89,6 @@ const IconField: FormReact.FieldComponent<EventIconId, IconFieldProps> = ({
             const IconComponent = EVENT_ICON_MAP[item.id];
             return (
               <button
-                aria-describedby={hasError ? errorId : undefined}
                 aria-pressed={field.value === item.id}
                 className={cn(
                   "flex flex-col items-center gap-1 rounded-lg border p-3 transition-all hover:bg-muted/50",
@@ -135,7 +140,6 @@ const ColorField: FormReact.FieldComponent<
         <div className="flex flex-wrap gap-2">
           {EventColors.map((color) => (
             <button
-              aria-describedby={hasError ? errorId : undefined}
               aria-label={`Wybierz kolor ${color.name}`}
               aria-pressed={field.value === color.id}
               className={cn(
@@ -239,15 +243,29 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
   const submit = useAtomSet(eventForm.submit, { mode: "promise" });
   const reset = useAtomSet(eventForm.reset);
   const submitResult = useAtomValue(eventForm.submit);
+  const isDirty = useAtomValue(eventForm.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
 
-  const handleSubmit = async () => {
-    await submit(createEvent);
-    toast.success("Event utworzony pomyślnie");
-    reset();
-    setOpen(false);
+  useEffect(() => {
+    if (AsyncResult.isSuccess(submitResult)) {
+      toast.success("Event utworzony pomyślnie");
+      reset();
+      setOpen(false);
+    }
+  }, [reset, submitResult]);
+
+  const handleSubmit = async (): Promise<void> => {
+    try {
+      await submit(createEvent);
+    } catch {
+      // Effect Form owns the persistent failure message and keeps the draft.
+    }
   };
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
+      }
       reset();
     }
     setOpen(nextOpen);
@@ -263,7 +281,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-106.25">
         <eventForm.Initialize defaultValues={EventFormDefaults}>
-          <form action={handleSubmit}>
+          <EffectForm action={handleSubmit} submitResult={submitResult}>
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>Dodaj nowy event</ResponsiveDialogTitle>
               <ResponsiveDialogDescription>
@@ -282,6 +300,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
               <eventForm.color />
               <eventForm.date />
             </div>
+            <EffectFormFeedback result={submitResult} />
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
@@ -295,7 +314,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                 {submitResult.waiting ? "Tworzenie..." : "Utwórz event"}
               </Button>
             </ResponsiveDialogFooter>
-          </form>
+          </EffectForm>
         </eventForm.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

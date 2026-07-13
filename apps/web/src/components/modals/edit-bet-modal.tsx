@@ -9,6 +9,11 @@ import { toast } from "sonner";
 import { HeroBetMemberPicker } from "@/components/events/hero-bet-member-picker";
 import type { SelectableUser } from "@/components/events/user-select-list";
 import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import {
   EffectFieldError,
   getFieldErrorId,
   getFieldId,
@@ -149,6 +154,8 @@ export const EditBetModal = ({
   const submit = useAtomSet(form.submit);
   const reset = useAtomSet(form.reset);
   const submitResult = useAtomValue(form.submit);
+  const isDirty = useAtomValue(form.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
   let submitLabel = "Zapisz zmiany";
   if (usersLoading) {
     submitLabel = "Ładowanie...";
@@ -167,6 +174,9 @@ export const EditBetModal = ({
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
+      }
       reset();
     }
     setOpen(nextOpen);
@@ -186,7 +196,10 @@ export const EditBetModal = ({
           defaultValues={{ userIds: currentMemberIds }}
           key={currentMemberIds.join("\u0000")}
         >
-          <form action={() => submit({ betId, editBet, refreshInput })}>
+          <EffectForm
+            action={() => submit({ betId, editBet, refreshInput })}
+            submitResult={submitResult}
+          >
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>Edytuj obstawienie</ResponsiveDialogTitle>
               <ResponsiveDialogDescription>
@@ -202,6 +215,7 @@ export const EditBetModal = ({
               usersLoading={usersLoading}
             />
 
+            <EffectFormFeedback result={submitResult} />
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
@@ -218,7 +232,7 @@ export const EditBetModal = ({
                 {submitLabel}
               </Button>
             </ResponsiveDialogFooter>
-          </form>
+          </EffectForm>
         </form.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

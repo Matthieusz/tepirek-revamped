@@ -12,8 +12,14 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
 import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
@@ -74,12 +80,23 @@ const TasksContent = ({ session }: TasksPageProps) => {
   const submit = useAtomSet(todoForm.submit, { mode: "promise" });
   const reset = useAtomSet(todoForm.reset);
   const submitResult = useAtomValue(todoForm.submit);
+  const isDirty = useAtomValue(todoForm.isDirty);
+  useEffectFormProtection(isDirty, submitResult.waiting);
   const canCreateTodo = session.user.id.length > 0;
 
-  const handleCreateTodo = async () => {
-    await submit(createTodo);
-    toast.success("Zadanie zostało dodane");
-    reset();
+  useEffect(() => {
+    if (AsyncResult.isSuccess(submitResult)) {
+      toast.success("Zadanie zostało dodane");
+      reset();
+    }
+  }, [reset, submitResult]);
+
+  const handleCreateTodo = async (): Promise<void> => {
+    try {
+      await submit(createTodo);
+    } catch {
+      // Effect Form owns the persistent failure message and keeps the draft.
+    }
   };
 
   const toggleTodoMutation = (input: { id: number; completed: boolean }) =>
@@ -155,7 +172,12 @@ const TasksContent = ({ session }: TasksPageProps) => {
             Wpisz treść nowego zadania
           </p>
           <todoForm.Initialize defaultValues={{ text: "" }}>
-            <form className="flex items-start gap-2" action={handleCreateTodo}>
+            <EffectFormFeedback result={submitResult} />
+            <EffectForm
+              action={handleCreateTodo}
+              className="flex items-start gap-2"
+              submitResult={submitResult}
+            >
               <todoForm.text
                 className="flex-1"
                 disabled={!canCreateTodo || submitResult.waiting}
@@ -173,7 +195,7 @@ const TasksContent = ({ session }: TasksPageProps) => {
                   "Dodaj"
                 )}
               </Button>
-            </form>
+            </EffectForm>
           </todoForm.Initialize>
         </div>
 

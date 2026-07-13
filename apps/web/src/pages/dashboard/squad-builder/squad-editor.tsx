@@ -14,6 +14,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { useEffectFormProtection } from "@/components/forms/effect-form";
 import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -129,6 +130,7 @@ const SquadBuilderEditorContent = ({
   const [isSettingVisibility, setIsSettingVisibility] = useState(false);
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [isRevokingInvite, setIsRevokingInvite] = useState(false);
+  useEffectFormProtection(isDirty, isSaving || isSavingShared);
 
   const detailAtom = squadGroupDetailAtom({ groupId });
   const detailResult = useAtomValue(detailAtom);

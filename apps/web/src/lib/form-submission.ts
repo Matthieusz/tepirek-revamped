@@ -1,22 +1,26 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import { toast } from "sonner";
 
 import { getErrorMessage } from "@/lib/errors";
 
 class FormSubmissionError extends Schema.TaggedErrorClass<FormSubmissionError>()(
   "FormSubmissionError",
-  { cause: Schema.Defect() }
+  {
+    cause: Schema.Defect(),
+    message: Schema.String,
+  }
 ) {}
 
-/** Bridges a promise mutation into Effect Form and reports a localized failure toast. */
+/** Translates a rejected mutation promise into a typed Effect Form failure. */
 export const formSubmission = <A>(promise: () => Promise<A>) =>
   Effect.tryPromise({
-    catch: (cause) => new FormSubmissionError({ cause }),
+    catch: (cause) =>
+      new FormSubmissionError({
+        cause,
+        message: getErrorMessage(
+          cause,
+          "Nie udało się wykonać operacji. Spróbuj ponownie."
+        ),
+      }),
     try: promise,
-  }).pipe(
-    // oxlint-disable-next-line promise/prefer-await-to-callbacks -- Effect.tapError requires a callback.
-    Effect.tapError((error) =>
-      Effect.sync(() => toast.error(getErrorMessage(error.cause)))
-    )
-  );
+  });

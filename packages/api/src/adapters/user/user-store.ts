@@ -1,5 +1,8 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
-import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
+import type {
+  EffectPgDatabase,
+  TransactionDatabase,
+} from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { account, user } from "@tepirek-revamped/db/schema/auth";
 import type { SQL } from "drizzle-orm";
@@ -170,8 +173,10 @@ const mutateAdminAvailabilityUser = Effect.fnUntraced(
       readonly userId: string;
     }
   ) {
-    const transaction = database.transaction((tx) =>
-      Effect.gen(function* mutateAdminAvailabilityUserTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* mutateAdminAvailabilityUserTransaction(
+        tx: TransactionDatabase
+      ) {
         yield* tx.execute(
           sql`select pg_advisory_xact_lock(hashtext('tepirek:user-admin-mutation'))`
         );

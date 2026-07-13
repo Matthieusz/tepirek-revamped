@@ -161,8 +161,10 @@ const createBetWithDatabase = (database: EffectPgDatabase) =>
     );
     return yield* persistenceQuery(
       "createBet",
-      database.transaction((tx) =>
-        Effect.gen(function* createBetTransaction() {
+      database.transaction(
+        Effect.fnUntraced(function* createBetTransaction(
+          tx: TransactionDatabase
+        ) {
           const insertedBets = yield* tx
             .insert(heroBet)
             .values({
@@ -239,8 +241,10 @@ const deleteBetWithDatabase = (database: EffectPgDatabase) =>
 
     yield* persistenceQuery(
       "deleteBet",
-      database.transaction((tx) =>
-        Effect.gen(function* deleteBetTransaction() {
+      database.transaction(
+        Effect.fnUntraced(function* deleteBetTransaction(
+          tx: TransactionDatabase
+        ) {
           if (memberUserIds.length > 0) {
             yield* tx
               .update(userStats)
@@ -320,8 +324,10 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
 
     yield* persistenceQuery(
       "editBet",
-      database.transaction((tx) =>
-        Effect.gen(function* editBetTransaction() {
+      database.transaction(
+        Effect.fnUntraced(function* editBetTransaction(
+          tx: TransactionDatabase
+        ) {
           if (membersToRemove.length > 0) {
             const removeUserIds = membersToRemove.map(
               (member) => member.userId

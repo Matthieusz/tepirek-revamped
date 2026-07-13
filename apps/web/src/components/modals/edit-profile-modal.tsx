@@ -5,6 +5,11 @@ import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
 import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +54,8 @@ export const EditProfileModal = ({
   const submit = useAtomSet(profileForm.submit);
   const reset = useAtomSet(profileForm.reset);
   const submitResult = useAtomValue(profileForm.submit);
+  const isDirty = useAtomValue(profileForm.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
 
   useEffect(() => {
     if (AsyncResult.isSuccess(submitResult)) {
@@ -60,6 +67,9 @@ export const EditProfileModal = ({
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
+      }
       reset();
     }
     setOpen(nextOpen);
@@ -74,7 +84,10 @@ export const EditProfileModal = ({
               defaultValues={{ name: defaultName }}
               key={defaultName}
             >
-              <form action={() => submit(() => updateProfile)}>
+              <EffectForm
+                action={() => submit(() => updateProfile)}
+                submitResult={submitResult}
+              >
                 <ResponsiveDialogHeader>
                   <ResponsiveDialogTitle>Edytuj profil</ResponsiveDialogTitle>
                   <ResponsiveDialogDescription>
@@ -87,6 +100,7 @@ export const EditProfileModal = ({
                     placeholder="Wpisz nazwę"
                   />
                 </div>
+                <EffectFormFeedback result={submitResult} />
                 <ResponsiveDialogFooter>
                   <Button
                     disabled={submitResult.waiting}
@@ -100,7 +114,7 @@ export const EditProfileModal = ({
                     {submitResult.waiting ? "Zapisywanie..." : "Zapisz"}
                   </Button>
                 </ResponsiveDialogFooter>
-              </form>
+              </EffectForm>
             </profileForm.Initialize>
           </ResponsiveDialogContent>
         }

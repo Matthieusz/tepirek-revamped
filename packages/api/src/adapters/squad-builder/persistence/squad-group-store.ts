@@ -1,4 +1,7 @@
-import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
+import type {
+  EffectPgDatabase,
+  TransactionDatabase,
+} from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import {
@@ -414,8 +417,10 @@ const upsertSquadGroupEditorInviteWithDatabase = (database: EffectPgDatabase) =>
     const groupIdNumber = squadGroupIdToNumber(groupId);
     const invitedUser = appUserIdToString(invitedUserId);
     const owner = appUserIdToString(ownerUserId);
-    const transaction = database.transaction((tx) =>
-      Effect.gen(function* upsertSquadGroupEditorInviteTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* upsertSquadGroupEditorInviteTransaction(
+        tx: TransactionDatabase
+      ) {
         const existingSelect = tx
           .select({
             id: squadGroupInvitation.id,
@@ -517,8 +522,10 @@ const respondToSquadGroupInviteWithDatabase = (database: EffectPgDatabase) =>
     const operation = "respondToSquadGroupInvite" as const;
     const invitedUser = appUserIdToString(invitedUserId);
     const invitationIdNumber = squadGroupInvitationIdToNumber(invitationId);
-    const transaction = database.transaction((tx) =>
-      Effect.gen(function* respondToSquadGroupInviteTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* respondToSquadGroupInviteTransaction(
+        tx: TransactionDatabase
+      ) {
         const existingSelect = tx
           .select({
             id: squadGroupInvitation.id,
@@ -594,8 +601,10 @@ const revokeSquadGroupEditorWithDatabase = (database: EffectPgDatabase) =>
     const operation = "revokeSquadGroupEditor" as const;
     const owner = appUserIdToString(ownerUserId);
     const invitationIdNumber = squadGroupInvitationIdToNumber(invitationId);
-    const transaction = database.transaction((tx) =>
-      Effect.gen(function* revokeSquadGroupEditorTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* revokeSquadGroupEditorTransaction(
+        tx: TransactionDatabase
+      ) {
         const existingSelect = tx
           .select({
             ownerUserId: squadGroup.ownerUserId,
@@ -1253,8 +1262,10 @@ const saveSharedSquadGroupCharactersWithDatabase = (
     const operation = "saveSharedSquadGroupCharacters" as const;
     const groupIdNumber = squadGroupIdToNumber(groupId);
     const actor = appUserIdToString(actorUserId);
-    const transaction = database.transaction((tx) =>
-      Effect.gen(function* saveSharedSquadGroupCharactersTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* saveSharedSquadGroupCharactersTransaction(
+        tx: TransactionDatabase
+      ) {
         yield* tx.execute(
           sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
         );
@@ -1417,8 +1428,10 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
       availableByCharacterId.set(character.characterId, character);
     }
 
-    const transaction = database.transaction((tx) =>
-      Effect.gen(function* saveSquadGroupSnapshotTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* saveSquadGroupSnapshotTransaction(
+        tx: TransactionDatabase
+      ) {
         yield* tx.execute(
           sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
         );

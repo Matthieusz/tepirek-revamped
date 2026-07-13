@@ -6,6 +6,7 @@ import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Calculator, Sparkles, TrendingUp } from "lucide-react";
 
+import { EffectForm } from "@/components/forms/effect-form";
 import {
   EffectFieldFrame,
   EffectNumberField,
@@ -290,7 +291,12 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
               </p>
             </div>
             <div className="p-6">
-              <form action={() => submit()} className="grid gap-4">
+              {/* Calculator input is disposable and intentionally has no draft blocker. */}
+              <EffectForm
+                action={() => submit()}
+                className="grid gap-4"
+                submitResult={submitResult}
+              >
                 <ulepaForm.itemLevel label="Poziom przedmiotu" />
                 <ulepaForm.itemRarity label="Rzadkość przedmiotu" />
                 <Button
@@ -300,7 +306,7 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
                 >
                   {submitResult.waiting ? "Obliczanie..." : "Oblicz koszty"}
                 </Button>
-              </form>
+              </EffectForm>
             </div>
           </div>
 

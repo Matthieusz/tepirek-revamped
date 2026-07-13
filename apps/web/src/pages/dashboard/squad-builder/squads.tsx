@@ -8,6 +8,10 @@ import { Check, Loader2, Plus, Swords, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import {
+  EffectForm,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
 import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -107,9 +111,11 @@ const SquadGroupListFilters = ({
 
   return (
     <squadFilterForm.Initialize defaultValues={emptyFilterForm}>
-      <form
+      {/* Filters are disposable input and intentionally do not block navigation. */}
+      <EffectForm
         action={() => submit({ onApply })}
         className="grid gap-3 rounded-lg border border-border bg-card/60 p-4 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_auto] sm:items-end"
+        submitResult={submitResult}
       >
         <squadFilterForm.nameQuery
           className="space-y-2"
@@ -145,7 +151,7 @@ const SquadGroupListFilters = ({
             Wyczyść
           </Button>
         </div>
-      </form>
+      </EffectForm>
     </squadFilterForm.Initialize>
   );
 };
@@ -288,6 +294,7 @@ export default function SquadBuilderSquadsPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [activeTab, setActiveTab] = useState<SquadListTab>("mine");
   const [appliedFilters, setAppliedFilters] = useState(emptyFilterForm);
+  useEffectFormProtection(name.trim().length > 0, isCreating);
   const activeFilters = hasActiveFilters(appliedFilters);
   useAtomValue(sessionAtom);
   const sharedGroupsResult = useAtomValue(sharedSquadGroupsAtom);

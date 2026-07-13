@@ -107,47 +107,43 @@ const extractAvatarUrl = (rowHtml: string): string | null => {
   return avatarUrl === undefined || avatarUrl.length === 0 ? null : avatarUrl;
 };
 
-const parseJarunaCharacterRow = (
-  profileId: MargonemProfileId,
-  rowHtml: string
-): Effect.Effect<
-  MargonemCharacterPreview | null,
-  ParseMargonemProfileHtmlError
-> => {
-  const world = extractAttribute(rowHtml, "data-world");
+const parseJarunaCharacterRow = Effect.fnUntraced(
+  function* parseJarunaCharacterRow(
+    profileId: MargonemProfileId,
+    rowHtml: string
+  ): Effect.fn.Return<
+    MargonemCharacterPreview | null,
+    ParseMargonemProfileHtmlError
+  > {
+    const world = extractAttribute(rowHtml, "data-world");
 
-  if (world !== "#jaruna") {
-    return Effect.succeed(null);
-  }
+    if (world !== "#jaruna") {
+      return null;
+    }
 
-  const characterIdText = extractAttribute(rowHtml, "data-id");
-  const name = extractAttribute(rowHtml, "data-nick");
-  const levelText = extractAttribute(rowHtml, "data-lvl");
-  const professionLabel = extractProfessionLabel(rowHtml);
+    const characterIdText = extractAttribute(rowHtml, "data-id");
+    const name = extractAttribute(rowHtml, "data-nick");
+    const levelText = extractAttribute(rowHtml, "data-lvl");
+    const professionLabel = extractProfessionLabel(rowHtml);
 
-  if (
-    characterIdText === undefined ||
-    name === undefined ||
-    levelText === undefined
-  ) {
-    return Effect.fail(
-      new MargonemCharacterRowInvalid({
+    if (
+      characterIdText === undefined ||
+      name === undefined ||
+      levelText === undefined
+    ) {
+      return yield* new MargonemCharacterRowInvalid({
         profileId,
         safeReason: "missing required character row attributes",
-      })
-    );
-  }
+      });
+    }
 
-  if (professionLabel === undefined) {
-    return Effect.fail(
-      new MargonemCharacterRowInvalid({
+    if (professionLabel === undefined) {
+      return yield* new MargonemCharacterRowInvalid({
         profileId,
         safeReason: "missing profession label",
-      })
-    );
-  }
+      });
+    }
 
-  return Effect.gen(function* parseJarunaCharacterRowEffect() {
     const invalidCharacter = () =>
       new MargonemCharacterRowInvalid({
         profileId,
@@ -171,8 +167,8 @@ const parseJarunaCharacterRow = (
       profession: parsedProfession,
       world: "jaruna" as const,
     };
-  });
-};
+  }
+);
 
 /** Parse Firecrawl HTML into a Jaruna-only profile preview. */
 export const parseMargonemProfileHtml = Effect.fnUntraced(

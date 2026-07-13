@@ -1,4 +1,7 @@
-import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
+import type {
+  EffectPgDatabase,
+  TransactionDatabase,
+} from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import {
   firecrawlProfileScrapeRequest,
@@ -73,8 +76,10 @@ const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
   }: ReserveFirecrawlRequestInput) {
     const operation = "reserveRequest" as const;
     const yearMonthText = firecrawlYearMonthToString(yearMonth);
-    const transaction = database.transaction((tx) => {
-      const transactionEffect = Effect.gen(function* reserveInTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* reserveInTransaction(
+        tx: TransactionDatabase
+      ) {
         yield* tx.execute(
           sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
         );
@@ -133,10 +138,8 @@ const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
           },
           requestId: reserved.id,
         };
-      });
-
-      return transactionEffect;
-    });
+      })
+    );
 
     return yield* persistenceQuery(operation, transaction);
   });
@@ -300,8 +303,10 @@ const createPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
     profileId,
   }: CreatePendingMargonemAccountRefetchInput) {
     const operation = "createPendingRefetch" as const;
-    const transaction = database.transaction((tx) =>
-      Effect.gen(function* createPendingRefetchTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* createPendingRefetchTransaction(
+        tx: TransactionDatabase
+      ) {
         const insert = tx
           .insert(margonemAccountRefetchPreview)
           .values({
@@ -492,8 +497,10 @@ const applyRefetchedAccountWithDatabase = (database: EffectPgDatabase) =>
     pendingRefetch,
   }: ApplyRefetchedAccountInput) {
     const operation = "applyRefetchedAccount" as const;
-    const transaction = database.transaction((tx) =>
-      Effect.gen(function* applyRefetchedAccountTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* applyRefetchedAccountTransaction(
+        tx: TransactionDatabase
+      ) {
         const accountIdNumber = margonemAccountIdToNumber(
           pendingRefetch.accountId
         );

@@ -17,6 +17,11 @@ import {
   HeroSelectItems,
 } from "@/components/events/select-utils";
 import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import {
   EffectFieldFrame,
   getFieldErrorId,
   getFieldId,
@@ -365,9 +370,14 @@ export const DistributeGoldModal = ({
   const submit = useAtomSet(distributeGoldForm.submit);
   const reset = useAtomSet(distributeGoldForm.reset);
   const submitResult = useAtomValue(distributeGoldForm.submit);
+  const isDirty = useAtomValue(distributeGoldForm.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
+      }
       reset();
     }
     setOpen(nextOpen);
@@ -444,7 +454,10 @@ export const DistributeGoldModal = ({
           }}
           key={`${selectedEventId}-${selectedHeroId}`}
         >
-          <form action={() => submit(() => distributeGold)}>
+          <EffectForm
+            action={() => submit(() => distributeGold)}
+            submitResult={submitResult}
+          >
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle className="flex items-center gap-2">
                 <Coins className="size-5 text-yellow-500" />
@@ -525,6 +538,7 @@ export const DistributeGoldModal = ({
                   </div>
                 )}
             </div>
+            <EffectFormFeedback result={submitResult} />
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
@@ -547,7 +561,7 @@ export const DistributeGoldModal = ({
                 {submitLabel}
               </Button>
             </ResponsiveDialogFooter>
-          </form>
+          </EffectForm>
         </distributeGoldForm.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

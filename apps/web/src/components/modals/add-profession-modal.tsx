@@ -5,6 +5,11 @@ import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
 import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +52,8 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
   const submit = useAtomSet(professionForm.submit);
   const reset = useAtomSet(professionForm.reset);
   const submitResult = useAtomValue(professionForm.submit);
+  const isDirty = useAtomValue(professionForm.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
 
   useEffect(() => {
     if (AsyncResult.isSuccess(submitResult)) {
@@ -58,6 +65,9 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
+      }
       reset();
     }
     setOpen(nextOpen);
@@ -68,7 +78,10 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-[425px]">
         <professionForm.Initialize defaultValues={{ name: "" }}>
-          <form action={() => submit(() => createSkillProfession)}>
+          <EffectForm
+            action={() => submit(() => createSkillProfession)}
+            submitResult={submitResult}
+          >
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>Dodaj profesję</ResponsiveDialogTitle>
               <ResponsiveDialogDescription>
@@ -81,6 +94,7 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
                 placeholder="Wpisz nazwę profesji"
               />
             </div>
+            <EffectFormFeedback result={submitResult} />
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
@@ -94,7 +108,7 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
                 {submitResult.waiting ? "Tworzenie..." : "Utwórz profesję"}
               </Button>
             </ResponsiveDialogFooter>
-          </form>
+          </EffectForm>
         </professionForm.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

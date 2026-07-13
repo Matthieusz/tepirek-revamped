@@ -51,6 +51,11 @@ const makeDrizzleDatabase = () =>
 /** Effect-native Drizzle database produced by `drizzle-orm/effect-postgres`. */
 export type EffectPgDatabase = Success<ReturnType<typeof makeDrizzleDatabase>>;
 
+/** Transaction-scoped database handle for multi-statement operations. */
+export type TransactionDatabase = Parameters<
+  Parameters<EffectPgDatabase["transaction"]>[0]
+>[0];
+
 /** Context service for the Effect-native Drizzle PostgreSQL database. */
 export class EffectDatabase extends Context.Service<
   EffectDatabase,

@@ -6,6 +6,11 @@ import {
   BackToHomeButton,
   DiscordLoginButton,
 } from "@/components/auth-buttons";
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
 import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
@@ -56,6 +61,8 @@ export const LoginForm = ({
     });
   const submit = useAtomSet(loginForm.submit);
   const submitResult = useAtomValue(loginForm.submit);
+  const isDirty = useAtomValue(loginForm.isDirty);
+  useEffectFormProtection(isDirty, submitResult.waiting);
 
   return (
     <loginForm.Initialize defaultValues={{ email: "", password: "" }}>
@@ -83,10 +90,11 @@ export const LoginForm = ({
             </div>
           </div>
 
-          <form
+          <EffectForm
             action={() =>
               submitWhenIdle(submitResult.waiting, () => submit(() => login))
             }
+            submitResult={submitResult}
           >
             <div className="flex flex-col gap-5">
               <loginForm.email
@@ -102,6 +110,7 @@ export const LoginForm = ({
                 required
                 type="password"
               />
+              <EffectFormFeedback result={submitResult} />
               <Button
                 className="h-11 w-full font-semibold"
                 disabled={submitResult.waiting}
@@ -110,7 +119,7 @@ export const LoginForm = ({
                 {submitResult.waiting ? "Wysyłanie..." : "Zaloguj się"}
               </Button>
             </div>
-          </form>
+          </EffectForm>
         </div>
 
         <p className="text-center text-sm text-muted-foreground">

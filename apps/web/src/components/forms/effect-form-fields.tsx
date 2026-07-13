@@ -39,7 +39,7 @@ interface EffectFieldErrorProps {
   readonly id: string;
 }
 
-/** Renders a localized field error with an announcement and stable id. */
+/** Renders a localized field error with a stable id. */
 export const EffectFieldError = ({
   error,
   id,
@@ -47,7 +47,7 @@ export const EffectFieldError = ({
   Option.match(error, {
     onNone: () => null,
     onSome: (message) => (
-      <p className="text-destructive text-sm" id={id} role="alert">
+      <p className="text-destructive text-sm" id={id}>
         {message}
       </p>
     ),
@@ -208,7 +208,7 @@ export const EffectTextField: FormReact.FieldComponent<
         onBlur={field.onBlur}
         onChange={(event) => field.onChange(event.target.value)}
         placeholder={props.placeholder}
-        required={props.required}
+        aria-required={props.required || undefined}
         type={props.type ?? "text"}
         value={field.value}
       />
@@ -241,7 +241,7 @@ export const EffectNumberField: FormReact.FieldComponent<
         onBlur={field.onBlur}
         onChange={(event) => field.onChange(Number(event.target.value))}
         placeholder={props.placeholder}
-        required={props.required}
+        aria-required={props.required || undefined}
         type="number"
         value={field.value}
       />
@@ -275,7 +275,7 @@ export const EffectTextareaField: FormReact.FieldComponent<
         onBlur={field.onBlur}
         onChange={(event) => field.onChange(event.target.value)}
         placeholder={props.placeholder}
-        required={props.required}
+        aria-required={props.required || undefined}
         value={field.value}
       />
     </EffectFieldFrame>

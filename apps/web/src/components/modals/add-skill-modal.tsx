@@ -6,6 +6,11 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import {
   EffectCheckboxField,
   EffectStringSelectField,
   EffectTextField,
@@ -93,6 +98,8 @@ export const AddSkillModal = ({
   const submit = useAtomSet(form.submit);
   const reset = useAtomSet(form.reset);
   const submitResult = useAtomValue(form.submit);
+  const isDirty = useAtomValue(form.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
   let submitLabel = "Utwórz zestaw";
   if (professionsLoading) {
     submitLabel = "Ładowanie...";
@@ -111,6 +118,9 @@ export const AddSkillModal = ({
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
+      }
       reset();
     }
     setOpen(nextOpen);
@@ -132,7 +142,10 @@ export const AddSkillModal = ({
           }}
           key={defaultProfessionId ?? "no-default-profession"}
         >
-          <form action={() => submit({ createSkill, rangeId: defaultRangeId })}>
+          <EffectForm
+            action={() => submit({ createSkill, rangeId: defaultRangeId })}
+            submitResult={submitResult}
+          >
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>
                 Dodaj zestaw umiejętności
@@ -164,6 +177,7 @@ export const AddSkillModal = ({
                 <form.mastery label="Mistrzostwo?" />
               </div>
             </div>
+            <EffectFormFeedback result={submitResult} />
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
@@ -180,7 +194,7 @@ export const AddSkillModal = ({
                 {submitLabel}
               </Button>
             </ResponsiveDialogFooter>
-          </form>
+          </EffectForm>
         </form.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

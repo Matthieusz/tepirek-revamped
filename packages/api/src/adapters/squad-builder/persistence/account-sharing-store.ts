@@ -1,4 +1,7 @@
-import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
+import type {
+  EffectPgDatabase,
+  TransactionDatabase,
+} from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import {
@@ -342,8 +345,10 @@ const upsertAccountAccessInviteWithDatabase = (database: EffectPgDatabase) =>
     const accountIdNumber = margonemAccountIdToNumber(accountId);
     const invitedUser = appUserIdToString(invitedUserId);
     const owner = appUserIdToString(ownerUserId);
-    const transaction = database.transaction((tx) =>
-      Effect.gen(function* upsertAccountAccessInviteTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* upsertAccountAccessInviteTransaction(
+        tx: TransactionDatabase
+      ) {
         const existingSelect = tx
           .select({
             id: margonemAccountAccess.id,
@@ -626,8 +631,10 @@ const respondToAccountAccessInviteWithDatabase = (database: EffectPgDatabase) =>
   }: RespondToAccountAccessInviteStoreInput) {
     const operation = "respondToAccountAccessInvite" as const;
     const invitedUser = appUserIdToString(invitedUserId);
-    const transaction = database.transaction((tx) =>
-      Effect.gen(function* respondToAccountAccessInviteTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* respondToAccountAccessInviteTransaction(
+        tx: TransactionDatabase
+      ) {
         const existingSelect = tx
           .select({
             id: margonemAccountAccess.id,
@@ -703,8 +710,10 @@ const revokeAccountAccessWithDatabase = (database: EffectPgDatabase) =>
     const operation = "revokeAccountAccess" as const;
     const accessIdNumber = margonemAccountAccessIdToNumber(accessId);
     const owner = appUserIdToString(ownerUserId);
-    const transaction = database.transaction((tx) =>
-      Effect.gen(function* revokeAccountAccessTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* revokeAccountAccessTransaction(
+        tx: TransactionDatabase
+      ) {
         const accessSelect = tx
           .select({
             accountId: margonemAccountAccess.accountId,

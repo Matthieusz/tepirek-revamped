@@ -6,6 +6,7 @@ import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Calculator, Unlink } from "lucide-react";
 
+import { EffectForm } from "@/components/forms/effect-form";
 import {
   EffectFieldFrame,
   EffectNumberField,
@@ -173,7 +174,12 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
               </p>
             </div>
             <div className="p-6">
-              <form action={() => submit()} className="grid gap-4">
+              {/* Calculator input is disposable and intentionally has no draft blocker. */}
+              <EffectForm
+                action={() => submit()}
+                className="grid gap-4"
+                submitResult={submitResult}
+              >
                 <odwForm.itemLevel label="Poziom przedmiotu" />
                 <odwForm.itemRarity label="Rzadkość przedmiotu" />
                 <Button
@@ -183,7 +189,7 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
                 >
                   {submitResult.waiting ? "Obliczanie..." : "Oblicz koszt"}
                 </Button>
-              </form>
+              </EffectForm>
             </div>
           </div>
 

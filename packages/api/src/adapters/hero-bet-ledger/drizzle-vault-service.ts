@@ -18,7 +18,10 @@ import type {
 } from "../../services/vault/vault-service.ts";
 import { VaultService } from "../../services/vault/vault-service.ts";
 import { mapPersistenceErrors } from "./persistence-query.ts";
-import type { EffectPgDatabase } from "./persistence-query.ts";
+import type {
+  EffectPgDatabase,
+  TransactionDatabase,
+} from "./persistence-query.ts";
 
 const persistenceQuery = <A, E, R>(
   operation: string,
@@ -88,8 +91,10 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
     const storedPointWorth = pointWorth.toFixed(6);
     yield* persistenceQuery(
       "distributeGold",
-      database.transaction((tx) =>
-        Effect.gen(function* distributeGoldTransaction() {
+      database.transaction(
+        Effect.fnUntraced(function* distributeGoldTransaction(
+          tx: TransactionDatabase
+        ) {
           yield* tx
             .update(userStats)
             .set({

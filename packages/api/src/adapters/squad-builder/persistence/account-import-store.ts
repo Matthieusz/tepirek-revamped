@@ -1,4 +1,7 @@
-import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
+import type {
+  EffectPgDatabase,
+  TransactionDatabase,
+} from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import {
   firecrawlProfileScrapeRequest,
@@ -117,8 +120,10 @@ const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
   }: ReserveFirecrawlRequestInput) {
     const operation = "reserveRequest" as const;
     const yearMonthText = firecrawlYearMonthToString(yearMonth);
-    const transaction = database.transaction((tx) => {
-      const transactionEffect = Effect.gen(function* reserveInTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* reserveInTransaction(
+        tx: TransactionDatabase
+      ) {
         yield* tx.execute(
           sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
         );
@@ -177,10 +182,8 @@ const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
           },
           requestId: reserved.id,
         };
-      });
-
-      return transactionEffect;
-    });
+      })
+    );
 
     return yield* persistenceQuery(operation, transaction);
   });
@@ -245,8 +248,10 @@ const createPendingImportWithDatabase = (database: EffectPgDatabase) =>
     suggestedAccountName,
   }: CreatePendingMargonemAccountImportInput) {
     const operation = "createPendingImport" as const;
-    const transaction = database.transaction((tx) =>
-      Effect.gen(function* createPendingImportTransaction() {
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* createPendingImportTransaction(
+        tx: TransactionDatabase
+      ) {
         const insert = tx
           .insert(margonemAccountImportPreview)
           .values({
@@ -407,87 +412,95 @@ const createOwnedAccountFromPendingImportWithDatabase = (
     pending,
   }: CreateOwnedAccountFromPendingImportInput) {
     const operation = "createOwnedAccountFromPendingImport" as const;
-    const transaction = database.transaction((tx) =>
-      Effect.gen(function* createOwnedAccountFromPendingImportTransaction() {
-        const existingSelect = tx
-          .select({ ownerUserId: margonemAccount.ownerUserId })
-          .from(margonemAccount)
-          .where(
-            eq(margonemAccount.profileId, profileIdToNumber(pending.profileId))
-          )
-          .limit(1);
-        const existingRows = yield* existingSelect;
-
-        const [existing] = existingRows;
-
-        if (existing !== undefined) {
-          return yield* existing.ownerUserId === appUserIdToString(actorUserId)
-            ? new MargonemAccountAlreadyOwnedByActor()
-            : new MargonemAccountOwnedByAnotherUser();
-        }
-
-        const insert = tx
-          .insert(margonemAccount)
-          .values({
-            displayName: accountDisplayNameToString(displayName),
-            lastFetchedAt: pending.fetchedAt,
-            ownerUserId: appUserIdToString(actorUserId),
-            profileId: profileIdToNumber(pending.profileId),
-          })
-          .returning({
-            createdAt: margonemAccount.createdAt,
-            id: margonemAccount.id,
-          });
-        const accountRows = yield* insert;
-
-        const [account] = accountRows;
-
-        if (account === undefined) {
-          return yield* failPersistence(
-            operation,
-            new Error("Failed to insert owned account")
-          );
-        }
-
-        if (pending.jarunaCharacters.length > 0) {
-          const characterInsert = tx.insert(margonemCharacter).values(
-            pending.jarunaCharacters.map((character) => ({
-              accountId: account.id,
-              avatarUrl: character.avatarUrl,
-              characterId: characterIdToNumber(character.characterId),
-              level: levelToNumber(character.level),
-              name: character.name,
-              profession: character.profession,
-              world: character.world,
-            }))
-          );
-          yield* characterInsert;
-        }
-
-        const update = tx
-          .update(margonemAccountImportPreview)
-          .set({ confirmedAt })
-          .where(
-            eq(
-              margonemAccountImportPreview.id,
-              pendingImportIdToNumber(pending.id)
+    const transaction = database.transaction(
+      Effect.fnUntraced(
+        function* createOwnedAccountFromPendingImportTransaction(
+          tx: TransactionDatabase
+        ) {
+          const existingSelect = tx
+            .select({ ownerUserId: margonemAccount.ownerUserId })
+            .from(margonemAccount)
+            .where(
+              eq(
+                margonemAccount.profileId,
+                profileIdToNumber(pending.profileId)
+              )
             )
+            .limit(1);
+          const existingRows = yield* existingSelect;
+
+          const [existing] = existingRows;
+
+          if (existing !== undefined) {
+            return yield* existing.ownerUserId ===
+            appUserIdToString(actorUserId)
+              ? new MargonemAccountAlreadyOwnedByActor()
+              : new MargonemAccountOwnedByAnotherUser();
+          }
+
+          const insert = tx
+            .insert(margonemAccount)
+            .values({
+              displayName: accountDisplayNameToString(displayName),
+              lastFetchedAt: pending.fetchedAt,
+              ownerUserId: appUserIdToString(actorUserId),
+              profileId: profileIdToNumber(pending.profileId),
+            })
+            .returning({
+              createdAt: margonemAccount.createdAt,
+              id: margonemAccount.id,
+            });
+          const accountRows = yield* insert;
+
+          const [account] = accountRows;
+
+          if (account === undefined) {
+            return yield* failPersistence(
+              operation,
+              new Error("Failed to insert owned account")
+            );
+          }
+
+          if (pending.jarunaCharacters.length > 0) {
+            const characterInsert = tx.insert(margonemCharacter).values(
+              pending.jarunaCharacters.map((character) => ({
+                accountId: account.id,
+                avatarUrl: character.avatarUrl,
+                characterId: characterIdToNumber(character.characterId),
+                level: levelToNumber(character.level),
+                name: character.name,
+                profession: character.profession,
+                world: character.world,
+              }))
+            );
+            yield* characterInsert;
+          }
+
+          const update = tx
+            .update(margonemAccountImportPreview)
+            .set({ confirmedAt })
+            .where(
+              eq(
+                margonemAccountImportPreview.id,
+                pendingImportIdToNumber(pending.id)
+              )
+            );
+          yield* update;
+
+          const accountId = yield* parseMargonemAccountId(account.id).pipe(
+            Effect.catch((error) => failPersistence(operation, error))
           );
-        yield* update;
 
-        const accountId = yield* parseMargonemAccountId(account.id).pipe(
-          Effect.catch((error) => failPersistence(operation, error))
-        );
-
-        return {
-          accountId,
-          characterCount: pending.jarunaCharacters.length,
-          displayName,
-          generatedProfileUrl: toMargonemProfileUrl(pending.profileId),
-          lastFetchedAt: pending.fetchedAt,
-          profileId: pending.profileId,
-        };
-      })
+          return {
+            accountId,
+            characterCount: pending.jarunaCharacters.length,
+            displayName,
+            generatedProfileUrl: toMargonemProfileUrl(pending.profileId),
+            lastFetchedAt: pending.fetchedAt,
+            profileId: pending.profileId,
+          };
+        }
+      )
     );
 
     return yield* persistenceQuery(operation, transaction);

@@ -30,6 +30,11 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import {
   EffectFieldFrame,
   EffectTextField,
   getFieldErrorId,
@@ -321,6 +326,8 @@ const PreviewRow = ({
   const submit = useAtomSet(confirmationForm.submit);
   const reset = useAtomSet(confirmationForm.reset);
   const submitResult = useAtomValue(confirmationForm.submit);
+  const isDirty = useAtomValue(confirmationForm.isDirty);
+  useEffectFormProtection(isDirty);
 
   useEffect(() => {
     if (item.status === "success" && AsyncResult.isSuccess(submitResult)) {
@@ -388,14 +395,16 @@ const PreviewRow = ({
       <confirmationForm.Initialize
         defaultValues={{ displayName: item.defaultDisplayName }}
       >
-        <form
-          className="flex flex-wrap items-end gap-2 pl-7"
+        <EffectFormFeedback result={submitResult} />
+        <EffectForm
           action={() =>
             submit({
               confirmOwnedAccountImport: (payload) => onConfirm(item, payload),
               pendingImportId: item.pendingImportId,
             })
           }
+          className="flex flex-wrap items-end gap-2 pl-7"
+          submitResult={submitResult}
         >
           <confirmationForm.displayName
             className="min-w-40 flex-1"
@@ -417,7 +426,7 @@ const PreviewRow = ({
             )}
             Zapisz konto
           </Button>
-        </form>
+        </EffectForm>
       </confirmationForm.Initialize>
     </li>
   );
@@ -437,6 +446,7 @@ interface ImportPanelProps {
     item: Extract<PreviewItem, { status: "success" }>
   ) => void;
   readonly onSubmitPreview: () => void;
+  readonly submitResult: AsyncResult.AsyncResult<unknown, unknown>;
 }
 
 const ImportPanel = ({
@@ -448,6 +458,7 @@ const ImportPanel = ({
   onConfirm,
   onConfirmed,
   onSubmitPreview,
+  submitResult,
 }: ImportPanelProps) => (
   <section className="overflow-hidden rounded-xl border border-border bg-card">
     <div className="border-b border-border px-5 py-3">
@@ -460,11 +471,13 @@ const ImportPanel = ({
       </p>
     </div>
 
-    <form
+    <EffectForm
       action={onSubmitPreview}
       className="space-y-4 border-b border-border px-5 py-4"
+      submitResult={submitResult}
     >
       <accountPreviewForm.profileUrls disabled={isPreviewPending} />
+      <EffectFormFeedback result={submitResult} />
 
       <div className="flex items-center gap-2">
         <Button disabled={isPreviewPending} type="submit">
@@ -487,7 +500,7 @@ const ImportPanel = ({
           </Button>
         )}
       </div>
-    </form>
+    </EffectForm>
 
     {isPreviewPending && previewItems.length === 0 && <PreviewSkeleton />}
 
@@ -1386,6 +1399,8 @@ export default function SquadBuilderAccountsPage() {
   const submitPreview = useAtomSet(accountPreviewForm.submit);
   const resetPreview = useAtomSet(accountPreviewForm.reset);
   const previewSubmitResult = useAtomValue(accountPreviewForm.submit);
+  const previewIsDirty = useAtomValue(accountPreviewForm.isDirty);
+  useEffectFormProtection(previewIsDirty, previewSubmitResult.waiting);
   const isPreviewPending = previewSubmitResult.waiting;
   const isConfirming = confirmingId !== null;
 
@@ -1469,6 +1484,7 @@ export default function SquadBuilderAccountsPage() {
               onConfirm={handleConfirm}
               onConfirmed={handleConfirmed}
               onSubmitPreview={() => submitPreview(() => previewImports)}
+              submitResult={previewSubmitResult}
             />
           </accountPreviewForm.Initialize>
           {AsyncResult.isFailure(ownedAccountsResult) ? (

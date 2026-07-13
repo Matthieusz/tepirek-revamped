@@ -80,9 +80,7 @@ export const authFormSubmission = <Response extends AuthResponse>(
           status: response.error.status ?? 0,
         })
       );
-    }),
-    // oxlint-disable-next-line promise/prefer-await-to-callbacks -- Effect.tapError requires a callback.
-    Effect.tapError((error) => Effect.sync(() => toast.error(error.message)))
+    })
   );
 
 /** Preserves the login success order: feedback, invalidate, then navigate. */
