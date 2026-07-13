@@ -33,8 +33,11 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
   "user",
   (handlers) =>
     handlers
-      .handle("deleteUser", ({ payload }) =>
-        Effect.gen(function* UserHttpApiHandlers() {
+      .handle(
+        "deleteUser",
+        Effect.fn("UserHttpApiHandlers.deleteUser")(function* deleteUser({
+          payload,
+        }) {
           yield* requireAdminSession();
           const store = yield* UserStore;
           return yield* store
@@ -43,8 +46,9 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
         })
       )
       .handle("getSession", () => requireSession())
-      .handle("getVerified", () =>
-        Effect.gen(function* UserHttpApiHandlers() {
+      .handle(
+        "getVerified",
+        Effect.fn("UserHttpApiHandlers.getVerified")(function* getVerified() {
           yield* requireVerifiedSession();
           const store = yield* UserStore;
           return yield* store
@@ -52,8 +56,9 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
         })
       )
-      .handle("list", () =>
-        Effect.gen(function* UserHttpApiHandlers() {
+      .handle(
+        "list",
+        Effect.fn("UserHttpApiHandlers.list")(function* list() {
           yield* requireVerifiedSession();
           const store = yield* UserStore;
           return yield* store
@@ -61,8 +66,11 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
         })
       )
-      .handle("setRole", ({ payload }) =>
-        Effect.gen(function* UserHttpApiHandlers() {
+      .handle(
+        "setRole",
+        Effect.fn("UserHttpApiHandlers.setRole")(function* setRole({
+          payload,
+        }) {
           const session = yield* requireAdminSession();
           const store = yield* UserStore;
           const updatedAt = new Date(yield* Clock.currentTimeMillis);
@@ -76,8 +84,11 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
         })
       )
-      .handle("setVerified", ({ payload }) =>
-        Effect.gen(function* UserHttpApiHandlers() {
+      .handle(
+        "setVerified",
+        Effect.fn("UserHttpApiHandlers.setVerified")(function* setVerified({
+          payload,
+        }) {
           const session = yield* requireAdminSession();
           const store = yield* UserStore;
           const updatedAt = new Date(yield* Clock.currentTimeMillis);
@@ -91,8 +102,11 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
         })
       )
-      .handle("updateProfile", ({ payload }) =>
-        Effect.gen(function* UserHttpApiHandlers() {
+      .handle(
+        "updateProfile",
+        Effect.fn("UserHttpApiHandlers.updateProfile")(function* updateProfile({
+          payload,
+        }) {
           const session = yield* requireVerifiedSession();
           const store = yield* UserStore;
           const updatedAt = new Date(yield* Clock.currentTimeMillis);
@@ -105,40 +119,46 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
         })
       )
-      .handle("updateUserName", ({ payload }) =>
-        Effect.gen(function* UserHttpApiHandlers() {
-          yield* requireAdminSession();
-          const store = yield* UserStore;
-          const updatedAt = new Date(yield* Clock.currentTimeMillis);
-          return yield* store
-            .updateProfile({
-              name: payload.name,
-              updatedAt,
-              userId: payload.userId,
-            })
-            .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
-        })
-      )
-      .handle("verifyDiscordGuildMembership", () =>
-        Effect.gen(function* UserHttpApiHandlers() {
-          const session = yield* requireSession();
-          const store = yield* UserStore;
-          const verifier = yield* DiscordGuildVerifier;
-          const accessToken = yield* store
-            .getDiscordAccessToken(session.user.id)
-            .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
-          const valid = yield* verifier
-            .verifyMembership(accessToken)
-            .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
-
-          if (valid) {
+      .handle(
+        "updateUserName",
+        Effect.fn("UserHttpApiHandlers.updateUserName")(
+          function* updateUserName({ payload }) {
+            yield* requireAdminSession();
+            const store = yield* UserStore;
             const updatedAt = new Date(yield* Clock.currentTimeMillis);
-            yield* store
-              .markUserVerified({ updatedAt, userId: session.user.id })
+            return yield* store
+              .updateProfile({
+                name: payload.name,
+                updatedAt,
+                userId: payload.userId,
+              })
               .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
           }
+        )
+      )
+      .handle(
+        "verifyDiscordGuildMembership",
+        Effect.fn("UserHttpApiHandlers.verifyDiscordGuildMembership")(
+          function* verifyDiscordGuildMembership() {
+            const session = yield* requireSession();
+            const store = yield* UserStore;
+            const verifier = yield* DiscordGuildVerifier;
+            const accessToken = yield* store
+              .getDiscordAccessToken(session.user.id)
+              .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
+            const valid = yield* verifier
+              .verifyMembership(accessToken)
+              .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
 
-          return { valid };
-        })
+            if (valid) {
+              const updatedAt = new Date(yield* Clock.currentTimeMillis);
+              yield* store
+                .markUserVerified({ updatedAt, userId: session.user.id })
+                .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
+            }
+
+            return { valid };
+          }
+        )
       )
 );

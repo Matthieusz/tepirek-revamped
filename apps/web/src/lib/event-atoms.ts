@@ -37,37 +37,39 @@ export const eventsAtom = appHttpApiAtom(
 
 /** Mutation atom for creating an event. */
 export const createEventAtom = appHttpApiFn(
-  (
+  Effect.fnUntraced(function* createEventEffect(
     payload: {
       readonly color?: string;
       readonly endTime: Date;
       readonly icon?: EventIconId;
       readonly name: string;
     },
-    get
-  ) =>
-    Effect.gen(function* createEventEffect() {
-      const client = yield* AppHttpApiClient;
-      const event = yield* client.event.createEvent({ payload });
-      get.refresh(eventsAtom);
-      return event;
-    })
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const event = yield* client.event.createEvent({ payload });
+    get.refresh(eventsAtom);
+    return event;
+  })
 );
 
 const deleteEventRequestAtom = appHttpApiFn(
-  (payload: { readonly id: number }) =>
-    Effect.gen(function* deleteEventEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.event.deleteEvent({ payload });
-    })
+  Effect.fnUntraced(function* deleteEventEffect(input: {
+    readonly id: number;
+  }) {
+    const client = yield* AppHttpApiClient;
+    return yield* client.event.deleteEvent({ payload: input });
+  })
 );
 
 const toggleEventActiveRequestAtom = appHttpApiFn(
-  (payload: { readonly active: boolean; readonly id: number }) =>
-    Effect.gen(function* toggleEventActiveEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.event.toggleEventActive({ payload });
-    })
+  Effect.fnUntraced(function* toggleEventActiveEffect(input: {
+    readonly active: boolean;
+    readonly id: number;
+  }) {
+    const client = yield* AppHttpApiClient;
+    return yield* client.event.toggleEventActive({ payload: input });
+  })
 );
 
 /** Optimistic event resource that preserves loading and failure states. */

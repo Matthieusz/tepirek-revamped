@@ -163,66 +163,72 @@ const refreshVisibleAccountSharingAtoms = (
 
 /** Mutation atom for searching account invite targets. */
 export const searchAccountInviteTargetsAtom = appHttpApiFn(
-  (payload: SearchAccountInviteTargetsInput) =>
-    Effect.gen(function* searchAccountInviteTargetsEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.squadBuilderAccountSharing.searchAccountInviteTargets(
-        {
-          payload: {
-            accountId: asMargonemAccountId(payload.accountId),
-            query: payload.query,
-          },
-        }
-      );
-    })
+  Effect.fnUntraced(function* searchAccountInviteTargetsEffect(
+    payload: SearchAccountInviteTargetsInput
+  ) {
+    const client = yield* AppHttpApiClient;
+    return yield* client.squadBuilderAccountSharing.searchAccountInviteTargets({
+      payload: {
+        accountId: asMargonemAccountId(payload.accountId),
+        query: payload.query,
+      },
+    });
+  })
 );
 
 /** Mutation atom for sending account access invite. */
 export const sendAccountAccessInviteAtom = appHttpApiFn(
-  (payload: SendAccountAccessInviteInput, get) =>
-    Effect.gen(function* sendAccountAccessInviteEffect() {
-      const client = yield* AppHttpApiClient;
-      const result =
-        yield* client.squadBuilderAccountSharing.sendAccountAccessInvite({
-          payload: {
-            accountId: asMargonemAccountId(payload.accountId),
-            invitedUserId: asAppUserId(payload.invitedUserId),
-          },
-        });
-      refreshVisibleAccountSharingAtoms(get, payload);
-      return result;
-    })
+  Effect.fnUntraced(function* sendAccountAccessInviteEffect(
+    payload: SendAccountAccessInviteInput,
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const result =
+      yield* client.squadBuilderAccountSharing.sendAccountAccessInvite({
+        payload: {
+          accountId: asMargonemAccountId(payload.accountId),
+          invitedUserId: asAppUserId(payload.invitedUserId),
+        },
+      });
+    refreshVisibleAccountSharingAtoms(get, payload);
+    return result;
+  })
 );
 
 /** Mutation atom for responding to account access invite. */
 export const respondToAccountAccessInviteAtom = appHttpApiFn(
-  (payload: RespondToAccountAccessInviteInput, get) =>
-    Effect.gen(function* respondToAccountAccessInviteEffect() {
-      const client = yield* AppHttpApiClient;
-      const result =
-        yield* client.squadBuilderAccountSharing.respondToAccountAccessInvite({
-          payload: {
-            accessId: asMargonemAccountAccessId(payload.accessId),
-            response: payload.response,
-          },
-        });
-      refreshVisibleAccountSharingAtoms(get);
-      return result;
-    })
+  Effect.fnUntraced(function* respondToAccountAccessInviteEffect(
+    payload: RespondToAccountAccessInviteInput,
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const result =
+      yield* client.squadBuilderAccountSharing.respondToAccountAccessInvite({
+        payload: {
+          accessId: asMargonemAccountAccessId(payload.accessId),
+          response: payload.response,
+        },
+      });
+    refreshVisibleAccountSharingAtoms(get);
+    return result;
+  })
 );
 
 /** Mutation atom for revoking account access. */
 export const revokeAccountAccessAtom = appHttpApiFn(
-  (payload: RevokeAccountAccessInput, get) =>
-    Effect.gen(function* revokeAccountAccessEffect() {
-      const client = yield* AppHttpApiClient;
-      const result =
-        yield* client.squadBuilderAccountSharing.revokeAccountAccess({
-          payload: {
-            accessId: asMargonemAccountAccessId(payload.accessId),
-          },
-        });
-      refreshVisibleAccountSharingAtoms(get, payload);
-      return result;
-    })
+  Effect.fnUntraced(function* revokeAccountAccessEffect(
+    payload: RevokeAccountAccessInput,
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const result = yield* client.squadBuilderAccountSharing.revokeAccountAccess(
+      {
+        payload: {
+          accessId: asMargonemAccountAccessId(payload.accessId),
+        },
+      }
+    );
+    refreshVisibleAccountSharingAtoms(get, payload);
+    return result;
+  })
 );

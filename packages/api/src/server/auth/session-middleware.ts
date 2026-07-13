@@ -49,16 +49,20 @@ export const SessionMiddlewareLayer = Layer.effect(
   SessionMiddleware,
   Effect.gen(function* makeSessionMiddleware() {
     const auth = yield* BetterAuthAdapter;
-    return SessionMiddleware.of((effect) =>
-      Effect.gen(function* loadRequestSession() {
-        const request = yield* HttpServerRequest.HttpServerRequest;
-        const currentSession = yield* loadCurrentSession(
-          headersFromRequest(request)
-        ).pipe(Effect.provideService(BetterAuthAdapter, auth));
-        return yield* effect.pipe(
-          Effect.provideService(CurrentSession, currentSession)
-        );
-      })
-    );
+    const loadRequestSession = Effect.fnUntraced(function* loadRequestSession<
+      A,
+      E,
+      R,
+    >(effect: Effect.Effect<A, E, R>) {
+      const request = yield* HttpServerRequest.HttpServerRequest;
+      const currentSession = yield* loadCurrentSession(
+        headersFromRequest(request)
+      ).pipe(Effect.provideService(BetterAuthAdapter, auth));
+      return yield* effect.pipe(
+        Effect.provideService(CurrentSession, currentSession)
+      );
+    });
+
+    return SessionMiddleware.of(loadRequestSession);
   })
 );

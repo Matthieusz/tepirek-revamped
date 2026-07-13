@@ -29,10 +29,10 @@ export type ParseMargonemProfileUrlError =
 const profilePathPattern = /^\/profile\/view,(?<profileId>\d+)$/u;
 
 /** Parse a Margonem profile URL and return the canonical numeric profile id. */
-export const parseMargonemProfileUrl = (
-  input: string
-): Effect.Effect<MargonemProfileId, ParseMargonemProfileUrlError> =>
-  Effect.gen(function* parseMargonemProfileUrlGen() {
+export const parseMargonemProfileUrl = Effect.fnUntraced(
+  function* parseMargonemProfileUrl(
+    input: string
+  ): Effect.fn.Return<MargonemProfileId, ParseMargonemProfileUrlError> {
     const url = yield* Effect.try({
       catch: () =>
         new InvalidMargonemProfileUrl({
@@ -67,7 +67,8 @@ export const parseMargonemProfileUrl = (
           })
       )
     );
-  });
+  }
+);
 
 /** Build the canonical Margonem profile URL used for Firecrawl and outbound links. */
 export const toMargonemProfileUrl = (profileId: MargonemProfileId): string =>

@@ -71,44 +71,45 @@ export const createProfessionWithDatabase =
       database.insert(professions).values({ name })
     );
 
-export const createRangeWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({ image, level, name }: CreateRangeInput) =>
-    Effect.gen(function* createRangeWithDatabase() {
-      const slug = slugifySkillRangeName(name);
-      if (slug === "") {
-        return yield* new SkillsBadRequest({
-          message: "Nazwa przedziału musi zawierać litery lub cyfry",
-        });
-      }
-      const existing = yield* persistenceQuery(
-        "findRangeBySlug",
-        database
-          .select({ id: range.id })
-          .from(range)
-          .where(eq(range.slug, slug))
-          .limit(1)
-      );
-      if (existing[0]) {
-        return yield* new SkillsConflict({
-          message: "Przedział o tej nazwie już istnieje",
-        });
-      }
-      yield* persistenceQuery(
-        "createRange",
-        database.insert(range).values({ image, level, name, slug })
-      );
-    });
+export const createRangeWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* createRangeWithDatabase({
+    image,
+    level,
+    name,
+  }: CreateRangeInput) {
+    const slug = slugifySkillRangeName(name);
+    if (slug === "") {
+      return yield* new SkillsBadRequest({
+        message: "Nazwa przedziału musi zawierać litery lub cyfry",
+      });
+    }
+    const existing = yield* persistenceQuery(
+      "findRangeBySlug",
+      database
+        .select({ id: range.id })
+        .from(range)
+        .where(eq(range.slug, slug))
+        .limit(1)
+    );
+    if (existing[0]) {
+      return yield* new SkillsConflict({
+        message: "Przedział o tej nazwie już istnieje",
+      });
+    }
+    yield* persistenceQuery(
+      "createRange",
+      database.insert(range).values({ image, level, name, slug })
+    );
+  });
 
-const createSkillWithDatabase =
-  (database: EffectPgDatabase) => (input: CreateSkillInput) =>
-    Effect.gen(function* createSkillWithDatabase() {
-      yield* assertHttpUrl(input.link);
-      yield* persistenceQuery(
-        "createSkill",
-        database.insert(skills).values(input)
-      );
-    });
+const createSkillWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* createSkillWithDatabase(input: CreateSkillInput) {
+    yield* assertHttpUrl(input.link);
+    yield* persistenceQuery(
+      "createSkill",
+      database.insert(skills).values(input)
+    );
+  });
 
 const deleteRangeWithDatabase =
   (database: EffectPgDatabase) =>
@@ -128,16 +129,16 @@ const listProfessionsWithDatabase = (database: EffectPgDatabase) => () =>
   persistenceQuery("listProfessions", database.select().from(professions));
 const listRangesWithDatabase = (database: EffectPgDatabase) => () =>
   persistenceQuery("listRanges", database.select().from(range));
-const getRangeBySlugWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({ slug }: GetRangeBySlugInput) =>
-    Effect.gen(function* getRangeBySlugWithDatabase() {
-      const rows = yield* persistenceQuery(
-        "getRangeBySlug",
-        database.select().from(range).where(eq(range.slug, slug)).limit(1)
-      );
-      return rows[0] ?? null;
-    });
+const getRangeBySlugWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* getRangeBySlugWithDatabase({
+    slug,
+  }: GetRangeBySlugInput) {
+    const rows = yield* persistenceQuery(
+      "getRangeBySlug",
+      database.select().from(range).where(eq(range.slug, slug)).limit(1)
+    );
+    return rows[0] ?? null;
+  });
 const listSkillsByRangeWithDatabase =
   (database: EffectPgDatabase) =>
   ({ rangeId }: GetSkillsByRangeInput) =>

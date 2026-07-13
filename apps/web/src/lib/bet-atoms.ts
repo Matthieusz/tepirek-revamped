@@ -84,25 +84,24 @@ export const latestBetForCopyAtom = appHttpApiAtom(
 
 /** Mutation atom for creating a bet. */
 export const createBetAtom = appHttpApiFn(
-  (
+  Effect.fnUntraced(function* createBetEffect(
     payload: {
       readonly heroId: number;
       readonly userIds: readonly [string, ...string[]];
     },
-    get
-  ) =>
-    Effect.gen(function* createBetEffect() {
-      const client = yield* AppHttpApiClient;
-      const bet = yield* client.bet.create({ payload });
-      get.refresh(latestBetForCopyAtom);
-      return bet;
-    })
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const bet = yield* client.bet.create({ payload });
+    get.refresh(latestBetForCopyAtom);
+    return bet;
+  })
 );
 
-const deleteBetRequestAtom = appHttpApiFn((payload: { readonly id: number }) =>
-  Effect.gen(function* deleteBetEffect() {
+const deleteBetRequestAtom = appHttpApiFn(
+  Effect.fnUntraced(function* deleteBetEffect(input: { readonly id: number }) {
     const client = yield* AppHttpApiClient;
-    return yield* client.bet.delete({ payload });
+    return yield* client.bet.delete({ payload: input });
   })
 );
 
@@ -130,23 +129,22 @@ export const deleteBetFromPageAtom = (input: PaginatedBetInput) =>
 
 /** Mutation atom for editing a bet's members. */
 export const editBetAtom = appHttpApiFn(
-  (
+  Effect.fnUntraced(function* editBetEffect(
     payload: {
       readonly betId: number;
       readonly newUserIds: readonly [string, ...string[]];
       readonly refreshInput: PaginatedBetInput;
     },
-    get
-  ) =>
-    Effect.gen(function* editBetEffect() {
-      const client = yield* AppHttpApiClient;
-      const result = yield* client.bet.edit({
-        payload: {
-          betId: payload.betId,
-          newUserIds: payload.newUserIds,
-        },
-      });
-      get.refresh(paginatedBetsAtom(payload.refreshInput));
-      return result;
-    })
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const result = yield* client.bet.edit({
+      payload: {
+        betId: payload.betId,
+        newUserIds: payload.newUserIds,
+      },
+    });
+    get.refresh(paginatedBetsAtom(payload.refreshInput));
+    return result;
+  })
 );

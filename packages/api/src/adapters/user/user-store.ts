@@ -75,46 +75,46 @@ export interface UpdateUserNameInput {
   readonly userId: string;
 }
 
-const loadTargetUser = (
+const loadTargetUser = Effect.fnUntraced(function* loadTargetUser(
   database: Pick<UserQueryExecutor, "select">,
   userId: string
-) =>
-  Effect.gen(function* loadTargetUserEffect() {
-    const rows = yield* userPersistenceQuery(
-      "loadTargetUser",
-      database.select().from(user).where(eq(user.id, userId))
-    );
-    const [targetUser] = rows;
+) {
+  const rows = yield* userPersistenceQuery(
+    "loadTargetUser",
+    database.select().from(user).where(eq(user.id, userId))
+  );
+  const [targetUser] = rows;
 
-    if (targetUser === undefined) {
-      return yield* new UserNotFound({ message: "Użytkownik nie istnieje" });
-    }
-
-    return targetUser;
-  });
-
-const countVerifiedAdmins = (database: Pick<UserQueryExecutor, "select">) =>
-  Effect.gen(function* countVerifiedAdminsEffect() {
-    const rows = yield* userPersistenceQuery(
-      "countVerifiedAdmins",
-      database
-        .select({ count: sql<number>`count(*)` })
-        .from(user)
-        .where(and(eq(user.role, "admin"), eq(user.verified, true)))
-    );
-
-    return Number(rows[0]?.count ?? 0);
-  });
-
-const assertAdminMutationAllowed = (
-  database: Pick<UserQueryExecutor, "select">,
-  input: {
-    readonly actorId: string;
-    readonly next: UserMutationState;
-    readonly targetUser: Pick<UserRow, "id" | "role" | "verified">;
+  if (targetUser === undefined) {
+    return yield* new UserNotFound({ message: "Użytkownik nie istnieje" });
   }
-) =>
-  Effect.gen(function* assertAdminMutationAllowedEffect() {
+
+  return targetUser;
+});
+
+const countVerifiedAdmins = Effect.fnUntraced(function* countVerifiedAdmins(
+  database: Pick<UserQueryExecutor, "select">
+) {
+  const rows = yield* userPersistenceQuery(
+    "countVerifiedAdmins",
+    database
+      .select({ count: sql<number>`count(*)` })
+      .from(user)
+      .where(and(eq(user.role, "admin"), eq(user.verified, true)))
+  );
+
+  return Number(rows[0]?.count ?? 0);
+});
+
+const assertAdminMutationAllowed = Effect.fnUntraced(
+  function* assertAdminMutationAllowed(
+    database: Pick<UserQueryExecutor, "select">,
+    input: {
+      readonly actorId: string;
+      readonly next: UserMutationState;
+      readonly targetUser: Pick<UserRow, "id" | "role" | "verified">;
+    }
+  ) {
     const { actorId, next, targetUser } = input;
     const nextRole = next.role ?? targetUser.role;
     const nextVerified = next.verified ?? targetUser.verified;
@@ -135,41 +135,41 @@ const assertAdminMutationAllowed = (
     if (verifiedAdminCount <= 1) {
       return yield* new UserForbidden({ message: LAST_ADMIN_MESSAGE });
     }
-  });
+  }
+);
 
-const updateAndReturnUser = (
+const updateAndReturnUser = Effect.fnUntraced(function* updateAndReturnUser(
   database: UserQueryExecutor,
   operation: string,
   where: SQL,
   updatedAt: Date,
   values: Partial<typeof user.$inferInsert>
-) =>
-  Effect.gen(function* updateAndReturnUserEffect() {
-    yield* userPersistenceQuery(
-      operation,
-      database
-        .update(user)
-        .set({ updatedAt, ...values })
-        .where(where)
-    );
-    const rows = yield* userPersistenceQuery(
-      operation,
-      database.select(playerListSelect).from(user).where(where)
-    );
+) {
+  yield* userPersistenceQuery(
+    operation,
+    database
+      .update(user)
+      .set({ updatedAt, ...values })
+      .where(where)
+  );
+  const rows = yield* userPersistenceQuery(
+    operation,
+    database.select(playerListSelect).from(user).where(where)
+  );
 
-    return rows[0] ?? null;
-  });
+  return rows[0] ?? null;
+});
 
-const mutateAdminAvailabilityUser = (
-  database: EffectPgDatabase,
-  input: {
-    readonly actorId: string;
-    readonly next: UserMutationState;
-    readonly updatedAt: Date;
-    readonly userId: string;
-  }
-) =>
-  Effect.gen(function* mutateAdminAvailabilityUserEffect() {
+const mutateAdminAvailabilityUser = Effect.fnUntraced(
+  function* mutateAdminAvailabilityUser(
+    database: EffectPgDatabase,
+    input: {
+      readonly actorId: string;
+      readonly next: UserMutationState;
+      readonly updatedAt: Date;
+      readonly userId: string;
+    }
+  ) {
     const transaction = database.transaction((tx) =>
       Effect.gen(function* mutateAdminAvailabilityUserTransaction() {
         yield* tx.execute(
@@ -196,32 +196,26 @@ const mutateAdminAvailabilityUser = (
       "mutateAdminAvailabilityUser",
       transaction
     );
+  }
+);
+
+const deleteUserWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* deleteUser(userId: string) {
+    const targetUser = yield* loadTargetUser(database, userId);
+
+    if (targetUser.verified) {
+      return yield* new UserBadRequest({
+        message: "Nie można usunąć zweryfikowanego użytkownika",
+      });
+    }
+
+    yield* userPersistenceQuery(
+      "deleteUser",
+      database.delete(user).where(eq(user.id, userId))
+    );
+
+    return { success: true as const };
   });
-
-const deleteUserWithDatabase =
-  (database: EffectPgDatabase) =>
-  (
-    userId: string
-  ): Effect.Effect<
-    { readonly success: true },
-    UserBadRequest | UserNotFound | UserAdapterError
-  > =>
-    Effect.gen(function* deleteUserEffect() {
-      const targetUser = yield* loadTargetUser(database, userId);
-
-      if (targetUser.verified) {
-        return yield* new UserBadRequest({
-          message: "Nie można usunąć zweryfikowanego użytkownika",
-        });
-      }
-
-      yield* userPersistenceQuery(
-        "deleteUser",
-        database.delete(user).where(eq(user.id, userId))
-      );
-
-      return { success: true as const };
-    });
 
 const getVerifiedWithDatabase = (database: EffectPgDatabase) => () =>
   userPersistenceQuery(
@@ -269,29 +263,27 @@ const updateProfileWithDatabase =
       { name }
     );
 
-const getDiscordAccessTokenWithDatabase =
-  (database: EffectPgDatabase) =>
-  (userId: string): Effect.Effect<string, UserBadRequest | UserAdapterError> =>
-    Effect.gen(function* getDiscordAccessTokenEffect() {
-      const rows = yield* userPersistenceQuery(
-        "getDiscordAccessToken",
-        database
-          .select({ accessToken: account.accessToken })
-          .from(account)
-          .where(
-            and(eq(account.userId, userId), eq(account.providerId, "discord"))
-          )
-      );
-      const accessToken = rows[0]?.accessToken;
+const getDiscordAccessTokenWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* getDiscordAccessToken(userId: string) {
+    const rows = yield* userPersistenceQuery(
+      "getDiscordAccessToken",
+      database
+        .select({ accessToken: account.accessToken })
+        .from(account)
+        .where(
+          and(eq(account.userId, userId), eq(account.providerId, "discord"))
+        )
+    );
+    const accessToken = rows[0]?.accessToken;
 
-      if (!accessToken) {
-        return yield* new UserBadRequest({
-          message: "Połącz konto Discord, aby zweryfikować członkostwo",
-        });
-      }
+    if (!accessToken) {
+      return yield* new UserBadRequest({
+        message: "Połącz konto Discord, aby zweryfikować członkostwo",
+      });
+    }
 
-      return accessToken;
-    });
+    return accessToken;
+  });
 
 const markUserVerifiedWithDatabase =
   (database: EffectPgDatabase) =>

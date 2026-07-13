@@ -189,81 +189,87 @@ export const refreshVisibleSquadGroupAtoms = (
 };
 
 export const createSquadGroupAtom = appHttpApiFn(
-  (payload: CreateSquadGroupInput, get) =>
-    Effect.gen(function* createSquadGroupEffect() {
-      const client = yield* AppHttpApiClient;
-      const squadGroup = yield* client.squadBuilderSquadGroup.createSquadGroup({
-        payload: {
-          name: payload.name,
-        },
-      });
-      get.refresh(ownedSquadGroupsByActorAtom("default"));
-      return squadGroup;
-    })
+  Effect.fnUntraced(function* createSquadGroupEffect(
+    payload: CreateSquadGroupInput,
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const squadGroup = yield* client.squadBuilderSquadGroup.createSquadGroup({
+      payload: {
+        name: payload.name,
+      },
+    });
+    get.refresh(ownedSquadGroupsByActorAtom("default"));
+    return squadGroup;
+  })
 );
 
 export const saveSquadGroupAtom = appHttpApiFn(
-  (payload: SaveSquadGroupInput, get) =>
-    Effect.gen(function* saveSquadGroupEffect() {
-      const client = yield* AppHttpApiClient;
-      const squadGroup = yield* client.squadBuilderSquadGroup.saveSquadGroup({
-        payload: {
-          groupId: asSquadGroupId(payload.groupId),
-          name: payload.name,
-          squads: payload.squads.map((squad) => ({
-            ...squad,
-            squadId:
-              squad.squadId === undefined
-                ? undefined
-                : asSquadId(squad.squadId),
-          })),
-        },
-      });
-      get.refresh(ownedSquadGroupsByActorAtom("default"));
-      get.refresh(squadGroupDetailByKeyAtom(squadGroupIdKey(payload.groupId)));
-      get.refresh(
-        availableSquadCharactersByKeyAtom(squadGroupIdKey(payload.groupId))
-      );
-      return squadGroup;
-    })
+  Effect.fnUntraced(function* saveSquadGroupEffect(
+    payload: SaveSquadGroupInput,
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const squadGroup = yield* client.squadBuilderSquadGroup.saveSquadGroup({
+      payload: {
+        groupId: asSquadGroupId(payload.groupId),
+        name: payload.name,
+        squads: payload.squads.map((squad) => ({
+          ...squad,
+          squadId:
+            squad.squadId === undefined ? undefined : asSquadId(squad.squadId),
+        })),
+      },
+    });
+    get.refresh(ownedSquadGroupsByActorAtom("default"));
+    get.refresh(squadGroupDetailByKeyAtom(squadGroupIdKey(payload.groupId)));
+    get.refresh(
+      availableSquadCharactersByKeyAtom(squadGroupIdKey(payload.groupId))
+    );
+    return squadGroup;
+  })
 );
 
 export const saveSharedSquadGroupCharactersAtom = appHttpApiFn(
-  (payload: SaveSharedSquadGroupCharactersInput, get) =>
-    Effect.gen(function* saveSharedSquadGroupCharactersEffect() {
-      const client = yield* AppHttpApiClient;
-      const squadGroup =
-        yield* client.squadBuilderSquadGroup.saveSharedSquadGroupCharacters({
-          payload: {
-            groupId: asSquadGroupId(payload.groupId),
-            squads: payload.squads.map((squad) => ({
-              ...squad,
-              squadId: asSquadId(squad.squadId),
-            })),
-          },
-        });
-      get.refresh(ownedSquadGroupsByActorAtom("default"));
-      get.refresh(squadGroupDetailByKeyAtom(squadGroupIdKey(payload.groupId)));
-      get.refresh(
-        availableSquadCharactersByKeyAtom(squadGroupIdKey(payload.groupId))
-      );
-      return squadGroup;
-    })
+  Effect.fnUntraced(function* saveSharedSquadGroupCharactersEffect(
+    payload: SaveSharedSquadGroupCharactersInput,
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const squadGroup =
+      yield* client.squadBuilderSquadGroup.saveSharedSquadGroupCharacters({
+        payload: {
+          groupId: asSquadGroupId(payload.groupId),
+          squads: payload.squads.map((squad) => ({
+            ...squad,
+            squadId: asSquadId(squad.squadId),
+          })),
+        },
+      });
+    get.refresh(ownedSquadGroupsByActorAtom("default"));
+    get.refresh(squadGroupDetailByKeyAtom(squadGroupIdKey(payload.groupId)));
+    get.refresh(
+      availableSquadCharactersByKeyAtom(squadGroupIdKey(payload.groupId))
+    );
+    return squadGroup;
+  })
 );
 
 export const setSquadGroupVisibilityAtom = appHttpApiFn(
-  (payload: SetSquadGroupVisibilityInput, get) =>
-    Effect.gen(function* setSquadGroupVisibilityEffect() {
-      const client = yield* AppHttpApiClient;
-      const visibility =
-        yield* client.squadBuilderSquadGroup.setSquadGroupVisibility({
-          payload: {
-            groupId: asSquadGroupId(payload.groupId),
-            visibility: payload.visibility,
-          },
-        });
-      get.refresh(ownedSquadGroupsByActorAtom("default"));
-      get.refresh(squadGroupDetailByKeyAtom(squadGroupIdKey(payload.groupId)));
-      return visibility;
-    })
+  Effect.fnUntraced(function* setSquadGroupVisibilityEffect(
+    payload: SetSquadGroupVisibilityInput,
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const visibility =
+      yield* client.squadBuilderSquadGroup.setSquadGroupVisibility({
+        payload: {
+          groupId: asSquadGroupId(payload.groupId),
+          visibility: payload.visibility,
+        },
+      });
+    get.refresh(ownedSquadGroupsByActorAtom("default"));
+    get.refresh(squadGroupDetailByKeyAtom(squadGroupIdKey(payload.groupId)));
+    return visibility;
+  })
 );

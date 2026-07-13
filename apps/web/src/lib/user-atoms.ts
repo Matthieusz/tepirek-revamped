@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import type * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
   AppHttpApiClient,
@@ -32,69 +33,83 @@ export const usersAtom = appHttpApiAtom(
 
 /** Mutation atom for updating the current user's profile. */
 export const updateProfileAtom = appHttpApiFn(
-  (payload: { readonly name: string }, get) =>
-    Effect.gen(function* updateProfileEffect() {
-      const client = yield* AppHttpApiClient;
-      const profile = yield* client.user.updateProfile({ payload });
-      get.refresh(sessionAtom);
-      get.refresh(usersAtom);
-      get.refresh(verifiedUsersAtom);
-      return profile;
-    })
+  Effect.fnUntraced(function* updateProfileEffect(
+    payload: { readonly name: string },
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const profile = yield* client.user.updateProfile({ payload });
+    get.refresh(sessionAtom);
+    get.refresh(usersAtom);
+    get.refresh(verifiedUsersAtom);
+    return profile;
+  })
 );
 
 export const setVerifiedAtom = appHttpApiFn(
-  (payload: { readonly userId: string; readonly verified: boolean }, get) =>
-    Effect.gen(function* setVerifiedEffect() {
-      const client = yield* AppHttpApiClient;
-      const user = yield* client.user.setVerified({ payload });
-      get.refresh(usersAtom);
-      get.refresh(verifiedUsersAtom);
-      return user;
-    })
+  Effect.fnUntraced(function* setVerifiedEffect(
+    payload: { readonly userId: string; readonly verified: boolean },
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const user = yield* client.user.setVerified({ payload });
+    get.refresh(usersAtom);
+    get.refresh(verifiedUsersAtom);
+    return user;
+  })
 );
 
 export const setRoleAtom = appHttpApiFn(
-  (
+  Effect.fnUntraced(function* setRoleEffect(
     payload: { readonly role: "admin" | "user"; readonly userId: string },
-    get
-  ) =>
-    Effect.gen(function* setRoleEffect() {
-      const client = yield* AppHttpApiClient;
-      const user = yield* client.user.setRole({ payload });
-      get.refresh(usersAtom);
-      get.refresh(verifiedUsersAtom);
-      return user;
-    })
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const user = yield* client.user.setRole({ payload });
+    get.refresh(usersAtom);
+    get.refresh(verifiedUsersAtom);
+    return user;
+  })
 );
 
 export const updateUserNameAtom = appHttpApiFn(
-  (payload: { readonly name: string; readonly userId: string }, get) =>
-    Effect.gen(function* updateUserNameEffect() {
-      const client = yield* AppHttpApiClient;
-      const user = yield* client.user.updateUserName({ payload });
-      get.refresh(usersAtom);
-      get.refresh(verifiedUsersAtom);
-      return user;
-    })
+  Effect.fnUntraced(function* updateUserNameEffect(
+    payload: { readonly name: string; readonly userId: string },
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const user = yield* client.user.updateUserName({ payload });
+    get.refresh(usersAtom);
+    get.refresh(verifiedUsersAtom);
+    return user;
+  })
 );
 
 export const deleteUserAtom = appHttpApiFn(
-  (payload: { readonly userId: string }, get) =>
-    Effect.gen(function* deleteUserEffect() {
-      const client = yield* AppHttpApiClient;
-      const user = yield* client.user.deleteUser({ payload });
-      get.refresh(usersAtom);
-      get.refresh(verifiedUsersAtom);
-      return user;
-    })
+  Effect.fnUntraced(function* deleteUserEffect(
+    payload: { readonly userId: string },
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const user = yield* client.user.deleteUser({ payload });
+    get.refresh(usersAtom);
+    get.refresh(verifiedUsersAtom);
+    return user;
+  })
 );
 
-export const verifyDiscordGuildMembershipAtom = appHttpApiFn((_, get) =>
-  Effect.gen(function* verifyDiscordGuildMembershipEffect() {
+const verifyDiscordGuildMembershipRequest = Effect.fnUntraced(
+  function* verifyDiscordGuildMembershipEffect(
+    _: unknown,
+    get: Atom.FnContext
+  ) {
     const client = yield* AppHttpApiClient;
     const session = yield* client.user.verifyDiscordGuildMembership({});
     get.refresh(sessionAtom);
     return session;
-  })
+  }
+);
+
+export const verifyDiscordGuildMembershipAtom = appHttpApiFn((payload, get) =>
+  verifyDiscordGuildMembershipRequest(payload, get)
 );

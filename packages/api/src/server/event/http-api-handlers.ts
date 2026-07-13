@@ -34,8 +34,11 @@ export const EventHttpApiHandlers = HttpApiBuilder.group(
   "event",
   (handlers) =>
     handlers
-      .handle("createEvent", ({ payload }) =>
-        Effect.gen(function* EventHttpApiHandlers() {
+      .handle(
+        "createEvent",
+        Effect.fn("EventHttpApiHandlers.createEvent")(function* createEvent({
+          payload,
+        }) {
           yield* requireAdminSession();
           const store = yield* EventStore;
           yield* store
@@ -43,8 +46,11 @@ export const EventHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("EventStoreError", projectStoreError));
         })
       )
-      .handle("deleteEvent", ({ payload }) =>
-        Effect.gen(function* EventHttpApiHandlers() {
+      .handle(
+        "deleteEvent",
+        Effect.fn("EventHttpApiHandlers.deleteEvent")(function* deleteEvent({
+          payload,
+        }) {
           yield* requireAdminSession();
           const store = yield* EventStore;
           yield* store
@@ -52,8 +58,9 @@ export const EventHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("EventStoreError", projectStoreError));
         })
       )
-      .handle("listEvents", () =>
-        Effect.gen(function* EventHttpApiHandlers() {
+      .handle(
+        "listEvents",
+        Effect.fn("EventHttpApiHandlers.listEvents")(function* listEvents() {
           yield* requireVerifiedSession();
           const store = yield* EventStore;
           return yield* store
@@ -61,13 +68,16 @@ export const EventHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("EventStoreError", projectStoreError));
         })
       )
-      .handle("toggleEventActive", ({ payload }) =>
-        Effect.gen(function* EventHttpApiHandlers() {
-          yield* requireAdminSession();
-          const store = yield* EventStore;
-          yield* store
-            .toggleActive(payload)
-            .pipe(Effect.catchTag("EventStoreError", projectStoreError));
-        })
+      .handle(
+        "toggleEventActive",
+        Effect.fn("EventHttpApiHandlers.toggleEventActive")(
+          function* toggleEventActive({ payload }) {
+            yield* requireAdminSession();
+            const store = yield* EventStore;
+            yield* store
+              .toggleActive(payload)
+              .pipe(Effect.catchTag("EventStoreError", projectStoreError));
+          }
+        )
       )
 );

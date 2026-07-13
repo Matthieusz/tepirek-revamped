@@ -34,85 +34,85 @@ const persistenceQuery = <A, E, R>(
       })
   );
 
-const getHeroEventWithDatabase =
-  (database: EffectPgDatabase) => (heroId: number, message: string) =>
-    Effect.gen(function* getHeroEvent() {
-      const rows = yield* persistenceQuery(
-        "getHeroEvent",
-        database
-          .select({ eventId: hero.eventId, name: hero.name })
-          .from(hero)
-          .where(eq(hero.id, heroId))
-      );
-      const [heroData] = rows;
-      if (heroData === undefined) {
-        return yield* new VaultBadRequest({ message });
-      }
-      return heroData;
-    });
+const getHeroEventWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* getHeroEvent(heroId: number, message: string) {
+    const rows = yield* persistenceQuery(
+      "getHeroEvent",
+      database
+        .select({ eventId: hero.eventId, name: hero.name })
+        .from(hero)
+        .where(eq(hero.id, heroId))
+    );
+    const [heroData] = rows;
+    if (heroData === undefined) {
+      return yield* new VaultBadRequest({ message });
+    }
+    return heroData;
+  });
 
-const distributeGoldWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({ goldAmount, heroId }: DistributeGoldInput) =>
-    Effect.gen(function* distributeGold() {
-      const heroData = yield* getHeroEventWithDatabase(database)(
-        heroId,
-        "Heros nie znaleziony"
-      );
-      const heroUserStats = yield* persistenceQuery(
-        "distributeGold.loadStats",
-        database
-          .select({
-            id: userStats.id,
-            points: userStats.points,
-            userId: userStats.userId,
-          })
-          .from(userStats)
-          .where(eq(userStats.heroId, heroId))
-      );
-      if (heroUserStats.length === 0) {
-        return yield* new VaultBadRequest({
-          message: "Brak obstawień dla tego herosa",
-        });
-      }
-      const totalPoints = heroUserStats.reduce(
-        (sum, stat) => sum + Number.parseFloat(stat.points),
-        0
-      );
-      if (totalPoints <= 0) {
-        return yield* new VaultBadRequest({
-          message: "Suma punktów musi być większa od zera",
-        });
-      }
-      const pointWorth = goldAmount / totalPoints;
-      const storedPointWorth = pointWorth.toFixed(6);
-      yield* persistenceQuery(
-        "distributeGold",
-        database.transaction((tx) =>
-          Effect.gen(function* distributeGoldTransaction() {
-            yield* tx
-              .update(userStats)
-              .set({
-                earnings: sql`ROUND((${userStats.points}) * ${storedPointWorth}, 2)`,
-              })
-              .where(eq(userStats.heroId, heroId));
-            yield* tx
-              .update(hero)
-              .set({ pointWorth: storedPointWorth })
-              .where(eq(hero.id, heroId));
-          })
-        )
-      );
-      return {
-        goldAmount,
-        heroId,
-        heroName: heroData.name,
-        pointWorth: Number(storedPointWorth),
-        success: true as const,
-        totalPoints,
-        usersUpdated: heroUserStats.length,
-      };
-    });
+const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* distributeGold({
+    goldAmount,
+    heroId,
+  }: DistributeGoldInput) {
+    const heroData = yield* getHeroEventWithDatabase(database)(
+      heroId,
+      "Heros nie znaleziony"
+    );
+    const heroUserStats = yield* persistenceQuery(
+      "distributeGold.loadStats",
+      database
+        .select({
+          id: userStats.id,
+          points: userStats.points,
+          userId: userStats.userId,
+        })
+        .from(userStats)
+        .where(eq(userStats.heroId, heroId))
+    );
+    if (heroUserStats.length === 0) {
+      return yield* new VaultBadRequest({
+        message: "Brak obstawień dla tego herosa",
+      });
+    }
+    const totalPoints = heroUserStats.reduce(
+      (sum, stat) => sum + Number.parseFloat(stat.points),
+      0
+    );
+    if (totalPoints <= 0) {
+      return yield* new VaultBadRequest({
+        message: "Suma punktów musi być większa od zera",
+      });
+    }
+    const pointWorth = goldAmount / totalPoints;
+    const storedPointWorth = pointWorth.toFixed(6);
+    yield* persistenceQuery(
+      "distributeGold",
+      database.transaction((tx) =>
+        Effect.gen(function* distributeGoldTransaction() {
+          yield* tx
+            .update(userStats)
+            .set({
+              earnings: sql`ROUND((${userStats.points}) * ${storedPointWorth}, 2)`,
+            })
+            .where(eq(userStats.heroId, heroId));
+          yield* tx
+            .update(hero)
+            .set({ pointWorth: storedPointWorth })
+            .where(eq(hero.id, heroId));
+        })
+      )
+    );
+    return {
+      goldAmount,
+      heroId,
+      heroName: heroData.name,
+      pointWorth: Number(storedPointWorth),
+      success: true as const,
+      totalPoints,
+      usersUpdated: heroUserStats.length,
+    };
+  });
 
 const getUserStatsWithDatabase =
   (database: EffectPgDatabase) => (eventId?: number) => {
@@ -153,23 +153,22 @@ const getVaultWithDatabase =
     );
   };
 
-const togglePaidOutWithDatabase =
-  (database: EffectPgDatabase) => (input: TogglePaidOutInput) =>
-    Effect.gen(function* togglePaidOut() {
-      yield* persistenceQuery(
-        "togglePaidOut",
-        database
-          .update(userStats)
-          .set({ paidOut: input.paidOut })
-          .where(
-            and(
-              eq(userStats.userId, input.userId),
-              eq(userStats.eventId, input.eventId)
-            )
+const togglePaidOutWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* togglePaidOut(input: TogglePaidOutInput) {
+    yield* persistenceQuery(
+      "togglePaidOut",
+      database
+        .update(userStats)
+        .set({ paidOut: input.paidOut })
+        .where(
+          and(
+            eq(userStats.userId, input.userId),
+            eq(userStats.eventId, input.eventId)
           )
-      );
-      return { success: true } as const;
-    });
+        )
+    );
+    return { success: true } as const;
+  });
 
 const makeService = (database: EffectPgDatabase): VaultServiceInterface => ({
   distributeGold: Effect.fn("VaultService.distributeGold")(

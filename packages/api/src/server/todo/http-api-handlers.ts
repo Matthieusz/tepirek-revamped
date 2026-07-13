@@ -32,8 +32,11 @@ export const TodoHttpApiHandlers = HttpApiBuilder.group(
   "todo",
   (handlers) =>
     handlers
-      .handle("createTodo", ({ payload }) =>
-        Effect.gen(function* TodoHttpApiHandlers() {
+      .handle(
+        "createTodo",
+        Effect.fn("TodoHttpApiHandlers.createTodo")(function* createTodo({
+          payload,
+        }) {
           const session = yield* requireVerifiedSession();
           const store = yield* TodoStore;
 
@@ -42,8 +45,11 @@ export const TodoHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("TodoStoreError", projectStoreError));
         })
       )
-      .handle("deleteTodo", ({ payload }) =>
-        Effect.gen(function* TodoHttpApiHandlers() {
+      .handle(
+        "deleteTodo",
+        Effect.fn("TodoHttpApiHandlers.deleteTodo")(function* deleteTodo({
+          payload,
+        }) {
           const session = yield* requireVerifiedSession();
           const store = yield* TodoStore;
 
@@ -52,8 +58,9 @@ export const TodoHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("TodoStoreError", projectStoreError));
         })
       )
-      .handle("listTodos", () =>
-        Effect.gen(function* TodoHttpApiHandlers() {
+      .handle(
+        "listTodos",
+        Effect.fn("TodoHttpApiHandlers.listTodos")(function* listTodos() {
           const session = yield* requireVerifiedSession();
           const store = yield* TodoStore;
 
@@ -62,8 +69,11 @@ export const TodoHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("TodoStoreError", projectStoreError));
         })
       )
-      .handle("toggleTodo", ({ payload }) =>
-        Effect.gen(function* TodoHttpApiHandlers() {
+      .handle(
+        "toggleTodo",
+        Effect.fn("TodoHttpApiHandlers.toggleTodo")(function* toggleTodo({
+          payload,
+        }) {
           const session = yield* requireVerifiedSession();
           const store = yield* TodoStore;
 

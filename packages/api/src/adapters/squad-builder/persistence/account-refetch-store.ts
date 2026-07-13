@@ -46,12 +46,9 @@ import type {
   MarkFirecrawlRequestSucceededInput,
   MarkPendingMargonemAccountRefetchAppliedInput,
   PendingMargonemAccountRefetch,
-  PendingMargonemAccountRefetchForApply,
   RefetchableMargonemAccount,
   ReserveFirecrawlRequestInput,
-  ReservedFirecrawlRequest,
 } from "../../../services/squad-builder/account-refetch/account-refetch-store.ts";
-import type { ApplyAccountRefetchOutput } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.ts";
 import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   ActorDoesNotOwnMargonemAccount,
@@ -67,88 +64,82 @@ import {
   usedFirecrawlRequestStatuses,
 } from "./persistence-query.ts";
 
-const reserveRequestWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({
+const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* reserveRequestEffect({
     monthlyRequestBudget,
     profileId,
     requestedByUserId,
     yearMonth,
-  }: ReserveFirecrawlRequestInput): Effect.Effect<
-    ReservedFirecrawlRequest,
-    FirecrawlMonthlyBudgetExhausted | EffectSquadBuilderPersistenceUnavailable,
-    never
-  > =>
-    Effect.gen(function* reserveRequestEffect() {
-      const operation = "reserveRequest" as const;
-      const yearMonthText = firecrawlYearMonthToString(yearMonth);
-      const transaction = database.transaction((tx) => {
-        const transactionEffect = Effect.gen(function* reserveInTransaction() {
-          yield* tx.execute(
-            sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
-          );
-          const usageSelect = tx
-            .select({ usedRequests: count() })
-            .from(firecrawlProfileScrapeRequest)
-            .where(
-              and(
-                eq(firecrawlProfileScrapeRequest.yearMonth, yearMonthText),
-                inArray(
-                  firecrawlProfileScrapeRequest.status,
-                  usedFirecrawlRequestStatuses
-                )
+  }: ReserveFirecrawlRequestInput) {
+    const operation = "reserveRequest" as const;
+    const yearMonthText = firecrawlYearMonthToString(yearMonth);
+    const transaction = database.transaction((tx) => {
+      const transactionEffect = Effect.gen(function* reserveInTransaction() {
+        yield* tx.execute(
+          sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
+        );
+        const usageSelect = tx
+          .select({ usedRequests: count() })
+          .from(firecrawlProfileScrapeRequest)
+          .where(
+            and(
+              eq(firecrawlProfileScrapeRequest.yearMonth, yearMonthText),
+              inArray(
+                firecrawlProfileScrapeRequest.status,
+                usedFirecrawlRequestStatuses
               )
-            );
-          const usageRows = yield* usageSelect;
+            )
+          );
+        const usageRows = yield* usageSelect;
 
-          const usedRequests = usageRows[0]?.usedRequests ?? 0;
+        const usedRequests = usageRows[0]?.usedRequests ?? 0;
 
-          if (usedRequests >= monthlyRequestBudget) {
-            return yield* new FirecrawlMonthlyBudgetExhausted({
-              monthlyRequestBudget,
-              usedRequests,
-              yearMonth,
-            });
-          }
+        if (usedRequests >= monthlyRequestBudget) {
+          return yield* new FirecrawlMonthlyBudgetExhausted({
+            monthlyRequestBudget,
+            usedRequests,
+            yearMonth,
+          });
+        }
 
-          const insert = tx
-            .insert(firecrawlProfileScrapeRequest)
-            .values({
-              profileId: profileIdToNumber(profileId),
-              requestedByUserId: appUserIdToString(requestedByUserId),
-              status: "reserved",
-              yearMonth: yearMonthText,
-            })
-            .returning({ id: firecrawlProfileScrapeRequest.id });
-          const insertedRows = yield* insert;
+        const insert = tx
+          .insert(firecrawlProfileScrapeRequest)
+          .values({
+            profileId: profileIdToNumber(profileId),
+            requestedByUserId: appUserIdToString(requestedByUserId),
+            status: "reserved",
+            yearMonth: yearMonthText,
+          })
+          .returning({ id: firecrawlProfileScrapeRequest.id });
+        const insertedRows = yield* insert;
 
-          const [reserved] = insertedRows;
+        const [reserved] = insertedRows;
 
-          if (reserved === undefined) {
-            return yield* failPersistence(
-              operation,
-              new Error("Failed to reserve Firecrawl request")
-            );
-          }
+        if (reserved === undefined) {
+          return yield* failPersistence(
+            operation,
+            new Error("Failed to reserve Firecrawl request")
+          );
+        }
 
-          const nextUsedRequests = usedRequests + 1;
+        const nextUsedRequests = usedRequests + 1;
 
-          return {
-            budgetState: {
-              monthlyRequestBudget,
-              remainingRequests: monthlyRequestBudget - nextUsedRequests,
-              usedRequests: nextUsedRequests,
-              yearMonth,
-            },
-            requestId: reserved.id,
-          };
-        });
-
-        return transactionEffect;
+        return {
+          budgetState: {
+            monthlyRequestBudget,
+            remainingRequests: monthlyRequestBudget - nextUsedRequests,
+            usedRequests: nextUsedRequests,
+            yearMonth,
+          },
+          requestId: reserved.id,
+        };
       });
 
-      return yield* persistenceQuery(operation, transaction);
+      return transactionEffect;
     });
+
+    return yield* persistenceQuery(operation, transaction);
+  });
 
 const markRequestSucceededWithDatabase =
   (database: EffectPgDatabase) =>
@@ -198,116 +189,107 @@ const markRequestFailedWithDatabase =
     return persistenceQuery(operation, update).pipe(Effect.asVoid);
   };
 
-const getAccountForRefetchWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({
+const getAccountForRefetchWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* getAccountForRefetchEffect({
     accountId,
     actorUserId,
   }: {
     readonly actorUserId: AppUserId;
     readonly accountId: MargonemAccountId;
-  }): Effect.Effect<
-    RefetchableMargonemAccount,
-    | MargonemAccountNotFound
-    | ActorDoesNotOwnMargonemAccount
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
-  > =>
-    Effect.gen(function* getAccountForRefetchEffect() {
-      const operation = "getAccountForRefetch" as const;
-      const accountIdNumber = margonemAccountIdToNumber(accountId);
-      const accountSelect = database
-        .select({
-          displayName: margonemAccount.displayName,
-          ownerUserId: margonemAccount.ownerUserId,
-          profileId: margonemAccount.profileId,
-        })
-        .from(margonemAccount)
-        .where(eq(margonemAccount.id, accountIdNumber))
-        .limit(1);
-      const accountRows = yield* persistenceQuery(operation, accountSelect);
+  }) {
+    const operation = "getAccountForRefetch" as const;
+    const accountIdNumber = margonemAccountIdToNumber(accountId);
+    const accountSelect = database
+      .select({
+        displayName: margonemAccount.displayName,
+        ownerUserId: margonemAccount.ownerUserId,
+        profileId: margonemAccount.profileId,
+      })
+      .from(margonemAccount)
+      .where(eq(margonemAccount.id, accountIdNumber))
+      .limit(1);
+    const accountRows = yield* persistenceQuery(operation, accountSelect);
 
-      const [account] = accountRows;
+    const [account] = accountRows;
 
-      if (account === undefined) {
-        return yield* new MargonemAccountNotFound();
-      }
+    if (account === undefined) {
+      return yield* new MargonemAccountNotFound();
+    }
 
-      if (account.ownerUserId !== appUserIdToString(actorUserId)) {
-        return yield* new ActorDoesNotOwnMargonemAccount();
-      }
+    if (account.ownerUserId !== appUserIdToString(actorUserId)) {
+      return yield* new ActorDoesNotOwnMargonemAccount();
+    }
 
-      const characterSelect = database
-        .select({
-          affectedSquadCount: sql<number>`count(${squadCharacter.id})::int`,
-          avatarUrl: margonemCharacter.avatarUrl,
-          characterId: margonemCharacter.characterId,
-          id: margonemCharacter.id,
-          level: margonemCharacter.level,
-          name: margonemCharacter.name,
-          profession: margonemCharacter.profession,
-          world: margonemCharacter.world,
-        })
-        .from(margonemCharacter)
-        .leftJoin(
-          squadCharacter,
-          eq(squadCharacter.characterId, margonemCharacter.id)
-        )
-        .where(eq(margonemCharacter.accountId, accountIdNumber))
-        .groupBy(margonemCharacter.id);
-      const characterRows = yield* persistenceQuery(operation, characterSelect);
+    const characterSelect = database
+      .select({
+        affectedSquadCount: sql<number>`count(${squadCharacter.id})::int`,
+        avatarUrl: margonemCharacter.avatarUrl,
+        characterId: margonemCharacter.characterId,
+        id: margonemCharacter.id,
+        level: margonemCharacter.level,
+        name: margonemCharacter.name,
+        profession: margonemCharacter.profession,
+        world: margonemCharacter.world,
+      })
+      .from(margonemCharacter)
+      .leftJoin(
+        squadCharacter,
+        eq(squadCharacter.characterId, margonemCharacter.id)
+      )
+      .where(eq(margonemCharacter.accountId, accountIdNumber))
+      .groupBy(margonemCharacter.id);
+    const characterRows = yield* persistenceQuery(operation, characterSelect);
 
-      const displayName = yield* parseAccountDisplayName(
-        account.displayName
+    const displayName = yield* parseAccountDisplayName(
+      account.displayName
+    ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
+    const profileId = yield* parseMargonemProfileId(account.profileId).pipe(
+      Effect.catch((error) => failPersistence(operation, error))
+    );
+
+    const currentCharacters: RefetchableMargonemAccount["currentCharacters"][number][] =
+      [];
+
+    for (const row of characterRows) {
+      const margonemCharacterId = yield* parseMargonemCharacterId(
+        row.characterId
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
-      const profileId = yield* parseMargonemProfileId(account.profileId).pipe(
+      const level = yield* parsePositiveLevel(row.level).pipe(
         Effect.catch((error) => failPersistence(operation, error))
       );
 
-      const currentCharacters: RefetchableMargonemAccount["currentCharacters"][number][] =
-        [];
+      const profession = yield* parseMargonemProfession(row.profession).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
 
-      for (const row of characterRows) {
-        const margonemCharacterId = yield* parseMargonemCharacterId(
-          row.characterId
-        ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      const world = yield* parseMargonemWorld(row.world).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
 
-        const level = yield* parsePositiveLevel(row.level).pipe(
-          Effect.catch((error) => failPersistence(operation, error))
-        );
+      currentCharacters.push({
+        affectedSquadCount: row.affectedSquadCount ?? 0,
+        avatarUrl: row.avatarUrl,
+        databaseCharacterId: row.id,
+        level,
+        margonemCharacterId,
+        name: row.name,
+        profession,
+        world,
+      });
+    }
 
-        const profession = yield* parseMargonemProfession(row.profession).pipe(
-          Effect.catch((error) => failPersistence(operation, error))
-        );
+    return {
+      accountId,
+      currentCharacters,
+      displayName,
+      profileId,
+    };
+  });
 
-        const world = yield* parseMargonemWorld(row.world).pipe(
-          Effect.catch((error) => failPersistence(operation, error))
-        );
-
-        currentCharacters.push({
-          affectedSquadCount: row.affectedSquadCount ?? 0,
-          avatarUrl: row.avatarUrl,
-          databaseCharacterId: row.id,
-          level,
-          margonemCharacterId,
-          name: row.name,
-          profession,
-          world,
-        });
-      }
-
-      return {
-        accountId,
-        currentCharacters,
-        displayName,
-        profileId,
-      };
-    });
-
-const createPendingRefetchWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({
+const createPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* createPendingRefetchEffect({
     accountId,
     actorUserId,
     diff,
@@ -316,69 +298,63 @@ const createPendingRefetchWithDatabase =
     firecrawlCreditsUsed,
     latestCharacters,
     profileId,
-  }: CreatePendingMargonemAccountRefetchInput): Effect.Effect<
-    PendingMargonemAccountRefetch,
-    EffectSquadBuilderPersistenceUnavailable,
-    never
-  > =>
-    Effect.gen(function* createPendingRefetchEffect() {
-      const operation = "createPendingRefetch" as const;
-      const transaction = database.transaction((tx) =>
-        Effect.gen(function* createPendingRefetchTransaction() {
-          const insert = tx
-            .insert(margonemAccountRefetchPreview)
-            .values({
-              accountId: margonemAccountIdToNumber(accountId),
-              actorUserId: appUserIdToString(actorUserId),
-              diffJson: JSON.stringify(diff),
-              expiresAt,
-              fetchedAt,
-              firecrawlCreditsUsed,
-              profileId: profileIdToNumber(profileId),
-            })
-            .returning({ id: margonemAccountRefetchPreview.id });
-          const insertedRows = yield* insert;
+  }: CreatePendingMargonemAccountRefetchInput) {
+    const operation = "createPendingRefetch" as const;
+    const transaction = database.transaction((tx) =>
+      Effect.gen(function* createPendingRefetchTransaction() {
+        const insert = tx
+          .insert(margonemAccountRefetchPreview)
+          .values({
+            accountId: margonemAccountIdToNumber(accountId),
+            actorUserId: appUserIdToString(actorUserId),
+            diffJson: JSON.stringify(diff),
+            expiresAt,
+            fetchedAt,
+            firecrawlCreditsUsed,
+            profileId: profileIdToNumber(profileId),
+          })
+          .returning({ id: margonemAccountRefetchPreview.id });
+        const insertedRows = yield* insert;
 
-          const [preview] = insertedRows;
+        const [preview] = insertedRows;
 
-          if (preview === undefined) {
-            return yield* failPersistence(
-              operation,
-              new Error("Failed to create pending refetch preview")
+        if (preview === undefined) {
+          return yield* failPersistence(
+            operation,
+            new Error("Failed to create pending refetch preview")
+          );
+        }
+
+        if (latestCharacters.length > 0) {
+          const characterInsert = tx
+            .insert(margonemAccountRefetchPreviewCharacter)
+            .values(
+              latestCharacters.map((character) => ({
+                avatarUrl: character.avatarUrl,
+                characterId: characterIdToNumber(character.characterId),
+                level: levelToNumber(character.level),
+                name: character.name,
+                profession: character.profession,
+                refetchPreviewId: preview.id,
+                world: character.world,
+              }))
             );
-          }
+          yield* characterInsert;
+        }
 
-          if (latestCharacters.length > 0) {
-            const characterInsert = tx
-              .insert(margonemAccountRefetchPreviewCharacter)
-              .values(
-                latestCharacters.map((character) => ({
-                  avatarUrl: character.avatarUrl,
-                  characterId: characterIdToNumber(character.characterId),
-                  level: levelToNumber(character.level),
-                  name: character.name,
-                  profession: character.profession,
-                  refetchPreviewId: preview.id,
-                  world: character.world,
-                }))
-              );
-            yield* characterInsert;
-          }
+        const pendingRefetchId = yield* parsePendingMargonemAccountRefetchId(
+          preview.id
+        ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
-          const pendingRefetchId = yield* parsePendingMargonemAccountRefetchId(
-            preview.id
-          ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+        return { id: pendingRefetchId };
+      })
+    );
 
-          return { id: pendingRefetchId };
-        })
-      );
+    return yield* persistenceQuery(operation, transaction);
+  });
 
-      return yield* persistenceQuery(operation, transaction);
-    });
-
-const findPendingRefetchForApplyWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({
+const findPendingRefetchForApplyWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* findPendingRefetchForApplyEffect({
     actorUserId,
     now,
     refetchPreviewId,
@@ -386,114 +362,105 @@ const findPendingRefetchForApplyWithDatabase =
     readonly actorUserId: AppUserId;
     readonly refetchPreviewId: PendingMargonemAccountRefetch["id"];
     readonly now: Date;
-  }): Effect.Effect<
-    PendingMargonemAccountRefetchForApply,
-    | PendingMargonemAccountRefetchNotFound
-    | EffectSquadBuilderPersistenceUnavailable,
-    never
-  > =>
-    Effect.gen(function* findPendingRefetchForApplyEffect() {
-      const operation = "findPendingRefetchForApply" as const;
-      const previewSelect = database
-        .select({
-          accountId: margonemAccountRefetchPreview.accountId,
-          actorUserId: margonemAccountRefetchPreview.actorUserId,
-          fetchedAt: margonemAccountRefetchPreview.fetchedAt,
-          id: margonemAccountRefetchPreview.id,
-          profileId: margonemAccountRefetchPreview.profileId,
-        })
-        .from(margonemAccountRefetchPreview)
-        .where(
-          and(
-            eq(
-              margonemAccountRefetchPreview.id,
-              pendingRefetchIdToNumber(refetchPreviewId)
-            ),
-            eq(
-              margonemAccountRefetchPreview.actorUserId,
-              appUserIdToString(actorUserId)
-            ),
-            isNull(margonemAccountRefetchPreview.appliedAt),
-            gt(margonemAccountRefetchPreview.expiresAt, now)
-          )
-        )
-        .limit(1);
-      const previewRows = yield* persistenceQuery(operation, previewSelect);
-
-      const [preview] = previewRows;
-
-      if (preview === undefined) {
-        return yield* new PendingMargonemAccountRefetchNotFound();
-      }
-
-      const characterSelect = database
-        .select({
-          avatarUrl: margonemAccountRefetchPreviewCharacter.avatarUrl,
-          characterId: margonemAccountRefetchPreviewCharacter.characterId,
-          level: margonemAccountRefetchPreviewCharacter.level,
-          name: margonemAccountRefetchPreviewCharacter.name,
-          profession: margonemAccountRefetchPreviewCharacter.profession,
-          world: margonemAccountRefetchPreviewCharacter.world,
-        })
-        .from(margonemAccountRefetchPreviewCharacter)
-        .where(
+  }) {
+    const operation = "findPendingRefetchForApply" as const;
+    const previewSelect = database
+      .select({
+        accountId: margonemAccountRefetchPreview.accountId,
+        actorUserId: margonemAccountRefetchPreview.actorUserId,
+        fetchedAt: margonemAccountRefetchPreview.fetchedAt,
+        id: margonemAccountRefetchPreview.id,
+        profileId: margonemAccountRefetchPreview.profileId,
+      })
+      .from(margonemAccountRefetchPreview)
+      .where(
+        and(
           eq(
-            margonemAccountRefetchPreviewCharacter.refetchPreviewId,
-            preview.id
-          )
-        );
-      const characterRows = yield* persistenceQuery(operation, characterSelect);
+            margonemAccountRefetchPreview.id,
+            pendingRefetchIdToNumber(refetchPreviewId)
+          ),
+          eq(
+            margonemAccountRefetchPreview.actorUserId,
+            appUserIdToString(actorUserId)
+          ),
+          isNull(margonemAccountRefetchPreview.appliedAt),
+          gt(margonemAccountRefetchPreview.expiresAt, now)
+        )
+      )
+      .limit(1);
+    const previewRows = yield* persistenceQuery(operation, previewSelect);
 
-      const latestCharacters = [];
+    const [preview] = previewRows;
 
-      for (const row of characterRows) {
-        const characterId = yield* parseMargonemCharacterId(
-          row.characterId
-        ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+    if (preview === undefined) {
+      return yield* new PendingMargonemAccountRefetchNotFound();
+    }
 
-        const level = yield* parsePositiveLevel(row.level).pipe(
-          Effect.catch((error) => failPersistence(operation, error))
-        );
+    const characterSelect = database
+      .select({
+        avatarUrl: margonemAccountRefetchPreviewCharacter.avatarUrl,
+        characterId: margonemAccountRefetchPreviewCharacter.characterId,
+        level: margonemAccountRefetchPreviewCharacter.level,
+        name: margonemAccountRefetchPreviewCharacter.name,
+        profession: margonemAccountRefetchPreviewCharacter.profession,
+        world: margonemAccountRefetchPreviewCharacter.world,
+      })
+      .from(margonemAccountRefetchPreviewCharacter)
+      .where(
+        eq(margonemAccountRefetchPreviewCharacter.refetchPreviewId, preview.id)
+      );
+    const characterRows = yield* persistenceQuery(operation, characterSelect);
 
-        const profession = yield* parseMargonemProfession(row.profession).pipe(
-          Effect.catch((error) => failPersistence(operation, error))
-        );
+    const latestCharacters = [];
 
-        const world = yield* parseMargonemWorld(row.world).pipe(
-          Effect.catch((error) => failPersistence(operation, error))
-        );
-
-        latestCharacters.push({
-          avatarUrl: row.avatarUrl,
-          characterId,
-          level,
-          name: row.name,
-          profession,
-          world,
-        });
-      }
-
-      const accountId = yield* parseMargonemAccountId(preview.accountId).pipe(
+    for (const row of characterRows) {
+      const characterId = yield* parseMargonemCharacterId(row.characterId).pipe(
         Effect.catch((error) => failPersistence(operation, error))
       );
 
-      const persistedActorUserId = yield* parsePersistedAppUserId(
-        operation,
-        preview.actorUserId
-      );
-      const profileId = yield* parseMargonemProfileId(preview.profileId).pipe(
+      const level = yield* parsePositiveLevel(row.level).pipe(
         Effect.catch((error) => failPersistence(operation, error))
       );
 
-      return {
-        accountId,
-        actorUserId: persistedActorUserId,
-        fetchedAt: preview.fetchedAt,
-        id: refetchPreviewId,
-        latestCharacters,
-        profileId,
-      };
-    });
+      const profession = yield* parseMargonemProfession(row.profession).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+
+      const world = yield* parseMargonemWorld(row.world).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+
+      latestCharacters.push({
+        avatarUrl: row.avatarUrl,
+        characterId,
+        level,
+        name: row.name,
+        profession,
+        world,
+      });
+    }
+
+    const accountId = yield* parseMargonemAccountId(preview.accountId).pipe(
+      Effect.catch((error) => failPersistence(operation, error))
+    );
+
+    const persistedActorUserId = yield* parsePersistedAppUserId(
+      operation,
+      preview.actorUserId
+    );
+    const profileId = yield* parseMargonemProfileId(preview.profileId).pipe(
+      Effect.catch((error) => failPersistence(operation, error))
+    );
+
+    return {
+      accountId,
+      actorUserId: persistedActorUserId,
+      fetchedAt: preview.fetchedAt,
+      id: refetchPreviewId,
+      latestCharacters,
+      profileId,
+    };
+  });
 
 const markPendingRefetchAppliedWithDatabase =
   (database: EffectPgDatabase) =>
@@ -518,194 +485,186 @@ const markPendingRefetchAppliedWithDatabase =
     return persistenceQuery(operation, update).pipe(Effect.asVoid);
   };
 
-const applyRefetchedAccountWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({
+const applyRefetchedAccountWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* applyRefetchedAccountEffect({
     actorUserId,
     now,
     pendingRefetch,
-  }: ApplyRefetchedAccountInput): Effect.Effect<
-    ApplyAccountRefetchOutput,
-    EffectSquadBuilderPersistenceUnavailable,
-    never
-  > =>
-    Effect.gen(function* applyRefetchedAccountEffect() {
-      const operation = "applyRefetchedAccount" as const;
-      const transaction = database.transaction((tx) =>
-        Effect.gen(function* applyRefetchedAccountTransaction() {
-          const accountIdNumber = margonemAccountIdToNumber(
-            pendingRefetch.accountId
-          );
+  }: ApplyRefetchedAccountInput) {
+    const operation = "applyRefetchedAccount" as const;
+    const transaction = database.transaction((tx) =>
+      Effect.gen(function* applyRefetchedAccountTransaction() {
+        const accountIdNumber = margonemAccountIdToNumber(
+          pendingRefetch.accountId
+        );
 
-          yield* tx.execute(
-            sql`select pg_advisory_xact_lock(hashtext(${`margonem-refetch:${accountIdNumber}`}))`
-          );
+        yield* tx.execute(
+          sql`select pg_advisory_xact_lock(hashtext(${`margonem-refetch:${accountIdNumber}`}))`
+        );
 
-          const accountSelect = tx
-            .select({ id: margonemAccount.id })
-            .from(margonemAccount)
-            .where(
-              and(
-                eq(margonemAccount.id, accountIdNumber),
-                eq(margonemAccount.ownerUserId, appUserIdToString(actorUserId))
-              )
+        const accountSelect = tx
+          .select({ id: margonemAccount.id })
+          .from(margonemAccount)
+          .where(
+            and(
+              eq(margonemAccount.id, accountIdNumber),
+              eq(margonemAccount.ownerUserId, appUserIdToString(actorUserId))
             )
-            .limit(1);
-          const accountRows = yield* accountSelect;
+          )
+          .limit(1);
+        const accountRows = yield* accountSelect;
 
-          if (accountRows[0] === undefined) {
-            return yield* failPersistence(
-              operation,
-              new Error("Account not found while applying refetch")
-            );
+        if (accountRows[0] === undefined) {
+          return yield* failPersistence(
+            operation,
+            new Error("Account not found while applying refetch")
+          );
+        }
+
+        const currentSelect = tx
+          .select({
+            avatarUrl: margonemCharacter.avatarUrl,
+            characterId: margonemCharacter.characterId,
+            id: margonemCharacter.id,
+            level: margonemCharacter.level,
+            name: margonemCharacter.name,
+            profession: margonemCharacter.profession,
+          })
+          .from(margonemCharacter)
+          .where(eq(margonemCharacter.accountId, accountIdNumber));
+        const currentRows = yield* currentSelect;
+
+        const currentByCharacterId = new Map<
+          number,
+          (typeof currentRows)[number]
+        >();
+
+        for (const current of currentRows) {
+          currentByCharacterId.set(current.characterId, current);
+        }
+
+        const latestByCharacterId = new Map<number, true>();
+        const charactersToInsert = [];
+        const charactersToUpdate = [];
+        const removedDatabaseCharacterIds = [];
+
+        for (const latest of pendingRefetch.latestCharacters) {
+          const latestCharacterId = characterIdToNumber(latest.characterId);
+          const latestLevel = levelToNumber(latest.level);
+          const current = currentByCharacterId.get(latestCharacterId);
+          latestByCharacterId.set(latestCharacterId, true);
+
+          if (current === undefined) {
+            charactersToInsert.push({
+              accountId: accountIdNumber,
+              avatarUrl: latest.avatarUrl,
+              characterId: latestCharacterId,
+              level: latestLevel,
+              name: latest.name,
+              profession: latest.profession,
+              updatedAt: now,
+              world: latest.world,
+            });
+            continue;
           }
 
-          const currentSelect = tx
-            .select({
-              avatarUrl: margonemCharacter.avatarUrl,
-              characterId: margonemCharacter.characterId,
-              id: margonemCharacter.id,
-              level: margonemCharacter.level,
-              name: margonemCharacter.name,
-              profession: margonemCharacter.profession,
+          const changed =
+            current.avatarUrl !== latest.avatarUrl ||
+            current.level !== latestLevel ||
+            current.name !== latest.name ||
+            current.profession !== latest.profession;
+
+          if (changed) {
+            charactersToUpdate.push({
+              avatarUrl: latest.avatarUrl,
+              databaseCharacterId: current.id,
+              level: latestLevel,
+              name: latest.name,
+              profession: latest.profession,
+              world: latest.world,
+            });
+          }
+        }
+
+        if (charactersToInsert.length > 0) {
+          yield* tx.insert(margonemCharacter).values(charactersToInsert);
+        }
+
+        for (const character of charactersToUpdate) {
+          yield* tx
+            .update(margonemCharacter)
+            .set({
+              avatarUrl: character.avatarUrl,
+              level: character.level,
+              name: character.name,
+              profession: character.profession,
+              updatedAt: now,
+              world: character.world,
             })
-            .from(margonemCharacter)
-            .where(eq(margonemCharacter.accountId, accountIdNumber));
-          const currentRows = yield* currentSelect;
+            .where(eq(margonemCharacter.id, character.databaseCharacterId));
+        }
 
-          const currentByCharacterId = new Map<
-            number,
-            (typeof currentRows)[number]
-          >();
-
-          for (const current of currentRows) {
-            currentByCharacterId.set(current.characterId, current);
+        for (const current of currentRows) {
+          if (!latestByCharacterId.has(current.characterId)) {
+            removedDatabaseCharacterIds.push(current.id);
           }
+        }
 
-          const latestByCharacterId = new Map<number, true>();
-          const charactersToInsert = [];
-          const charactersToUpdate = [];
-          const removedDatabaseCharacterIds = [];
+        let removedSquadCharacterCount = 0;
 
-          for (const latest of pendingRefetch.latestCharacters) {
-            const latestCharacterId = characterIdToNumber(latest.characterId);
-            const latestLevel = levelToNumber(latest.level);
-            const current = currentByCharacterId.get(latestCharacterId);
-            latestByCharacterId.set(latestCharacterId, true);
+        if (removedDatabaseCharacterIds.length > 0) {
+          const affectedGroupSelect = tx
+            .select({ groupId: squadCharacter.squadGroupId })
+            .from(squadCharacter)
+            .where(
+              inArray(squadCharacter.characterId, removedDatabaseCharacterIds)
+            );
+          const affectedGroups = yield* affectedGroupSelect;
 
-            if (current === undefined) {
-              charactersToInsert.push({
-                accountId: accountIdNumber,
-                avatarUrl: latest.avatarUrl,
-                characterId: latestCharacterId,
-                level: latestLevel,
-                name: latest.name,
-                profession: latest.profession,
-                updatedAt: now,
-                world: latest.world,
-              });
-              continue;
-            }
+          const affectedGroupIds = [
+            ...new Set(affectedGroups.map((group) => group.groupId)),
+          ];
+          const removedPlacementsDelete = tx
+            .delete(squadCharacter)
+            .where(
+              inArray(squadCharacter.characterId, removedDatabaseCharacterIds)
+            )
+            .returning({ id: squadCharacter.id });
+          const removedPlacements = yield* removedPlacementsDelete;
 
-            const changed =
-              current.avatarUrl !== latest.avatarUrl ||
-              current.level !== latestLevel ||
-              current.name !== latest.name ||
-              current.profession !== latest.profession;
+          removedSquadCharacterCount = removedPlacements.length;
 
-            if (changed) {
-              charactersToUpdate.push({
-                avatarUrl: latest.avatarUrl,
-                databaseCharacterId: current.id,
-                level: latestLevel,
-                name: latest.name,
-                profession: latest.profession,
-                world: latest.world,
-              });
-            }
-          }
-
-          if (charactersToInsert.length > 0) {
-            yield* tx.insert(margonemCharacter).values(charactersToInsert);
-          }
-
-          for (const character of charactersToUpdate) {
+          if (affectedGroupIds.length > 0) {
             yield* tx
-              .update(margonemCharacter)
-              .set({
-                avatarUrl: character.avatarUrl,
-                level: character.level,
-                name: character.name,
-                profession: character.profession,
-                updatedAt: now,
-                world: character.world,
-              })
-              .where(eq(margonemCharacter.id, character.databaseCharacterId));
-          }
-
-          for (const current of currentRows) {
-            if (!latestByCharacterId.has(current.characterId)) {
-              removedDatabaseCharacterIds.push(current.id);
-            }
-          }
-
-          let removedSquadCharacterCount = 0;
-
-          if (removedDatabaseCharacterIds.length > 0) {
-            const affectedGroupSelect = tx
-              .select({ groupId: squadCharacter.squadGroupId })
-              .from(squadCharacter)
-              .where(
-                inArray(squadCharacter.characterId, removedDatabaseCharacterIds)
-              );
-            const affectedGroups = yield* affectedGroupSelect;
-
-            const affectedGroupIds = [
-              ...new Set(affectedGroups.map((group) => group.groupId)),
-            ];
-            const removedPlacementsDelete = tx
-              .delete(squadCharacter)
-              .where(
-                inArray(squadCharacter.characterId, removedDatabaseCharacterIds)
-              )
-              .returning({ id: squadCharacter.id });
-            const removedPlacements = yield* removedPlacementsDelete;
-
-            removedSquadCharacterCount = removedPlacements.length;
-
-            if (affectedGroupIds.length > 0) {
-              yield* tx
-                .update(squadGroup)
-                .set({ updatedAt: now })
-                .where(inArray(squadGroup.id, affectedGroupIds));
-            }
-
-            yield* tx
-              .delete(margonemCharacter)
-              .where(
-                inArray(margonemCharacter.id, removedDatabaseCharacterIds)
-              );
+              .update(squadGroup)
+              .set({ updatedAt: now })
+              .where(inArray(squadGroup.id, affectedGroupIds));
           }
 
           yield* tx
-            .update(margonemAccount)
-            .set({ lastFetchedAt: pendingRefetch.fetchedAt, updatedAt: now })
-            .where(eq(margonemAccount.id, accountIdNumber));
+            .delete(margonemCharacter)
+            .where(inArray(margonemCharacter.id, removedDatabaseCharacterIds));
+        }
 
-          return {
-            accountId: pendingRefetch.accountId,
-            addedCharacterCount: charactersToInsert.length,
-            lastFetchedAt: pendingRefetch.fetchedAt,
-            profileId: pendingRefetch.profileId,
-            removedCharacterCount: removedDatabaseCharacterIds.length,
-            removedSquadCharacterCount,
-            updatedCharacterCount: charactersToUpdate.length,
-          };
-        })
-      );
+        yield* tx
+          .update(margonemAccount)
+          .set({ lastFetchedAt: pendingRefetch.fetchedAt, updatedAt: now })
+          .where(eq(margonemAccount.id, accountIdNumber));
 
-      return yield* persistenceQuery(operation, transaction);
-    });
+        return {
+          accountId: pendingRefetch.accountId,
+          addedCharacterCount: charactersToInsert.length,
+          lastFetchedAt: pendingRefetch.fetchedAt,
+          profileId: pendingRefetch.profileId,
+          removedCharacterCount: removedDatabaseCharacterIds.length,
+          removedSquadCharacterCount,
+          updatedCharacterCount: charactersToUpdate.length,
+        };
+      })
+    );
+
+    return yield* persistenceQuery(operation, transaction);
+  });
 
 export const DrizzleAccountRefetchStoreServiceLayer: Layer.Layer<
   AccountRefetchStoreService,

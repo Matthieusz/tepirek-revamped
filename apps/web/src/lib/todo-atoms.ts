@@ -34,28 +34,32 @@ export const todosAtom = appHttpApiAtom(
 
 /** Mutation atom for creating a todo. */
 export const createTodoAtom = appHttpApiFn(
-  (payload: { readonly text: string }, get) =>
-    Effect.gen(function* createTodoEffect() {
-      const client = yield* AppHttpApiClient;
-      const todo = yield* client.todo.createTodo({ payload });
-      get.refresh(todosAtom);
-      return todo;
-    })
+  Effect.fnUntraced(function* createTodoEffect(
+    payload: { readonly text: string },
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const todo = yield* client.todo.createTodo({ payload });
+    get.refresh(todosAtom);
+    return todo;
+  })
 );
 
-const deleteTodoRequestAtom = appHttpApiFn((payload: { readonly id: number }) =>
-  Effect.gen(function* deleteTodoEffect() {
+const deleteTodoRequestAtom = appHttpApiFn(
+  Effect.fnUntraced(function* deleteTodoEffect(input: { readonly id: number }) {
     const client = yield* AppHttpApiClient;
-    return yield* client.todo.deleteTodo({ payload });
+    return yield* client.todo.deleteTodo({ payload: input });
   })
 );
 
 const toggleTodoRequestAtom = appHttpApiFn(
-  (payload: { readonly completed: boolean; readonly id: number }) =>
-    Effect.gen(function* toggleTodoEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.todo.toggleTodo({ payload });
-    })
+  Effect.fnUntraced(function* toggleTodoEffect(input: {
+    readonly completed: boolean;
+    readonly id: number;
+  }) {
+    const client = yield* AppHttpApiClient;
+    return yield* client.todo.toggleTodo({ payload: input });
+  })
 );
 
 /** Optimistic todo resource that preserves loading and failure states. */

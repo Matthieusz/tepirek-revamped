@@ -139,11 +139,10 @@ export const DiscordGuildVerifierLiveLayer: Layer.Layer<
 
     return DiscordGuildVerifier.of({
       verifyMembership: Effect.fn("DiscordGuildVerifier.verifyMembership")(
-        (accessToken) =>
-          Effect.gen(function* verifyMembershipEffect() {
-            const guilds = yield* fetchDiscordGuilds(accessToken);
-            return hasDiscordGuild(guilds, config.guildId);
-          })
+        function* verifyMembership(accessToken) {
+          const guilds = yield* fetchDiscordGuilds(accessToken);
+          return hasDiscordGuild(guilds, config.guildId);
+        }
       ),
     });
   })

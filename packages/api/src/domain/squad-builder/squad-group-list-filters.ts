@@ -86,100 +86,96 @@ export const squadGroupLevelBoundToNumber = (
 const normalizeNameQuery = (value: string): string =>
   value.trim().replaceAll(/\s+/gu, " ");
 
-const parseNameQuery = (
+const parseNameQuery = Effect.fnUntraced(function* parseNameQuery(
   value: string | null | undefined
-): Effect.Effect<
+): Effect.fn.Return<
   | { readonly _tag: "Absent" }
   | {
       readonly _tag: "Present";
       readonly value: SquadGroupNameQuery;
     },
   InvalidSquadGroupNameQuery
-> =>
-  Effect.gen(function* parseNameQueryGen() {
-    if (value === undefined || value === null) {
-      return { _tag: "Absent" as const };
-    }
+> {
+  if (value === undefined || value === null) {
+    return { _tag: "Absent" as const };
+  }
 
-    const normalized = normalizeNameQuery(value);
-    if (normalized.length === 0) {
-      return { _tag: "Absent" as const };
-    }
+  const normalized = normalizeNameQuery(value);
+  if (normalized.length === 0) {
+    return { _tag: "Absent" as const };
+  }
 
-    if (normalized.length < squadGroupListFilterPolicy.nameQueryMinLength) {
-      return yield* new InvalidSquadGroupNameQuery({
-        message: `Wpisz co najmniej ${squadGroupListFilterPolicy.nameQueryMinLength} znaki nazwy składu.`,
-      });
-    }
+  if (normalized.length < squadGroupListFilterPolicy.nameQueryMinLength) {
+    return yield* new InvalidSquadGroupNameQuery({
+      message: `Wpisz co najmniej ${squadGroupListFilterPolicy.nameQueryMinLength} znaki nazwy składu.`,
+    });
+  }
 
-    if (normalized.length > squadGroupListFilterPolicy.nameQueryMaxLength) {
-      return yield* new InvalidSquadGroupNameQuery({
-        message: `Nazwa składu może mieć maksymalnie ${squadGroupListFilterPolicy.nameQueryMaxLength} znaków.`,
-      });
-    }
+  if (normalized.length > squadGroupListFilterPolicy.nameQueryMaxLength) {
+    return yield* new InvalidSquadGroupNameQuery({
+      message: `Nazwa składu może mieć maksymalnie ${squadGroupListFilterPolicy.nameQueryMaxLength} znaków.`,
+    });
+  }
 
-    return {
-      _tag: "Present" as const,
-      value: yield* Schema.decodeUnknownEffect(SquadGroupNameQuery)(
-        normalized
-      ).pipe(
-        Effect.catchTag(
-          "SchemaError",
-          () =>
-            new InvalidSquadGroupNameQuery({
-              message: "Nieoczekiwany błąd walidacji zapytania o nazwę składu.",
-            })
-        )
-      ),
-    };
-  });
+  return {
+    _tag: "Present" as const,
+    value: yield* Schema.decodeUnknownEffect(SquadGroupNameQuery)(
+      normalized
+    ).pipe(
+      Effect.catchTag(
+        "SchemaError",
+        () =>
+          new InvalidSquadGroupNameQuery({
+            message: "Nieoczekiwany błąd walidacji zapytania o nazwę składu.",
+          })
+      )
+    ),
+  };
+});
 
-const parseLevelBound = (
+const parseLevelBound = Effect.fnUntraced(function* parseLevelBound(
   value: number | null | undefined,
   fieldName: "minLevel" | "maxLevel"
-): Effect.Effect<
+): Effect.fn.Return<
   | { readonly _tag: "Absent" }
   | {
       readonly _tag: "Present";
       readonly value: SquadGroupLevelBound;
     },
   InvalidSquadGroupLevelRange
-> =>
-  Effect.gen(function* parseLevelBoundGen() {
-    if (value === undefined || value === null) {
-      return { _tag: "Absent" as const };
-    }
+> {
+  if (value === undefined || value === null) {
+    return { _tag: "Absent" as const };
+  }
 
-    if (!Number.isInteger(value)) {
-      return yield* new InvalidSquadGroupLevelRange({
-        message: "Poziom postaci musi być liczbą całkowitą.",
-      });
-    }
+  if (!Number.isInteger(value)) {
+    return yield* new InvalidSquadGroupLevelRange({
+      message: "Poziom postaci musi być liczbą całkowitą.",
+    });
+  }
 
-    if (
-      value < squadGroupListFilterPolicy.minAllowedLevel ||
-      value > squadGroupListFilterPolicy.maxAllowedLevel
-    ) {
-      return yield* new InvalidSquadGroupLevelRange({
-        message: `Poziom ${fieldName === "minLevel" ? "od" : "do"} musi być w zakresie ${squadGroupListFilterPolicy.minAllowedLevel}-${squadGroupListFilterPolicy.maxAllowedLevel}.`,
-      });
-    }
+  if (
+    value < squadGroupListFilterPolicy.minAllowedLevel ||
+    value > squadGroupListFilterPolicy.maxAllowedLevel
+  ) {
+    return yield* new InvalidSquadGroupLevelRange({
+      message: `Poziom ${fieldName === "minLevel" ? "od" : "do"} musi być w zakresie ${squadGroupListFilterPolicy.minAllowedLevel}-${squadGroupListFilterPolicy.maxAllowedLevel}.`,
+    });
+  }
 
-    return {
-      _tag: "Present" as const,
-      value: yield* Schema.decodeUnknownEffect(SquadGroupLevelBound)(
-        value
-      ).pipe(
-        Effect.catchTag(
-          "SchemaError",
-          () =>
-            new InvalidSquadGroupLevelRange({
-              message: "Nieoczekiwany błąd walidacji zakresu poziomów.",
-            })
-        )
-      ),
-    };
-  });
+  return {
+    _tag: "Present" as const,
+    value: yield* Schema.decodeUnknownEffect(SquadGroupLevelBound)(value).pipe(
+      Effect.catchTag(
+        "SchemaError",
+        () =>
+          new InvalidSquadGroupLevelRange({
+            message: "Nieoczekiwany błąd walidacji zakresu poziomów.",
+          })
+      )
+    ),
+  };
+});
 
 /** Parse and normalize squad group list filters before store access. */
 export const parseSquadGroupListFilters = Effect.fn(

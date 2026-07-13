@@ -62,48 +62,46 @@ export const userStatsAtom = (payload: VaultInput) =>
 
 /** Mutation atom for distributing gold for one hero. Refreshes affected vault resources on success. */
 export const distributeGoldAtom = appHttpApiFn(
-  (
+  Effect.fnUntraced(function* distributeGoldEffect(
     payload: {
       readonly goldAmount: number;
       readonly eventId: number;
       readonly heroId: number;
     },
-    get
-  ) =>
-    Effect.gen(function* distributeGoldEffect() {
-      const client = yield* AppHttpApiClient;
-      const result = yield* client.vault.distributeGold({
-        payload: { goldAmount: payload.goldAmount, heroId: payload.heroId },
-      });
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const result = yield* client.vault.distributeGold({
+      payload: { goldAmount: payload.goldAmount, heroId: payload.heroId },
+    });
 
-      const allKey = vaultKey({});
-      get.refresh(vaultByKeyAtom(allKey));
-      get.refresh(userStatsByKeyAtom(allKey));
+    const allKey = vaultKey({});
+    get.refresh(vaultByKeyAtom(allKey));
+    get.refresh(userStatsByKeyAtom(allKey));
 
-      const key = vaultKey({ eventId: payload.eventId });
-      get.refresh(vaultByKeyAtom(key));
-      get.refresh(userStatsByKeyAtom(key));
-      get.refresh(oldestUnpaidEventAtom);
+    const key = vaultKey({ eventId: payload.eventId });
+    get.refresh(vaultByKeyAtom(key));
+    get.refresh(userStatsByKeyAtom(key));
+    get.refresh(oldestUnpaidEventAtom);
 
-      return result;
-    })
+    return result;
+  })
 );
 
 const togglePaidOutRequestAtom = appHttpApiFn(
-  (
+  Effect.fnUntraced(function* togglePaidOutEffect(
     payload: {
       readonly eventId: number;
       readonly paidOut: boolean;
       readonly userId: string;
     },
-    get
-  ) =>
-    Effect.gen(function* togglePaidOutEffect() {
-      const client = yield* AppHttpApiClient;
-      const result = yield* client.vault.togglePaidOut({ payload });
-      get.refresh(oldestUnpaidEventAtom);
-      return result;
-    })
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const result = yield* client.vault.togglePaidOut({ payload });
+    get.refresh(oldestUnpaidEventAtom);
+    return result;
+  })
 );
 
 /** Optimistic vault list atom backed by a Result-returning vault resource. */

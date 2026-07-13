@@ -80,8 +80,8 @@ const mapAccountSharingError = (error: AccountSharingError): ProtocolError => {
 export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "squadBuilderAccountSharing",
-  (handlers) =>
-    Effect.gen(function* SquadBuilderAccountSharingHttpApiHandlers() {
+  Effect.fnUntraced(
+    function* SquadBuilderAccountSharingHttpApiHandlers(handlers) {
       const accountSharingStateSvc = yield* AccountSharingStateService;
       const accountAccessInviteResponsesSvc =
         yield* AccountAccessInviteResponsesService;
@@ -91,90 +91,112 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
       const accountAccessInvitesSvc = yield* AccountAccessInvitesService;
 
       return handlers
-        .handle("searchAccountInviteTargets", ({ payload, request }) =>
-          Effect.gen(function* searchAccountInviteTargetsHandler() {
-            const session = yield* requireSquadBuilderSession();
-            return yield* withRequestCorrelation(
-              request,
-              accountInviteTargetsSvc.search({
-                accountId: payload.accountId,
-                actorUserId: sessionAppUserId(session),
-                query: payload.query,
-              })
-            ).pipe(Effect.mapError(mapAccountSharingError));
-          })
+        .handle(
+          "searchAccountInviteTargets",
+          Effect.fn("SquadBuilderAccountSharing.searchAccountInviteTargets")(
+            function* searchAccountInviteTargets({ payload, request }) {
+              const session = yield* requireSquadBuilderSession();
+              return yield* withRequestCorrelation(
+                request,
+                accountInviteTargetsSvc.search({
+                  accountId: payload.accountId,
+                  actorUserId: sessionAppUserId(session),
+                  query: payload.query,
+                })
+              ).pipe(Effect.mapError(mapAccountSharingError));
+            }
+          )
         )
-        .handle("sendAccountAccessInvite", ({ payload, request }) =>
-          Effect.gen(function* sendAccountAccessInviteHandler() {
-            const session = yield* requireSquadBuilderSession();
-            return yield* withRequestCorrelation(
-              request,
-              accountAccessInvitesSvc.send({
-                accountId: payload.accountId,
-                actorUserId: sessionAppUserId(session),
-                invitedUserId: payload.invitedUserId,
-              })
-            ).pipe(Effect.mapError(mapAccountSharingError));
-          })
+        .handle(
+          "sendAccountAccessInvite",
+          Effect.fn("SquadBuilderAccountSharing.sendAccountAccessInvite")(
+            function* sendAccountAccessInvite({ payload, request }) {
+              const session = yield* requireSquadBuilderSession();
+              return yield* withRequestCorrelation(
+                request,
+                accountAccessInvitesSvc.send({
+                  accountId: payload.accountId,
+                  actorUserId: sessionAppUserId(session),
+                  invitedUserId: payload.invitedUserId,
+                })
+              ).pipe(Effect.mapError(mapAccountSharingError));
+            }
+          )
         )
-        .handle("respondToAccountAccessInvite", ({ payload, request }) =>
-          Effect.gen(function* respondToAccountAccessInviteHandler() {
-            const session = yield* requireSquadBuilderSession();
-            return yield* withRequestCorrelation(
-              request,
-              accountAccessInviteResponsesSvc.respond({
-                accessId: payload.accessId,
-                actorUserId: sessionAppUserId(session),
-                response: payload.response,
-              })
-            ).pipe(Effect.mapError(mapAccountSharingError));
-          })
+        .handle(
+          "respondToAccountAccessInvite",
+          Effect.fn("SquadBuilderAccountSharing.respondToAccountAccessInvite")(
+            function* respondToAccountAccessInvite({ payload, request }) {
+              const session = yield* requireSquadBuilderSession();
+              return yield* withRequestCorrelation(
+                request,
+                accountAccessInviteResponsesSvc.respond({
+                  accessId: payload.accessId,
+                  actorUserId: sessionAppUserId(session),
+                  response: payload.response,
+                })
+              ).pipe(Effect.mapError(mapAccountSharingError));
+            }
+          )
         )
-        .handle("revokeAccountAccess", ({ payload, request }) =>
-          Effect.gen(function* revokeAccountAccessHandler() {
-            const session = yield* requireSquadBuilderSession();
-            return yield* withRequestCorrelation(
-              request,
-              accountAccessRevocationsSvc.revoke({
-                accessId: payload.accessId,
-                actorUserId: sessionAppUserId(session),
-              })
-            ).pipe(Effect.mapError(mapAccountSharingError));
-          })
+        .handle(
+          "revokeAccountAccess",
+          Effect.fn("SquadBuilderAccountSharing.revokeAccountAccess")(
+            function* revokeAccountAccess({ payload, request }) {
+              const session = yield* requireSquadBuilderSession();
+              return yield* withRequestCorrelation(
+                request,
+                accountAccessRevocationsSvc.revoke({
+                  accessId: payload.accessId,
+                  actorUserId: sessionAppUserId(session),
+                })
+              ).pipe(Effect.mapError(mapAccountSharingError));
+            }
+          )
         )
-        .handle("listIncomingAccountInvites", ({ request }) =>
-          Effect.gen(function* listIncomingAccountInvitesHandler() {
-            const session = yield* requireSquadBuilderSession();
-            return yield* withRequestCorrelation(
-              request,
-              accountSharingStateSvc.listIncomingInvites({
-                actorUserId: sessionAppUserId(session),
-              })
-            ).pipe(Effect.mapError(mapAccountSharingError));
-          })
+        .handle(
+          "listIncomingAccountInvites",
+          Effect.fn("SquadBuilderAccountSharing.listIncomingAccountInvites")(
+            function* listIncomingAccountInvites({ request }) {
+              const session = yield* requireSquadBuilderSession();
+              return yield* withRequestCorrelation(
+                request,
+                accountSharingStateSvc.listIncomingInvites({
+                  actorUserId: sessionAppUserId(session),
+                })
+              ).pipe(Effect.mapError(mapAccountSharingError));
+            }
+          )
         )
-        .handle("listSharedAccounts", ({ request }) =>
-          Effect.gen(function* listSharedAccountsHandler() {
-            const session = yield* requireSquadBuilderSession();
-            return yield* withRequestCorrelation(
-              request,
-              accountSharingStateSvc.listSharedAccounts({
-                actorUserId: sessionAppUserId(session),
-              })
-            ).pipe(Effect.mapError(mapAccountSharingError));
-          })
+        .handle(
+          "listSharedAccounts",
+          Effect.fn("SquadBuilderAccountSharing.listSharedAccounts")(
+            function* listSharedAccounts({ request }) {
+              const session = yield* requireSquadBuilderSession();
+              return yield* withRequestCorrelation(
+                request,
+                accountSharingStateSvc.listSharedAccounts({
+                  actorUserId: sessionAppUserId(session),
+                })
+              ).pipe(Effect.mapError(mapAccountSharingError));
+            }
+          )
         )
-        .handle("listAccountAccessGrants", ({ payload, request }) =>
-          Effect.gen(function* listAccountAccessGrantsHandler() {
-            const session = yield* requireSquadBuilderSession();
-            return yield* withRequestCorrelation(
-              request,
-              accountSharingStateSvc.listAccountAccessGrants({
-                accountId: payload.accountId,
-                actorUserId: sessionAppUserId(session),
-              })
-            ).pipe(Effect.mapError(mapAccountSharingError));
-          })
+        .handle(
+          "listAccountAccessGrants",
+          Effect.fn("SquadBuilderAccountSharing.listAccountAccessGrants")(
+            function* listAccountAccessGrants({ payload, request }) {
+              const session = yield* requireSquadBuilderSession();
+              return yield* withRequestCorrelation(
+                request,
+                accountSharingStateSvc.listAccountAccessGrants({
+                  accountId: payload.accountId,
+                  actorUserId: sessionAppUserId(session),
+                })
+              ).pipe(Effect.mapError(mapAccountSharingError));
+            }
+          )
         );
-    })
+    }
+  )
 );

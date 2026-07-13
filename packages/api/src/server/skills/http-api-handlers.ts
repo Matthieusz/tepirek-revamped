@@ -36,17 +36,23 @@ export const SkillsHttpApiHandlers = HttpApiBuilder.group(
   "skills",
   (handlers) =>
     handlers
-      .handle("createProfession", ({ payload }) =>
-        Effect.gen(function* SkillsHttpApiHandlers() {
-          yield* requireAdminSession();
-          const store = yield* SkillsStore;
-          yield* store
-            .createProfession(payload)
-            .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
-        })
+      .handle(
+        "createProfession",
+        Effect.fn("SkillsHttpApiHandlers.createProfession")(
+          function* createProfession({ payload }) {
+            yield* requireAdminSession();
+            const store = yield* SkillsStore;
+            yield* store
+              .createProfession(payload)
+              .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
+          }
+        )
       )
-      .handle("createRange", ({ payload }) =>
-        Effect.gen(function* SkillsHttpApiHandlers() {
+      .handle(
+        "createRange",
+        Effect.fn("SkillsHttpApiHandlers.createRange")(function* createRange({
+          payload,
+        }) {
           yield* requireAdminSession();
           const store = yield* SkillsStore;
           yield* store
@@ -54,8 +60,11 @@ export const SkillsHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
         })
       )
-      .handle("createSkill", ({ payload }) =>
-        Effect.gen(function* SkillsHttpApiHandlers() {
+      .handle(
+        "createSkill",
+        Effect.fn("SkillsHttpApiHandlers.createSkill")(function* createSkill({
+          payload,
+        }) {
           const session = yield* requireVerifiedSession();
           const store = yield* SkillsStore;
           yield* store
@@ -63,8 +72,11 @@ export const SkillsHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
         })
       )
-      .handle("deleteRange", ({ payload }) =>
-        Effect.gen(function* SkillsHttpApiHandlers() {
+      .handle(
+        "deleteRange",
+        Effect.fn("SkillsHttpApiHandlers.deleteRange")(function* deleteRange({
+          payload,
+        }) {
           yield* requireAdminSession();
           const store = yield* SkillsStore;
           yield* store
@@ -72,8 +84,11 @@ export const SkillsHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
         })
       )
-      .handle("deleteSkill", ({ payload }) =>
-        Effect.gen(function* SkillsHttpApiHandlers() {
+      .handle(
+        "deleteSkill",
+        Effect.fn("SkillsHttpApiHandlers.deleteSkill")(function* deleteSkill({
+          payload,
+        }) {
           yield* requireAdminSession();
           const store = yield* SkillsStore;
           yield* store
@@ -81,17 +96,21 @@ export const SkillsHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
         })
       )
-      .handle("listProfessions", () =>
-        Effect.gen(function* SkillsHttpApiHandlers() {
-          yield* requireVerifiedSession();
-          const store = yield* SkillsStore;
-          return yield* store
-            .listProfessions()
-            .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
-        })
+      .handle(
+        "listProfessions",
+        Effect.fn("SkillsHttpApiHandlers.listProfessions")(
+          function* listProfessions() {
+            yield* requireVerifiedSession();
+            const store = yield* SkillsStore;
+            return yield* store
+              .listProfessions()
+              .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
+          }
+        )
       )
-      .handle("listRanges", () =>
-        Effect.gen(function* SkillsHttpApiHandlers() {
+      .handle(
+        "listRanges",
+        Effect.fn("SkillsHttpApiHandlers.listRanges")(function* listRanges() {
           yield* requireVerifiedSession();
           const store = yield* SkillsStore;
           return yield* store
@@ -99,22 +118,28 @@ export const SkillsHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
         })
       )
-      .handle("getRangeBySlug", ({ payload }) =>
-        Effect.gen(function* SkillsHttpApiHandlers() {
-          yield* requireVerifiedSession();
-          const store = yield* SkillsStore;
-          return yield* store
-            .getRangeBySlug(payload)
-            .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
-        })
+      .handle(
+        "getRangeBySlug",
+        Effect.fn("SkillsHttpApiHandlers.getRangeBySlug")(
+          function* getRangeBySlug({ payload }) {
+            yield* requireVerifiedSession();
+            const store = yield* SkillsStore;
+            return yield* store
+              .getRangeBySlug(payload)
+              .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
+          }
+        )
       )
-      .handle("listSkillsByRange", ({ payload }) =>
-        Effect.gen(function* SkillsHttpApiHandlers() {
-          yield* requireVerifiedSession();
-          const store = yield* SkillsStore;
-          return yield* store
-            .listSkillsByRange(payload)
-            .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
-        })
+      .handle(
+        "listSkillsByRange",
+        Effect.fn("SkillsHttpApiHandlers.listSkillsByRange")(
+          function* listSkillsByRange({ payload }) {
+            yield* requireVerifiedSession();
+            const store = yield* SkillsStore;
+            return yield* store
+              .listSkillsByRange(payload)
+              .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
+          }
+        )
       )
 );

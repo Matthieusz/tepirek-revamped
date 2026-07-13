@@ -22,10 +22,10 @@ const accountDisplayNameRules = {
 } as const;
 
 /** Parse a user-facing account display name for storage. */
-export const parseAccountDisplayName = (
-  input: string
-): Effect.Effect<AccountDisplayName, InvalidAccountDisplayName> =>
-  Effect.gen(function* parseAccountDisplayNameGen() {
+export const parseAccountDisplayName = Effect.fnUntraced(
+  function* parseAccountDisplayName(
+    input: string
+  ): Effect.fn.Return<AccountDisplayName, InvalidAccountDisplayName> {
     const trimmed = accountDisplayNameRules.trim ? input.trim() : input;
 
     if (trimmed.length < accountDisplayNameRules.minLength) {
@@ -41,7 +41,8 @@ export const parseAccountDisplayName = (
     }
 
     return AccountDisplayName.make(trimmed);
-  });
+  }
+);
 
 /** Convert an account display name to its primitive representation. */
 export const accountDisplayNameToString = (name: AccountDisplayName): string =>

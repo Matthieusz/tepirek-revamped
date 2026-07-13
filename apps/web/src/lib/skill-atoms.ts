@@ -73,36 +73,37 @@ export const skillsByRangeAtom = (rangeId: number) =>
 
 /** Mutation atom for creating a skill profession. */
 export const createSkillProfessionAtom = appHttpApiFn(
-  (payload: { readonly name: string }, get) =>
-    Effect.gen(function* createSkillProfessionEffect() {
-      const client = yield* AppHttpApiClient;
-      const profession = yield* client.skills.createProfession({ payload });
-      get.refresh(skillProfessionsAtom);
-      return profession;
-    })
+  Effect.fnUntraced(function* createSkillProfessionEffect(
+    payload: { readonly name: string },
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const profession = yield* client.skills.createProfession({ payload });
+    get.refresh(skillProfessionsAtom);
+    return profession;
+  })
 );
 
 /** Mutation atom for creating a skill range. */
 export const createSkillRangeAtom = appHttpApiFn(
-  (
+  Effect.fnUntraced(function* createSkillRangeEffect(
     payload: {
       readonly image: string;
       readonly level: number;
       readonly name: string;
     },
-    get
-  ) =>
-    Effect.gen(function* createSkillRangeEffect() {
-      const client = yield* AppHttpApiClient;
-      const range = yield* client.skills.createRange({ payload });
-      get.refresh(skillRangesAtom);
-      return range;
-    })
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const range = yield* client.skills.createRange({ payload });
+    get.refresh(skillRangesAtom);
+    return range;
+  })
 );
 
 /** Mutation atom for creating a skill. */
 export const createSkillAtom = appHttpApiFn(
-  (
+  Effect.fnUntraced(function* createSkillEffect(
     payload: {
       readonly link: string;
       readonly mastery: boolean;
@@ -110,30 +111,31 @@ export const createSkillAtom = appHttpApiFn(
       readonly professionId: number;
       readonly rangeId: number;
     },
-    get
-  ) =>
-    Effect.gen(function* createSkillEffect() {
-      const client = yield* AppHttpApiClient;
-      const skill = yield* client.skills.createSkill({ payload });
-      get.refresh(skillsByRangeAtom(payload.rangeId));
-      return skill;
-    })
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const skill = yield* client.skills.createSkill({ payload });
+    get.refresh(skillsByRangeAtom(payload.rangeId));
+    return skill;
+  })
 );
 
 const deleteSkillRangeRequestAtom = appHttpApiFn(
-  (payload: { readonly id: number }) =>
-    Effect.gen(function* deleteSkillRangeEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.skills.deleteRange({ payload });
-    })
+  Effect.fnUntraced(function* deleteSkillRangeEffect(input: {
+    readonly id: number;
+  }) {
+    const client = yield* AppHttpApiClient;
+    return yield* client.skills.deleteRange({ payload: input });
+  })
 );
 
 const deleteSkillRequestAtom = appHttpApiFn(
-  (payload: { readonly id: number }) =>
-    Effect.gen(function* deleteSkillEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.skills.deleteSkill({ payload });
-    })
+  Effect.fnUntraced(function* deleteSkillEffect(input: {
+    readonly id: number;
+  }) {
+    const client = yield* AppHttpApiClient;
+    return yield* client.skills.deleteSkill({ payload: input });
+  })
 );
 
 /** Optimistic skill-range resource that preserves loading and failure states. */

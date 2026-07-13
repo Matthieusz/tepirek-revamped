@@ -36,8 +36,11 @@ export const HeroesHttpApiHandlers = HttpApiBuilder.group(
   "heroes",
   (handlers) =>
     handlers
-      .handle("createHero", ({ payload }) =>
-        Effect.gen(function* HeroesHttpApiHandlers() {
+      .handle(
+        "createHero",
+        Effect.fn("HeroesHttpApiHandlers.createHero")(function* createHero({
+          payload,
+        }) {
           yield* requireAdminSession();
           const store = yield* HeroesStore;
           yield* store
@@ -45,8 +48,11 @@ export const HeroesHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("HeroesStoreError", projectStoreError));
         })
       )
-      .handle("deleteHero", ({ payload }) =>
-        Effect.gen(function* HeroesHttpApiHandlers() {
+      .handle(
+        "deleteHero",
+        Effect.fn("HeroesHttpApiHandlers.deleteHero")(function* deleteHero({
+          payload,
+        }) {
           yield* requireAdminSession();
           const store = yield* HeroesStore;
           yield* store
@@ -54,8 +60,9 @@ export const HeroesHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("HeroesStoreError", projectStoreError));
         })
       )
-      .handle("listHeroes", () =>
-        Effect.gen(function* HeroesHttpApiHandlers() {
+      .handle(
+        "listHeroes",
+        Effect.fn("HeroesHttpApiHandlers.listHeroes")(function* listHeroes() {
           yield* requireVerifiedSession();
           const store = yield* HeroesStore;
           return yield* store
@@ -63,13 +70,16 @@ export const HeroesHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("HeroesStoreError", projectStoreError));
         })
       )
-      .handle("listHeroesByEvent", ({ payload }) =>
-        Effect.gen(function* HeroesHttpApiHandlers() {
-          yield* requireVerifiedSession();
-          const store = yield* HeroesStore;
-          return yield* store
-            .listByEvent(payload)
-            .pipe(Effect.catchTag("HeroesStoreError", projectStoreError));
-        })
+      .handle(
+        "listHeroesByEvent",
+        Effect.fn("HeroesHttpApiHandlers.listHeroesByEvent")(
+          function* listHeroesByEvent({ payload }) {
+            yield* requireVerifiedSession();
+            const store = yield* HeroesStore;
+            return yield* store
+              .listByEvent(payload)
+              .pipe(Effect.catchTag("HeroesStoreError", projectStoreError));
+          }
+        )
       )
 );

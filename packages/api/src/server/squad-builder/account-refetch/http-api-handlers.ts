@@ -88,42 +88,49 @@ const mapAccountRefetchError = (
 export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "squadBuilderAccountRefetch",
-  (handlers) =>
-    Effect.gen(function* SquadBuilderAccountRefetchHttpApiHandlers() {
+  Effect.fnUntraced(
+    function* SquadBuilderAccountRefetchHttpApiHandlers(handlers) {
       const previewAccountRefetchSvc = yield* PreviewAccountRefetchService;
       const applyAccountRefetchSvc = yield* ApplyAccountRefetchService;
 
       return handlers
-        .handle("previewAccountRefetch", ({ payload, request }) =>
-          Effect.gen(function* previewAccountRefetchHandler() {
-            const session = yield* requireSquadBuilderSession();
-            const accountId = yield* parseMargonemAccountId(
-              payload.accountId
-            ).pipe(Effect.mapError(mapInvalidId));
-            return yield* withRequestCorrelation(
-              request,
-              previewAccountRefetchSvc.preview({
-                accountId,
-                actorUserId: sessionAppUserId(session),
-              })
-            ).pipe(Effect.mapError(mapAccountRefetchError));
-          })
-        )
-        .handle("applyAccountRefetch", ({ payload, request }) =>
-          Effect.gen(function* applyAccountRefetchHandler() {
-            const session = yield* requireSquadBuilderSession();
-            const refetchPreviewId =
-              yield* parsePendingMargonemAccountRefetchId(
-                payload.refetchPreviewId
+        .handle(
+          "previewAccountRefetch",
+          Effect.fn("SquadBuilderAccountRefetch.previewAccountRefetch")(
+            function* previewAccountRefetch({ payload, request }) {
+              const session = yield* requireSquadBuilderSession();
+              const accountId = yield* parseMargonemAccountId(
+                payload.accountId
               ).pipe(Effect.mapError(mapInvalidId));
-            return yield* withRequestCorrelation(
-              request,
-              applyAccountRefetchSvc.apply({
-                actorUserId: sessionAppUserId(session),
-                refetchPreviewId,
-              })
-            ).pipe(Effect.mapError(mapAccountRefetchError));
-          })
+              return yield* withRequestCorrelation(
+                request,
+                previewAccountRefetchSvc.preview({
+                  accountId,
+                  actorUserId: sessionAppUserId(session),
+                })
+              ).pipe(Effect.mapError(mapAccountRefetchError));
+            }
+          )
+        )
+        .handle(
+          "applyAccountRefetch",
+          Effect.fn("SquadBuilderAccountRefetch.applyAccountRefetch")(
+            function* applyAccountRefetch({ payload, request }) {
+              const session = yield* requireSquadBuilderSession();
+              const refetchPreviewId =
+                yield* parsePendingMargonemAccountRefetchId(
+                  payload.refetchPreviewId
+                ).pipe(Effect.mapError(mapInvalidId));
+              return yield* withRequestCorrelation(
+                request,
+                applyAccountRefetchSvc.apply({
+                  actorUserId: sessionAppUserId(session),
+                  refetchPreviewId,
+                })
+              ).pipe(Effect.mapError(mapAccountRefetchError));
+            }
+          )
         );
-    })
+    }
+  )
 );

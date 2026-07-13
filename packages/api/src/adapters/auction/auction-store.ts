@@ -64,110 +64,111 @@ const getSignupsWithDatabase =
         .orderBy(auction.createdAt)
     );
 
-const getStatsWithDatabase =
-  (database: EffectPgDatabase) => (input: AuctionGroupInput) =>
-    Effect.gen(function* getStatsWithDatabase() {
-      const result = yield* persistenceQuery(
-        "getAuctionStats",
-        database
-          .select({
-            totalSignups: count(),
-            uniqueUsers: countDistinct(auction.userId),
-          })
-          .from(auction)
-          .where(
-            and(
-              eq(auction.profession, input.profession),
-              eq(auction.type, input.type)
-            )
+const getStatsWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* getStatsWithDatabase(input: AuctionGroupInput) {
+    const result = yield* persistenceQuery(
+      "getAuctionStats",
+      database
+        .select({
+          totalSignups: count(),
+          uniqueUsers: countDistinct(auction.userId),
+        })
+        .from(auction)
+        .where(
+          and(
+            eq(auction.profession, input.profession),
+            eq(auction.type, input.type)
           )
-      );
-      const [stats] = result;
-      return stats ?? { totalSignups: 0, uniqueUsers: 0 };
-    });
+        )
+    );
+    const [stats] = result;
+    return stats ?? { totalSignups: 0, uniqueUsers: 0 };
+  });
 
-const removeSignupWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({ actorUserId, id }: RemoveSignupInput) =>
-    Effect.gen(function* removeSignupWithDatabase() {
-      const signups = yield* persistenceQuery(
-        "findAuctionSignup",
-        database
-          .select({ userId: auction.userId })
-          .from(auction)
-          .where(eq(auction.id, id))
-          .limit(1)
-      );
-      const [signup] = signups;
-      if (!signup) {
-        return yield* new AuctionNotFound({ message: "Zapis nie znaleziony" });
-      }
-      if (signup.userId !== actorUserId) {
-        return yield* new AuctionForbidden({
-          message: "Nie masz uprawnień do usunięcia tego zapisu",
-        });
-      }
-      yield* persistenceQuery(
-        "removeAuctionSignup",
-        database.delete(auction).where(eq(auction.id, id))
-      );
-      return { success: true as const };
-    });
+const removeSignupWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* removeSignupWithDatabase({
+    actorUserId,
+    id,
+  }: RemoveSignupInput) {
+    const signups = yield* persistenceQuery(
+      "findAuctionSignup",
+      database
+        .select({ userId: auction.userId })
+        .from(auction)
+        .where(eq(auction.id, id))
+        .limit(1)
+    );
+    const [signup] = signups;
+    if (!signup) {
+      return yield* new AuctionNotFound({ message: "Zapis nie znaleziony" });
+    }
+    if (signup.userId !== actorUserId) {
+      return yield* new AuctionForbidden({
+        message: "Nie masz uprawnień do usunięcia tego zapisu",
+      });
+    }
+    yield* persistenceQuery(
+      "removeAuctionSignup",
+      database.delete(auction).where(eq(auction.id, id))
+    );
+    return { success: true as const };
+  });
 
-const toggleSignupWithDatabase =
-  (database: EffectPgDatabase) => (input: ToggleSignupInput) =>
-    Effect.gen(function* toggleSignupWithDatabase() {
-      const existing = yield* persistenceQuery(
-        "findAuctionSlot",
-        database
-          .select({ id: auction.id, userId: auction.userId })
-          .from(auction)
-          .where(
-            and(
-              eq(auction.profession, input.profession),
-              eq(auction.type, input.type),
-              eq(auction.level, input.level),
-              eq(auction.round, input.round),
-              eq(auction.column, input.column)
-            )
+const toggleSignupWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* toggleSignupWithDatabase(
+    input: ToggleSignupInput
+  ) {
+    const existing = yield* persistenceQuery(
+      "findAuctionSlot",
+      database
+        .select({ id: auction.id, userId: auction.userId })
+        .from(auction)
+        .where(
+          and(
+            eq(auction.profession, input.profession),
+            eq(auction.type, input.type),
+            eq(auction.level, input.level),
+            eq(auction.round, input.round),
+            eq(auction.column, input.column)
           )
-          .limit(1)
-      );
-      const [cell] = existing;
-      if (cell) {
-        if (cell.userId === input.actorUserId) {
-          yield* persistenceQuery(
-            "removeOwnAuctionSignup",
-            database.delete(auction).where(eq(auction.id, cell.id))
-          );
-          return { action: "removed" as const };
-        }
-        return yield* new AuctionConflict({
-          message: "To pole jest już zajęte",
-        });
+        )
+        .limit(1)
+    );
+    const [cell] = existing;
+    if (cell) {
+      if (cell.userId === input.actorUserId) {
+        yield* persistenceQuery(
+          "removeOwnAuctionSignup",
+          database.delete(auction).where(eq(auction.id, cell.id))
+        );
+        return { action: "removed" as const };
       }
-      const inserted = yield* persistenceQuery(
-        "addAuctionSignup",
-        database
-          .insert(auction)
-          .values({
-            column: input.column,
-            level: input.level,
-            profession: input.profession,
-            round: input.round,
-            type: input.type,
-            userId: input.actorUserId,
-          })
-          .onConflictDoNothing()
-          .returning({ id: auction.id })
-      );
-      if (inserted.length === 0) {
-        return yield* new AuctionConflict({
-          message: "To pole jest już zajęte",
-        });
-      }
-      return { action: "added" as const };
-    });
+      return yield* new AuctionConflict({
+        message: "To pole jest już zajęte",
+      });
+    }
+    const inserted = yield* persistenceQuery(
+      "addAuctionSignup",
+      database
+        .insert(auction)
+        .values({
+          column: input.column,
+          level: input.level,
+          profession: input.profession,
+          round: input.round,
+          type: input.type,
+          userId: input.actorUserId,
+        })
+        .onConflictDoNothing()
+        .returning({ id: auction.id })
+    );
+    if (inserted.length === 0) {
+      return yield* new AuctionConflict({
+        message: "To pole jest już zajęte",
+      });
+    }
+    return { action: "added" as const };
+  });
 
 export class AuctionStore extends Context.Service<
   AuctionStore,

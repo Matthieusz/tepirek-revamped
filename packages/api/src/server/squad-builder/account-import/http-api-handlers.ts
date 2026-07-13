@@ -91,8 +91,8 @@ const mapAccountImportError = (
 export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "squadBuilderAccountImport",
-  (handlers) =>
-    Effect.gen(function* SquadBuilderAccountImportHttpApiHandlers() {
+  Effect.fnUntraced(
+    function* SquadBuilderAccountImportHttpApiHandlers(handlers) {
       const previewMargonemProfileImportSvc =
         yield* PreviewMargonemProfileImportService;
       const previewOwnedAccountImportsSvc =
@@ -101,55 +101,68 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
         yield* ConfirmOwnedAccountImportService;
 
       return handlers
-        .handle("previewMargonemProfileImport", ({ payload, request }) =>
-          Effect.gen(function* previewMargonemProfileImportHandler() {
-            const session = yield* requireSquadBuilderSession();
-            return yield* withRequestCorrelation(
-              request,
-              previewMargonemProfileImportSvc.preview({
-                actorUserId: sessionAppUserId(session),
-                profileUrl: payload.profileUrl,
-              })
-            ).pipe(Effect.mapError(mapAccountImportError));
-          })
-        )
-        .handle("previewOwnedAccountImports", ({ payload, request }) =>
-          Effect.gen(function* previewOwnedAccountImportsHandler() {
-            const session = yield* requireSquadBuilderSession();
-            return yield* withRequestCorrelation(
-              request,
-              previewOwnedAccountImportsSvc.preview({
-                actorUserId: sessionAppUserId(session),
-                profileUrls: payload.profileUrls,
-              })
-            ).pipe(Effect.mapError(mapAccountImportError));
-          })
-        )
-        .handle("confirmOwnedAccountImport", ({ payload, request }) =>
-          Effect.gen(function* confirmOwnedAccountImportHandler() {
-            const session = yield* requireSquadBuilderSession();
-            return yield* withRequestCorrelation(
-              request,
-              confirmOwnedAccountImportSvc.confirm({
-                actorUserId: sessionAppUserId(session),
-                displayName: payload.displayName,
-                pendingImportId: payload.pendingImportId,
-              })
-            ).pipe(Effect.mapError(mapAccountImportError));
-          })
-        )
-        .handle("listOwnedAccounts", ({ request }) =>
-          Effect.gen(function* listOwnedAccountsHandler() {
-            const session = yield* requireSquadBuilderSession();
-            return yield* withRequestCorrelation(
-              request,
-              AccountImportStoreService.use((store) =>
-                store.listOwnedAccounts({
+        .handle(
+          "previewMargonemProfileImport",
+          Effect.fn("SquadBuilderAccountImport.previewMargonemProfileImport")(
+            function* previewMargonemProfileImport({ payload, request }) {
+              const session = yield* requireSquadBuilderSession();
+              return yield* withRequestCorrelation(
+                request,
+                previewMargonemProfileImportSvc.preview({
                   actorUserId: sessionAppUserId(session),
+                  profileUrl: payload.profileUrl,
                 })
-              )
-            ).pipe(Effect.mapError(mapAccountImportError));
-          })
+              ).pipe(Effect.mapError(mapAccountImportError));
+            }
+          )
+        )
+        .handle(
+          "previewOwnedAccountImports",
+          Effect.fn("SquadBuilderAccountImport.previewOwnedAccountImports")(
+            function* previewOwnedAccountImports({ payload, request }) {
+              const session = yield* requireSquadBuilderSession();
+              return yield* withRequestCorrelation(
+                request,
+                previewOwnedAccountImportsSvc.preview({
+                  actorUserId: sessionAppUserId(session),
+                  profileUrls: payload.profileUrls,
+                })
+              ).pipe(Effect.mapError(mapAccountImportError));
+            }
+          )
+        )
+        .handle(
+          "confirmOwnedAccountImport",
+          Effect.fn("SquadBuilderAccountImport.confirmOwnedAccountImport")(
+            function* confirmOwnedAccountImport({ payload, request }) {
+              const session = yield* requireSquadBuilderSession();
+              return yield* withRequestCorrelation(
+                request,
+                confirmOwnedAccountImportSvc.confirm({
+                  actorUserId: sessionAppUserId(session),
+                  displayName: payload.displayName,
+                  pendingImportId: payload.pendingImportId,
+                })
+              ).pipe(Effect.mapError(mapAccountImportError));
+            }
+          )
+        )
+        .handle(
+          "listOwnedAccounts",
+          Effect.fn("SquadBuilderAccountImport.listOwnedAccounts")(
+            function* listOwnedAccounts({ request }) {
+              const session = yield* requireSquadBuilderSession();
+              return yield* withRequestCorrelation(
+                request,
+                AccountImportStoreService.use((store) =>
+                  store.listOwnedAccounts({
+                    actorUserId: sessionAppUserId(session),
+                  })
+                )
+              ).pipe(Effect.mapError(mapAccountImportError));
+            }
+          )
         );
-    })
+    }
+  )
 );

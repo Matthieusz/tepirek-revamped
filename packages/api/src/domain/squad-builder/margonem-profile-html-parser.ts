@@ -175,14 +175,14 @@ const parseJarunaCharacterRow = (
 };
 
 /** Parse Firecrawl HTML into a Jaruna-only profile preview. */
-export const parseMargonemProfileHtml = ({
-  html,
-  profileId,
-}: ParseMargonemProfileHtmlInput): Effect.Effect<
-  ParsedMargonemProfile,
-  ParseMargonemProfileHtmlError
-> =>
-  Effect.gen(function* parseMargonemProfileHtmlEffect() {
+export const parseMargonemProfileHtml = Effect.fnUntraced(
+  function* parseMargonemProfileHtml({
+    html,
+    profileId,
+  }: ParseMargonemProfileHtmlInput): Effect.fn.Return<
+    ParsedMargonemProfile,
+    ParseMargonemProfileHtmlError
+  > {
     const suggestedAccountName = extractProfileName(html);
 
     if (suggestedAccountName === undefined) {
@@ -215,4 +215,5 @@ export const parseMargonemProfileHtml = ({
       profileId,
       suggestedAccountName,
     };
-  });
+  }
+);

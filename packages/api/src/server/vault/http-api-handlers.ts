@@ -46,18 +46,24 @@ export const VaultHttpApiHandlers = HttpApiBuilder.group(
   "vault",
   (handlers) =>
     handlers
-      .handle("distributeGold", ({ payload }) =>
-        Effect.gen(function* VaultHttpApiHandlers() {
-          const vaultService = yield* VaultService;
-          yield* requireAdminSession();
-          return yield* mapVaultError(
-            "distributeGold",
-            vaultService.distributeGold(payload)
-          );
-        })
+      .handle(
+        "distributeGold",
+        Effect.fn("VaultHttpApiHandlers.distributeGold")(
+          function* distributeGold({ payload }) {
+            const vaultService = yield* VaultService;
+            yield* requireAdminSession();
+            return yield* mapVaultError(
+              "distributeGold",
+              vaultService.distributeGold(payload)
+            );
+          }
+        )
       )
-      .handle("getUserStats", ({ payload }) =>
-        Effect.gen(function* VaultHttpApiHandlers() {
+      .handle(
+        "getUserStats",
+        Effect.fn("VaultHttpApiHandlers.getUserStats")(function* getUserStats({
+          payload,
+        }) {
           const vaultService = yield* VaultService;
           yield* requireVerifiedSession();
           return yield* mapVaultError(
@@ -66,8 +72,11 @@ export const VaultHttpApiHandlers = HttpApiBuilder.group(
           );
         })
       )
-      .handle("getVault", ({ payload }) =>
-        Effect.gen(function* VaultHttpApiHandlers() {
+      .handle(
+        "getVault",
+        Effect.fn("VaultHttpApiHandlers.getVault")(function* getVault({
+          payload,
+        }) {
           const vaultService = yield* VaultService;
           yield* requireVerifiedSession();
           return yield* mapVaultError(
@@ -76,14 +85,17 @@ export const VaultHttpApiHandlers = HttpApiBuilder.group(
           );
         })
       )
-      .handle("togglePaidOut", ({ payload }) =>
-        Effect.gen(function* VaultHttpApiHandlers() {
-          const vaultService = yield* VaultService;
-          yield* requireAdminSession();
-          return yield* mapVaultError(
-            "togglePaidOut",
-            vaultService.togglePaidOut(payload)
-          );
-        })
+      .handle(
+        "togglePaidOut",
+        Effect.fn("VaultHttpApiHandlers.togglePaidOut")(
+          function* togglePaidOut({ payload }) {
+            const vaultService = yield* VaultService;
+            yield* requireAdminSession();
+            return yield* mapVaultError(
+              "togglePaidOut",
+              vaultService.togglePaidOut(payload)
+            );
+          }
+        )
       )
 );

@@ -46,8 +46,9 @@ export const BetHttpApiHandlers = HttpApiBuilder.group(
   "bet",
   (handlers) =>
     handlers
-      .handle("create", ({ payload }) =>
-        Effect.gen(function* BetHttpApiHandlers() {
+      .handle(
+        "create",
+        Effect.fn("BetHttpApiHandlers.create")(function* create({ payload }) {
           const betService = yield* BetService;
           const session = yield* requireAdminSession();
           const createdAt = new Date(yield* Clock.currentTimeMillis);
@@ -62,8 +63,11 @@ export const BetHttpApiHandlers = HttpApiBuilder.group(
           );
         })
       )
-      .handle("delete", ({ payload }) =>
-        Effect.gen(function* BetHttpApiHandlers() {
+      .handle(
+        "delete",
+        Effect.fn("BetHttpApiHandlers.delete")(function* deleteBet({
+          payload,
+        }) {
           const betService = yield* BetService;
           yield* requireAdminSession();
           return yield* mapBetError(
@@ -72,8 +76,9 @@ export const BetHttpApiHandlers = HttpApiBuilder.group(
           );
         })
       )
-      .handle("edit", ({ payload }) =>
-        Effect.gen(function* BetHttpApiHandlers() {
+      .handle(
+        "edit",
+        Effect.fn("BetHttpApiHandlers.edit")(function* edit({ payload }) {
           const betService = yield* BetService;
           yield* requireAdminSession();
           return yield* mapBetError(
@@ -85,30 +90,37 @@ export const BetHttpApiHandlers = HttpApiBuilder.group(
           );
         })
       )
-      .handle("getAll", () =>
-        Effect.gen(function* BetHttpApiHandlers() {
+      .handle(
+        "getAll",
+        Effect.fn("BetHttpApiHandlers.getAll")(function* getAll() {
           const betService = yield* BetService;
           yield* requireVerifiedSession();
           return yield* mapBetError("getAllBets", betService.getAllBets());
         })
       )
-      .handle("getAllPaginated", ({ payload }) =>
-        Effect.gen(function* BetHttpApiHandlers() {
-          const betService = yield* BetService;
-          yield* requireVerifiedSession();
-          return yield* mapBetError(
-            "getPaginatedBets",
-            betService.getPaginatedBets({
-              eventId: payload.eventId,
-              heroId: payload.heroId,
-              limit: payload.limit ?? 10,
-              page: payload.page ?? 1,
-            })
-          );
-        })
+      .handle(
+        "getAllPaginated",
+        Effect.fn("BetHttpApiHandlers.getAllPaginated")(
+          function* getAllPaginated({ payload }) {
+            const betService = yield* BetService;
+            yield* requireVerifiedSession();
+            return yield* mapBetError(
+              "getPaginatedBets",
+              betService.getPaginatedBets({
+                eventId: payload.eventId,
+                heroId: payload.heroId,
+                limit: payload.limit ?? 10,
+                page: payload.page ?? 1,
+              })
+            );
+          }
+        )
       )
-      .handle("getBetMembers", ({ payload }) =>
-        Effect.gen(function* BetHttpApiHandlers() {
+      .handle(
+        "getBetMembers",
+        Effect.fn("BetHttpApiHandlers.getBetMembers")(function* getBetMembers({
+          payload,
+        }) {
           const betService = yield* BetService;
           yield* requireVerifiedSession();
           return yield* mapBetError(
@@ -117,8 +129,11 @@ export const BetHttpApiHandlers = HttpApiBuilder.group(
           );
         })
       )
-      .handle("getByEvent", ({ payload }) =>
-        Effect.gen(function* BetHttpApiHandlers() {
+      .handle(
+        "getByEvent",
+        Effect.fn("BetHttpApiHandlers.getByEvent")(function* getByEvent({
+          payload,
+        }) {
           const betService = yield* BetService;
           yield* requireVerifiedSession();
           return yield* mapBetError(
@@ -127,14 +142,17 @@ export const BetHttpApiHandlers = HttpApiBuilder.group(
           );
         })
       )
-      .handle("getLatestForCopy", () =>
-        Effect.gen(function* BetHttpApiHandlers() {
-          const betService = yield* BetService;
-          yield* requireVerifiedSession();
-          return yield* mapBetError(
-            "getLatestBetForCopy",
-            betService.getLatestBetForCopy()
-          );
-        })
+      .handle(
+        "getLatestForCopy",
+        Effect.fn("BetHttpApiHandlers.getLatestForCopy")(
+          function* getLatestForCopy() {
+            const betService = yield* BetService;
+            yield* requireVerifiedSession();
+            return yield* mapBetError(
+              "getLatestBetForCopy",
+              betService.getLatestBetForCopy()
+            );
+          }
+        )
       )
 );

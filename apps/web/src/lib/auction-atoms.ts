@@ -62,7 +62,7 @@ export const auctionStatsAtom = (payload: AuctionGroupInput) =>
 
 /** Mutation atom for toggling an auction signup. Refreshes the affected group on success. */
 export const toggleAuctionSignupAtom = appHttpApiFn(
-  (
+  Effect.fnUntraced(function* toggleAuctionSignupEffect(
     payload: {
       readonly column: number;
       readonly level: number;
@@ -70,19 +70,18 @@ export const toggleAuctionSignupAtom = appHttpApiFn(
       readonly round: number;
       readonly type: AuctionType;
     },
-    get
-  ) =>
-    Effect.gen(function* toggleAuctionSignupEffect() {
-      const client = yield* AppHttpApiClient;
-      const result = yield* client.auction.toggleAuctionSignup({ payload });
-      const key = auctionGroupKey({
-        profession: payload.profession,
-        type: payload.type,
-      });
-      get.refresh(auctionSignupsByGroupAtom(key));
-      get.refresh(auctionStatsByGroupAtom(key));
-      return result;
-    })
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const result = yield* client.auction.toggleAuctionSignup({ payload });
+    const key = auctionGroupKey({
+      profession: payload.profession,
+      type: payload.type,
+    });
+    get.refresh(auctionSignupsByGroupAtom(key));
+    get.refresh(auctionStatsByGroupAtom(key));
+    return result;
+  })
 );
 
 /** Optimistic auction signup resource that preserves loading and failure states. */
@@ -99,8 +98,11 @@ const removeAuctionSignupFromGroupByGroupAtom = Atom.family(
   (key: AuctionGroupKey) =>
     optimisticAuctionSignupsByGroupAtom(key).pipe(
       Atom.optimisticFn({
-        fn: appHttpApiFn((payload: { readonly id: number }, get) =>
-          Effect.gen(function* removeAuctionSignupFromGroupEffect() {
+        fn: appHttpApiFn(
+          Effect.fnUntraced(function* removeAuctionSignupFromGroupEffect(
+            payload: { readonly id: number },
+            get: Atom.FnContext
+          ) {
             const client = yield* AppHttpApiClient;
             const result = yield* client.auction.removeAuctionSignup({
               payload,

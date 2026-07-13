@@ -39,40 +39,55 @@ export const AnnouncementHttpApiHandlers = HttpApiBuilder.group(
   "announcement",
   (handlers) =>
     handlers
-      .handle("createAnnouncement", ({ payload }) =>
-        Effect.gen(function* AnnouncementHttpApiHandlers() {
-          const session = yield* requireAdminSession();
-          const store = yield* AnnouncementStore;
-          const createdAt = new Date(yield* Clock.currentTimeMillis);
+      .handle(
+        "createAnnouncement",
+        Effect.fn("AnnouncementHttpApiHandlers.createAnnouncement")(
+          function* createAnnouncement({ payload }) {
+            const session = yield* requireAdminSession();
+            const store = yield* AnnouncementStore;
+            const createdAt = new Date(yield* Clock.currentTimeMillis);
 
-          yield* store
-            .create({
-              createdAt,
-              description: payload.description,
-              title: payload.title,
-              userId: session.user.id,
-            })
-            .pipe(Effect.catchTag("AnnouncementStoreError", projectStoreError));
-        })
+            yield* store
+              .create({
+                createdAt,
+                description: payload.description,
+                title: payload.title,
+                userId: session.user.id,
+              })
+              .pipe(
+                Effect.catchTag("AnnouncementStoreError", projectStoreError)
+              );
+          }
+        )
       )
-      .handle("deleteAnnouncement", ({ payload }) =>
-        Effect.gen(function* AnnouncementHttpApiHandlers() {
-          yield* requireAdminSession();
-          const store = yield* AnnouncementStore;
+      .handle(
+        "deleteAnnouncement",
+        Effect.fn("AnnouncementHttpApiHandlers.deleteAnnouncement")(
+          function* deleteAnnouncement({ payload }) {
+            yield* requireAdminSession();
+            const store = yield* AnnouncementStore;
 
-          yield* store
-            .delete({ id: payload.id })
-            .pipe(Effect.catchTag("AnnouncementStoreError", projectStoreError));
-        })
+            yield* store
+              .delete({ id: payload.id })
+              .pipe(
+                Effect.catchTag("AnnouncementStoreError", projectStoreError)
+              );
+          }
+        )
       )
-      .handle("listAnnouncements", () =>
-        Effect.gen(function* AnnouncementHttpApiHandlers() {
-          yield* requireVerifiedSession();
-          const store = yield* AnnouncementStore;
+      .handle(
+        "listAnnouncements",
+        Effect.fn("AnnouncementHttpApiHandlers.listAnnouncements")(
+          function* listAnnouncements() {
+            yield* requireVerifiedSession();
+            const store = yield* AnnouncementStore;
 
-          return yield* store
-            .list()
-            .pipe(Effect.catchTag("AnnouncementStoreError", projectStoreError));
-        })
+            return yield* store
+              .list()
+              .pipe(
+                Effect.catchTag("AnnouncementStoreError", projectStoreError)
+              );
+          }
+        )
       )
 );

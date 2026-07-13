@@ -46,27 +46,26 @@ export const heroesByEventAtom = (eventId: number | null) =>
 
 /** Mutation atom for creating a hero. */
 export const createHeroAtom = appHttpApiFn(
-  (
+  Effect.fnUntraced(function* createHeroEffect(
     payload: {
       readonly eventId: number;
       readonly image?: string;
       readonly level?: number;
       readonly name: string;
     },
-    get
-  ) =>
-    Effect.gen(function* createHeroEffect() {
-      const client = yield* AppHttpApiClient;
-      const hero = yield* client.heroes.createHero({ payload });
-      get.refresh(heroesAtom);
-      return hero;
-    })
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const hero = yield* client.heroes.createHero({ payload });
+    get.refresh(heroesAtom);
+    return hero;
+  })
 );
 
-const deleteHeroRequestAtom = appHttpApiFn((payload: { readonly id: number }) =>
-  Effect.gen(function* deleteHeroEffect() {
+const deleteHeroRequestAtom = appHttpApiFn(
+  Effect.fnUntraced(function* deleteHeroEffect(input: { readonly id: number }) {
     const client = yield* AppHttpApiClient;
-    return yield* client.heroes.deleteHero({ payload });
+    return yield* client.heroes.deleteHero({ payload: input });
   })
 );
 

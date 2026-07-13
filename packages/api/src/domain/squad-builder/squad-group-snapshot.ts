@@ -147,10 +147,10 @@ const parseCharacterPosition = (input: number) =>
   );
 
 /** Validate a squad group snapshot against accessible Jaruna characters and group rules. */
-export const validateSquadGroupSnapshot = (
-  input: ValidateSquadGroupSnapshotInput
-): Effect.Effect<SquadGroupDraftSnapshot, SquadGroupValidationError> =>
-  Effect.gen(function* validateSquadGroupSnapshotGen() {
+export const validateSquadGroupSnapshot = Effect.fnUntraced(
+  function* validateSquadGroupSnapshot(
+    input: ValidateSquadGroupSnapshotInput
+  ): Effect.fn.Return<SquadGroupDraftSnapshot, SquadGroupValidationError> {
     const { availableCharacters, groupId, name, squads } = input;
 
     const parsedName = yield* parseSquadGroupName(name);
@@ -254,4 +254,5 @@ export const validateSquadGroupSnapshot = (
       name: parsedName,
       squads: parsedSquads,
     };
-  });
+  }
+);

@@ -34,46 +34,58 @@ export const AuctionHttpApiHandlers = HttpApiBuilder.group(
   "auction",
   (handlers) =>
     handlers
-      .handle("getAuctionSignups", ({ payload }) =>
-        Effect.gen(function* AuctionHttpApiHandlers() {
-          yield* requireVerifiedSession();
-          const store = yield* AuctionStore;
-          return yield* store
-            .getSignups(payload)
-            .pipe(Effect.catchTag("AuctionStoreError", projectStoreError));
-        })
+      .handle(
+        "getAuctionSignups",
+        Effect.fn("AuctionHttpApiHandlers.getAuctionSignups")(
+          function* getAuctionSignups({ payload }) {
+            yield* requireVerifiedSession();
+            const store = yield* AuctionStore;
+            return yield* store
+              .getSignups(payload)
+              .pipe(Effect.catchTag("AuctionStoreError", projectStoreError));
+          }
+        )
       )
-      .handle("getAuctionStats", ({ payload }) =>
-        Effect.gen(function* AuctionHttpApiHandlers() {
-          yield* requireVerifiedSession();
-          const store = yield* AuctionStore;
-          return yield* store
-            .getStats(payload)
-            .pipe(Effect.catchTag("AuctionStoreError", projectStoreError));
-        })
+      .handle(
+        "getAuctionStats",
+        Effect.fn("AuctionHttpApiHandlers.getAuctionStats")(
+          function* getAuctionStats({ payload }) {
+            yield* requireVerifiedSession();
+            const store = yield* AuctionStore;
+            return yield* store
+              .getStats(payload)
+              .pipe(Effect.catchTag("AuctionStoreError", projectStoreError));
+          }
+        )
       )
-      .handle("removeAuctionSignup", ({ payload }) =>
-        Effect.gen(function* AuctionHttpApiHandlers() {
-          const session = yield* requireVerifiedSession();
-          const store = yield* AuctionStore;
-          return yield* store
-            .removeSignup({
-              actorUserId: session.user.id,
-              id: payload.id,
-            })
-            .pipe(Effect.catchTag("AuctionStoreError", projectStoreError));
-        })
+      .handle(
+        "removeAuctionSignup",
+        Effect.fn("AuctionHttpApiHandlers.removeAuctionSignup")(
+          function* removeAuctionSignup({ payload }) {
+            const session = yield* requireVerifiedSession();
+            const store = yield* AuctionStore;
+            return yield* store
+              .removeSignup({
+                actorUserId: session.user.id,
+                id: payload.id,
+              })
+              .pipe(Effect.catchTag("AuctionStoreError", projectStoreError));
+          }
+        )
       )
-      .handle("toggleAuctionSignup", ({ payload }) =>
-        Effect.gen(function* AuctionHttpApiHandlers() {
-          const session = yield* requireVerifiedSession();
-          const store = yield* AuctionStore;
-          return yield* store
-            .toggleSignup({
-              ...payload,
-              actorUserId: session.user.id,
-            })
-            .pipe(Effect.catchTag("AuctionStoreError", projectStoreError));
-        })
+      .handle(
+        "toggleAuctionSignup",
+        Effect.fn("AuctionHttpApiHandlers.toggleAuctionSignup")(
+          function* toggleAuctionSignup({ payload }) {
+            const session = yield* requireVerifiedSession();
+            const store = yield* AuctionStore;
+            return yield* store
+              .toggleSignup({
+                ...payload,
+                actorUserId: session.user.id,
+              })
+              .pipe(Effect.catchTag("AuctionStoreError", projectStoreError));
+          }
+        )
       )
 );

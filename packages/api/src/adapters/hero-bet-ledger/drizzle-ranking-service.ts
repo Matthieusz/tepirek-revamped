@@ -63,47 +63,45 @@ const normalizeRankingRow = (row: {
   totalBets: Number(row.totalBets),
 });
 
-const getHeroStatsWithDatabase =
-  (database: EffectPgDatabase) => (heroId: number) =>
-    Effect.gen(function* getHeroStats() {
-      const statsRows = yield* persistenceQuery(
-        "getHeroStats.stats",
-        database
-          .select({
-            totalBets: sql<number>`COALESCE(SUM(${userStats.bets}), 0)`.as(
-              "total_bets"
-            ),
-            totalPoints:
-              sql<string>`COALESCE(SUM(${userStats.points}), '0')`.as(
-                "total_points"
-              ),
-          })
-          .from(userStats)
-          .where(eq(userStats.heroId, heroId))
-      );
-      const heroRows = yield* persistenceQuery(
-        "getHeroStats.hero",
-        database
-          .select({ id: hero.id, name: hero.name, pointWorth: hero.pointWorth })
-          .from(hero)
-          .where(eq(hero.id, heroId))
-      );
-      const [heroInfo] = heroRows;
-      if (heroInfo === undefined) {
-        return yield* new RankingNotFound({ message: "Heros nie znaleziony" });
-      }
-      const [stats] = statsRows;
-      return {
-        currentPointWorth: Number(heroInfo.pointWorth),
-        heroId,
-        heroName: heroInfo.name,
-        totalBets: Number(stats?.totalBets ?? 0),
-        totalPoints: Number.parseFloat(stats?.totalPoints ?? "0"),
-      };
-    });
+const getHeroStatsWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* getHeroStats(heroId: number) {
+    const statsRows = yield* persistenceQuery(
+      "getHeroStats.stats",
+      database
+        .select({
+          totalBets: sql<number>`COALESCE(SUM(${userStats.bets}), 0)`.as(
+            "total_bets"
+          ),
+          totalPoints: sql<string>`COALESCE(SUM(${userStats.points}), '0')`.as(
+            "total_points"
+          ),
+        })
+        .from(userStats)
+        .where(eq(userStats.heroId, heroId))
+    );
+    const heroRows = yield* persistenceQuery(
+      "getHeroStats.hero",
+      database
+        .select({ id: hero.id, name: hero.name, pointWorth: hero.pointWorth })
+        .from(hero)
+        .where(eq(hero.id, heroId))
+    );
+    const [heroInfo] = heroRows;
+    if (heroInfo === undefined) {
+      return yield* new RankingNotFound({ message: "Heros nie znaleziony" });
+    }
+    const [stats] = statsRows;
+    return {
+      currentPointWorth: Number(heroInfo.pointWorth),
+      heroId,
+      heroName: heroInfo.name,
+      totalBets: Number(stats?.totalBets ?? 0),
+      totalPoints: Number.parseFloat(stats?.totalPoints ?? "0"),
+    };
+  });
 
-const getOldestUnpaidEventWithDatabase = (database: EffectPgDatabase) => () =>
-  Effect.gen(function* getOldestUnpaidEvent() {
+const getOldestUnpaidEventWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* getOldestUnpaidEvent() {
     const result = yield* persistenceQuery(
       "getOldestUnpaidEvent",
       database
@@ -119,82 +117,79 @@ const getOldestUnpaidEventWithDatabase = (database: EffectPgDatabase) => () =>
     return result[0]?.eventId ?? null;
   });
 
-const getRankingWithDatabase =
-  (database: EffectPgDatabase) => (input: GetRankingInput) =>
-    Effect.gen(function* getRanking() {
-      const whereClause = buildUserStatsWhere(input);
+const getRankingWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* getRanking(input: GetRankingInput) {
+    const whereClause = buildUserStatsWhere(input);
 
-      const ranking = yield* persistenceQuery(
-        "getRanking.ranking",
+    const ranking = yield* persistenceQuery(
+      "getRanking.ranking",
+      database
+        .select({
+          totalBets: sql<number>`SUM(${userStats.bets})`.as("total_bets"),
+          totalEarnings: sql<string>`SUM(${userStats.earnings})`.as(
+            "total_earnings"
+          ),
+          totalPoints: sql<string>`SUM(${userStats.points})`.as("total_points"),
+          userId: userStats.userId,
+          userImage: user.image,
+          userName: user.name,
+        })
+        .from(userStats)
+        .innerJoin(user, eq(userStats.userId, user.id))
+        .where(whereClause)
+        .groupBy(userStats.userId, user.name, user.image)
+        .orderBy(desc(sql`SUM(${userStats.points})`))
+    );
+
+    let totalBets = 0;
+    if (input.heroId !== undefined) {
+      const betsRows = yield* persistenceQuery(
+        "getRanking.totalHeroBets",
         database
-          .select({
-            totalBets: sql<number>`SUM(${userStats.bets})`.as("total_bets"),
-            totalEarnings: sql<string>`SUM(${userStats.earnings})`.as(
-              "total_earnings"
-            ),
-            totalPoints: sql<string>`SUM(${userStats.points})`.as(
-              "total_points"
-            ),
-            userId: userStats.userId,
-            userImage: user.image,
-            userName: user.name,
-          })
-          .from(userStats)
-          .innerJoin(user, eq(userStats.userId, user.id))
-          .where(whereClause)
-          .groupBy(userStats.userId, user.name, user.image)
-          .orderBy(desc(sql`SUM(${userStats.points})`))
+          .select({ count: sql<number>`count(*)` })
+          .from(heroBet)
+          .where(eq(heroBet.heroId, input.heroId))
       );
+      totalBets = Number(betsRows[0]?.count ?? 0);
+    } else if (input.eventId === undefined) {
+      const betsRows = yield* persistenceQuery(
+        "getRanking.totalBets",
+        database.select({ count: sql<number>`count(*)` }).from(heroBet)
+      );
+      totalBets = Number(betsRows[0]?.count ?? 0);
+    } else {
+      const betsRows = yield* persistenceQuery(
+        "getRanking.totalEventBets",
+        database
+          .select({ count: sql<number>`count(*)` })
+          .from(heroBet)
+          .innerJoin(hero, eq(heroBet.heroId, hero.id))
+          .where(eq(hero.eventId, input.eventId))
+      );
+      totalBets = Number(betsRows[0]?.count ?? 0);
+    }
 
-      let totalBets = 0;
-      if (input.heroId !== undefined) {
-        const betsRows = yield* persistenceQuery(
-          "getRanking.totalHeroBets",
-          database
-            .select({ count: sql<number>`count(*)` })
-            .from(heroBet)
-            .where(eq(heroBet.heroId, input.heroId))
-        );
-        totalBets = Number(betsRows[0]?.count ?? 0);
-      } else if (input.eventId === undefined) {
-        const betsRows = yield* persistenceQuery(
-          "getRanking.totalBets",
-          database.select({ count: sql<number>`count(*)` }).from(heroBet)
-        );
-        totalBets = Number(betsRows[0]?.count ?? 0);
-      } else {
-        const betsRows = yield* persistenceQuery(
-          "getRanking.totalEventBets",
-          database
-            .select({ count: sql<number>`count(*)` })
-            .from(heroBet)
-            .innerJoin(hero, eq(heroBet.heroId, hero.id))
-            .where(eq(hero.eventId, input.eventId))
-        );
-        totalBets = Number(betsRows[0]?.count ?? 0);
-      }
+    const pointWorthRows =
+      input.heroId === undefined
+        ? null
+        : yield* persistenceQuery(
+            "getRanking.pointWorth",
+            database
+              .select({ pointWorth: hero.pointWorth })
+              .from(hero)
+              .where(eq(hero.id, input.heroId))
+          );
+    const pointWorth =
+      pointWorthRows === null
+        ? null
+        : parsePointWorth(pointWorthRows[0]?.pointWorth ?? null);
 
-      const pointWorthRows =
-        input.heroId === undefined
-          ? null
-          : yield* persistenceQuery(
-              "getRanking.pointWorth",
-              database
-                .select({ pointWorth: hero.pointWorth })
-                .from(hero)
-                .where(eq(hero.id, input.heroId))
-            );
-      const pointWorth =
-        pointWorthRows === null
-          ? null
-          : parsePointWorth(pointWorthRows[0]?.pointWorth ?? null);
-
-      return {
-        pointWorth,
-        ranking: ranking.map(normalizeRankingRow),
-        totalBets,
-      };
-    });
+    return {
+      pointWorth,
+      ranking: ranking.map(normalizeRankingRow),
+      totalBets,
+    };
+  });
 
 const makeService = (database: EffectPgDatabase): RankingServiceInterface => ({
   getHeroStats: Effect.fn("RankingService.getHeroStats")((heroId: number) =>

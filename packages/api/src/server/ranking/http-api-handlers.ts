@@ -41,28 +41,37 @@ export const RankingHttpApiHandlers = HttpApiBuilder.group(
   "ranking",
   (handlers) =>
     handlers
-      .handle("getHeroStats", ({ payload }) =>
-        Effect.gen(function* RankingHttpApiHandlers() {
-          const rankingService = yield* RankingService;
-          yield* requireVerifiedSession();
-          return yield* mapRankingError(
-            "getHeroStats",
-            rankingService.getHeroStats(payload.heroId)
-          );
-        })
+      .handle(
+        "getHeroStats",
+        Effect.fn("RankingHttpApiHandlers.getHeroStats")(
+          function* getHeroStats({ payload }) {
+            const rankingService = yield* RankingService;
+            yield* requireVerifiedSession();
+            return yield* mapRankingError(
+              "getHeroStats",
+              rankingService.getHeroStats(payload.heroId)
+            );
+          }
+        )
       )
-      .handle("getOldestUnpaidEvent", () =>
-        Effect.gen(function* RankingHttpApiHandlers() {
-          const rankingService = yield* RankingService;
-          yield* requireVerifiedSession();
-          return yield* mapRankingError(
-            "getOldestUnpaidEvent",
-            rankingService.getOldestUnpaidEvent()
-          );
-        })
+      .handle(
+        "getOldestUnpaidEvent",
+        Effect.fn("RankingHttpApiHandlers.getOldestUnpaidEvent")(
+          function* getOldestUnpaidEvent() {
+            const rankingService = yield* RankingService;
+            yield* requireVerifiedSession();
+            return yield* mapRankingError(
+              "getOldestUnpaidEvent",
+              rankingService.getOldestUnpaidEvent()
+            );
+          }
+        )
       )
-      .handle("getRanking", ({ payload }) =>
-        Effect.gen(function* RankingHttpApiHandlers() {
+      .handle(
+        "getRanking",
+        Effect.fn("RankingHttpApiHandlers.getRanking")(function* getRanking({
+          payload,
+        }) {
           const rankingService = yield* RankingService;
           yield* requireVerifiedSession();
           return yield* mapRankingError(

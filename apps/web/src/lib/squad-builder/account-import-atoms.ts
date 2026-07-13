@@ -29,34 +29,35 @@ export const ownedAccountsAtom = appHttpApiAtom(
 
 /** Mutation atom for previewing owned account imports. */
 export const previewOwnedAccountImportsAtom = appHttpApiFn(
-  (payload: PreviewOwnedAccountImportsInput) =>
-    Effect.gen(function* previewOwnedAccountImportsEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.squadBuilderAccountImport.previewOwnedAccountImports(
-        {
-          payload: {
-            profileUrls: payload.profileUrls,
-          },
-        }
-      );
-    })
+  Effect.fnUntraced(function* previewOwnedAccountImportsEffect(
+    payload: PreviewOwnedAccountImportsInput
+  ) {
+    const client = yield* AppHttpApiClient;
+    return yield* client.squadBuilderAccountImport.previewOwnedAccountImports({
+      payload: {
+        profileUrls: payload.profileUrls,
+      },
+    });
+  })
 );
 
 /** Mutation atom for confirming an owned account import. Refreshes owned accounts on success. */
 export const confirmOwnedAccountImportAtom = appHttpApiFn(
-  (payload: ConfirmOwnedAccountImportInput, get: Atom.FnContext) =>
-    Effect.gen(function* confirmOwnedAccountImportEffect() {
-      const client = yield* AppHttpApiClient;
-      const result =
-        yield* client.squadBuilderAccountImport.confirmOwnedAccountImport({
-          payload: {
-            displayName: payload.displayName,
-            pendingImportId: asPendingMargonemAccountImportId(
-              payload.pendingImportId
-            ),
-          },
-        });
-      get.refresh(ownedAccountsAtom);
-      return result;
-    })
+  Effect.fnUntraced(function* confirmOwnedAccountImportEffect(
+    payload: ConfirmOwnedAccountImportInput,
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const result =
+      yield* client.squadBuilderAccountImport.confirmOwnedAccountImport({
+        payload: {
+          displayName: payload.displayName,
+          pendingImportId: asPendingMargonemAccountImportId(
+            payload.pendingImportId
+          ),
+        },
+      });
+    get.refresh(ownedAccountsAtom);
+    return result;
+  })
 );
