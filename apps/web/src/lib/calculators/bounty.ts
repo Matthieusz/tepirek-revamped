@@ -7,8 +7,8 @@
  * single source of truth for the penalty math.
  */
 
-export const MIN_LEVEL = 1;
-export const MAX_LEVEL = 500;
+const MIN_LEVEL = 1;
+const MAX_LEVEL = 500;
 
 /**
  * Base level difference threshold before scaling

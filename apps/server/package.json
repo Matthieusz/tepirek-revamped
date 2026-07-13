@@ -13,6 +13,7 @@
     "db:push": "pnpm --filter @tepirek-revamped/db run db:push"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
     "@tepirek-revamped/api": "workspace:*",
     "@tepirek-revamped/auth": "workspace:*",
     "@tepirek-revamped/db": "workspace:*",

@@ -110,7 +110,7 @@ type PreviewOwnedAccountImportFailure = Extract<
   { readonly _tag: "PreviewFailed" }
 >;
 
-export type SquadBuilderLineError = PreviewOwnedAccountImportFailure["error"];
+type SquadBuilderLineError = PreviewOwnedAccountImportFailure["error"];
 
 const isUnauthorizedApiError = (error: unknown): boolean =>
   error instanceof AnnouncementUnauthorized ||

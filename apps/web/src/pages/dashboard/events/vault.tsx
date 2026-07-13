@@ -129,7 +129,6 @@ interface VaultContentProps extends EventsVaultPageProps {
   readonly vaultInput: { readonly eventId?: number };
 }
 
-// oxlint-disable-next-line complexity
 const VaultContent = ({
   effectiveEventId,
   events,

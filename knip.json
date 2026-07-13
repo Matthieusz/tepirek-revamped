@@ -4,7 +4,6 @@
   "exclude": ["duplicates"],
   "ignore": [
     "apps/web/src/components/ui/**",
-    "apps/web/src/lib/effect-atom-result.ts",
     "apps/web/src/lib/route-helpers.ts",
     "apps/web/src/lib/squad-builder/account-sharing-atoms.ts",
     "apps/web/src/lib/squad-builder/squad-group-atoms.ts",
@@ -14,5 +13,5 @@
     "packages/api/src/test/integration/builders.ts",
     "packages/db/drizzle.config.ts"
   ],
-  "ignoreDependencies": ["dotenv"]
+  "ignoreDependencies": ["@opentelemetry/api", "dotenv"]
 }

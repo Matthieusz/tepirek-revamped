@@ -11,7 +11,7 @@ interface AuthProviderErrorDetails {
   readonly statusText?: string;
 }
 
-export interface AuthResponse {
+interface AuthResponse {
   readonly error: AuthProviderErrorDetails | null;
 }
 
