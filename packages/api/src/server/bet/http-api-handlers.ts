@@ -1,4 +1,3 @@
-// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
