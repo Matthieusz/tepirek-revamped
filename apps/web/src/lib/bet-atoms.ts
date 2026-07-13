@@ -1,8 +1,8 @@
 import type { PaginatedBets } from "@tepirek-revamped/api/protocol/bet/http-api-contract";
 import { Effect } from "effect";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
@@ -42,21 +42,6 @@ const paginatedBetInputFromKey = (key: PaginatedBetKey) => {
     ...(page === null ? {} : { page }),
   };
 };
-
-const emptyPaginatedBets: PaginatedBetList = {
-  items: [],
-  pagination: {
-    hasMore: false,
-    limit: 0,
-    page: 1,
-    totalItems: 0,
-    totalPages: 0,
-  },
-};
-
-const getPaginatedBetsOrEmpty = (
-  result: AsyncResult.AsyncResult<PaginatedBetList, unknown>
-) => (AsyncResult.isSuccess(result) ? result.value : emptyPaginatedBets);
 
 const removeBetFromPage = (
   current: PaginatedBetList,
@@ -123,9 +108,7 @@ const deleteBetRequestAtom = appHttpApiFn((payload: { readonly id: number }) =>
 
 /** Optimistic paginated bet atom backed by a Result-returning page resource. */
 const optimisticPaginatedBetsByKeyAtom = Atom.family((key: PaginatedBetKey) =>
-  Atom.optimistic(
-    paginatedBetsByKeyAtom(key).pipe(Atom.map(getPaginatedBetsOrEmpty))
-  )
+  Atom.optimistic(paginatedBetsByKeyAtom(key))
 );
 
 export const optimisticPaginatedBetsAtom = (input: PaginatedBetInput) =>
@@ -136,7 +119,8 @@ const deleteBetFromPageByKeyAtom = Atom.family((key: PaginatedBetKey) =>
   optimisticPaginatedBetsByKeyAtom(key).pipe(
     Atom.optimisticFn({
       fn: deleteBetRequestAtom,
-      reducer: removeBetFromPage,
+      reducer: (current, input) =>
+        updateResultSuccess(current, (page) => removeBetFromPage(page, input)),
     })
   )
 );

@@ -1,9 +1,12 @@
 import { useAtomValue } from "@effect/atom-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useCallback } from "react";
 
-import type { EventSelectOption } from "@/components/events/select-utils";
-import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
+import type {
+  EventSelectOption,
+  HeroSelectOption,
+} from "@/components/events/select-utils";
 import { eventsAtom } from "@/lib/event-atoms";
 import {
   isHeroQueryEnabled,
@@ -39,9 +42,11 @@ interface UseEventHeroFilterOptions {
 interface UseEventHeroFilterResult {
   state: EventHeroFilterState;
   events: EventSelectOption[] | undefined;
+  eventsResult: AsyncResult.AsyncResult<readonly EventSelectOption[], unknown>;
   /** Heroes for the selected Event, sorted by level. Undefined when all Events. */
   sortedHeroes: ReturnType<typeof sortHeroesByLevel>;
   heroesLoading: boolean;
+  heroesResult: AsyncResult.AsyncResult<readonly HeroSelectOption[], unknown>;
   /** Whether the Hero query is enabled (specific Event selected). */
   heroQueryEnabled: boolean;
   /** The Event/Hero filter as router query inputs (undefined for all). */
@@ -78,13 +83,15 @@ export const useEventHeroFilter = (
   });
 
   const eventsResult = useAtomValue(eventsAtom);
-  const events = [...resultValueOr(eventsResult, [])] as EventSelectOption[];
+  const events = AsyncResult.isSuccess(eventsResult)
+    ? [...eventsResult.value]
+    : [];
 
   const heroQueryEnabled = isHeroQueryEnabled(state);
   const heroEventId = heroQueryEnabled ? Number(state.eventId) : null;
   const heroesResult = useAtomValue(heroesByEventAtom(heroEventId));
-  const heroes = heroQueryEnabled ? resultValueOr(heroesResult, []) : [];
-  const heroesLoading = heroQueryEnabled && resultIsLoading(heroesResult);
+  const heroes = AsyncResult.isSuccess(heroesResult) ? heroesResult.value : [];
+  const heroesLoading = heroQueryEnabled && AsyncResult.isWaiting(heroesResult);
 
   const sortedHeroes = heroQueryEnabled ? sortHeroesByLevel(heroes) : [];
 
@@ -119,8 +126,10 @@ export const useEventHeroFilter = (
 
   return {
     events,
+    eventsResult,
     heroQueryEnabled,
     heroesLoading,
+    heroesResult,
     queryInputs,
     selectEvent,
     selectHero,

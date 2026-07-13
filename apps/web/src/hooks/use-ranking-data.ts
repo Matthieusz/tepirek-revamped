@@ -1,7 +1,7 @@
 import { useAtomValue } from "@effect/atom-react";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 
 import type { RankingItem } from "@/components/events/ranking-list";
-import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { rankingAtom } from "@/lib/ranking-atoms";
 
 interface UseRankingDataParams {
@@ -41,8 +41,10 @@ export const useRankingData = ({
   queryInputs,
 }: UseRankingDataParams) => {
   const rankingResult = useAtomValue(rankingAtom(queryInputs));
-  const rankingData = resultValueOr(rankingResult);
-  const rankingLoading = resultIsLoading(rankingResult);
+  const rankingData = AsyncResult.isSuccess(rankingResult)
+    ? rankingResult.value
+    : undefined;
+  const rankingLoading = AsyncResult.isWaiting(rankingResult);
 
   const sortedRanking = sortRanking(
     rankingData?.ranking as RankingItem[] | undefined,
@@ -52,6 +54,7 @@ export const useRankingData = ({
   return {
     pointWorth: rankingData?.pointWorth ?? null,
     rankingLoading,
+    rankingResult,
     sortedRanking,
     totalBets: rankingData?.totalBets ?? 0,
   };

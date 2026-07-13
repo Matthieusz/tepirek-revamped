@@ -1,8 +1,8 @@
 import type { TodoSummary } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
 import { Effect } from "effect";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
@@ -10,12 +10,6 @@ import {
 } from "@/lib/http-api-client-runtime";
 
 type Todo = typeof TodoSummary.Type;
-
-const emptyTodos: readonly Todo[] = [];
-
-const getTodoListOrEmpty = (
-  result: AsyncResult.AsyncResult<readonly Todo[], unknown>
-) => (AsyncResult.isSuccess(result) ? result.value : emptyTodos);
 
 const removeTodoById = (
   todos: readonly Todo[],
@@ -64,16 +58,15 @@ const toggleTodoRequestAtom = appHttpApiFn(
     })
 );
 
-/** Optimistic todo list atom backed by the Result-returning todos resource. */
-export const optimisticTodosAtom = Atom.optimistic(
-  todosAtom.pipe(Atom.map(getTodoListOrEmpty))
-);
+/** Optimistic todo resource that preserves loading and failure states. */
+export const optimisticTodosAtom = Atom.optimistic(todosAtom);
 
 /** Optimistic mutation atom for deleting a todo from the list. */
 export const deleteTodoAtom = optimisticTodosAtom.pipe(
   Atom.optimisticFn({
     fn: deleteTodoRequestAtom,
-    reducer: removeTodoById,
+    reducer: (current, input) =>
+      updateResultSuccess(current, (todos) => removeTodoById(todos, input)),
   })
 );
 
@@ -81,6 +74,7 @@ export const deleteTodoAtom = optimisticTodosAtom.pipe(
 export const toggleTodoAtom = optimisticTodosAtom.pipe(
   Atom.optimisticFn({
     fn: toggleTodoRequestAtom,
-    reducer: toggleTodoById,
+    reducer: (current, input) =>
+      updateResultSuccess(current, (todos) => toggleTodoById(todos, input)),
   })
 );

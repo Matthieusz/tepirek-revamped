@@ -1,6 +1,9 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
+/* oxlint-disable no-use-before-define */
+
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import type { SkillSummary as SkillSummarySchema } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -16,10 +19,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Table,
   TableBody,
@@ -28,7 +31,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { isAdmin } from "@/lib/route-helpers";
 import {
   deleteSkillFromRangeAtom,
@@ -46,11 +48,28 @@ const RangeSkillsView = ({
   rangeId: number;
   professions: readonly { readonly id: number; readonly name: string }[];
 }) => {
+  const skillsResult = useAtomValue(skillsByRangeAtom(rangeId));
+  const refreshSkills = useAtomRefresh(skillsByRangeAtom(rangeId));
+
+  return (
+    <AsyncResultBoundary onRetry={refreshSkills} result={skillsResult}>
+      {() => <RangeSkillsContent professions={professions} rangeId={rangeId} />}
+    </AsyncResultBoundary>
+  );
+};
+
+const RangeSkillsContent = ({
+  rangeId,
+  professions,
+}: {
+  rangeId: number;
+  professions: readonly { readonly id: number; readonly name: string }[];
+}) => {
   const { session } = routeApi.useRouteContext();
   const isAdminUser = isAdmin(session);
   const [skillToDelete, setSkillToDelete] = useState<SkillToDelete>(null);
-
   const skillsResult = useAtomValue(skillsByRangeAtom(rangeId));
+  const skillsData = AsyncResult.getOrThrow(skillsResult);
   const deleteSkill = useAtomSet(deleteSkillFromRangeAtom(rangeId), {
     mode: "promise",
   });
@@ -73,7 +92,6 @@ const RangeSkillsView = ({
     },
   };
 
-  const skillsData = resultValueOr(skillsResult, []) ?? [];
   type SkillSummary = typeof SkillSummarySchema.Type;
   const skillsGrouped: Record<number, SkillSummary[]> = {};
   for (const s of skillsData) {
@@ -218,59 +236,70 @@ const RangeSkillsView = ({
 const RangeDetails = () => {
   const { rangeName } = routeApi.useParams();
   const rangeResult = useAtomValue(skillRangeBySlugAtom(rangeName));
-  const rangeData = resultValueOr(rangeResult, null);
-  const rangeIsLoading = resultIsLoading(rangeResult);
-  const professionsQueryData = resultValueOr(
-    useAtomValue(skillProfessionsAtom),
-    []
-  );
-
-  if (rangeIsLoading) {
-    return (
-      <div className="mx-auto w-full max-w-6xl space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <LoadingSpinner />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!rangeData) {
-    return <div>Nie znaleziono przedziału.</div>;
-  }
-
-  const currentRange = rangeData;
+  const professionsResult = useAtomValue(skillProfessionsAtom);
+  const refreshRange = useAtomRefresh(skillRangeBySlugAtom(rangeName));
+  const refreshProfessions = useAtomRefresh(skillProfessionsAtom);
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="mb-1 font-bold text-2xl tracking-tight">
-            {rangeData.name}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Zestawy umiejętności dla poziomu {currentRange.level}
-          </p>
-        </div>
-        <AddSkillModal
-          defaultRangeId={currentRange.id}
-          trigger={
-            <Button size="sm" type="button">
-              <Plus className="size-4" />
-              Dodaj zestaw
-            </Button>
-          }
-        />
-      </div>
-      <RangeSkillsView
-        professions={professionsQueryData}
-        rangeId={currentRange.id}
-      />
-    </div>
+    <AsyncResultBoundary onRetry={refreshRange} result={rangeResult}>
+      {(rangeData) =>
+        rangeData === null ? (
+          <p>Nie znaleziono przedziału.</p>
+        ) : (
+          <AsyncResultBoundary
+            onRetry={refreshProfessions}
+            result={professionsResult}
+          >
+            {(professions) => (
+              <RangeDetailsContent
+                professions={professions}
+                rangeData={rangeData}
+              />
+            )}
+          </AsyncResultBoundary>
+        )
+      }
+    </AsyncResultBoundary>
   );
 };
+
+const RangeDetailsContent = ({
+  rangeData,
+  professions,
+}: {
+  readonly rangeData: {
+    readonly id: number;
+    readonly level: number;
+    readonly name: string;
+  };
+  readonly professions: readonly {
+    readonly id: number;
+    readonly name: string;
+  }[];
+}) => (
+  <div className="mx-auto w-full max-w-6xl space-y-6">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 className="mb-1 font-bold text-2xl tracking-tight">
+          {rangeData.name}
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Zestawy umiejętności dla poziomu {rangeData.level}
+        </p>
+      </div>
+      <AddSkillModal
+        defaultRangeId={rangeData.id}
+        trigger={
+          <Button size="sm" type="button">
+            <Plus className="size-4" />
+            Dodaj zestaw
+          </Button>
+        }
+      />
+    </div>
+    <RangeSkillsView professions={professions} rangeId={rangeData.id} />
+  </div>
+);
 
 export const Route = createFileRoute("/dashboard/skills/$rangeName")({
   component: RangeDetails,

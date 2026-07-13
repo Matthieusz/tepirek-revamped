@@ -1,9 +1,9 @@
 import type { AuctionSignupSummary } from "@tepirek-revamped/api/protocol/auction/http-api-contract";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import { Effect } from "effect";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
@@ -11,12 +11,6 @@ import {
 } from "@/lib/http-api-client-runtime";
 
 type AuctionSignup = typeof AuctionSignupSummary.Type;
-
-const emptyAuctionSignups: readonly AuctionSignup[] = [];
-
-const getAuctionSignupListOrEmpty = (
-  result: AsyncResult.AsyncResult<readonly AuctionSignup[], unknown>
-) => (AsyncResult.isSuccess(result) ? result.value : emptyAuctionSignups);
 
 const removeAuctionSignupById = (
   signups: readonly AuctionSignup[],
@@ -91,13 +85,14 @@ export const toggleAuctionSignupAtom = appHttpApiFn(
     })
 );
 
-/** Optimistic auction signup list atom backed by a Result-returning group resource. */
+/** Optimistic auction signup resource that preserves loading and failure states. */
 const optimisticAuctionSignupsByGroupAtom = Atom.family(
-  (key: AuctionGroupKey) =>
-    Atom.optimistic(
-      auctionSignupsByGroupAtom(key).pipe(Atom.map(getAuctionSignupListOrEmpty))
-    )
+  (key: AuctionGroupKey) => Atom.optimistic(auctionSignupsByGroupAtom(key))
 );
+
+/** Optimistic auction signups resource for one auction group. */
+export const optimisticAuctionSignupsAtom = (payload: AuctionGroupInput) =>
+  optimisticAuctionSignupsByGroupAtom(auctionGroupKey(payload));
 
 /** Optimistic mutation atom for removing a signup from one auction group. Refreshes signups and stats on success. */
 const removeAuctionSignupFromGroupByGroupAtom = Atom.family(
@@ -115,7 +110,10 @@ const removeAuctionSignupFromGroupByGroupAtom = Atom.family(
             return result;
           })
         ),
-        reducer: removeAuctionSignupById,
+        reducer: (current, input: { readonly id: number }) =>
+          updateResultSuccess(current, (signups) =>
+            removeAuctionSignupById(signups, input)
+          ),
       })
     )
 );

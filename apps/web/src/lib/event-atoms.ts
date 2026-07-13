@@ -1,9 +1,9 @@
 import type { EventSummary } from "@tepirek-revamped/api/protocol/event/http-api-contract";
 import type { EVENT_ICON_IDS } from "@tepirek-revamped/config";
 import { Effect } from "effect";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
@@ -11,12 +11,6 @@ import {
 } from "@/lib/http-api-client-runtime";
 
 type Event = typeof EventSummary.Type;
-
-const emptyEvents: readonly Event[] = [];
-
-const getEventListOrEmpty = (
-  result: AsyncResult.AsyncResult<readonly Event[], unknown>
-) => (AsyncResult.isSuccess(result) ? result.value : emptyEvents);
 
 const removeEventById = (
   events: readonly Event[],
@@ -76,16 +70,15 @@ const toggleEventActiveRequestAtom = appHttpApiFn(
     })
 );
 
-/** Optimistic event list atom backed by the Result-returning events resource. */
-export const optimisticEventsAtom = Atom.optimistic(
-  eventsAtom.pipe(Atom.map(getEventListOrEmpty))
-);
+/** Optimistic event resource that preserves loading and failure states. */
+export const optimisticEventsAtom = Atom.optimistic(eventsAtom);
 
 /** Optimistic mutation atom for deleting an event from the list. */
 export const deleteEventAtom = optimisticEventsAtom.pipe(
   Atom.optimisticFn({
     fn: deleteEventRequestAtom,
-    reducer: removeEventById,
+    reducer: (current, input) =>
+      updateResultSuccess(current, (events) => removeEventById(events, input)),
   })
 );
 
@@ -93,6 +86,7 @@ export const deleteEventAtom = optimisticEventsAtom.pipe(
 export const toggleEventActiveAtom = optimisticEventsAtom.pipe(
   Atom.optimisticFn({
     fn: toggleEventActiveRequestAtom,
-    reducer: toggleEventById,
+    reducer: (current, input) =>
+      updateResultSuccess(current, (events) => toggleEventById(events, input)),
   })
 );

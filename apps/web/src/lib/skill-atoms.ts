@@ -6,6 +6,7 @@ import { Effect } from "effect";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
@@ -15,17 +16,8 @@ import {
 type SkillRange = typeof RangeSummary.Type;
 type Skill = typeof SkillSummary.Type;
 
-const emptySkillRanges: readonly SkillRange[] = [];
 const emptySkills: readonly Skill[] = [];
 const disabledSkillsByRangeAtom = Atom.make(AsyncResult.success(emptySkills));
-
-const getSkillRangeListOrEmpty = (
-  result: AsyncResult.AsyncResult<readonly SkillRange[], unknown>
-) => (AsyncResult.isSuccess(result) ? result.value : emptySkillRanges);
-
-const getSkillListOrEmpty = (
-  result: AsyncResult.AsyncResult<readonly Skill[], unknown>
-) => (AsyncResult.isSuccess(result) ? result.value : emptySkills);
 
 const removeSkillRangeById = (
   ranges: readonly SkillRange[],
@@ -144,25 +136,24 @@ const deleteSkillRequestAtom = appHttpApiFn(
     })
 );
 
-/** Optimistic skill range list atom backed by the Result-returning range resource. */
-export const optimisticSkillRangesAtom = Atom.optimistic(
-  skillRangesAtom.pipe(Atom.map(getSkillRangeListOrEmpty))
-);
+/** Optimistic skill-range resource that preserves loading and failure states. */
+export const optimisticSkillRangesAtom = Atom.optimistic(skillRangesAtom);
 
 /** Optimistic mutation atom for deleting a skill range from the list. */
 export const deleteSkillRangeAtom = Atom.optimisticFn(
   optimisticSkillRangesAtom,
   {
     fn: deleteSkillRangeRequestAtom,
-    reducer: removeSkillRangeById,
+    reducer: (current, input) =>
+      updateResultSuccess(current, (ranges) =>
+        removeSkillRangeById(ranges, input)
+      ),
   }
 );
 
-/** Optimistic skill list atom backed by a Result-returning range detail resource. */
+/** Optimistic skill resource that preserves loading and failure states. */
 const optimisticSkillsByRangeIdAtom = Atom.family((rangeId: number) =>
-  Atom.optimistic(
-    skillsByRangeAtom(rangeId).pipe(Atom.map(getSkillListOrEmpty))
-  )
+  Atom.optimistic(skillsByRangeAtom(rangeId))
 );
 
 export const optimisticSkillsByRangeAtom = (rangeId: number) =>
@@ -172,7 +163,8 @@ export const optimisticSkillsByRangeAtom = (rangeId: number) =>
 const deleteSkillFromRangeIdAtom = Atom.family((rangeId: number) =>
   Atom.optimisticFn(optimisticSkillsByRangeAtom(rangeId), {
     fn: deleteSkillRequestAtom,
-    reducer: removeSkillById,
+    reducer: (current, input) =>
+      updateResultSuccess(current, (skills) => removeSkillById(skills, input)),
   })
 );
 

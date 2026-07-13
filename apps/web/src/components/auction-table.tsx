@@ -1,4 +1,4 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   AUCTION_SLOT_LEVELS,
   AUCTION_SLOT_ROUND_LABELS,
@@ -6,17 +6,18 @@ import {
   getAuctionSlotColumns,
 } from "@tepirek-revamped/config";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Loader2, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import {
   auctionSignupsAtom,
+  optimisticAuctionSignupsAtom,
   removeAuctionSignupFromGroupAtom,
   toggleAuctionSignupAtom,
 } from "@/lib/auction-atoms";
-import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -158,10 +159,34 @@ const AuctionTable: React.FC<AuctionTableProps> = ({
   type,
   currentUserId,
 }) => {
-  const columns = getAuctionSlotColumns(profession, type);
   const signupsResult = useAtomValue(auctionSignupsAtom({ profession, type }));
-  const signups = resultValueOr(signupsResult, []);
-  const isPending = resultIsLoading(signupsResult);
+  const refreshSignups = useAtomRefresh(
+    auctionSignupsAtom({ profession, type })
+  );
+
+  return (
+    <AsyncResultBoundary onRetry={refreshSignups} result={signupsResult}>
+      {() => (
+        <AuctionTableContent
+          currentUserId={currentUserId}
+          profession={profession}
+          type={type}
+        />
+      )}
+    </AsyncResultBoundary>
+  );
+};
+
+const AuctionTableContent: React.FC<AuctionTableProps> = ({
+  profession,
+  type,
+  currentUserId,
+}) => {
+  const columns = getAuctionSlotColumns(profession, type);
+  const signupsResult = useAtomValue(
+    optimisticAuctionSignupsAtom({ profession, type })
+  );
+  const signups = AsyncResult.getOrThrow(signupsResult);
   const toggleAuctionSignup = useAtomSet(toggleAuctionSignupAtom, {
     mode: "promise",
   });
@@ -243,10 +268,6 @@ const AuctionTable: React.FC<AuctionTableProps> = ({
     const own = cellSignups.find((s) => s.userId === currentUserId);
     return own ?? cellSignups[0];
   };
-
-  if (isPending) {
-    return <LoadingSpinner />;
-  }
 
   return (
     <div className="overflow-x-auto">

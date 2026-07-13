@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
@@ -10,12 +11,6 @@ import {
 } from "@/lib/http-api-client-runtime";
 
 type Hero = typeof HeroSummary.Type;
-
-const emptyHeroes: readonly Hero[] = [];
-
-const getHeroListOrEmpty = (
-  result: AsyncResult.AsyncResult<readonly Hero[], unknown>
-) => (AsyncResult.isSuccess(result) ? result.value : emptyHeroes);
 
 const removeHeroById = (
   heroes: readonly Hero[],
@@ -75,15 +70,14 @@ const deleteHeroRequestAtom = appHttpApiFn((payload: { readonly id: number }) =>
   })
 );
 
-/** Optimistic hero list atom backed by the Result-returning heroes resource. */
-export const optimisticHeroesAtom = Atom.optimistic(
-  heroesAtom.pipe(Atom.map(getHeroListOrEmpty))
-);
+/** Optimistic hero resource that preserves loading and failure states. */
+export const optimisticHeroesAtom = Atom.optimistic(heroesAtom);
 
 /** Optimistic mutation atom for deleting a hero from the list. */
 export const deleteHeroAtom = optimisticHeroesAtom.pipe(
   Atom.optimisticFn({
     fn: deleteHeroRequestAtom,
-    reducer: removeHeroById,
+    reducer: (current, input) =>
+      updateResultSuccess(current, (heroes) => removeHeroById(heroes, input)),
   })
 );

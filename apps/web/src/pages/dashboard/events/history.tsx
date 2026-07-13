@@ -1,6 +1,9 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
+/* oxlint-disable no-use-before-define */
+
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { History, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
@@ -24,8 +27,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Select,
   SelectContent,
@@ -39,9 +42,10 @@ import {
   paginatedBetsAtom,
 } from "@/lib/bet-atoms";
 import { calculatePointsPerMember } from "@/lib/bet-helpers";
-import { resultIsLoading } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
+import { eventsAtom } from "@/lib/event-atoms";
 import { ALL_FILTER } from "@/lib/event-hero-filter";
+import { heroesByEventAtom } from "@/lib/hero-atoms";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import type { AuthSession } from "@/types/route";
@@ -58,14 +62,11 @@ interface HistoryPageProps {
 }
 
 export default function HistoryPage({ session }: HistoryPageProps) {
-  const [betToDelete, setBetToDelete] = useState<BetToDelete>(null);
-
   const filter = useEventHeroFilter({
     persistenceKey: "history-filters",
     routeId: "/dashboard/events/history",
   });
 
-  const { ref: loadMoreRef, inView } = useInView({ threshold: 0.1 });
   const betPageInput = {
     ...(filter.queryInputs.eventId === undefined
       ? {}
@@ -76,26 +77,68 @@ export default function HistoryPage({ session }: HistoryPageProps) {
     limit: ITEMS_PER_PAGE,
     page: 1,
   };
+  const betsResult = useAtomValue(paginatedBetsAtom(betPageInput));
+  const refreshBets = useAtomRefresh(paginatedBetsAtom(betPageInput));
+  const refreshEvents = useAtomRefresh(eventsAtom);
+  const refreshHeroes = useAtomRefresh(
+    heroesByEventAtom(
+      filter.heroQueryEnabled ? Number(filter.state.eventId) : null
+    )
+  );
+
+  return (
+    <AsyncResultBoundary onRetry={refreshEvents} result={filter.eventsResult}>
+      {() => (
+        <AsyncResultBoundary
+          onRetry={refreshHeroes}
+          result={filter.heroesResult}
+        >
+          {() => (
+            <AsyncResultBoundary onRetry={refreshBets} result={betsResult}>
+              {() => (
+                <HistoryContent
+                  betPageInput={betPageInput}
+                  filter={filter}
+                  session={session}
+                />
+              )}
+            </AsyncResultBoundary>
+          )}
+        </AsyncResultBoundary>
+      )}
+    </AsyncResultBoundary>
+  );
+}
+
+interface HistoryContentProps extends HistoryPageProps {
+  readonly betPageInput: {
+    readonly eventId?: number;
+    readonly heroId?: number;
+    readonly limit: number;
+    readonly page: number;
+  };
+  readonly filter: ReturnType<typeof useEventHeroFilter>;
+}
+
+const HistoryContent = ({
+  betPageInput,
+  filter,
+  session,
+}: HistoryContentProps) => {
+  const [betToDelete, setBetToDelete] = useState<BetToDelete>(null);
   const deleteBet = useAtomSet(deleteBetFromPageAtom(betPageInput), {
     mode: "promise",
   });
-
+  const betsDataResult = useAtomValue(
+    optimisticPaginatedBetsAtom(betPageInput)
+  );
+  const betsData = AsyncResult.getOrThrow(betsDataResult);
+  const { ref: loadMoreRef } = useInView({ threshold: 0.1 });
   const isAdminUser = isAdmin(session);
 
-  const betsResult = useAtomValue(paginatedBetsAtom(betPageInput));
-  const betsData = useAtomValue(optimisticPaginatedBetsAtom(betPageInput));
-  const betsLoading = resultIsLoading(betsResult);
-
-  // Flatten pages into single array of bets
-  const allBets = betsData?.items ?? [];
-
-  // Calculate stats based on current filters
-  const totalBets = betsData?.pagination.totalItems ?? 0;
+  const allBets = betsData.items;
+  const totalBets = betsData.pagination.totalItems;
   const hasNextPage = false;
-
-  useEffect(() => {
-    void inView;
-  }, [inView]);
 
   const deleteMutation = {
     isPending: false,
@@ -113,15 +156,10 @@ export default function HistoryPage({ session }: HistoryPageProps) {
     },
   };
 
-  let betsContent: ReactNode;
-  if (betsLoading) {
-    betsContent = <LoadingSpinner />;
-  } else if (allBets.length === 0) {
-    betsContent = (
+  const betsContent: ReactNode =
+    allBets.length === 0 ? (
       <EmptyState icon={History} message="Brak obstawień do wyświetlenia" />
-    );
-  } else {
-    betsContent = (
+    ) : (
       <div className="grid gap-4">
         {allBets.map((bet) => (
           <BetCard
@@ -154,7 +192,6 @@ export default function HistoryPage({ session }: HistoryPageProps) {
         )}
       </div>
     );
-  }
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -259,4 +296,4 @@ export default function HistoryPage({ session }: HistoryPageProps) {
       </AlertDialog>
     </div>
   );
-}
+};

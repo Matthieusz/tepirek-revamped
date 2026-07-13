@@ -1,5 +1,8 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
+/* oxlint-disable no-use-before-define */
+
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { format } from "date-fns/format";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Calendar, Plus, Power, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -16,10 +19,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Table,
   TableBody,
@@ -29,7 +32,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getEventIcon } from "@/lib/constants";
-import { resultIsLoading } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
 import {
   deleteEventAtom,
@@ -52,10 +54,20 @@ interface EventsListPageProps {
 }
 
 export default function EventsListPage({ session }: EventsListPageProps) {
-  const [eventAction, setEventAction] = useState<EventAction>(null);
   const eventsResult = useAtomValue(eventsAtom);
-  const events = useAtomValue(optimisticEventsAtom);
-  const isPending = resultIsLoading(eventsResult);
+  const refreshEvents = useAtomRefresh(eventsAtom);
+
+  return (
+    <AsyncResultBoundary onRetry={refreshEvents} result={eventsResult}>
+      {() => <EventsListContent session={session} />}
+    </AsyncResultBoundary>
+  );
+}
+
+const EventsListContent = ({ session }: EventsListPageProps) => {
+  const [eventAction, setEventAction] = useState<EventAction>(null);
+  const optimisticEventsResult = useAtomValue(optimisticEventsAtom);
+  const events = AsyncResult.getOrThrow(optimisticEventsResult);
   const deleteEvent = useAtomSet(deleteEventAtom, { mode: "promise" });
   const toggleEventActive = useAtomSet(toggleEventActiveAtom, {
     mode: "promise",
@@ -98,22 +110,6 @@ export default function EventsListPage({ session }: EventsListPageProps) {
       })();
     },
   };
-
-  if (isPending) {
-    return (
-      <div className="mx-auto w-full max-w-4xl space-y-6">
-        <div>
-          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
-            Lista eventów
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Zarządzaj eventami w grze.
-          </p>
-        </div>
-        <LoadingSpinner />
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -299,4 +295,4 @@ export default function EventsListPage({ session }: EventsListPageProps) {
       </AlertDialog>
     </div>
   );
-}
+};

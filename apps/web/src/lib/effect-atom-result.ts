@@ -1,53 +1,16 @@
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 
-import { getErrorMessage } from "@/lib/errors";
+/** Applies an optimistic update only to an available success value. */
+export const updateResultSuccess = <A, E>(
+  result: AsyncResult.AsyncResult<A, E>,
+  update: (value: A) => A
+): AsyncResult.AsyncResult<A, E> => {
+  if (!AsyncResult.isSuccess(result)) {
+    return result;
+  }
 
-/** Explicit UI state for an Effect Atom AsyncResult. */
-type ResultViewState<A> =
-  | { readonly _tag: "Loading" }
-  | { readonly _tag: "Failure"; readonly message: string }
-  | { readonly _tag: "Success"; readonly value: A };
-
-/** Converts Effect Atom Result into an explicit UI state without leaking causes. */
-const resultViewState = <A>(
-  result: AsyncResult.AsyncResult<A, unknown>
-): ResultViewState<A> =>
-  AsyncResult.matchWithWaiting(result, {
-    onDefect: (defect) => ({
-      _tag: "Failure",
-      message: getErrorMessage(defect),
-    }),
-    onError: (error) => ({ _tag: "Failure", message: getErrorMessage(error) }),
-    onSuccess: ({ value }) => ({ _tag: "Success", value }),
-    onWaiting: () => ({ _tag: "Loading" }),
+  return AsyncResult.success(update(result.value), {
+    timestamp: result.timestamp,
+    waiting: result.waiting,
   });
-
-/** Extracts successful Effect Atom resource data when available. */
-export function resultValueOr<A>(
-  result: AsyncResult.AsyncResult<A, unknown>
-): A | undefined;
-/** Extracts successful Effect Atom resource data with a stable fallback. */
-export function resultValueOr<A>(
-  result: AsyncResult.AsyncResult<A, unknown>,
-  fallback: A
-): A;
-export function resultValueOr<A>(
-  result: AsyncResult.AsyncResult<A, unknown>,
-  fallback?: A
-): A | undefined {
-  const state = resultViewState(result);
-  return state._tag === "Success" ? state.value : fallback;
-}
-
-/** True while an Effect Atom resource is waiting for its current value. */
-export const resultIsLoading = (
-  result: AsyncResult.AsyncResult<unknown, unknown>
-): boolean => resultViewState(result)._tag === "Loading";
-
-/** Safe, user-facing error message for failed Effect Atom resource states. */
-export const resultErrorMessage = (
-  result: AsyncResult.AsyncResult<unknown, unknown>
-): string | undefined => {
-  const state = resultViewState(result);
-  return state._tag === "Failure" ? state.message : undefined;
 };

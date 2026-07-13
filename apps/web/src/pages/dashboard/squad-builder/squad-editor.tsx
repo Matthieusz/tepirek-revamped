@@ -1,9 +1,6 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import type {
-  SquadEditorInviteTargetSchema,
-  SquadGroupEditorGrantSummarySchema,
-} from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import {
   ArrowLeft,
   ChevronDown,
@@ -17,6 +14,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +24,6 @@ import { CollapsibleTrigger } from "@/components/ui/collapsible-trigger";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
 import type { AvailableSquadCharacter } from "@/lib/squad-builder/squad-group-atoms";
 import {
@@ -78,8 +75,6 @@ interface DraftSquad {
   readonly characters: readonly DraftCharacter[];
 }
 
-type SquadEditorInviteTarget = typeof SquadEditorInviteTargetSchema.Type;
-type SquadGroupEditorGrant = typeof SquadGroupEditorGrantSummarySchema.Type;
 interface SaveSquadGroupInput {
   readonly groupId: number;
   readonly name: string;
@@ -135,20 +130,29 @@ const SquadBuilderEditorContent = ({
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [isRevokingInvite, setIsRevokingInvite] = useState(false);
 
-  const detailResult = useAtomValue(squadGroupDetailAtom({ groupId }));
-  const detail = resultValueOr(detailResult);
+  const detailAtom = squadGroupDetailAtom({ groupId });
+  const detailResult = useAtomValue(detailAtom);
+  const refreshDetail = useAtomRefresh(detailAtom);
+  const detail = AsyncResult.isSuccess(detailResult)
+    ? detailResult.value
+    : undefined;
   const accessRole = detail?.accessRole;
   const isOwner = accessRole === "owner";
   const isEditor = accessRole === "editor";
   const isViewer = accessRole === "viewer";
   const canEditPlacements = isOwner || isEditor;
-  const availableResult = useAtomValue(
-    availableSquadCharactersAtom({ groupId })
-  );
-  const grantsResult = useAtomValue(squadGroupEditorGrantsAtom({ groupId }));
-  const inviteTargetsResult = useAtomValue(
-    squadEditorInviteTargetsAtom({ groupId, query: inviteQuery })
-  );
+  const availableAtom = availableSquadCharactersAtom({ groupId });
+  const availableResult = useAtomValue(availableAtom);
+  const refreshAvailable = useAtomRefresh(availableAtom);
+  const grantsAtom = squadGroupEditorGrantsAtom({ groupId });
+  const grantsResult = useAtomValue(grantsAtom);
+  const refreshGrants = useAtomRefresh(grantsAtom);
+  const inviteTargetsAtom = squadEditorInviteTargetsAtom({
+    groupId,
+    query: inviteQuery,
+  });
+  const inviteTargetsResult = useAtomValue(inviteTargetsAtom);
+  const refreshInviteTargets = useAtomRefresh(inviteTargetsAtom);
   const saveSquadGroup = useAtomSet(saveSquadGroupAtom, { mode: "promise" });
   const saveSharedSquadGroupCharacters = useAtomSet(
     saveSharedSquadGroupCharactersAtom,
@@ -282,7 +286,7 @@ const SquadBuilderEditorContent = ({
   };
 
   const availableCharacters = useMemo(
-    () => resultValueOr(availableResult, []),
+    () => (AsyncResult.isSuccess(availableResult) ? availableResult.value : []),
     [availableResult]
   );
   const availableById = useMemo(() => {
@@ -309,16 +313,12 @@ const SquadBuilderEditorContent = ({
   }, [availableCharacters, detail?.squads]);
 
   const inviteTargets =
-    inviteQuery.trim().length >= 2
-      ? resultValueOr(
-          inviteTargetsResult,
-          [] as readonly SquadEditorInviteTarget[]
-        )
+    inviteQuery.trim().length >= 2 && AsyncResult.isSuccess(inviteTargetsResult)
+      ? inviteTargetsResult.value
       : [];
-  const editorGrants = resultValueOr(
-    grantsResult,
-    [] as readonly SquadGroupEditorGrant[]
-  );
+  const editorGrants = AsyncResult.isSuccess(grantsResult)
+    ? grantsResult.value
+    : [];
 
   const selectedCharacterIds = useMemo(() => {
     const ids = new Set<number>();
@@ -397,7 +397,7 @@ const SquadBuilderEditorContent = ({
     });
   };
 
-  if (resultIsLoading(detailResult)) {
+  if (AsyncResult.isInitial(detailResult)) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-64" />
@@ -406,11 +406,12 @@ const SquadBuilderEditorContent = ({
     );
   }
 
-  if (detailResult._tag === "Failure") {
+  if (AsyncResult.isFailure(detailResult)) {
     return (
-      <p className="text-destructive text-sm">
-        Nie udało się wczytać grupy składów.
-      </p>
+      <AsyncResultFailure
+        message="Nie udało się wczytać grupy składów."
+        onRetry={refreshDetail}
+      />
     );
   }
 
@@ -688,6 +689,12 @@ const SquadBuilderEditorContent = ({
                       <span className="flex items-center gap-2">
                         <UserPlus className="size-4 text-muted-foreground" />
                         <span className="font-semibold text-sm">Edytorzy</span>
+                        {AsyncResult.isFailure(grantsResult) && (
+                          <AsyncResultFailure
+                            message="Nie udało się wczytać edytorów."
+                            onRetry={refreshGrants}
+                          />
+                        )}
                         {editorGrants.length > 0 && (
                           <span className="font-mono text-xs text-muted-foreground">
                             {editorGrants.length}
@@ -719,6 +726,12 @@ const SquadBuilderEditorContent = ({
                         value={inviteQuery}
                       />
                     </div>
+                    {AsyncResult.isFailure(inviteTargetsResult) && (
+                      <AsyncResultFailure
+                        message="Nie udało się wyszukać edytorów."
+                        onRetry={refreshInviteTargets}
+                      />
+                    )}
                     {inviteTargets.length > 0 && (
                       <ul className="space-y-1">
                         {inviteTargets.map((target) => (
@@ -841,20 +854,26 @@ const SquadBuilderEditorContent = ({
                     składu.
                   </p>
                 )}
-                {resultIsLoading(availableResult) && (
+                {AsyncResult.isFailure(availableResult) && (
+                  <AsyncResultFailure
+                    message="Nie udało się wczytać dostępnych postaci."
+                    onRetry={refreshAvailable}
+                  />
+                )}
+                {AsyncResult.isInitial(availableResult) && (
                   <div className="space-y-2 px-1" aria-hidden="true">
                     <Skeleton className="h-12 w-full" />
                     <Skeleton className="h-12 w-full" />
                   </div>
                 )}
-                {!resultIsLoading(availableResult) &&
+                {AsyncResult.isSuccess(availableResult) &&
                   availableCharacters.length === 0 && (
                     <p className="px-1 text-muted-foreground text-sm">
                       Brak dostępnych postaci z Jaruny. Dodaj konto na stronie
                       Konta.
                     </p>
                   )}
-                {!resultIsLoading(availableResult) &&
+                {AsyncResult.isSuccess(availableResult) &&
                   availableCharacters.length > 0 && (
                     <ul className="divide-y divide-border/60">
                       {availableCharacters.map((character) => {

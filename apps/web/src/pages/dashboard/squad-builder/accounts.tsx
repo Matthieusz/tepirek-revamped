@@ -1,12 +1,14 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
-import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-refetch/account-refetch-schema";
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
 import type {
-  AccountAccessGrantSummarySchema,
-  AccountAccessInviteSummarySchema,
-  AccountInviteTargetSchema,
-  SharedMargonemAccountSummarySchema,
-} from "@tepirek-revamped/api/protocol/squad-builder/account-sharing/account-sharing-schema";
+  OwnedMargonemAccountSummarySchema,
+  PreviewOwnedAccountImportsPayload,
+  PreviewOwnedAccountImportsSuccess,
+} from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
+import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-refetch/account-refetch-schema";
+import type { AccountAccessGrantSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-sharing/account-sharing-schema";
+import * as Option from "effect/Option";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import {
   AlertTriangle,
   Check,
@@ -27,6 +29,13 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  EffectFieldFrame,
+  EffectTextField,
+  getFieldErrorId,
+  getFieldId,
+} from "@/components/forms/effect-form-fields";
+import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,8 +47,14 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
+import {
+  AccountDisplayNameSchema,
+  getProfileLines,
+  MAX_PROFILE_URLS,
+  ProfileUrlsSchema,
+} from "@/lib/form-schemas";
+import { formSubmission } from "@/lib/form-submission";
 import {
   confirmOwnedAccountImportAtom,
   ownedAccountsAtom,
@@ -70,7 +85,114 @@ const PROFESSION_LABELS: Record<string, string> = {
   warrior: "Wojownik",
 };
 
-const MAX_PROFILE_URLS = 20;
+interface ProfileUrlsFieldProps {
+  readonly disabled?: boolean;
+}
+
+const ProfileUrlsField: FormReact.FieldComponent<
+  string,
+  ProfileUrlsFieldProps
+> = ({ field, props }) => {
+  const fieldId = getFieldId(field.path);
+  const errorId = getFieldErrorId(fieldId);
+  const helperId = `${fieldId}-helper`;
+  const hasError = Option.isSome(field.error);
+  const profileLineCount = getProfileLines(field.value).length;
+  const describedBy = [helperId, hasError ? errorId : undefined]
+    .filter((id): id is string => id !== undefined)
+    .join(" ");
+
+  return (
+    <EffectFieldFrame
+      error={field.error}
+      fieldId={fieldId}
+      helperText={
+        <p className="text-muted-foreground text-xs" id={helperId}>
+          Wklej maksymalnie {MAX_PROFILE_URLS} linków, po jednym w wierszu.
+          {profileLineCount > MAX_PROFILE_URLS && (
+            <span className="text-destructive">
+              {" "}
+              Wykryto {profileLineCount} linków, ogranicz listę do{" "}
+              {MAX_PROFILE_URLS}.
+            </span>
+          )}
+        </p>
+      }
+      label="Linki do profili"
+    >
+      <Textarea
+        aria-describedby={describedBy}
+        aria-invalid={hasError}
+        className="min-h-32 font-mono text-xs"
+        disabled={props.disabled}
+        id={fieldId}
+        name={field.path}
+        onBlur={field.onBlur}
+        onChange={(event) => field.onChange(event.target.value)}
+        placeholder="https://www.margonem.pl/profile/view,7298897"
+        value={field.value}
+      />
+    </EffectFieldFrame>
+  );
+};
+
+type PreviewOwnedAccountImports = (
+  payload: typeof PreviewOwnedAccountImportsPayload.Type
+) => Promise<typeof PreviewOwnedAccountImportsSuccess.Type>;
+
+const accountPreviewFormBuilder = FormBuilder.empty.addField(
+  "profileUrls",
+  ProfileUrlsSchema
+);
+
+const accountPreviewForm = FormReact.make(accountPreviewFormBuilder, {
+  fields: { profileUrls: ProfileUrlsField },
+  mode: { validation: "onSubmit" },
+  onSubmit: (
+    previewOwnedAccountImports: PreviewOwnedAccountImports,
+    { decoded }
+  ) => formSubmission(() => previewOwnedAccountImports(decoded)),
+});
+
+const accountDisplayNameSchema = AccountDisplayNameSchema;
+
+const accountConfirmationFormBuilder = FormBuilder.empty.addField(
+  "displayName",
+  accountDisplayNameSchema
+);
+
+interface AccountImportConfirmation {
+  readonly displayName: string;
+  readonly pendingImportId: number;
+}
+
+type ConfirmOwnedAccountImport = (
+  payload: AccountImportConfirmation
+) => Promise<unknown>;
+
+interface AccountConfirmationSubmitArgs {
+  readonly confirmOwnedAccountImport: ConfirmOwnedAccountImport;
+  readonly pendingImportId: number;
+}
+
+const makeAccountConfirmationForm = () =>
+  FormReact.make(accountConfirmationFormBuilder, {
+    fields: { displayName: EffectTextField },
+    mode: { validation: "onSubmit" },
+    onSubmit: (
+      {
+        confirmOwnedAccountImport,
+        pendingImportId,
+      }: AccountConfirmationSubmitArgs,
+      { decoded }
+    ) =>
+      formSubmission(() =>
+        confirmOwnedAccountImport({
+          displayName: decoded.displayName.trim(),
+          pendingImportId,
+        })
+      ),
+  });
 
 type PreviewItem =
   | {
@@ -101,10 +223,7 @@ type PreviewItem =
       readonly message: string;
     };
 
-type AccountAccessInvite = typeof AccountAccessInviteSummarySchema.Type;
-type AccountInviteTarget = typeof AccountInviteTargetSchema.Type;
 type OwnedAccount = typeof OwnedMargonemAccountSummarySchema.Type;
-type SharedAccount = typeof SharedMargonemAccountSummarySchema.Type;
 
 interface AccountRefetchPreview {
   readonly refetchPreviewId: number;
@@ -180,26 +299,36 @@ const PreviewSkeleton = () => (
 
 interface PreviewRowProps {
   readonly confirmingId: number | null;
-  readonly displayNames: Record<number, string>;
   readonly isConfirming: boolean;
   readonly item: PreviewItem;
   readonly onConfirm: (
+    item: Extract<PreviewItem, { status: "success" }>,
+    payload: AccountImportConfirmation
+  ) => Promise<unknown>;
+  readonly onConfirmed: (
     item: Extract<PreviewItem, { status: "success" }>
-  ) => void;
-  readonly onDisplayNameChange: (
-    pendingImportId: number,
-    value: string
   ) => void;
 }
 
 const PreviewRow = ({
   confirmingId,
-  displayNames,
   isConfirming,
   item,
   onConfirm,
-  onDisplayNameChange,
+  onConfirmed,
 }: PreviewRowProps) => {
+  const confirmationForm = useMemo(makeAccountConfirmationForm, []);
+  const submit = useAtomSet(confirmationForm.submit);
+  const reset = useAtomSet(confirmationForm.reset);
+  const submitResult = useAtomValue(confirmationForm.submit);
+
+  useEffect(() => {
+    if (item.status === "success" && AsyncResult.isSuccess(submitResult)) {
+      reset();
+      onConfirmed(item);
+    }
+  }, [item, onConfirmed, reset, submitResult]);
+
   if (item.status === "error") {
     return (
       <li className="flex items-start gap-3 px-5 py-3">
@@ -221,6 +350,7 @@ const PreviewRow = ({
   }
 
   const isConfirmingThis = confirmingId === item.pendingImportId;
+  const isDisabled = isConfirming || submitResult.waiting;
 
   return (
     <li className="space-y-3 px-5 py-3">
@@ -255,76 +385,69 @@ const PreviewRow = ({
         </div>
       </div>
 
-      <form
-        className="flex flex-wrap items-center gap-2 pl-7"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onConfirm(item);
-        }}
+      <confirmationForm.Initialize
+        defaultValues={{ displayName: item.defaultDisplayName }}
       >
-        <Input
-          aria-label={`Nazwa konta dla profilu ${item.profileId}`}
-          className="h-8 flex-1 min-w-40"
-          disabled={isConfirming}
-          maxLength={80}
-          onChange={(event) => {
-            onDisplayNameChange(item.pendingImportId, event.target.value);
-          }}
-          placeholder="Nazwa konta"
-          value={displayNames[item.pendingImportId] ?? item.defaultDisplayName}
-        />
-        <Button
-          aria-label={`Zapisz konto ${item.suggestedAccountName}`}
-          disabled={isConfirming}
-          type="submit"
+        <form
+          className="flex flex-wrap items-end gap-2 pl-7"
+          action={() =>
+            submit({
+              confirmOwnedAccountImport: (payload) => onConfirm(item, payload),
+              pendingImportId: item.pendingImportId,
+            })
+          }
         >
-          {isConfirmingThis ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <CheckCircle2 className="size-4" />
-          )}
-          Zapisz konto
-        </Button>
-      </form>
+          <confirmationForm.displayName
+            className="min-w-40 flex-1"
+            disabled={isDisabled}
+            id={`displayName-${item.pendingImportId}`}
+            label="Nazwa konta"
+            maxLength={80}
+            placeholder="Nazwa konta"
+          />
+          <Button
+            aria-label={`Zapisz konto ${item.suggestedAccountName}`}
+            disabled={isDisabled}
+            type="submit"
+          >
+            {isConfirmingThis ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="size-4" />
+            )}
+            Zapisz konto
+          </Button>
+        </form>
+      </confirmationForm.Initialize>
     </li>
   );
 };
 
 interface ImportPanelProps {
-  readonly canSubmit: boolean;
   readonly confirmingId: number | null;
-  readonly displayNames: Record<number, string>;
   readonly isConfirming: boolean;
   readonly isPreviewPending: boolean;
   readonly previewItems: readonly PreviewItem[];
-  readonly profileLineCount: number;
   readonly onClear: () => void;
   readonly onConfirm: (
+    item: Extract<PreviewItem, { status: "success" }>,
+    payload: AccountImportConfirmation
+  ) => Promise<unknown>;
+  readonly onConfirmed: (
     item: Extract<PreviewItem, { status: "success" }>
   ) => void;
-  readonly onDisplayNameChange: (
-    pendingImportId: number,
-    value: string
-  ) => void;
-  readonly onSubmitPreview: (event: React.FormEvent) => void;
-  readonly onUrlsChange: (value: string) => void;
-  readonly urlsText: string;
+  readonly onSubmitPreview: () => void;
 }
 
 const ImportPanel = ({
-  canSubmit,
   confirmingId,
-  displayNames,
   isConfirming,
   isPreviewPending,
   previewItems,
-  profileLineCount,
   onClear,
   onConfirm,
-  onDisplayNameChange,
+  onConfirmed,
   onSubmitPreview,
-  onUrlsChange,
-  urlsText,
 }: ImportPanelProps) => (
   <section className="overflow-hidden rounded-xl border border-border bg-card">
     <div className="border-b border-border px-5 py-3">
@@ -338,36 +461,13 @@ const ImportPanel = ({
     </div>
 
     <form
+      action={onSubmitPreview}
       className="space-y-4 border-b border-border px-5 py-4"
-      onSubmit={onSubmitPreview}
     >
-      <div className="space-y-2">
-        <Label htmlFor="profile-urls">Linki do profili</Label>
-        <Textarea
-          aria-describedby="profile-urls-helper"
-          className="min-h-32 font-mono text-xs"
-          disabled={isPreviewPending}
-          id="profile-urls"
-          onChange={(event) => {
-            onUrlsChange(event.target.value);
-          }}
-          placeholder="https://www.margonem.pl/profile/view,7298897"
-          value={urlsText}
-        />
-        <p className="text-muted-foreground text-xs" id="profile-urls-helper">
-          Wklej maksymalnie {MAX_PROFILE_URLS} linków, po jednym w wierszu.
-          {profileLineCount > MAX_PROFILE_URLS && (
-            <span className="text-destructive">
-              {" "}
-              Wykryto {profileLineCount} linków, ogranicz listę do{" "}
-              {MAX_PROFILE_URLS}.
-            </span>
-          )}
-        </p>
-      </div>
+      <accountPreviewForm.profileUrls disabled={isPreviewPending} />
 
       <div className="flex items-center gap-2">
-        <Button disabled={!canSubmit} type="submit">
+        <Button disabled={isPreviewPending} type="submit">
           {isPreviewPending ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
@@ -396,12 +496,11 @@ const ImportPanel = ({
         {previewItems.map((item) => (
           <PreviewRow
             confirmingId={confirmingId}
-            displayNames={displayNames}
             isConfirming={isConfirming}
             item={item}
             key={item.lineNumber}
             onConfirm={onConfirm}
-            onDisplayNameChange={onDisplayNameChange}
+            onConfirmed={onConfirmed}
           />
         ))}
       </ul>
@@ -437,12 +536,12 @@ const AccountSharingPanel = ({
   const debouncedQuery = useDebouncedValue(query, 250);
   const trimmedQuery = debouncedQuery.trim();
 
-  const grantsResult = useAtomValue(
-    accountAccessGrantsAtom(accountId, actorUserId)
-  );
-  const searchResult = useAtomValue(
-    accountInviteTargetsAtom(accountId, trimmedQuery)
-  );
+  const grantsAtom = accountAccessGrantsAtom(accountId, actorUserId);
+  const searchAtom = accountInviteTargetsAtom(accountId, trimmedQuery);
+  const grantsResult = useAtomValue(grantsAtom);
+  const searchResult = useAtomValue(searchAtom);
+  const refreshGrants = useAtomRefresh(grantsAtom);
+  const refreshSearch = useAtomRefresh(searchAtom);
   const sendInvite = useAtomSet(sendAccountAccessInviteAtom, {
     mode: "promise",
   });
@@ -451,10 +550,32 @@ const AccountSharingPanel = ({
   });
 
   const targets =
-    trimmedQuery.length >= 2
-      ? resultValueOr(searchResult, [] as readonly AccountInviteTarget[])
+    trimmedQuery.length >= 2 && AsyncResult.isSuccess(searchResult)
+      ? searchResult.value
       : [];
-  const grants: readonly AccountAccessGrant[] = resultValueOr(grantsResult, []);
+  const grants: readonly AccountAccessGrant[] = AsyncResult.isSuccess(
+    grantsResult
+  )
+    ? grantsResult.value
+    : [];
+
+  if (AsyncResult.isFailure(grantsResult)) {
+    return (
+      <AsyncResultFailure
+        message="Nie udało się wczytać udostępnionych użytkowników."
+        onRetry={refreshGrants}
+      />
+    );
+  }
+
+  if (trimmedQuery.length >= 2 && AsyncResult.isFailure(searchResult)) {
+    return (
+      <AsyncResultFailure
+        message="Nie udało się wyszukać użytkowników."
+        onRetry={refreshSearch}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -482,13 +603,13 @@ const AccountSharingPanel = ({
 
         {debouncedQuery.trim().length >= 2 && (
           <ul className="space-y-1">
-            {resultIsLoading(searchResult) && (
+            {!AsyncResult.isSuccess(searchResult) && (
               <li className="flex items-center gap-2 text-muted-foreground text-xs">
                 <Loader2 className="size-3 animate-spin" />
                 Szukam…
               </li>
             )}
-            {!resultIsLoading(searchResult) && targets.length === 0 && (
+            {AsyncResult.isSuccess(searchResult) && targets.length === 0 && (
               <li className="text-muted-foreground text-xs">
                 Brak pasujących zweryfikowanych użytkowników.
               </li>
@@ -554,13 +675,13 @@ const AccountSharingPanel = ({
         <h3 className="text-muted-foreground text-xs">
           Udostępnieni użytkownicy
         </h3>
-        {resultIsLoading(grantsResult) && (
+        {!AsyncResult.isSuccess(grantsResult) && (
           <div className="flex items-center gap-2 text-muted-foreground text-xs">
             <Loader2 className="size-3 animate-spin" />
             Wczytywanie…
           </div>
         )}
-        {!resultIsLoading(grantsResult) && grants.length === 0 && (
+        {AsyncResult.isSuccess(grantsResult) && grants.length === 0 && (
           <p className="text-muted-foreground text-xs">
             Nikt nie ma jeszcze dostępu do konta {accountDisplayName}.
           </p>
@@ -998,15 +1119,25 @@ const InviteInboxSkeleton = () => (
 
 const InviteInboxPanel = () => {
   const [isResponding, setIsResponding] = useState(false);
-  const invitesResult = useAtomValue(incomingAccountInvitesAtom);
+  const invitesAtom = incomingAccountInvitesAtom;
+  const invitesResult = useAtomValue(invitesAtom);
+  const refreshInvites = useAtomRefresh(invitesAtom);
   const respondToInvite = useAtomSet(respondToAccountAccessInviteAtom, {
     mode: "promise",
   });
 
-  const invites = resultValueOr(
-    invitesResult,
-    [] as readonly AccountAccessInvite[]
-  );
+  const invites = AsyncResult.isSuccess(invitesResult)
+    ? invitesResult.value
+    : [];
+
+  if (AsyncResult.isFailure(invitesResult)) {
+    return (
+      <AsyncResultFailure
+        message="Nie udało się wczytać zaproszeń do kont."
+        onRetry={refreshInvites}
+      />
+    );
+  }
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
@@ -1020,9 +1151,9 @@ const InviteInboxPanel = () => {
         </span>
       </div>
 
-      {resultIsLoading(invitesResult) && <InviteInboxSkeleton />}
+      {!AsyncResult.isSuccess(invitesResult) && <InviteInboxSkeleton />}
 
-      {!resultIsLoading(invitesResult) && invites.length === 0 && (
+      {AsyncResult.isSuccess(invitesResult) && invites.length === 0 && (
         <div className="px-5 py-8 text-center">
           <Inbox
             aria-hidden="true"
@@ -1144,7 +1275,19 @@ const SharedAccountsSkeleton = () => (
 
 const SharedAccountsPanel = () => {
   const sharedResult = useAtomValue(sharedAccountsAtom);
-  const accounts = resultValueOr(sharedResult, [] as readonly SharedAccount[]);
+  const refreshSharedAccounts = useAtomRefresh(sharedAccountsAtom);
+  const accounts = AsyncResult.isSuccess(sharedResult)
+    ? sharedResult.value
+    : [];
+
+  if (AsyncResult.isFailure(sharedResult)) {
+    return (
+      <AsyncResultFailure
+        message="Nie udało się wczytać udostępnionych kont."
+        onRetry={refreshSharedAccounts}
+      />
+    );
+  }
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
@@ -1158,9 +1301,9 @@ const SharedAccountsPanel = () => {
         </span>
       </div>
 
-      {resultIsLoading(sharedResult) && <SharedAccountsSkeleton />}
+      {!AsyncResult.isSuccess(sharedResult) && <SharedAccountsSkeleton />}
 
-      {!resultIsLoading(sharedResult) && accounts.length === 0 && (
+      {AsyncResult.isSuccess(sharedResult) && accounts.length === 0 && (
         <div className="px-5 py-8 text-center">
           <Users
             aria-hidden="true"
@@ -1228,14 +1371,11 @@ const SharedAccountsPanel = () => {
 };
 
 export default function SquadBuilderAccountsPage() {
-  const [urlsText, setUrlsText] = useState("");
   const [previewItems, setPreviewItems] = useState<readonly PreviewItem[]>([]);
-  const [displayNames, setDisplayNames] = useState<Record<number, string>>({});
   const [confirmingId, setConfirmingId] = useState<number | null>(null);
-  const [isPreviewPending, setIsPreviewPending] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false);
 
   const ownedAccountsResult = useAtomValue(ownedAccountsAtom);
+  const refreshOwnedAccounts = useAtomRefresh(ownedAccountsAtom);
   const previewImports = useAtomSet(previewOwnedAccountImportsAtom, {
     mode: "promise",
   });
@@ -1243,105 +1383,67 @@ export default function SquadBuilderAccountsPage() {
     mode: "promise",
   });
 
-  const profileLines = useMemo(
-    () => urlsText.split("\n").filter((line) => line.trim().length > 0),
-    [urlsText]
-  );
+  const submitPreview = useAtomSet(accountPreviewForm.submit);
+  const resetPreview = useAtomSet(accountPreviewForm.reset);
+  const previewSubmitResult = useAtomValue(accountPreviewForm.submit);
+  const isPreviewPending = previewSubmitResult.waiting;
+  const isConfirming = confirmingId !== null;
 
-  const canSubmit =
-    profileLines.length > 0 &&
-    profileLines.length <= MAX_PROFILE_URLS &&
-    !isPreviewPending;
-
-  const handleSubmitPreview = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!canSubmit) {
+  useEffect(() => {
+    if (!AsyncResult.isSuccess(previewSubmitResult)) {
       return;
     }
 
-    void (async () => {
-      setIsPreviewPending(true);
-      try {
-        const response = await previewImports({
-          profileUrls: urlsText.split("\n"),
-        });
-        const items = response.items.map((item) =>
-          item._tag === "PreviewSucceeded"
-            ? {
-                ...item,
-                characterCount: item.jarunaCharacters.length,
-                lastFetchedAt: item.lastFetchedAt.toISOString(),
-                status: "success" as const,
-              }
-            : {
-                errorTag: item.error._tag,
-                inputUrl: item.inputUrl,
-                lineNumber: item.lineNumber,
-                message: getErrorMessage(item.error),
-                status: "error" as const,
-              }
-        );
-        const initialNames: Record<number, string> = {};
-        for (const item of items) {
-          if (item.status === "success") {
-            initialNames[item.pendingImportId] = item.defaultDisplayName;
+    const items = previewSubmitResult.value.items.map((item) =>
+      item._tag === "PreviewSucceeded"
+        ? {
+            ...item,
+            characterCount: item.jarunaCharacters.length,
+            lastFetchedAt: item.lastFetchedAt.toISOString(),
+            status: "success" as const,
           }
-        }
-        setPreviewItems(items);
-        setDisplayNames(initialNames);
-      } catch (error: unknown) {
-        toast.error(getErrorMessage(error, "Nie udało się sprawdzić kont"));
-      } finally {
-        setIsPreviewPending(false);
-      }
-    })();
-  };
+        : {
+            errorTag: item.error._tag,
+            inputUrl: item.inputUrl,
+            lineNumber: item.lineNumber,
+            message: getErrorMessage(item.error),
+            status: "error" as const,
+          }
+    );
+    setPreviewItems(items);
+  }, [previewSubmitResult]);
 
   const handleClear = () => {
-    setUrlsText("");
+    resetPreview();
     setPreviewItems([]);
-    setDisplayNames({});
   };
 
-  const handleConfirm = (item: Extract<PreviewItem, { status: "success" }>) => {
-    const displayName = displayNames[item.pendingImportId]?.trim();
-
-    if (displayName === undefined || displayName.length === 0) {
-      toast.error("Podaj nazwę konta");
-      return;
-    }
-
+  const handleConfirm = (
+    item: Extract<PreviewItem, { status: "success" }>,
+    payload: AccountImportConfirmation
+  ): Promise<unknown> => {
     setConfirmingId(item.pendingImportId);
-    void (async () => {
-      setIsConfirming(true);
-      try {
-        await confirmImport({
-          displayName,
-          pendingImportId: item.pendingImportId,
-        });
-        setPreviewItems((current) =>
-          current.filter(
-            (currentItem) =>
-              !(
-                currentItem.status === "success" &&
-                currentItem.pendingImportId === item.pendingImportId
-              )
-          )
-        );
-        toast.success("Konto zostało zapisane");
-      } catch (error: unknown) {
-        toast.error(getErrorMessage(error, "Nie udało się zapisać konta"));
-      } finally {
-        setIsConfirming(false);
-        setConfirmingId(null);
-      }
-    })();
+    return confirmImport(payload).finally(() => setConfirmingId(null));
   };
 
-  const ownedAccounts = resultValueOr(
-    ownedAccountsResult,
-    [] as readonly OwnedAccount[]
-  );
+  const handleConfirmed = (
+    item: Extract<PreviewItem, { status: "success" }>
+  ) => {
+    setPreviewItems((current) =>
+      current.filter(
+        (currentItem) =>
+          !(
+            currentItem.status === "success" &&
+            currentItem.pendingImportId === item.pendingImportId
+          )
+      )
+    );
+    toast.success("Konto zostało zapisane");
+  };
+
+  const ownedAccounts = AsyncResult.isSuccess(ownedAccountsResult)
+    ? ownedAccountsResult.value
+    : [];
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -1357,30 +1459,29 @@ export default function SquadBuilderAccountsPage() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
         <div className="space-y-6">
-          <ImportPanel
-            canSubmit={canSubmit}
-            confirmingId={confirmingId}
-            displayNames={displayNames}
-            isConfirming={isConfirming}
-            isPreviewPending={isPreviewPending}
-            previewItems={previewItems}
-            profileLineCount={profileLines.length}
-            onClear={handleClear}
-            onConfirm={handleConfirm}
-            onDisplayNameChange={(pendingImportId, value) => {
-              setDisplayNames((current) => ({
-                ...current,
-                [pendingImportId]: value,
-              }));
-            }}
-            onSubmitPreview={handleSubmitPreview}
-            onUrlsChange={setUrlsText}
-            urlsText={urlsText}
-          />
-          <OwnedAccountsPanel
-            accounts={ownedAccounts}
-            isLoading={resultIsLoading(ownedAccountsResult)}
-          />
+          <accountPreviewForm.Initialize defaultValues={{ profileUrls: "" }}>
+            <ImportPanel
+              confirmingId={confirmingId}
+              isConfirming={isConfirming}
+              isPreviewPending={isPreviewPending}
+              previewItems={previewItems}
+              onClear={handleClear}
+              onConfirm={handleConfirm}
+              onConfirmed={handleConfirmed}
+              onSubmitPreview={() => submitPreview(() => previewImports)}
+            />
+          </accountPreviewForm.Initialize>
+          {AsyncResult.isFailure(ownedAccountsResult) ? (
+            <AsyncResultFailure
+              message="Nie udało się wczytać zapisanych kont."
+              onRetry={refreshOwnedAccounts}
+            />
+          ) : (
+            <OwnedAccountsPanel
+              accounts={ownedAccounts}
+              isLoading={!AsyncResult.isSuccess(ownedAccountsResult)}
+            />
+          )}
         </div>
         <div className="space-y-6">
           <InviteInboxPanel />

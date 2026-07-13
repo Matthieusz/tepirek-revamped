@@ -1,4 +1,7 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
+/* oxlint-disable no-use-before-define */
+
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Calendar, Megaphone, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -14,17 +17,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Separator } from "@/components/ui/separator";
 import {
   announcementsAtom,
   deleteAnnouncementAtom,
   optimisticAnnouncementsAtom,
 } from "@/lib/announcement-atoms";
-import { resultIsLoading } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
@@ -40,11 +42,26 @@ interface DashboardHomePageProps {
 }
 
 export default function DashboardHomePage({ session }: DashboardHomePageProps) {
+  const announcementsResult = useAtomValue(announcementsAtom);
+  const refreshAnnouncements = useAtomRefresh(announcementsAtom);
+
+  return (
+    <AsyncResultBoundary
+      onRetry={refreshAnnouncements}
+      result={announcementsResult}
+    >
+      {() => <DashboardHomeContent session={session} />}
+    </AsyncResultBoundary>
+  );
+}
+
+const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
   const [announcementToDelete, setAnnouncementToDelete] =
     useState<AnnouncementToDelete>(null);
-  const announcementsResult = useAtomValue(announcementsAtom);
-  const announcements = useAtomValue(optimisticAnnouncementsAtom);
-  const isPending = resultIsLoading(announcementsResult);
+  const optimisticAnnouncementsResult = useAtomValue(
+    optimisticAnnouncementsAtom
+  );
+  const announcements = AsyncResult.getOrThrow(optimisticAnnouncementsResult);
   const deleteAnnouncement = useAtomSet(deleteAnnouncementAtom, {
     mode: "promise",
   });
@@ -89,13 +106,11 @@ export default function DashboardHomePage({ session }: DashboardHomePageProps) {
         )}
       </div>
 
-      {isPending && <LoadingSpinner />}
-
-      {!isPending && (!announcements || announcements.length === 0) && (
+      {announcements.length === 0 && (
         <EmptyState icon={Megaphone} message="Brak ogłoszeń do wyświetlenia" />
       )}
 
-      {!isPending && announcements && announcements.length > 0 && (
+      {announcements.length > 0 && (
         <div className="space-y-4">
           {announcements.map((announcement) => (
             <article
@@ -193,4 +208,4 @@ export default function DashboardHomePage({ session }: DashboardHomePageProps) {
       </AlertDialog>
     </div>
   );
-}
+};

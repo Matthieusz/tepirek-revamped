@@ -1,8 +1,8 @@
 import type { AnnouncementSummary } from "@tepirek-revamped/api/protocol/announcement/http-api-contract";
 import { Effect } from "effect";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
@@ -10,12 +10,6 @@ import {
 } from "@/lib/http-api-client-runtime";
 
 type Announcement = typeof AnnouncementSummary.Type;
-
-const emptyAnnouncements: readonly Announcement[] = [];
-
-const getAnnouncementListOrEmpty = (
-  result: AsyncResult.AsyncResult<readonly Announcement[], unknown>
-) => (AsyncResult.isSuccess(result) ? result.value : emptyAnnouncements);
 
 const removeAnnouncementById = (
   announcements: readonly Announcement[],
@@ -51,15 +45,16 @@ const deleteAnnouncementRequestAtom = appHttpApiFn(
     })
 );
 
-/** Optimistic announcement list atom backed by the Result-returning resource. */
-export const optimisticAnnouncementsAtom = Atom.optimistic(
-  announcementsAtom.pipe(Atom.map(getAnnouncementListOrEmpty))
-);
+/** Optimistic announcement resource that preserves loading and failure states. */
+export const optimisticAnnouncementsAtom = Atom.optimistic(announcementsAtom);
 
 /** Optimistic mutation atom for deleting an announcement from the list. */
 export const deleteAnnouncementAtom = optimisticAnnouncementsAtom.pipe(
   Atom.optimisticFn({
     fn: deleteAnnouncementRequestAtom,
-    reducer: removeAnnouncementById,
+    reducer: (current, input) =>
+      updateResultSuccess(current, (announcements) =>
+        removeAnnouncementById(announcements, input)
+      ),
   })
 );

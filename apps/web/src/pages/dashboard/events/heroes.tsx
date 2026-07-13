@@ -1,4 +1,7 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
+/* oxlint-disable no-use-before-define */
+
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Plus, Sword, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -16,9 +19,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Select,
   SelectContent,
@@ -33,7 +36,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { resultIsLoading, resultValueOr } from "@/lib/effect-atom-result";
 import { getErrorMessage } from "@/lib/errors";
 import { eventsAtom } from "@/lib/event-atoms";
 import {
@@ -54,12 +56,29 @@ interface EventsHeroesPageProps {
 }
 
 export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
+  const heroesResult = useAtomValue(heroesAtom);
+  const eventsResult = useAtomValue(eventsAtom);
+  const refreshHeroes = useAtomRefresh(heroesAtom);
+  const refreshEvents = useAtomRefresh(eventsAtom);
+
+  return (
+    <AsyncResultBoundary onRetry={refreshHeroes} result={heroesResult}>
+      {() => (
+        <AsyncResultBoundary onRetry={refreshEvents} result={eventsResult}>
+          {() => <EventsHeroesContent session={session} />}
+        </AsyncResultBoundary>
+      )}
+    </AsyncResultBoundary>
+  );
+}
+
+const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
   const [heroToDelete, setHeroToDelete] = useState<HeroToDelete>(null);
   const [selectedEventId, setSelectedEventId] = useState("all");
-  const heroesResult = useAtomValue(heroesAtom);
-  const heroes = useAtomValue(optimisticHeroesAtom);
-  const isPending = resultIsLoading(heroesResult);
-  const events = [...resultValueOr(useAtomValue(eventsAtom), [])];
+  const optimisticHeroesResult = useAtomValue(optimisticHeroesAtom);
+  const heroes = AsyncResult.getOrThrow(optimisticHeroesResult);
+  const eventsResult = useAtomValue(eventsAtom);
+  const events = [...AsyncResult.getOrThrow(eventsResult)];
   const deleteHero = useAtomSet(deleteHeroAtom, { mode: "promise" });
 
   const isAdminUser = isAdmin(session);
@@ -67,7 +86,7 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
   const filteredHeroes =
     selectedEventId === "all"
       ? heroes
-      : heroes?.filter((h) => h.eventId?.toString() === selectedEventId);
+      : heroes.filter((h) => h.eventId?.toString() === selectedEventId);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const deleteMutation = {
@@ -87,22 +106,6 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
       })();
     },
   };
-
-  if (isPending) {
-    return (
-      <div className="mx-auto w-full max-w-4xl space-y-6">
-        <div>
-          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
-            Herosi
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Zarządzaj herosami dostępnymi na eventach.
-          </p>
-        </div>
-        <LoadingSpinner />
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -262,4 +265,4 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
       </AlertDialog>
     </div>
   );
-}
+};

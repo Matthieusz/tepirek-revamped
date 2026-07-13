@@ -1,8 +1,8 @@
 import type { VaultRow } from "@tepirek-revamped/api/protocol/vault/http-api-contract";
 import { Effect } from "effect";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
@@ -23,12 +23,6 @@ const vaultKey = (payload: VaultInput): VaultKey =>
 
 const vaultInputFromKey = (key: VaultKey) =>
   key === "all" ? {} : { eventId: Number(key) };
-
-const emptyVaultRows: readonly VaultEntry[] = [];
-
-const getVaultRowsOrEmpty = (
-  result: AsyncResult.AsyncResult<readonly VaultEntry[], unknown>
-) => (AsyncResult.isSuccess(result) ? result.value : emptyVaultRows);
 
 const setPaidOutForUser = (
   rows: readonly VaultEntry[],
@@ -114,7 +108,7 @@ const togglePaidOutRequestAtom = appHttpApiFn(
 
 /** Optimistic vault list atom backed by a Result-returning vault resource. */
 const optimisticVaultByKeyAtom = Atom.family((key: VaultKey) =>
-  Atom.optimistic(vaultByKeyAtom(key).pipe(Atom.map(getVaultRowsOrEmpty)))
+  Atom.optimistic(vaultByKeyAtom(key))
 );
 
 export const optimisticVaultAtom = (payload: VaultInput) =>
@@ -125,7 +119,8 @@ const togglePaidOutInVaultByKeyAtom = Atom.family((key: VaultKey) =>
   optimisticVaultByKeyAtom(key).pipe(
     Atom.optimisticFn({
       fn: togglePaidOutRequestAtom,
-      reducer: setPaidOutForUser,
+      reducer: (current, input) =>
+        updateResultSuccess(current, (rows) => setPaidOutForUser(rows, input)),
     })
   )
 );
