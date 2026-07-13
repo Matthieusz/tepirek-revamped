@@ -1,3 +1,5 @@
+import * as Schema from "effect/Schema";
+
 import type {
   EventSelectOption,
   HeroSelectOption,
@@ -15,6 +17,22 @@ import type {
 
 export const ALL_FILTER = "all" as const;
 export type FilterSelection = typeof ALL_FILTER | string;
+
+const PERSISTED_FILTER_ID_PATTERN = /^[1-9]\d*$/u;
+const PersistedFilterSelectionSchema = Schema.Union([
+  Schema.Literal(ALL_FILTER),
+  Schema.String.pipe(
+    Schema.refine(
+      (value): value is string => PERSISTED_FILTER_ID_PATTERN.test(value),
+      { message: "Expected the all sentinel or a positive numeric id" }
+    )
+  ),
+]);
+
+export const EventHeroFilterPersistenceSchema = Schema.Struct({
+  eventId: Schema.optional(PersistedFilterSelectionSchema),
+  heroId: Schema.optional(PersistedFilterSelectionSchema),
+});
 
 export interface EventHeroFilterState {
   eventId: FilterSelection;

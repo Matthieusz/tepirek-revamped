@@ -20,7 +20,6 @@ import { ApplyAccountRefetchService } from "../../../services/squad-builder/acco
 import type { ApplyAccountRefetchError } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.ts";
 import { PreviewAccountRefetchService } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.ts";
 import type { PreviewAccountRefetchError } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.ts";
-import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -107,10 +106,7 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
                 accountId,
                 actorUserId: sessionAppUserId(session),
               })
-            ).pipe(
-              Effect.tapError(logSquadBuilderInternalFailure),
-              Effect.mapError(mapAccountRefetchError)
-            );
+            ).pipe(Effect.mapError(mapAccountRefetchError));
           })
         )
         .handle("applyAccountRefetch", ({ payload, request }) =>
@@ -126,10 +122,7 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 refetchPreviewId,
               })
-            ).pipe(
-              Effect.tapError(logSquadBuilderInternalFailure),
-              Effect.mapError(mapAccountRefetchError)
-            );
+            ).pipe(Effect.mapError(mapAccountRefetchError));
           })
         );
     })

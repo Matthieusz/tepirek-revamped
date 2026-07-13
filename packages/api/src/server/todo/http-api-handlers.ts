@@ -24,17 +24,7 @@ const { requireVerifiedSession } = makeAuthorizationPolicy({
 
 const projectStoreError = Effect.fn("TodoHttpApiHandlers.projectStoreError")(
   (error: TodoStoreError) =>
-    Effect.gen(function* projectStoreError() {
-      yield* Effect.logError("Todo persistence operation failed").pipe(
-        Effect.annotateLogs({
-          errorTag: error._tag,
-          operation: error.operation,
-        })
-      );
-      return yield* new TodoPersistenceUnavailable({
-        operation: error.operation,
-      });
-    })
+    Effect.fail(new TodoPersistenceUnavailable({ operation: error.operation }))
 );
 
 export const TodoHttpApiHandlers = HttpApiBuilder.group(

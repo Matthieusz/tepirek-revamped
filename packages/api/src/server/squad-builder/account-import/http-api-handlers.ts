@@ -21,7 +21,6 @@ import { PreviewMargonemProfileImportService } from "../../../services/squad-bui
 import type { PreviewMargonemProfileImportError } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import { PreviewOwnedAccountImportsService } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
 import type { PreviewOwnedAccountImportsError } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
-import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -111,10 +110,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 profileUrl: payload.profileUrl,
               })
-            ).pipe(
-              Effect.tapError(logSquadBuilderInternalFailure),
-              Effect.mapError(mapAccountImportError)
-            );
+            ).pipe(Effect.mapError(mapAccountImportError));
           })
         )
         .handle("previewOwnedAccountImports", ({ payload, request }) =>
@@ -126,10 +122,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 profileUrls: payload.profileUrls,
               })
-            ).pipe(
-              Effect.tapError(logSquadBuilderInternalFailure),
-              Effect.mapError(mapAccountImportError)
-            );
+            ).pipe(Effect.mapError(mapAccountImportError));
           })
         )
         .handle("confirmOwnedAccountImport", ({ payload, request }) =>
@@ -142,10 +135,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
                 displayName: payload.displayName,
                 pendingImportId: payload.pendingImportId,
               })
-            ).pipe(
-              Effect.tapError(logSquadBuilderInternalFailure),
-              Effect.mapError(mapAccountImportError)
-            );
+            ).pipe(Effect.mapError(mapAccountImportError));
           })
         )
         .handle("listOwnedAccounts", ({ request }) =>
@@ -158,10 +148,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
                   actorUserId: sessionAppUserId(session),
                 })
               )
-            ).pipe(
-              Effect.tapError(logSquadBuilderInternalFailure),
-              Effect.mapError(mapAccountImportError)
-            );
+            ).pipe(Effect.mapError(mapAccountImportError));
           })
         );
     })

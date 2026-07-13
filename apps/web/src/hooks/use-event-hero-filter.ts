@@ -9,6 +9,7 @@ import type {
 } from "@/components/events/select-utils";
 import { eventsAtom } from "@/lib/event-atoms";
 import {
+  EventHeroFilterPersistenceSchema,
   isHeroQueryEnabled,
   normalizeEventHeroFilter,
   selectEventUpdate,
@@ -71,13 +72,15 @@ export const useEventHeroFilter = (
   });
   const navigate = useNavigate({ from: routeId });
 
-  const [persistedFilters, updatePersistedFilters] = useFilterPersistence<
-    Record<string, unknown>
-  >(persistenceKey, { eventId: undefined, heroId: undefined });
+  const [persistedFilters, updatePersistedFilters] = useFilterPersistence(
+    persistenceKey,
+    EventHeroFilterPersistenceSchema,
+    { eventId: undefined, heroId: undefined }
+  );
 
   const state = normalizeEventHeroFilter({
-    persistedEventId: persistedFilters.eventId as string | undefined,
-    persistedHeroId: persistedFilters.heroId as string | undefined,
+    persistedEventId: persistedFilters.eventId,
+    persistedHeroId: persistedFilters.heroId,
     urlEventId: typeof urlEventId === "string" ? urlEventId : undefined,
     urlHeroId: typeof urlHeroId === "string" ? urlHeroId : undefined,
   });

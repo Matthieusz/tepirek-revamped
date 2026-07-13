@@ -24,17 +24,9 @@ const { requireVerifiedSession } = makeAuthorizationPolicy({
 
 const projectStoreError = Effect.fn("AuctionHttpApiHandlers.projectStoreError")(
   (error: AuctionStoreError) =>
-    Effect.gen(function* projectStoreError() {
-      yield* Effect.logError("Auction persistence operation failed").pipe(
-        Effect.annotateLogs({
-          errorTag: error._tag,
-          operation: error.operation,
-        })
-      );
-      return yield* new AuctionPersistenceUnavailable({
-        operation: error.operation,
-      });
-    })
+    Effect.fail(
+      new AuctionPersistenceUnavailable({ operation: error.operation })
+    )
 );
 
 export const AuctionHttpApiHandlers = HttpApiBuilder.group(

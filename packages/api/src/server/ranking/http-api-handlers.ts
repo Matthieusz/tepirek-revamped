@@ -31,16 +31,8 @@ const mapRankingError = <A>(
     Effect.catchTags({
       RankingNotFound: (error) =>
         Effect.fail(new RankingNotFound({ message: error.message })),
-      RankingPersistenceUnavailable: (error) =>
-        Effect.logError("Ranking persistence operation failed").pipe(
-          Effect.annotateLogs({
-            errorTag: error._tag,
-            operation: error.operation,
-          }),
-          Effect.andThen(
-            Effect.fail(new RankingPersistenceUnavailable({ operation }))
-          )
-        ),
+      RankingPersistenceUnavailable: () =>
+        Effect.fail(new RankingPersistenceUnavailable({ operation })),
     })
   );
 

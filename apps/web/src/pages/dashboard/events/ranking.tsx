@@ -35,13 +35,10 @@ import { isAdmin } from "@/lib/route-helpers";
 import { useFilterPersistence } from "@/lib/use-filter-persistence";
 import type { AuthSession } from "@/types/route";
 
+import { RankingSortFiltersSchema } from "./ranking-search";
+import type { RankingSort } from "./ranking-search";
+
 const routeApi = getRouteApi("/dashboard/events/ranking");
-
-type RankingSort = "points" | "bets" | "gold";
-
-interface SortFilters extends Record<string, unknown> {
-  sortBy?: RankingSort | undefined;
-}
 
 const buildRankingContent = (params: {
   sortedRanking: RankingItem[];
@@ -62,10 +59,11 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
   const { sortBy } = routeApi.useSearch();
   const navigate = useNavigate({ from: "/dashboard/events/ranking" });
 
-  const [persistedSort, updatePersistedSort] =
-    useFilterPersistence<SortFilters>("ranking-sort", {
-      sortBy: undefined,
-    });
+  const [persistedSort, updatePersistedSort] = useFilterPersistence(
+    "ranking-sort",
+    RankingSortFiltersSchema,
+    { sortBy: undefined }
+  );
 
   const currentSortBy: RankingSort = sortBy ?? persistedSort.sortBy ?? "points";
 
@@ -91,7 +89,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
   const rankingContent = buildRankingContent({ sortedRanking });
 
   const navigateSortWithPersist = useCallback(
-    (updates: Partial<SortFilters>) => {
+    (updates: Partial<typeof persistedSort>) => {
       updatePersistedSort(updates);
       navigate({
         search: (prev) => ({ ...prev, ...updates }),

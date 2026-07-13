@@ -20,7 +20,6 @@ import { AccountAccessInviteResponsesService } from "../../../services/squad-bui
 import { AccountAccessRevocationsService } from "../../../services/squad-builder/account-sharing/revoke-account-access-service.ts";
 import { AccountInviteTargetsService } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.ts";
 import { AccountAccessInvitesService } from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.ts";
-import { logSquadBuilderInternalFailure } from "../../../services/squad-builder/internal-error-logging.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -102,10 +101,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 query: payload.query,
               })
-            ).pipe(
-              Effect.tapError(logSquadBuilderInternalFailure),
-              Effect.mapError(mapAccountSharingError)
-            );
+            ).pipe(Effect.mapError(mapAccountSharingError));
           })
         )
         .handle("sendAccountAccessInvite", ({ payload, request }) =>
@@ -118,10 +114,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 invitedUserId: payload.invitedUserId,
               })
-            ).pipe(
-              Effect.tapError(logSquadBuilderInternalFailure),
-              Effect.mapError(mapAccountSharingError)
-            );
+            ).pipe(Effect.mapError(mapAccountSharingError));
           })
         )
         .handle("respondToAccountAccessInvite", ({ payload, request }) =>
@@ -134,10 +127,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 response: payload.response,
               })
-            ).pipe(
-              Effect.tapError(logSquadBuilderInternalFailure),
-              Effect.mapError(mapAccountSharingError)
-            );
+            ).pipe(Effect.mapError(mapAccountSharingError));
           })
         )
         .handle("revokeAccountAccess", ({ payload, request }) =>
@@ -149,10 +139,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                 accessId: payload.accessId,
                 actorUserId: sessionAppUserId(session),
               })
-            ).pipe(
-              Effect.tapError(logSquadBuilderInternalFailure),
-              Effect.mapError(mapAccountSharingError)
-            );
+            ).pipe(Effect.mapError(mapAccountSharingError));
           })
         )
         .handle("listIncomingAccountInvites", ({ request }) =>
@@ -163,10 +150,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
               accountSharingStateSvc.listIncomingInvites({
                 actorUserId: sessionAppUserId(session),
               })
-            ).pipe(
-              Effect.tapError(logSquadBuilderInternalFailure),
-              Effect.mapError(mapAccountSharingError)
-            );
+            ).pipe(Effect.mapError(mapAccountSharingError));
           })
         )
         .handle("listSharedAccounts", ({ request }) =>
@@ -177,10 +161,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
               accountSharingStateSvc.listSharedAccounts({
                 actorUserId: sessionAppUserId(session),
               })
-            ).pipe(
-              Effect.tapError(logSquadBuilderInternalFailure),
-              Effect.mapError(mapAccountSharingError)
-            );
+            ).pipe(Effect.mapError(mapAccountSharingError));
           })
         )
         .handle("listAccountAccessGrants", ({ payload, request }) =>
@@ -192,10 +173,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                 accountId: payload.accountId,
                 actorUserId: sessionAppUserId(session),
               })
-            ).pipe(
-              Effect.tapError(logSquadBuilderInternalFailure),
-              Effect.mapError(mapAccountSharingError)
-            );
+            ).pipe(Effect.mapError(mapAccountSharingError));
           })
         );
     })

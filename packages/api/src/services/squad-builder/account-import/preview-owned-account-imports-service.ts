@@ -22,7 +22,6 @@ import { FirecrawlClientService } from "../firecrawl-client.ts";
 import type { FirecrawlScrapeError } from "../firecrawl-client.ts";
 import { FirecrawlConfigService } from "../firecrawl-config.ts";
 import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
-import { logSquadBuilderInternalFailure } from "../internal-error-logging.ts";
 import {
   MargonemAccountAlreadyOwnedByActor,
   MargonemAccountAlreadySharedWithActor,
@@ -240,12 +239,10 @@ const persistPendingImport = ({
     .pipe(
       EffectRuntime.matchEffect({
         onFailure: (error) =>
-          logSquadBuilderInternalFailure(error).pipe(
-            EffectRuntime.as({
-              item: toFailedItem({ error, inputUrl, lineNumber }),
-              lineNumber,
-            })
-          ),
+          EffectRuntime.succeed({
+            item: toFailedItem({ error, inputUrl, lineNumber }),
+            lineNumber,
+          }),
         onSuccess: (created) =>
           EffectRuntime.succeed({
             item: {
@@ -347,14 +344,12 @@ const makePreview = (
           .pipe(
             EffectRuntime.matchEffect({
               onFailure: (error) =>
-                logSquadBuilderInternalFailure(error).pipe(
-                  EffectRuntime.as({
-                    _tag: "LineFailure" as const,
-                    error,
-                    inputUrl: line.inputUrl,
-                    lineNumber: line.lineNumber,
-                  })
-                ),
+                EffectRuntime.succeed({
+                  _tag: "LineFailure" as const,
+                  error,
+                  inputUrl: line.inputUrl,
+                  lineNumber: line.lineNumber,
+                }),
               onSuccess: (state) =>
                 EffectRuntime.succeed({
                   _tag: "AccessState" as const,
@@ -408,16 +403,14 @@ const makePreview = (
           .pipe(
             EffectRuntime.matchEffect({
               onFailure: (error) =>
-                logSquadBuilderInternalFailure(error).pipe(
-                  EffectRuntime.as({
-                    item: toFailedItem({
-                      error,
-                      inputUrl: line.inputUrl,
-                      lineNumber: line.lineNumber,
-                    }),
+                EffectRuntime.succeed({
+                  item: toFailedItem({
+                    error,
+                    inputUrl: line.inputUrl,
                     lineNumber: line.lineNumber,
-                  })
-                ),
+                  }),
+                  lineNumber: line.lineNumber,
+                }),
               onSuccess: (profilePreview) =>
                 persistPendingImport({
                   actorUserId: input.actorUserId,

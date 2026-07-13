@@ -1,8 +1,6 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import * as Effect from "effect/Effect";
-import { toast } from "sonner";
 
 import {
   BackToHomeButton,
@@ -12,8 +10,9 @@ import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import {
-  getAuthProviderErrorMessage,
+  authFormSubmission,
   handleSignupSuccess,
+  submitWhenIdle,
 } from "@/lib/auth-form-behavior";
 import {
   EmailSchema,
@@ -33,7 +32,9 @@ interface SignupCredentials {
   readonly password: string;
 }
 
-type Signup = (credentials: SignupCredentials) => Promise<unknown>;
+type Signup = (
+  credentials: SignupCredentials
+) => ReturnType<typeof authClient.signUp.email>;
 
 const signupForm = FormReact.make(signupFormBuilder, {
   fields: {
@@ -43,7 +44,7 @@ const signupForm = FormReact.make(signupFormBuilder, {
   },
   mode: { validation: "onSubmit" },
   onSubmit: (signup: Signup, { decoded }) =>
-    Effect.promise(() => signup(decoded)),
+    authFormSubmission("signup", () => signup(decoded)),
 });
 
 export const SignUpForm = ({
@@ -53,9 +54,6 @@ export const SignUpForm = ({
   const navigate = useNavigate({ from: "/" });
   const signup = (credentials: SignupCredentials) =>
     authClient.signUp.email(credentials, {
-      onError: (error) => {
-        toast.error(getAuthProviderErrorMessage(error));
-      },
       onSuccess: () =>
         handleSignupSuccess(() => navigate({ to: "/dashboard" })),
     });
@@ -90,7 +88,11 @@ export const SignUpForm = ({
             </div>
           </div>
 
-          <form action={() => submit(() => signup)}>
+          <form
+            action={() =>
+              submitWhenIdle(submitResult.waiting, () => submit(() => signup))
+            }
+          >
             <div className="flex flex-col gap-5">
               <signupForm.name
                 autoComplete="name"

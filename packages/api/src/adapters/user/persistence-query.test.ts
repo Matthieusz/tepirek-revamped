@@ -73,4 +73,16 @@ describe("userPersistenceQuery", () => {
       expect(error).toBe(domainError);
     })
   );
+
+  it.effect("does not translate a tag-shaped non-Drizzle failure", () =>
+    Effect.gen(function* tagShapedFailureTest() {
+      const domainError = { _tag: "EffectDrizzleQueryError" as const };
+
+      const error = yield* Effect.flip(
+        userPersistenceQuery("loadTargetUser", Effect.fail(domainError))
+      );
+
+      expect(error).toBe(domainError);
+    })
+  );
 });

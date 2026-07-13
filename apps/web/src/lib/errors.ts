@@ -1,3 +1,82 @@
+import {
+  AnnouncementForbidden,
+  AnnouncementPersistenceUnavailable,
+  AnnouncementUnauthorized,
+} from "@tepirek-revamped/api/protocol/announcement/http-api-contract";
+import type { AnnouncementError } from "@tepirek-revamped/api/protocol/announcement/http-api-contract";
+import {
+  AuctionForbidden,
+  AuctionPersistenceUnavailable,
+  AuctionUnauthorized,
+} from "@tepirek-revamped/api/protocol/auction/http-api-contract";
+import type { AuctionError } from "@tepirek-revamped/api/protocol/auction/http-api-contract";
+import {
+  BetBadRequest,
+  BetForbidden,
+  BetNotFound,
+  BetPersistenceUnavailable,
+  BetUnauthorized,
+} from "@tepirek-revamped/api/protocol/bet/http-api-contract";
+import type { BetError } from "@tepirek-revamped/api/protocol/bet/http-api-contract";
+import {
+  EventForbidden,
+  EventPersistenceUnavailable,
+  EventUnauthorized,
+} from "@tepirek-revamped/api/protocol/event/http-api-contract";
+import type { EventError } from "@tepirek-revamped/api/protocol/event/http-api-contract";
+import {
+  HeroesForbidden,
+  HeroesPersistenceUnavailable,
+  HeroesUnauthorized,
+} from "@tepirek-revamped/api/protocol/heroes/http-api-contract";
+import type { HeroesError } from "@tepirek-revamped/api/protocol/heroes/http-api-contract";
+import {
+  RankingForbidden,
+  RankingPersistenceUnavailable,
+  RankingUnauthorized,
+} from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
+import type { RankingError } from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
+import {
+  SkillsBadRequest,
+  SkillsConflict,
+  SkillsForbidden,
+  SkillsPersistenceUnavailable,
+  SkillsUnauthorized,
+} from "@tepirek-revamped/api/protocol/skills/http-api-contract";
+import type { SkillsError } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
+import type { PreviewOwnedAccountImportsSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
+import {
+  SquadBuilderConflict,
+  SquadBuilderForbidden,
+  SquadBuilderInvalidInput,
+  SquadBuilderNotFound,
+  SquadBuilderPersistenceUnavailable,
+  SquadBuilderUnauthorized,
+  SquadBuilderUpstreamUnavailable,
+} from "@tepirek-revamped/api/protocol/squad-builder/errors";
+import {
+  TodoForbidden,
+  TodoPersistenceUnavailable,
+  TodoUnauthorized,
+} from "@tepirek-revamped/api/protocol/todo/http-api-contract";
+import type { TodoError } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
+import {
+  UserBadRequest,
+  UserForbidden,
+  UserNotFound,
+  UserPersistenceUnavailable,
+  UserUnauthorized,
+} from "@tepirek-revamped/api/protocol/user/http-api-contract";
+import type { UserError } from "@tepirek-revamped/api/protocol/user/http-api-contract";
+import {
+  VaultBadRequest,
+  VaultForbidden,
+  VaultNotFound,
+  VaultPersistenceUnavailable,
+  VaultUnauthorized,
+} from "@tepirek-revamped/api/protocol/vault/http-api-contract";
+import type { VaultError } from "@tepirek-revamped/api/protocol/vault/http-api-contract";
+
 const fallbackErrorMessage = "Wystąpił błąd. Spróbuj ponownie później.";
 const forbiddenMessage = "Nie masz uprawnień do wykonania tej akcji.";
 const unauthorizedMessage = "Zaloguj się ponownie, aby kontynuować.";
@@ -6,140 +85,194 @@ const conflictMessage =
   "Nie można zapisać zmian, bo zasób został już zmieniony.";
 const validationMessage = "Sprawdź dane i spróbuj ponownie.";
 
-const taggedFailureMessages: Readonly<Record<string, string>> = {
-  AccountAccessInviteNotFound: "Nie znaleziono zaproszenia do konta.",
-  AccountAccessTransitionNotAllowed:
-    "Nie można już zmienić statusu tego zaproszenia.",
-  ActorCannotEditSquadGroup: "Nie możesz edytować tej grupy składów.",
-  ActorCannotViewSquadGroup: "Nie masz dostępu do tej grupy składów.",
-  ActorDoesNotOwnMargonemAccount: "Możesz zarządzać tylko własnymi kontami.",
-  ActorDoesNotOwnSquadGroup: "Możesz zarządzać tylko własnymi grupami składów.",
-  ActorIsNotInviteRecipient:
-    "To zaproszenie jest przypisane do innego użytkownika.",
-  ActorIsNotSquadGroupInviteRecipient:
-    "To zaproszenie do grupy jest przypisane do innego użytkownika.",
-  CannotInviteSelf: "Nie możesz zaprosić samego siebie.",
-  DuplicateProfileInBatchError:
-    "Ten profil występuje na liście więcej niż raz.",
-  EditorCannotChangeSquadStructure:
-    "Edytor nie może zmieniać struktury składu w tej grupie.",
-  EmptyProfileUrlBatch: "Wklej co najmniej jeden link do profilu.",
-  FirecrawlRequestFailed: "Nie udało się pobrać profilu Margonem.",
-  FirecrawlResponseNotParseable:
-    "Nie udało się odczytać danych z profilu Margonem.",
-  InvalidAccountInviteTargetQuery:
-    "Wpisz co najmniej 2 znaki, aby wyszukać użytkownika.",
-  InvalidMargonemProfileUrl: "Podaj poprawny link do profilu Margonem.",
-  InvalidSquadGroupName: "Podaj poprawną nazwę grupy składów.",
-  InviteTargetNotFound: "Nie znaleziono użytkownika do zaproszenia.",
-  InviteTargetNotVerified: "Możesz zaprosić tylko zweryfikowanego użytkownika.",
-  MargonemAccountNotFound: "Nie znaleziono konta Margonem.",
-  MargonemCharacterRowInvalid: "Profil zawiera nieprawidłowe dane postaci.",
-  MargonemCharacterRowsNotFound: "Nie znaleziono postaci na tym profilu.",
-  MargonemProfileNameNotFound: "Nie znaleziono nazwy profilu Margonem.",
-  MissingMargonemProfileId: "Link nie zawiera identyfikatora profilu Margonem.",
-  PendingMargonemAccountImportNotFound:
-    "Nie znaleziono oczekującego importu konta.",
-  PendingMargonemAccountRefetchNotFound:
-    "Nie znaleziono oczekującego odświeżenia konta.",
-  SquadBuilderPersistenceUnavailable:
-    "Nie udało się zapisać zmian kont i składów. Spróbuj ponownie później.",
-  SquadCharacterNotAccessible: "Nie masz dostępu do tej postaci.",
-  SquadEditorInviteTargetNotFound: "Nie znaleziono edytora do zaproszenia.",
-  SquadEditorInviteTargetNotVerified:
-    "Możesz zaprosić tylko zweryfikowanego edytora.",
-  SquadGroupInvitationNotFound: "Nie znaleziono zaproszenia do grupy składów.",
-  SquadGroupInvitationTransitionNotAllowed:
-    "Nie można już zmienić statusu tego zaproszenia do grupy.",
-  SquadGroupNotFound: "Nie znaleziono grupy składów.",
-  SquadNotInGroup: "Ten skład nie należy do wybranej grupy.",
-  TooManyProfileUrlsInBatch: "Wklej maksymalnie 20 linków do profili naraz.",
-};
+/** All tagged errors that may cross the typed HTTP API boundary. */
+type ApiError =
+  | typeof AnnouncementError.Type
+  | typeof AuctionError.Type
+  | typeof BetError.Type
+  | typeof EventError.Type
+  | typeof HeroesError.Type
+  | typeof RankingError.Type
+  | typeof SkillsError.Type
+  | typeof TodoError.Type
+  | typeof UserError.Type
+  | typeof VaultError.Type
+  | InstanceType<typeof SquadBuilderConflict>
+  | InstanceType<typeof SquadBuilderForbidden>
+  | InstanceType<typeof SquadBuilderInvalidInput>
+  | InstanceType<typeof SquadBuilderNotFound>
+  | InstanceType<typeof SquadBuilderPersistenceUnavailable>
+  | InstanceType<typeof SquadBuilderUnauthorized>
+  | InstanceType<typeof SquadBuilderUpstreamUnavailable>;
 
-type KnownTaggedFailure =
-  | { readonly _tag: "BetBadRequest"; readonly message?: string }
-  | { readonly _tag: "SkillsBadRequest"; readonly message?: string }
-  | { readonly _tag: "UserBadRequest"; readonly message?: string }
-  | { readonly _tag: "VaultBadRequest"; readonly message?: string }
-  | { readonly _tag: "SkillsConflict"; readonly message?: string }
-  | { readonly _tag: "BetNotFound"; readonly message?: string }
-  | { readonly _tag: "UserNotFound"; readonly message?: string }
-  | { readonly _tag: "VaultNotFound"; readonly message?: string };
+type PreviewOwnedAccountImportFailure = Extract<
+  (typeof PreviewOwnedAccountImportsSuccess.Type)["items"][number],
+  { readonly _tag: "PreviewFailed" }
+>;
 
-interface TaggedFailure {
-  readonly _tag: string;
-  readonly message?: string;
-}
+export type SquadBuilderLineError = PreviewOwnedAccountImportFailure["error"];
 
-const isTaggedFailure = (error: unknown): error is TaggedFailure =>
-  typeof error === "object" &&
-  error !== null &&
-  "_tag" in error &&
-  typeof error._tag === "string";
+const isUnauthorizedApiError = (error: unknown): boolean =>
+  error instanceof AnnouncementUnauthorized ||
+  error instanceof AuctionUnauthorized ||
+  error instanceof BetUnauthorized ||
+  error instanceof EventUnauthorized ||
+  error instanceof HeroesUnauthorized ||
+  error instanceof RankingUnauthorized ||
+  error instanceof SkillsUnauthorized ||
+  error instanceof TodoUnauthorized ||
+  error instanceof UserUnauthorized ||
+  error instanceof VaultUnauthorized ||
+  error instanceof SquadBuilderUnauthorized;
 
-const publicMessage = (failure: TaggedFailure, fallback: string): string =>
-  typeof failure.message === "string" && failure.message.length > 0
-    ? failure.message
-    : fallback;
+const isForbiddenApiError = (error: unknown): boolean =>
+  error instanceof AnnouncementForbidden ||
+  error instanceof AuctionForbidden ||
+  error instanceof BetForbidden ||
+  error instanceof EventForbidden ||
+  error instanceof HeroesForbidden ||
+  error instanceof RankingForbidden ||
+  error instanceof SkillsForbidden ||
+  error instanceof TodoForbidden ||
+  error instanceof UserForbidden ||
+  error instanceof VaultForbidden ||
+  error instanceof SquadBuilderForbidden;
 
-const isKnownTaggedFailure = (
-  failure: TaggedFailure
-): failure is KnownTaggedFailure =>
-  [
-    "BetBadRequest",
-    "SkillsBadRequest",
-    "UserBadRequest",
-    "VaultBadRequest",
-    "SkillsConflict",
-    "BetNotFound",
-    "UserNotFound",
-    "VaultNotFound",
-  ].includes(failure._tag);
+const isBadRequestApiError = (error: unknown): boolean =>
+  error instanceof BetBadRequest ||
+  error instanceof SkillsBadRequest ||
+  error instanceof UserBadRequest ||
+  error instanceof VaultBadRequest;
 
-const getKnownTaggedErrorMessage = (failure: KnownTaggedFailure): string => {
-  if (
-    failure._tag === "BetBadRequest" ||
-    failure._tag === "SkillsBadRequest" ||
-    failure._tag === "UserBadRequest" ||
-    failure._tag === "VaultBadRequest"
-  ) {
-    return publicMessage(failure, validationMessage);
-  }
+const isConflictApiError = (error: unknown): boolean =>
+  error instanceof SkillsConflict || error instanceof SquadBuilderConflict;
 
-  if (failure._tag === "SkillsConflict") {
-    return conflictMessage;
-  }
+const isNotFoundApiError = (error: unknown): boolean =>
+  error instanceof BetNotFound ||
+  error instanceof UserNotFound ||
+  error instanceof VaultNotFound ||
+  error instanceof SquadBuilderNotFound;
 
-  return notFoundMessage;
-};
+const isPersistenceApiError = (error: unknown): boolean =>
+  error instanceof AnnouncementPersistenceUnavailable ||
+  error instanceof AuctionPersistenceUnavailable ||
+  error instanceof BetPersistenceUnavailable ||
+  error instanceof EventPersistenceUnavailable ||
+  error instanceof HeroesPersistenceUnavailable ||
+  error instanceof RankingPersistenceUnavailable ||
+  error instanceof SkillsPersistenceUnavailable ||
+  error instanceof TodoPersistenceUnavailable ||
+  error instanceof UserPersistenceUnavailable ||
+  error instanceof VaultPersistenceUnavailable ||
+  error instanceof SquadBuilderPersistenceUnavailable;
 
-const getTaggedErrorMessage = (failure: TaggedFailure): string => {
-  const mappedMessage = taggedFailureMessages[failure._tag];
-  if (mappedMessage !== undefined) {
-    return mappedMessage;
-  }
+const isApiError = (error: unknown): error is ApiError =>
+  isUnauthorizedApiError(error) ||
+  isForbiddenApiError(error) ||
+  isBadRequestApiError(error) ||
+  isConflictApiError(error) ||
+  isNotFoundApiError(error) ||
+  isPersistenceApiError(error) ||
+  error instanceof SquadBuilderInvalidInput ||
+  error instanceof SquadBuilderUpstreamUnavailable;
 
-  if (failure._tag.endsWith("Unauthorized")) {
+const publicMessage = (message: string, fallback: string): string =>
+  message.length > 0 ? message : fallback;
+
+/** Maps a decoded HTTP API error while its tagged error type is known. */
+export const getApiErrorMessage = (error: ApiError): string => {
+  if (isUnauthorizedApiError(error)) {
     return unauthorizedMessage;
   }
 
-  if (failure._tag.endsWith("Forbidden")) {
+  if (isForbiddenApiError(error)) {
     return forbiddenMessage;
   }
 
-  if (isKnownTaggedFailure(failure)) {
-    return getKnownTaggedErrorMessage(failure);
+  if (isBadRequestApiError(error)) {
+    return publicMessage(error.message, validationMessage);
+  }
+
+  if (isConflictApiError(error)) {
+    return conflictMessage;
+  }
+
+  if (isNotFoundApiError(error)) {
+    return notFoundMessage;
+  }
+
+  if (error instanceof SquadBuilderInvalidInput) {
+    return validationMessage;
+  }
+
+  if (error instanceof SquadBuilderUpstreamUnavailable) {
+    return "Nie udało się pobrać danych z zewnętrznej usługi.";
   }
 
   return fallbackErrorMessage;
 };
 
+/** Maps typed line failures returned inside a squad-builder success payload. */
+export const getSquadBuilderLineErrorMessage = (
+  error: SquadBuilderLineError
+): string => {
+  switch (error._tag) {
+    case "DuplicateProfileInBatch": {
+      return "Ten profil występuje na liście więcej niż raz.";
+    }
+    case "FirecrawlMonthlyBudgetExhausted": {
+      return "Limit pobierania profili został wyczerpany. Spróbuj ponownie później.";
+    }
+    case "FirecrawlRequestFailed": {
+      return "Nie udało się pobrać profilu Margonem.";
+    }
+    case "FirecrawlResponseNotParseable": {
+      return "Nie udało się odczytać danych z profilu Margonem.";
+    }
+    case "InvalidMargonemProfileUrl": {
+      return "Podaj poprawny link do profilu Margonem.";
+    }
+    case "MargonemAccountAlreadyOwnedByActor": {
+      return "Możesz zarządzać tylko własnymi kontami.";
+    }
+    case "MargonemAccountAlreadySharedWithActor": {
+      return "To konto jest już z Tobą współdzielone.";
+    }
+    case "MargonemAccountOwnedByAnotherUser": {
+      return "To konto należy do innego użytkownika.";
+    }
+    case "MargonemCharacterRowInvalid": {
+      return "Profil zawiera nieprawidłowe dane postaci.";
+    }
+    case "MargonemCharacterRowsNotFound": {
+      return "Nie znaleziono postaci na tym profilu.";
+    }
+    case "MargonemProfileNameNotFound": {
+      return "Nie znaleziono nazwy profilu Margonem.";
+    }
+    case "MissingMargonemProfileId": {
+      return "Link nie zawiera identyfikatora profilu Margonem.";
+    }
+    case "SquadBuilderPersistenceUnavailable": {
+      return "Nie udało się zapisać zmian kont i składów. Spróbuj ponownie później.";
+    }
+    default: {
+      const exhaustive: never = error;
+      return exhaustive;
+    }
+  }
+};
+
+/**
+ * Converts errors at JavaScript and Promise boundaries into safe UI copy.
+ * HTTP API errors are already decoded and are matched by their concrete types.
+ */
 export const getErrorMessage = (
   error: unknown,
   fallback = fallbackErrorMessage
 ): string => {
-  if (isTaggedFailure(error)) {
-    return getTaggedErrorMessage(error);
+  if (isApiError(error)) {
+    return getApiErrorMessage(error);
   }
 
   if (error instanceof Error && error.name !== "RuntimeException") {

@@ -25,18 +25,8 @@ const { requireAdminSession, requireSession, requireVerifiedSession } =
       }),
   });
 
-const projectAdapterError = Effect.fn(
-  "UserHttpApiHandlers.projectAdapterError"
-)((error: UserAdapterError) =>
-  Effect.gen(function* projectAdapterError() {
-    yield* Effect.logError("User dependency operation failed").pipe(
-      Effect.annotateLogs({ errorTag: error._tag, operation: error.operation })
-    );
-    return yield* new UserPersistenceUnavailable({
-      operation: error.operation,
-    });
-  })
-);
+const projectAdapterError = (error: UserAdapterError) =>
+  Effect.fail(new UserPersistenceUnavailable({ operation: error.operation }));
 
 export const UserHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,

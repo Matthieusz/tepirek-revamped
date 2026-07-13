@@ -47,7 +47,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { getErrorMessage } from "@/lib/errors";
+import { getErrorMessage, getSquadBuilderLineErrorMessage } from "@/lib/errors";
 import {
   AccountDisplayNameSchema,
   getProfileLines,
@@ -1406,7 +1406,7 @@ export default function SquadBuilderAccountsPage() {
             errorTag: item.error._tag,
             inputUrl: item.inputUrl,
             lineNumber: item.lineNumber,
-            message: getErrorMessage(item.error),
+            message: getSquadBuilderLineErrorMessage(item.error),
             status: "error" as const,
           }
     );

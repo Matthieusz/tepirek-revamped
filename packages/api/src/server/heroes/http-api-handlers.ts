@@ -26,17 +26,9 @@ const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
 
 const projectStoreError = Effect.fn("HeroesHttpApiHandlers.projectStoreError")(
   (error: HeroesStoreError) =>
-    Effect.gen(function* projectStoreError() {
-      yield* Effect.logError("Heroes persistence operation failed").pipe(
-        Effect.annotateLogs({
-          errorTag: error._tag,
-          operation: error.operation,
-        })
-      );
-      return yield* new HeroesPersistenceUnavailable({
-        operation: error.operation,
-      });
-    })
+    Effect.fail(
+      new HeroesPersistenceUnavailable({ operation: error.operation })
+    )
 );
 
 export const HeroesHttpApiHandlers = HttpApiBuilder.group(

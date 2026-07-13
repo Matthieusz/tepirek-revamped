@@ -36,16 +36,8 @@ const mapVaultError = <A>(
         Effect.fail(new VaultBadRequest({ message: error.message })),
       VaultNotFound: (error) =>
         Effect.fail(new VaultNotFound({ message: error.message })),
-      VaultPersistenceUnavailable: (error) =>
-        Effect.logError("Vault persistence operation failed").pipe(
-          Effect.annotateLogs({
-            errorTag: error._tag,
-            operation: error.operation,
-          }),
-          Effect.andThen(
-            Effect.fail(new VaultPersistenceUnavailable({ operation }))
-          )
-        ),
+      VaultPersistenceUnavailable: () =>
+        Effect.fail(new VaultPersistenceUnavailable({ operation })),
     })
   );
 

@@ -26,17 +26,9 @@ const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
 
 const projectStoreError = Effect.fn("SkillsHttpApiHandlers.projectStoreError")(
   (error: SkillsStoreError) =>
-    Effect.gen(function* projectStoreError() {
-      yield* Effect.logError("Skills persistence operation failed").pipe(
-        Effect.annotateLogs({
-          errorTag: error._tag,
-          operation: error.operation,
-        })
-      );
-      return yield* new SkillsPersistenceUnavailable({
-        operation: error.operation,
-      });
-    })
+    Effect.fail(
+      new SkillsPersistenceUnavailable({ operation: error.operation })
+    )
 );
 
 export const SkillsHttpApiHandlers = HttpApiBuilder.group(

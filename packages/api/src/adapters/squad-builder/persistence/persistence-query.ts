@@ -1,4 +1,4 @@
-import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
+import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Effect from "effect/Effect";
 import { isSqlError } from "effect/unstable/sql/SqlError";
 import type { SqlError } from "effect/unstable/sql/SqlError";
@@ -90,12 +90,7 @@ export function persistenceQuery<A, R>(
   self: Effect.Effect<A, unknown, R>
 ): Effect.Effect<A, unknown, R> {
   return Effect.catch(self, (error) => {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "_tag" in error &&
-      error._tag === "EffectDrizzleQueryError"
-    ) {
+    if (error instanceof EffectDrizzleQueryError) {
       return failPersistence(operation, error);
     }
 

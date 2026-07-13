@@ -36,16 +36,8 @@ const mapBetError = <A>(
         Effect.fail(new BetBadRequest({ message: error.message })),
       BetNotFound: (error) =>
         Effect.fail(new BetNotFound({ message: error.message })),
-      BetPersistenceUnavailable: (error) =>
-        Effect.logError("Bet persistence operation failed").pipe(
-          Effect.annotateLogs({
-            errorTag: error._tag,
-            operation: error.operation,
-          }),
-          Effect.andThen(
-            Effect.fail(new BetPersistenceUnavailable({ operation }))
-          )
-        ),
+      BetPersistenceUnavailable: () =>
+        Effect.fail(new BetPersistenceUnavailable({ operation })),
     })
   );
 

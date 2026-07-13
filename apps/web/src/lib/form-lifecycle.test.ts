@@ -118,6 +118,7 @@ describe("Effect Form submission lifecycle", () => {
     await flushFibers();
 
     expect(AsyncResult.isFailure(registry.get(form.submitAtom))).toBe(true);
+    expect(registry.get(form.submitAtom).waiting).toBe(false);
     expect(registry.get(form.valuesAtom)).toEqual(
       Option.some({ name: "unsaved" })
     );

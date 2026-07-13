@@ -1,8 +1,6 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
-import * as Effect from "effect/Effect";
-import { toast } from "sonner";
 
 import {
   BackToHomeButton,
@@ -12,8 +10,9 @@ import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import {
-  getAuthProviderErrorMessage,
+  authFormSubmission,
   handleLoginSuccess,
+  submitWhenIdle,
 } from "@/lib/auth-form-behavior";
 import { EmailSchema, PasswordSchema } from "@/lib/form-schemas";
 import { cn } from "@/lib/utils";
@@ -27,7 +26,9 @@ interface LoginCredentials {
   readonly password: string;
 }
 
-type Login = (credentials: LoginCredentials) => Promise<unknown>;
+type Login = (
+  credentials: LoginCredentials
+) => ReturnType<typeof authClient.signIn.email>;
 
 const loginForm = FormReact.make(loginFormBuilder, {
   fields: {
@@ -35,7 +36,8 @@ const loginForm = FormReact.make(loginFormBuilder, {
     password: EffectTextField,
   },
   mode: { validation: "onSubmit" },
-  onSubmit: (login: Login, { decoded }) => Effect.promise(() => login(decoded)),
+  onSubmit: (login: Login, { decoded }) =>
+    authFormSubmission("login", () => login(decoded)),
 });
 
 export const LoginForm = ({
@@ -46,9 +48,6 @@ export const LoginForm = ({
   const navigate = useNavigate({ from: "/" });
   const login = (credentials: LoginCredentials) =>
     authClient.signIn.email(credentials, {
-      onError: (error) => {
-        toast.error(getAuthProviderErrorMessage(error));
-      },
       onSuccess: () =>
         handleLoginSuccess({
           invalidate: () => router.invalidate(),
@@ -84,7 +83,11 @@ export const LoginForm = ({
             </div>
           </div>
 
-          <form action={() => submit(() => login)}>
+          <form
+            action={() =>
+              submitWhenIdle(submitResult.waiting, () => submit(() => login))
+            }
+          >
             <div className="flex flex-col gap-5">
               <loginForm.email
                 autoComplete="email"

@@ -26,17 +26,7 @@ const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
 
 const projectStoreError = Effect.fn("EventHttpApiHandlers.projectStoreError")(
   (error: EventStoreError) =>
-    Effect.gen(function* projectStoreError() {
-      yield* Effect.logError("Event persistence operation failed").pipe(
-        Effect.annotateLogs({
-          errorTag: error._tag,
-          operation: error.operation,
-        })
-      );
-      return yield* new EventPersistenceUnavailable({
-        operation: error.operation,
-      });
-    })
+    Effect.fail(new EventPersistenceUnavailable({ operation: error.operation }))
 );
 
 export const EventHttpApiHandlers = HttpApiBuilder.group(
