@@ -6,7 +6,15 @@ import {
   appHttpApiAtom,
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
-import { asPendingMargonemAccountImportId } from "@/lib/squad-builder/branded-ids";
+import {
+  incomingAccountInvitesAtom,
+  sharedAccountsAtom,
+} from "@/lib/squad-builder/account-sharing-atoms";
+import {
+  asMargonemAccountId,
+  asPendingMargonemAccountImportId,
+} from "@/lib/squad-builder/branded-ids";
+import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
 
 interface ConfirmOwnedAccountImportInput {
   readonly displayName: string;
@@ -15,6 +23,15 @@ interface ConfirmOwnedAccountImportInput {
 
 interface PreviewOwnedAccountImportsInput {
   readonly profileUrls: readonly string[];
+}
+
+interface UpdateOwnedAccountDisplayNameInput {
+  readonly accountId: number;
+  readonly displayName: string;
+}
+
+interface DeleteOwnedAccountInput {
+  readonly accountId: number;
 }
 
 /** Resource atom for owned accounts. */
@@ -58,6 +75,43 @@ export const confirmOwnedAccountImportAtom = appHttpApiFn(
         },
       });
     get.refresh(ownedAccountsAtom);
+    return result;
+  })
+);
+
+/** Mutation atom for renaming an owned account. */
+export const updateOwnedAccountDisplayNameAtom = appHttpApiFn(
+  Effect.fnUntraced(function* updateOwnedAccountDisplayNameEffect(
+    payload: UpdateOwnedAccountDisplayNameInput,
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const result =
+      yield* client.squadBuilderAccountImport.updateOwnedAccountDisplayName({
+        payload: {
+          accountId: asMargonemAccountId(payload.accountId),
+          displayName: payload.displayName,
+        },
+      });
+    get.refresh(ownedAccountsAtom);
+    return result;
+  })
+);
+
+/** Mutation atom for deleting an owned account and its linked squad data. */
+export const deleteOwnedAccountAtom = appHttpApiFn(
+  Effect.fnUntraced(function* deleteOwnedAccountEffect(
+    payload: DeleteOwnedAccountInput,
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const result = yield* client.squadBuilderAccountImport.deleteOwnedAccount({
+      payload: { accountId: asMargonemAccountId(payload.accountId) },
+    });
+    get.refresh(ownedAccountsAtom);
+    get.refresh(sharedAccountsAtom);
+    get.refresh(incomingAccountInvitesAtom);
+    refreshVisibleSquadGroupAtoms(get);
     return result;
   })
 );
