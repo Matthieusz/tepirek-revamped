@@ -66,6 +66,14 @@
   --shadow-2xl: 0px 4px 10px 0px hsl(260 15% 8% / 0.3);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+  --success: oklch(0.68 0.09 165);
+  --success-foreground: oklch(0.14 0.02 165);
+  --info: oklch(0.7 0.06 220);
+  --info-foreground: oklch(0.14 0.02 220);
+  --warning: oklch(0.76 0.1 80);
+  --warning-foreground: oklch(0.16 0.025 80);
+  --invert: oklch(0.9 0.008 270);
+  --invert-foreground: oklch(0.16 0.008 270);
 }
 
 .dark {
@@ -126,6 +134,14 @@
     0px 4px 10px 0px hsl(260 15% 8% / 0.12),
     0px 8px 10px -1px hsl(260 15% 8% / 0.12);
   --shadow-2xl: 0px 4px 10px 0px hsl(260 15% 8% / 0.3);
+  --success: oklch(0.68 0.09 165);
+  --success-foreground: oklch(0.14 0.02 165);
+  --info: oklch(0.7 0.06 220);
+  --info-foreground: oklch(0.14 0.02 220);
+  --warning: oklch(0.76 0.1 80);
+  --warning-foreground: oklch(0.16 0.025 80);
+  --invert: oklch(0.9 0.008 270);
+  --invert-foreground: oklch(0.16 0.008 270);
 }
 
 @theme inline {
@@ -179,6 +195,14 @@
   --shadow-lg: var(--shadow-lg);
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
+  --color-invert-foreground: var(--invert-foreground);
+  --color-invert: var(--invert);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning: var(--warning);
+  --color-info-foreground: var(--info-foreground);
+  --color-info: var(--info);
+  --color-success-foreground: var(--success-foreground);
+  --color-success: var(--success);
 }
 
 @layer base {
