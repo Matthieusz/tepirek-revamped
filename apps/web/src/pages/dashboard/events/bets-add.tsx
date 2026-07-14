@@ -306,20 +306,16 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
     isAdminUser && !AsyncResult.isSuccess(verifiedUsersResult);
 
   const latestBetResult = useAtomValue(latestBetForCopyAtom);
-  const latestBetRaw =
-    isAdminUser && AsyncResult.isSuccess(latestBetResult)
-      ? latestBetResult.value
-      : null;
+  const latestBetRaw = isAdminUser
+    ? Option.getOrNull(AsyncResult.value(latestBetResult))
+    : null;
   const latestBet =
     latestBetRaw === null
       ? null
       : { ...latestBetRaw, members: [...latestBetRaw.members] };
-  const latestBetLoading =
-    isAdminUser && !AsyncResult.isSuccess(latestBetResult);
   const refreshEvents = useAtomRefresh(eventsAtom);
   const refreshHeroes = useAtomRefresh(heroesAtom);
   const refreshUsers = useAtomRefresh(verifiedUsersAtom);
-  const refreshLatestBet = useAtomRefresh(latestBetForCopyAtom);
   const submit = useAtomSet(addBetForm.submit);
   const submitResult = useAtomValue(addBetForm.submit);
   const isDirty = useAtomValue(addBetForm.isDirty);
@@ -381,81 +377,72 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
               result={verifiedUsersResult}
             >
               {() => (
-                <AsyncResultBoundary
-                  onRetry={refreshLatestBet}
-                  result={latestBetResult}
-                >
-                  {() => (
-                    <div className="mx-auto w-full max-w-4xl space-y-6">
-                      <div>
-                        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
-                          Dodaj obstawienie
-                        </h1>
-                        <p className="text-muted-foreground text-sm">
-                          Wybierz event, herosa i graczy.
-                        </p>
-                      </div>
+                <div className="mx-auto w-full max-w-4xl space-y-6">
+                  <div>
+                    <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+                      Dodaj obstawienie
+                    </h1>
+                    <p className="text-muted-foreground text-sm">
+                      Wybierz event, herosa i graczy.
+                    </p>
+                  </div>
 
-                      <div className="rounded-xl border border-border bg-card p-6">
-                        <addBetForm.Initialize defaultValues={defaultValues}>
-                          <EffectForm
-                            action={submitIfIdle}
-                            className="space-y-6"
-                            submitResult={submitResult}
+                  <div className="rounded-xl border border-border bg-card p-6">
+                    <addBetForm.Initialize defaultValues={defaultValues}>
+                      <EffectForm
+                        action={submitIfIdle}
+                        className="space-y-6"
+                        submitResult={submitResult}
+                      >
+                        <EffectFormFeedback result={submitResult} />
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                          <addBetForm.eventId
+                            events={events}
+                            eventsLoading={eventsLoading}
+                            onEventChange={() => {
+                              clearHero("");
+                            }}
+                          />
+                          <Button
+                            className="h-10"
+                            disabled={
+                              submitResult.waiting ||
+                              eventsLoading ||
+                              heroesLoading ||
+                              usersLoading
+                            }
+                            type="submit"
                           >
-                            <EffectFormFeedback result={submitResult} />
-                            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                              <addBetForm.eventId
-                                events={events}
-                                eventsLoading={eventsLoading}
-                                onEventChange={() => {
-                                  clearHero("");
-                                }}
-                              />
-                              <Button
-                                className="h-10"
-                                disabled={
-                                  submitResult.waiting ||
-                                  eventsLoading ||
-                                  heroesLoading ||
-                                  usersLoading
-                                }
-                                type="submit"
-                              >
-                                {submitResult.waiting ? (
-                                  <p className="flex items-center gap-2">
-                                    <Loader2 className="size-4 animate-spin" />
-                                    Tworzenie obstawienia
-                                  </p>
-                                ) : (
-                                  <p className="flex items-center gap-2">
-                                    Utwórz obstawienie
-                                    <Kbd>Enter</Kbd>
-                                  </p>
-                                )}
-                              </Button>
-                            </div>
-                            <addBetForm.heroId
-                              heroes={heroes}
-                              heroesLoading={heroesLoading}
-                              selectedEventId={selectedEventId}
-                            />
-                            <addBetForm.userIds
-                              lastBet={latestBet ?? undefined}
-                              lastBetAvailable={
-                                !latestBetLoading &&
-                                latestBet !== null &&
-                                latestBet !== undefined
-                              }
-                              users={verifiedUsers}
-                              usersLoading={usersLoading}
-                            />
-                          </EffectForm>
-                        </addBetForm.Initialize>
-                      </div>
-                    </div>
-                  )}
-                </AsyncResultBoundary>
+                            {submitResult.waiting ? (
+                              <p className="flex items-center gap-2">
+                                <Loader2 className="size-4 animate-spin" />
+                                Tworzenie obstawienia
+                              </p>
+                            ) : (
+                              <p className="flex items-center gap-2">
+                                Utwórz obstawienie
+                                <Kbd>Enter</Kbd>
+                              </p>
+                            )}
+                          </Button>
+                        </div>
+                        <addBetForm.heroId
+                          heroes={heroes}
+                          heroesLoading={heroesLoading}
+                          selectedEventId={selectedEventId}
+                        />
+                        <addBetForm.userIds
+                          lastBet={latestBet ?? undefined}
+                          lastBetAvailable={
+                            latestBet !== null && latestBet !== undefined
+                          }
+                          users={verifiedUsers}
+                          usersLoading={usersLoading}
+                        />
+                      </EffectForm>
+                    </addBetForm.Initialize>
+                  </div>
+                </div>
               )}
             </AsyncResultBoundary>
           )}

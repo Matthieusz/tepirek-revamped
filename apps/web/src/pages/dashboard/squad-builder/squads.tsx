@@ -427,7 +427,7 @@ export default function SquadBuilderSquadsPage() {
                             kontach.
                           </p>
                         </div>
-                        <form
+                        <EffectForm
                           action={submitSquadGroup}
                           className="flex items-end gap-2"
                         >
@@ -454,7 +454,7 @@ export default function SquadBuilderSquadsPage() {
                             <span className="hidden sm:inline">Nowa grupa</span>
                             <span className="sm:hidden">Dodaj</span>
                           </Button>
-                        </form>
+                        </EffectForm>
                       </div>
 
                       {invites.length > 0 && (

@@ -307,6 +307,9 @@ const VaultContent = ({
                     <Checkbox
                       checked={player.paidOut}
                       disabled={toggleMutation.isPending}
+                      onClick={(event) => {
+                        event.preventDefault();
+                      }}
                       onCheckedChange={(checked) => {
                         if (typeof checked === "boolean") {
                           toggleMutation.mutate({
@@ -339,6 +342,9 @@ const VaultContent = ({
                     <Checkbox
                       checked={player.paidOut}
                       disabled={toggleMutation.isPending}
+                      onClick={(event) => {
+                        event.preventDefault();
+                      }}
                       onCheckedChange={(checked) => {
                         if (typeof checked === "boolean") {
                           toggleMutation.mutate({

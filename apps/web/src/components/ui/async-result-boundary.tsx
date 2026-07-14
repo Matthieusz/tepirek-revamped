@@ -44,11 +44,11 @@ export function AsyncResultBoundary({
     .onWaiting((current) => {
       if (AsyncResult.isSuccess(current)) {
         return (
-          <div className="space-y-2">
+          <div className="relative w-full">
             {children(current.value)}
             <p
               aria-live="polite"
-              className="text-center text-muted-foreground text-xs"
+              className="absolute top-full w-full pt-2 text-center text-muted-foreground text-xs"
             >
               Odświeżanie…
             </p>

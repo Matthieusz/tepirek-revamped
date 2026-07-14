@@ -1,13 +1,18 @@
-import { useBlocker } from "@tanstack/react-router";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
+import type { ReactNode, SubmitEvent } from "react";
 
 import { getErrorMessage } from "@/lib/errors";
 
-const DISCARD_CHANGES_MESSAGE =
-  "Masz niezapisane zmiany. Czy na pewno chcesz je odrzucić?";
 const FOCUSABLE_CONTROL_SELECTOR =
   'button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
@@ -18,7 +23,8 @@ interface InvalidControl {
 
 type EffectFormResult = AsyncResult.AsyncResult<unknown, unknown>;
 
-interface EffectFormProps extends React.ComponentProps<"form"> {
+interface EffectFormProps extends Omit<React.ComponentProps<"form">, "action"> {
+  readonly action: (formData: FormData) => void | Promise<void>;
   readonly submitResult?: EffectFormResult;
 }
 
@@ -65,7 +71,9 @@ const focusControl = (form: HTMLFormElement, id: string): void => {
  * schema failures focused on their first invalid control.
  */
 export const EffectForm = ({
+  action,
   children,
+  onSubmit,
   submitResult,
   ...props
 }: EffectFormProps): ReactNode => {
@@ -74,6 +82,14 @@ export const EffectForm = ({
   const [invalidControls, setInvalidControls] = useState<
     readonly InvalidControl[]
   >([]);
+
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    onSubmit?.(event);
+
+    const formData = new FormData(event.currentTarget);
+    startTransition(() => action(formData));
+  };
 
   useEffect(() => {
     if (submitResult === undefined || !AsyncResult.isFailure(submitResult)) {
@@ -93,7 +109,7 @@ export const EffectForm = ({
   }, [submitResult]);
 
   return (
-    <form {...props} noValidate ref={formRef}>
+    <form {...props} noValidate onSubmit={handleSubmit} ref={formRef}>
       {invalidControls.length >= 3 && (
         <div
           aria-labelledby={errorSummaryId}
@@ -143,6 +159,10 @@ export const EffectFormFeedback = ({
 }: EffectFormFeedbackProps): ReactNode => {
   if (AsyncResult.isFailure(result)) {
     const error = AsyncResult.error(result);
+    if (Option.exists(error, Schema.isSchemaError)) {
+      return null;
+    }
+
     const message = Option.match(error, {
       onNone: () => failureMessage,
       onSome: (value) => getErrorMessage(value, failureMessage),
@@ -171,31 +191,10 @@ export const EffectFormFeedback = ({
 };
 
 /**
- * Protects meaningful Effect Form drafts from route changes and browser exit.
- * The returned callback is also used by dialogs before resetting their form.
+ * Allows dirty forms to be discarded without browser or route confirmations.
+ * Dialogs still remain open while their submission is in progress.
  */
 export const useEffectFormProtection = (
-  isDirty: boolean,
+  _isDirty: boolean,
   isSubmitting = false
-): (() => boolean) => {
-  const shouldProtect = isDirty && !isSubmitting;
-  const canDiscard = useCallback(() => {
-    if (isSubmitting) {
-      return false;
-    }
-
-    if (!shouldProtect || typeof window === "undefined") {
-      return true;
-    }
-
-    return window.confirm(DISCARD_CHANGES_MESSAGE);
-  }, [isSubmitting, shouldProtect]);
-
-  useBlocker({
-    disabled: !shouldProtect,
-    enableBeforeUnload: shouldProtect,
-    shouldBlockFn: () => !canDiscard(),
-  });
-
-  return canDiscard;
-};
+): (() => boolean) => useCallback(() => !isSubmitting, [isSubmitting]);
