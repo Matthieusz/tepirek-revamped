@@ -23,6 +23,8 @@ import type { SquadGroupName } from "../../../domain/squad-builder/squad-name.ts
 import type {
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
+  DeleteOwnedAccountInput,
+  DeleteOwnedAccountResult,
   DuplicateMargonemAccountError,
   FindPendingMargonemAccountImportInput,
   FindProfileAccessStateInput,
@@ -36,6 +38,7 @@ import type {
   ProfileAccessState,
   ReserveFirecrawlRequestInput,
   ReservedFirecrawlRequest,
+  UpdateOwnedAccountDisplayNameInput,
 } from "../account-import/account-import-store.ts";
 import type {
   ApplyRefetchedAccountInput,
@@ -438,6 +441,22 @@ export interface SquadBuilderStoreServiceShape {
     readonly OwnedMargonemAccountSummary[],
     EffectSquadBuilderPersistenceUnavailable
   >;
+  readonly updateOwnedAccountDisplayName: (
+    input: UpdateOwnedAccountDisplayNameInput
+  ) => Effect<
+    OwnedMargonemAccountSummary,
+    | MargonemAccountNotFound
+    | ActorDoesNotOwnMargonemAccount
+    | EffectSquadBuilderPersistenceUnavailable
+  >;
+  readonly deleteOwnedAccount: (
+    input: DeleteOwnedAccountInput
+  ) => Effect<
+    DeleteOwnedAccountResult,
+    | MargonemAccountNotFound
+    | ActorDoesNotOwnMargonemAccount
+    | EffectSquadBuilderPersistenceUnavailable
+  >;
   readonly findProfileAccessState: (
     input: FindProfileAccessStateInput
   ) => Effect<ProfileAccessState, EffectSquadBuilderPersistenceUnavailable>;
@@ -620,12 +639,14 @@ export type AccountImportStoreServiceShape = Pick<
   SquadBuilderStoreServiceShape,
   | "createOwnedAccountFromPendingImport"
   | "createPendingImport"
+  | "deleteOwnedAccount"
   | "findPendingImportForConfirmation"
   | "findProfileAccessState"
   | "listOwnedAccounts"
   | "markRequestFailed"
   | "markRequestSucceeded"
   | "reserveRequest"
+  | "updateOwnedAccountDisplayName"
 >;
 
 export type AccountRefetchStoreServiceShape = Pick<
@@ -668,6 +689,8 @@ export type {
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
   CreatePendingMargonemAccountRefetchInput,
+  DeleteOwnedAccountInput,
+  DeleteOwnedAccountResult,
   DuplicateMargonemAccountError,
   FindOwnedAccountForSharingInput,
   FindPendingMargonemAccountImportInput,
@@ -696,6 +719,7 @@ export type {
   RevokeAccountAccessStoreInput,
   SearchInviteTargetsStoreInput,
   SharedMargonemAccountSummary,
+  UpdateOwnedAccountDisplayNameInput,
   UpsertAccountAccessInviteInput,
   VerifiedInviteTarget,
 };

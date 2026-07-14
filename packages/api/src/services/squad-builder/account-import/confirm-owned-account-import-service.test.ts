@@ -40,6 +40,14 @@ it.effect("confirms a pending owned account import through services", () => {
       Effect.succeed({
         accountId,
         characterCount: pending.jarunaCharacters.length,
+        characterPreviews: pending.jarunaCharacters
+          .slice(0, 4)
+          .map((character) => ({
+            avatarUrl: character.avatarUrl,
+            characterId: character.characterId,
+            name: character.name,
+            profession: character.profession,
+          })),
         displayName,
         generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
         lastFetchedAt: pending.fetchedAt,

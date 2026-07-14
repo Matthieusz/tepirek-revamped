@@ -126,6 +126,14 @@ export interface MarkPendingMargonemAccountImportConfirmedInput {
   readonly confirmedAt: Date;
 }
 
+/** Small character identity preview shown in the owned accounts list. */
+export interface OwnedAccountCharacterPreview {
+  readonly characterId: number;
+  readonly name: string;
+  readonly avatarUrl: string | null;
+  readonly profession: string;
+}
+
 /** Read model for one owned Margonem account. */
 export interface OwnedMargonemAccountSummary {
   readonly accountId: MargonemAccountId;
@@ -134,6 +142,29 @@ export interface OwnedMargonemAccountSummary {
   readonly generatedProfileUrl: string;
   readonly lastFetchedAt: Date;
   readonly characterCount: number;
+  readonly characterPreviews: readonly OwnedAccountCharacterPreview[];
+}
+
+/** Input for changing an owned account display name. */
+export interface UpdateOwnedAccountDisplayNameInput {
+  readonly actorUserId: AppUserId;
+  readonly accountId: MargonemAccountId;
+  readonly displayName: AccountDisplayName;
+  readonly now: Date;
+}
+
+/** Input for deleting an owned account and its linked data. */
+export interface DeleteOwnedAccountInput {
+  readonly actorUserId: AppUserId;
+  readonly accountId: MargonemAccountId;
+}
+
+/** Impact counts returned after deleting an owned account. */
+export interface DeleteOwnedAccountResult {
+  readonly accountId: MargonemAccountId;
+  readonly removedCharacterCount: number;
+  readonly removedSquadCharacterCount: number;
+  readonly removedAccessGrantCount: number;
 }
 
 /** Input for confirming a pending import into an owned account. */

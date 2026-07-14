@@ -42,10 +42,12 @@ import type { RankingService } from "../services/ranking/ranking-service.ts";
 import type { AccountImportStoreService } from "../services/squad-builder/account-import/account-import-store-service.ts";
 import { layer as confirmOwnedAccountImportLayer } from "../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
 import type { ConfirmOwnedAccountImportService } from "../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
+import { DeleteOwnedAccountService } from "../services/squad-builder/account-import/delete-owned-account-service.ts";
 import { layer as previewMargonemProfileImportLayer } from "../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import type { PreviewMargonemProfileImportService } from "../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import { layer as previewOwnedAccountImportsLayer } from "../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
 import type { PreviewOwnedAccountImportsService } from "../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
+import { UpdateOwnedAccountDisplayNameService } from "../services/squad-builder/account-import/update-owned-account-display-name-service.ts";
 import type { AccountRefetchStoreService } from "../services/squad-builder/account-refetch/account-refetch-store-service.ts";
 import { layer as applyAccountRefetchLayer } from "../services/squad-builder/account-refetch/apply-account-refetch-service.ts";
 import type { ApplyAccountRefetchService } from "../services/squad-builder/account-refetch/apply-account-refetch-service.ts";
@@ -153,6 +155,8 @@ const makeApiStableLayer = (
     previewMargonemProfileImportLayer,
     previewOwnedAccountImportsLayer,
     confirmOwnedAccountImportLayer,
+    DeleteOwnedAccountService.layer,
+    UpdateOwnedAccountDisplayNameService.layer,
     previewAccountRefetchLayer,
     applyAccountRefetchLayer
   );
@@ -230,5 +234,7 @@ type SquadBuilderServices =
   | PreviewMargonemProfileImportService
   | PreviewOwnedAccountImportsService
   | ConfirmOwnedAccountImportService
+  | DeleteOwnedAccountService
+  | UpdateOwnedAccountDisplayNameService
   | PreviewAccountRefetchService
   | ApplyAccountRefetchService;

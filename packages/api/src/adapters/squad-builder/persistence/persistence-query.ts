@@ -15,6 +15,7 @@ export type EffectSquadGroupPersistenceOperation =
   | "createOwnedAccountFromPendingImport"
   | "createPendingRefetch"
   | "createSquadGroup"
+  | "deleteOwnedAccount"
   | "findOwnedAccountForSharing"
   | "findVerifiedInviteTarget"
   | "findVerifiedSquadEditorInviteTarget"
@@ -48,7 +49,8 @@ export type EffectSquadGroupPersistenceOperation =
   | "searchInviteTargets"
   | "upsertAccountAccessInvite"
   | "upsertSquadGroupEditorInvite"
-  | "setSquadGroupVisibility";
+  | "setSquadGroupVisibility"
+  | "updateOwnedAccountDisplayName";
 
 export const usedFirecrawlRequestStatuses = [
   "reserved",

@@ -17,6 +17,7 @@ const makeEffectStoreTestService = (
   createPendingImport: () => unhandledStoreCall("createPendingImport"),
   createPendingRefetch: () => unhandledStoreCall("createPendingRefetch"),
   createSquadGroup: () => unhandledStoreCall("createSquadGroup"),
+  deleteOwnedAccount: () => unhandledStoreCall("deleteOwnedAccount"),
   findOwnedAccountForSharing: () =>
     unhandledStoreCall("findOwnedAccountForSharing"),
   findPendingImportForConfirmation: () =>
@@ -64,6 +65,8 @@ const makeEffectStoreTestService = (
   searchSquadEditorInviteTargets: () =>
     unhandledStoreCall("searchSquadEditorInviteTargets"),
   setSquadGroupVisibility: () => unhandledStoreCall("setSquadGroupVisibility"),
+  updateOwnedAccountDisplayName: () =>
+    unhandledStoreCall("updateOwnedAccountDisplayName"),
   upsertAccountAccessInvite: () =>
     unhandledStoreCall("upsertAccountAccessInvite"),
   upsertSquadGroupEditorInvite: () =>

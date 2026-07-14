@@ -13,11 +13,14 @@ import {
 } from "../errors.ts";
 import {
   ConfirmOwnedAccountImportPayload,
+  DeleteOwnedAccountPayload,
+  DeleteOwnedAccountSuccess,
   OwnedMargonemAccountSummarySchema,
   PreviewMargonemProfileImportPayload,
   PreviewMargonemProfileImportSuccess,
   PreviewOwnedAccountImportsPayload,
   PreviewOwnedAccountImportsSuccess,
+  UpdateOwnedAccountDisplayNamePayload,
 } from "./account-import-schema.ts";
 
 export {
@@ -54,6 +57,16 @@ export const SquadBuilderAccountImportGroup = HttpApiGroup.make(
       error: SquadBuilderAccountImportErrors,
       payload: ConfirmOwnedAccountImportPayload,
       success: OwnedMargonemAccountSummarySchema,
+    }),
+    HttpApiEndpoint.post("updateOwnedAccountDisplayName", "/rename-owned", {
+      error: SquadBuilderAccountImportErrors,
+      payload: UpdateOwnedAccountDisplayNamePayload,
+      success: OwnedMargonemAccountSummarySchema,
+    }),
+    HttpApiEndpoint.post("deleteOwnedAccount", "/delete-owned", {
+      error: SquadBuilderAccountImportErrors,
+      payload: DeleteOwnedAccountPayload,
+      success: DeleteOwnedAccountSuccess,
     }),
     HttpApiEndpoint.post("listOwnedAccounts", "/owned", {
       error: SquadBuilderAccountImportErrors,

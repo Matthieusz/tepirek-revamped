@@ -56,7 +56,7 @@ const profileNamePattern =
 const characterRowPattern =
   /<li\b[^>]*class="[^"]*\bchar-row\b[^"]*"[^>]*>[\s\S]*?<\/li>/gu;
 const backgroundImagePattern =
-  /background-image:\s*url\(['"]?(?<avatarUrl>[^'")]+)['"]?\)/u;
+  /background-image:\s*url\(\s*(?<avatarUrl>[^)]*?)\s*\)/u;
 
 const decodeHtmlEntities = (value: string): string =>
   value
@@ -103,8 +103,21 @@ const extractProfessionLabel = (rowHtml: string): string | undefined => {
 
 const extractAvatarUrl = (rowHtml: string): string | null => {
   const match = backgroundImagePattern.exec(rowHtml);
-  const avatarUrl = match?.groups?.avatarUrl?.trim();
-  return avatarUrl === undefined || avatarUrl.length === 0 ? null : avatarUrl;
+  const rawAvatarUrl = match?.groups?.avatarUrl;
+
+  if (rawAvatarUrl === undefined) {
+    return null;
+  }
+
+  const decodedAvatarUrl = decodeHtmlEntities(rawAvatarUrl).trim();
+  const hasWrappingQuotes =
+    (decodedAvatarUrl.startsWith('"') && decodedAvatarUrl.endsWith('"')) ||
+    (decodedAvatarUrl.startsWith("'") && decodedAvatarUrl.endsWith("'"));
+  const avatarUrl = hasWrappingQuotes
+    ? decodedAvatarUrl.slice(1, -1).trim()
+    : decodedAvatarUrl;
+
+  return avatarUrl.length === 0 ? null : avatarUrl;
 };
 
 const parseJarunaCharacterRow = Effect.fnUntraced(

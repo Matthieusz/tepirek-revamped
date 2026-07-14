@@ -10,8 +10,19 @@ import {
   margonemAccountImportPreview,
   margonemAccountImportPreviewCharacter,
   margonemCharacter,
+  squadCharacter,
 } from "@tepirek-revamped/db/schema/squad-builder";
-import { and, count, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gt,
+  inArray,
+  isNull,
+  sql,
+} from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -21,7 +32,10 @@ import {
 } from "../../../domain/squad-builder/account-display-name.ts";
 import { appUserIdToString } from "../../../domain/squad-builder/app-user-id.ts";
 import { firecrawlYearMonthToString } from "../../../domain/squad-builder/firecrawl-year-month.ts";
-import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
+import {
+  margonemAccountIdToNumber,
+  parseMargonemAccountId,
+} from "../../../domain/squad-builder/margonem-account-id.ts";
 import {
   parseMargonemProfession,
   parseMargonemWorld,
@@ -43,18 +57,23 @@ import { AccountImportStoreService } from "../../../services/squad-builder/accou
 import type {
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
+  DeleteOwnedAccountInput,
   FindPendingMargonemAccountImportInput,
   FindProfileAccessStateInput,
   ListOwnedMargonemAccountsInput,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
+  OwnedAccountCharacterPreview,
   OwnedMargonemAccountSummary,
   ReserveFirecrawlRequestInput,
+  UpdateOwnedAccountDisplayNameInput,
 } from "../../../services/squad-builder/account-import/account-import-store.ts";
 import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
+  ActorDoesNotOwnMargonemAccount,
   FirecrawlMonthlyBudgetExhausted,
   MargonemAccountAlreadyOwnedByActor,
+  MargonemAccountNotFound,
   MargonemAccountOwnedByAnotherUser,
   PendingMargonemAccountImportNotFound,
 } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
@@ -64,6 +83,8 @@ import {
   persistenceQuery,
   usedFirecrawlRequestStatuses,
 } from "./persistence-query.ts";
+
+const ACCOUNT_CHARACTER_PREVIEW_LIMIT = 1;
 
 const findProfileAccessStateWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* findProfileAccessStateEffect({
@@ -494,6 +515,15 @@ const createOwnedAccountFromPendingImportWithDatabase = (
           return {
             accountId,
             characterCount: pending.jarunaCharacters.length,
+            characterPreviews: pending.jarunaCharacters
+              .toSorted((left, right) => right.level - left.level)
+              .slice(0, ACCOUNT_CHARACTER_PREVIEW_LIMIT)
+              .map((character) => ({
+                avatarUrl: character.avatarUrl,
+                characterId: character.characterId,
+                name: character.name,
+                profession: character.profession,
+              })),
             displayName,
             generatedProfileUrl: toMargonemProfileUrl(pending.profileId),
             lastFetchedAt: pending.fetchedAt,
@@ -501,6 +531,132 @@ const createOwnedAccountFromPendingImportWithDatabase = (
           };
         }
       )
+    );
+
+    return yield* persistenceQuery(operation, transaction);
+  });
+
+const updateOwnedAccountDisplayNameWithDatabase = (
+  database: EffectPgDatabase
+) =>
+  Effect.fnUntraced(function* updateOwnedAccountDisplayNameEffect({
+    accountId,
+    actorUserId,
+    displayName,
+    now,
+  }: UpdateOwnedAccountDisplayNameInput) {
+    const operation = "updateOwnedAccountDisplayName" as const;
+    const accountIdNumber = margonemAccountIdToNumber(accountId);
+    const accountSelect = database
+      .select({ ownerUserId: margonemAccount.ownerUserId })
+      .from(margonemAccount)
+      .where(eq(margonemAccount.id, accountIdNumber))
+      .limit(1);
+    const accountRows = yield* persistenceQuery(operation, accountSelect);
+    const [account] = accountRows;
+
+    if (account === undefined) {
+      return yield* new MargonemAccountNotFound();
+    }
+
+    if (account.ownerUserId !== appUserIdToString(actorUserId)) {
+      return yield* new ActorDoesNotOwnMargonemAccount();
+    }
+
+    yield* persistenceQuery(
+      operation,
+      database
+        .update(margonemAccount)
+        .set({
+          displayName: accountDisplayNameToString(displayName),
+          updatedAt: now,
+        })
+        .where(eq(margonemAccount.id, accountIdNumber))
+    );
+
+    // oxlint-disable-next-line no-use-before-define -- The list projection is reused after the transactional update.
+    const accounts = yield* listOwnedAccountsWithDatabase(database)({
+      actorUserId,
+    });
+    const updatedAccount = accounts.find(
+      (candidate) => candidate.accountId === accountId
+    );
+
+    if (updatedAccount === undefined) {
+      return yield* failPersistence(
+        operation,
+        new Error("Updated owned account was not found")
+      );
+    }
+
+    return updatedAccount;
+  });
+
+const deleteOwnedAccountWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* deleteOwnedAccountEffect({
+    accountId,
+    actorUserId,
+  }: DeleteOwnedAccountInput) {
+    const operation = "deleteOwnedAccount" as const;
+    const accountIdNumber = margonemAccountIdToNumber(accountId);
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* deleteOwnedAccountTransaction(
+        tx: TransactionDatabase
+      ) {
+        const accountSelect = tx
+          .select({ ownerUserId: margonemAccount.ownerUserId })
+          .from(margonemAccount)
+          .where(eq(margonemAccount.id, accountIdNumber))
+          .limit(1);
+        const accountRows = yield* accountSelect;
+        const [account] = accountRows;
+
+        if (account === undefined) {
+          return yield* new MargonemAccountNotFound();
+        }
+
+        if (account.ownerUserId !== appUserIdToString(actorUserId)) {
+          return yield* new ActorDoesNotOwnMargonemAccount();
+        }
+
+        const characterRows = yield* tx
+          .select({
+            count: sql<number>`count(${margonemCharacter.id})::int`,
+          })
+          .from(margonemCharacter)
+          .where(eq(margonemCharacter.accountId, accountIdNumber));
+        const squadCharacterRows = yield* tx
+          .select({
+            count: sql<number>`count(${squadCharacter.id})::int`,
+          })
+          .from(squadCharacter)
+          .where(eq(squadCharacter.accountId, accountIdNumber));
+        const accessRows = yield* tx
+          .select({
+            count: sql<number>`count(${margonemAccountAccess.id})::int`,
+          })
+          .from(margonemAccountAccess)
+          .where(eq(margonemAccountAccess.accountId, accountIdNumber));
+
+        const deletedRows = yield* tx
+          .delete(margonemAccount)
+          .where(eq(margonemAccount.id, accountIdNumber))
+          .returning({ id: margonemAccount.id });
+
+        if (deletedRows[0] === undefined) {
+          return yield* failPersistence(
+            operation,
+            new Error("Failed to delete owned account")
+          );
+        }
+
+        return {
+          accountId,
+          removedAccessGrantCount: accessRows[0]?.count ?? 0,
+          removedCharacterCount: characterRows[0]?.count ?? 0,
+          removedSquadCharacterCount: squadCharacterRows[0]?.count ?? 0,
+        };
+      })
     );
 
     return yield* persistenceQuery(operation, transaction);
@@ -531,6 +687,47 @@ const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
       .groupBy(margonemAccount.id)
       .orderBy(desc(margonemAccount.createdAt), desc(margonemAccount.id));
     const rows = yield* persistenceQuery(operation, select);
+    const accountIds = rows.map((row) => row.accountId);
+    const characterRows =
+      accountIds.length === 0
+        ? []
+        : yield* persistenceQuery(
+            operation,
+            database
+              .select({
+                accountId: margonemCharacter.accountId,
+                avatarUrl: margonemCharacter.avatarUrl,
+                characterId: margonemCharacter.characterId,
+                id: margonemCharacter.id,
+                level: margonemCharacter.level,
+                name: margonemCharacter.name,
+                profession: margonemCharacter.profession,
+              })
+              .from(margonemCharacter)
+              .where(inArray(margonemCharacter.accountId, accountIds))
+              .orderBy(
+                asc(margonemCharacter.accountId),
+                desc(margonemCharacter.level),
+                asc(margonemCharacter.id)
+              )
+          );
+    const characterPreviewsByAccount = new Map<
+      number,
+      OwnedAccountCharacterPreview[]
+    >();
+
+    for (const row of characterRows) {
+      const previews = characterPreviewsByAccount.get(row.accountId) ?? [];
+      if (previews.length < ACCOUNT_CHARACTER_PREVIEW_LIMIT) {
+        previews.push({
+          avatarUrl: row.avatarUrl,
+          characterId: row.characterId,
+          name: row.name,
+          profession: row.profession,
+        });
+        characterPreviewsByAccount.set(row.accountId, previews);
+      }
+    }
 
     const accounts: OwnedMargonemAccountSummary[] = [];
 
@@ -550,6 +747,7 @@ const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
       accounts.push({
         accountId,
         characterCount: row.characterCount ?? 0,
+        characterPreviews: characterPreviewsByAccount.get(row.accountId) ?? [],
         displayName,
         generatedProfileUrl: toMargonemProfileUrl(profileId),
         lastFetchedAt: row.lastFetchedAt ?? row.createdAt,
@@ -576,6 +774,10 @@ export const DrizzleAccountImportStoreServiceLayer: Layer.Layer<
         "AccountImportStore.createPendingImport",
         createPendingImportWithDatabase(database)
       ),
+      deleteOwnedAccount: namedStoreMethod(
+        "AccountImportStore.deleteOwnedAccount",
+        deleteOwnedAccountWithDatabase(database)
+      ),
       findPendingImportForConfirmation: namedStoreMethod(
         "AccountImportStore.findPendingImportForConfirmation",
         findPendingImportForConfirmationWithDatabase(database)
@@ -599,6 +801,10 @@ export const DrizzleAccountImportStoreServiceLayer: Layer.Layer<
       reserveRequest: namedStoreMethod(
         "AccountImportStore.reserveRequest",
         reserveRequestWithDatabase(database)
+      ),
+      updateOwnedAccountDisplayName: namedStoreMethod(
+        "AccountImportStore.updateOwnedAccountDisplayName",
+        updateOwnedAccountDisplayNameWithDatabase(database)
       ),
     })
   )

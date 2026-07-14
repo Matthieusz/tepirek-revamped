@@ -9,6 +9,7 @@ import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
 import type { SquadBuilderAccountImportError } from "../../../protocol/squad-builder/account-import/http-api-contract.ts";
 import {
   SquadBuilderConflict,
+  SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
@@ -17,10 +18,14 @@ import {
 import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store-service.ts";
 import { ConfirmOwnedAccountImportService } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
 import type { ConfirmOwnedAccountImportError } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
+import { DeleteOwnedAccountService } from "../../../services/squad-builder/account-import/delete-owned-account-service.ts";
+import type { DeleteOwnedAccountError } from "../../../services/squad-builder/account-import/delete-owned-account-service.ts";
 import { PreviewMargonemProfileImportService } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import type { PreviewMargonemProfileImportError } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import { PreviewOwnedAccountImportsService } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
 import type { PreviewOwnedAccountImportsError } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
+import { UpdateOwnedAccountDisplayNameService } from "../../../services/squad-builder/account-import/update-owned-account-display-name-service.ts";
+import type { UpdateOwnedAccountDisplayNameError } from "../../../services/squad-builder/account-import/update-owned-account-display-name-service.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -46,14 +51,20 @@ const withRequestCorrelation = <A, E, R>(
 type AccountImportHandlerError =
   | PreviewMargonemProfileImportError
   | PreviewOwnedAccountImportsError
-  | ConfirmOwnedAccountImportError;
+  | ConfirmOwnedAccountImportError
+  | UpdateOwnedAccountDisplayNameError
+  | DeleteOwnedAccountError;
 
 const mapAccountImportError = (
   error: AccountImportHandlerError
 ): ProtocolError => {
   switch (error._tag) {
-    case "PendingMargonemAccountImportNotFound": {
-      return new SquadBuilderNotFound({ message: "Pending import not found" });
+    case "PendingMargonemAccountImportNotFound":
+    case "MargonemAccountNotFound": {
+      return new SquadBuilderNotFound({ message: error._tag });
+    }
+    case "ActorDoesNotOwnMargonemAccount": {
+      return new SquadBuilderForbidden({ message: error._tag });
     }
     case "InvalidMargonemProfileUrl":
     case "MissingMargonemProfileId":
@@ -99,6 +110,9 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
         yield* PreviewOwnedAccountImportsService;
       const confirmOwnedAccountImportSvc =
         yield* ConfirmOwnedAccountImportService;
+      const updateOwnedAccountDisplayNameSvc =
+        yield* UpdateOwnedAccountDisplayNameService;
+      const deleteOwnedAccountSvc = yield* DeleteOwnedAccountService;
 
       return handlers
         .handle(
@@ -142,6 +156,37 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
                   actorUserId: sessionAppUserId(session),
                   displayName: payload.displayName,
                   pendingImportId: payload.pendingImportId,
+                })
+              ).pipe(Effect.mapError(mapAccountImportError));
+            }
+          )
+        )
+        .handle(
+          "updateOwnedAccountDisplayName",
+          Effect.fn("SquadBuilderAccountImport.updateOwnedAccountDisplayName")(
+            function* updateOwnedAccountDisplayName({ payload, request }) {
+              const session = yield* requireSquadBuilderSession();
+              return yield* withRequestCorrelation(
+                request,
+                updateOwnedAccountDisplayNameSvc.update({
+                  accountId: payload.accountId,
+                  actorUserId: sessionAppUserId(session),
+                  displayName: payload.displayName,
+                })
+              ).pipe(Effect.mapError(mapAccountImportError));
+            }
+          )
+        )
+        .handle(
+          "deleteOwnedAccount",
+          Effect.fn("SquadBuilderAccountImport.deleteOwnedAccount")(
+            function* deleteOwnedAccount({ payload, request }) {
+              const session = yield* requireSquadBuilderSession();
+              return yield* withRequestCorrelation(
+                request,
+                deleteOwnedAccountSvc.delete({
+                  accountId: payload.accountId,
+                  actorUserId: sessionAppUserId(session),
                 })
               ).pipe(Effect.mapError(mapAccountImportError));
             }

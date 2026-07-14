@@ -11,7 +11,7 @@ import {
   squadCharacter,
   squadGroup,
 } from "@tepirek-revamped/db/schema/squad-builder";
-import { and, desc, eq, ilike, inArray, ne, not, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, ne, not, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -38,6 +38,7 @@ import {
 } from "../../../domain/squad-builder/margonem-account-id.ts";
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.ts";
+import type { OwnedAccountCharacterPreview } from "../../../services/squad-builder/account-import/account-import-store.ts";
 import { AccountSharingStoreService } from "../../../services/squad-builder/account-sharing/account-sharing-store-service.ts";
 import type {
   AccountAccessGrantSummary,
@@ -70,6 +71,8 @@ import {
 } from "./persistence-query.ts";
 import type { EffectSquadGroupPersistenceOperation } from "./persistence-query.ts";
 
+const ACCOUNT_CHARACTER_PREVIEW_LIMIT = 1;
+
 const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* listOwnedAccountsEffect({
     actorUserId,
@@ -95,6 +98,47 @@ const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
       .groupBy(margonemAccount.id)
       .orderBy(desc(margonemAccount.createdAt), desc(margonemAccount.id));
     const rows = yield* persistenceQuery(operation, select);
+    const accountIds = rows.map((row) => row.accountId);
+    const characterRows =
+      accountIds.length === 0
+        ? []
+        : yield* persistenceQuery(
+            operation,
+            database
+              .select({
+                accountId: margonemCharacter.accountId,
+                avatarUrl: margonemCharacter.avatarUrl,
+                characterId: margonemCharacter.characterId,
+                id: margonemCharacter.id,
+                level: margonemCharacter.level,
+                name: margonemCharacter.name,
+                profession: margonemCharacter.profession,
+              })
+              .from(margonemCharacter)
+              .where(inArray(margonemCharacter.accountId, accountIds))
+              .orderBy(
+                asc(margonemCharacter.accountId),
+                desc(margonemCharacter.level),
+                asc(margonemCharacter.id)
+              )
+          );
+    const characterPreviewsByAccount = new Map<
+      number,
+      OwnedAccountCharacterPreview[]
+    >();
+
+    for (const row of characterRows) {
+      const previews = characterPreviewsByAccount.get(row.accountId) ?? [];
+      if (previews.length < ACCOUNT_CHARACTER_PREVIEW_LIMIT) {
+        previews.push({
+          avatarUrl: row.avatarUrl,
+          characterId: row.characterId,
+          name: row.name,
+          profession: row.profession,
+        });
+        characterPreviewsByAccount.set(row.accountId, previews);
+      }
+    }
 
     const accounts: OwnedMargonemAccountSummary[] = [];
 
@@ -114,6 +158,7 @@ const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
       accounts.push({
         accountId,
         characterCount: row.characterCount ?? 0,
+        characterPreviews: characterPreviewsByAccount.get(row.accountId) ?? [],
         displayName,
         generatedProfileUrl: toMargonemProfileUrl(profileId),
         lastFetchedAt: row.lastFetchedAt ?? row.createdAt,

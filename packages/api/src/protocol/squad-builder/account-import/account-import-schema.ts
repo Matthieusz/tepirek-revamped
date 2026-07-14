@@ -92,9 +92,30 @@ export const ConfirmOwnedAccountImportPayload = Schema.Struct({
   displayName: Schema.String,
   pendingImportId: PendingMargonemAccountImportIdSchema,
 });
+export const UpdateOwnedAccountDisplayNamePayload = Schema.Struct({
+  accountId: MargonemAccountIdSchema,
+  displayName: Schema.String,
+});
+export const DeleteOwnedAccountPayload = Schema.Struct({
+  accountId: MargonemAccountIdSchema,
+});
+export const DeleteOwnedAccountSuccess = Schema.Struct({
+  accountId: MargonemAccountIdSchema,
+  removedAccessGrantCount: Schema.Number,
+  removedCharacterCount: Schema.Number,
+  removedSquadCharacterCount: Schema.Number,
+});
+export const OwnedAccountCharacterPreviewSchema = Schema.Struct({
+  avatarUrl: Schema.NullOr(Schema.String),
+  characterId: Schema.Number,
+  name: Schema.String,
+  profession: Schema.String,
+});
+
 export const OwnedMargonemAccountSummarySchema = Schema.Struct({
   accountId: MargonemAccountIdSchema,
   characterCount: Schema.Number,
+  characterPreviews: Schema.Array(OwnedAccountCharacterPreviewSchema),
   displayName: Schema.String,
   generatedProfileUrl: Schema.String,
   lastFetchedAt: Schema.DateFromString,
