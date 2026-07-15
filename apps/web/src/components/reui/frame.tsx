@@ -171,5 +171,4 @@ export {
   FrameTitle,
   FrameDescription,
   FrameFooter,
-  frameVariants,
 };

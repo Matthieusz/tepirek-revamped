@@ -24,6 +24,8 @@ type StepIndicators = {
   loading?: React.ReactNode;
 };
 
+const EMPTY_INDICATORS: StepIndicators = {};
+
 interface StepperContextValue {
   activeStep: number;
   setActiveStep: (step: number) => void;
@@ -79,7 +81,7 @@ function Stepper({
   orientation = "horizontal",
   className,
   children,
-  indicators = {},
+  indicators = EMPTY_INDICATORS,
   ...props
 }: StepperProps) {
   const [activeStep, setActiveStep] = useState(defaultValue);
@@ -111,15 +113,35 @@ function Stepper({
   const currentStep = value ?? activeStep;
 
   // Keyboard navigation logic
-  const focusTrigger = (idx: number) => {
-    if (triggerNodes[idx]) triggerNodes[idx].focus();
-  };
-  const focusNext = (currentIdx: number) =>
-    focusTrigger((currentIdx + 1) % triggerNodes.length);
-  const focusPrev = (currentIdx: number) =>
-    focusTrigger((currentIdx - 1 + triggerNodes.length) % triggerNodes.length);
-  const focusFirst = () => focusTrigger(0);
-  const focusLast = () => focusTrigger(triggerNodes.length - 1);
+  const focusTrigger = useCallback(
+    (idx: number) => {
+      triggerNodes[idx]?.focus();
+    },
+    [triggerNodes]
+  );
+  const focusNext = useCallback(
+    (currentIdx: number) => {
+      if (triggerNodes.length > 0) {
+        focusTrigger((currentIdx + 1) % triggerNodes.length);
+      }
+    },
+    [focusTrigger, triggerNodes.length]
+  );
+  const focusPrev = useCallback(
+    (currentIdx: number) => {
+      if (triggerNodes.length > 0) {
+        focusTrigger(
+          (currentIdx - 1 + triggerNodes.length) % triggerNodes.length
+        );
+      }
+    },
+    [focusTrigger, triggerNodes.length]
+  );
+  const focusFirst = useCallback(() => focusTrigger(0), [focusTrigger]);
+  const focusLast = useCallback(
+    () => focusTrigger(triggerNodes.length - 1),
+    [focusTrigger, triggerNodes.length]
+  );
 
   // Context value
   const contextValue = useMemo<StepperContextValue>(
@@ -147,6 +169,11 @@ function Stepper({
       orientation,
       registerTrigger,
       triggerNodes,
+      focusNext,
+      focusPrev,
+      focusFirst,
+      focusLast,
+      indicators,
     ]
   );
 
@@ -193,10 +220,13 @@ function StepperItem({
 
   const isLoading = loading && step === activeStep;
 
+  const contextValue = useMemo(
+    () => ({ step, state, isDisabled: disabled, isLoading }),
+    [disabled, isLoading, state, step]
+  );
+
   return (
-    <StepItemContext.Provider
-      value={{ step, state, isDisabled: disabled, isLoading }}
-    >
+    <StepItemContext.Provider value={contextValue}>
       <div
         data-slot="stepper-item"
         className={cn(
@@ -243,17 +273,24 @@ function StepperTrigger({
 
   // Register this trigger for keyboard navigation
   const btnRef = useRef<HTMLButtonElement>(null);
+  const [buttonNode, setButtonNode] = useState<HTMLButtonElement | null>(null);
+  const setButtonRef = useCallback((node: HTMLButtonElement | null) => {
+    btnRef.current = node;
+    setButtonNode(node);
+  }, []);
+
   useEffect(() => {
-    if (btnRef.current) {
-      registerTrigger(btnRef.current);
+    if (buttonNode === null) {
+      return;
     }
-  }, [btnRef.current]);
+    registerTrigger(buttonNode);
+    return () => registerTrigger(null);
+  }, [buttonNode, registerTrigger]);
 
   // Find our index among triggers for navigation
   const myIdx = useMemo(
-    () =>
-      triggerNodes.findIndex((n: HTMLButtonElement) => n === btnRef.current),
-    [triggerNodes, btnRef.current]
+    () => triggerNodes.findIndex((node) => node === buttonNode),
+    [buttonNode, triggerNodes]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -298,7 +335,7 @@ function StepperTrigger({
 
   return (
     <button
-      ref={btnRef}
+      ref={setButtonRef}
       role="tab"
       id={id}
       aria-selected={isSelected}
