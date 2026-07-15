@@ -1,9 +1,6 @@
 import type { Filter } from "@/components/reui/filters-model";
 
-export type CharacterPoolFilterField =
-  | "profession"
-  | "characterName"
-  | "accountName";
+type CharacterPoolFilterField = "profession" | "characterName" | "accountName";
 
 export interface CharacterPoolCharacter {
   readonly accountDisplayName: string;
@@ -15,7 +12,7 @@ export interface CharacterPoolCharacter {
   readonly profession: string;
 }
 
-export interface CharacterPoolFilters {
+interface CharacterPoolFilters {
   readonly accountName: string;
   readonly characterName: string;
   readonly hasInvalidLevelInput: boolean;
@@ -25,7 +22,7 @@ export interface CharacterPoolFilters {
   readonly professions: readonly string[];
 }
 
-export interface CharacterAccountGroup<T extends CharacterPoolCharacter> {
+interface CharacterAccountGroup<T extends CharacterPoolCharacter> {
   readonly accountDisplayName: string;
   readonly accountId: string;
   readonly accountOwnerUserName: string;

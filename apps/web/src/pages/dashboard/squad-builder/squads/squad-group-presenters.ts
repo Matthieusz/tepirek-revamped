@@ -1,29 +1,3 @@
-import type { SharedSquadGroupSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
-
-import type {
-  GlobalSquadGroupSummary,
-  SquadGroupSummary,
-} from "@/lib/squad-builder/squad-group-atoms";
-
-type SharedSquadGroupSummary = typeof SharedSquadGroupSummarySchema.Type;
-
-export type SquadGroupListItem =
-  | {
-      readonly kind: "mine";
-      readonly group: SquadGroupSummary;
-      readonly status: "właściciel";
-    }
-  | {
-      readonly kind: "shared";
-      readonly group: SharedSquadGroupSummary;
-      readonly status: "edytor";
-    }
-  | {
-      readonly kind: "public";
-      readonly group: GlobalSquadGroupSummary;
-      readonly status: "publiczny";
-    };
-
 export const userInitials = (name: string): string =>
   name
     .split(/\s+/u)

@@ -17,7 +17,7 @@ type KnownProfession =
   | "tracker"
   | "warrior";
 
-export interface ProfessionPresentation {
+interface ProfessionPresentation {
   readonly colorClass: string;
   readonly icon: LucideIcon;
   readonly label: string;

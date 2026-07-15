@@ -1,12 +1,10 @@
 import type {
   AvailableSquadCharacterSchema,
-  SquadGroupDetailCharacterSchema,
   SquadGroupDetailSchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
 
 type SquadGroupDetail = typeof SquadGroupDetailSchema.Type;
 export type AvailableCharacter = typeof AvailableSquadCharacterSchema.Type;
-export type DetailCharacter = typeof SquadGroupDetailCharacterSchema.Type;
 
 export const MAX_SQUAD_CHARACTERS = 10;
 
@@ -38,11 +36,11 @@ export type PlacementError =
       readonly accountDisplayName: string;
     };
 
-export type PlacementResult =
+type PlacementResult =
   | { readonly _tag: "success"; readonly draft: SquadGroupDraft }
   | { readonly _tag: "failure"; readonly error: PlacementError };
 
-export interface SaveSquadGroupPayload {
+interface SaveSquadGroupPayload {
   readonly groupId: number;
   readonly name: string;
   readonly squads: readonly {
@@ -57,7 +55,7 @@ export interface SaveSquadGroupPayload {
   }[];
 }
 
-export interface SaveSharedSquadGroupCharactersPayload {
+interface SaveSharedSquadGroupCharactersPayload {
   readonly groupId: number;
   readonly squads: readonly {
     readonly characters: readonly {
