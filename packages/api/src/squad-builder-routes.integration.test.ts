@@ -30,7 +30,7 @@ const appHttpApi = HttpRouter.toWebHandler(appHttpApiLayer, {
 const requestHttpApi = (path: string, init?: RequestInit) =>
   appHttpApi.handler(new Request(`http://localhost:3000${path}`, init));
 
-const createSignedInUser = async (name: string) => {
+const createSignedInUser = async (name: string, verified = true) => {
   const email = `${name}@example.com`;
   const response = await testAuth.handler(
     new Request("http://localhost:3000/api/auth/sign-up/email", {
@@ -50,7 +50,7 @@ const createSignedInUser = async (name: string) => {
 
   const [createdUser] = await testDb
     .update(user)
-    .set({ verified: true })
+    .set({ verified })
     .where(eq(user.email, email))
     .returning();
 
@@ -179,5 +179,60 @@ describe("squad-builder squad-group route auth", () => {
     )(await owned2.json());
     expect(owned2Json).toHaveLength(1);
     expect(owned2Json[0]).toMatchObject({ name: "User2 Group" });
+  });
+
+  it("rejects a warmed session immediately after admin privileges are removed", async () => {
+    const admin = await createSignedInUser("revoked-admin");
+    await testDb
+      .update(user)
+      .set({ role: "admin" })
+      .where(eq(user.id, admin.id));
+
+    const warmedResponse = await requestHttpApi(
+      "/events",
+      jsonPost(
+        { endTime: "2030-01-01T00:00:00.000Z", name: "Warmed Admin Event" },
+        admin.cookie
+      )
+    );
+    expect(warmedResponse.status).toBe(200);
+
+    await testDb
+      .update(user)
+      .set({ role: "user" })
+      .where(eq(user.id, admin.id));
+
+    const revokedResponse = await requestHttpApi(
+      "/events",
+      jsonPost(
+        { endTime: "2030-01-02T00:00:00.000Z", name: "Should Be Rejected" },
+        admin.cookie
+      )
+    );
+    expect(revokedResponse.status).not.toBe(200);
+    await expect(revokedResponse.json()).resolves.toMatchObject({
+      _tag: "EventForbidden",
+    });
+  });
+
+  it("accepts a warmed session immediately after verification is granted", async () => {
+    const userToVerify = await createSignedInUser("newly-verified", false);
+
+    const warmedResponse = await requestHttpApi(
+      "/squad-builder/squad-groups",
+      jsonPost({ name: "Before Verification" }, userToVerify.cookie)
+    );
+    expect(warmedResponse.status).toBe(403);
+
+    await testDb
+      .update(user)
+      .set({ verified: true })
+      .where(eq(user.id, userToVerify.id));
+
+    const verifiedResponse = await requestHttpApi(
+      "/squad-builder/squad-groups",
+      jsonPost({ name: "After Verification" }, userToVerify.cookie)
+    );
+    expect(verifiedResponse.status).toBe(200);
   });
 });
