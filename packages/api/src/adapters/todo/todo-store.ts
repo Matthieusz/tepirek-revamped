@@ -8,27 +8,30 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { TodoId } from "../../domain/core-identifiers.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
+import type { TodoSummary } from "../../protocol/todo/http-api-contract.ts";
 import { makeDirectPersistenceQuery } from "../persistence-query.ts";
 import { TodoStoreError } from "./todo-store-error.ts";
 
 export interface CreateTodoInput {
   readonly text: string;
-  readonly userId: string;
+  readonly userId: typeof AppUserId.Type;
 }
 
 export interface DeleteTodoInput {
-  readonly id: number;
-  readonly userId: string;
+  readonly id: typeof TodoId.Type;
+  readonly userId: typeof AppUserId.Type;
 }
 
 export interface ListTodosInput {
-  readonly userId: string;
+  readonly userId: typeof AppUserId.Type;
 }
 
 export interface ToggleTodoInput {
   readonly completed: boolean;
-  readonly id: number;
-  readonly userId: string;
+  readonly id: typeof TodoId.Type;
+  readonly userId: typeof AppUserId.Type;
 }
 
 const persistenceQuery = makeDirectPersistenceQuery(
@@ -57,6 +60,14 @@ const listWithDatabase =
     persistenceQuery(
       "listTodos",
       database.select().from(todo).where(eq(todo.userId, userId))
+    ).pipe(
+      Effect.map((rows) =>
+        rows.map((row) => ({
+          ...row,
+          id: TodoId.make(row.id),
+          userId: AppUserId.make(row.userId),
+        }))
+      )
     );
 
 const toggleWithDatabase =
@@ -79,15 +90,9 @@ export class TodoStore extends Context.Service<
     readonly delete: (
       input: DeleteTodoInput
     ) => Effect.Effect<void, TodoStoreError>;
-    readonly list: (input: ListTodosInput) => Effect.Effect<
-      readonly {
-        readonly completed: boolean;
-        readonly id: number;
-        readonly text: string;
-        readonly userId: string;
-      }[],
-      TodoStoreError
-    >;
+    readonly list: (
+      input: ListTodosInput
+    ) => Effect.Effect<readonly (typeof TodoSummary.Type)[], TodoStoreError>;
     readonly toggle: (
       input: ToggleTodoInput
     ) => Effect.Effect<void, TodoStoreError>;

@@ -1,43 +1,39 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
+import type { EventId, HeroId } from "../../domain/core-identifiers.ts";
+import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
+import type {
+  HeroStats,
+  RankingResult,
+} from "../../protocol/ranking/http-api-contract.ts";
 import type { RankingError } from "./ranking-errors.ts";
 
+export type HeroStatsResult = typeof HeroStats.Type;
+export type RankingResultType = typeof RankingResult.Type;
+
 export interface GetRankingInput {
-  readonly eventId?: number | undefined;
-  readonly heroId?: number | undefined;
+  readonly eventId?: EventId | undefined;
+  readonly heroId?: HeroId | undefined;
 }
 
 export interface RankingRow {
   readonly totalBets: number;
   readonly totalEarnings: string;
   readonly totalPoints: string;
-  readonly userId: string;
+  readonly userId: AppUserId;
   readonly userImage: string | null;
   readonly userName: string | null;
 }
 
-export interface RankingResult {
-  readonly pointWorth: number | null;
-  readonly ranking: readonly RankingRow[];
-  readonly totalBets: number;
-}
-
 export interface RankingServiceInterface {
-  readonly getHeroStats: (heroId: number) => Effect<
-    {
-      readonly currentPointWorth: number;
-      readonly heroId: number;
-      readonly heroName: string;
-      readonly totalBets: number;
-      readonly totalPoints: number;
-    },
-    RankingError
-  >;
-  readonly getOldestUnpaidEvent: () => Effect<number | null, RankingError>;
+  readonly getHeroStats: (
+    heroId: HeroId
+  ) => Effect<HeroStatsResult, RankingError>;
+  readonly getOldestUnpaidEvent: () => Effect<EventId | null, RankingError>;
   readonly getRanking: (
     input: GetRankingInput
-  ) => Effect<RankingResult, RankingError>;
+  ) => Effect<RankingResultType, RankingError>;
 }
 
 export class RankingService extends Context.Service<

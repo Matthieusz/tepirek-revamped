@@ -9,6 +9,9 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { AnnouncementId } from "../../domain/core-identifiers.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
+import type { AnnouncementSummary } from "../../protocol/announcement/http-api-contract.ts";
 import { makeDirectPersistenceQuery } from "../persistence-query.ts";
 import { AnnouncementStoreError } from "./announcement-store-error.ts";
 
@@ -16,11 +19,11 @@ export interface CreateAnnouncementInput {
   readonly createdAt: Date;
   readonly description: string;
   readonly title: string;
-  readonly userId: string;
+  readonly userId: AppUserId;
 }
 
 export interface DeleteAnnouncementInput {
-  readonly id: number;
+  readonly id: AnnouncementId;
 }
 
 const persistenceQuery = makeDirectPersistenceQuery(
@@ -66,6 +69,17 @@ const listWithDatabase = (database: EffectPgDatabase) => () =>
       .from(announcement)
       .leftJoin(user, eq(announcement.userId, user.id))
       .orderBy(desc(announcement.createdAt))
+  ).pipe(
+    Effect.map((rows) =>
+      rows.map((row) => ({
+        ...row,
+        id: AnnouncementId.make(row.id),
+        user:
+          row.user === null
+            ? null
+            : { ...row.user, id: AppUserId.make(row.user.id) },
+      }))
+    )
   );
 
 export class AnnouncementStore extends Context.Service<
@@ -78,17 +92,7 @@ export class AnnouncementStore extends Context.Service<
       input: DeleteAnnouncementInput
     ) => Effect.Effect<void, AnnouncementStoreError>;
     readonly list: () => Effect.Effect<
-      readonly {
-        readonly createdAt: Date;
-        readonly description: string;
-        readonly id: number;
-        readonly title: string;
-        readonly user: {
-          readonly id: string;
-          readonly image: string | null;
-          readonly name: string | null;
-        } | null;
-      }[],
+      readonly (typeof AnnouncementSummary.Type)[],
       AnnouncementStoreError
     >;
   }

@@ -11,8 +11,19 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import {
+  ProfessionId,
+  SkillId,
+  SkillRangeId,
+} from "../../domain/core-identifiers.ts";
+import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
+import {
   SkillsBadRequest,
   SkillsConflict,
+} from "../../protocol/skills/http-api-contract.ts";
+import type {
+  ProfessionSummary,
+  RangeSummary,
+  SkillSummary,
 } from "../../protocol/skills/http-api-contract.ts";
 import { makeDirectPersistenceQuery } from "../persistence-query.ts";
 import { SkillsStoreError } from "./skills-store-error.ts";
@@ -29,18 +40,21 @@ export interface CreateSkillInput {
   readonly link: string;
   readonly mastery: boolean;
   readonly name: string;
-  readonly professionId: number;
-  readonly rangeId: number;
-  readonly userId: string;
+  readonly professionId: typeof ProfessionId.Type;
+  readonly rangeId: typeof SkillRangeId.Type;
+  readonly userId: typeof AppUserId.Type;
 }
-export interface DeleteInput {
-  readonly id: number;
+export interface DeleteRangeInput {
+  readonly id: typeof SkillRangeId.Type;
+}
+export interface DeleteSkillInput {
+  readonly id: typeof SkillId.Type;
 }
 export interface GetRangeBySlugInput {
   readonly slug: string;
 }
 export interface GetSkillsByRangeInput {
-  readonly rangeId: number;
+  readonly rangeId: typeof SkillRangeId.Type;
 }
 
 const persistenceQuery = makeDirectPersistenceQuery(
@@ -113,22 +127,30 @@ const createSkillWithDatabase = (database: EffectPgDatabase) =>
 
 const deleteRangeWithDatabase =
   (database: EffectPgDatabase) =>
-  ({ id }: DeleteInput) =>
+  ({ id }: DeleteRangeInput) =>
     persistenceQuery(
       "deleteRange",
       database.delete(range).where(eq(range.id, id))
     );
 const deleteSkillWithDatabase =
   (database: EffectPgDatabase) =>
-  ({ id }: DeleteInput) =>
+  ({ id }: DeleteSkillInput) =>
     persistenceQuery(
       "deleteSkill",
       database.delete(skills).where(eq(skills.id, id))
     );
 const listProfessionsWithDatabase = (database: EffectPgDatabase) => () =>
-  persistenceQuery("listProfessions", database.select().from(professions));
+  persistenceQuery("listProfessions", database.select().from(professions)).pipe(
+    Effect.map((rows) =>
+      rows.map((row) => ({ ...row, id: ProfessionId.make(row.id) }))
+    )
+  );
 const listRangesWithDatabase = (database: EffectPgDatabase) => () =>
-  persistenceQuery("listRanges", database.select().from(range));
+  persistenceQuery("listRanges", database.select().from(range)).pipe(
+    Effect.map((rows) =>
+      rows.map((row) => ({ ...row, id: SkillRangeId.make(row.id) }))
+    )
+  );
 const getRangeBySlugWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* getRangeBySlugWithDatabase({
     slug,
@@ -137,7 +159,8 @@ const getRangeBySlugWithDatabase = (database: EffectPgDatabase) =>
       "getRangeBySlug",
       database.select().from(range).where(eq(range.slug, slug)).limit(1)
     );
-    return rows[0] ?? null;
+    const [row] = rows;
+    return row === undefined ? null : { ...row, id: SkillRangeId.make(row.id) };
   });
 const listSkillsByRangeWithDatabase =
   (database: EffectPgDatabase) =>
@@ -159,6 +182,14 @@ const listSkillsByRangeWithDatabase =
         .innerJoin(professions, eq(professions.id, skills.professionId))
         .innerJoin(user, eq(user.id, skills.userId))
         .where(eq(skills.rangeId, rangeId))
+    ).pipe(
+      Effect.map((rows) =>
+        rows.map((row) => ({
+          ...row,
+          id: SkillId.make(row.id),
+          professionId: ProfessionId.make(row.professionId),
+        }))
+      )
     );
 
 export class SkillsStore extends Context.Service<
@@ -177,35 +208,25 @@ export class SkillsStore extends Context.Service<
       input: CreateSkillInput
     ) => Effect.Effect<void, SkillsBadRequest | SkillsStoreError>;
     readonly deleteRange: (
-      input: DeleteInput
+      input: DeleteRangeInput
     ) => Effect.Effect<void, SkillsStoreError>;
     readonly deleteSkill: (
-      input: DeleteInput
+      input: DeleteSkillInput
     ) => Effect.Effect<void, SkillsStoreError>;
     readonly listProfessions: () => Effect.Effect<
-      readonly (typeof professions.$inferSelect)[],
+      readonly (typeof ProfessionSummary.Type)[],
       SkillsStoreError
     >;
     readonly listRanges: () => Effect.Effect<
-      readonly (typeof range.$inferSelect)[],
+      readonly (typeof RangeSummary.Type)[],
       SkillsStoreError
     >;
     readonly getRangeBySlug: (
       input: GetRangeBySlugInput
-    ) => Effect.Effect<typeof range.$inferSelect | null, SkillsStoreError>;
-    readonly listSkillsByRange: (input: GetSkillsByRangeInput) => Effect.Effect<
-      readonly {
-        readonly addedBy: string | null;
-        readonly addedByImage: string | null;
-        readonly id: number;
-        readonly link: string;
-        readonly mastery: boolean;
-        readonly name: string;
-        readonly professionId: number;
-        readonly professionName: string;
-      }[],
-      SkillsStoreError
-    >;
+    ) => Effect.Effect<typeof RangeSummary.Type | null, SkillsStoreError>;
+    readonly listSkillsByRange: (
+      input: GetSkillsByRangeInput
+    ) => Effect.Effect<readonly (typeof SkillSummary.Type)[], SkillsStoreError>;
   }
 >()("@tepirek-revamped/api/SkillsStore") {}
 

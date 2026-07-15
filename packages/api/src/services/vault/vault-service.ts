@@ -1,51 +1,45 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
-import type { UserStatsRow } from "../../protocol/vault/http-api-contract.ts";
+import type { EventId, HeroId } from "../../domain/core-identifiers.ts";
+import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
+import type {
+  DistributeGoldSuccess,
+  MutationSuccess,
+  UserStatsRow,
+  VaultRow,
+} from "../../protocol/vault/http-api-contract.ts";
 import type { VaultError } from "./vault-errors.ts";
 
+export type DistributeGoldResult = typeof DistributeGoldSuccess.Type;
 export type UserStatsResultRow = typeof UserStatsRow.Type;
+export type VaultResultRow = typeof VaultRow.Type;
+export type MutationSuccessResult = typeof MutationSuccess.Type;
 
 export interface DistributeGoldInput {
   readonly goldAmount: number;
-  readonly heroId: number;
+  readonly heroId: HeroId;
 }
 
 export interface TogglePaidOutInput {
-  readonly eventId: number;
+  readonly eventId: EventId;
   readonly paidOut: boolean;
-  readonly userId: string;
+  readonly userId: AppUserId;
 }
 
 export interface VaultServiceInterface {
-  readonly distributeGold: (input: DistributeGoldInput) => Effect<
-    {
-      readonly goldAmount: number;
-      readonly heroId: number;
-      readonly heroName: string;
-      readonly pointWorth: number;
-      readonly success: true;
-      readonly totalPoints: number;
-      readonly usersUpdated: number;
-    },
-    VaultError
-  >;
+  readonly distributeGold: (
+    input: DistributeGoldInput
+  ) => Effect<DistributeGoldResult, VaultError>;
   readonly getUserStats: (
-    eventId?: number
+    eventId?: EventId
   ) => Effect<readonly UserStatsResultRow[], VaultError>;
-  readonly getVault: (eventId?: number) => Effect<
-    readonly {
-      readonly paidOut: boolean;
-      readonly totalEarnings: string;
-      readonly userId: string;
-      readonly userImage: string | null;
-      readonly userName: string | null;
-    }[],
-    VaultError
-  >;
+  readonly getVault: (
+    eventId?: EventId
+  ) => Effect<readonly VaultResultRow[], VaultError>;
   readonly togglePaidOut: (
     input: TogglePaidOutInput
-  ) => Effect<{ readonly success: true }, VaultError>;
+  ) => Effect<MutationSuccessResult, VaultError>;
 }
 
 export class VaultService extends Context.Service<

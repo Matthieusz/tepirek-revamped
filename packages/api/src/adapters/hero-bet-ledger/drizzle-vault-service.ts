@@ -7,6 +7,8 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { EventId, HeroId } from "../../domain/core-identifiers.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
   VaultBadRequest,
   VaultPersistenceUnavailable,
@@ -118,7 +120,7 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
     );
     return {
       goldAmount,
-      heroId,
+      heroId: HeroId.make(heroId),
       heroName: distribution.heroName,
       pointWorth: distribution.pointWorth,
       success: true as const,
@@ -133,9 +135,30 @@ const getUserStatsWithDatabase =
       return persistenceQuery(
         "getUserStats",
         database.select().from(userStats).where(eq(userStats.eventId, eventId))
+      ).pipe(
+        Effect.map((rows) =>
+          rows.map((row) => ({
+            ...row,
+            eventId: EventId.make(row.eventId),
+            heroId: HeroId.make(row.heroId),
+            userId: AppUserId.make(row.userId),
+          }))
+        )
       );
     }
-    return persistenceQuery("getUserStats", database.select().from(userStats));
+    return persistenceQuery(
+      "getUserStats",
+      database.select().from(userStats)
+    ).pipe(
+      Effect.map((rows) =>
+        rows.map((row) => ({
+          ...row,
+          eventId: EventId.make(row.eventId),
+          heroId: HeroId.make(row.heroId),
+          userId: AppUserId.make(row.userId),
+        }))
+      )
+    );
   };
 
 const getVaultWithDatabase =
@@ -163,6 +186,10 @@ const getVaultWithDatabase =
         .groupBy(userStats.userId, user.name, user.image)
         .having(sql`SUM(${userStats.earnings}) >= ${MIN_EARNINGS}`)
         .orderBy(desc(sql`SUM(${userStats.earnings})`))
+    ).pipe(
+      Effect.map((rows) =>
+        rows.map((row) => ({ ...row, userId: AppUserId.make(row.userId) }))
+      )
     );
   };
 

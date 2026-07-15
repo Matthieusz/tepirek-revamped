@@ -8,10 +8,12 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { EventId } from "../../domain/core-identifiers.ts";
 import {
   defaultEventColor,
   defaultEventIcon,
 } from "../../protocol/event/http-api-contract.ts";
+import type { EventSummary } from "../../protocol/event/http-api-contract.ts";
 import { makeDirectPersistenceQuery } from "../persistence-query.ts";
 import { EventStoreError } from "./event-store-error.ts";
 
@@ -22,11 +24,11 @@ export interface CreateEventInput {
   readonly name: string;
 }
 export interface DeleteEventInput {
-  readonly id: number;
+  readonly id: EventId;
 }
 export interface ToggleEventActiveInput {
   readonly active: boolean;
-  readonly id: number;
+  readonly id: EventId;
 }
 
 const persistenceQuery = makeDirectPersistenceQuery(
@@ -55,7 +57,11 @@ const deleteWithDatabase =
     );
 
 const listWithDatabase = (database: EffectPgDatabase) => () =>
-  persistenceQuery("listEvents", database.select().from(event));
+  persistenceQuery("listEvents", database.select().from(event)).pipe(
+    Effect.map((rows) =>
+      rows.map((row) => ({ ...row, id: EventId.make(row.id) }))
+    )
+  );
 
 const toggleActiveWithDatabase =
   (database: EffectPgDatabase) =>
@@ -75,7 +81,7 @@ export class EventStore extends Context.Service<
       input: DeleteEventInput
     ) => Effect.Effect<void, EventStoreError>;
     readonly list: () => Effect.Effect<
-      readonly (typeof event.$inferSelect)[],
+      readonly (typeof EventSummary.Type)[],
       EventStoreError
     >;
     readonly toggleActive: (

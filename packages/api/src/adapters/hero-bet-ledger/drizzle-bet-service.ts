@@ -12,7 +12,9 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { BetId, EventId, HeroId } from "../../domain/core-identifiers.ts";
 import { calculatePointsPerMember } from "../../domain/hero-bet-ledger/points.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
   BetBadRequest,
   BetNotFound,
@@ -45,6 +47,43 @@ const persistenceQuery = <A, E, R>(
         operation: failedOperation,
       })
   );
+
+const toBetMember = (member: {
+  readonly heroBetId: number;
+  readonly points: string;
+  readonly userId: string;
+  readonly userImage: string | null;
+  readonly userName: string | null;
+}) => ({
+  ...member,
+  heroBetId: BetId.make(member.heroBetId),
+  userId: AppUserId.make(member.userId),
+});
+
+const toBetSummary = <
+  T extends {
+    readonly createdBy: string;
+    readonly eventId: number;
+    readonly heroId: number;
+    readonly id: number;
+    readonly members: readonly {
+      readonly heroBetId: number;
+      readonly points: string;
+      readonly userId: string;
+      readonly userImage: string | null;
+      readonly userName: string | null;
+    }[];
+  },
+>(
+  bet: T
+) => ({
+  ...bet,
+  createdBy: AppUserId.make(bet.createdBy),
+  eventId: EventId.make(bet.eventId),
+  heroId: HeroId.make(bet.heroId),
+  id: BetId.make(bet.id),
+  members: bet.members.map(toBetMember),
+});
 
 const getHeroEventWithDatabase = (database: Pick<EffectPgDatabase, "select">) =>
   Effect.fnUntraced(function* getHeroEvent(heroId: number, message: string) {
@@ -211,7 +250,12 @@ const createBetWithDatabase = (database: EffectPgDatabase) =>
               target: [userStats.userId, userStats.eventId, userStats.heroId],
             });
           yield* refreshEarningsForHero(tx, heroId);
-          return bet;
+          return {
+            ...bet,
+            createdBy: AppUserId.make(bet.createdBy),
+            heroId: HeroId.make(bet.heroId),
+            id: BetId.make(bet.id),
+          };
         })
       )
     );
@@ -464,7 +508,9 @@ const getAllBetsWithDatabase = (database: EffectPgDatabase) =>
         .innerJoin(user, eq(heroBet.createdBy, user.id))
         .orderBy(desc(heroBet.createdAt), desc(heroBet.id))
     );
-    return yield* attachMembersToBetsWithDatabase(database)(bets);
+    return (yield* attachMembersToBetsWithDatabase(database)(bets)).map(
+      toBetSummary
+    );
   });
 
 const getBetMembersWithDatabase =
@@ -479,6 +525,10 @@ const getBetMembersWithDatabase =
         })
         .from(heroBetMember)
         .where(eq(heroBetMember.heroBetId, betId))
+    ).pipe(
+      Effect.map((rows) =>
+        rows.map((row) => ({ ...row, userId: AppUserId.make(row.userId) }))
+      )
     );
 
 const getBetsByEventWithDatabase =
@@ -499,6 +549,16 @@ const getBetsByEventWithDatabase =
         .innerJoin(hero, eq(heroBet.heroId, hero.id))
         .where(eq(hero.eventId, eventId))
         .orderBy(desc(heroBet.createdAt), desc(heroBet.id))
+    ).pipe(
+      Effect.map((rows) =>
+        rows.map((row) => ({
+          ...row,
+          createdBy: AppUserId.make(row.createdBy),
+          eventId: EventId.make(row.eventId),
+          heroId: HeroId.make(row.heroId),
+          id: BetId.make(row.id),
+        }))
+      )
     );
 
 const getLatestBetForCopyWithDatabase = (database: EffectPgDatabase) =>
@@ -518,7 +578,12 @@ const getLatestBetForCopyWithDatabase = (database: EffectPgDatabase) =>
     const [withMembers] = yield* attachMembersToBetsWithDatabase(database)([
       latestBet,
     ]);
-    return withMembers ?? null;
+    return withMembers === undefined
+      ? null
+      : {
+          id: BetId.make(withMembers.id),
+          members: withMembers.members.map(toBetMember),
+        };
   });
 
 const getPaginatedBetsWithDatabase = (database: EffectPgDatabase) =>
@@ -574,7 +639,9 @@ const getPaginatedBetsWithDatabase = (database: EffectPgDatabase) =>
     const totalPages = Math.ceil(totalItems / limit);
 
     return {
-      items: yield* attachMembersToBetsWithDatabase(database)(bets),
+      items: (yield* attachMembersToBetsWithDatabase(database)(bets)).map(
+        toBetSummary
+      ),
       pagination: {
         hasMore: page < totalPages,
         limit,

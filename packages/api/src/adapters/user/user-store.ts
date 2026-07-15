@@ -11,6 +11,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
   UserBadRequest,
   UserForbidden,
@@ -39,14 +40,14 @@ const playerListSelect = {
 };
 
 export interface VerifiedMember {
-  readonly id: string;
+  readonly id: typeof AppUserId.Type;
   readonly image: string | null;
   readonly name: string;
 }
 
 export interface Player {
   readonly createdAt: Date;
-  readonly id: string;
+  readonly id: typeof AppUserId.Type;
   readonly image: string | null;
   readonly name: string;
   readonly role: string | null;
@@ -54,33 +55,55 @@ export interface Player {
   readonly verified: boolean;
 }
 
+const toVerifiedMember = (row: {
+  readonly id: string;
+  readonly image: string | null;
+  readonly name: string;
+}): VerifiedMember => ({
+  ...row,
+  id: AppUserId.make(row.id),
+});
+
+const toPlayer = (row: {
+  readonly createdAt: Date;
+  readonly id: string;
+  readonly image: string | null;
+  readonly name: string;
+  readonly role: string | null;
+  readonly updatedAt: Date;
+  readonly verified: boolean;
+}): Player => ({
+  ...row,
+  id: AppUserId.make(row.id),
+});
+
 type UserRow = typeof user.$inferSelect;
 type UserQueryExecutor = Pick<EffectPgDatabase, "select" | "update">;
 type UserMutationState = Partial<Pick<UserRow, "role" | "verified">>;
 
 export interface SetUserRoleInput {
-  readonly actorId: string;
+  readonly actorId: typeof AppUserId.Type;
   readonly role: NonNullable<UserRow["role"]>;
   readonly updatedAt: Date;
-  readonly userId: string;
+  readonly userId: typeof AppUserId.Type;
 }
 
 export interface SetUserVerifiedInput {
-  readonly actorId: string;
+  readonly actorId: typeof AppUserId.Type;
   readonly updatedAt: Date;
-  readonly userId: string;
+  readonly userId: typeof AppUserId.Type;
   readonly verified: boolean;
 }
 
 export interface UpdateUserNameInput {
   readonly name: string;
   readonly updatedAt: Date;
-  readonly userId: string;
+  readonly userId: typeof AppUserId.Type;
 }
 
 const loadTargetUser = Effect.fnUntraced(function* loadTargetUser(
   database: Pick<UserQueryExecutor, "select">,
-  userId: string
+  userId: typeof AppUserId.Type
 ) {
   const rows = yield* userPersistenceQuery(
     "loadTargetUser",
@@ -113,7 +136,7 @@ const assertAdminMutationAllowed = Effect.fnUntraced(
   function* assertAdminMutationAllowed(
     database: Pick<UserQueryExecutor, "select">,
     input: {
-      readonly actorId: string;
+      readonly actorId: typeof AppUserId.Type;
       readonly next: UserMutationState;
       readonly targetUser: Pick<UserRow, "id" | "role" | "verified">;
     }
@@ -160,17 +183,18 @@ const updateAndReturnUser = Effect.fnUntraced(function* updateAndReturnUser(
     database.select(playerListSelect).from(user).where(where)
   );
 
-  return rows[0] ?? null;
+  const [row] = rows;
+  return row === undefined ? null : toPlayer(row);
 });
 
 const mutateAdminAvailabilityUser = Effect.fnUntraced(
   function* mutateAdminAvailabilityUser(
     database: EffectPgDatabase,
     input: {
-      readonly actorId: string;
+      readonly actorId: typeof AppUserId.Type;
       readonly next: UserMutationState;
       readonly updatedAt: Date;
-      readonly userId: string;
+      readonly userId: typeof AppUserId.Type;
     }
   ) {
     const transaction = database.transaction(
@@ -205,7 +229,7 @@ const mutateAdminAvailabilityUser = Effect.fnUntraced(
 );
 
 const deleteUserWithDatabase = (database: EffectPgDatabase) =>
-  Effect.fnUntraced(function* deleteUser(userId: string) {
+  Effect.fnUntraced(function* deleteUser(userId: typeof AppUserId.Type) {
     const targetUser = yield* loadTargetUser(database, userId);
 
     if (targetUser.verified) {
@@ -229,13 +253,13 @@ const getVerifiedWithDatabase = (database: EffectPgDatabase) => () =>
       .select(verifiedMemberSelect)
       .from(user)
       .where(eq(user.verified, true))
-  );
+  ).pipe(Effect.map((rows) => rows.map(toVerifiedMember)));
 
 const listWithDatabase = (database: EffectPgDatabase) => () =>
   userPersistenceQuery(
     "listUsers",
     database.select(playerListSelect).from(user)
-  );
+  ).pipe(Effect.map((rows) => rows.map(toPlayer)));
 
 const setRoleWithDatabase =
   (database: EffectPgDatabase) =>
@@ -269,7 +293,9 @@ const updateProfileWithDatabase =
     );
 
 const getDiscordAccessTokenWithDatabase = (database: EffectPgDatabase) =>
-  Effect.fnUntraced(function* getDiscordAccessToken(userId: string) {
+  Effect.fnUntraced(function* getDiscordAccessToken(
+    userId: typeof AppUserId.Type
+  ) {
     const rows = yield* userPersistenceQuery(
       "getDiscordAccessToken",
       database
@@ -294,7 +320,7 @@ const markUserVerifiedWithDatabase =
   (database: EffectPgDatabase) =>
   (input: {
     readonly updatedAt: Date;
-    readonly userId: string;
+    readonly userId: typeof AppUserId.Type;
   }): Effect.Effect<void, UserAdapterError> =>
     userPersistenceQuery(
       "markUserVerified",
@@ -308,13 +334,13 @@ export class UserStore extends Context.Service<
   UserStore,
   {
     readonly deleteUser: (
-      userId: string
+      userId: typeof AppUserId.Type
     ) => Effect.Effect<
       { readonly success: true },
       UserBadRequest | UserNotFound | UserAdapterError
     >;
     readonly getDiscordAccessToken: (
-      userId: string
+      userId: typeof AppUserId.Type
     ) => Effect.Effect<string, UserBadRequest | UserAdapterError>;
     readonly getVerified: () => Effect.Effect<
       readonly VerifiedMember[],
@@ -323,7 +349,7 @@ export class UserStore extends Context.Service<
     readonly list: () => Effect.Effect<readonly Player[], UserAdapterError>;
     readonly markUserVerified: (input: {
       readonly updatedAt: Date;
-      readonly userId: string;
+      readonly userId: typeof AppUserId.Type;
     }) => Effect.Effect<void, UserAdapterError>;
     readonly setRole: (
       input: SetUserRoleInput

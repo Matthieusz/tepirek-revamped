@@ -9,11 +9,14 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { AuctionSignupId } from "../../domain/core-identifiers.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
   AuctionConflict,
   AuctionForbidden,
   AuctionNotFound,
 } from "../../protocol/auction/http-api-contract.ts";
+import type { AuctionSignupSummary } from "../../protocol/auction/http-api-contract.ts";
 import { makeDirectPersistenceQuery } from "../persistence-query.ts";
 import { AuctionStoreError } from "./auction-store-error.ts";
 
@@ -22,11 +25,11 @@ export interface AuctionGroupInput {
   readonly type: string;
 }
 export interface RemoveSignupInput {
-  readonly actorUserId: string;
-  readonly id: number;
+  readonly actorUserId: AppUserId;
+  readonly id: typeof AuctionSignupId.Type;
 }
 export interface ToggleSignupInput {
-  readonly actorUserId: string;
+  readonly actorUserId: AppUserId;
   readonly column: number;
   readonly level: number;
   readonly profession: string;
@@ -62,6 +65,14 @@ const getSignupsWithDatabase =
           )
         )
         .orderBy(auction.createdAt)
+    ).pipe(
+      Effect.map((rows) =>
+        rows.map((row) => ({
+          ...row,
+          id: AuctionSignupId.make(row.id),
+          userId: AppUserId.make(row.userId),
+        }))
+      )
     );
 
 const getStatsWithDatabase = (database: EffectPgDatabase) =>
@@ -173,17 +184,10 @@ const toggleSignupWithDatabase = (database: EffectPgDatabase) =>
 export class AuctionStore extends Context.Service<
   AuctionStore,
   {
-    readonly getSignups: (input: AuctionGroupInput) => Effect.Effect<
-      readonly {
-        readonly column: number;
-        readonly createdAt: Date;
-        readonly id: number;
-        readonly level: number;
-        readonly round: number;
-        readonly userId: string;
-        readonly userImage: string | null;
-        readonly userName: string | null;
-      }[],
+    readonly getSignups: (
+      input: AuctionGroupInput
+    ) => Effect.Effect<
+      readonly (typeof AuctionSignupSummary.Type)[],
       AuctionStoreError
     >;
     readonly getStats: (

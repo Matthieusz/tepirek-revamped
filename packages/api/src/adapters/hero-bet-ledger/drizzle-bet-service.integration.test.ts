@@ -11,11 +11,25 @@ import * as Layer from "effect/Layer";
 import { TestClock } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
-import type { BetServiceInterface } from "../../services/bet/bet-service.ts";
+import { BetId, EventId, HeroId } from "../../domain/core-identifiers.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
+import type {
+  BetServiceInterface,
+  CreateBetInput,
+  EditBetInput,
+  GetPaginatedBetsInput,
+} from "../../services/bet/bet-service.ts";
 import { BetService } from "../../services/bet/bet-service.ts";
-import type { RankingServiceInterface } from "../../services/ranking/ranking-service.ts";
+import type {
+  GetRankingInput,
+  RankingServiceInterface,
+} from "../../services/ranking/ranking-service.ts";
 import { RankingService } from "../../services/ranking/ranking-service.ts";
-import type { VaultServiceInterface } from "../../services/vault/vault-service.ts";
+import type {
+  DistributeGoldInput,
+  TogglePaidOutInput,
+  VaultServiceInterface,
+} from "../../services/vault/vault-service.ts";
 import { VaultService } from "../../services/vault/vault-service.ts";
 import { testEffect } from "../../test/effect.ts";
 import {
@@ -42,24 +56,66 @@ const testLayer = Layer.mergeAll(
   DrizzleVaultServiceLayer.pipe(Layer.provide(databaseLayer))
 );
 
+interface TestServices {
+  readonly createBet: (
+    input: Omit<CreateBetInput, "createdBy" | "heroId" | "userIds"> & {
+      readonly createdBy: string;
+      readonly heroId: number;
+      readonly userIds: readonly string[];
+    }
+  ) => ReturnType<BetServiceInterface["createBet"]>;
+  readonly deleteBet: (
+    id: number
+  ) => ReturnType<BetServiceInterface["deleteBet"]>;
+  readonly editBet: (
+    input: Omit<EditBetInput, "betId" | "newUserIds"> & {
+      readonly betId: number;
+      readonly newUserIds: readonly string[];
+    }
+  ) => ReturnType<BetServiceInterface["editBet"]>;
+  readonly getAllBets: BetServiceInterface["getAllBets"];
+  readonly getPaginatedBets: (
+    input: Omit<GetPaginatedBetsInput, "eventId" | "heroId"> & {
+      readonly eventId?: number | undefined;
+      readonly heroId?: number | undefined;
+    }
+  ) => ReturnType<BetServiceInterface["getPaginatedBets"]>;
+  readonly getBetMembers: (
+    betId: number
+  ) => ReturnType<BetServiceInterface["getBetMembers"]>;
+  readonly getBetsByEvent: (
+    eventId: number
+  ) => ReturnType<BetServiceInterface["getBetsByEvent"]>;
+  readonly getLatestBetForCopy: BetServiceInterface["getLatestBetForCopy"];
+  readonly getHeroStats: (
+    heroId: number
+  ) => ReturnType<RankingServiceInterface["getHeroStats"]>;
+  readonly getOldestUnpaidEvent: RankingServiceInterface["getOldestUnpaidEvent"];
+  readonly getRanking: (
+    input: Omit<GetRankingInput, "eventId" | "heroId"> & {
+      readonly eventId?: number | undefined;
+      readonly heroId?: number | undefined;
+    }
+  ) => ReturnType<RankingServiceInterface["getRanking"]>;
+  readonly distributeGold: (
+    input: Omit<DistributeGoldInput, "heroId"> & { readonly heroId: number }
+  ) => ReturnType<VaultServiceInterface["distributeGold"]>;
+  readonly getUserStats: (
+    eventId?: number
+  ) => ReturnType<VaultServiceInterface["getUserStats"]>;
+  readonly getVault: (
+    eventId?: number
+  ) => ReturnType<VaultServiceInterface["getVault"]>;
+  readonly togglePaidOut: (
+    input: Omit<TogglePaidOutInput, "eventId" | "userId"> & {
+      readonly eventId: number;
+      readonly userId: string;
+    }
+  ) => ReturnType<VaultServiceInterface["togglePaidOut"]>;
+}
+
 const withServices = <A>(
-  f: (svc: {
-    readonly createBet: BetServiceInterface["createBet"];
-    readonly deleteBet: BetServiceInterface["deleteBet"];
-    readonly editBet: BetServiceInterface["editBet"];
-    readonly getAllBets: BetServiceInterface["getAllBets"];
-    readonly getPaginatedBets: BetServiceInterface["getPaginatedBets"];
-    readonly getBetMembers: BetServiceInterface["getBetMembers"];
-    readonly getBetsByEvent: BetServiceInterface["getBetsByEvent"];
-    readonly getLatestBetForCopy: BetServiceInterface["getLatestBetForCopy"];
-    readonly getHeroStats: RankingServiceInterface["getHeroStats"];
-    readonly getOldestUnpaidEvent: RankingServiceInterface["getOldestUnpaidEvent"];
-    readonly getRanking: RankingServiceInterface["getRanking"];
-    readonly distributeGold: VaultServiceInterface["distributeGold"];
-    readonly getUserStats: VaultServiceInterface["getUserStats"];
-    readonly getVault: VaultServiceInterface["getVault"];
-    readonly togglePaidOut: VaultServiceInterface["togglePaidOut"];
-  }) => Effect.Effect<A, unknown>,
+  f: (svc: TestServices) => Effect.Effect<A, unknown>,
   currentTime?: Date
 ) =>
   testEffect(
@@ -72,9 +128,66 @@ const withServices = <A>(
       const ranking = yield* RankingService;
       const vault = yield* VaultService;
       return yield* f({
-        ...bet,
-        ...ranking,
-        ...vault,
+        createBet: (input) =>
+          bet.createBet({
+            ...input,
+            createdBy: AppUserId.make(input.createdBy),
+            heroId: HeroId.make(input.heroId),
+            userIds: input.userIds.map((userId) => AppUserId.make(userId)),
+          }),
+        deleteBet: (id) => bet.deleteBet(BetId.make(id)),
+        distributeGold: (input) =>
+          vault.distributeGold({
+            ...input,
+            heroId: HeroId.make(input.heroId),
+          }),
+        editBet: (input) =>
+          bet.editBet({
+            ...input,
+            betId: BetId.make(input.betId),
+            newUserIds: input.newUserIds.map((userId) =>
+              AppUserId.make(userId)
+            ),
+          }),
+        getAllBets: bet.getAllBets,
+        getBetMembers: (betId) => bet.getBetMembers(BetId.make(betId)),
+        getBetsByEvent: (eventId) => bet.getBetsByEvent(EventId.make(eventId)),
+        getHeroStats: (heroId) => ranking.getHeroStats(HeroId.make(heroId)),
+        getLatestBetForCopy: bet.getLatestBetForCopy,
+        getOldestUnpaidEvent: ranking.getOldestUnpaidEvent,
+        getPaginatedBets: (input) => {
+          const { eventId, heroId, ...pagination } = input;
+          return bet.getPaginatedBets({
+            ...pagination,
+            ...(eventId === undefined
+              ? {}
+              : { eventId: EventId.make(eventId) }),
+            ...(heroId === undefined ? {} : { heroId: HeroId.make(heroId) }),
+          });
+        },
+        getRanking: (input) => {
+          const { eventId, heroId } = input;
+          return ranking.getRanking({
+            ...(eventId === undefined
+              ? {}
+              : { eventId: EventId.make(eventId) }),
+            ...(heroId === undefined ? {} : { heroId: HeroId.make(heroId) }),
+          });
+        },
+        getUserStats: (eventId) =>
+          vault.getUserStats(
+            eventId === undefined ? undefined : EventId.make(eventId)
+          ),
+        getVault: (eventId) =>
+          vault.getVault(
+            eventId === undefined ? undefined : EventId.make(eventId)
+          ),
+        togglePaidOut: (input) =>
+          vault.togglePaidOut({
+            ...input,
+            eventId: EventId.make(input.eventId),
+            userId: AppUserId.make(input.userId),
+          }),
       });
     })
   );

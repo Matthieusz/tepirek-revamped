@@ -9,7 +9,9 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { EventId, HeroId } from "../../domain/core-identifiers.ts";
 import { parsePointWorth } from "../../domain/hero-bet-ledger/points.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
   RankingNotFound,
   RankingPersistenceUnavailable,
@@ -61,6 +63,7 @@ const normalizeRankingRow = (row: {
 }): RankingRow => ({
   ...row,
   totalBets: Number(row.totalBets),
+  userId: AppUserId.make(row.userId),
 });
 
 const getHeroStatsWithDatabase = (database: EffectPgDatabase) =>
@@ -93,7 +96,7 @@ const getHeroStatsWithDatabase = (database: EffectPgDatabase) =>
     const [stats] = statsRows;
     return {
       currentPointWorth: Number(heroInfo.pointWorth),
-      heroId,
+      heroId: HeroId.make(heroId),
       heroName: heroInfo.name,
       totalBets: Number(stats?.totalBets ?? 0),
       totalPoints: Number.parseFloat(stats?.totalPoints ?? "0"),
@@ -114,7 +117,8 @@ const getOldestUnpaidEventWithDatabase = (database: EffectPgDatabase) =>
         .orderBy(sql`${event.endTime} ASC`)
         .limit(1)
     );
-    return result[0]?.eventId ?? null;
+    const eventId = result[0]?.eventId;
+    return eventId === undefined ? null : EventId.make(eventId);
   });
 
 const getRankingWithDatabase = (database: EffectPgDatabase) =>

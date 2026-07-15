@@ -1,96 +1,64 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 
+import type { BetId, EventId, HeroId } from "../../domain/core-identifiers.ts";
+import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import type {
+  BetByEventSummary,
+  BetSummary,
+  CreatedBet,
   LatestBetForCopy,
+  MutationSuccess,
   PaginatedBets,
+  StoredBetMember,
 } from "../../protocol/bet/http-api-contract.ts";
 import type { BetError } from "./bet-errors.ts";
 
+export type CreatedBetResult = typeof CreatedBet.Type;
+export type BetSummaryResult = typeof BetSummary.Type;
+export type BetByEventSummaryResult = typeof BetByEventSummary.Type;
+export type StoredBetMemberResult = typeof StoredBetMember.Type;
 export type LatestBetForCopyResult = typeof LatestBetForCopy.Type;
 export type PaginatedBetsResult = typeof PaginatedBets.Type;
+export type MutationSuccessResult = typeof MutationSuccess.Type;
 
 export interface CreateBetInput {
   readonly createdAt: Date;
-  readonly createdBy: string;
-  readonly heroId: number;
-  readonly userIds: readonly string[];
+  readonly createdBy: AppUserId;
+  readonly heroId: HeroId;
+  readonly userIds: readonly AppUserId[];
 }
 
 export interface EditBetInput {
-  readonly betId: number;
-  readonly newUserIds: readonly string[];
+  readonly betId: BetId;
+  readonly newUserIds: readonly AppUserId[];
 }
 
 export interface GetPaginatedBetsInput {
-  readonly eventId?: number | undefined;
-  readonly heroId?: number | undefined;
+  readonly eventId?: EventId | undefined;
+  readonly heroId?: HeroId | undefined;
   readonly limit: number;
   readonly page: number;
 }
 
 export interface BetServiceInterface {
-  readonly createBet: (input: CreateBetInput) => Effect<
-    {
-      readonly createdAt: Date;
-      readonly createdBy: string;
-      readonly heroId: number;
-      readonly id: number;
-      readonly memberCount: number;
-    },
-    BetError
-  >;
-  readonly deleteBet: (
-    id: number
-  ) => Effect<{ readonly success: boolean }, BetError>;
+  readonly createBet: (
+    input: CreateBetInput
+  ) => Effect<CreatedBetResult, BetError>;
+  readonly deleteBet: (id: BetId) => Effect<MutationSuccessResult, BetError>;
   readonly editBet: (
     input: EditBetInput
-  ) => Effect<{ readonly success: boolean }, BetError>;
-  readonly getAllBets: () => Effect<
-    readonly {
-      readonly createdAt: Date;
-      readonly createdBy: string;
-      readonly createdByImage: string | null;
-      readonly createdByName: string | null;
-      readonly eventId: number;
-      readonly heroId: number;
-      readonly heroImage: string | null;
-      readonly heroName: string;
-      readonly id: number;
-      readonly memberCount: number;
-      readonly members: readonly {
-        readonly heroBetId: number;
-        readonly points: string;
-        readonly userId: string;
-        readonly userImage: string | null;
-        readonly userName: string | null;
-      }[];
-    }[],
-    BetError
-  >;
+  ) => Effect<MutationSuccessResult, BetError>;
+  readonly getAllBets: () => Effect<readonly BetSummaryResult[], BetError>;
   readonly getPaginatedBets: (
     input: GetPaginatedBetsInput
   ) => Effect<PaginatedBetsResult, BetError>;
-  readonly getBetMembers: (betId: number) => Effect<
-    readonly {
-      readonly id: number;
-      readonly points: string;
-      readonly userId: string;
-    }[],
-    BetError
-  >;
-  readonly getBetsByEvent: (eventId: number) => Effect<
-    readonly {
-      readonly createdAt: Date;
-      readonly createdBy: string;
-      readonly eventId: number;
-      readonly heroId: number;
-      readonly heroName: string;
-      readonly id: number;
-      readonly memberCount: number;
-    }[],
-    BetError
-  >;
+  readonly getBetMembers: (
+    betId: BetId
+  ) => Effect<readonly StoredBetMemberResult[], BetError>;
+  readonly getBetsByEvent: (
+    eventId: EventId
+  ) => Effect<readonly BetByEventSummaryResult[], BetError>;
   readonly getLatestBetForCopy: () => Effect<LatestBetForCopyResult, BetError>;
 }
 
