@@ -125,18 +125,24 @@ pnpm db:start && pnpm db:push && pnpm dev
    DISCORD_CLIENT_ID=your-discord-client-id
    DISCORD_CLIENT_SECRET=your-discord-client-secret
    DISCORD_SERVER_ID=your-discord-server-id
+
+   # Squad builder / Firecrawl (required by current startup configuration)
+   FIRECRAWL_API_KEY=your-firecrawl-api-key
+   FIRECRAWL_MONTHLY_REQUEST_BUDGET=900
    ```
 
    Local dummy values are enough for tests and smoke tests that do not
-   exercise Discord login, but real development login through Discord requires
-   real Discord application credentials.
+   exercise Discord login or Firecrawl, but real development login through
+   Discord requires real Discord application credentials. Account import and
+   refetch require a real Firecrawl provider credential. The monthly budget
+   accepts integers from 1 to 1000 and defaults to 900.
 
    > **Secret hygiene:** `.env.example` is safe to commit; `.env` is git-ignored
-   > and must never be committed. If `BETTER_AUTH_SECRET` or
-   > `DISCORD_CLIENT_SECRET` is accidentally exposed (terminal transcript,
-   > screenshot, issue, chat, or agent output), rotate it in the relevant
-   > dashboard immediately. Never paste `.env` contents into plans, issues, or
-   > chats. Use deployment secret stores for production.
+   > and must never be committed. If `BETTER_AUTH_SECRET`,
+   > `DISCORD_CLIENT_SECRET`, or `FIRECRAWL_API_KEY` is accidentally exposed
+   > (terminal transcript, screenshot, issue, chat, or agent output), rotate it
+   > in the relevant dashboard immediately. Never paste `.env` contents into
+   > plans, issues, or chats. Use deployment secret stores for production.
 
 3. **Set up the database**
 
@@ -165,6 +171,7 @@ pnpm db:start && pnpm db:push && pnpm dev
 | `pnpm dev:server`       | Backend only                                                |
 | `pnpm build`            | Build everything for production                             |
 | `pnpm check`            | Run Ultracite (lint + format check)                         |
+| `pnpm check:unused`     | Check for unused exports and dependencies                   |
 | `pnpm fix`              | Auto-fix lint and format issues                             |
 | `pnpm check-types`      | TypeScript type checking                                    |
 | `pnpm test`             | Run unit tests                                              |
@@ -177,7 +184,7 @@ pnpm db:start && pnpm db:push && pnpm dev
 
 `pnpm test:integration` runs the API/router integration suite. By default, it starts a dedicated Docker Postgres database on port `5433`, applies the real schema, truncates application tables between tests, and stops the container after the suite completes.
 
-Set `TEST_DATABASE_URL` only when you want to connect to an already-running dedicated test database. Do not point it at your development database.
+Set `TEST_DATABASE_URL` only when you want to connect to an already-running dedicated test database. The built-in Docker database needs no extra setting; an explicitly supplied database requires `API_INTEGRATION_ALLOW_DATABASE_RESET=1` because the suite may apply migrations and truncate its application tables. Do not point it at your development database.
 
 ### Database
 
