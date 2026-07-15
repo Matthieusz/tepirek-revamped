@@ -2,20 +2,20 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
+import {
+  ProfessionIdSchema,
+  SkillIdSchema,
+  SkillRangeIdSchema,
+} from "../../domain/core-identifiers.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-const PositiveInt = Schema.Number.check(
-  Schema.isInt(),
-  Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
-);
+export { ProfessionIdSchema, SkillIdSchema, SkillRangeIdSchema };
+
 const SkillLevel = Schema.Number.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: 300, minimum: 1 })
 );
 
-export const SkillEntityIdSchema = PositiveInt.annotate({
-  identifier: "SkillEntityId",
-});
 export const SlugSchema = Schema.NonEmptyString.annotate({
   identifier: "SkillRangeSlug",
 });
@@ -32,23 +32,22 @@ export const CreateSkillPayload = Schema.Struct({
   link: Schema.NonEmptyString,
   mastery: Schema.Boolean,
   name: Schema.NonEmptyString,
-  professionId: SkillEntityIdSchema,
-  rangeId: SkillEntityIdSchema,
+  professionId: ProfessionIdSchema,
+  rangeId: SkillRangeIdSchema,
 });
-export const DeleteSkillEntityPayload = Schema.Struct({
-  id: SkillEntityIdSchema,
-});
+export const DeleteRangePayload = Schema.Struct({ id: SkillRangeIdSchema });
+export const DeleteSkillPayload = Schema.Struct({ id: SkillIdSchema });
 export const GetRangeBySlugPayload = Schema.Struct({ slug: SlugSchema });
 export const GetSkillsByRangePayload = Schema.Struct({
-  rangeId: SkillEntityIdSchema,
+  rangeId: SkillRangeIdSchema,
 });
 
 export const ProfessionSummary = Schema.Struct({
-  id: SkillEntityIdSchema,
+  id: ProfessionIdSchema,
   name: Schema.String,
 });
 export const RangeSummary = Schema.Struct({
-  id: SkillEntityIdSchema,
+  id: SkillRangeIdSchema,
   image: Schema.NullOr(Schema.String),
   level: SkillLevel,
   name: Schema.String,
@@ -57,11 +56,11 @@ export const RangeSummary = Schema.Struct({
 export const SkillSummary = Schema.Struct({
   addedBy: Schema.NullOr(Schema.String),
   addedByImage: Schema.NullOr(Schema.String),
-  id: SkillEntityIdSchema,
+  id: SkillIdSchema,
   link: Schema.String,
   mastery: Schema.Boolean,
   name: Schema.String,
-  professionId: SkillEntityIdSchema,
+  professionId: ProfessionIdSchema,
   professionName: Schema.String,
 });
 
@@ -118,12 +117,12 @@ export const SkillsHttpApiGroup = HttpApiGroup.make("skills")
     }),
     HttpApiEndpoint.post("deleteRange", "/ranges/delete", {
       error: SkillsError,
-      payload: DeleteSkillEntityPayload,
+      payload: DeleteRangePayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.post("deleteSkill", "/delete", {
       error: SkillsError,
-      payload: DeleteSkillEntityPayload,
+      payload: DeleteSkillPayload,
       success: Schema.Void,
     }),
     HttpApiEndpoint.get("listProfessions", "/professions", {

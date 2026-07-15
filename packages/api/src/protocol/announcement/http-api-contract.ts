@@ -2,17 +2,13 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
+import { AnnouncementIdSchema } from "../../domain/core-identifiers.ts";
+import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-const { NonEmptyString } = Schema;
-const PositiveInt = Schema.Number.check(
-  Schema.isInt(),
-  Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
-);
+export { AnnouncementIdSchema };
 
-export const AnnouncementIdSchema = PositiveInt.annotate({
-  identifier: "AnnouncementId",
-});
+const { NonEmptyString } = Schema;
 export const CreateAnnouncementPayload = Schema.Struct({
   description: NonEmptyString,
   title: NonEmptyString,
@@ -22,7 +18,7 @@ export const DeleteAnnouncementPayload = Schema.Struct({
 });
 
 export const AnnouncementAuthor = Schema.Struct({
-  id: Schema.String,
+  id: AppUserIdSchema,
   image: Schema.NullOr(Schema.String),
   name: Schema.NullOr(Schema.String),
 });

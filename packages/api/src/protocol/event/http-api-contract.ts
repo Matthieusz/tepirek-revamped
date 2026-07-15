@@ -6,15 +6,12 @@ import {
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
+import { EventIdSchema } from "../../domain/core-identifiers.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-const PositiveInt = Schema.Number.check(
-  Schema.isInt(),
-  Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
-);
-const EventIcon = Schema.Literals(EVENT_ICON_IDS);
+export { EventIdSchema };
 
-export const EventIdSchema = PositiveInt.annotate({ identifier: "EventId" });
+const EventIcon = Schema.Literals(EVENT_ICON_IDS);
 
 export const CreateEventPayload = Schema.Struct({
   color: Schema.optional(Schema.NonEmptyString),

@@ -2,22 +2,20 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
+import { EventIdSchema, HeroIdSchema } from "../../domain/core-identifiers.ts";
+import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-const PositiveInt = Schema.Number.check(
-  Schema.isInt(),
-  Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
-);
-const OptionalPositiveInt = Schema.optional(PositiveInt);
+export { EventIdSchema, HeroIdSchema };
 
-export const HeroIdPayload = Schema.Struct({ heroId: PositiveInt });
+export const HeroIdPayload = Schema.Struct({ heroId: HeroIdSchema });
 export const RankingPayload = Schema.Struct({
-  eventId: OptionalPositiveInt,
-  heroId: OptionalPositiveInt,
+  eventId: Schema.optional(EventIdSchema),
+  heroId: Schema.optional(HeroIdSchema),
 });
 export const HeroStats = Schema.Struct({
   currentPointWorth: Schema.Number,
-  heroId: PositiveInt,
+  heroId: HeroIdSchema,
   heroName: Schema.String,
   totalBets: Schema.Number,
   totalPoints: Schema.Number,
@@ -26,7 +24,7 @@ export const RankingRow = Schema.Struct({
   totalBets: Schema.Number,
   totalEarnings: Schema.String,
   totalPoints: Schema.String,
-  userId: Schema.String,
+  userId: AppUserIdSchema,
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });
@@ -73,7 +71,7 @@ export const RankingHttpApiGroup = HttpApiGroup.make("ranking")
     }),
     HttpApiEndpoint.get("getOldestUnpaidEvent", "/oldest-unpaid-event", {
       error: RankingError,
-      success: Schema.NullOr(PositiveInt),
+      success: Schema.NullOr(EventIdSchema),
     }),
     HttpApiEndpoint.post("getRanking", "/", {
       error: RankingError,

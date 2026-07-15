@@ -2,19 +2,15 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
+import { EventIdSchema, HeroIdSchema } from "../../domain/core-identifiers.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-const PositiveInt = Schema.Number.check(
-  Schema.isInt(),
-  Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
-);
 const HeroLevel = Schema.Number.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: 300, minimum: 1 })
 );
 
-export const HeroIdSchema = PositiveInt.annotate({ identifier: "HeroId" });
-export const EventIdSchema = PositiveInt.annotate({ identifier: "EventId" });
+export { EventIdSchema, HeroIdSchema };
 
 export const CreateHeroPayload = Schema.Struct({
   eventId: EventIdSchema,

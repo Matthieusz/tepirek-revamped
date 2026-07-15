@@ -2,30 +2,32 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
+import { EventIdSchema, HeroIdSchema } from "../../domain/core-identifiers.ts";
+import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
+
+export { EventIdSchema, HeroIdSchema };
 
 const PositiveNumber = Schema.Number.check(Schema.isGreaterThan(0));
 const PositiveInt = Schema.Number.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
 );
-const OptionalPositiveInt = Schema.optional(PositiveInt);
-
 export const DistributeGoldPayload = Schema.Struct({
   goldAmount: PositiveNumber,
-  heroId: PositiveInt,
+  heroId: HeroIdSchema,
 });
 export const EventFilterPayload = Schema.Struct({
-  eventId: OptionalPositiveInt,
+  eventId: Schema.optional(EventIdSchema),
 });
 export const TogglePaidOutPayload = Schema.Struct({
-  eventId: PositiveInt,
+  eventId: EventIdSchema,
   paidOut: Schema.Boolean,
-  userId: Schema.NonEmptyString,
+  userId: AppUserIdSchema,
 });
 export const DistributeGoldSuccess = Schema.Struct({
   goldAmount: PositiveNumber,
-  heroId: PositiveInt,
+  heroId: HeroIdSchema,
   heroName: Schema.String,
   pointWorth: Schema.Number,
   success: Schema.Boolean,
@@ -35,17 +37,17 @@ export const DistributeGoldSuccess = Schema.Struct({
 export const UserStatsRow = Schema.Struct({
   bets: Schema.Number,
   earnings: Schema.String,
-  eventId: PositiveInt,
-  heroId: PositiveInt,
+  eventId: EventIdSchema,
+  heroId: HeroIdSchema,
   id: PositiveInt,
   paidOut: Schema.Boolean,
   points: Schema.String,
-  userId: Schema.String,
+  userId: AppUserIdSchema,
 });
 export const VaultRow = Schema.Struct({
   paidOut: Schema.Boolean,
   totalEarnings: Schema.String,
-  userId: Schema.String,
+  userId: AppUserIdSchema,
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });

@@ -3,9 +3,10 @@ import { USER_ROLES } from "@tepirek-revamped/config";
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
+import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-export const UserId = Schema.NonEmptyString;
+export const UserId = AppUserIdSchema;
 export const Role = Schema.Literals(USER_ROLES);
 export const Name = Schema.NonEmptyString.check(Schema.isMinLength(2));
 

@@ -2,7 +2,6 @@
 // oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params -- Effect.catch uses callback pattern
 import * as Effect from "effect/Effect";
 import type * as Schema from "effect/Schema";
-import type { HttpServerRequest } from "effect/unstable/http/HttpServerRequest";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
@@ -30,23 +29,9 @@ import {
   requireSquadBuilderSession,
   sessionAppUserId,
 } from "../auth-helper.ts";
+import { withRequestCorrelation } from "../request-correlation.ts";
 
 type ProtocolError = Schema.Schema.Type<typeof SquadBuilderAccountImportError>;
-
-const withRequestCorrelation = <A, E, R>(
-  request: HttpServerRequest,
-  effect: Effect.Effect<A, E, R>
-): Effect.Effect<A, E, R> => {
-  const requestId = request.headers["x-request-id"];
-
-  if (requestId === undefined || requestId.length === 0) {
-    return effect;
-  }
-
-  return effect.pipe(
-    Effect.tap(() => Effect.annotateCurrentSpan("request.id", requestId))
-  );
-};
 
 type AccountImportHandlerError =
   | PreviewMargonemProfileImportError
@@ -92,9 +77,8 @@ const mapAccountImportError = (
       });
     }
     default: {
-      return new SquadBuilderUpstreamUnavailable({
-        message: "Unreachable error tag",
-      });
+      const exhaustive: never = error;
+      return exhaustive;
     }
   }
 };

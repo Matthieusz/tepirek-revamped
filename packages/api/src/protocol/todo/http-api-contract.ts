@@ -2,14 +2,11 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
+import { TodoIdSchema } from "../../domain/core-identifiers.ts";
+import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-const PositiveInt = Schema.Number.check(
-  Schema.isInt(),
-  Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
-);
-
-export const TodoIdSchema = PositiveInt.annotate({ identifier: "TodoId" });
+export { TodoIdSchema };
 
 export const CreateTodoPayload = Schema.Struct({
   text: Schema.NonEmptyString,
@@ -28,7 +25,7 @@ export const TodoSummary = Schema.Struct({
   completed: Schema.Boolean,
   id: TodoIdSchema,
   text: Schema.String,
-  userId: Schema.String,
+  userId: AppUserIdSchema,
 });
 
 export class TodoUnauthorized extends Schema.TaggedErrorClass<TodoUnauthorized>()(

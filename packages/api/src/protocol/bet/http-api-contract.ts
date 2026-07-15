@@ -2,79 +2,86 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
+import {
+  BetIdSchema,
+  EventIdSchema,
+  HeroIdSchema,
+} from "../../domain/core-identifiers.ts";
+import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
+
+export { BetIdSchema, EventIdSchema, HeroIdSchema };
 
 const PositiveInt = Schema.Number.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
 );
 
-const UserId = Schema.NonEmptyString;
-const OptionalPositiveInt = Schema.optional(PositiveInt);
+const UserId = AppUserIdSchema;
 
 export const CreateBetPayload = Schema.Struct({
-  heroId: PositiveInt,
+  heroId: HeroIdSchema,
   userIds: Schema.NonEmptyArray(UserId),
 });
-export const DeleteBetPayload = Schema.Struct({ id: PositiveInt });
+export const DeleteBetPayload = Schema.Struct({ id: BetIdSchema });
 export const EditBetPayload = Schema.Struct({
-  betId: PositiveInt,
+  betId: BetIdSchema,
   newUserIds: Schema.NonEmptyArray(UserId),
 });
 export const GetAllPaginatedBetsPayload = Schema.Struct({
-  eventId: OptionalPositiveInt,
-  heroId: OptionalPositiveInt,
+  eventId: Schema.optional(EventIdSchema),
+  heroId: Schema.optional(HeroIdSchema),
   limit: Schema.optional(PositiveInt.check(Schema.isLessThanOrEqualTo(50))),
   page: Schema.optional(PositiveInt),
 });
-export const GetBetMembersPayload = Schema.Struct({ betId: PositiveInt });
-export const GetBetsByEventPayload = Schema.Struct({ eventId: PositiveInt });
+export const GetBetMembersPayload = Schema.Struct({ betId: BetIdSchema });
+export const GetBetsByEventPayload = Schema.Struct({ eventId: EventIdSchema });
 
 export const BetMemberSummary = Schema.Struct({
-  heroBetId: PositiveInt,
+  heroBetId: BetIdSchema,
   points: Schema.String,
-  userId: Schema.String,
+  userId: AppUserIdSchema,
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });
 export const BetSummary = Schema.Struct({
   createdAt: Schema.DateFromString,
-  createdBy: Schema.String,
+  createdBy: AppUserIdSchema,
   createdByImage: Schema.NullOr(Schema.String),
   createdByName: Schema.NullOr(Schema.String),
-  eventId: PositiveInt,
-  heroId: PositiveInt,
+  eventId: EventIdSchema,
+  heroId: HeroIdSchema,
   heroImage: Schema.NullOr(Schema.String),
   heroLevel: Schema.optional(Schema.Number),
   heroName: Schema.String,
-  id: PositiveInt,
+  id: BetIdSchema,
   memberCount: PositiveInt,
   members: Schema.Array(BetMemberSummary),
 });
 export const BetByEventSummary = Schema.Struct({
   createdAt: Schema.DateFromString,
-  createdBy: Schema.String,
-  eventId: PositiveInt,
-  heroId: PositiveInt,
+  createdBy: AppUserIdSchema,
+  eventId: EventIdSchema,
+  heroId: HeroIdSchema,
   heroName: Schema.String,
-  id: PositiveInt,
+  id: BetIdSchema,
   memberCount: PositiveInt,
 });
 export const StoredBetMember = Schema.Struct({
   id: PositiveInt,
   points: Schema.String,
-  userId: Schema.String,
+  userId: AppUserIdSchema,
 });
 export const CreatedBet = Schema.Struct({
   createdAt: Schema.DateFromString,
   createdBy: UserId,
-  heroId: PositiveInt,
-  id: PositiveInt,
+  heroId: HeroIdSchema,
+  id: BetIdSchema,
   memberCount: PositiveInt,
 });
 export const LatestBetForCopy = Schema.NullOr(
   Schema.Struct({
-    id: PositiveInt,
+    id: BetIdSchema,
     members: Schema.Array(BetMemberSummary),
   })
 );

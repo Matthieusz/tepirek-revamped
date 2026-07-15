@@ -4,11 +4,14 @@ import {
   AUCTION_TYPES,
   isLegalAuctionSlot,
 } from "@tepirek-revamped/config";
-import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
+import { AuctionSignupIdSchema } from "../../domain/core-identifiers.ts";
+import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
+
+export { AuctionSignupIdSchema };
 
 const PositiveInt = Schema.Number.check(
   Schema.isInt(),
@@ -16,34 +19,25 @@ const PositiveInt = Schema.Number.check(
 );
 export const AuctionProfessionSchema = Schema.Literals(AUCTION_PROFESSIONS);
 export const AuctionTypeSchema = Schema.Literals(AUCTION_TYPES);
-export const AuctionSignupIdSchema = PositiveInt.annotate({
-  identifier: "AuctionSignupId",
-});
-
 export const AuctionGroupPayload = Schema.Struct({
   profession: AuctionProfessionSchema,
   type: AuctionTypeSchema,
 });
-export interface AuctionSignupPayloadType {
-  readonly column: number;
-  readonly level: number;
-  readonly profession: AuctionProfession;
-  readonly round: number;
-  readonly type: AuctionType;
-}
-
-export const AuctionSignupPayload = Schema.Struct({
+const AuctionSignupPayloadFields = Schema.Struct({
   column: PositiveInt,
   level: PositiveInt,
   profession: AuctionProfessionSchema,
   round: PositiveInt,
   type: AuctionTypeSchema,
-}).pipe(
+});
+export const AuctionSignupPayload = AuctionSignupPayloadFields.pipe(
   Schema.refine(
-    (value): value is AuctionSignupPayloadType => isLegalAuctionSlot(value),
+    (value): value is typeof AuctionSignupPayloadFields.Type =>
+      isLegalAuctionSlot(value),
     { message: "Nieprawidłowe pole licytacji" }
   )
 );
+export type AuctionSignupPayloadType = typeof AuctionSignupPayload.Type;
 export const RemoveAuctionSignupPayload = Schema.Struct({
   id: AuctionSignupIdSchema,
 });
@@ -54,7 +48,7 @@ export const AuctionSignupSummary = Schema.Struct({
   id: AuctionSignupIdSchema,
   level: PositiveInt,
   round: PositiveInt,
-  userId: Schema.String,
+  userId: AppUserIdSchema,
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });
