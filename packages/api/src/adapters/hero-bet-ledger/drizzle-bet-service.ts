@@ -25,6 +25,7 @@ import type {
   GetPaginatedBetsInput,
 } from "../../services/bet/bet-service.ts";
 import { BetService } from "../../services/bet/bet-service.ts";
+import { lockHeroLedger } from "./hero-ledger-lock.ts";
 import { mapPersistenceErrors } from "./persistence-query.ts";
 import type {
   EffectPgDatabase,
@@ -45,7 +46,7 @@ const persistenceQuery = <A, E, R>(
       })
   );
 
-const getHeroEventWithDatabase = (database: EffectPgDatabase) =>
+const getHeroEventWithDatabase = (database: Pick<EffectPgDatabase, "select">) =>
   Effect.fnUntraced(function* getHeroEvent(heroId: number, message: string) {
     const rows = yield* persistenceQuery(
       "getHeroEvent",
@@ -61,7 +62,9 @@ const getHeroEventWithDatabase = (database: EffectPgDatabase) =>
     return heroData;
   });
 
-const validateVerifiedMemberIdsWithDatabase = (database: EffectPgDatabase) =>
+const validateVerifiedMemberIdsWithDatabase = (
+  database: Pick<EffectPgDatabase, "select">
+) =>
   Effect.fnUntraced(function* validateVerifiedMemberIds(
     userIds: readonly string[]
   ) {
@@ -151,20 +154,21 @@ const createBetWithDatabase = (database: EffectPgDatabase) =>
     heroId,
     userIds,
   }: CreateBetInput) {
-    const memberUserIds =
-      yield* validateVerifiedMemberIdsWithDatabase(database)(userIds);
-    const memberCount = memberUserIds.length;
-    const pointsPerMember = calculatePointsPerMember(memberCount);
-    const heroData = yield* getHeroEventWithDatabase(database)(
-      heroId,
-      "Nie znaleziono herosów"
-    );
     return yield* persistenceQuery(
       "createBet",
       database.transaction(
         Effect.fnUntraced(function* createBetTransaction(
           tx: TransactionDatabase
         ) {
+          yield* lockHeroLedger(tx, heroId);
+          const memberUserIds =
+            yield* validateVerifiedMemberIdsWithDatabase(tx)(userIds);
+          const memberCount = memberUserIds.length;
+          const pointsPerMember = calculatePointsPerMember(memberCount);
+          const heroData = yield* getHeroEventWithDatabase(tx)(
+            heroId,
+            "Nie znaleziono herosów"
+          );
           const insertedBets = yield* tx
             .insert(heroBet)
             .values({
@@ -218,7 +222,7 @@ const deleteBetWithDatabase = (database: EffectPgDatabase) =>
     const betRows = yield* persistenceQuery(
       "deleteBet.loadBet",
       database
-        .select({ heroId: heroBet.heroId, memberCount: heroBet.memberCount })
+        .select({ heroId: heroBet.heroId })
         .from(heroBet)
         .where(eq(heroBet.id, id))
     );
@@ -226,18 +230,6 @@ const deleteBetWithDatabase = (database: EffectPgDatabase) =>
     if (betData === undefined) {
       return yield* new BetNotFound({ message: "Obstawienie nie znalezione" });
     }
-    const heroData = yield* getHeroEventWithDatabase(database)(
-      betData.heroId,
-      "Heros nie znaleziony"
-    );
-    const members = yield* persistenceQuery(
-      "deleteBet.loadMembers",
-      database
-        .select({ userId: heroBetMember.userId })
-        .from(heroBetMember)
-        .where(eq(heroBetMember.heroBetId, id))
-    );
-    const memberUserIds = [...new Set(members.map((member) => member.userId))];
 
     yield* persistenceQuery(
       "deleteBet",
@@ -245,6 +237,28 @@ const deleteBetWithDatabase = (database: EffectPgDatabase) =>
         Effect.fnUntraced(function* deleteBetTransaction(
           tx: TransactionDatabase
         ) {
+          yield* lockHeroLedger(tx, betData.heroId);
+          const currentBetRows = yield* tx
+            .select({ heroId: heroBet.heroId })
+            .from(heroBet)
+            .where(eq(heroBet.id, id));
+          const [currentBet] = currentBetRows;
+          if (currentBet === undefined) {
+            return yield* new BetNotFound({
+              message: "Obstawienie nie znalezione",
+            });
+          }
+          const heroData = yield* getHeroEventWithDatabase(tx)(
+            currentBet.heroId,
+            "Heros nie znaleziony"
+          );
+          const members = yield* tx
+            .select({ userId: heroBetMember.userId })
+            .from(heroBetMember)
+            .where(eq(heroBetMember.heroBetId, id));
+          const memberUserIds = [
+            ...new Set(members.map((member) => member.userId)),
+          ];
           if (memberUserIds.length > 0) {
             yield* tx
               .update(userStats)
@@ -255,13 +269,13 @@ const deleteBetWithDatabase = (database: EffectPgDatabase) =>
               .where(
                 and(
                   eq(userStats.eventId, heroData.eventId),
-                  eq(userStats.heroId, betData.heroId),
+                  eq(userStats.heroId, currentBet.heroId),
                   inArray(userStats.userId, memberUserIds)
                 )
               );
           }
           yield* tx.delete(heroBet).where(eq(heroBet.id, id));
-          yield* refreshEarningsForHero(tx, betData.heroId);
+          yield* refreshEarningsForHero(tx, currentBet.heroId);
         })
       )
     );
@@ -270,13 +284,10 @@ const deleteBetWithDatabase = (database: EffectPgDatabase) =>
 
 const editBetWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* editBet({ betId, newUserIds }: EditBetInput) {
-    const memberUserIds =
-      yield* validateVerifiedMemberIdsWithDatabase(database)(newUserIds);
-    const newMemberCount = memberUserIds.length;
     const betRows = yield* persistenceQuery(
       "editBet.loadBet",
       database
-        .select({ heroId: heroBet.heroId, memberCount: heroBet.memberCount })
+        .select({ heroId: heroBet.heroId })
         .from(heroBet)
         .where(eq(heroBet.id, betId))
     );
@@ -286,41 +297,6 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
         message: "Obstawienie nie znalezione",
       });
     }
-    const heroData = yield* getHeroEventWithDatabase(database)(
-      betData.heroId,
-      "Heros nie znaleziony"
-    );
-    const currentMembers = yield* persistenceQuery(
-      "editBet.loadMembers",
-      database
-        .select({
-          points: heroBetMember.points,
-          userId: heroBetMember.userId,
-        })
-        .from(heroBetMember)
-        .where(eq(heroBetMember.heroBetId, betId))
-    );
-    const currentMemberIds = new Set(
-      currentMembers.map((member) => member.userId)
-    );
-    if (currentMembers.length === 0) {
-      return yield* new BetBadRequest({
-        message: "Obstawienie nie ma członków",
-      });
-    }
-    const oldPointsPerMember = Number.parseFloat(
-      currentMembers[0]?.points ?? "0"
-    );
-    const newPointsPerMember = calculatePointsPerMember(newMemberCount);
-    const membersToRemove = currentMembers.filter(
-      (member) => !memberUserIds.includes(member.userId)
-    );
-    const membersToAdd = memberUserIds.filter(
-      (id) => !currentMemberIds.has(id)
-    );
-    const membersToKeep = currentMembers.filter((member) =>
-      memberUserIds.includes(member.userId)
-    );
 
     yield* persistenceQuery(
       "editBet",
@@ -328,6 +304,52 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
         Effect.fnUntraced(function* editBetTransaction(
           tx: TransactionDatabase
         ) {
+          yield* lockHeroLedger(tx, betData.heroId);
+          const currentBetRows = yield* tx
+            .select({ heroId: heroBet.heroId })
+            .from(heroBet)
+            .where(eq(heroBet.id, betId));
+          const [currentBet] = currentBetRows;
+          if (currentBet === undefined) {
+            return yield* new BetNotFound({
+              message: "Obstawienie nie znalezione",
+            });
+          }
+          const memberUserIds =
+            yield* validateVerifiedMemberIdsWithDatabase(tx)(newUserIds);
+          const newMemberCount = memberUserIds.length;
+          const heroData = yield* getHeroEventWithDatabase(tx)(
+            currentBet.heroId,
+            "Heros nie znaleziony"
+          );
+          const currentMembers = yield* tx
+            .select({
+              points: heroBetMember.points,
+              userId: heroBetMember.userId,
+            })
+            .from(heroBetMember)
+            .where(eq(heroBetMember.heroBetId, betId));
+          const currentMemberIds = new Set(
+            currentMembers.map((member) => member.userId)
+          );
+          if (currentMembers.length === 0) {
+            return yield* new BetBadRequest({
+              message: "Obstawienie nie ma członków",
+            });
+          }
+          const oldPointsPerMember = Number.parseFloat(
+            currentMembers[0]?.points ?? "0"
+          );
+          const newPointsPerMember = calculatePointsPerMember(newMemberCount);
+          const membersToRemove = currentMembers.filter(
+            (member) => !memberUserIds.includes(member.userId)
+          );
+          const membersToAdd = memberUserIds.filter(
+            (userId) => !currentMemberIds.has(userId)
+          );
+          const membersToKeep = currentMembers.filter((member) =>
+            memberUserIds.includes(member.userId)
+          );
           if (membersToRemove.length > 0) {
             const removeUserIds = membersToRemove.map(
               (member) => member.userId
@@ -341,7 +363,7 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
               .where(
                 and(
                   eq(userStats.eventId, heroData.eventId),
-                  eq(userStats.heroId, betData.heroId),
+                  eq(userStats.heroId, currentBet.heroId),
                   inArray(userStats.userId, removeUserIds)
                 )
               );
@@ -369,7 +391,7 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
                   bets: 1,
                   earnings: "0",
                   eventId: heroData.eventId,
-                  heroId: betData.heroId,
+                  heroId: currentBet.heroId,
                   points: newPointsPerMember,
                   userId,
                 }))
@@ -403,7 +425,7 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
                 .where(
                   and(
                     eq(userStats.eventId, heroData.eventId),
-                    eq(userStats.heroId, betData.heroId),
+                    eq(userStats.heroId, currentBet.heroId),
                     inArray(userStats.userId, keepUserIds)
                   )
                 );
@@ -413,7 +435,7 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
             .update(heroBet)
             .set({ memberCount: newMemberCount })
             .where(eq(heroBet.id, betId));
-          yield* refreshEarningsForHero(tx, betData.heroId);
+          yield* refreshEarningsForHero(tx, currentBet.heroId);
         })
       )
     );
@@ -440,7 +462,7 @@ const getAllBetsWithDatabase = (database: EffectPgDatabase) =>
         .from(heroBet)
         .innerJoin(hero, eq(heroBet.heroId, hero.id))
         .innerJoin(user, eq(heroBet.createdBy, user.id))
-        .orderBy(desc(heroBet.createdAt))
+        .orderBy(desc(heroBet.createdAt), desc(heroBet.id))
     );
     return yield* attachMembersToBetsWithDatabase(database)(bets);
   });
@@ -476,6 +498,7 @@ const getBetsByEventWithDatabase =
         .from(heroBet)
         .innerJoin(hero, eq(heroBet.heroId, hero.id))
         .where(eq(hero.eventId, eventId))
+        .orderBy(desc(heroBet.createdAt), desc(heroBet.id))
     );
 
 const getLatestBetForCopyWithDatabase = (database: EffectPgDatabase) =>
@@ -485,7 +508,7 @@ const getLatestBetForCopyWithDatabase = (database: EffectPgDatabase) =>
       database
         .select({ id: heroBet.id })
         .from(heroBet)
-        .orderBy(desc(heroBet.createdAt))
+        .orderBy(desc(heroBet.createdAt), desc(heroBet.id))
         .limit(1)
     );
     const [latestBet] = latestRows;
@@ -535,7 +558,7 @@ const getPaginatedBetsWithDatabase = (database: EffectPgDatabase) =>
         .innerJoin(hero, eq(heroBet.heroId, hero.id))
         .innerJoin(user, eq(heroBet.createdBy, user.id))
         .where(whereClause)
-        .orderBy(desc(heroBet.createdAt))
+        .orderBy(desc(heroBet.createdAt), desc(heroBet.id))
         .limit(limit)
         .offset(offset)
     );

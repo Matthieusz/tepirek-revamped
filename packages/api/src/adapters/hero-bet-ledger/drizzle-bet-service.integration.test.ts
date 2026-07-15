@@ -1,6 +1,7 @@
 import { makeLiveDatabaseLayer } from "@tepirek-revamped/db/effect";
 import {
   hero,
+  heroBet,
   heroBetMember,
   userStats,
 } from "@tepirek-revamped/db/schema/bet";
@@ -84,6 +85,48 @@ const expectLedgerError = async (
   message: string
 ) => {
   await expect(action).rejects.toMatchObject({ _tag: tag, message });
+};
+
+const assertHeroLedgerInvariant = async (heroId: number) => {
+  const members = await testDb
+    .select({
+      points: heroBetMember.points,
+      userId: heroBetMember.userId,
+    })
+    .from(heroBetMember)
+    .innerJoin(heroBet, eq(heroBetMember.heroBetId, heroBet.id))
+    .where(eq(heroBet.heroId, heroId));
+  const expected = new Map<string, { bets: number; points: number }>();
+  for (const member of members) {
+    const current = expected.get(member.userId) ?? { bets: 0, points: 0 };
+    current.bets += 1;
+    current.points += Number(member.points);
+    expected.set(member.userId, current);
+  }
+
+  const [heroRow] = await testDb
+    .select({ pointWorth: hero.pointWorth })
+    .from(hero)
+    .where(eq(hero.id, heroId));
+  const stats = await testDb
+    .select({
+      bets: userStats.bets,
+      earnings: userStats.earnings,
+      points: userStats.points,
+      userId: userStats.userId,
+    })
+    .from(userStats)
+    .where(eq(userStats.heroId, heroId));
+
+  for (const stat of stats) {
+    const expectedStat = expected.get(stat.userId) ?? { bets: 0, points: 0 };
+    expect(stat.bets).toBe(expectedStat.bets);
+    expect(Number(stat.points)).toBeCloseTo(expectedStat.points, 2);
+    const expectedEarnings =
+      Math.round(expectedStat.points * Number(heroRow?.pointWorth ?? 0) * 100) /
+      100;
+    expect(Number(stat.earnings)).toBeCloseTo(expectedEarnings, 2);
+  }
 };
 
 describe("HeroBetLedger characterization", () => {
@@ -421,6 +464,174 @@ describe("HeroBetLedger characterization", () => {
       { bets: 0, earnings: "0.00", points: "0.00", userId: secondMember.id },
       { bets: 0, earnings: "0.00", points: "0.00", userId: thirdMember.id },
     ]);
+  });
+
+  it("keeps edit and distribution mutations coherent when they overlap", async () => {
+    const creator = await createVerifiedMember({ id: "ledger-overlap-admin" });
+    const firstMember = await createVerifiedMember({
+      id: "ledger-overlap-first",
+    });
+    const secondMember = await createVerifiedMember({
+      id: "ledger-overlap-second",
+    });
+    const thirdMember = await createVerifiedMember({
+      id: "ledger-overlap-third",
+    });
+    const createdHero = await createHero({ name: "Ledger Overlap Hero" });
+    const bet = await withServices((ledger) =>
+      ledger.createBet({
+        createdAt: new Date(0),
+        createdBy: creator.id,
+        heroId: createdHero.id,
+        userIds: [firstMember.id, secondMember.id],
+      })
+    );
+
+    const results = await Promise.all([
+      withServices((ledger) =>
+        ledger.editBet({
+          betId: bet.id,
+          newUserIds: [firstMember.id, thirdMember.id],
+        })
+      ),
+      withServices((ledger) =>
+        ledger.distributeGold({
+          goldAmount: 2_000_000_000,
+          heroId: createdHero.id,
+        })
+      ),
+    ]);
+
+    expect(results).toHaveLength(2);
+    await assertHeroLedgerInvariant(createdHero.id);
+  });
+
+  it("keeps deletion and distribution coherent when they overlap", async () => {
+    const creator = await createVerifiedMember({
+      id: "ledger-delete-overlap-admin",
+    });
+    const member = await createVerifiedMember({
+      id: "ledger-delete-overlap-member",
+    });
+    const createdHero = await createHero({
+      name: "Ledger Delete Overlap Hero",
+    });
+    const bet = await withServices((ledger) =>
+      ledger.createBet({
+        createdAt: new Date(0),
+        createdBy: creator.id,
+        heroId: createdHero.id,
+        userIds: [member.id],
+      })
+    );
+
+    const outcomes = await Promise.allSettled([
+      withServices((ledger) => ledger.deleteBet(bet.id)),
+      withServices((ledger) =>
+        ledger.distributeGold({ goldAmount: 1000, heroId: createdHero.id })
+      ),
+    ]);
+
+    expect(outcomes).toHaveLength(2);
+    await assertHeroLedgerInvariant(createdHero.id);
+  });
+
+  it("does not mix aggregate rows across overlapping edits", async () => {
+    const creator = await createVerifiedMember({
+      id: "ledger-two-edits-admin",
+    });
+    const firstMember = await createVerifiedMember({
+      id: "ledger-two-edits-first",
+    });
+    const secondMember = await createVerifiedMember({
+      id: "ledger-two-edits-second",
+    });
+    const thirdMember = await createVerifiedMember({
+      id: "ledger-two-edits-third",
+    });
+    const fourthMember = await createVerifiedMember({
+      id: "ledger-two-edits-fourth",
+    });
+    const createdHero = await createHero({ name: "Ledger Two Edits Hero" });
+    const bet = await withServices((ledger) =>
+      ledger.createBet({
+        createdAt: new Date(0),
+        createdBy: creator.id,
+        heroId: createdHero.id,
+        userIds: [firstMember.id, secondMember.id],
+      })
+    );
+
+    await Promise.all([
+      withServices((ledger) =>
+        ledger.editBet({
+          betId: bet.id,
+          newUserIds: [firstMember.id, thirdMember.id],
+        })
+      ),
+      withServices((ledger) =>
+        ledger.editBet({
+          betId: bet.id,
+          newUserIds: [secondMember.id, fourthMember.id],
+        })
+      ),
+    ]);
+
+    const members = await withServices((ledger) =>
+      ledger.getBetMembers(bet.id)
+    );
+    const memberIds = members.map((row) => row.userId).toSorted();
+    expect([
+      [firstMember.id, thirdMember.id].toSorted(),
+      [secondMember.id, fourthMember.id].toSorted(),
+    ]).toContainEqual(memberIds);
+    await assertHeroLedgerInvariant(createdHero.id);
+  });
+
+  it("allows independent hero ledgers to mutate concurrently", async () => {
+    const creator = await createVerifiedMember({
+      id: "ledger-independent-admin",
+    });
+    const firstMember = await createVerifiedMember({
+      id: "ledger-independent-first",
+    });
+    const secondMember = await createVerifiedMember({
+      id: "ledger-independent-second",
+    });
+    const firstHero = await createHero({ name: "Ledger Independent First" });
+    const secondHero = await createHero({ name: "Ledger Independent Second" });
+
+    await Promise.all([
+      withServices((ledger) =>
+        ledger.createBet({
+          createdAt: new Date(0),
+          createdBy: creator.id,
+          heroId: firstHero.id,
+          userIds: [firstMember.id],
+        })
+      ),
+      withServices((ledger) =>
+        ledger.createBet({
+          createdAt: new Date(0),
+          createdBy: creator.id,
+          heroId: secondHero.id,
+          userIds: [secondMember.id],
+        })
+      ),
+    ]);
+
+    const distributions = await Promise.all([
+      withServices((ledger) =>
+        ledger.distributeGold({ goldAmount: 1000, heroId: firstHero.id })
+      ),
+      withServices((ledger) =>
+        ledger.distributeGold({ goldAmount: 2000, heroId: secondHero.id })
+      ),
+    ]);
+
+    expect(distributions).toHaveLength(2);
+    await assertHeroLedgerInvariant(firstHero.id);
+    await assertHeroLedgerInvariant(secondHero.id);
   });
 
   it("returns paginated bet row shapes with attached member rows", async () => {

@@ -17,6 +17,7 @@ import type {
   VaultServiceInterface,
 } from "../../services/vault/vault-service.ts";
 import { VaultService } from "../../services/vault/vault-service.ts";
+import { lockHeroLedger } from "./hero-ledger-lock.ts";
 import { mapPersistenceErrors } from "./persistence-query.ts";
 import type {
   EffectPgDatabase,
@@ -37,7 +38,7 @@ const persistenceQuery = <A, E, R>(
       })
   );
 
-const getHeroEventWithDatabase = (database: EffectPgDatabase) =>
+const getHeroEventWithDatabase = (database: Pick<EffectPgDatabase, "select">) =>
   Effect.fnUntraced(function* getHeroEvent(heroId: number, message: string) {
     const rows = yield* persistenceQuery(
       "getHeroEvent",
@@ -58,43 +59,44 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
     goldAmount,
     heroId,
   }: DistributeGoldInput) {
-    const heroData = yield* getHeroEventWithDatabase(database)(
-      heroId,
-      "Heros nie znaleziony"
-    );
-    const heroUserStats = yield* persistenceQuery(
-      "distributeGold.loadStats",
-      database
-        .select({
-          id: userStats.id,
-          points: userStats.points,
-          userId: userStats.userId,
-        })
-        .from(userStats)
-        .where(eq(userStats.heroId, heroId))
-    );
-    if (heroUserStats.length === 0) {
-      return yield* new VaultBadRequest({
-        message: "Brak obstawień dla tego herosa",
-      });
-    }
-    const totalPoints = heroUserStats.reduce(
-      (sum, stat) => sum + Number.parseFloat(stat.points),
-      0
-    );
-    if (totalPoints <= 0) {
-      return yield* new VaultBadRequest({
-        message: "Suma punktów musi być większa od zera",
-      });
-    }
-    const pointWorth = goldAmount / totalPoints;
-    const storedPointWorth = pointWorth.toFixed(6);
-    yield* persistenceQuery(
+    const distribution = yield* persistenceQuery(
       "distributeGold",
       database.transaction(
         Effect.fnUntraced(function* distributeGoldTransaction(
           tx: TransactionDatabase
         ) {
+          yield* lockHeroLedger(tx, heroId);
+          const heroData = yield* getHeroEventWithDatabase(tx)(
+            heroId,
+            "Heros nie znaleziony"
+          );
+          const heroUserStats = yield* persistenceQuery(
+            "distributeGold.loadStats",
+            tx
+              .select({
+                id: userStats.id,
+                points: userStats.points,
+                userId: userStats.userId,
+              })
+              .from(userStats)
+              .where(eq(userStats.heroId, heroId))
+          );
+          if (heroUserStats.length === 0) {
+            return yield* new VaultBadRequest({
+              message: "Brak obstawień dla tego herosa",
+            });
+          }
+          const totalPoints = heroUserStats.reduce(
+            (sum, stat) => sum + Number.parseFloat(stat.points),
+            0
+          );
+          if (totalPoints <= 0) {
+            return yield* new VaultBadRequest({
+              message: "Suma punktów musi być większa od zera",
+            });
+          }
+          const pointWorth = goldAmount / totalPoints;
+          const storedPointWorth = pointWorth.toFixed(6);
           yield* tx
             .update(userStats)
             .set({
@@ -105,17 +107,23 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
             .update(hero)
             .set({ pointWorth: storedPointWorth })
             .where(eq(hero.id, heroId));
+          return {
+            heroName: heroData.name,
+            pointWorth: Number(storedPointWorth),
+            totalPoints,
+            usersUpdated: heroUserStats.length,
+          };
         })
       )
     );
     return {
       goldAmount,
       heroId,
-      heroName: heroData.name,
-      pointWorth: Number(storedPointWorth),
+      heroName: distribution.heroName,
+      pointWorth: distribution.pointWorth,
       success: true as const,
-      totalPoints,
-      usersUpdated: heroUserStats.length,
+      totalPoints: distribution.totalPoints,
+      usersUpdated: distribution.usersUpdated,
     };
   });
 
