@@ -33,6 +33,12 @@ import { getTableName, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
+import {
+  assertIntegrationDatabaseResetSafety,
+  databaseUrlsMatch,
+  parseDatabaseUrl,
+} from "./test-database-safety.ts";
+
 const applicationTables = [
   account,
   announcement,
@@ -67,19 +73,31 @@ export const defaultTestDatabaseUrl =
   "postgresql://postgres:password@localhost:5433/tepirek-revamped-test";
 
 const hasExplicitTestDatabaseUrl = process.env.TEST_DATABASE_URL !== undefined;
-const testDatabaseUrl = process.env.TEST_DATABASE_URL ?? defaultTestDatabaseUrl;
+export const testDatabaseUrl =
+  process.env.TEST_DATABASE_URL ?? defaultTestDatabaseUrl;
+const testDatabase = parseDatabaseUrl(testDatabaseUrl, "TEST_DATABASE_URL");
+const isVitestWorker = process.env.VITEST_POOL_ID !== undefined;
+const developmentDatabase =
+  !isVitestWorker && process.env.DATABASE_URL
+    ? parseDatabaseUrl(process.env.DATABASE_URL, "DATABASE_URL")
+    : undefined;
 
-process.env.TEST_DATABASE_URL = testDatabaseUrl;
-
-if (
-  process.env.API_INTEGRATION_MANAGED_DATABASE !== "true" &&
-  hasExplicitTestDatabaseUrl &&
-  process.env.DATABASE_URL &&
-  process.env.DATABASE_URL === testDatabaseUrl
-) {
-  throw new Error(
-    "TEST_DATABASE_URL must not match DATABASE_URL. Use a dedicated Postgres test database."
+export const isManagedTestDatabase =
+  !hasExplicitTestDatabaseUrl &&
+  databaseUrlsMatch(
+    testDatabase,
+    parseDatabaseUrl(defaultTestDatabaseUrl, "TEST_DATABASE_URL")
   );
+
+if (!isVitestWorker) {
+  assertIntegrationDatabaseResetSafety({
+    allowDatabaseReset:
+      process.env.API_INTEGRATION_ALLOW_DATABASE_RESET === "1",
+    developmentDatabase,
+    isExplicitTestDatabase: hasExplicitTestDatabaseUrl,
+    isManagedDatabase: isManagedTestDatabase,
+    testDatabase,
+  });
 }
 
 process.env.DATABASE_URL = testDatabaseUrl;

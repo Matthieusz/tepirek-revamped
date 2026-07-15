@@ -55,6 +55,9 @@ jobs:
       - name: Check formatting and lint
         run: pnpm check
 
+      - name: Unused-code check
+        run: pnpm check:unused
+
       - name: Typecheck
         run: pnpm check-types
 
@@ -64,10 +67,10 @@ jobs:
       - name: Smoke tests
         run: pnpm test:smoke
 
-      # Keep aligned with docs/adr/0001-api-router-integration-tests-with-real-postgres.md.
       - name: API integration tests
         run: pnpm test:integration
         env:
+          API_INTEGRATION_ALLOW_DATABASE_RESET: "1"
           TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/tepirek_revamped_test
 
       - name: Build
