@@ -3,7 +3,7 @@ import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
 import * as Option from "effect/Option";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Pencil } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { HeroBetMemberPicker } from "@/components/events/hero-bet-member-picker";
@@ -17,7 +17,7 @@ import {
   EffectFieldError,
   getFieldErrorId,
   getFieldId,
-} from "@/components/forms/effect-form-fields";
+} from "@/components/forms/effect-form-field-helpers";
 import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
@@ -164,14 +164,6 @@ export const EditBetModal = ({
     submitLabel = "Zapisywanie...";
   }
 
-  useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult)) {
-      toast.success("Obstawienie zostało zaktualizowane");
-      reset();
-      setOpen(false);
-    }
-  }, [reset, submitResult]);
-
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       if (!canDiscard()) {
@@ -197,7 +189,19 @@ export const EditBetModal = ({
           key={currentMemberIds.join("\u0000")}
         >
           <EffectForm
-            action={() => submit({ betId, editBet, refreshInput })}
+            action={() =>
+              submit({
+                betId,
+                editBet: async (update) => {
+                  const result = await editBet(update);
+                  toast.success("Obstawienie zostało zaktualizowane");
+                  reset();
+                  setOpen(false);
+                  return result;
+                },
+                refreshInput,
+              })
+            }
             submitResult={submitResult}
           >
             <ResponsiveDialogHeader>

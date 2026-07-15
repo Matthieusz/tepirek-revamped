@@ -8,10 +8,12 @@ import { Calculator, Unlink } from "lucide-react";
 
 import { EffectForm } from "@/components/forms/effect-form";
 import {
-  EffectFieldFrame,
-  EffectNumberField,
   getFieldErrorId,
   getFieldId,
+} from "@/components/forms/effect-form-field-helpers";
+import {
+  EffectFieldFrame,
+  EffectNumberField,
 } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
 import {

@@ -8,7 +8,6 @@ import {
 } from "@tanstack/react-table";
 import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
 import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-refetch/account-refetch-schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import {
   AlertTriangle,
   Check,
@@ -23,7 +22,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { EffectForm, EffectFormFeedback } from "@/components/forms/effect-form";
@@ -187,23 +186,20 @@ const RenameAccountForm = ({
   });
   const isSubmitting = submitResult.waiting;
 
-  useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult)) {
-      reset();
-      onSuccess();
-    }
-  }, [onSuccess, reset, submitResult]);
-
   return (
     <renameForm.Initialize defaultValues={{ displayName: account.displayName }}>
       <EffectForm
         action={() =>
           submit({
-            renameAccount: (displayName) =>
-              updateAccount({
+            renameAccount: async (displayName) => {
+              const result = await updateAccount({
                 accountId: account.accountId,
                 displayName,
-              }),
+              });
+              reset();
+              onSuccess();
+              return result;
+            },
           })
         }
         className="space-y-2"

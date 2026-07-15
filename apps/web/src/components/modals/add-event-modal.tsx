@@ -4,9 +4,8 @@ import { EVENT_ICON_OPTIONS } from "@tepirek-revamped/config";
 import type { EventIconId } from "@tepirek-revamped/config";
 import { format } from "date-fns";
 import * as Option from "effect/Option";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -15,10 +14,12 @@ import {
   useEffectFormProtection,
 } from "@/components/forms/effect-form";
 import {
-  EffectFieldFrame,
-  EffectTextField,
   getFieldErrorId,
   getFieldId,
+} from "@/components/forms/effect-form-field-helpers";
+import {
+  EffectFieldFrame,
+  EffectTextField,
 } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -246,17 +247,15 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
   const isDirty = useAtomValue(eventForm.isDirty);
   const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
 
-  useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult)) {
-      toast.success("Event utworzony pomyślnie");
-      reset();
-      setOpen(false);
-    }
-  }, [reset, submitResult]);
-
   const handleSubmit = async (): Promise<void> => {
     try {
-      await submit(createEvent);
+      await submit(async (payload) => {
+        const result = await createEvent(payload);
+        toast.success("Event utworzony pomyślnie");
+        reset();
+        setOpen(false);
+        return result;
+      });
     } catch {
       // Effect Form owns the persistent failure message and keeps the draft.
     }

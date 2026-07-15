@@ -8,10 +8,12 @@ import { Calculator, Sparkles, TrendingUp } from "lucide-react";
 
 import { EffectForm } from "@/components/forms/effect-form";
 import {
-  EffectFieldFrame,
-  EffectNumberField,
   getFieldErrorId,
   getFieldId,
+} from "@/components/forms/effect-form-field-helpers";
+import {
+  EffectFieldFrame,
+  EffectNumberField,
 } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
 import {
@@ -210,7 +212,9 @@ const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
           {result.differentialCosts.map((cost, idx) => {
             const level = idx + 1;
             return (
-              <TableRow key={`upgrade-level-${level}`}>
+              <TableRow
+                key={`upgrade-${cost}-${result.cumulativeCosts[idx] ?? 0}`}
+              >
                 <TableCell>
                   <span className="inline-flex size-7 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary text-sm">
                     +{level}

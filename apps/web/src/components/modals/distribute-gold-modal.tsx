@@ -5,7 +5,7 @@ import * as Option from "effect/Option";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Coins } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -22,10 +22,10 @@ import {
   useEffectFormProtection,
 } from "@/components/forms/effect-form";
 import {
-  EffectFieldFrame,
   getFieldErrorId,
   getFieldId,
-} from "@/components/forms/effect-form-fields";
+} from "@/components/forms/effect-form-field-helpers";
+import { EffectFieldFrame } from "@/components/forms/effect-form-fields";
 import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -383,16 +383,6 @@ export const DistributeGoldModal = ({
     setOpen(nextOpen);
   };
 
-  useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult)) {
-      const { goldAmount, result } = submitResult.value;
-      toast.success(
-        `Rozdzielono ${goldAmount.toLocaleString("pl-PL")} złota dla ${result.usersUpdated} graczy`
-      );
-      reset();
-      setOpen(false);
-    }
-  }, [reset, submitResult]);
   const clearHero = useAtomSet(
     distributeGoldForm.getFieldAtoms(distributeGoldForm.fields.heroId).setValue
   );
@@ -455,7 +445,17 @@ export const DistributeGoldModal = ({
           key={`${selectedEventId}-${selectedHeroId}`}
         >
           <EffectForm
-            action={() => submit(() => distributeGold)}
+            action={() =>
+              submit(async (distribution: GoldDistribution) => {
+                const result = await distributeGold(distribution);
+                toast.success(
+                  `Rozdzielono ${distribution.goldAmount.toLocaleString("pl-PL")} złota dla ${result.usersUpdated} graczy`
+                );
+                reset();
+                setOpen(false);
+                return result;
+              })
+            }
             submitResult={submitResult}
           >
             <ResponsiveDialogHeader>

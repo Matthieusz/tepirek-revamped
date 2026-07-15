@@ -15,6 +15,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
+import {
+  EffectFieldError,
+  getFieldErrorId,
+  getFieldId,
+} from "./effect-form-field-helpers";
+
 interface TextFieldProps {
   readonly autoComplete?: string;
   readonly className?: string;
@@ -26,32 +32,6 @@ interface TextFieldProps {
   readonly required?: boolean;
   readonly type?: "email" | "number" | "password" | "text";
 }
-
-/** Creates a stable DOM id for a field path, optionally preserving a caller-provided suffix. */
-export const getFieldId = (path: string, explicitId?: string): string =>
-  explicitId ?? `field-${path.replaceAll(/[^a-zA-Z0-9_-]/g, "-")}`;
-
-/** Creates the error element id associated with a rendered field control. */
-export const getFieldErrorId = (fieldId: string): string => `${fieldId}-error`;
-
-interface EffectFieldErrorProps {
-  readonly error: Option.Option<string>;
-  readonly id: string;
-}
-
-/** Renders a localized field error with a stable id. */
-export const EffectFieldError = ({
-  error,
-  id,
-}: EffectFieldErrorProps): ReactNode =>
-  Option.match(error, {
-    onNone: () => null,
-    onSome: (message) => (
-      <p className="text-destructive text-sm" id={id}>
-        {message}
-      </p>
-    ),
-  });
 
 interface EffectFieldFrameProps {
   readonly children: ReactNode;

@@ -24,10 +24,12 @@ import {
   useEffectFormProtection,
 } from "@/components/forms/effect-form";
 import {
-  EffectFieldFrame,
-  EffectTextField,
   getFieldErrorId,
   getFieldId,
+} from "@/components/forms/effect-form-field-helpers";
+import {
+  EffectFieldFrame,
+  EffectTextField,
 } from "@/components/forms/effect-form-fields";
 import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert";
 import { Badge as ReuiBadge } from "@/components/reui/badge";
@@ -238,13 +240,6 @@ const PreviewRow = ({
   const isDirty = useAtomValue(confirmationForm.isDirty);
   useEffectFormProtection(isDirty);
 
-  useEffect(() => {
-    if (item.status === "success" && AsyncResult.isSuccess(submitResult)) {
-      reset();
-      onConfirmed(item);
-    }
-  }, [item, onConfirmed, reset, submitResult]);
-
   if (item.status === "error") {
     return (
       <li className="px-5 py-3">
@@ -339,8 +334,12 @@ const PreviewRow = ({
             <EffectForm
               action={() =>
                 submit({
-                  confirmOwnedAccountImport: (payload) =>
-                    onConfirm(item, payload),
+                  confirmOwnedAccountImport: async (payload) => {
+                    const result = await onConfirm(item, payload);
+                    reset();
+                    onConfirmed(item);
+                    return result;
+                  },
                   pendingImportId: item.pendingImportId,
                 })
               }

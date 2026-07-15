@@ -19,10 +19,10 @@ import {
 } from "@/components/forms/effect-form";
 import {
   EffectFieldError,
-  EffectFieldFrame,
   getFieldErrorId,
   getFieldId,
-} from "@/components/forms/effect-form-fields";
+} from "@/components/forms/effect-form-field-helpers";
+import { EffectFieldFrame } from "@/components/forms/effect-form-fields";
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
