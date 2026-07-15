@@ -1,5 +1,5 @@
 import * as Schema from "effect/Schema";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 type PersistenceSchema = Schema.Codec<object, unknown, never, never>;
 
@@ -46,30 +46,37 @@ export const useFilterPersistence = <S extends PersistenceSchema>(
   schema: S,
   defaults: S["Type"]
 ): [S["Type"], (updates: Partial<S["Type"]>) => void] => {
-  const isInitialized = useRef(false);
-
-  const [filters, setFilters] = useState<S["Type"]>(() => {
-    try {
-      return decodePersistedValue(schema, defaults, localStorage.getItem(key));
-    } catch {
-      // Ignore unavailable localStorage during server rendering or in a
-      // browser context where storage access is denied.
-      return defaults;
-    }
-  });
+  const [filters, setFilters] = useState<S["Type"]>(defaults);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    if (isInitialized.current) {
-      try {
-        localStorage.setItem(key, encodePersistedValue(schema, filters));
-      } catch {
-        // Ignore unavailable localStorage and impossible schema encoding
-        // failures; the in-memory filter state remains usable.
-      }
-    } else {
-      isInitialized.current = true;
+    if (typeof window === "undefined") {
+      return;
     }
-  }, [filters, key, schema]);
+
+    try {
+      setFilters(
+        decodePersistedValue(schema, defaults, window.localStorage.getItem(key))
+      );
+    } catch {
+      // Ignore unavailable localStorage in a browser context where storage
+      // access is denied; the in-memory default remains usable.
+    }
+    setIsHydrated(true);
+  }, [defaults, key, schema]);
+
+  useEffect(() => {
+    if (!isHydrated || typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(key, encodePersistedValue(schema, filters));
+    } catch {
+      // Ignore unavailable localStorage and impossible schema encoding
+      // failures; the in-memory filter state remains usable.
+    }
+  }, [filters, isHydrated, key, schema]);
 
   const updateFilters = (updates: Partial<S["Type"]>) => {
     setFilters((prev) =>

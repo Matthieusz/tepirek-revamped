@@ -3,7 +3,7 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { History, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
@@ -377,14 +377,16 @@ const LoadedHistoryPageChunk = ({
 
 const LoadMoreTrigger = ({ onVisible }: { readonly onVisible: () => void }) => {
   const [hasRequestedNextPage, setHasRequestedNextPage] = useState(false);
-  const { inView, ref } = useInView({ threshold: 0.1 });
-
-  useEffect(() => {
+  const handleVisibilityChange = (inView: boolean) => {
     if (inView && !hasRequestedNextPage) {
       setHasRequestedNextPage(true);
       onVisible();
     }
-  }, [hasRequestedNextPage, inView, onVisible]);
+  };
+  const { ref } = useInView({
+    onChange: handleVisibilityChange,
+    threshold: 0.1,
+  });
 
   if (hasRequestedNextPage) {
     return null;

@@ -32,14 +32,11 @@ export const AsyncResultFailure = ({
 );
 
 /** Renders every AsyncResult lifecycle without treating failures as empty data. */
-export function AsyncResultBoundary<A, E>(
-  props: AsyncResultBoundaryProps<A, E>
-): ReactNode;
-export function AsyncResultBoundary({
+const AsyncResultBoundaryContent = ({
   children,
   onRetry,
   result,
-}: AsyncResultBoundaryProps<unknown, unknown>): ReactNode {
+}: AsyncResultBoundaryProps<unknown, unknown>): ReactNode => {
   return AsyncResult.builder(result)
     .onWaiting((current) => {
       if (AsyncResult.isSuccess(current)) {
@@ -85,4 +82,16 @@ export function AsyncResultBoundary({
       />
     ))
     .exhaustive();
-}
+};
+
+export const AsyncResultBoundary = <A, E>(
+  props: AsyncResultBoundaryProps<A, E>
+): ReactNode => {
+  // SAFETY: The result and callback keep the same A/E pair at this boundary.
+  const contentProps: AsyncResultBoundaryProps<unknown, unknown> = {
+    children: (value) => props.children(value as A),
+    onRetry: props.onRetry,
+    result: props.result as AsyncResult.AsyncResult<unknown, unknown>,
+  };
+  return <AsyncResultBoundaryContent {...contentProps} />;
+};

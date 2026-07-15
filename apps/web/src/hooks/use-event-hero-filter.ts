@@ -33,6 +33,8 @@ type EventHeroFilterRouteId =
   | "/dashboard/events/history"
   | "/dashboard/events/ranking";
 
+const DEFAULT_EVENT_HERO_FILTERS = { eventId: undefined, heroId: undefined };
+
 interface UseEventHeroFilterOptions {
   /** Route id, e.g. "/dashboard/events/ranking". */
   routeId: EventHeroFilterRouteId;
@@ -75,7 +77,7 @@ export const useEventHeroFilter = (
   const [persistedFilters, updatePersistedFilters] = useFilterPersistence(
     persistenceKey,
     EventHeroFilterPersistenceSchema,
-    { eventId: undefined, heroId: undefined }
+    DEFAULT_EVENT_HERO_FILTERS
   );
 
   const state = normalizeEventHeroFilter({

@@ -39,6 +39,7 @@ import { RankingSortFiltersSchema } from "./ranking-search";
 import type { RankingSort } from "./ranking-search";
 
 const routeApi = getRouteApi("/dashboard/events/ranking");
+const DEFAULT_RANKING_SORT_FILTERS = { sortBy: undefined };
 
 const buildRankingContent = (params: {
   sortedRanking: RankingItem[];
@@ -62,7 +63,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
   const [persistedSort, updatePersistedSort] = useFilterPersistence(
     "ranking-sort",
     RankingSortFiltersSchema,
-    { sortBy: undefined }
+    DEFAULT_RANKING_SORT_FILTERS
   );
 
   const currentSortBy: RankingSort = sortBy ?? persistedSort.sortBy ?? "points";
