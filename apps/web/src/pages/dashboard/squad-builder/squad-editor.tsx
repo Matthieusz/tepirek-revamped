@@ -13,17 +13,18 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/components/reui/alert";
-import { Frame, FramePanel } from "@/components/reui/frame";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/errors";
 import {
+  availableSquadCharactersAtom,
   saveSharedSquadGroupCharactersAtom,
   saveSquadGroupAtom,
+  setSquadGroupVisibilityAtom,
   squadGroupDetailAtom,
 } from "@/lib/squad-builder/squad-group-atoms";
-import { AvailableCharacterPool } from "@/pages/dashboard/squad-builder/squad-editor/available-character-pool";
-import { SquadEditorCommandHeader } from "@/pages/dashboard/squad-builder/squad-editor/squad-editor-command-header";
+import type { AvailableSquadCharacter } from "@/lib/squad-builder/squad-group-atoms";
+import { SquadEditorLayout } from "@/pages/dashboard/squad-builder/squad-editor/squad-editor-layout";
 import {
   hydrateDraft,
   isDraftEqual,
@@ -32,8 +33,6 @@ import {
   removeCharacter,
 } from "@/pages/dashboard/squad-builder/squad-editor/squad-group-draft";
 import type { SquadGroupDraft } from "@/pages/dashboard/squad-builder/squad-editor/squad-group-draft";
-import { SquadGroupSettings } from "@/pages/dashboard/squad-builder/squad-editor/squad-group-settings";
-import { SquadRosterWorkspace } from "@/pages/dashboard/squad-builder/squad-editor/squad-roster-workspace";
 import type { SquadCharacterMetadata } from "@/pages/dashboard/squad-builder/squad-editor/squad-roster-workspace";
 
 // Kept as a named alias so route resource states and child props share one source type.
@@ -44,11 +43,13 @@ const makeClientKey = (): string => `new-${crypto.randomUUID()}`;
 const DetailSkeleton = () => (
   <div aria-hidden="true" className="space-y-5">
     <div className="flex items-center gap-3">
-      <Skeleton className="h-9 w-20" />
       <Skeleton className="h-10 w-64" />
-      <Skeleton className="ml-auto h-9 w-24" />
+      <div className="ml-auto flex items-center gap-2">
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-9 w-24" />
+      </div>
     </div>
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_28rem]">
       <div className="grid gap-3 lg:grid-cols-2">
         <Skeleton className="h-72 w-full" />
         <Skeleton className="h-72 w-full" />
@@ -80,14 +81,35 @@ const detailCharacters = (
   return characters;
 };
 
-const roleDescription = (role: "editor" | "viewer") =>
-  role === "editor"
-    ? "Możesz zmieniać pozycje postaci w istniejących składach. Nazwa, składy, widoczność i dostęp pozostają pod kontrolą właściciela."
-    : "Oglądasz tę grupę w trybie tylko do odczytu. Mutujące akcje są ukryte.";
+const availableCharacterMetadata = (
+  character: AvailableSquadCharacter
+): SquadCharacterMetadata => ({
+  accountDisplayName: character.accountDisplayName,
+  accountId: character.accountId,
+  accountOwnerUserImage: character.accountOwnerUserImage,
+  accountOwnerUserName: character.accountOwnerUserName,
+  avatarUrl: character.avatarUrl,
+  characterId: character.characterId,
+  level: character.level,
+  name: character.name,
+  profession: character.profession,
+});
 
 interface SquadBuilderEditorContentProps {
   readonly groupId: number;
 }
+
+interface SquadEditorState {
+  readonly draft: SquadGroupDraft | null;
+  readonly savedSnapshot: SquadGroupDraft | null;
+  readonly visibility: "private" | "global";
+}
+
+const initialSquadEditorState: SquadEditorState = {
+  draft: null,
+  savedSnapshot: null,
+  visibility: "private",
+};
 
 // oxlint-disable-next-line complexity
 const SquadBuilderEditorContent = ({
@@ -103,26 +125,37 @@ const SquadBuilderEditorContent = ({
   const isOwner = role === "owner";
   const isViewer = role === "viewer";
   const canEditPlacements = isOwner || role === "editor";
-  const [draft, setDraft] = useState<SquadGroupDraft | null>(null);
-  const [savedSnapshot, setSavedSnapshot] = useState<SquadGroupDraft | null>(
-    null
-  );
-  const [visibility, setVisibility] = useState<"private" | "global">("private");
+  const availableCharactersAtom = availableSquadCharactersAtom({
+    groupId: canEditPlacements ? groupId : 0,
+  });
+  const availableCharactersResult = useAtomValue(availableCharactersAtom);
+  const [editorState, setEditorState] = useState(initialSquadEditorState);
+  const { draft, savedSnapshot, visibility } = editorState;
+  const [isSharingOpen, setIsSharingOpen] = useState(false);
+  const [isVisibilityPending, setIsVisibilityPending] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [placementStatus, setPlacementStatus] = useState("");
   const hydratedUpdatedAtRef = useRef<number | null>(null);
 
   const isDirty =
     draft !== null &&
     savedSnapshot !== null &&
     !isDraftEqual(draft, savedSnapshot);
+  const draftRef = useRef(draft);
+  const isDirtyRef = useRef(isDirty);
+  useEffect(() => {
+    draftRef.current = draft;
+    isDirtyRef.current = isDirty;
+  }, [draft, isDirty]);
   useEffectFormProtection(isDirty, isSaving);
   const saveSquadGroup = useAtomSet(saveSquadGroupAtom, { mode: "promise" });
   const saveSharedSquadGroupCharacters = useAtomSet(
     saveSharedSquadGroupCharactersAtom,
     { mode: "promise" }
   );
+  const setSquadGroupVisibility = useAtomSet(setSquadGroupVisibilityAtom, {
+    mode: "promise",
+  });
 
   useEffect(() => {
     if (detail === undefined) {
@@ -130,32 +163,45 @@ const SquadBuilderEditorContent = ({
     }
 
     const detailUpdatedAt = detail.updatedAt.getTime();
+    const currentDraft = draftRef.current;
     const shouldHydrate =
-      draft === null ||
-      draft.groupId !== detail.groupId ||
-      (!isDirty && hydratedUpdatedAtRef.current !== detailUpdatedAt);
+      currentDraft === null ||
+      currentDraft.groupId !== detail.groupId ||
+      (!isDirtyRef.current && hydratedUpdatedAtRef.current !== detailUpdatedAt);
     if (!shouldHydrate) {
       return;
     }
 
     const nextDraft = hydrateDraft(detail);
-    setDraft(nextDraft);
-    setSavedSnapshot(nextDraft);
-    setVisibility(detail.visibility);
+    setEditorState({
+      draft: nextDraft,
+      savedSnapshot: nextDraft,
+      visibility: detail.visibility,
+    });
     hydratedUpdatedAtRef.current = detailUpdatedAt;
-  }, [detail, draft, isDirty]);
+  }, [detail]);
 
-  const characterById = useMemo(
-    () => (detail === undefined ? new Map() : detailCharacters(detail)),
-    [detail]
-  );
+  const characterById = useMemo(() => {
+    const characters =
+      detail === undefined
+        ? new Map<number, SquadCharacterMetadata>()
+        : new Map(detailCharacters(detail));
 
-  const updateDraft = (nextDraft: SquadGroupDraft, status = "") => {
-    setDraft(nextDraft);
-    setSaveError(null);
-    if (status.length > 0) {
-      setPlacementStatus(status);
+    if (AsyncResult.isSuccess(availableCharactersResult)) {
+      for (const character of availableCharactersResult.value) {
+        characters.set(
+          character.characterId,
+          availableCharacterMetadata(character)
+        );
+      }
     }
+
+    return characters;
+  }, [availableCharactersResult, detail]);
+
+  const updateDraft = (nextDraft: SquadGroupDraft) => {
+    setEditorState((current) => ({ ...current, draft: nextDraft }));
+    setSaveError(null);
   };
 
   const addSquad = () => {
@@ -201,10 +247,7 @@ const SquadBuilderEditorContent = ({
     if (draft === null || !canEditPlacements) {
       return;
     }
-    updateDraft(
-      removeCharacter(draft, characterId, true),
-      "Postać została usunięta ze składu."
-    );
+    updateDraft(removeCharacter(draft, characterId, true));
   };
 
   const save = async () => {
@@ -233,9 +276,11 @@ const SquadBuilderEditorContent = ({
       await (role === "editor"
         ? saveSharedSquadGroupCharacters(projectEditorPayload(normalizedDraft))
         : saveSquadGroup(projectOwnerPayload(normalizedDraft)));
-      setDraft(normalizedDraft);
-      setSavedSnapshot(normalizedDraft);
-      setPlacementStatus("");
+      setEditorState((current) => ({
+        ...current,
+        draft: normalizedDraft,
+        savedSnapshot: normalizedDraft,
+      }));
       toast.success("Grupa składów została zapisana");
     } catch (error: unknown) {
       const message = getErrorMessage(
@@ -246,6 +291,26 @@ const SquadBuilderEditorContent = ({
       toast.error(message);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const updateVisibility = async (nextVisibility: "private" | "global") => {
+    if (!isOwner || isVisibilityPending || visibility === nextVisibility) {
+      return;
+    }
+
+    setIsVisibilityPending(true);
+    try {
+      await setSquadGroupVisibility({ groupId, visibility: nextVisibility });
+      setEditorState((current) => ({
+        ...current,
+        visibility: nextVisibility,
+      }));
+      toast.success("Widoczność została zmieniona");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Nie udało się zmienić widoczności"));
+    } finally {
+      setIsVisibilityPending(false);
     }
   };
 
@@ -283,94 +348,35 @@ const SquadBuilderEditorContent = ({
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
-      <SquadEditorCommandHeader
-        draft={draft}
-        isDirty={isDirty}
-        isSaving={isSaving}
-        isViewer={isViewer}
-        onNameChange={(name) => {
-          if (isOwner) {
-            updateDraft({ ...draft, name });
-          }
-        }}
-        onSave={() => {
-          void save();
-        }}
-        role={role}
-        saveError={saveError}
-        visibility={visibility}
-      />
-
-      {!isOwner && (
-        <Alert variant={isViewer ? "default" : "info"}>
-          <AlertTriangle aria-hidden="true" />
-          <AlertTitle>
-            {isViewer ? "Tryb tylko do odczytu" : "Uprawnienia edytora"}
-          </AlertTitle>
-          <AlertDescription>{roleDescription(role)}</AlertDescription>
-        </Alert>
-      )}
-
-      <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
-        <FramePanel className="p-0 shadow-none">
-          <div className="grid gap-5 p-3 xl:grid-cols-[minmax(0,1fr)_22rem] xl:p-4">
-            <div className="order-2 min-w-0 xl:order-1">
-              <SquadRosterWorkspace
-                canEditPlacements={canEditPlacements}
-                characterById={characterById}
-                draft={draft}
-                isOwner={isOwner}
-                onAddSquad={addSquad}
-                onNameChange={updateSquadName}
-                onRemoveCharacter={removeDraftCharacter}
-                onRemoveSquad={deleteSquad}
-              />
-            </div>
-            <div className="order-1 min-w-0 xl:order-2">
-              {canEditPlacements ? (
-                <AvailableCharacterPool
-                  characterById={characterById}
-                  draft={draft}
-                  groupId={groupId}
-                  onDraftChange={(nextDraft) =>
-                    updateDraft(
-                      nextDraft,
-                      "Przydział postaci został zmieniony."
-                    )
-                  }
-                  onRemoveCharacter={removeDraftCharacter}
-                />
-              ) : (
-                <div className="flex items-start">
-                  <Alert className="w-full" variant="info">
-                    <AlertTitle>Brak puli do edycji</AlertTitle>
-                    <AlertDescription>
-                      Właściciel lub edytor może zmieniać przydział postaci w
-                      tej grupie.
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              )}
-            </div>
-          </div>
-        </FramePanel>
-      </Frame>
-
-      {placementStatus.length > 0 && (
-        <output aria-live="polite" className="text-muted-foreground text-sm">
-          {placementStatus}
-        </output>
-      )}
-
-      {isOwner && (
-        <SquadGroupSettings
-          groupId={groupId}
-          onVisibilityChange={setVisibility}
-          visibility={visibility}
-        />
-      )}
-    </div>
+    <SquadEditorLayout
+      characterById={characterById}
+      draft={draft}
+      groupId={groupId}
+      permissions={{ canEditPlacements, isOwner, isViewer }}
+      status={{ isDirty, isSaving, isSharingOpen, isVisibilityPending }}
+      onAddSquad={addSquad}
+      onDraftChange={updateDraft}
+      onNameChange={(name) => {
+        if (isOwner) {
+          updateDraft({ ...draft, name });
+        }
+      }}
+      onRemoveCharacter={removeDraftCharacter}
+      onRemoveSquad={deleteSquad}
+      onSave={() => {
+        void save();
+      }}
+      onShareToggle={() => {
+        setIsSharingOpen((current) => !current);
+      }}
+      onSquadNameChange={updateSquadName}
+      onVisibilityChange={(nextVisibility) => {
+        void updateVisibility(nextVisibility);
+      }}
+      role={role}
+      saveError={saveError}
+      visibility={visibility}
+    />
   );
 };
 

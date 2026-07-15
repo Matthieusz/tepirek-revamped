@@ -1,7 +1,13 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { AlertTriangle, RotateCw, Search, UserPlus, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  ChevronDown,
+  RotateCw,
+  Search,
+  UserPlus,
+} from "lucide-react";
+import { useMemo, useReducer } from "react";
 
 import {
   Alert,
@@ -9,7 +15,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/components/reui/alert";
-import { Badge } from "@/components/reui/badge";
+import type { Filter } from "@/components/reui/filters-model";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { IconStack } from "@/components/reui/icon-stack";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -22,23 +28,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { availableSquadCharactersAtom } from "@/lib/squad-builder/squad-group-atoms";
+import { cn } from "@/lib/utils";
 
 import { MargonemCharacterAvatarImage } from "../margonem-character-avatar-image";
+import { getProfessionPresentation } from "../profession-presenters";
+import { AvailableCharacterPoolHeader } from "./available-character-pool-header";
 import {
-  getProfessionPresentation,
-  formatProfession,
-} from "../profession-presenters";
+  filterAvailableCharacters,
+  getAssignedCharacterIds,
+  groupCharactersByAccount,
+  parseCharacterPoolFilters,
+} from "./character-pool-filters";
 import {
+  MAX_SQUAD_CHARACTERS,
   applyPlacement,
   getPlacementError,
-  placementErrorMessage,
 } from "./squad-group-draft";
 import type {
   AvailableCharacter,
   CharacterAccountInfo,
+  PlacementError,
   SquadGroupDraft,
 } from "./squad-group-draft";
 import type { SquadCharacterMetadata } from "./squad-roster-workspace";
@@ -48,10 +60,18 @@ interface AvailableCharacterPoolProps {
   readonly draft: SquadGroupDraft;
   readonly groupId: number;
   readonly onDraftChange: (draft: SquadGroupDraft) => void;
-  readonly onRemoveCharacter: (characterId: number) => void;
 }
 
-const professionLabel = formatProfession;
+const createFilter = <T = unknown,>(
+  field: string,
+  operator = "is",
+  values: T[] = []
+): Filter<T> => ({
+  field,
+  id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+  operator,
+  values,
+});
 
 const toMetadata = (character: AvailableCharacter): SquadCharacterMetadata => ({
   accountDisplayName: character.accountDisplayName,
@@ -65,34 +85,49 @@ const toMetadata = (character: AvailableCharacter): SquadCharacterMetadata => ({
   profession: character.profession,
 });
 
-const characterMatches = (
-  character: SquadCharacterMetadata,
-  query: string
-): boolean => {
-  const searchable = [
-    character.name,
-    character.accountDisplayName,
-    character.accountOwnerUserName,
-    professionLabel(character.profession),
-  ]
-    .join(" ")
-    .toLocaleLowerCase("pl-PL");
-  return searchable.includes(query.toLocaleLowerCase("pl-PL"));
+const getProfessionFilterValues = (
+  filters: readonly Filter<unknown>[]
+): string[] => {
+  const values: string[] = [];
+  for (const filter of filters) {
+    if (filter.field !== "profession" || filter.operator !== "is_any_of") {
+      continue;
+    }
+    for (const value of filter.values) {
+      if (typeof value === "string") {
+        values.push(value);
+      }
+    }
+  }
+  return values;
 };
 
-const CharacterPoolSkeleton = () => (
-  <div aria-hidden="true" className="space-y-3 px-4 py-4">
-    {[0, 1, 2].map((item) => (
-      <div className="flex items-center gap-2" key={item}>
-        <Skeleton className="h-10 w-8 rounded-none" />
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-4 w-40" />
-          <Skeleton className="h-3 w-56" />
-        </div>
-      </div>
-    ))}
-  </div>
-);
+const placementErrorMessage = (
+  error: PlacementError,
+  characterName: string,
+  fallbackSquadName?: string
+): string => {
+  switch (error._tag) {
+    case "accountAlreadyRepresented": {
+      return `${characterName} nie może trafić do składu ${error.squadName}.`;
+    }
+    case "readOnly": {
+      return "Ten widok jest tylko do odczytu.";
+    }
+    case "squadFull": {
+      return `Skład ${error.squadName} ma już ${MAX_SQUAD_CHARACTERS} postaci.`;
+    }
+    case "unknownCharacter": {
+      return `Nie znaleziono postaci #${error.characterId}.`;
+    }
+    case "unknownSquad": {
+      return `Nie znaleziono składu ${fallbackSquadName ?? error.squadKey}.`;
+    }
+    default: {
+      return "Nie można przypisać postaci do składu.";
+    }
+  }
+};
 
 const getAccountInfoMap = (
   characterById: ReadonlyMap<number, SquadCharacterMetadata>
@@ -107,33 +142,154 @@ const getAccountInfoMap = (
   return accountInfo;
 };
 
-const DestinationMenu = ({
+interface CharacterPoolState {
+  readonly collapsedAccountIds: ReadonlySet<string>;
+  readonly filters: Filter<unknown>[];
+  readonly characterNameQuery: string;
+  readonly levelFromInput: string;
+  readonly levelToInput: string;
+}
+
+type CharacterPoolAction =
+  | { readonly type: "clear-filters" }
+  | { readonly type: "set-filters"; readonly filters: Filter<unknown>[] }
+  | { readonly type: "set-level-from"; readonly value: string }
+  | { readonly type: "set-level-to"; readonly value: string }
+  | { readonly type: "set-name"; readonly value: string }
+  | { readonly type: "toggle-account"; readonly accountId: string };
+
+const initialCharacterPoolState: CharacterPoolState = {
+  characterNameQuery: "",
+  collapsedAccountIds: new Set(),
+  filters: [],
+  levelFromInput: "",
+  levelToInput: "",
+};
+
+const characterPoolReducer = (
+  state: CharacterPoolState,
+  action: CharacterPoolAction
+): CharacterPoolState => {
+  switch (action.type) {
+    case "clear-filters": {
+      return {
+        ...state,
+        characterNameQuery: "",
+        filters: [],
+        levelFromInput: "",
+        levelToInput: "",
+      };
+    }
+    case "set-filters": {
+      return { ...state, filters: action.filters };
+    }
+    case "set-level-from": {
+      return { ...state, levelFromInput: action.value };
+    }
+    case "set-level-to": {
+      return { ...state, levelToInput: action.value };
+    }
+    case "set-name": {
+      return {
+        ...state,
+        characterNameQuery: action.value,
+        filters: [
+          ...state.filters.filter((filter) => filter.field !== "characterName"),
+          ...(action.value.length > 0
+            ? [
+                createFilter<unknown>("characterName", "contains", [
+                  action.value,
+                ]),
+              ]
+            : []),
+        ],
+      };
+    }
+    case "toggle-account": {
+      const collapsedAccountIds = new Set(state.collapsedAccountIds);
+      if (collapsedAccountIds.has(action.accountId)) {
+        collapsedAccountIds.delete(action.accountId);
+      } else {
+        collapsedAccountIds.add(action.accountId);
+      }
+      return { ...state, collapsedAccountIds };
+    }
+    default: {
+      return state;
+    }
+  }
+};
+
+const CharacterPoolSkeleton = () => (
+  <div aria-hidden="true" className="space-y-1 px-4 py-4">
+    {[0, 1, 2, 3, 4].map((item) => (
+      <div
+        className="flex items-center gap-2 rounded-md border border-border p-1.5"
+        key={item}
+      >
+        <Skeleton className="aspect-[4/5] h-8 w-[1.6rem] rounded-md" />
+        <div className="min-w-0 flex-1 space-y-1">
+          <Skeleton className="h-3.5 w-2/3" />
+          <Skeleton className="h-3 w-1/3" />
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const CharacterImageTrigger = ({
   character,
-  characterById,
+}: {
+  readonly character: SquadCharacterMetadata;
+}) => (
+  <DropdownMenuTrigger
+    render={
+      <button
+        aria-label={`Dodaj postać ${character.name} do składu`}
+        className="group relative block aspect-[4/5] h-8 w-[1.6rem] shrink-0 overflow-hidden rounded-md bg-muted/50 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        type="button"
+      >
+        <Avatar
+          aria-hidden="true"
+          className="absolute inset-0 size-full overflow-hidden rounded-md after:hidden"
+        >
+          {character.avatarUrl ? (
+            <MargonemCharacterAvatarImage alt="" src={character.avatarUrl} />
+          ) : null}
+          <AvatarFallback className="rounded-md">
+            {character.name.slice(0, 2).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/75 text-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100 motion-reduce:transition-none"
+        >
+          <UserPlus className="size-3.5" />
+        </span>
+      </button>
+    }
+  />
+);
+
+const DestinationMenu = ({
+  accountInfoByCharacterId,
+  character,
   draft,
   onDraftChange,
 }: {
+  readonly accountInfoByCharacterId: ReadonlyMap<number, CharacterAccountInfo>;
   readonly character: SquadCharacterMetadata;
-  readonly characterById: ReadonlyMap<number, SquadCharacterMetadata>;
   readonly draft: SquadGroupDraft;
   readonly onDraftChange: (draft: SquadGroupDraft) => void;
 }) => {
-  const accountInfo = getAccountInfoMap(characterById);
   const selectedSquad = draft.squads.find((squad) =>
     squad.characters.some((item) => item.characterId === character.characterId)
   );
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button size="xs" type="button" variant="outline">
-            <UserPlus className="size-3.5" />
-            Przypisz do składu
-          </Button>
-        }
-      />
-      <DropdownMenuContent align="end" className="min-w-64">
+      <CharacterImageTrigger character={character} />
+      <DropdownMenuContent align="start" className="min-w-64">
         <DropdownMenuLabel>
           Wybierz miejsce dla {character.name}
         </DropdownMenuLabel>
@@ -147,7 +303,7 @@ const DestinationMenu = ({
             draft,
             character.characterId,
             squad.clientKey,
-            accountInfo,
+            accountInfoByCharacterId,
             true
           );
           let disabledReason: string | undefined;
@@ -169,7 +325,7 @@ const DestinationMenu = ({
                   draft,
                   character.characterId,
                   squad.clientKey,
-                  accountInfo,
+                  accountInfoByCharacterId,
                   true
                 );
                 if (result._tag === "success") {
@@ -180,7 +336,7 @@ const DestinationMenu = ({
               <span className="min-w-0 flex-1">
                 <span className="block break-words">{squad.name}</span>
                 <span className="block font-mono text-muted-foreground text-xs">
-                  {squad.characters.length}/10
+                  {squad.characters.length}/{MAX_SQUAD_CHARACTERS}
                   {disabledReason ? ` · ${disabledReason}` : ""}
                 </span>
               </span>
@@ -192,101 +348,69 @@ const DestinationMenu = ({
   );
 };
 
-const CharacterPoolRow = ({
+const CharacterPoolTile = ({
+  accountInfoByCharacterId,
   character,
-  characterById,
   draft,
   onDraftChange,
-  onRemoveCharacter,
 }: {
+  readonly accountInfoByCharacterId: ReadonlyMap<number, CharacterAccountInfo>;
   readonly character: SquadCharacterMetadata;
-  readonly characterById: ReadonlyMap<number, SquadCharacterMetadata>;
   readonly draft: SquadGroupDraft;
   readonly onDraftChange: (draft: SquadGroupDraft) => void;
-  readonly onRemoveCharacter: (characterId: number) => void;
 }) => {
-  const selectedSquad = draft.squads.find((squad) =>
-    squad.characters.some((item) => item.characterId === character.characterId)
-  );
   const profession = getProfessionPresentation(character.profession);
   const ProfessionIcon = profession.icon;
 
   return (
-    <li className="space-y-2 py-3">
-      <div className="flex items-start gap-2">
-        <Avatar className="mt-0.5 h-10 w-8 overflow-hidden rounded-none after:hidden">
-          {character.avatarUrl ? (
-            <MargonemCharacterAvatarImage
-              alt={character.name}
-              src={character.avatarUrl}
-            />
-          ) : null}
-          <AvatarFallback className="rounded-none">
-            {character.name.slice(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="break-words font-medium text-sm">
-              {character.name}{" "}
-              <span className="font-mono text-muted-foreground">
-                {character.level}
-              </span>
-            </span>
-            {selectedSquad && (
-              <Badge size="sm" variant="primary-light">
-                {selectedSquad.name}
-              </Badge>
-            )}
-          </div>
-          <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs">
-            <span
-              className={`inline-flex items-center gap-1 ${profession.colorClass}`}
-            >
-              <ProfessionIcon aria-hidden="true" className="size-3" />
-              {profession.label}
-            </span>
-            <span className="text-muted-foreground">·</span>
-            <span className="break-words text-muted-foreground">
-              {character.accountDisplayName}
-            </span>
-          </p>
-          <p className="break-words text-muted-foreground text-xs">
-            Konto właściciela: {character.accountOwnerUserName}
-          </p>
-        </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-2 pl-8">
+    <li className="min-w-0">
+      <article className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-card/40 p-1.5 transition-colors hover:border-primary/40 motion-reduce:transition-none">
         <DestinationMenu
+          accountInfoByCharacterId={accountInfoByCharacterId}
           character={character}
-          characterById={characterById}
           draft={draft}
           onDraftChange={onDraftChange}
         />
-        {selectedSquad && (
-          <Button
-            onClick={() => onRemoveCharacter(character.characterId)}
-            size="xs"
-            type="button"
-            variant="ghost"
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <h3 className="min-w-0 flex-1 truncate font-medium text-sm leading-snug">
+            {character.name}
+          </h3>
+          <span
+            aria-label={`Poziom ${character.level}`}
+            className="shrink-0 font-mono text-muted-foreground text-xs tabular-nums"
           >
-            <X className="size-3.5" />
-            Usuń ze składu
-          </Button>
-        )}
-      </div>
+            {character.level}
+          </span>
+          <span
+            className={`flex max-w-24 shrink-0 items-center gap-1 truncate text-xs ${profession.colorClass}`}
+          >
+            <ProfessionIcon aria-hidden="true" className="size-3 shrink-0" />
+            <span className="truncate">{profession.label}</span>
+          </span>
+        </div>
+      </article>
     </li>
   );
 };
 
+// oxlint-disable-next-line complexity
 export const AvailableCharacterPool = ({
   characterById,
   draft,
   groupId,
   onDraftChange,
-  onRemoveCharacter,
 }: AvailableCharacterPoolProps) => {
-  const [query, setQuery] = useState("");
+  const [state, dispatch] = useReducer(
+    characterPoolReducer,
+    initialCharacterPoolState
+  );
+  const {
+    characterNameQuery,
+    collapsedAccountIds,
+    filters,
+    levelFromInput,
+    levelToInput,
+  } = state;
   const atom = availableSquadCharactersAtom({ groupId });
   const result = useAtomValue(atom);
   const refresh = useAtomRefresh(atom);
@@ -304,69 +428,129 @@ export const AvailableCharacterPool = ({
     () => [...allCharacterById.values()],
     [allCharacterById]
   );
+  const assignedCharacterIds = useMemo(
+    () => getAssignedCharacterIds(draft.squads),
+    [draft.squads]
+  );
+  const unassignedCharacters = useMemo(
+    () =>
+      characters.filter(
+        (character) => !assignedCharacterIds.has(character.characterId)
+      ),
+    [assignedCharacterIds, characters]
+  );
+  const parsedFilters = useMemo(
+    () => parseCharacterPoolFilters(filters, levelFromInput, levelToInput),
+    [filters, levelFromInput, levelToInput]
+  );
   const filteredCharacters = useMemo(
     () =>
-      characters.filter((character) =>
-        characterMatches(character, query.trim())
+      filterAvailableCharacters(
+        characters,
+        assignedCharacterIds,
+        parsedFilters
       ),
-    [characters, query]
+    [assignedCharacterIds, characters, parsedFilters]
   );
-  const groupedCharacters = useMemo(() => {
-    const groups = new Map<string, SquadCharacterMetadata[]>();
-    for (const character of filteredCharacters) {
-      const key = String(character.accountId);
-      const current = groups.get(key);
-      if (current === undefined) {
-        groups.set(key, [character]);
-      } else {
-        current.push(character);
-      }
+  const groupedCharacters = useMemo(
+    () => groupCharactersByAccount(filteredCharacters),
+    [filteredCharacters]
+  );
+  const accountInfoByCharacterId = useMemo(
+    () => getAccountInfoMap(allCharacterById),
+    [allCharacterById]
+  );
+  const selectedProfessions = useMemo(
+    () => new Set(getProfessionFilterValues(filters)),
+    [filters]
+  );
+  const hasActiveFilters =
+    filters.length > 0 ||
+    characterNameQuery.trim().length > 0 ||
+    levelFromInput.trim().length > 0 ||
+    levelToInput.trim().length > 0;
+  const levelErrorId = `character-pool-level-error-${groupId}`;
+  const hasLevelError =
+    parsedFilters.hasInvalidLevelInput || parsedFilters.hasReversedLevelRange;
+  const levelErrorMessage = parsedFilters.hasReversedLevelRange
+    ? "Poziom od nie może być większy niż poziom do."
+    : "Poziom musi być dodatnią liczbą całkowitą.";
+
+  const updateProfessionFilter = (profession: string) => {
+    const currentValues = getProfessionFilterValues(filters);
+    const nextValues = currentValues.includes(profession)
+      ? currentValues.filter((value) => value !== profession)
+      : [...currentValues, profession];
+
+    if (nextValues.length === 0) {
+      dispatch({
+        filters: filters.filter((filter) => filter.field !== "profession"),
+        type: "set-filters",
+      });
+      return;
     }
-    return [...groups.values()];
-  }, [filteredCharacters]);
+
+    const hasProfessionFilter = filters.some(
+      (filter) => filter.field === "profession"
+    );
+    const nextProfessionFilter = createFilter<unknown>(
+      "profession",
+      "is_any_of",
+      nextValues
+    );
+    dispatch({
+      filters: hasProfessionFilter
+        ? filters.map((filter) =>
+            filter.field === "profession" ? nextProfessionFilter : filter
+          )
+        : [...filters, nextProfessionFilter],
+      type: "set-filters",
+    });
+  };
+
+  const toggleAccountGroup = (accountId: string) => {
+    dispatch({ accountId, type: "toggle-account" });
+  };
+
+  const clearFilters = () => {
+    dispatch({ type: "clear-filters" });
+  };
 
   return (
-    <aside aria-labelledby="available-characters-heading" className="min-w-0">
+    <aside
+      aria-labelledby="available-characters-heading"
+      className="flex min-h-0 min-w-0 flex-col"
+    >
       <Frame
-        className="[--frame-radius:var(--radius-lg)] xl:sticky xl:top-4"
+        className="flex min-h-0 flex-1 flex-col [--frame-radius:var(--radius-lg)] xl:max-h-[calc(100dvh-10rem)] xl:sticky xl:top-4"
         spacing="sm"
       >
-        <FramePanel className="p-0 shadow-none">
-          <header className="space-y-3 border-b border-border px-4 py-3">
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <h2
-                  className="font-semibold text-base"
-                  id="available-characters-heading"
-                >
-                  Dostępne postacie
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Wybierz źródło i przypisz je do celu.
-                </p>
-              </div>
-              {AsyncResult.isSuccess(result) && (
-                <Badge className="font-mono" variant="secondary">
-                  {characters.length}
-                </Badge>
-              )}
-            </div>
-            {AsyncResult.isSuccess(result) && characters.length > 0 && (
-              <div className="relative">
-                <Search
-                  aria-hidden="true"
-                  className="absolute top-2.5 left-2.5 size-3.5 text-muted-foreground"
-                />
-                <Input
-                  aria-label="Szukaj dostępnej postaci"
-                  className="h-8 pl-8"
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Szukaj postaci, profesji lub konta"
-                  value={query}
-                />
-              </div>
-            )}
-          </header>
+        <FramePanel className="flex min-h-0 flex-1 flex-col p-0 shadow-none">
+          <AvailableCharacterPoolHeader
+            characterCount={characters.length}
+            characterNameQuery={characterNameQuery}
+            filteredCount={filteredCharacters.length}
+            groupId={groupId}
+            hasActiveFilters={hasActiveFilters}
+            hasLevelError={hasLevelError}
+            levelErrorId={levelErrorId}
+            levelErrorMessage={levelErrorMessage}
+            levelFromInput={levelFromInput}
+            levelToInput={levelToInput}
+            onCharacterNameChange={(value) => {
+              dispatch({ type: "set-name", value });
+            }}
+            onClearFilters={clearFilters}
+            onLevelFromChange={(value) => {
+              dispatch({ type: "set-level-from", value });
+            }}
+            onLevelToChange={(value) => {
+              dispatch({ type: "set-level-to", value });
+            }}
+            onProfessionToggle={updateProfessionFilter}
+            selectedProfessions={selectedProfessions}
+            unassignedCount={unassignedCharacters.length}
+          />
 
           {AsyncResult.isFailure(result) && (
             <Alert className="m-4" variant="destructive">
@@ -401,7 +585,7 @@ export const AvailableCharacterPool = ({
                 Brak dostępnych postaci z Jaruny. Dodaj konto, aby zasilić pulę.
               </p>
               <a
-                className="inline-flex h-8 items-center justify-center rounded-lg border border-border px-3 font-medium text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex min-h-10 items-center justify-center rounded-lg border border-border px-3 font-medium text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 href="/dashboard/squad-builder/accounts"
               >
                 Przejdź do kont
@@ -410,6 +594,18 @@ export const AvailableCharacterPool = ({
           )}
           {AsyncResult.isSuccess(result) &&
             characters.length > 0 &&
+            unassignedCharacters.length === 0 && (
+              <div className="flex flex-col items-center gap-2 px-4 py-9 text-center">
+                <IconStack aria-hidden="true">
+                  <UserPlus className="size-5" />
+                </IconStack>
+                <p className="max-w-sm text-muted-foreground text-sm">
+                  Wszystkie dostępne postacie są już przypisane do składów.
+                </p>
+              </div>
+            )}
+          {AsyncResult.isSuccess(result) &&
+            unassignedCharacters.length > 0 &&
             filteredCharacters.length === 0 && (
               <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
                 <Search
@@ -417,46 +613,81 @@ export const AvailableCharacterPool = ({
                   className="size-5 text-muted-foreground"
                 />
                 <p className="text-muted-foreground text-sm">
-                  Brak postaci pasujących do wyszukiwania.
+                  Brak postaci pasujących do filtrów.
                 </p>
                 <Button
-                  onClick={() => setQuery("")}
+                  onClick={clearFilters}
                   size="sm"
                   type="button"
                   variant="ghost"
                 >
-                  Wyczyść wyszukiwanie
+                  Wyczyść filtry
                 </Button>
               </div>
             )}
           {groupedCharacters.length > 0 && (
-            <ul className="divide-y divide-border px-4">
-              {groupedCharacters.map((accountCharacters) => {
-                const [first] = accountCharacters;
-                if (first === undefined) {
-                  return null;
-                }
-                return (
-                  <li key={String(first.accountId)}>
-                    <p className="pt-3 font-mono text-muted-foreground text-xs">
-                      {first.accountDisplayName} · {first.accountOwnerUserName}
-                    </p>
-                    <ul>
-                      {accountCharacters.map((character) => (
-                        <CharacterPoolRow
-                          character={character}
-                          characterById={allCharacterById}
-                          draft={draft}
-                          key={character.characterId}
-                          onDraftChange={onDraftChange}
-                          onRemoveCharacter={onRemoveCharacter}
-                        />
-                      ))}
-                    </ul>
-                  </li>
-                );
-              })}
-            </ul>
+            <ScrollArea className="min-h-0 flex-1 xl:overflow-hidden">
+              <ul className="space-y-4 px-4 py-4">
+                {groupedCharacters.map((accountGroup) => {
+                  const isCollapsed = collapsedAccountIds.has(
+                    accountGroup.accountId
+                  );
+                  const charactersId = `character-account-${groupId}-${accountGroup.accountId}`;
+
+                  return (
+                    <li key={accountGroup.accountId}>
+                      <div className="mb-2 flex min-w-0 items-center gap-2">
+                        <h3 className="min-w-0 break-words font-mono text-muted-foreground text-xs">
+                          {accountGroup.accountDisplayName}
+                        </h3>
+                        {accountGroup.accountOwnerUserName.length > 0 &&
+                          accountGroup.accountOwnerUserName !==
+                            accountGroup.accountDisplayName && (
+                            <span className="min-w-0 break-words text-muted-foreground text-xs">
+                              ({accountGroup.accountOwnerUserName})
+                            </span>
+                          )}
+                        <Button
+                          aria-controls={charactersId}
+                          aria-expanded={!isCollapsed}
+                          aria-label={`${isCollapsed ? "Rozwiń" : "Zwiń"} konto ${accountGroup.accountDisplayName}`}
+                          className="ms-auto size-8 shrink-0"
+                          onClick={() =>
+                            toggleAccountGroup(accountGroup.accountId)
+                          }
+                          size="icon-sm"
+                          type="button"
+                          variant="ghost"
+                        >
+                          <ChevronDown
+                            aria-hidden="true"
+                            className={cn(
+                              "size-4 transition-transform duration-150 motion-reduce:transition-none",
+                              isCollapsed && "-rotate-90"
+                            )}
+                          />
+                        </Button>
+                      </div>
+                      {!isCollapsed && (
+                        <ul className="space-y-1" id={charactersId}>
+                          {accountGroup.characters.map((character) => (
+                            <CharacterPoolTile
+                              accountInfoByCharacterId={
+                                accountInfoByCharacterId
+                              }
+                              character={character}
+                              draft={draft}
+                              key={character.characterId}
+                              onDraftChange={onDraftChange}
+                            />
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </ScrollArea>
           )}
         </FramePanel>
       </Frame>

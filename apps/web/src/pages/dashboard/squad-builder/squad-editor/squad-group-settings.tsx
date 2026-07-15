@@ -4,7 +4,7 @@ import type {
   SquadGroupEditorGrantSummarySchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Loader2, RotateCw, Shield, Trash2, UserPlus } from "lucide-react";
+import { Loader2, RotateCw, Trash2, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -30,7 +30,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { getErrorMessage } from "@/lib/errors";
-import { setSquadGroupVisibilityAtom } from "@/lib/squad-builder/squad-group-atoms";
 import {
   revokeSquadGroupEditorAtom,
   sendSquadGroupEditorInviteAtom,
@@ -45,8 +44,6 @@ type EditorGrant = typeof SquadGroupEditorGrantSummarySchema.Type;
 
 interface SquadGroupSettingsProps {
   readonly groupId: number;
-  readonly visibility: "private" | "global";
-  readonly onVisibilityChange: (visibility: "private" | "global") => void;
 }
 
 const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
@@ -56,88 +53,6 @@ const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
     return () => clearTimeout(timeout);
   }, [value, delayMs]);
   return debounced;
-};
-
-const VisibilityPanel = ({
-  groupId,
-  onVisibilityChange,
-  visibility,
-}: SquadGroupSettingsProps) => {
-  const setVisibility = useAtomSet(setSquadGroupVisibilityAtom, {
-    mode: "promise",
-  });
-  const [isPending, setIsPending] = useState(false);
-  const [visibilityError, setVisibilityError] = useState<string | null>(null);
-
-  const updateVisibility = async (nextVisibility: "private" | "global") => {
-    setVisibilityError(null);
-    setIsPending(true);
-    try {
-      await setVisibility({ groupId, visibility: nextVisibility });
-      onVisibilityChange(nextVisibility);
-      toast.success("Widoczność została zmieniona");
-    } catch (error: unknown) {
-      const message = getErrorMessage(
-        error,
-        "Nie udało się zmienić widoczności"
-      );
-      setVisibilityError(message);
-      toast.error(message);
-    } finally {
-      setIsPending(false);
-    }
-  };
-
-  return (
-    <FramePanel className="p-0 shadow-none">
-      <div className="space-y-3 px-4 py-4">
-        <div>
-          <h2 className="flex items-center gap-2 font-semibold text-base">
-            <Shield
-              aria-hidden="true"
-              className="size-4 text-muted-foreground"
-            />
-            Widoczność
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Publiczne grupy może oglądać każdy zalogowany użytkownik. Edytować
-            mogą tylko zaproszeni edytorzy.
-          </p>
-        </div>
-        <fieldset className="flex flex-wrap gap-2">
-          <legend className="sr-only">Widoczność grupy składów</legend>
-          <Button
-            aria-pressed={visibility === "private"}
-            disabled={isPending || visibility === "private"}
-            onClick={() => {
-              void updateVisibility("private");
-            }}
-            type="button"
-            variant={visibility === "private" ? "default" : "outline"}
-          >
-            Prywatna
-          </Button>
-          <Button
-            aria-pressed={visibility === "global"}
-            disabled={isPending || visibility === "global"}
-            onClick={() => {
-              void updateVisibility("global");
-            }}
-            type="button"
-            variant={visibility === "global" ? "default" : "outline"}
-          >
-            Publiczna
-          </Button>
-        </fieldset>
-        {visibilityError !== null && (
-          <Alert variant="destructive">
-            <AlertTitle>Nie udało się zmienić widoczności</AlertTitle>
-            <AlertDescription>{visibilityError}</AlertDescription>
-          </Alert>
-        )}
-      </div>
-    </FramePanel>
-  );
 };
 
 const autocompleteStatus = (
@@ -404,9 +319,11 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
 };
 
 export const SquadGroupSettings = (props: SquadGroupSettingsProps) => (
-  <section aria-label="Ustawienia grupy składów">
-    <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm" stacked>
-      <VisibilityPanel {...props} />
+  <section
+    aria-label="Udostępnianie grupy składów"
+    id="squad-group-sharing-panel"
+  >
+    <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
       <EditorAccessPanel groupId={props.groupId} />
     </Frame>
   </section>

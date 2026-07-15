@@ -13,17 +13,10 @@ export const MargonemCharacterAvatarImage = ({
 }: MargonemCharacterAvatarImageProps) => (
   <AvatarImage
     {...props}
-    className={cn("rounded-none", className)}
-    style={{
-      borderRadius: 0,
-      height: "400%",
-      left: 0,
-      maxWidth: "none",
-      objectFit: "fill",
-      position: "absolute",
-      top: 0,
-      width: "400%",
-      ...style,
-    }}
+    className={cn(
+      "absolute top-0 left-0 h-[400%] w-[400%] max-w-none rounded-none object-fill",
+      className
+    )}
+    style={style}
   />
 );

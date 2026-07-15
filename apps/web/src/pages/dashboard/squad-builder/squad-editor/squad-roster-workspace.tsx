@@ -1,8 +1,19 @@
-import { Plus, Trash2, UserRound, X } from "lucide-react";
+import { ChevronDown, Plus, Trash2, UserRound, X } from "lucide-react";
+import { useState } from "react";
 
 import { Badge } from "@/components/reui/badge";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { IconStack } from "@/components/reui/icon-stack";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,19 +54,38 @@ const SquadRosterRow = ({
   characterId,
   characterById,
   onRemove,
+  position,
   squadName,
 }: {
-  readonly characterId: number;
+  readonly characterId: number | undefined;
   readonly characterById: ReadonlyMap<number, SquadCharacterMetadata>;
   readonly onRemove: () => void;
   readonly canEditPlacements: boolean;
+  readonly position: number;
   readonly squadName: string;
 }) => {
+  if (characterId === undefined) {
+    return (
+      <li
+        aria-label={`Wolne miejsce ${position + 1}`}
+        className="flex min-h-16 items-center gap-2 rounded-md border border-dashed border-border/80 px-2 text-muted-foreground"
+      >
+        <span
+          aria-hidden="true"
+          className="flex size-6 shrink-0 items-center justify-center rounded border border-border font-mono text-xs"
+        >
+          {position + 1}
+        </span>
+        <span className="text-xs">Wolne miejsce</span>
+      </li>
+    );
+  }
+
   const character = characterById.get(characterId);
 
   if (character === undefined) {
     return (
-      <li className="flex items-center justify-between gap-2 py-2.5">
+      <li className="flex min-h-16 items-center justify-between gap-2 rounded-md border border-border px-2">
         <div className="flex min-w-0 items-center gap-2">
           <Avatar size="sm">
             <AvatarFallback>?</AvatarFallback>
@@ -86,7 +116,7 @@ const SquadRosterRow = ({
   const ProfessionIcon = profession.icon;
 
   return (
-    <li className="flex items-center justify-between gap-2 py-2.5">
+    <li className="flex min-h-16 items-center justify-between gap-2 rounded-md border border-border bg-card/40 px-2">
       <div className="flex min-w-0 items-center gap-2">
         <Avatar className="h-10 w-8 overflow-hidden rounded-none after:hidden">
           {character.avatarUrl ? (
@@ -118,9 +148,6 @@ const SquadRosterRow = ({
               {character.accountDisplayName}
             </span>
           </p>
-          <p className="break-words text-muted-foreground text-xs">
-            Konto właściciela: {character.accountOwnerUserName}
-          </p>
         </div>
       </div>
       {canEditPlacements && (
@@ -136,6 +163,70 @@ const SquadRosterRow = ({
       )}
     </li>
   );
+};
+
+interface SquadLevelRange {
+  readonly max: number;
+  readonly min: number;
+}
+
+const getSquadLevelRange = (
+  squad: DraftSquad,
+  characterById: ReadonlyMap<number, SquadCharacterMetadata>
+): SquadLevelRange | undefined => {
+  let min: number | undefined;
+  let max: number | undefined;
+
+  for (const draftCharacter of squad.characters) {
+    const character = characterById.get(draftCharacter.characterId);
+    if (character === undefined) {
+      continue;
+    }
+    min = min === undefined ? character.level : Math.min(min, character.level);
+    max = max === undefined ? character.level : Math.max(max, character.level);
+  }
+
+  return min === undefined || max === undefined ? undefined : { max, min };
+};
+
+interface ProfessionCount {
+  readonly count: number;
+  readonly profession: string;
+}
+
+const getSquadProfessionCounts = (
+  squad: DraftSquad,
+  characterById: ReadonlyMap<number, SquadCharacterMetadata>
+): readonly ProfessionCount[] => {
+  const counts = new Map<string, number>();
+
+  for (const draftCharacter of squad.characters) {
+    const character = characterById.get(draftCharacter.characterId);
+    if (character === undefined) {
+      continue;
+    }
+    counts.set(
+      character.profession,
+      (counts.get(character.profession) ?? 0) + 1
+    );
+  }
+
+  return [...counts.entries()].map(([profession, count]) => ({
+    count,
+    profession,
+  }));
+};
+
+const formatSquadLevelRange = (
+  levelRange: SquadLevelRange | undefined
+): string => {
+  if (levelRange === undefined) {
+    return "Brak poziomów";
+  }
+  if (levelRange.min === levelRange.max) {
+    return `Poziom ${levelRange.min}`;
+  }
+  return `Poziomy ${levelRange.min}–${levelRange.max}`;
 };
 
 const SquadPanel = ({
@@ -154,82 +245,168 @@ const SquadPanel = ({
   readonly onRemoveCharacter: (characterId: number) => void;
   readonly onRemoveSquad: () => void;
   readonly squad: DraftSquad;
-}) => (
-  <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
-    <FramePanel className="p-0 shadow-none">
-      <header className="flex items-center gap-2 border-b border-border px-4 py-3">
-        {isOwner ? (
-          <div className="min-w-0 flex-1">
-            <Label
-              className="sr-only"
-              htmlFor={`squad-name-${squad.clientKey}`}
+}) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const levelRange = getSquadLevelRange(squad, characterById);
+  const professionCounts = getSquadProfessionCounts(squad, characterById);
+  const characterListId = `squad-characters-${squad.clientKey}`;
+
+  return (
+    <>
+      <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
+        <FramePanel className="p-0 shadow-none">
+          <header className="flex items-start gap-2 border-b border-border px-4 py-3">
+            <div className="min-w-0 flex-1">
+              {isOwner ? (
+                <div className="min-w-0">
+                  <Label
+                    className="sr-only"
+                    htmlFor={`squad-name-${squad.clientKey}`}
+                  >
+                    Nazwa składu
+                  </Label>
+                  <Input
+                    className="h-8"
+                    id={`squad-name-${squad.clientKey}`}
+                    maxLength={60}
+                    onChange={(event) => onNameChange(event.target.value)}
+                    value={squad.name}
+                  />
+                </div>
+              ) : (
+                <h3 className="break-words font-semibold text-sm">
+                  {squad.name}
+                </h3>
+              )}
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground text-xs">
+                <span className="font-mono tabular-nums">
+                  {formatSquadLevelRange(levelRange)}
+                </span>
+                <span aria-hidden="true">·</span>
+                {professionCounts.length > 0 ? (
+                  <ul
+                    aria-label={`Profesje w składzie ${squad.name}`}
+                    className="flex flex-wrap items-center gap-x-2 gap-y-1"
+                  >
+                    {professionCounts.map(({ count, profession }) => {
+                      const presentation =
+                        getProfessionPresentation(profession);
+                      const ProfessionIcon = presentation.icon;
+                      return (
+                        <li
+                          aria-label={`${presentation.label}: ${count}`}
+                          className={`inline-flex items-center gap-1 ${presentation.colorClass}`}
+                          key={profession}
+                          title={`${presentation.label}: ${count}`}
+                        >
+                          <ProfessionIcon
+                            aria-hidden="true"
+                            className="size-3"
+                          />
+                          <span className="font-mono tabular-nums">
+                            {count}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <span>Brak profesji</span>
+                )}
+              </div>
+            </div>
+            <Badge
+              className="shrink-0 font-mono tabular-nums mt-1"
+              variant={
+                squad.characters.length === MAX_SQUAD_CHARACTERS
+                  ? "warning-light"
+                  : "secondary"
+              }
             >
-              Nazwa składu
-            </Label>
-            <Input
-              className="h-8"
-              id={`squad-name-${squad.clientKey}`}
-              maxLength={60}
-              onChange={(event) => onNameChange(event.target.value)}
-              value={squad.name}
-            />
+              {squad.characters.length}/{MAX_SQUAD_CHARACTERS}
+            </Badge>
+            {isOwner && (
+              <Button
+                aria-label={`Usuń skład ${squad.name}`}
+                onClick={() => setIsDeleteDialogOpen(true)}
+                size="icon-sm"
+                type="button"
+                variant="ghost"
+              >
+                <Trash2 className="size-3.5 text-destructive" />
+              </Button>
+            )}
+            <Button
+              aria-controls={characterListId}
+              aria-expanded={isExpanded}
+              aria-label={`${isExpanded ? "Ukryj" : "Pokaż"} postacie w składzie ${squad.name}`}
+              className="shrink-0"
+              onClick={() => setIsExpanded((current) => !current)}
+              size="icon-sm"
+              type="button"
+              variant="ghost"
+            >
+              <ChevronDown
+                aria-hidden="true"
+                className={`size-4 transition-transform duration-150 motion-reduce:transition-none ${isExpanded ? "" : "-rotate-90"}`}
+              />
+            </Button>
+          </header>
+          <div hidden={!isExpanded} id={characterListId} className="mt-2">
+            <ul className="grid grid-flow-col grid-cols-2 grid-rows-5 gap-2 px-3 pb-3">
+              {Array.from({ length: MAX_SQUAD_CHARACTERS }, (_, position) => {
+                const character = squad.characters[position];
+                return (
+                  <SquadRosterRow
+                    canEditPlacements={canEditPlacements}
+                    characterById={characterById}
+                    characterId={character?.characterId}
+                    key={`slot-${position}`}
+                    onRemove={() => {
+                      if (character !== undefined) {
+                        onRemoveCharacter(character.characterId);
+                      }
+                    }}
+                    position={position}
+                    squadName={squad.name}
+                  />
+                );
+              })}
+            </ul>
           </div>
-        ) : (
-          <h3 className="min-w-0 flex-1 break-words font-semibold text-sm">
-            {squad.name}
-          </h3>
-        )}
-        <Badge
-          className="font-mono tabular-nums"
-          variant={
-            squad.characters.length === MAX_SQUAD_CHARACTERS
-              ? "warning-light"
-              : "secondary"
-          }
-        >
-          {squad.characters.length}/{MAX_SQUAD_CHARACTERS}
-        </Badge>
-        {isOwner && (
-          <Button
-            aria-label={`Usuń skład ${squad.name}`}
-            onClick={onRemoveSquad}
-            size="icon-sm"
-            type="button"
-            variant="ghost"
-          >
-            <Trash2 className="size-3.5 text-destructive" />
-          </Button>
-        )}
-      </header>
-      <div className="px-4 py-2">
-        <progress
-          aria-label={`Wypełnienie składu ${squad.name}: ${squad.characters.length} z ${MAX_SQUAD_CHARACTERS}`}
-          className="h-1.5 w-full accent-primary"
-          max={MAX_SQUAD_CHARACTERS}
-          value={squad.characters.length}
-        />
-      </div>
-      {squad.characters.length === 0 ? (
-        <p className="px-4 py-7 text-center text-muted-foreground text-xs">
-          Brak postaci. Wybierz postać z puli obok.
-        </p>
-      ) : (
-        <ul className="divide-y divide-border px-4">
-          {squad.characters.map((character) => (
-            <SquadRosterRow
-              canEditPlacements={canEditPlacements}
-              characterById={characterById}
-              characterId={character.characterId}
-              key={character.characterId}
-              onRemove={() => onRemoveCharacter(character.characterId)}
-              squadName={squad.name}
-            />
-          ))}
-        </ul>
-      )}
-    </FramePanel>
-  </Frame>
-);
+        </FramePanel>
+      </Frame>
+      <AlertDialog
+        onOpenChange={setIsDeleteDialogOpen}
+        open={isDeleteDialogOpen}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Usunąć skład?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Skład „{squad.name}” zostanie usunięty z bieżącej wersji grupy, a
+              przypisane postacie wrócą do puli dostępnych postaci. Zmiana
+              zostanie zastosowana po zapisaniu grupy.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onRemoveSquad();
+                setIsDeleteDialogOpen(false);
+              }}
+              variant="destructive"
+            >
+              Usuń skład
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};
 
 export const SquadRosterWorkspace = ({
   canEditPlacements,
@@ -306,7 +483,7 @@ export const SquadRosterWorkspace = ({
               postaci.
             </p>
           )}
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid gap-3">
             {draft.squads.map((squad) => (
               <SquadPanel
                 canEditPlacements={canEditPlacements}
