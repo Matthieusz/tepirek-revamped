@@ -493,15 +493,35 @@ const listIncomingAccountInvitesWithDatabase = (database: EffectPgDatabase) =>
   }: ListIncomingAccountInvitesInput) {
     const operation = "listIncomingAccountInvites" as const;
     const select = database
-      .select({ id: margonemAccountAccess.id })
+      .select({
+        accountDisplayName: margonemAccount.displayName,
+        accountId: margonemAccountAccess.accountId,
+        createdAt: margonemAccountAccess.createdAt,
+        id: margonemAccountAccess.id,
+        invitedUserId: margonemAccountAccess.userId,
+        ownerId: user.id,
+        ownerImage: user.image,
+        ownerName: user.name,
+        profileId: margonemAccount.profileId,
+        status: margonemAccountAccess.status,
+        updatedAt: margonemAccountAccess.updatedAt,
+      })
       .from(margonemAccountAccess)
+      .innerJoin(
+        margonemAccount,
+        eq(margonemAccount.id, margonemAccountAccess.accountId)
+      )
+      .innerJoin(user, eq(user.id, margonemAccount.ownerUserId))
       .where(
         and(
           eq(margonemAccountAccess.userId, appUserIdToString(actorUserId)),
           eq(margonemAccountAccess.status, "pending")
         )
       )
-      .orderBy(desc(margonemAccountAccess.createdAt));
+      .orderBy(
+        desc(margonemAccountAccess.createdAt),
+        desc(margonemAccountAccess.id)
+      );
     const rows = yield* persistenceQuery(operation, select);
 
     const invites: AccountAccessInviteSummary[] = [];
@@ -511,15 +531,41 @@ const listIncomingAccountInvitesWithDatabase = (database: EffectPgDatabase) =>
         Effect.catch((error) => failPersistence(operation, error))
       );
 
-      const summary = yield* loadAccountAccessInviteSummaryWithDatabase(
-        database
-      )(accessId, operation).pipe(
-        Effect.catchTag("AccountAccessInviteNotFound", (error) =>
-          failPersistence(operation, error)
-        )
+      const status = yield* parseAccountAccessStatus(row.status).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
       );
 
-      invites.push(summary);
+      const accountDisplayName = yield* parseAccountDisplayName(
+        row.accountDisplayName
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+      const accountId = yield* parseMargonemAccountId(row.accountId).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const profileId = yield* parseMargonemProfileId(row.profileId).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const invitedUserId = yield* parsePersistedAppUserId(
+        operation,
+        row.invitedUserId
+      );
+      const ownerUserId = yield* parsePersistedAppUserId(
+        operation,
+        row.ownerId
+      );
+
+      invites.push({
+        accessId,
+        accountDisplayName,
+        accountId,
+        createdAt: row.createdAt,
+        generatedProfileUrl: toMargonemProfileUrl(profileId),
+        invitedUserId,
+        ownerUserId,
+        ownerUserImage: row.ownerImage,
+        ownerUserName: row.ownerName,
+        status,
+        updatedAt: row.updatedAt,
+      });
     }
 
     return invites;
