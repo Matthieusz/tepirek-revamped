@@ -50,11 +50,6 @@ const disabledSquadEditorInviteTargetsAtom = Atom.make<
   AsyncResult.AsyncResult<readonly SquadEditorInviteTarget[], never>
 >(AsyncResult.success([]));
 
-interface RefreshVisibleSquadGroupSharingAtomsOptions {
-  readonly actorUserId?: string;
-  readonly groupId?: number;
-}
-
 const squadGroupEditorGrantsKey = (groupId: number): string => `${groupId}`;
 
 const squadEditorInviteTargetsKey = (
@@ -169,23 +164,6 @@ export const squadEditorInviteTargetsAtom = (
   payload.groupId > 0
     ? squadEditorInviteTargetsByKeyAtom(squadEditorInviteTargetsKey(payload))
     : disabledSquadEditorInviteTargetsAtom;
-
-export const refreshVisibleSquadGroupSharingAtoms = (
-  get: Atom.FnContext,
-  options: RefreshVisibleSquadGroupSharingAtomsOptions = {}
-) => {
-  get.refresh(incomingSquadGroupInvitesByActorAtom("default"));
-  get.refresh(sharedSquadGroupsByActorAtom("default"));
-  get.refresh(pendingSquadGroupInviteCountByActorAtom("default"));
-
-  if (options.groupId !== undefined && options.groupId > 0) {
-    get.refresh(
-      squadGroupEditorGrantsByKeyAtom(
-        squadGroupEditorGrantsKey(options.groupId)
-      )
-    );
-  }
-};
 
 /** Mutation atom for responding to a squad-group invite. */
 export const respondToSquadGroupInviteAtom = appHttpApiFn(

@@ -245,33 +245,6 @@ export const removeCharacter = (
   };
 };
 
-export const placementErrorMessage = (
-  error: PlacementError,
-  characterName: string,
-  fallbackSquadName?: string
-): string => {
-  switch (error._tag) {
-    case "accountAlreadyRepresented": {
-      return `${characterName} nie może trafić do składu ${error.squadName}, ponieważ konto ${error.accountDisplayName} jest już reprezentowane.`;
-    }
-    case "readOnly": {
-      return "Ten widok jest tylko do odczytu.";
-    }
-    case "squadFull": {
-      return `Skład ${error.squadName} ma już ${MAX_SQUAD_CHARACTERS} postaci.`;
-    }
-    case "unknownCharacter": {
-      return `Nie znaleziono postaci #${error.characterId}.`;
-    }
-    case "unknownSquad": {
-      return `Nie znaleziono składu ${fallbackSquadName ?? error.squadKey}.`;
-    }
-    default: {
-      return "Nie można przypisać postaci do składu.";
-    }
-  }
-};
-
 export const projectOwnerPayload = (
   draft: SquadGroupDraft
 ): SaveSquadGroupPayload => ({

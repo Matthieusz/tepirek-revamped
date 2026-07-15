@@ -27,10 +27,6 @@ interface RevokeAccountAccessInput {
   readonly accountId: number;
   readonly actorUserId: string;
 }
-interface SearchAccountInviteTargetsInput {
-  readonly accountId: number;
-  readonly query: string;
-}
 interface SendAccountAccessInviteInput {
   readonly accountId: number;
   readonly actorUserId: string;
@@ -160,21 +156,6 @@ const refreshVisibleAccountSharingAtoms = (
 
   refreshVisibleSquadGroupAtoms(get, { actorUserId: "default" });
 };
-
-/** Mutation atom for searching account invite targets. */
-export const searchAccountInviteTargetsAtom = appHttpApiFn(
-  Effect.fnUntraced(function* searchAccountInviteTargetsEffect(
-    payload: SearchAccountInviteTargetsInput
-  ) {
-    const client = yield* AppHttpApiClient;
-    return yield* client.squadBuilderAccountSharing.searchAccountInviteTargets({
-      payload: {
-        accountId: asMargonemAccountId(payload.accountId),
-        query: payload.query,
-      },
-    });
-  })
-);
 
 /** Mutation atom for sending account access invite. */
 export const sendAccountAccessInviteAtom = appHttpApiFn(

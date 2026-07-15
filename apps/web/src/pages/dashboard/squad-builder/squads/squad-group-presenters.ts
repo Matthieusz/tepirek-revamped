@@ -4,7 +4,6 @@ import type {
   GlobalSquadGroupSummary,
   SquadGroupSummary,
 } from "@/lib/squad-builder/squad-group-atoms";
-import { formatDateTime } from "@/lib/utils";
 
 type SharedSquadGroupSummary = typeof SharedSquadGroupSummarySchema.Type;
 
@@ -53,30 +52,3 @@ export const formatCharacterCount = (count: number): string =>
 
 export const formatSquadCount = (count: number): string =>
   `${count} ${pluralize(count, "skład", "składy", "składów")}`;
-
-export const formatGroupUpdatedAt = (date: Date): string =>
-  formatDateTime(date);
-
-export const toMineListItem = (
-  group: SquadGroupSummary
-): SquadGroupListItem => ({
-  group,
-  kind: "mine",
-  status: "właściciel",
-});
-
-export const toSharedListItem = (
-  group: SharedSquadGroupSummary
-): SquadGroupListItem => ({
-  group,
-  kind: "shared",
-  status: "edytor",
-});
-
-export const toPublicListItem = (
-  group: GlobalSquadGroupSummary
-): SquadGroupListItem => ({
-  group,
-  kind: "public",
-  status: "publiczny",
-});

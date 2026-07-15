@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export type KnownProfession =
+type KnownProfession =
   | "bladeDancer"
   | "hunter"
   | "mage"
