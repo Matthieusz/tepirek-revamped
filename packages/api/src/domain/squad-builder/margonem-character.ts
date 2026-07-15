@@ -1,10 +1,6 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import type {
-  MargonemCharacterId,
-  PositiveLevel,
-} from "./margonem-profile-id.ts";
 import {
   MargonemCharacterIdSchema,
   PositiveLevelSchema,
@@ -33,15 +29,6 @@ export const parseMargonemWorld = Effect.fn("MargonemWorld.parse")(
   }
 );
 
-/** Normalized Margonem profession. */
-export type MargonemProfession =
-  | "warrior"
-  | "paladin"
-  | "bladeDancer"
-  | "mage"
-  | "hunter"
-  | "tracker";
-
 /** HTTP/API schema for a normalized Margonem profession. */
 export const MargonemProfessionSchema = Schema.Literals([
   "warrior",
@@ -51,16 +38,7 @@ export const MargonemProfessionSchema = Schema.Literals([
   "hunter",
   "tracker",
 ]);
-
-/** A Jaruna character parsed from a Margonem profile. */
-export interface MargonemCharacterPreview {
-  readonly characterId: MargonemCharacterId;
-  readonly name: string;
-  readonly level: PositiveLevel;
-  readonly profession: MargonemProfession;
-  readonly world: MargonemWorld;
-  readonly avatarUrl: string | null;
-}
+export type MargonemProfession = typeof MargonemProfessionSchema.Type;
 
 /** HTTP/API schema for a Jaruna character parsed from a Margonem profile. */
 export const MargonemCharacterPreviewSchema = Schema.Struct({
@@ -71,6 +49,8 @@ export const MargonemCharacterPreviewSchema = Schema.Struct({
   profession: MargonemProfessionSchema,
   world: MargonemWorld,
 });
+export type MargonemCharacterPreview =
+  typeof MargonemCharacterPreviewSchema.Type;
 
 /** Expected failure when a profession label cannot be normalized. */
 // oxlint-disable-next-line max-classes-per-file -- closely related domain errors

@@ -19,6 +19,7 @@ import {
 } from "./squad-group-errors.ts";
 import type {
   EffectSquadBuilderPersistenceUnavailable,
+  SquadCharacterNotAccessible,
   SquadGroupWriteConflict,
 } from "./squad-group-errors.ts";
 import type {
@@ -62,19 +63,11 @@ export type EffectSharedSquadGroupSaveError =
 
 export type SharedSquadGroupSaveError =
   | SquadGroupNotFound
-  | { readonly _tag: "SquadGroupNotFound" }
   | ActorCannotViewSquadGroup
-  | { readonly _tag: "ActorCannotViewSquadGroup" }
   | ActorCannotEditSquadGroup
-  | { readonly _tag: "ActorCannotEditSquadGroup" }
   | SquadNotInGroup
-  | { readonly _tag: "SquadNotInGroup"; readonly squadId: SquadId }
   | EditorCannotChangeSquadStructure
-  | { readonly _tag: "EditorCannotChangeSquadStructure" }
-  | {
-      readonly _tag: "SquadCharacterNotAccessible";
-      readonly characterId: number;
-    }
+  | SquadCharacterNotAccessible
   | SquadGroupValidationError
   | SquadBuilderPersistenceUnavailable;
 

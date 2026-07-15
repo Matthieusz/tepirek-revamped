@@ -30,8 +30,8 @@ import {
 } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
 import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
-import { CharacterPosition } from "../../../domain/squad-builder/squad-group-snapshot.ts";
 import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
+import { CharacterPosition } from "../../../domain/squad-builder/squad-group-snapshot.ts";
 import { parseSquadId } from "../../../domain/squad-builder/squad-id.ts";
 import { makeApiSquadBuilderLayer } from "../../../server/effect-app.ts";
 import { liveEffect } from "../../../test/effect.ts";
@@ -59,8 +59,8 @@ import { SquadGroupEditorInviteResponsesService } from "./respond-to-squad-group
 import { SquadGroupEditorRevocationsService } from "./revoke-squad-group-editor-service.ts";
 import { save as saveSquadGroup } from "./save-squad-group.ts";
 import { SquadGroupEditorInvitesService } from "./send-squad-group-editor-invite-service.ts";
-import { SquadGroupStoreService } from "./squad-group-store.ts";
 import { set as setSquadGroupVisibility } from "./set-squad-group-visibility.ts";
+import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 const apiTestLayer = makeApiSquadBuilderLayer(defaultTestDatabaseUrl);
 

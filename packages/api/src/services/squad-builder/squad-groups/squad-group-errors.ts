@@ -99,13 +99,7 @@ export class EditorCannotChangeSquadStructure extends Schema.TaggedErrorClass<Ed
   forbidden
 ) {}
 
-export class SquadCharacterNotAccessible extends Schema.TaggedErrorClass<SquadCharacterNotAccessible>()(
-  "SquadCharacterNotAccessible",
-  {
-    characterId: Schema.Number,
-  },
-  forbidden
-) {}
+export { SquadCharacterNotAccessible } from "../../../domain/squad-builder/squad-group-validation-errors.ts";
 
 export class MargonemAccountNotFound extends Schema.TaggedErrorClass<MargonemAccountNotFound>()(
   "MargonemAccountNotFound",

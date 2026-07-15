@@ -4,23 +4,25 @@ import * as Schema from "effect/Schema";
 import type { AccountDisplayName } from "./account-display-name.ts";
 import type { AppUserId } from "./app-user-id.ts";
 import type { MargonemAccountId } from "./margonem-account-id.ts";
-import type {
-  MargonemProfession,
-  MargonemWorld,
-} from "./margonem-character.ts";
+import type { MargonemProfession } from "./margonem-character.ts";
 import type {
   MargonemCharacterId,
   PositiveLevel,
 } from "./margonem-profile-id.ts";
 import type { SquadGroupId } from "./squad-group-id.ts";
+import {
+  DuplicateAccountInSquad,
+  DuplicateCharacterInSquad,
+  DuplicateCharacterInSquadGroup,
+  InvalidSquadSnapshot,
+  SquadCharacterNotAccessible,
+  SquadCharacterNotJaruna,
+  TooManyCharactersInSquad,
+} from "./squad-group-validation-errors.ts";
+import type { SquadGroupValidationError } from "./squad-group-validation-errors.ts";
 import type { SquadId } from "./squad-id.ts";
 import { parseSquadGroupName, parseSquadName } from "./squad-name.ts";
-import type {
-  InvalidSquadGroupName,
-  InvalidSquadName,
-  SquadGroupName,
-  SquadName,
-} from "./squad-name.ts";
+import type { SquadGroupName, SquadName } from "./squad-name.ts";
 
 /** Position of a squad inside a group snapshot. */
 const Position = Schema.Number.check(
@@ -50,7 +52,7 @@ export interface AvailableSquadCharacter {
   readonly level: PositiveLevel;
   readonly profession: MargonemProfession;
   readonly avatarUrl: string | null;
-  readonly world: MargonemWorld;
+  readonly world: string;
 }
 
 /** Parsed full draft snapshot for an explicit squad group save. */
@@ -87,37 +89,7 @@ export interface SaveSquadInput {
   }[];
 }
 
-/** Expected snapshot validation failure. */
-export type SquadGroupValidationError =
-  | InvalidSquadGroupName
-  | InvalidSquadName
-  | { readonly _tag: "SquadGroupNotFound" }
-  | { readonly _tag: "ActorDoesNotOwnSquadGroup" }
-  | {
-      readonly _tag: "TooManyCharactersInSquad";
-      readonly squadClientKey: string;
-      readonly maxCharacters: 10;
-    }
-  | {
-      readonly _tag: "DuplicateCharacterInSquad";
-      readonly squadClientKey: string;
-      readonly characterId: number;
-    }
-  | {
-      readonly _tag: "DuplicateAccountInSquad";
-      readonly squadClientKey: string;
-      readonly accountId: MargonemAccountId;
-    }
-  | {
-      readonly _tag: "DuplicateCharacterInSquadGroup";
-      readonly characterId: number;
-    }
-  | {
-      readonly _tag: "SquadCharacterNotAccessible";
-      readonly characterId: number;
-    }
-  | { readonly _tag: "SquadCharacterNotJaruna"; readonly characterId: number }
-  | { readonly _tag: "InvalidSquadSnapshot"; readonly message: string };
+export type { SquadGroupValidationError };
 
 /** Input for validating a full squad group snapshot. */
 export interface ValidateSquadGroupSnapshotInput {
@@ -130,11 +102,11 @@ export interface ValidateSquadGroupSnapshotInput {
 
 const maxCharactersPerSquad = 10;
 
-const invalidPosition = () => ({
-  _tag: "InvalidSquadSnapshot" as const,
-  message:
-    "Pozycje składów i postaci muszą być nieujemnymi liczbami całkowitymi",
-});
+const invalidPosition = () =>
+  new InvalidSquadSnapshot({
+    message:
+      "Pozycje składów i postaci muszą być nieujemnymi liczbami całkowitymi",
+  });
 
 const parseSquadPosition = (input: number) =>
   Schema.decodeUnknownEffect(SquadPosition)(input).pipe(
@@ -165,21 +137,19 @@ export const validateSquadGroupSnapshot = Effect.fnUntraced(
 
     for (const squad of squads) {
       if (squad.clientKey.trim().length === 0) {
-        return yield* Effect.fail({
-          _tag: "InvalidSquadSnapshot",
+        return yield* new InvalidSquadSnapshot({
           message: "Każdy skład musi mieć klucz klienta",
-        } as const);
+        });
       }
 
       const parsedSquadName = yield* parseSquadName(squad.name);
       const parsedSquadPosition = yield* parseSquadPosition(squad.position);
 
       if (squad.characters.length > maxCharactersPerSquad) {
-        return yield* Effect.fail({
-          _tag: "TooManyCharactersInSquad",
+        return yield* new TooManyCharactersInSquad({
           maxCharacters: maxCharactersPerSquad,
           squadClientKey: squad.clientKey,
-        } as const);
+        });
       }
 
       const squadCharacterIds = new Set<number>();
@@ -195,40 +165,35 @@ export const validateSquadGroupSnapshot = Effect.fnUntraced(
           character.characterId
         );
         if (availableCharacter === undefined) {
-          return yield* Effect.fail({
-            _tag: "SquadCharacterNotAccessible",
+          return yield* new SquadCharacterNotAccessible({
             characterId: character.characterId,
-          } as const);
+          });
         }
 
         if (availableCharacter.world !== "jaruna") {
-          return yield* Effect.fail({
-            _tag: "SquadCharacterNotJaruna",
+          return yield* new SquadCharacterNotJaruna({
             characterId: character.characterId,
-          } as const);
+          });
         }
 
         if (squadCharacterIds.has(character.characterId)) {
-          return yield* Effect.fail({
-            _tag: "DuplicateCharacterInSquad",
+          return yield* new DuplicateCharacterInSquad({
             characterId: character.characterId,
             squadClientKey: squad.clientKey,
-          } as const);
+          });
         }
 
         if (groupCharacterIds.has(character.characterId)) {
-          return yield* Effect.fail({
-            _tag: "DuplicateCharacterInSquadGroup",
+          return yield* new DuplicateCharacterInSquadGroup({
             characterId: character.characterId,
-          } as const);
+          });
         }
 
         if (squadAccountIds.has(availableCharacter.accountId)) {
-          return yield* Effect.fail({
-            _tag: "DuplicateAccountInSquad",
+          return yield* new DuplicateAccountInSquad({
             accountId: availableCharacter.accountId,
             squadClientKey: squad.clientKey,
-          } as const);
+          });
         }
 
         squadCharacterIds.add(character.characterId);
