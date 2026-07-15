@@ -101,10 +101,11 @@ export const HeroBetMemberPicker = ({
 }: HeroBetMemberPickerProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
+  const selectedUserIdSet = new Set(selectedUserIds);
   const availableUsers = getAvailableUsers(users, selectedUserIds, searchQuery);
   const selectedUsers = getSelectedUsers(users, selectedUserIds);
   const availableCount =
-    users?.filter((user) => !selectedUserIds.includes(user.id)).length ?? 0;
+    users?.filter((user) => !selectedUserIdSet.has(user.id)).length ?? 0;
   const listState = getAvailableListState({
     availableUsers,
     users,
@@ -374,6 +375,7 @@ const SelectedUsers = ({
             </Avatar>
             <span className="text-sm">{user.name}</span>
             <button
+              aria-label={`Usuń gracza ${user.name}`}
               className="flex size-5 items-center justify-center rounded-full bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground"
               onClick={() => {
                 onChange(removeUser(user.id, selectedUserIds));

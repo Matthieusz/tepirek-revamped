@@ -25,35 +25,39 @@ export const UserSelectList = ({
   onBlur,
   selectedUserIds,
   onToggleUser,
-}: UserSelectListProps) => (
-  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
-    {users.map((user) => (
-      <label
-        className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 ${
-          selectedUserIds.includes(user.id)
-            ? "border-primary bg-primary/5"
-            : "border-border"
-        }`}
-        htmlFor={`${idPrefix}-${user.id}`}
-        key={user.id}
-      >
-        <Checkbox
-          checked={selectedUserIds.includes(user.id)}
-          id={`${idPrefix}-${user.id}`}
-          {...(fieldName === undefined ? {} : { name: fieldName })}
-          onBlur={onBlur}
-          onCheckedChange={() => {
-            onToggleUser(user.id);
-          }}
-        />
-        <Avatar className="size-8">
-          <AvatarImage alt={user.name} src={user.image ?? undefined} />
-          <AvatarFallback>
-            <User className="size-4" />
-          </AvatarFallback>
-        </Avatar>
-        <span className="truncate font-normal">{user.name}</span>
-      </label>
-    ))}
-  </div>
-);
+}: UserSelectListProps) => {
+  const selectedUserIdSet = new Set(selectedUserIds);
+
+  return (
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
+      {users.map((user) => (
+        <label
+          className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 ${
+            selectedUserIdSet.has(user.id)
+              ? "border-primary bg-primary/5"
+              : "border-border"
+          }`}
+          htmlFor={`${idPrefix}-${user.id}`}
+          key={user.id}
+        >
+          <Checkbox
+            checked={selectedUserIdSet.has(user.id)}
+            id={`${idPrefix}-${user.id}`}
+            {...(fieldName === undefined ? {} : { name: fieldName })}
+            onBlur={onBlur}
+            onCheckedChange={() => {
+              onToggleUser(user.id);
+            }}
+          />
+          <Avatar className="size-8">
+            <AvatarImage alt={user.name} src={user.image ?? undefined} />
+            <AvatarFallback>
+              <User className="size-4" />
+            </AvatarFallback>
+          </Avatar>
+          <span className="truncate font-normal">{user.name}</span>
+        </label>
+      ))}
+    </div>
+  );
+};

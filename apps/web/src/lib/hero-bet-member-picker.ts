@@ -43,8 +43,9 @@ export const getAvailableUsers = (
   if (users === undefined) {
     return [];
   }
+  const selectedUserIdSet = new Set(selectedUserIds);
   return filterUsersBySearch(users, searchQuery).filter(
-    (user) => !selectedUserIds.includes(user.id)
+    (user) => !selectedUserIdSet.has(user.id)
   );
 };
 
@@ -59,7 +60,8 @@ export const getSelectedUsers = (
   if (users === undefined) {
     return [];
   }
-  return users.filter((user) => selectedUserIds.includes(user.id));
+  const selectedUserIdSet = new Set(selectedUserIds);
+  return users.filter((user) => selectedUserIdSet.has(user.id));
 };
 
 /**
