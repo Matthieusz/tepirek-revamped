@@ -2,6 +2,10 @@ import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
+
+const DiscordGuildId = Schema.Trim.pipe(Schema.check(Schema.isNonEmpty()));
+const discordGuildIdConfig = Config.schema(DiscordGuildId, "DISCORD_SERVER_ID");
 
 export class DiscordVerificationConfig extends Context.Service<
   DiscordVerificationConfig,
@@ -12,16 +16,16 @@ export class DiscordVerificationConfig extends Context.Service<
     Config.ConfigError
   > = Layer.effect(
     DiscordVerificationConfig,
-    Config.string("DISCORD_SERVER_ID").pipe(
+    discordGuildIdConfig.pipe(
       Effect.map((guildId) => DiscordVerificationConfig.of({ guildId }))
     )
   );
 }
 
 /** Discord guild configuration parsed from the active Config provider. */
-export const readDiscordVerificationConfig = Config.string(
-  "DISCORD_SERVER_ID"
-).pipe(Effect.map((guildId) => DiscordVerificationConfig.of({ guildId })));
+export const readDiscordVerificationConfig = discordGuildIdConfig.pipe(
+  Effect.map((guildId) => DiscordVerificationConfig.of({ guildId }))
+);
 
 /** Provide an already-parsed Discord verification configuration. */
 export const makeDiscordVerificationConfigLayer = (config: {

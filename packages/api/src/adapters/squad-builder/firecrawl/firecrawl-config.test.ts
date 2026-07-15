@@ -21,6 +21,22 @@ it.effect("loads Firecrawl config from Effect Config with default budget", () =>
   )
 );
 
+it.effect("fails layer construction for an empty Firecrawl API key", () => {
+  const program = FirecrawlConfigService.pipe(
+    Effect.provide(FirecrawlConfigServiceLiveLayer),
+    Effect.provideService(
+      ConfigProvider.ConfigProvider,
+      ConfigProvider.fromUnknown({ FIRECRAWL_API_KEY: "" })
+    )
+  );
+
+  return Effect.gen(function* firecrawlConfigFailureEffect() {
+    const error = yield* Effect.flip(program);
+
+    expect(error._tag).toBe("ConfigError");
+  });
+});
+
 it.effect("fails layer construction for invalid Firecrawl budget", () => {
   const program = FirecrawlConfigService.pipe(
     Effect.provide(FirecrawlConfigServiceLiveLayer),

@@ -15,6 +15,8 @@ import type {
 } from "../../../services/squad-builder/firecrawl-client.ts";
 import { parseFirecrawlCreditCount } from "../../../services/squad-builder/firecrawl-config.ts";
 
+const FirecrawlScrapeDeadline = "30 seconds";
+
 interface FirecrawlScraper {
   readonly scrape: (
     url: string,
@@ -50,7 +52,18 @@ export class FirecrawlSdkClient implements FirecrawlClient {
           sdk.scrape(toMargonemProfileUrl(profileId), {
             formats: ["html"],
           }),
-      });
+      }).pipe(
+        Effect.timeoutOrElse({
+          duration: FirecrawlScrapeDeadline,
+          orElse: () =>
+            Effect.fail(
+              new FirecrawlRequestFailed({
+                cause: new Error("Firecrawl scrape timed out"),
+                profileId,
+              })
+            ),
+        })
+      );
 
       // Validate the document has HTML content.
       if (typeof document.html !== "string" || document.html.length === 0) {
