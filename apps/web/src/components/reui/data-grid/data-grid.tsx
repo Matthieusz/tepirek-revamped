@@ -23,17 +23,6 @@ declare module "@tanstack/react-table" {
   }
 }
 
-/** Label for headers / column visibility: `meta.headerTitle`, string `columnDef.header`, or `column.id`. */
-export function getColumnHeaderLabel<TData, TValue>(
-  column: Column<TData, TValue>
-): string {
-  const meta = column.columnDef.meta as { headerTitle?: string } | undefined;
-  if (typeof meta?.headerTitle === "string") return meta.headerTitle;
-  const defHeader = column.columnDef.header;
-  if (typeof defHeader === "string") return defHeader;
-  return String(column.id);
-}
-
 export type DataGridApiFetchParams = {
   pageIndex: number;
   pageSize: number;
@@ -182,44 +171,46 @@ function DataGridProvider<TData extends object>({
   );
 }
 
+const defaultDataGridProps: Partial<DataGridProps<object>> = {
+  loadingMode: "skeleton",
+  tableLayout: {
+    dense: false,
+    cellBorder: false,
+    rowBorder: true,
+    rowRounded: false,
+    stripped: false,
+    headerSticky: false,
+    headerBackground: false,
+    footerBackground: false,
+    headerBorder: true,
+    width: "fixed",
+    columnsVisibility: false,
+    columnsResizable: false,
+    columnsResizeMode: "onEnd",
+    columnsPinnable: false,
+    columnsMovable: false,
+    columnsDraggable: false,
+    rowsDraggable: false,
+    rowsPinnable: false,
+  },
+  tableClassNames: {
+    base: "",
+    header: "",
+    headerRow: "",
+    headerSticky: "sticky top-0 z-15 bg-background/90 backdrop-blur-xs",
+    body: "",
+    bodyRow: "",
+    footer: "",
+    edgeCell: "",
+  },
+};
+
 function DataGrid<TData extends object>({
   children,
   table,
   ...props
 }: DataGridProps<TData>) {
-  const defaultProps: Partial<DataGridProps<TData>> = {
-    loadingMode: "skeleton",
-    tableLayout: {
-      dense: false,
-      cellBorder: false,
-      rowBorder: true,
-      rowRounded: false,
-      stripped: false,
-      headerSticky: false,
-      headerBackground: false,
-      footerBackground: false,
-      headerBorder: true,
-      width: "fixed",
-      columnsVisibility: false,
-      columnsResizable: false,
-      columnsResizeMode: "onEnd",
-      columnsPinnable: false,
-      columnsMovable: false,
-      columnsDraggable: false,
-      rowsDraggable: false,
-      rowsPinnable: false,
-    },
-    tableClassNames: {
-      base: "",
-      header: "",
-      headerRow: "",
-      headerSticky: "sticky top-0 z-15 bg-background/90 backdrop-blur-xs",
-      body: "",
-      bodyRow: "",
-      footer: "",
-      edgeCell: "",
-    },
-  };
+  const defaultProps = defaultDataGridProps as Partial<DataGridProps<TData>>;
 
   const mergedProps: DataGridProps<TData> = {
     ...defaultProps,
