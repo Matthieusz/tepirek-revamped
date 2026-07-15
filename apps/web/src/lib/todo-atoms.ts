@@ -1,3 +1,4 @@
+import { TodoIdSchema } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
 import type { TodoSummary } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
 import { Effect } from "effect";
 import * as Atom from "effect/unstable/reactivity/Atom";
@@ -48,7 +49,9 @@ export const createTodoAtom = appHttpApiFn(
 const deleteTodoRequestAtom = appHttpApiFn(
   Effect.fnUntraced(function* deleteTodoEffect(input: { readonly id: number }) {
     const client = yield* AppHttpApiClient;
-    return yield* client.todo.deleteTodo({ payload: input });
+    return yield* client.todo.deleteTodo({
+      payload: { id: TodoIdSchema.make(input.id) },
+    });
   })
 );
 
@@ -58,7 +61,12 @@ const toggleTodoRequestAtom = appHttpApiFn(
     readonly id: number;
   }) {
     const client = yield* AppHttpApiClient;
-    return yield* client.todo.toggleTodo({ payload: input });
+    return yield* client.todo.toggleTodo({
+      payload: {
+        completed: input.completed,
+        id: TodoIdSchema.make(input.id),
+      },
+    });
   })
 );
 

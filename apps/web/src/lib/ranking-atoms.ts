@@ -1,3 +1,8 @@
+import {
+  EventIdSchema,
+  HeroIdSchema,
+} from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
+import type { HeroStats } from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
 import { Effect } from "effect";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
@@ -31,7 +36,16 @@ const rankingByKeyAtom = Atom.family((key: RankingKey) => {
   return appHttpApiAtom(
     Effect.gen(function* getRankingEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.ranking.getRanking({ payload });
+      return yield* client.ranking.getRanking({
+        payload: {
+          ...(payload.eventId === undefined
+            ? {}
+            : { eventId: EventIdSchema.make(payload.eventId) }),
+          ...(payload.heroId === undefined
+            ? {}
+            : { heroId: HeroIdSchema.make(payload.heroId) }),
+        },
+      });
     })
   );
 });
@@ -39,17 +53,11 @@ const rankingByKeyAtom = Atom.family((key: RankingKey) => {
 export const rankingAtom = (payload: RankingInput) =>
   rankingByKeyAtom(rankingKey(payload));
 
-interface HeroStatsData {
-  readonly currentPointWorth: number;
-  readonly heroId: number;
-  readonly heroName: string;
-  readonly totalBets: number;
-  readonly totalPoints: number;
-}
+type HeroStatsData = typeof HeroStats.Type;
 
 const HERO_STATS_PLACEHOLDER: HeroStatsData = {
   currentPointWorth: 0,
-  heroId: 0,
+  heroId: HeroIdSchema.make(1),
   heroName: "",
   totalBets: 0,
   totalPoints: 0,
@@ -64,7 +72,9 @@ const heroStatsByHeroIdAtom = Atom.family((heroId: number) =>
   appHttpApiAtom(
     Effect.gen(function* getHeroStatsEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.ranking.getHeroStats({ payload: { heroId } });
+      return yield* client.ranking.getHeroStats({
+        payload: { heroId: HeroIdSchema.make(heroId) },
+      });
     })
   )
 );

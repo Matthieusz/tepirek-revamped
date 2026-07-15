@@ -1,3 +1,8 @@
+import { UserId } from "@tepirek-revamped/api/protocol/user/http-api-contract";
+import {
+  EventIdSchema,
+  HeroIdSchema,
+} from "@tepirek-revamped/api/protocol/vault/http-api-contract";
 import type { VaultRow } from "@tepirek-revamped/api/protocol/vault/http-api-contract";
 import { Effect } from "effect";
 import * as Atom from "effect/unstable/reactivity/Atom";
@@ -22,7 +27,7 @@ const vaultKey = (payload: VaultInput): VaultKey =>
   String(payload.eventId ?? "all");
 
 const vaultInputFromKey = (key: VaultKey) =>
-  key === "all" ? {} : { eventId: Number(key) };
+  key === "all" ? {} : { eventId: EventIdSchema.make(Number(key)) };
 
 const setPaidOutForUser = (
   rows: readonly VaultEntry[],
@@ -72,7 +77,10 @@ export const distributeGoldAtom = appHttpApiFn(
   ) {
     const client = yield* AppHttpApiClient;
     const result = yield* client.vault.distributeGold({
-      payload: { goldAmount: payload.goldAmount, heroId: payload.heroId },
+      payload: {
+        goldAmount: payload.goldAmount,
+        heroId: HeroIdSchema.make(payload.heroId),
+      },
     });
 
     const allKey = vaultKey({});
@@ -98,7 +106,13 @@ const togglePaidOutRequestAtom = appHttpApiFn(
     get: Atom.FnContext
   ) {
     const client = yield* AppHttpApiClient;
-    const result = yield* client.vault.togglePaidOut({ payload });
+    const result = yield* client.vault.togglePaidOut({
+      payload: {
+        ...payload,
+        eventId: EventIdSchema.make(payload.eventId),
+        userId: UserId.make(payload.userId),
+      },
+    });
     get.refresh(oldestUnpaidEventAtom);
     return result;
   })

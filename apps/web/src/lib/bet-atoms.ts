@@ -1,3 +1,9 @@
+import {
+  BetIdSchema,
+  EventIdSchema,
+  HeroIdSchema,
+} from "@tepirek-revamped/api/protocol/bet/http-api-contract";
+import { UserId } from "@tepirek-revamped/api/protocol/user/http-api-contract";
 import { Effect } from "effect";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
@@ -45,7 +51,18 @@ const paginatedBetsByKeyAtom = Atom.family((key: PaginatedBetKey) => {
   return appHttpApiAtom(
     Effect.gen(function* getAllPaginatedBetsEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.bet.getAllPaginated({ payload });
+      return yield* client.bet.getAllPaginated({
+        payload: {
+          ...(payload.eventId === undefined
+            ? {}
+            : { eventId: EventIdSchema.make(payload.eventId) }),
+          ...(payload.heroId === undefined
+            ? {}
+            : { heroId: HeroIdSchema.make(payload.heroId) }),
+          ...(payload.limit === undefined ? {} : { limit: payload.limit }),
+          ...(payload.page === undefined ? {} : { page: payload.page }),
+        },
+      });
     })
   );
 });
@@ -71,7 +88,16 @@ export const createBetAtom = appHttpApiFn(
     get: Atom.FnContext
   ) {
     const client = yield* AppHttpApiClient;
-    const bet = yield* client.bet.create({ payload });
+    const [firstUserId, ...remainingUserIds] = payload.userIds;
+    const bet = yield* client.bet.create({
+      payload: {
+        heroId: HeroIdSchema.make(payload.heroId),
+        userIds: [
+          UserId.make(firstUserId),
+          ...remainingUserIds.map((userId) => UserId.make(userId)),
+        ],
+      },
+    });
     get.refresh(latestBetForCopyAtom);
     return bet;
   })
@@ -87,7 +113,9 @@ export const deleteBetAtom = appHttpApiFn(
     get: Atom.FnContext
   ) {
     const client = yield* AppHttpApiClient;
-    const result = yield* client.bet.delete({ payload: { id: input.id } });
+    const result = yield* client.bet.delete({
+      payload: { id: BetIdSchema.make(input.id) },
+    });
     get.refresh(paginatedBetsAtom({ ...input.refreshInput, page: 1 }));
     return result;
   })
@@ -104,10 +132,14 @@ export const editBetAtom = appHttpApiFn(
     get: Atom.FnContext
   ) {
     const client = yield* AppHttpApiClient;
+    const [firstUserId, ...remainingUserIds] = payload.newUserIds;
     const result = yield* client.bet.edit({
       payload: {
-        betId: payload.betId,
-        newUserIds: payload.newUserIds,
+        betId: BetIdSchema.make(payload.betId),
+        newUserIds: [
+          UserId.make(firstUserId),
+          ...remainingUserIds.map((userId) => UserId.make(userId)),
+        ],
       },
     });
     get.refresh(paginatedBetsAtom(payload.refreshInput));

@@ -1,3 +1,4 @@
+import { EventIdSchema } from "@tepirek-revamped/api/protocol/event/http-api-contract";
 import type { EventSummary } from "@tepirek-revamped/api/protocol/event/http-api-contract";
 import type { EVENT_ICON_IDS } from "@tepirek-revamped/config";
 import { Effect } from "effect";
@@ -58,7 +59,9 @@ const deleteEventRequestAtom = appHttpApiFn(
     readonly id: number;
   }) {
     const client = yield* AppHttpApiClient;
-    return yield* client.event.deleteEvent({ payload: input });
+    return yield* client.event.deleteEvent({
+      payload: { id: EventIdSchema.make(input.id) },
+    });
   })
 );
 
@@ -68,7 +71,9 @@ const toggleEventActiveRequestAtom = appHttpApiFn(
     readonly id: number;
   }) {
     const client = yield* AppHttpApiClient;
-    return yield* client.event.toggleEventActive({ payload: input });
+    return yield* client.event.toggleEventActive({
+      payload: { active: input.active, id: EventIdSchema.make(input.id) },
+    });
   })
 );
 

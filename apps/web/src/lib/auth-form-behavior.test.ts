@@ -1,6 +1,7 @@
+import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { toast } from "sonner";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, vi } from "vitest";
 
 import {
   authFormSubmission,
@@ -40,29 +41,31 @@ describe("auth form behavior", () => {
     expect(submit).toHaveBeenCalledOnce();
   });
 
-  it("translates a rejected request into a typed failure without leaking its cause", async () => {
-    const error = await Effect.runPromise(
-      Effect.flip(
-        authFormSubmission("login", () =>
-          Promise.reject(new Error("provider URL and token"))
-        )
-      )
-    );
+  it.effect(
+    "translates a rejected request into a typed failure without leaking its cause",
+    () =>
+      Effect.gen(function* translateRequestFailure() {
+        const error = yield* Effect.flip(
+          authFormSubmission("login", () =>
+            Promise.reject(new Error("provider URL and token"))
+          )
+        );
 
-    expect(error).toMatchObject({
-      _tag: "AuthFormSubmissionError",
-      kind: "request",
-      message: "Nie udało się połączyć z usługą uwierzytelniania",
-      operation: "login",
-    });
-    expect(error).not.toHaveProperty("url");
-    expect(error).not.toHaveProperty("token");
-    expect(toast.success).not.toHaveBeenCalled();
-  });
+        expect(error).toMatchObject({
+          _tag: "AuthFormSubmissionError",
+          kind: "request",
+          message: "Nie udało się połączyć z usługą uwierzytelniania",
+          operation: "login",
+        });
+        expect(error).not.toHaveProperty("url");
+        expect(error).not.toHaveProperty("token");
+        expect(toast.success).not.toHaveBeenCalled();
+      })
+  );
 
-  it("translates provider-declared failures and reports them once", async () => {
-    const error = await Effect.runPromise(
-      Effect.flip(
+  it.effect("translates provider-declared failures and reports them once", () =>
+    Effect.gen(function* translateProviderFailure() {
+      const error = yield* Effect.flip(
         authFormSubmission("signup", () =>
           Promise.resolve({
             data: null,
@@ -74,19 +77,19 @@ describe("auth form behavior", () => {
             },
           })
         )
-      )
-    );
+      );
 
-    expect(error).toMatchObject({
-      _tag: "AuthFormSubmissionError",
-      code: "INVALID_EMAIL",
-      kind: "provider",
-      message: "Niepoprawny e-mail",
-      operation: "signup",
-      status: 400,
-    });
-    expect(toast.success).not.toHaveBeenCalled();
-  });
+      expect(error).toMatchObject({
+        _tag: "AuthFormSubmissionError",
+        code: "INVALID_EMAIL",
+        kind: "provider",
+        message: "Niepoprawny e-mail",
+        operation: "signup",
+        status: 400,
+      });
+      expect(toast.success).not.toHaveBeenCalled();
+    })
+  );
 
   it("invalidates before navigating after login", async () => {
     const calls: string[] = [];
