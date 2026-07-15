@@ -44,6 +44,7 @@ export const makeTestLayer = () => {
     },
     bet: {
       create: record("bet", "create"),
+      delete: record("bet", "delete"),
       edit: record("bet", "edit"),
       getAllPaginated: record("bet", "getAllPaginated"),
       getLatestForCopy: record("bet", "getLatestForCopy"),

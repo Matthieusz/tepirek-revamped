@@ -36,11 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEventHeroFilter } from "@/hooks/use-event-hero-filter";
-import {
-  deleteBetFromPageAtom,
-  optimisticPaginatedBetsAtom,
-  paginatedBetsAtom,
-} from "@/lib/bet-atoms";
+import { deleteBetAtom, paginatedBetsAtom } from "@/lib/bet-atoms";
 import { calculatePointsPerMember } from "@/lib/bet-helpers";
 import { getErrorMessage } from "@/lib/errors";
 import { eventsAtom } from "@/lib/event-atoms";
@@ -53,7 +49,6 @@ import type { AuthSession } from "@/types/route";
 type BetToDelete = {
   id: number;
   heroName: string;
-  page: number;
 } | null;
 
 const ITEMS_PER_PAGE = 10;
@@ -61,6 +56,13 @@ const ITEMS_PER_PAGE = 10;
 interface HistoryPageProps {
   session: AuthSession;
 }
+
+const historyFilterKey = (input: {
+  readonly eventId?: number;
+  readonly heroId?: number;
+  readonly limit: number;
+}) =>
+  JSON.stringify([input.eventId ?? null, input.heroId ?? null, input.limit]);
 
 export default function HistoryPage({ session }: HistoryPageProps) {
   const filter = useEventHeroFilter({
@@ -100,6 +102,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
                 <HistoryContent
                   betPageInput={betPageInput}
                   filter={filter}
+                  key={historyFilterKey(betPageInput)}
                   session={session}
                 />
               )}
@@ -128,16 +131,8 @@ const HistoryContent = ({
 }: HistoryContentProps) => {
   const [betToDelete, setBetToDelete] = useState<BetToDelete>(null);
   const [loadedPages, setLoadedPages] = useState<readonly number[]>([1]);
-  const deleteInput = {
-    ...betPageInput,
-    page: betToDelete?.page ?? 1,
-  };
-  const deleteBet = useAtomSet(deleteBetFromPageAtom(deleteInput), {
-    mode: "promise",
-  });
-  const betsDataResult = useAtomValue(
-    optimisticPaginatedBetsAtom(betPageInput)
-  );
+  const deleteBet = useAtomSet(deleteBetAtom, { mode: "promise" });
+  const betsDataResult = useAtomValue(paginatedBetsAtom(betPageInput));
   const betsData = AsyncResult.getOrThrow(betsDataResult);
   const isAdminUser = isAdmin(session);
 
@@ -151,19 +146,26 @@ const HistoryContent = ({
     );
   };
 
+  const [isDeleting, setIsDeleting] = useState(false);
   const deleteMutation = {
-    isPending: false,
+    isPending: isDeleting,
     mutate: (betId: number) => {
-      const run = async () => {
+      if (isDeleting) {
+        return;
+      }
+      void (async () => {
+        setIsDeleting(true);
         try {
-          await deleteBet({ id: betId });
+          await deleteBet({ id: betId, refreshInput: betPageInput });
+          setLoadedPages([1]);
           toast.success("Obstawienie zostało usunięte");
           setBetToDelete(null);
         } catch (error: unknown) {
           toast.error(getErrorMessage(error));
+        } finally {
+          setIsDeleting(false);
         }
-      };
-      void run();
+      })();
     },
   };
 
@@ -186,9 +188,7 @@ const HistoryContent = ({
             formattedCreatedAt={formatDateTime(bet.createdAt)}
             isAdminUser={isAdminUser}
             key={bet.id}
-            onDeleteClick={(selectedBet) =>
-              setBetToDelete({ ...selectedBet, page: 1 })
-            }
+            onDeleteClick={setBetToDelete}
             pointsPerMember={calculatePointsPerMember(bet.memberCount)}
             refreshInput={betPageInput}
           />
@@ -323,7 +323,7 @@ interface HistoryPageChunkProps {
 
 const HistoryPageChunk = (props: HistoryPageChunkProps) => {
   const input = { ...props.baseInput, page: props.page };
-  const result = useAtomValue(optimisticPaginatedBetsAtom(input));
+  const result = useAtomValue(paginatedBetsAtom(input));
   const refresh = useAtomRefresh(paginatedBetsAtom(input));
 
   return (
@@ -344,7 +344,7 @@ const LoadedHistoryPageChunk = ({
   onLoadPage,
   page,
 }: LoadedHistoryPageChunkProps) => {
-  const result = useAtomValue(optimisticPaginatedBetsAtom(input));
+  const result = useAtomValue(paginatedBetsAtom(input));
   const data = AsyncResult.getOrThrow(result);
 
   return (
@@ -363,7 +363,7 @@ const LoadedHistoryPageChunk = ({
           formattedCreatedAt={formatDateTime(bet.createdAt)}
           isAdminUser={isAdminUser}
           key={bet.id}
-          onDeleteClick={(selectedBet) => onDelete({ ...selectedBet, page })}
+          onDeleteClick={onDelete}
           pointsPerMember={calculatePointsPerMember(bet.memberCount)}
           refreshInput={input}
         />

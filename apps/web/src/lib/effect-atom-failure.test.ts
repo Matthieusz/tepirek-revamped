@@ -11,10 +11,7 @@ import {
   auctionSignupsAtom,
   optimisticAuctionSignupsAtom,
 } from "@/lib/auction-atoms";
-import {
-  optimisticPaginatedBetsAtom,
-  paginatedBetsAtom,
-} from "@/lib/bet-atoms";
+import { paginatedBetsAtom } from "@/lib/bet-atoms";
 import { optimisticEventsAtom, eventsAtom } from "@/lib/event-atoms";
 import { heroesAtom, optimisticHeroesAtom } from "@/lib/hero-atoms";
 import { rankingAtom } from "@/lib/ranking-atoms";
@@ -61,9 +58,8 @@ describe("optimistic resource failure states", () => {
       announcementsAtom,
       optimisticAnnouncementsAtom
     );
-    expectOptimisticFailureToRemainFailure(
-      paginatedBetsAtom({ eventId: 1, page: 1 }),
-      optimisticPaginatedBetsAtom({ eventId: 1, page: 1 })
+    expectResourceFailureToRemainFailure(
+      paginatedBetsAtom({ eventId: 1, page: 1 })
     );
     expectOptimisticFailureToRemainFailure(
       vaultAtom({ eventId: 1 }),
