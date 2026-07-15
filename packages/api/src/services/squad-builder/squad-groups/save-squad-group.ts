@@ -10,7 +10,10 @@ import type {
   SquadGroupValidationError,
 } from "../../../domain/squad-builder/squad-group-snapshot.ts";
 import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.ts";
-import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.ts";
+import type {
+  EffectSquadBuilderPersistenceUnavailable,
+  SquadGroupWriteConflict,
+} from "./squad-group-errors.ts";
 import * as SquadGroupStore from "./squad-group-store.ts";
 
 export type { SaveSquadInput };
@@ -19,6 +22,7 @@ export type { SaveSquadInput };
 export interface SaveSquadGroupInput {
   readonly actorUserId: AppUserId;
   readonly groupId: SquadGroupId;
+  readonly expectedUpdatedAt: Date;
   readonly name: string;
   readonly squads: readonly SaveSquadInput[];
 }
@@ -28,6 +32,7 @@ export type SaveSquadGroupError =
   | SquadGroupStore.SquadGroupNotFound
   | SquadGroupStore.ActorCannotViewSquadGroup
   | SquadGroupStore.ActorDoesNotOwnSquadGroup
+  | SquadGroupWriteConflict
   | SquadGroupValidationError
   | EffectSquadBuilderPersistenceUnavailable;
 
@@ -56,6 +61,7 @@ const makeSave = (store: SquadGroupStore.SquadGroupStoreServiceShape) =>
     return yield* store.saveSquadGroupSnapshot({
       actorUserId: input.actorUserId,
       availableCharacters,
+      expectedUpdatedAt: input.expectedUpdatedAt,
       now,
       snapshot,
     });

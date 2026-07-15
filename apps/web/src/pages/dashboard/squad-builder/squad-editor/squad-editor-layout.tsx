@@ -34,6 +34,8 @@ interface SquadEditorLayoutProps {
   readonly onSquadNameChange: (squadKey: string, name: string) => void;
   readonly onVisibilityChange: (visibility: "private" | "global") => void;
   readonly role: "owner" | "editor" | "viewer";
+  readonly isSaveConflict: boolean;
+  readonly onReloadLatest: () => void;
   readonly saveError: string | null;
   readonly visibility: "private" | "global";
 }
@@ -60,6 +62,8 @@ export const SquadEditorLayout = ({
   onSquadNameChange,
   onVisibilityChange,
   role,
+  isSaveConflict,
+  onReloadLatest,
   saveError,
   visibility,
 }: SquadEditorLayoutProps) => {
@@ -75,6 +79,8 @@ export const SquadEditorLayout = ({
         onShareToggle={onShareToggle}
         onVisibilityChange={onVisibilityChange}
         role={role}
+        isSaveConflict={isSaveConflict}
+        onReloadLatest={onReloadLatest}
         saveError={saveError}
         state={{ isDirty, isSaving, isSharingOpen, isVisibilityPending }}
         variant={isViewer ? "viewer" : "editor"}
@@ -103,6 +109,7 @@ export const SquadEditorLayout = ({
                 canEditPlacements={canEditPlacements}
                 characterById={characterById}
                 draft={draft}
+                isSaving={isSaving}
                 isOwner={isOwner}
                 onAddSquad={onAddSquad}
                 onNameChange={onSquadNameChange}
@@ -116,6 +123,7 @@ export const SquadEditorLayout = ({
                   characterById={characterById}
                   draft={draft}
                   groupId={groupId}
+                  isSaving={isSaving}
                   key={groupId}
                   onDraftChange={onDraftChange}
                 />

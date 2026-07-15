@@ -90,6 +90,7 @@ import type {
   SquadGroupInvitationNotFound,
   SquadGroupInvitationTransitionNotAllowed,
   SquadGroupNotFound,
+  SquadGroupWriteConflict,
   SquadNotInGroup,
 } from "./squad-group-errors.ts";
 
@@ -114,6 +115,7 @@ export type {
   SquadGroupInvitationNotFound,
   SquadGroupInvitationTransitionNotAllowed,
   SquadGroupNotFound,
+  SquadGroupWriteConflict,
   SquadNotInGroup,
 } from "./squad-group-errors.ts";
 
@@ -286,6 +288,7 @@ export interface ListAvailableCharactersForOwnerInput {
 /** Store input for saving a parsed squad group snapshot. */
 export interface SaveSquadGroupSnapshotStoreInput {
   readonly actorUserId: AppUserId;
+  readonly expectedUpdatedAt: Date;
   readonly snapshot: SquadGroupDraftSnapshot;
   readonly availableCharacters: readonly AvailableSquadCharacter[];
   readonly now: Date;
@@ -325,6 +328,7 @@ export interface RevokeSquadGroupEditorStoreInput {
 /** Store input for saving shared squad group characters. */
 export interface SaveSharedSquadGroupCharactersStoreInput {
   readonly actorUserId: AppUserId;
+  readonly expectedUpdatedAt: Date;
   readonly groupId: SquadGroupId;
   readonly snapshot: SharedSquadGroupCharactersSnapshot;
   readonly now: Date;
@@ -360,6 +364,7 @@ export interface SquadBuilderStoreServiceShape {
     SquadGroupDetail,
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
+    | SquadGroupWriteConflict
     | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly saveSharedSquadGroupCharacters: (
@@ -371,6 +376,7 @@ export interface SquadBuilderStoreServiceShape {
     | SquadNotInGroup
     | EditorCannotChangeSquadStructure
     | SquadCharacterNotAccessible
+    | SquadGroupWriteConflict
     | EffectSquadBuilderPersistenceUnavailable
   >;
   readonly listGlobalSquadGroups: (

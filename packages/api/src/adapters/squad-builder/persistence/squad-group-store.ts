@@ -90,6 +90,7 @@ import {
   SquadGroupInvitationNotFound,
   SquadGroupInvitationTransitionNotAllowed,
   SquadGroupNotFound,
+  SquadGroupWriteConflict,
   SquadNotInGroup,
 } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import type {
@@ -681,8 +682,23 @@ const listIncomingSquadGroupInvitesWithDatabase = (
   }) {
     const operation = "listIncomingSquadGroupInvites" as const;
     const select = database
-      .select({ id: squadGroupInvitation.id })
+      .select({
+        createdAt: squadGroupInvitation.createdAt,
+        invitationId: squadGroupInvitation.id,
+        ownerId: user.id,
+        ownerImage: user.image,
+        ownerName: user.name,
+        squadGroupId: squadGroup.id,
+        squadGroupName: squadGroup.name,
+        status: squadGroupInvitation.status,
+        updatedAt: squadGroupInvitation.updatedAt,
+      })
       .from(squadGroupInvitation)
+      .innerJoin(
+        squadGroup,
+        eq(squadGroup.id, squadGroupInvitation.squadGroupId)
+      )
+      .innerJoin(user, eq(user.id, squadGroup.ownerUserId))
       .where(
         and(
           eq(
@@ -692,25 +708,46 @@ const listIncomingSquadGroupInvitesWithDatabase = (
           eq(squadGroupInvitation.status, "pending")
         )
       )
-      .orderBy(desc(squadGroupInvitation.createdAt));
+      .orderBy(
+        desc(squadGroupInvitation.createdAt),
+        desc(squadGroupInvitation.id)
+      );
     const rows = yield* persistenceQuery(operation, select);
 
     const invites: SquadGroupInvitationSummary[] = [];
 
     for (const row of rows) {
-      const invitationId = yield* parseSquadGroupInvitationId(row.id).pipe(
+      const invitationId = yield* parseSquadGroupInvitationId(
+        row.invitationId
+      ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+
+      const status = yield* parseSquadGroupInvitationStatus(row.status).pipe(
         Effect.catch((error) => failPersistence(operation, error))
       );
 
-      const summary = yield* loadSquadGroupInvitationSummaryWithDatabase(
-        database
-      )(invitationId, operation).pipe(
-        Effect.catchTag("SquadGroupInvitationNotFound", (error) =>
-          failPersistence(operation, error)
-        )
+      const squadGroupId = yield* parseSquadGroupId(row.squadGroupId).pipe(
+        Effect.catch((error) => failPersistence(operation, error))
+      );
+      const squadGroupName = yield* parsePersistedSquadGroupName(
+        operation,
+        row.squadGroupName
+      );
+      const ownerUserId = yield* parsePersistedAppUserId(
+        operation,
+        row.ownerId
       );
 
-      invites.push(summary);
+      invites.push({
+        createdAt: row.createdAt,
+        invitationId,
+        ownerUserId,
+        ownerUserImage: row.ownerImage,
+        ownerUserName: row.ownerName,
+        squadGroupId,
+        squadGroupName,
+        status,
+        updatedAt: row.updatedAt,
+      });
     }
 
     return invites;
@@ -1255,6 +1292,7 @@ const saveSharedSquadGroupCharactersWithDatabase = (
 ) =>
   Effect.fnUntraced(function* saveSharedSquadGroupCharactersEffect({
     actorUserId,
+    expectedUpdatedAt,
     groupId,
     now,
     snapshot,
@@ -1271,7 +1309,10 @@ const saveSharedSquadGroupCharactersWithDatabase = (
         );
 
         const groupSelect = tx
-          .select({ ownerUserId: squadGroup.ownerUserId })
+          .select({
+            ownerUserId: squadGroup.ownerUserId,
+            updatedAt: squadGroup.updatedAt,
+          })
           .from(squadGroup)
           .where(eq(squadGroup.id, groupIdNumber))
           .limit(1);
@@ -1281,6 +1322,10 @@ const saveSharedSquadGroupCharactersWithDatabase = (
 
         if (group === undefined) {
           return new SquadGroupNotFound();
+        }
+
+        if (group.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
+          return new SquadGroupWriteConflict();
         }
 
         if (group.ownerUserId !== actor) {
@@ -1417,6 +1462,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* saveSquadGroupSnapshotEffect({
     actorUserId,
     availableCharacters,
+    expectedUpdatedAt,
     now,
     snapshot,
   }: SaveSquadGroupSnapshotStoreInput) {
@@ -1437,7 +1483,10 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
         );
 
         const groupSelect = tx
-          .select({ ownerUserId: squadGroup.ownerUserId })
+          .select({
+            ownerUserId: squadGroup.ownerUserId,
+            updatedAt: squadGroup.updatedAt,
+          })
           .from(squadGroup)
           .where(eq(squadGroup.id, groupIdNumber))
           .limit(1);
@@ -1447,6 +1496,10 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
 
         if (group === undefined) {
           return new SquadGroupNotFound();
+        }
+
+        if (group.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
+          return new SquadGroupWriteConflict();
         }
 
         if (group.ownerUserId !== appUserIdToString(actorUserId)) {

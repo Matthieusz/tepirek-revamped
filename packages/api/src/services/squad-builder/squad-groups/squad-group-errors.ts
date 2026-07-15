@@ -79,6 +79,12 @@ export class SquadGroupInvitationTransitionNotAllowed extends Schema.TaggedError
   conflict
 ) {}
 
+export class SquadGroupWriteConflict extends Schema.TaggedErrorClass<SquadGroupWriteConflict>()(
+  "SquadGroupWriteConflict",
+  {},
+  conflict
+) {}
+
 export class SquadNotInGroup extends Schema.TaggedErrorClass<SquadNotInGroup>()(
   "SquadNotInGroup",
   {

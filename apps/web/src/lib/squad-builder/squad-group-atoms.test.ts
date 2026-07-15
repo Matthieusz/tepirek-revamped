@@ -25,6 +25,7 @@ describe("squad group atoms", () => {
     const registry = makeRegistry();
 
     registry.set(saveSquadGroupAtom, {
+      expectedUpdatedAt: new Date("2026-01-01T00:00:00.000Z"),
       groupId: 10,
       name: "Test group",
       squads: [
@@ -47,6 +48,7 @@ describe("squad group atoms", () => {
 
     const saveCall = calls.find((call) => call.method === "saveSquadGroup");
     expect(saveCall?.args).toEqual({
+      expectedUpdatedAt: new Date("2026-01-01T00:00:00.000Z"),
       groupId: 10,
       name: "Test group",
       squads: [
@@ -73,6 +75,7 @@ describe("squad group atoms", () => {
     const registry = makeRegistry();
 
     registry.set(saveSharedSquadGroupCharactersAtom, {
+      expectedUpdatedAt: new Date("2026-01-01T00:00:00.000Z"),
       groupId: 10,
       squads: [{ characters: [], squadId: 20 }],
     });
@@ -82,6 +85,7 @@ describe("squad group atoms", () => {
       (call) => call.method === "saveSharedSquadGroupCharacters"
     );
     expect(saveCall?.args).toEqual({
+      expectedUpdatedAt: new Date("2026-01-01T00:00:00.000Z"),
       groupId: 10,
       squads: [{ characters: [], squadId: 20 }],
     });

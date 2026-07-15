@@ -102,6 +102,7 @@ const SaveSquadPayload = Schema.Struct({
 });
 
 export const SaveSquadGroupPayload = Schema.Struct({
+  expectedUpdatedAt: Schema.DateFromString,
   groupId: SquadGroupIdSchema,
   name: Schema.String,
   squads: Schema.Array(SaveSquadPayload),
@@ -113,6 +114,7 @@ const SaveSharedSquadCharactersPayload = Schema.Struct({
 });
 
 export const SaveSharedSquadGroupCharactersPayload = Schema.Struct({
+  expectedUpdatedAt: Schema.DateFromString,
   groupId: SquadGroupIdSchema,
   squads: Schema.Array(SaveSharedSquadCharactersPayload),
 });

@@ -59,6 +59,7 @@ interface AvailableCharacterPoolProps {
   readonly characterById: ReadonlyMap<number, SquadCharacterMetadata>;
   readonly draft: SquadGroupDraft;
   readonly groupId: number;
+  readonly isSaving: boolean;
   readonly onDraftChange: (draft: SquadGroupDraft) => void;
 }
 
@@ -398,6 +399,7 @@ export const AvailableCharacterPool = ({
   characterById,
   draft,
   groupId,
+  isSaving,
   onDraftChange,
 }: AvailableCharacterPoolProps) => {
   const [state, dispatch] = useReducer(
@@ -521,176 +523,178 @@ export const AvailableCharacterPool = ({
       aria-labelledby="available-characters-heading"
       className="flex min-h-0 min-w-0 flex-col"
     >
-      <Frame
-        className="flex min-h-0 flex-1 flex-col [--frame-radius:var(--radius-lg)] xl:max-h-[calc(100dvh-10rem)] xl:sticky xl:top-4"
-        spacing="sm"
-      >
-        <FramePanel className="flex min-h-0 flex-1 flex-col p-0 shadow-none">
-          <AvailableCharacterPoolHeader
-            characterCount={characters.length}
-            characterNameQuery={characterNameQuery}
-            filteredCount={filteredCharacters.length}
-            groupId={groupId}
-            hasActiveFilters={hasActiveFilters}
-            hasLevelError={hasLevelError}
-            levelErrorId={levelErrorId}
-            levelErrorMessage={levelErrorMessage}
-            levelFromInput={levelFromInput}
-            levelToInput={levelToInput}
-            onCharacterNameChange={(value) => {
-              dispatch({ type: "set-name", value });
-            }}
-            onClearFilters={clearFilters}
-            onLevelFromChange={(value) => {
-              dispatch({ type: "set-level-from", value });
-            }}
-            onLevelToChange={(value) => {
-              dispatch({ type: "set-level-to", value });
-            }}
-            onProfessionToggle={updateProfessionFilter}
-            selectedProfessions={selectedProfessions}
-            unassignedCount={unassignedCharacters.length}
-          />
+      <fieldset className="contents" disabled={isSaving}>
+        <Frame
+          className="flex min-h-0 flex-1 flex-col [--frame-radius:var(--radius-lg)] xl:max-h-[calc(100dvh-10rem)] xl:sticky xl:top-4"
+          spacing="sm"
+        >
+          <FramePanel className="flex min-h-0 flex-1 flex-col p-0 shadow-none">
+            <AvailableCharacterPoolHeader
+              characterCount={characters.length}
+              characterNameQuery={characterNameQuery}
+              filteredCount={filteredCharacters.length}
+              groupId={groupId}
+              hasActiveFilters={hasActiveFilters}
+              hasLevelError={hasLevelError}
+              levelErrorId={levelErrorId}
+              levelErrorMessage={levelErrorMessage}
+              levelFromInput={levelFromInput}
+              levelToInput={levelToInput}
+              onCharacterNameChange={(value) => {
+                dispatch({ type: "set-name", value });
+              }}
+              onClearFilters={clearFilters}
+              onLevelFromChange={(value) => {
+                dispatch({ type: "set-level-from", value });
+              }}
+              onLevelToChange={(value) => {
+                dispatch({ type: "set-level-to", value });
+              }}
+              onProfessionToggle={updateProfessionFilter}
+              selectedProfessions={selectedProfessions}
+              unassignedCount={unassignedCharacters.length}
+            />
 
-          {AsyncResult.isFailure(result) && (
-            <Alert className="m-4" variant="destructive">
-              <AlertTriangle aria-hidden="true" />
-              <AlertTitle>Nie udało się wczytać puli postaci</AlertTitle>
-              <AlertDescription>
-                Zapisane składy są nadal widoczne. Spróbuj ponownie, aby
-                przydzielać postacie.
-              </AlertDescription>
-              <AlertAction>
-                <Button
-                  onClick={refresh}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  <RotateCw className="size-3.5" />
-                  Spróbuj ponownie
-                </Button>
-              </AlertAction>
-            </Alert>
-          )}
-          {!AsyncResult.isSuccess(result) && !AsyncResult.isFailure(result) && (
-            <CharacterPoolSkeleton />
-          )}
-          {AsyncResult.isSuccess(result) && characters.length === 0 && (
-            <div className="flex flex-col items-center gap-3 px-4 py-9 text-center">
-              <IconStack aria-hidden="true">
-                <UserPlus className="size-5" />
-              </IconStack>
-              <p className="max-w-sm text-muted-foreground text-sm">
-                Brak dostępnych postaci z Jaruny. Dodaj konto, aby zasilić pulę.
-              </p>
-              <a
-                className="inline-flex min-h-10 items-center justify-center rounded-lg border border-border px-3 font-medium text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                href="/dashboard/squad-builder/accounts"
-              >
-                Przejdź do kont
-              </a>
-            </div>
-          )}
-          {AsyncResult.isSuccess(result) &&
-            characters.length > 0 &&
-            unassignedCharacters.length === 0 && (
-              <div className="flex flex-col items-center gap-2 px-4 py-9 text-center">
+            {AsyncResult.isFailure(result) && (
+              <Alert className="m-4" variant="destructive">
+                <AlertTriangle aria-hidden="true" />
+                <AlertTitle>Nie udało się wczytać puli postaci</AlertTitle>
+                <AlertDescription>
+                  Zapisane składy są nadal widoczne. Spróbuj ponownie, aby
+                  przydzielać postacie.
+                </AlertDescription>
+                <AlertAction>
+                  <Button
+                    onClick={refresh}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    <RotateCw className="size-3.5" />
+                    Spróbuj ponownie
+                  </Button>
+                </AlertAction>
+              </Alert>
+            )}
+            {!AsyncResult.isSuccess(result) &&
+              !AsyncResult.isFailure(result) && <CharacterPoolSkeleton />}
+            {AsyncResult.isSuccess(result) && characters.length === 0 && (
+              <div className="flex flex-col items-center gap-3 px-4 py-9 text-center">
                 <IconStack aria-hidden="true">
                   <UserPlus className="size-5" />
                 </IconStack>
                 <p className="max-w-sm text-muted-foreground text-sm">
-                  Wszystkie dostępne postacie są już przypisane do składów.
+                  Brak dostępnych postaci z Jaruny. Dodaj konto, aby zasilić
+                  pulę.
                 </p>
-              </div>
-            )}
-          {AsyncResult.isSuccess(result) &&
-            unassignedCharacters.length > 0 &&
-            filteredCharacters.length === 0 && (
-              <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-                <Search
-                  aria-hidden="true"
-                  className="size-5 text-muted-foreground"
-                />
-                <p className="text-muted-foreground text-sm">
-                  Brak postaci pasujących do filtrów.
-                </p>
-                <Button
-                  onClick={clearFilters}
-                  size="sm"
-                  type="button"
-                  variant="ghost"
+                <a
+                  className="inline-flex min-h-10 items-center justify-center rounded-lg border border-border px-3 font-medium text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  href="/dashboard/squad-builder/accounts"
                 >
-                  Wyczyść filtry
-                </Button>
+                  Przejdź do kont
+                </a>
               </div>
             )}
-          {groupedCharacters.length > 0 && (
-            <ScrollArea className="min-h-0 flex-1 xl:overflow-hidden">
-              <ul className="space-y-4 px-4 py-4">
-                {groupedCharacters.map((accountGroup) => {
-                  const isCollapsed = collapsedAccountIds.has(
-                    accountGroup.accountId
-                  );
-                  const charactersId = `character-account-${groupId}-${accountGroup.accountId}`;
+            {AsyncResult.isSuccess(result) &&
+              characters.length > 0 &&
+              unassignedCharacters.length === 0 && (
+                <div className="flex flex-col items-center gap-2 px-4 py-9 text-center">
+                  <IconStack aria-hidden="true">
+                    <UserPlus className="size-5" />
+                  </IconStack>
+                  <p className="max-w-sm text-muted-foreground text-sm">
+                    Wszystkie dostępne postacie są już przypisane do składów.
+                  </p>
+                </div>
+              )}
+            {AsyncResult.isSuccess(result) &&
+              unassignedCharacters.length > 0 &&
+              filteredCharacters.length === 0 && (
+                <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+                  <Search
+                    aria-hidden="true"
+                    className="size-5 text-muted-foreground"
+                  />
+                  <p className="text-muted-foreground text-sm">
+                    Brak postaci pasujących do filtrów.
+                  </p>
+                  <Button
+                    onClick={clearFilters}
+                    size="sm"
+                    type="button"
+                    variant="ghost"
+                  >
+                    Wyczyść filtry
+                  </Button>
+                </div>
+              )}
+            {groupedCharacters.length > 0 && (
+              <ScrollArea className="min-h-0 flex-1 xl:overflow-hidden">
+                <ul className="space-y-4 px-4 py-4">
+                  {groupedCharacters.map((accountGroup) => {
+                    const isCollapsed = collapsedAccountIds.has(
+                      accountGroup.accountId
+                    );
+                    const charactersId = `character-account-${groupId}-${accountGroup.accountId}`;
 
-                  return (
-                    <li key={accountGroup.accountId}>
-                      <div className="mb-2 flex min-w-0 items-center gap-2">
-                        <h3 className="min-w-0 break-words font-mono text-muted-foreground text-xs">
-                          {accountGroup.accountDisplayName}
-                        </h3>
-                        {accountGroup.accountOwnerUserName.length > 0 &&
-                          accountGroup.accountOwnerUserName !==
-                            accountGroup.accountDisplayName && (
-                            <span className="min-w-0 break-words text-muted-foreground text-xs">
-                              ({accountGroup.accountOwnerUserName})
-                            </span>
-                          )}
-                        <Button
-                          aria-controls={charactersId}
-                          aria-expanded={!isCollapsed}
-                          aria-label={`${isCollapsed ? "Rozwiń" : "Zwiń"} konto ${accountGroup.accountDisplayName}`}
-                          className="ms-auto size-8 shrink-0"
-                          onClick={() =>
-                            toggleAccountGroup(accountGroup.accountId)
-                          }
-                          size="icon-sm"
-                          type="button"
-                          variant="ghost"
-                        >
-                          <ChevronDown
-                            aria-hidden="true"
-                            className={cn(
-                              "size-4 transition-transform duration-150 motion-reduce:transition-none",
-                              isCollapsed && "-rotate-90"
+                    return (
+                      <li key={accountGroup.accountId}>
+                        <div className="mb-2 flex min-w-0 items-center gap-2">
+                          <h3 className="min-w-0 break-words font-mono text-muted-foreground text-xs">
+                            {accountGroup.accountDisplayName}
+                          </h3>
+                          {accountGroup.accountOwnerUserName.length > 0 &&
+                            accountGroup.accountOwnerUserName !==
+                              accountGroup.accountDisplayName && (
+                              <span className="min-w-0 break-words text-muted-foreground text-xs">
+                                ({accountGroup.accountOwnerUserName})
+                              </span>
                             )}
-                          />
-                        </Button>
-                      </div>
-                      {!isCollapsed && (
-                        <ul className="space-y-1" id={charactersId}>
-                          {accountGroup.characters.map((character) => (
-                            <CharacterPoolTile
-                              accountInfoByCharacterId={
-                                accountInfoByCharacterId
-                              }
-                              character={character}
-                              draft={draft}
-                              key={character.characterId}
-                              onDraftChange={onDraftChange}
+                          <Button
+                            aria-controls={charactersId}
+                            aria-expanded={!isCollapsed}
+                            aria-label={`${isCollapsed ? "Rozwiń" : "Zwiń"} konto ${accountGroup.accountDisplayName}`}
+                            className="ms-auto size-8 shrink-0"
+                            onClick={() =>
+                              toggleAccountGroup(accountGroup.accountId)
+                            }
+                            size="icon-sm"
+                            type="button"
+                            variant="ghost"
+                          >
+                            <ChevronDown
+                              aria-hidden="true"
+                              className={cn(
+                                "size-4 transition-transform duration-150 motion-reduce:transition-none",
+                                isCollapsed && "-rotate-90"
+                              )}
                             />
-                          ))}
-                        </ul>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </ScrollArea>
-          )}
-        </FramePanel>
-      </Frame>
+                          </Button>
+                        </div>
+                        {!isCollapsed && (
+                          <ul className="space-y-1" id={charactersId}>
+                            {accountGroup.characters.map((character) => (
+                              <CharacterPoolTile
+                                accountInfoByCharacterId={
+                                  accountInfoByCharacterId
+                                }
+                                character={character}
+                                draft={draft}
+                                key={character.characterId}
+                                onDraftChange={onDraftChange}
+                              />
+                            ))}
+                          </ul>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </ScrollArea>
+            )}
+          </FramePanel>
+        </Frame>
+      </fieldset>
     </aside>
   );
 };

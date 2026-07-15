@@ -10,6 +10,7 @@ import { parseSquadGroupListFilters } from "../../../domain/squad-builder/squad-
 import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
 import type { SquadBuilderSquadGroupError } from "../../../protocol/squad-builder/squad-groups/http-api-contract.ts";
 import {
+  SquadBuilderConflict,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
@@ -62,6 +63,7 @@ type SquadGroupsHandlerError =
   | GlobalSquadVisibilityError
   | SquadGroupListFilterError;
 
+// oxlint-disable-next-line complexity
 const mapSquadGroupsError = (error: SquadGroupsHandlerError): ProtocolError => {
   switch (error._tag) {
     case "SquadGroupNotFound": {
@@ -73,6 +75,9 @@ const mapSquadGroupsError = (error: SquadGroupsHandlerError): ProtocolError => {
     case "EditorCannotChangeSquadStructure":
     case "SquadCharacterNotAccessible": {
       return new SquadBuilderForbidden({ message: error._tag });
+    }
+    case "SquadGroupWriteConflict": {
+      return new SquadBuilderConflict({ message: error._tag });
     }
     case "SquadNotInGroup":
     case "InvalidSquadGroupName":
@@ -216,6 +221,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
               request,
               saveSquadGroupSvc.save({
                 actorUserId: sessionAppUserId(session),
+                expectedUpdatedAt: payload.expectedUpdatedAt,
                 groupId: payload.groupId,
                 name: payload.name,
                 squads: payload.squads.map((squad) => ({
@@ -241,6 +247,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
               request,
               saveSharedCharactersSvc.saveWithStoreService({
                 actorUserId: sessionAppUserId(session),
+                expectedUpdatedAt: payload.expectedUpdatedAt,
                 groupId: payload.groupId,
                 squads: payload.squads.map((squad) => ({
                   characters: squad.characters,

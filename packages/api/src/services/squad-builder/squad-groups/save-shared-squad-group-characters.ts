@@ -12,11 +12,14 @@ import type {
 import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.ts";
 import type { SquadId } from "../../../domain/squad-builder/squad-id.ts";
 import type { SquadBuilderPersistenceUnavailable } from "../account-import/account-import-store.ts";
-import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.ts";
 import {
   ActorCannotEditSquadGroup,
   EditorCannotChangeSquadStructure,
   SquadNotInGroup,
+} from "./squad-group-errors.ts";
+import type {
+  EffectSquadBuilderPersistenceUnavailable,
+  SquadGroupWriteConflict,
 } from "./squad-group-errors.ts";
 import type {
   ActorCannotViewSquadGroup,
@@ -35,6 +38,7 @@ export interface SharedSquadCharactersInput {
 export interface SaveSharedSquadGroupCharactersInput {
   readonly actorUserId: AppUserId;
   readonly groupId: SquadGroupId;
+  readonly expectedUpdatedAt: Date;
   readonly squads: readonly SharedSquadCharactersInput[];
 }
 
@@ -52,6 +56,7 @@ export type EffectSharedSquadGroupSaveError =
   | ActorCannotEditSquadGroup
   | SquadNotInGroup
   | EditorCannotChangeSquadStructure
+  | SquadGroupWriteConflict
   | SquadGroupValidationError
   | EffectSquadBuilderPersistenceUnavailable;
 
@@ -145,6 +150,7 @@ const makeSave = (store: typeof SquadGroupStoreService.Service) =>
       const now = new Date(yield* Clock.currentTimeMillis);
       return yield* store.saveSharedSquadGroupCharacters({
         actorUserId: input.actorUserId,
+        expectedUpdatedAt: input.expectedUpdatedAt,
         groupId: input.groupId,
         now,
         snapshot: {

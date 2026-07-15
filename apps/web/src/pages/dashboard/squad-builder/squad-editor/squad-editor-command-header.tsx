@@ -1,6 +1,11 @@
 import { Loader2, Save, Share2 } from "lucide-react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert";
+import {
+  Alert,
+  AlertAction,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/reui/alert";
 import { Badge } from "@/components/reui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +26,8 @@ interface SquadEditorCommandHeaderProps {
   readonly saveError: string | null;
   readonly visibility: "private" | "global";
   readonly role: "owner" | "editor" | "viewer";
+  readonly isSaveConflict: boolean;
+  readonly onReloadLatest: () => void;
   readonly onNameChange: (name: string) => void;
   readonly onSave: () => void;
   readonly onShareToggle: () => void;
@@ -59,6 +66,8 @@ export const SquadEditorCommandHeader = ({
   onShareToggle,
   onVisibilityChange,
   role,
+  isSaveConflict,
+  onReloadLatest,
   saveError,
   visibility,
 }: SquadEditorCommandHeaderProps) => {
@@ -103,7 +112,7 @@ export const SquadEditorCommandHeader = ({
               </Label>
               <Switch
                 checked={visibility === "global"}
-                disabled={isVisibilityPending}
+                disabled={isSaving || isVisibilityPending}
                 id="group-visibility-toggle"
                 onCheckedChange={(checked) => {
                   onVisibilityChange(checked ? "global" : "private");
@@ -168,6 +177,18 @@ export const SquadEditorCommandHeader = ({
         <Alert variant="destructive">
           <AlertTitle>Nie udało się zapisać zmian</AlertTitle>
           <AlertDescription>{saveError}</AlertDescription>
+          {isSaveConflict && (
+            <AlertAction>
+              <Button
+                onClick={onReloadLatest}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                Wczytaj najnowszą wersję
+              </Button>
+            </AlertAction>
+          )}
         </Alert>
       )}
     </header>

@@ -39,6 +39,7 @@ export interface SquadCharacterMetadata {
 interface SquadRosterWorkspaceProps {
   readonly characterById: ReadonlyMap<number, SquadCharacterMetadata>;
   readonly draft: SquadGroupDraft;
+  readonly isSaving: boolean;
   readonly isOwner: boolean;
   readonly canEditPlacements: boolean;
   readonly onAddSquad: () => void;
@@ -53,12 +54,14 @@ const SquadRosterRow = ({
   canEditPlacements,
   characterId,
   characterById,
+  isSaving,
   onRemove,
   position,
   squadName,
 }: {
   readonly characterId: number | undefined;
   readonly characterById: ReadonlyMap<number, SquadCharacterMetadata>;
+  readonly isSaving: boolean;
   readonly onRemove: () => void;
   readonly canEditPlacements: boolean;
   readonly position: number;
@@ -101,6 +104,7 @@ const SquadRosterRow = ({
           <Button
             aria-label={`Usuń niedostępną postać ${characterId} ze składu ${squadName}`}
             onClick={onRemove}
+            disabled={isSaving}
             size="icon-sm"
             type="button"
             variant="ghost"
@@ -154,6 +158,7 @@ const SquadRosterRow = ({
         <Button
           aria-label={`Usuń ${character.name} ze składu ${squadName}`}
           onClick={onRemove}
+          disabled={isSaving}
           size="icon-sm"
           type="button"
           variant="ghost"
@@ -233,6 +238,7 @@ const SquadPanel = ({
   canEditPlacements,
   characterById,
   isOwner,
+  isSaving,
   onNameChange,
   onRemoveCharacter,
   onRemoveSquad,
@@ -240,6 +246,7 @@ const SquadPanel = ({
 }: {
   readonly characterById: ReadonlyMap<number, SquadCharacterMetadata>;
   readonly isOwner: boolean;
+  readonly isSaving: boolean;
   readonly canEditPlacements: boolean;
   readonly onNameChange: (name: string) => void;
   readonly onRemoveCharacter: (characterId: number) => void;
@@ -268,6 +275,7 @@ const SquadPanel = ({
                   </Label>
                   <Input
                     className="h-8"
+                    disabled={isSaving}
                     id={`squad-name-${squad.clientKey}`}
                     maxLength={60}
                     onChange={(event) => onNameChange(event.target.value)}
@@ -329,6 +337,7 @@ const SquadPanel = ({
             {isOwner && (
               <Button
                 aria-label={`Usuń skład ${squad.name}`}
+                disabled={isSaving}
                 onClick={() => setIsDeleteDialogOpen(true)}
                 size="icon-sm"
                 type="button"
@@ -362,6 +371,7 @@ const SquadPanel = ({
                     canEditPlacements={canEditPlacements}
                     characterById={characterById}
                     characterId={character?.characterId}
+                    isSaving={isSaving}
                     key={`slot-${position}`}
                     onRemove={() => {
                       if (character !== undefined) {
@@ -412,6 +422,7 @@ export const SquadRosterWorkspace = ({
   canEditPlacements,
   characterById,
   draft,
+  isSaving,
   isOwner,
   onAddSquad,
   onNameChange,
@@ -438,6 +449,7 @@ export const SquadRosterWorkspace = ({
         </div>
         {isOwner && (
           <Button
+            disabled={isSaving}
             onClick={onAddSquad}
             size="sm"
             type="button"
@@ -462,6 +474,7 @@ export const SquadRosterWorkspace = ({
             </p>
             {isOwner && (
               <Button
+                disabled={isSaving}
                 onClick={onAddSquad}
                 size="sm"
                 type="button"
@@ -489,6 +502,7 @@ export const SquadRosterWorkspace = ({
                 canEditPlacements={canEditPlacements}
                 characterById={characterById}
                 isOwner={isOwner}
+                isSaving={isSaving}
                 key={squad.clientKey}
                 onNameChange={(name) => onNameChange(squad.clientKey, name)}
                 onRemoveCharacter={onRemoveCharacter}

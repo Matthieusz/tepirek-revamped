@@ -102,14 +102,22 @@ interface SquadBuilderEditorContentProps {
 interface SquadEditorState {
   readonly draft: SquadGroupDraft | null;
   readonly savedSnapshot: SquadGroupDraft | null;
+  readonly updatedAt: Date | null;
   readonly visibility: "private" | "global";
 }
 
 const initialSquadEditorState: SquadEditorState = {
   draft: null,
   savedSnapshot: null,
+  updatedAt: null,
   visibility: "private",
 };
+
+const isSquadBuilderConflict = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "_tag" in error &&
+  error._tag === "SquadBuilderConflict";
 
 // oxlint-disable-next-line complexity
 const SquadBuilderEditorContent = ({
@@ -130,11 +138,13 @@ const SquadBuilderEditorContent = ({
   });
   const availableCharactersResult = useAtomValue(availableCharactersAtom);
   const [editorState, setEditorState] = useState(initialSquadEditorState);
-  const { draft, savedSnapshot, visibility } = editorState;
+  const { draft, savedSnapshot, updatedAt, visibility } = editorState;
   const [isSharingOpen, setIsSharingOpen] = useState(false);
   const [isVisibilityPending, setIsVisibilityPending] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaveConflict, setIsSaveConflict] = useState(false);
+  const isSavingRef = useRef(false);
   const hydratedUpdatedAtRef = useRef<number | null>(null);
 
   const isDirty =
@@ -176,6 +186,7 @@ const SquadBuilderEditorContent = ({
     setEditorState({
       draft: nextDraft,
       savedSnapshot: nextDraft,
+      updatedAt: detail.updatedAt,
       visibility: detail.visibility,
     });
     hydratedUpdatedAtRef.current = detailUpdatedAt;
@@ -200,8 +211,12 @@ const SquadBuilderEditorContent = ({
   }, [availableCharactersResult, detail]);
 
   const updateDraft = (nextDraft: SquadGroupDraft) => {
+    if (isSavingRef.current) {
+      return;
+    }
     setEditorState((current) => ({ ...current, draft: nextDraft }));
     setSaveError(null);
+    setIsSaveConflict(false);
   };
 
   const addSquad = () => {
@@ -251,7 +266,7 @@ const SquadBuilderEditorContent = ({
   };
 
   const save = async () => {
-    if (draft === null || isViewer || isSaving) {
+    if (draft === null || updatedAt === null || isViewer || isSaving) {
       return;
     }
     const trimmedName = draft.name.trim();
@@ -261,7 +276,9 @@ const SquadBuilderEditorContent = ({
     }
 
     setIsSaving(true);
+    isSavingRef.current = true;
     setSaveError(null);
+    setIsSaveConflict(false);
     const normalizedDraft: SquadGroupDraft = isOwner
       ? {
           ...draft,
@@ -273,14 +290,24 @@ const SquadBuilderEditorContent = ({
         }
       : draft;
     try {
-      await (role === "editor"
-        ? saveSharedSquadGroupCharacters(projectEditorPayload(normalizedDraft))
-        : saveSquadGroup(projectOwnerPayload(normalizedDraft)));
+      const savedDetail = await (role === "editor"
+        ? saveSharedSquadGroupCharacters({
+            ...projectEditorPayload(normalizedDraft),
+            expectedUpdatedAt: updatedAt,
+          })
+        : saveSquadGroup({
+            ...projectOwnerPayload(normalizedDraft),
+            expectedUpdatedAt: updatedAt,
+          }));
+      const nextDraft = hydrateDraft(savedDetail);
       setEditorState((current) => ({
         ...current,
-        draft: normalizedDraft,
-        savedSnapshot: normalizedDraft,
+        draft: nextDraft,
+        savedSnapshot: nextDraft,
+        updatedAt: savedDetail.updatedAt,
+        visibility: savedDetail.visibility,
       }));
+      hydratedUpdatedAtRef.current = savedDetail.updatedAt.getTime();
       toast.success("Grupa składów została zapisana");
     } catch (error: unknown) {
       const message = getErrorMessage(
@@ -288,14 +315,33 @@ const SquadBuilderEditorContent = ({
         "Nie udało się zapisać grupy składów"
       );
       setSaveError(message);
+      setIsSaveConflict(isSquadBuilderConflict(error));
       toast.error(message);
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
   };
 
+  const reloadLatest = () => {
+    setSaveError(null);
+    setIsSaveConflict(false);
+    setEditorState((current) => ({
+      ...current,
+      draft: null,
+      savedSnapshot: null,
+      updatedAt: null,
+    }));
+    refreshDetail();
+  };
+
   const updateVisibility = async (nextVisibility: "private" | "global") => {
-    if (!isOwner || isVisibilityPending || visibility === nextVisibility) {
+    if (
+      !isOwner ||
+      isSaving ||
+      isVisibilityPending ||
+      visibility === nextVisibility
+    ) {
       return;
     }
 
@@ -374,6 +420,8 @@ const SquadBuilderEditorContent = ({
         void updateVisibility(nextVisibility);
       }}
       role={role}
+      isSaveConflict={isSaveConflict}
+      onReloadLatest={reloadLatest}
       saveError={saveError}
       visibility={visibility}
     />

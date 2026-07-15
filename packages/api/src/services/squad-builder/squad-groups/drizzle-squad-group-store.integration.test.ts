@@ -201,6 +201,7 @@ describe("DrizzleSquadGroupStoreService integration", () => {
       apiTestLayer,
       saveService.save({
         actorUserId: parseTestUserId(member.id),
+        expectedUpdatedAt: created.updatedAt,
         groupId: created.groupId,
         name: "Effect save updated",
         squads: [
@@ -220,6 +221,47 @@ describe("DrizzleSquadGroupStoreService integration", () => {
       name: "Effect save updated",
       squads: [{ characters: [], name: "First squad", position: 0 }],
     });
+  });
+
+  it("rejects an owner save made from a stale detail version", async () => {
+    const member = await createVerifiedMember({ id: "effect-stale-owner" });
+    const createService = { create: createSquadGroup };
+    const saveService = { save: saveSquadGroup };
+
+    const created = await liveEffect(
+      apiTestLayer,
+      createService.create({
+        actorUserId: parseTestUserId(member.id),
+        name: "Stale owner group",
+      })
+    );
+
+    const firstSave = await liveEffect(
+      apiTestLayer,
+      saveService.save({
+        actorUserId: parseTestUserId(member.id),
+        expectedUpdatedAt: created.updatedAt,
+        groupId: created.groupId,
+        name: "First owner save",
+        squads: [],
+      })
+    );
+
+    const staleFailure = await liveEffect(
+      apiTestLayer,
+      Effect.flip(
+        saveService.save({
+          actorUserId: parseTestUserId(member.id),
+          expectedUpdatedAt: created.updatedAt,
+          groupId: created.groupId,
+          name: "Stale owner save",
+          squads: [],
+        })
+      )
+    );
+
+    expect(staleFailure._tag).toBe("SquadGroupWriteConflict");
+    expect(firstSave.name).toBe("First owner save");
   });
 
   it("lists available Jaruna characters for the squad group owner", async () => {

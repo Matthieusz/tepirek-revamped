@@ -47,11 +47,13 @@ interface SaveSquadPayloadSquad {
   readonly squadId?: number;
 }
 interface SaveSquadGroupInput {
+  readonly expectedUpdatedAt: Date;
   readonly groupId: number;
   readonly name: string;
   readonly squads: readonly SaveSquadPayloadSquad[];
 }
 interface SaveSharedSquadGroupCharactersInput {
+  readonly expectedUpdatedAt: Date;
   readonly groupId: number;
   readonly squads: readonly {
     readonly characters: readonly SaveSquadPayloadCharacter[];
@@ -212,6 +214,7 @@ export const saveSquadGroupAtom = appHttpApiFn(
     const client = yield* AppHttpApiClient;
     const squadGroup = yield* client.squadBuilderSquadGroup.saveSquadGroup({
       payload: {
+        expectedUpdatedAt: payload.expectedUpdatedAt,
         groupId: asSquadGroupId(payload.groupId),
         name: payload.name,
         squads: payload.squads.map((squad) => ({
@@ -239,6 +242,7 @@ export const saveSharedSquadGroupCharactersAtom = appHttpApiFn(
     const squadGroup =
       yield* client.squadBuilderSquadGroup.saveSharedSquadGroupCharacters({
         payload: {
+          expectedUpdatedAt: payload.expectedUpdatedAt,
           groupId: asSquadGroupId(payload.groupId),
           squads: payload.squads.map((squad) => ({
             ...squad,
