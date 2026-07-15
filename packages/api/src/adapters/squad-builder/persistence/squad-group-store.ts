@@ -468,7 +468,7 @@ const upsertSquadGroupEditorInviteWithDatabase = (database: EffectPgDatabase) =>
         ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
         if (!canTransitionSquadGroupInvitation(status, "pending")) {
-          return new SquadGroupInvitationTransitionNotAllowed({
+          return yield* new SquadGroupInvitationTransitionNotAllowed({
             attempted: "pending",
             currentStatus: status,
           });
@@ -494,10 +494,6 @@ const upsertSquadGroupEditorInviteWithDatabase = (database: EffectPgDatabase) =>
       })
     );
     const upserted = yield* persistenceQuery(operation, transaction);
-
-    if (typeof upserted !== "number") {
-      return yield* upserted;
-    }
 
     const invitationId = yield* parseSquadGroupInvitationId(upserted).pipe(
       Effect.catch((error) => failPersistence(operation, error))
@@ -541,11 +537,11 @@ const respondToSquadGroupInviteWithDatabase = (database: EffectPgDatabase) =>
         const [existing] = existingRows;
 
         if (existing === undefined) {
-          return new SquadGroupInvitationNotFound();
+          return yield* new SquadGroupInvitationNotFound();
         }
 
         if (existing.invitedUserId !== invitedUser) {
-          return new ActorIsNotSquadGroupInviteRecipient();
+          return yield* new ActorIsNotSquadGroupInviteRecipient();
         }
 
         const status = yield* parseSquadGroupInvitationStatus(
@@ -556,7 +552,7 @@ const respondToSquadGroupInviteWithDatabase = (database: EffectPgDatabase) =>
           response === "accept" ? "accepted" : "declined";
 
         if (!canTransitionSquadGroupInvitation(status, nextStatus)) {
-          return new SquadGroupInvitationTransitionNotAllowed({
+          return yield* new SquadGroupInvitationTransitionNotAllowed({
             attempted: nextStatus,
             currentStatus: status,
           });
@@ -581,11 +577,7 @@ const respondToSquadGroupInviteWithDatabase = (database: EffectPgDatabase) =>
         return { _tag: "Updated" as const };
       })
     );
-    const respond = yield* persistenceQuery(operation, transaction);
-
-    if (respond._tag !== "Updated") {
-      return yield* respond;
-    }
+    yield* persistenceQuery(operation, transaction);
 
     return yield* loadSquadGroupInvitationSummaryWithDatabase(database)(
       invitationId,
@@ -623,11 +615,11 @@ const revokeSquadGroupEditorWithDatabase = (database: EffectPgDatabase) =>
         const [existing] = existingRows;
 
         if (existing === undefined) {
-          return new SquadGroupInvitationNotFound();
+          return yield* new SquadGroupInvitationNotFound();
         }
 
         if (existing.ownerUserId !== owner) {
-          return new ActorDoesNotOwnSquadGroup();
+          return yield* new ActorDoesNotOwnSquadGroup();
         }
 
         const status = yield* parseSquadGroupInvitationStatus(
@@ -635,7 +627,7 @@ const revokeSquadGroupEditorWithDatabase = (database: EffectPgDatabase) =>
         ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
         if (!canTransitionSquadGroupInvitation(status, "revoked")) {
-          return new SquadGroupInvitationTransitionNotAllowed({
+          return yield* new SquadGroupInvitationTransitionNotAllowed({
             attempted: "revoked",
             currentStatus: status,
           });
@@ -660,11 +652,7 @@ const revokeSquadGroupEditorWithDatabase = (database: EffectPgDatabase) =>
         return { _tag: "Revoked" as const };
       })
     );
-    const revoked = yield* persistenceQuery(operation, transaction);
-
-    if (revoked._tag !== "Revoked") {
-      return yield* revoked;
-    }
+    yield* persistenceQuery(operation, transaction);
 
     return yield* loadSquadGroupInvitationSummaryWithDatabase(database)(
       invitationId,
@@ -1321,11 +1309,11 @@ const saveSharedSquadGroupCharactersWithDatabase = (
         const [group] = groupRows;
 
         if (group === undefined) {
-          return new SquadGroupNotFound();
+          return yield* new SquadGroupNotFound();
         }
 
         if (group.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
-          return new SquadGroupWriteConflict();
+          return yield* new SquadGroupWriteConflict();
         }
 
         if (group.ownerUserId !== actor) {
@@ -1343,7 +1331,7 @@ const saveSharedSquadGroupCharactersWithDatabase = (
           const inviteRows = yield* inviteSelect;
 
           if (inviteRows[0] === undefined) {
-            return new ActorCannotEditSquadGroup();
+            return yield* new ActorCannotEditSquadGroup();
           }
         }
 
@@ -1356,12 +1344,12 @@ const saveSharedSquadGroupCharactersWithDatabase = (
         const existingSquadIds = new Set(existingSquads.map((row) => row.id));
 
         if (existingSquadIds.size !== snapshot.squads.length) {
-          return new EditorCannotChangeSquadStructure();
+          return yield* new EditorCannotChangeSquadStructure();
         }
 
         for (const submitted of snapshot.squads) {
           if (!existingSquadIds.has(submitted.squadId)) {
-            return new SquadNotInGroup({ squadId: submitted.squadId });
+            return yield* new SquadNotInGroup({ squadId: submitted.squadId });
           }
         }
 
@@ -1401,7 +1389,7 @@ const saveSharedSquadGroupCharactersWithDatabase = (
             const stored = charactersById.get(character.characterId);
 
             if (stored === undefined) {
-              return new SquadCharacterNotAccessible({
+              return yield* new SquadCharacterNotAccessible({
                 characterId: character.characterId,
               });
             }
@@ -1429,11 +1417,7 @@ const saveSharedSquadGroupCharactersWithDatabase = (
       })
     );
 
-    const saved = yield* persistenceQuery(operation, transaction);
-
-    if (saved._tag !== "Saved") {
-      return yield* saved;
-    }
+    yield* persistenceQuery(operation, transaction);
 
     return yield* getSquadGroupDetailWithDatabase(database)({
       actorUserId,
@@ -1495,15 +1479,15 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
         const [group] = groupRows;
 
         if (group === undefined) {
-          return new SquadGroupNotFound();
+          return yield* new SquadGroupNotFound();
         }
 
         if (group.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
-          return new SquadGroupWriteConflict();
+          return yield* new SquadGroupWriteConflict();
         }
 
         if (group.ownerUserId !== appUserIdToString(actorUserId)) {
-          return new ActorDoesNotOwnSquadGroup();
+          return yield* new ActorDoesNotOwnSquadGroup();
         }
 
         yield* tx
@@ -1531,7 +1515,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
           const [insertedSquad] = insertedSquadRows;
 
           if (insertedSquad === undefined) {
-            return new EffectSquadBuilderPersistenceUnavailable({
+            return yield* new EffectSquadBuilderPersistenceUnavailable({
               cause: new Error("Failed to insert squad"),
               operation,
               provider: "postgres",
@@ -1548,7 +1532,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
             const character = availableByCharacterId.get(placement.characterId);
 
             if (character === undefined) {
-              return new EffectSquadBuilderPersistenceUnavailable({
+              return yield* new EffectSquadBuilderPersistenceUnavailable({
                 cause: new Error("Validated character was not available"),
                 operation,
                 provider: "postgres",
@@ -1571,11 +1555,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
       })
     );
 
-    const saved = yield* persistenceQuery(operation, transaction);
-
-    if (saved._tag !== "Saved") {
-      return yield* saved;
-    }
+    yield* persistenceQuery(operation, transaction);
 
     return yield* getSquadGroupDetailWithDatabase(database)({
       actorUserId,

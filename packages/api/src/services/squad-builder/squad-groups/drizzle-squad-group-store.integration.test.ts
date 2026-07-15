@@ -15,6 +15,7 @@ import {
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
@@ -29,6 +30,9 @@ import {
 } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
 import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
+import { CharacterPosition } from "../../../domain/squad-builder/squad-group-snapshot.ts";
+import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
+import { parseSquadId } from "../../../domain/squad-builder/squad-id.ts";
 import { makeApiSquadBuilderLayer } from "../../../server/effect-app.ts";
 import { liveEffect } from "../../../test/effect.ts";
 import { createVerifiedMember } from "../../../test/integration/builders.ts";
@@ -55,6 +59,7 @@ import { SquadGroupEditorInviteResponsesService } from "./respond-to-squad-group
 import { SquadGroupEditorRevocationsService } from "./revoke-squad-group-editor-service.ts";
 import { save as saveSquadGroup } from "./save-squad-group.ts";
 import { SquadGroupEditorInvitesService } from "./send-squad-group-editor-invite-service.ts";
+import { SquadGroupStoreService } from "./squad-group-store.ts";
 import { set as setSquadGroupVisibility } from "./set-squad-group-visibility.ts";
 
 const apiTestLayer = makeApiSquadBuilderLayer(defaultTestDatabaseUrl);
@@ -73,6 +78,14 @@ const parseTestCredits = (value: number) =>
 
 const parseTestCharacterId = (value: number) =>
   Effect.runSync(parseMargonemCharacterId(value));
+
+const parseTestSquadGroupId = (value: number) =>
+  Effect.runSync(parseSquadGroupId(value));
+
+const parseTestSquadId = (value: number) => Effect.runSync(parseSquadId(value));
+
+const parseTestCharacterPosition = (value: number) =>
+  Effect.runSync(Schema.decodeUnknownEffect(CharacterPosition)(value));
 
 const parseTestLevel = (value: number) =>
   Effect.runSync(parsePositiveLevel(value));
@@ -262,6 +275,141 @@ describe("DrizzleSquadGroupStoreService integration", () => {
 
     expect(staleFailure._tag).toBe("SquadGroupWriteConflict");
     expect(firstSave.name).toBe("First owner save");
+  });
+
+  it("rolls back a shared save when a submitted character is inaccessible", async () => {
+    const member = await createVerifiedMember({ id: "effect-rollback-owner" });
+    const [account] = await testDb
+      .insert(margonemAccount)
+      .values({
+        displayName: "Rollback account",
+        ownerUserId: member.id,
+        profileId: 8_100_250,
+      })
+      .returning({ id: margonemAccount.id });
+
+    if (account === undefined) {
+      throw new Error("Failed to seed rollback account");
+    }
+
+    const [character] = await testDb
+      .insert(margonemCharacter)
+      .values({
+        accountId: account.id,
+        avatarUrl: null,
+        characterId: 1_296_700,
+        level: 300,
+        name: "rollbackchar",
+        profession: "tracker",
+        world: "jaruna",
+      })
+      .returning({ id: margonemCharacter.id });
+
+    if (character === undefined) {
+      throw new Error("Failed to seed rollback character");
+    }
+
+    const [group] = await testDb
+      .insert(squadGroup)
+      .values({
+        name: "Rollback group",
+        ownerUserId: member.id,
+        visibility: "private",
+      })
+      .returning({ id: squadGroup.id });
+
+    if (group === undefined) {
+      throw new Error("Failed to seed rollback group");
+    }
+
+    const [seededSquad] = await testDb
+      .insert(squad)
+      .values({
+        name: "Rollback squad",
+        position: 0,
+        squadGroupId: group.id,
+      })
+      .returning({ id: squad.id });
+
+    if (seededSquad === undefined) {
+      throw new Error("Failed to seed rollback squad");
+    }
+
+    const [placement] = await testDb
+      .insert(squadCharacter)
+      .values({
+        accountId: account.id,
+        characterId: character.id,
+        position: 0,
+        squadGroupId: group.id,
+        squadId: seededSquad.id,
+      })
+      .returning({ id: squadCharacter.id });
+
+    if (placement === undefined) {
+      throw new Error("Failed to seed rollback placement");
+    }
+
+    const groupId = parseTestSquadGroupId(group.id);
+    const squadId = parseTestSquadId(seededSquad.id);
+    const [beforeGroup] = await testDb
+      .select({ updatedAt: squadGroup.updatedAt })
+      .from(squadGroup)
+      .where(eq(squadGroup.id, group.id))
+      .limit(1);
+    const beforePlacement = await testDb
+      .select()
+      .from(squadCharacter)
+      .where(eq(squadCharacter.id, placement.id))
+      .limit(1);
+
+    if (beforeGroup === undefined) {
+      throw new Error("Failed to load rollback group");
+    }
+
+    const failure = await liveEffect(
+      apiTestLayer,
+      Effect.flip(
+        SquadGroupStoreService.use((store) =>
+          store.saveSharedSquadGroupCharacters({
+            actorUserId: parseTestUserId(member.id),
+            expectedUpdatedAt: beforeGroup.updatedAt,
+            groupId,
+            now: new Date(beforeGroup.updatedAt.getTime() + 1000),
+            snapshot: {
+              groupId,
+              squads: [
+                {
+                  characters: [
+                    {
+                      characterId: 2_000_000_000,
+                      position: parseTestCharacterPosition(0),
+                    },
+                  ],
+                  squadId,
+                },
+              ],
+            },
+          })
+        )
+      )
+    );
+
+    expect(failure._tag).toBe("SquadCharacterNotAccessible");
+
+    const afterPlacement = await testDb
+      .select()
+      .from(squadCharacter)
+      .where(eq(squadCharacter.id, placement.id))
+      .limit(1);
+    const [afterGroup] = await testDb
+      .select({ updatedAt: squadGroup.updatedAt })
+      .from(squadGroup)
+      .where(eq(squadGroup.id, group.id))
+      .limit(1);
+
+    expect(afterPlacement).toEqual(beforePlacement);
+    expect(afterGroup?.updatedAt).toEqual(beforeGroup.updatedAt);
   });
 
   it("lists available Jaruna characters for the squad group owner", async () => {
