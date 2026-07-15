@@ -19,6 +19,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@tepirek-revamped/config": "workspace:*",
     "typescript": "catalog:"
   },

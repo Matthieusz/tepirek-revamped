@@ -20,7 +20,7 @@ const sessionLayer = (verified: boolean, role: string) =>
       id: "session-id",
       token: "token",
       updatedAt: new Date(),
-      userId: "user-id",
+      userId: AppUserId.make("user-id"),
     },
     user: {
       createdAt: new Date(),

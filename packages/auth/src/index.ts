@@ -8,6 +8,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
+import * as Schema from "effect/Schema";
 
 export interface AuthEnv {
   readonly betterAuthSecret: Redacted.Redacted;
@@ -18,12 +19,24 @@ export interface AuthEnv {
   readonly isProduction: boolean;
 }
 
+const NonEmptyString = Schema.String.check(Schema.isNonEmpty());
+const BetterAuthSecret = Schema.String.check(Schema.isMinLength(32));
+const TrimmedNonEmptyString = Schema.Trim.pipe(
+  Schema.check(Schema.isNonEmpty())
+);
+
 const authEnvConfig = Config.all({
-  betterAuthSecret: Config.redacted("BETTER_AUTH_SECRET"),
+  betterAuthSecret: Config.schema(
+    Schema.Redacted(BetterAuthSecret),
+    "BETTER_AUTH_SECRET"
+  ),
   betterAuthUrl: Config.string("BETTER_AUTH_URL"),
   corsOrigin: Config.string("CORS_ORIGIN").pipe(Config.withDefault("")),
-  discordClientId: Config.string("DISCORD_CLIENT_ID"),
-  discordClientSecret: Config.redacted("DISCORD_CLIENT_SECRET"),
+  discordClientId: Config.schema(TrimmedNonEmptyString, "DISCORD_CLIENT_ID"),
+  discordClientSecret: Config.schema(
+    Schema.Redacted(NonEmptyString),
+    "DISCORD_CLIENT_SECRET"
+  ),
   isProduction: Config.string("NODE_ENV").pipe(
     Config.withDefault("development"),
     Config.map((nodeEnv) => nodeEnv === "production")

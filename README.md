@@ -134,8 +134,10 @@ pnpm db:start && pnpm db:push && pnpm dev
    Local dummy values are enough for tests and smoke tests that do not
    exercise Discord login or Firecrawl, but real development login through
    Discord requires real Discord application credentials. Account import and
-   refetch require a real Firecrawl provider credential. The monthly budget
-   accepts integers from 1 to 1000 and defaults to 900.
+   refetch require a real Firecrawl provider credential. Startup validation
+   requires `BETTER_AUTH_SECRET` to be at least 32 characters and rejects
+   empty Discord credentials, `DISCORD_SERVER_ID`, or `FIRECRAWL_API_KEY`.
+   The monthly budget accepts integers from 1 to 1000 and defaults to 900.
 
    > **Secret hygiene:** `.env.example` is safe to commit; `.env` is git-ignored
    > and must never be committed. If `BETTER_AUTH_SECRET`,

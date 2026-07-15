@@ -7,7 +7,10 @@ type BetterAuthSession = NonNullable<
   Awaited<ReturnType<Auth["api"]["getSession"]>>
 >;
 
-export type RequestSession = Omit<BetterAuthSession, "user"> & {
+export type RequestSession = Omit<BetterAuthSession, "session" | "user"> & {
+  readonly session: Omit<BetterAuthSession["session"], "userId"> & {
+    readonly userId: AppUserId;
+  };
   readonly user: Omit<BetterAuthSession["user"], "id"> & {
     readonly id: AppUserId;
   };

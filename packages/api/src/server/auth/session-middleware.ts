@@ -40,7 +40,14 @@ export const loadCurrentSession = Effect.fn("SessionMiddleware.loadSession")(
     const userId = yield* parseAppUserId(session.user.id).pipe(
       Effect.mapError(() => new InvalidSession({ message: "INVALID_SESSION" }))
     );
-    return { ...session, user: { ...session.user, id: userId } };
+    const sessionUserId = yield* parseAppUserId(session.session.userId).pipe(
+      Effect.mapError(() => new InvalidSession({ message: "INVALID_SESSION" }))
+    );
+    return {
+      ...session,
+      session: { ...session.session, userId: sessionUserId },
+      user: { ...session.user, id: userId },
+    };
   }
 );
 
