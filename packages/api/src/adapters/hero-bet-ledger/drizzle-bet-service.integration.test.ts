@@ -354,7 +354,7 @@ describe("HeroBetLedger characterization", () => {
           createdAt: new Date(0),
           createdBy: creator.id,
           heroId: createdHero.id,
-          userIds: [""],
+          userIds: ["ledger-errors-unverified"],
         })
       ),
       "BetBadRequest",
