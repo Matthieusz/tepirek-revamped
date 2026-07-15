@@ -91,13 +91,6 @@ export const createAuth = (env: AuthEnv, database: Database) =>
       window: 60,
     },
     secret: Redacted.value(env.betterAuthSecret),
-    session: {
-      cookieCache: {
-        enabled: true,
-        maxAge: 5 * 60,
-        strategy: "compact",
-      },
-    },
     socialProviders: {
       discord: {
         clientId: env.discordClientId,
