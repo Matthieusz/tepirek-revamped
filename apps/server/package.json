@@ -8,23 +8,22 @@
     "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
     "dev": "bun run --hot src/index.ts",
     "start": "bun run dist/index.mjs",
+    "test": "vitest run src/server-lifecycle.test.ts src/startup-config.test.ts",
     "test:smoke": "vitest run src/index.smoke.test.ts",
     "db:push": "pnpm --filter @tepirek-revamped/db run db:push"
   },
   "dependencies": {
-    "@orpc/openapi": "catalog:",
-    "@orpc/server": "catalog:",
-    "@orpc/zod": "catalog:",
+    "@opentelemetry/api": "^1.9.1",
     "@tepirek-revamped/api": "workspace:*",
     "@tepirek-revamped/auth": "workspace:*",
     "@tepirek-revamped/db": "workspace:*",
-    "better-auth": "catalog:",
     "dotenv": "catalog:",
+    "effect": "catalog:",
     "evlog": "^2.19.2",
-    "hono": "catalog:",
-    "zod": "catalog:"
+    "hono": "catalog:"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@tepirek-revamped/config": "workspace:*",
     "@types/bun": "^1.3.14",
     "tsdown": "^0.22.3",

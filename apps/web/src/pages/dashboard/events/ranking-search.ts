@@ -1,9 +1,21 @@
-import { z } from "zod";
+import * as Schema from "effect/Schema";
 
-const searchSchema = z.object({
-  eventId: z.string().optional(),
-  heroId: z.string().optional(),
-  sortBy: z.enum(["points", "bets", "gold"]).optional(),
+import { FilterIdSearchSchema } from "@/lib/event-hero-filter";
+
+const RankingSortSchema = Schema.Literals(["points", "bets", "gold"]);
+export type RankingSort = typeof RankingSortSchema.Type;
+
+export const RankingSortFiltersSchema = Schema.Struct({
+  sortBy: Schema.optional(RankingSortSchema),
 });
 
-export { searchSchema };
+const RankingSearchSchema = Schema.Struct({
+  eventId: Schema.optional(FilterIdSearchSchema),
+  heroId: Schema.optional(FilterIdSearchSchema),
+  sortBy: Schema.optional(RankingSortSchema),
+});
+
+export const searchSchema = (
+  search: unknown
+): typeof RankingSearchSchema.Type =>
+  Schema.decodeUnknownSync(RankingSearchSchema)(search);

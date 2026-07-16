@@ -1,9 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "@effect/atom-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useCallback } from "react";
 
-import type { EventSelectOption } from "@/components/events/select-utils";
+import type {
+  EventSelectOption,
+  HeroSelectOption,
+} from "@/components/events/select-utils";
+import { eventsAtom } from "@/lib/event-atoms";
 import {
+  EventHeroFilterPersistenceSchema,
   isHeroQueryEnabled,
   normalizeEventHeroFilter,
   selectEventUpdate,
@@ -15,8 +21,8 @@ import type {
   EventHeroFilterState,
   FilterSelection,
 } from "@/lib/event-hero-filter";
+import { heroesByEventAtom } from "@/lib/hero-atoms";
 import { useFilterPersistence } from "@/lib/use-filter-persistence";
-import { orpc } from "@/utils/orpc";
 
 /**
  * Route ids that share the Event/Hero URL search shape (eventId/heroId).
@@ -27,19 +33,23 @@ type EventHeroFilterRouteId =
   | "/dashboard/events/history"
   | "/dashboard/events/ranking";
 
-export interface UseEventHeroFilterOptions {
+const DEFAULT_EVENT_HERO_FILTERS = { eventId: undefined, heroId: undefined };
+
+interface UseEventHeroFilterOptions {
   /** Route id, e.g. "/dashboard/events/ranking". */
   routeId: EventHeroFilterRouteId;
   /** localStorage key for persisted Event/Hero fallback. */
   persistenceKey: string;
 }
 
-export interface UseEventHeroFilterResult {
+interface UseEventHeroFilterResult {
   state: EventHeroFilterState;
   events: EventSelectOption[] | undefined;
+  eventsResult: AsyncResult.AsyncResult<readonly EventSelectOption[], unknown>;
   /** Heroes for the selected Event, sorted by level. Undefined when all Events. */
   sortedHeroes: ReturnType<typeof sortHeroesByLevel>;
   heroesLoading: boolean;
+  heroesResult: AsyncResult.AsyncResult<readonly HeroSelectOption[], unknown>;
   /** Whether the Hero query is enabled (specific Event selected). */
   heroQueryEnabled: boolean;
   /** The Event/Hero filter as router query inputs (undefined for all). */
@@ -64,26 +74,29 @@ export const useEventHeroFilter = (
   });
   const navigate = useNavigate({ from: routeId });
 
-  const [persistedFilters, updatePersistedFilters] = useFilterPersistence<
-    Record<string, unknown>
-  >(persistenceKey, { eventId: undefined, heroId: undefined });
+  const [persistedFilters, updatePersistedFilters] = useFilterPersistence(
+    persistenceKey,
+    EventHeroFilterPersistenceSchema,
+    DEFAULT_EVENT_HERO_FILTERS
+  );
 
   const state = normalizeEventHeroFilter({
-    persistedEventId: persistedFilters.eventId as string | undefined,
-    persistedHeroId: persistedFilters.heroId as string | undefined,
+    persistedEventId: persistedFilters.eventId,
+    persistedHeroId: persistedFilters.heroId,
     urlEventId: typeof urlEventId === "string" ? urlEventId : undefined,
     urlHeroId: typeof urlHeroId === "string" ? urlHeroId : undefined,
   });
 
-  const { data: events } = useQuery(orpc.event.getAll.queryOptions());
+  const eventsResult = useAtomValue(eventsAtom);
+  const events = AsyncResult.isSuccess(eventsResult)
+    ? [...eventsResult.value]
+    : [];
 
   const heroQueryEnabled = isHeroQueryEnabled(state);
-  const { data: heroes, isPending: heroesLoading } = useQuery({
-    ...orpc.heroes.getByEventId.queryOptions({
-      input: { eventId: Number(state.eventId) },
-    }),
-    enabled: heroQueryEnabled,
-  });
+  const heroEventId = heroQueryEnabled ? Number(state.eventId) : null;
+  const heroesResult = useAtomValue(heroesByEventAtom(heroEventId));
+  const heroes = AsyncResult.isSuccess(heroesResult) ? heroesResult.value : [];
+  const heroesLoading = heroQueryEnabled && AsyncResult.isWaiting(heroesResult);
 
   const sortedHeroes = heroQueryEnabled ? sortHeroesByLevel(heroes) : [];
 
@@ -118,8 +131,10 @@ export const useEventHeroFilter = (
 
   return {
     events,
+    eventsResult,
     heroQueryEnabled,
     heroesLoading,
+    heroesResult,
     queryInputs,
     selectEvent,
     selectHero,

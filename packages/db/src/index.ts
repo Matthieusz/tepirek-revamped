@@ -1,27 +1,18 @@
+import { NoopLogger } from "drizzle-orm/logger";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
-import { requireEnv } from "./env";
-import { announcement } from "./schema/announcement";
-import { auction } from "./schema/auction";
-import { auth } from "./schema/auth";
-import { bet } from "./schema/bet";
-import { event } from "./schema/event";
-import { skills } from "./schema/skills";
-import { todo } from "./schema/todo";
+/** Create the legacy Drizzle/Postgres resources used by Better Auth. */
+export const createDatabase = (databaseUrl: string) => {
+  const pool = new Pool({ connectionString: databaseUrl });
+  const database = drizzle({
+    client: pool,
+    // Drizzle query logs include raw SQL parameters.
+    logger: new NoopLogger(),
+  });
 
-export const dbPool = new Pool({
-  connectionString: requireEnv("DATABASE_URL"),
-});
+  return { database, pool };
+};
 
-export const db = drizzle(dbPool, {
-  schema: {
-    ...auth,
-    ...todo,
-    ...bet,
-    ...event,
-    ...auction,
-    ...announcement,
-    ...skills,
-  },
-});
+/** Database instance accepted by the Better Auth Drizzle adapter. */
+export type Database = ReturnType<typeof createDatabase>["database"];

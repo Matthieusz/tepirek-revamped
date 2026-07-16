@@ -1,0 +1,189 @@
+import { expect, it } from "@effect/vitest";
+import * as Cause from "effect/Cause";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as Redacted from "effect/Redacted";
+
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
+import {
+  parseMargonemCharacterId,
+  parseMargonemProfileId,
+  parsePositiveLevel,
+} from "../../../domain/squad-builder/margonem-profile-id.ts";
+import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
+import { FirecrawlClientService } from "../firecrawl-client.ts";
+import type { FirecrawlClient } from "../firecrawl-client.ts";
+import {
+  FirecrawlConfigService,
+  parseFirecrawlCreditCount,
+} from "../firecrawl-config.ts";
+import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.ts";
+import { AccountRefetchStoreService } from "./account-refetch-store-service.ts";
+import { preview } from "./preview-account-refetch-service.ts";
+
+const parseTestUserId = () =>
+  Effect.runSync(parseAppUserId("effect-refetch-user"));
+
+const htmlWithUpdatedJarunaCharacter = `
+  <div class="profile-header__name"><span>informati</span></div>
+  <li data-nick="informati" data-lvl="316" data-world="#jaruna" class="char-row" data-id="1296625">
+    <span class="cimg" style="background-image: url('https://example.com/avatar.gif');"></span>
+    <span class="character-prof">Tropiciel,</span>
+  </li>
+`;
+
+it.effect("previews account refetch and stores the pending diff", () => {
+  const actorUserId = parseTestUserId();
+  const accountId = Effect.runSync(parseMargonemAccountId(123));
+  const displayName = Effect.runSync(parseAccountDisplayName("informati"));
+  const firecrawlCreditsUsed = Effect.runSync(parseFirecrawlCreditCount(1));
+  const level = Effect.runSync(parsePositiveLevel(315));
+  const margonemCharacterId = Effect.runSync(
+    parseMargonemCharacterId(1_296_625)
+  );
+  const profileId = Effect.runSync(parseMargonemProfileId(7_298_897));
+  const refetchPreviewId = Effect.runSync(
+    parsePendingMargonemAccountRefetchId(456)
+  );
+  const createdPendingIds: number[] = [];
+  const firecrawl: FirecrawlClient = {
+    scrapeProfileHtml: () =>
+      Effect.succeed({
+        html: htmlWithUpdatedJarunaCharacter,
+        metadata: {
+          cacheState: "miss",
+          creditsUsed: 1,
+          statusCode: 200,
+        },
+      }),
+  };
+  const store = makeAccountRefetchStoreServiceTestService({
+    createPendingRefetch: (input) => {
+      expect(input.latestCharacters).toHaveLength(1);
+      expect(input.diff.changed).toHaveLength(1);
+      createdPendingIds.push(456);
+      return Effect.succeed({ id: refetchPreviewId });
+    },
+    getAccountForRefetch: (input) =>
+      Effect.succeed({
+        accountId: input.accountId,
+        currentCharacters: [
+          {
+            affectedSquadCount: 0,
+            avatarUrl: null,
+            databaseCharacterId: 10,
+            level,
+            margonemCharacterId,
+            name: "informati",
+            profession: "tracker",
+            world: "jaruna",
+          },
+        ],
+        displayName,
+        profileId,
+      }),
+    markRequestSucceeded: () => Effect.void,
+    reserveRequest: (input) =>
+      Effect.succeed({
+        budgetState: {
+          monthlyRequestBudget: input.monthlyRequestBudget,
+          remainingRequests: input.monthlyRequestBudget - 1,
+          usedRequests: 1,
+          yearMonth: input.yearMonth,
+        },
+        requestId: 123,
+      }),
+  });
+  const service = { preview };
+
+  return Effect.gen(function* previewRefetchEffect() {
+    const refetchPreview = yield* service.preview({
+      accountId,
+      actorUserId,
+    });
+
+    expect(refetchPreview).toMatchObject({
+      accountId: 123,
+      firecrawlCreditsUsed,
+      generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
+      refetchPreviewId: 456,
+    });
+    expect(refetchPreview.diff.changed).toHaveLength(1);
+    expect(createdPendingIds).toEqual([456]);
+  }).pipe(
+    Effect.provideService(FirecrawlConfigService)({
+      apiKey: Redacted.make("test-key"),
+      monthlyRequestBudget: 900,
+    }),
+    Effect.provideService(FirecrawlClientService)(firecrawl),
+    Effect.provideService(AccountRefetchStoreService)(store)
+  );
+});
+
+it.effect("marks a reserved refetch request failed when interrupted", () =>
+  Effect.gen(function* interruptedRefetch() {
+    const actorUserId = parseTestUserId();
+    const accountId = yield* parseMargonemAccountId(123);
+    const displayName = yield* parseAccountDisplayName("informati");
+    const profileId = yield* parseMargonemProfileId(7_298_897);
+    const scrapeStarted = yield* Deferred.make<boolean>();
+    const pendingScrape = yield* Deferred.make<never>();
+    const failedRequests: { errorTag: string; requestId: number }[] = [];
+    const firecrawl: FirecrawlClient = {
+      scrapeProfileHtml: () =>
+        Deferred.succeed(scrapeStarted, true).pipe(
+          Effect.andThen(Deferred.await(pendingScrape))
+        ),
+    };
+    const store = makeAccountRefetchStoreServiceTestService({
+      getAccountForRefetch: () =>
+        Effect.succeed({
+          accountId,
+          currentCharacters: [],
+          displayName,
+          profileId,
+        }),
+      markRequestFailed: (input) =>
+        Effect.sync(() => {
+          failedRequests.push(input);
+        }),
+      reserveRequest: (input) =>
+        Effect.succeed({
+          budgetState: {
+            monthlyRequestBudget: input.monthlyRequestBudget,
+            remainingRequests: input.monthlyRequestBudget - 1,
+            usedRequests: 1,
+            yearMonth: input.yearMonth,
+          },
+          requestId: 123,
+        }),
+    });
+    const operation = preview({ accountId, actorUserId }).pipe(
+      Effect.provideService(FirecrawlConfigService)({
+        apiKey: Redacted.make("test-key"),
+        monthlyRequestBudget: 900,
+      }),
+      Effect.provideService(FirecrawlClientService)(firecrawl),
+      Effect.provideService(AccountRefetchStoreService)(store)
+    );
+    const fiber = yield* Effect.forkChild(operation);
+
+    yield* Deferred.await(scrapeStarted);
+    yield* Fiber.interrupt(fiber);
+    const exit = yield* Fiber.await(fiber);
+
+    expect(Exit.isFailure(exit)).toBe(true);
+    if (Exit.isFailure(exit)) {
+      expect(exit.cause.reasons.some(Cause.isInterruptReason)).toBe(true);
+    }
+    expect(failedRequests).toHaveLength(1);
+    expect(failedRequests[0]).toMatchObject({
+      errorTag: "Interrupted",
+      requestId: 123,
+    });
+  })
+);

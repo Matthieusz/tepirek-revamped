@@ -11,9 +11,9 @@ import { calculatePointsPerMember } from "@/lib/bet-helpers";
  * with selection shape and rules.
  */
 
-export type PointsPreviewVariant = "default" | "destructive" | "secondary";
+type PointsPreviewVariant = "default" | "destructive" | "secondary";
 
-export interface PointsPreview {
+interface PointsPreview {
   currentMemberCount: number;
   currentPointsPerMember: number;
   newMemberCount: number;
@@ -43,8 +43,9 @@ export const getAvailableUsers = (
   if (users === undefined) {
     return [];
   }
+  const selectedUserIdSet = new Set(selectedUserIds);
   return filterUsersBySearch(users, searchQuery).filter(
-    (user) => !selectedUserIds.includes(user.id)
+    (user) => !selectedUserIdSet.has(user.id)
   );
 };
 
@@ -59,7 +60,8 @@ export const getSelectedUsers = (
   if (users === undefined) {
     return [];
   }
-  return users.filter((user) => selectedUserIds.includes(user.id));
+  const selectedUserIdSet = new Set(selectedUserIds);
+  return users.filter((user) => selectedUserIdSet.has(user.id));
 };
 
 /**
@@ -107,7 +109,7 @@ export const copyLastBet = (lastBet?: {
   return lastBet.members.map((member) => member.userId);
 };
 
-export type PickerEmptyState =
+type PickerEmptyState =
   | "loading"
   | "no-users"
   | "no-search-results"

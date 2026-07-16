@@ -4,7 +4,7 @@ import { hero } from "@tepirek-revamped/db/schema/bet";
 import { event } from "@tepirek-revamped/db/schema/event";
 import { professions, range } from "@tepirek-revamped/db/schema/skills";
 
-import { testDb } from "./database";
+import { testDb } from "./database.ts";
 
 interface TestUserOverrides {
   email?: string;
@@ -18,7 +18,7 @@ interface CreateTestUserOptions extends TestUserOverrides {
   verified?: boolean;
 }
 
-export interface TestUser {
+interface TestUser {
   email: string;
   id: string;
   image: string | null;
@@ -34,7 +34,7 @@ const nextUserId = () => {
   return `test-user-${userSequence}`;
 };
 
-export const createTestUser = async ({
+const createTestUser = async ({
   email,
   id = nextUserId(),
   image = null,
@@ -90,7 +90,7 @@ interface TestHeroOverrides {
   name?: string;
 }
 
-export const createEvent = async ({
+const createEvent = async ({
   color = "#22c55e",
   endTime = new Date("2030-01-02T03:04:05.000Z"),
   icon = "calendar",

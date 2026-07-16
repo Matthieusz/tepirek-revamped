@@ -1,12 +1,20 @@
-import { useForm } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import { CreateRangePayload } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import {
+  EffectNumberField,
+  EffectTextField,
+} from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -16,166 +24,106 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { getErrorMessage } from "@/lib/errors";
-import { orpc } from "@/utils/orpc";
+import { formSubmission } from "@/lib/form-submission";
+import { createSkillRangeAtom } from "@/lib/skill-atoms";
 
-interface AddEventModalProps {
-  trigger: React.ReactNode;
+interface AddRangeModalProps {
+  readonly trigger: React.ReactNode;
 }
 
-interface AddRangeModal {
-  level: number;
-  image?: string;
-  name: string;
-}
+const rangeFormBuilder = FormBuilder.empty
+  .addField("name", CreateRangePayload.fields.name)
+  .addField("level", CreateRangePayload.fields.level)
+  .addField("image", CreateRangePayload.fields.image);
 
-const defaultValues: AddRangeModal = {
-  image: "",
-  level: 1,
-  name: "",
-};
+type CreateRange = (
+  payload: typeof CreateRangePayload.Type
+) => Promise<unknown>;
 
-export const AddRangeModal = ({ trigger }: AddEventModalProps) => {
+const rangeForm = FormReact.make(rangeFormBuilder, {
+  fields: {
+    image: EffectTextField,
+    level: EffectNumberField,
+    name: EffectTextField,
+  },
+  mode: { validation: "onSubmit" },
+  onSubmit: (createRange: CreateRange, { decoded }) =>
+    formSubmission(() => createRange(decoded)),
+});
+
+export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
-
-  const form = useForm({
-    defaultValues: {
-      ...defaultValues,
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        await orpc.skills.createRange.call({
-          image: value.image ?? "",
-          level: value.level,
-          name: value.name,
-        });
-
-        toast.success("Przedział utworzony pomyślnie");
-        await queryClient.invalidateQueries({
-          queryKey: orpc.skills.getAllRanges.queryKey(),
-        });
-        setOpen(false);
-        form.reset();
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
-    },
-    validators: {
-      onSubmit: z.object({
-        image: z.string().min(2),
-        level: z.number().min(1, "Poziom jest wymagany"),
-        name: z.string().min(1, "Nazwa jest wymagana"),
-      }),
-    },
+  const createSkillRange = useAtomSet(createSkillRangeAtom, {
+    mode: "promise",
   });
+  const submit = useAtomSet(rangeForm.submit);
+  const reset = useAtomSet(rangeForm.reset);
+  const submitResult = useAtomValue(rangeForm.submit);
+  const isDirty = useAtomValue(rangeForm.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
+
+  useEffect(() => {
+    if (AsyncResult.isSuccess(submitResult)) {
+      toast.success("Przedział utworzony pomyślnie");
+      reset();
+      setOpen(false);
+    }
+  }, [reset, submitResult]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
+      }
+      reset();
+    }
+    setOpen(nextOpen);
+  };
 
   return (
-    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+    <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-106.25">
-        <form
-          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-          action={async () => {
-            await form.handleSubmit();
-          }}
-        >
-          <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>Dodaj nowy przedział</ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>
-              Utwórz nowy przedział z nazwą i poziomem.
-            </ResponsiveDialogDescription>
-          </ResponsiveDialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <form.Field name="name">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Nazwa przedziału</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="Wpisz nazwę przedziału"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
+        <rangeForm.Initialize defaultValues={{ image: "", level: 1, name: "" }}>
+          <EffectForm
+            action={() => submit(() => createSkillRange)}
+            submitResult={submitResult}
+          >
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>
+                Dodaj nowy przedział
+              </ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
+                Utwórz nowy przedział z nazwą i poziomem.
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+            <div className="grid gap-4 py-4">
+              <rangeForm.name
+                label="Nazwa przedziału"
+                placeholder="Wpisz nazwę przedziału"
+              />
+              <rangeForm.level label="Poziom" placeholder="Wpisz poziom" />
+              <rangeForm.image
+                label="URL obrazka"
+                placeholder="Wpisz URL obrazka"
+              />
             </div>
-            <div className="grid gap-2">
-              <form.Field name="level">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Level</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(
-                          Number.parseInt(e.target.value, 10) || 0
-                        );
-                      }}
-                      placeholder="Wpisz level"
-                      type="number"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-            <div className="grid gap-2">
-              <form.Field name="image">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>URL obrazka</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="Wpisz URL obrazka"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-          </div>
-          <ResponsiveDialogFooter>
-            <form.Subscribe>
-              {(state) => (
-                <Button
-                  disabled={!state.canSubmit || state.isSubmitting}
-                  type="submit"
-                >
-                  {state.isSubmitting ? "Tworzenie..." : "Utwórz przedział"}
-                </Button>
-              )}
-            </form.Subscribe>
-          </ResponsiveDialogFooter>
-        </form>
+            <EffectFormFeedback result={submitResult} />
+            <ResponsiveDialogFooter>
+              <Button
+                disabled={submitResult.waiting}
+                onClick={() => handleOpenChange(false)}
+                type="button"
+                variant="outline"
+              >
+                Anuluj
+              </Button>
+              <Button disabled={submitResult.waiting} type="submit">
+                {submitResult.waiting ? "Tworzenie..." : "Utwórz przedział"}
+              </Button>
+            </ResponsiveDialogFooter>
+          </EffectForm>
+        </rangeForm.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

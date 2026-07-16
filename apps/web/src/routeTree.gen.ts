@@ -21,6 +21,7 @@ import { Route as DashboardPlayerListRouteImport } from './routes/dashboard/play
 import { Route as DashboardSquadBuilderRouteRouteImport } from './routes/dashboard/squad-builder/route'
 import { Route as DashboardSkillsRouteRouteImport } from './routes/dashboard/skills/route'
 import { Route as DashboardAuctionsRouteRouteImport } from './routes/dashboard/auctions/route'
+import { Route as DashboardSquadBuilderIndexRouteImport } from './routes/dashboard/squad-builder/index'
 import { Route as DashboardSkillsIndexRouteImport } from './routes/dashboard/skills/index'
 import { Route as DashboardSquadBuilderSquadsRouteImport } from './routes/dashboard/squad-builder/squads'
 import { Route as DashboardSquadBuilderAccountsRouteImport } from './routes/dashboard/squad-builder/accounts'
@@ -100,6 +101,12 @@ const DashboardAuctionsRouteRoute = DashboardAuctionsRouteRouteImport.update({
   path: '/auctions',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardSquadBuilderIndexRoute =
+  DashboardSquadBuilderIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardSquadBuilderRouteRoute,
+  } as any)
 const DashboardSkillsIndexRoute = DashboardSkillsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -220,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/squad-builder/accounts': typeof DashboardSquadBuilderAccountsRoute
   '/dashboard/squad-builder/squads': typeof DashboardSquadBuilderSquadsRoute
   '/dashboard/skills/': typeof DashboardSkillsIndexRoute
+  '/dashboard/squad-builder/': typeof DashboardSquadBuilderIndexRoute
   '/dashboard/auctions/$type/$profession': typeof DashboardAuctionsTypeProfessionRoute
   '/dashboard/events/bets/add': typeof DashboardEventsBetsAddRoute
   '/dashboard/squad-builder/squads/$groupId': typeof DashboardSquadBuilderSquadsGroupIdRoute
@@ -231,7 +239,6 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/waiting-room': typeof WaitingRoomRoute
   '/dashboard/auctions': typeof DashboardAuctionsRouteRouteWithChildren
-  '/dashboard/squad-builder': typeof DashboardSquadBuilderRouteRouteWithChildren
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
@@ -248,6 +255,7 @@ export interface FileRoutesByTo {
   '/dashboard/squad-builder/accounts': typeof DashboardSquadBuilderAccountsRoute
   '/dashboard/squad-builder/squads': typeof DashboardSquadBuilderSquadsRoute
   '/dashboard/skills': typeof DashboardSkillsIndexRoute
+  '/dashboard/squad-builder': typeof DashboardSquadBuilderIndexRoute
   '/dashboard/auctions/$type/$profession': typeof DashboardAuctionsTypeProfessionRoute
   '/dashboard/events/bets/add': typeof DashboardEventsBetsAddRoute
   '/dashboard/squad-builder/squads/$groupId': typeof DashboardSquadBuilderSquadsGroupIdRoute
@@ -280,6 +288,7 @@ export interface FileRoutesById {
   '/dashboard/squad-builder/accounts': typeof DashboardSquadBuilderAccountsRoute
   '/dashboard/squad-builder/squads': typeof DashboardSquadBuilderSquadsRoute
   '/dashboard/skills/': typeof DashboardSkillsIndexRoute
+  '/dashboard/squad-builder/': typeof DashboardSquadBuilderIndexRoute
   '/dashboard/auctions/$type/$profession': typeof DashboardAuctionsTypeProfessionRoute
   '/dashboard/events/bets/add': typeof DashboardEventsBetsAddRoute
   '/dashboard/squad-builder/squads_/$groupId': typeof DashboardSquadBuilderSquadsGroupIdRoute
@@ -313,6 +322,7 @@ export interface FileRouteTypes {
     | '/dashboard/squad-builder/accounts'
     | '/dashboard/squad-builder/squads'
     | '/dashboard/skills/'
+    | '/dashboard/squad-builder/'
     | '/dashboard/auctions/$type/$profession'
     | '/dashboard/events/bets/add'
     | '/dashboard/squad-builder/squads/$groupId'
@@ -324,7 +334,6 @@ export interface FileRouteTypes {
     | '/signup'
     | '/waiting-room'
     | '/dashboard/auctions'
-    | '/dashboard/squad-builder'
     | '/dashboard/player-list'
     | '/dashboard/profile'
     | '/dashboard/tasks'
@@ -341,6 +350,7 @@ export interface FileRouteTypes {
     | '/dashboard/squad-builder/accounts'
     | '/dashboard/squad-builder/squads'
     | '/dashboard/skills'
+    | '/dashboard/squad-builder'
     | '/dashboard/auctions/$type/$profession'
     | '/dashboard/events/bets/add'
     | '/dashboard/squad-builder/squads/$groupId'
@@ -372,6 +382,7 @@ export interface FileRouteTypes {
     | '/dashboard/squad-builder/accounts'
     | '/dashboard/squad-builder/squads'
     | '/dashboard/skills/'
+    | '/dashboard/squad-builder/'
     | '/dashboard/auctions/$type/$profession'
     | '/dashboard/events/bets/add'
     | '/dashboard/squad-builder/squads_/$groupId'
@@ -471,6 +482,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/auctions'
       preLoaderRoute: typeof DashboardAuctionsRouteRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/squad-builder/': {
+      id: '/dashboard/squad-builder/'
+      path: '/'
+      fullPath: '/dashboard/squad-builder/'
+      preLoaderRoute: typeof DashboardSquadBuilderIndexRouteImport
+      parentRoute: typeof DashboardSquadBuilderRouteRoute
     }
     '/dashboard/skills/': {
       id: '/dashboard/skills/'
@@ -641,6 +659,7 @@ const DashboardSkillsRouteRouteWithChildren =
 interface DashboardSquadBuilderRouteRouteChildren {
   DashboardSquadBuilderAccountsRoute: typeof DashboardSquadBuilderAccountsRoute
   DashboardSquadBuilderSquadsRoute: typeof DashboardSquadBuilderSquadsRoute
+  DashboardSquadBuilderIndexRoute: typeof DashboardSquadBuilderIndexRoute
   DashboardSquadBuilderSquadsGroupIdRoute: typeof DashboardSquadBuilderSquadsGroupIdRoute
 }
 
@@ -648,6 +667,7 @@ const DashboardSquadBuilderRouteRouteChildren: DashboardSquadBuilderRouteRouteCh
   {
     DashboardSquadBuilderAccountsRoute: DashboardSquadBuilderAccountsRoute,
     DashboardSquadBuilderSquadsRoute: DashboardSquadBuilderSquadsRoute,
+    DashboardSquadBuilderIndexRoute: DashboardSquadBuilderIndexRoute,
     DashboardSquadBuilderSquadsGroupIdRoute:
       DashboardSquadBuilderSquadsGroupIdRoute,
   }

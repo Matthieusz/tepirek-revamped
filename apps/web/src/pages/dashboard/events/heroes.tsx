@@ -1,4 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+/* oxlint-disable no-use-before-define */
+
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Plus, Sword, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -16,9 +19,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Select,
   SelectContent,
@@ -34,9 +37,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getErrorMessage } from "@/lib/errors";
+import { eventsAtom } from "@/lib/event-atoms";
+import {
+  deleteHeroAtom,
+  heroesAtom,
+  optimisticHeroesAtom,
+} from "@/lib/hero-atoms";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
 
 type HeroToDelete = {
   id: number;
@@ -48,52 +56,56 @@ interface EventsHeroesPageProps {
 }
 
 export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
+  const heroesResult = useAtomValue(heroesAtom);
+  const eventsResult = useAtomValue(eventsAtom);
+  const refreshHeroes = useAtomRefresh(heroesAtom);
+  const refreshEvents = useAtomRefresh(eventsAtom);
+
+  return (
+    <AsyncResultBoundary onRetry={refreshHeroes} result={heroesResult}>
+      {() => (
+        <AsyncResultBoundary onRetry={refreshEvents} result={eventsResult}>
+          {() => <EventsHeroesContent session={session} />}
+        </AsyncResultBoundary>
+      )}
+    </AsyncResultBoundary>
+  );
+}
+
+const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
   const [heroToDelete, setHeroToDelete] = useState<HeroToDelete>(null);
   const [selectedEventId, setSelectedEventId] = useState("all");
-  const { data: heroes, isPending } = useQuery(
-    orpc.heroes.getAll.queryOptions()
-  );
-  const { data: events } = useQuery(orpc.event.getAll.queryOptions());
-  const queryClient = useQueryClient();
+  const optimisticHeroesResult = useAtomValue(optimisticHeroesAtom);
+  const heroes = AsyncResult.getOrThrow(optimisticHeroesResult);
+  const eventsResult = useAtomValue(eventsAtom);
+  const events = [...AsyncResult.getOrThrow(eventsResult)];
+  const deleteHero = useAtomSet(deleteHeroAtom, { mode: "promise" });
 
   const isAdminUser = isAdmin(session);
 
   const filteredHeroes =
     selectedEventId === "all"
       ? heroes
-      : heroes?.filter((h) => h.eventId?.toString() === selectedEventId);
+      : heroes.filter((h) => h.eventId?.toString() === selectedEventId);
 
-  const deleteMutation = useMutation({
-    mutationFn: async (heroId: number) => {
-      await orpc.heroes.delete.call({ id: heroId });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteMutation = {
+    isPending: isDeleting,
+    mutate: (heroId: number) => {
+      void (async () => {
+        setIsDeleting(true);
+        try {
+          await deleteHero({ id: heroId });
+          toast.success("Heros został usunięty");
+          setHeroToDelete(null);
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error));
+        } finally {
+          setIsDeleting(false);
+        }
+      })();
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-    onSuccess: async () => {
-      toast.success("Heros został usunięty");
-      await queryClient.invalidateQueries({
-        queryKey: orpc.heroes.getAll.queryKey(),
-      });
-      setHeroToDelete(null);
-    },
-  });
-
-  if (isPending) {
-    return (
-      <div className="mx-auto w-full max-w-4xl space-y-6">
-        <div>
-          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
-            Herosi
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Zarządzaj herosami dostępnymi na eventach.
-          </p>
-        </div>
-        <LoadingSpinner />
-      </div>
-    );
-  }
+  };
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -253,4 +265,4 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
       </AlertDialog>
     </div>
   );
-}
+};

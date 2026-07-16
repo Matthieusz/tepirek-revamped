@@ -1,12 +1,17 @@
-import { useForm } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import { UpdateProfilePayload } from "@tepirek-revamped/api/protocol/user/http-api-contract";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -16,19 +21,28 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { getErrorMessage } from "@/lib/errors";
-import { orpc } from "@/utils/orpc";
+import { formSubmission } from "@/lib/form-submission";
+import { updateProfileAtom } from "@/lib/user-atoms";
 
 interface EditProfileModalProps {
-  trigger: React.ReactNode;
-  defaultName: string;
+  readonly defaultName: string;
+  readonly trigger: React.ReactNode;
 }
 
-const schema = z.object({
-  name: z
-    .string()
-    .min(2, "Imię jest wymagane")
-    .max(24, "Maksymalna długość to 24 znaki"),
+const profileFormBuilder = FormBuilder.empty.addField(
+  "name",
+  UpdateProfilePayload.fields.name
+);
+
+type UpdateProfile = (
+  payload: typeof UpdateProfilePayload.Type
+) => Promise<unknown>;
+
+const profileForm = FormReact.make(profileFormBuilder, {
+  fields: { name: EffectTextField },
+  mode: { validation: "onSubmit" },
+  onSubmit: (updateProfile: UpdateProfile, { decoded }) =>
+    formSubmission(() => updateProfile(decoded)),
 });
 
 export const EditProfileModal = ({
@@ -36,90 +50,72 @@ export const EditProfileModal = ({
   defaultName,
 }: EditProfileModalProps) => {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const updateProfile = useAtomSet(updateProfileAtom, { mode: "promise" });
+  const submit = useAtomSet(profileForm.submit);
+  const reset = useAtomSet(profileForm.reset);
+  const submitResult = useAtomValue(profileForm.submit);
+  const isDirty = useAtomValue(profileForm.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
 
-  const form = useForm({
-    defaultValues: {
-      name: defaultName,
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        await orpc.user.updateProfile.call({
-          name: value.name,
-        });
-        toast.success("Profil zaktualizowany");
-        await queryClient.invalidateQueries({
-          queryKey: orpc.user.getSession.queryKey(),
-        });
-        setOpen(false);
-      } catch (error) {
-        toast.error(getErrorMessage(error));
+  useEffect(() => {
+    if (AsyncResult.isSuccess(submitResult)) {
+      toast.success("Profil zaktualizowany");
+      reset();
+      setOpen(false);
+    }
+  }, [reset, submitResult]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
       }
-    },
-    validators: {
-      onSubmit: schema,
-    },
-  });
+      reset();
+    }
+    setOpen(nextOpen);
+  };
 
   return (
-    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+    <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger
         render={
           <ResponsiveDialogContent className="sm:max-w-[425px]">
-            <form
-              // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-              action={async () => {
-                await form.handleSubmit();
-              }}
+            <profileForm.Initialize
+              defaultValues={{ name: defaultName }}
+              key={defaultName}
             >
-              <ResponsiveDialogHeader>
-                <ResponsiveDialogTitle>Edytuj profil</ResponsiveDialogTitle>
-                <ResponsiveDialogDescription>
-                  Zmień wyświetlaną nazwę.
-                </ResponsiveDialogDescription>
-              </ResponsiveDialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <form.Field name="name">
-                    {(field) => (
-                      <div className="grid gap-1.5">
-                        <Label htmlFor={field.name}>Nazwa użytkownika</Label>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => {
-                            field.handleChange(e.target.value);
-                          }}
-                          placeholder="Wpisz nazwę"
-                          value={field.state.value}
-                        />
-                        {field.state.meta.errors.map((e) => (
-                          <p
-                            className="text-red-500 text-sm"
-                            key={`${field.name}-${e?.message}`}
-                          >
-                            {e?.message}
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                  </form.Field>
+              <EffectForm
+                action={() => submit(() => updateProfile)}
+                submitResult={submitResult}
+              >
+                <ResponsiveDialogHeader>
+                  <ResponsiveDialogTitle>Edytuj profil</ResponsiveDialogTitle>
+                  <ResponsiveDialogDescription>
+                    Zmień wyświetlaną nazwę.
+                  </ResponsiveDialogDescription>
+                </ResponsiveDialogHeader>
+                <div className="grid gap-4 py-4">
+                  <profileForm.name
+                    label="Nazwa użytkownika"
+                    placeholder="Wpisz nazwę"
+                  />
                 </div>
-              </div>
-              <ResponsiveDialogFooter>
-                <form.Subscribe>
-                  {(state) => (
-                    <Button
-                      disabled={!state.canSubmit || state.isSubmitting}
-                      type="submit"
-                    >
-                      {state.isSubmitting ? "Zapisywanie..." : "Zapisz"}
-                    </Button>
-                  )}
-                </form.Subscribe>
-              </ResponsiveDialogFooter>
-            </form>
+                <EffectFormFeedback result={submitResult} />
+                <ResponsiveDialogFooter>
+                  <Button
+                    disabled={submitResult.waiting}
+                    onClick={() => handleOpenChange(false)}
+                    type="button"
+                    variant="outline"
+                  >
+                    Anuluj
+                  </Button>
+                  <Button disabled={submitResult.waiting} type="submit">
+                    {submitResult.waiting ? "Zapisywanie..." : "Zapisz"}
+                  </Button>
+                </ResponsiveDialogFooter>
+              </EffectForm>
+            </profileForm.Initialize>
           </ResponsiveDialogContent>
         }
       >

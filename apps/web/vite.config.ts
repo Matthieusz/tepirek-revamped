@@ -5,6 +5,21 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig(({ mode }) => ({
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              maxSize: 450_000,
+              name: "effect",
+              test: /node_modules[\\/](?:@effect[\\/]|effect[\\/])/u,
+            },
+          ],
+        },
+      },
+    },
+  },
   plugins:
     mode === "test"
       ? []
@@ -12,4 +27,11 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     tsconfigPaths: true,
   },
+  ...(mode === "test" && {
+    define: {
+      "import.meta.env.VITE_SERVER_URL": JSON.stringify(
+        "http://localhost:3000"
+      ),
+    },
+  }),
 }));

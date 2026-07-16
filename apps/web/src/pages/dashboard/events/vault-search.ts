@@ -1,7 +1,10 @@
-import { z } from "zod";
+import * as Schema from "effect/Schema";
 
-const searchSchema = z.object({
-  eventId: z.string().optional(),
+import { FilterIdSearchSchema } from "@/lib/event-hero-filter";
+
+const VaultSearchSchema = Schema.Struct({
+  eventId: Schema.optional(FilterIdSearchSchema),
 });
 
-export { searchSchema };
+export const searchSchema = (search: unknown): typeof VaultSearchSchema.Type =>
+  Schema.decodeUnknownSync(VaultSearchSchema)(search);

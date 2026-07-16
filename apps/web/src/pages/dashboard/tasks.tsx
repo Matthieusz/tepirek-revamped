@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+/* oxlint-disable no-use-before-define */
+
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import type { CreateTodoPayload } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import {
   CheckCircle2,
   Circle,
@@ -7,71 +12,108 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import { EffectTextField } from "@/components/forms/effect-form-fields";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { TodoTextSchema } from "@/lib/form-schemas";
+import { formSubmission } from "@/lib/form-submission";
+import {
+  createTodoAtom,
+  deleteTodoAtom,
+  optimisticTodosAtom,
+  todosAtom,
+  toggleTodoAtom,
+} from "@/lib/todo-atoms";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
 
 interface TasksPageProps {
   session: AuthSession;
 }
 
+const todoFormBuilder = FormBuilder.empty.addField("text", TodoTextSchema);
+
+type CreateTodo = (payload: typeof CreateTodoPayload.Type) => Promise<unknown>;
+
+const todoForm = FormReact.make(todoFormBuilder, {
+  fields: { text: EffectTextField },
+  mode: { validation: "onSubmit" },
+  onSubmit: (createTodo: CreateTodo, { decoded }) =>
+    formSubmission(() => createTodo(decoded)),
+});
+
+const runMutation = (
+  action: () => Promise<unknown>,
+  onSuccess?: () => void
+) => {
+  void (async () => {
+    await action();
+    onSuccess?.();
+  })();
+};
+
 export default function TasksPage({ session }: TasksPageProps) {
-  const [newTodoText, setNewTodoText] = useState("");
-  const queryClient = useQueryClient();
+  const todosResult = useAtomValue(todosAtom);
+  const refreshTodos = useAtomRefresh(todosAtom);
 
-  const { data: todosData, isLoading: todosIsLoading } = useQuery(
-    orpc.todo.getAll.queryOptions()
+  return (
+    <AsyncResultBoundary onRetry={refreshTodos} result={todosResult}>
+      {() => <TasksContent session={session} />}
+    </AsyncResultBoundary>
   );
-  const createMutation = useMutation(
-    orpc.todo.create.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: orpc.todo.getAll.queryKey(),
-        });
-        setNewTodoText("");
-      },
-    })
-  );
-  const toggleMutation = useMutation(
-    orpc.todo.toggle.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: orpc.todo.getAll.queryKey(),
-        });
-      },
-    })
-  );
-  const deleteMutation = useMutation(
-    orpc.todo.delete.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: orpc.todo.getAll.queryKey(),
-        });
-      },
-    })
-  );
+}
 
-  const handleAddTodo = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newTodoText.trim() && session.user.id) {
-      createMutation.mutate({ text: newTodoText, userId: session.user.id });
+const TasksContent = ({ session }: TasksPageProps) => {
+  const optimisticTodosResult = useAtomValue(optimisticTodosAtom);
+  const todosData = AsyncResult.getOrThrow(optimisticTodosResult);
+  const createTodo = useAtomSet(createTodoAtom, { mode: "promise" });
+  const toggleTodo = useAtomSet(toggleTodoAtom, { mode: "promise" });
+  const deleteTodo = useAtomSet(deleteTodoAtom, { mode: "promise" });
+  const submit = useAtomSet(todoForm.submit, { mode: "promise" });
+  const reset = useAtomSet(todoForm.reset);
+  const submitResult = useAtomValue(todoForm.submit);
+  const isDirty = useAtomValue(todoForm.isDirty);
+  useEffectFormProtection(isDirty, submitResult.waiting);
+  const canCreateTodo = session.user.id.length > 0;
+
+  useEffect(() => {
+    if (AsyncResult.isSuccess(submitResult)) {
+      toast.success("Zadanie zostało dodane");
+      reset();
+    }
+  }, [reset, submitResult]);
+
+  const handleCreateTodo = async (): Promise<void> => {
+    try {
+      await submit(createTodo);
+    } catch {
+      // Effect Form owns the persistent failure message and keeps the draft.
     }
   };
 
+  const toggleTodoMutation = (input: { id: number; completed: boolean }) =>
+    runMutation(() => toggleTodo(input));
+  const deleteTodoMutation = (input: { id: number }) =>
+    runMutation(() => deleteTodo(input));
+
   const handleToggleTodo = (id: number, completed: boolean) => {
-    toggleMutation.mutate({ completed: !completed, id });
+    toggleTodoMutation({ completed: !completed, id });
   };
 
   const handleDeleteTodo = (id: number) => {
-    deleteMutation.mutate({ id });
+    deleteTodoMutation({ id });
   };
 
-  const completedCount = todosData?.filter((t) => t.completed).length ?? 0;
-  const totalCount = todosData?.length ?? 0;
+  const completedCount = todosData.filter((t) => t.completed).length;
+  const totalCount = todosData.length;
 
   return (
     <div className="w-full max-w-2xl space-y-6">
@@ -94,9 +136,7 @@ export default function TasksPage({ session }: TasksPageProps) {
               </p>
               <ListTodo className="size-4 text-muted-foreground" />
             </div>
-            <p className="mt-1 font-bold text-2xl">
-              {todosIsLoading ? "—" : totalCount}
-            </p>
+            <p className="mt-1 font-bold text-2xl">{totalCount}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between">
@@ -106,7 +146,7 @@ export default function TasksPage({ session }: TasksPageProps) {
               <CheckCircle2 className="size-4 text-primary" />
             </div>
             <p className="mt-1 font-bold text-2xl text-primary">
-              {todosIsLoading ? "—" : completedCount}
+              {completedCount}
             </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
@@ -117,7 +157,7 @@ export default function TasksPage({ session }: TasksPageProps) {
               <Circle className="size-4 text-muted-foreground" />
             </div>
             <p className="mt-1 font-bold text-2xl text-muted-foreground">
-              {todosIsLoading ? "—" : totalCount - completedCount}
+              {totalCount - completedCount}
             </p>
           </div>
         </div>
@@ -131,28 +171,32 @@ export default function TasksPage({ session }: TasksPageProps) {
           <p className="mb-4 text-muted-foreground text-sm">
             Wpisz treść nowego zadania
           </p>
-          <form className="flex gap-2" onSubmit={handleAddTodo}>
-            <Input
-              aria-label="Treść nowego zadania"
-              className="flex-1"
-              disabled={createMutation.isPending}
-              onChange={(e) => {
-                setNewTodoText(e.target.value);
-              }}
-              placeholder="np. zrobić porządek na postaciach (pozdro Wolan)"
-              value={newTodoText}
-            />
-            <Button
-              disabled={createMutation.isPending || !newTodoText.trim()}
-              type="submit"
+          <todoForm.Initialize defaultValues={{ text: "" }}>
+            <EffectFormFeedback result={submitResult} />
+            <EffectForm
+              action={handleCreateTodo}
+              className="flex items-start gap-2"
+              submitResult={submitResult}
             >
-              {createMutation.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                "Dodaj"
-              )}
-            </Button>
-          </form>
+              <todoForm.text
+                className="flex-1"
+                disabled={!canCreateTodo || submitResult.waiting}
+                label="Treść nowego zadania"
+                placeholder="np. zrobić porządek na postaciach (pozdro Wolan)"
+                required
+              />
+              <Button
+                disabled={!canCreateTodo || submitResult.waiting}
+                type="submit"
+              >
+                {submitResult.waiting ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  "Dodaj"
+                )}
+              </Button>
+            </EffectForm>
+          </todoForm.Initialize>
         </div>
 
         {/* Task List */}
@@ -167,12 +211,7 @@ export default function TasksPage({ session }: TasksPageProps) {
             </span>
           </div>
           <div className="p-4">
-            {todosIsLoading && (
-              <div className="flex justify-center py-8">
-                <Loader2 className="size-6 animate-spin text-muted-foreground" />
-              </div>
-            )}
-            {!todosIsLoading && todosData?.length === 0 && (
+            {todosData.length === 0 && (
               <div className="rounded-lg border border-dashed py-8 text-center">
                 <ListTodo className="mx-auto size-8 text-muted-foreground" />
                 <p className="mt-2 text-muted-foreground text-sm">
@@ -183,7 +222,7 @@ export default function TasksPage({ session }: TasksPageProps) {
                 </p>
               </div>
             )}
-            {!todosIsLoading && todosData && todosData.length > 0 && (
+            {todosData.length > 0 && (
               <ul className="space-y-2">
                 {todosData.map((todo) => (
                   <li
@@ -232,4 +271,4 @@ export default function TasksPage({ session }: TasksPageProps) {
       </div>
     </div>
   );
-}
+};

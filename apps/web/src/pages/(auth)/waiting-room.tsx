@@ -1,3 +1,4 @@
+import { useAtomSet } from "@effect/atom-react";
 import { useRouter } from "@tanstack/react-router";
 import { Loader2, LogOut, RefreshCw } from "lucide-react";
 import { useEffect, useRef } from "react";
@@ -12,8 +13,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { authClient } from "@/lib/auth-client";
+import { verifyDiscordGuildMembershipAtom } from "@/lib/user-atoms";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
 
 interface WaitingRoomPageProps {
   session: AuthSession;
@@ -21,6 +22,10 @@ interface WaitingRoomPageProps {
 
 export default function WaitingRoomPage({ session }: WaitingRoomPageProps) {
   const router = useRouter();
+  const verifyDiscordGuildMembership = useAtomSet(
+    verifyDiscordGuildMembershipAtom,
+    { mode: "promise" }
+  );
   const isValidatingRef = useRef(false);
   const hasValidated = useRef(false);
 
@@ -33,7 +38,7 @@ export default function WaitingRoomPage({ session }: WaitingRoomPageProps) {
       hasValidated.current = true;
       isValidatingRef.current = true;
       try {
-        const result = await orpc.user.verifyDiscordGuildMembership.call();
+        const result = await verifyDiscordGuildMembership();
         if (result?.valid) {
           await router.invalidate();
           await router.navigate({ to: "/dashboard" });
@@ -49,7 +54,7 @@ export default function WaitingRoomPage({ session }: WaitingRoomPageProps) {
 
     // oxlint-disable-next-line @typescript-eslint/no-floating-promises
     validateAndRedirect();
-  }, [router]);
+  }, [router, verifyDiscordGuildMembership]);
 
   const handleSignOut = async () => {
     await authClient.signOut({

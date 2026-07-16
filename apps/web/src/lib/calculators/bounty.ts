@@ -7,8 +7,8 @@
  * single source of truth for the penalty math.
  */
 
-export const MIN_LEVEL = 1;
-export const MAX_LEVEL = 500;
+const MIN_LEVEL = 1;
+const MAX_LEVEL = 500;
 
 /**
  * Base level difference threshold before scaling
@@ -31,7 +31,7 @@ const GROUP_ATTACK_THRESHOLD_BASE = 15;
 const GROUP_ATTACK_THRESHOLD_MULTIPLIER = 0.1;
 const GROUP_ATTACK_THRESHOLD_OFFSET = 20;
 
-export interface GroupAttackPenaltyResult {
+interface GroupAttackPenaltyResult {
   maxAttackerLevel: number;
   avgAttackerLevel: number;
   avgDefenderLevel: number;

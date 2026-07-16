@@ -1,10 +1,11 @@
 import { execFileSync } from "node:child_process";
 
 import {
-  defaultTestDatabaseUrl,
+  isManagedTestDatabase,
   testPool,
+  testDatabaseUrl,
   truncateApplicationTables,
-} from "./database";
+} from "./database.ts";
 
 const dockerComposeArgs = [
   "compose",
@@ -12,8 +13,7 @@ const dockerComposeArgs = [
   "../db/docker-compose.test.yml",
 ] as const;
 
-const shouldManageTestDatabase =
-  process.env.TEST_DATABASE_URL === defaultTestDatabaseUrl;
+const shouldManageTestDatabase = isManagedTestDatabase;
 
 const runDockerCompose = (args: string[]) => {
   execFileSync("docker", [...dockerComposeArgs, ...args], {
@@ -52,27 +52,20 @@ const applySchema = () => {
   execFileSync("pnpm", ["--filter", "@tepirek-revamped/db", "db:push"], {
     env: {
       ...process.env,
-      DATABASE_URL: process.env.TEST_DATABASE_URL,
+      DATABASE_URL: testDatabaseUrl,
     },
     stdio: "inherit",
   });
 };
 
 export const setup = async () => {
-  if (shouldManageTestDatabase) {
-    process.env.API_INTEGRATION_MANAGED_DATABASE = "true";
-  }
-
   startManagedTestDatabase();
   await assertTestDatabaseIsReachable();
   applySchema();
   await truncateApplicationTables();
 
   return async () => {
-    const { dbPool } = await import("@tepirek-revamped/db");
-
     await testPool.end();
-    await dbPool.end();
     stopManagedTestDatabase();
   };
 };

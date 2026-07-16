@@ -5,18 +5,18 @@ packages:
 allowBuilds:
   esbuild: true
   lefthook: true
+  msgpackr-extract: true
 
 catalog:
-  "@orpc/client": ^1.14.6
-  "@orpc/openapi": ^1.14.6
-  "@orpc/server": ^1.14.6
-  "@orpc/zod": ^1.14.6
   better-auth: ^1.6.20
   dotenv: ^17.4.2
-  drizzle-orm: ^0.45.2
+  "@effect/sql-pg": 4.0.0-beta.93
+  "@effect/vitest": 4.0.0-beta.93
+  drizzle-kit: 1.0.0-rc.4
+  drizzle-orm: 1.0.0-rc.4
+  effect: 4.0.0-beta.93
   hono: ^4.12.27
-  tsdown: ^0.22.3
-  typescript: rc
+  typescript: 6.0.3
   zod: ^4.4.3
 
 minimumReleaseAgeExclude:
@@ -25,6 +25,51 @@ minimumReleaseAgeExclude:
   - pg-connection-string@2.14.0
   - pg-protocol@1.15.0
   - pg@8.22.0
+  - "@oxfmt/binding-android-arm-eabi@0.59.0"
+  - "@oxfmt/binding-android-arm64@0.59.0"
+  - "@oxfmt/binding-darwin-arm64@0.59.0"
+  - "@oxfmt/binding-darwin-x64@0.59.0"
+  - "@oxfmt/binding-freebsd-x64@0.59.0"
+  - "@oxfmt/binding-linux-arm-gnueabihf@0.59.0"
+  - "@oxfmt/binding-linux-arm-musleabihf@0.59.0"
+  - "@oxfmt/binding-linux-arm64-gnu@0.59.0"
+  - "@oxfmt/binding-linux-arm64-musl@0.59.0"
+  - "@oxfmt/binding-linux-ppc64-gnu@0.59.0"
+  - "@oxfmt/binding-linux-riscv64-gnu@0.59.0"
+  - "@oxfmt/binding-linux-riscv64-musl@0.59.0"
+  - "@oxfmt/binding-linux-s390x-gnu@0.59.0"
+  - "@oxfmt/binding-linux-x64-gnu@0.59.0"
+  - "@oxfmt/binding-linux-x64-musl@0.59.0"
+  - "@oxfmt/binding-openharmony-arm64@0.59.0"
+  - "@oxfmt/binding-win32-arm64-msvc@0.59.0"
+  - "@oxfmt/binding-win32-ia32-msvc@0.59.0"
+  - "@oxfmt/binding-win32-x64-msvc@0.59.0"
+  - "@oxlint/binding-android-arm-eabi@1.74.0"
+  - "@oxlint/binding-android-arm64@1.74.0"
+  - "@oxlint/binding-darwin-arm64@1.74.0"
+  - "@oxlint/binding-darwin-x64@1.74.0"
+  - "@oxlint/binding-freebsd-x64@1.74.0"
+  - "@oxlint/binding-linux-arm-gnueabihf@1.74.0"
+  - "@oxlint/binding-linux-arm-musleabihf@1.74.0"
+  - "@oxlint/binding-linux-arm64-gnu@1.74.0"
+  - "@oxlint/binding-linux-arm64-musl@1.74.0"
+  - "@oxlint/binding-linux-ppc64-gnu@1.74.0"
+  - "@oxlint/binding-linux-riscv64-gnu@1.74.0"
+  - "@oxlint/binding-linux-riscv64-musl@1.74.0"
+  - "@oxlint/binding-linux-s390x-gnu@1.74.0"
+  - "@oxlint/binding-linux-x64-gnu@1.74.0"
+  - "@oxlint/binding-linux-x64-musl@1.74.0"
+  - "@oxlint/binding-openharmony-arm64@1.74.0"
+  - "@oxlint/binding-win32-arm64-msvc@1.74.0"
+  - "@oxlint/binding-win32-ia32-msvc@1.74.0"
+  - "@oxlint/binding-win32-x64-msvc@1.74.0"
+  - oxfmt@0.59.0
+  - oxlint@1.74.0
 
 onlyBuiltDependencies:
   - esbuild
+  - msgpackr-extract
+
+overrides:
+  "@lucas-barake/effect-form-react>@lucas-barake/effect-form": 0.25.0-beta.6
+  drizzle-orm: 1.0.0-rc.4

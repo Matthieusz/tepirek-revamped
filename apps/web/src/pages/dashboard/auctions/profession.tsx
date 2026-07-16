@@ -24,7 +24,7 @@ export default function AuctionsProfessionPage({
   const professionMeta = AUCTION_PROFESSION_META[profession];
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6">
+    <div className="mx-auto w-full max-w-6xl space-y-8">
       <AuctionHeader
         description={AUCTION_TYPE_META[type].professionDescription}
         icon={professionMeta.headerIcon}

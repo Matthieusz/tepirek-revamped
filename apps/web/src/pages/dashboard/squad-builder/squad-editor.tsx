@@ -1,925 +1,455 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams } from "@tanstack/react-router";
-import {
-  ArrowLeft,
-  ChevronDown,
-  Loader2,
-  Plus,
-  Save,
-  Trash2,
-  UserPlus,
-  X,
-} from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useParams } from "@tanstack/react-router";
+import type { SquadGroupDetailSchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { AlertTriangle, RotateCw } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { useEffectFormProtection } from "@/components/forms/effect-form";
+import {
+  Alert,
+  AlertAction,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/reui/alert";
 import { Button } from "@/components/ui/button";
-import { Collapsible } from "@/components/ui/collapsible";
-import { CollapsibleContent } from "@/components/ui/collapsible-content";
-import { CollapsibleTrigger } from "@/components/ui/collapsible-trigger";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { orpc } from "@/utils/orpc";
+import { getErrorMessage } from "@/lib/errors";
+import {
+  availableSquadCharactersAtom,
+  saveSharedSquadGroupCharactersAtom,
+  saveSquadGroupAtom,
+  setSquadGroupVisibilityAtom,
+  squadGroupDetailAtom,
+} from "@/lib/squad-builder/squad-group-atoms";
+import type { AvailableSquadCharacter } from "@/lib/squad-builder/squad-group-atoms";
+import { SquadEditorLayout } from "@/pages/dashboard/squad-builder/squad-editor/squad-editor-layout";
+import {
+  hydrateDraft,
+  isDraftEqual,
+  projectEditorPayload,
+  projectOwnerPayload,
+  removeCharacter,
+} from "@/pages/dashboard/squad-builder/squad-editor/squad-group-draft";
+import type { SquadGroupDraft } from "@/pages/dashboard/squad-builder/squad-editor/squad-group-draft";
+import type { SquadCharacterMetadata } from "@/pages/dashboard/squad-builder/squad-editor/squad-roster-workspace";
 
-const PROFESSION_LABELS: Record<string, string> = {
-  bladeDancer: "Tancerz ostrzy",
-  hunter: "Łowca",
-  mage: "Mag",
-  paladin: "Paladyn",
-  tracker: "Tropiciel",
-  warrior: "Wojownik",
+// Kept as a named alias so route resource states and child props share one source type.
+type SquadGroupDetail = typeof SquadGroupDetailSchema.Type;
+
+const makeClientKey = (): string => `new-${crypto.randomUUID()}`;
+
+const DetailSkeleton = () => (
+  <div aria-hidden="true" className="space-y-5">
+    <div className="flex items-center gap-3">
+      <Skeleton className="h-10 w-64" />
+      <div className="ml-auto flex items-center gap-2">
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-9 w-24" />
+      </div>
+    </div>
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_28rem]">
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Skeleton className="h-72 w-full" />
+        <Skeleton className="h-72 w-full" />
+      </div>
+      <Skeleton className="h-96 w-full" />
+    </div>
+  </div>
+);
+
+const detailCharacters = (
+  detail: SquadGroupDetail
+): ReadonlyMap<number, SquadCharacterMetadata> => {
+  const characters = new Map<number, SquadCharacterMetadata>();
+  for (const squad of detail.squads) {
+    for (const character of squad.characters) {
+      characters.set(character.characterId, {
+        accountDisplayName: character.accountDisplayName,
+        accountId: character.accountId,
+        accountOwnerUserImage: character.accountOwnerUserImage,
+        accountOwnerUserName: character.accountOwnerUserName,
+        avatarUrl: character.avatarUrl,
+        characterId: character.characterId,
+        level: character.level,
+        name: character.name,
+        profession: character.profession,
+      });
+    }
+  }
+  return characters;
 };
 
-interface AvailableCharacter {
-  readonly characterId: number;
-  readonly accountId: number;
-  readonly accountDisplayName: string;
-  readonly accountOwnerUserName: string;
-  readonly accountOwnerUserImage: string | null;
-  readonly name: string;
-  readonly level: number;
-  readonly profession: string;
-  readonly avatarUrl: string | null;
+const availableCharacterMetadata = (
+  character: AvailableSquadCharacter
+): SquadCharacterMetadata => ({
+  accountDisplayName: character.accountDisplayName,
+  accountId: character.accountId,
+  accountOwnerUserImage: character.accountOwnerUserImage,
+  accountOwnerUserName: character.accountOwnerUserName,
+  avatarUrl: character.avatarUrl,
+  characterId: character.characterId,
+  level: character.level,
+  name: character.name,
+  profession: character.profession,
+});
+
+interface SquadBuilderEditorContentProps {
+  readonly groupId: number;
 }
 
-interface DraftCharacter {
-  readonly characterId: number;
-  readonly position: number;
+interface SquadEditorState {
+  readonly draft: SquadGroupDraft | null;
+  readonly savedSnapshot: SquadGroupDraft | null;
+  readonly updatedAt: Date | null;
+  readonly visibility: "private" | "global";
 }
 
-interface DraftSquad {
-  readonly clientKey: string;
-  readonly squadId?: number;
-  readonly name: string;
-  readonly position: number;
-  readonly characters: readonly DraftCharacter[];
-}
+const initialSquadEditorState: SquadEditorState = {
+  draft: null,
+  savedSnapshot: null,
+  updatedAt: null,
+  visibility: "private",
+};
 
-interface SquadEditorInviteTarget {
-  readonly userId: string;
-  readonly name: string;
-  readonly image: string | null;
-}
-
-interface SquadGroupEditorGrant {
-  readonly invitationId: number;
-  readonly userId: string;
-  readonly userName: string;
-  readonly userImage: string | null;
-  readonly status: "pending" | "accepted";
-}
-
-const makeClientKey = (): string => crypto.randomUUID();
-
-const characterLabel = (character: AvailableCharacter): string =>
-  `${character.name} ${character.level} ${PROFESSION_LABELS[character.profession] ?? character.profession}`;
+const isSquadBuilderConflict = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "_tag" in error &&
+  error._tag === "SquadBuilderConflict";
 
 // oxlint-disable-next-line complexity
-export default function SquadBuilderEditorPage() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const params = useParams({
-    from: "/dashboard/squad-builder/squads_/$groupId",
+const SquadBuilderEditorContent = ({
+  groupId,
+}: SquadBuilderEditorContentProps) => {
+  const detailAtom = squadGroupDetailAtom({ groupId });
+  const detailResult = useAtomValue(detailAtom);
+  const refreshDetail = useAtomRefresh(detailAtom);
+  const detail = AsyncResult.isSuccess(detailResult)
+    ? detailResult.value
+    : undefined;
+  const role = detail?.accessRole ?? "viewer";
+  const isOwner = role === "owner";
+  const isViewer = role === "viewer";
+  const canEditPlacements = isOwner || role === "editor";
+  const availableCharactersAtom = availableSquadCharactersAtom({
+    groupId: canEditPlacements ? groupId : 0,
   });
-  const groupId = Number(params.groupId);
-  const [groupName, setGroupName] = useState("");
-  const [squads, setSquads] = useState<readonly DraftSquad[]>([]);
-  const [isDirty, setIsDirty] = useState(false);
-  const [inviteQuery, setInviteQuery] = useState("");
-  const [visibility, setVisibility] = useState<"private" | "global">("private");
-  const [editorsOpen, setEditorsOpen] = useState(false);
+  const availableCharactersResult = useAtomValue(availableCharactersAtom);
+  const [editorState, setEditorState] = useState(initialSquadEditorState);
+  const { draft, savedSnapshot, updatedAt, visibility } = editorState;
+  const [isSharingOpen, setIsSharingOpen] = useState(false);
+  const [isVisibilityPending, setIsVisibilityPending] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaveConflict, setIsSaveConflict] = useState(false);
+  const isSavingRef = useRef(false);
+  const hydratedUpdatedAtRef = useRef<number | null>(null);
 
-  const detailQuery = useQuery(
-    orpc.squadBuilder.getSquadGroupDetail.queryOptions({
-      enabled: Number.isSafeInteger(groupId) && groupId > 0,
-      input: { groupId },
-    })
+  const isDirty =
+    draft !== null &&
+    savedSnapshot !== null &&
+    !isDraftEqual(draft, savedSnapshot);
+  const draftRef = useRef(draft);
+  const isDirtyRef = useRef(isDirty);
+  useEffect(() => {
+    draftRef.current = draft;
+    isDirtyRef.current = isDirty;
+  }, [draft, isDirty]);
+  useEffectFormProtection(isDirty, isSaving);
+  const saveSquadGroup = useAtomSet(saveSquadGroupAtom, { mode: "promise" });
+  const saveSharedSquadGroupCharacters = useAtomSet(
+    saveSharedSquadGroupCharactersAtom,
+    { mode: "promise" }
   );
-
-  const accessRole = detailQuery.data?.accessRole;
-  const isOwner = accessRole === "owner";
-  const isEditor = accessRole === "editor";
-  const isViewer = accessRole === "viewer";
-  const canEditPlacements = isOwner || isEditor;
-
-  const availableQuery = useQuery(
-    orpc.squadBuilder.listAvailableSquadCharacters.queryOptions({
-      enabled:
-        canEditPlacements && Number.isSafeInteger(groupId) && groupId > 0,
-      input: { groupId },
-    })
-  );
-
-  const grantsQuery = useQuery(
-    orpc.squadBuilder.listSquadGroupEditorGrants.queryOptions({
-      enabled: isOwner && Number.isSafeInteger(groupId) && groupId > 0,
-      input: { groupId },
-    })
-  );
-  const inviteTargetsQuery = useQuery(
-    orpc.squadBuilder.searchSquadEditorInviteTargets.queryOptions({
-      enabled: isOwner && inviteQuery.trim().length >= 2,
-      input: { groupId, query: inviteQuery },
-    })
-  );
+  const setSquadGroupVisibility = useAtomSet(setSquadGroupVisibilityAtom, {
+    mode: "promise",
+  });
 
   useEffect(() => {
-    const detail = detailQuery.data;
-    if (detail === undefined || isDirty) {
+    if (detail === undefined) {
       return;
     }
 
-    setGroupName(detail.name);
-    setVisibility(detail.visibility);
-    setSquads(
-      detail.squads.map((squad) => ({
-        characters: squad.characters.map((character) => ({
-          characterId: character.characterId,
-          position: character.position,
-        })),
-        clientKey: `saved-${squad.squadId}`,
-        name: squad.name,
-        position: squad.position,
-        squadId: squad.squadId,
-      }))
-    );
-  }, [detailQuery.data, isDirty]);
+    const detailUpdatedAt = detail.updatedAt.getTime();
+    const currentDraft = draftRef.current;
+    const shouldHydrate =
+      currentDraft === null ||
+      currentDraft.groupId !== detail.groupId ||
+      (!isDirtyRef.current && hydratedUpdatedAtRef.current !== detailUpdatedAt);
+    if (!shouldHydrate) {
+      return;
+    }
 
-  const saveMutation = useMutation(
-    orpc.squadBuilder.saveSquadGroup.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: (detail) => {
-        toast.success("Grupa składów została zapisana");
-        setIsDirty(false);
-        setGroupName(detail.name);
-        setSquads(
-          detail.squads.map((squad) => ({
-            characters: squad.characters.map((character) => ({
-              characterId: character.characterId,
-              position: character.position,
-            })),
-            clientKey: `saved-${squad.squadId}`,
-            name: squad.name,
-            position: squad.position,
-            squadId: squad.squadId,
-          }))
+    const nextDraft = hydrateDraft(detail);
+    setEditorState({
+      draft: nextDraft,
+      savedSnapshot: nextDraft,
+      updatedAt: detail.updatedAt,
+      visibility: detail.visibility,
+    });
+    hydratedUpdatedAtRef.current = detailUpdatedAt;
+  }, [detail]);
+
+  const characterById = useMemo(() => {
+    const characters =
+      detail === undefined
+        ? new Map<number, SquadCharacterMetadata>()
+        : new Map(detailCharacters(detail));
+
+    if (AsyncResult.isSuccess(availableCharactersResult)) {
+      for (const character of availableCharactersResult.value) {
+        characters.set(
+          character.characterId,
+          availableCharacterMetadata(character)
         );
-        void queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.listMySquadGroups.queryKey(),
-        });
-        void queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.getSquadGroupDetail.queryKey({
-            input: { groupId },
-          }),
-        });
-      },
-    })
-  );
-
-  const saveSharedMutation = useMutation(
-    orpc.squadBuilder.saveSharedSquadGroupCharacters.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: (detail) => {
-        toast.success("Skład został zapisany");
-        setIsDirty(false);
-        setGroupName(detail.name);
-        setSquads(
-          detail.squads.map((squad) => ({
-            characters: squad.characters.map((character) => ({
-              characterId: character.characterId,
-              position: character.position,
-            })),
-            clientKey: `saved-${squad.squadId}`,
-            name: squad.name,
-            position: squad.position,
-            squadId: squad.squadId,
-          }))
-        );
-        void queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.getSquadGroupDetail.queryKey({
-            input: { groupId },
-          }),
-        });
-      },
-    })
-  );
-
-  const visibilityMutation = useMutation(
-    orpc.squadBuilder.setSquadGroupVisibility.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: async (result) => {
-        toast.success("Widoczność została zmieniona");
-        setVisibility(result.visibility);
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: orpc.squadBuilder.getSquadGroupDetail.queryKey({
-              input: { groupId },
-            }),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: orpc.squadBuilder.listGlobalSquadGroups.queryKey(),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: orpc.squadBuilder.listMySquadGroups.queryKey(),
-          }),
-        ]);
-      },
-    })
-  );
-
-  const sendInviteMutation = useMutation(
-    orpc.squadBuilder.sendSquadGroupEditorInvite.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: async () => {
-        toast.success("Zaproszenie zostało wysłane");
-        setInviteQuery("");
-        await queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.listSquadGroupEditorGrants.queryKey({
-            input: { groupId },
-          }),
-        });
-      },
-    })
-  );
-
-  const revokeInviteMutation = useMutation(
-    orpc.squadBuilder.revokeSquadGroupEditor.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: async () => {
-        toast.success("Dostęp został cofnięty");
-        await queryClient.invalidateQueries({
-          queryKey: orpc.squadBuilder.listSquadGroupEditorGrants.queryKey({
-            input: { groupId },
-          }),
-        });
-      },
-    })
-  );
-
-  const availableCharacters = useMemo(
-    () =>
-      (availableQuery.data?.characters ?? []) as readonly AvailableCharacter[],
-    [availableQuery.data?.characters]
-  );
-  const availableById = useMemo(() => {
-    const map = new Map<number, AvailableCharacter>();
-    for (const squad of detailQuery.data?.squads ?? []) {
-      for (const character of squad.characters) {
-        map.set(character.characterId, {
-          accountDisplayName: character.accountDisplayName,
-          accountId: character.accountId,
-          accountOwnerUserImage: character.accountOwnerUserImage,
-          accountOwnerUserName: character.accountOwnerUserName,
-          avatarUrl: character.avatarUrl,
-          characterId: character.characterId,
-          level: character.level,
-          name: character.name,
-          profession: character.profession,
-        });
       }
     }
-    for (const character of availableCharacters) {
-      map.set(character.characterId, character);
+
+    return characters;
+  }, [availableCharactersResult, detail]);
+
+  const updateDraft = (nextDraft: SquadGroupDraft) => {
+    if (isSavingRef.current) {
+      return;
     }
-    return map;
-  }, [availableCharacters, detailQuery.data?.squads]);
-
-  const inviteTargets = (inviteTargetsQuery.data?.users ??
-    []) as readonly SquadEditorInviteTarget[];
-  const editorGrants = (grantsQuery.data?.grants ??
-    []) as readonly SquadGroupEditorGrant[];
-
-  const selectedCharacterIds = useMemo(() => {
-    const ids = new Set<number>();
-    for (const squad of squads) {
-      for (const character of squad.characters) {
-        ids.add(character.characterId);
-      }
-    }
-    return ids;
-  }, [squads]);
-
-  const updateSquads = (next: readonly DraftSquad[]) => {
-    setSquads(next);
-    setIsDirty(true);
+    setEditorState((current) => ({ ...current, draft: nextDraft }));
+    setSaveError(null);
+    setIsSaveConflict(false);
   };
 
-  const handleAddSquad = () => {
-    updateSquads([
-      ...squads,
-      {
-        characters: [],
-        clientKey: makeClientKey(),
-        name: `Skład ${squads.length + 1}`,
-        position: squads.length,
-      },
-    ]);
+  const addSquad = () => {
+    if (draft === null || !isOwner) {
+      return;
+    }
+    updateDraft({
+      ...draft,
+      squads: [
+        ...draft.squads,
+        {
+          characters: [],
+          clientKey: makeClientKey(),
+          name: `Skład ${draft.squads.length + 1}`,
+        },
+      ],
+    });
   };
 
-  const handleSave = () => {
-    const trimmedName = groupName.trim();
-    if (trimmedName.length === 0) {
+  const updateSquadName = (squadKey: string, name: string) => {
+    if (draft === null || !isOwner) {
+      return;
+    }
+    updateDraft({
+      ...draft,
+      squads: draft.squads.map((squad) =>
+        squad.clientKey === squadKey ? { ...squad, name } : squad
+      ),
+    });
+  };
+
+  const deleteSquad = (squadKey: string) => {
+    if (draft === null || !isOwner) {
+      return;
+    }
+    updateDraft({
+      ...draft,
+      squads: draft.squads.filter((squad) => squad.clientKey !== squadKey),
+    });
+  };
+
+  const removeDraftCharacter = (characterId: number) => {
+    if (draft === null || !canEditPlacements) {
+      return;
+    }
+    updateDraft(removeCharacter(draft, characterId, true));
+  };
+
+  const save = async () => {
+    if (draft === null || updatedAt === null || isViewer || isSaving) {
+      return;
+    }
+    const trimmedName = draft.name.trim();
+    if (isOwner && trimmedName.length === 0) {
       toast.error("Podaj nazwę grupy");
       return;
     }
 
-    if (isViewer) {
-      toast.error("Ten widok jest tylko do odczytu");
-      return;
-    }
-
-    if (isEditor) {
-      void saveSharedMutation.mutate({
-        groupId,
-        squads: squads
-          .filter((squad) => squad.squadId !== undefined)
-          .map((squad) => ({
-            characters: squad.characters.map((character, characterIndex) => ({
-              characterId: character.characterId,
-              position: characterIndex,
-            })),
-            squadId: squad.squadId as number,
+    setIsSaving(true);
+    isSavingRef.current = true;
+    setSaveError(null);
+    setIsSaveConflict(false);
+    const normalizedDraft: SquadGroupDraft = isOwner
+      ? {
+          ...draft,
+          name: trimmedName,
+          squads: draft.squads.map((squad) => ({
+            ...squad,
+            name: squad.name.trim(),
           })),
-      });
-      return;
+        }
+      : draft;
+    try {
+      const savedDetail = await (role === "editor"
+        ? saveSharedSquadGroupCharacters({
+            ...projectEditorPayload(normalizedDraft),
+            expectedUpdatedAt: updatedAt,
+          })
+        : saveSquadGroup({
+            ...projectOwnerPayload(normalizedDraft),
+            expectedUpdatedAt: updatedAt,
+          }));
+      const nextDraft = hydrateDraft(savedDetail);
+      setEditorState((current) => ({
+        ...current,
+        draft: nextDraft,
+        savedSnapshot: nextDraft,
+        updatedAt: savedDetail.updatedAt,
+        visibility: savedDetail.visibility,
+      }));
+      hydratedUpdatedAtRef.current = savedDetail.updatedAt.getTime();
+      toast.success("Grupa składów została zapisana");
+    } catch (error: unknown) {
+      const message = getErrorMessage(
+        error,
+        "Nie udało się zapisać grupy składów"
+      );
+      setSaveError(message);
+      setIsSaveConflict(isSquadBuilderConflict(error));
+      toast.error(message);
+    } finally {
+      isSavingRef.current = false;
+      setIsSaving(false);
     }
-
-    void saveMutation.mutate({
-      groupId,
-      name: trimmedName,
-      squads: squads.map((squad, squadIndex) => ({
-        characters: squad.characters.map((character, characterIndex) => ({
-          characterId: character.characterId,
-          position: characterIndex,
-        })),
-        clientKey: squad.clientKey,
-        name: squad.name,
-        position: squadIndex,
-        ...(squad.squadId === undefined ? {} : { squadId: squad.squadId }),
-      })),
-    });
   };
 
-  if (detailQuery.isLoading) {
+  const reloadLatest = () => {
+    setSaveError(null);
+    setIsSaveConflict(false);
+    setEditorState((current) => ({
+      ...current,
+      draft: null,
+      savedSnapshot: null,
+      updatedAt: null,
+    }));
+    refreshDetail();
+  };
+
+  const updateVisibility = async (nextVisibility: "private" | "global") => {
+    if (
+      !isOwner ||
+      isSaving ||
+      isVisibilityPending ||
+      visibility === nextVisibility
+    ) {
+      return;
+    }
+
+    setIsVisibilityPending(true);
+    try {
+      await setSquadGroupVisibility({ groupId, visibility: nextVisibility });
+      setEditorState((current) => ({
+        ...current,
+        visibility: nextVisibility,
+      }));
+      toast.success("Widoczność została zmieniona");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Nie udało się zmienić widoczności"));
+    } finally {
+      setIsVisibilityPending(false);
+    }
+  };
+
+  if (AsyncResult.isInitial(detailResult)) {
+    return <DetailSkeleton />;
+  }
+
+  if (AsyncResult.isFailure(detailResult)) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-64 w-full" />
+      <div className="space-y-3">
+        <Alert variant="destructive">
+          <AlertTriangle aria-hidden="true" />
+          <AlertTitle>Nie udało się wczytać grupy składów</AlertTitle>
+          <AlertDescription>
+            Grupa może być niedostępna albo nie masz do niej dostępu.
+          </AlertDescription>
+          <AlertAction>
+            <Button
+              onClick={refreshDetail}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <RotateCw className="size-3.5" />
+              Spróbuj ponownie
+            </Button>
+          </AlertAction>
+        </Alert>
       </div>
     );
   }
 
-  if (detailQuery.isError) {
-    return (
-      <p className="text-destructive text-sm">
-        Nie udało się wczytać grupy składów.
-      </p>
-    );
+  if (draft === null || detail === undefined) {
+    return <DetailSkeleton />;
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-5">
-      <div className="flex flex-wrap items-center gap-3">
-        <Button
-          onClick={() => {
-            void navigate({ to: "/dashboard/squad-builder/squads" });
-          }}
-          type="button"
-          variant="ghost"
-        >
-          <ArrowLeft className="size-4" />
-          Grupy
-        </Button>
-        <div className="min-w-56 flex-1 space-y-1">
-          <Label htmlFor="group-name">Nazwa grupy</Label>
-          {isOwner ? (
-            <Input
-              id="group-name"
-              maxLength={80}
-              onChange={(event) => {
-                setGroupName(event.target.value);
-                setIsDirty(true);
-              }}
-              value={groupName}
-            />
-          ) : (
-            <p className="rounded-md bg-muted px-3 py-2 text-sm">{groupName}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-2 self-end">
-          {isViewer && (
-            <Badge variant="secondary">Widok tylko do odczytu</Badge>
-          )}
-          {isDirty && !isViewer && (
-            <span className="text-muted-foreground text-xs">
-              Niezapisane zmiany
-            </span>
-          )}
-          {!isViewer && (
-            <Button
-              disabled={
-                saveMutation.isPending ||
-                saveSharedMutation.isPending ||
-                !isDirty
-              }
-              onClick={handleSave}
-              type="button"
-            >
-              {saveMutation.isPending || saveSharedMutation.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Save className="size-4" />
-              )}
-              Zapisz
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {isOwner && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
-          <div className="space-y-0.5">
-            <h2 className="font-semibold text-sm">Widoczność</h2>
-            <p className="text-muted-foreground text-xs">
-              Publiczne składy może oglądać każdy zalogowany użytkownik.
-              Edytować mogą tylko zaproszeni edytorzy.
-            </p>
-          </div>
-          <fieldset className="flex flex-wrap gap-2">
-            <legend className="sr-only">Widoczność grupy składów</legend>
-            <Button
-              disabled={
-                visibilityMutation.isPending || visibility === "private"
-              }
-              onClick={() =>
-                visibilityMutation.mutate({ groupId, visibility: "private" })
-              }
-              size="sm"
-              type="button"
-              variant={visibility === "private" ? "default" : "outline"}
-            >
-              Prywatny
-            </Button>
-            <Button
-              disabled={visibilityMutation.isPending || visibility === "global"}
-              onClick={() =>
-                visibilityMutation.mutate({ groupId, visibility: "global" })
-              }
-              size="sm"
-              type="button"
-              variant={visibility === "global" ? "default" : "outline"}
-            >
-              Publiczny dla zalogowanych
-            </Button>
-          </fieldset>
-        </div>
-      )}
-
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-base">Składy w grupie</h2>
-            {isOwner && (
-              <Button
-                onClick={handleAddSquad}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                <Plus className="size-4" />
-                Dodaj skład
-              </Button>
-            )}
-          </div>
-
-          {squads.length === 0 && (
-            <div className="rounded-xl border border-dashed border-border py-10 text-center text-muted-foreground text-sm">
-              Dodaj pierwszy skład, a potem wybierz postacie z panelu obok.
-            </div>
-          )}
-
-          <div className="grid gap-3 lg:grid-cols-2">
-            {squads.map((squad) => {
-              const fill = Math.min(squad.characters.length, 10) / 10;
-              return (
-                <article
-                  className="overflow-hidden rounded-xl border border-border bg-card"
-                  key={squad.clientKey}
-                >
-                  <header className="flex items-center gap-2 border-b border-border px-4 py-2.5">
-                    {isOwner ? (
-                      <Input
-                        aria-label="Nazwa składu"
-                        className="h-8"
-                        maxLength={60}
-                        onChange={(event) => {
-                          updateSquads(
-                            squads.map((item) =>
-                              item.clientKey === squad.clientKey
-                                ? { ...item, name: event.target.value }
-                                : item
-                            )
-                          );
-                        }}
-                        value={squad.name}
-                      />
-                    ) : (
-                      <h3 className="flex-1 font-medium text-sm">
-                        {squad.name}
-                      </h3>
-                    )}
-                    {isOwner && (
-                      <Button
-                        aria-label={`Usuń skład ${squad.name}`}
-                        onClick={() =>
-                          updateSquads(
-                            squads.filter(
-                              (item) => item.clientKey !== squad.clientKey
-                            )
-                          )
-                        }
-                        size="icon-sm"
-                        type="button"
-                        variant="ghost"
-                      >
-                        <Trash2 className="size-3.5 text-destructive" />
-                      </Button>
-                    )}
-                  </header>
-
-                  <div className="px-3 py-2">
-                    {squad.characters.length === 0 ? (
-                      <p className="py-5 text-center text-xs text-muted-foreground">
-                        Brak postaci. Wybierz z panelu obok.
-                      </p>
-                    ) : (
-                      <ul className="divide-y divide-border/60">
-                        {squad.characters.map((placement) => {
-                          const character = availableById.get(
-                            placement.characterId
-                          );
-                          return (
-                            <li
-                              className="flex items-center justify-between gap-2 py-2"
-                              key={placement.characterId}
-                            >
-                              <div className="flex min-w-0 items-center gap-2">
-                                <Avatar size="sm" className="size-7">
-                                  {character?.avatarUrl ? (
-                                    <AvatarImage
-                                      alt={character.name}
-                                      src={character.avatarUrl}
-                                    />
-                                  ) : null}
-                                  <AvatarFallback>
-                                    {character
-                                      ? character.name.slice(0, 2).toUpperCase()
-                                      : "?"}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="truncate text-sm">
-                                  {character === undefined
-                                    ? "Niedostępna postać"
-                                    : characterLabel(character)}
-                                </span>
-                              </div>
-                              {canEditPlacements && (
-                                <Button
-                                  aria-label={`Usuń ${character?.name ?? "postać"} ze składu ${squad.name}`}
-                                  onClick={() => {
-                                    updateSquads(
-                                      squads.map((item) =>
-                                        item.clientKey === squad.clientKey
-                                          ? {
-                                              ...item,
-                                              characters:
-                                                item.characters.filter(
-                                                  (current) =>
-                                                    current.characterId !==
-                                                    placement.characterId
-                                                ),
-                                            }
-                                          : item
-                                      )
-                                    );
-                                  }}
-                                  size="icon-sm"
-                                  type="button"
-                                  variant="ghost"
-                                >
-                                  <X className="size-3.5" />
-                                </Button>
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-
-                    <div className="mt-2.5 space-y-1.5">
-                      <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary/60"
-                          style={{ width: `${fill * 100}%` }}
-                        />
-                      </div>
-                      <p className="font-mono text-xs text-muted-foreground">
-                        {squad.characters.length}/10 postaci
-                      </p>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-
-        <aside className="space-y-4">
-          {isOwner && (
-            <Collapsible onOpenChange={setEditorsOpen} open={editorsOpen}>
-              <div className="overflow-hidden rounded-xl border border-border bg-card">
-                <CollapsibleTrigger
-                  className="flex w-full items-center justify-between gap-2 border-b border-border px-4 py-3 text-left transition-colors hover:bg-muted/40"
-                  render={
-                    <button type="button">
-                      <span className="flex items-center gap-2">
-                        <UserPlus className="size-4 text-muted-foreground" />
-                        <span className="font-semibold text-sm">Edytorzy</span>
-                        {editorGrants.length > 0 && (
-                          <span className="font-mono text-xs text-muted-foreground">
-                            {editorGrants.length}
-                          </span>
-                        )}
-                      </span>
-                      <ChevronDown
-                        aria-hidden="true"
-                        className={`size-4 text-muted-foreground transition-transform ${
-                          editorsOpen ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-                  }
-                />
-                {editorsOpen && (
-                  <CollapsibleContent className="space-y-3 px-4 py-3">
-                    <div className="space-y-2">
-                      <Label
-                        className="text-muted-foreground text-xs"
-                        htmlFor="editor-invite-query"
-                      >
-                        Zaproś użytkownika
-                      </Label>
-                      <Input
-                        id="editor-invite-query"
-                        onChange={(event) => setInviteQuery(event.target.value)}
-                        placeholder="Nazwa użytkownika"
-                        value={inviteQuery}
-                      />
-                    </div>
-                    {inviteTargets.length > 0 && (
-                      <ul className="space-y-1">
-                        {inviteTargets.map((target) => (
-                          <li
-                            className="flex items-center justify-between gap-2 rounded-md px-1 py-1"
-                            key={target.userId}
-                          >
-                            <div className="flex min-w-0 items-center gap-2">
-                              <Avatar size="sm">
-                                {target.image ? (
-                                  <AvatarImage
-                                    alt={target.name}
-                                    src={target.image}
-                                  />
-                                ) : null}
-                                <AvatarFallback>
-                                  {target.name.slice(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="truncate text-sm">
-                                {target.name}
-                              </span>
-                            </div>
-                            <Button
-                              disabled={sendInviteMutation.isPending}
-                              onClick={() =>
-                                sendInviteMutation.mutate({
-                                  groupId,
-                                  invitedUserId: target.userId,
-                                })
-                              }
-                              size="xs"
-                              type="button"
-                            >
-                              Zaproś
-                            </Button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    {editorGrants.length > 0 && (
-                      <ul className="space-y-1 border-t border-border pt-3">
-                        {editorGrants.map((grant) => (
-                          <li
-                            className="flex items-center justify-between gap-2 rounded-md px-1 py-1"
-                            key={grant.invitationId}
-                          >
-                            <div className="flex min-w-0 items-center gap-2">
-                              <Avatar size="sm">
-                                {grant.userImage ? (
-                                  <AvatarImage
-                                    alt={grant.userName}
-                                    src={grant.userImage}
-                                  />
-                                ) : null}
-                                <AvatarFallback>
-                                  {grant.userName.slice(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="truncate text-sm">
-                                {grant.userName}
-                              </span>
-                              <Badge
-                                variant={
-                                  grant.status === "accepted"
-                                    ? "default"
-                                    : "secondary"
-                                }
-                              >
-                                {grant.status === "pending"
-                                  ? "oczekuje"
-                                  : "aktywny"}
-                              </Badge>
-                            </div>
-                            <Button
-                              disabled={revokeInviteMutation.isPending}
-                              onClick={() =>
-                                revokeInviteMutation.mutate({
-                                  invitationId: grant.invitationId,
-                                })
-                              }
-                              size="xs"
-                              type="button"
-                              variant="outline"
-                            >
-                              Cofnij dostęp
-                            </Button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </CollapsibleContent>
-                )}
-              </div>
-            </Collapsible>
-          )}
-
-          <section className="overflow-hidden rounded-xl border border-border bg-card">
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <h2 className="font-semibold text-base">
-                {isViewer ? "Informacje" : "Dostępne postacie"}
-              </h2>
-              {!isViewer && (
-                <span className="font-mono text-xs text-muted-foreground">
-                  {availableCharacters.length}
-                </span>
-              )}
-            </div>
-
-            {isViewer ? (
-              <p className="px-4 py-3 text-muted-foreground text-sm">
-                Oglądasz publiczną grupę w trybie tylko do odczytu. Nie możesz
-                dodawać ani usuwać postaci.
-              </p>
-            ) : (
-              <div className="space-y-3 px-3 py-3">
-                {!isOwner && (
-                  <p className="px-1 text-muted-foreground text-xs">
-                    Dostępne postacie pochodzą z kont dostępnych właścicielowi
-                    składu.
-                  </p>
-                )}
-                {availableQuery.isLoading && (
-                  <div className="space-y-2 px-1" aria-hidden="true">
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
-                  </div>
-                )}
-                {!availableQuery.isLoading &&
-                  availableCharacters.length === 0 && (
-                    <p className="px-1 text-muted-foreground text-sm">
-                      Brak dostępnych postaci z Jaruny. Dodaj konto na stronie
-                      Konta.
-                    </p>
-                  )}
-                {!availableQuery.isLoading &&
-                  availableCharacters.length > 0 && (
-                    <ul className="divide-y divide-border/60">
-                      {availableCharacters.map((character) => {
-                        const isSelected = selectedCharacterIds.has(
-                          character.characterId
-                        );
-                        return (
-                          <li className="py-2.5" key={character.characterId}>
-                            <div className="flex items-center gap-2 px-1">
-                              <Avatar className="size-8">
-                                {character.avatarUrl ? (
-                                  <AvatarImage
-                                    alt={character.name}
-                                    src={character.avatarUrl}
-                                  />
-                                ) : null}
-                                <AvatarFallback>
-                                  {character.name.slice(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate font-medium text-sm">
-                                  {characterLabel(character)}
-                                </p>
-                                <p className="truncate font-mono text-xs text-muted-foreground">
-                                  {character.accountDisplayName} ·{" "}
-                                  {character.accountOwnerUserName}
-                                </p>
-                              </div>
-                              {isSelected && (
-                                <Badge variant="secondary">wybrana</Badge>
-                              )}
-                            </div>
-                            <div className="mt-2 flex flex-wrap gap-1.5 pl-10">
-                              {squads.map((squad) => {
-                                const hasCharacterFromSameAccount =
-                                  squad.characters.some(
-                                    (placement) =>
-                                      availableById.get(placement.characterId)
-                                        ?.accountId === character.accountId
-                                  );
-                                const cannotAddToSquad =
-                                  isSelected ||
-                                  squad.characters.length >= 10 ||
-                                  hasCharacterFromSameAccount;
-
-                                return (
-                                  <Button
-                                    disabled={cannotAddToSquad}
-                                    key={squad.clientKey}
-                                    onClick={() => {
-                                      updateSquads(
-                                        squads.map((item) =>
-                                          item.clientKey === squad.clientKey
-                                            ? {
-                                                ...item,
-                                                characters: [
-                                                  ...item.characters,
-                                                  {
-                                                    characterId:
-                                                      character.characterId,
-                                                    position:
-                                                      item.characters.length,
-                                                  },
-                                                ],
-                                              }
-                                            : item
-                                        )
-                                      );
-                                    }}
-                                    size="xs"
-                                    title={
-                                      hasCharacterFromSameAccount
-                                        ? "Ten skład ma już postać z tego konta"
-                                        : undefined
-                                    }
-                                    type="button"
-                                    variant="outline"
-                                  >
-                                    <UserPlus className="size-3" />
-                                    {squad.name}
-                                  </Button>
-                                );
-                              })}
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-              </div>
-            )}
-          </section>
-        </aside>
-      </div>
-    </div>
+    <SquadEditorLayout
+      characterById={characterById}
+      draft={draft}
+      groupId={groupId}
+      permissions={{ canEditPlacements, isOwner, isViewer }}
+      status={{ isDirty, isSaving, isSharingOpen, isVisibilityPending }}
+      onAddSquad={addSquad}
+      onDraftChange={updateDraft}
+      onNameChange={(name) => {
+        if (isOwner) {
+          updateDraft({ ...draft, name });
+        }
+      }}
+      onRemoveCharacter={removeDraftCharacter}
+      onRemoveSquad={deleteSquad}
+      onSave={() => {
+        void save();
+      }}
+      onShareToggle={() => {
+        setIsSharingOpen((current) => !current);
+      }}
+      onSquadNameChange={updateSquadName}
+      onVisibilityChange={(nextVisibility) => {
+        void updateVisibility(nextVisibility);
+      }}
+      role={role}
+      isSaveConflict={isSaveConflict}
+      onReloadLatest={reloadLatest}
+      saveError={saveError}
+      visibility={visibility}
+    />
   );
+};
+
+export default function SquadBuilderEditorPage() {
+  const params = useParams({
+    from: "/dashboard/squad-builder/squads_/$groupId",
+  });
+  const groupId = Number(params.groupId);
+
+  if (!Number.isSafeInteger(groupId) || groupId <= 0) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle aria-hidden="true" />
+        <AlertTitle>Nieprawidłowy identyfikator grupy składów</AlertTitle>
+        <AlertDescription>
+          <a
+            className="underline underline-offset-4"
+            href="/dashboard/squad-builder/squads"
+          >
+            Wróć do listy grup.
+          </a>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  return <SquadBuilderEditorContent groupId={groupId} />;
 }

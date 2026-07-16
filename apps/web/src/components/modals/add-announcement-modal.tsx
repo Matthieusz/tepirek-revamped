@@ -1,12 +1,20 @@
-import { useForm } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import { CreateAnnouncementPayload } from "@tepirek-revamped/api/protocol/announcement/http-api-contract";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import {
+  EffectTextField,
+  EffectTextareaField,
+} from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -16,129 +24,107 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { getErrorMessage } from "@/lib/errors";
-import { orpc } from "@/utils/orpc";
+import { createAnnouncementAtom } from "@/lib/announcement-atoms";
+import { formSubmission } from "@/lib/form-submission";
 
 interface AddAnnouncementModalProps {
-  trigger: React.ReactNode;
+  readonly trigger: React.ReactNode;
 }
+
+const announcementFormBuilder = FormBuilder.empty
+  .addField("title", CreateAnnouncementPayload.fields.title)
+  .addField("description", CreateAnnouncementPayload.fields.description);
+
+type CreateAnnouncement = (
+  payload: typeof CreateAnnouncementPayload.Type
+) => Promise<unknown>;
+
+const announcementForm = FormReact.make(announcementFormBuilder, {
+  fields: {
+    description: EffectTextareaField,
+    title: EffectTextField,
+  },
+  mode: { validation: "onSubmit" },
+  onSubmit: (createAnnouncement: CreateAnnouncement, { decoded }) =>
+    formSubmission(() => createAnnouncement(decoded)),
+});
 
 export const AddAnnouncementModal = ({
   trigger,
 }: AddAnnouncementModalProps) => {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
-
-  const form = useForm({
-    defaultValues: {
-      description: "",
-      title: "",
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        await orpc.announcement.create.call({
-          description: value.description,
-          title: value.title,
-        });
-
-        toast.success("Ogłoszenie utworzone pomyślnie");
-        await queryClient.invalidateQueries({
-          queryKey: orpc.announcement.getAll.queryKey(),
-        });
-        setOpen(false);
-        form.reset();
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
-    },
-    validators: {
-      onSubmit: z.object({
-        description: z.string().min(1, "Opis ogłoszenia jest wymagany"),
-        title: z.string().min(1, "Tytuł ogłoszenia jest wymagany"),
-      }),
-    },
+  const createAnnouncement = useAtomSet(createAnnouncementAtom, {
+    mode: "promise",
   });
+  const submit = useAtomSet(announcementForm.submit);
+  const reset = useAtomSet(announcementForm.reset);
+  const submitResult = useAtomValue(announcementForm.submit);
+  const isDirty = useAtomValue(announcementForm.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
+
+  useEffect(() => {
+    if (AsyncResult.isSuccess(submitResult)) {
+      toast.success("Ogłoszenie utworzone pomyślnie");
+      reset();
+      setOpen(false);
+    }
+  }, [reset, submitResult]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
+      }
+      reset();
+    }
+    setOpen(nextOpen);
+  };
 
   return (
-    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+    <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-150">
-        <form
-          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-          action={async () => {
-            await form.handleSubmit();
-          }}
+        <announcementForm.Initialize
+          defaultValues={{ description: "", title: "" }}
         >
-          <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>Dodaj nowe ogłoszenie</ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>
-              Utwórz nowe ogłoszenie z tytułem i opisem.
-            </ResponsiveDialogDescription>
-          </ResponsiveDialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <form.Field name="title">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Tytuł ogłoszenia</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="Wpisz tytuł ogłoszenia"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
+          <EffectForm
+            action={() => submit(() => createAnnouncement)}
+            submitResult={submitResult}
+          >
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>
+                Dodaj nowe ogłoszenie
+              </ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
+                Utwórz nowe ogłoszenie z tytułem i opisem.
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+            <div className="grid gap-4 py-4">
+              <announcementForm.title
+                label="Tytuł ogłoszenia"
+                placeholder="Wpisz tytuł ogłoszenia"
+              />
+              <announcementForm.description
+                label="Opis ogłoszenia"
+                placeholder="Wpisz opis ogłoszenia"
+              />
             </div>
-            <div className="grid gap-2">
-              <form.Field name="description">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Opis ogłoszenia</Label>
-                    <Textarea
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="Wpisz opis ogłoszenia"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-          </div>
-          <ResponsiveDialogFooter>
-            <form.Subscribe>
-              {(state) => (
-                <Button
-                  disabled={!state.canSubmit || state.isSubmitting}
-                  type="submit"
-                >
-                  {state.isSubmitting ? "Tworzenie..." : "Dodaj ogłoszenie"}
-                </Button>
-              )}
-            </form.Subscribe>
-          </ResponsiveDialogFooter>
-        </form>
+            <EffectFormFeedback result={submitResult} />
+            <ResponsiveDialogFooter>
+              <Button
+                disabled={submitResult.waiting}
+                onClick={() => handleOpenChange(false)}
+                type="button"
+                variant="outline"
+              >
+                Anuluj
+              </Button>
+              <Button disabled={submitResult.waiting} type="submit">
+                {submitResult.waiting ? "Tworzenie..." : "Dodaj ogłoszenie"}
+              </Button>
+            </ResponsiveDialogFooter>
+          </EffectForm>
+        </announcementForm.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

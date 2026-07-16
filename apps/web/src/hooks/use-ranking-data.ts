@@ -1,7 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "@effect/atom-react";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 
 import type { RankingItem } from "@/components/events/ranking-list";
-import { orpc } from "@/utils/orpc";
+import { rankingAtom } from "@/lib/ranking-atoms";
 
 interface UseRankingDataParams {
   currentSortBy: "points" | "bets" | "gold";
@@ -39,14 +40,11 @@ export const useRankingData = ({
   currentSortBy,
   queryInputs,
 }: UseRankingDataParams) => {
-  const { data: rankingData, isPending: rankingLoading } = useQuery({
-    ...orpc.ranking.getRanking.queryOptions({
-      input: {
-        eventId: queryInputs.eventId,
-        heroId: queryInputs.heroId,
-      },
-    }),
-  });
+  const rankingResult = useAtomValue(rankingAtom(queryInputs));
+  const rankingData = AsyncResult.isSuccess(rankingResult)
+    ? rankingResult.value
+    : undefined;
+  const rankingLoading = AsyncResult.isWaiting(rankingResult);
 
   const sortedRanking = sortRanking(
     rankingData?.ranking as RankingItem[] | undefined,
@@ -56,6 +54,7 @@ export const useRankingData = ({
   return {
     pointWorth: rankingData?.pointWorth ?? null,
     rankingLoading,
+    rankingResult,
     sortedRanking,
     totalBets: rankingData?.totalBets ?? 0,
   };

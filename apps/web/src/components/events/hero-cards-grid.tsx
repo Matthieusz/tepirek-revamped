@@ -8,25 +8,32 @@ export interface HeroCardOption {
 }
 
 interface HeroCardsGridProps {
-  heroes: HeroCardOption[];
-  selectedHeroId: string;
-  onSelectHero: (heroId: string) => void;
+  readonly fieldName?: string;
+  readonly heroes: HeroCardOption[];
+  readonly onBlur?: () => void;
+  readonly onSelectHero: (heroId: string) => void;
+  readonly selectedHeroId: string;
 }
 
 export const HeroCardsGrid = ({
   heroes,
+  fieldName,
+  onBlur,
   selectedHeroId,
   onSelectHero,
 }: HeroCardsGridProps) => (
   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
     {heroes.map((hero) => (
       <button
+        aria-pressed={selectedHeroId === hero.id.toString()}
         className={`group relative flex flex-col items-center rounded-lg border p-3 transition-all hover:bg-muted/50 ${
           selectedHeroId === hero.id.toString()
             ? "border-primary bg-primary/5 ring-2 ring-primary"
             : "border-border"
         }`}
         key={hero.id}
+        {...(fieldName === undefined ? {} : { name: fieldName })}
+        onBlur={onBlur}
         onClick={() => {
           onSelectHero(hero.id.toString());
         }}

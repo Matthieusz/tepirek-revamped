@@ -1,4 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+/* oxlint-disable no-use-before-define */
+
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Calendar, Megaphone, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -14,16 +17,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Separator } from "@/components/ui/separator";
+import {
+  announcementsAtom,
+  deleteAnnouncementAtom,
+  optimisticAnnouncementsAtom,
+} from "@/lib/announcement-atoms";
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
 
 type AnnouncementToDelete = {
   id: number;
@@ -35,30 +42,50 @@ interface DashboardHomePageProps {
 }
 
 export default function DashboardHomePage({ session }: DashboardHomePageProps) {
+  const announcementsResult = useAtomValue(announcementsAtom);
+  const refreshAnnouncements = useAtomRefresh(announcementsAtom);
+
+  return (
+    <AsyncResultBoundary
+      onRetry={refreshAnnouncements}
+      result={announcementsResult}
+    >
+      {() => <DashboardHomeContent session={session} />}
+    </AsyncResultBoundary>
+  );
+}
+
+const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
   const [announcementToDelete, setAnnouncementToDelete] =
     useState<AnnouncementToDelete>(null);
-  const { data: announcements, isPending } = useQuery(
-    orpc.announcement.getAll.queryOptions()
+  const optimisticAnnouncementsResult = useAtomValue(
+    optimisticAnnouncementsAtom
   );
-  const queryClient = useQueryClient();
+  const announcements = AsyncResult.getOrThrow(optimisticAnnouncementsResult);
+  const deleteAnnouncement = useAtomSet(deleteAnnouncementAtom, {
+    mode: "promise",
+  });
 
   const isAdminUser = isAdmin(session);
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await orpc.announcement.delete.call({ id });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteMutation = {
+    isPending: isDeleting,
+    mutate: (id: number) => {
+      void (async () => {
+        setIsDeleting(true);
+        try {
+          await deleteAnnouncement({ id });
+          toast.success("Ogłoszenie zostało usunięte");
+          setAnnouncementToDelete(null);
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error));
+        } finally {
+          setIsDeleting(false);
+        }
+      })();
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-    onSuccess: async () => {
-      toast.success("Ogłoszenie zostało usunięte");
-      await queryClient.invalidateQueries({
-        queryKey: orpc.announcement.getAll.queryKey(),
-      });
-      setAnnouncementToDelete(null);
-    },
-  });
+  };
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8">
@@ -79,13 +106,11 @@ export default function DashboardHomePage({ session }: DashboardHomePageProps) {
         )}
       </div>
 
-      {isPending && <LoadingSpinner />}
-
-      {!isPending && (!announcements || announcements.length === 0) && (
+      {announcements.length === 0 && (
         <EmptyState icon={Megaphone} message="Brak ogłoszeń do wyświetlenia" />
       )}
 
-      {!isPending && announcements && announcements.length > 0 && (
+      {announcements.length > 0 && (
         <div className="space-y-4">
           {announcements.map((announcement) => (
             <article
@@ -183,4 +208,4 @@ export default function DashboardHomePage({ session }: DashboardHomePageProps) {
       </AlertDialog>
     </div>
   );
-}
+};

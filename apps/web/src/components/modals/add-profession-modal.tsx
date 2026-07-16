@@ -1,12 +1,17 @@
-import { useForm } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import { CreateProfessionPayload } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -16,100 +21,95 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { getErrorMessage } from "@/lib/errors";
-import { orpc } from "@/utils/orpc";
+import { formSubmission } from "@/lib/form-submission";
+import { createSkillProfessionAtom } from "@/lib/skill-atoms";
 
 interface AddProfessionModalProps {
-  trigger: React.ReactNode;
+  readonly trigger: React.ReactNode;
 }
 
-const defaultValues = {
-  name: "",
-};
+const professionFormBuilder = FormBuilder.empty.addField(
+  "name",
+  CreateProfessionPayload.fields.name
+);
+
+type CreateProfession = (
+  payload: typeof CreateProfessionPayload.Type
+) => Promise<unknown>;
+
+const professionForm = FormReact.make(professionFormBuilder, {
+  fields: { name: EffectTextField },
+  mode: { validation: "onSubmit" },
+  onSubmit: (createProfession: CreateProfession, { decoded }) =>
+    formSubmission(() => createProfession(decoded)),
+});
 
 export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
-
-  const form = useForm({
-    defaultValues,
-    onSubmit: async ({ value }) => {
-      try {
-        await orpc.skills.createProfession.call({
-          name: value.name,
-        });
-        toast.success("Profesja utworzona");
-        await queryClient.invalidateQueries({
-          queryKey: orpc.skills.getAllProfessions.queryKey(),
-        });
-        setOpen(false);
-        form.reset();
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
-    },
-    validators: {
-      onSubmit: z.object({
-        name: z.string().min(1, "Nazwa jest wymagana"),
-      }),
-    },
+  const createSkillProfession = useAtomSet(createSkillProfessionAtom, {
+    mode: "promise",
   });
+  const submit = useAtomSet(professionForm.submit);
+  const reset = useAtomSet(professionForm.reset);
+  const submitResult = useAtomValue(professionForm.submit);
+  const isDirty = useAtomValue(professionForm.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
+
+  useEffect(() => {
+    if (AsyncResult.isSuccess(submitResult)) {
+      toast.success("Profesja utworzona");
+      reset();
+      setOpen(false);
+    }
+  }, [reset, submitResult]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
+      }
+      reset();
+    }
+    setOpen(nextOpen);
+  };
 
   return (
-    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+    <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-[425px]">
-        <form
-          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-          action={async () => {
-            await form.handleSubmit();
-          }}
-        >
-          <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>Dodaj profesję</ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>
-              Utwórz nową profesję.
-            </ResponsiveDialogDescription>
-          </ResponsiveDialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <form.Field name="name">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Nazwa</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="Wpisz nazwę profesji"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
+        <professionForm.Initialize defaultValues={{ name: "" }}>
+          <EffectForm
+            action={() => submit(() => createSkillProfession)}
+            submitResult={submitResult}
+          >
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>Dodaj profesję</ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
+                Utwórz nową profesję.
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+            <div className="grid gap-4 py-4">
+              <professionForm.name
+                label="Nazwa"
+                placeholder="Wpisz nazwę profesji"
+              />
             </div>
-          </div>
-          <ResponsiveDialogFooter>
-            <form.Subscribe>
-              {(state) => (
-                <Button
-                  disabled={!state.canSubmit || state.isSubmitting}
-                  type="submit"
-                >
-                  {state.isSubmitting ? "Tworzenie..." : "Utwórz profesję"}
-                </Button>
-              )}
-            </form.Subscribe>
-          </ResponsiveDialogFooter>
-        </form>
+            <EffectFormFeedback result={submitResult} />
+            <ResponsiveDialogFooter>
+              <Button
+                disabled={submitResult.waiting}
+                onClick={() => handleOpenChange(false)}
+                type="button"
+                variant="outline"
+              >
+                Anuluj
+              </Button>
+              <Button disabled={submitResult.waiting} type="submit">
+                {submitResult.waiting ? "Tworzenie..." : "Utwórz profesję"}
+              </Button>
+            </ResponsiveDialogFooter>
+          </EffectForm>
+        </professionForm.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

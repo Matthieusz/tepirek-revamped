@@ -38,7 +38,7 @@ const CalendarDayButton = ({
       ref={focusRef}
       variant="ghost"
       size="icon"
-      data-day={day.date.toLocaleDateString(locale?.code)}
+      data-day={day.date.toISOString().slice(0, 10)}
       data-selected-single={
         modifiers.selected &&
         !modifiers.range_start &&
@@ -83,10 +83,13 @@ const Calendar = ({
         className
       )}
       captionLayout={captionLayout}
-      locale={locale}
+      {...(locale === undefined ? {} : { locale })}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString(locale?.code, { month: "short" }),
+          date.toLocaleString(locale?.code ?? "en-US", {
+            month: "short",
+            timeZone: "UTC",
+          }),
         ...formatters,
       }}
       classNames={{
@@ -207,7 +210,10 @@ const Calendar = ({
           );
         },
         DayButton: ({ ...dayButtonProps }) => (
-          <CalendarDayButton locale={locale} {...dayButtonProps} />
+          <CalendarDayButton
+            {...(locale === undefined ? {} : { locale })}
+            {...dayButtonProps}
+          />
         ),
         Root: ({ className: rootClassName, rootRef, ...rootProps }) => (
           <div

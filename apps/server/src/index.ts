@@ -1,20 +1,29 @@
 import "dotenv/config";
-import { OpenAPIHandler } from "@orpc/openapi/fetch";
-import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
-import { onError } from "@orpc/server";
-import { RPCHandler } from "@orpc/server/fetch";
-import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
-import { createContext } from "@tepirek-revamped/api/context";
-import { appRouter } from "@tepirek-revamped/api/routers/index";
-import { auth } from "@tepirek-revamped/auth";
-import { createError, initLogger, log as evlogLog, parseError } from "evlog";
+import * as Observability from "@tepirek-revamped/api/observability";
+import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
+import { makeBetterAuthAdapterLayer } from "@tepirek-revamped/api/server/auth/better-auth-adapter";
+import { makeApiLiveLayerFromValues } from "@tepirek-revamped/api/server/effect-app";
+import { HealthHttpApiLayer } from "@tepirek-revamped/api/server/health/http-api-handlers";
+import { AppHttpApiLayer } from "@tepirek-revamped/api/server/http-api-handlers";
+import { AuthConfigLiveLayer, createAuth } from "@tepirek-revamped/auth";
+import { createDatabase } from "@tepirek-revamped/db";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
+import { HttpRouter, HttpServer } from "effect/unstable/http";
+import { OpenApi } from "effect/unstable/httpapi";
+import { initLogger, parseError } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
 import type { BetterAuthInstance } from "evlog/better-auth";
 import { evlog } from "evlog/hono";
 import type { EvlogVariables } from "evlog/hono";
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
+
+import { makeShutdown } from "./server-lifecycle.js";
+import { readStartupConfig } from "./startup-config.js";
 
 initLogger({
   env: { service: "tepirek-server" },
@@ -22,11 +31,103 @@ initLogger({
 
 const app = new Hono<EvlogVariables>();
 
-const corsOrigin = process.env.CORS_ORIGIN;
+// The Hono host is the executable adapter boundary: all environment values
+// are parsed here before handlers or traffic can start. Observability remains
+// an adapter concern because its values configure external OTLP transports.
+const startupConfig = Effect.runSync(
+  readStartupConfig.pipe(Effect.provide(AuthConfigLiveLayer))
+);
+const { corsOrigin } = startupConfig;
+const { database, pool: dbPool } = createDatabase(
+  Redacted.value(startupConfig.databaseUrl)
+);
+const auth = createAuth(startupConfig.auth, database);
 
-if (!corsOrigin) {
-  throw new Error("CORS_ORIGIN environment variable is required");
-}
+// SAFETY: The production layer immediately provides the squad-builder services
+// and HttpServer services required by the HttpApi layer before it reaches
+// toWebHandler; this narrows the exported web handler to the Hono boundary.
+const appHttpApiLayer = AppHttpApiLayer.pipe(
+  Layer.provideMerge(
+    makeApiLiveLayerFromValues({
+      databaseUrl: Redacted.value(startupConfig.databaseUrl),
+      discordGuildId: startupConfig.discordGuildId,
+      firecrawl: startupConfig.firecrawl,
+    })
+  ),
+  Layer.provideMerge(makeBetterAuthAdapterLayer(auth)),
+  Layer.provide(HttpServer.layerServices),
+  Layer.provide(Observability.makeLayer(startupConfig.observability))
+);
+
+const appHttpApi = HttpRouter.toWebHandler(appHttpApiLayer, {
+  disableLogger: true,
+});
+
+const healthHttpApiLayer = HealthHttpApiLayer.pipe(
+  Layer.provide(HttpServer.layerServices)
+);
+
+const healthHttpApi = HttpRouter.toWebHandler(healthHttpApiLayer, {
+  disableLogger: true,
+});
+
+/** Release every process-owned server resource exactly once. */
+export const shutdown = makeShutdown([
+  { dispose: appHttpApi.dispose },
+  { dispose: healthHttpApi.dispose },
+  { dispose: () => dbPool.end() },
+]);
+
+/** Gracefully stop the host and release all composition-root resources. */
+export const stopServer = async (
+  server: Bun.Server<unknown>
+): Promise<void> => {
+  try {
+    await server.stop();
+    await shutdown();
+  } catch (error) {
+    console.error("Failed to shut down server resources", error);
+    throw error;
+  }
+};
+
+/**
+ * Start the Hono-hosted Bun server and make this composition root own shutdown.
+ */
+export const startServer = async (): Promise<Bun.Server<unknown>> => {
+  let server: Bun.Server<unknown>;
+  try {
+    server = Bun.serve({
+      fetch: app.fetch,
+      id: "tepirek-server",
+    });
+  } catch (error) {
+    await shutdown();
+    throw error;
+  }
+
+  const handleShutdownSignal = async (): Promise<void> => {
+    try {
+      await stopServer(server);
+      process.exit(0);
+    } catch {
+      process.exit(1);
+    }
+  };
+
+  process.once("SIGINT", handleShutdownSignal);
+  process.once("SIGTERM", handleShutdownSignal);
+
+  if (import.meta.hot) {
+    import.meta.hot.dispose(async () => {
+      process.off("SIGINT", handleShutdownSignal);
+      process.off("SIGTERM", handleShutdownSignal);
+      await stopServer(server);
+    });
+  }
+
+  return server;
+};
 
 app.use(evlog());
 
@@ -40,13 +141,21 @@ const identifyUser = createAuthMiddleware(auth as BetterAuthInstance, {
 
 app.use("*", async (c, next) => {
   await identifyUser(c.get("log"), c.req.raw.headers, c.req.path);
-  return next();
+  return await next();
 });
 
 app.use(
   "/*",
   cors({
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: [
+      "Content-Type",
+      "Authorization",
+      "b3",
+      "traceparent",
+      "tracestate",
+      "baggage",
+      "x-request-id",
+    ],
     allowMethods: ["GET", "POST", "OPTIONS"],
     credentials: true,
     origin: corsOrigin,
@@ -55,92 +164,41 @@ app.use(
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
-// Demo route: shows a request-scoped wide event via the evlog Hono middleware.
-// `c.get('log')` is the Hono equivalent of `useLogger(event)` — the middleware
-// creates one request logger per request and emits a single wide event on
-// response completion.
-app.post("/api/echo", async (c) => {
-  const log = c.get("log");
-
-  let body: { text?: unknown };
-  try {
-    body = await c.req.json();
-  } catch {
-    body = {};
-  }
-
-  const text = body?.text;
-  log.set({ input: { text } });
-
-  if (typeof text !== "string" || text.trim().length === 0) {
-    throw createError({
-      fix: 'Send a JSON body like { "text": "hello" }',
-      message: "text is required",
-      status: 400,
-      why: "The `text` field was missing or empty in the request body",
-    });
-  }
-
-  log.set({ echo: { length: text.length } });
-  return c.json({ text });
+app.get("/api/openapi.json", (c) => {
+  c.get("log").set({ httpApi: { docs: "app-openapi" } });
+  return c.json(OpenApi.fromApi(AppHttpApi));
 });
 
-export const apiHandler = new OpenAPIHandler(appRouter, {
-  interceptors: [
-    // oxlint-disable-next-line promise/prefer-await-to-callbacks
-    onError((error) => {
-      evlogLog.error({ error, handler: "openapi" });
-    }),
-  ],
-  plugins: [
-    new OpenAPIReferencePlugin({
-      schemaConverters: [new ZodToJsonSchemaConverter()],
-    }),
-  ],
-});
-
-export const rpcHandler = new RPCHandler(appRouter, {
-  interceptors: [
-    // oxlint-disable-next-line promise/prefer-await-to-callbacks
-    onError((error) => {
-      evlogLog.error({ error, handler: "rpc" });
-    }),
-  ],
-});
-
-app.use("/rpc/*", async (c, next) => {
-  const context = await createContext({ context: c });
+const handleHttpApiRequest = async (
+  c: Context<EvlogVariables>,
+  handler: typeof appHttpApi
+) => {
   const requestLog = c.get("log");
+  const { requestId } = requestLog.getContext();
+  const headers = new Headers(c.req.raw.headers);
 
-  const rpcResult = await rpcHandler.handle(c.req.raw, {
-    context,
-    prefix: "/rpc",
-  });
-
-  if (rpcResult.matched) {
-    requestLog.set({ rpc: { path: c.req.path } });
-    return c.newResponse(rpcResult.response.body, rpcResult.response);
+  if (typeof requestId === "string" && requestId.length > 0) {
+    headers.set("x-request-id", requestId);
   }
 
-  return next();
-});
+  requestLog.set({ httpApi: { path: c.req.path } });
+  const response = await handler.handler(new Request(c.req.raw, { headers }));
 
-app.use("/api-reference/*", async (c, next) => {
-  const context = await createContext({ context: c });
-  const requestLog = c.get("log");
+  return response;
+};
 
-  const apiResult = await apiHandler.handle(c.req.raw, {
-    context,
-    prefix: "/api-reference",
-  });
-
-  if (apiResult.matched) {
-    requestLog.set({ openapi: { path: c.req.path } });
-    return c.newResponse(apiResult.response.body, apiResult.response);
-  }
-
-  return next();
-});
+app.use("/health", (c) => handleHttpApiRequest(c, healthHttpApi));
+app.use("/announcements/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/todos/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/heroes/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/events/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/skills/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/auction/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/bet/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/ranking/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/user/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/vault/*", (c) => handleHttpApiRequest(c, appHttpApi));
+app.use("/squad-builder/*", (c) => handleHttpApiRequest(c, appHttpApi));
 
 app.get("/", (c) => c.text("OK"));
 
@@ -159,4 +217,8 @@ app.onError((error, c) => {
   );
 });
 
-export default app;
+export { app };
+
+if (import.meta.main) {
+  await startServer();
+}

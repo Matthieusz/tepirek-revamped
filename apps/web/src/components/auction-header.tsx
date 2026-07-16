@@ -1,14 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import type { LucideIcon } from "lucide-react";
 import { Users } from "lucide-react";
 import type React from "react";
 
-import { orpc } from "@/utils/orpc";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
+import { auctionStatsAtom } from "@/lib/auction-atoms";
 
-import { Skeleton } from "./ui/skeleton";
-
-export interface AuctionHeaderProps {
+interface AuctionHeaderProps {
   title: string;
   description: string;
   icon: LucideIcon;
@@ -23,11 +23,33 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
   profession,
   type,
 }) => {
-  const { data: stats, isPending } = useQuery(
-    orpc.auction.getStats.queryOptions({
-      input: { profession, type },
-    })
+  const statsResult = useAtomValue(auctionStatsAtom({ profession, type }));
+  const refreshStats = useAtomRefresh(auctionStatsAtom({ profession, type }));
+
+  return (
+    <AsyncResultBoundary onRetry={refreshStats} result={statsResult}>
+      {() => (
+        <AuctionHeaderContent
+          description={description}
+          icon={Icon}
+          profession={profession}
+          title={title}
+          type={type}
+        />
+      )}
+    </AsyncResultBoundary>
   );
+};
+
+const AuctionHeaderContent: React.FC<AuctionHeaderProps> = ({
+  description,
+  icon: Icon,
+  profession,
+  title,
+  type,
+}) => {
+  const statsResult = useAtomValue(auctionStatsAtom({ profession, type }));
+  const stats = AsyncResult.getOrThrow(statsResult);
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between">
@@ -47,28 +69,16 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 rounded-lg bg-background/50 px-3 py-2">
           <Users className="size-4 text-muted-foreground" />
-          {isPending ? (
-            <Skeleton className="h-5 w-16" />
-          ) : (
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-semibold text-lg">
-                {stats?.uniqueUsers ?? 0}
-              </span>
-              <span className="text-muted-foreground text-sm">graczy</span>
-            </div>
-          )}
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-semibold text-lg">{stats.uniqueUsers}</span>
+            <span className="text-muted-foreground text-sm">graczy</span>
+          </div>
         </div>
         <div className="flex items-center gap-2 rounded-lg bg-background/50 px-3 py-2">
-          {isPending ? (
-            <Skeleton className="h-5 w-20" />
-          ) : (
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-semibold text-lg">
-                {stats?.totalSignups ?? 0}
-              </span>
-              <span className="text-muted-foreground text-sm">zapisów</span>
-            </div>
-          )}
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-semibold text-lg">{stats.totalSignups}</span>
+            <span className="text-muted-foreground text-sm">zapisów</span>
+          </div>
         </div>
       </div>
     </div>

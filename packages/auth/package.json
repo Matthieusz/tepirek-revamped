@@ -10,13 +10,16 @@
     }
   },
   "scripts": {
-    "check-types": "tsc -b"
+    "check-types": "tsc -b",
+    "test": "vitest run --dir src"
   },
   "dependencies": {
     "@tepirek-revamped/db": "workspace:*",
-    "better-auth": "catalog:"
+    "better-auth": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@tepirek-revamped/config": "workspace:*",
     "typescript": "catalog:"
   },

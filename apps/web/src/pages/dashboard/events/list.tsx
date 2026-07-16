@@ -1,5 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+/* oxlint-disable no-use-before-define */
+
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { format } from "date-fns/format";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Calendar, Plus, Power, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -16,10 +19,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Table,
   TableBody,
@@ -30,9 +33,14 @@ import {
 } from "@/components/ui/table";
 import { getEventIcon } from "@/lib/constants";
 import { getErrorMessage } from "@/lib/errors";
+import {
+  deleteEventAtom,
+  eventsAtom,
+  optimisticEventsAtom,
+  toggleEventActiveAtom,
+} from "@/lib/event-atoms";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
 
 type EventAction = {
   id: number;
@@ -46,63 +54,62 @@ interface EventsListPageProps {
 }
 
 export default function EventsListPage({ session }: EventsListPageProps) {
-  const [eventAction, setEventAction] = useState<EventAction>(null);
-  const { data: events, isPending } = useQuery(
-    orpc.event.getAll.queryOptions()
+  const eventsResult = useAtomValue(eventsAtom);
+  const refreshEvents = useAtomRefresh(eventsAtom);
+
+  return (
+    <AsyncResultBoundary onRetry={refreshEvents} result={eventsResult}>
+      {() => <EventsListContent session={session} />}
+    </AsyncResultBoundary>
   );
-  const queryClient = useQueryClient();
+}
+
+const EventsListContent = ({ session }: EventsListPageProps) => {
+  const [eventAction, setEventAction] = useState<EventAction>(null);
+  const optimisticEventsResult = useAtomValue(optimisticEventsAtom);
+  const events = AsyncResult.getOrThrow(optimisticEventsResult);
+  const deleteEvent = useAtomSet(deleteEventAtom, { mode: "promise" });
+  const toggleEventActive = useAtomSet(toggleEventActiveAtom, {
+    mode: "promise",
+  });
 
   const isAdminUser = isAdmin(session);
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await orpc.event.delete.call({ id });
+  const [actionPending, setActionPending] = useState(false);
+  const deleteMutation = {
+    isPending: actionPending,
+    mutate: (id: number) => {
+      void (async () => {
+        setActionPending(true);
+        try {
+          await deleteEvent({ id });
+          toast.success("Event został usunięty");
+          setEventAction(null);
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error));
+        } finally {
+          setActionPending(false);
+        }
+      })();
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
+  };
+  const toggleMutation = {
+    isPending: actionPending,
+    mutate: (input: { id: number; active: boolean }) => {
+      void (async () => {
+        setActionPending(true);
+        try {
+          await toggleEventActive(input);
+          toast.success("Status eventu został zmieniony");
+          setEventAction(null);
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error));
+        } finally {
+          setActionPending(false);
+        }
+      })();
     },
-    onSuccess: async () => {
-      toast.success("Event został usunięty");
-      await queryClient.invalidateQueries({
-        queryKey: orpc.event.getAll.queryKey(),
-      });
-      setEventAction(null);
-    },
-  });
-
-  const toggleMutation = useMutation({
-    mutationFn: async ({ id, active }: { id: number; active: boolean }) => {
-      await orpc.event.toggleActive.call({ active, id });
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-    onSuccess: async () => {
-      toast.success("Status eventu został zmieniony");
-      await queryClient.invalidateQueries({
-        queryKey: orpc.event.getAll.queryKey(),
-      });
-      setEventAction(null);
-    },
-  });
-
-  const actionPending = deleteMutation.isPending || toggleMutation.isPending;
-
-  if (isPending) {
-    return (
-      <div className="mx-auto w-full max-w-4xl space-y-6">
-        <div>
-          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
-            Lista eventów
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Zarządzaj eventami w grze.
-          </p>
-        </div>
-        <LoadingSpinner />
-      </div>
-    );
-  }
+  };
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -288,4 +295,4 @@ export default function EventsListPage({ session }: EventsListPageProps) {
       </AlertDialog>
     </div>
   );
-}
+};

@@ -1,0 +1,158 @@
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import { HttpApiBuilder } from "effect/unstable/httpapi";
+
+import {
+  BetBadRequest,
+  BetForbidden,
+  BetNotFound,
+  BetPersistenceUnavailable,
+  BetUnauthorized,
+} from "../../protocol/bet/http-api-contract.ts";
+import { AppHttpApi } from "../../protocol/http-api-contract.ts";
+import type { BetError } from "../../services/bet/bet-errors.ts";
+/* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
+import { BetService } from "../../services/bet/bet-service.ts";
+import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
+
+const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
+  {
+    forbidden: () => new BetForbidden({ message: "FORBIDDEN" }),
+    unauthorized: () => new BetUnauthorized({ message: "UNAUTHORIZED" }),
+    unverified: () =>
+      new BetForbidden({
+        message: "Konto oczekuje na weryfikację",
+      }),
+  }
+);
+
+const mapBetError = <A>(
+  operation: string,
+  effect: Effect.Effect<A, BetError>
+) =>
+  effect.pipe(
+    Effect.catchTags({
+      BetBadRequest: (error) =>
+        Effect.fail(new BetBadRequest({ message: error.message })),
+      BetNotFound: (error) =>
+        Effect.fail(new BetNotFound({ message: error.message })),
+      BetPersistenceUnavailable: () =>
+        Effect.fail(new BetPersistenceUnavailable({ operation })),
+    })
+  );
+
+export const BetHttpApiHandlers = HttpApiBuilder.group(
+  AppHttpApi,
+  "bet",
+  (handlers) =>
+    handlers
+      .handle(
+        "create",
+        Effect.fn("BetHttpApiHandlers.create")(function* create({ payload }) {
+          const betService = yield* BetService;
+          const session = yield* requireAdminSession();
+          const createdAt = new Date(yield* Clock.currentTimeMillis);
+          return yield* mapBetError(
+            "createBet",
+            betService.createBet({
+              createdAt,
+              createdBy: session.user.id,
+              heroId: payload.heroId,
+              userIds: payload.userIds,
+            })
+          );
+        })
+      )
+      .handle(
+        "delete",
+        Effect.fn("BetHttpApiHandlers.delete")(function* deleteBet({
+          payload,
+        }) {
+          const betService = yield* BetService;
+          yield* requireAdminSession();
+          return yield* mapBetError(
+            "deleteBet",
+            betService.deleteBet(payload.id)
+          );
+        })
+      )
+      .handle(
+        "edit",
+        Effect.fn("BetHttpApiHandlers.edit")(function* edit({ payload }) {
+          const betService = yield* BetService;
+          yield* requireAdminSession();
+          return yield* mapBetError(
+            "editBet",
+            betService.editBet({
+              betId: payload.betId,
+              newUserIds: payload.newUserIds,
+            })
+          );
+        })
+      )
+      .handle(
+        "getAll",
+        Effect.fn("BetHttpApiHandlers.getAll")(function* getAll() {
+          const betService = yield* BetService;
+          yield* requireVerifiedSession();
+          return yield* mapBetError("getAllBets", betService.getAllBets());
+        })
+      )
+      .handle(
+        "getAllPaginated",
+        Effect.fn("BetHttpApiHandlers.getAllPaginated")(
+          function* getAllPaginated({ payload }) {
+            const betService = yield* BetService;
+            yield* requireVerifiedSession();
+            return yield* mapBetError(
+              "getPaginatedBets",
+              betService.getPaginatedBets({
+                eventId: payload.eventId,
+                heroId: payload.heroId,
+                limit: payload.limit ?? 10,
+                page: payload.page ?? 1,
+              })
+            );
+          }
+        )
+      )
+      .handle(
+        "getBetMembers",
+        Effect.fn("BetHttpApiHandlers.getBetMembers")(function* getBetMembers({
+          payload,
+        }) {
+          const betService = yield* BetService;
+          yield* requireVerifiedSession();
+          return yield* mapBetError(
+            "getBetMembers",
+            betService.getBetMembers(payload.betId)
+          );
+        })
+      )
+      .handle(
+        "getByEvent",
+        Effect.fn("BetHttpApiHandlers.getByEvent")(function* getByEvent({
+          payload,
+        }) {
+          const betService = yield* BetService;
+          yield* requireVerifiedSession();
+          return yield* mapBetError(
+            "getBetsByEvent",
+            betService.getBetsByEvent(payload.eventId)
+          );
+        })
+      )
+      .handle(
+        "getLatestForCopy",
+        Effect.fn("BetHttpApiHandlers.getLatestForCopy")(
+          function* getLatestForCopy() {
+            const betService = yield* BetService;
+            yield* requireVerifiedSession();
+            return yield* mapBetError(
+              "getLatestBetForCopy",
+              betService.getLatestBetForCopy()
+            );
+          }
+        )
+      )
+);

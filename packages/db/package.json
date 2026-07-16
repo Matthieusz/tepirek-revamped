@@ -21,14 +21,17 @@
     "db:down": "docker compose down"
   },
   "dependencies": {
+    "@effect/sql-pg": "catalog:",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
-    "pg": "^8.22.0"
+    "effect": "catalog:",
+    "pg": "^8.22.0",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tepirek-revamped/config": "workspace:*",
     "@types/pg": "^8.20.0",
-    "drizzle-kit": "^0.31.10",
+    "drizzle-kit": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {

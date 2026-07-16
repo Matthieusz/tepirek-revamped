@@ -1,24 +1,36 @@
-import { useQuery } from "@tanstack/react-query";
+/* oxlint-disable no-use-before-define */
+
+import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Plus } from "lucide-react";
 
 import { AddProfessionModal } from "@/components/modals/add-profession-modal";
 import { AddRangeModal } from "@/components/modals/add-range-modal";
 import { RangeCard } from "@/components/skills/range-card";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { isAdmin } from "@/lib/route-helpers";
+import { skillRangesAtom } from "@/lib/skill-atoms";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
 
 interface SkillsIndexPageProps {
   session: AuthSession;
 }
 
 export default function SkillsIndexPage({ session }: SkillsIndexPageProps) {
-  const { data: ranges, isPending } = useQuery(
-    orpc.skills.getAllRanges.queryOptions()
-  );
+  const rangesResult = useAtomValue(skillRangesAtom);
+  const refreshRanges = useAtomRefresh(skillRangesAtom);
 
+  return (
+    <AsyncResultBoundary onRetry={refreshRanges} result={rangesResult}>
+      {() => <SkillsIndexContent session={session} />}
+    </AsyncResultBoundary>
+  );
+}
+
+const SkillsIndexContent = ({ session }: SkillsIndexPageProps) => {
+  const rangesResult = useAtomValue(skillRangesAtom);
+  const ranges = AsyncResult.getOrThrow(rangesResult);
   const isAdminUser = isAdmin(session);
 
   return (
@@ -55,15 +67,14 @@ export default function SkillsIndexPage({ session }: SkillsIndexPageProps) {
           </div>
         )}
       </div>
-      {isPending && <LoadingSpinner />}
-      {!isPending && ranges?.length === 0 && (
+      {ranges.length === 0 && (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <p className="text-muted-foreground">
             Brak przedziałów do wyświetlenia.
           </p>
         </div>
       )}
-      {!isPending && ranges && ranges.length > 0 && (
+      {ranges.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {ranges.map((range) => (
             <RangeCard key={range.id} range={range} session={session.user} />
@@ -72,4 +83,4 @@ export default function SkillsIndexPage({ session }: SkillsIndexPageProps) {
       )}
     </div>
   );
-}
+};

@@ -1,14 +1,29 @@
-import { useQuery } from "@tanstack/react-query";
+/* oxlint-disable no-use-before-define */
+
+import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Link2, LogIn, UserPlus } from "lucide-react";
 
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
-import { orpc } from "@/utils/orpc";
+import { healthAtom } from "@/lib/health-atoms";
 
 const HomeComponent = () => {
-  const { data: healthCheckData, isLoading: healthCheckIsLoading } = useQuery(
-    orpc.healthCheck.queryOptions()
+  const healthResult = useAtomValue(healthAtom);
+  const refreshHealth = useAtomRefresh(healthAtom);
+
+  return (
+    <AsyncResultBoundary onRetry={refreshHealth} result={healthResult}>
+      {() => <HomeContent />}
+    </AsyncResultBoundary>
   );
+};
+
+const HomeContent = () => {
+  const healthResult = useAtomValue(healthAtom);
+  const healthCheckData = AsyncResult.getOrThrow(healthResult);
+  const healthCheckIsLoading = AsyncResult.isWaiting(healthResult);
 
   let statusText: string;
   let statusColor = "text-muted-foreground";

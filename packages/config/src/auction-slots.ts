@@ -1,4 +1,4 @@
-import type { AuctionProfession, AuctionType } from "./index";
+import type { AuctionProfession, AuctionType } from "./index.ts";
 
 /**
  * Auction slot rules shared by the API router and the web table.

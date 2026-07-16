@@ -1,20 +1,28 @@
-import { useForm } from "@tanstack/react-form";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  DEFAULT_EVENT_ICON_ID,
-  EVENT_ICON_OPTIONS,
-} from "@tepirek-revamped/config";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import { EVENT_ICON_OPTIONS } from "@tepirek-revamped/config";
 import type { EventIconId } from "@tepirek-revamped/config";
 import { format } from "date-fns";
+import * as Option from "effect/Option";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import {
+  getFieldErrorId,
+  getFieldId,
+} from "@/components/forms/effect-form-field-helpers";
+import {
+  EffectFieldFrame,
+  EffectTextField,
+} from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
@@ -30,230 +38,283 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { EVENT_ICON_MAP } from "@/lib/constants";
-import { getErrorMessage } from "@/lib/errors";
+import { createEventAtom } from "@/lib/event-atoms";
+import {
+  EventColorSchema,
+  EventColors,
+  EventDateSchema,
+  EventFormDefaults,
+  EventIconSchema,
+  EventNameSchema,
+} from "@/lib/form-schemas";
+import type { EventColor } from "@/lib/form-schemas";
+import { formSubmission } from "@/lib/form-submission";
 import { cn } from "@/lib/utils";
-import { orpc } from "@/utils/orpc";
 
 interface AddEventModalProps {
-  trigger: React.ReactNode;
+  readonly trigger: React.ReactNode;
 }
 
-const EVENT_COLORS = [
-  { id: "#22c55e", name: "Zielony" },
-  { id: "#eab308", name: "Żółty" },
-  { id: "#f97316", name: "Pomarańczowy" },
-  { id: "#ef4444", name: "Czerwony" },
-  { id: "#8b5cf6", name: "Fioletowy" },
-  { id: "#6366f1", name: "Indygo" },
-  { id: "#3b82f6", name: "Niebieski" },
-  { id: "#06b6d4", name: "Cyjan" },
-  { id: "#ec4899", name: "Różowy" },
-] as const;
+const eventFormBuilder = FormBuilder.empty
+  .addField("name", EventNameSchema)
+  .addField("icon", EventIconSchema)
+  .addField("color", EventColorSchema)
+  .addField("date", EventDateSchema);
+
+interface IconFieldProps {
+  readonly color: EventColor;
+}
+
+const IconField: FormReact.FieldComponent<EventIconId, IconFieldProps> = ({
+  field,
+  props,
+}) => {
+  const fieldId = getFieldId(field.path);
+  const errorId = getFieldErrorId(fieldId);
+  const hasError = Option.isSome(field.error);
+
+  return (
+    <EffectFieldFrame error={field.error} fieldId={fieldId}>
+      <fieldset
+        aria-describedby={hasError ? errorId : undefined}
+        aria-invalid={hasError}
+        aria-labelledby={`${fieldId}-label`}
+        className="grid gap-2"
+        id={fieldId}
+      >
+        <legend className="text-sm font-medium" id={`${fieldId}-label`}>
+          Ikona eventu
+        </legend>
+        <div className="grid grid-cols-3 gap-2">
+          {EVENT_ICON_OPTIONS.map((item) => {
+            const IconComponent = EVENT_ICON_MAP[item.id];
+            return (
+              <button
+                aria-pressed={field.value === item.id}
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-lg border p-3 transition-all hover:bg-muted/50",
+                  field.value === item.id
+                    ? "border-primary bg-primary/5 ring-2 ring-primary"
+                    : "border-border"
+                )}
+                id={`${fieldId}-${item.id}`}
+                key={item.id}
+                name={field.path}
+                onBlur={field.onBlur}
+                onClick={() => field.onChange(item.id)}
+                type="button"
+              >
+                <IconComponent
+                  className="size-5"
+                  style={{ color: props.color }}
+                />
+                <span className="text-xs">{item.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
+    </EffectFieldFrame>
+  );
+};
+
+const ColorField: FormReact.FieldComponent<
+  EventColor,
+  Record<never, never>
+> = ({ field }) => {
+  const fieldId = getFieldId(field.path);
+  const errorId = getFieldErrorId(fieldId);
+  const hasError = Option.isSome(field.error);
+
+  return (
+    <EffectFieldFrame error={field.error} fieldId={fieldId}>
+      <fieldset
+        aria-describedby={hasError ? errorId : undefined}
+        aria-invalid={hasError}
+        aria-labelledby={`${fieldId}-label`}
+        className="grid gap-2"
+        id={fieldId}
+      >
+        <legend className="text-sm font-medium" id={`${fieldId}-label`}>
+          Kolor przewodni
+        </legend>
+        <div className="flex flex-wrap gap-2">
+          {EventColors.map((color) => (
+            <button
+              aria-label={`Wybierz kolor ${color.name}`}
+              aria-pressed={field.value === color.id}
+              className={cn(
+                "size-8 rounded-full border-2 transition-all",
+                field.value === color.id
+                  ? "scale-110 border-foreground"
+                  : "border-transparent"
+              )}
+              id={`${fieldId}-${color.id.replaceAll("#", "")}`}
+              key={color.id}
+              name={field.path}
+              onBlur={field.onBlur}
+              onClick={() => field.onChange(color.id)}
+              style={{ backgroundColor: color.id }}
+              title={color.name}
+              type="button"
+            />
+          ))}
+        </div>
+      </fieldset>
+    </EffectFieldFrame>
+  );
+};
+
+const DateField: FormReact.FieldComponent<
+  Date | null,
+  Record<never, never>
+> = ({ field }) => {
+  const fieldId = getFieldId(field.path);
+  const errorId = getFieldErrorId(fieldId);
+  const hasError = Option.isSome(field.error);
+  return (
+    <EffectFieldFrame
+      error={field.error}
+      fieldId={fieldId}
+      label="Data końcowa"
+    >
+      <Popover>
+        <PopoverTrigger
+          render={
+            <Button
+              aria-describedby={hasError ? errorId : undefined}
+              aria-invalid={hasError}
+              className={cn(
+                "justify-start text-left font-normal",
+                !field.value && "text-muted-foreground"
+              )}
+              id={fieldId}
+              name={field.path}
+              onBlur={field.onBlur}
+              variant="outline"
+            >
+              <CalendarIcon className="mr-2 size-4" />
+              {field.value ? format(field.value, "PPP") : "Wybierz datę"}
+            </Button>
+          }
+        />
+        <PopoverContent className="w-auto p-0">
+          <Calendar
+            mode="single"
+            onSelect={(date) => field.onChange(date ?? null)}
+            selected={field.value ?? undefined}
+          />
+        </PopoverContent>
+      </Popover>
+    </EffectFieldFrame>
+  );
+};
+
+interface EventSubmission {
+  readonly color: EventColor;
+  readonly endTime: Date;
+  readonly icon: EventIconId;
+  readonly name: string;
+}
+
+type CreateEvent = (payload: EventSubmission) => Promise<unknown>;
+
+const eventForm = FormReact.make(eventFormBuilder, {
+  fields: {
+    color: ColorField,
+    date: DateField,
+    icon: IconField,
+    name: EffectTextField,
+  },
+  mode: { validation: "onSubmit" },
+  onSubmit: (createEvent: CreateEvent, { decoded }) =>
+    formSubmission(() =>
+      createEvent({
+        color: decoded.color,
+        endTime: decoded.date,
+        icon: decoded.icon,
+        name: decoded.name,
+      })
+    ),
+});
 
 export const AddEventModal = ({ trigger }: AddEventModalProps) => {
   const [open, setOpen] = useState(false);
-  const [date, setDate] = useState<Date>();
-  const [selectedIcon, setSelectedIcon] = useState<EventIconId>(
-    DEFAULT_EVENT_ICON_ID
-  );
-  const [selectedColor, setSelectedColor] = useState("#6366f1");
-  const queryClient = useQueryClient();
+  const createEvent = useAtomSet(createEventAtom, { mode: "promise" });
+  const submit = useAtomSet(eventForm.submit, { mode: "promise" });
+  const reset = useAtomSet(eventForm.reset);
+  const submitResult = useAtomValue(eventForm.submit);
+  const isDirty = useAtomValue(eventForm.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
 
-  const form = useForm({
-    defaultValues: {
-      endTime: "",
-      name: "",
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        if (!date) {
-          toast.error("Wybierz datę końcową eventu!");
-          return;
-        }
-
-        await orpc.event.create.call({
-          color: selectedColor,
-          endTime: date.toISOString(),
-          icon: selectedIcon,
-          name: value.name,
-        });
-
+  const handleSubmit = async (): Promise<void> => {
+    try {
+      await submit(async (payload) => {
+        const result = await createEvent(payload);
         toast.success("Event utworzony pomyślnie");
-        await queryClient.invalidateQueries({
-          queryKey: orpc.event.getAll.queryKey(),
-        });
+        reset();
         setOpen(false);
-        form.reset();
-        setDate(undefined);
-        setSelectedIcon(DEFAULT_EVENT_ICON_ID);
-        setSelectedColor("#6366f1");
-      } catch (error) {
-        toast.error(getErrorMessage(error));
+        return result;
+      });
+    } catch {
+      // Effect Form owns the persistent failure message and keeps the draft.
+    }
+  };
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
       }
-    },
-    validators: {
-      onSubmit: z.object({
-        endTime: z.string(),
-        name: z.string().min(1, "Nazwa eventu jest wymagana"),
-      }),
-    },
+      reset();
+    }
+    setOpen(nextOpen);
+  };
+  const values = useAtomValue(eventForm.values);
+  const selectedColor = Option.match(values, {
+    onNone: () => "#6366f1" as const,
+    onSome: (formValues) => formValues.color,
   });
 
   return (
-    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+    <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-106.25">
-        <form
-          // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-          action={async () => {
-            await form.handleSubmit();
-          }}
-        >
-          <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>Dodaj nowy event</ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>
-              Utwórz nowy event z nazwą i datą końcową.
-            </ResponsiveDialogDescription>
-          </ResponsiveDialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <form.Field name="name">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Nazwa eventu</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="Wpisz nazwę eventu"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-
-            {/* Icon Selection */}
-            <div className="grid gap-2">
-              <Label>Ikona eventu</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {EVENT_ICON_OPTIONS.map((item) => {
-                  const IconComponent = EVENT_ICON_MAP[item.id];
-                  return (
-                    <button
-                      className={cn(
-                        "flex flex-col items-center gap-1 rounded-lg border p-3 transition-all hover:bg-muted/50",
-                        selectedIcon === item.id
-                          ? "border-primary bg-primary/5 ring-2 ring-primary"
-                          : "border-border"
-                      )}
-                      key={item.id}
-                      onClick={() => {
-                        setSelectedIcon(item.id);
-                      }}
-                      type="button"
-                    >
-                      <IconComponent
-                        className="size-5"
-                        style={{ color: selectedColor }}
-                      />
-                      <span className="text-xs">{item.name}</span>
-                    </button>
-                  );
-                })}
+        <eventForm.Initialize defaultValues={EventFormDefaults}>
+          <EffectForm action={handleSubmit} submitResult={submitResult}>
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>Dodaj nowy event</ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
+                Utwórz nowy event z nazwą i datą końcową.
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <eventForm.name
+                  label="Nazwa eventu"
+                  placeholder="Wpisz nazwę eventu"
+                />
               </div>
-            </div>
 
-            {/* Color Selection */}
-            <div className="grid gap-2">
-              <Label>Kolor przewodni</Label>
-              <div className="flex flex-wrap gap-2">
-                {EVENT_COLORS.map((color) => (
-                  <button
-                    className={cn(
-                      "size-8 rounded-full border-2 transition-all",
-                      selectedColor === color.id
-                        ? "scale-110 border-foreground"
-                        : "border-transparent"
-                    )}
-                    key={color.id}
-                    onClick={() => {
-                      setSelectedColor(color.id);
-                    }}
-                    style={{ backgroundColor: color.id }}
-                    aria-label={`Wybierz kolor ${color.name}`}
-                    title={color.name}
-                    type="button"
-                  />
-                ))}
-              </div>
+              <eventForm.icon color={selectedColor} />
+              <eventForm.color />
+              <eventForm.date />
             </div>
-
-            <div className="grid gap-2">
-              <form.Field name="endTime">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="date">Data końcowa</Label>
-                    <Popover>
-                      <PopoverTrigger
-                        render={
-                          <Button
-                            className={cn(
-                              "justify-start text-left font-normal",
-                              !date && "text-muted-foreground"
-                            )}
-                            id="date"
-                            variant="outline"
-                          >
-                            <CalendarIcon className="mr-2 size-4" />
-                            {date ? format(date, "PPP") : "Wybierz datę"}
-                          </Button>
-                        }
-                      />
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          onSelect={(selectedDate) => {
-                            setDate(selectedDate);
-                            field.handleChange(
-                              selectedDate?.toISOString() ?? ""
-                            );
-                          }}
-                          selected={date}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-          </div>
-          <ResponsiveDialogFooter>
-            <form.Subscribe>
-              {(state) => (
-                <Button
-                  disabled={!state.canSubmit || state.isSubmitting}
-                  type="submit"
-                >
-                  {state.isSubmitting ? "Tworzenie..." : "Utwórz event"}
-                </Button>
-              )}
-            </form.Subscribe>
-          </ResponsiveDialogFooter>
-        </form>
+            <EffectFormFeedback result={submitResult} />
+            <ResponsiveDialogFooter>
+              <Button
+                disabled={submitResult.waiting}
+                onClick={() => handleOpenChange(false)}
+                type="button"
+                variant="outline"
+              >
+                Anuluj
+              </Button>
+              <Button disabled={submitResult.waiting} type="submit">
+                {submitResult.waiting ? "Tworzenie..." : "Utwórz event"}
+              </Button>
+            </ResponsiveDialogFooter>
+          </EffectForm>
+        </eventForm.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

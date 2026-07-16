@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import {
   AUCTION_SLOT_LEVELS,
   AUCTION_SLOT_ROUND_LABELS,
@@ -6,13 +6,19 @@ import {
   getAuctionSlotColumns,
 } from "@tepirek-revamped/config";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Loader2, Trash2 } from "lucide-react";
-import type React from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
+import {
+  auctionSignupsAtom,
+  optimisticAuctionSignupsAtom,
+  removeAuctionSignupFromGroupAtom,
+  toggleAuctionSignupAtom,
+} from "@/lib/auction-atoms";
 import { getErrorMessage } from "@/lib/errors";
-import { orpc } from "@/utils/orpc";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -139,7 +145,7 @@ const CellContent: React.FC<CellContentProps> = ({
   );
 };
 
-export interface AuctionTableProps {
+interface AuctionTableProps {
   profession: AuctionProfession;
   type: AuctionType;
   currentUserId: string;
@@ -153,50 +159,90 @@ const AuctionTable: React.FC<AuctionTableProps> = ({
   type,
   currentUserId,
 }) => {
+  const signupsResult = useAtomValue(auctionSignupsAtom({ profession, type }));
+  const refreshSignups = useAtomRefresh(
+    auctionSignupsAtom({ profession, type })
+  );
+
+  return (
+    <AsyncResultBoundary onRetry={refreshSignups} result={signupsResult}>
+      {() => (
+        <AuctionTableContent
+          currentUserId={currentUserId}
+          profession={profession}
+          type={type}
+        />
+      )}
+    </AsyncResultBoundary>
+  );
+};
+
+const AuctionTableContent: React.FC<AuctionTableProps> = ({
+  profession,
+  type,
+  currentUserId,
+}) => {
   const columns = getAuctionSlotColumns(profession, type);
-  const queryClient = useQueryClient();
-
-  const signupsQuery = orpc.auction.getSignups.queryOptions({
-    input: { profession, type },
+  const signupsResult = useAtomValue(
+    optimisticAuctionSignupsAtom({ profession, type })
+  );
+  const signups = AsyncResult.getOrThrow(signupsResult);
+  const toggleAuctionSignup = useAtomSet(toggleAuctionSignupAtom, {
+    mode: "promise",
   });
-  const statsQuery = orpc.auction.getStats.queryOptions({
-    input: { profession, type },
-  });
-
-  const { data: signups, isPending } = useQuery(signupsQuery);
-
-  const toggleMutation = useMutation({
-    mutationFn: (params: { level: number; round: number; column: number }) =>
-      orpc.auction.toggleSignup.call({
-        profession,
-        type,
-        ...params,
-      }),
-    onError: () => {
-      toast.error("Wystąpił błąd");
+  const removeAuctionSignup = useAtomSet(
+    removeAuctionSignupFromGroupAtom({ profession, type }),
+    { mode: "promise" }
+  );
+  const [isMutating, setIsMutating] = useState(false);
+  const [mutatingCell, setMutatingCell] = useState<{
+    readonly column: number;
+    readonly level: number;
+    readonly round: number;
+  } | null>(null);
+  const toggleMutation = {
+    isPending: isMutating,
+    variables: mutatingCell,
+    mutate: (params: { level: number; round: number; column: number }) => {
+      void (async () => {
+        setIsMutating(true);
+        setMutatingCell(params);
+        try {
+          const result = await toggleAuctionSignup({
+            profession,
+            type,
+            ...params,
+          });
+          toast.success(
+            result.action === "added"
+              ? "Zapisano na licytację"
+              : "Wypisano z licytacji"
+          );
+        } catch {
+          toast.error("Wystąpił błąd");
+        } finally {
+          setIsMutating(false);
+          setMutatingCell(null);
+        }
+      })();
     },
-    onSuccess: async (result) => {
-      await queryClient.invalidateQueries({ queryKey: signupsQuery.queryKey });
-      await queryClient.invalidateQueries({ queryKey: statsQuery.queryKey });
-      toast.success(
-        result.action === "added"
-          ? "Zapisano na licytację"
-          : "Wypisano z licytacji"
-      );
+  };
+  const removeMutation = {
+    isPending: isMutating,
+    mutate: (id: number) => {
+      void (async () => {
+        setIsMutating(true);
+        try {
+          await removeAuctionSignup({ id });
+          toast.success("Wypisano z licytacji");
+        } catch (error: unknown) {
+          toast.error(getErrorMessage(error));
+        } finally {
+          setIsMutating(false);
+        }
+      })();
     },
-  });
-
-  const removeMutation = useMutation({
-    mutationFn: (id: number) => orpc.auction.removeSignup.call({ id }),
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: signupsQuery.queryKey });
-      await queryClient.invalidateQueries({ queryKey: statsQuery.queryKey });
-      toast.success("Wypisano z licytacji");
-    },
-  });
+  };
 
   // Group signups by level-round-column for quick lookup
   const signupMap = new Map<string, SignupData[]>();
@@ -222,10 +268,6 @@ const AuctionTable: React.FC<AuctionTableProps> = ({
     const own = cellSignups.find((s) => s.userId === currentUserId);
     return own ?? cellSignups[0];
   };
-
-  if (isPending) {
-    return <LoadingSpinner />;
-  }
 
   return (
     <div className="overflow-x-auto">

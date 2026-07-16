@@ -1,24 +1,37 @@
-import { useQuery } from "@tanstack/react-query";
+/* oxlint-disable no-use-before-define */
+
+import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { CheckCircle2, Clock, Search, Users } from "lucide-react";
 import { useState } from "react";
 
 import { buildPlayerColumns } from "@/components/players-table/columns";
 import { PlayerTable } from "@/components/players-table/player-table";
+import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Input } from "@/components/ui/input";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { isAdmin } from "@/lib/route-helpers";
+import { usersAtom } from "@/lib/user-atoms";
 import type { AuthSession } from "@/types/route";
-import { orpc } from "@/utils/orpc";
 
 interface PlayerListPageProps {
   session: AuthSession;
 }
 
 export default function PlayerListPage({ session }: PlayerListPageProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const { data: playersData = [], isPending } = useQuery(
-    orpc.user.list.queryOptions()
+  const playersResult = useAtomValue(usersAtom);
+  const refreshPlayers = useAtomRefresh(usersAtom);
+
+  return (
+    <AsyncResultBoundary onRetry={refreshPlayers} result={playersResult}>
+      {() => <PlayerListContent session={session} />}
+    </AsyncResultBoundary>
   );
+}
+
+const PlayerListContent = ({ session }: PlayerListPageProps) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const playersResult = useAtomValue(usersAtom);
+  const playersData = AsyncResult.getOrThrow(playersResult);
   const isAdminUser = isAdmin(session);
   const cols = buildPlayerColumns(isAdminUser);
 
@@ -60,9 +73,7 @@ export default function PlayerListPage({ session }: PlayerListPageProps) {
             <p className="font-medium text-sm">Wszyscy gracze</p>
             <Users className="size-4 text-muted-foreground" />
           </div>
-          <p className="mt-1 font-bold text-2xl">
-            {isPending ? "—" : playersData.length}
-          </p>
+          <p className="mt-1 font-bold text-2xl">{playersData.length}</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
@@ -70,7 +81,7 @@ export default function PlayerListPage({ session }: PlayerListPageProps) {
             <CheckCircle2 className="size-4 text-primary" />
           </div>
           <p className="mt-1 font-bold text-2xl text-primary">
-            {isPending ? "—" : totalVerified}
+            {totalVerified}
           </p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
@@ -79,7 +90,7 @@ export default function PlayerListPage({ session }: PlayerListPageProps) {
             <Clock className="size-4 text-muted-foreground" />
           </div>
           <p className="mt-1 font-bold text-2xl text-muted-foreground">
-            {isPending ? "—" : totalNotVerified}
+            {totalNotVerified}
           </p>
         </div>
       </div>
@@ -107,11 +118,10 @@ export default function PlayerListPage({ session }: PlayerListPageProps) {
             <h2 className="font-semibold text-base">Zweryfikowani</h2>
           </div>
           <div className="p-4">
-            {isPending && <LoadingSpinner />}
-            {!isPending && verifiedPlayers.length > 0 && (
+            {verifiedPlayers.length > 0 && (
               <PlayerTable columns={cols} data={verifiedPlayers} />
             )}
-            {!isPending && verifiedPlayers.length === 0 && (
+            {verifiedPlayers.length === 0 && (
               <p className="py-8 text-center text-muted-foreground text-sm">
                 Brak zweryfikowanych graczy
               </p>
@@ -127,11 +137,10 @@ export default function PlayerListPage({ session }: PlayerListPageProps) {
             </h2>
           </div>
           <div className="p-4">
-            {isPending && <LoadingSpinner />}
-            {!isPending && notVerifiedPlayers.length > 0 && (
+            {notVerifiedPlayers.length > 0 && (
               <PlayerTable columns={cols} data={notVerifiedPlayers} />
             )}
-            {!isPending && notVerifiedPlayers.length === 0 && (
+            {notVerifiedPlayers.length === 0 && (
               <p className="py-8 text-center text-muted-foreground text-sm">
                 Brak oczekujących graczy
               </p>
@@ -141,4 +150,4 @@ export default function PlayerListPage({ session }: PlayerListPageProps) {
       </div>
     </div>
   );
-}
+};

@@ -1,5 +1,4 @@
-import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { RegistryProvider } from "@effect/atom-react";
 import {
   createRootRouteWithContext,
   HeadContent,
@@ -13,7 +12,6 @@ import { evlogErrorHandler } from "evlog/nitro/v3";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { getErrorMessage } from "@/lib/errors";
-import type { orpc } from "@/utils/orpc";
 
 import appCss from "@/index.css?url";
 
@@ -25,16 +23,17 @@ const RootDocument = () => (
       <HeadContent />
     </head>
     <body>
-      <div className="grid h-svh grid-rows-[auto_1fr]">
-        <Outlet />
-      </div>
-      <Toaster richColors />
-      {showDevtools ? (
-        <>
-          <TanStackRouterDevtools position="bottom-right" />
-          <ReactQueryDevtools buttonPosition="bottom-right" position="bottom" />
-        </>
-      ) : null}
+      <RegistryProvider>
+        <div className="grid h-svh grid-rows-[auto_1fr]">
+          <Outlet />
+        </div>
+        <Toaster richColors />
+        {showDevtools ? (
+          <>
+            <TanStackRouterDevtools position="bottom-right" />
+          </>
+        ) : null}
+      </RegistryProvider>
       <Scripts />
     </body>
   </html>
@@ -62,10 +61,7 @@ const RootErrorBoundary = ({
   </html>
 );
 
-export interface RouterAppContext {
-  orpc: typeof orpc;
-  queryClient: QueryClient;
-}
+export type RouterAppContext = Record<string, never>;
 
 const evlogMiddleware = createMiddleware().server(evlogErrorHandler);
 

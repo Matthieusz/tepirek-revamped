@@ -7,7 +7,7 @@ import {
   text,
 } from "drizzle-orm/pg-core";
 
-import { user } from "./auth";
+import { user } from "./auth.ts";
 
 export const range = pgTable("range", {
   id: serial("id").primaryKey(),
@@ -37,7 +37,7 @@ export const skills = pgTable(
       .notNull(),
     userId: text("user_id")
       .notNull()
-      .references(() => user.id),
+      .references(() => user.id, { onDelete: "cascade" }),
   },
   (table) => [index("skills_range_id_idx").on(table.rangeId)]
 );

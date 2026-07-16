@@ -1,12 +1,21 @@
-import { useForm } from "@tanstack/react-form";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import * as Schema from "effect/Schema";
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 
+import {
+  EffectForm,
+  EffectFormFeedback,
+  useEffectFormProtection,
+} from "@/components/forms/effect-form";
+import {
+  EffectNumberField,
+  EffectStringSelectField,
+  EffectTextField,
+} from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -16,232 +25,150 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { getErrorMessage } from "@/lib/errors";
-import { orpc } from "@/utils/orpc";
+import { eventsAtom } from "@/lib/event-atoms";
+import { HeroEventIdSchema, HeroNameSchema } from "@/lib/form-schemas";
+import { formSubmission } from "@/lib/form-submission";
+import { createHeroAtom } from "@/lib/hero-atoms";
 
 interface AddHeroModalProps {
-  trigger: React.ReactNode;
+  readonly trigger: React.ReactNode;
 }
 
-interface AddHeroModal {
-  name: string;
-  image?: string;
-  level: string;
-  eventId: string;
+const heroFormBuilder = FormBuilder.empty
+  .addField("name", HeroNameSchema)
+  .addField("image", Schema.String)
+  .addField("level", Schema.Number)
+  .addField("eventId", HeroEventIdSchema);
+
+interface HeroSubmission {
+  readonly eventId: number;
+  readonly image?: string;
+  readonly level: number;
+  readonly name: string;
 }
 
-const defaultValues: AddHeroModal = {
-  eventId: "",
-  image: "",
-  level: "1",
-  name: "",
-};
+type CreateHero = (payload: HeroSubmission) => Promise<unknown>;
+
+const heroForm = FormReact.make(heroFormBuilder, {
+  fields: {
+    eventId: EffectStringSelectField,
+    image: EffectTextField,
+    level: EffectNumberField,
+    name: EffectTextField,
+  },
+  mode: { validation: "onSubmit" },
+  onSubmit: (createHero: CreateHero, { decoded }) =>
+    formSubmission(() =>
+      createHero({
+        eventId: Number.parseInt(decoded.eventId, 10),
+        ...(decoded.image ? { image: decoded.image } : {}),
+        level: decoded.level,
+        name: decoded.name,
+      })
+    ),
+});
 
 export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const { data: events, isPending: eventsLoading } = useQuery(
-    orpc.event.getAll.queryOptions()
-  );
+  const createHero = useAtomSet(createHeroAtom, { mode: "promise" });
+  const eventsResult = useAtomValue(eventsAtom);
+  const events = AsyncResult.isSuccess(eventsResult)
+    ? Array.from(eventsResult.value)
+    : [];
+  const eventsLoading = !AsyncResult.isSuccess(eventsResult);
+  const submit = useAtomSet(heroForm.submit, { mode: "promise" });
+  const reset = useAtomSet(heroForm.reset);
+  const submitResult = useAtomValue(heroForm.submit);
+  const isDirty = useAtomValue(heroForm.isDirty);
+  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
+  let submitLabel = "Utwórz herosa";
+  if (eventsLoading) {
+    submitLabel = "Ładowanie...";
+  }
+  if (submitResult.waiting) {
+    submitLabel = "Tworzenie...";
+  }
 
-  const form = useForm({
-    defaultValues: {
-      ...defaultValues,
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        if (value.eventId === "") {
-          toast.error("Wybierz event!");
-          return;
-        }
+  useEffect(() => {
+    if (AsyncResult.isSuccess(submitResult)) {
+      toast.success("Heros utworzony pomyślnie");
+      reset();
+      setOpen(false);
+    }
+  }, [reset, submitResult]);
 
-        await orpc.heroes.create.call({
-          eventId: Number.parseInt(value.eventId, 10),
-          image: value.image ?? undefined,
-          level: Number.parseInt(value.level, 10),
-          name: value.name,
-        });
+  const handleSubmit = async (): Promise<void> => {
+    try {
+      await submit(createHero);
+    } catch {
+      // Effect Form owns the persistent failure message and keeps the draft.
+    }
+  };
 
-        toast.success("Heros utworzony pomyślnie");
-        // oxlint-disable-next-line @typescript-eslint/no-floating-promises
-        queryClient.invalidateQueries({
-          queryKey: orpc.heroes.getAll.queryKey(),
-        });
-        setOpen(false);
-        form.reset();
-      } catch (error) {
-        toast.error(getErrorMessage(error));
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      if (!canDiscard()) {
+        return;
       }
-    },
-    validators: {
-      onSubmit: z.object({
-        eventId: z.string().min(1, "Wybierz event"),
-        image: z.string().optional(),
-        level: z.string().min(1, "Poziom jest wymagany"),
-        name: z.string().min(1, "Nazwa herosa jest wymagana"),
-      }),
-    },
-  });
+      reset();
+    }
+    setOpen(nextOpen);
+  };
 
   return (
-    <ResponsiveDialog onOpenChange={setOpen} open={open}>
+    <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-106.25">
-        <form
-          action={() => {
-            // oxlint-disable-next-line @typescript-eslint/no-floating-promises
-            form.handleSubmit();
-          }}
+        <heroForm.Initialize
+          defaultValues={{ eventId: "", image: "", level: 1, name: "" }}
         >
-          <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>Dodaj nowego herosa</ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>
-              Utwórz nowego herosa do wybranego eventu.
-            </ResponsiveDialogDescription>
-          </ResponsiveDialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <form.Field name="name">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Nazwa herosa</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="Wprowadź nazwę herosa"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
+          <EffectForm action={handleSubmit} submitResult={submitResult}>
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>Dodaj nowego herosa</ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
+                Utwórz nowego herosa do wybranego eventu.
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+            <div className="grid gap-4 py-4">
+              <heroForm.name
+                label="Nazwa herosa"
+                placeholder="Wprowadź nazwę herosa"
+              />
+              <heroForm.image
+                label="URL obrazka (opcjonalnie)"
+                placeholder="Wprowadź URL obrazka"
+              />
+              <heroForm.level label="Poziom" placeholder="Wprowadź poziom" />
+              <heroForm.eventId
+                disabled={eventsLoading}
+                label="Event"
+                loading={eventsLoading}
+                options={events.map((event) => ({
+                  label: event.name,
+                  value: event.id.toString(),
+                }))}
+                placeholder="Wybierz event"
+              />
             </div>
-            <div className="grid gap-2">
-              <form.Field name="image">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>
-                      URL obrazka (opcjonalnie)
-                    </Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="Wprowadź URL obrazka"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-            <div className="grid gap-2">
-              <form.Field name="level">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Poziom</Label>
-                    <Input
-                      id={field.name}
-                      max={300}
-                      min={1}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                      }}
-                      placeholder="Wprowadź poziom"
-                      type="number"
-                      value={field.state.value}
-                    />
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-            <div className="grid gap-2">
-              <form.Field name="eventId">
-                {(field) => (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={field.name}>Event</Label>
-                    <Select
-                      onValueChange={(value) => {
-                        if (value !== null) {
-                          field.handleChange(value);
-                        }
-                      }}
-                      value={field.state.value}
-                    >
-                      <SelectTrigger id={field.name}>
-                        <SelectValue placeholder="Wybierz event" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {eventsLoading ? (
-                          <SelectItem disabled value="loading">
-                            Ładowanie...
-                          </SelectItem>
-                        ) : (
-                          events?.map((event) => (
-                            <SelectItem
-                              key={event.id}
-                              value={event.id.toString()}
-                            >
-                              {event.name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                    {field.state.meta.errors.map((error) => (
-                      <p className="text-red-500 text-sm" key={error?.message}>
-                        {error?.message}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </form.Field>
-            </div>
-          </div>
-          <ResponsiveDialogFooter>
-            <form.Subscribe>
-              {(state) => (
-                <Button
-                  disabled={
-                    !state.canSubmit || state.isSubmitting || eventsLoading
-                  }
-                  type="submit"
-                >
-                  {state.isSubmitting ? "Tworzenie..." : "Utwórz herosa"}
-                </Button>
-              )}
-            </form.Subscribe>
-          </ResponsiveDialogFooter>
-        </form>
+            <EffectFormFeedback result={submitResult} />
+            <ResponsiveDialogFooter>
+              <Button
+                disabled={submitResult.waiting}
+                onClick={() => handleOpenChange(false)}
+                type="button"
+                variant="outline"
+              >
+                Anuluj
+              </Button>
+              <Button
+                disabled={submitResult.waiting || eventsLoading}
+                type="submit"
+              >
+                {submitLabel}
+              </Button>
+            </ResponsiveDialogFooter>
+          </EffectForm>
+        </heroForm.Initialize>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
