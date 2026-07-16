@@ -5,21 +5,6 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig(({ mode }) => ({
-  build: {
-    rolldownOptions: {
-      output: {
-        codeSplitting: {
-          groups: [
-            {
-              maxSize: 450_000,
-              name: "effect",
-              test: /node_modules[\\/](?:@effect[\\/]|effect[\\/])/u,
-            },
-          ],
-        },
-      },
-    },
-  },
   plugins:
     mode === "test"
       ? []
