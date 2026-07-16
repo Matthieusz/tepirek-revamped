@@ -18,15 +18,21 @@ import type {
 export const ALL_FILTER = "all" as const;
 export type FilterSelection = typeof ALL_FILTER | string;
 
-const PERSISTED_FILTER_ID_PATTERN = /^[1-9]\d*$/u;
+const FILTER_ID_PATTERN = /^[1-9]\d*$/u;
+
+const isPositiveIntegerId = (value: string): boolean =>
+  FILTER_ID_PATTERN.test(value) && Number.isSafeInteger(Number(value));
+
+/** Schema for a URL or persisted positive integer ID encoded as a string. */
+export const FilterIdSearchSchema = Schema.String.pipe(
+  Schema.refine((value): value is string => isPositiveIntegerId(value), {
+    message: "Expected a positive integer id",
+  })
+);
+
 const PersistedFilterSelectionSchema = Schema.Union([
   Schema.Literal(ALL_FILTER),
-  Schema.String.pipe(
-    Schema.refine(
-      (value): value is string => PERSISTED_FILTER_ID_PATTERN.test(value),
-      { message: "Expected the all sentinel or a positive numeric id" }
-    )
-  ),
+  FilterIdSearchSchema,
 ]);
 
 export const EventHeroFilterPersistenceSchema = Schema.Struct({
@@ -78,8 +84,8 @@ export const normalizeEventHeroFilter = (input: {
 
 /**
  * Convert a filter selection to a router query input value. Returns
- * `undefined` for the all sentinel, otherwise a parsed number. Invalid
- * numeric strings fall back to `undefined` to match route search behavior.
+ * `undefined` for the all sentinel, otherwise a positive integer. Invalid
+ * ID strings fall back to `undefined`.
  */
 export const toQueryInput = (
   selection: FilterSelection | undefined
@@ -87,8 +93,7 @@ export const toQueryInput = (
   if (selection === undefined || isAllFilter(selection)) {
     return undefined;
   }
-  const parsed = Number.parseInt(selection, 10);
-  return Number.isNaN(parsed) ? undefined : parsed;
+  return isPositiveIntegerId(selection) ? Number(selection) : undefined;
 };
 
 const toEventTimestamp = (eventEndTime: Date | string | undefined): number => {

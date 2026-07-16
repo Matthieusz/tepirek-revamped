@@ -75,6 +75,9 @@ describe("toQueryInput", () => {
 
   it("returns undefined for invalid numeric strings", () => {
     expect(toQueryInput("abc")).toBeUndefined();
+    expect(toQueryInput("12junk")).toBeUndefined();
+    expect(toQueryInput("0")).toBeUndefined();
+    expect(toQueryInput("-1")).toBeUndefined();
   });
 });
 

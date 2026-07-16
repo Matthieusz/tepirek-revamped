@@ -1,5 +1,7 @@
 import * as Schema from "effect/Schema";
 
+import { FilterIdSearchSchema } from "@/lib/event-hero-filter";
+
 const RankingSortSchema = Schema.Literals(["points", "bets", "gold"]);
 export type RankingSort = typeof RankingSortSchema.Type;
 
@@ -8,8 +10,8 @@ export const RankingSortFiltersSchema = Schema.Struct({
 });
 
 const RankingSearchSchema = Schema.Struct({
-  eventId: Schema.optional(Schema.String),
-  heroId: Schema.optional(Schema.String),
+  eventId: Schema.optional(FilterIdSearchSchema),
+  heroId: Schema.optional(FilterIdSearchSchema),
   sortBy: Schema.optional(RankingSortSchema),
 });
 

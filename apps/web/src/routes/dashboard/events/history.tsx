@@ -1,5 +1,7 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
+import * as Schema from "effect/Schema";
 
+import { FilterIdSearchSchema } from "@/lib/event-hero-filter";
 import HistoryPage from "@/pages/dashboard/events/history";
 
 const routeApi = getRouteApi("/dashboard/events/history");
@@ -14,8 +16,10 @@ export const Route = createFileRoute("/dashboard/events/history")({
   staticData: {
     crumb: "Historia obstawień",
   },
-  validateSearch: (search) => ({
-    eventId: typeof search.eventId === "string" ? search.eventId : undefined,
-    heroId: typeof search.heroId === "string" ? search.heroId : undefined,
-  }),
+  validateSearch: Schema.decodeUnknownSync(
+    Schema.Struct({
+      eventId: Schema.optional(FilterIdSearchSchema),
+      heroId: Schema.optional(FilterIdSearchSchema),
+    })
+  ),
 });

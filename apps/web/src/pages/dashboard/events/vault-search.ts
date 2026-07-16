@@ -1,7 +1,9 @@
 import * as Schema from "effect/Schema";
 
+import { FilterIdSearchSchema } from "@/lib/event-hero-filter";
+
 const VaultSearchSchema = Schema.Struct({
-  eventId: Schema.optional(Schema.String),
+  eventId: Schema.optional(FilterIdSearchSchema),
 });
 
 export const searchSchema = (search: unknown): typeof VaultSearchSchema.Type =>
