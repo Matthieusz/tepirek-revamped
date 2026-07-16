@@ -60,9 +60,9 @@ const backgroundImagePattern =
 
 const decodeHtmlEntities = (value: string): string =>
   value
+    .replaceAll("&amp;", "&")
     .replaceAll("&quot;", '"')
     .replaceAll("&#039;", "'")
-    .replaceAll("&amp;", "&")
     .replaceAll("&lt;", "<")
     .replaceAll("&gt;", ">")
     .replaceAll(/&#(?<codePoint>\d+);/gu, (_match, codePoint: string) =>

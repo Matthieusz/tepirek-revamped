@@ -27,7 +27,7 @@ describe("Margonem profile HTML parser", () => {
           html: `
           <div class="profile-header__name"><span>Informati</span></div>
           <li class="char-row" data-world="#jaruna" data-id="123" data-nick="Hero" data-lvl="150">
-            <span class="cimg" style="background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/postacie/mage/20/m_mag081.gif&quot;);"></span>
+            <span class="cimg" style="background-image: url(&amp;quot;https://micc.garmory-cdn.cloud/obrazki/postacie/mage/20/m_mag081.gif&amp;quot;);"></span>
             <span class="character-prof">Mag</span>
           </li>
         `,
