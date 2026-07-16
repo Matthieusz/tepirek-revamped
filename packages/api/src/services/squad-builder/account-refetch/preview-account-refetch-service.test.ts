@@ -1,5 +1,9 @@
 import { expect, it } from "@effect/vitest";
+import * as Cause from "effect/Cause";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as Redacted from "effect/Redacted";
 
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
@@ -119,3 +123,67 @@ it.effect("previews account refetch and stores the pending diff", () => {
     Effect.provideService(AccountRefetchStoreService)(store)
   );
 });
+
+it.effect("marks a reserved refetch request failed when interrupted", () =>
+  Effect.gen(function* interruptedRefetch() {
+    const actorUserId = parseTestUserId();
+    const accountId = yield* parseMargonemAccountId(123);
+    const displayName = yield* parseAccountDisplayName("informati");
+    const profileId = yield* parseMargonemProfileId(7_298_897);
+    const scrapeStarted = yield* Deferred.make<boolean>();
+    const pendingScrape = yield* Deferred.make<never>();
+    const failedRequests: { errorTag: string; requestId: number }[] = [];
+    const firecrawl: FirecrawlClient = {
+      scrapeProfileHtml: () =>
+        Deferred.succeed(scrapeStarted, true).pipe(
+          Effect.andThen(Deferred.await(pendingScrape))
+        ),
+    };
+    const store = makeAccountRefetchStoreServiceTestService({
+      getAccountForRefetch: () =>
+        Effect.succeed({
+          accountId,
+          currentCharacters: [],
+          displayName,
+          profileId,
+        }),
+      markRequestFailed: (input) =>
+        Effect.sync(() => {
+          failedRequests.push(input);
+        }),
+      reserveRequest: (input) =>
+        Effect.succeed({
+          budgetState: {
+            monthlyRequestBudget: input.monthlyRequestBudget,
+            remainingRequests: input.monthlyRequestBudget - 1,
+            usedRequests: 1,
+            yearMonth: input.yearMonth,
+          },
+          requestId: 123,
+        }),
+    });
+    const operation = preview({ accountId, actorUserId }).pipe(
+      Effect.provideService(FirecrawlConfigService)({
+        apiKey: Redacted.make("test-key"),
+        monthlyRequestBudget: 900,
+      }),
+      Effect.provideService(FirecrawlClientService)(firecrawl),
+      Effect.provideService(AccountRefetchStoreService)(store)
+    );
+    const fiber = yield* Effect.forkChild(operation);
+
+    yield* Deferred.await(scrapeStarted);
+    yield* Fiber.interrupt(fiber);
+    const exit = yield* Fiber.await(fiber);
+
+    expect(Exit.isFailure(exit)).toBe(true);
+    if (Exit.isFailure(exit)) {
+      expect(exit.cause.reasons.some(Cause.isInterruptReason)).toBe(true);
+    }
+    expect(failedRequests).toHaveLength(1);
+    expect(failedRequests[0]).toMatchObject({
+      errorTag: "Interrupted",
+      requestId: 123,
+    });
+  })
+);

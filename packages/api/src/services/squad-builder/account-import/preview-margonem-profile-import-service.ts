@@ -117,47 +117,64 @@ export const makePreviewMargonemProfileImport = (
       requestedByUserId: input.actorUserId,
       yearMonth,
     });
-    const scrapedProfile = yield* firecrawl.scrapeProfileHtml(profileId).pipe(
-      EffectRuntime.catch((error) =>
-        EffectRuntime.gen(function* markRequestFailed() {
-          const completedAt = yield* currentDate;
-          yield* store.markRequestFailed({
-            completedAt,
-            errorTag: error._tag,
-            requestId: reservedRequest.requestId,
-          });
-          return yield* error;
-        })
-      )
-    );
-
-    const creditsUsed = yield* parseFirecrawlCreditCount(
-      scrapedProfile.metadata.creditsUsed ?? 1
+    const finalizedRequest = yield* EffectRuntime.gen(
+      function* finalizeReservedRequest() {
+        const scrapedProfile = yield* firecrawl
+          .scrapeProfileHtml(profileId)
+          .pipe(
+            EffectRuntime.catch((error) =>
+              EffectRuntime.gen(function* markRequestFailed() {
+                const completedAt = yield* currentDate;
+                yield* store.markRequestFailed({
+                  completedAt,
+                  errorTag: error._tag,
+                  requestId: reservedRequest.requestId,
+                });
+                return yield* error;
+              })
+            )
+          );
+        const creditsUsed = yield* parseFirecrawlCreditCount(
+          scrapedProfile.metadata.creditsUsed ?? 1
+        ).pipe(
+          EffectRuntime.catch(() =>
+            EffectRuntime.gen(function* markInvalidResponseFailed() {
+              const completedAt = yield* currentDate;
+              yield* store.markRequestFailed({
+                completedAt,
+                errorTag: "FirecrawlResponseNotParseable",
+                requestId: reservedRequest.requestId,
+              });
+              return yield* new FirecrawlResponseNotParseable({
+                cause: new Error("Invalid Firecrawl creditsUsed"),
+                profileId,
+              });
+            })
+          )
+        );
+        const completedAt = yield* currentDate;
+        yield* store.markRequestSucceeded({
+          cacheState: scrapedProfile.metadata.cacheState ?? null,
+          completedAt,
+          creditsUsed,
+          firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
+          requestId: reservedRequest.requestId,
+        });
+        return { creditsUsed, scrapedProfile };
+      }
     ).pipe(
-      EffectRuntime.catch(() =>
-        EffectRuntime.gen(function* markInvalidResponseFailed() {
+      EffectRuntime.onInterrupt(() =>
+        EffectRuntime.gen(function* markInterruptedRequestFailed() {
           const completedAt = yield* currentDate;
           yield* store.markRequestFailed({
             completedAt,
-            errorTag: "FirecrawlResponseNotParseable",
+            errorTag: "Interrupted",
             requestId: reservedRequest.requestId,
-          });
-          return yield* new FirecrawlResponseNotParseable({
-            cause: new Error("Invalid Firecrawl creditsUsed"),
-            profileId,
           });
         })
       )
     );
-
-    const completedAt = yield* currentDate;
-    yield* store.markRequestSucceeded({
-      cacheState: scrapedProfile.metadata.cacheState ?? null,
-      completedAt,
-      creditsUsed,
-      firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
-      requestId: reservedRequest.requestId,
-    });
+    const { creditsUsed, scrapedProfile } = finalizedRequest;
 
     const parsedHtml = yield* parseMargonemProfileHtml({
       html: scrapedProfile.html,
