@@ -141,7 +141,7 @@ const identifyUser = createAuthMiddleware(auth as BetterAuthInstance, {
 
 app.use("*", async (c, next) => {
   await identifyUser(c.get("log"), c.req.raw.headers, c.req.path);
-  return next();
+  return await next();
 });
 
 app.use(

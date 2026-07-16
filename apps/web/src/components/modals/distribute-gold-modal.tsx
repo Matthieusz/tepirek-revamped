@@ -367,11 +367,27 @@ export const DistributeGoldModal = ({
   const heroes = AsyncResult.isSuccess(heroesResult) ? heroesResult.value : [];
   const heroesLoading = !AsyncResult.isSuccess(heroesResult);
 
-  const submit = useAtomSet(distributeGoldForm.submit);
+  const submit = useAtomSet(distributeGoldForm.submit, { mode: "promise" });
   const reset = useAtomSet(distributeGoldForm.reset);
   const submitResult = useAtomValue(distributeGoldForm.submit);
   const isDirty = useAtomValue(distributeGoldForm.isDirty);
   const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
+
+  const handleSubmit = async (): Promise<void> => {
+    try {
+      await submit(async (distribution: GoldDistribution) => {
+        const result = await distributeGold(distribution);
+        toast.success(
+          `Rozdzielono ${distribution.goldAmount.toLocaleString("pl-PL")} złota dla ${result.usersUpdated} graczy`
+        );
+        reset();
+        setOpen(false);
+        return result;
+      });
+    } catch {
+      // Effect Form owns the persistent failure message and keeps the draft.
+    }
+  };
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -444,20 +460,7 @@ export const DistributeGoldModal = ({
           }}
           key={`${selectedEventId}-${selectedHeroId}`}
         >
-          <EffectForm
-            action={() =>
-              submit(async (distribution: GoldDistribution) => {
-                const result = await distributeGold(distribution);
-                toast.success(
-                  `Rozdzielono ${distribution.goldAmount.toLocaleString("pl-PL")} złota dla ${result.usersUpdated} graczy`
-                );
-                reset();
-                setOpen(false);
-                return result;
-              })
-            }
-            submitResult={submitResult}
-          >
+          <EffectForm action={handleSubmit} submitResult={submitResult}>
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle className="flex items-center gap-2">
                 <Coins className="size-5 text-yellow-500" />
