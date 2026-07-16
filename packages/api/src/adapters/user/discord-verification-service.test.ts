@@ -110,6 +110,30 @@ describe("DiscordGuildVerifier", () => {
     })
   );
 
+  it.effect("uses the Effect clock for HTTP-date Retry-After values", () =>
+    Effect.gen(function* honorHttpDateRetryAfter() {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(null, {
+            headers: { "Retry-After": "Thu, 01 Jan 1970 00:00:02 GMT" },
+            status: 429,
+          })
+        )
+        .mockResolvedValueOnce(Response.json([{ id: "guild-1" }]));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const fiber = yield* verify().pipe(Effect.forkChild);
+      yield* Effect.yieldNow;
+      yield* TestClock.adjust(1999);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      yield* TestClock.adjust(1);
+
+      expect(yield* Fiber.join(fiber)).toBe(true);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    })
+  );
+
   it.effect("aborts a request that exceeds the timeout", () =>
     Effect.gen(function* abortTimedOutRequest() {
       let observedSignal: AbortSignal | undefined;

@@ -1,6 +1,9 @@
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
 
 import { hasDiscordGuild } from "./discord-guild.ts";
@@ -30,40 +33,54 @@ const MILLISECONDS_PER_SECOND = 1000;
 
 const parseRetryAfterMilliseconds = (
   response: Response
-): number | undefined => {
-  const retryAfter = response.headers.get("Retry-After");
-  if (retryAfter === null) {
-    return undefined;
-  }
+): Effect.Effect<number | undefined> =>
+  Effect.gen(function* parseRetryAfter() {
+    const retryAfter = response.headers.get("Retry-After");
+    if (retryAfter === null) {
+      return;
+    }
 
-  const seconds = Number(retryAfter);
-  if (Number.isFinite(seconds) && seconds >= 0) {
-    return seconds * MILLISECONDS_PER_SECOND;
-  }
+    const seconds = Number(retryAfter);
+    if (Number.isFinite(seconds) && seconds >= 0) {
+      return seconds * MILLISECONDS_PER_SECOND;
+    }
 
-  const retryAt = Date.parse(retryAfter);
-  return Number.isNaN(retryAt) ? undefined : Math.max(0, retryAt - Date.now());
-};
+    const retryAt = Date.parse(retryAfter);
+    if (Number.isNaN(retryAt)) {
+      return;
+    }
+
+    const currentTime = yield* Clock.currentTimeMillis;
+    return Math.max(0, retryAt - currentTime);
+  });
+
+const discordRetrySchedule: Schedule.Schedule<
+  DiscordRequestFailureError,
+  DiscordRequestFailureError
+> = Schedule.exponential(DISCORD_RETRY_BASE_DELAY_MILLISECONDS).pipe(
+  Schedule.take(DISCORD_RETRY_LIMIT),
+  Schedule.setInputType<DiscordRequestFailureError>(),
+  Schedule.passthrough,
+  Schedule.modifyDelay((failure, backoffDelay) =>
+    Effect.succeed(
+      failure.retryAfterMilliseconds === undefined
+        ? backoffDelay
+        : Duration.max(
+            backoffDelay,
+            Duration.millis(failure.retryAfterMilliseconds)
+          )
+    )
+  )
+);
 
 const retryTransient = <A>(
-  effect: Effect.Effect<A, DiscordRequestFailureError>,
-  retriesRemaining = DISCORD_RETRY_LIMIT,
-  attempt = 0
+  effect: Effect.Effect<A, DiscordRequestFailureError>
 ): Effect.Effect<A, DiscordRequestFailureError> =>
   effect.pipe(
-    Effect.catchIf(
-      (failure) => failure.retryable && retriesRemaining > 0,
-      (failure) => {
-        const fallbackDelay =
-          DISCORD_RETRY_BASE_DELAY_MILLISECONDS * 2 ** attempt;
-        const delay = failure.retryAfterMilliseconds ?? fallbackDelay;
-        return Effect.sleep(delay).pipe(
-          Effect.andThen(
-            retryTransient(effect, retriesRemaining - 1, attempt + 1)
-          )
-        );
-      }
-    )
+    Effect.retry({
+      schedule: discordRetrySchedule,
+      while: (failure) => failure.retryable,
+    })
   );
 
 const fetchDiscordGuilds = (
@@ -79,30 +96,43 @@ const fetchDiscordGuilds = (
             undefined,
             { cause }
           ),
-    try: async (signal) => {
-      const response = await fetch("https://discord.com/api/users/@me/guilds", {
+    try: (signal) =>
+      fetch("https://discord.com/api/users/@me/guilds", {
         headers: { Authorization: `Bearer ${accessToken}` },
         signal,
-      });
-
-      if (response.status === 401 || response.status === 403) {
-        return null;
-      }
-
-      if (!response.ok) {
-        const retryable = response.status === 429 || response.status >= 500;
-        throw new DiscordRequestFailureError(
-          `Discord responded with status ${response.status}`,
-          retryable,
-          response.status === 429
-            ? parseRetryAfterMilliseconds(response)
-            : undefined
-        );
-      }
-
-      return response.json();
-    },
+      }),
   }).pipe(
+    Effect.flatMap((response) =>
+      Effect.gen(function* classifyDiscordResponse() {
+        if (response.status === 401 || response.status === 403) {
+          return null;
+        }
+
+        if (!response.ok) {
+          const retryable = response.status === 429 || response.status >= 500;
+          return yield* Effect.fail(
+            new DiscordRequestFailureError(
+              `Discord responded with status ${response.status}`,
+              retryable,
+              response.status === 429
+                ? yield* parseRetryAfterMilliseconds(response)
+                : undefined
+            )
+          );
+        }
+
+        return yield* Effect.tryPromise({
+          catch: (cause) =>
+            new DiscordRequestFailureError(
+              "Discord response decoding failed",
+              false,
+              undefined,
+              { cause }
+            ),
+          try: () => response.json(),
+        });
+      })
+    ),
     retryTransient,
     Effect.flatMap((payload) =>
       payload === null
