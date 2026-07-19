@@ -148,7 +148,9 @@ const DashboardEventsHeroesRoute = DashboardEventsHeroesRouteImport.update({
   id: '/events/heroes',
   path: '/events/heroes',
   getParentRoute: () => DashboardRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/dashboard/events/heroes.lazy').then((d) => d.Route),
+)
 const DashboardCalculatorUlepaRoute =
   DashboardCalculatorUlepaRouteImport.update({
     id: '/calculator/ulepa',

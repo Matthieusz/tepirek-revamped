@@ -1,4 +1,6 @@
-import { createMemoryHistory } from "@tanstack/react-router";
+import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getRouter } from "@/router";
@@ -9,6 +11,9 @@ const { getUser } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/functions/get-user", () => ({ getUser }));
+vi.mock("@/pages/dashboard/events/heroes", () => ({
+  default: () => createElement("h1", null, "Lazy heroes page"),
+}));
 
 const verifiedSession = {
   session: {
@@ -54,6 +59,9 @@ describe("direct heroes route loading", () => {
       (match) => match.routeId === "/dashboard/events/heroes"
     );
     expect(heroesMatch?.context).toMatchObject({ session: verifiedSession });
+    expect(
+      renderToStaticMarkup(createElement(RouterProvider, { router }))
+    ).toContain("Lazy heroes page");
     expect(getUser).toHaveBeenCalledOnce();
   });
 });
