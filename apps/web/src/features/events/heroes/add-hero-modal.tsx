@@ -25,10 +25,10 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { eventsAtom } from "@/lib/event-atoms";
+import { eventsAtom } from "@/features/events/core/event-atoms";
+import { createHeroAtom } from "@/features/events/heroes/hero-atoms";
 import { HeroEventIdSchema, HeroNameSchema } from "@/lib/form-schemas";
 import { formSubmission } from "@/lib/form-submission";
-import { createHeroAtom } from "@/lib/hero-atoms";
 
 interface AddHeroModalProps {
   readonly trigger: React.ReactNode;
@@ -73,7 +73,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
   const createHero = useAtomSet(createHeroAtom, { mode: "promise" });
   const eventsResult = useAtomValue(eventsAtom);
   const events = AsyncResult.isSuccess(eventsResult)
-    ? Array.from(eventsResult.value)
+    ? [...eventsResult.value]
     : [];
   const eventsLoading = !AsyncResult.isSuccess(eventsResult);
   const submit = useAtomSet(heroForm.submit, { mode: "promise" });

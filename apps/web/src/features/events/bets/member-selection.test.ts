@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { SelectableUser } from "@/components/events/user-select-list";
+import type { SelectableUser } from "@/features/events/bets/user-select-list";
 
 import {
   clearSelection,
@@ -13,7 +13,7 @@ import {
   removeUser,
   restoreSelection,
   toggleUser,
-} from "./hero-bet-member-picker";
+} from "./member-selection";
 
 const users: SelectableUser[] = [
   { id: "u1", image: null, name: "Alice" },

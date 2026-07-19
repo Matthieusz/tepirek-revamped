@@ -37,8 +37,8 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import { createEventAtom } from "@/features/events/core/event-atoms";
 import { EVENT_ICON_MAP } from "@/lib/constants";
-import { createEventAtom } from "@/lib/event-atoms";
 import {
   EventColorSchema,
   EventColors,

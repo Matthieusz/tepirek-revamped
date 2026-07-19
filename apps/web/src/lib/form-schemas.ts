@@ -11,8 +11,8 @@ import {
 import * as Schema from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 
+import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
 import { parseLevels } from "@/lib/calculators/bounty";
-import { ALL_FILTER } from "@/lib/event-hero-filter";
 import { parseGoldAmount } from "@/lib/gold";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;

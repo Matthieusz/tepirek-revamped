@@ -6,8 +6,6 @@ import { Pencil } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { HeroBetMemberPicker } from "@/components/events/hero-bet-member-picker";
-import type { SelectableUser } from "@/components/events/user-select-list";
 import {
   EffectForm,
   EffectFormFeedback,
@@ -28,7 +26,9 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { editBetAtom } from "@/lib/bet-atoms";
+import { editBetAtom } from "@/features/events/bets/bet-atoms";
+import { HeroBetMemberPicker } from "@/features/events/bets/hero-bet-member-picker";
+import type { SelectableUser } from "@/features/events/bets/user-select-list";
 import { NonEmptyUserIdsSchema } from "@/lib/form-schemas";
 import { formSubmission } from "@/lib/form-submission";
 import { verifiedUsersAtom } from "@/lib/user-atoms";
@@ -132,7 +132,7 @@ export const EditBetModal = ({
 
   const verifiedUsersResult = useAtomValue(verifiedUsersAtom);
   const verifiedUsers = AsyncResult.isSuccess(verifiedUsersResult)
-    ? Array.from(verifiedUsersResult.value)
+    ? [...verifiedUsersResult.value]
     : [];
   const usersLoading = !AsyncResult.isSuccess(verifiedUsersResult);
   const form = useMemo(

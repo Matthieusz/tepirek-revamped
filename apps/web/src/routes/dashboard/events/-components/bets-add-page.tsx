@@ -8,10 +8,6 @@ import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
-import { HeroBetMemberPicker } from "@/components/events/hero-bet-member-picker";
-import { HeroCardsGrid } from "@/components/events/hero-cards-grid";
-import type { HeroCardOption } from "@/components/events/hero-cards-grid";
-import type { SelectableUser } from "@/components/events/user-select-list";
 import {
   EffectForm,
   EffectFormFeedback,
@@ -33,12 +29,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createBetAtom, latestBetForCopyAtom } from "@/lib/bet-atoms";
+import {
+  createBetAtom,
+  latestBetForCopyAtom,
+} from "@/features/events/bets/bet-atoms";
+import { HeroBetMemberPicker } from "@/features/events/bets/hero-bet-member-picker";
+import { HeroCardsGrid } from "@/features/events/bets/hero-cards-grid";
+import type { HeroCardOption } from "@/features/events/bets/hero-cards-grid";
+import type { SelectableUser } from "@/features/events/bets/user-select-list";
+import { eventsAtom } from "@/features/events/core/event-atoms";
+import { heroesAtom } from "@/features/events/heroes/hero-atoms";
 import { getEventIcon } from "@/lib/constants";
-import { eventsAtom } from "@/lib/event-atoms";
 import { NonEmptyUserIdsSchema } from "@/lib/form-schemas";
 import { formSubmission } from "@/lib/form-submission";
-import { heroesAtom } from "@/lib/hero-atoms";
 import { isAdmin } from "@/lib/route-helpers";
 import { verifiedUsersAtom } from "@/lib/user-atoms";
 import type { AuthSession } from "@/types/route";

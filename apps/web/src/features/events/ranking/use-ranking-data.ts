@@ -1,8 +1,8 @@
 import { useAtomValue } from "@effect/atom-react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 
-import type { RankingItem } from "@/components/events/ranking-list";
-import { rankingAtom } from "@/lib/ranking-atoms";
+import { rankingAtom } from "@/features/events/ranking/ranking-atoms";
+import type { RankingItem } from "@/features/events/ranking/ranking-list";
 
 interface UseRankingDataParams {
   currentSortBy: "points" | "bets" | "gold";

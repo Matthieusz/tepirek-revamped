@@ -7,8 +7,6 @@ import { Calendar, Plus, Power, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { EventActionButtonLabel } from "@/components/events/event-action-button-label";
-import { AddEventModal } from "@/components/modals/add-event-modal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,14 +29,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getEventIcon } from "@/lib/constants";
-import { getErrorMessage } from "@/lib/errors";
+import { AddEventModal } from "@/features/events/core/add-event-modal";
+import { EventActionButtonLabel } from "@/features/events/core/event-action-button-label";
 import {
   deleteEventAtom,
   eventsAtom,
   optimisticEventsAtom,
   toggleEventActiveAtom,
-} from "@/lib/event-atoms";
+} from "@/features/events/core/event-atoms";
+import { getEventIcon } from "@/lib/constants";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 

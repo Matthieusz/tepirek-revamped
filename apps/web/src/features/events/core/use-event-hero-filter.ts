@@ -3,11 +3,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useCallback } from "react";
 
-import type {
-  EventSelectOption,
-  HeroSelectOption,
-} from "@/components/events/select-utils";
-import { eventsAtom } from "@/lib/event-atoms";
+import { eventsAtom } from "@/features/events/core/event-atoms";
 import {
   EventHeroFilterPersistenceSchema,
   isHeroQueryEnabled,
@@ -16,12 +12,16 @@ import {
   selectHeroUpdate,
   sortHeroesByLevel,
   toQueryInput,
-} from "@/lib/event-hero-filter";
+} from "@/features/events/core/event-hero-filter";
 import type {
   EventHeroFilterState,
   FilterSelection,
-} from "@/lib/event-hero-filter";
-import { heroesByEventAtom } from "@/lib/hero-atoms";
+} from "@/features/events/core/event-hero-filter";
+import type {
+  EventSelectOption,
+  HeroSelectOption,
+} from "@/features/events/core/select-utils";
+import { heroesByEventAtom } from "@/features/events/heroes/hero-atoms";
 import { useFilterPersistence } from "@/lib/use-filter-persistence";
 
 /**

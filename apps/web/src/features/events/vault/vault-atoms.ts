@@ -7,13 +7,13 @@ import type { VaultRow } from "@tepirek-revamped/api/protocol/vault/http-api-con
 import { Effect } from "effect";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { oldestUnpaidEventAtom } from "@/features/events/ranking/ranking-atoms";
 import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
-import { oldestUnpaidEventAtom } from "@/lib/ranking-atoms";
 
 type VaultEntry = typeof VaultRow.Type;
 

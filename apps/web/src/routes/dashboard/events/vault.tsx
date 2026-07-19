@@ -1,7 +1,8 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
+import * as Schema from "effect/Schema";
 
-import EventsVaultPage from "@/pages/dashboard/events/vault";
-import { searchSchema } from "@/pages/dashboard/events/vault-search";
+import { FilterIdSearchSchema } from "@/features/events/core/event-hero-filter";
+import EventsVaultPage from "@/routes/dashboard/events/-components/vault-page";
 
 const routeApi = getRouteApi("/dashboard/events/vault");
 
@@ -15,5 +16,9 @@ export const Route = createFileRoute("/dashboard/events/vault")({
   staticData: {
     crumb: "Skarbiec",
   },
-  validateSearch: searchSchema,
+  validateSearch: Schema.decodeUnknownSync(
+    Schema.Struct({
+      eventId: Schema.optional(FilterIdSearchSchema),
+    })
+  ),
 });

@@ -7,8 +7,6 @@ import { Check, Coins, User, Vault as VaultIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { getEventSelectDisplay } from "@/components/events/select-display";
-import { EventSelectItems } from "@/components/events/select-utils";
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -21,18 +19,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { VaultUserCard } from "@/components/vault-user-card";
-import { getErrorMessage } from "@/lib/errors";
-import { eventsAtom } from "@/lib/event-atoms";
-import { ALL_FILTER, toQueryInput } from "@/lib/event-hero-filter";
-import { formatVaultEarnings } from "@/lib/gold";
-import { oldestUnpaidEventAtom } from "@/lib/ranking-atoms";
-import { isAdmin } from "@/lib/route-helpers";
+import { eventsAtom } from "@/features/events/core/event-atoms";
+import {
+  ALL_FILTER,
+  toQueryInput,
+} from "@/features/events/core/event-hero-filter";
+import { getEventSelectDisplay } from "@/features/events/core/select-display";
+import { EventSelectItems } from "@/features/events/core/select-utils";
+import { oldestUnpaidEventAtom } from "@/features/events/ranking/ranking-atoms";
 import {
   optimisticVaultAtom,
   togglePaidOutInVaultAtom,
   vaultAtom,
-} from "@/lib/vault-atoms";
+} from "@/features/events/vault/vault-atoms";
+import { VaultUserCard } from "@/features/events/vault/vault-user-card";
+import { getErrorMessage } from "@/lib/errors";
+import { formatVaultEarnings } from "@/lib/gold";
+import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 
 const routeApi = getRouteApi("/dashboard/events/vault");

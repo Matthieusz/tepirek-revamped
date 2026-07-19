@@ -1,8 +1,8 @@
 import { Loader2 } from "lucide-react";
 
 import { SelectItem } from "@/components/ui/select";
+import { sortEventsByEndTimeDesc } from "@/features/events/core/event-hero-filter";
 import { getEventIcon } from "@/lib/constants";
-import { sortEventsByEndTimeDesc } from "@/lib/event-hero-filter";
 
 export interface EventSelectOption {
   id: number;

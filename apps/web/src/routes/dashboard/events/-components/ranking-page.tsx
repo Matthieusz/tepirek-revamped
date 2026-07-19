@@ -4,18 +4,6 @@ import { Coins, Trophy } from "lucide-react";
 import { useCallback } from "react";
 import type { ReactNode } from "react";
 
-import { RankingList } from "@/components/events/ranking-list";
-import type { RankingItem } from "@/components/events/ranking-list";
-import {
-  getEventSelectDisplay,
-  getHeroSelectDisplay,
-} from "@/components/events/select-display";
-import {
-  EventSelectItems,
-  HeroSelectItems,
-} from "@/components/events/select-utils";
-import { StatsPopover } from "@/components/events/stats-popover";
-import { DistributeGoldModal } from "@/components/modals/distribute-gold-modal";
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -25,18 +13,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEventHeroFilter } from "@/hooks/use-event-hero-filter";
-import { useRankingData } from "@/hooks/use-ranking-data";
-import { eventsAtom } from "@/lib/event-atoms";
-import { ALL_FILTER } from "@/lib/event-hero-filter";
-import { heroesByEventAtom } from "@/lib/hero-atoms";
-import { rankingAtom } from "@/lib/ranking-atoms";
+import { eventsAtom } from "@/features/events/core/event-atoms";
+import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
+import {
+  getEventSelectDisplay,
+  getHeroSelectDisplay,
+} from "@/features/events/core/select-display";
+import {
+  EventSelectItems,
+  HeroSelectItems,
+} from "@/features/events/core/select-utils";
+import { useEventHeroFilter } from "@/features/events/core/use-event-hero-filter";
+import { heroesByEventAtom } from "@/features/events/heroes/hero-atoms";
+import { rankingAtom } from "@/features/events/ranking/ranking-atoms";
+import { RankingList } from "@/features/events/ranking/ranking-list";
+import type { RankingItem } from "@/features/events/ranking/ranking-list";
+import { RankingSortFiltersSchema } from "@/features/events/ranking/ranking-sort";
+import type { RankingSort } from "@/features/events/ranking/ranking-sort";
+import { StatsPopover } from "@/features/events/ranking/stats-popover";
+import { useRankingData } from "@/features/events/ranking/use-ranking-data";
+import { DistributeGoldModal } from "@/features/events/vault/distribute-gold-modal";
 import { isAdmin } from "@/lib/route-helpers";
 import { useFilterPersistence } from "@/lib/use-filter-persistence";
 import type { AuthSession } from "@/types/route";
-
-import { RankingSortFiltersSchema } from "./ranking-search";
-import type { RankingSort } from "./ranking-search";
 
 const routeApi = getRouteApi("/dashboard/events/ranking");
 const DEFAULT_RANKING_SORT_FILTERS = { sortBy: undefined };

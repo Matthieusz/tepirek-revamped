@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { deleteBetAtom, editBetAtom, paginatedBetsAtom } from "@/lib/bet-atoms";
+import {
+  deleteBetAtom,
+  editBetAtom,
+  paginatedBetsAtom,
+} from "@/features/events/bets/bet-atoms";
 import { flush, makeTestLayer } from "@/lib/test-utils/atom-test-utils";
 
 describe("bet atoms", () => {

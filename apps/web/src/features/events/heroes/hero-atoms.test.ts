@@ -1,7 +1,7 @@
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry";
 import { describe, expect, it } from "vitest";
 
-import { heroesByEventAtom } from "@/lib/hero-atoms";
+import { heroesByEventAtom } from "@/features/events/heroes/hero-atoms";
 
 describe("hero atoms", () => {
   it("heroesByEventAtom(null) returns a constant atom with a success of empty array - no API call", () => {

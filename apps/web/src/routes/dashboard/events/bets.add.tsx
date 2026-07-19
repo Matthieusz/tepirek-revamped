@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import { BetsAddPage } from "@/pages/dashboard/events/bets-add";
+import { BetsAddPage } from "@/routes/dashboard/events/-components/bets-add-page";
 
 const routeApi = getRouteApi("/dashboard/events/bets/add");
 

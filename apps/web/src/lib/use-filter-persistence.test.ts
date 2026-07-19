@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { EventHeroFilterPersistenceSchema } from "@/lib/event-hero-filter";
+import { EventHeroFilterPersistenceSchema } from "@/features/events/core/event-hero-filter";
+import { RankingSortFiltersSchema } from "@/features/events/ranking/ranking-sort";
 import {
   decodePersistedValue,
   encodePersistedValue,
 } from "@/lib/use-filter-persistence";
-import { RankingSortFiltersSchema } from "@/pages/dashboard/events/ranking-search";
 
 describe("persisted filter schemas", () => {
   const eventHeroDefaults = { eventId: undefined, heroId: undefined };

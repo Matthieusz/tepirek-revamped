@@ -3,7 +3,7 @@ import * as Exit from "effect/Exit";
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
-import { ALL_FILTER } from "@/lib/event-hero-filter";
+import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
 import {
   AccountDisplayNameSchema,
   CalculatorItemLevelSchema,

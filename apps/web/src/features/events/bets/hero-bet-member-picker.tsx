@@ -1,9 +1,9 @@
+/* oxlint-disable complexity, no-negated-condition, no-nested-ternary, no-use-before-define */
+
 import { Copy, CopyX, Search, User, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-import { UserSelectList } from "@/components/events/user-select-list";
-import type { SelectableUser } from "@/components/events/user-select-list";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,9 @@ import {
   clearSelection,
   copyLastBet,
   restoreSelection,
-} from "@/lib/hero-bet-member-picker";
+} from "@/features/events/bets/member-selection";
+import { UserSelectList } from "@/features/events/bets/user-select-list";
+import type { SelectableUser } from "@/features/events/bets/user-select-list";
 
 /**
  * Deep Hero bet member picker component.
@@ -113,12 +115,12 @@ export const HeroBetMemberPicker = ({
   });
 
   const preview =
-    pointsPreview !== undefined
-      ? getPointsPreview(
+    pointsPreview === undefined
+      ? null
+      : getPointsPreview(
           selectedUserIds.length,
           pointsPreview.currentMemberCount
-        )
-      : null;
+        );
 
   return (
     <div className="grid gap-1.5">

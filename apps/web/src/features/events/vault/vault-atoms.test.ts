@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { oldestUnpaidEventAtom } from "@/lib/ranking-atoms";
-import { makeTestLayer, flush } from "@/lib/test-utils/atom-test-utils";
+import { oldestUnpaidEventAtom } from "@/features/events/ranking/ranking-atoms";
 import {
   distributeGoldAtom,
   vaultAtom,
   userStatsAtom,
-} from "@/lib/vault-atoms";
+} from "@/features/events/vault/vault-atoms";
+import { makeTestLayer, flush } from "@/lib/test-utils/atom-test-utils";
 
 describe("vault atoms", () => {
   it("distributeGoldAtom with eventId refreshes vault, userStats, and oldestUnpaidEvent", async () => {

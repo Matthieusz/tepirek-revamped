@@ -6,9 +6,6 @@ import { Plus, Sword, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { getEventSelectDisplay } from "@/components/events/select-display";
-import { EventSelectItems } from "@/components/events/select-utils";
-import { AddHeroModal } from "@/components/modals/add-hero-modal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,13 +33,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getErrorMessage } from "@/lib/errors";
-import { eventsAtom } from "@/lib/event-atoms";
+import { eventsAtom } from "@/features/events/core/event-atoms";
+import { getEventSelectDisplay } from "@/features/events/core/select-display";
+import { EventSelectItems } from "@/features/events/core/select-utils";
+import { AddHeroModal } from "@/features/events/heroes/add-hero-modal";
 import {
   deleteHeroAtom,
   heroesAtom,
   optimisticHeroesAtom,
-} from "@/lib/hero-atoms";
+} from "@/features/events/heroes/hero-atoms";
+import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import type { AuthSession } from "@/types/route";
 

@@ -1,8 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { HeroBetMemberPicker } from "@/components/events/hero-bet-member-picker";
-import { HeroCardsGrid } from "@/components/events/hero-cards-grid";
+import { HeroBetMemberPicker } from "@/features/events/bets/hero-bet-member-picker";
+import { HeroCardsGrid } from "@/features/events/bets/hero-cards-grid";
 
 const users = [
   { id: "u1", image: null, name: "Ala" },
@@ -22,8 +22,8 @@ describe("custom picker fields", () => {
             name: "Smok",
           },
         ]}
-        onBlur={() => undefined}
-        onSelectHero={() => undefined}
+        onBlur={() => {}}
+        onSelectHero={() => {}}
         selectedHeroId="7"
       />
     );
@@ -39,8 +39,8 @@ describe("custom picker fields", () => {
         clearEnabled
         fieldName="userIds"
         idPrefix="members"
-        onBlur={() => undefined}
-        onChange={() => undefined}
+        onBlur={() => {}}
+        onChange={() => {}}
         selectedUserIds={["u1"]}
         users={users}
         usersLoading={false}

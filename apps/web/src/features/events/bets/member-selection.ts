@@ -1,5 +1,5 @@
-import type { SelectableUser } from "@/components/events/user-select-list";
-import { calculatePointsPerMember } from "@/lib/bet-helpers";
+import { calculatePointsPerMember } from "@/features/events/bets/bet-helpers";
+import type { SelectableUser } from "@/features/events/bets/user-select-list";
 
 /**
  * Deep Hero bet member picker model.

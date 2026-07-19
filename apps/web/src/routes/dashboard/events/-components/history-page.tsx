@@ -8,15 +8,6 @@ import type { ReactNode } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
 
-import { BetCard } from "@/components/events/bet-card";
-import {
-  getEventSelectDisplay,
-  getHeroSelectDisplay,
-} from "@/components/events/select-display";
-import {
-  EventSelectItems,
-  HeroSelectItems,
-} from "@/components/events/select-utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,13 +26,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEventHeroFilter } from "@/hooks/use-event-hero-filter";
-import { deleteBetAtom, paginatedBetsAtom } from "@/lib/bet-atoms";
-import { calculatePointsPerMember } from "@/lib/bet-helpers";
+import {
+  deleteBetAtom,
+  paginatedBetsAtom,
+} from "@/features/events/bets/bet-atoms";
+import { BetCard } from "@/features/events/bets/bet-card";
+import { calculatePointsPerMember } from "@/features/events/bets/bet-helpers";
+import { eventsAtom } from "@/features/events/core/event-atoms";
+import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
+import {
+  getEventSelectDisplay,
+  getHeroSelectDisplay,
+} from "@/features/events/core/select-display";
+import {
+  EventSelectItems,
+  HeroSelectItems,
+} from "@/features/events/core/select-utils";
+import { useEventHeroFilter } from "@/features/events/core/use-event-hero-filter";
+import { heroesByEventAtom } from "@/features/events/heroes/hero-atoms";
 import { getErrorMessage } from "@/lib/errors";
-import { eventsAtom } from "@/lib/event-atoms";
-import { ALL_FILTER } from "@/lib/event-hero-filter";
-import { heroesByEventAtom } from "@/lib/hero-atoms";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import type { AuthSession } from "@/types/route";

@@ -3,6 +3,20 @@ import * as Atom from "effect/unstable/reactivity/Atom";
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry";
 import { describe, expect, it } from "vitest";
 
+import { paginatedBetsAtom } from "@/features/events/bets/bet-atoms";
+import {
+  optimisticEventsAtom,
+  eventsAtom,
+} from "@/features/events/core/event-atoms";
+import {
+  heroesAtom,
+  optimisticHeroesAtom,
+} from "@/features/events/heroes/hero-atoms";
+import { rankingAtom } from "@/features/events/ranking/ranking-atoms";
+import {
+  optimisticVaultAtom,
+  vaultAtom,
+} from "@/features/events/vault/vault-atoms";
 import {
   announcementsAtom,
   optimisticAnnouncementsAtom,
@@ -11,14 +25,9 @@ import {
   auctionSignupsAtom,
   optimisticAuctionSignupsAtom,
 } from "@/lib/auction-atoms";
-import { paginatedBetsAtom } from "@/lib/bet-atoms";
-import { optimisticEventsAtom, eventsAtom } from "@/lib/event-atoms";
-import { heroesAtom, optimisticHeroesAtom } from "@/lib/hero-atoms";
-import { rankingAtom } from "@/lib/ranking-atoms";
 import { optimisticSkillRangesAtom, skillRangesAtom } from "@/lib/skill-atoms";
 import { ownedSquadGroupsAtom } from "@/lib/squad-builder/squad-group-atoms";
 import { optimisticTodosAtom, todosAtom } from "@/lib/todo-atoms";
-import { optimisticVaultAtom, vaultAtom } from "@/lib/vault-atoms";
 
 const failedResource = () => AsyncResult.fail("resource unavailable");
 

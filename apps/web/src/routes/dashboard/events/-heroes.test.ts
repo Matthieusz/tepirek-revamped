@@ -14,7 +14,7 @@ const { getUser, preloadAtomResults } = vi.hoisted(() => ({
 
 vi.mock("@/functions/get-user", () => ({ getUser }));
 vi.mock("@/lib/atom-preload", () => ({ preloadAtomResults }));
-vi.mock("@/pages/dashboard/events/heroes", () => ({
+vi.mock("@/routes/dashboard/events/-components/heroes-page", () => ({
   default: () => createElement("h1", null, "Lazy heroes page"),
 }));
 

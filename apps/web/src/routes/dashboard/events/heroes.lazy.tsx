@@ -1,6 +1,6 @@
 import { createLazyFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import EventsHeroesPage from "@/pages/dashboard/events/heroes";
+import EventsHeroesPage from "@/routes/dashboard/events/-components/heroes-page";
 
 const routeApi = getRouteApi("/dashboard/events/heroes");
 

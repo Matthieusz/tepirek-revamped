@@ -1,8 +1,8 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 
-import { FilterIdSearchSchema } from "@/lib/event-hero-filter";
-import HistoryPage from "@/pages/dashboard/events/history";
+import { FilterIdSearchSchema } from "@/features/events/core/event-hero-filter";
+import HistoryPage from "@/routes/dashboard/events/-components/history-page";
 
 const routeApi = getRouteApi("/dashboard/events/history");
 

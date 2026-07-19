@@ -1,3 +1,5 @@
+/* oxlint-disable complexity, no-negated-condition */
+
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
 import * as Effect from "effect/Effect";
@@ -8,14 +10,6 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import {
-  getEventSelectDisplay,
-  getHeroSelectDisplay,
-} from "@/components/events/select-display";
-import {
-  EventSelectItems,
-  HeroSelectItems,
-} from "@/components/events/select-utils";
 import {
   EffectForm,
   EffectFormFeedback,
@@ -45,14 +39,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { eventsAtom } from "@/lib/event-atoms";
-import { ALL_FILTER } from "@/lib/event-hero-filter";
+import { eventsAtom } from "@/features/events/core/event-atoms";
+import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
+import {
+  getEventSelectDisplay,
+  getHeroSelectDisplay,
+} from "@/features/events/core/select-display";
+import {
+  EventSelectItems,
+  HeroSelectItems,
+} from "@/features/events/core/select-utils";
+import { heroesAtom } from "@/features/events/heroes/hero-atoms";
+import { heroStatsAtom } from "@/features/events/ranking/ranking-atoms";
+import { distributeGoldAtom } from "@/features/events/vault/vault-atoms";
 import { GoldAmountSchema, RequiredSelectionSchema } from "@/lib/form-schemas";
 import { formSubmission } from "@/lib/form-submission";
 import { parseGoldAmount } from "@/lib/gold";
-import { heroesAtom } from "@/lib/hero-atoms";
-import { heroStatsAtom } from "@/lib/ranking-atoms";
-import { distributeGoldAtom } from "@/lib/vault-atoms";
 
 const distributeGoldFormBuilder = FormBuilder.empty
   .addField("eventId", RequiredSelectionSchema("Wybierz event"))
@@ -335,8 +337,8 @@ const distributeGoldForm = FormReact.make(distributeGoldFormBuilder, {
     const goldAmount = parseGoldAmount(decoded.goldAmount);
     return formSubmission(() =>
       distributeGold({
-        goldAmount,
         eventId: Number.parseInt(decoded.eventId, 10),
+        goldAmount,
         heroId: Number.parseInt(decoded.heroId, 10),
       })
     ).pipe(Effect.map((result) => ({ goldAmount, result })));
@@ -359,7 +361,7 @@ export const DistributeGoldModal = ({
 
   const eventsResult = useAtomValue(eventsAtom);
   const events = AsyncResult.isSuccess(eventsResult)
-    ? Array.from(eventsResult.value)
+    ? [...eventsResult.value]
     : [];
   const eventsLoading = !AsyncResult.isSuccess(eventsResult);
 
@@ -422,7 +424,7 @@ export const DistributeGoldModal = ({
       : heroes?.filter((hero) => hero.eventId?.toString() === eventId)
   )?.toSorted((firstHero, secondHero) => firstHero.level - secondHero.level);
   const parsedHeroId =
-    heroId !== ALL_FILTER ? Number.parseInt(heroId, 10) : null;
+    heroId === ALL_FILTER ? null : Number.parseInt(heroId, 10);
   const heroStatsAtomValue = heroStatsAtom({ heroId: parsedHeroId });
   const heroStatsResult = useAtomValue(heroStatsAtomValue);
   const refreshHeroStats = useAtomRefresh(heroStatsAtomValue);

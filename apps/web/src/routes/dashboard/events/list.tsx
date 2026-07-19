@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import EventsListPage from "@/pages/dashboard/events/list";
+import EventsListPage from "@/routes/dashboard/events/-components/list-page";
 
 const routeApi = getRouteApi("/dashboard/events/list");
 
