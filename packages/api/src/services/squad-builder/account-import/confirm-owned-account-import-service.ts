@@ -74,6 +74,6 @@ export const layer = Layer.effect(
   ConfirmOwnedAccountImportService,
   EffectRuntime.gen(function* layer() {
     const store = yield* AccountImportStoreService;
-    return { confirm: makeConfirm(store) };
+    return ConfirmOwnedAccountImportService.of({ confirm: makeConfirm(store) });
   })
 );

@@ -36,7 +36,7 @@ export const layer = Layer.effect(
   EffectRuntime.gen(function* makeAccountAccessInviteResponsesService() {
     const store = yield* AccountSharingStoreService;
 
-    return {
+    return AccountAccessInviteResponsesService.of({
       respond: EffectRuntime.fn("AccountAccessInviteResponses.respond")(
         function* respond(input) {
           const now = new Date(yield* Clock.currentTimeMillis);
@@ -49,6 +49,6 @@ export const layer = Layer.effect(
           });
         }
       ),
-    };
+    });
   })
 );
