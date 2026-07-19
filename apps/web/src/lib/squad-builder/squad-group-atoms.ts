@@ -146,7 +146,7 @@ const squadGroupDetailByKeyAtom = Atom.family((key: string) => {
       const client = yield* AppHttpApiClient;
       return yield* client.squadBuilderSquadGroup.getSquadGroupDetail({
         payload: {
-          groupId: asSquadGroupId(payload.groupId),
+          groupId: yield* asSquadGroupId(payload.groupId),
         },
       });
     })
@@ -165,7 +165,7 @@ const availableSquadCharactersByKeyAtom = Atom.family((key: string) => {
       const client = yield* AppHttpApiClient;
       return yield* client.squadBuilderSquadGroup.listAvailableSquadCharacters({
         payload: {
-          groupId: asSquadGroupId(payload.groupId),
+          groupId: yield* asSquadGroupId(payload.groupId),
         },
       });
     })
@@ -212,16 +212,23 @@ export const saveSquadGroupAtom = appHttpApiFn(
     get: Atom.FnContext
   ) {
     const client = yield* AppHttpApiClient;
+    const squads = yield* Effect.forEach((squad: SaveSquadPayloadSquad) => {
+      const { squadId, ...squadWithoutId } = squad;
+      return squadId === undefined
+        ? Effect.succeed(squadWithoutId)
+        : asSquadId(squadId).pipe(
+            Effect.map((decodedSquadId) => ({
+              ...squadWithoutId,
+              squadId: decodedSquadId,
+            }))
+          );
+    })(payload.squads);
     const squadGroup = yield* client.squadBuilderSquadGroup.saveSquadGroup({
       payload: {
         expectedUpdatedAt: payload.expectedUpdatedAt,
-        groupId: asSquadGroupId(payload.groupId),
+        groupId: yield* asSquadGroupId(payload.groupId),
         name: payload.name,
-        squads: payload.squads.map((squad) => ({
-          ...squad,
-          squadId:
-            squad.squadId === undefined ? undefined : asSquadId(squad.squadId),
-        })),
+        squads,
       },
     });
     get.refresh(ownedSquadGroupsByActorAtom("default"));
@@ -239,15 +246,18 @@ export const saveSharedSquadGroupCharactersAtom = appHttpApiFn(
     get: Atom.FnContext
   ) {
     const client = yield* AppHttpApiClient;
+    const squads = yield* Effect.forEach(
+      (squad: SaveSharedSquadGroupCharactersInput["squads"][number]) =>
+        asSquadId(squad.squadId).pipe(
+          Effect.map((squadId) => ({ ...squad, squadId }))
+        )
+    )(payload.squads);
     const squadGroup =
       yield* client.squadBuilderSquadGroup.saveSharedSquadGroupCharacters({
         payload: {
           expectedUpdatedAt: payload.expectedUpdatedAt,
-          groupId: asSquadGroupId(payload.groupId),
-          squads: payload.squads.map((squad) => ({
-            ...squad,
-            squadId: asSquadId(squad.squadId),
-          })),
+          groupId: yield* asSquadGroupId(payload.groupId),
+          squads,
         },
       });
     get.refresh(ownedSquadGroupsByActorAtom("default"));
@@ -268,7 +278,7 @@ export const setSquadGroupVisibilityAtom = appHttpApiFn(
     const visibility =
       yield* client.squadBuilderSquadGroup.setSquadGroupVisibility({
         payload: {
-          groupId: asSquadGroupId(payload.groupId),
+          groupId: yield* asSquadGroupId(payload.groupId),
           visibility: payload.visibility,
         },
       });

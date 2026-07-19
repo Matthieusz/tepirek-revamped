@@ -24,7 +24,7 @@ export const previewAccountRefetchAtom = appHttpApiFn(
     const client = yield* AppHttpApiClient;
     return yield* client.squadBuilderAccountRefetch.previewAccountRefetch({
       payload: {
-        accountId: asMargonemAccountId(payload.accountId),
+        accountId: yield* asMargonemAccountId(payload.accountId),
       },
     });
   })
@@ -40,7 +40,7 @@ export const applyAccountRefetchAtom = appHttpApiFn(
     const result = yield* client.squadBuilderAccountRefetch.applyAccountRefetch(
       {
         payload: {
-          refetchPreviewId: asPendingMargonemAccountRefetchId(
+          refetchPreviewId: yield* asPendingMargonemAccountRefetchId(
             payload.refetchPreviewId
           ),
         },

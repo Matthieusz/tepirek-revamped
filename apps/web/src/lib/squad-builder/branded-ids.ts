@@ -10,32 +10,32 @@ import * as Schema from "effect/Schema";
 
 /** Build an `AppUserId` from a plain string. */
 export const asAppUserId = (value: string) =>
-  Schema.decodeUnknownSync(AppUserIdSchema)(value);
+  Schema.decodeUnknownEffect(AppUserIdSchema)(value);
 
 /** Build a `SquadGroupId` from a plain number. */
 export const asSquadGroupId = (value: number) =>
-  Schema.decodeUnknownSync(SquadGroupIdSchema)(value);
+  Schema.decodeUnknownEffect(SquadGroupIdSchema)(value);
 
 /** Build a `SquadId` from a plain number. */
 export const asSquadId = (value: number) =>
-  Schema.decodeUnknownSync(SquadIdSchema)(value);
+  Schema.decodeUnknownEffect(SquadIdSchema)(value);
 
 /** Build a `MargonemAccountId` from a plain number. */
 export const asMargonemAccountId = (value: number) =>
-  Schema.decodeUnknownSync(MargonemAccountIdSchema)(value);
+  Schema.decodeUnknownEffect(MargonemAccountIdSchema)(value);
 
 /** Build a `MargonemAccountAccessId` from a plain number. */
 export const asMargonemAccountAccessId = (value: number) =>
-  Schema.decodeUnknownSync(MargonemAccountAccessIdSchema)(value);
+  Schema.decodeUnknownEffect(MargonemAccountAccessIdSchema)(value);
 
 /** Build a `SquadGroupInvitationId` from a plain number. */
 export const asSquadGroupInvitationId = (value: number) =>
-  Schema.decodeUnknownSync(SquadGroupInvitationIdSchema)(value);
+  Schema.decodeUnknownEffect(SquadGroupInvitationIdSchema)(value);
 
 /** Build a `PendingMargonemAccountImportId` from a plain number. */
 export const asPendingMargonemAccountImportId = (value: number) =>
-  Schema.decodeUnknownSync(PendingMargonemAccountImportIdSchema)(value);
+  Schema.decodeUnknownEffect(PendingMargonemAccountImportIdSchema)(value);
 
 /** Build a `PendingMargonemAccountRefetchId` from a plain number. */
 export const asPendingMargonemAccountRefetchId = (value: number) =>
-  Schema.decodeUnknownSync(PendingMargonemAccountRefetchIdSchema)(value);
+  Schema.decodeUnknownEffect(PendingMargonemAccountRefetchIdSchema)(value);

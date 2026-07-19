@@ -88,7 +88,9 @@ const accountAccessGrantsByKeyAtom = Atom.family(
         const [accountId] = key.split(":");
         return yield* client.squadBuilderAccountSharing.listAccountAccessGrants(
           {
-            payload: { accountId: asMargonemAccountId(Number(accountId)) },
+            payload: {
+              accountId: yield* asMargonemAccountId(Number(accountId)),
+            },
           }
         );
       })
@@ -107,7 +109,7 @@ const accountInviteTargetsByKeyAtom = Atom.family(
         return yield* client.squadBuilderAccountSharing.searchAccountInviteTargets(
           {
             payload: {
-              accountId: asMargonemAccountId(Number(accountId)),
+              accountId: yield* asMargonemAccountId(Number(accountId)),
               query: decodeURIComponent(query),
             },
           }
@@ -167,8 +169,8 @@ export const sendAccountAccessInviteAtom = appHttpApiFn(
     const result =
       yield* client.squadBuilderAccountSharing.sendAccountAccessInvite({
         payload: {
-          accountId: asMargonemAccountId(payload.accountId),
-          invitedUserId: asAppUserId(payload.invitedUserId),
+          accountId: yield* asMargonemAccountId(payload.accountId),
+          invitedUserId: yield* asAppUserId(payload.invitedUserId),
         },
       });
     refreshVisibleAccountSharingAtoms(get, payload);
@@ -186,7 +188,7 @@ export const respondToAccountAccessInviteAtom = appHttpApiFn(
     const result =
       yield* client.squadBuilderAccountSharing.respondToAccountAccessInvite({
         payload: {
-          accessId: asMargonemAccountAccessId(payload.accessId),
+          accessId: yield* asMargonemAccountAccessId(payload.accessId),
           response: payload.response,
         },
       });
@@ -205,7 +207,7 @@ export const revokeAccountAccessAtom = appHttpApiFn(
     const result = yield* client.squadBuilderAccountSharing.revokeAccountAccess(
       {
         payload: {
-          accessId: asMargonemAccountAccessId(payload.accessId),
+          accessId: yield* asMargonemAccountAccessId(payload.accessId),
         },
       }
     );

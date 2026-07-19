@@ -106,7 +106,7 @@ const squadGroupEditorGrantsByKeyAtom = Atom.family(
         return yield* client.squadBuilderSquadGroupSharing.listSquadGroupEditorGrants(
           {
             payload: {
-              groupId: asSquadGroupId(groupId),
+              groupId: yield* asSquadGroupId(groupId),
             },
           }
         );
@@ -148,7 +148,7 @@ const squadEditorInviteTargetsByKeyAtom = Atom.family(
         return yield* client.squadBuilderSquadGroupSharing.searchSquadEditorInviteTargets(
           {
             payload: {
-              groupId: asSquadGroupId(payload.groupId),
+              groupId: yield* asSquadGroupId(payload.groupId),
               query: payload.query,
             },
           }
@@ -175,7 +175,7 @@ export const respondToSquadGroupInviteAtom = appHttpApiFn(
     const result =
       yield* client.squadBuilderSquadGroupSharing.respondToSquadGroupInvite({
         payload: {
-          invitationId: asSquadGroupInvitationId(payload.invitationId),
+          invitationId: yield* asSquadGroupInvitationId(payload.invitationId),
           response: payload.response,
         },
       });
@@ -195,8 +195,8 @@ export const sendSquadGroupEditorInviteAtom = appHttpApiFn(
     const result =
       yield* client.squadBuilderSquadGroupSharing.sendSquadGroupEditorInvite({
         payload: {
-          groupId: asSquadGroupId(payload.groupId),
-          invitedUserId: asAppUserId(payload.invitedUserId),
+          groupId: yield* asSquadGroupId(payload.groupId),
+          invitedUserId: yield* asAppUserId(payload.invitedUserId),
         },
       });
     get.refresh(incomingSquadGroupInvitesByActorAtom("default"));
@@ -220,7 +220,7 @@ export const revokeSquadGroupEditorAtom = appHttpApiFn(
     const result =
       yield* client.squadBuilderSquadGroupSharing.revokeSquadGroupEditor({
         payload: {
-          invitationId: asSquadGroupInvitationId(payload.invitationId),
+          invitationId: yield* asSquadGroupInvitationId(payload.invitationId),
         },
       });
     get.refresh(incomingSquadGroupInvitesByActorAtom("default"));

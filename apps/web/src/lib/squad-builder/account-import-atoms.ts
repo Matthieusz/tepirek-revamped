@@ -69,7 +69,7 @@ export const confirmOwnedAccountImportAtom = appHttpApiFn(
       yield* client.squadBuilderAccountImport.confirmOwnedAccountImport({
         payload: {
           displayName: payload.displayName,
-          pendingImportId: asPendingMargonemAccountImportId(
+          pendingImportId: yield* asPendingMargonemAccountImportId(
             payload.pendingImportId
           ),
         },
@@ -89,7 +89,7 @@ export const updateOwnedAccountDisplayNameAtom = appHttpApiFn(
     const result =
       yield* client.squadBuilderAccountImport.updateOwnedAccountDisplayName({
         payload: {
-          accountId: asMargonemAccountId(payload.accountId),
+          accountId: yield* asMargonemAccountId(payload.accountId),
           displayName: payload.displayName,
         },
       });
@@ -106,7 +106,7 @@ export const deleteOwnedAccountAtom = appHttpApiFn(
   ) {
     const client = yield* AppHttpApiClient;
     const result = yield* client.squadBuilderAccountImport.deleteOwnedAccount({
-      payload: { accountId: asMargonemAccountId(payload.accountId) },
+      payload: { accountId: yield* asMargonemAccountId(payload.accountId) },
     });
     get.refresh(ownedAccountsAtom);
     get.refresh(sharedAccountsAtom);
