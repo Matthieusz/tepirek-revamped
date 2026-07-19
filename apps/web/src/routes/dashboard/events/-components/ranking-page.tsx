@@ -221,6 +221,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
                           selectedHeroId={filter.state.heroId}
                           trigger={
                             <Button
+                              aria-label="Rozdziel złoto"
                               className="ml-1 shrink-0"
                               size="icon"
                               variant="outline"

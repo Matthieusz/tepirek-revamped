@@ -18,6 +18,8 @@ import { getErrorMessage } from "@/lib/errors";
 import appCss from "@/index.css?url";
 
 const showDevtools = import.meta.env.DEV;
+const applicationDescription =
+  "Narzędzia Gildii Złodziei do organizacji wydarzeń, aukcji i wspólnych zadań w Margonem.";
 
 const RootDocument = () => {
   const { atomRegistry } = useRouteContext({ from: "__root__" });
@@ -96,6 +98,42 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       {
         content: "width=device-width, initial-scale=1",
         name: "viewport",
+      },
+      {
+        content: "Tepirek Revamped",
+        name: "application-name",
+      },
+      {
+        content: applicationDescription,
+        name: "description",
+      },
+      {
+        content: "#181713",
+        name: "theme-color",
+      },
+      {
+        content: "Tepirek Revamped",
+        property: "og:title",
+      },
+      {
+        content: applicationDescription,
+        property: "og:description",
+      },
+      {
+        content: "website",
+        property: "og:type",
+      },
+      {
+        content: "summary",
+        name: "twitter:card",
+      },
+      {
+        content: "Tepirek Revamped",
+        name: "twitter:title",
+      },
+      {
+        content: applicationDescription,
+        name: "twitter:description",
       },
       {
         title: "Tepirek Revamped",

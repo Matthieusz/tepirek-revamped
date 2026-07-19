@@ -16,7 +16,11 @@ export const StatsPopover = ({ pointWorth, totalBets }: StatsPopoverProps) => (
   <Popover>
     <PopoverTrigger
       render={
-        <Button size="icon" variant="ghost">
+        <Button
+          aria-label="Pokaż statystyki rankingu"
+          size="icon"
+          variant="ghost"
+        >
           <Info className="size-4" />
         </Button>
       }

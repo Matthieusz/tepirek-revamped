@@ -55,6 +55,21 @@ interface EventsHeroesPageProps {
   session: AuthSession;
 }
 
+/** Builds the event-name lookup used while rendering hero rows. */
+export const getEventNamesById = (
+  events: readonly { readonly id: number; readonly name: string }[]
+): ReadonlyMap<number, string> =>
+  new Map(events.map((event) => [event.id, event.name]));
+
+/** Returns the event name for a hero, preserving the current missing-event fallback. */
+export const getHeroEventName = (
+  eventNamesById: ReadonlyMap<number, string>,
+  eventId: number | null | undefined
+): string =>
+  eventId === null || eventId === undefined
+    ? "Brak"
+    : (eventNamesById.get(eventId) ?? "Brak");
+
 export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
   const heroesResult = useAtomValue(heroesAtom);
   const eventsResult = useAtomValue(eventsAtom);
@@ -79,6 +94,7 @@ const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
   const heroes = AsyncResult.getOrThrow(optimisticHeroesResult);
   const eventsResult = useAtomValue(eventsAtom);
   const events = [...AsyncResult.getOrThrow(eventsResult)];
+  const eventNamesById = getEventNamesById(events);
   const deleteHero = useAtomSet(deleteHeroAtom, { mode: "promise" });
 
   const isAdminUser = isAdmin(session);
@@ -201,13 +217,13 @@ const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
                       </TableCell>
                       <TableCell>
                         <span className="text-muted-foreground text-sm">
-                          {events?.find((event) => event.id === hero.eventId)
-                            ?.name ?? "Brak"}
+                          {getHeroEventName(eventNamesById, hero.eventId)}
                         </span>
                       </TableCell>
                       {isAdminUser && (
                         <TableCell className="text-right">
                           <Button
+                            aria-label={`Usuń herosa ${hero.name}`}
                             onClick={() => {
                               setHeroToDelete({ id: hero.id, name: hero.name });
                             }}

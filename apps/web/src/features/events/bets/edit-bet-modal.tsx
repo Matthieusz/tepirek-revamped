@@ -178,7 +178,12 @@ export const EditBetModal = ({
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>
         {trigger ?? (
-          <Button size="icon" type="button" variant="ghost">
+          <Button
+            aria-label={`Edytuj obstawienie na herosa ${heroName}`}
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
             <Pencil className="size-4" />
           </Button>
         )}

@@ -1,5 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
+import { createPageTitle } from "@/lib/metadata";
 import { requireUnverified } from "@/lib/route-helpers";
 import WaitingRoomPage from "@/pages/(auth)/waiting-room";
 
@@ -16,4 +17,7 @@ export const Route = createFileRoute("/waiting-room")({
     return { session };
   },
   component: WaitingRoomRoute,
+  head: () => ({
+    meta: [{ title: createPageTitle("Oczekiwanie na weryfikację") }],
+  }),
 });

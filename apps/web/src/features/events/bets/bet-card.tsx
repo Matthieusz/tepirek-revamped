@@ -70,12 +70,18 @@ export const BetCard = ({
                 memberCount={bet.memberCount}
                 refreshInput={refreshInput}
                 trigger={
-                  <Button size="icon" type="button" variant="ghost">
+                  <Button
+                    aria-label={`Edytuj obstawienie na herosa ${bet.heroName}`}
+                    size="icon"
+                    type="button"
+                    variant="ghost"
+                  >
                     <Pencil className="size-4" />
                   </Button>
                 }
               />
               <Button
+                aria-label={`Usuń obstawienie na herosa ${bet.heroName}`}
                 onClick={() => {
                   onDeleteClick({
                     heroName: bet.heroName,

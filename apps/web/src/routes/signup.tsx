@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { getUser } from "@/functions/get-user";
+import { createPageTitle } from "@/lib/metadata";
 import SignupPage from "@/pages/(auth)/signup";
 
 export const Route = createFileRoute("/signup")({
@@ -11,4 +12,7 @@ export const Route = createFileRoute("/signup")({
     }
   },
   component: SignupPage,
+  head: () => ({
+    meta: [{ title: createPageTitle("Rejestracja") }],
+  }),
 });

@@ -8,6 +8,7 @@ import { Link2, LogIn, UserPlus } from "lucide-react";
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { healthAtom } from "@/lib/health-atoms";
+import { createPageTitle } from "@/lib/metadata";
 
 const HomeComponent = () => {
   const healthResult = useAtomValue(healthAtom);
@@ -125,4 +126,7 @@ const HomeContent = () => {
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
+  head: () => ({
+    meta: [{ title: createPageTitle("Strona główna") }],
+  }),
 });
