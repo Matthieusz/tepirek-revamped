@@ -119,105 +119,105 @@ const parseCharacterPosition = (input: number) =>
   );
 
 /** Validate a squad group snapshot against accessible Jaruna characters and group rules. */
-export const validateSquadGroupSnapshot = Effect.fnUntraced(
-  function* validateSquadGroupSnapshot(
-    input: ValidateSquadGroupSnapshotInput
-  ): Effect.fn.Return<SquadGroupDraftSnapshot, SquadGroupValidationError> {
-    const { availableCharacters, groupId, name, squads } = input;
+export const validateSquadGroupSnapshot = Effect.fn(
+  "SquadGroupSnapshot.validate"
+)(function* validateSquadGroupSnapshot(
+  input: ValidateSquadGroupSnapshotInput
+): Effect.fn.Return<SquadGroupDraftSnapshot, SquadGroupValidationError> {
+  const { availableCharacters, groupId, name, squads } = input;
 
-    const parsedName = yield* parseSquadGroupName(name);
+  const parsedName = yield* parseSquadGroupName(name);
 
-    const availableByCharacterId = new Map<number, AvailableSquadCharacter>();
-    for (const character of availableCharacters) {
-      availableByCharacterId.set(character.characterId, character);
+  const availableByCharacterId = new Map<number, AvailableSquadCharacter>();
+  for (const character of availableCharacters) {
+    availableByCharacterId.set(character.characterId, character);
+  }
+
+  const groupCharacterIds = new Set<number>();
+  const parsedSquads: SquadDraftSnapshot[] = [];
+
+  for (const squad of squads) {
+    if (squad.clientKey.trim().length === 0) {
+      return yield* new InvalidSquadSnapshot({
+        message: "Każdy skład musi mieć klucz klienta",
+      });
     }
 
-    const groupCharacterIds = new Set<number>();
-    const parsedSquads: SquadDraftSnapshot[] = [];
+    const parsedSquadName = yield* parseSquadName(squad.name);
+    const parsedSquadPosition = yield* parseSquadPosition(squad.position);
 
-    for (const squad of squads) {
-      if (squad.clientKey.trim().length === 0) {
-        return yield* new InvalidSquadSnapshot({
-          message: "Każdy skład musi mieć klucz klienta",
+    if (squad.characters.length > maxCharactersPerSquad) {
+      return yield* new TooManyCharactersInSquad({
+        maxCharacters: maxCharactersPerSquad,
+        squadClientKey: squad.clientKey,
+      });
+    }
+
+    const squadCharacterIds = new Set<number>();
+    const squadAccountIds = new Set<number>();
+    const parsedCharacters: SquadCharacterDraftPlacement[] = [];
+
+    for (const character of squad.characters) {
+      const parsedCharacterPosition = yield* parseCharacterPosition(
+        character.position
+      );
+
+      const availableCharacter = availableByCharacterId.get(
+        character.characterId
+      );
+      if (availableCharacter === undefined) {
+        return yield* new SquadCharacterNotAccessible({
+          characterId: character.characterId,
         });
       }
 
-      const parsedSquadName = yield* parseSquadName(squad.name);
-      const parsedSquadPosition = yield* parseSquadPosition(squad.position);
+      if (availableCharacter.world !== "jaruna") {
+        return yield* new SquadCharacterNotJaruna({
+          characterId: character.characterId,
+        });
+      }
 
-      if (squad.characters.length > maxCharactersPerSquad) {
-        return yield* new TooManyCharactersInSquad({
-          maxCharacters: maxCharactersPerSquad,
+      if (squadCharacterIds.has(character.characterId)) {
+        return yield* new DuplicateCharacterInSquad({
+          characterId: character.characterId,
           squadClientKey: squad.clientKey,
         });
       }
 
-      const squadCharacterIds = new Set<number>();
-      const squadAccountIds = new Set<number>();
-      const parsedCharacters: SquadCharacterDraftPlacement[] = [];
-
-      for (const character of squad.characters) {
-        const parsedCharacterPosition = yield* parseCharacterPosition(
-          character.position
-        );
-
-        const availableCharacter = availableByCharacterId.get(
-          character.characterId
-        );
-        if (availableCharacter === undefined) {
-          return yield* new SquadCharacterNotAccessible({
-            characterId: character.characterId,
-          });
-        }
-
-        if (availableCharacter.world !== "jaruna") {
-          return yield* new SquadCharacterNotJaruna({
-            characterId: character.characterId,
-          });
-        }
-
-        if (squadCharacterIds.has(character.characterId)) {
-          return yield* new DuplicateCharacterInSquad({
-            characterId: character.characterId,
-            squadClientKey: squad.clientKey,
-          });
-        }
-
-        if (groupCharacterIds.has(character.characterId)) {
-          return yield* new DuplicateCharacterInSquadGroup({
-            characterId: character.characterId,
-          });
-        }
-
-        if (squadAccountIds.has(availableCharacter.accountId)) {
-          return yield* new DuplicateAccountInSquad({
-            accountId: availableCharacter.accountId,
-            squadClientKey: squad.clientKey,
-          });
-        }
-
-        squadCharacterIds.add(character.characterId);
-        groupCharacterIds.add(character.characterId);
-        squadAccountIds.add(availableCharacter.accountId);
-        parsedCharacters.push({
+      if (groupCharacterIds.has(character.characterId)) {
+        return yield* new DuplicateCharacterInSquadGroup({
           characterId: character.characterId,
-          position: parsedCharacterPosition,
         });
       }
 
-      parsedSquads.push({
-        characters: parsedCharacters,
-        clientKey: squad.clientKey,
-        name: parsedSquadName,
-        position: parsedSquadPosition,
-        ...(squad.squadId === undefined ? {} : { squadId: squad.squadId }),
+      if (squadAccountIds.has(availableCharacter.accountId)) {
+        return yield* new DuplicateAccountInSquad({
+          accountId: availableCharacter.accountId,
+          squadClientKey: squad.clientKey,
+        });
+      }
+
+      squadCharacterIds.add(character.characterId);
+      groupCharacterIds.add(character.characterId);
+      squadAccountIds.add(availableCharacter.accountId);
+      parsedCharacters.push({
+        characterId: character.characterId,
+        position: parsedCharacterPosition,
       });
     }
 
-    return {
-      groupId,
-      name: parsedName,
-      squads: parsedSquads,
-    };
+    parsedSquads.push({
+      characters: parsedCharacters,
+      clientKey: squad.clientKey,
+      name: parsedSquadName,
+      position: parsedSquadPosition,
+      ...(squad.squadId === undefined ? {} : { squadId: squad.squadId }),
+    });
   }
-);
+
+  return {
+    groupId,
+    name: parsedName,
+    squads: parsedSquads,
+  };
+});

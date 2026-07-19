@@ -29,7 +29,7 @@ export type ParseMargonemProfileUrlError =
 const profilePathPattern = /^\/profile\/view,(?<profileId>\d+)$/u;
 
 /** Parse a Margonem profile URL and return the canonical numeric profile id. */
-export const parseMargonemProfileUrl = Effect.fnUntraced(
+export const parseMargonemProfileUrl = Effect.fn("MargonemProfileUrl.parse")(
   function* parseMargonemProfileUrl(
     input: string
   ): Effect.fn.Return<MargonemProfileId, ParseMargonemProfileUrlError> {

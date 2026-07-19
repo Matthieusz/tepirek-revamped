@@ -22,7 +22,7 @@ const accountDisplayNameRules = {
 } as const;
 
 /** Parse a user-facing account display name for storage. */
-export const parseAccountDisplayName = Effect.fnUntraced(
+export const parseAccountDisplayName = Effect.fn("AccountDisplayName.parse")(
   function* parseAccountDisplayName(
     input: string
   ): Effect.fn.Return<AccountDisplayName, InvalidAccountDisplayName> {

@@ -184,7 +184,7 @@ const parseJarunaCharacterRow = Effect.fnUntraced(
 );
 
 /** Parse Firecrawl HTML into a Jaruna-only profile preview. */
-export const parseMargonemProfileHtml = Effect.fnUntraced(
+export const parseMargonemProfileHtml = Effect.fn("MargonemProfileHtml.parse")(
   function* parseMargonemProfileHtml({
     html,
     profileId,
