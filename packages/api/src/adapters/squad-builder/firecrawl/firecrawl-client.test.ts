@@ -54,4 +54,26 @@ describe("FirecrawlSdkClient", () => {
         );
       })
   );
+
+  it.effect("rejects malformed Firecrawl metadata", () =>
+    Effect.gen(function* rejectMalformedMetadata() {
+      const scrape = vi.fn(() =>
+        Promise.resolve({
+          html: "<html></html>",
+          metadata: { statusCode: "200" },
+        })
+      );
+      const client = new FirecrawlSdkClient("test", { scrape });
+      const profileId = yield* parseMargonemProfileId(789);
+
+      const exit = yield* Effect.exit(client.scrapeProfileHtml(profileId));
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      if (Exit.isFailure(exit)) {
+        const reason = exit.cause.reasons.find(Cause.isFailReason);
+        expect(reason?.error._tag).toBe("FirecrawlResponseNotParseable");
+        expect(reason?.error.profileId).toBe(profileId);
+      }
+    })
+  );
 });

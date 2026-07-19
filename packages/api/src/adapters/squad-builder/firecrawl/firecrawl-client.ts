@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import { Firecrawl } from "firecrawl";
-import type { Document } from "firecrawl";
 
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.ts";
@@ -13,11 +13,25 @@ import { parseFirecrawlCreditCount } from "../../../services/squad-builder/firec
 
 const FirecrawlScrapeDeadline = "30 seconds";
 
+const FirecrawlDocument = Schema.Struct({
+  html: Schema.String.check(Schema.isMinLength(1)),
+  metadata: Schema.optionalKey(
+    Schema.Struct({
+      cacheState: Schema.optionalKey(Schema.String),
+      contentType: Schema.optionalKey(Schema.String),
+      creditsUsed: Schema.optionalKey(Schema.Number),
+      sourceURL: Schema.optionalKey(Schema.String),
+      statusCode: Schema.optionalKey(Schema.Number),
+      url: Schema.optionalKey(Schema.String),
+    })
+  ),
+});
+
 interface FirecrawlScraper {
   readonly scrape: (
     url: string,
     options: { readonly formats: readonly ["html"] }
-  ) => Promise<Document>;
+  ) => Promise<unknown>;
 }
 
 /** Firecrawl SDK-backed implementation of profile HTML scraping. */
@@ -37,7 +51,7 @@ export class FirecrawlSdkClient implements FirecrawlClient {
         // firecrawl@4.28.3 does not expose AbortSignal support for scrape requests.
         // Effect interruption therefore stops waiting for this promise, but cannot
         // cancel the SDK's underlying HTTP request.
-        const document: Document = yield* Effect.tryPromise({
+        const rawDocument = yield* Effect.tryPromise({
           catch: (cause: unknown) =>
             new FirecrawlRequestFailed({
               cause,
@@ -60,13 +74,17 @@ export class FirecrawlSdkClient implements FirecrawlClient {
           })
         );
 
-        // Validate the document has HTML content.
-        if (typeof document.html !== "string" || document.html.length === 0) {
-          return yield* new FirecrawlResponseNotParseable({
-            cause: new Error("Firecrawl response did not include HTML"),
-            profileId,
-          });
-        }
+        const document = yield* Schema.decodeUnknownEffect(FirecrawlDocument)(
+          rawDocument
+        ).pipe(
+          Effect.mapError(
+            (cause) =>
+              new FirecrawlResponseNotParseable({
+                cause,
+                profileId,
+              })
+          )
+        );
 
         // Parse credits used from the response metadata.
         const rawCredits = document.metadata?.creditsUsed;
