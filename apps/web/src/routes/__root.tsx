@@ -39,7 +39,7 @@ const RootDocument = () => (
   </html>
 );
 
-const RootErrorBoundary = ({
+export const RootErrorBoundary = ({
   error,
   reset,
 }: {
