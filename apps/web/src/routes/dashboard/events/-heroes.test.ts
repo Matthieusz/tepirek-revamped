@@ -6,11 +6,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getRouter } from "@/router";
 import type { UserSession } from "@/types/route";
 
-const { getUser } = vi.hoisted(() => ({
+const { getUser, preloadAtomResults } = vi.hoisted(() => ({
   getUser: vi.fn<() => Promise<UserSession>>(),
+  preloadAtomResults:
+    vi.fn<(registry: unknown, atoms: readonly unknown[]) => Promise<void>>(),
 }));
 
 vi.mock("@/functions/get-user", () => ({ getUser }));
+vi.mock("@/lib/atom-preload", () => ({ preloadAtomResults }));
 vi.mock("@/pages/dashboard/events/heroes", () => ({
   default: () => createElement("h1", null, "Lazy heroes page"),
 }));
@@ -42,12 +45,15 @@ const verifiedSession = {
 describe("direct heroes route loading", () => {
   beforeEach(() => {
     getUser.mockReset();
+    preloadAtomResults.mockReset();
+    preloadAtomResults.mockResolvedValue();
   });
 
   it("inherits the verified session from the dashboard route", async () => {
     getUser.mockResolvedValue(verifiedSession);
     const router = getRouter();
     router.update({
+      context: router.options.context,
       history: createMemoryHistory({
         initialEntries: ["/dashboard/events/heroes"],
       }),
@@ -63,5 +69,9 @@ describe("direct heroes route loading", () => {
       renderToStaticMarkup(createElement(RouterProvider, { router }))
     ).toContain("Lazy heroes page");
     expect(getUser).toHaveBeenCalledOnce();
+    expect(preloadAtomResults).toHaveBeenCalledOnce();
+    expect(preloadAtomResults.mock.calls[0]?.[0]).toBe(
+      router.options.context.atomRegistry
+    );
   });
 });

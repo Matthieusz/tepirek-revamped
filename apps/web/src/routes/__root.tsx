@@ -1,12 +1,14 @@
-import { RegistryProvider } from "@effect/atom-react";
+import { RegistryContext } from "@effect/atom-react";
 import {
   createRootRouteWithContext,
   HeadContent,
   Outlet,
   Scripts,
+  useRouteContext,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createMiddleware } from "@tanstack/react-start";
+import type * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry";
 import { evlogErrorHandler } from "evlog/nitro/v3";
 
 import { Button } from "@/components/ui/button";
@@ -17,27 +19,31 @@ import appCss from "@/index.css?url";
 
 const showDevtools = import.meta.env.DEV;
 
-const RootDocument = () => (
-  <html className="dark" lang="pl" suppressHydrationWarning>
-    <head>
-      <HeadContent />
-    </head>
-    <body>
-      <RegistryProvider>
-        <div className="grid h-svh grid-rows-[auto_1fr]">
-          <Outlet />
-        </div>
-        <Toaster richColors />
-        {showDevtools ? (
-          <>
-            <TanStackRouterDevtools position="bottom-right" />
-          </>
-        ) : null}
-      </RegistryProvider>
-      <Scripts />
-    </body>
-  </html>
-);
+const RootDocument = () => {
+  const { atomRegistry } = useRouteContext({ from: "__root__" });
+
+  return (
+    <html className="dark" lang="pl" suppressHydrationWarning>
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        <RegistryContext.Provider value={atomRegistry}>
+          <div className="grid h-svh grid-rows-[auto_1fr]">
+            <Outlet />
+          </div>
+          <Toaster richColors />
+          {showDevtools ? (
+            <>
+              <TanStackRouterDevtools position="bottom-right" />
+            </>
+          ) : null}
+        </RegistryContext.Provider>
+        <Scripts />
+      </body>
+    </html>
+  );
+};
 
 export const RootErrorBoundary = ({
   error,
@@ -61,7 +67,9 @@ export const RootErrorBoundary = ({
   </html>
 );
 
-export type RouterAppContext = Record<string, never>;
+export interface RouterAppContext {
+  readonly atomRegistry: AtomRegistry.AtomRegistry;
+}
 
 const evlogMiddleware = createMiddleware().server(evlogErrorHandler);
 
