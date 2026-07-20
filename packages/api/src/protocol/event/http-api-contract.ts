@@ -14,9 +14,9 @@ export { EventIdSchema };
 const EventIcon = Schema.Literals(EVENT_ICON_IDS);
 
 export const CreateEventPayload = Schema.Struct({
-  color: Schema.optional(Schema.NonEmptyString),
+  color: Schema.optionalKey(Schema.NonEmptyString),
   endTime: Schema.DateFromString,
-  icon: Schema.optional(EventIcon),
+  icon: Schema.optionalKey(EventIcon),
   name: Schema.NonEmptyString,
 });
 export const DeleteEventPayload = Schema.Struct({ id: EventIdSchema });

@@ -18,7 +18,7 @@ export const DistributeGoldPayload = Schema.Struct({
   heroId: HeroIdSchema,
 });
 export const EventFilterPayload = Schema.Struct({
-  eventId: Schema.optional(EventIdSchema),
+  eventId: Schema.optionalKey(EventIdSchema),
 });
 export const TogglePaidOutPayload = Schema.Struct({
   eventId: EventIdSchema,

@@ -36,9 +36,9 @@ export const GlobalSquadGroupSummarySchema = Schema.Struct({
 });
 
 export const ListGlobalSquadGroupsPayload = Schema.Struct({
-  maxLevel: Schema.optional(Schema.NullOr(Schema.Number)),
-  minLevel: Schema.optional(Schema.NullOr(Schema.Number)),
-  nameQuery: Schema.optional(Schema.NullOr(Schema.String)),
+  maxLevel: Schema.optionalKey(Schema.NullOr(Schema.Number)),
+  minLevel: Schema.optionalKey(Schema.NullOr(Schema.Number)),
+  nameQuery: Schema.optionalKey(Schema.NullOr(Schema.String)),
 });
 
 export const AvailableSquadCharacterSchema = Schema.Struct({
@@ -98,7 +98,7 @@ const SaveSquadPayload = Schema.Struct({
   clientKey: Schema.String,
   name: Schema.String,
   position: Schema.Number,
-  squadId: Schema.optional(SquadIdSchema),
+  squadId: Schema.optionalKey(SquadIdSchema),
 });
 
 export const SaveSquadGroupPayload = Schema.Struct({

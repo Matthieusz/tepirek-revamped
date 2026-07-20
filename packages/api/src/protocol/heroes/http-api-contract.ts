@@ -14,8 +14,8 @@ export { EventIdSchema, HeroIdSchema };
 
 export const CreateHeroPayload = Schema.Struct({
   eventId: EventIdSchema,
-  image: Schema.optional(Schema.NonEmptyString),
-  level: Schema.optional(HeroLevel),
+  image: Schema.optionalKey(Schema.NonEmptyString),
+  level: Schema.optionalKey(HeroLevel),
   name: Schema.NonEmptyString,
 });
 export const DeleteHeroPayload = Schema.Struct({ id: HeroIdSchema });

@@ -125,11 +125,7 @@ const globalSquadGroupsByKeyAtom = Atom.family(
       Effect.gen(function* listGlobalSquadGroupsEffect() {
         const client = yield* AppHttpApiClient;
         return yield* client.squadBuilderSquadGroup.listGlobalSquadGroups({
-          payload: {
-            maxLevel: payload.maxLevel,
-            minLevel: payload.minLevel,
-            nameQuery: payload.nameQuery,
-          },
+          payload,
         });
       })
     );

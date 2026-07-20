@@ -29,10 +29,10 @@ export const EditBetPayload = Schema.Struct({
   newUserIds: Schema.NonEmptyArray(UserId),
 });
 export const GetAllPaginatedBetsPayload = Schema.Struct({
-  eventId: Schema.optional(EventIdSchema),
-  heroId: Schema.optional(HeroIdSchema),
-  limit: Schema.optional(PositiveInt.check(Schema.isLessThanOrEqualTo(50))),
-  page: Schema.optional(PositiveInt),
+  eventId: Schema.optionalKey(EventIdSchema),
+  heroId: Schema.optionalKey(HeroIdSchema),
+  limit: Schema.optionalKey(PositiveInt.check(Schema.isLessThanOrEqualTo(50))),
+  page: Schema.optionalKey(PositiveInt),
 });
 export const GetBetMembersPayload = Schema.Struct({ betId: BetIdSchema });
 export const GetBetsByEventPayload = Schema.Struct({ eventId: EventIdSchema });
@@ -52,7 +52,7 @@ export const BetSummary = Schema.Struct({
   eventId: EventIdSchema,
   heroId: HeroIdSchema,
   heroImage: Schema.NullOr(Schema.String),
-  heroLevel: Schema.optional(Schema.Number),
+  heroLevel: Schema.optionalKey(Schema.Number),
   heroName: Schema.String,
   id: BetIdSchema,
   memberCount: PositiveInt,

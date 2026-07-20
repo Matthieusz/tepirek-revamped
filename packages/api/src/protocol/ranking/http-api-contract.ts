@@ -10,8 +10,8 @@ export { EventIdSchema, HeroIdSchema };
 
 export const HeroIdPayload = Schema.Struct({ heroId: HeroIdSchema });
 export const RankingPayload = Schema.Struct({
-  eventId: Schema.optional(EventIdSchema),
-  heroId: Schema.optional(HeroIdSchema),
+  eventId: Schema.optionalKey(EventIdSchema),
+  heroId: Schema.optionalKey(HeroIdSchema),
 });
 export const HeroStats = Schema.Struct({
   currentPointWorth: Schema.Number,

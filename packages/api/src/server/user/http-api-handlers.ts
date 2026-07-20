@@ -7,6 +7,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 import { DiscordGuildVerifier } from "../../adapters/user/discord-verification-service.ts";
 import type { UserAdapterError } from "../../adapters/user/user-adapter-error.ts";
 import { UserStore } from "../../adapters/user/user-store.ts";
+import type { RequestSession } from "../../protocol/auth/current-session.ts";
 import { AppHttpApi } from "../../protocol/http-api-contract.ts";
 import {
   UserForbidden,
@@ -28,6 +29,24 @@ const { requireAdminSession, requireSession, requireVerifiedSession } =
 const projectAdapterError = (error: UserAdapterError) =>
   Effect.fail(new UserPersistenceUnavailable({ operation: error.operation }));
 
+const projectAuthenticatedSession = (requestSession: RequestSession) => {
+  const { ipAddress, userAgent, ...session } = requestSession.session;
+  const { image, role, ...user } = requestSession.user;
+
+  return {
+    session: {
+      ...session,
+      ...(ipAddress === undefined ? {} : { ipAddress }),
+      ...(userAgent === undefined ? {} : { userAgent }),
+    },
+    user: {
+      ...user,
+      ...(image === undefined ? {} : { image }),
+      ...(role === undefined ? {} : { role }),
+    },
+  };
+};
+
 export const UserHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "user",
@@ -45,7 +64,9 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
             .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
         })
       )
-      .handle("getSession", () => requireSession())
+      .handle("getSession", () =>
+        requireSession().pipe(Effect.map(projectAuthenticatedSession))
+      )
       .handle(
         "getVerified",
         Effect.fn("UserHttpApiHandlers.getVerified")(function* getVerified() {
