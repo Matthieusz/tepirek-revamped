@@ -11,7 +11,7 @@ export type AvailableCharacter = AvailableSquadCharacterSchema;
 
 export const MAX_SQUAD_CHARACTERS = 10;
 
-export interface DraftCharacter {
+interface DraftCharacter {
   readonly characterId: number;
 }
 
