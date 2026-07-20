@@ -180,13 +180,14 @@ const makePreview = (
   );
 
 /** Integration seam that resolves dependencies from the Effect context. */
-export const preview = (input: PreviewAccountRefetchInput) =>
-  EffectRuntime.gen(function* previewIntegration() {
+export const preview = EffectRuntime.fn("AccountRefetch.previewIntegration")(
+  function* previewIntegration(input: PreviewAccountRefetchInput) {
     const store = yield* AccountRefetchStoreService;
     const config = yield* FirecrawlConfigService;
     const firecrawl = yield* FirecrawlClientService;
     return yield* makePreview(store, config, firecrawl)(input);
-  });
+  }
+);
 
 export interface PreviewAccountRefetch {
   readonly preview: ReturnType<typeof makePreview>;

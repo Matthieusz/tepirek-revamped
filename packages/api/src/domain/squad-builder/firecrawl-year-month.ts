@@ -17,12 +17,14 @@ export class InvalidFirecrawlYearMonth extends Schema.TaggedErrorClass<InvalidFi
 ) {}
 
 /** Parse a YYYY-MM Firecrawl budget month. */
-export const parseFirecrawlYearMonth = (
-  input: string
-): Effect.Effect<FirecrawlYearMonth, InvalidFirecrawlYearMonth> =>
-  Schema.decodeUnknownEffect(FirecrawlYearMonth)(input).pipe(
-    Effect.catchTag("SchemaError", () => new InvalidFirecrawlYearMonth())
-  );
+export const parseFirecrawlYearMonth = Effect.fn("FirecrawlYearMonth.parse")(
+  (
+    input: string
+  ): Effect.Effect<FirecrawlYearMonth, InvalidFirecrawlYearMonth> =>
+    Schema.decodeUnknownEffect(FirecrawlYearMonth)(input).pipe(
+      Effect.catchTag("SchemaError", () => new InvalidFirecrawlYearMonth())
+    )
+);
 
 /** Get the UTC Firecrawl budget month for a date. */
 export const firecrawlYearMonthFromDate = (date: Date): FirecrawlYearMonth => {

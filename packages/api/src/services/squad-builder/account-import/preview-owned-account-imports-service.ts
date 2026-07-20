@@ -446,16 +446,17 @@ const makePreview = (
   });
 
 /** Integration seam that resolves dependencies from the Effect context. */
-export const preview = (input: PreviewOwnedAccountImportsInput) =>
-  EffectRuntime.gen(function* previewIntegration() {
-    const store = yield* AccountImportStoreService;
-    const config = yield* FirecrawlConfigService;
-    const firecrawl = yield* FirecrawlClientService;
-    const singleProfilePreview = {
-      preview: makePreviewMargonemProfileImport(store, config, firecrawl),
-    };
-    return yield* makePreview(store, singleProfilePreview)(input);
-  });
+export const preview = EffectRuntime.fn(
+  "AccountImport.previewBatchIntegration"
+)(function* previewIntegration(input: PreviewOwnedAccountImportsInput) {
+  const store = yield* AccountImportStoreService;
+  const config = yield* FirecrawlConfigService;
+  const firecrawl = yield* FirecrawlClientService;
+  const singleProfilePreview = {
+    preview: makePreviewMargonemProfileImport(store, config, firecrawl),
+  };
+  return yield* makePreview(store, singleProfilePreview)(input);
+});
 
 export interface PreviewOwnedAccountImports {
   readonly preview: ReturnType<typeof makePreview>;
