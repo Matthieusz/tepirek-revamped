@@ -1,6 +1,7 @@
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { Layer } from "effect";
 import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { HttpApiClient } from "effect/unstable/httpapi";
 import * as Atom from "effect/unstable/reactivity/Atom";
@@ -15,10 +16,27 @@ const fetchHttpClientLayer = FetchHttpClient.layer.pipe(
   Layer.provide(fetchRequestInitLayer)
 );
 
+type DecodedMethod<Method> = Method extends (
+  ...args: infer Args
+) => Effect.Effect<infer Success, infer Error, infer Requirements>
+  ? (...args: Args) => Effect.Effect<Success, Error, Requirements>
+  : never;
+
+/** Application client surface restricted to decoded endpoint responses. */
+export type AppHttpApiClientService = {
+  readonly [Group in keyof HttpApiClient.ForApi<typeof AppHttpApi>]: {
+    readonly [Method in keyof HttpApiClient.ForApi<
+      typeof AppHttpApi
+    >[Group]]: DecodedMethod<
+      HttpApiClient.ForApi<typeof AppHttpApi>[Group][Method]
+    >;
+  };
+};
+
 /** Effect HttpApi client service for the shared application API contract. */
 export class AppHttpApiClient extends Context.Service<
   AppHttpApiClient,
-  HttpApiClient.ForApi<typeof AppHttpApi>
+  AppHttpApiClientService
 >()("@tepirek-revamped/web/AppHttpApiClient") {
   /** Live browser client layer that preserves better-auth cookies. */
   static readonly layer = Layer.effect(

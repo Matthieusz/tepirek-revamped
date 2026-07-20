@@ -6,11 +6,6 @@ import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry";
 
-const flushFibers = Effect.gen(function* flushEffectFibers() {
-  yield* Effect.yieldNow;
-  yield* Effect.promise(() => Promise.resolve());
-});
-
 describe("Effect Atom lifecycle", () => {
   it.effect("interrupts an in-flight mutation", () =>
     Effect.gen(function* interruptMutation() {
@@ -22,7 +17,11 @@ describe("Effect Atom lifecycle", () => {
       expect(registry.get(mutation).waiting).toBe(true);
 
       registry.set(mutation, Atom.Interrupt);
-      yield* flushFibers;
+      yield* Effect.exit(
+        AtomRegistry.getResult(registry, mutation, {
+          suspendOnWaiting: true,
+        })
+      );
 
       expect(AsyncResult.isInterrupted(registry.get(mutation))).toBe(true);
       unmount();
@@ -34,10 +33,16 @@ describe("Effect Atom lifecycle", () => {
     () =>
       Effect.gen(function* preventStaleResponse() {
         const latches = MutableHashMap.empty<number, Latch.Latch>();
+        const completions = MutableHashMap.empty<number, Latch.Latch>();
         const mutation = Atom.fn((value: number) => {
           const latch = Latch.makeUnsafe();
+          const completion = Latch.makeUnsafe();
           MutableHashMap.set(latches, value, latch);
-          return latch.await.pipe(Effect.as(value));
+          MutableHashMap.set(completions, value, completion);
+          return latch.await.pipe(
+            Effect.as(value),
+            Effect.ensuring(Effect.sync(() => completion.openUnsafe()))
+          );
         });
         const registry = AtomRegistry.make();
         const unmount = registry.mount(mutation);
@@ -47,11 +52,18 @@ describe("Effect Atom lifecycle", () => {
         MutableHashMap.get(latches, 2).pipe(
           Option.map((latch) => latch.openUnsafe())
         );
-        yield* flushFibers;
+        yield* AtomRegistry.getResult(registry, mutation, {
+          suspendOnWaiting: true,
+        });
         MutableHashMap.get(latches, 1).pipe(
           Option.map((latch) => latch.openUnsafe())
         );
-        yield* flushFibers;
+        yield* MutableHashMap.get(completions, 1).pipe(
+          Option.match({
+            onNone: () => Effect.die(new Error("Missing completion latch")),
+            onSome: (completion) => completion.await,
+          })
+        );
 
         const result = registry.get(mutation);
         expect(AsyncResult.isSuccess(result)).toBe(true);
@@ -78,7 +90,11 @@ describe("Effect Atom lifecycle", () => {
       const unmountRemove = registry.mount(remove);
 
       registry.set(remove, 1);
-      yield* flushFibers;
+      yield* Effect.exit(
+        AtomRegistry.getResult(registry, remove, {
+          suspendOnWaiting: true,
+        })
+      );
 
       expect(registry.get(optimistic)).toEqual([1, 2]);
       unmountRemove();
@@ -89,10 +105,12 @@ describe("Effect Atom lifecycle", () => {
   it.effect("runs finalizers when a mutation is replaced", () =>
     Effect.gen(function* runReplacementFinalizers() {
       let finalizerRuns = 0;
+      const replacementFinalized = Latch.makeUnsafe();
       const mutation = Atom.fn((value: number) =>
         Effect.acquireRelease(Effect.succeed(value), () =>
           Effect.sync(() => {
             finalizerRuns += 1;
+            replacementFinalized.openUnsafe();
           })
         ).pipe(Effect.andThen(Effect.never))
       );
@@ -101,7 +119,7 @@ describe("Effect Atom lifecycle", () => {
 
       registry.set(mutation, 1);
       registry.set(mutation, 2);
-      yield* flushFibers;
+      yield* replacementFinalized.await;
 
       expect(finalizerRuns).toBe(1);
       unmount();

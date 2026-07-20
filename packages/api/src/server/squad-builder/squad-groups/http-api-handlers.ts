@@ -17,6 +17,8 @@ import {
 } from "../../../protocol/squad-builder/squad-groups/http-api-contract.ts";
 import type { CreateSquadGroupError } from "../../../services/squad-builder/squad-groups/create-squad-group.ts";
 import { CreateSquadGroupService } from "../../../services/squad-builder/squad-groups/create-squad-group.ts";
+import type { ListAvailableSquadCharactersError } from "../../../services/squad-builder/squad-groups/list-available-squad-characters.ts";
+import { ListAvailableSquadCharactersService } from "../../../services/squad-builder/squad-groups/list-available-squad-characters.ts";
 import { ListGlobalSquadGroupsService } from "../../../services/squad-builder/squad-groups/list-global-squad-groups.ts";
 import type {
   GetSquadGroupDetailError,
@@ -29,7 +31,6 @@ import type { SaveSquadGroupError } from "../../../services/squad-builder/squad-
 import { SaveSquadGroupService } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
 import type { GlobalSquadVisibilityError } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
 import { SetSquadGroupVisibilityService } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
-import { SquadGroupStoreService } from "../../../services/squad-builder/squad-groups/squad-group-store.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -42,6 +43,7 @@ type SquadGroupsHandlerError =
   | CreateSquadGroupError
   | ListMySquadGroupsError
   | GetSquadGroupDetailError
+  | ListAvailableSquadCharactersError
   | SaveSquadGroupError
   | EffectSharedSquadGroupSaveError
   | GlobalSquadVisibilityError
@@ -95,6 +97,8 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
   Effect.fnUntraced(function* SquadBuilderSquadGroupHttpApiHandlers(handlers) {
     const createSquadGroupSvc = yield* CreateSquadGroupService;
     const listSquadGroupsSvc = yield* ListSquadGroupsService;
+    const listAvailableCharactersSvc =
+      yield* ListAvailableSquadCharactersService;
     const listGlobalSquadGroupsSvc = yield* ListGlobalSquadGroupsService;
     const saveSquadGroupSvc = yield* SaveSquadGroupService;
     const saveSharedCharactersSvc =
@@ -161,12 +165,10 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              SquadGroupStoreService.use((store) =>
-                store.getSquadGroupDetail({
-                  actorUserId: sessionAppUserId(session),
-                  groupId: payload.groupId,
-                })
-              )
+              listSquadGroupsSvc.getMine({
+                actorUserId: sessionAppUserId(session),
+                groupId: payload.groupId,
+              })
             ).pipe(Effect.mapError(mapSquadGroupsError));
           }
         )
@@ -178,18 +180,9 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              Effect.gen(function* listAvailableSquadCharacters() {
-                const detail = yield* SquadGroupStoreService.use((store) =>
-                  store.getSquadGroupDetail({
-                    actorUserId: sessionAppUserId(session),
-                    groupId: payload.groupId,
-                  })
-                );
-                return yield* SquadGroupStoreService.use((store) =>
-                  store.listAvailableCharactersForOwner({
-                    ownerUserId: detail.ownerUserId,
-                  })
-                );
+              listAvailableCharactersSvc.list({
+                actorUserId: sessionAppUserId(session),
+                groupId: payload.groupId,
               })
             ).pipe(Effect.mapError(mapSquadGroupsError));
           }

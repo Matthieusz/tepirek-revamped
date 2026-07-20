@@ -10,11 +10,6 @@ import * as Atom from "effect/unstable/reactivity/Atom";
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry";
 import { vi } from "vitest";
 
-const flushFibers = Effect.gen(function* flushEffectFibers() {
-  yield* Effect.yieldNow;
-  yield* Effect.promise(() => Promise.resolve());
-});
-
 const nameSchema = Schema.String.pipe(
   Schema.refine((value): value is string => value.trim().length > 0, {
     message: "Podaj nazwę",
@@ -64,7 +59,11 @@ describe("Effect Form submission lifecycle", () => {
         const registry = yield* initialize(form, "");
 
         registry.set(form.submitAtom, undefined);
-        yield* flushFibers;
+        yield* Effect.exit(
+          AtomRegistry.getResult(registry, form.submitAtom, {
+            suspendOnWaiting: true,
+          })
+        );
 
         expect(submit).not.toHaveBeenCalled();
         expect(AsyncResult.isFailure(registry.get(form.submitAtom))).toBe(true);
@@ -89,11 +88,12 @@ describe("Effect Form submission lifecycle", () => {
         registry.set(name.setValue, "submitted");
 
         registry.set(form.submitAtom, undefined);
-        yield* flushFibers;
         expect(registry.get(form.submitAtom).waiting).toBe(true);
 
         latch.openUnsafe();
-        yield* flushFibers;
+        yield* AtomRegistry.getResult(registry, form.submitAtom, {
+          suspendOnWaiting: true,
+        });
 
         const result = registry.get(form.submitAtom);
         expect(AsyncResult.isSuccess(result)).toBe(true);
@@ -120,7 +120,11 @@ describe("Effect Form submission lifecycle", () => {
         registry.set(name.setValue, "unsaved");
 
         registry.set(form.submitAtom, undefined);
-        yield* flushFibers;
+        yield* Effect.exit(
+          AtomRegistry.getResult(registry, form.submitAtom, {
+            suspendOnWaiting: true,
+          })
+        );
 
         expect(AsyncResult.isFailure(registry.get(form.submitAtom))).toBe(true);
         expect(registry.get(form.submitAtom).waiting).toBe(false);

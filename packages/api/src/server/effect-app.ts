@@ -43,6 +43,8 @@ import type { AccountImportStoreService } from "../services/squad-builder/accoun
 import { layer as confirmOwnedAccountImportLayer } from "../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
 import type { ConfirmOwnedAccountImportService } from "../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
 import { DeleteOwnedAccountService } from "../services/squad-builder/account-import/delete-owned-account-service.ts";
+import { layer as listOwnedMargonemAccountsLayer } from "../services/squad-builder/account-import/list-owned-margonem-accounts.ts";
+import type { ListOwnedMargonemAccountsService } from "../services/squad-builder/account-import/list-owned-margonem-accounts.ts";
 import { layer as previewMargonemProfileImportLayer } from "../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import type { PreviewMargonemProfileImportService } from "../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import { layer as previewOwnedAccountImportsLayer } from "../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
@@ -71,6 +73,8 @@ import type {
 } from "../services/squad-builder/firecrawl-config.ts";
 import { layer as createSquadGroupLayer } from "../services/squad-builder/squad-groups/create-squad-group.ts";
 import type { CreateSquadGroupService } from "../services/squad-builder/squad-groups/create-squad-group.ts";
+import { layer as listAvailableSquadCharactersLayer } from "../services/squad-builder/squad-groups/list-available-squad-characters.ts";
+import type { ListAvailableSquadCharactersService } from "../services/squad-builder/squad-groups/list-available-squad-characters.ts";
 import { layer as listGlobalSquadGroupsLayer } from "../services/squad-builder/squad-groups/list-global-squad-groups.ts";
 import type { ListGlobalSquadGroupsService } from "../services/squad-builder/squad-groups/list-global-squad-groups.ts";
 import type { SquadGroupSharingStateService } from "../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.ts";
@@ -147,6 +151,7 @@ const makeApiStableLayer = (
 
   const squadBuilderUseCases = Layer.mergeAll(
     createSquadGroupLayer,
+    listAvailableSquadCharactersLayer,
     listSquadGroupsLayer,
     listGlobalSquadGroupsLayer,
     saveSquadGroupLayer,
@@ -155,6 +160,7 @@ const makeApiStableLayer = (
     previewMargonemProfileImportLayer,
     previewOwnedAccountImportsLayer,
     confirmOwnedAccountImportLayer,
+    listOwnedMargonemAccountsLayer,
     DeleteOwnedAccountService.layer,
     UpdateOwnedAccountDisplayNameService.layer,
     previewAccountRefetchLayer,
@@ -226,6 +232,7 @@ type SquadBuilderServices =
   | SquadGroupEditorRevocationsService
   | SquadGroupSharingStateService
   | CreateSquadGroupService
+  | ListAvailableSquadCharactersService
   | ListSquadGroupsService
   | ListGlobalSquadGroupsService
   | SaveSquadGroupService
@@ -234,6 +241,7 @@ type SquadBuilderServices =
   | PreviewMargonemProfileImportService
   | PreviewOwnedAccountImportsService
   | ConfirmOwnedAccountImportService
+  | ListOwnedMargonemAccountsService
   | DeleteOwnedAccountService
   | UpdateOwnedAccountDisplayNameService
   | PreviewAccountRefetchService

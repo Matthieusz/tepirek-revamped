@@ -14,11 +14,12 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/account-import/http-api-contract.ts";
-import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store-service.ts";
 import { ConfirmOwnedAccountImportService } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
 import type { ConfirmOwnedAccountImportError } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
 import { DeleteOwnedAccountService } from "../../../services/squad-builder/account-import/delete-owned-account-service.ts";
 import type { DeleteOwnedAccountError } from "../../../services/squad-builder/account-import/delete-owned-account-service.ts";
+import type { ListOwnedMargonemAccountsError } from "../../../services/squad-builder/account-import/list-owned-margonem-accounts.ts";
+import { ListOwnedMargonemAccountsService } from "../../../services/squad-builder/account-import/list-owned-margonem-accounts.ts";
 import { PreviewMargonemProfileImportService } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import type { PreviewMargonemProfileImportError } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import { PreviewOwnedAccountImportsService } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
@@ -38,7 +39,8 @@ type AccountImportHandlerError =
   | PreviewOwnedAccountImportsError
   | ConfirmOwnedAccountImportError
   | UpdateOwnedAccountDisplayNameError
-  | DeleteOwnedAccountError;
+  | DeleteOwnedAccountError
+  | ListOwnedMargonemAccountsError;
 
 const mapAccountImportError = (
   error: AccountImportHandlerError
@@ -97,6 +99,8 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
       const updateOwnedAccountDisplayNameSvc =
         yield* UpdateOwnedAccountDisplayNameService;
       const deleteOwnedAccountSvc = yield* DeleteOwnedAccountService;
+      const listOwnedMargonemAccountsSvc =
+        yield* ListOwnedMargonemAccountsService;
 
       return handlers
         .handle(
@@ -183,11 +187,9 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                AccountImportStoreService.use((store) =>
-                  store.listOwnedAccounts({
-                    actorUserId: sessionAppUserId(session),
-                  })
-                )
+                listOwnedMargonemAccountsSvc.list({
+                  actorUserId: sessionAppUserId(session),
+                })
               ).pipe(Effect.mapError(mapAccountImportError));
             }
           )
