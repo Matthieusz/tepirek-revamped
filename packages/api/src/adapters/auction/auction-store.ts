@@ -204,10 +204,7 @@ export class AuctionStore extends Context.Service<
   {
     readonly getSignups: (
       input: AuctionGroupInput
-    ) => Effect.Effect<
-      readonly (typeof AuctionSignupSummary.Type)[],
-      AuctionStoreError
-    >;
+    ) => Effect.Effect<readonly AuctionSignupSummary[], AuctionStoreError>;
     readonly getStats: (
       input: AuctionGroupInput
     ) => Effect.Effect<

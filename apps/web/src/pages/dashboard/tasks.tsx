@@ -41,7 +41,7 @@ interface TasksPageProps {
 
 const todoFormBuilder = FormBuilder.empty.addField("text", TodoTextSchema);
 
-type CreateTodo = (payload: typeof CreateTodoPayload.Type) => Promise<unknown>;
+type CreateTodo = (payload: CreateTodoPayload) => Promise<unknown>;
 
 const todoForm = FormReact.make(todoFormBuilder, {
   fields: { text: EffectTextField },

@@ -40,7 +40,7 @@ import type { SquadGroupDraft } from "@/pages/dashboard/squad-builder/squad-edit
 import type { SquadCharacterMetadata } from "@/pages/dashboard/squad-builder/squad-editor/squad-roster-workspace";
 
 // Kept as a named alias so route resource states and child props share one source type.
-type SquadGroupDetail = typeof SquadGroupDetailSchema.Type;
+type SquadGroupDetail = SquadGroupDetailSchema;
 
 const decodeSquadGroupId = Schema.decodeUnknownOption(
   Schema.NumberFromString.pipe(

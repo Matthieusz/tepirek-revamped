@@ -10,7 +10,7 @@ import {
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
 
-type Announcement = typeof AnnouncementSummary.Type;
+type Announcement = AnnouncementSummary;
 
 const removeAnnouncementById = (
   announcements: readonly Announcement[],

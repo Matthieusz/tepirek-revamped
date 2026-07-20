@@ -6,8 +6,8 @@ import * as Data from "effect/Data";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
 
-type SquadGroupDetail = typeof SquadGroupDetailSchema.Type;
-export type AvailableCharacter = typeof AvailableSquadCharacterSchema.Type;
+type SquadGroupDetail = SquadGroupDetailSchema;
+export type AvailableCharacter = AvailableSquadCharacterSchema;
 
 export const MAX_SQUAD_CHARACTERS = 10;
 

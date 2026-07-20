@@ -33,9 +33,7 @@ const professionFormBuilder = FormBuilder.empty.addField(
   CreateProfessionPayload.fields.name
 );
 
-type CreateProfession = (
-  payload: typeof CreateProfessionPayload.Type
-) => Promise<unknown>;
+type CreateProfession = (payload: CreateProfessionPayload) => Promise<unknown>;
 
 const professionForm = FormReact.make(professionFormBuilder, {
   fields: { name: EffectTextField },

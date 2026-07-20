@@ -52,7 +52,7 @@ import {
   userInitials,
 } from "./squad-group-presenters";
 
-type SharedSquadGroupSummary = typeof SharedSquadGroupSummarySchema.Type;
+type SharedSquadGroupSummary = SharedSquadGroupSummarySchema;
 type SquadListTab = "mine" | "shared" | "public";
 
 interface SquadGroupListFilterFormState {

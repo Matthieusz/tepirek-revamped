@@ -261,19 +261,19 @@ export class SkillsStore extends Context.Service<
       input: DeleteSkillInput
     ) => Effect.Effect<void, SkillsStoreError>;
     readonly listProfessions: () => Effect.Effect<
-      readonly (typeof ProfessionSummary.Type)[],
+      readonly ProfessionSummary[],
       SkillsStoreError
     >;
     readonly listRanges: () => Effect.Effect<
-      readonly (typeof RangeSummary.Type)[],
+      readonly RangeSummary[],
       SkillsStoreError
     >;
     readonly getRangeBySlug: (
       input: GetRangeBySlugInput
-    ) => Effect.Effect<typeof RangeSummary.Type | null, SkillsStoreError>;
+    ) => Effect.Effect<RangeSummary | null, SkillsStoreError>;
     readonly listSkillsByRange: (
       input: GetSkillsByRangeInput
-    ) => Effect.Effect<readonly (typeof SkillSummary.Type)[], SkillsStoreError>;
+    ) => Effect.Effect<readonly SkillSummary[], SkillsStoreError>;
   }
 >()("@tepirek-revamped/api/SkillsStore") {}
 

@@ -1,3 +1,4 @@
+/* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import {
   AUCTION_PROFESSIONS,
@@ -23,6 +24,9 @@ export const AuctionGroupPayload = Schema.Struct({
   profession: AuctionProfessionSchema,
   type: AuctionTypeSchema,
 });
+export interface AuctionGroupPayload extends Schema.Schema.Type<
+  typeof AuctionGroupPayload
+> {}
 const AuctionSignupPayloadFields = Schema.Struct({
   column: PositiveInt,
   level: PositiveInt,
@@ -41,6 +45,9 @@ export type AuctionSignupPayloadType = typeof AuctionSignupPayload.Type;
 export const RemoveAuctionSignupPayload = Schema.Struct({
   id: AuctionSignupIdSchema,
 });
+export interface RemoveAuctionSignupPayload extends Schema.Schema.Type<
+  typeof RemoveAuctionSignupPayload
+> {}
 
 export const AuctionSignupSummary = Schema.Struct({
   column: PositiveInt,
@@ -52,16 +59,26 @@ export const AuctionSignupSummary = Schema.Struct({
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });
+export interface AuctionSignupSummary extends Schema.Schema.Type<
+  typeof AuctionSignupSummary
+> {}
 export const AuctionStats = Schema.Struct({
   totalSignups: Schema.Number,
   uniqueUsers: Schema.Number,
 });
+export interface AuctionStats extends Schema.Schema.Type<typeof AuctionStats> {}
 export const ToggleAuctionSignupSuccess = Schema.Struct({
   action: Schema.Literals(["added", "removed"]),
 });
+export interface ToggleAuctionSignupSuccess extends Schema.Schema.Type<
+  typeof ToggleAuctionSignupSuccess
+> {}
 export const RemoveAuctionSignupSuccess = Schema.Struct({
   success: Schema.Literal(true),
 });
+export interface RemoveAuctionSignupSuccess extends Schema.Schema.Type<
+  typeof RemoveAuctionSignupSuccess
+> {}
 
 export class AuctionUnauthorized extends Schema.TaggedErrorClass<AuctionUnauthorized>()(
   "AuctionUnauthorized",

@@ -1,3 +1,4 @@
+/* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
@@ -9,10 +10,16 @@ import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 export { EventIdSchema, HeroIdSchema };
 
 export const HeroIdPayload = Schema.Struct({ heroId: HeroIdSchema });
+export interface HeroIdPayload extends Schema.Schema.Type<
+  typeof HeroIdPayload
+> {}
 export const RankingPayload = Schema.Struct({
   eventId: Schema.optionalKey(EventIdSchema),
   heroId: Schema.optionalKey(HeroIdSchema),
 });
+export interface RankingPayload extends Schema.Schema.Type<
+  typeof RankingPayload
+> {}
 export const HeroStats = Schema.Struct({
   currentPointWorth: Schema.Number,
   heroId: HeroIdSchema,
@@ -20,6 +27,7 @@ export const HeroStats = Schema.Struct({
   totalBets: Schema.Number,
   totalPoints: Schema.Number,
 });
+export interface HeroStats extends Schema.Schema.Type<typeof HeroStats> {}
 export const RankingRow = Schema.Struct({
   totalBets: Schema.Number,
   totalEarnings: Schema.String,
@@ -28,11 +36,15 @@ export const RankingRow = Schema.Struct({
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });
+export interface RankingRow extends Schema.Schema.Type<typeof RankingRow> {}
 export const RankingResult = Schema.Struct({
   pointWorth: Schema.NullOr(Schema.Number),
   ranking: Schema.Array(RankingRow),
   totalBets: Schema.Number,
 });
+export interface RankingResult extends Schema.Schema.Type<
+  typeof RankingResult
+> {}
 
 export class RankingUnauthorized extends Schema.TaggedErrorClass<RankingUnauthorized>()(
   "RankingUnauthorized",

@@ -113,7 +113,7 @@ export class TodoStore extends Context.Service<
     ) => Effect.Effect<void, TodoStoreError>;
     readonly list: (
       input: ListTodosInput
-    ) => Effect.Effect<readonly (typeof TodoSummary.Type)[], TodoStoreError>;
+    ) => Effect.Effect<readonly TodoSummary[], TodoStoreError>;
     readonly toggle: (
       input: ToggleTodoInput
     ) => Effect.Effect<void, TodoStoreError>;

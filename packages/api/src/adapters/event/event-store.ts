@@ -101,7 +101,7 @@ export class EventStore extends Context.Service<
       input: DeleteEventInput
     ) => Effect.Effect<void, EventStoreError>;
     readonly list: () => Effect.Effect<
-      readonly (typeof EventSummary.Type)[],
+      readonly EventSummary[],
       EventStoreError
     >;
     readonly toggleActive: (

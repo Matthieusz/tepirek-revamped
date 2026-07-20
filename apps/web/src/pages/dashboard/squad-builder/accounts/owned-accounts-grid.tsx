@@ -75,7 +75,7 @@ import { AccountSharingPanel } from "@/pages/dashboard/squad-builder/accounts/ac
 import { MargonemCharacterAvatarImage } from "@/pages/dashboard/squad-builder/margonem-character-avatar-image";
 import { getProfessionPresentation } from "@/pages/dashboard/squad-builder/profession-presenters";
 
-type OwnedAccount = typeof OwnedMargonemAccountSummarySchema.Type;
+type OwnedAccount = OwnedMargonemAccountSummarySchema;
 
 type RenameAccount = (displayName: string) => Promise<unknown>;
 
@@ -129,7 +129,7 @@ interface AccountRefetchPreview {
   };
 }
 
-type AccountRefetchPreviewApi = typeof PreviewAccountRefetchSuccess.Type;
+type AccountRefetchPreviewApi = PreviewAccountRefetchSuccess;
 
 interface OwnedAccountRowProps {
   readonly account: OwnedAccount;

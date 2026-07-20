@@ -21,12 +21,11 @@ interface SquadGroupIdInput {
   readonly groupId: number;
 }
 
-export type AvailableSquadCharacter = typeof AvailableSquadCharacterSchema.Type;
-export type GlobalSquadGroupSummary = typeof GlobalSquadGroupSummarySchema.Type;
-type SquadGroupDetail = typeof SquadGroupDetailSchema.Type;
-export type SquadGroupDetailCharacter =
-  typeof SquadGroupDetailCharacterSchema.Type;
-export type SquadGroupSummary = typeof SquadGroupSummarySchema.Type;
+export type AvailableSquadCharacter = AvailableSquadCharacterSchema;
+export type GlobalSquadGroupSummary = GlobalSquadGroupSummarySchema;
+type SquadGroupDetail = SquadGroupDetailSchema;
+export type SquadGroupDetailCharacter = SquadGroupDetailCharacterSchema;
+export type SquadGroupSummary = SquadGroupSummarySchema;
 
 interface CreateSquadGroupInput {
   readonly name: string;

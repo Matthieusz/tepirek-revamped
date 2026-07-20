@@ -1,3 +1,4 @@
+/* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import {
   DEFAULT_EVENT_ICON_ID,
@@ -19,11 +20,20 @@ export const CreateEventPayload = Schema.Struct({
   icon: Schema.optionalKey(EventIcon),
   name: Schema.NonEmptyString,
 });
+export interface CreateEventPayload extends Schema.Schema.Type<
+  typeof CreateEventPayload
+> {}
 export const DeleteEventPayload = Schema.Struct({ id: EventIdSchema });
+export interface DeleteEventPayload extends Schema.Schema.Type<
+  typeof DeleteEventPayload
+> {}
 export const ToggleEventActivePayload = Schema.Struct({
   active: Schema.Boolean,
   id: EventIdSchema,
 });
+export interface ToggleEventActivePayload extends Schema.Schema.Type<
+  typeof ToggleEventActivePayload
+> {}
 
 export const EventSummary = Schema.Struct({
   active: Schema.NullOr(Schema.Boolean),
@@ -33,6 +43,7 @@ export const EventSummary = Schema.Struct({
   id: EventIdSchema,
   name: Schema.String,
 });
+export interface EventSummary extends Schema.Schema.Type<typeof EventSummary> {}
 
 export class EventUnauthorized extends Schema.TaggedErrorClass<EventUnauthorized>()(
   "EventUnauthorized",

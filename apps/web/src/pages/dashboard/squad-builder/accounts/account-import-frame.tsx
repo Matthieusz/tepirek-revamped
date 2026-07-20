@@ -117,8 +117,8 @@ const ProfileUrlsField: FormReact.FieldComponent<
 };
 
 type PreviewOwnedAccountImports = (
-  payload: typeof PreviewOwnedAccountImportsPayload.Type
-) => Promise<typeof PreviewOwnedAccountImportsSuccess.Type>;
+  payload: PreviewOwnedAccountImportsPayload
+) => Promise<PreviewOwnedAccountImportsSuccess>;
 
 const accountPreviewFormBuilder = FormBuilder.empty.addField(
   "profileUrls",

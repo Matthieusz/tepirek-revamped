@@ -1,3 +1,4 @@
+/* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 import * as Schema from "effect/Schema";
 
 import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-account-id.ts";
@@ -71,10 +72,16 @@ export const MargonemAccountRefetchDiffSchema = Schema.Struct({
   removed: Schema.Array(RemovedMargonemCharacterDiffSchema),
   unchangedCount: Schema.Number,
 });
+export interface MargonemAccountRefetchDiffSchema extends Schema.Schema.Type<
+  typeof MargonemAccountRefetchDiffSchema
+> {}
 
 export const PreviewAccountRefetchPayload = Schema.Struct({
   accountId: MargonemAccountIdSchema,
 });
+export interface PreviewAccountRefetchPayload extends Schema.Schema.Type<
+  typeof PreviewAccountRefetchPayload
+> {}
 export const PreviewAccountRefetchSuccess = Schema.Struct({
   accountId: MargonemAccountIdSchema,
   diff: MargonemAccountRefetchDiffSchema,
@@ -84,10 +91,16 @@ export const PreviewAccountRefetchSuccess = Schema.Struct({
   profileId: MargonemProfileIdSchema,
   refetchPreviewId: PendingMargonemAccountRefetchIdSchema,
 });
+export interface PreviewAccountRefetchSuccess extends Schema.Schema.Type<
+  typeof PreviewAccountRefetchSuccess
+> {}
 
 export const ApplyAccountRefetchPayload = Schema.Struct({
   refetchPreviewId: PendingMargonemAccountRefetchIdSchema,
 });
+export interface ApplyAccountRefetchPayload extends Schema.Schema.Type<
+  typeof ApplyAccountRefetchPayload
+> {}
 export const ApplyAccountRefetchSuccess = Schema.Struct({
   accountId: MargonemAccountIdSchema,
   addedCharacterCount: Schema.Number,
@@ -97,3 +110,6 @@ export const ApplyAccountRefetchSuccess = Schema.Struct({
   removedSquadCharacterCount: Schema.Number,
   updatedCharacterCount: Schema.Number,
 });
+export interface ApplyAccountRefetchSuccess extends Schema.Schema.Type<
+  typeof ApplyAccountRefetchSuccess
+> {}

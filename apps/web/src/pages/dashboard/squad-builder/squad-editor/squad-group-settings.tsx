@@ -40,7 +40,7 @@ import {
 import { userInitials } from "../squads/squad-group-presenters";
 
 type InviteTarget = typeof SquadEditorInviteTargetSchema.Type;
-type EditorGrant = typeof SquadGroupEditorGrantSummarySchema.Type;
+type EditorGrant = SquadGroupEditorGrantSummarySchema;
 
 interface SquadGroupSettingsProps {
   readonly groupId: number;

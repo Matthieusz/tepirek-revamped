@@ -36,7 +36,7 @@ const announcementFormBuilder = FormBuilder.empty
   .addField("description", CreateAnnouncementPayload.fields.description);
 
 type CreateAnnouncement = (
-  payload: typeof CreateAnnouncementPayload.Type
+  payload: CreateAnnouncementPayload
 ) => Promise<unknown>;
 
 const announcementForm = FormReact.make(announcementFormBuilder, {

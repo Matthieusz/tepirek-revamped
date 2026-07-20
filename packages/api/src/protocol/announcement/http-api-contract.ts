@@ -1,3 +1,4 @@
+/* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
@@ -13,15 +14,24 @@ export const CreateAnnouncementPayload = Schema.Struct({
   description: NonEmptyString,
   title: NonEmptyString,
 });
+export interface CreateAnnouncementPayload extends Schema.Schema.Type<
+  typeof CreateAnnouncementPayload
+> {}
 export const DeleteAnnouncementPayload = Schema.Struct({
   id: AnnouncementIdSchema,
 });
+export interface DeleteAnnouncementPayload extends Schema.Schema.Type<
+  typeof DeleteAnnouncementPayload
+> {}
 
 export const AnnouncementAuthor = Schema.Struct({
   id: AppUserIdSchema,
   image: Schema.NullOr(Schema.String),
   name: Schema.NullOr(Schema.String),
 });
+export interface AnnouncementAuthor extends Schema.Schema.Type<
+  typeof AnnouncementAuthor
+> {}
 export const AnnouncementSummary = Schema.Struct({
   createdAt: Schema.DateFromString,
   description: Schema.String,
@@ -29,6 +39,9 @@ export const AnnouncementSummary = Schema.Struct({
   title: Schema.String,
   user: Schema.NullOr(AnnouncementAuthor),
 });
+export interface AnnouncementSummary extends Schema.Schema.Type<
+  typeof AnnouncementSummary
+> {}
 
 export class AnnouncementUnauthorized extends Schema.TaggedErrorClass<AnnouncementUnauthorized>()(
   "AnnouncementUnauthorized",

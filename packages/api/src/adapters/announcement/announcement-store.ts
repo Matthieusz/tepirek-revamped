@@ -113,7 +113,7 @@ export class AnnouncementStore extends Context.Service<
       input: DeleteAnnouncementInput
     ) => Effect.Effect<void, AnnouncementStoreError>;
     readonly list: () => Effect.Effect<
-      readonly (typeof AnnouncementSummary.Type)[],
+      readonly AnnouncementSummary[],
       AnnouncementStoreError
     >;
   }

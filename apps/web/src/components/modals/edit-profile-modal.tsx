@@ -34,9 +34,7 @@ const profileFormBuilder = FormBuilder.empty.addField(
   UpdateProfilePayload.fields.name
 );
 
-type UpdateProfile = (
-  payload: typeof UpdateProfilePayload.Type
-) => Promise<unknown>;
+type UpdateProfile = (payload: UpdateProfilePayload) => Promise<unknown>;
 
 const profileForm = FormReact.make(profileFormBuilder, {
   fields: { name: EffectTextField },

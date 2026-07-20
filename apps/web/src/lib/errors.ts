@@ -106,7 +106,7 @@ type ApiError =
   | InstanceType<typeof SquadBuilderUpstreamUnavailable>;
 
 type PreviewOwnedAccountImportFailure = Extract<
-  (typeof PreviewOwnedAccountImportsSuccess.Type)["items"][number],
+  PreviewOwnedAccountImportsSuccess["items"][number],
   { readonly _tag: "PreviewFailed" }
 >;
 

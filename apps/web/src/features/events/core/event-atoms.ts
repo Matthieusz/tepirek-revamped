@@ -11,7 +11,7 @@ import {
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
 
-type Event = typeof EventSummary.Type;
+type Event = EventSummary;
 
 const removeEventById = (
   events: readonly Event[],

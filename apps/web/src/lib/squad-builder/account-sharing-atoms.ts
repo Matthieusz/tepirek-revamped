@@ -44,8 +44,8 @@ const AccountInviteTargetsKeySchema = Schema.fromJsonString(
   Schema.Tuple([Schema.Number, Schema.String])
 );
 
-type AccountAccessGrant = typeof AccountAccessGrantSummarySchema.Type;
-type AccountInviteTarget = typeof AccountInviteTargetSchema.Type;
+type AccountAccessGrant = AccountAccessGrantSummarySchema;
+type AccountInviteTarget = AccountInviteTargetSchema;
 
 const disabledAccountAccessGrantsAtom = Atom.make<
   AsyncResult.AsyncResult<readonly AccountAccessGrant[], never>

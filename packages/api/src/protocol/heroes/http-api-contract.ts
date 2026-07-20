@@ -1,3 +1,4 @@
+/* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
@@ -18,8 +19,17 @@ export const CreateHeroPayload = Schema.Struct({
   level: Schema.optionalKey(HeroLevel),
   name: Schema.NonEmptyString,
 });
+export interface CreateHeroPayload extends Schema.Schema.Type<
+  typeof CreateHeroPayload
+> {}
 export const DeleteHeroPayload = Schema.Struct({ id: HeroIdSchema });
+export interface DeleteHeroPayload extends Schema.Schema.Type<
+  typeof DeleteHeroPayload
+> {}
 export const HeroesByEventPayload = Schema.Struct({ eventId: EventIdSchema });
+export interface HeroesByEventPayload extends Schema.Schema.Type<
+  typeof HeroesByEventPayload
+> {}
 
 export const HeroSummary = Schema.Struct({
   eventId: EventIdSchema,
@@ -29,6 +39,7 @@ export const HeroSummary = Schema.Struct({
   name: Schema.String,
   pointWorth: Schema.String,
 });
+export interface HeroSummary extends Schema.Schema.Type<typeof HeroSummary> {}
 
 export class HeroesUnauthorized extends Schema.TaggedErrorClass<HeroesUnauthorized>()(
   "HeroesUnauthorized",

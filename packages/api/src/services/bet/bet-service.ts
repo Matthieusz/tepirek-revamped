@@ -14,13 +14,13 @@ import type {
 } from "../../protocol/bet/http-api-contract.ts";
 import type { BetError } from "./bet-errors.ts";
 
-export type CreatedBetResult = typeof CreatedBet.Type;
-export type BetSummaryResult = typeof BetSummary.Type;
-export type BetByEventSummaryResult = typeof BetByEventSummary.Type;
-export type StoredBetMemberResult = typeof StoredBetMember.Type;
+export type CreatedBetResult = CreatedBet;
+export type BetSummaryResult = BetSummary;
+export type BetByEventSummaryResult = BetByEventSummary;
+export type StoredBetMemberResult = StoredBetMember;
 export type LatestBetForCopyResult = typeof LatestBetForCopy.Type;
-export type PaginatedBetsResult = typeof PaginatedBets.Type;
-export type MutationSuccessResult = typeof MutationSuccess.Type;
+export type PaginatedBetsResult = PaginatedBets;
+export type MutationSuccessResult = MutationSuccess;
 
 export interface CreateBetInput {
   readonly createdAt: Date;

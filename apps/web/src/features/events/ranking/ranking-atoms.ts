@@ -59,7 +59,7 @@ const rankingByKeyAtom = Atom.family((key: RankingKey) => {
 export const rankingAtom = (payload: RankingInput) =>
   rankingByKeyAtom(rankingKey(payload));
 
-type HeroStatsData = typeof HeroStats.Type;
+type HeroStatsData = HeroStats;
 
 const HERO_STATS_PLACEHOLDER: HeroStatsData = {
   currentPointWorth: 0,

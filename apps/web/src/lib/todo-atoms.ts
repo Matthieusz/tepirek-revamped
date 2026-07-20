@@ -10,7 +10,7 @@ import {
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
 
-type Todo = typeof TodoSummary.Type;
+type Todo = TodoSummary;
 
 const removeTodoById = (
   todos: readonly Todo[],

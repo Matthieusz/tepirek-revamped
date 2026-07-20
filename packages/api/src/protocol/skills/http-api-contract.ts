@@ -1,3 +1,4 @@
+/* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 /* eslint-disable max-classes-per-file -- Contract-only tagged error schemas are collocated with endpoint definitions. */
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
@@ -23,11 +24,17 @@ export const SlugSchema = Schema.NonEmptyString.annotate({
 export const CreateProfessionPayload = Schema.Struct({
   name: Schema.NonEmptyString,
 });
+export interface CreateProfessionPayload extends Schema.Schema.Type<
+  typeof CreateProfessionPayload
+> {}
 export const CreateRangePayload = Schema.Struct({
   image: Schema.NonEmptyString,
   level: SkillLevel,
   name: Schema.NonEmptyString,
 });
+export interface CreateRangePayload extends Schema.Schema.Type<
+  typeof CreateRangePayload
+> {}
 export const CreateSkillPayload = Schema.Struct({
   link: Schema.NonEmptyString,
   mastery: Schema.Boolean,
@@ -35,17 +42,35 @@ export const CreateSkillPayload = Schema.Struct({
   professionId: ProfessionIdSchema,
   rangeId: SkillRangeIdSchema,
 });
+export interface CreateSkillPayload extends Schema.Schema.Type<
+  typeof CreateSkillPayload
+> {}
 export const DeleteRangePayload = Schema.Struct({ id: SkillRangeIdSchema });
+export interface DeleteRangePayload extends Schema.Schema.Type<
+  typeof DeleteRangePayload
+> {}
 export const DeleteSkillPayload = Schema.Struct({ id: SkillIdSchema });
+export interface DeleteSkillPayload extends Schema.Schema.Type<
+  typeof DeleteSkillPayload
+> {}
 export const GetRangeBySlugPayload = Schema.Struct({ slug: SlugSchema });
+export interface GetRangeBySlugPayload extends Schema.Schema.Type<
+  typeof GetRangeBySlugPayload
+> {}
 export const GetSkillsByRangePayload = Schema.Struct({
   rangeId: SkillRangeIdSchema,
 });
+export interface GetSkillsByRangePayload extends Schema.Schema.Type<
+  typeof GetSkillsByRangePayload
+> {}
 
 export const ProfessionSummary = Schema.Struct({
   id: ProfessionIdSchema,
   name: Schema.String,
 });
+export interface ProfessionSummary extends Schema.Schema.Type<
+  typeof ProfessionSummary
+> {}
 export const RangeSummary = Schema.Struct({
   id: SkillRangeIdSchema,
   image: Schema.NullOr(Schema.String),
@@ -53,6 +78,7 @@ export const RangeSummary = Schema.Struct({
   name: Schema.String,
   slug: Schema.String,
 });
+export interface RangeSummary extends Schema.Schema.Type<typeof RangeSummary> {}
 export const SkillSummary = Schema.Struct({
   addedBy: Schema.NullOr(Schema.String),
   addedByImage: Schema.NullOr(Schema.String),
@@ -63,6 +89,7 @@ export const SkillSummary = Schema.Struct({
   professionId: ProfessionIdSchema,
   professionName: Schema.String,
 });
+export interface SkillSummary extends Schema.Schema.Type<typeof SkillSummary> {}
 
 export class SkillsUnauthorized extends Schema.TaggedErrorClass<SkillsUnauthorized>()(
   "SkillsUnauthorized",

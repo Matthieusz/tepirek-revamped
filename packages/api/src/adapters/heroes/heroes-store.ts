@@ -95,12 +95,12 @@ export class HeroesStore extends Context.Service<
       input: DeleteHeroInput
     ) => Effect.Effect<void, HeroesStoreError>;
     readonly list: () => Effect.Effect<
-      readonly (typeof HeroSummary.Type)[],
+      readonly HeroSummary[],
       HeroesStoreError
     >;
     readonly listByEvent: (
       input: ListHeroesByEventInput
-    ) => Effect.Effect<readonly (typeof HeroSummary.Type)[], HeroesStoreError>;
+    ) => Effect.Effect<readonly HeroSummary[], HeroesStoreError>;
   }
 >()("@tepirek-revamped/api/HeroesStore") {}
 

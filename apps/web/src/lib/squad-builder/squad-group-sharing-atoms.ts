@@ -46,7 +46,7 @@ const SquadEditorInviteTargetsKeySchema = Schema.fromJsonString(
 );
 
 type SquadEditorInviteTarget = typeof SquadEditorInviteTargetSchema.Type;
-type SquadGroupEditorGrant = typeof SquadGroupEditorGrantSummarySchema.Type;
+type SquadGroupEditorGrant = SquadGroupEditorGrantSummarySchema;
 
 const disabledSquadGroupEditorGrantsAtom = Atom.make<
   AsyncResult.AsyncResult<readonly SquadGroupEditorGrant[], never>

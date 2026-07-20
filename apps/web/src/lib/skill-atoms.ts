@@ -14,8 +14,8 @@ import {
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
 
-type SkillRange = typeof RangeSummary.Type;
-type Skill = typeof SkillSummary.Type;
+type SkillRange = RangeSummary;
+type Skill = SkillSummary;
 
 const emptySkills: readonly Skill[] = [];
 const disabledSkillsByRangeAtom = Atom.make(AsyncResult.success(emptySkills));

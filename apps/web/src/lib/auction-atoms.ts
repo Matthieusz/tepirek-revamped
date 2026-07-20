@@ -11,7 +11,7 @@ import {
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
 
-type AuctionSignup = typeof AuctionSignupSummary.Type;
+type AuctionSignup = AuctionSignupSummary;
 
 const removeAuctionSignupById = (
   signups: readonly AuctionSignup[],

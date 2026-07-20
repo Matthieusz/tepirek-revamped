@@ -11,10 +11,10 @@ import type {
 } from "../../protocol/vault/http-api-contract.ts";
 import type { VaultError } from "./vault-errors.ts";
 
-export type DistributeGoldResult = typeof DistributeGoldSuccess.Type;
-export type UserStatsResultRow = typeof UserStatsRow.Type;
-export type VaultResultRow = typeof VaultRow.Type;
-export type MutationSuccessResult = typeof MutationSuccess.Type;
+export type DistributeGoldResult = DistributeGoldSuccess;
+export type UserStatsResultRow = UserStatsRow;
+export type VaultResultRow = VaultRow;
+export type MutationSuccessResult = MutationSuccess;
 
 export interface DistributeGoldInput {
   readonly goldAmount: number;

@@ -12,7 +12,7 @@ import {
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
 
-type VaultEntry = typeof VaultRow.Type;
+type VaultEntry = VaultRow;
 
 interface VaultInput {
   readonly eventId?: number | undefined;

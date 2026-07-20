@@ -33,8 +33,8 @@ import { sessionAtom } from "@/lib/user-atoms";
 import { userInitials } from "@/pages/dashboard/squad-builder/accounts/account-presenters";
 import { SectionFailure } from "@/pages/dashboard/squad-builder/accounts/section-failure";
 
-type AccountAccessGrant = typeof AccountAccessGrantSummarySchema.Type;
-type AccountInviteTarget = typeof AccountInviteTargetSchema.Type;
+type AccountAccessGrant = AccountAccessGrantSummarySchema;
+type AccountInviteTarget = AccountInviteTargetSchema;
 
 const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
   const [debounced, setDebounced] = useState(value);

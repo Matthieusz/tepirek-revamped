@@ -36,9 +36,7 @@ const rangeFormBuilder = FormBuilder.empty
   .addField("level", CreateRangePayload.fields.level)
   .addField("image", CreateRangePayload.fields.image);
 
-type CreateRange = (
-  payload: typeof CreateRangePayload.Type
-) => Promise<unknown>;
+type CreateRange = (payload: CreateRangePayload) => Promise<unknown>;
 
 const rangeForm = FormReact.make(rangeFormBuilder, {
   fields: {

@@ -11,7 +11,7 @@ import {
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
 
-type Hero = typeof HeroSummary.Type;
+type Hero = HeroSummary;
 
 const removeHeroById = (
   heroes: readonly Hero[],

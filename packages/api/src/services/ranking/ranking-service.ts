@@ -9,8 +9,8 @@ import type {
 } from "../../protocol/ranking/http-api-contract.ts";
 import type { RankingError } from "./ranking-errors.ts";
 
-export type HeroStatsResult = typeof HeroStats.Type;
-export type RankingResultType = typeof RankingResult.Type;
+export type HeroStatsResult = HeroStats;
+export type RankingResultType = RankingResult;
 
 export interface GetRankingInput {
   readonly eventId?: EventId | undefined;
