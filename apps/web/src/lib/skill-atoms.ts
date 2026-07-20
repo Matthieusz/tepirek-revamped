@@ -1,8 +1,3 @@
-import {
-  ProfessionIdSchema,
-  SkillIdSchema,
-  SkillRangeIdSchema,
-} from "@tepirek-revamped/api/protocol/skills/http-api-contract";
 import type {
   RangeSummary,
   SkillSummary,
@@ -11,6 +6,7 @@ import { Effect } from "effect";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { asProfessionId, asSkillId, asSkillRangeId } from "@/lib/branded-ids";
 import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
@@ -69,7 +65,7 @@ const skillsByRangeIdAtom = Atom.family((rangeId: number) =>
     Effect.gen(function* listSkillsByRangeEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.skills.listSkillsByRange({
-        payload: { rangeId: SkillRangeIdSchema.make(rangeId) },
+        payload: { rangeId: yield* asSkillRangeId(rangeId) },
       });
     })
   )
@@ -124,8 +120,8 @@ export const createSkillAtom = appHttpApiFn(
     const skill = yield* client.skills.createSkill({
       payload: {
         ...payload,
-        professionId: ProfessionIdSchema.make(payload.professionId),
-        rangeId: SkillRangeIdSchema.make(payload.rangeId),
+        professionId: yield* asProfessionId(payload.professionId),
+        rangeId: yield* asSkillRangeId(payload.rangeId),
       },
     });
     get.refresh(skillsByRangeAtom(payload.rangeId));
@@ -139,7 +135,7 @@ const deleteSkillRangeRequestAtom = appHttpApiFn(
   }) {
     const client = yield* AppHttpApiClient;
     return yield* client.skills.deleteRange({
-      payload: { id: SkillRangeIdSchema.make(input.id) },
+      payload: { id: yield* asSkillRangeId(input.id) },
     });
   })
 );
@@ -150,7 +146,7 @@ const deleteSkillRequestAtom = appHttpApiFn(
   }) {
     const client = yield* AppHttpApiClient;
     return yield* client.skills.deleteSkill({
-      payload: { id: SkillIdSchema.make(input.id) },
+      payload: { id: yield* asSkillId(input.id) },
     });
   })
 );

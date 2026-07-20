@@ -1,7 +1,7 @@
-import { UserId } from "@tepirek-revamped/api/protocol/user/http-api-contract";
 import { Effect } from "effect";
 import type * as Atom from "effect/unstable/reactivity/Atom";
 
+import { asUserId } from "@/lib/branded-ids";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
@@ -54,7 +54,7 @@ export const setVerifiedAtom = appHttpApiFn(
   ) {
     const client = yield* AppHttpApiClient;
     const user = yield* client.user.setVerified({
-      payload: { ...payload, userId: UserId.make(payload.userId) },
+      payload: { ...payload, userId: yield* asUserId(payload.userId) },
     });
     get.refresh(usersAtom);
     get.refresh(verifiedUsersAtom);
@@ -69,7 +69,7 @@ export const setRoleAtom = appHttpApiFn(
   ) {
     const client = yield* AppHttpApiClient;
     const user = yield* client.user.setRole({
-      payload: { ...payload, userId: UserId.make(payload.userId) },
+      payload: { ...payload, userId: yield* asUserId(payload.userId) },
     });
     get.refresh(usersAtom);
     get.refresh(verifiedUsersAtom);
@@ -84,7 +84,7 @@ export const updateUserNameAtom = appHttpApiFn(
   ) {
     const client = yield* AppHttpApiClient;
     const user = yield* client.user.updateUserName({
-      payload: { ...payload, userId: UserId.make(payload.userId) },
+      payload: { ...payload, userId: yield* asUserId(payload.userId) },
     });
     get.refresh(usersAtom);
     get.refresh(verifiedUsersAtom);
@@ -99,7 +99,7 @@ export const deleteUserAtom = appHttpApiFn(
   ) {
     const client = yield* AppHttpApiClient;
     const user = yield* client.user.deleteUser({
-      payload: { userId: UserId.make(payload.userId) },
+      payload: { userId: yield* asUserId(payload.userId) },
     });
     get.refresh(usersAtom);
     get.refresh(verifiedUsersAtom);

@@ -1,13 +1,9 @@
-import { UserId } from "@tepirek-revamped/api/protocol/user/http-api-contract";
-import {
-  EventIdSchema,
-  HeroIdSchema,
-} from "@tepirek-revamped/api/protocol/vault/http-api-contract";
 import type { VaultRow } from "@tepirek-revamped/api/protocol/vault/http-api-contract";
 import { Effect } from "effect";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
 import { oldestUnpaidEventAtom } from "@/features/events/ranking/ranking-atoms";
+import { asEventId, asHeroId, asUserId } from "@/lib/branded-ids";
 import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
@@ -27,7 +23,7 @@ const vaultKey = (payload: VaultInput): VaultKey =>
   String(payload.eventId ?? "all");
 
 const vaultInputFromKey = (key: VaultKey) =>
-  key === "all" ? {} : { eventId: EventIdSchema.make(Number(key)) };
+  key === "all" ? {} : { eventId: Number(key) };
 
 const setPaidOutForUser = (
   rows: readonly VaultEntry[],
@@ -43,7 +39,12 @@ const vaultByKeyAtom = Atom.family((key: VaultKey) => {
   return appHttpApiAtom(
     Effect.gen(function* getVaultEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.vault.getVault({ payload });
+      return yield* client.vault.getVault({
+        payload:
+          payload.eventId === undefined
+            ? {}
+            : { eventId: yield* asEventId(payload.eventId) },
+      });
     })
   );
 });
@@ -57,7 +58,12 @@ const userStatsByKeyAtom = Atom.family((key: VaultKey) => {
   return appHttpApiAtom(
     Effect.gen(function* getUserStatsEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.vault.getUserStats({ payload });
+      return yield* client.vault.getUserStats({
+        payload:
+          payload.eventId === undefined
+            ? {}
+            : { eventId: yield* asEventId(payload.eventId) },
+      });
     })
   );
 });
@@ -79,7 +85,7 @@ export const distributeGoldAtom = appHttpApiFn(
     const result = yield* client.vault.distributeGold({
       payload: {
         goldAmount: payload.goldAmount,
-        heroId: HeroIdSchema.make(payload.heroId),
+        heroId: yield* asHeroId(payload.heroId),
       },
     });
 
@@ -109,8 +115,8 @@ const togglePaidOutRequestAtom = appHttpApiFn(
     const result = yield* client.vault.togglePaidOut({
       payload: {
         ...payload,
-        eventId: EventIdSchema.make(payload.eventId),
-        userId: UserId.make(payload.userId),
+        eventId: yield* asEventId(payload.eventId),
+        userId: yield* asUserId(payload.userId),
       },
     });
     get.refresh(oldestUnpaidEventAtom);

@@ -1,9 +1,9 @@
-import { AuctionSignupIdSchema } from "@tepirek-revamped/api/protocol/auction/http-api-contract";
 import type { AuctionSignupSummary } from "@tepirek-revamped/api/protocol/auction/http-api-contract";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import { Effect } from "effect";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { asAuctionSignupId } from "@/lib/branded-ids";
 import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
@@ -106,7 +106,7 @@ const removeAuctionSignupFromGroupByGroupAtom = Atom.family(
           ) {
             const client = yield* AppHttpApiClient;
             const result = yield* client.auction.removeAuctionSignup({
-              payload: { id: AuctionSignupIdSchema.make(payload.id) },
+              payload: { id: yield* asAuctionSignupId(payload.id) },
             });
             get.refresh(auctionSignupsByGroupAtom(key));
             get.refresh(auctionStatsByGroupAtom(key));

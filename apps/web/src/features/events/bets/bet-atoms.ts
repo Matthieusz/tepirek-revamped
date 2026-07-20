@@ -1,12 +1,7 @@
-import {
-  BetIdSchema,
-  EventIdSchema,
-  HeroIdSchema,
-} from "@tepirek-revamped/api/protocol/bet/http-api-contract";
-import { UserId } from "@tepirek-revamped/api/protocol/user/http-api-contract";
 import { Effect } from "effect";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { asBetId, asEventId, asHeroId, asUserId } from "@/lib/branded-ids";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
@@ -55,10 +50,10 @@ const paginatedBetsByKeyAtom = Atom.family((key: PaginatedBetKey) => {
         payload: {
           ...(payload.eventId === undefined
             ? {}
-            : { eventId: EventIdSchema.make(payload.eventId) }),
+            : { eventId: yield* asEventId(payload.eventId) }),
           ...(payload.heroId === undefined
             ? {}
-            : { heroId: HeroIdSchema.make(payload.heroId) }),
+            : { heroId: yield* asHeroId(payload.heroId) }),
           ...(payload.limit === undefined ? {} : { limit: payload.limit }),
           ...(payload.page === undefined ? {} : { page: payload.page }),
         },
@@ -89,13 +84,12 @@ export const createBetAtom = appHttpApiFn(
   ) {
     const client = yield* AppHttpApiClient;
     const [firstUserId, ...remainingUserIds] = payload.userIds;
+    const decodedRemainingUserIds =
+      yield* Effect.forEach(asUserId)(remainingUserIds);
     const bet = yield* client.bet.create({
       payload: {
-        heroId: HeroIdSchema.make(payload.heroId),
-        userIds: [
-          UserId.make(firstUserId),
-          ...remainingUserIds.map((userId) => UserId.make(userId)),
-        ],
+        heroId: yield* asHeroId(payload.heroId),
+        userIds: [yield* asUserId(firstUserId), ...decodedRemainingUserIds],
       },
     });
     get.refresh(latestBetForCopyAtom);
@@ -114,7 +108,7 @@ export const deleteBetAtom = appHttpApiFn(
   ) {
     const client = yield* AppHttpApiClient;
     const result = yield* client.bet.delete({
-      payload: { id: BetIdSchema.make(input.id) },
+      payload: { id: yield* asBetId(input.id) },
     });
     get.refresh(paginatedBetsAtom({ ...input.refreshInput, page: 1 }));
     return result;
@@ -133,13 +127,12 @@ export const editBetAtom = appHttpApiFn(
   ) {
     const client = yield* AppHttpApiClient;
     const [firstUserId, ...remainingUserIds] = payload.newUserIds;
+    const decodedRemainingUserIds =
+      yield* Effect.forEach(asUserId)(remainingUserIds);
     const result = yield* client.bet.edit({
       payload: {
-        betId: BetIdSchema.make(payload.betId),
-        newUserIds: [
-          UserId.make(firstUserId),
-          ...remainingUserIds.map((userId) => UserId.make(userId)),
-        ],
+        betId: yield* asBetId(payload.betId),
+        newUserIds: [yield* asUserId(firstUserId), ...decodedRemainingUserIds],
       },
     });
     get.refresh(paginatedBetsAtom(payload.refreshInput));

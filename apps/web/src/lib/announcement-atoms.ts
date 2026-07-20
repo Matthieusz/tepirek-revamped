@@ -1,8 +1,8 @@
-import { AnnouncementIdSchema } from "@tepirek-revamped/api/protocol/announcement/http-api-contract";
 import type { AnnouncementSummary } from "@tepirek-revamped/api/protocol/announcement/http-api-contract";
 import { Effect } from "effect";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { asAnnouncementId } from "@/lib/branded-ids";
 import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
@@ -46,7 +46,7 @@ const deleteAnnouncementRequestAtom = appHttpApiFn(
   }) {
     const client = yield* AppHttpApiClient;
     return yield* client.announcement.deleteAnnouncement({
-      payload: { id: AnnouncementIdSchema.make(input.id) },
+      payload: { id: yield* asAnnouncementId(input.id) },
     });
   })
 );

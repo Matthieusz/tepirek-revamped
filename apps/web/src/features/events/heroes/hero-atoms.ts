@@ -1,12 +1,9 @@
-import {
-  EventIdSchema,
-  HeroIdSchema,
-} from "@tepirek-revamped/api/protocol/heroes/http-api-contract";
 import type { HeroSummary } from "@tepirek-revamped/api/protocol/heroes/http-api-contract";
 import { Effect } from "effect";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { asEventId, asHeroId } from "@/lib/branded-ids";
 import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
@@ -35,7 +32,7 @@ const heroesByEventIdAtom = Atom.family((eventId: number) =>
     Effect.gen(function* listHeroesByEventEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.heroes.listHeroesByEvent({
-        payload: { eventId: EventIdSchema.make(eventId) },
+        payload: { eventId: yield* asEventId(eventId) },
       });
     })
   )
@@ -63,7 +60,7 @@ export const createHeroAtom = appHttpApiFn(
   ) {
     const client = yield* AppHttpApiClient;
     const hero = yield* client.heroes.createHero({
-      payload: { ...payload, eventId: EventIdSchema.make(payload.eventId) },
+      payload: { ...payload, eventId: yield* asEventId(payload.eventId) },
     });
     get.refresh(heroesAtom);
     return hero;
@@ -74,7 +71,7 @@ const deleteHeroRequestAtom = appHttpApiFn(
   Effect.fnUntraced(function* deleteHeroEffect(input: { readonly id: number }) {
     const client = yield* AppHttpApiClient;
     return yield* client.heroes.deleteHero({
-      payload: { id: HeroIdSchema.make(input.id) },
+      payload: { id: yield* asHeroId(input.id) },
     });
   })
 );
