@@ -73,34 +73,31 @@ export const failPersistence = (
     })
   );
 
-// oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
-export function persistenceQuery<A, R>(
+function projectPersistenceError<E>(
   operation: EffectSquadGroupPersistenceOperation,
-  self: Effect.Effect<A, EffectDrizzleQueryError, R>
-): Effect.Effect<A, EffectSquadBuilderPersistenceUnavailable, R>;
-export function persistenceQuery<A, E, R>(
+  error: E
+):
+  | Exclude<E, EffectDrizzleQueryError | SqlError>
+  | EffectSquadBuilderPersistenceUnavailable;
+function projectPersistenceError(
+  operation: EffectSquadGroupPersistenceOperation,
+  error: unknown
+): unknown {
+  return error instanceof EffectDrizzleQueryError || isSqlError(error)
+    ? new EffectSquadBuilderPersistenceUnavailable({
+        cause: error,
+        operation,
+        provider: "postgres",
+      })
+    : error;
+}
+
+// oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
+export const persistenceQuery = <A, E, R>(
   operation: EffectSquadGroupPersistenceOperation,
   self: Effect.Effect<A, E, R>
-): Effect.Effect<
-  A,
-  | Exclude<E, EffectDrizzleQueryError | SqlError>
-  | EffectSquadBuilderPersistenceUnavailable,
-  R
->;
-export function persistenceQuery<A, R>(
-  operation: EffectSquadGroupPersistenceOperation,
-  self: Effect.Effect<A, unknown, R>
-): Effect.Effect<A, unknown, R> {
-  return Effect.catch(self, (error) => {
-    if (error instanceof EffectDrizzleQueryError) {
-      return failPersistence(operation, error);
-    }
-
-    return isSqlError(error)
-      ? failPersistence(operation, error)
-      : Effect.fail(error);
-  });
-}
+) =>
+  Effect.mapError(self, (error) => projectPersistenceError(operation, error));
 // oxlint-enable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
 
 // oxlint-disable promise/prefer-await-to-callbacks
