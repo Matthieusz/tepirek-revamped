@@ -40,7 +40,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { eventsAtom } from "@/features/events/core/event-atoms";
-import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
+import {
+  ALL_FILTER,
+  toQueryInput,
+} from "@/features/events/core/event-hero-filter";
 import {
   getEventSelectDisplay,
   getHeroSelectDisplay,
@@ -337,9 +340,9 @@ const distributeGoldForm = FormReact.make(distributeGoldFormBuilder, {
     const goldAmount = parseGoldAmount(decoded.goldAmount);
     return formSubmission(() =>
       distributeGold({
-        eventId: Number.parseInt(decoded.eventId, 10),
+        eventId: decoded.eventId,
         goldAmount,
-        heroId: Number.parseInt(decoded.heroId, 10),
+        heroId: decoded.heroId,
       })
     ).pipe(Effect.map((result) => ({ goldAmount, result })));
   },
@@ -423,8 +426,7 @@ export const DistributeGoldModal = ({
       ? []
       : heroes?.filter((hero) => hero.eventId?.toString() === eventId)
   )?.toSorted((firstHero, secondHero) => firstHero.level - secondHero.level);
-  const parsedHeroId =
-    heroId === ALL_FILTER ? null : Number.parseInt(heroId, 10);
+  const parsedHeroId = toQueryInput(heroId) ?? null;
   const heroStatsAtomValue = heroStatsAtom({ heroId: parsedHeroId });
   const heroStatsResult = useAtomValue(heroStatsAtomValue);
   const refreshHeroStats = useAtomRefresh(heroStatsAtomValue);

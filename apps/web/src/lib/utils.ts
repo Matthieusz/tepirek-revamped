@@ -1,8 +1,11 @@
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import * as Predicate from "effect/Predicate";
+import * as Schema from "effect/Schema";
 
 export { cn } from "cnfast";
+
+const isValidDate = Schema.is(Schema.Date.check(Schema.isDateValid()));
 
 export const slugify = (input: string) =>
   input
@@ -18,7 +21,7 @@ export const formatDate = (
   formatStr = "dd-MM-yyyy"
 ): string => {
   const d = Predicate.isDate(date) ? date : new Date(date);
-  if (Number.isNaN(d.getTime())) {
+  if (!isValidDate(d)) {
     return "";
   }
   return format(d, formatStr, { locale: pl });

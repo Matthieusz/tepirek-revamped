@@ -60,7 +60,7 @@ const EXTRACTION_GOLD_PER_POINT = 60;
 
 const clampLevel = (n: number): number => {
   const v = Math.trunc(n);
-  if (Number.isNaN(v)) {
+  if (Num.Number.isNaN(v)) {
     return MIN_LEVEL;
   }
   return Num.clamp(v, { maximum: MAX_LEVEL, minimum: MIN_LEVEL });
@@ -107,8 +107,10 @@ export const calculateUpgradePoints = (
 };
 
 export const calculateDifferentialCosts = (upgradeCosts: number[]): number[] =>
-  Arr.map((cost: number, index) => cost - (upgradeCosts[index - 1] ?? 0))(
-    upgradeCosts
+  Arr.zipWith(
+    upgradeCosts,
+    Arr.prepend(upgradeCosts, 0),
+    (cost, previousCost) => cost - previousCost
   );
 
 export const calculateUpgradeSummary = (

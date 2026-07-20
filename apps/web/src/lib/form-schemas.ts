@@ -9,12 +9,12 @@ import {
   EVENT_ICON_IDS,
 } from "@tepirek-revamped/config";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 
-import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
 import { parseLevels } from "@/lib/calculators/bounty";
 import { parseGoldAmount } from "@/lib/gold";
 
@@ -98,11 +98,14 @@ export const HeroNameSchema = Schema.String.pipe(
   })
 );
 
-export const HeroEventIdSchema = Schema.String.pipe(
-  Schema.refine((value): value is string => value.length > 0, {
-    message: "Wybierz event",
-  })
+const PositiveIntegerIdFromString = Schema.NumberFromString.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThan(0))
 );
+
+export const HeroEventIdSchema = PositiveIntegerIdFromString.annotate({
+  message: "Wybierz event",
+});
 
 export const SkillLinkSchema = Schema.String.pipe(
   Schema.refine((value): value is string => value.trim().length > 0, {
@@ -116,11 +119,9 @@ export const SkillNameSchema = Schema.String.pipe(
   })
 );
 
-export const SkillProfessionIdSchema = Schema.String.pipe(
-  Schema.refine((value): value is string => value.length > 0, {
-    message: "Wybierz profesję",
-  })
-);
+export const SkillProfessionIdSchema = PositiveIntegerIdFromString.annotate({
+  message: "Wybierz profesję",
+});
 
 export const SkillMasterySchema = Schema.Boolean;
 
@@ -134,11 +135,7 @@ export const GoldAmountSchema = Schema.String.pipe(
 );
 
 export const RequiredSelectionSchema = (message: string) =>
-  Schema.String.pipe(
-    Schema.refine((value): value is string => value !== ALL_FILTER, {
-      message,
-    })
-  );
+  PositiveIntegerIdFromString.annotate({ message });
 
 export const MAX_PROFILE_URLS = 20;
 
@@ -183,11 +180,17 @@ export const validateSquadFilterLevelOrder = (values: {
 }): true | { readonly issue: string; readonly path: readonly ["maxLevel"] } => {
   const minLevel = values.minLevel.trim();
   const maxLevel = values.maxLevel.trim();
+  const parsedMinLevel = Schema.decodeUnknownOption(
+    PositiveIntegerIdFromString
+  )(minLevel);
+  const parsedMaxLevel = Schema.decodeUnknownOption(
+    PositiveIntegerIdFromString
+  )(maxLevel);
 
   if (
-    minLevel.length > 0 &&
-    maxLevel.length > 0 &&
-    Number(minLevel) > Number(maxLevel)
+    Option.isSome(parsedMinLevel) &&
+    Option.isSome(parsedMaxLevel) &&
+    parsedMinLevel.value > parsedMaxLevel.value
   ) {
     return {
       issue: "Poziom od nie może być większy niż poziom do",

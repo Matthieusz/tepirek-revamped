@@ -7,6 +7,7 @@ import {
 } from "@tepirek-revamped/config";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import * as Arr from "effect/Array";
+import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Loader2, Trash2 } from "lucide-react";
 import React, { useState } from "react";
@@ -43,6 +44,8 @@ interface SignupData {
   userImage: string | null;
 }
 
+const isValidDate = Schema.is(Schema.Date.check(Schema.isDateValid()));
+
 interface CellContentProps {
   signup: SignupData | undefined;
   isOwnSignup: boolean;
@@ -53,7 +56,7 @@ interface CellContentProps {
 
 const formatSignupDate = (createdAt: string | Date) => {
   const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
-  if (Number.isNaN(date.getTime())) {
+  if (!isValidDate(date)) {
     return "";
   }
   return date.toLocaleString("pl-PL", {

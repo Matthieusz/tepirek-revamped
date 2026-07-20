@@ -60,7 +60,7 @@ const heroForm = FormReact.make(heroFormBuilder, {
   onSubmit: (createHero: CreateHero, { decoded }) =>
     formSubmission(() =>
       createHero({
-        eventId: Number.parseInt(decoded.eventId, 10),
+        eventId: decoded.eventId,
         ...(decoded.image ? { image: decoded.image } : {}),
         level: decoded.level,
         name: decoded.name,

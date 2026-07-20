@@ -1,5 +1,5 @@
 import { Effect, Layer } from "effect";
-import * as Record from "effect/Record";
+import type * as Record from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import * as OtlpLogger from "effect/unstable/observability/OtlpLogger";
@@ -11,29 +11,10 @@ import { runId } from "./shared.ts";
 export interface OtlpConfig {
   readonly deploymentEnvironmentName: string;
   readonly endpoint?: string;
-  readonly headers?: Redacted.Redacted;
+  readonly headers?: Redacted.Redacted<Readonly<Record<string, string>>>;
   readonly resourceAttributes: Readonly<Record<string, string>>;
   readonly serviceVersion: string;
 }
-
-const parseHeaders = (
-  headers: Redacted.Redacted | undefined
-): Record<string, string> | undefined => {
-  if (headers === undefined) {
-    return undefined;
-  }
-  return Record.fromEntries(
-    Redacted.value(headers)
-      .split(",")
-      .map((entry) => {
-        const separator = entry.indexOf("=");
-        return [
-          entry.slice(0, separator).trim(),
-          entry.slice(separator + 1).trim(),
-        ];
-      })
-  );
-};
 
 const otlpSupportLayer = Layer.merge(
   FetchHttpClient.layer,
@@ -76,7 +57,10 @@ export const loggers = (config: OtlpConfig) => {
     ? []
     : [
         OtlpLogger.make({
-          headers: parseHeaders(config.headers),
+          headers:
+            config.headers === undefined
+              ? undefined
+              : Redacted.value(config.headers),
           resource: resource(config),
           url,
         }).pipe(Effect.provide(otlpSupportLayer)),
@@ -91,7 +75,10 @@ export const tracingLayer = (config: OtlpConfig) => {
     url === undefined
       ? Layer.empty
       : OtlpTracer.layer({
-          headers: parseHeaders(config.headers),
+          headers:
+            config.headers === undefined
+              ? undefined
+              : Redacted.value(config.headers),
           resource: resource(config),
           url,
         }).pipe(Layer.provide(otlpSupportLayer))

@@ -32,7 +32,9 @@ export const filterUsersBySearch = (
   searchQuery: string
 ): SelectableUser[] => {
   const query = searchQuery.toLowerCase();
-  return users.filter((user) => user.name.toLowerCase().includes(query));
+  return Arr.filter<SelectableUser>((user) =>
+    user.name.toLowerCase().includes(query)
+  )(users);
 };
 
 /**
@@ -47,9 +49,9 @@ export const getAvailableUsers = (
     return [];
   }
   const selectedUserIdSet = HashSet.fromIterable(selectedUserIds);
-  return filterUsersBySearch(users, searchQuery).filter(
+  return Arr.filter<SelectableUser>(
     (user) => !HashSet.has(selectedUserIdSet, user.id)
-  );
+  )(filterUsersBySearch(users, searchQuery));
 };
 
 /**
@@ -64,7 +66,9 @@ export const getSelectedUsers = (
     return [];
   }
   const selectedUserIdSet = HashSet.fromIterable(selectedUserIds);
-  return users.filter((user) => HashSet.has(selectedUserIdSet, user.id));
+  return Arr.filter<SelectableUser>((user) =>
+    HashSet.has(selectedUserIdSet, user.id)
+  )(users);
 };
 
 /**
@@ -109,7 +113,9 @@ export const copyLastBet = (lastBet?: {
   if (!lastBet) {
     return [];
   }
-  return lastBet.members.map((member) => member.userId);
+  return Arr.map((member: { userId: string }) => member.userId)(
+    lastBet.members
+  );
 };
 
 type PickerEmptyState =

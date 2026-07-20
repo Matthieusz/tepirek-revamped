@@ -5,11 +5,14 @@ import type { ObservabilityConfig } from "@tepirek-revamped/api/observability";
 import type { FirecrawlConfig } from "@tepirek-revamped/api/services/squad-builder/firecrawl-config";
 import { AuthConfig } from "@tepirek-revamped/auth";
 import type { AuthEnv } from "@tepirek-revamped/auth";
+import * as Arr from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Record from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
+import * as Str from "effect/String";
 
 class StartupConfigurationError extends Schema.TaggedErrorClass<StartupConfigurationError>()(
   "StartupConfigurationError",
@@ -53,21 +56,26 @@ const parseEntries = (
       }),
     try: () => {
       if (value.length === 0) {
-        return {};
+        return Record.empty<string, string>();
       }
       return Record.fromEntries(
-        value.split(",").map((entry) => {
-          const separator = entry.indexOf("=");
+        Arr.map(Str.split(value, ","), (entry) => {
+          const separator = Option.getOrThrow(Str.indexOf("=")(entry));
           if (separator < 1 || separator === entry.length - 1) {
             throw new Error("invalid entry");
           }
-          const key = entry.slice(0, separator).trim();
-          const entryValue = entry.slice(separator + 1).trim();
-          if (key.length === 0 || entryValue.length === 0) {
+          const key = Str.trim(entry.slice(0, separator));
+          const entryValue = Str.trim(entry.slice(separator + 1));
+          if (Str.isEmpty(key) || Str.isEmpty(entryValue)) {
             throw new Error("invalid entry");
           }
           return decode
-            ? [decodeURIComponent(key), decodeURIComponent(entryValue)]
+            ? [
+                Schema.decodeUnknownSync(Schema.StringFromUriComponent)(key),
+                Schema.decodeUnknownSync(Schema.StringFromUriComponent)(
+                  entryValue
+                ),
+              ]
             : [key, entryValue];
         })
       );
@@ -128,7 +136,7 @@ const readObservabilityConfig = Effect.gen(
       ...(endpoint === undefined ? {} : { endpoint }),
       ...(Record.isEmptyReadonlyRecord(parsedHeaders)
         ? {}
-        : { headers: values.headers }),
+        : { headers: Redacted.make(parsedHeaders) }),
       minimumLogLevel,
       printLogs: values.printLogs === "1",
       resourceAttributes: yield* parseEntries(

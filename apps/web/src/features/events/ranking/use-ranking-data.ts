@@ -1,4 +1,8 @@
 import { useAtomValue } from "@effect/atom-react";
+import * as Arr from "effect/Array";
+import * as Num from "effect/Number";
+import * as Option from "effect/Option";
+import * as Order from "effect/Order";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 
 import { rankingAtom } from "@/features/events/ranking/ranking-atoms";
@@ -13,27 +17,28 @@ const sortRanking = (
   ranking: RankingItem[] | undefined,
   sortBy: "points" | "bets" | "gold"
 ): RankingItem[] => {
-  const items = [...(ranking ?? [])];
-
-  items.sort((a, b) => {
-    if (sortBy === "points") {
-      return (
-        Number.parseFloat(b.totalPoints ?? "0") -
-        Number.parseFloat(a.totalPoints ?? "0")
-      );
-    }
-
-    if (sortBy === "bets") {
-      return (b.totalBets ?? 0) - (a.totalBets ?? 0);
-    }
-
-    return (
-      Number.parseFloat(b.totalEarnings ?? "0") -
-      Number.parseFloat(a.totalEarnings ?? "0")
+  const descendingNumber = Order.flip(Order.Number);
+  if (sortBy === "bets") {
+    return Arr.sortWith(
+      ranking ?? [],
+      (item) => item.totalBets ?? 0,
+      descendingNumber
     );
-  });
+  }
 
-  return items;
+  return Arr.sortWith(
+    ranking ?? [],
+    (item) =>
+      Option.getOrElse(
+        Num.parse(
+          sortBy === "points"
+            ? (item.totalPoints ?? "0")
+            : (item.totalEarnings ?? "0")
+        ),
+        () => 0
+      ),
+    descendingNumber
+  );
 };
 
 export const useRankingData = ({

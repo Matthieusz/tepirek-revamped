@@ -1,4 +1,9 @@
 import { POINTS_PER_HERO } from "@tepirek-revamped/config";
+import * as Schema from "effect/Schema";
+
+const PointWorth = Schema.NullOr(
+  Schema.Union([Schema.Number, Schema.NumberFromString])
+);
 
 /** Calculate points per member for a bet with given member count. */
 export const calculatePointsPerMember = (memberCount: number): string =>
@@ -7,4 +12,4 @@ export const calculatePointsPerMember = (memberCount: number): string =>
 /** Parse a point worth value (number, string, or null) to number or null. */
 export const parsePointWorth = (
   pointWorth: number | string | null
-): number | null => (pointWorth === null ? null : Number(pointWorth));
+): number | null => Schema.decodeUnknownSync(PointWorth)(pointWorth);

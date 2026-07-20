@@ -52,7 +52,7 @@ const parseRetryAfterMilliseconds = (
     }
 
     const retryAt = Date.parse(retryAfter);
-    if (Number.isNaN(retryAt)) {
+    if (Num.Number.isNaN(retryAt)) {
       return;
     }
 

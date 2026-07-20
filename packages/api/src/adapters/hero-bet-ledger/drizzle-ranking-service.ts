@@ -8,6 +8,7 @@ import type { SQL } from "drizzle-orm";
 import { and, desc, eq, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
 
 import { EventId, HeroId } from "../../domain/core-identifiers.ts";
 import { parsePointWorth } from "../../domain/hero-bet-ledger/points.ts";
@@ -24,6 +25,9 @@ import type {
 import { RankingService } from "../../services/ranking/ranking-service.ts";
 import { mapPersistenceErrors } from "./persistence-query.ts";
 import type { EffectPgDatabase } from "./persistence-query.ts";
+
+const DatabaseNumber = Schema.Union([Schema.Number, Schema.NumberFromString]);
+const decodeDatabaseNumber = Schema.decodeUnknownSync(DatabaseNumber);
 
 const persistenceQuery = <A, E, R>(
   operation: string,
@@ -62,7 +66,7 @@ const normalizeRankingRow = (row: {
   readonly userName: string | null;
 }): RankingRow => ({
   ...row,
-  totalBets: Number(row.totalBets),
+  totalBets: decodeDatabaseNumber(row.totalBets),
   userId: AppUserId.make(row.userId),
 });
 
@@ -95,11 +99,13 @@ const getHeroStatsWithDatabase = (database: EffectPgDatabase) =>
     }
     const [stats] = statsRows;
     return {
-      currentPointWorth: Number(heroInfo.pointWorth),
+      currentPointWorth: parsePointWorth(heroInfo.pointWorth) ?? 0,
       heroId: HeroId.make(heroId),
       heroName: heroInfo.name,
-      totalBets: Number(stats?.totalBets ?? 0),
-      totalPoints: Number.parseFloat(stats?.totalPoints ?? "0"),
+      totalBets: decodeDatabaseNumber(stats?.totalBets ?? 0),
+      totalPoints: Schema.decodeUnknownSync(Schema.NumberFromString)(
+        stats?.totalPoints ?? "0"
+      ),
     };
   });
 
@@ -154,13 +160,13 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
           .from(heroBet)
           .where(eq(heroBet.heroId, input.heroId))
       );
-      totalBets = Number(betsRows[0]?.count ?? 0);
+      totalBets = decodeDatabaseNumber(betsRows[0]?.count ?? 0);
     } else if (input.eventId === undefined) {
       const betsRows = yield* persistenceQuery(
         "getRanking.totalBets",
         database.select({ count: sql<number>`count(*)` }).from(heroBet)
       );
-      totalBets = Number(betsRows[0]?.count ?? 0);
+      totalBets = decodeDatabaseNumber(betsRows[0]?.count ?? 0);
     } else {
       const betsRows = yield* persistenceQuery(
         "getRanking.totalEventBets",
@@ -170,7 +176,7 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
           .innerJoin(hero, eq(heroBet.heroId, hero.id))
           .where(eq(hero.eventId, input.eventId))
       );
-      totalBets = Number(betsRows[0]?.count ?? 0);
+      totalBets = decodeDatabaseNumber(betsRows[0]?.count ?? 0);
     }
 
     const pointWorthRows =

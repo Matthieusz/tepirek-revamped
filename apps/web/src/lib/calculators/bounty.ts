@@ -131,7 +131,7 @@ export const calculateGroupAttackPenalty = (
   attackerLevels: number[],
   defenderLevels: number[]
 ): GroupAttackPenaltyResult => {
-  const maxAttackerLevel = Math.max(...attackerLevels);
+  const maxAttackerLevel = Num.ReducerMax.combineAll(attackerLevels);
   const avgAttackerLevel = Num.sumAll(attackerLevels) / attackerLevels.length;
   const avgDefenderLevel = Num.sumAll(defenderLevels) / defenderLevels.length;
 

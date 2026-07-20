@@ -1,3 +1,5 @@
+import * as Num from "effect/Number";
+import * as Option from "effect/Option";
 import { Trophy, User } from "lucide-react";
 import type { ReactElement } from "react";
 
@@ -43,8 +45,14 @@ interface RankingListProps {
 export const RankingList = ({ players }: RankingListProps) => (
   <div className="space-y-2">
     {players.map((player, index) => {
-      const earnings = Number.parseFloat(player.totalEarnings ?? "0");
-      const points = Number.parseFloat(player.totalPoints ?? "0");
+      const earnings = Option.getOrElse(
+        Num.parse(player.totalEarnings ?? "0"),
+        () => 0
+      );
+      const points = Option.getOrElse(
+        Num.parse(player.totalPoints ?? "0"),
+        () => 0
+      );
       const rankIcon = getRankIcon(index + 1);
 
       return (

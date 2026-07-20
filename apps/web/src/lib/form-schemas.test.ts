@@ -95,7 +95,7 @@ describe("form schemas", () => {
     it("requires event and hero selections and preserves skill mastery", () => {
       fails(HeroEventIdSchema, "");
       fails(HeroNameSchema, " ");
-      expect(succeeds(SkillProfessionIdSchema, "3")).toBe("3");
+      expect(succeeds(SkillProfessionIdSchema, "3")).toBe(3);
       expect(succeeds(SkillMasterySchema, true)).toBe(true);
       fails(SkillProfessionIdSchema, "");
     });
@@ -114,9 +114,7 @@ describe("form schemas", () => {
       fails(GoldAmountSchema, "0");
       fails(GoldAmountSchema, "not-gold");
       fails(RequiredSelectionSchema("Wybierz event"), ALL_FILTER);
-      expect(succeeds(RequiredSelectionSchema("Wybierz event"), "42")).toBe(
-        "42"
-      );
+      expect(succeeds(RequiredSelectionSchema("Wybierz event"), "42")).toBe(42);
     });
   });
 

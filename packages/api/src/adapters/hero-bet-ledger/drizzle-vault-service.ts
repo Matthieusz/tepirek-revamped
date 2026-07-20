@@ -7,6 +7,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
+import * as Schema from "effect/Schema";
 
 import { EventId, HeroId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
@@ -90,7 +91,9 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
             });
           }
           const totalPoints = Num.sumAll(
-            heroUserStats.map((stat) => Number.parseFloat(stat.points))
+            heroUserStats.map((stat) =>
+              Schema.decodeUnknownSync(Schema.NumberFromString)(stat.points)
+            )
           );
           if (totalPoints <= 0) {
             return yield* new VaultBadRequest({
@@ -111,7 +114,9 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
             .where(eq(hero.id, heroId));
           return {
             heroName: heroData.name,
-            pointWorth: Number(storedPointWorth),
+            pointWorth: Schema.decodeUnknownSync(Schema.NumberFromString)(
+              storedPointWorth
+            ),
             totalPoints,
             usersUpdated: heroUserStats.length,
           };

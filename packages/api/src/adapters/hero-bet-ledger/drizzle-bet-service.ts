@@ -13,9 +13,13 @@ import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
 
 import { BetId, EventId, HeroId } from "../../domain/core-identifiers.ts";
-import { calculatePointsPerMember } from "../../domain/hero-bet-ledger/points.ts";
+import {
+  calculatePointsPerMember,
+  parsePointWorth,
+} from "../../domain/hero-bet-ledger/points.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
   BetBadRequest,
@@ -173,7 +177,10 @@ const refreshEarningsForHero = Effect.fnUntraced(
       .from(hero)
       .where(eq(hero.id, heroId));
     const [heroRow] = rows;
-    if (heroRow === undefined || Number(heroRow.pointWorth) <= 0) {
+    if (
+      heroRow === undefined ||
+      (parsePointWorth(heroRow.pointWorth) ?? 0) <= 0
+    ) {
       return;
     }
     yield* tx
@@ -380,9 +387,9 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
               message: "Obstawienie nie ma członków",
             });
           }
-          const oldPointsPerMember = Number.parseFloat(
-            currentMembers[0]?.points ?? "0"
-          );
+          const oldPointsPerMember = Schema.decodeUnknownSync(
+            Schema.NumberFromString
+          )(currentMembers[0]?.points ?? "0");
           const newPointsPerMember = calculatePointsPerMember(newMemberCount);
           const membersToRemove = currentMembers.filter(
             (member) => !memberUserIds.includes(member.userId)
@@ -449,7 +456,10 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
           }
           if (membersToKeep.length > 0) {
             const keepUserIds = membersToKeep.map((member) => member.userId);
-            const pointsDiff = Number(newPointsPerMember) - oldPointsPerMember;
+            const pointsDiff =
+              Schema.decodeUnknownSync(Schema.NumberFromString)(
+                newPointsPerMember
+              ) - oldPointsPerMember;
             yield* tx
               .update(heroBetMember)
               .set({ points: newPointsPerMember })
@@ -634,7 +644,9 @@ const getPaginatedBetsWithDatabase = (database: EffectPgDatabase) =>
         .innerJoin(hero, eq(heroBet.heroId, hero.id))
         .where(whereClause)
     );
-    const totalItems = Number(countRows[0]?.count ?? 0);
+    const totalItems = Schema.decodeUnknownSync(
+      Schema.Union([Schema.Number, Schema.NumberFromString])
+    )(countRows[0]?.count ?? 0);
     const totalPages = Math.ceil(totalItems / limit);
 
     return {

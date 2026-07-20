@@ -54,6 +54,14 @@ interface EventOption {
   readonly name: string;
 }
 
+const PositiveIntegerIdFromString = Schema.NumberFromString.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThan(0))
+);
+const decodePositiveIntegerId = Schema.decodeUnknownOption(
+  PositiveIntegerIdFromString
+);
+
 interface EventFieldProps {
   readonly events: EventOption[] | undefined;
   readonly eventsLoading: boolean;
@@ -152,8 +160,11 @@ const HeroField: FormReact.FieldComponent<string, HeroFieldProps> = ({
       <p className="text-muted-foreground text-sm">Najpierw wybierz event</p>
     );
   } else {
+    const selectedEventId = Option.getOrUndefined(
+      decodePositiveIntegerId(props.selectedEventId)
+    );
     const filteredHeroes = props.heroes?.filter(
-      (hero) => hero.eventId === Number.parseInt(props.selectedEventId, 10)
+      (hero) => hero.eventId === selectedEventId
     );
     content =
       filteredHeroes?.length === 0 ? (
@@ -236,19 +247,11 @@ const MembersField: FormReact.FieldComponent<
 const addBetFormBuilder = FormBuilder.empty
   .addField(
     "eventId",
-    Schema.String.pipe(
-      Schema.refine((value): value is string => value.length > 0, {
-        message: "Wybierz event",
-      })
-    )
+    PositiveIntegerIdFromString.annotate({ message: "Wybierz event" })
   )
   .addField(
     "heroId",
-    Schema.String.pipe(
-      Schema.refine((value): value is string => value.length > 0, {
-        message: "Wybierz herosa",
-      })
-    )
+    PositiveIntegerIdFromString.annotate({ message: "Wybierz herosa" })
   )
   .addField("userIds", NonEmptyUserIdsSchema);
 
@@ -271,7 +274,7 @@ const addBetForm = FormReact.make(addBetFormBuilder, {
   onSubmit: (createBet: CreateBet, { decoded }) =>
     formSubmission(() =>
       createBet({
-        heroId: Number.parseInt(decoded.heroId, 10),
+        heroId: decoded.heroId,
         userIds: decoded.userIds,
       })
     ),

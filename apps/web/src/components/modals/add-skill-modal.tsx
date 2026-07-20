@@ -88,7 +88,7 @@ export const AddSkillModal = ({
               link: decoded.link,
               mastery: decoded.mastery,
               name: decoded.name,
-              professionId: Number.parseInt(decoded.professionId, 10),
+              professionId: decoded.professionId,
               rangeId: submitArgs.rangeId,
             })
           ),

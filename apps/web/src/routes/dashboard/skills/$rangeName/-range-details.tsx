@@ -1,6 +1,6 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { getRouteApi } from "@tanstack/react-router";
-import type { SkillSummary as SkillSummarySchema } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
+import * as Arr from "effect/Array";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Plus } from "lucide-react";
 /* oxlint-disable no-use-before-define */
@@ -39,7 +39,6 @@ import {
 } from "@/lib/skill-atoms";
 
 const routeApi = getRouteApi("/dashboard/skills/$rangeName");
-type SkillSummary = typeof SkillSummarySchema.Type;
 
 type SkillToDelete = {
   id: number;
@@ -81,12 +80,9 @@ const RangeSkillsContent = ({
   });
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const skillsGrouped: Record<number, SkillSummary[]> = {};
-  for (const skill of skillsData) {
-    const key = skill.professionId;
-    skillsGrouped[key] ??= [];
-    skillsGrouped[key].push(skill);
-  }
+  const skillsGrouped = Arr.groupBy(skillsData, (skill) =>
+    String(skill.professionId)
+  );
 
   const deleteSkillById = (id: number) => {
     void (async () => {
@@ -106,7 +102,7 @@ const RangeSkillsContent = ({
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {professions.map((profession) => {
-        const skills = skillsGrouped[profession.id] ?? [];
+        const skills = skillsGrouped[String(profession.id)] ?? [];
         return (
           <Card key={profession.id}>
             <CardHeader className="pb-3">

@@ -1,4 +1,6 @@
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Order from "effect/Order";
 import * as Schema from "effect/Schema";
 
 import type {
@@ -28,6 +30,7 @@ const PositiveIntegerIdFromString = Schema.NumberFromString.pipe(
 const decodePositiveIntegerId = Schema.decodeUnknownOption(
   PositiveIntegerIdFromString
 );
+const isValidDate = Schema.is(Schema.Date.check(Schema.isDateValid()));
 
 /** Schema for a URL or persisted positive integer ID encoded as a string. */
 export const FilterIdSearchSchema = Schema.String.pipe(
@@ -109,8 +112,8 @@ const toEventTimestamp = (eventEndTime: Date | string | undefined): number => {
   if (eventEndTime === undefined) {
     return Number.NEGATIVE_INFINITY;
   }
-  const timestamp = new Date(eventEndTime).getTime();
-  return Number.isNaN(timestamp) ? Number.NEGATIVE_INFINITY : timestamp;
+  const date = new Date(eventEndTime);
+  return isValidDate(date) ? date.getTime() : Number.NEGATIVE_INFINITY;
 };
 
 /**
@@ -119,8 +122,10 @@ const toEventTimestamp = (eventEndTime: Date | string | undefined): number => {
 export const sortEventsByEndTimeDesc = (
   events?: readonly EventSelectOption[]
 ): EventSelectOption[] =>
-  [...(events ?? [])].toSorted(
-    (a, b) => toEventTimestamp(b.endTime) - toEventTimestamp(a.endTime)
+  Arr.sortWith(
+    events ?? [],
+    (event) => toEventTimestamp(event.endTime),
+    Order.flip(Order.Number)
   );
 
 /**
@@ -129,7 +134,7 @@ export const sortEventsByEndTimeDesc = (
 export const sortHeroesByLevel = (
   heroes?: readonly HeroSelectOption[]
 ): HeroSelectOption[] =>
-  [...(heroes ?? [])].toSorted((a, b) => (a.level ?? 0) - (b.level ?? 0));
+  Arr.sortWith(heroes ?? [], (hero) => hero.level ?? 0, Order.Number);
 
 /**
  * Decide whether the Hero query should be enabled: only when a specific
