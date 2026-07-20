@@ -4,7 +4,10 @@ import {
   ownedAccountsAtom,
   confirmOwnedAccountImportAtom,
 } from "@/lib/squad-builder/account-import-atoms";
-import { makeTestLayer, flush } from "@/lib/test-utils/atom-test-utils";
+import {
+  makeTestLayer,
+  waitForAtomResults,
+} from "@/lib/test-utils/atom-test-utils";
 
 describe("account import atoms", () => {
   it("confirmOwnedAccountImportAtom refreshes ownedAccountsAtom", async () => {
@@ -12,7 +15,7 @@ describe("account import atoms", () => {
     const registry = makeRegistry();
 
     registry.mount(ownedAccountsAtom);
-    await flush();
+    await waitForAtomResults(registry, [ownedAccountsAtom]);
 
     const ownedCallsBefore = calls.filter(
       (c) => c.method === "listOwnedAccounts"
@@ -22,7 +25,7 @@ describe("account import atoms", () => {
       displayName: "Test Account",
       pendingImportId: 1,
     });
-    await flush();
+    await waitForAtomResults(registry, [confirmOwnedAccountImportAtom]);
 
     expect(calls.filter((c) => c.method === "listOwnedAccounts")).toHaveLength(
       ownedCallsBefore + 1
@@ -37,7 +40,7 @@ describe("account import atoms", () => {
       displayName: "My Account",
       pendingImportId: 99,
     });
-    await flush();
+    await waitForAtomResults(registry, [confirmOwnedAccountImportAtom]);
 
     const confirmCalls = calls.filter(
       (c) => c.method === "confirmOwnedAccountImport"

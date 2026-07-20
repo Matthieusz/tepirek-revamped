@@ -6,7 +6,10 @@ import {
   toggleAuctionSignupAtom,
   removeAuctionSignupFromGroupAtom,
 } from "@/lib/auction-atoms";
-import { makeTestLayer, flush } from "@/lib/test-utils/atom-test-utils";
+import {
+  makeTestLayer,
+  waitForAtomResults,
+} from "@/lib/test-utils/atom-test-utils";
 
 describe("auction atoms", () => {
   it("toggleAuctionSignupAtom triggers getAuctionSignups and getAuctionStats fetches for the toggled group", async () => {
@@ -16,9 +19,11 @@ describe("auction atoms", () => {
     const profession = "mage" as const;
     const type = "main" as const;
 
-    registry.mount(auctionSignupsAtom({ profession, type }));
-    registry.mount(auctionStatsAtom({ profession, type }));
-    await flush();
+    const signups = auctionSignupsAtom({ profession, type });
+    const stats = auctionStatsAtom({ profession, type });
+    registry.mount(signups);
+    registry.mount(stats);
+    await waitForAtomResults(registry, [signups, stats]);
 
     registry.set(toggleAuctionSignupAtom, {
       column: 0,
@@ -27,7 +32,7 @@ describe("auction atoms", () => {
       round: 1,
       type,
     });
-    await flush();
+    await waitForAtomResults(registry, [toggleAuctionSignupAtom]);
 
     const signupsCalls = calls.filter((c) => c.method === "getAuctionSignups");
     expect(signupsCalls.length).toBeGreaterThanOrEqual(2);
@@ -46,11 +51,17 @@ describe("auction atoms", () => {
     const groupA = { profession: "mage" as const, type: "main" as const };
     const groupB = { profession: "warrior" as const, type: "main" as const };
 
-    registry.mount(auctionSignupsAtom(groupA));
-    registry.mount(auctionStatsAtom(groupA));
-    registry.mount(auctionSignupsAtom(groupB));
-    registry.mount(auctionStatsAtom(groupB));
-    await flush();
+    const mountedAtoms = [
+      auctionSignupsAtom(groupA),
+      auctionStatsAtom(groupA),
+      auctionSignupsAtom(groupB),
+      auctionStatsAtom(groupB),
+    ] as const;
+    registry.mount(mountedAtoms[0]);
+    registry.mount(mountedAtoms[1]);
+    registry.mount(mountedAtoms[2]);
+    registry.mount(mountedAtoms[3]);
+    await waitForAtomResults(registry, mountedAtoms);
 
     const groupBSignupsBefore = calls.filter(
       (c) =>
@@ -69,7 +80,7 @@ describe("auction atoms", () => {
       ...groupA,
       round: 1,
     });
-    await flush();
+    await waitForAtomResults(registry, [toggleAuctionSignupAtom]);
 
     const groupBSignupsAfter = calls.filter(
       (c) =>

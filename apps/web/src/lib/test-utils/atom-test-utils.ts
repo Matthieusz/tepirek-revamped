@@ -1,9 +1,11 @@
-import { setTimeout } from "node:timers/promises";
-
 import type { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { Effect, Layer } from "effect";
 import type { HttpApiClient } from "effect/unstable/httpapi";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
+import type * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import type * as AtomType from "effect/unstable/reactivity/Atom";
+import type * as AtomRegistryType from "effect/unstable/reactivity/AtomRegistry";
+import { getResult } from "effect/unstable/reactivity/AtomRegistry";
 
 import {
   AppHttpApiClient,
@@ -216,13 +218,16 @@ export const makeTestLayer = () => {
   };
 };
 
-const flush = async () => {
-  const promises: Promise<void>[] = [];
-  for (let i = 0; i < 30; i += 1) {
-    promises.push(Effect.runPromise(Effect.yieldNow));
-    promises.push(setTimeout(0));
-  }
-  await Promise.all(promises);
-};
+type AsyncResultAtom = AtomType.Atom<AsyncResult.AsyncResult<unknown, unknown>>;
 
-export { flush };
+/** Waits until every supplied atom has reached a non-waiting result. */
+export const waitForAtomResults = async (
+  registry: AtomRegistryType.AtomRegistry,
+  atoms: readonly AsyncResultAtom[]
+): Promise<void> => {
+  await Promise.all(
+    atoms.map((atom) =>
+      Effect.runPromise(getResult(registry, atom, { suspendOnWaiting: true }))
+    )
+  );
+};

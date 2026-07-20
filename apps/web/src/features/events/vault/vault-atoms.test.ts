@@ -6,19 +6,29 @@ import {
   vaultAtom,
   userStatsAtom,
 } from "@/features/events/vault/vault-atoms";
-import { makeTestLayer, flush } from "@/lib/test-utils/atom-test-utils";
+import {
+  makeTestLayer,
+  waitForAtomResults,
+} from "@/lib/test-utils/atom-test-utils";
 
 describe("vault atoms", () => {
   it("distributeGoldAtom with eventId refreshes vault, userStats, and oldestUnpaidEvent", async () => {
     const { calls, makeRegistry } = makeTestLayer();
     const registry = makeRegistry();
 
-    registry.mount(vaultAtom({ eventId: 5 }));
-    registry.mount(userStatsAtom({ eventId: 5 }));
-    registry.mount(vaultAtom({}));
-    registry.mount(userStatsAtom({}));
-    registry.mount(oldestUnpaidEventAtom);
-    await flush();
+    const mountedAtoms = [
+      vaultAtom({ eventId: 5 }),
+      userStatsAtom({ eventId: 5 }),
+      vaultAtom({}),
+      userStatsAtom({}),
+      oldestUnpaidEventAtom,
+    ] as const;
+    registry.mount(mountedAtoms[0]);
+    registry.mount(mountedAtoms[1]);
+    registry.mount(mountedAtoms[2]);
+    registry.mount(mountedAtoms[3]);
+    registry.mount(mountedAtoms[4]);
+    await waitForAtomResults(registry, mountedAtoms);
 
     const vaultCallCount = calls.filter((c) => c.method === "getVault").length;
     const userStatsCallCount = calls.filter(
@@ -33,7 +43,7 @@ describe("vault atoms", () => {
       goldAmount: 500,
       heroId: 10,
     });
-    await flush();
+    await waitForAtomResults(registry, [distributeGoldAtom]);
 
     expect(calls.filter((c) => c.method === "getVault")).toHaveLength(
       vaultCallCount + 2

@@ -5,7 +5,10 @@ import {
   editBetAtom,
   paginatedBetsAtom,
 } from "@/features/events/bets/bet-atoms";
-import { flush, makeTestLayer } from "@/lib/test-utils/atom-test-utils";
+import {
+  makeTestLayer,
+  waitForAtomResults,
+} from "@/lib/test-utils/atom-test-utils";
 
 describe("bet atoms", () => {
   it("deletes a bet and refreshes the active first page", async () => {
@@ -13,14 +16,15 @@ describe("bet atoms", () => {
     const registry = makeRegistry();
     const refreshInput = { eventId: 5, heroId: 2, limit: 10, page: 1 };
 
-    registry.mount(paginatedBetsAtom(refreshInput));
-    await flush();
+    const paginatedBets = paginatedBetsAtom(refreshInput);
+    registry.mount(paginatedBets);
+    await waitForAtomResults(registry, [paginatedBets]);
     const callsBefore = calls.filter(
       (call) => call.method === "getAllPaginated"
     ).length;
 
     registry.set(deleteBetAtom, { id: 10, refreshInput });
-    await flush();
+    await waitForAtomResults(registry, [deleteBetAtom]);
 
     expect(calls.filter((call) => call.method === "delete")).toHaveLength(1);
     expect(
@@ -35,8 +39,9 @@ describe("bet atoms", () => {
     const { calls, makeRegistry } = makeTestLayer();
     const registry = makeRegistry();
 
-    registry.mount(paginatedBetsAtom({ eventId: 5, page: 1 }));
-    await flush();
+    const paginatedBets = paginatedBetsAtom({ eventId: 5, page: 1 });
+    registry.mount(paginatedBets);
+    await waitForAtomResults(registry, [paginatedBets]);
     const callsBefore = calls.filter(
       (call) => call.method === "getAllPaginated"
     ).length;
@@ -46,7 +51,7 @@ describe("bet atoms", () => {
       newUserIds: ["user-id"],
       refreshInput: { eventId: 5, page: 1 },
     });
-    await flush();
+    await waitForAtomResults(registry, [editBetAtom]);
 
     expect(
       calls.filter((call) => call.method === "getAllPaginated")

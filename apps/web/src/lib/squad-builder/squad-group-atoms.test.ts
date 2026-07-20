@@ -6,17 +6,18 @@ import {
   saveSquadGroupAtom,
   squadGroupDetailAtom,
 } from "@/lib/squad-builder/squad-group-atoms";
-import { flush, makeTestLayer } from "@/lib/test-utils/atom-test-utils";
+import {
+  makeTestLayer,
+  waitForAtomResults,
+} from "@/lib/test-utils/atom-test-utils";
 
 describe("squad group atoms", () => {
-  it("does not mount group resources for invalid IDs", async () => {
+  it("does not mount group resources for invalid IDs", () => {
     const { calls, makeRegistry } = makeTestLayer();
     const registry = makeRegistry();
 
     registry.mount(squadGroupDetailAtom({ groupId: 0 }));
     registry.mount(availableSquadCharactersAtom({ groupId: -1 }));
-    await flush();
-
     expect(calls).toHaveLength(0);
   });
 
@@ -44,7 +45,7 @@ describe("squad group atoms", () => {
         },
       ],
     });
-    await flush();
+    await waitForAtomResults(registry, [saveSquadGroupAtom]);
 
     const saveCall = calls.find((call) => call.method === "saveSquadGroup");
     expect(saveCall?.args).toEqual({
@@ -79,7 +80,7 @@ describe("squad group atoms", () => {
       groupId: 10,
       squads: [{ characters: [], squadId: 20 }],
     });
-    await flush();
+    await waitForAtomResults(registry, [saveSharedSquadGroupCharactersAtom]);
 
     const saveCall = calls.find(
       (call) => call.method === "saveSharedSquadGroupCharacters"

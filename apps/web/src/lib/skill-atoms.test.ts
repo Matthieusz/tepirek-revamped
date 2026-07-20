@@ -9,7 +9,10 @@ import {
   skillRangesAtom,
   skillsByRangeAtom,
 } from "@/lib/skill-atoms";
-import { makeTestLayer, flush } from "@/lib/test-utils/atom-test-utils";
+import {
+  makeTestLayer,
+  waitForAtomResults,
+} from "@/lib/test-utils/atom-test-utils";
 
 describe("skill atoms", () => {
   describe("resource atoms produce distinct family members per key", () => {
@@ -88,8 +91,9 @@ describe("skill atoms", () => {
       const { calls, makeRegistry } = makeTestLayer();
       const registry = makeRegistry();
 
-      registry.mount(skillsByRangeAtom(5));
-      await flush();
+      const skills = skillsByRangeAtom(5);
+      registry.mount(skills);
+      await waitForAtomResults(registry, [skills]);
 
       const callsForRange5 = calls.filter(
         (c) =>
@@ -106,13 +110,11 @@ describe("skill atoms", () => {
       expect(callsForRange0).toHaveLength(0);
     });
 
-    it("does not call the API when an invalid range ID is mounted", async () => {
+    it("does not call the API when an invalid range ID is mounted", () => {
       const { calls, makeRegistry } = makeTestLayer();
       const registry = makeRegistry();
 
       registry.mount(skillsByRangeAtom(0));
-      await flush();
-
       const callsForRange0 = calls.filter(
         (c) =>
           c.method === "listSkillsByRange" &&

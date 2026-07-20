@@ -11,17 +11,18 @@ import {
   squadEditorInviteTargetsAtom,
   squadGroupEditorGrantsAtom,
 } from "@/lib/squad-builder/squad-group-sharing-atoms";
-import { flush, makeTestLayer } from "@/lib/test-utils/atom-test-utils";
+import {
+  makeTestLayer,
+  waitForAtomResults,
+} from "@/lib/test-utils/atom-test-utils";
 
 describe("sharing atom families", () => {
-  it("does not mount account-sharing resources for invalid account IDs", async () => {
+  it("does not mount account-sharing resources for invalid account IDs", () => {
     const { calls, makeRegistry } = makeTestLayer();
     const registry = makeRegistry();
 
     registry.mount(accountAccessGrantsAtom(0, "actor"));
     registry.mount(accountInviteTargetsAtom(-1, "query"));
-    await flush();
-
     expect(calls).toHaveLength(0);
   });
 
@@ -30,8 +31,9 @@ describe("sharing atom families", () => {
     const registry = makeRegistry();
     const actorUserId = "actor";
 
-    registry.mount(accountAccessGrantsAtom(5, actorUserId));
-    await flush();
+    const grants = accountAccessGrantsAtom(5, actorUserId);
+    registry.mount(grants);
+    await waitForAtomResults(registry, [grants]);
     const callsBefore = calls.filter(
       (call) => call.method === "listAccountAccessGrants"
     ).length;
@@ -41,7 +43,7 @@ describe("sharing atom families", () => {
       actorUserId,
       invitedUserId: "invited-user",
     });
-    await flush();
+    await waitForAtomResults(registry, [sendAccountAccessInviteAtom]);
 
     expect(
       calls.filter((call) => call.method === "listAccountAccessGrants")
@@ -53,8 +55,9 @@ describe("sharing atom families", () => {
     const registry = makeRegistry();
     const actorUserId = "actor";
 
-    registry.mount(accountAccessGrantsAtom(5, actorUserId));
-    await flush();
+    const grants = accountAccessGrantsAtom(5, actorUserId);
+    registry.mount(grants);
+    await waitForAtomResults(registry, [grants]);
     const callsBefore = calls.filter(
       (call) => call.method === "listAccountAccessGrants"
     ).length;
@@ -64,14 +67,14 @@ describe("sharing atom families", () => {
       accountId: 5,
       actorUserId,
     });
-    await flush();
+    await waitForAtomResults(registry, [revokeAccountAccessAtom]);
 
     expect(
       calls.filter((call) => call.method === "listAccountAccessGrants")
     ).toHaveLength(callsBefore + 1);
   });
 
-  it("does not mount squad-sharing resources for invalid group IDs", async () => {
+  it("does not mount squad-sharing resources for invalid group IDs", () => {
     const { calls, makeRegistry } = makeTestLayer();
     const registry = makeRegistry();
 
@@ -79,8 +82,6 @@ describe("sharing atom families", () => {
     registry.mount(
       squadEditorInviteTargetsAtom({ groupId: -1, query: "query" })
     );
-    await flush();
-
     expect(calls).toHaveLength(0);
   });
 
@@ -88,8 +89,9 @@ describe("sharing atom families", () => {
     const { calls, makeRegistry } = makeTestLayer();
     const registry = makeRegistry();
 
-    registry.mount(squadGroupEditorGrantsAtom({ groupId: 7 }));
-    await flush();
+    const grants = squadGroupEditorGrantsAtom({ groupId: 7 });
+    registry.mount(grants);
+    await waitForAtomResults(registry, [grants]);
     const callsBefore = calls.filter(
       (call) => call.method === "listSquadGroupEditorGrants"
     ).length;
@@ -98,7 +100,7 @@ describe("sharing atom families", () => {
       groupId: 7,
       invitationId: 11,
     });
-    await flush();
+    await waitForAtomResults(registry, [revokeSquadGroupEditorAtom]);
 
     expect(
       calls.filter((call) => call.method === "listSquadGroupEditorGrants")
