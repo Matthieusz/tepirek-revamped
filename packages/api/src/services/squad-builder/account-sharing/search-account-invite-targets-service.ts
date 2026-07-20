@@ -36,7 +36,7 @@ export const layer = Layer.effect(
   EffectRuntime.gen(function* makeAccountInviteTargetsService() {
     const store = yield* AccountSharingStoreService;
 
-    return {
+    return AccountInviteTargetsService.of({
       search: EffectRuntime.fn("AccountInviteTargets.search")(
         function* search(input) {
           const query = yield* parseInviteTargetQuery(input.query);
@@ -56,6 +56,6 @@ export const layer = Layer.effect(
           });
         }
       ),
-    };
+    });
   })
 );

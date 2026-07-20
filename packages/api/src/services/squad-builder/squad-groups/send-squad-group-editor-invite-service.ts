@@ -32,7 +32,7 @@ export const layer = Layer.effect(
   EffectRuntime.gen(function* makeSquadGroupEditorInvitesService() {
     const store = yield* SquadGroupStoreService;
 
-    return {
+    return SquadGroupEditorInvitesService.of({
       send: EffectRuntime.fn("SquadGroupEditorInvites.send")(
         function* send(input) {
           const now = new Date(yield* Clock.currentTimeMillis);
@@ -57,6 +57,6 @@ export const layer = Layer.effect(
           });
         }
       ),
-    };
+    });
   })
 );

@@ -35,7 +35,7 @@ export const layer = Layer.effect(
   EffectRuntime.gen(function* makeAccountAccessRevocationsService() {
     const store = yield* AccountSharingStoreService;
 
-    return {
+    return AccountAccessRevocationsService.of({
       revoke: EffectRuntime.fn("AccountAccessRevocations.revoke")(
         function* revoke(input) {
           const now = new Date(yield* Clock.currentTimeMillis);
@@ -47,6 +47,6 @@ export const layer = Layer.effect(
           });
         }
       ),
-    };
+    });
   })
 );

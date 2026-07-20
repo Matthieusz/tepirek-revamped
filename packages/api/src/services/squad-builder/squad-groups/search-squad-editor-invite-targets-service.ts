@@ -34,7 +34,7 @@ export const layer = Layer.effect(
   EffectRuntime.gen(function* makeSquadEditorInviteTargetsService() {
     const store = yield* SquadGroupStoreService;
 
-    return {
+    return SquadEditorInviteTargetsService.of({
       search: EffectRuntime.fn("SquadGroupEditorInvites.searchTargets")(
         function* search(input) {
           const query = yield* parseInviteTargetQuery(input.query);
@@ -52,6 +52,6 @@ export const layer = Layer.effect(
           });
         }
       ),
-    };
+    });
   })
 );

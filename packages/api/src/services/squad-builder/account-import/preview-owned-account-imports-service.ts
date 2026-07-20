@@ -477,6 +477,8 @@ export const layer = Layer.effect(
     const singleProfilePreview = {
       preview: makePreviewMargonemProfileImport(store, config, firecrawl),
     };
-    return { preview: makePreview(store, singleProfilePreview) };
+    return PreviewOwnedAccountImportsService.of({
+      preview: makePreview(store, singleProfilePreview),
+    });
   })
 );

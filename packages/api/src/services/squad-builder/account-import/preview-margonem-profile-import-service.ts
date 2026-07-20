@@ -225,8 +225,8 @@ export const layer = Layer.effect(
     const store = yield* AccountImportStoreService;
     const config = yield* FirecrawlConfigService;
     const firecrawl = yield* FirecrawlClientService;
-    return {
+    return PreviewMargonemProfileImportService.of({
       preview: makePreviewMargonemProfileImport(store, config, firecrawl),
-    };
+    });
   })
 );

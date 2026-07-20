@@ -53,13 +53,13 @@ export const layer = Layer.effect(
   ListSquadGroupsService,
   Effect.gen(function* makeService() {
     const store = yield* SquadGroupStoreService;
-    return {
+    return ListSquadGroupsService.of({
       getMine: Effect.fn("SquadGroups.getMine")((input) =>
         store.getSquadGroupDetail(input)
       ),
       listMine: Effect.fn("SquadGroups.listMine")((input) =>
         store.listMySquadGroups(input)
       ),
-    };
+    });
   })
 );

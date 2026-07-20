@@ -62,7 +62,9 @@ export class UpdateOwnedAccountDisplayNameService extends Context.Service<
     UpdateOwnedAccountDisplayNameService,
     Effect.gen(function* updateOwnedAccountDisplayNameLayer() {
       const store = yield* AccountImportStoreService;
-      return { update: makeUpdate(store) };
+      return UpdateOwnedAccountDisplayNameService.of({
+        update: makeUpdate(store),
+      });
     })
   );
 }

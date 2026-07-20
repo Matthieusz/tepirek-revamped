@@ -85,6 +85,6 @@ export const layer = Layer.effect(
   SaveSquadGroupService,
   Effect.gen(function* layer() {
     const store = yield* SquadGroupStore.SquadGroupStoreService;
-    return { save: makeSave(store) };
+    return SaveSquadGroupService.of({ save: makeSave(store) });
   })
 );

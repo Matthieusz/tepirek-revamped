@@ -45,6 +45,6 @@ export const layer = Layer.effect(
   ListGlobalSquadGroupsService,
   Effect.gen(function* layer() {
     const store = yield* SquadGroupStoreService;
-    return { list: makeList(store) };
+    return ListGlobalSquadGroupsService.of({ list: makeList(store) });
   })
 );

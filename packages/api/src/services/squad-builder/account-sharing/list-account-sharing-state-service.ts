@@ -56,7 +56,7 @@ export const layer = Layer.effect(
   EffectRuntime.gen(function* makeAccountSharingStateService() {
     const store = yield* AccountSharingStoreService;
 
-    return {
+    return AccountSharingStateService.of({
       listAccountAccessGrants: EffectRuntime.fn(
         "AccountSharingState.listAccountAccessGrants"
       )(function* listAccountAccessGrants(input) {
@@ -88,6 +88,6 @@ export const layer = Layer.effect(
           actorUserId: input.actorUserId,
         });
       }),
-    };
+    });
   })
 );

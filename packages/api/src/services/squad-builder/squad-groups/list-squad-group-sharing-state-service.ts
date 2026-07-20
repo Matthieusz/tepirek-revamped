@@ -63,7 +63,7 @@ export const layer = Layer.effect(
   EffectRuntime.gen(function* makeSquadGroupSharingStateService() {
     const store = yield* SquadGroupStoreService;
 
-    return {
+    return SquadGroupSharingStateService.of({
       countPendingInvites: EffectRuntime.fn(
         "SquadGroupSharingState.countPendingInvites"
       )(function* countPendingInvites(input) {
@@ -94,6 +94,6 @@ export const layer = Layer.effect(
           filters: input.filters ?? emptySquadGroupListFilters,
         });
       }),
-    };
+    });
   })
 );

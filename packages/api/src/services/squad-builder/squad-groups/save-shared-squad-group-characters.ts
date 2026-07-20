@@ -175,6 +175,8 @@ export const layer = Layer.effect(
   SaveSharedSquadGroupCharactersService,
   Effect.gen(function* layer() {
     const store = yield* SquadGroupStoreService;
-    return { saveWithStoreService: makeSave(store) };
+    return SaveSharedSquadGroupCharactersService.of({
+      saveWithStoreService: makeSave(store),
+    });
   })
 );

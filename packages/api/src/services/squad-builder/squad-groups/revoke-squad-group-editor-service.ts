@@ -30,7 +30,7 @@ export const layer = Layer.effect(
   EffectRuntime.gen(function* makeSquadGroupEditorRevocationsService() {
     const store = yield* SquadGroupStoreService;
 
-    return {
+    return SquadGroupEditorRevocationsService.of({
       revoke: EffectRuntime.fn("SquadGroupEditorInvites.revoke")(
         function* revoke(input) {
           const now = new Date(yield* Clock.currentTimeMillis);
@@ -42,6 +42,6 @@ export const layer = Layer.effect(
           });
         }
       ),
-    };
+    });
   })
 );

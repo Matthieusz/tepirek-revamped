@@ -57,6 +57,6 @@ export const layer = Layer.effect(
   SetSquadGroupVisibilityService,
   Effect.gen(function* layer() {
     const store = yield* SquadGroupStore.SquadGroupStoreService;
-    return { set: makeSet(store) };
+    return SetSquadGroupVisibilityService.of({ set: makeSet(store) });
   })
 );

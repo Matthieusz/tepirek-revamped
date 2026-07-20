@@ -93,6 +93,6 @@ export const layer = Layer.effect(
   ApplyAccountRefetchService,
   EffectRuntime.gen(function* layer() {
     const store = yield* AccountRefetchStoreService;
-    return { apply: makeApply(store) };
+    return ApplyAccountRefetchService.of({ apply: makeApply(store) });
   })
 );

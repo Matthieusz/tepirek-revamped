@@ -49,7 +49,7 @@ export class DeleteOwnedAccountService extends Context.Service<
     DeleteOwnedAccountService,
     Effect.gen(function* deleteOwnedAccountLayer() {
       const store = yield* AccountImportStoreService;
-      return { delete: makeDelete(store) };
+      return DeleteOwnedAccountService.of({ delete: makeDelete(store) });
     })
   );
 }

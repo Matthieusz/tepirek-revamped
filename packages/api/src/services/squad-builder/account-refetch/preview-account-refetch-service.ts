@@ -205,6 +205,8 @@ export const layer = Layer.effect(
     const store = yield* AccountRefetchStoreService;
     const config = yield* FirecrawlConfigService;
     const firecrawl = yield* FirecrawlClientService;
-    return { preview: makePreview(store, config, firecrawl) };
+    return PreviewAccountRefetchService.of({
+      preview: makePreview(store, config, firecrawl),
+    });
   })
 );
