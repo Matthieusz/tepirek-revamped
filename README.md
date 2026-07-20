@@ -1,228 +1,103 @@
-# 🎮 Tepirek Revamped
+# Tepirek Revamped
 
-A modern guild management platform for **Margonem** MMORPG players. We built this because spreadsheets weren't cutting it anymore — managing squads, tracking events, running auctions, and keeping tabs on everyone's skills deserves something better.
+Guild operations software for [Margonem](https://www.margonem.com/) players. It replaces the spreadsheets and chat threads used to coordinate events, hero bets, auctions, skill ranges, player access, and squads.
 
-Built with TypeScript, end-to-end typesafety, and a monorepo setup that makes the frontend and backend actually talk to each other without the usual API contract headaches.
+## What is here
 
----
+- Events, hero records, betting, rankings, and the guild vault
+- Main- and auxiliary-character auctions with profession views
+- Skill tracking by range
+- Player verification, announcements, and tasks
+- Squad planning from imported Margonem accounts
+- ODW and item-upgrade calculators
+- Email/password and Discord sign-in with admin approval
 
-## ✨ What you can do
+## Repository layout
 
-### 📊 Event Management
-
-- Track guild events and activities
-- Hero management with a betting system
-- Event history, rankings, and vault management
-
-### 💰 Auction System
-
-- Main and auxiliary character auctions
-- Profession-based filtering
-- Round and column-based signup
-
-### 🎯 Skills Tracker
-
-- One place to store all of clans skills
-- Range-based skill organization
-
-### 👥 User Management
-
-- Role-based access control (Admin/User)
-- Discord OAuth
-- Admin panel for managing users
-
-### 📋 And a few extras
-
-- Task/todo management
-- Guild announcements
-- Player listing with verification status
-- Calculator tools (ODW, ULEPA)
-
----
-
-## 🏗️ What's under the hood
-
-This is a **Turborepo monorepo** with end-to-end typesafety. The frontend and backend share Effect `HttpApi` contracts and schema-derived types through the `packages/api` layer, so there's no guessing about API contracts — change a schema in one place and everything stays in sync.
-
-```
-tepirek-revamped/
-├── apps/
-│   ├── web/          # Frontend (TanStack Start, port 3001)
-│   └── server/       # Backend (Hono + Bun, port 3000)
-│
-├── packages/
-│   ├── api/          # Shared Effect HttpApi contracts, handlers, and services
-│   ├── auth/         # Better Auth config
-│   ├── db/           # Drizzle ORM + PostgreSQL schemas
-│   └── config/       # Shared TypeScript configs
-│
-└── turbo.json        # Build orchestration
+```text
+apps/web       TanStack Start and React frontend (port 3001)
+apps/server    Bun/Hono HTTP server (port 3000)
+packages/api   Effect HTTP contracts, domain logic, and handlers
+packages/auth  Better Auth configuration
+packages/db    Drizzle schemas, migrations, and local PostgreSQL
+packages/config Shared TypeScript and application configuration
 ```
 
-### Tech choices
+The web and server applications use the same Effect HTTP contracts from `packages/api`. PostgreSQL access is defined in `packages/db`; authentication is kept in `packages/auth`.
 
-| Layer        | What we use                | Why                                       |
-| ------------ | -------------------------- | ----------------------------------------- |
-| **Frontend** | TanStack Start + React 19  | SSR, file-based routing, great DX         |
-| **Backend**  | Hono + Bun                 | Lightweight, fast, simple                 |
-| **API**      | Effect HttpApi             | End-to-end typesafety from shared schemas |
-| **Database** | PostgreSQL + Drizzle ORM   | Type-safe queries, no ORM bloat           |
-| **Auth**     | Better Auth                | Discord OAuth + email, zero fuss          |
-| **UI**       | shadcn/ui + Tailwind v4    | Accessible, customizable, no lock-in      |
-| **Linting**  | Ultracite (Oxlint + Oxfmt) | Fast, strict, zero-config                 |
+## Local setup
 
-### Form architecture
-
-Validated submissions and mutations in `apps/web` use `@lucas-barake/effect-form-react` with Effect Schema as their source of truth. Local React state is reserved for transient controls such as search text and tab selection. Promise-based submissions go through the shared `formSubmission` bridge so expected failures stay in the Effect error channel; schema validation is rendered at the relevant field.
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- **Node.js** 20+
-- **pnpm** 10+
-- **PostgreSQL** 15+
-- **Bun** (for the server)
-
-### Quick start
-
-Already know the drill?
+You need Node.js 20 or newer, pnpm 11, Bun, and Docker.
 
 ```bash
 git clone https://github.com/Matthieusz/tepirek-revamped.git
 cd tepirek-revamped
+corepack enable
 pnpm install
-pnpm db:start && pnpm db:push && pnpm dev
+cp apps/server/.env.example apps/server/.env
 ```
 
-### Full setup
+Fill in `apps/server/.env`. The local database started by this repository uses:
 
-1. **Clone & install**
+```env
+DATABASE_URL=postgresql://postgres:password@localhost:5432/tepirek-revamped
+BETTER_AUTH_SECRET=replace-with-at-least-32-characters
+BETTER_AUTH_URL=http://localhost:3000
+CORS_ORIGIN=http://localhost:3001
+```
 
-   ```bash
-   git clone https://github.com/Matthieusz/tepirek-revamped.git
-   cd tepirek-revamped
-   pnpm install
-   ```
+Discord credentials, a Discord server ID, and a Firecrawl API key are also required at startup; every variable is documented in [`apps/server/.env.example`](apps/server/.env.example). Keep `.env` out of source control and rotate any secret that is exposed.
 
-2. **Set up your env**
+Start PostgreSQL, apply the schema, and run both applications:
 
-   Create `apps/server/.env`:
+```bash
+pnpm db:start
+pnpm db:push
+pnpm dev
+```
 
-   ```env
-   # Database
-   DATABASE_URL=postgresql://user:password@localhost:5432/tepirek
-   TEST_DATABASE_URL=postgresql://user:password@localhost:5432/tepirek_test
+Open <http://localhost:3001>. The API is available at <http://localhost:3000>; its OpenAPI document is at <http://localhost:3000/api/openapi.json>.
 
-   # Auth
-   BETTER_AUTH_SECRET=your-secret-key-here
-   BETTER_AUTH_URL=http://localhost:3000
-   CORS_ORIGIN=http://localhost:3001
+## Commands
 
-   # Discord OAuth (required by the current login UI and server auth config)
-   DISCORD_CLIENT_ID=your-discord-client-id
-   DISCORD_CLIENT_SECRET=your-discord-client-secret
-   DISCORD_SERVER_ID=your-discord-server-id
+| Command                 | Purpose                                      |
+| ----------------------- | -------------------------------------------- |
+| `pnpm dev`              | Run web and server development processes     |
+| `pnpm build`            | Build all workspaces                         |
+| `pnpm check-types`      | Type-check all workspaces                    |
+| `pnpm test`             | Run unit tests                               |
+| `pnpm test:smoke`       | Check server startup and health              |
+| `pnpm test:integration` | Run API tests against dedicated PostgreSQL   |
+| `pnpm check`            | Check formatting and lint rules              |
+| `pnpm fix`              | Apply formatting and safe lint fixes         |
+| `pnpm check:unused`     | Find unused files, exports, and dependencies |
+| `pnpm db:generate`      | Generate a migration after a schema change   |
+| `pnpm db:migrate`       | Apply committed migrations                   |
+| `pnpm db:studio`        | Open Drizzle Studio                          |
+| `pnpm db:stop`          | Stop local PostgreSQL                        |
 
-   # Squad builder / Firecrawl (required by current startup configuration)
-   FIRECRAWL_API_KEY=your-firecrawl-api-key
-   FIRECRAWL_MONTHLY_REQUEST_BUDGET=900
-   ```
+Integration tests create a dedicated PostgreSQL container on port `5433`. To use an existing test database, set `TEST_DATABASE_URL` and `API_INTEGRATION_ALLOW_DATABASE_RESET=1`. The suite migrates and truncates that database, so never point it at development or production data.
 
-   Local dummy values are enough for tests and smoke tests that do not
-   exercise Discord login or Firecrawl, but real development login through
-   Discord requires real Discord application credentials. Account import and
-   refetch require a real Firecrawl provider credential. Startup validation
-   requires `BETTER_AUTH_SECRET` to be at least 32 characters and rejects
-   empty Discord credentials, `DISCORD_SERVER_ID`, or `FIRECRAWL_API_KEY`.
-   The monthly budget accepts integers from 1 to 1000 and defaults to 900.
+## Technical references
 
-   > **Secret hygiene:** `.env.example` is safe to commit; `.env` is git-ignored
-   > and must never be committed. If `BETTER_AUTH_SECRET`,
-   > `DISCORD_CLIENT_SECRET`, or `FIRECRAWL_API_KEY` is accidentally exposed
-   > (terminal transcript, screenshot, issue, chat, or agent output), rotate it
-   > in the relevant dashboard immediately. Never paste `.env` contents into
-   > plans, issues, or chats. Use deployment secret stores for production.
+- [Margonem](https://www.margonem.com/) — the game this project supports
+- [TanStack Start](https://tanstack.com/start/latest) and [React](https://react.dev/) — web application
+- [Effect](https://effect.website/) — schemas, services, and HTTP contracts
+- [Hono](https://hono.dev/) and [Bun](https://bun.sh/docs) — server host and runtime
+- [Better Auth](https://www.better-auth.com/docs) — sessions and Discord OAuth
+- [Drizzle ORM](https://orm.drizzle.team/docs/overview) and [PostgreSQL](https://www.postgresql.org/docs/) — persistence
+- [Turborepo](https://turborepo.com/docs) and [pnpm workspaces](https://pnpm.io/workspaces) — monorepo tooling
 
-3. **Set up the database**
+## Contributing
 
-   ```bash
-   pnpm db:start    # Start PostgreSQL (Docker)
-   pnpm db:push     # Push schema to database
-   ```
+Keep changes scoped and follow the existing workspace boundaries. Before opening a pull request, run:
 
-4. **Start dev servers**
+```bash
+pnpm check
+pnpm check-types
+pnpm test
+```
 
-   ```bash
-   pnpm dev
-   ```
+Schema changes should include generated migrations. API behavior should include unit or integration coverage as appropriate.
 
-   - Frontend: [http://localhost:3001](http://localhost:3001)
-   - API: [http://localhost:3000](http://localhost:3000)
-
----
-
-## 📜 Commands
-
-| Command                 | What it does                                                |
-| ----------------------- | ----------------------------------------------------------- |
-| `pnpm dev`              | Start everything in dev mode                                |
-| `pnpm dev:web`          | Frontend only                                               |
-| `pnpm dev:server`       | Backend only                                                |
-| `pnpm build`            | Build everything for production                             |
-| `pnpm check`            | Run Ultracite (lint + format check)                         |
-| `pnpm check:unused`     | Check for unused exports and dependencies                   |
-| `pnpm fix`              | Auto-fix lint and format issues                             |
-| `pnpm check-types`      | TypeScript type checking                                    |
-| `pnpm test`             | Run unit tests                                              |
-| `pnpm test:smoke`       | Run fast app-start and health smoke tests                   |
-| `pnpm test:integration` | Run API/router integration tests against dedicated Postgres |
-
-### Integration tests
-
-`pnpm test:smoke` runs fast app-start and health checks. `pnpm test:integration` remains the primary confidence layer for guild-critical workflows.
-
-`pnpm test:integration` runs the API/router integration suite. By default, it starts a dedicated Docker Postgres database on port `5433`, applies the real schema, truncates application tables between tests, and stops the container after the suite completes.
-
-Set `TEST_DATABASE_URL` only when you want to connect to an already-running dedicated test database. The built-in Docker database needs no extra setting; an explicitly supplied database requires `API_INTEGRATION_ALLOW_DATABASE_RESET=1` because the suite may apply migrations and truncate its application tables. Do not point it at your development database.
-
-### Database
-
-| Command            | What it does                                            |
-| ------------------ | ------------------------------------------------------- |
-| `pnpm db:push`     | Push schema directly for local prototyping only         |
-| `pnpm db:studio`   | Open Drizzle Studio (database GUI)                      |
-| `pnpm db:generate` | Generate migration files to commit after schema changes |
-| `pnpm db:migrate`  | Apply committed migrations                              |
-| `pnpm db:start`    | Start PostgreSQL (Docker)                               |
-| `pnpm db:stop`     | Stop PostgreSQL                                         |
-
----
-
-## 🔐 Authentication Flow
-
-1. **Sign up** — Email/password or Discord OAuth
-2. **Wait in the waiting room** — Wait till you get verified by an admin or get approved through membership in set Discord server
-3. **Get approved** — Admins verify you via the player list
-
----
-
-## 🤝 Contributing
-
-Got an idea or found a bug? Here's how to help out:
-
-1. Fork the repo
-2. Create a branch (`git checkout -b feature/your-thing`)
-3. Make your changes
-4. Run `pnpm check` and `pnpm check-types` to make sure everything's clean
-5. Push and open a PR
-
-If you're not sure where to start, just open an issue and we'll figure it out together.
-
----
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
+Licensed under the [MIT License](LICENSE).
