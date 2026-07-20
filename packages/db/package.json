@@ -11,6 +11,7 @@
   },
   "scripts": {
     "check-types": "tsc -b",
+    "test": "vitest run",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
@@ -29,6 +30,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@tepirek-revamped/config": "workspace:*",
     "@types/pg": "^8.20.0",
     "drizzle-kit": "catalog:",

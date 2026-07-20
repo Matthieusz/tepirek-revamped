@@ -91,7 +91,7 @@ export const PgClientLiveFromConfig = Layer.unwrap(
     const url = yield* DatabaseUrlConfig;
     return makePgClientLayer(url);
   })
-).pipe(Layer.orDie);
+);
 
 /** Layer that provides the Effect-native Drizzle database from a PgClient. */
 export const EffectDatabaseLayer: Layer.Layer<
