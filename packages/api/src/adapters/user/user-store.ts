@@ -1,4 +1,4 @@
-/* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
+// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import type {
   EffectPgDatabase,
   TransactionDatabase,
@@ -17,8 +17,9 @@ import {
   UserForbidden,
   UserNotFound,
 } from "../../protocol/user/http-api-contract.ts";
+import { decodePersistedValue } from "../persistence-query.ts";
 import { userPersistenceQuery } from "./persistence-query.ts";
-import type { UserAdapterError } from "./user-adapter-error.ts";
+import { UserAdapterError } from "./user-adapter-error.ts";
 
 const LAST_ADMIN_MESSAGE =
   "Nie można odebrać uprawnień ostatniemu administratorowi";
@@ -55,16 +56,24 @@ export interface Player {
   readonly verified: boolean;
 }
 
-const toVerifiedMember = (row: {
+const decodeAppUserId = (input: unknown, operation: string) =>
+  decodePersistedValue(
+    AppUserId,
+    input,
+    operation,
+    (error) => new UserAdapterError(error)
+  );
+
+const toVerifiedMember = Effect.fnUntraced(function* toVerifiedMember(row: {
   readonly id: string;
   readonly image: string | null;
   readonly name: string;
-}): VerifiedMember => ({
-  ...row,
-  id: AppUserId.make(row.id),
+}) {
+  const id = yield* decodeAppUserId(row.id, "getVerified.decode");
+  return { ...row, id };
 });
 
-const toPlayer = (row: {
+const toPlayer = Effect.fnUntraced(function* toPlayer(row: {
   readonly createdAt: Date;
   readonly id: string;
   readonly image: string | null;
@@ -72,9 +81,9 @@ const toPlayer = (row: {
   readonly role: string | null;
   readonly updatedAt: Date;
   readonly verified: boolean;
-}): Player => ({
-  ...row,
-  id: AppUserId.make(row.id),
+}) {
+  const id = yield* decodeAppUserId(row.id, "listUsers.decode");
+  return { ...row, id };
 });
 
 type UserRow = typeof user.$inferSelect;
@@ -184,7 +193,7 @@ const updateAndReturnUser = Effect.fnUntraced(function* updateAndReturnUser(
   );
 
   const [row] = rows;
-  return row === undefined ? null : toPlayer(row);
+  return row === undefined ? null : yield* toPlayer(row);
 });
 
 const mutateAdminAvailabilityUser = Effect.fnUntraced(
@@ -253,13 +262,13 @@ const getVerifiedWithDatabase = (database: EffectPgDatabase) => () =>
       .select(verifiedMemberSelect)
       .from(user)
       .where(eq(user.verified, true))
-  ).pipe(Effect.map((rows) => rows.map(toVerifiedMember)));
+  ).pipe(Effect.flatMap((rows) => Effect.all(rows.map(toVerifiedMember))));
 
 const listWithDatabase = (database: EffectPgDatabase) => () =>
   userPersistenceQuery(
     "listUsers",
     database.select(playerListSelect).from(user)
-  ).pipe(Effect.map((rows) => rows.map(toPlayer)));
+  ).pipe(Effect.flatMap((rows) => Effect.all(rows.map(toPlayer))));
 
 const setRoleWithDatabase =
   (database: EffectPgDatabase) =>

@@ -2,11 +2,15 @@ import { describe, expect, it } from "@effect/vitest";
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Effect from "effect/Effect";
 
+import { AnnouncementId } from "../domain/core-identifiers.ts";
 import { AnnouncementStoreError } from "./announcement/announcement-store-error.ts";
 import { AuctionStoreError } from "./auction/auction-store-error.ts";
 import { EventStoreError } from "./event/event-store-error.ts";
 import { HeroesStoreError } from "./heroes/heroes-store-error.ts";
-import { makeDirectPersistenceQuery } from "./persistence-query.ts";
+import {
+  decodePersistedValue,
+  makeDirectPersistenceQuery,
+} from "./persistence-query.ts";
 import { SkillsStoreError } from "./skills/skills-store-error.ts";
 import { TodoStoreError } from "./todo/todo-store-error.ts";
 
@@ -54,4 +58,24 @@ describe("makeDirectPersistenceQuery", () => {
   testProjection("HeroesStoreError", (input) => new HeroesStoreError(input));
   testProjection("SkillsStoreError", (input) => new SkillsStoreError(input));
   testProjection("TodoStoreError", (input) => new TodoStoreError(input));
+});
+
+describe("decodePersistedValue", () => {
+  it.effect(
+    "returns malformed persisted values as typed adapter failures",
+    () =>
+      Effect.gen(function* persistedValueDecodeTest() {
+        const error = yield* Effect.flip(
+          decodePersistedValue(
+            AnnouncementId,
+            0,
+            "listAnnouncements.decode",
+            (input) => new AnnouncementStoreError(input)
+          )
+        );
+
+        expect(error).toBeInstanceOf(AnnouncementStoreError);
+        expect(error.operation).toBe("listAnnouncements.decode");
+      })
+  );
 });

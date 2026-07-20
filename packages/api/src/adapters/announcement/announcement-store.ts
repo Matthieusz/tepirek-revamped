@@ -8,11 +8,15 @@ import { desc, eq } from "drizzle-orm";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import type * as Schema from "effect/Schema";
 
 import { AnnouncementId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import type { AnnouncementSummary } from "../../protocol/announcement/http-api-contract.ts";
-import { makeDirectPersistenceQuery } from "../persistence-query.ts";
+import {
+  decodePersistedValue,
+  makeDirectPersistenceQuery,
+} from "../persistence-query.ts";
 import { AnnouncementStoreError } from "./announcement-store-error.ts";
 
 export interface CreateAnnouncementInput {
@@ -29,6 +33,15 @@ export interface DeleteAnnouncementInput {
 const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new AnnouncementStoreError(input)
 );
+const decodePersisted =
+  <A>(schema: Schema.ConstraintDecoder<A, never>) =>
+  (input: unknown) =>
+    decodePersistedValue(
+      schema,
+      input,
+      "listAnnouncements.decode",
+      (error) => new AnnouncementStoreError(error)
+    );
 
 const createWithDatabase =
   (database: EffectPgDatabase) =>
@@ -70,15 +83,23 @@ const listWithDatabase = (database: EffectPgDatabase) => () =>
       .leftJoin(user, eq(announcement.userId, user.id))
       .orderBy(desc(announcement.createdAt))
   ).pipe(
-    Effect.map((rows) =>
-      rows.map((row) => ({
-        ...row,
-        id: AnnouncementId.make(row.id),
-        user:
-          row.user === null
-            ? null
-            : { ...row.user, id: AppUserId.make(row.user.id) },
-      }))
+    Effect.flatMap((rows) =>
+      Effect.all(
+        rows.map((row) =>
+          Effect.gen(function* decodeAnnouncementRow() {
+            const id = yield* decodePersisted(AnnouncementId)(row.id);
+            if (row.user === null) {
+              return { ...row, id, user: null };
+            }
+            const userId = yield* decodePersisted(AppUserId)(row.user.id);
+            return {
+              ...row,
+              id,
+              user: { ...row.user, id: userId },
+            };
+          })
+        )
+      )
     )
   );
 

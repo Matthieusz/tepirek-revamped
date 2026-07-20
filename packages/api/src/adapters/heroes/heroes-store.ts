@@ -7,10 +7,14 @@ import { eq } from "drizzle-orm";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import type * as Schema from "effect/Schema";
 
 import { EventId, HeroId } from "../../domain/core-identifiers.ts";
 import type { HeroSummary } from "../../protocol/heroes/http-api-contract.ts";
-import { makeDirectPersistenceQuery } from "../persistence-query.ts";
+import {
+  decodePersistedValue,
+  makeDirectPersistenceQuery,
+} from "../persistence-query.ts";
 import { HeroesStoreError } from "./heroes-store-error.ts";
 
 export interface CreateHeroInput {
@@ -29,6 +33,26 @@ export interface ListHeroesByEventInput {
 const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new HeroesStoreError(input)
 );
+const decodePersisted =
+  <A>(schema: Schema.ConstraintDecoder<A, never>) =>
+  (input: unknown) =>
+    decodePersistedValue(
+      schema,
+      input,
+      "decodeHeroRow",
+      (error) => new HeroesStoreError(error)
+    );
+
+const decodeHeroRow = <
+  T extends { readonly eventId: number; readonly id: number },
+>(
+  row: T
+) =>
+  Effect.gen(function* decodeHeroRowEffect() {
+    const eventId = yield* decodePersisted(EventId)(row.eventId);
+    const id = yield* decodePersisted(HeroId)(row.id);
+    return { ...row, eventId, id };
+  });
 
 const createWithDatabase =
   (database: EffectPgDatabase) =>
@@ -50,13 +74,7 @@ const deleteWithDatabase =
 
 const listWithDatabase = (database: EffectPgDatabase) => () =>
   persistenceQuery("listHeroes", database.select().from(hero)).pipe(
-    Effect.map((rows) =>
-      rows.map((row) => ({
-        ...row,
-        eventId: EventId.make(row.eventId),
-        id: HeroId.make(row.id),
-      }))
-    )
+    Effect.flatMap((rows) => Effect.all(rows.map(decodeHeroRow)))
   );
 
 const listByEventWithDatabase =
@@ -65,15 +83,7 @@ const listByEventWithDatabase =
     persistenceQuery(
       "listHeroesByEvent",
       database.select().from(hero).where(eq(hero.eventId, eventId))
-    ).pipe(
-      Effect.map((rows) =>
-        rows.map((row) => ({
-          ...row,
-          eventId: EventId.make(row.eventId),
-          id: HeroId.make(row.id),
-        }))
-      )
-    );
+    ).pipe(Effect.flatMap((rows) => Effect.all(rows.map(decodeHeroRow))));
 
 export class HeroesStore extends Context.Service<
   HeroesStore,
