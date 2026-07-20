@@ -1,3 +1,5 @@
+import * as Schema from "effect/Schema";
+
 export const POINTS_PER_HERO = 20;
 export const MIN_EARNINGS = 100_000_000;
 
@@ -25,8 +27,8 @@ export const EVENT_ICON_IDS = [
 
 export type EventIconId = (typeof EVENT_ICON_IDS)[number];
 
-export const isEventIconId = (value: string): value is EventIconId =>
-  EVENT_ICON_IDS.some((eventIconId) => eventIconId === value);
+const EventIconIdSchema = Schema.Literals(EVENT_ICON_IDS);
+export const isEventIconId = Schema.is(EventIconIdSchema);
 
 export interface EventIconOption {
   id: EventIconId;
@@ -51,8 +53,8 @@ export const DEFAULT_EVENT_ICON_ID: EventIconId = "calendar";
 export const AUCTION_TYPES = ["main", "support"] as const;
 export type AuctionType = (typeof AUCTION_TYPES)[number];
 
-export const isAuctionType = (value: string): value is AuctionType =>
-  AUCTION_TYPES.some((auctionType) => auctionType === value);
+const AuctionTypeSchema = Schema.Literals(AUCTION_TYPES);
+export const isAuctionType = Schema.is(AuctionTypeSchema);
 
 export const AUCTION_PROFESSIONS = [
   "tracker",
@@ -64,13 +66,23 @@ export const AUCTION_PROFESSIONS = [
 ] as const;
 export type AuctionProfession = (typeof AUCTION_PROFESSIONS)[number];
 
-export const isAuctionProfession = (
-  value: string
-): value is AuctionProfession =>
-  AUCTION_PROFESSIONS.some((auctionProfession) => auctionProfession === value);
+const AuctionProfessionSchema = Schema.Literals(AUCTION_PROFESSIONS);
+export const isAuctionProfession = Schema.is(AuctionProfessionSchema);
 
 // ---------------------------------------------------------------------------
 // Auction slot rules (levels, rounds, columns, legality)
 // ---------------------------------------------------------------------------
 
-export * from "./auction-slots.ts";
+export {
+  AUCTION_SLOT_COLUMNS,
+  AUCTION_SLOT_LEVELS,
+  AUCTION_SLOT_ROUND_LABELS,
+  AUCTION_SLOT_ROUNDS,
+  getAuctionSlotColumnCount,
+  getAuctionSlotColumns,
+  isLegalAuctionSlot,
+} from "./auction-slots.ts";
+export type {
+  AuctionSlotCoordinate,
+  AuctionSlotRound,
+} from "./auction-slots.ts";

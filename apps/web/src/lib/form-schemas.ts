@@ -8,8 +8,11 @@ import {
   DEFAULT_EVENT_ICON_ID,
   EVENT_ICON_IDS,
 } from "@tepirek-revamped/config";
+import * as Arr from "effect/Array";
+import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
+import * as Str from "effect/String";
 
 import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
 import { parseLevels } from "@/lib/calculators/bounty";
@@ -140,10 +143,12 @@ export const RequiredSelectionSchema = (message: string) =>
 export const MAX_PROFILE_URLS = 20;
 
 export const getProfileLines = (value: string): readonly string[] =>
-  value
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
+  Arr.filterMap<string, string, null>((line) => {
+    const trimmedLine = Str.trim(line);
+    return Str.isNonEmpty(trimmedLine)
+      ? Result.succeed(trimmedLine)
+      : Result.fail(null);
+  })(Str.split(value, "\n"));
 
 export const ProfileUrlsSchema = Schema.String.pipe(
   Schema.refine((value): value is string => getProfileLines(value).length > 0, {
@@ -220,23 +225,21 @@ export const CreateSquadGroupNameSchema =
     })
   );
 
-export const CalculatorLevelSchema = Schema.Number.pipe(
-  Schema.refine((value): value is number => Number.isInteger(value), {
-    message: "Podaj liczbę całkowitą od 1 do 500",
-  }),
-  Schema.refine((value): value is number => value >= 1 && value <= 500, {
-    message: "Podaj liczbę całkowitą od 1 do 500",
+export const CalculatorLevelSchema = Schema.Number.check(
+  Schema.isInt({ message: "Podaj liczbę całkowitą od 1 do 500" }),
+  Schema.isBetween({
+    maximum: 500,
+    minimum: 1,
   })
-);
+).annotate({ message: "Podaj liczbę całkowitą od 1 do 500" });
 
-export const CalculatorItemLevelSchema = Schema.Number.pipe(
-  Schema.refine((value): value is number => Number.isInteger(value), {
-    message: "Podaj liczbę całkowitą od 1 do 300",
-  }),
-  Schema.refine((value): value is number => value >= 1 && value <= 300, {
-    message: "Podaj liczbę całkowitą od 1 do 300",
+export const CalculatorItemLevelSchema = Schema.Number.check(
+  Schema.isInt({ message: "Podaj liczbę całkowitą od 1 do 300" }),
+  Schema.isBetween({
+    maximum: 300,
+    minimum: 1,
   })
-);
+).annotate({ message: "Podaj liczbę całkowitą od 1 do 300" });
 
 export const CalculatorLevelsSchema = Schema.String.pipe(
   Schema.refine((value): value is string => value.trim().length > 0, {

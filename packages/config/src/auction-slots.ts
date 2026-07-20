@@ -1,3 +1,6 @@
+import * as Arr from "effect/Array";
+import * as Schema from "effect/Schema";
+
 import type { AuctionProfession, AuctionType } from "./index.ts";
 
 /**
@@ -8,9 +11,10 @@ import type { AuctionProfession, AuctionType } from "./index.ts";
  * stay in web modules; only slot vocabulary lives here.
  */
 
-export const AUCTION_SLOT_LEVELS = Object.freeze(
-  Array.from({ length: 28 }, (_, index) => 30 + index * 10)
-) as readonly number[];
+export const AUCTION_SLOT_LEVELS: readonly number[] = Arr.makeBy(
+  28,
+  (index) => 30 + index * 10
+);
 
 export const AUCTION_SLOT_ROUNDS = [1, 2, 3, 4] as const;
 export type AuctionSlotRound = (typeof AUCTION_SLOT_ROUNDS)[number];
@@ -74,25 +78,26 @@ export interface AuctionSlotCoordinate {
   column: number;
 }
 
-const isInteger = (value: number): boolean =>
-  Number.isInteger(value) && value > 0;
+const isPositiveInteger = Schema.is(
+  Schema.Int.pipe(Schema.check(Schema.isGreaterThan(0)))
+);
 
 export const isLegalAuctionSlot = (
   coordinate: AuctionSlotCoordinate
 ): boolean => {
   if (
-    !isInteger(coordinate.level) ||
-    !isInteger(coordinate.round) ||
-    !isInteger(coordinate.column)
+    !isPositiveInteger(coordinate.level) ||
+    !isPositiveInteger(coordinate.round) ||
+    !isPositiveInteger(coordinate.column)
   ) {
     return false;
   }
 
-  if (!AUCTION_SLOT_LEVELS.includes(coordinate.level)) {
+  if (!Arr.contains(AUCTION_SLOT_LEVELS, coordinate.level)) {
     return false;
   }
 
-  if (!(AUCTION_SLOT_ROUNDS as readonly number[]).includes(coordinate.round)) {
+  if (!Arr.contains<number>(AUCTION_SLOT_ROUNDS, coordinate.round)) {
     return false;
   }
 

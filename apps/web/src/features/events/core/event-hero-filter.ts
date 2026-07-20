@@ -1,3 +1,4 @@
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import type {
@@ -18,16 +19,24 @@ import type {
 export const ALL_FILTER = "all" as const;
 export type FilterSelection = typeof ALL_FILTER | string;
 
-const FILTER_ID_PATTERN = /^[1-9]\d*$/u;
-
-const isPositiveIntegerId = (value: string): boolean =>
-  FILTER_ID_PATTERN.test(value) && Number.isSafeInteger(Number(value));
+const PositiveIntegerIdFromString = Schema.NumberFromString.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.check(
+    Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
+  )
+);
+const decodePositiveIntegerId = Schema.decodeUnknownOption(
+  PositiveIntegerIdFromString
+);
 
 /** Schema for a URL or persisted positive integer ID encoded as a string. */
 export const FilterIdSearchSchema = Schema.String.pipe(
-  Schema.refine((value): value is string => isPositiveIntegerId(value), {
-    message: "Expected a positive integer id",
-  })
+  Schema.refine(
+    (value): value is string => Option.isSome(decodePositiveIntegerId(value)),
+    {
+      message: "Expected a positive integer id",
+    }
+  )
 );
 
 const PersistedFilterSelectionSchema = Schema.Union([
@@ -93,7 +102,7 @@ export const toQueryInput = (
   if (selection === undefined || isAllFilter(selection)) {
     return undefined;
   }
-  return isPositiveIntegerId(selection) ? Number(selection) : undefined;
+  return Option.getOrUndefined(decodePositiveIntegerId(selection));
 };
 
 const toEventTimestamp = (eventEndTime: Date | string | undefined): number => {

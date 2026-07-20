@@ -1,3 +1,4 @@
+import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 
 import { calculatePointsPerMember } from "@/features/events/bets/bet-helpers";
@@ -73,10 +74,10 @@ export const toggleUser = (
   userId: string,
   selectedUserIds: readonly string[]
 ): string[] => {
-  if (selectedUserIds.includes(userId)) {
-    return selectedUserIds.filter((id) => id !== userId);
+  if (Arr.contains(userId)(selectedUserIds)) {
+    return Arr.filter<string>((id) => id !== userId)(selectedUserIds);
   }
-  return [...selectedUserIds, userId];
+  return Arr.append(userId)(selectedUserIds);
 };
 
 /**
@@ -85,7 +86,7 @@ export const toggleUser = (
 export const removeUser = (
   userId: string,
   selectedUserIds: readonly string[]
-): string[] => selectedUserIds.filter((id) => id !== userId);
+): string[] => Arr.filter<string>((id) => id !== userId)(selectedUserIds);
 
 /**
  * Clear the entire selection.
@@ -97,7 +98,7 @@ export const clearSelection = (): string[] => [];
  */
 export const restoreSelection = (
   initialMemberIds: readonly string[]
-): string[] => [...initialMemberIds];
+): string[] => Arr.copy(initialMemberIds);
 
 /**
  * Copy the last bet's member IDs into the selection (add flow).

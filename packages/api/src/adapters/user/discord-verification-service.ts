@@ -3,6 +3,8 @@ import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
+import * as Option from "effect/Option";
 import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
 
@@ -30,6 +32,10 @@ const DISCORD_REQUEST_TIMEOUT = "10 seconds";
 const DISCORD_RETRY_LIMIT = 2;
 const DISCORD_RETRY_BASE_DELAY_MILLISECONDS = 100;
 const MILLISECONDS_PER_SECOND = 1000;
+const RetryAfterSeconds = Schema.NumberFromString.pipe(
+  Schema.check(Schema.isGreaterThanOrEqualTo(0))
+);
+const decodeRetryAfterSeconds = Schema.decodeUnknownOption(RetryAfterSeconds);
 
 const parseRetryAfterMilliseconds = (
   response: Response
@@ -40,9 +46,9 @@ const parseRetryAfterMilliseconds = (
       return;
     }
 
-    const seconds = Number(retryAfter);
-    if (Number.isFinite(seconds) && seconds >= 0) {
-      return seconds * MILLISECONDS_PER_SECOND;
+    const seconds = decodeRetryAfterSeconds(retryAfter);
+    if (Option.isSome(seconds)) {
+      return seconds.value * MILLISECONDS_PER_SECOND;
     }
 
     const retryAt = Date.parse(retryAfter);
@@ -51,7 +57,7 @@ const parseRetryAfterMilliseconds = (
     }
 
     const currentTime = yield* Clock.currentTimeMillis;
-    return Math.max(0, retryAt - currentTime);
+    return Num.max(0, retryAt - currentTime);
   });
 
 const discordRetrySchedule: Schedule.Schedule<

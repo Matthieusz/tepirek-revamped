@@ -1,3 +1,11 @@
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
+
+const decodeGoldNumber = Schema.decodeUnknownOption(Schema.NumberFromString);
+const decodeGoldInteger = Schema.decodeUnknownOption(
+  Schema.NumberFromString.pipe(Schema.check(Schema.isInt()))
+);
+
 /**
  * Gold-value parsing and vault-earnings formatting.
  *
@@ -14,7 +22,9 @@
  */
 export const formatVaultEarnings = (totalEarnings: string): string =>
   (
-    Math.floor(Number.parseFloat(totalEarnings || "0") / 1_000_000) * 1_000_000
+    Math.floor(
+      Option.getOrElse(decodeGoldNumber(totalEarnings), () => 0) / 1_000_000
+    ) * 1_000_000
   ).toLocaleString("pl-PL", { maximumFractionDigits: 0 });
 
 /**
@@ -24,10 +34,18 @@ export const formatVaultEarnings = (totalEarnings: string): string =>
  */
 export const parseGoldAmount = (value: string): number => {
   const trimmed = value.trim().toLowerCase();
-  if (trimmed.endsWith("g")) {
-    const num = Number.parseFloat(trimmed.slice(0, -1));
-    return Number.isNaN(num) ? 0 : Math.floor(num * 1_000_000_000);
-  }
-  const num = Number.parseInt(trimmed, 10);
-  return Number.isNaN(num) ? 0 : num;
+  const hasBillionsSuffix = trimmed.endsWith("g");
+  const numericText = hasBillionsSuffix ? trimmed.slice(0, -1) : trimmed;
+
+  const amount = hasBillionsSuffix
+    ? decodeGoldNumber(numericText)
+    : decodeGoldInteger(numericText);
+
+  return Option.match(amount, {
+    onNone: () => 0,
+    onSome: (parsedAmount) =>
+      hasBillionsSuffix
+        ? Math.floor(parsedAmount * 1_000_000_000)
+        : parsedAmount,
+  });
 };

@@ -1,3 +1,4 @@
+import * as Arr from "effect/Array";
 import * as Num from "effect/Number";
 
 export type UlepaRarity =
@@ -48,8 +49,8 @@ const rarityFactors: Record<UlepaRarity, RarityFactor> = {
   zwykły: { upgradeGoldFactor: 1, upgradeRarityFactor: 1 },
 };
 
-/** Multipliers for each upgrade level (1-5) - index 0 is unused */
-const UPGRADE_LEVEL_FACTORS: readonly number[] = [0, 1, 2.1, 3.4, 5, 7];
+/** Multipliers for each upgrade level (1-5). */
+const UPGRADE_LEVEL_FACTORS: readonly number[] = [1, 2.1, 3.4, 5, 7];
 
 const MIN_LEVEL = 1;
 const MAX_LEVEL = 300;
@@ -92,13 +93,7 @@ export const calculateUpgradePoints = (
     throw new Error("Nieznana rzadkość przedmiotu");
   }
 
-  const upgradeCosts: number[] = [];
-
-  for (let n = 1; n <= 5; n += 1) {
-    const upgradeLevelFactor = UPGRADE_LEVEL_FACTORS[n];
-    if (upgradeLevelFactor === undefined) {
-      throw new Error("Nieznany poziom ulepszenia");
-    }
+  return Arr.map((upgradeLevelFactor: number) => {
     const cost =
       rarity === "ulepszony"
         ? upgradeLevelFactor *
@@ -107,27 +102,14 @@ export const calculateUpgradePoints = (
         : factors.upgradeRarityFactor *
           upgradeLevelFactor *
           (GAME_CONSTANTS.STANDARD_BASE_COST + level);
-    upgradeCosts.push(cost);
-  }
-
-  return upgradeCosts;
+    return cost;
+  })(UPGRADE_LEVEL_FACTORS);
 };
 
-export const calculateDifferentialCosts = (
-  upgradeCosts: number[]
-): number[] => {
-  const differentialCosts: number[] = [];
-  for (let i = 0; i < upgradeCosts.length; i += 1) {
-    if (i === 0) {
-      differentialCosts.push(upgradeCosts[i] ?? 0);
-    } else {
-      differentialCosts.push(
-        (upgradeCosts[i] ?? 0) - (upgradeCosts[i - 1] ?? 0)
-      );
-    }
-  }
-  return differentialCosts;
-};
+export const calculateDifferentialCosts = (upgradeCosts: number[]): number[] =>
+  Arr.map((cost: number, index) => cost - (upgradeCosts[index - 1] ?? 0))(
+    upgradeCosts
+  );
 
 export const calculateUpgradeSummary = (
   level: number,

@@ -41,10 +41,12 @@ const flatten = (
     return [[prefix, input]];
   }
 
-  return entries.flatMap(([key, value]) => {
+  return Arr.flatMap(([key, value]: readonly [string, unknown]) => {
     const path = prefix ? `${prefix}.${key}` : key;
-    return isPlainObject(value) ? flatten(value, path, seen) : [[path, value]];
-  });
+    return isPlainObject(value)
+      ? flatten(value, path, seen)
+      : [[path, value] as const];
+  })(entries);
 };
 
 const formatValue = (input: unknown): string => {
@@ -59,21 +61,22 @@ const formatter = (id: string = runId) =>
         ? output.message
         : [output.message];
 
-      return [
+      return Arr.map(
+        ([key, value]: readonly [string, unknown]) =>
+          `${key}=${formatValue(value)}`
+      )([
         ["timestamp", output.timestamp],
         ["level", output.level],
         ["run", id],
-        ...messages.flatMap((value) =>
+        ...Arr.flatMap((value: unknown) =>
           isPlainObject(value) ? flatten(value) : [["message", value] as const]
-        ),
+        )(messages),
         ...(output.cause === undefined
           ? []
           : [["cause", output.cause] as const]),
         ...flatten(output.spans),
         ...flatten(output.annotations),
-      ]
-        .map(([key, value]) => `${key}=${formatValue(value)}`)
-        .join(" ");
+      ]).join(" ");
     })
   );
 
