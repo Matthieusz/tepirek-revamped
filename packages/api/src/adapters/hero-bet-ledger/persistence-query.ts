@@ -1,6 +1,7 @@
 import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import { isSqlError } from "effect/unstable/sql/SqlError";
 import type { SqlError } from "effect/unstable/sql/SqlError";
 
@@ -29,6 +30,17 @@ export function mapPersistenceErrors<A, P, R>(
   });
 }
 // oxlint-enable promise/prefer-await-to-callbacks, promise/valid-params
+
+/** Decodes persisted data and projects schema drift through the service's persistence error. */
+export const decodePersistedValue = <A, PersistenceError>(
+  schema: Schema.ConstraintDecoder<A, never>,
+  input: unknown,
+  operation: string,
+  makeError: (cause: unknown, operation: string) => PersistenceError
+) =>
+  Schema.decodeUnknownEffect(schema)(input).pipe(
+    Effect.mapError((cause) => makeError(cause, operation))
+  );
 
 /** Transaction-scoped database handle for multi-statement operations. */
 export type TransactionDatabase = Parameters<

@@ -26,7 +26,10 @@ import type {
   RangeSummary,
   SkillSummary,
 } from "../../protocol/skills/http-api-contract.ts";
-import { makeDirectPersistenceQuery } from "../persistence-query.ts";
+import {
+  decodePersistedValue,
+  makeDirectPersistenceQuery,
+} from "../persistence-query.ts";
 import { SkillsStoreError } from "./skills-store-error.ts";
 
 export interface CreateProfessionInput {
@@ -61,6 +64,17 @@ export interface GetSkillsByRangeInput {
 const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new SkillsStoreError(input)
 );
+const decodePersisted = <A>(
+  schema: Schema.ConstraintDecoder<A, never>,
+  input: unknown,
+  operation: string
+) =>
+  decodePersistedValue(
+    schema,
+    input,
+    operation,
+    (error) => new SkillsStoreError(error)
+  );
 
 const assertHttpUrl = (link: string) =>
   Schema.decodeUnknownEffect(Schema.URLFromString)(link).pipe(
@@ -142,14 +156,26 @@ const deleteSkillWithDatabase =
     );
 const listProfessionsWithDatabase = (database: EffectPgDatabase) => () =>
   persistenceQuery("listProfessions", database.select().from(professions)).pipe(
-    Effect.map((rows) =>
-      rows.map((row) => ({ ...row, id: ProfessionId.make(row.id) }))
+    Effect.flatMap((rows) =>
+      Effect.all(
+        rows.map((row) =>
+          decodePersisted(ProfessionId, row.id, "listProfessions.decode").pipe(
+            Effect.map((id) => ({ ...row, id }))
+          )
+        )
+      )
     )
   );
 const listRangesWithDatabase = (database: EffectPgDatabase) => () =>
   persistenceQuery("listRanges", database.select().from(range)).pipe(
-    Effect.map((rows) =>
-      rows.map((row) => ({ ...row, id: SkillRangeId.make(row.id) }))
+    Effect.flatMap((rows) =>
+      Effect.all(
+        rows.map((row) =>
+          decodePersisted(SkillRangeId, row.id, "listRanges.decode").pipe(
+            Effect.map((id) => ({ ...row, id }))
+          )
+        )
+      )
     )
   );
 const getRangeBySlugWithDatabase = (database: EffectPgDatabase) =>
@@ -161,7 +187,15 @@ const getRangeBySlugWithDatabase = (database: EffectPgDatabase) =>
       database.select().from(range).where(eq(range.slug, slug)).limit(1)
     );
     const [row] = rows;
-    return row === undefined ? null : { ...row, id: SkillRangeId.make(row.id) };
+    if (row === undefined) {
+      return null;
+    }
+    const id = yield* decodePersisted(
+      SkillRangeId,
+      row.id,
+      "getRangeBySlug.decode"
+    );
+    return { ...row, id };
   });
 const listSkillsByRangeWithDatabase =
   (database: EffectPgDatabase) =>
@@ -184,12 +218,24 @@ const listSkillsByRangeWithDatabase =
         .innerJoin(user, eq(user.id, skills.userId))
         .where(eq(skills.rangeId, rangeId))
     ).pipe(
-      Effect.map((rows) =>
-        rows.map((row) => ({
-          ...row,
-          id: SkillId.make(row.id),
-          professionId: ProfessionId.make(row.professionId),
-        }))
+      Effect.flatMap((rows) =>
+        Effect.all(
+          rows.map((row) =>
+            Effect.gen(function* decodeSkillRow() {
+              const id = yield* decodePersisted(
+                SkillId,
+                row.id,
+                "listSkillsByRange.decode"
+              );
+              const professionId = yield* decodePersisted(
+                ProfessionId,
+                row.professionId,
+                "listSkillsByRange.decode"
+              );
+              return { ...row, id, professionId };
+            })
+          )
+        )
       )
     );
 

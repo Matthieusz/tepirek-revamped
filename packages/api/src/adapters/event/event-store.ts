@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import type * as Schema from "effect/Schema";
 
 import { EventId } from "../../domain/core-identifiers.ts";
 import {
@@ -14,7 +15,10 @@ import {
   defaultEventIcon,
 } from "../../protocol/event/http-api-contract.ts";
 import type { EventSummary } from "../../protocol/event/http-api-contract.ts";
-import { makeDirectPersistenceQuery } from "../persistence-query.ts";
+import {
+  decodePersistedValue,
+  makeDirectPersistenceQuery,
+} from "../persistence-query.ts";
 import { EventStoreError } from "./event-store-error.ts";
 
 export interface CreateEventInput {
@@ -34,6 +38,16 @@ export interface ToggleEventActiveInput {
 const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new EventStoreError(input)
 );
+const decodePersisted = <A>(
+  schema: Schema.ConstraintDecoder<A, never>,
+  input: unknown
+) =>
+  decodePersistedValue(
+    schema,
+    input,
+    "listEvents.decode",
+    (error) => new EventStoreError(error)
+  );
 
 const createWithDatabase =
   (database: EffectPgDatabase) =>
@@ -58,8 +72,14 @@ const deleteWithDatabase =
 
 const listWithDatabase = (database: EffectPgDatabase) => () =>
   persistenceQuery("listEvents", database.select().from(event)).pipe(
-    Effect.map((rows) =>
-      rows.map((row) => ({ ...row, id: EventId.make(row.id) }))
+    Effect.flatMap((rows) =>
+      Effect.all(
+        rows.map((row) =>
+          decodePersisted(EventId, row.id).pipe(
+            Effect.map((id) => ({ ...row, id }))
+          )
+        )
+      )
     )
   );
 

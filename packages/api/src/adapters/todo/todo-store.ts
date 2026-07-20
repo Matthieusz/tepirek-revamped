@@ -7,11 +7,15 @@ import { and, eq } from "drizzle-orm";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import type * as Schema from "effect/Schema";
 
 import { TodoId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import type { TodoSummary } from "../../protocol/todo/http-api-contract.ts";
-import { makeDirectPersistenceQuery } from "../persistence-query.ts";
+import {
+  decodePersistedValue,
+  makeDirectPersistenceQuery,
+} from "../persistence-query.ts";
 import { TodoStoreError } from "./todo-store-error.ts";
 
 export interface CreateTodoInput {
@@ -37,6 +41,16 @@ export interface ToggleTodoInput {
 const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new TodoStoreError(input)
 );
+const decodePersisted = <A>(
+  schema: Schema.ConstraintDecoder<A, never>,
+  input: unknown
+) =>
+  decodePersistedValue(
+    schema,
+    input,
+    "listTodos.decode",
+    (error) => new TodoStoreError(error)
+  );
 
 const createWithDatabase =
   (database: EffectPgDatabase) =>
@@ -61,12 +75,19 @@ const listWithDatabase =
       "listTodos",
       database.select().from(todo).where(eq(todo.userId, userId))
     ).pipe(
-      Effect.map((rows) =>
-        rows.map((row) => ({
-          ...row,
-          id: TodoId.make(row.id),
-          userId: AppUserId.make(row.userId),
-        }))
+      Effect.flatMap((rows) =>
+        Effect.all(
+          rows.map((row) =>
+            Effect.gen(function* decodeTodoRow() {
+              const id = yield* decodePersisted(TodoId, row.id);
+              const decodedUserId = yield* decodePersisted(
+                AppUserId,
+                row.userId
+              );
+              return { ...row, id, userId: decodedUserId };
+            })
+          )
+        )
       )
     );
 

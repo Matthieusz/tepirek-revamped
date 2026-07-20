@@ -22,7 +22,10 @@ import type {
 } from "../../services/vault/vault-service.ts";
 import { VaultService } from "../../services/vault/vault-service.ts";
 import { lockHeroLedger } from "./hero-ledger-lock.ts";
-import { mapPersistenceErrors } from "./persistence-query.ts";
+import {
+  decodePersistedValue,
+  mapPersistenceErrors,
+} from "./persistence-query.ts";
 import type {
   EffectPgDatabase,
   TransactionDatabase,
@@ -41,6 +44,47 @@ const persistenceQuery = <A, E, R>(
         operation: failedOperation,
       })
   );
+
+const decodePersisted = <A>(
+  schema: Schema.ConstraintDecoder<A, never>,
+  input: unknown,
+  operation: string
+) =>
+  decodePersistedValue(
+    schema,
+    input,
+    operation,
+    (cause, failedOperation) =>
+      new VaultPersistenceUnavailable({ cause, operation: failedOperation })
+  );
+
+const decodeUserStatsRow = <
+  T extends {
+    readonly eventId: number;
+    readonly heroId: number;
+    readonly userId: string;
+  },
+>(
+  row: T
+) =>
+  Effect.gen(function* decodeUserStatsRowEffect() {
+    const eventId = yield* decodePersisted(
+      EventId,
+      row.eventId,
+      "getUserStats.decode"
+    );
+    const heroId = yield* decodePersisted(
+      HeroId,
+      row.heroId,
+      "getUserStats.decode"
+    );
+    const userId = yield* decodePersisted(
+      AppUserId,
+      row.userId,
+      "getUserStats.decode"
+    );
+    return { ...row, eventId, heroId, userId };
+  });
 
 const getHeroEventWithDatabase = (database: Pick<EffectPgDatabase, "select">) =>
   Effect.fnUntraced(function* getHeroEvent(heroId: number, message: string) {
@@ -90,11 +134,16 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
               message: "Brak obstawień dla tego herosa",
             });
           }
-          const totalPoints = Num.sumAll(
+          const decodedPoints = yield* Effect.all(
             heroUserStats.map((stat) =>
-              Schema.decodeUnknownSync(Schema.NumberFromString)(stat.points)
+              decodePersisted(
+                Schema.NumberFromString,
+                stat.points,
+                "distributeGold.decode"
+              )
             )
           );
+          const totalPoints = Num.sumAll(decodedPoints);
           if (totalPoints <= 0) {
             return yield* new VaultBadRequest({
               message: "Suma punktów musi być większa od zera",
@@ -112,20 +161,28 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
             .update(hero)
             .set({ pointWorth: storedPointWorth })
             .where(eq(hero.id, heroId));
+          const decodedPointWorth = yield* decodePersisted(
+            Schema.NumberFromString,
+            storedPointWorth,
+            "distributeGold.decode"
+          );
           return {
             heroName: heroData.name,
-            pointWorth: Schema.decodeUnknownSync(Schema.NumberFromString)(
-              storedPointWorth
-            ),
+            pointWorth: decodedPointWorth,
             totalPoints,
             usersUpdated: heroUserStats.length,
           };
         })
       )
     );
+    const decodedHeroId = yield* decodePersisted(
+      HeroId,
+      heroId,
+      "distributeGold.decode"
+    );
     return {
       goldAmount,
-      heroId: HeroId.make(heroId),
+      heroId: decodedHeroId,
       heroName: distribution.heroName,
       pointWorth: distribution.pointWorth,
       success: true as const,
@@ -141,29 +198,13 @@ const getUserStatsWithDatabase =
         "getUserStats",
         database.select().from(userStats).where(eq(userStats.eventId, eventId))
       ).pipe(
-        Effect.map((rows) =>
-          rows.map((row) => ({
-            ...row,
-            eventId: EventId.make(row.eventId),
-            heroId: HeroId.make(row.heroId),
-            userId: AppUserId.make(row.userId),
-          }))
-        )
+        Effect.flatMap((rows) => Effect.all(rows.map(decodeUserStatsRow)))
       );
     }
     return persistenceQuery(
       "getUserStats",
       database.select().from(userStats)
-    ).pipe(
-      Effect.map((rows) =>
-        rows.map((row) => ({
-          ...row,
-          eventId: EventId.make(row.eventId),
-          heroId: HeroId.make(row.heroId),
-          userId: AppUserId.make(row.userId),
-        }))
-      )
-    );
+    ).pipe(Effect.flatMap((rows) => Effect.all(rows.map(decodeUserStatsRow))));
   };
 
 const getVaultWithDatabase =
@@ -192,8 +233,14 @@ const getVaultWithDatabase =
         .having(sql`SUM(${userStats.earnings}) >= ${MIN_EARNINGS}`)
         .orderBy(desc(sql`SUM(${userStats.earnings})`))
     ).pipe(
-      Effect.map((rows) =>
-        rows.map((row) => ({ ...row, userId: AppUserId.make(row.userId) }))
+      Effect.flatMap((rows) =>
+        Effect.all(
+          rows.map((row) =>
+            decodePersisted(AppUserId, row.userId, "getVault.decode").pipe(
+              Effect.map((userId) => ({ ...row, userId }))
+            )
+          )
+        )
       )
     );
   };

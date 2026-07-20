@@ -8,6 +8,7 @@ import { and, count, countDistinct, eq } from "drizzle-orm";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import type * as Schema from "effect/Schema";
 
 import { AuctionSignupId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
@@ -17,7 +18,10 @@ import {
   AuctionNotFound,
 } from "../../protocol/auction/http-api-contract.ts";
 import type { AuctionSignupSummary } from "../../protocol/auction/http-api-contract.ts";
-import { makeDirectPersistenceQuery } from "../persistence-query.ts";
+import {
+  decodePersistedValue,
+  makeDirectPersistenceQuery,
+} from "../persistence-query.ts";
 import { AuctionStoreError } from "./auction-store-error.ts";
 
 export interface AuctionGroupInput {
@@ -40,6 +44,16 @@ export interface ToggleSignupInput {
 const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new AuctionStoreError(input)
 );
+const decodePersisted = <A>(
+  schema: Schema.ConstraintDecoder<A, never>,
+  input: unknown
+) =>
+  decodePersistedValue(
+    schema,
+    input,
+    "getAuctionSignups.decode",
+    (error) => new AuctionStoreError(error)
+  );
 
 const getSignupsWithDatabase =
   (database: EffectPgDatabase) => (input: AuctionGroupInput) =>
@@ -66,12 +80,16 @@ const getSignupsWithDatabase =
         )
         .orderBy(auction.createdAt)
     ).pipe(
-      Effect.map((rows) =>
-        rows.map((row) => ({
-          ...row,
-          id: AuctionSignupId.make(row.id),
-          userId: AppUserId.make(row.userId),
-        }))
+      Effect.flatMap((rows) =>
+        Effect.all(
+          rows.map((row) =>
+            Effect.gen(function* decodeAuctionSignup() {
+              const id = yield* decodePersisted(AuctionSignupId, row.id);
+              const userId = yield* decodePersisted(AppUserId, row.userId);
+              return { ...row, id, userId };
+            })
+          )
+        )
       )
     );
 

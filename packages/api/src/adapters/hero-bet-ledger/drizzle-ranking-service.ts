@@ -23,12 +23,13 @@ import type {
   RankingServiceInterface,
 } from "../../services/ranking/ranking-service.ts";
 import { RankingService } from "../../services/ranking/ranking-service.ts";
-import { mapPersistenceErrors } from "./persistence-query.ts";
+import {
+  decodePersistedValue,
+  mapPersistenceErrors,
+} from "./persistence-query.ts";
 import type { EffectPgDatabase } from "./persistence-query.ts";
 
 const DatabaseNumber = Schema.Union([Schema.Number, Schema.NumberFromString]);
-const decodeDatabaseNumber = Schema.decodeUnknownSync(DatabaseNumber);
-
 const persistenceQuery = <A, E, R>(
   operation: string,
   self: Effect.Effect<A, E, R>
@@ -41,6 +42,19 @@ const persistenceQuery = <A, E, R>(
         cause,
         operation: failedOperation,
       })
+  );
+
+const decodePersisted = <A>(
+  schema: Schema.ConstraintDecoder<A, never>,
+  input: unknown,
+  operation: string
+) =>
+  decodePersistedValue(
+    schema,
+    input,
+    operation,
+    (cause, failedOperation) =>
+      new RankingPersistenceUnavailable({ cause, operation: failedOperation })
   );
 
 const buildUserStatsWhere = (input: {
@@ -64,11 +78,20 @@ const normalizeRankingRow = (row: {
   readonly userId: string;
   readonly userImage: string | null;
   readonly userName: string | null;
-}): RankingRow => ({
-  ...row,
-  totalBets: decodeDatabaseNumber(row.totalBets),
-  userId: AppUserId.make(row.userId),
-});
+}) =>
+  Effect.gen(function* normalizeRankingRowEffect() {
+    const totalBets = yield* decodePersisted(
+      DatabaseNumber,
+      row.totalBets,
+      "getRanking.decode"
+    );
+    const userId = yield* decodePersisted(
+      AppUserId,
+      row.userId,
+      "getRanking.decode"
+    );
+    return { ...row, totalBets, userId } satisfies RankingRow;
+  });
 
 const getHeroStatsWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* getHeroStats(heroId: number) {
@@ -98,14 +121,27 @@ const getHeroStatsWithDatabase = (database: EffectPgDatabase) =>
       return yield* new RankingNotFound({ message: "Heros nie znaleziony" });
     }
     const [stats] = statsRows;
+    const decodedHeroId = yield* decodePersisted(
+      HeroId,
+      heroId,
+      "getHeroStats.decode"
+    );
+    const totalBets = yield* decodePersisted(
+      DatabaseNumber,
+      stats?.totalBets ?? 0,
+      "getHeroStats.decode"
+    );
+    const totalPoints = yield* decodePersisted(
+      Schema.NumberFromString,
+      stats?.totalPoints ?? "0",
+      "getHeroStats.decode"
+    );
     return {
       currentPointWorth: parsePointWorth(heroInfo.pointWorth) ?? 0,
-      heroId: HeroId.make(heroId),
+      heroId: decodedHeroId,
       heroName: heroInfo.name,
-      totalBets: decodeDatabaseNumber(stats?.totalBets ?? 0),
-      totalPoints: Schema.decodeUnknownSync(Schema.NumberFromString)(
-        stats?.totalPoints ?? "0"
-      ),
+      totalBets,
+      totalPoints,
     };
   });
 
@@ -124,7 +160,9 @@ const getOldestUnpaidEventWithDatabase = (database: EffectPgDatabase) =>
         .limit(1)
     );
     const eventId = result[0]?.eventId;
-    return eventId === undefined ? null : EventId.make(eventId);
+    return eventId === undefined
+      ? null
+      : yield* decodePersisted(EventId, eventId, "getOldestUnpaidEvent.decode");
   });
 
 const getRankingWithDatabase = (database: EffectPgDatabase) =>
@@ -160,13 +198,21 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
           .from(heroBet)
           .where(eq(heroBet.heroId, input.heroId))
       );
-      totalBets = decodeDatabaseNumber(betsRows[0]?.count ?? 0);
+      totalBets = yield* decodePersisted(
+        DatabaseNumber,
+        betsRows[0]?.count ?? 0,
+        "getRanking.decode"
+      );
     } else if (input.eventId === undefined) {
       const betsRows = yield* persistenceQuery(
         "getRanking.totalBets",
         database.select({ count: sql<number>`count(*)` }).from(heroBet)
       );
-      totalBets = decodeDatabaseNumber(betsRows[0]?.count ?? 0);
+      totalBets = yield* decodePersisted(
+        DatabaseNumber,
+        betsRows[0]?.count ?? 0,
+        "getRanking.decode"
+      );
     } else {
       const betsRows = yield* persistenceQuery(
         "getRanking.totalEventBets",
@@ -176,7 +222,11 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
           .innerJoin(hero, eq(heroBet.heroId, hero.id))
           .where(eq(hero.eventId, input.eventId))
       );
-      totalBets = decodeDatabaseNumber(betsRows[0]?.count ?? 0);
+      totalBets = yield* decodePersisted(
+        DatabaseNumber,
+        betsRows[0]?.count ?? 0,
+        "getRanking.decode"
+      );
     }
 
     const pointWorthRows =
@@ -196,7 +246,7 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
 
     return {
       pointWorth,
-      ranking: ranking.map(normalizeRankingRow),
+      ranking: yield* Effect.all(ranking.map(normalizeRankingRow)),
       totalBets,
     };
   });
