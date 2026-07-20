@@ -75,7 +75,7 @@ export const latestBetForCopyAtom = appHttpApiAtom(
 
 /** Mutation atom for creating a bet. */
 export const createBetAtom = appHttpApiFn(
-  Effect.fnUntraced(function* createBetEffect(
+  Effect.fn("Web.Bet.create")(function* createBetEffect(
     payload: {
       readonly heroId: number;
       readonly userIds: readonly [string, ...string[]];
@@ -99,7 +99,7 @@ export const createBetAtom = appHttpApiFn(
 
 /** Mutation atom for deleting a bet and refreshing the active first page. */
 export const deleteBetAtom = appHttpApiFn(
-  Effect.fnUntraced(function* deleteBetEffect(
+  Effect.fn("Web.Bet.delete")(function* deleteBetEffect(
     input: {
       readonly id: number;
       readonly refreshInput: PaginatedBetInput;
@@ -117,7 +117,7 @@ export const deleteBetAtom = appHttpApiFn(
 
 /** Mutation atom for editing a bet's members. */
 export const editBetAtom = appHttpApiFn(
-  Effect.fnUntraced(function* editBetEffect(
+  Effect.fn("Web.Bet.edit")(function* editBetEffect(
     payload: {
       readonly betId: number;
       readonly newUserIds: readonly [string, ...string[]];

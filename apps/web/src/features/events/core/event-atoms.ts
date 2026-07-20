@@ -38,7 +38,7 @@ export const eventsAtom = appHttpApiAtom(
 
 /** Mutation atom for creating an event. */
 export const createEventAtom = appHttpApiFn(
-  Effect.fnUntraced(function* createEventEffect(
+  Effect.fn("Web.Event.create")(function* createEventEffect(
     payload: {
       readonly color?: string;
       readonly endTime: Date;
@@ -55,7 +55,7 @@ export const createEventAtom = appHttpApiFn(
 );
 
 const deleteEventRequestAtom = appHttpApiFn(
-  Effect.fnUntraced(function* deleteEventEffect(input: {
+  Effect.fn("Web.Event.delete")(function* deleteEventEffect(input: {
     readonly id: number;
   }) {
     const client = yield* AppHttpApiClient;
@@ -66,7 +66,7 @@ const deleteEventRequestAtom = appHttpApiFn(
 );
 
 const toggleEventActiveRequestAtom = appHttpApiFn(
-  Effect.fnUntraced(function* toggleEventActiveEffect(input: {
+  Effect.fn("Web.Event.toggleActive")(function* toggleEventActiveEffect(input: {
     readonly active: boolean;
     readonly id: number;
   }) {

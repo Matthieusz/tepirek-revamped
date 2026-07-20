@@ -63,7 +63,7 @@ export const auctionStatsAtom = (payload: AuctionGroupInput) =>
 
 /** Mutation atom for toggling an auction signup. Refreshes the affected group on success. */
 export const toggleAuctionSignupAtom = appHttpApiFn(
-  Effect.fnUntraced(function* toggleAuctionSignupEffect(
+  Effect.fn("Web.Auction.toggleSignup")(function* toggleAuctionSignupEffect(
     payload: {
       readonly column: number;
       readonly level: number;
@@ -100,18 +100,20 @@ const removeAuctionSignupFromGroupByGroupAtom = Atom.family(
     optimisticAuctionSignupsByGroupAtom(key).pipe(
       Atom.optimisticFn({
         fn: appHttpApiFn(
-          Effect.fnUntraced(function* removeAuctionSignupFromGroupEffect(
-            payload: { readonly id: number },
-            get: Atom.FnContext
-          ) {
-            const client = yield* AppHttpApiClient;
-            const result = yield* client.auction.removeAuctionSignup({
-              payload: { id: yield* asAuctionSignupId(payload.id) },
-            });
-            get.refresh(auctionSignupsByGroupAtom(key));
-            get.refresh(auctionStatsByGroupAtom(key));
-            return result;
-          })
+          Effect.fn("Web.Auction.removeSignupFromGroup")(
+            function* removeAuctionSignupFromGroupEffect(
+              payload: { readonly id: number },
+              get: Atom.FnContext
+            ) {
+              const client = yield* AppHttpApiClient;
+              const result = yield* client.auction.removeAuctionSignup({
+                payload: { id: yield* asAuctionSignupId(payload.id) },
+              });
+              get.refresh(auctionSignupsByGroupAtom(key));
+              get.refresh(auctionStatsByGroupAtom(key));
+              return result;
+            }
+          )
         ),
         reducer: (current, input: { readonly id: number }) =>
           updateResultSuccess(current, (signups) =>

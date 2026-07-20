@@ -161,57 +161,62 @@ const refreshVisibleAccountSharingAtoms = (
 
 /** Mutation atom for sending account access invite. */
 export const sendAccountAccessInviteAtom = appHttpApiFn(
-  Effect.fnUntraced(function* sendAccountAccessInviteEffect(
-    payload: SendAccountAccessInviteInput,
-    get: Atom.FnContext
-  ) {
-    const client = yield* AppHttpApiClient;
-    const result =
-      yield* client.squadBuilderAccountSharing.sendAccountAccessInvite({
-        payload: {
-          accountId: yield* asMargonemAccountId(payload.accountId),
-          invitedUserId: yield* asAppUserId(payload.invitedUserId),
-        },
-      });
-    refreshVisibleAccountSharingAtoms(get, payload);
-    return result;
-  })
+  Effect.fn("Web.SquadAccountSharing.sendInvite")(
+    function* sendAccountAccessInviteEffect(
+      payload: SendAccountAccessInviteInput,
+      get: Atom.FnContext
+    ) {
+      const client = yield* AppHttpApiClient;
+      const result =
+        yield* client.squadBuilderAccountSharing.sendAccountAccessInvite({
+          payload: {
+            accountId: yield* asMargonemAccountId(payload.accountId),
+            invitedUserId: yield* asAppUserId(payload.invitedUserId),
+          },
+        });
+      refreshVisibleAccountSharingAtoms(get, payload);
+      return result;
+    }
+  )
 );
 
 /** Mutation atom for responding to account access invite. */
 export const respondToAccountAccessInviteAtom = appHttpApiFn(
-  Effect.fnUntraced(function* respondToAccountAccessInviteEffect(
-    payload: RespondToAccountAccessInviteInput,
-    get: Atom.FnContext
-  ) {
-    const client = yield* AppHttpApiClient;
-    const result =
-      yield* client.squadBuilderAccountSharing.respondToAccountAccessInvite({
-        payload: {
-          accessId: yield* asMargonemAccountAccessId(payload.accessId),
-          response: payload.response,
-        },
-      });
-    refreshVisibleAccountSharingAtoms(get);
-    return result;
-  })
+  Effect.fn("Web.SquadAccountSharing.respondToInvite")(
+    function* respondToAccountAccessInviteEffect(
+      payload: RespondToAccountAccessInviteInput,
+      get: Atom.FnContext
+    ) {
+      const client = yield* AppHttpApiClient;
+      const result =
+        yield* client.squadBuilderAccountSharing.respondToAccountAccessInvite({
+          payload: {
+            accessId: yield* asMargonemAccountAccessId(payload.accessId),
+            response: payload.response,
+          },
+        });
+      refreshVisibleAccountSharingAtoms(get);
+      return result;
+    }
+  )
 );
 
 /** Mutation atom for revoking account access. */
 export const revokeAccountAccessAtom = appHttpApiFn(
-  Effect.fnUntraced(function* revokeAccountAccessEffect(
-    payload: RevokeAccountAccessInput,
-    get: Atom.FnContext
-  ) {
-    const client = yield* AppHttpApiClient;
-    const result = yield* client.squadBuilderAccountSharing.revokeAccountAccess(
-      {
-        payload: {
-          accessId: yield* asMargonemAccountAccessId(payload.accessId),
-        },
-      }
-    );
-    refreshVisibleAccountSharingAtoms(get, payload);
-    return result;
-  })
+  Effect.fn("Web.SquadAccountSharing.revokeAccess")(
+    function* revokeAccountAccessEffect(
+      payload: RevokeAccountAccessInput,
+      get: Atom.FnContext
+    ) {
+      const client = yield* AppHttpApiClient;
+      const result =
+        yield* client.squadBuilderAccountSharing.revokeAccountAccess({
+          payload: {
+            accessId: yield* asMargonemAccountAccessId(payload.accessId),
+          },
+        });
+      refreshVisibleAccountSharingAtoms(get, payload);
+      return result;
+    }
+  )
 );

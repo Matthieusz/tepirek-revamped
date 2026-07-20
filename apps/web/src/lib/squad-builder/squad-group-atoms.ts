@@ -191,7 +191,7 @@ export const refreshVisibleSquadGroupAtoms = (
 };
 
 export const createSquadGroupAtom = appHttpApiFn(
-  Effect.fnUntraced(function* createSquadGroupEffect(
+  Effect.fn("Web.SquadGroup.create")(function* createSquadGroupEffect(
     payload: CreateSquadGroupInput,
     get: Atom.FnContext
   ) {
@@ -207,7 +207,7 @@ export const createSquadGroupAtom = appHttpApiFn(
 );
 
 export const saveSquadGroupAtom = appHttpApiFn(
-  Effect.fnUntraced(function* saveSquadGroupEffect(
+  Effect.fn("Web.SquadGroup.save")(function* saveSquadGroupEffect(
     payload: SaveSquadGroupInput,
     get: Atom.FnContext
   ) {
@@ -241,49 +241,53 @@ export const saveSquadGroupAtom = appHttpApiFn(
 );
 
 export const saveSharedSquadGroupCharactersAtom = appHttpApiFn(
-  Effect.fnUntraced(function* saveSharedSquadGroupCharactersEffect(
-    payload: SaveSharedSquadGroupCharactersInput,
-    get: Atom.FnContext
-  ) {
-    const client = yield* AppHttpApiClient;
-    const squads = yield* Effect.forEach(
-      (squad: SaveSharedSquadGroupCharactersInput["squads"][number]) =>
-        asSquadId(squad.squadId).pipe(
-          Effect.map((squadId) => ({ ...squad, squadId }))
-        )
-    )(payload.squads);
-    const squadGroup =
-      yield* client.squadBuilderSquadGroup.saveSharedSquadGroupCharacters({
-        payload: {
-          expectedUpdatedAt: payload.expectedUpdatedAt,
-          groupId: yield* asSquadGroupId(payload.groupId),
-          squads,
-        },
-      });
-    get.refresh(ownedSquadGroupsByActorAtom("default"));
-    get.refresh(squadGroupDetailByKeyAtom(squadGroupIdKey(payload.groupId)));
-    get.refresh(
-      availableSquadCharactersByKeyAtom(squadGroupIdKey(payload.groupId))
-    );
-    return squadGroup;
-  })
+  Effect.fn("Web.SquadGroup.saveSharedCharacters")(
+    function* saveSharedSquadGroupCharactersEffect(
+      payload: SaveSharedSquadGroupCharactersInput,
+      get: Atom.FnContext
+    ) {
+      const client = yield* AppHttpApiClient;
+      const squads = yield* Effect.forEach(
+        (squad: SaveSharedSquadGroupCharactersInput["squads"][number]) =>
+          asSquadId(squad.squadId).pipe(
+            Effect.map((squadId) => ({ ...squad, squadId }))
+          )
+      )(payload.squads);
+      const squadGroup =
+        yield* client.squadBuilderSquadGroup.saveSharedSquadGroupCharacters({
+          payload: {
+            expectedUpdatedAt: payload.expectedUpdatedAt,
+            groupId: yield* asSquadGroupId(payload.groupId),
+            squads,
+          },
+        });
+      get.refresh(ownedSquadGroupsByActorAtom("default"));
+      get.refresh(squadGroupDetailByKeyAtom(squadGroupIdKey(payload.groupId)));
+      get.refresh(
+        availableSquadCharactersByKeyAtom(squadGroupIdKey(payload.groupId))
+      );
+      return squadGroup;
+    }
+  )
 );
 
 export const setSquadGroupVisibilityAtom = appHttpApiFn(
-  Effect.fnUntraced(function* setSquadGroupVisibilityEffect(
-    payload: SetSquadGroupVisibilityInput,
-    get: Atom.FnContext
-  ) {
-    const client = yield* AppHttpApiClient;
-    const visibility =
-      yield* client.squadBuilderSquadGroup.setSquadGroupVisibility({
-        payload: {
-          groupId: yield* asSquadGroupId(payload.groupId),
-          visibility: payload.visibility,
-        },
-      });
-    get.refresh(ownedSquadGroupsByActorAtom("default"));
-    get.refresh(squadGroupDetailByKeyAtom(squadGroupIdKey(payload.groupId)));
-    return visibility;
-  })
+  Effect.fn("Web.SquadGroup.setVisibility")(
+    function* setSquadGroupVisibilityEffect(
+      payload: SetSquadGroupVisibilityInput,
+      get: Atom.FnContext
+    ) {
+      const client = yield* AppHttpApiClient;
+      const visibility =
+        yield* client.squadBuilderSquadGroup.setSquadGroupVisibility({
+          payload: {
+            groupId: yield* asSquadGroupId(payload.groupId),
+            visibility: payload.visibility,
+          },
+        });
+      get.refresh(ownedSquadGroupsByActorAtom("default"));
+      get.refresh(squadGroupDetailByKeyAtom(squadGroupIdKey(payload.groupId)));
+      return visibility;
+    }
+  )
 );

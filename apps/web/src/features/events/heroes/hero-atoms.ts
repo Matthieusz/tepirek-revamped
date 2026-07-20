@@ -49,7 +49,7 @@ export const heroesByEventAtom = (eventId: number | null) =>
 
 /** Mutation atom for creating a hero. */
 export const createHeroAtom = appHttpApiFn(
-  Effect.fnUntraced(function* createHeroEffect(
+  Effect.fn("Web.Hero.create")(function* createHeroEffect(
     payload: {
       readonly eventId: number;
       readonly image?: string;
@@ -68,7 +68,9 @@ export const createHeroAtom = appHttpApiFn(
 );
 
 const deleteHeroRequestAtom = appHttpApiFn(
-  Effect.fnUntraced(function* deleteHeroEffect(input: { readonly id: number }) {
+  Effect.fn("Web.Hero.delete")(function* deleteHeroEffect(input: {
+    readonly id: number;
+  }) {
     const client = yield* AppHttpApiClient;
     return yield* client.heroes.deleteHero({
       payload: { id: yield* asHeroId(input.id) },

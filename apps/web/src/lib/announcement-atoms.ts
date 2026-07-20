@@ -27,7 +27,7 @@ export const announcementsAtom = appHttpApiAtom(
 
 /** Mutation atom for creating an announcement. */
 export const createAnnouncementAtom = appHttpApiFn(
-  Effect.fnUntraced(function* createAnnouncementEffect(
+  Effect.fn("Web.Announcement.create")(function* createAnnouncementEffect(
     payload: { readonly description: string; readonly title: string },
     get: Atom.FnContext
   ) {
@@ -41,14 +41,14 @@ export const createAnnouncementAtom = appHttpApiFn(
 );
 
 const deleteAnnouncementRequestAtom = appHttpApiFn(
-  Effect.fnUntraced(function* deleteAnnouncementEffect(input: {
-    readonly id: number;
-  }) {
-    const client = yield* AppHttpApiClient;
-    return yield* client.announcement.deleteAnnouncement({
-      payload: { id: yield* asAnnouncementId(input.id) },
-    });
-  })
+  Effect.fn("Web.Announcement.delete")(
+    function* deleteAnnouncementEffect(input: { readonly id: number }) {
+      const client = yield* AppHttpApiClient;
+      return yield* client.announcement.deleteAnnouncement({
+        payload: { id: yield* asAnnouncementId(input.id) },
+      });
+    }
+  )
 );
 
 /** Optimistic announcement resource that preserves loading and failure states. */

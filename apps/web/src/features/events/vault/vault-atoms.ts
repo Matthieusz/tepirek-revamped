@@ -73,7 +73,7 @@ export const userStatsAtom = (payload: VaultInput) =>
 
 /** Mutation atom for distributing gold for one hero. Refreshes affected vault resources on success. */
 export const distributeGoldAtom = appHttpApiFn(
-  Effect.fnUntraced(function* distributeGoldEffect(
+  Effect.fn("Web.Vault.distributeGold")(function* distributeGoldEffect(
     payload: {
       readonly goldAmount: number;
       readonly eventId: number;
@@ -103,7 +103,7 @@ export const distributeGoldAtom = appHttpApiFn(
 );
 
 const togglePaidOutRequestAtom = appHttpApiFn(
-  Effect.fnUntraced(function* togglePaidOutEffect(
+  Effect.fn("Web.Vault.togglePaidOut")(function* togglePaidOutEffect(
     payload: {
       readonly eventId: number;
       readonly paidOut: boolean;

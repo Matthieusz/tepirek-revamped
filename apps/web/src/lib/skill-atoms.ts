@@ -76,7 +76,7 @@ export const skillsByRangeAtom = (rangeId: number) =>
 
 /** Mutation atom for creating a skill profession. */
 export const createSkillProfessionAtom = appHttpApiFn(
-  Effect.fnUntraced(function* createSkillProfessionEffect(
+  Effect.fn("Web.Skill.createProfession")(function* createSkillProfessionEffect(
     payload: { readonly name: string },
     get: Atom.FnContext
   ) {
@@ -89,7 +89,7 @@ export const createSkillProfessionAtom = appHttpApiFn(
 
 /** Mutation atom for creating a skill range. */
 export const createSkillRangeAtom = appHttpApiFn(
-  Effect.fnUntraced(function* createSkillRangeEffect(
+  Effect.fn("Web.Skill.createRange")(function* createSkillRangeEffect(
     payload: {
       readonly image: string;
       readonly level: number;
@@ -106,7 +106,7 @@ export const createSkillRangeAtom = appHttpApiFn(
 
 /** Mutation atom for creating a skill. */
 export const createSkillAtom = appHttpApiFn(
-  Effect.fnUntraced(function* createSkillEffect(
+  Effect.fn("Web.Skill.create")(function* createSkillEffect(
     payload: {
       readonly link: string;
       readonly mastery: boolean;
@@ -130,7 +130,7 @@ export const createSkillAtom = appHttpApiFn(
 );
 
 const deleteSkillRangeRequestAtom = appHttpApiFn(
-  Effect.fnUntraced(function* deleteSkillRangeEffect(input: {
+  Effect.fn("Web.Skill.deleteRange")(function* deleteSkillRangeEffect(input: {
     readonly id: number;
   }) {
     const client = yield* AppHttpApiClient;
@@ -141,7 +141,7 @@ const deleteSkillRangeRequestAtom = appHttpApiFn(
 );
 
 const deleteSkillRequestAtom = appHttpApiFn(
-  Effect.fnUntraced(function* deleteSkillEffect(input: {
+  Effect.fn("Web.Skill.delete")(function* deleteSkillEffect(input: {
     readonly id: number;
   }) {
     const client = yield* AppHttpApiClient;

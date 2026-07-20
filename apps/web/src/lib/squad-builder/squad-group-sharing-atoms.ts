@@ -167,70 +167,76 @@ export const squadEditorInviteTargetsAtom = (
 
 /** Mutation atom for responding to a squad-group invite. */
 export const respondToSquadGroupInviteAtom = appHttpApiFn(
-  Effect.fnUntraced(function* respondToSquadGroupInviteEffect(
-    payload: RespondToSquadGroupInviteInput,
-    get: Atom.FnContext
-  ) {
-    const client = yield* AppHttpApiClient;
-    const result =
-      yield* client.squadBuilderSquadGroupSharing.respondToSquadGroupInvite({
-        payload: {
-          invitationId: yield* asSquadGroupInvitationId(payload.invitationId),
-          response: payload.response,
-        },
-      });
-    get.refresh(incomingSquadGroupInvitesByActorAtom("default"));
-    get.refresh(sharedSquadGroupsByActorAtom("default"));
-    get.refresh(pendingSquadGroupInviteCountByActorAtom("default"));
-    return result;
-  })
+  Effect.fn("Web.SquadGroupSharing.respondToInvite")(
+    function* respondToSquadGroupInviteEffect(
+      payload: RespondToSquadGroupInviteInput,
+      get: Atom.FnContext
+    ) {
+      const client = yield* AppHttpApiClient;
+      const result =
+        yield* client.squadBuilderSquadGroupSharing.respondToSquadGroupInvite({
+          payload: {
+            invitationId: yield* asSquadGroupInvitationId(payload.invitationId),
+            response: payload.response,
+          },
+        });
+      get.refresh(incomingSquadGroupInvitesByActorAtom("default"));
+      get.refresh(sharedSquadGroupsByActorAtom("default"));
+      get.refresh(pendingSquadGroupInviteCountByActorAtom("default"));
+      return result;
+    }
+  )
 );
 
 export const sendSquadGroupEditorInviteAtom = appHttpApiFn(
-  Effect.fnUntraced(function* sendSquadGroupEditorInviteEffect(
-    payload: SendSquadGroupEditorInviteInput,
-    get: Atom.FnContext
-  ) {
-    const client = yield* AppHttpApiClient;
-    const result =
-      yield* client.squadBuilderSquadGroupSharing.sendSquadGroupEditorInvite({
-        payload: {
-          groupId: yield* asSquadGroupId(payload.groupId),
-          invitedUserId: yield* asAppUserId(payload.invitedUserId),
-        },
-      });
-    get.refresh(incomingSquadGroupInvitesByActorAtom("default"));
-    get.refresh(sharedSquadGroupsByActorAtom("default"));
-    get.refresh(pendingSquadGroupInviteCountByActorAtom("default"));
-    get.refresh(
-      squadGroupEditorGrantsByKeyAtom(
-        squadGroupEditorGrantsKey(payload.groupId)
-      )
-    );
-    return result;
-  })
+  Effect.fn("Web.SquadGroupSharing.sendEditorInvite")(
+    function* sendSquadGroupEditorInviteEffect(
+      payload: SendSquadGroupEditorInviteInput,
+      get: Atom.FnContext
+    ) {
+      const client = yield* AppHttpApiClient;
+      const result =
+        yield* client.squadBuilderSquadGroupSharing.sendSquadGroupEditorInvite({
+          payload: {
+            groupId: yield* asSquadGroupId(payload.groupId),
+            invitedUserId: yield* asAppUserId(payload.invitedUserId),
+          },
+        });
+      get.refresh(incomingSquadGroupInvitesByActorAtom("default"));
+      get.refresh(sharedSquadGroupsByActorAtom("default"));
+      get.refresh(pendingSquadGroupInviteCountByActorAtom("default"));
+      get.refresh(
+        squadGroupEditorGrantsByKeyAtom(
+          squadGroupEditorGrantsKey(payload.groupId)
+        )
+      );
+      return result;
+    }
+  )
 );
 
 export const revokeSquadGroupEditorAtom = appHttpApiFn(
-  Effect.fnUntraced(function* revokeSquadGroupEditorEffect(
-    payload: RevokeSquadGroupEditorInput,
-    get: Atom.FnContext
-  ) {
-    const client = yield* AppHttpApiClient;
-    const result =
-      yield* client.squadBuilderSquadGroupSharing.revokeSquadGroupEditor({
-        payload: {
-          invitationId: yield* asSquadGroupInvitationId(payload.invitationId),
-        },
-      });
-    get.refresh(incomingSquadGroupInvitesByActorAtom("default"));
-    get.refresh(sharedSquadGroupsByActorAtom("default"));
-    get.refresh(pendingSquadGroupInviteCountByActorAtom("default"));
-    get.refresh(
-      squadGroupEditorGrantsByKeyAtom(
-        squadGroupEditorGrantsKey(payload.groupId)
-      )
-    );
-    return result;
-  })
+  Effect.fn("Web.SquadGroupSharing.revokeEditor")(
+    function* revokeSquadGroupEditorEffect(
+      payload: RevokeSquadGroupEditorInput,
+      get: Atom.FnContext
+    ) {
+      const client = yield* AppHttpApiClient;
+      const result =
+        yield* client.squadBuilderSquadGroupSharing.revokeSquadGroupEditor({
+          payload: {
+            invitationId: yield* asSquadGroupInvitationId(payload.invitationId),
+          },
+        });
+      get.refresh(incomingSquadGroupInvitesByActorAtom("default"));
+      get.refresh(sharedSquadGroupsByActorAtom("default"));
+      get.refresh(pendingSquadGroupInviteCountByActorAtom("default"));
+      get.refresh(
+        squadGroupEditorGrantsByKeyAtom(
+          squadGroupEditorGrantsKey(payload.groupId)
+        )
+      );
+      return result;
+    }
+  )
 );

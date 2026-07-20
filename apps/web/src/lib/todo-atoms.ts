@@ -35,7 +35,7 @@ export const todosAtom = appHttpApiAtom(
 
 /** Mutation atom for creating a todo. */
 export const createTodoAtom = appHttpApiFn(
-  Effect.fnUntraced(function* createTodoEffect(
+  Effect.fn("Web.Todo.create")(function* createTodoEffect(
     payload: { readonly text: string },
     get: Atom.FnContext
   ) {
@@ -47,7 +47,9 @@ export const createTodoAtom = appHttpApiFn(
 );
 
 const deleteTodoRequestAtom = appHttpApiFn(
-  Effect.fnUntraced(function* deleteTodoEffect(input: { readonly id: number }) {
+  Effect.fn("Web.Todo.delete")(function* deleteTodoEffect(input: {
+    readonly id: number;
+  }) {
     const client = yield* AppHttpApiClient;
     return yield* client.todo.deleteTodo({
       payload: { id: yield* asTodoId(input.id) },
@@ -56,7 +58,7 @@ const deleteTodoRequestAtom = appHttpApiFn(
 );
 
 const toggleTodoRequestAtom = appHttpApiFn(
-  Effect.fnUntraced(function* toggleTodoEffect(input: {
+  Effect.fn("Web.Todo.toggle")(function* toggleTodoEffect(input: {
     readonly completed: boolean;
     readonly id: number;
   }) {

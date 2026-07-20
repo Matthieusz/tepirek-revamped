@@ -34,7 +34,7 @@ export const usersAtom = appHttpApiAtom(
 
 /** Mutation atom for updating the current user's profile. */
 export const updateProfileAtom = appHttpApiFn(
-  Effect.fnUntraced(function* updateProfileEffect(
+  Effect.fn("Web.User.updateProfile")(function* updateProfileEffect(
     payload: { readonly name: string },
     get: Atom.FnContext
   ) {
@@ -48,7 +48,7 @@ export const updateProfileAtom = appHttpApiFn(
 );
 
 export const setVerifiedAtom = appHttpApiFn(
-  Effect.fnUntraced(function* setVerifiedEffect(
+  Effect.fn("Web.User.setVerified")(function* setVerifiedEffect(
     payload: { readonly userId: string; readonly verified: boolean },
     get: Atom.FnContext
   ) {
@@ -63,7 +63,7 @@ export const setVerifiedAtom = appHttpApiFn(
 );
 
 export const setRoleAtom = appHttpApiFn(
-  Effect.fnUntraced(function* setRoleEffect(
+  Effect.fn("Web.User.setRole")(function* setRoleEffect(
     payload: { readonly role: "admin" | "user"; readonly userId: string },
     get: Atom.FnContext
   ) {
@@ -78,7 +78,7 @@ export const setRoleAtom = appHttpApiFn(
 );
 
 export const updateUserNameAtom = appHttpApiFn(
-  Effect.fnUntraced(function* updateUserNameEffect(
+  Effect.fn("Web.User.updateName")(function* updateUserNameEffect(
     payload: { readonly name: string; readonly userId: string },
     get: Atom.FnContext
   ) {
@@ -93,7 +93,7 @@ export const updateUserNameAtom = appHttpApiFn(
 );
 
 export const deleteUserAtom = appHttpApiFn(
-  Effect.fnUntraced(function* deleteUserEffect(
+  Effect.fn("Web.User.delete")(function* deleteUserEffect(
     payload: { readonly userId: string },
     get: Atom.FnContext
   ) {
@@ -107,17 +107,17 @@ export const deleteUserAtom = appHttpApiFn(
   })
 );
 
-const verifyDiscordGuildMembershipRequest = Effect.fnUntraced(
-  function* verifyDiscordGuildMembershipEffect(
-    _: unknown,
-    get: Atom.FnContext
-  ) {
-    const client = yield* AppHttpApiClient;
-    const session = yield* client.user.verifyDiscordGuildMembership({});
-    get.refresh(sessionAtom);
-    return session;
-  }
-);
+const verifyDiscordGuildMembershipRequest = Effect.fn(
+  "Web.User.verifyDiscordGuildMembership"
+)(function* verifyDiscordGuildMembershipEffect(
+  _: unknown,
+  get: Atom.FnContext
+) {
+  const client = yield* AppHttpApiClient;
+  const session = yield* client.user.verifyDiscordGuildMembership({});
+  get.refresh(sessionAtom);
+  return session;
+});
 
 export const verifyDiscordGuildMembershipAtom = appHttpApiFn((payload, get) =>
   verifyDiscordGuildMembershipRequest(payload, get)
