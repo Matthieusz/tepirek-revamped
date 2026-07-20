@@ -61,6 +61,7 @@ const backgroundImagePattern =
   /background-image:\s*url\(\s*(?<avatarUrl>[^)]*?)\s*\)/u;
 
 const decodeNumber = Schema.decodeUnknownEffect(Schema.NumberFromString);
+const decodeNumberSync = Schema.decodeUnknownSync(Schema.NumberFromString);
 
 const decodeHtmlEntities = (value: string): string =>
   value
@@ -70,7 +71,7 @@ const decodeHtmlEntities = (value: string): string =>
     .replaceAll("&lt;", "<")
     .replaceAll("&gt;", ">")
     .replaceAll(/&#(?<codePoint>\d+);/gu, (_match, codePoint: string) =>
-      String.fromCodePoint(Number(codePoint))
+      String.fromCodePoint(decodeNumberSync(codePoint))
     );
 
 const stripTags = (value: string): string => value.replaceAll(/<[^>]*>/gu, "");

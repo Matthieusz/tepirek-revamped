@@ -109,7 +109,7 @@ export const sharedSquadGroupsAtom = sharedSquadGroupsByActorAtom("default");
 /** Resource atom for editor grants on one squad group. */
 const squadGroupEditorGrantsByKeyAtom = Atom.family(
   (key: SquadGroupEditorGrantsKey) => {
-    const groupId = Number(key);
+    const groupId = Schema.decodeUnknownSync(Schema.NumberFromString)(key);
     return appHttpApiAtom(
       Effect.gen(function* listSquadGroupEditorGrantsEffect() {
         const client = yield* AppHttpApiClient;

@@ -3,6 +3,8 @@ import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
 import { Link } from "@tanstack/react-router";
 import type { SharedSquadGroupSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import {
   AlertTriangle,
@@ -64,6 +66,12 @@ const emptyFilterForm: SquadGroupListFilterFormState = {
   minLevel: "",
   nameQuery: "",
 };
+const PositiveLevelFromString = Schema.NumberFromString.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThan(0))
+);
+const decodeOptionalLevel = (value: string): number | null =>
+  Option.getOrNull(Schema.decodeUnknownOption(PositiveLevelFromString)(value));
 
 const squadFilterFormBuilder = FormBuilder.empty
   .addField("nameQuery", SquadFilterNameSchema)
@@ -362,11 +370,11 @@ export const SquadGroupLibrary = ({
   const publicAtom = globalSquadGroupsAtom({
     maxLevel:
       appliedFilters.maxLevel.length > 0
-        ? Number(appliedFilters.maxLevel)
+        ? decodeOptionalLevel(appliedFilters.maxLevel)
         : null,
     minLevel:
       appliedFilters.minLevel.length > 0
-        ? Number(appliedFilters.minLevel)
+        ? decodeOptionalLevel(appliedFilters.minLevel)
         : null,
     nameQuery:
       appliedFilters.nameQuery.length > 0 ? appliedFilters.nameQuery : null,

@@ -1,6 +1,7 @@
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
+import * as Order from "effect/Order";
 import * as Predicate from "effect/Predicate";
 import * as Record from "effect/Record";
 import * as Schema from "effect/Schema";
@@ -75,11 +76,15 @@ const getTextFilterValue = (
   filters: readonly Filter<unknown>[],
   field: CharacterPoolFilterField
 ): string => {
-  const filter = filters.find(
+  const filter = Arr.findFirst(
+    filters,
     (candidate) =>
       candidate.field === field && candidate.operator === "contains"
   );
-  const value = filter === undefined ? "" : (getStringValues(filter)[0] ?? "");
+  const value = Option.match(filter, {
+    onNone: () => "",
+    onSome: (matchedFilter) => getStringValues(matchedFilter)[0] ?? "",
+  });
   return normalizeText(value);
 };
 
@@ -90,11 +95,11 @@ export const parseCharacterPoolFilters = (
   levelToInput: string
 ): CharacterPoolFilters => {
   const professionValues = Arr.dedupe(
-    filters.flatMap((filter) =>
+    Arr.flatMap((filter: Filter<unknown>) =>
       filter.field === "profession" && filter.operator === "is_any_of"
-        ? getStringValues(filter).map(normalizeText)
+        ? Arr.map(normalizeText)(getStringValues(filter))
         : []
-    )
+    )(filters)
   );
   const levelFrom = parseLevelInput(levelFromInput);
   const levelTo = parseLevelInput(levelToInput);
@@ -120,9 +125,11 @@ export const getAssignedCharacterIds = (
   }[]
 ): HashSet.HashSet<number> =>
   HashSet.fromIterable(
-    squads.flatMap((squad) =>
-      squad.characters.map((character) => character.characterId)
-    )
+    Arr.flatMap((squad: (typeof squads)[number]) =>
+      Arr.map(
+        (character: { readonly characterId: number }) => character.characterId
+      )(squad.characters)
+    )(squads)
   );
 
 const matchesText = (value: string, query: string): boolean =>
@@ -150,9 +157,9 @@ const matchesCharacter = (
 ): boolean => {
   const professionMatches =
     filters.professions.length === 0 ||
-    filters.professions.some(
-      (profession) => normalizeText(character.profession) === profession
-    );
+    Arr.some<string>(
+      (profession: string) => normalizeText(character.profession) === profession
+    )(filters.professions);
 
   return (
     professionMatches &&
@@ -169,15 +176,38 @@ export const filterAvailableCharacters = <T extends CharacterPoolCharacter>(
   filters: CharacterPoolFilters
 ): readonly T[] => {
   const assignedCharacterIdSet = HashSet.fromIterable(assignedCharacterIds);
-  return characters.filter(
+  return Arr.filter<T>(
     (character) =>
       !HashSet.has(assignedCharacterIdSet, character.characterId) &&
       matchesCharacter(character, filters)
-  );
+  )(characters);
 };
 
 const comparePolishText = (left: string, right: string): number =>
   left.localeCompare(right, "pl-PL", { sensitivity: "base" });
+const polishTextOrder = Order.make<string>((left, right) => {
+  const result = comparePolishText(left, right);
+  if (result < 0) {
+    return -1;
+  }
+  return result > 0 ? 1 : 0;
+});
+const characterOrder = Order.combineAll<CharacterPoolCharacter>([
+  Order.mapInput(Order.flip(Order.Number), (character) => character.level),
+  Order.mapInput(polishTextOrder, (character) => character.name),
+  Order.mapInput(Order.Number, (character) => character.characterId),
+]);
+const accountGroupOrder = Order.combine(
+  Order.mapInput(
+    polishTextOrder,
+    (group: CharacterAccountGroup<CharacterPoolCharacter>) =>
+      group.accountDisplayName
+  ),
+  Order.mapInput(
+    polishTextOrder,
+    (group: CharacterAccountGroup<CharacterPoolCharacter>) => group.accountId
+  )
+);
 
 /** Groups and sorts pool characters for the account-oriented tile layout. */
 export const groupCharactersByAccount = <T extends CharacterPoolCharacter>(
@@ -187,21 +217,13 @@ export const groupCharactersByAccount = <T extends CharacterPoolCharacter>(
     String(character.accountId)
   );
 
-  return Record.toEntries(groups)
-    .map(([accountId, group]) => ({
+  return Arr.sort(
+    Arr.map(Record.toEntries(groups), ([accountId, group]) => ({
       accountDisplayName: group[0].accountDisplayName,
       accountId,
       accountOwnerUserName: group[0].accountOwnerUserName,
-      characters: group.toSorted(
-        (left, right) =>
-          right.level - left.level ||
-          comparePolishText(left.name, right.name) ||
-          left.characterId - right.characterId
-      ),
-    }))
-    .toSorted(
-      (left, right) =>
-        comparePolishText(left.accountDisplayName, right.accountDisplayName) ||
-        comparePolishText(left.accountId, right.accountId)
-    );
+      characters: Arr.sort(group, characterOrder),
+    })),
+    accountGroupOrder
+  );
 };

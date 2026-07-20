@@ -81,9 +81,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
   const isAdminUser = isAdmin(session);
   const refreshEvents = useAtomRefresh(eventsAtom);
   const refreshHeroes = useAtomRefresh(
-    heroesByEventAtom(
-      filter.heroQueryEnabled ? Number(filter.state.eventId) : null
-    )
+    heroesByEventAtom(filter.queryInputs.eventId ?? null)
   );
   const refreshRanking = useAtomRefresh(rankingAtom(filter.queryInputs));
   const rankingContent = buildRankingContent({ sortedRanking });

@@ -9,6 +9,7 @@ import { AuthConfigLiveLayer, createAuth } from "@tepirek-revamped/auth";
 import { createDatabase } from "@tepirek-revamped/db";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Predicate from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { OpenApi } from "effect/unstable/httpapi";
@@ -177,7 +178,7 @@ const handleHttpApiRequest = async (
   const { requestId } = requestLog.getContext();
   const headers = new Headers(c.req.raw.headers);
 
-  if (typeof requestId === "string" && requestId.length > 0) {
+  if (Predicate.isString(requestId) && requestId.length > 0) {
     headers.set("x-request-id", requestId);
   }
 

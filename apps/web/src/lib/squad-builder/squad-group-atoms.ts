@@ -143,7 +143,9 @@ export const globalSquadGroupsAtom = (payload: ListGlobalSquadGroupsInput) =>
   globalSquadGroupsByKeyAtom(globalSquadGroupsKey(payload));
 
 const squadGroupDetailByKeyAtom = Atom.family((key: string) => {
-  const payload = { groupId: Number(key) } as SquadGroupIdInput;
+  const payload = {
+    groupId: Schema.decodeUnknownSync(Schema.NumberFromString)(key),
+  } satisfies SquadGroupIdInput;
   return appHttpApiAtom(
     Effect.gen(function* getSquadGroupDetailEffect() {
       const client = yield* AppHttpApiClient;
@@ -162,7 +164,9 @@ export const squadGroupDetailAtom = (payload: SquadGroupIdInput) =>
     : disabledSquadGroupDetailAtom;
 
 const availableSquadCharactersByKeyAtom = Atom.family((key: string) => {
-  const payload = { groupId: Number(key) } as SquadGroupIdInput;
+  const payload = {
+    groupId: Schema.decodeUnknownSync(Schema.NumberFromString)(key),
+  } satisfies SquadGroupIdInput;
   return appHttpApiAtom(
     Effect.gen(function* listAvailableSquadCharactersEffect() {
       const client = yield* AppHttpApiClient;

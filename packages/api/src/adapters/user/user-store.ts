@@ -10,6 +10,7 @@ import { and, eq, sql } from "drizzle-orm";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
 
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
@@ -23,6 +24,7 @@ import { UserAdapterError } from "./user-adapter-error.ts";
 
 const LAST_ADMIN_MESSAGE =
   "Nie można odebrać uprawnień ostatniemu administratorowi";
+const PersistedCount = Schema.Union([Schema.Number, Schema.NumberFromString]);
 
 const verifiedMemberSelect = {
   id: user.id,
@@ -138,7 +140,12 @@ const countVerifiedAdmins = Effect.fnUntraced(function* countVerifiedAdmins(
       .where(and(eq(user.role, "admin"), eq(user.verified, true)))
   );
 
-  return Number(rows[0]?.count ?? 0);
+  return yield* decodePersistedValue(
+    PersistedCount,
+    rows[0]?.count ?? 0,
+    "countVerifiedAdmins.decode",
+    (error) => new UserAdapterError(error)
+  );
 });
 
 const assertAdminMutationAllowed = Effect.fnUntraced(

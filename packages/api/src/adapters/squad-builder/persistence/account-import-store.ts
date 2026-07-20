@@ -26,6 +26,7 @@ import {
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
 
 import {
   accountDisplayNameToString,
@@ -515,15 +516,22 @@ const createOwnedAccountFromPendingImportWithDatabase = (
           return {
             accountId,
             characterCount: pending.jarunaCharacters.length,
-            characterPreviews: pending.jarunaCharacters
-              .toSorted((left, right) => right.level - left.level)
-              .slice(0, ACCOUNT_CHARACTER_PREVIEW_LIMIT)
-              .map((character) => ({
+            characterPreviews: Arr.map(
+              Arr.take(
+                Arr.sortWith(
+                  pending.jarunaCharacters,
+                  (character) => character.level,
+                  Order.flip(Order.Number)
+                ),
+                ACCOUNT_CHARACTER_PREVIEW_LIMIT
+              ),
+              (character) => ({
                 avatarUrl: character.avatarUrl,
                 characterId: character.characterId,
                 name: character.name,
                 profession: character.profession,
-              })),
+              })
+            ),
             displayName,
             generatedProfileUrl: toMargonemProfileUrl(pending.profileId),
             lastFetchedAt: pending.fetchedAt,

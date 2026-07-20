@@ -2,8 +2,11 @@
 
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
+import * as Order from "effect/Order";
+import * as Predicate from "effect/Predicate";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Coins } from "lucide-react";
 import type { ReactNode } from "react";
@@ -76,9 +79,10 @@ const GoldAmountField: FormReact.FieldComponent<
   const errorId = getFieldErrorId(fieldId);
   const helperId = `${fieldId}-helper`;
   const hasError = Option.isSome(field.error);
-  const describedBy = [helperId, hasError ? errorId : undefined]
-    .filter((id): id is string => id !== undefined)
-    .join(" ");
+  const describedBy = Arr.filter(
+    [helperId, hasError ? errorId : undefined],
+    Predicate.isString
+  ).join(" ");
 
   return (
     <EffectFieldFrame
@@ -421,11 +425,15 @@ export const DistributeGoldModal = ({
     onSome: (values) => values.goldAmount || "0",
   });
   const goldAmount = parseGoldAmount(goldAmountValue);
-  const filteredHeroes = (
+  const filteredHeroes = Arr.sortWith(
     eventId === ALL_FILTER
       ? []
-      : heroes?.filter((hero) => hero.eventId?.toString() === eventId)
-  )?.toSorted((firstHero, secondHero) => firstHero.level - secondHero.level);
+      : Arr.filter<(typeof heroes)[number]>(
+          (hero) => hero.eventId?.toString() === eventId
+        )(heroes ?? []),
+    (hero) => hero.level,
+    Order.Number
+  );
   const parsedHeroId = toQueryInput(heroId) ?? null;
   const heroStatsAtomValue = heroStatsAtom({ heroId: parsedHeroId });
   const heroStatsResult = useAtomValue(heroStatsAtomValue);

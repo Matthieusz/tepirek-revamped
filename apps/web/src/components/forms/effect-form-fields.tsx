@@ -1,5 +1,7 @@
 import type { FormReact } from "@lucas-barake/effect-form-react";
 import * as Option from "effect/Option";
+import * as Predicate from "effect/Predicate";
+import * as Schema from "effect/Schema";
 import type { ReactNode } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,6 +22,8 @@ import {
   getFieldErrorId,
   getFieldId,
 } from "./effect-form-field-helpers";
+
+const decodeNumber = Schema.decodeUnknownOption(Schema.NumberFromString);
 
 interface TextFieldProps {
   readonly autoComplete?: string;
@@ -151,7 +155,9 @@ export const EffectCheckboxField: FormReact.FieldComponent<
           id={fieldId}
           name={field.path}
           onBlur={field.onBlur}
-          onCheckedChange={(value) => field.onChange(Boolean(value))}
+          onCheckedChange={(value) =>
+            Predicate.isBoolean(value) && field.onChange(value)
+          }
         />
         <Label className="text-sm font-medium" htmlFor={fieldId}>
           {props.label}
@@ -219,7 +225,11 @@ export const EffectNumberField: FormReact.FieldComponent<
         id={fieldId}
         name={field.path}
         onBlur={field.onBlur}
-        onChange={(event) => field.onChange(Number(event.target.value))}
+        onChange={(event) =>
+          field.onChange(
+            Option.getOrElse(decodeNumber(event.target.value), () => 0)
+          )
+        }
         placeholder={props.placeholder}
         aria-required={props.required || undefined}
         type="number"

@@ -36,6 +36,7 @@ const RetryAfterSeconds = Schema.NumberFromString.pipe(
   Schema.check(Schema.isGreaterThanOrEqualTo(0))
 );
 const decodeRetryAfterSeconds = Schema.decodeUnknownOption(RetryAfterSeconds);
+const decodeRetryAfterDate = Schema.decodeUnknownOption(Schema.DateFromString);
 
 const parseRetryAfterMilliseconds = (
   response: Response
@@ -51,13 +52,13 @@ const parseRetryAfterMilliseconds = (
       return seconds.value * MILLISECONDS_PER_SECOND;
     }
 
-    const retryAt = Date.parse(retryAfter);
-    if (Num.Number.isNaN(retryAt)) {
+    const retryAt = decodeRetryAfterDate(retryAfter);
+    if (Option.isNone(retryAt)) {
       return;
     }
 
     const currentTime = yield* Clock.currentTimeMillis;
-    return Num.max(0, retryAt - currentTime);
+    return Num.max(0, retryAt.value.getTime() - currentTime);
   });
 
 const discordRetrySchedule: Schedule.Schedule<

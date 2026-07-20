@@ -1,3 +1,6 @@
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+
 interface ServerResource {
   readonly dispose: () => Promise<void>;
 }
@@ -6,10 +9,14 @@ const disposeAll = async (
   resources: readonly ServerResource[]
 ): Promise<void> => {
   const results = await Promise.allSettled(
-    resources.map(({ dispose }) => Promise.resolve().then(dispose))
+    Arr.map(({ dispose }: ServerResource) => Promise.resolve().then(dispose))(
+      resources
+    )
   );
-  const failures = results.flatMap((result) =>
-    result.status === "rejected" ? [result.reason] : []
+  const failures = Arr.getSomes(
+    Arr.map((result: PromiseSettledResult<void>) =>
+      result.status === "rejected" ? Option.some(result.reason) : Option.none()
+    )(results)
   );
 
   if (failures.length > 0) {

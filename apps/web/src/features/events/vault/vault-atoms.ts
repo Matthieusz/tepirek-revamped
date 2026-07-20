@@ -1,5 +1,6 @@
 import type { VaultRow } from "@tepirek-revamped/api/protocol/vault/http-api-contract";
 import { Effect } from "effect";
+import * as Schema from "effect/Schema";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
 import { oldestUnpaidEventAtom } from "@/features/events/ranking/ranking-atoms";
@@ -23,7 +24,9 @@ const vaultKey = (payload: VaultInput): VaultKey =>
   String(payload.eventId ?? "all");
 
 const vaultInputFromKey = (key: VaultKey) =>
-  key === "all" ? {} : { eventId: Number(key) };
+  key === "all"
+    ? {}
+    : { eventId: Schema.decodeUnknownSync(Schema.NumberFromString)(key) };
 
 const setPaidOutForUser = (
   rows: readonly VaultEntry[],

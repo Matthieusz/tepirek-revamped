@@ -4,7 +4,9 @@ import type {
   PreviewOwnedAccountImportsPayload,
   PreviewOwnedAccountImportsSuccess,
 } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Predicate from "effect/Predicate";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import {
   AlertTriangle,
@@ -75,9 +77,10 @@ const ProfileUrlsField: FormReact.FieldComponent<
   const helperId = `${fieldId}-helper`;
   const hasError = Option.isSome(field.error);
   const profileLineCount = getProfileLines(field.value).length;
-  const describedBy = [helperId, hasError ? errorId : undefined]
-    .filter((id): id is string => id !== undefined)
-    .join(" ");
+  const describedBy = Arr.filter(
+    [helperId, hasError ? errorId : undefined],
+    Predicate.isString
+  ).join(" ");
 
   return (
     <EffectFieldFrame

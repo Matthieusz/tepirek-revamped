@@ -4,6 +4,7 @@ import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cva } from "class-variance-authority";
 import type { VariantProps } from "class-variance-authority";
+import * as Predicate from "effect/Predicate";
 import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
 
@@ -103,7 +104,7 @@ const SidebarProvider = ({
   const open = openProp ?? _open;
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
-      const openState = typeof value === "function" ? value(open) : value;
+      const openState = Predicate.isFunction(value) ? value(open) : value;
       if (setOpenProp) {
         setOpenProp(openState);
       } else {
@@ -571,7 +572,7 @@ const SidebarMenuButton = ({
   }
 
   const tooltipProps: React.ComponentProps<typeof TooltipContent> =
-    typeof tooltip === "string" ? { children: tooltip } : tooltip;
+    Predicate.isString(tooltip) ? { children: tooltip } : tooltip;
 
   return (
     <Tooltip>

@@ -87,9 +87,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
   const refreshBets = useAtomRefresh(paginatedBetsAtom(betPageInput));
   const refreshEvents = useAtomRefresh(eventsAtom);
   const refreshHeroes = useAtomRefresh(
-    heroesByEventAtom(
-      filter.heroQueryEnabled ? Number(filter.state.eventId) : null
-    )
+    heroesByEventAtom(filter.queryInputs.eventId ?? null)
   );
 
   return (

@@ -1,4 +1,7 @@
+import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
+import * as Order from "effect/Order";
+import * as Schema from "effect/Schema";
 
 type DatabaseUrlMetadata = Readonly<{
   canonical: string;
@@ -8,9 +11,9 @@ const defaultPostgresPort = "5432";
 const postgresProtocols = HashSet.fromIterable(["postgres:", "postgresql:"]);
 
 const canonicalizeSearch = (url: URL) => {
-  const parameters = [...url.searchParams.entries()].toSorted(
-    ([leftKey, leftValue], [rightKey, rightValue]) =>
-      leftKey.localeCompare(rightKey) || leftValue.localeCompare(rightValue)
+  const parameters = Arr.sort(
+    Arr.fromIterable(url.searchParams.entries()),
+    Order.Tuple([Order.String, Order.String])
   );
 
   return new URLSearchParams(parameters).toString();
@@ -20,34 +23,32 @@ export const parseDatabaseUrl = (
   value: string,
   environmentKey: "DATABASE_URL" | "TEST_DATABASE_URL"
 ): DatabaseUrlMetadata => {
-  let url: URL;
-
   try {
-    url = new URL(value);
+    const url = Schema.decodeUnknownSync(Schema.URLFromString)(value);
+
+    if (
+      !HashSet.has(postgresProtocols, url.protocol) ||
+      url.hostname.length === 0
+    ) {
+      throw new Error("invalid PostgreSQL URL");
+    }
+
+    const protocol = "postgresql:";
+    const port = url.port || defaultPostgresPort;
+    const search = canonicalizeSearch(url);
+
+    return {
+      canonical: [
+        protocol,
+        url.hostname.toLowerCase(),
+        port,
+        url.pathname,
+        search,
+      ].join("|"),
+    };
   } catch {
     throw new Error(`${environmentKey} must be a valid PostgreSQL URL.`);
   }
-
-  if (
-    !HashSet.has(postgresProtocols, url.protocol) ||
-    url.hostname.length === 0
-  ) {
-    throw new Error(`${environmentKey} must be a valid PostgreSQL URL.`);
-  }
-
-  const protocol = "postgresql:";
-  const port = url.port || defaultPostgresPort;
-  const search = canonicalizeSearch(url);
-
-  return {
-    canonical: [
-      protocol,
-      url.hostname.toLowerCase(),
-      port,
-      url.pathname,
-      search,
-    ].join("|"),
-  };
 };
 
 export const databaseUrlsMatch = (

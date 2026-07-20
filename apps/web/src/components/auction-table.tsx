@@ -7,6 +7,7 @@ import {
 } from "@tepirek-revamped/config";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import * as Arr from "effect/Array";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Loader2, Trash2 } from "lucide-react";
@@ -55,7 +56,7 @@ interface CellContentProps {
 }
 
 const formatSignupDate = (createdAt: string | Date) => {
-  const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
+  const date = Predicate.isDate(createdAt) ? createdAt : new Date(createdAt);
   if (!isValidDate(date)) {
     return "";
   }

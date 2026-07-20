@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
 
 import {
   ProfessionId,
@@ -62,10 +63,10 @@ const persistenceQuery = makeDirectPersistenceQuery(
 );
 
 const assertHttpUrl = (link: string) =>
-  Effect.try({
-    catch: () => new SkillsBadRequest({ message: "Podaj poprawny URL" }),
-    try: () => new URL(link),
-  }).pipe(
+  Schema.decodeUnknownEffect(Schema.URLFromString)(link).pipe(
+    Effect.mapError(
+      () => new SkillsBadRequest({ message: "Podaj poprawny URL" })
+    ),
     Effect.flatMap((url) =>
       url.protocol === "http:" || url.protocol === "https:"
         ? Effect.void

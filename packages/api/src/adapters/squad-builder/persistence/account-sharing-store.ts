@@ -15,6 +15,7 @@ import { and, asc, desc, eq, ilike, inArray, ne, not, sql } from "drizzle-orm";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Predicate from "effect/Predicate";
 
 import type { AccountAccessStatus } from "../../../domain/squad-builder/account-access-status.ts";
 import {
@@ -461,7 +462,7 @@ const upsertAccountAccessInviteWithDatabase = (database: EffectPgDatabase) =>
     );
     const upserted = yield* persistenceQuery(operation, transaction);
 
-    if (typeof upserted !== "number") {
+    if (!Predicate.isNumber(upserted)) {
       return yield* upserted;
     }
 

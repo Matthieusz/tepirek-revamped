@@ -2,7 +2,9 @@ import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useParams } from "@tanstack/react-router";
 import type { SquadGroupDetailSchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
 import * as HashMap from "effect/HashMap";
+import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
+import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { AlertTriangle, RotateCw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -39,6 +41,13 @@ import type { SquadCharacterMetadata } from "@/pages/dashboard/squad-builder/squ
 
 // Kept as a named alias so route resource states and child props share one source type.
 type SquadGroupDetail = typeof SquadGroupDetailSchema.Type;
+
+const decodeSquadGroupId = Schema.decodeUnknownOption(
+  Schema.NumberFromString.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0))
+  )
+);
 
 const makeClientKey = (): string => `new-${crypto.randomUUID()}`;
 
@@ -435,9 +444,9 @@ export default function SquadBuilderEditorPage() {
   const params = useParams({
     from: "/dashboard/squad-builder/squads_/$groupId",
   });
-  const groupId = Number(params.groupId);
+  const groupId = decodeSquadGroupId(params.groupId);
 
-  if (!Number.isSafeInteger(groupId) || groupId <= 0) {
+  if (Option.isNone(groupId)) {
     return (
       <Alert variant="destructive">
         <AlertTriangle aria-hidden="true" />
@@ -454,5 +463,5 @@ export default function SquadBuilderEditorPage() {
     );
   }
 
-  return <SquadBuilderEditorContent groupId={groupId} />;
+  return <SquadBuilderEditorContent groupId={groupId.value} />;
 }

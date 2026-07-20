@@ -1,5 +1,6 @@
 import { useAtomValue } from "@effect/atom-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import * as Predicate from "effect/Predicate";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useCallback } from "react";
 
@@ -83,8 +84,8 @@ export const useEventHeroFilter = (
   const state = normalizeEventHeroFilter({
     persistedEventId: persistedFilters.eventId,
     persistedHeroId: persistedFilters.heroId,
-    urlEventId: typeof urlEventId === "string" ? urlEventId : undefined,
-    urlHeroId: typeof urlHeroId === "string" ? urlHeroId : undefined,
+    urlEventId: Predicate.isString(urlEventId) ? urlEventId : undefined,
+    urlHeroId: Predicate.isString(urlHeroId) ? urlHeroId : undefined,
   });
 
   const eventsResult = useAtomValue(eventsAtom);
@@ -93,7 +94,9 @@ export const useEventHeroFilter = (
     : [];
 
   const heroQueryEnabled = isHeroQueryEnabled(state);
-  const heroEventId = heroQueryEnabled ? Number(state.eventId) : null;
+  const heroEventId = heroQueryEnabled
+    ? (toQueryInput(state.eventId) ?? null)
+    : null;
   const heroesResult = useAtomValue(heroesByEventAtom(heroEventId));
   const heroes = AsyncResult.isSuccess(heroesResult) ? heroesResult.value : [];
   const heroesLoading = heroQueryEnabled && AsyncResult.isWaiting(heroesResult);

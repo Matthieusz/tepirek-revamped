@@ -2,6 +2,9 @@
 
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+import * as Predicate from "effect/Predicate";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Check, Coins, User, Vault as VaultIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -169,9 +172,13 @@ const VaultContent = ({
   };
 
   const isAdminUser = isAdmin(session);
-  const nextToPay = vault.find((v) => !v.paidOut);
-  const unpaidUsers = vault.filter((v) => !v.paidOut);
-  const paidUsers = vault.filter((v) => v.paidOut);
+  const nextToPay = Arr.findFirst(vault, (entry) => !entry.paidOut);
+  const unpaidUsers = Arr.filter<(typeof vault)[number]>(
+    (entry) => !entry.paidOut
+  )(vault);
+  const paidUsers = Arr.filter<(typeof vault)[number]>(
+    (entry) => entry.paidOut
+  )(vault);
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -211,7 +218,7 @@ const VaultContent = ({
 
       <>
         {/* Next to receive payment - highlighted */}
-        {nextToPay && (
+        {Option.isSome(nextToPay) && (
           <div className="rounded-xl border-2 border-primary/50 bg-primary/5 p-6">
             <div className="mb-2 flex items-center justify-center gap-2">
               <span className="font-semibold text-primary text-sm">
@@ -222,17 +229,19 @@ const VaultContent = ({
               <div className="flex items-center gap-3">
                 <Avatar className="size-12 border-2 border-primary">
                   <AvatarImage
-                    alt={nextToPay.userName ?? ""}
-                    src={nextToPay.userImage ?? undefined}
+                    alt={nextToPay.value.userName ?? ""}
+                    src={nextToPay.value.userImage ?? undefined}
                   />
                   <AvatarFallback>
                     <User className="size-6" />
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-bold text-lg">{nextToPay.userName}</p>
+                  <p className="font-bold text-lg">
+                    {nextToPay.value.userName}
+                  </p>
                   <p className="font-mono text-muted-foreground">
-                    {formatVaultEarnings(nextToPay.totalEarnings)} złota
+                    {formatVaultEarnings(nextToPay.value.totalEarnings)} złota
                   </p>
                 </div>
               </div>
@@ -242,7 +251,7 @@ const VaultContent = ({
                   onClick={() => {
                     toggleMutation.mutate({
                       paidOut: true,
-                      userId: nextToPay.userId,
+                      userId: nextToPay.value.userId,
                     });
                   }}
                   size="sm"
@@ -314,7 +323,7 @@ const VaultContent = ({
                         event.preventDefault();
                       }}
                       onCheckedChange={(checked) => {
-                        if (typeof checked === "boolean") {
+                        if (Predicate.isBoolean(checked)) {
                           toggleMutation.mutate({
                             paidOut: checked,
                             userId: player.userId,
@@ -349,7 +358,7 @@ const VaultContent = ({
                         event.preventDefault();
                       }}
                       onCheckedChange={(checked) => {
-                        if (typeof checked === "boolean") {
+                        if (Predicate.isBoolean(checked)) {
                           toggleMutation.mutate({
                             paidOut: checked,
                             userId: player.userId,

@@ -1,3 +1,4 @@
+import * as Predicate from "effect/Predicate";
 import type * as React from "react";
 import { createContext, isValidElement, use as reactUse, useMemo } from "react";
 
@@ -84,7 +85,7 @@ const ResponsiveDialogTrigger = ({
   if (isMobile) {
     return (
       <DrawerTrigger
-        className={typeof className === "string" ? className : undefined}
+        className={Predicate.isString(className) ? className : undefined}
       >
         {children}
       </DrawerTrigger>
