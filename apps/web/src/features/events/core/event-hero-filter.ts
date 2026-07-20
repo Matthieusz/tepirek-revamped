@@ -1,3 +1,4 @@
+/* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
@@ -51,6 +52,9 @@ export const EventHeroFilterPersistenceSchema = Schema.Struct({
   eventId: Schema.optional(PersistedFilterSelectionSchema),
   heroId: Schema.optional(PersistedFilterSelectionSchema),
 });
+export interface EventHeroFilterPersistenceSchema extends Schema.Schema.Type<
+  typeof EventHeroFilterPersistenceSchema
+> {}
 
 export interface EventHeroFilterState {
   eventId: FilterSelection;

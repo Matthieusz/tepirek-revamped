@@ -1,3 +1,4 @@
+/* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -49,8 +50,10 @@ export const MargonemCharacterPreviewSchema = Schema.Struct({
   profession: MargonemProfessionSchema,
   world: MargonemWorld,
 });
-export type MargonemCharacterPreview =
-  typeof MargonemCharacterPreviewSchema.Type;
+export interface MargonemCharacterPreviewSchema extends Schema.Schema.Type<
+  typeof MargonemCharacterPreviewSchema
+> {}
+export type MargonemCharacterPreview = MargonemCharacterPreviewSchema;
 
 /** Expected failure when a profession label cannot be normalized. */
 // oxlint-disable-next-line max-classes-per-file -- closely related domain errors
