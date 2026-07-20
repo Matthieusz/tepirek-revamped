@@ -1,3 +1,4 @@
+import * as Data from "effect/Data";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
 
@@ -26,17 +27,32 @@ export interface StoredMargonemCharacterSnapshot {
 }
 
 /** Diff for a latest character that is not yet stored. */
-export interface AddedMargonemCharacterDiff {
-  readonly _tag: "AddedCharacter";
-  readonly latest: MargonemCharacterPreview;
-}
+export type MargonemCharacterDiff = Data.TaggedEnum<{
+  readonly AddedCharacter: { readonly latest: MargonemCharacterPreview };
+  readonly RemovedCharacter: {
+    readonly current: StoredMargonemCharacterSnapshot;
+    readonly reason: "missingFromLatestJarunaProfile";
+  };
+  readonly ChangedCharacter: {
+    readonly databaseCharacterId: number;
+    readonly margonemCharacterId: MargonemCharacterId;
+    readonly changes: readonly MargonemCharacterFieldChange[];
+    readonly current: StoredMargonemCharacterSnapshot;
+    readonly latest: MargonemCharacterPreview;
+  };
+}>;
+export const MargonemCharacterDiff = Data.taggedEnum<MargonemCharacterDiff>();
+
+export type AddedMargonemCharacterDiff = Data.TaggedEnum.Value<
+  MargonemCharacterDiff,
+  "AddedCharacter"
+>;
 
 /** Diff for a stored character absent from the latest Jaruna profile. */
-export interface RemovedMargonemCharacterDiff {
-  readonly _tag: "RemovedCharacter";
-  readonly current: StoredMargonemCharacterSnapshot;
-  readonly reason: "missingFromLatestJarunaProfile";
-}
+export type RemovedMargonemCharacterDiff = Data.TaggedEnum.Value<
+  MargonemCharacterDiff,
+  "RemovedCharacter"
+>;
 
 /** A changed stored character field. */
 export type MargonemCharacterFieldChange =
@@ -62,14 +78,10 @@ export type MargonemCharacterFieldChange =
     };
 
 /** Diff for a stored character whose latest profile metadata changed. */
-export interface ChangedMargonemCharacterDiff {
-  readonly _tag: "ChangedCharacter";
-  readonly databaseCharacterId: number;
-  readonly margonemCharacterId: MargonemCharacterId;
-  readonly changes: readonly MargonemCharacterFieldChange[];
-  readonly current: StoredMargonemCharacterSnapshot;
-  readonly latest: MargonemCharacterPreview;
-}
+export type ChangedMargonemCharacterDiff = Data.TaggedEnum.Value<
+  MargonemCharacterDiff,
+  "ChangedCharacter"
+>;
 
 /** Account-level Jaruna character refetch diff. */
 export interface MargonemAccountRefetchDiff {
@@ -154,7 +166,7 @@ export const computeMargonemAccountRefetchDiff = ({
     const currentOption = HashMap.get(currentByCharacterId, latest.characterId);
 
     if (Option.isNone(currentOption)) {
-      added.push({ _tag: "AddedCharacter", latest });
+      added.push(MargonemCharacterDiff.AddedCharacter({ latest }));
       continue;
     }
     const current = currentOption.value;
@@ -166,23 +178,25 @@ export const computeMargonemAccountRefetchDiff = ({
       continue;
     }
 
-    changed.push({
-      _tag: "ChangedCharacter",
-      changes,
-      current,
-      databaseCharacterId: current.databaseCharacterId,
-      latest,
-      margonemCharacterId: current.margonemCharacterId,
-    });
+    changed.push(
+      MargonemCharacterDiff.ChangedCharacter({
+        changes,
+        current,
+        databaseCharacterId: current.databaseCharacterId,
+        latest,
+        margonemCharacterId: current.margonemCharacterId,
+      })
+    );
   }
 
   for (const current of currentCharacters) {
     if (!HashMap.has(latestByCharacterId, current.margonemCharacterId)) {
-      removed.push({
-        _tag: "RemovedCharacter",
-        current,
-        reason: "missingFromLatestJarunaProfile",
-      });
+      removed.push(
+        MargonemCharacterDiff.RemovedCharacter({
+          current,
+          reason: "missingFromLatestJarunaProfile",
+        })
+      );
     }
   }
 

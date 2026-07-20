@@ -1,3 +1,4 @@
+import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
@@ -43,15 +44,14 @@ export const SquadGroupLevelBound = Schema.Int.pipe(
 export type SquadGroupLevelBound = typeof SquadGroupLevelBound.Type;
 
 /** Character-level range for squad group list filtering. */
-export type SquadGroupLevelRange =
-  | {
-      readonly _tag: "AnyLevel";
-    }
-  | {
-      readonly _tag: "BoundedLevelRange";
-      readonly minLevel?: SquadGroupLevelBound;
-      readonly maxLevel?: SquadGroupLevelBound;
-    };
+export type SquadGroupLevelRange = Data.TaggedEnum<{
+  readonly AnyLevel: Record<never, never>;
+  readonly BoundedLevelRange: {
+    readonly minLevel?: SquadGroupLevelBound;
+    readonly maxLevel?: SquadGroupLevelBound;
+  };
+}>;
+export const SquadGroupLevelRange = Data.taggedEnum<SquadGroupLevelRange>();
 
 /** Parsed filters for squad group browsing lists. */
 export interface SquadGroupListFilters {
@@ -61,7 +61,7 @@ export interface SquadGroupListFilters {
 
 /** Empty squad group list filters matching the unfiltered list behavior. */
 export const emptySquadGroupListFilters: SquadGroupListFilters = {
-  levelRange: { _tag: "AnyLevel" },
+  levelRange: SquadGroupLevelRange.AnyLevel(),
 };
 
 /** Failure returned when a squad group name query is invalid. */
@@ -103,27 +103,25 @@ export const squadGroupLevelBoundToNumber = (
   bound: SquadGroupLevelBound
 ): number => bound;
 
+type ParsedNameQuery = Data.TaggedEnum<{
+  readonly Absent: Record<never, never>;
+  readonly Present: { readonly value: SquadGroupNameQuery };
+}>;
+const ParsedNameQuery = Data.taggedEnum<ParsedNameQuery>();
+
 const parseNameQuery = Effect.fnUntraced(function* parseNameQuery(
   value: string | null | undefined
-): Effect.fn.Return<
-  | { readonly _tag: "Absent" }
-  | {
-      readonly _tag: "Present";
-      readonly value: SquadGroupNameQuery;
-    },
-  InvalidSquadGroupNameQuery
-> {
+): Effect.fn.Return<ParsedNameQuery, InvalidSquadGroupNameQuery> {
   if (value === undefined || value === null) {
-    return { _tag: "Absent" as const };
+    return ParsedNameQuery.Absent();
   }
 
   const normalized = normalizeNameQuery(value);
   if (normalized.length === 0) {
-    return { _tag: "Absent" as const };
+    return ParsedNameQuery.Absent();
   }
 
-  return {
-    _tag: "Present" as const,
+  return ParsedNameQuery.Present({
     value: yield* Schema.decodeUnknownEffect(SquadGroupNameQuery)(value).pipe(
       Effect.catchTag(
         "SchemaError",
@@ -136,26 +134,24 @@ const parseNameQuery = Effect.fnUntraced(function* parseNameQuery(
           })
       )
     ),
-  };
+  });
 });
+
+type ParsedLevelBound = Data.TaggedEnum<{
+  readonly Absent: Record<never, never>;
+  readonly Present: { readonly value: SquadGroupLevelBound };
+}>;
+const ParsedLevelBound = Data.taggedEnum<ParsedLevelBound>();
 
 const parseLevelBound = Effect.fnUntraced(function* parseLevelBound(
   value: number | null | undefined,
   fieldName: "minLevel" | "maxLevel"
-): Effect.fn.Return<
-  | { readonly _tag: "Absent" }
-  | {
-      readonly _tag: "Present";
-      readonly value: SquadGroupLevelBound;
-    },
-  InvalidSquadGroupLevelRange
-> {
+): Effect.fn.Return<ParsedLevelBound, InvalidSquadGroupLevelRange> {
   if (value === undefined || value === null) {
-    return { _tag: "Absent" as const };
+    return ParsedLevelBound.Absent();
   }
 
-  return {
-    _tag: "Present" as const,
+  return ParsedLevelBound.Present({
     value: yield* Schema.decodeUnknownEffect(SquadGroupLevelBound)(value).pipe(
       Effect.catchTag(
         "SchemaError",
@@ -167,7 +163,7 @@ const parseLevelBound = Effect.fnUntraced(function* parseLevelBound(
           })
       )
     ),
-  };
+  });
 });
 
 /** Parse and normalize squad group list filters before store access. */
@@ -192,12 +188,11 @@ export const parseSquadGroupListFilters = Effect.fn(
 
   const levelRange: SquadGroupLevelRange =
     minLevel._tag === "Absent" && maxLevel._tag === "Absent"
-      ? { _tag: "AnyLevel" }
-      : {
-          _tag: "BoundedLevelRange",
+      ? SquadGroupLevelRange.AnyLevel()
+      : SquadGroupLevelRange.BoundedLevelRange({
           ...(maxLevel._tag === "Absent" ? {} : { maxLevel: maxLevel.value }),
           ...(minLevel._tag === "Absent" ? {} : { minLevel: minLevel.value }),
-        };
+        });
 
   return {
     levelRange,

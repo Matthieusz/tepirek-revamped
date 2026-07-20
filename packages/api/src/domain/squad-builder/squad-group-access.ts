@@ -1,3 +1,5 @@
+import * as Data from "effect/Data";
+
 import type { AppUserId } from "./app-user-id.ts";
 import type { SquadGroupId } from "./squad-group-id.ts";
 import type { SquadGroupInvitationId } from "./squad-group-invitation-id.ts";
@@ -6,33 +8,39 @@ import type { SquadGroupInvitationId } from "./squad-group-invitation-id.ts";
 export type SquadGroupAccessRole = "owner" | "editor" | "viewer";
 
 /** Full owner access to a squad group. */
-export interface SquadGroupOwnerAccess {
-  readonly _tag: "SquadGroupOwnerAccess";
-  readonly role: "owner";
-  readonly groupId: SquadGroupId;
-  readonly ownerUserId: AppUserId;
-}
+export type SquadGroupAccess = Data.TaggedEnum<{
+  readonly SquadGroupOwnerAccess: {
+    readonly role: "owner";
+    readonly groupId: SquadGroupId;
+    readonly ownerUserId: AppUserId;
+  };
+  readonly SquadGroupEditorAccess: {
+    readonly role: "editor";
+    readonly groupId: SquadGroupId;
+    readonly ownerUserId: AppUserId;
+    readonly editorUserId: AppUserId;
+    readonly invitationId: SquadGroupInvitationId;
+  };
+  readonly SquadGroupViewerAccess: {
+    readonly role: "viewer";
+    readonly groupId: SquadGroupId;
+    readonly ownerUserId: AppUserId;
+  };
+}>;
+export const SquadGroupAccess = Data.taggedEnum<SquadGroupAccess>();
+export type SquadGroupOwnerAccess = Data.TaggedEnum.Value<
+  SquadGroupAccess,
+  "SquadGroupOwnerAccess"
+>;
 
 /** Editor access granted through an accepted squad group invitation. */
-export interface SquadGroupEditorAccess {
-  readonly _tag: "SquadGroupEditorAccess";
-  readonly role: "editor";
-  readonly groupId: SquadGroupId;
-  readonly ownerUserId: AppUserId;
-  readonly editorUserId: AppUserId;
-  readonly invitationId: SquadGroupInvitationId;
-}
+export type SquadGroupEditorAccess = Data.TaggedEnum.Value<
+  SquadGroupAccess,
+  "SquadGroupEditorAccess"
+>;
 
 /** Read-only access granted by global squad group visibility. */
-export interface SquadGroupViewerAccess {
-  readonly _tag: "SquadGroupViewerAccess";
-  readonly role: "viewer";
-  readonly groupId: SquadGroupId;
-  readonly ownerUserId: AppUserId;
-}
-
-/** Union of all squad group access levels. */
-export type SquadGroupAccess =
-  | SquadGroupOwnerAccess
-  | SquadGroupEditorAccess
-  | SquadGroupViewerAccess;
+export type SquadGroupViewerAccess = Data.TaggedEnum.Value<
+  SquadGroupAccess,
+  "SquadGroupViewerAccess"
+>;

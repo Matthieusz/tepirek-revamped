@@ -69,6 +69,7 @@ import type {
   ReserveFirecrawlRequestInput,
   UpdateOwnedAccountDisplayNameInput,
 } from "../../../services/squad-builder/account-import/account-import-store.ts";
+import { ProfileAccessState } from "../../../services/squad-builder/account-import/account-import-store.ts";
 import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   ActorDoesNotOwnMargonemAccount,
@@ -106,11 +107,11 @@ const findProfileAccessStateWithDatabase = (database: EffectPgDatabase) =>
     const [account] = accountRows;
 
     if (account === undefined) {
-      return { _tag: "Available" as const };
+      return ProfileAccessState.Available();
     }
 
     if (account.ownerUserId === appUserIdToString(actorUserId)) {
-      return { _tag: "OwnedByActor" as const };
+      return ProfileAccessState.OwnedByActor();
     }
 
     const accessSelect = database
@@ -127,10 +128,10 @@ const findProfileAccessStateWithDatabase = (database: EffectPgDatabase) =>
     const accessRows = yield* persistenceQuery(operation, accessSelect);
 
     if (accessRows[0] !== undefined) {
-      return { _tag: "SharedWithActor" as const };
+      return ProfileAccessState.SharedWithActor();
     }
 
-    return { _tag: "OwnedByAnotherUser" as const };
+    return ProfileAccessState.OwnedByAnotherUser();
   });
 
 const reserveRequestWithDatabase = (database: EffectPgDatabase) =>

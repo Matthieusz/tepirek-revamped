@@ -1,17 +1,12 @@
-/** Internal Discord dependency failure carrying retry classification. */
-export class DiscordRequestFailureError extends Error {
-  readonly retryAfterMilliseconds: number | undefined;
-  readonly retryable: boolean;
+import * as Schema from "effect/Schema";
 
-  constructor(
-    message: string,
-    retryable: boolean,
-    retryAfterMilliseconds?: number,
-    options?: ErrorOptions
-  ) {
-    super(message, options);
-    this.name = "DiscordRequestFailureError";
-    this.retryAfterMilliseconds = retryAfterMilliseconds;
-    this.retryable = retryable;
+/** Internal Discord dependency failure carrying retry classification. */
+export class DiscordRequestFailureError extends Schema.TaggedErrorClass<DiscordRequestFailureError>()(
+  "DiscordRequestFailureError",
+  {
+    cause: Schema.optional(Schema.Defect()),
+    message: Schema.String,
+    retryAfterMilliseconds: Schema.optional(Schema.Number),
+    retryable: Schema.Boolean,
   }
-}
+) {}

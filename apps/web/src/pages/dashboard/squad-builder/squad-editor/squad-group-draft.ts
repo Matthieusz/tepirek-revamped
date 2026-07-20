@@ -2,6 +2,7 @@ import type {
   AvailableSquadCharacterSchema,
   SquadGroupDetailSchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
+import * as Data from "effect/Data";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
 
@@ -27,20 +28,23 @@ export interface SquadGroupDraft {
   readonly squads: readonly DraftSquad[];
 }
 
-export type PlacementError =
-  | { readonly _tag: "readOnly" }
-  | { readonly _tag: "unknownCharacter"; readonly characterId: number }
-  | { readonly _tag: "unknownSquad"; readonly squadKey: string }
-  | { readonly _tag: "squadFull"; readonly squadName: string }
-  | {
-      readonly _tag: "accountAlreadyRepresented";
-      readonly squadName: string;
-      readonly accountDisplayName: string;
-    };
+export type PlacementError = Data.TaggedEnum<{
+  readonly readOnly: Record<never, never>;
+  readonly unknownCharacter: { readonly characterId: number };
+  readonly unknownSquad: { readonly squadKey: string };
+  readonly squadFull: { readonly squadName: string };
+  readonly accountAlreadyRepresented: {
+    readonly squadName: string;
+    readonly accountDisplayName: string;
+  };
+}>;
+export const PlacementError = Data.taggedEnum<PlacementError>();
 
-type PlacementResult =
-  | { readonly _tag: "success"; readonly draft: SquadGroupDraft }
-  | { readonly _tag: "failure"; readonly error: PlacementError };
+type PlacementResult = Data.TaggedEnum<{
+  readonly success: { readonly draft: SquadGroupDraft };
+  readonly failure: { readonly error: PlacementError };
+}>;
+const PlacementResult = Data.taggedEnum<PlacementResult>();
 
 interface SaveSquadGroupPayload {
   readonly groupId: number;
@@ -132,19 +136,19 @@ export const getPlacementError = (
   canEdit: boolean
 ): PlacementError | undefined => {
   if (!canEdit) {
-    return { _tag: "readOnly" };
+    return PlacementError.readOnly();
   }
 
   const character = HashMap.get(charactersById, characterId).pipe(
     Option.getOrUndefined
   );
   if (character === undefined) {
-    return { _tag: "unknownCharacter", characterId };
+    return PlacementError.unknownCharacter({ characterId });
   }
 
   const squad = draft.squads.find((item) => item.clientKey === squadKey);
   if (squad === undefined) {
-    return { _tag: "unknownSquad", squadKey };
+    return PlacementError.unknownSquad({ squadKey });
   }
 
   const currentSquad = getCurrentSquad(draft, characterId);
@@ -156,7 +160,7 @@ export const getPlacementError = (
     (current) => current.characterId !== characterId
   );
   if (targetCharacters.length >= MAX_SQUAD_CHARACTERS) {
-    return { _tag: "squadFull", squadName: squad.name };
+    return PlacementError.squadFull({ squadName: squad.name });
   }
 
   const sameAccountCharacter = targetCharacters.find((current) => {
@@ -170,11 +174,10 @@ export const getPlacementError = (
     );
   });
   if (sameAccountCharacter !== undefined) {
-    return {
-      _tag: "accountAlreadyRepresented",
+    return PlacementError.accountAlreadyRepresented({
       accountDisplayName: character.accountDisplayName,
       squadName: squad.name,
-    };
+    });
   }
 
   return undefined;
@@ -195,16 +198,15 @@ export const applyPlacement = (
     canEdit
   );
   if (error !== undefined) {
-    return { _tag: "failure", error };
+    return PlacementResult.failure({ error });
   }
 
   const currentSquad = getCurrentSquad(draft, characterId);
   if (currentSquad?.clientKey === squadKey) {
-    return { _tag: "success", draft };
+    return PlacementResult.success({ draft });
   }
 
-  return {
-    _tag: "success",
+  return PlacementResult.success({
     draft: {
       ...draft,
       squads: draft.squads.map((squad) => {
@@ -223,7 +225,7 @@ export const applyPlacement = (
         };
       }),
     },
-  };
+  });
 };
 
 export const removeCharacter = (

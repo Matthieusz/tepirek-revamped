@@ -53,7 +53,7 @@ import {
   parseMargonemCharacterId,
   parsePositiveLevel,
 } from "../../../domain/squad-builder/margonem-profile-id.ts";
-import type { SquadGroupAccess } from "../../../domain/squad-builder/squad-group-access.ts";
+import { SquadGroupAccess } from "../../../domain/squad-builder/squad-group-access.ts";
 import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
 import {
   parseSquadGroupId,
@@ -240,12 +240,11 @@ const authorizeSquadGroupOwnerWithDatabase = (database: EffectPgDatabase) =>
       return yield* new ActorDoesNotOwnSquadGroup();
     }
 
-    return {
-      _tag: "SquadGroupOwnerAccess" as const,
+    return SquadGroupAccess.SquadGroupOwnerAccess({
       groupId,
       ownerUserId: actorUserId,
-      role: "owner" as const,
-    };
+      role: "owner",
+    });
   });
 
 const searchSquadEditorInviteTargetsWithDatabase = (
@@ -976,12 +975,11 @@ const getSquadGroupDetailWithDatabase = (database: EffectPgDatabase) =>
     let access: SquadGroupAccess;
 
     if (group.ownerUserId === actor) {
-      access = {
-        _tag: "SquadGroupOwnerAccess",
+      access = SquadGroupAccess.SquadGroupOwnerAccess({
         groupId,
         ownerUserId: actorUserId,
         role: "owner",
-      };
+      });
     } else {
       const inviteSelect = database
         .select({ id: squadGroupInvitation.id })
@@ -1003,25 +1001,23 @@ const getSquadGroupDetailWithDatabase = (database: EffectPgDatabase) =>
           return yield* new ActorCannotViewSquadGroup();
         }
 
-        access = {
-          _tag: "SquadGroupViewerAccess",
+        access = SquadGroupAccess.SquadGroupViewerAccess({
           groupId,
           ownerUserId,
           role: "viewer",
-        };
+        });
       } else {
         const invitationId = yield* parseSquadGroupInvitationId(invite.id).pipe(
           Effect.catch((error) => failPersistence(operation, error))
         );
 
-        access = {
-          _tag: "SquadGroupEditorAccess",
+        access = SquadGroupAccess.SquadGroupEditorAccess({
           editorUserId: actorUserId,
           groupId,
           invitationId,
           ownerUserId,
           role: "editor",
-        };
+        });
       }
     }
 

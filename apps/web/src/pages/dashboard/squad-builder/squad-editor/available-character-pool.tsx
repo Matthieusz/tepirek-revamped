@@ -48,13 +48,13 @@ import {
 } from "./character-pool-filters";
 import {
   MAX_SQUAD_CHARACTERS,
+  PlacementError,
   applyPlacement,
   getPlacementError,
 } from "./squad-group-draft";
 import type {
   AvailableCharacter,
   CharacterAccountInfo,
-  PlacementError,
   SquadGroupDraft,
 } from "./squad-group-draft";
 import type { SquadCharacterMetadata } from "./squad-roster-workspace";
@@ -103,28 +103,18 @@ const placementErrorMessage = (
   error: PlacementError,
   characterName: string,
   fallbackSquadName?: string
-): string => {
-  switch (error._tag) {
-    case "accountAlreadyRepresented": {
-      return `${characterName} nie może trafić do składu ${error.squadName}.`;
-    }
-    case "readOnly": {
-      return "Ten widok jest tylko do odczytu.";
-    }
-    case "squadFull": {
-      return `Skład ${error.squadName} ma już ${MAX_SQUAD_CHARACTERS} postaci.`;
-    }
-    case "unknownCharacter": {
-      return `Nie znaleziono postaci #${error.characterId}.`;
-    }
-    case "unknownSquad": {
-      return `Nie znaleziono składu ${fallbackSquadName ?? error.squadKey}.`;
-    }
-    default: {
-      return "Nie można przypisać postaci do składu.";
-    }
-  }
-};
+): string =>
+  PlacementError.$match(error, {
+    accountAlreadyRepresented: ({ squadName }) =>
+      `${characterName} nie może trafić do składu ${squadName}.`,
+    readOnly: () => "Ten widok jest tylko do odczytu.",
+    squadFull: ({ squadName }) =>
+      `Skład ${squadName} ma już ${MAX_SQUAD_CHARACTERS} postaci.`,
+    unknownCharacter: ({ characterId }) =>
+      `Nie znaleziono postaci #${characterId}.`,
+    unknownSquad: ({ squadKey }) =>
+      `Nie znaleziono składu ${fallbackSquadName ?? squadKey}.`,
+  });
 
 const getAccountInfoMap = (
   characterById: HashMap.HashMap<number, SquadCharacterMetadata>

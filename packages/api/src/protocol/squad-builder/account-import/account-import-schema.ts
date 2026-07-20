@@ -21,9 +21,35 @@ export const PreviewMargonemProfileImportSuccess = Schema.Struct({
 export const PreviewOwnedAccountImportsPayload = Schema.Struct({
   profileUrls: Schema.Array(Schema.String),
 });
-const PreviewOwnedAccountImportSucceeded = Schema.TaggedStruct(
-  "PreviewSucceeded",
-  {
+const PreviewOwnedAccountImportLineError = Schema.TaggedUnion({
+  DuplicateProfileInBatch: { firstLineNumber: PositiveInt },
+  FirecrawlMonthlyBudgetExhausted: {
+    monthlyRequestBudget: Schema.Number,
+    usedRequests: Schema.Number,
+    yearMonth: Schema.String,
+  },
+  FirecrawlRequestFailed: { profileId: PositiveInt },
+  FirecrawlResponseNotParseable: { profileId: PositiveInt },
+  InvalidMargonemProfileUrl: { message: Schema.String },
+  MargonemAccountAlreadyOwnedByActor: {},
+  MargonemAccountAlreadySharedWithActor: {},
+  MargonemAccountOwnedByAnotherUser: {},
+  MargonemCharacterRowInvalid: {
+    profileId: MargonemProfileIdSchema,
+    safeReason: Schema.String,
+  },
+  MargonemCharacterRowsNotFound: { profileId: MargonemProfileIdSchema },
+  MargonemProfileNameNotFound: { profileId: MargonemProfileIdSchema },
+  MissingMargonemProfileId: { message: Schema.String },
+  SquadBuilderPersistenceUnavailable: { operation: Schema.String },
+});
+const PreviewOwnedAccountImportItem = Schema.TaggedUnion({
+  PreviewFailed: {
+    error: PreviewOwnedAccountImportLineError,
+    inputUrl: Schema.String,
+    lineNumber: PositiveInt,
+  },
+  PreviewSucceeded: {
     defaultDisplayName: Schema.String,
     firecrawlCreditsUsed: PositiveInt,
     generatedProfileUrl: Schema.String,
@@ -34,58 +60,10 @@ const PreviewOwnedAccountImportSucceeded = Schema.TaggedStruct(
     pendingImportId: PendingMargonemAccountImportIdSchema,
     profileId: MargonemProfileIdSchema,
     suggestedAccountName: Schema.String,
-  }
-);
-const PreviewOwnedAccountImportLineError = Schema.Union([
-  Schema.TaggedStruct("InvalidMargonemProfileUrl", {
-    message: Schema.String,
-  }),
-  Schema.TaggedStruct("MissingMargonemProfileId", {
-    message: Schema.String,
-  }),
-  Schema.TaggedStruct("DuplicateProfileInBatch", {
-    firstLineNumber: PositiveInt,
-  }),
-  Schema.TaggedStruct("MargonemAccountAlreadyOwnedByActor", {}),
-  Schema.TaggedStruct("MargonemAccountOwnedByAnotherUser", {}),
-  Schema.TaggedStruct("MargonemAccountAlreadySharedWithActor", {}),
-  Schema.TaggedStruct("FirecrawlMonthlyBudgetExhausted", {
-    monthlyRequestBudget: Schema.Number,
-    usedRequests: Schema.Number,
-    yearMonth: Schema.String,
-  }),
-  Schema.TaggedStruct("FirecrawlRequestFailed", {
-    profileId: PositiveInt,
-  }),
-  Schema.TaggedStruct("FirecrawlResponseNotParseable", {
-    profileId: PositiveInt,
-  }),
-  Schema.TaggedStruct("MargonemProfileNameNotFound", {
-    profileId: MargonemProfileIdSchema,
-  }),
-  Schema.TaggedStruct("MargonemCharacterRowsNotFound", {
-    profileId: MargonemProfileIdSchema,
-  }),
-  Schema.TaggedStruct("MargonemCharacterRowInvalid", {
-    profileId: MargonemProfileIdSchema,
-    safeReason: Schema.String,
-  }),
-  Schema.TaggedStruct("SquadBuilderPersistenceUnavailable", {
-    operation: Schema.String,
-  }),
-]);
-const PreviewOwnedAccountImportFailed = Schema.TaggedStruct("PreviewFailed", {
-  error: PreviewOwnedAccountImportLineError,
-  inputUrl: Schema.String,
-  lineNumber: PositiveInt,
+  },
 });
 export const PreviewOwnedAccountImportsSuccess = Schema.Struct({
-  items: Schema.Array(
-    Schema.Union([
-      PreviewOwnedAccountImportSucceeded,
-      PreviewOwnedAccountImportFailed,
-    ])
-  ),
+  items: Schema.Array(PreviewOwnedAccountImportItem),
 });
 
 export const ConfirmOwnedAccountImportPayload = Schema.Struct({

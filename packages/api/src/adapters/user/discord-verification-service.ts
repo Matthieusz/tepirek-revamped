@@ -98,12 +98,11 @@ const fetchDiscordGuilds = (
     catch: (cause) =>
       cause instanceof DiscordRequestFailureError
         ? cause
-        : new DiscordRequestFailureError(
-            "Discord transport failure",
-            true,
-            undefined,
-            { cause }
-          ),
+        : new DiscordRequestFailureError({
+            cause,
+            message: "Discord transport failure",
+            retryable: true,
+          }),
     try: (signal) =>
       fetch("https://discord.com/api/users/@me/guilds", {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -118,25 +117,23 @@ const fetchDiscordGuilds = (
 
         if (!response.ok) {
           const retryable = response.status === 429 || response.status >= 500;
-          return yield* Effect.fail(
-            new DiscordRequestFailureError(
-              `Discord responded with status ${response.status}`,
-              retryable,
+          return yield* new DiscordRequestFailureError({
+            message: `Discord responded with status ${response.status}`,
+            retryAfterMilliseconds:
               response.status === 429
                 ? yield* parseRetryAfterMilliseconds(response)
-                : undefined
-            )
-          );
+                : undefined,
+            retryable,
+          });
         }
 
         return yield* Effect.tryPromise({
           catch: (cause) =>
-            new DiscordRequestFailureError(
-              "Discord response decoding failed",
-              false,
-              undefined,
-              { cause }
-            ),
+            new DiscordRequestFailureError({
+              cause,
+              message: "Discord response decoding failed",
+              retryable: false,
+            }),
           try: () => response.json(),
         });
       })

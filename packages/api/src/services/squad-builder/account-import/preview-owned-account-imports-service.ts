@@ -1,6 +1,7 @@
 import * as Arr from "effect/Array";
 import * as ClockRuntime from "effect/Clock";
 import * as Context from "effect/Context";
+import * as Data from "effect/Data";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -32,10 +33,10 @@ import {
   MargonemAccountOwnedByAnotherUser,
 } from "../squad-groups/squad-group-errors.ts";
 import { AccountImportStoreService } from "./account-import-store-service.ts";
+import { ProfileAccessState } from "./account-import-store.ts";
 import type {
   DuplicateMargonemAccountError,
   FirecrawlBudgetError,
-  ProfileAccessState,
   SquadBuilderPersistenceUnavailable,
 } from "./account-import-store.ts";
 import { makePreviewMargonemProfileImport } from "./preview-margonem-profile-import-service.ts";
@@ -50,19 +51,31 @@ export interface PreviewOwnedAccountImportsInput {
   readonly profileUrls: readonly string[];
 }
 
-export interface PreviewOwnedAccountImportSuccess {
-  readonly _tag: "PreviewSucceeded";
-  readonly lineNumber: number;
-  readonly inputUrl: string;
-  readonly pendingImportId: PendingMargonemAccountImportId;
-  readonly profileId: MargonemProfileId;
-  readonly generatedProfileUrl: string;
-  readonly suggestedAccountName: string;
-  readonly defaultDisplayName: AccountDisplayName;
-  readonly lastFetchedAt: Date;
-  readonly firecrawlCreditsUsed: FirecrawlCreditCount;
-  readonly jarunaCharacters: readonly MargonemCharacterPreview[];
-}
+export type PreviewOwnedAccountImportItem = Data.TaggedEnum<{
+  readonly PreviewSucceeded: {
+    readonly lineNumber: number;
+    readonly inputUrl: string;
+    readonly pendingImportId: PendingMargonemAccountImportId;
+    readonly profileId: MargonemProfileId;
+    readonly generatedProfileUrl: string;
+    readonly suggestedAccountName: string;
+    readonly defaultDisplayName: AccountDisplayName;
+    readonly lastFetchedAt: Date;
+    readonly firecrawlCreditsUsed: FirecrawlCreditCount;
+    readonly jarunaCharacters: readonly MargonemCharacterPreview[];
+  };
+  readonly PreviewFailed: {
+    readonly lineNumber: number;
+    readonly inputUrl: string;
+    readonly error: PreviewOwnedAccountImportLineError;
+  };
+}>;
+export const PreviewOwnedAccountImportItem =
+  Data.taggedEnum<PreviewOwnedAccountImportItem>();
+export type PreviewOwnedAccountImportSuccess = Data.TaggedEnum.Value<
+  PreviewOwnedAccountImportItem,
+  "PreviewSucceeded"
+>;
 
 export class DuplicateProfileInBatchError extends Schema.TaggedErrorClass<DuplicateProfileInBatchError>()(
   "DuplicateProfileInBatch",
@@ -79,16 +92,10 @@ export type PreviewOwnedAccountImportLineError =
   | ParseMargonemProfileHtmlError
   | SquadBuilderPersistenceUnavailable;
 
-export interface PreviewOwnedAccountImportFailure {
-  readonly _tag: "PreviewFailed";
-  readonly lineNumber: number;
-  readonly inputUrl: string;
-  readonly error: PreviewOwnedAccountImportLineError;
-}
-
-export type PreviewOwnedAccountImportItem =
-  | PreviewOwnedAccountImportSuccess
-  | PreviewOwnedAccountImportFailure;
+export type PreviewOwnedAccountImportFailure = Data.TaggedEnum.Value<
+  PreviewOwnedAccountImportItem,
+  "PreviewFailed"
+>;
 
 export interface PreviewOwnedAccountImportsOutput {
   readonly items: readonly PreviewOwnedAccountImportItem[];
@@ -171,35 +178,23 @@ const defaultDisplayNameFor = (
 
 const accessStateToLineError = (
   state: ProfileAccessState
-): DuplicateMargonemAccountError | undefined => {
-  switch (state._tag) {
-    case "Available": {
-      return undefined;
-    }
-    case "OwnedByActor": {
-      return new MargonemAccountAlreadyOwnedByActor();
-    }
-    case "OwnedByAnotherUser": {
-      return new MargonemAccountOwnedByAnotherUser();
-    }
-    case "SharedWithActor": {
-      return new MargonemAccountAlreadySharedWithActor();
-    }
-    default: {
-      const exhaustive: never = state;
-      return exhaustive;
-    }
-  }
-};
+): DuplicateMargonemAccountError | undefined =>
+  ProfileAccessState.$match(state, {
+    Available: () =>
+      Option.none<DuplicateMargonemAccountError>().pipe(Option.getOrUndefined),
+    OwnedByActor: () => new MargonemAccountAlreadyOwnedByActor(),
+    OwnedByAnotherUser: () => new MargonemAccountOwnedByAnotherUser(),
+    SharedWithActor: () => new MargonemAccountAlreadySharedWithActor(),
+  });
 
 const toFailedItem = (
   lineFailure: LineFailure
-): PreviewOwnedAccountImportItem => ({
-  _tag: "PreviewFailed",
-  error: lineFailure.error,
-  inputUrl: lineFailure.inputUrl,
-  lineNumber: lineFailure.lineNumber,
-});
+): PreviewOwnedAccountImportItem =>
+  PreviewOwnedAccountImportItem.PreviewFailed({
+    error: lineFailure.error,
+    inputUrl: lineFailure.inputUrl,
+    lineNumber: lineFailure.lineNumber,
+  });
 
 const persistPendingImport = ({
   actorUserId,
@@ -249,8 +244,7 @@ const persistPendingImport = ({
           }),
         onSuccess: (created) =>
           EffectRuntime.succeed({
-            item: {
-              _tag: "PreviewSucceeded" as const,
+            item: PreviewOwnedAccountImportItem.PreviewSucceeded({
               defaultDisplayName,
               firecrawlCreditsUsed: preview.firecrawlCreditsUsed,
               generatedProfileUrl: toMargonemProfileUrl(preview.profileId),
@@ -261,7 +255,7 @@ const persistPendingImport = ({
               pendingImportId: created.id,
               profileId: preview.profileId,
               suggestedAccountName: preview.suggestedAccountName,
-            },
+            }),
             lineNumber,
           }),
       })

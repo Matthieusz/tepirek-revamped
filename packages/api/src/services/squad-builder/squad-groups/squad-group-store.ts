@@ -77,6 +77,7 @@ import type {
   ActorDoesNotOwnSquadGroup,
   ActorIsNotInviteRecipient,
   ActorIsNotSquadGroupInviteRecipient,
+  CannotInviteSelf,
   EditorCannotChangeSquadStructure,
   EffectSquadBuilderPersistenceUnavailable,
   InviteTargetNotFound,
@@ -103,6 +104,7 @@ export type {
   ActorDoesNotOwnSquadGroup,
   ActorIsNotInviteRecipient,
   ActorIsNotSquadGroupInviteRecipient,
+  CannotInviteSelf,
   EditorCannotChangeSquadStructure,
   InviteTargetNotFound,
   InviteTargetNotVerified,
@@ -125,16 +127,12 @@ export type SquadGroupSharingAuthorizationError =
   | ActorDoesNotOwnSquadGroup
   | ActorCannotViewSquadGroup
   | ActorCannotEditSquadGroup
-  | { readonly _tag: "CannotInviteSelf" }
-  | { readonly _tag: "SquadEditorInviteTargetNotFound" }
-  | { readonly _tag: "SquadEditorInviteTargetNotVerified" }
-  | { readonly _tag: "SquadGroupInvitationNotFound" }
-  | { readonly _tag: "ActorIsNotSquadGroupInviteRecipient" }
-  | {
-      readonly _tag: "SquadGroupInvitationTransitionNotAllowed";
-      readonly currentStatus: SquadGroupInvitationStatus;
-      readonly attempted: string;
-    };
+  | CannotInviteSelf
+  | SquadEditorInviteTargetNotFound
+  | SquadEditorInviteTargetNotVerified
+  | SquadGroupInvitationNotFound
+  | ActorIsNotSquadGroupInviteRecipient
+  | SquadGroupInvitationTransitionNotAllowed;
 
 /** Summary row for a squad group list. */
 export interface SquadGroupSummary {
