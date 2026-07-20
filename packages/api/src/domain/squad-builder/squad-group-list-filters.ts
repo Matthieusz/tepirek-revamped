@@ -1,14 +1,43 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+
+/** Policy for squad group browsing filters. */
+export const squadGroupListFilterPolicy = {
+  defaultLimit: 50,
+  maxAllowedLevel: 500,
+  minAllowedLevel: 1,
+  nameQueryMaxLength: 80,
+  nameQueryMinLength: 2,
+} as const;
+
+const normalizeNameQuery = (value: string): string =>
+  value.trim().replaceAll(/\s+/gu, " ");
 
 /** Normalized text query for browsing squad groups. */
 export const SquadGroupNameQuery = Schema.String.pipe(
+  Schema.decode({
+    decode: SchemaGetter.transform(normalizeNameQuery),
+    encode: SchemaGetter.passthrough(),
+  }),
+  Schema.check(
+    Schema.isLengthBetween(
+      squadGroupListFilterPolicy.nameQueryMinLength,
+      squadGroupListFilterPolicy.nameQueryMaxLength
+    )
+  ),
   Schema.brand("SquadGroupNameQuery")
 );
 export type SquadGroupNameQuery = typeof SquadGroupNameQuery.Type;
 
 /** Inclusive character-level bound for browsing squad groups. */
-export const SquadGroupLevelBound = Schema.Number.pipe(
+export const SquadGroupLevelBound = Schema.Int.pipe(
+  Schema.check(
+    Schema.isBetween({
+      maximum: squadGroupListFilterPolicy.maxAllowedLevel,
+      minimum: squadGroupListFilterPolicy.minAllowedLevel,
+    })
+  ),
   Schema.brand("SquadGroupLevelBound")
 );
 export type SquadGroupLevelBound = typeof SquadGroupLevelBound.Type;
@@ -29,15 +58,6 @@ export interface SquadGroupListFilters {
   readonly nameQuery?: SquadGroupNameQuery;
   readonly levelRange: SquadGroupLevelRange;
 }
-
-/** Policy for squad group browsing filters. */
-export const squadGroupListFilterPolicy = {
-  defaultLimit: 50,
-  maxAllowedLevel: 500,
-  minAllowedLevel: 1,
-  nameQueryMaxLength: 80,
-  nameQueryMinLength: 2,
-} as const;
 
 /** Empty squad group list filters matching the unfiltered list behavior. */
 export const emptySquadGroupListFilters: SquadGroupListFilters = {
@@ -83,9 +103,6 @@ export const squadGroupLevelBoundToNumber = (
   bound: SquadGroupLevelBound
 ): number => bound;
 
-const normalizeNameQuery = (value: string): string =>
-  value.trim().replaceAll(/\s+/gu, " ");
-
 const parseNameQuery = Effect.fnUntraced(function* parseNameQuery(
   value: string | null | undefined
 ): Effect.fn.Return<
@@ -105,28 +122,17 @@ const parseNameQuery = Effect.fnUntraced(function* parseNameQuery(
     return { _tag: "Absent" as const };
   }
 
-  if (normalized.length < squadGroupListFilterPolicy.nameQueryMinLength) {
-    return yield* new InvalidSquadGroupNameQuery({
-      message: `Wpisz co najmniej ${squadGroupListFilterPolicy.nameQueryMinLength} znaki nazwy składu.`,
-    });
-  }
-
-  if (normalized.length > squadGroupListFilterPolicy.nameQueryMaxLength) {
-    return yield* new InvalidSquadGroupNameQuery({
-      message: `Nazwa składu może mieć maksymalnie ${squadGroupListFilterPolicy.nameQueryMaxLength} znaków.`,
-    });
-  }
-
   return {
     _tag: "Present" as const,
-    value: yield* Schema.decodeUnknownEffect(SquadGroupNameQuery)(
-      normalized
-    ).pipe(
+    value: yield* Schema.decodeUnknownEffect(SquadGroupNameQuery)(value).pipe(
       Effect.catchTag(
         "SchemaError",
         () =>
           new InvalidSquadGroupNameQuery({
-            message: "Nieoczekiwany błąd walidacji zapytania o nazwę składu.",
+            message:
+              normalized.length < squadGroupListFilterPolicy.nameQueryMinLength
+                ? `Wpisz co najmniej ${squadGroupListFilterPolicy.nameQueryMinLength} znaki nazwy składu.`
+                : `Nazwa składu może mieć maksymalnie ${squadGroupListFilterPolicy.nameQueryMaxLength} znaków.`,
           })
       )
     ),
@@ -148,21 +154,6 @@ const parseLevelBound = Effect.fnUntraced(function* parseLevelBound(
     return { _tag: "Absent" as const };
   }
 
-  if (!Number.isInteger(value)) {
-    return yield* new InvalidSquadGroupLevelRange({
-      message: "Poziom postaci musi być liczbą całkowitą.",
-    });
-  }
-
-  if (
-    value < squadGroupListFilterPolicy.minAllowedLevel ||
-    value > squadGroupListFilterPolicy.maxAllowedLevel
-  ) {
-    return yield* new InvalidSquadGroupLevelRange({
-      message: `Poziom ${fieldName === "minLevel" ? "od" : "do"} musi być w zakresie ${squadGroupListFilterPolicy.minAllowedLevel}-${squadGroupListFilterPolicy.maxAllowedLevel}.`,
-    });
-  }
-
   return {
     _tag: "Present" as const,
     value: yield* Schema.decodeUnknownEffect(SquadGroupLevelBound)(value).pipe(
@@ -170,7 +161,9 @@ const parseLevelBound = Effect.fnUntraced(function* parseLevelBound(
         "SchemaError",
         () =>
           new InvalidSquadGroupLevelRange({
-            message: "Nieoczekiwany błąd walidacji zakresu poziomów.",
+            message: Number.isInteger(value)
+              ? `Poziom ${fieldName === "minLevel" ? "od" : "do"} musi być w zakresie ${squadGroupListFilterPolicy.minAllowedLevel}-${squadGroupListFilterPolicy.maxAllowedLevel}.`
+              : "Poziom postaci musi być liczbą całkowitą.",
           })
       )
     ),

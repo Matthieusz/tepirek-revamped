@@ -1,8 +1,11 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
+const yearMonthPattern = /^\d{4}-\d{2}$/u;
+
 /** A Firecrawl budget month formatted as YYYY-MM. */
 export const FirecrawlYearMonth = Schema.String.pipe(
+  Schema.check(Schema.isPattern(yearMonthPattern)),
   Schema.brand("FirecrawlYearMonth")
 );
 export type FirecrawlYearMonth = typeof FirecrawlYearMonth.Type;
@@ -13,18 +16,13 @@ export class InvalidFirecrawlYearMonth extends Schema.TaggedErrorClass<InvalidFi
   {}
 ) {}
 
-const yearMonthPattern = /^\d{4}-\d{2}$/u;
-
 /** Parse a YYYY-MM Firecrawl budget month. */
 export const parseFirecrawlYearMonth = (
   input: string
-): Effect.Effect<FirecrawlYearMonth, InvalidFirecrawlYearMonth> => {
-  if (!yearMonthPattern.test(input)) {
-    return Effect.fail(new InvalidFirecrawlYearMonth());
-  }
-
-  return Effect.succeed(FirecrawlYearMonth.make(input));
-};
+): Effect.Effect<FirecrawlYearMonth, InvalidFirecrawlYearMonth> =>
+  Schema.decodeUnknownEffect(FirecrawlYearMonth)(input).pipe(
+    Effect.catchTag("SchemaError", () => new InvalidFirecrawlYearMonth())
+  );
 
 /** Get the UTC Firecrawl budget month for a date. */
 export const firecrawlYearMonthFromDate = (date: Date): FirecrawlYearMonth => {

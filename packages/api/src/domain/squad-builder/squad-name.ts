@@ -1,14 +1,28 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
+/** Naming limits used by squad builder. */
+export const squadBuilderNamingPolicy = {
+  squadGroupNameMaxLength: 80,
+  squadNameMaxLength: 60,
+} as const;
+
 /** A validated squad group name. */
-export const SquadGroupName = Schema.String.pipe(
+export const SquadGroupName = Schema.Trim.pipe(
+  Schema.check(
+    Schema.isLengthBetween(1, squadBuilderNamingPolicy.squadGroupNameMaxLength)
+  ),
   Schema.brand("SquadGroupName")
 );
 export type SquadGroupName = typeof SquadGroupName.Type;
 
 /** A validated squad name. */
-export const SquadName = Schema.String.pipe(Schema.brand("SquadName"));
+export const SquadName = Schema.Trim.pipe(
+  Schema.check(
+    Schema.isLengthBetween(1, squadBuilderNamingPolicy.squadNameMaxLength)
+  ),
+  Schema.brand("SquadName")
+);
 export type SquadName = typeof SquadName.Type;
 
 /** Expected failure when a squad group name is invalid. */
@@ -28,36 +42,18 @@ export class InvalidSquadName extends Schema.TaggedErrorClass<InvalidSquadName>(
   }
 ) {}
 
-/** Naming limits used by squad builder. */
-export const squadBuilderNamingPolicy = {
-  squadGroupNameMaxLength: 80,
-  squadNameMaxLength: 60,
-  trim: true,
-} as const;
-
 /** Parse and normalize a squad group name. */
 export const parseSquadGroupName = Effect.fn("SquadGroupName.parse")(
   function* parseSquadGroupName(input: string) {
-    const name = squadBuilderNamingPolicy.trim ? input.trim() : input;
-
-    if (name.length === 0) {
-      return yield* new InvalidSquadGroupName({
-        message: "Nazwa grupy składów jest wymagana",
-      });
-    }
-
-    if (name.length > squadBuilderNamingPolicy.squadGroupNameMaxLength) {
-      return yield* new InvalidSquadGroupName({
-        message: `Nazwa grupy składów może mieć maksymalnie ${squadBuilderNamingPolicy.squadGroupNameMaxLength} znaków`,
-      });
-    }
-
-    return yield* Schema.decodeUnknownEffect(SquadGroupName)(name).pipe(
+    return yield* Schema.decodeUnknownEffect(SquadGroupName)(input).pipe(
       Effect.catchTag(
         "SchemaError",
         () =>
           new InvalidSquadGroupName({
-            message: "Nieoczekiwany błąd walidacji nazwy grupy składów",
+            message:
+              input.trim().length === 0
+                ? "Nazwa grupy składów jest wymagana"
+                : `Nazwa grupy składów może mieć maksymalnie ${squadBuilderNamingPolicy.squadGroupNameMaxLength} znaków`,
           })
       )
     );
@@ -67,26 +63,15 @@ export const parseSquadGroupName = Effect.fn("SquadGroupName.parse")(
 /** Parse and normalize a squad name. */
 export const parseSquadName = Effect.fn("SquadName.parse")(
   function* parseSquadName(input: string) {
-    const name = squadBuilderNamingPolicy.trim ? input.trim() : input;
-
-    if (name.length === 0) {
-      return yield* new InvalidSquadName({
-        message: "Nazwa składu jest wymagana",
-      });
-    }
-
-    if (name.length > squadBuilderNamingPolicy.squadNameMaxLength) {
-      return yield* new InvalidSquadName({
-        message: `Nazwa składu może mieć maksymalnie ${squadBuilderNamingPolicy.squadNameMaxLength} znaków`,
-      });
-    }
-
-    return yield* Schema.decodeUnknownEffect(SquadName)(name).pipe(
+    return yield* Schema.decodeUnknownEffect(SquadName)(input).pipe(
       Effect.catchTag(
         "SchemaError",
         () =>
           new InvalidSquadName({
-            message: "Nieoczekiwany błąd walidacji nazwy składu",
+            message:
+              input.trim().length === 0
+                ? "Nazwa składu jest wymagana"
+                : `Nazwa składu może mieć maksymalnie ${squadBuilderNamingPolicy.squadNameMaxLength} znaków`,
           })
       )
     );
