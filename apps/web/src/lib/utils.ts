@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
+import * as Predicate from "effect/Predicate";
 
 export { cn } from "cnfast";
 
@@ -16,7 +17,7 @@ export const formatDate = (
   date: Date | string | number,
   formatStr = "dd-MM-yyyy"
 ): string => {
-  const d = date instanceof Date ? date : new Date(date);
+  const d = Predicate.isDate(date) ? date : new Date(date);
   if (Number.isNaN(d.getTime())) {
     return "";
   }

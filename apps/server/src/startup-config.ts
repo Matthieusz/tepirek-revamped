@@ -29,14 +29,16 @@ interface StartupConfig {
 }
 
 const parseUrl = (name: string, value: string) =>
-  Effect.try({
-    catch: () =>
-      new StartupConfigurationError({
-        message: `${name} must be a valid absolute URL`,
-        variable: name,
-      }),
-    try: () => new URL(value).toString(),
-  });
+  Schema.decodeUnknownEffect(Schema.URLFromString)(value).pipe(
+    Effect.map((url) => url.toString()),
+    Effect.mapError(
+      () =>
+        new StartupConfigurationError({
+          message: `${name} must be a valid absolute URL`,
+          variable: name,
+        })
+    )
+  );
 
 const parseEntries = (
   name: string,

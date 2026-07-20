@@ -7,10 +7,20 @@
  * single source of truth for the penalty math.
  */
 
+import * as Arr from "effect/Array";
 import * as Num from "effect/Number";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
+import * as Str from "effect/String";
 
 const MIN_LEVEL = 1;
 const MAX_LEVEL = 500;
+
+const LevelFromString = Schema.NumberFromString.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isBetween({ maximum: MAX_LEVEL, minimum: MIN_LEVEL }))
+);
+const decodeLevel = Schema.decodeUnknownOption(LevelFromString);
 
 /**
  * Base level difference threshold before scaling
@@ -154,7 +164,6 @@ export const calculateGroupAttackPenalty = (
  * Parse comma-separated levels string into array of numbers
  */
 export const parseLevels = (input: string): number[] =>
-  input
-    .split(",")
-    .map((s) => Number.parseInt(s.trim(), 10))
-    .filter((n) => !Number.isNaN(n) && n >= MIN_LEVEL && n <= MAX_LEVEL);
+  Arr.flatMap(Str.split(input, ","), (value) =>
+    Option.toArray(decodeLevel(Str.trim(value)))
+  );

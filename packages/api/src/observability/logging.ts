@@ -12,6 +12,7 @@ const LOG_LEVELS = {
   INFO: "Info",
   WARN: "Warn",
 } as const satisfies Record<string, LogLevel>;
+const LOG_LEVELS_BY_NAME: Readonly<Record<string, LogLevel>> = LOG_LEVELS;
 
 const SIMPLE_LOG_VALUE_PATTERN = /^[^\s="\\]+$/u;
 
@@ -47,7 +48,7 @@ const flatten = (
 };
 
 const formatValue = (input: unknown): string => {
-  const value = typeof input === "string" ? input : Formatter.format(input);
+  const value = Predicate.isString(input) ? input : Formatter.format(input);
   return SIMPLE_LOG_VALUE_PATTERN.test(value) ? value : JSON.stringify(value);
 };
 
@@ -85,7 +86,7 @@ export const makeStderrLogger = (
 export const stderrLogger = makeStderrLogger();
 
 const isLogLevelName = (value: string): value is keyof typeof LOG_LEVELS =>
-  value in LOG_LEVELS;
+  Record.has(LOG_LEVELS_BY_NAME, value);
 
 /** Parse a configured minimum log level. */
 export const parseLogLevel = (value: string): LogLevel | undefined => {

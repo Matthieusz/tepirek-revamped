@@ -1,11 +1,24 @@
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
+import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
 import * as Record from "effect/Record";
+import * as Schema from "effect/Schema";
 
 import type { Filter } from "@/components/reui/filters-model";
 
 type CharacterPoolFilterField = "profession" | "characterName" | "accountName";
+
+const isUnsignedIntegerText = Schema.is(
+  Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+$/u)))
+);
+const PositiveIntegerFromString = Schema.NumberFromString.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThan(0))
+);
+const decodePositiveInteger = Schema.decodeUnknownOption(
+  PositiveIntegerFromString
+);
 
 export interface CharacterPoolCharacter {
   readonly accountDisplayName: string;
@@ -45,16 +58,14 @@ const parseLevelInput = (
     return { invalid: false, value: null };
   }
 
-  if (!/^\d+$/u.test(value)) {
+  if (!isUnsignedIntegerText(value)) {
     return { invalid: true, value: null };
   }
 
-  const parsed = Number(value);
-  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
-    return { invalid: true, value: null };
-  }
-
-  return { invalid: false, value: parsed };
+  return Option.match(decodePositiveInteger(value), {
+    onNone: () => ({ invalid: true, value: null }),
+    onSome: (parsed) => ({ invalid: false, value: parsed }),
+  });
 };
 
 const getStringValues = (filter: Filter<unknown>): readonly string[] =>

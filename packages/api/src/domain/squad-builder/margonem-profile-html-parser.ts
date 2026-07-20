@@ -1,4 +1,6 @@
+import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 
 import { parseMargonemProfession } from "./margonem-character.ts";
@@ -57,6 +59,8 @@ const characterRowPattern =
   /<li\b[^>]*class="[^"]*\bchar-row\b[^"]*"[^>]*>[\s\S]*?<\/li>/gu;
 const backgroundImagePattern =
   /background-image:\s*url\(\s*(?<avatarUrl>[^)]*?)\s*\)/u;
+
+const decodeNumber = Schema.decodeUnknownEffect(Schema.NumberFromString);
 
 const decodeHtmlEntities = (value: string): string =>
   value
@@ -162,10 +166,16 @@ const parseJarunaCharacterRow = Effect.fnUntraced(
         profileId,
         safeReason: "invalid character attributes",
       });
-    const parsedCharacterId = yield* parseMargonemCharacterId(
-      Number(characterIdText)
-    ).pipe(Effect.mapError(invalidCharacter));
-    const parsedLevel = yield* parsePositiveLevel(Number(levelText)).pipe(
+    const characterId = yield* decodeNumber(characterIdText).pipe(
+      Effect.mapError(invalidCharacter)
+    );
+    const level = yield* decodeNumber(levelText).pipe(
+      Effect.mapError(invalidCharacter)
+    );
+    const parsedCharacterId = yield* parseMargonemCharacterId(characterId).pipe(
+      Effect.mapError(invalidCharacter)
+    );
+    const parsedLevel = yield* parsePositiveLevel(level).pipe(
       Effect.mapError(invalidCharacter)
     );
     const parsedProfession = yield* parseMargonemProfession(
@@ -198,8 +208,8 @@ export const parseMargonemProfileHtml = Effect.fn("MargonemProfileHtml.parse")(
       return yield* new MargonemProfileNameNotFound({ profileId });
     }
 
-    const rowMatches = Array.from(
-      html.matchAll(characterRowPattern),
+    const rowMatches = Arr.map(
+      Arr.fromIterable(html.matchAll(characterRowPattern)),
       (match) => match[0]
     );
 
@@ -207,17 +217,12 @@ export const parseMargonemProfileHtml = Effect.fn("MargonemProfileHtml.parse")(
       return yield* new MargonemCharacterRowsNotFound({ profileId });
     }
 
-    const jarunaCharacters: MargonemCharacterPreview[] = [];
-
-    for (const rowHtml of rowMatches) {
-      const parsedCharacter = yield* parseJarunaCharacterRow(
-        profileId,
-        rowHtml
-      );
-      if (parsedCharacter !== null) {
-        jarunaCharacters.push(parsedCharacter);
-      }
-    }
+    // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+    const parsedCharacters = yield* Effect.forEach(rowMatches, (rowHtml) =>
+      parseJarunaCharacterRow(profileId, rowHtml)
+    );
+    // oxlint-disable-next-line unicorn/no-array-method-this-argument -- Effect Array.filter uses a data-first overload; the second argument is a predicate, not thisArg.
+    const jarunaCharacters = Arr.filter(parsedCharacters, Predicate.isNotNull);
 
     return {
       jarunaCharacters,

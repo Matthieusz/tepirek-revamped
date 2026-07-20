@@ -28,18 +28,22 @@ export type ParseMargonemProfileUrlError =
 
 const profilePathPattern = /^\/profile\/view,(?<profileId>\d+)$/u;
 
+const decodeUrl = Schema.decodeUnknownEffect(Schema.URLFromString);
+const decodeNumber = Schema.decodeUnknownEffect(Schema.NumberFromString);
+
 /** Parse a Margonem profile URL and return the canonical numeric profile id. */
 export const parseMargonemProfileUrl = Effect.fn("MargonemProfileUrl.parse")(
   function* parseMargonemProfileUrl(
     input: string
   ): Effect.fn.Return<MargonemProfileId, ParseMargonemProfileUrlError> {
-    const url = yield* Effect.try({
-      catch: () =>
-        new InvalidMargonemProfileUrl({
-          message: "Invalid Margonem profile URL",
-        }),
-      try: () => new URL(input),
-    });
+    const url = yield* decodeUrl(input).pipe(
+      Effect.mapError(
+        () =>
+          new InvalidMargonemProfileUrl({
+            message: "Invalid Margonem profile URL",
+          })
+      )
+    );
 
     if (url.protocol !== "https:" || url.hostname !== "www.margonem.pl") {
       return yield* new InvalidMargonemProfileUrl({
@@ -56,7 +60,14 @@ export const parseMargonemProfileUrl = Effect.fn("MargonemProfileUrl.parse")(
       });
     }
 
-    const profileId = Number(profileIdText);
+    const profileId = yield* decodeNumber(profileIdText).pipe(
+      Effect.mapError(
+        () =>
+          new MissingMargonemProfileId({
+            message: "Margonem profile id is invalid",
+          })
+      )
+    );
 
     return yield* parseMargonemProfileId(profileId).pipe(
       Effect.catchTag(
