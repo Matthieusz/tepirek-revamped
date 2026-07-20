@@ -1,3 +1,5 @@
+import * as Cause from "effect/Cause";
+import * as Result from "effect/Result";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import type { ReactNode } from "react";
 
@@ -32,66 +34,71 @@ export const AsyncResultFailure = ({
 );
 
 /** Renders every AsyncResult lifecycle without treating failures as empty data. */
-const AsyncResultBoundaryContent = ({
+const AsyncResultBoundaryContent = <A, E>({
   children,
   onRetry,
   result,
-}: AsyncResultBoundaryProps<unknown, unknown>): ReactNode => {
-  return AsyncResult.builder(result)
-    .onWaiting((current) => {
-      if (AsyncResult.isSuccess(current)) {
-        return (
-          <div className="relative w-full">
-            {children(current.value)}
-            <p
-              aria-live="polite"
-              className="absolute top-full w-full pt-2 text-center text-muted-foreground text-xs"
-            >
-              Odświeżanie…
-            </p>
-          </div>
-        );
-      }
+}: AsyncResultBoundaryProps<A, E>): ReactNode => {
+  if (result.waiting) {
+    if (AsyncResult.isSuccess(result)) {
+      return (
+        <div className="relative w-full">
+          {children(result.value)}
+          <p
+            aria-live="polite"
+            className="absolute top-full w-full pt-2 text-center text-muted-foreground text-xs"
+          >
+            Odświeżanie…
+          </p>
+        </div>
+      );
+    }
 
-      return <LoadingSpinner />;
-    })
-    .onInitial(() => <LoadingSpinner />)
-    .onSuccess((value) => children(value))
-    .onError((error) => (
+    return <LoadingSpinner />;
+  }
+
+  if (AsyncResult.isInitial(result)) {
+    return <LoadingSpinner />;
+  }
+
+  if (AsyncResult.isSuccess(result)) {
+    return children(result.value);
+  }
+
+  const error = Cause.findError(result.cause);
+  if (Result.isSuccess(error)) {
+    return (
       <AsyncResultFailure
         message={getErrorMessage(
-          error,
+          error.success,
           "Nie udało się wczytać danych. Spróbuj ponownie."
         )}
         onRetry={onRetry}
       />
-    ))
-    .onDefect((defect) => (
+    );
+  }
+
+  const defect = Cause.findDefect(result.cause);
+  if (Result.isSuccess(defect)) {
+    return (
       <AsyncResultFailure
         message={getErrorMessage(
-          defect,
+          defect.success,
           "Nie udało się wczytać danych. Spróbuj ponownie."
         )}
         onRetry={onRetry}
       />
-    ))
-    .onInterrupt(() => (
-      <AsyncResultFailure
-        message="Wczytywanie danych zostało przerwane. Spróbuj ponownie."
-        onRetry={onRetry}
-      />
-    ))
-    .exhaustive();
+    );
+  }
+
+  return (
+    <AsyncResultFailure
+      message="Wczytywanie danych zostało przerwane. Spróbuj ponownie."
+      onRetry={onRetry}
+    />
+  );
 };
 
 export const AsyncResultBoundary = <A, E>(
   props: AsyncResultBoundaryProps<A, E>
-): ReactNode => {
-  // SAFETY: The result and callback keep the same A/E pair at this boundary.
-  const contentProps: AsyncResultBoundaryProps<unknown, unknown> = {
-    children: (value) => props.children(value as A),
-    onRetry: props.onRetry,
-    result: props.result as AsyncResult.AsyncResult<unknown, unknown>,
-  };
-  return <AsyncResultBoundaryContent {...contentProps} />;
-};
+): ReactNode => <AsyncResultBoundaryContent {...props} />;
