@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { EventHeroFilterPersistenceSchema } from "@/features/events/core/event-hero-filter";
 import { RankingSortFiltersSchema } from "@/features/events/ranking/ranking-sort";
 import {
+  applyFilterUpdates,
   decodePersistedValue,
   encodePersistedValue,
 } from "@/lib/use-filter-persistence";
@@ -75,5 +76,15 @@ describe("persisted filter schemas", () => {
         stored
       )
     ).toEqual(value);
+  });
+
+  it("preserves current filters when a partial update is invalid", () => {
+    const current = { sortBy: "bets" as const };
+
+    expect(
+      applyFilterUpdates(RankingSortFiltersSchema, current, {
+        sortBy: "recent",
+      })
+    ).toEqual(current);
   });
 });

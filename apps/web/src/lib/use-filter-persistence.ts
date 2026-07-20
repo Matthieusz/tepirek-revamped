@@ -1,3 +1,4 @@
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { useEffect, useState } from "react";
 
@@ -32,6 +33,16 @@ export const encodePersistedValue = <S extends PersistenceSchema>(
   schema: S,
   value: S["Type"]
 ): string => Schema.encodeSync(makeJsonCodec(schema))(value);
+
+/** Merge a partial filter update, preserving current state when it is invalid. */
+export const applyFilterUpdates = <S extends PersistenceSchema>(
+  schema: S,
+  current: S["Type"],
+  updates: object
+): S["Type"] =>
+  Schema.decodeUnknownOption(schema)({ ...current, ...updates }).pipe(
+    Option.getOrElse(() => current)
+  );
 
 /**
  * Persist filter state in localStorage, restoring on initial load to avoid flash.
@@ -79,9 +90,7 @@ export const useFilterPersistence = <S extends PersistenceSchema>(
   }, [filters, isHydrated, key, schema]);
 
   const updateFilters = (updates: Partial<S["Type"]>) => {
-    setFilters((prev) =>
-      Schema.decodeUnknownSync(schema)({ ...prev, ...updates })
-    );
+    setFilters((prev) => applyFilterUpdates(schema, prev, updates));
   };
 
   return [filters, updateFilters];
