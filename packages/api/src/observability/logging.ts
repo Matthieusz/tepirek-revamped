@@ -1,5 +1,8 @@
 import { Formatter, Logger } from "effect";
+import * as Arr from "effect/Array";
 import type { LogLevel } from "effect/LogLevel";
+import * as Predicate from "effect/Predicate";
+import * as Record from "effect/Record";
 
 import { runId } from "./shared.ts";
 
@@ -13,7 +16,7 @@ const LOG_LEVELS = {
 const SIMPLE_LOG_VALUE_PATTERN = /^[^\s="\\]+$/u;
 
 const isPlainObject = (input: unknown): input is Record<string, unknown> => {
-  if (input === null || typeof input !== "object" || Array.isArray(input)) {
+  if (!Predicate.isObject(input)) {
     return false;
   }
 
@@ -32,8 +35,8 @@ const flatten = (
 
   seen.add(input);
 
-  const entries = Object.entries(input);
-  if (entries.length === 0 && prefix) {
+  const entries = Record.toEntries(input);
+  if (Arr.isArrayEmpty(entries) && prefix) {
     return [[prefix, input]];
   }
 
@@ -51,7 +54,7 @@ const formatValue = (input: unknown): string => {
 const formatter = (id: string = runId) =>
   Logger.formatStructured.pipe(
     Logger.map((output) => {
-      const messages = Array.isArray(output.message)
+      const messages = Arr.isArray(output.message)
         ? output.message
         : [output.message];
 

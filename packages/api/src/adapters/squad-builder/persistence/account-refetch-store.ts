@@ -13,8 +13,12 @@ import {
   squadGroup,
 } from "@tepirek-revamped/db/schema/squad-builder";
 import { and, count, eq, gt, inArray, isNull, sql } from "drizzle-orm";
+import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
@@ -541,16 +545,11 @@ const applyRefetchedAccountWithDatabase = (database: EffectPgDatabase) =>
           .where(eq(margonemCharacter.accountId, accountIdNumber));
         const currentRows = yield* currentSelect;
 
-        const currentByCharacterId = new Map<
-          number,
-          (typeof currentRows)[number]
-        >();
+        const currentByCharacterId = HashMap.fromIterable(
+          currentRows.map((current) => [current.characterId, current] as const)
+        );
 
-        for (const current of currentRows) {
-          currentByCharacterId.set(current.characterId, current);
-        }
-
-        const latestByCharacterId = new Map<number, true>();
+        let latestCharacterIds = HashSet.empty<number>();
         const charactersToInsert = [];
         const charactersToUpdate = [];
         const removedDatabaseCharacterIds = [];
@@ -558,8 +557,14 @@ const applyRefetchedAccountWithDatabase = (database: EffectPgDatabase) =>
         for (const latest of pendingRefetch.latestCharacters) {
           const latestCharacterId = characterIdToNumber(latest.characterId);
           const latestLevel = levelToNumber(latest.level);
-          const current = currentByCharacterId.get(latestCharacterId);
-          latestByCharacterId.set(latestCharacterId, true);
+          const current = HashMap.get(
+            currentByCharacterId,
+            latestCharacterId
+          ).pipe(Option.getOrUndefined);
+          latestCharacterIds = HashSet.add(
+            latestCharacterIds,
+            latestCharacterId
+          );
 
           if (current === undefined) {
             charactersToInsert.push({
@@ -612,7 +617,7 @@ const applyRefetchedAccountWithDatabase = (database: EffectPgDatabase) =>
         }
 
         for (const current of currentRows) {
-          if (!latestByCharacterId.has(current.characterId)) {
+          if (!HashSet.has(latestCharacterIds, current.characterId)) {
             removedDatabaseCharacterIds.push(current.id);
           }
         }
@@ -628,9 +633,9 @@ const applyRefetchedAccountWithDatabase = (database: EffectPgDatabase) =>
             );
           const affectedGroups = yield* affectedGroupSelect;
 
-          const affectedGroupIds = [
-            ...new Set(affectedGroups.map((group) => group.groupId)),
-          ];
+          const affectedGroupIds = Arr.dedupe(
+            affectedGroups.map((group) => group.groupId)
+          );
           const removedPlacementsDelete = tx
             .delete(squadCharacter)
             .where(

@@ -1,3 +1,5 @@
+import * as Num from "effect/Number";
+
 export type UlepaRarity =
   | "zwykły"
   | "unikatowy"
@@ -60,7 +62,7 @@ const clampLevel = (n: number): number => {
   if (Number.isNaN(v)) {
     return MIN_LEVEL;
   }
-  return Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, v));
+  return Num.clamp(v, { maximum: MAX_LEVEL, minimum: MIN_LEVEL });
 };
 
 /**
@@ -140,10 +142,7 @@ export const calculateUpgradeSummary = (
 } => {
   const cumulativeCosts = calculateUpgradePoints(level, rarity);
   const differentialCosts = calculateDifferentialCosts(cumulativeCosts);
-  const totalUpgradeCost = differentialCosts.reduce(
-    (sum, cost) => sum + cost,
-    0
-  );
+  const totalUpgradeCost = Num.sumAll(differentialCosts);
   const total75Percent = totalUpgradeCost * GAME_CONSTANTS.EXTRACTION_RATE;
   const upgradeGoldCost =
     (GOLD_COST_LEVEL_MULTIPLIER * level + GOLD_COST_LEVEL_ADDEND) *

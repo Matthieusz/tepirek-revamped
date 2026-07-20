@@ -30,7 +30,10 @@ import {
   sql,
 } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
@@ -1063,10 +1066,15 @@ const getSquadGroupDetailWithDatabase = (database: EffectPgDatabase) =>
       .orderBy(asc(squadCharacter.position), asc(squadCharacter.id));
     const placementRows = yield* persistenceQuery(operation, placementSelect);
 
-    const charactersBySquadId = new Map<number, SquadGroupCharacter[]>();
+    let charactersBySquadId = HashMap.empty<
+      number,
+      readonly SquadGroupCharacter[]
+    >();
 
     for (const placement of placementRows) {
-      const current = charactersBySquadId.get(placement.squadId) ?? [];
+      const current = HashMap.get(charactersBySquadId, placement.squadId).pipe(
+        Option.getOrElse(() => [])
+      );
       const accountDisplayName = yield* parseAccountDisplayName(
         placement.accountDisplayName
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
@@ -1087,21 +1095,27 @@ const getSquadGroupDetailWithDatabase = (database: EffectPgDatabase) =>
         placement.margonemCharacterId
       ).pipe(Effect.catch((error) => failPersistence(operation, error)));
 
-      current.push({
-        accountDisplayName,
-        accountId,
-        accountOwnerUserImage: placement.accountOwnerUserImage,
-        accountOwnerUserName: placement.accountOwnerUserName,
-        avatarUrl: placement.avatarUrl,
-        characterId: placement.characterId,
-        level,
-        margonemCharacterId,
-        name: placement.name,
-        placementId: placement.placementId,
-        position: placement.position,
-        profession,
-      });
-      charactersBySquadId.set(placement.squadId, current);
+      charactersBySquadId = HashMap.set(
+        charactersBySquadId,
+        placement.squadId,
+        [
+          ...current,
+          {
+            accountDisplayName,
+            accountId,
+            accountOwnerUserImage: placement.accountOwnerUserImage,
+            accountOwnerUserName: placement.accountOwnerUserName,
+            avatarUrl: placement.avatarUrl,
+            characterId: placement.characterId,
+            level,
+            margonemCharacterId,
+            name: placement.name,
+            placementId: placement.placementId,
+            position: placement.position,
+            profession,
+          },
+        ]
+      );
     }
 
     const squads = [];
@@ -1114,7 +1128,9 @@ const getSquadGroupDetailWithDatabase = (database: EffectPgDatabase) =>
       );
 
       squads.push({
-        characters: charactersBySquadId.get(row.id) ?? [],
+        characters: HashMap.get(charactersBySquadId, row.id).pipe(
+          Option.getOrElse(() => [])
+        ),
         name: row.name,
         position: row.position,
         squadId,
@@ -1341,14 +1357,16 @@ const saveSharedSquadGroupCharactersWithDatabase = (
           .where(eq(squad.squadGroupId, groupIdNumber));
         const existingSquads = yield* existingSquadSelect;
 
-        const existingSquadIds = new Set(existingSquads.map((row) => row.id));
+        const existingSquadIds = HashSet.fromIterable(
+          existingSquads.map((row) => row.id)
+        );
 
-        if (existingSquadIds.size !== snapshot.squads.length) {
+        if (HashSet.size(existingSquadIds) !== snapshot.squads.length) {
           return yield* new EditorCannotChangeSquadStructure();
         }
 
         for (const submitted of snapshot.squads) {
-          if (!existingSquadIds.has(submitted.squadId)) {
+          if (!HashSet.has(existingSquadIds, submitted.squadId)) {
             return yield* new SquadNotInGroup({ squadId: submitted.squadId });
           }
         }
@@ -1360,7 +1378,7 @@ const saveSharedSquadGroupCharactersWithDatabase = (
         const characterIds = snapshot.squads.flatMap((item) =>
           item.characters.map((character) => character.characterId)
         );
-        const charactersById = new Map<
+        let charactersById = HashMap.empty<
           number,
           { readonly accountId: number }
         >();
@@ -1376,7 +1394,7 @@ const saveSharedSquadGroupCharactersWithDatabase = (
           const characterRows = yield* characterSelect;
 
           for (const character of characterRows) {
-            charactersById.set(character.id, {
+            charactersById = HashMap.set(charactersById, character.id, {
               accountId: character.accountId,
             });
           }
@@ -1386,7 +1404,10 @@ const saveSharedSquadGroupCharactersWithDatabase = (
 
         for (const submitted of snapshot.squads) {
           for (const character of submitted.characters) {
-            const stored = charactersById.get(character.characterId);
+            const stored = HashMap.get(
+              charactersById,
+              character.characterId
+            ).pipe(Option.getOrUndefined);
 
             if (stored === undefined) {
               return yield* new SquadCharacterNotAccessible({
@@ -1452,11 +1473,11 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
   }: SaveSquadGroupSnapshotStoreInput) {
     const operation = "saveSquadGroupSnapshot" as const;
     const groupIdNumber = squadGroupIdToNumber(snapshot.groupId);
-    const availableByCharacterId = new Map<number, AvailableSquadCharacter>();
-
-    for (const character of availableCharacters) {
-      availableByCharacterId.set(character.characterId, character);
-    }
+    const availableByCharacterId = HashMap.fromIterable(
+      availableCharacters.map(
+        (character) => [character.characterId, character] as const
+      )
+    );
 
     const transaction = database.transaction(
       Effect.fnUntraced(function* saveSquadGroupSnapshotTransaction(
@@ -1529,7 +1550,10 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
           const placementRows = [];
 
           for (const placement of squadSnapshot.characters) {
-            const character = availableByCharacterId.get(placement.characterId);
+            const character = HashMap.get(
+              availableByCharacterId,
+              placement.characterId
+            ).pipe(Option.getOrUndefined);
 
             if (character === undefined) {
               return yield* new EffectSquadBuilderPersistenceUnavailable({

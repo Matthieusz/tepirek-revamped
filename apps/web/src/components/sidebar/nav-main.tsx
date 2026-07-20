@@ -44,11 +44,10 @@ export const NavMain = ({
       <SidebarMenu>
         {items.map((item) => {
           const isGroupActive =
-            Array.isArray(item.items) &&
-            item.items.some(
+            item.items?.some(
               (subItem) =>
                 matchRoute({ fuzzy: true, to: subItem.url }) !== false
-            );
+            ) ?? false;
 
           return (
             // eslint-disable-next-line no-use-before-define

@@ -1,3 +1,4 @@
+import * as Record from "effect/Record";
 import { OpenApi } from "effect/unstable/httpapi";
 import { describe, expect, it } from "vitest";
 
@@ -19,7 +20,7 @@ const expectPostResponseStatuses = (
   path: OpenApiPath,
   expectedStatuses: readonly string[]
 ) => {
-  const statuses = Object.keys(appOpenApi.paths[path]?.post?.responses ?? {});
+  const statuses = Record.keys(appOpenApi.paths[path]?.post?.responses ?? {});
 
   expect(statuses).toEqual(expect.arrayContaining([...expectedStatuses]));
   expect(statuses).not.toContain("500");
@@ -29,7 +30,7 @@ describe("AppHttpApi route contract", () => {
   it("keeps liveness in its dependency-light standalone API", () => {
     expect(appOpenApi.paths["/health"]).toBeUndefined();
     expect(healthOpenApi.paths["/health"]?.get).toBeDefined();
-    expect(Object.keys(healthOpenApi.paths)).toEqual(["/health"]);
+    expect(Record.keys(healthOpenApi.paths)).toEqual(["/health"]);
   });
 
   it("exposes the migrated bet routes", () => {

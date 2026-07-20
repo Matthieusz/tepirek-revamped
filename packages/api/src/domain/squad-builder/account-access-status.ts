@@ -29,26 +29,13 @@ export class InvalidAccountAccessStatus extends Schema.TaggedErrorClass<InvalidA
   { value: Schema.String }
 ) {}
 
-const knownStatuses: ReadonlySet<string> = new Set<AccountAccessStatus>([
-  "pending",
-  "accepted",
-  "declined",
-  "revoked",
-]);
-
-const isKnownStatus = (value: string): value is AccountAccessStatus =>
-  knownStatuses.has(value);
-
 /** Parse a persisted status string into the domain status. */
 export const parseAccountAccessStatus = (
   value: string
-): Effect.Effect<AccountAccessStatus, InvalidAccountAccessStatus> => {
-  if (!isKnownStatus(value)) {
-    return Effect.fail(new InvalidAccountAccessStatus({ value }));
-  }
-
-  return Effect.succeed(value);
-};
+): Effect.Effect<AccountAccessStatus, InvalidAccountAccessStatus> =>
+  Schema.decodeUnknownEffect(AccountAccessStatusSchema)(value).pipe(
+    Effect.mapError(() => new InvalidAccountAccessStatus({ value }))
+  );
 
 /** Whether an access row may move from `from` to `to`. */
 export const canTransitionAccountAccess = (

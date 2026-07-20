@@ -1,6 +1,8 @@
 /* oxlint-disable no-use-before-define */
 
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import * as HashMap from "effect/HashMap";
+import * as Option from "effect/Option";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Plus, Sword, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -58,17 +60,17 @@ interface EventsHeroesPageProps {
 /** Builds the event-name lookup used while rendering hero rows. */
 export const getEventNamesById = (
   events: readonly { readonly id: number; readonly name: string }[]
-): ReadonlyMap<number, string> =>
-  new Map(events.map((event) => [event.id, event.name]));
+): HashMap.HashMap<number, string> =>
+  HashMap.fromIterable(events.map((event) => [event.id, event.name] as const));
 
 /** Returns the event name for a hero, preserving the current missing-event fallback. */
 export const getHeroEventName = (
-  eventNamesById: ReadonlyMap<number, string>,
+  eventNamesById: HashMap.HashMap<number, string>,
   eventId: number | null | undefined
 ): string =>
   eventId === null || eventId === undefined
     ? "Brak"
-    : (eventNamesById.get(eventId) ?? "Brak");
+    : HashMap.get(eventNamesById, eventId).pipe(Option.getOrElse(() => "Brak"));
 
 export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
   const heroesResult = useAtomValue(heroesAtom);

@@ -1,6 +1,8 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useParams } from "@tanstack/react-router";
 import type { SquadGroupDetailSchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
+import * as HashMap from "effect/HashMap";
+import * as Predicate from "effect/Predicate";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { AlertTriangle, RotateCw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -61,25 +63,28 @@ const DetailSkeleton = () => (
 
 const detailCharacters = (
   detail: SquadGroupDetail
-): ReadonlyMap<number, SquadCharacterMetadata> => {
-  const characters = new Map<number, SquadCharacterMetadata>();
-  for (const squad of detail.squads) {
-    for (const character of squad.characters) {
-      characters.set(character.characterId, {
-        accountDisplayName: character.accountDisplayName,
-        accountId: character.accountId,
-        accountOwnerUserImage: character.accountOwnerUserImage,
-        accountOwnerUserName: character.accountOwnerUserName,
-        avatarUrl: character.avatarUrl,
-        characterId: character.characterId,
-        level: character.level,
-        name: character.name,
-        profession: character.profession,
-      });
-    }
-  }
-  return characters;
-};
+): HashMap.HashMap<number, SquadCharacterMetadata> =>
+  HashMap.fromIterable(
+    detail.squads.flatMap((squad) =>
+      squad.characters.map(
+        (character) =>
+          [
+            character.characterId,
+            {
+              accountDisplayName: character.accountDisplayName,
+              accountId: character.accountId,
+              accountOwnerUserImage: character.accountOwnerUserImage,
+              accountOwnerUserName: character.accountOwnerUserName,
+              avatarUrl: character.avatarUrl,
+              characterId: character.characterId,
+              level: character.level,
+              name: character.name,
+              profession: character.profession,
+            },
+          ] as const
+      )
+    )
+  );
 
 const availableCharacterMetadata = (
   character: AvailableSquadCharacter
@@ -114,10 +119,7 @@ const initialSquadEditorState: SquadEditorState = {
 };
 
 const isSquadBuilderConflict = (error: unknown): boolean =>
-  typeof error === "object" &&
-  error !== null &&
-  "_tag" in error &&
-  error._tag === "SquadBuilderConflict";
+  Predicate.isTagged(error, "SquadBuilderConflict");
 
 // oxlint-disable-next-line complexity
 const SquadBuilderEditorContent = ({
@@ -193,14 +195,15 @@ const SquadBuilderEditorContent = ({
   }, [detail]);
 
   const characterById = useMemo(() => {
-    const characters =
+    let characters =
       detail === undefined
-        ? new Map<number, SquadCharacterMetadata>()
-        : new Map(detailCharacters(detail));
+        ? HashMap.empty<number, SquadCharacterMetadata>()
+        : detailCharacters(detail);
 
     if (AsyncResult.isSuccess(availableCharactersResult)) {
       for (const character of availableCharactersResult.value) {
-        characters.set(
+        characters = HashMap.set(
+          characters,
           character.characterId,
           availableCharacterMetadata(character)
         );

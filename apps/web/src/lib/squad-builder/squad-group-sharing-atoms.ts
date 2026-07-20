@@ -3,6 +3,7 @@ import type {
   SquadGroupEditorGrantSummarySchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
 import { Effect } from "effect";
+import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
@@ -40,6 +41,10 @@ interface SquadGroupEditorGrantsInput {
 type SquadGroupEditorGrantsKey = string;
 type SquadEditorInviteTargetsKey = string;
 
+const SquadEditorInviteTargetsKeySchema = Schema.fromJsonString(
+  Schema.Tuple([Schema.Number, Schema.String])
+);
+
 type SquadEditorInviteTarget = typeof SquadEditorInviteTargetSchema.Type;
 type SquadGroupEditorGrant = typeof SquadGroupEditorGrantSummarySchema.Type;
 
@@ -55,12 +60,17 @@ const squadGroupEditorGrantsKey = (groupId: number): string => `${groupId}`;
 const squadEditorInviteTargetsKey = (
   payload: SearchSquadEditorInviteTargetsInput
 ): SquadEditorInviteTargetsKey =>
-  JSON.stringify([payload.groupId, payload.query]);
+  Schema.encodeSync(SquadEditorInviteTargetsKeySchema)([
+    payload.groupId,
+    payload.query,
+  ]);
 
 const squadEditorInviteTargetsPayloadFromKey = (
   key: SquadEditorInviteTargetsKey
 ): SearchSquadEditorInviteTargetsInput => {
-  const [groupId, query] = JSON.parse(key) as [number, string];
+  const [groupId, query] = Schema.decodeUnknownSync(
+    SquadEditorInviteTargetsKeySchema
+  )(key);
   return { groupId, query };
 };
 

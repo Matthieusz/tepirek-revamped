@@ -1,3 +1,8 @@
+import * as Arr from "effect/Array";
+import * as HashSet from "effect/HashSet";
+import * as Predicate from "effect/Predicate";
+import * as Record from "effect/Record";
+
 import type { Filter } from "@/components/reui/filters-model";
 
 type CharacterPoolFilterField = "profession" | "characterName" | "accountName";
@@ -53,7 +58,7 @@ const parseLevelInput = (
 };
 
 const getStringValues = (filter: Filter<unknown>): readonly string[] =>
-  filter.values.filter((value): value is string => typeof value === "string");
+  Arr.filter(Predicate.isString)(filter.values);
 
 const getTextFilterValue = (
   filters: readonly Filter<unknown>[],
@@ -73,20 +78,13 @@ export const parseCharacterPoolFilters = (
   levelFromInput: string,
   levelToInput: string
 ): CharacterPoolFilters => {
-  const professionValues: string[] = [];
-  const professionSet = new Set<string>();
-  for (const filter of filters) {
-    if (filter.field !== "profession" || filter.operator !== "is_any_of") {
-      continue;
-    }
-    for (const value of getStringValues(filter)) {
-      const normalizedProfession = normalizeText(value);
-      if (!professionSet.has(normalizedProfession)) {
-        professionSet.add(normalizedProfession);
-        professionValues.push(normalizedProfession);
-      }
-    }
-  }
+  const professionValues = Arr.dedupe(
+    filters.flatMap((filter) =>
+      filter.field === "profession" && filter.operator === "is_any_of"
+        ? getStringValues(filter).map(normalizeText)
+        : []
+    )
+  );
   const levelFrom = parseLevelInput(levelFromInput);
   const levelTo = parseLevelInput(levelToInput);
 
@@ -109,15 +107,12 @@ export const getAssignedCharacterIds = (
   squads: readonly {
     readonly characters: readonly { readonly characterId: number }[];
   }[]
-): ReadonlySet<number> => {
-  const assignedCharacterIds = new Set<number>();
-  for (const squad of squads) {
-    for (const character of squad.characters) {
-      assignedCharacterIds.add(character.characterId);
-    }
-  }
-  return assignedCharacterIds;
-};
+): HashSet.HashSet<number> =>
+  HashSet.fromIterable(
+    squads.flatMap((squad) =>
+      squad.characters.map((character) => character.characterId)
+    )
+  );
 
 const matchesText = (value: string, query: string): boolean =>
   query.length === 0 || normalizeText(value).includes(query);
@@ -159,14 +154,16 @@ const matchesCharacter = (
 /** Excludes assigned characters and applies all local pool criteria without mutation. */
 export const filterAvailableCharacters = <T extends CharacterPoolCharacter>(
   characters: readonly T[],
-  assignedCharacterIds: ReadonlySet<number>,
+  assignedCharacterIds: Iterable<number>,
   filters: CharacterPoolFilters
-): readonly T[] =>
-  characters.filter(
+): readonly T[] => {
+  const assignedCharacterIdSet = HashSet.fromIterable(assignedCharacterIds);
+  return characters.filter(
     (character) =>
-      !assignedCharacterIds.has(character.characterId) &&
+      !HashSet.has(assignedCharacterIdSet, character.characterId) &&
       matchesCharacter(character, filters)
   );
+};
 
 const comparePolishText = (left: string, right: string): number =>
   left.localeCompare(right, "pl-PL", { sensitivity: "base" });
@@ -175,27 +172,16 @@ const comparePolishText = (left: string, right: string): number =>
 export const groupCharactersByAccount = <T extends CharacterPoolCharacter>(
   characters: readonly T[]
 ): readonly CharacterAccountGroup<T>[] => {
-  const groups = new Map<
-    string,
-    { readonly characters: T[]; readonly first: T }
-  >();
+  const groups = Arr.groupBy(characters, (character) =>
+    String(character.accountId)
+  );
 
-  for (const character of characters) {
-    const accountId = String(character.accountId);
-    const group = groups.get(accountId);
-    if (group === undefined) {
-      groups.set(accountId, { characters: [character], first: character });
-    } else {
-      group.characters.push(character);
-    }
-  }
-
-  return [...groups.entries()]
+  return Record.toEntries(groups)
     .map(([accountId, group]) => ({
-      accountDisplayName: group.first.accountDisplayName,
+      accountDisplayName: group[0].accountDisplayName,
       accountId,
-      accountOwnerUserName: group.first.accountOwnerUserName,
-      characters: group.characters.toSorted(
+      accountOwnerUserName: group[0].accountOwnerUserName,
+      characters: group.toSorted(
         (left, right) =>
           right.level - left.level ||
           comparePolishText(left.name, right.name) ||

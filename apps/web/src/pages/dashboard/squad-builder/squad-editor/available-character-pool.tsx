@@ -1,4 +1,8 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import * as Arr from "effect/Array";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Predicate from "effect/Predicate";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import {
   AlertTriangle,
@@ -56,7 +60,7 @@ import type {
 import type { SquadCharacterMetadata } from "./squad-roster-workspace";
 
 interface AvailableCharacterPoolProps {
-  readonly characterById: ReadonlyMap<number, SquadCharacterMetadata>;
+  readonly characterById: HashMap.HashMap<number, SquadCharacterMetadata>;
   readonly draft: SquadGroupDraft;
   readonly groupId: number;
   readonly isSaving: boolean;
@@ -88,20 +92,12 @@ const toMetadata = (character: AvailableCharacter): SquadCharacterMetadata => ({
 
 const getProfessionFilterValues = (
   filters: readonly Filter<unknown>[]
-): string[] => {
-  const values: string[] = [];
-  for (const filter of filters) {
-    if (filter.field !== "profession" || filter.operator !== "is_any_of") {
-      continue;
-    }
-    for (const value of filter.values) {
-      if (typeof value === "string") {
-        values.push(value);
-      }
-    }
-  }
-  return values;
-};
+): string[] =>
+  filters.flatMap((filter) =>
+    filter.field === "profession" && filter.operator === "is_any_of"
+      ? Arr.filter(Predicate.isString)(filter.values)
+      : []
+  );
 
 const placementErrorMessage = (
   error: PlacementError,
@@ -131,20 +127,17 @@ const placementErrorMessage = (
 };
 
 const getAccountInfoMap = (
-  characterById: ReadonlyMap<number, SquadCharacterMetadata>
-): ReadonlyMap<number, CharacterAccountInfo> => {
-  const accountInfo = new Map<number, CharacterAccountInfo>();
-  for (const [characterId, character] of characterById) {
-    accountInfo.set(characterId, {
+  characterById: HashMap.HashMap<number, SquadCharacterMetadata>
+): HashMap.HashMap<number, CharacterAccountInfo> =>
+  HashMap.map<CharacterAccountInfo, SquadCharacterMetadata, number>(
+    (character) => ({
       accountDisplayName: character.accountDisplayName,
       accountId: character.accountId,
-    });
-  }
-  return accountInfo;
-};
+    })
+  )(characterById);
 
 interface CharacterPoolState {
-  readonly collapsedAccountIds: ReadonlySet<string>;
+  readonly collapsedAccountIds: HashSet.HashSet<string>;
   readonly filters: Filter<unknown>[];
   readonly characterNameQuery: string;
   readonly levelFromInput: string;
@@ -161,7 +154,7 @@ type CharacterPoolAction =
 
 const initialCharacterPoolState: CharacterPoolState = {
   characterNameQuery: "",
-  collapsedAccountIds: new Set(),
+  collapsedAccountIds: HashSet.empty(),
   filters: [],
   levelFromInput: "",
   levelToInput: "",
@@ -207,12 +200,12 @@ const characterPoolReducer = (
       };
     }
     case "toggle-account": {
-      const collapsedAccountIds = new Set(state.collapsedAccountIds);
-      if (collapsedAccountIds.has(action.accountId)) {
-        collapsedAccountIds.delete(action.accountId);
-      } else {
-        collapsedAccountIds.add(action.accountId);
-      }
+      const collapsedAccountIds = HashSet.has(
+        state.collapsedAccountIds,
+        action.accountId
+      )
+        ? HashSet.remove(state.collapsedAccountIds, action.accountId)
+        : HashSet.add(state.collapsedAccountIds, action.accountId);
       return { ...state, collapsedAccountIds };
     }
     default: {
@@ -278,7 +271,10 @@ const DestinationMenu = ({
   draft,
   onDraftChange,
 }: {
-  readonly accountInfoByCharacterId: ReadonlyMap<number, CharacterAccountInfo>;
+  readonly accountInfoByCharacterId: HashMap.HashMap<
+    number,
+    CharacterAccountInfo
+  >;
   readonly character: SquadCharacterMetadata;
   readonly draft: SquadGroupDraft;
   readonly onDraftChange: (draft: SquadGroupDraft) => void;
@@ -355,7 +351,10 @@ const CharacterPoolTile = ({
   draft,
   onDraftChange,
 }: {
-  readonly accountInfoByCharacterId: ReadonlyMap<number, CharacterAccountInfo>;
+  readonly accountInfoByCharacterId: HashMap.HashMap<
+    number,
+    CharacterAccountInfo
+  >;
   readonly character: SquadCharacterMetadata;
   readonly draft: SquadGroupDraft;
   readonly onDraftChange: (draft: SquadGroupDraft) => void;
@@ -418,16 +417,20 @@ export const AvailableCharacterPool = ({
   const refresh = useAtomRefresh(atom);
 
   const allCharacterById = useMemo(() => {
-    const merged = new Map<number, SquadCharacterMetadata>(characterById);
+    let merged = characterById;
     if (AsyncResult.isSuccess(result)) {
       for (const character of result.value) {
-        merged.set(character.characterId, toMetadata(character));
+        merged = HashMap.set(
+          merged,
+          character.characterId,
+          toMetadata(character)
+        );
       }
     }
     return merged;
   }, [characterById, result]);
   const characters = useMemo(
-    () => [...allCharacterById.values()],
+    () => Arr.fromIterable(HashMap.values(allCharacterById)),
     [allCharacterById]
   );
   const assignedCharacterIds = useMemo(
@@ -437,7 +440,7 @@ export const AvailableCharacterPool = ({
   const unassignedCharacters = useMemo(
     () =>
       characters.filter(
-        (character) => !assignedCharacterIds.has(character.characterId)
+        (character) => !HashSet.has(assignedCharacterIds, character.characterId)
       ),
     [assignedCharacterIds, characters]
   );
@@ -463,7 +466,7 @@ export const AvailableCharacterPool = ({
     [allCharacterById]
   );
   const selectedProfessions = useMemo(
-    () => new Set(getProfessionFilterValues(filters)),
+    () => HashSet.fromIterable(getProfessionFilterValues(filters)),
     [filters]
   );
   const hasActiveFilters =
@@ -632,7 +635,8 @@ export const AvailableCharacterPool = ({
               <ScrollArea className="min-h-0 flex-1 xl:overflow-hidden">
                 <ul className="space-y-4 px-4 py-4">
                   {groupedCharacters.map((accountGroup) => {
-                    const isCollapsed = collapsedAccountIds.has(
+                    const isCollapsed = HashSet.has(
+                      collapsedAccountIds,
                       accountGroup.accountId
                     );
                     const charactersId = `character-account-${groupId}-${accountGroup.accountId}`;

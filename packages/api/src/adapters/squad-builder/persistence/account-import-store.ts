@@ -23,6 +23,7 @@ import {
   isNull,
   sql,
 } from "drizzle-orm";
+import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -63,7 +64,6 @@ import type {
   ListOwnedMargonemAccountsInput,
   MarkFirecrawlRequestFailedInput,
   MarkFirecrawlRequestSucceededInput,
-  OwnedAccountCharacterPreview,
   OwnedMargonemAccountSummary,
   ReserveFirecrawlRequestInput,
   UpdateOwnedAccountDisplayNameInput,
@@ -711,23 +711,9 @@ const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
                 asc(margonemCharacter.id)
               )
           );
-    const characterPreviewsByAccount = new Map<
-      number,
-      OwnedAccountCharacterPreview[]
-    >();
-
-    for (const row of characterRows) {
-      const previews = characterPreviewsByAccount.get(row.accountId) ?? [];
-      if (previews.length < ACCOUNT_CHARACTER_PREVIEW_LIMIT) {
-        previews.push({
-          avatarUrl: row.avatarUrl,
-          characterId: row.characterId,
-          name: row.name,
-          profession: row.profession,
-        });
-        characterPreviewsByAccount.set(row.accountId, previews);
-      }
-    }
+    const characterRowsByAccount = Arr.groupBy(characterRows, (row) =>
+      String(row.accountId)
+    );
 
     const accounts: OwnedMargonemAccountSummary[] = [];
 
@@ -747,7 +733,15 @@ const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
       accounts.push({
         accountId,
         characterCount: row.characterCount ?? 0,
-        characterPreviews: characterPreviewsByAccount.get(row.accountId) ?? [],
+        characterPreviews:
+          characterRowsByAccount[String(row.accountId)]
+            ?.slice(0, ACCOUNT_CHARACTER_PREVIEW_LIMIT)
+            .map((character) => ({
+              avatarUrl: character.avatarUrl,
+              characterId: character.characterId,
+              name: character.name,
+              profession: character.profession,
+            })) ?? [],
         displayName,
         generatedProfileUrl: toMargonemProfileUrl(profileId),
         lastFetchedAt: row.lastFetchedAt ?? row.createdAt,

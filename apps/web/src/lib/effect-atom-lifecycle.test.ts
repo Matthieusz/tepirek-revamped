@@ -1,5 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Latch } from "effect";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Option from "effect/Option";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry";
@@ -31,10 +33,10 @@ describe("Effect Atom lifecycle", () => {
     "prevents an interrupted stale response from replacing the latest result",
     () =>
       Effect.gen(function* preventStaleResponse() {
-        const latches = new Map<number, Latch.Latch>();
+        const latches = MutableHashMap.empty<number, Latch.Latch>();
         const mutation = Atom.fn((value: number) => {
           const latch = Latch.makeUnsafe();
-          latches.set(value, latch);
+          MutableHashMap.set(latches, value, latch);
           return latch.await.pipe(Effect.as(value));
         });
         const registry = AtomRegistry.make();
@@ -42,9 +44,13 @@ describe("Effect Atom lifecycle", () => {
 
         registry.set(mutation, 1);
         registry.set(mutation, 2);
-        latches.get(2)?.openUnsafe();
+        MutableHashMap.get(latches, 2).pipe(
+          Option.map((latch) => latch.openUnsafe())
+        );
         yield* flushFibers;
-        latches.get(1)?.openUnsafe();
+        MutableHashMap.get(latches, 1).pipe(
+          Option.map((latch) => latch.openUnsafe())
+        );
         yield* flushFibers;
 
         const result = registry.get(mutation);

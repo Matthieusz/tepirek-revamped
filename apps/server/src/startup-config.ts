@@ -7,6 +7,7 @@ import { AuthConfig } from "@tepirek-revamped/auth";
 import type { AuthEnv } from "@tepirek-revamped/auth";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as Record from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
@@ -52,7 +53,7 @@ const parseEntries = (
       if (value.length === 0) {
         return {};
       }
-      return Object.fromEntries(
+      return Record.fromEntries(
         value.split(",").map((entry) => {
           const separator = entry.indexOf("=");
           if (separator < 1 || separator === entry.length - 1) {
@@ -123,7 +124,7 @@ const readObservabilityConfig = Effect.gen(
       deploymentEnvironmentName:
         values.deploymentEnvironmentName || values.nodeEnvironment,
       ...(endpoint === undefined ? {} : { endpoint }),
-      ...(Object.keys(parsedHeaders).length === 0
+      ...(Record.isEmptyReadonlyRecord(parsedHeaders)
         ? {}
         : { headers: values.headers }),
       minimumLogLevel,

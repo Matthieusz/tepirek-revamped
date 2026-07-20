@@ -24,29 +24,16 @@ export class InvalidSquadGroupInvitationStatus extends Schema.TaggedErrorClass<I
   { value: Schema.String }
 ) {}
 
-const knownStatuses: ReadonlySet<string> = new Set<SquadGroupInvitationStatus>([
-  "pending",
-  "accepted",
-  "declined",
-  "revoked",
-]);
-
-const isKnownStatus = (value: string): value is SquadGroupInvitationStatus =>
-  knownStatuses.has(value);
-
 /** Parse a persisted status string into the domain status. */
 export const parseSquadGroupInvitationStatus = (
   value: string
 ): Effect.Effect<
   SquadGroupInvitationStatus,
   InvalidSquadGroupInvitationStatus
-> => {
-  if (!isKnownStatus(value)) {
-    return Effect.fail(new InvalidSquadGroupInvitationStatus({ value }));
-  }
-
-  return Effect.succeed(value);
-};
+> =>
+  Schema.decodeUnknownEffect(SquadGroupInvitationStatusSchema)(value).pipe(
+    Effect.mapError(() => new InvalidSquadGroupInvitationStatus({ value }))
+  );
 
 /** Whether an invitation row may move from `from` to `to`. */
 export const canTransitionSquadGroupInvitation = (

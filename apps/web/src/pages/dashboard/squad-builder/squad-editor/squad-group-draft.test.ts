@@ -1,3 +1,4 @@
+import * as HashMap from "effect/HashMap";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -35,7 +36,7 @@ if (firstSquad === undefined || secondSquad === undefined) {
   throw new Error("Test draft must include two squads");
 }
 
-const characters = new Map<number, CharacterAccountInfo>([
+const characters = HashMap.fromIterable<number, CharacterAccountInfo>([
   [1, { accountDisplayName: "Konto A", accountId: "account-a" }],
   [2, { accountDisplayName: "Konto B", accountId: "account-b" }],
   [3, { accountDisplayName: "Konto C", accountId: "account-c" }],
@@ -75,9 +76,9 @@ describe("squad group draft", () => {
         secondSquad,
       ],
     };
-    const fullCharacters = new Map(characters);
+    let fullCharacters = characters;
     for (let index = 10; index < 20; index += 1) {
-      fullCharacters.set(index, {
+      fullCharacters = HashMap.set(fullCharacters, index, {
         accountDisplayName: `Konto ${index}`,
         accountId: `account-${index}`,
       });

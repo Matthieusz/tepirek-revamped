@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import * as Schema from "effect/Schema";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
 import { asBetId, asEventId, asHeroId, asUserId } from "@/lib/branded-ids";
@@ -17,8 +18,17 @@ interface PaginatedBetInput {
 
 type PaginatedBetKey = string;
 
+const PaginatedBetKeySchema = Schema.fromJsonString(
+  Schema.Tuple([
+    Schema.NullOr(Schema.Number),
+    Schema.NullOr(Schema.Number),
+    Schema.NullOr(Schema.Number),
+    Schema.NullOr(Schema.Number),
+  ])
+);
+
 const paginatedBetKey = (input: PaginatedBetInput): PaginatedBetKey =>
-  JSON.stringify([
+  Schema.encodeSync(PaginatedBetKeySchema)([
     input.eventId ?? null,
     input.heroId ?? null,
     input.limit ?? null,
@@ -26,12 +36,9 @@ const paginatedBetKey = (input: PaginatedBetInput): PaginatedBetKey =>
   ]);
 
 const paginatedBetInputFromKey = (key: PaginatedBetKey) => {
-  const [eventId, heroId, limit, page] = JSON.parse(key) as [
-    number | null,
-    number | null,
-    number | null,
-    number | null,
-  ];
+  const [eventId, heroId, limit, page] = Schema.decodeUnknownSync(
+    PaginatedBetKeySchema
+  )(key);
   return {
     ...(eventId === null ? {} : { eventId }),
     ...(heroId === null ? {} : { heroId }),

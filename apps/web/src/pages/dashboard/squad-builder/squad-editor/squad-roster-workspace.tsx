@@ -1,3 +1,7 @@
+import * as Arr from "effect/Array";
+import * as HashMap from "effect/HashMap";
+import * as Option from "effect/Option";
+import * as Record from "effect/Record";
 import { ChevronDown, Plus, Trash2, UserRound, X } from "lucide-react";
 import { useState } from "react";
 
@@ -37,7 +41,7 @@ export interface SquadCharacterMetadata {
 }
 
 interface SquadRosterWorkspaceProps {
-  readonly characterById: ReadonlyMap<number, SquadCharacterMetadata>;
+  readonly characterById: HashMap.HashMap<number, SquadCharacterMetadata>;
   readonly draft: SquadGroupDraft;
   readonly isSaving: boolean;
   readonly isOwner: boolean;
@@ -60,7 +64,7 @@ const SquadRosterRow = ({
   squadName,
 }: {
   readonly characterId: number | undefined;
-  readonly characterById: ReadonlyMap<number, SquadCharacterMetadata>;
+  readonly characterById: HashMap.HashMap<number, SquadCharacterMetadata>;
   readonly isSaving: boolean;
   readonly onRemove: () => void;
   readonly canEditPlacements: boolean;
@@ -84,7 +88,9 @@ const SquadRosterRow = ({
     );
   }
 
-  const character = characterById.get(characterId);
+  const character = HashMap.get(characterById, characterId).pipe(
+    Option.getOrUndefined
+  );
 
   if (character === undefined) {
     return (
@@ -177,13 +183,16 @@ interface SquadLevelRange {
 
 const getSquadLevelRange = (
   squad: DraftSquad,
-  characterById: ReadonlyMap<number, SquadCharacterMetadata>
+  characterById: HashMap.HashMap<number, SquadCharacterMetadata>
 ): SquadLevelRange | undefined => {
   let min: number | undefined;
   let max: number | undefined;
 
   for (const draftCharacter of squad.characters) {
-    const character = characterById.get(draftCharacter.characterId);
+    const character = HashMap.get(
+      characterById,
+      draftCharacter.characterId
+    ).pipe(Option.getOrUndefined);
     if (character === undefined) {
       continue;
     }
@@ -201,23 +210,19 @@ interface ProfessionCount {
 
 const getSquadProfessionCounts = (
   squad: DraftSquad,
-  characterById: ReadonlyMap<number, SquadCharacterMetadata>
+  characterById: HashMap.HashMap<number, SquadCharacterMetadata>
 ): readonly ProfessionCount[] => {
-  const counts = new Map<string, number>();
+  const professions = squad.characters.flatMap((draftCharacter) => {
+    const character = HashMap.get(
+      characterById,
+      draftCharacter.characterId
+    ).pipe(Option.getOrUndefined);
+    return character === undefined ? [] : [character.profession];
+  });
+  const counts = Arr.groupBy(professions, (profession) => profession);
 
-  for (const draftCharacter of squad.characters) {
-    const character = characterById.get(draftCharacter.characterId);
-    if (character === undefined) {
-      continue;
-    }
-    counts.set(
-      character.profession,
-      (counts.get(character.profession) ?? 0) + 1
-    );
-  }
-
-  return [...counts.entries()].map(([profession, count]) => ({
-    count,
+  return Record.toEntries(counts).map(([profession, matches]) => ({
+    count: matches.length,
     profession,
   }));
 };
@@ -244,7 +249,7 @@ const SquadPanel = ({
   onRemoveSquad,
   squad,
 }: {
-  readonly characterById: ReadonlyMap<number, SquadCharacterMetadata>;
+  readonly characterById: HashMap.HashMap<number, SquadCharacterMetadata>;
   readonly isOwner: boolean;
   readonly isSaving: boolean;
   readonly canEditPlacements: boolean;

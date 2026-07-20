@@ -1,3 +1,4 @@
+import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 
 import { getProfessionPresentation } from "../profession-presenters";
@@ -24,12 +25,12 @@ describe("account presenters", () => {
       "warrior",
     ].map(getProfessionPresentation);
 
-    expect(new Set(professions.map((profession) => profession.icon)).size).toBe(
-      6
-    );
     expect(
-      new Set(professions.map((profession) => profession.colorClass)).size
-    ).toBe(6);
+      Arr.dedupe(professions.map((profession) => profession.icon))
+    ).toHaveLength(6);
+    expect(
+      Arr.dedupe(professions.map((profession) => profession.colorClass))
+    ).toHaveLength(6);
   });
 
   it("keeps unknown professions readable and neutral", () => {

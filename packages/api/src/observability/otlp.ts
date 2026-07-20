@@ -1,4 +1,5 @@
 import { Effect, Layer } from "effect";
+import * as Record from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import * as OtlpLogger from "effect/unstable/observability/OtlpLogger";
@@ -21,7 +22,7 @@ const parseHeaders = (
   if (headers === undefined) {
     return undefined;
   }
-  return Object.fromEntries(
+  return Record.fromEntries(
     Redacted.value(headers)
       .split(",")
       .map((entry) => {

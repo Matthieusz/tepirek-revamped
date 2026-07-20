@@ -1,3 +1,4 @@
+import * as HashSet from "effect/HashSet";
 import { Search, X } from "lucide-react";
 
 import { Badge } from "@/components/reui/badge";
@@ -19,7 +20,7 @@ interface AvailableCharacterPoolHeaderProps {
   readonly levelErrorMessage: string;
   readonly levelFromInput: string;
   readonly levelToInput: string;
-  readonly selectedProfessions: ReadonlySet<string>;
+  readonly selectedProfessions: HashSet.HashSet<string>;
   readonly unassignedCount: number;
   readonly onCharacterNameChange: (value: string) => void;
   readonly onClearFilters: () => void;
@@ -76,7 +77,7 @@ export const AvailableCharacterPoolHeader = ({
           ].map((profession) => {
             const presentation = getProfessionPresentation(profession);
             const ProfessionIcon = presentation.icon;
-            const selected = selectedProfessions.has(profession);
+            const selected = HashSet.has(selectedProfessions, profession);
             return (
               <Button
                 aria-pressed={selected}

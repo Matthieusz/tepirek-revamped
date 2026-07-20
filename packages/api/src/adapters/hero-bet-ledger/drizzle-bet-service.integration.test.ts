@@ -7,7 +7,9 @@ import {
 } from "@tepirek-revamped/db/schema/bet";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import { TestClock } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
@@ -209,12 +211,15 @@ const assertHeroLedgerInvariant = async (heroId: number) => {
     .from(heroBetMember)
     .innerJoin(heroBet, eq(heroBetMember.heroBetId, heroBet.id))
     .where(eq(heroBet.heroId, heroId));
-  const expected = new Map<string, { bets: number; points: number }>();
+  let expected = HashMap.empty<string, { bets: number; points: number }>();
   for (const member of members) {
-    const current = expected.get(member.userId) ?? { bets: 0, points: 0 };
-    current.bets += 1;
-    current.points += Number(member.points);
-    expected.set(member.userId, current);
+    const current = HashMap.get(expected, member.userId).pipe(
+      Option.getOrElse(() => ({ bets: 0, points: 0 }))
+    );
+    expected = HashMap.set(expected, member.userId, {
+      bets: current.bets + 1,
+      points: current.points + Number(member.points),
+    });
   }
 
   const [heroRow] = await testDb
@@ -232,7 +237,9 @@ const assertHeroLedgerInvariant = async (heroId: number) => {
     .where(eq(userStats.heroId, heroId));
 
   for (const stat of stats) {
-    const expectedStat = expected.get(stat.userId) ?? { bets: 0, points: 0 };
+    const expectedStat = HashMap.get(expected, stat.userId).pipe(
+      Option.getOrElse(() => ({ bets: 0, points: 0 }))
+    );
     expect(stat.bets).toBe(expectedStat.bets);
     expect(Number(stat.points)).toBeCloseTo(expectedStat.points, 2);
     const expectedEarnings =

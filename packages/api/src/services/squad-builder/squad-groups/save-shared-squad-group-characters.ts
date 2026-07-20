@@ -1,7 +1,10 @@
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
@@ -85,23 +88,24 @@ const makeSave = (store: typeof SquadGroupStoreService.Service) =>
         return yield* new ActorCannotEditSquadGroup();
       }
 
-      const existingSquadIds = new Set<number>();
-      for (const squad of detail.squads) {
-        existingSquadIds.add(squad.squadId);
-      }
+      const existingSquadIds = HashSet.fromIterable(
+        detail.squads.map((squad) => squad.squadId)
+      );
 
       if (input.squads.length !== detail.squads.length) {
         return yield* new EditorCannotChangeSquadStructure();
       }
 
       for (const submitted of input.squads) {
-        if (!existingSquadIds.has(submitted.squadId)) {
+        if (!HashSet.has(existingSquadIds, submitted.squadId)) {
           return yield* new SquadNotInGroup({ squadId: submitted.squadId });
         }
       }
 
-      const submittedIds = new Set(input.squads.map((squad) => squad.squadId));
-      if (submittedIds.size !== existingSquadIds.size) {
+      const submittedIds = HashSet.fromIterable(
+        input.squads.map((squad) => squad.squadId)
+      );
+      if (HashSet.size(submittedIds) !== HashSet.size(existingSquadIds)) {
         return yield* new EditorCannotChangeSquadStructure();
       }
 
@@ -109,10 +113,9 @@ const makeSave = (store: typeof SquadGroupStoreService.Service) =>
         ownerUserId: detail.ownerUserId,
       });
 
-      const submittedBySquadId = new Map<number, SharedSquadCharactersInput>();
-      for (const submitted of input.squads) {
-        submittedBySquadId.set(submitted.squadId, submitted);
-      }
+      const submittedBySquadId = HashMap.fromIterable(
+        input.squads.map((submitted) => [submitted.squadId, submitted] as const)
+      );
 
       const validation = yield* validateSquadGroupSnapshot({
         actorUserId: detail.ownerUserId,
@@ -120,7 +123,10 @@ const makeSave = (store: typeof SquadGroupStoreService.Service) =>
         groupId: input.groupId,
         name: detail.name,
         squads: detail.squads.map((squad) => ({
-          characters: submittedBySquadId.get(squad.squadId)?.characters ?? [],
+          characters: HashMap.get(submittedBySquadId, squad.squadId).pipe(
+            Option.map((submitted) => submitted.characters),
+            Option.getOrElse(() => [])
+          ),
           clientKey: `squad-${squad.squadId}`,
           name: squad.name,
           position: squad.position,

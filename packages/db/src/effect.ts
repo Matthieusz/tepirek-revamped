@@ -4,6 +4,7 @@ import * as PgDrizzle from "drizzle-orm/effect-postgres";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import type { Success } from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import { types } from "pg";
@@ -19,7 +20,7 @@ import {
  * expects to parse the raw values itself. Returning raw values here lets
  * Drizzle handle parsing and avoids double-parsing / timezone bugs.
  */
-const DATE_TIME_TYPE_IDS = new Set([
+const DATE_TIME_TYPE_IDS = HashSet.fromIterable([
   // timestamp
   1114,
   // timestamptz
@@ -67,7 +68,7 @@ export const makePgClientLayer = (databaseUrl: Redacted.Redacted) =>
   Pg.layer({
     types: {
       getTypeParser: (typeId, format) => {
-        if (DATE_TIME_TYPE_IDS.has(typeId)) {
+        if (HashSet.has(DATE_TIME_TYPE_IDS, typeId)) {
           return (val: unknown) => val;
         }
         return types.getTypeParser(typeId, format);

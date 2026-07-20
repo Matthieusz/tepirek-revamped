@@ -1,9 +1,11 @@
+import * as HashSet from "effect/HashSet";
+
 type DatabaseUrlMetadata = Readonly<{
   canonical: string;
 }>;
 
 const defaultPostgresPort = "5432";
-const postgresProtocols = new Set(["postgres:", "postgresql:"]);
+const postgresProtocols = HashSet.fromIterable(["postgres:", "postgresql:"]);
 
 const canonicalizeSearch = (url: URL) => {
   const parameters = [...url.searchParams.entries()].toSorted(
@@ -26,7 +28,10 @@ export const parseDatabaseUrl = (
     throw new Error(`${environmentKey} must be a valid PostgreSQL URL.`);
   }
 
-  if (!postgresProtocols.has(url.protocol) || url.hostname.length === 0) {
+  if (
+    !HashSet.has(postgresProtocols, url.protocol) ||
+    url.hostname.length === 0
+  ) {
     throw new Error(`${environmentKey} must be a valid PostgreSQL URL.`);
   }
 

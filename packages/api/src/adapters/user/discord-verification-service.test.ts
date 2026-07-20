@@ -79,7 +79,7 @@ describe("DiscordGuildVerifier", () => {
       vi.stubGlobal("fetch", fetchMock);
 
       const fiber = yield* verify().pipe(Effect.forkChild);
-      yield* TestClock.adjust(100);
+      yield* TestClock.adjust(200);
 
       expect(yield* Fiber.join(fiber)).toBe(true);
       expect(fetchMock).toHaveBeenCalledTimes(2);

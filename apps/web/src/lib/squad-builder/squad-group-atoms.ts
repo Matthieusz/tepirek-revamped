@@ -6,6 +6,7 @@ import type {
   SquadGroupSummarySchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
 import { Effect } from "effect";
+import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
@@ -67,6 +68,14 @@ interface SetSquadGroupVisibilityInput {
 
 type ListGlobalSquadGroupsKey = string;
 
+const ListGlobalSquadGroupsKeySchema = Schema.fromJsonString(
+  Schema.Tuple([
+    Schema.NullOr(Schema.Number),
+    Schema.NullOr(Schema.Number),
+    Schema.NullOr(Schema.String),
+  ])
+);
+
 interface RefreshVisibleSquadGroupAtomsOptions {
   readonly actorUserId?: string;
   readonly groupId?: number;
@@ -75,7 +84,7 @@ interface RefreshVisibleSquadGroupAtomsOptions {
 const globalSquadGroupsKey = (
   payload: ListGlobalSquadGroupsInput
 ): ListGlobalSquadGroupsKey =>
-  JSON.stringify([
+  Schema.encodeSync(ListGlobalSquadGroupsKeySchema)([
     payload.maxLevel ?? null,
     payload.minLevel ?? null,
     payload.nameQuery ?? null,
@@ -84,11 +93,9 @@ const globalSquadGroupsKey = (
 const globalSquadGroupsPayloadFromKey = (
   key: ListGlobalSquadGroupsKey
 ): ListGlobalSquadGroupsInput => {
-  const [maxLevel, minLevel, nameQuery] = JSON.parse(key) as [
-    number | null,
-    number | null,
-    string | null,
-  ];
+  const [maxLevel, minLevel, nameQuery] = Schema.decodeUnknownSync(
+    ListGlobalSquadGroupsKeySchema
+  )(key);
   return {
     maxLevel,
     minLevel,

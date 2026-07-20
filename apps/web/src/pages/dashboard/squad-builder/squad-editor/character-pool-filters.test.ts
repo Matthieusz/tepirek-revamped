@@ -1,3 +1,4 @@
+import * as HashSet from "effect/HashSet";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -83,7 +84,7 @@ describe("character pool filters", () => {
     );
 
     expect(
-      ids(filterAvailableCharacters(characters, new Set(), filters))
+      ids(filterAvailableCharacters(characters, HashSet.empty(), filters))
     ).toEqual([1, 2, 3]);
   });
 
@@ -99,7 +100,7 @@ describe("character pool filters", () => {
     );
 
     expect(
-      ids(filterAvailableCharacters(characters, new Set(), filters))
+      ids(filterAvailableCharacters(characters, HashSet.empty(), filters))
     ).toEqual([2]);
   });
 
@@ -107,7 +108,7 @@ describe("character pool filters", () => {
     const filters = parseCharacterPoolFilters([], "40", "50");
 
     expect(
-      ids(filterAvailableCharacters(characters, new Set(), filters))
+      ids(filterAvailableCharacters(characters, HashSet.empty(), filters))
     ).toEqual([1, 2]);
   });
 
@@ -120,7 +121,7 @@ describe("character pool filters", () => {
 
     expect(filters.hasReversedLevelRange).toBe(true);
     expect(
-      ids(filterAvailableCharacters(characters, new Set(), filters))
+      ids(filterAvailableCharacters(characters, HashSet.empty(), filters))
     ).toEqual([2, 3]);
   });
 
@@ -129,7 +130,7 @@ describe("character pool filters", () => {
 
     expect(filters.hasInvalidLevelInput).toBe(true);
     expect(
-      ids(filterAvailableCharacters(characters, new Set(), filters))
+      ids(filterAvailableCharacters(characters, HashSet.empty(), filters))
     ).toEqual([1, 2, 3, 4]);
   });
 
@@ -142,10 +143,10 @@ describe("character pool filters", () => {
     );
 
     expect(
-      ids(filterAvailableCharacters(characters, new Set(), allFilters))
+      ids(filterAvailableCharacters(characters, HashSet.empty(), allFilters))
     ).toEqual([1, 2, 3, 4]);
     expect(
-      ids(filterAvailableCharacters(characters, new Set(), knownFilters))
+      ids(filterAvailableCharacters(characters, HashSet.empty(), knownFilters))
     ).toEqual([2, 3]);
   });
 

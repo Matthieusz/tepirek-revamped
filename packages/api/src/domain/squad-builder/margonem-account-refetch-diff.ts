@@ -1,3 +1,6 @@
+import * as HashMap from "effect/HashMap";
+import * as Option from "effect/Option";
+
 import type { MargonemAccountId } from "./margonem-account-id.ts";
 import type {
   MargonemCharacterPreview,
@@ -133,22 +136,14 @@ export const computeMargonemAccountRefetchDiff = ({
   latestCharacters,
   profileId,
 }: ComputeMargonemAccountRefetchDiffInput): MargonemAccountRefetchDiff => {
-  const currentByCharacterId = new Map<
-    MargonemCharacterId,
-    StoredMargonemCharacterSnapshot
-  >();
-  const latestByCharacterId = new Map<
-    MargonemCharacterId,
-    MargonemCharacterPreview
-  >();
-
-  for (const current of currentCharacters) {
-    currentByCharacterId.set(current.margonemCharacterId, current);
-  }
-
-  for (const latest of latestCharacters) {
-    latestByCharacterId.set(latest.characterId, latest);
-  }
+  const currentByCharacterId = HashMap.fromIterable(
+    currentCharacters.map(
+      (current) => [current.margonemCharacterId, current] as const
+    )
+  );
+  const latestByCharacterId = HashMap.fromIterable(
+    latestCharacters.map((latest) => [latest.characterId, latest] as const)
+  );
 
   const added: AddedMargonemCharacterDiff[] = [];
   const removed: RemovedMargonemCharacterDiff[] = [];
@@ -156,12 +151,13 @@ export const computeMargonemAccountRefetchDiff = ({
   let unchangedCount = 0;
 
   for (const latest of latestCharacters) {
-    const current = currentByCharacterId.get(latest.characterId);
+    const currentOption = HashMap.get(currentByCharacterId, latest.characterId);
 
-    if (current === undefined) {
+    if (Option.isNone(currentOption)) {
       added.push({ _tag: "AddedCharacter", latest });
       continue;
     }
+    const current = currentOption.value;
 
     const changes = fieldChangesForCharacter(current, latest);
 
@@ -181,7 +177,7 @@ export const computeMargonemAccountRefetchDiff = ({
   }
 
   for (const current of currentCharacters) {
-    if (!latestByCharacterId.has(current.margonemCharacterId)) {
+    if (!HashMap.has(latestByCharacterId, current.margonemCharacterId)) {
       removed.push({
         _tag: "RemovedCharacter",
         current,

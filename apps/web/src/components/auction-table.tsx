@@ -6,6 +6,7 @@ import {
   getAuctionSlotColumns,
 } from "@tepirek-revamped/config";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
+import * as Arr from "effect/Array";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Loader2, Trash2 } from "lucide-react";
 import React, { useState } from "react";
@@ -245,13 +246,10 @@ const AuctionTableContent: React.FC<AuctionTableProps> = ({
   };
 
   // Group signups by level-round-column for quick lookup
-  const signupMap = new Map<string, SignupData[]>();
-  for (const signup of signups ?? []) {
-    const key = `${signup.level}-${signup.round}-${signup.column}`;
-    const existing = signupMap.get(key) ?? [];
-    existing.push(signup);
-    signupMap.set(key, existing);
-  }
+  const signupMap = Arr.groupBy(
+    signups ?? [],
+    (signup) => `${signup.level}-${signup.round}-${signup.column}`
+  );
 
   // Get single signup for cell (only one allowed)
   const getSignupForCell = (
@@ -259,7 +257,7 @@ const AuctionTableContent: React.FC<AuctionTableProps> = ({
     round: number,
     column: number
   ): SignupData | undefined => {
-    const cellSignups = signupMap.get(`${level}-${round}-${column}`);
+    const cellSignups = signupMap[`${level}-${round}-${column}`];
     if (!cellSignups || cellSignups.length === 0) {
       return;
     }

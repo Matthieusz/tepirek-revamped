@@ -2,6 +2,8 @@ import type {
   AvailableSquadCharacterSchema,
   SquadGroupDetailSchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
+import * as HashMap from "effect/HashMap";
+import * as Option from "effect/Option";
 
 type SquadGroupDetail = typeof SquadGroupDetailSchema.Type;
 export type AvailableCharacter = typeof AvailableSquadCharacterSchema.Type;
@@ -126,14 +128,16 @@ export const getPlacementError = (
   draft: SquadGroupDraft,
   characterId: number,
   squadKey: string,
-  charactersById: ReadonlyMap<number, CharacterAccountInfo>,
+  charactersById: HashMap.HashMap<number, CharacterAccountInfo>,
   canEdit: boolean
 ): PlacementError | undefined => {
   if (!canEdit) {
     return { _tag: "readOnly" };
   }
 
-  const character = charactersById.get(characterId);
+  const character = HashMap.get(charactersById, characterId).pipe(
+    Option.getOrUndefined
+  );
   if (character === undefined) {
     return { _tag: "unknownCharacter", characterId };
   }
@@ -156,7 +160,10 @@ export const getPlacementError = (
   }
 
   const sameAccountCharacter = targetCharacters.find((current) => {
-    const currentCharacter = charactersById.get(current.characterId);
+    const currentCharacter = HashMap.get(
+      charactersById,
+      current.characterId
+    ).pipe(Option.getOrUndefined);
     return (
       currentCharacter !== undefined &&
       String(currentCharacter.accountId) === String(character.accountId)
@@ -177,7 +184,7 @@ export const applyPlacement = (
   draft: SquadGroupDraft,
   characterId: number,
   squadKey: string,
-  charactersById: ReadonlyMap<number, CharacterAccountInfo>,
+  charactersById: HashMap.HashMap<number, CharacterAccountInfo>,
   canEdit: boolean
 ): PlacementResult => {
   const error = getPlacementError(

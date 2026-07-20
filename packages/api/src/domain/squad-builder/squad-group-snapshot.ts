@@ -1,4 +1,7 @@
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import type { AccountDisplayName } from "./account-display-name.ts";
@@ -128,12 +131,13 @@ export const validateSquadGroupSnapshot = Effect.fn(
 
   const parsedName = yield* parseSquadGroupName(name);
 
-  const availableByCharacterId = new Map<number, AvailableSquadCharacter>();
-  for (const character of availableCharacters) {
-    availableByCharacterId.set(character.characterId, character);
-  }
+  const availableByCharacterId = HashMap.fromIterable(
+    availableCharacters.map(
+      (character) => [character.characterId, character] as const
+    )
+  );
 
-  const groupCharacterIds = new Set<number>();
+  let groupCharacterIds = HashSet.empty<number>();
   const parsedSquads: SquadDraftSnapshot[] = [];
 
   for (const squad of squads) {
@@ -153,8 +157,8 @@ export const validateSquadGroupSnapshot = Effect.fn(
       });
     }
 
-    const squadCharacterIds = new Set<number>();
-    const squadAccountIds = new Set<number>();
+    let squadCharacterIds = HashSet.empty<number>();
+    let squadAccountIds = HashSet.empty<number>();
     const parsedCharacters: SquadCharacterDraftPlacement[] = [];
 
     for (const character of squad.characters) {
@@ -162,14 +166,16 @@ export const validateSquadGroupSnapshot = Effect.fn(
         character.position
       );
 
-      const availableCharacter = availableByCharacterId.get(
+      const availableCharacterOption = HashMap.get(
+        availableByCharacterId,
         character.characterId
       );
-      if (availableCharacter === undefined) {
+      if (Option.isNone(availableCharacterOption)) {
         return yield* new SquadCharacterNotAccessible({
           characterId: character.characterId,
         });
       }
+      const availableCharacter = availableCharacterOption.value;
 
       if (availableCharacter.world !== "jaruna") {
         return yield* new SquadCharacterNotJaruna({
@@ -177,29 +183,32 @@ export const validateSquadGroupSnapshot = Effect.fn(
         });
       }
 
-      if (squadCharacterIds.has(character.characterId)) {
+      if (HashSet.has(squadCharacterIds, character.characterId)) {
         return yield* new DuplicateCharacterInSquad({
           characterId: character.characterId,
           squadClientKey: squad.clientKey,
         });
       }
 
-      if (groupCharacterIds.has(character.characterId)) {
+      if (HashSet.has(groupCharacterIds, character.characterId)) {
         return yield* new DuplicateCharacterInSquadGroup({
           characterId: character.characterId,
         });
       }
 
-      if (squadAccountIds.has(availableCharacter.accountId)) {
+      if (HashSet.has(squadAccountIds, availableCharacter.accountId)) {
         return yield* new DuplicateAccountInSquad({
           accountId: availableCharacter.accountId,
           squadClientKey: squad.clientKey,
         });
       }
 
-      squadCharacterIds.add(character.characterId);
-      groupCharacterIds.add(character.characterId);
-      squadAccountIds.add(availableCharacter.accountId);
+      squadCharacterIds = HashSet.add(squadCharacterIds, character.characterId);
+      groupCharacterIds = HashSet.add(groupCharacterIds, character.characterId);
+      squadAccountIds = HashSet.add(
+        squadAccountIds,
+        availableCharacter.accountId
+      );
       parsedCharacters.push({
         characterId: character.characterId,
         position: parsedCharacterPosition,

@@ -1,3 +1,5 @@
+import * as HashSet from "effect/HashSet";
+
 import { calculatePointsPerMember } from "@/features/events/bets/bet-helpers";
 import type { SelectableUser } from "@/features/events/bets/user-select-list";
 
@@ -43,9 +45,9 @@ export const getAvailableUsers = (
   if (users === undefined) {
     return [];
   }
-  const selectedUserIdSet = new Set(selectedUserIds);
+  const selectedUserIdSet = HashSet.fromIterable(selectedUserIds);
   return filterUsersBySearch(users, searchQuery).filter(
-    (user) => !selectedUserIdSet.has(user.id)
+    (user) => !HashSet.has(selectedUserIdSet, user.id)
   );
 };
 
@@ -60,8 +62,8 @@ export const getSelectedUsers = (
   if (users === undefined) {
     return [];
   }
-  const selectedUserIdSet = new Set(selectedUserIds);
-  return users.filter((user) => selectedUserIdSet.has(user.id));
+  const selectedUserIdSet = HashSet.fromIterable(selectedUserIds);
+  return users.filter((user) => HashSet.has(selectedUserIdSet, user.id));
 };
 
 /**

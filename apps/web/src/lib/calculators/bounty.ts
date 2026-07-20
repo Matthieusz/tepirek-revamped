@@ -7,6 +7,8 @@
  * single source of truth for the penalty math.
  */
 
+import * as Num from "effect/Number";
+
 const MIN_LEVEL = 1;
 const MAX_LEVEL = 500;
 
@@ -120,10 +122,8 @@ export const calculateGroupAttackPenalty = (
   defenderLevels: number[]
 ): GroupAttackPenaltyResult => {
   const maxAttackerLevel = Math.max(...attackerLevels);
-  const avgAttackerLevel =
-    attackerLevels.reduce((sum, lvl) => sum + lvl, 0) / attackerLevels.length;
-  const avgDefenderLevel =
-    defenderLevels.reduce((sum, lvl) => sum + lvl, 0) / defenderLevels.length;
+  const avgAttackerLevel = Num.sumAll(attackerLevels) / attackerLevels.length;
+  const avgDefenderLevel = Num.sumAll(defenderLevels) / defenderLevels.length;
 
   // Left side of inequality: 0.5 * (max + avg_attackers) - avg_defenders
   const attackerStrength = maxAttackerLevel + avgAttackerLevel;

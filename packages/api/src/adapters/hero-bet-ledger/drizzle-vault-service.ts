@@ -6,6 +6,7 @@ import { hero, userStats } from "@tepirek-revamped/db/schema/bet";
 import { and, desc, eq, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
 
 import { EventId, HeroId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
@@ -88,9 +89,8 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
               message: "Brak obstawień dla tego herosa",
             });
           }
-          const totalPoints = heroUserStats.reduce(
-            (sum, stat) => sum + Number.parseFloat(stat.points),
-            0
+          const totalPoints = Num.sumAll(
+            heroUserStats.map((stat) => Number.parseFloat(stat.points))
           );
           if (totalPoints <= 0) {
             return yield* new VaultBadRequest({

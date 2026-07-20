@@ -9,7 +9,9 @@ import {
 } from "@tepirek-revamped/db/schema/bet";
 import type { SQL } from "drizzle-orm";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 
 import { BetId, EventId, HeroId } from "../../domain/core-identifiers.ts";
@@ -112,7 +114,7 @@ const validateVerifiedMemberIdsWithDatabase = (
         message: "Wybierz tylko zweryfikowanych graczy",
       });
     }
-    const uniqueUserIds = [...new Set(userIds)];
+    const uniqueUserIds = Arr.dedupe(userIds);
     if (uniqueUserIds.length !== userIds.length) {
       return yield* new BetBadRequest({
         message: "Ten sam gracz nie może być wybrany dwa razy",
@@ -155,15 +157,12 @@ const attachMembersToBetsWithDatabase = (database: EffectPgDatabase) =>
               .where(inArray(heroBetMember.heroBetId, betIds))
           )
         : [];
-    const membersByBetId = new Map<number, (typeof allMembers)[number][]>();
-    for (const member of allMembers) {
-      const existing = membersByBetId.get(member.heroBetId) ?? [];
-      existing.push(member);
-      membersByBetId.set(member.heroBetId, existing);
-    }
+    const membersByBetId = Arr.groupBy(allMembers, (member) =>
+      String(member.heroBetId)
+    );
     return bets.map((bet) => ({
       ...bet,
-      members: membersByBetId.get(bet.id) ?? [],
+      members: membersByBetId[String(bet.id)] ?? [],
     }));
   });
 
@@ -300,9 +299,9 @@ const deleteBetWithDatabase = (database: EffectPgDatabase) =>
             .select({ userId: heroBetMember.userId })
             .from(heroBetMember)
             .where(eq(heroBetMember.heroBetId, id));
-          const memberUserIds = [
-            ...new Set(members.map((member) => member.userId)),
-          ];
+          const memberUserIds = Arr.dedupe(
+            members.map((member) => member.userId)
+          );
           if (memberUserIds.length > 0) {
             yield* tx
               .update(userStats)
@@ -373,7 +372,7 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
             })
             .from(heroBetMember)
             .where(eq(heroBetMember.heroBetId, betId));
-          const currentMemberIds = new Set(
+          const currentMemberIds = HashSet.fromIterable(
             currentMembers.map((member) => member.userId)
           );
           if (currentMembers.length === 0) {
@@ -389,7 +388,7 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
             (member) => !memberUserIds.includes(member.userId)
           );
           const membersToAdd = memberUserIds.filter(
-            (userId) => !currentMemberIds.has(userId)
+            (userId) => !HashSet.has(currentMemberIds, userId)
           );
           const membersToKeep = currentMembers.filter((member) =>
             memberUserIds.includes(member.userId)

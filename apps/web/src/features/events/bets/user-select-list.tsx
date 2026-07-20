@@ -1,3 +1,4 @@
+import * as HashSet from "effect/HashSet";
 import { User } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,14 +27,14 @@ export const UserSelectList = ({
   selectedUserIds,
   onToggleUser,
 }: UserSelectListProps) => {
-  const selectedUserIdSet = new Set(selectedUserIds);
+  const selectedUserIdSet = HashSet.fromIterable(selectedUserIds);
 
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
       {users.map((user) => (
         <label
           className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 ${
-            selectedUserIdSet.has(user.id)
+            HashSet.has(selectedUserIdSet, user.id)
               ? "border-primary bg-primary/5"
               : "border-border"
           }`}
@@ -41,7 +42,7 @@ export const UserSelectList = ({
           key={user.id}
         >
           <Checkbox
-            checked={selectedUserIdSet.has(user.id)}
+            checked={HashSet.has(selectedUserIdSet, user.id)}
             id={`${idPrefix}-${user.id}`}
             {...(fieldName === undefined ? {} : { name: fieldName })}
             onBlur={onBlur}

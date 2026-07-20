@@ -1,5 +1,6 @@
 /* oxlint-disable complexity, no-negated-condition, no-nested-ternary, no-use-before-define */
 
+import * as HashSet from "effect/HashSet";
 import { Copy, CopyX, Search, User, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -103,11 +104,12 @@ export const HeroBetMemberPicker = ({
 }: HeroBetMemberPickerProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const selectedUserIdSet = new Set(selectedUserIds);
+  const selectedUserIdSet = HashSet.fromIterable(selectedUserIds);
   const availableUsers = getAvailableUsers(users, selectedUserIds, searchQuery);
   const selectedUsers = getSelectedUsers(users, selectedUserIds);
   const availableCount =
-    users?.filter((user) => !selectedUserIdSet.has(user.id)).length ?? 0;
+    users?.filter((user) => !HashSet.has(selectedUserIdSet, user.id)).length ??
+    0;
   const listState = getAvailableListState({
     availableUsers,
     users,

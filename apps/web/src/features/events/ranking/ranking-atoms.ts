@@ -1,6 +1,7 @@
 import type { HeroStats } from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
 import { HeroIdSchema } from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
 import { Effect } from "effect";
+import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
@@ -17,11 +18,18 @@ interface RankingInput {
 
 type RankingKey = string;
 
+const RankingKeySchema = Schema.fromJsonString(
+  Schema.Tuple([Schema.NullOr(Schema.Number), Schema.NullOr(Schema.Number)])
+);
+
 const rankingKey = (payload: RankingInput): RankingKey =>
-  JSON.stringify([payload.eventId ?? null, payload.heroId ?? null]);
+  Schema.encodeSync(RankingKeySchema)([
+    payload.eventId ?? null,
+    payload.heroId ?? null,
+  ]);
 
 const rankingInputFromKey = (key: RankingKey) => {
-  const [eventId, heroId] = JSON.parse(key) as [number | null, number | null];
+  const [eventId, heroId] = Schema.decodeUnknownSync(RankingKeySchema)(key);
   return {
     ...(eventId === null ? {} : { eventId }),
     ...(heroId === null ? {} : { heroId }),

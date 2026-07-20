@@ -1,3 +1,4 @@
+import type * as HashMap from "effect/HashMap";
 import { AlertTriangle } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert";
@@ -10,7 +11,7 @@ import { SquadRosterWorkspace } from "@/pages/dashboard/squad-builder/squad-edit
 import type { SquadCharacterMetadata } from "@/pages/dashboard/squad-builder/squad-editor/squad-roster-workspace";
 
 interface SquadEditorLayoutProps {
-  readonly characterById: ReadonlyMap<number, SquadCharacterMetadata>;
+  readonly characterById: HashMap.HashMap<number, SquadCharacterMetadata>;
   readonly draft: SquadGroupDraft;
   readonly groupId: number;
   readonly permissions: {

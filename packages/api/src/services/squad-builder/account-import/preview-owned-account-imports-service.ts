@@ -1,9 +1,13 @@
+import * as Arr from "effect/Array";
 import * as ClockRuntime from "effect/Clock";
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import * as Str from "effect/String";
 
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
@@ -140,7 +144,7 @@ export interface EffectSingleMargonemProfilePreview {
   >;
 }
 
-const isEmpty = (value: string): boolean => value.trim().length === 0;
+const isEmpty = (value: string): boolean => Str.isEmpty(Str.trim(value));
 
 const defaultDisplayNameFor = (
   suggestedAccountName: string,
@@ -290,7 +294,7 @@ const makePreview = (
 
     const failures: LineFailure[] = [];
     const parsedLines: ParsedLine[] = [];
-    const firstLineForProfileId = new Map<number, number>();
+    let firstLineForProfileId = HashMap.empty<number, number>();
 
     for (const line of nonBlankLines) {
       const parsedProfileId = yield* EffectRuntime.match(
@@ -313,12 +317,15 @@ const makePreview = (
       }
 
       const profileIdNumber = profileIdToNumber(parsedProfileId);
-      const firstLineNumber = firstLineForProfileId.get(profileIdNumber);
+      const firstLineNumber = HashMap.get(
+        firstLineForProfileId,
+        profileIdNumber
+      );
 
-      if (firstLineNumber !== undefined) {
+      if (Option.isSome(firstLineNumber)) {
         failures.push({
           error: new DuplicateProfileInBatchError({
-            firstLineNumber,
+            firstLineNumber: firstLineNumber.value,
           }),
           inputUrl: line.inputUrl,
           lineNumber: line.lineNumber,
@@ -326,7 +333,11 @@ const makePreview = (
         continue;
       }
 
-      firstLineForProfileId.set(profileIdNumber, line.lineNumber);
+      firstLineForProfileId = HashMap.set(
+        firstLineForProfileId,
+        profileIdNumber,
+        line.lineNumber
+      );
       parsedLines.push({
         inputUrl: line.inputUrl,
         lineNumber: line.lineNumber,
@@ -426,21 +437,23 @@ const makePreview = (
       { concurrency: batchImportPolicy.fetchConcurrency }
     );
 
-    const itemsByLine = new Map<number, PreviewOwnedAccountImportItem>();
+    let itemsByLine = HashMap.empty<number, PreviewOwnedAccountImportItem>();
 
     for (const lineFailure of failures) {
-      itemsByLine.set(lineFailure.lineNumber, toFailedItem(lineFailure));
+      itemsByLine = HashMap.set(
+        itemsByLine,
+        lineFailure.lineNumber,
+        toFailedItem(lineFailure)
+      );
     }
 
     for (const result of fetchedItems) {
-      itemsByLine.set(result.lineNumber, result.item);
+      itemsByLine = HashMap.set(itemsByLine, result.lineNumber, result.item);
     }
 
-    const items = nonBlankLines
-      .map((line) => itemsByLine.get(line.lineNumber))
-      .filter(
-        (item): item is PreviewOwnedAccountImportItem => item !== undefined
-      );
+    const items = Arr.getSomes(
+      nonBlankLines.map((line) => HashMap.get(itemsByLine, line.lineNumber))
+    );
 
     return { items };
   });
