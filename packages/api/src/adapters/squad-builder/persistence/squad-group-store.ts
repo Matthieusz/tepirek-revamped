@@ -99,6 +99,7 @@ import {
 import type {
   AvailableSquadCharacter,
   CreateSquadGroupStoreInput,
+  DeleteSquadGroupStoreInput,
   GetSquadGroupDetailInput,
   GlobalSquadGroupSummary,
   ListAvailableCharactersForOwnerInput,
@@ -168,6 +169,43 @@ const createSquadGroupWithDatabase = (database: EffectPgDatabase) =>
       squadCount: 0,
       updatedAt: created.updatedAt,
     };
+  });
+
+const deleteSquadGroupWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* deleteSquadGroupEffect({
+    actorUserId,
+    groupId,
+  }: DeleteSquadGroupStoreInput) {
+    const operation = "deleteSquadGroup" as const;
+    const groupIdNumber = squadGroupIdToNumber(groupId);
+    const existingRows = yield* persistenceQuery(
+      operation,
+      database
+        .select({ ownerUserId: squadGroup.ownerUserId })
+        .from(squadGroup)
+        .where(eq(squadGroup.id, groupIdNumber))
+        .limit(1)
+    );
+    const [existing] = existingRows;
+
+    if (existing === undefined) {
+      return yield* new SquadGroupNotFound({});
+    }
+    if (existing.ownerUserId !== appUserIdToString(actorUserId)) {
+      return yield* new ActorDoesNotOwnSquadGroup({});
+    }
+
+    yield* persistenceQuery(
+      operation,
+      database
+        .delete(squadGroup)
+        .where(
+          and(
+            eq(squadGroup.id, groupIdNumber),
+            eq(squadGroup.ownerUserId, appUserIdToString(actorUserId))
+          )
+        )
+    );
   });
 
 const listMySquadGroupsWithDatabase = (database: EffectPgDatabase) =>
@@ -1730,6 +1768,10 @@ export const DrizzleSquadGroupStoreServiceLayer: Layer.Layer<
       createSquadGroup: namedStoreMethod(
         "SquadGroupStore.createSquadGroup",
         createSquadGroupWithDatabase(database)
+      ),
+      deleteSquadGroup: namedStoreMethod(
+        "SquadGroupStore.deleteSquadGroup",
+        deleteSquadGroupWithDatabase(database)
       ),
       findVerifiedSquadEditorInviteTarget: namedStoreMethod(
         "SquadGroupStore.findVerifiedSquadEditorInviteTarget",

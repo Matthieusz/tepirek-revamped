@@ -16,6 +16,7 @@ export type EffectSquadGroupPersistenceOperation =
   | "createPendingRefetch"
   | "createSquadGroup"
   | "deleteOwnedAccount"
+  | "deleteSquadGroup"
   | "findOwnedAccountForSharing"
   | "findVerifiedInviteTarget"
   | "findVerifiedSquadEditorInviteTarget"

@@ -181,6 +181,40 @@ describe("squad-builder squad-group route auth", () => {
     expect(owned2Json[0]).toMatchObject({ name: "User2 Group" });
   });
 
+  it("only the owner can permanently delete a squad group", async () => {
+    const owner = await createSignedInUser("delete-owner");
+    const otherUser = await createSignedInUser("delete-other");
+    const createResponse = await requestHttpApi(
+      "/squad-builder/squad-groups",
+      jsonPost({ name: "Delete Me" }, owner.cookie)
+    );
+    expect(createResponse.status).toBe(200);
+    const created = Schema.decodeUnknownSync(SquadGroupSummarySchema)(
+      await createResponse.json()
+    );
+
+    const forbiddenResponse = await requestHttpApi(
+      "/squad-builder/squad-groups/delete",
+      jsonPost({ groupId: created.groupId }, otherUser.cookie)
+    );
+    expect(forbiddenResponse.status).toBe(403);
+
+    const deleteResponse = await requestHttpApi(
+      "/squad-builder/squad-groups/delete",
+      jsonPost({ groupId: created.groupId }, owner.cookie)
+    );
+    expect(deleteResponse.status).toBe(200);
+    await expect(deleteResponse.json()).resolves.toEqual({
+      groupId: created.groupId,
+    });
+
+    const detailResponse = await requestHttpApi(
+      "/squad-builder/squad-groups/detail",
+      jsonPost({ groupId: created.groupId }, owner.cookie)
+    );
+    expect(detailResponse.status).toBe(404);
+  });
+
   it("rejects a warmed session immediately after admin privileges are removed", async () => {
     const admin = await createSignedInUser("revoked-admin");
     await testDb

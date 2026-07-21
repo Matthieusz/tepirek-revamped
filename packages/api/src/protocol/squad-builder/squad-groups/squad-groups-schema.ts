@@ -16,6 +16,13 @@ export interface SquadGroupIdPayload extends Schema.Schema.Type<
   typeof SquadGroupIdPayload
 > {}
 
+export const DeleteSquadGroupSuccessSchema = Schema.Struct({
+  groupId: SquadGroupIdSchema,
+});
+export interface DeleteSquadGroupSuccessSchema extends Schema.Schema.Type<
+  typeof DeleteSquadGroupSuccessSchema
+> {}
+
 export const CreateSquadGroupPayload = Schema.Struct({
   name: Schema.String,
 });

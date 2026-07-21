@@ -18,6 +18,7 @@ const makeEffectStoreTestService = (
   createPendingRefetch: () => unhandledStoreCall("createPendingRefetch"),
   createSquadGroup: () => unhandledStoreCall("createSquadGroup"),
   deleteOwnedAccount: () => unhandledStoreCall("deleteOwnedAccount"),
+  deleteSquadGroup: () => unhandledStoreCall("deleteSquadGroup"),
   findOwnedAccountForSharing: () =>
     unhandledStoreCall("findOwnedAccountForSharing"),
   findPendingImportForConfirmation: () =>

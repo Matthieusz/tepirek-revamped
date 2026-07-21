@@ -267,6 +267,12 @@ export interface CreateSquadGroupStoreInput {
   readonly name: SquadGroupName;
 }
 
+/** Store input for permanently deleting an owned squad group. */
+export interface DeleteSquadGroupStoreInput {
+  readonly actorUserId: AppUserId;
+  readonly groupId: SquadGroupId;
+}
+
 /** Store input for listing actor-owned squad groups. */
 export interface ListMySquadGroupsInput {
   readonly actorUserId: AppUserId;
@@ -336,6 +342,14 @@ export interface SquadBuilderStoreServiceShape {
   readonly createSquadGroup: (
     input: CreateSquadGroupStoreInput
   ) => Effect<SquadGroupSummary, EffectSquadBuilderPersistenceUnavailable>;
+  readonly deleteSquadGroup: (
+    input: DeleteSquadGroupStoreInput
+  ) => Effect<
+    void,
+    | SquadGroupNotFound
+    | ActorDoesNotOwnSquadGroup
+    | EffectSquadBuilderPersistenceUnavailable
+  >;
   readonly listMySquadGroups: (
     input: ListMySquadGroupsInput
   ) => Effect<
@@ -621,6 +635,7 @@ export type SquadGroupStoreServiceShape = Pick<
   SquadBuilderStoreServiceShape,
   | "authorizeSquadGroupOwner"
   | "createSquadGroup"
+  | "deleteSquadGroup"
   | "findVerifiedSquadEditorInviteTarget"
   | "getPendingSquadGroupInviteCount"
   | "getSquadGroupDetail"

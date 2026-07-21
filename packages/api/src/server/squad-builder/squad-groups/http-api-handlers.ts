@@ -17,6 +17,8 @@ import {
 } from "../../../protocol/squad-builder/squad-groups/http-api-contract.ts";
 import type { CreateSquadGroupError } from "../../../services/squad-builder/squad-groups/create-squad-group.ts";
 import { CreateSquadGroupService } from "../../../services/squad-builder/squad-groups/create-squad-group.ts";
+import type { DeleteSquadGroupError } from "../../../services/squad-builder/squad-groups/delete-squad-group.ts";
+import { DeleteSquadGroupService } from "../../../services/squad-builder/squad-groups/delete-squad-group.ts";
 import type { ListAvailableSquadCharactersError } from "../../../services/squad-builder/squad-groups/list-available-squad-characters.ts";
 import { ListAvailableSquadCharactersService } from "../../../services/squad-builder/squad-groups/list-available-squad-characters.ts";
 import { ListGlobalSquadGroupsService } from "../../../services/squad-builder/squad-groups/list-global-squad-groups.ts";
@@ -41,6 +43,7 @@ type ProtocolError = Schema.Schema.Type<typeof SquadBuilderSquadGroupError>;
 
 type SquadGroupsHandlerError =
   | CreateSquadGroupError
+  | DeleteSquadGroupError
   | ListMySquadGroupsError
   | GetSquadGroupDetailError
   | ListAvailableSquadCharactersError
@@ -96,6 +99,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
   "squadBuilderSquadGroup",
   Effect.fnUntraced(function* SquadBuilderSquadGroupHttpApiHandlers(handlers) {
     const createSquadGroupSvc = yield* CreateSquadGroupService;
+    const deleteSquadGroupSvc = yield* DeleteSquadGroupService;
     const listSquadGroupsSvc = yield* ListSquadGroupsService;
     const listAvailableCharactersSvc =
       yield* ListAvailableSquadCharactersService;
@@ -118,6 +122,22 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                 name: payload.name,
               })
             ).pipe(Effect.mapError(mapSquadGroupsError));
+          }
+        )
+      )
+      .handle(
+        "deleteSquadGroup",
+        Effect.fn("SquadBuilderSquadGroup.deleteSquadGroup")(
+          function* deleteSquadGroup({ payload, request }) {
+            const session = yield* requireSquadBuilderSession();
+            yield* withRequestCorrelation(
+              request,
+              deleteSquadGroupSvc.delete({
+                actorUserId: sessionAppUserId(session),
+                groupId: payload.groupId,
+              })
+            ).pipe(Effect.mapError(mapSquadGroupsError));
+            return { groupId: payload.groupId };
           }
         )
       )

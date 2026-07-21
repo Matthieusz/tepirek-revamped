@@ -73,6 +73,8 @@ import type {
 } from "../services/squad-builder/firecrawl-config.ts";
 import { layer as createSquadGroupLayer } from "../services/squad-builder/squad-groups/create-squad-group.ts";
 import type { CreateSquadGroupService } from "../services/squad-builder/squad-groups/create-squad-group.ts";
+import { layer as deleteSquadGroupLayer } from "../services/squad-builder/squad-groups/delete-squad-group.ts";
+import type { DeleteSquadGroupService } from "../services/squad-builder/squad-groups/delete-squad-group.ts";
 import { layer as listAvailableSquadCharactersLayer } from "../services/squad-builder/squad-groups/list-available-squad-characters.ts";
 import type { ListAvailableSquadCharactersService } from "../services/squad-builder/squad-groups/list-available-squad-characters.ts";
 import { layer as listGlobalSquadGroupsLayer } from "../services/squad-builder/squad-groups/list-global-squad-groups.ts";
@@ -151,6 +153,7 @@ const makeApiStableLayer = (
 
   const squadBuilderUseCases = Layer.mergeAll(
     createSquadGroupLayer,
+    deleteSquadGroupLayer,
     listAvailableSquadCharactersLayer,
     listSquadGroupsLayer,
     listGlobalSquadGroupsLayer,
@@ -232,6 +235,7 @@ type SquadBuilderServices =
   | SquadGroupEditorRevocationsService
   | SquadGroupSharingStateService
   | CreateSquadGroupService
+  | DeleteSquadGroupService
   | ListAvailableSquadCharactersService
   | ListSquadGroupsService
   | ListGlobalSquadGroupsService

@@ -14,6 +14,7 @@ import {
 import {
   AvailableSquadCharacterSchema,
   CreateSquadGroupPayload,
+  DeleteSquadGroupSuccessSchema,
   GlobalSquadGroupSummarySchema,
   ListGlobalSquadGroupsPayload,
   SaveSharedSquadGroupCharactersPayload,
@@ -54,6 +55,11 @@ export const SquadBuilderSquadGroupGroup = HttpApiGroup.make(
       error: SquadBuilderSquadGroupErrors,
       payload: Schema.Struct({}),
       success: Schema.Array(SquadGroupSummarySchema),
+    }),
+    HttpApiEndpoint.post("deleteSquadGroup", "/delete", {
+      error: SquadBuilderSquadGroupErrors,
+      payload: SquadGroupIdPayload,
+      success: DeleteSquadGroupSuccessSchema,
     }),
     HttpApiEndpoint.post("listGlobalSquadGroups", "/global", {
       error: SquadBuilderSquadGroupErrors,
