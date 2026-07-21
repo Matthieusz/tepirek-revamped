@@ -9,7 +9,7 @@ import { Frame, FramePanel } from "@/components/reui/frame";
 import { IconStack } from "@/components/reui/icon-stack";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { getErrorMessage } from "@/lib/errors";
 import {
   incomingAccountInvitesAtom,
@@ -19,14 +19,6 @@ import {
 import { formatDateTime } from "@/lib/utils";
 import { userInitials } from "@/pages/dashboard/squad-builder/accounts/account-presenters";
 import { SectionFailure } from "@/pages/dashboard/squad-builder/accounts/section-failure";
-
-const InviteInboxSkeleton = () => (
-  <div className="space-y-2 px-5 py-3" aria-hidden="true">
-    {Array.from({ length: 2 }, (_, index) => (
-      <Skeleton className="h-12 w-full" key={index} />
-    ))}
-  </div>
-);
 
 const InviteInboxPanel = () => {
   const [respondingAccessId, setRespondingAccessId] = useState<number | null>(
@@ -64,7 +56,7 @@ const InviteInboxPanel = () => {
         </ReuiBadge>
       </div>
 
-      {!AsyncResult.isSuccess(invitesResult) && <InviteInboxSkeleton />}
+      {!AsyncResult.isSuccess(invitesResult) && <LoadingSpinner />}
 
       {AsyncResult.isSuccess(invitesResult) && invites.length === 0 && (
         <div className="flex flex-col items-center px-5 py-8 text-center">
@@ -177,14 +169,6 @@ const InviteInboxPanel = () => {
   );
 };
 
-const SharedAccountsSkeleton = () => (
-  <div className="space-y-2 px-5 py-3" aria-hidden="true">
-    {Array.from({ length: 2 }, (_, index) => (
-      <Skeleton className="h-14 w-full" key={index} />
-    ))}
-  </div>
-);
-
 const SharedAccountsPanel = () => {
   const sharedResult = useAtomValue(sharedAccountsAtom);
   const refreshSharedAccounts = useAtomRefresh(sharedAccountsAtom);
@@ -213,7 +197,7 @@ const SharedAccountsPanel = () => {
         </span>
       </div>
 
-      {!AsyncResult.isSuccess(sharedResult) && <SharedAccountsSkeleton />}
+      {!AsyncResult.isSuccess(sharedResult) && <LoadingSpinner />}
 
       {AsyncResult.isSuccess(sharedResult) && accounts.length === 0 && (
         <div className="flex flex-col items-center px-5 py-8 text-center">

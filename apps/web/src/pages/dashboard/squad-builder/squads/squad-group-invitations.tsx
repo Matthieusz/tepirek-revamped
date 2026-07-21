@@ -14,7 +14,7 @@ import { Badge } from "@/components/reui/badge";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { getErrorMessage } from "@/lib/errors";
 import {
   incomingSquadGroupInvitesAtom,
@@ -23,21 +23,6 @@ import {
 import { formatDateTime } from "@/lib/utils";
 
 import { userInitials } from "./squad-group-presenters";
-
-const InvitationSkeleton = () => (
-  <ul aria-hidden="true" className="divide-y divide-border">
-    {[0, 1].map((item) => (
-      <li className="flex items-center gap-3 px-4 py-3" key={item}>
-        <Skeleton className="size-7 rounded-full" />
-        <div className="min-w-0 flex-1 space-y-2">
-          <Skeleton className="h-4 w-40" />
-          <Skeleton className="h-3 w-56" />
-        </div>
-        <Skeleton className="h-8 w-28" />
-      </li>
-    ))}
-  </ul>
-);
 
 export const SquadGroupInvitations = () => {
   const result = useAtomValue(incomingSquadGroupInvitesAtom);
@@ -72,7 +57,7 @@ export const SquadGroupInvitations = () => {
     return (
       <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
         <FramePanel className="p-0 shadow-none">
-          <InvitationSkeleton />
+          <LoadingSpinner />
         </FramePanel>
       </Frame>
     );

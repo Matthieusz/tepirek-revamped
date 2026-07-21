@@ -48,7 +48,7 @@ import {
   StepperTrigger,
 } from "@/components/reui/stepper";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { getSquadBuilderLineErrorMessage } from "@/lib/errors";
 import {
@@ -204,17 +204,6 @@ type PreviewItem =
       readonly errorTag: string;
       readonly message: string;
     };
-
-const PreviewSkeleton = () => (
-  <ul className="divide-y divide-border" aria-hidden="true">
-    {Array.from({ length: 2 }, (_, index) => (
-      <li className="space-y-2 px-5 py-3" key={index}>
-        <Skeleton className="h-4 w-48" />
-        <Skeleton className="h-8 w-full" />
-      </li>
-    ))}
-  </ul>
-);
 
 interface PreviewRowProps {
   readonly confirmingId: number | null;
@@ -507,7 +496,7 @@ const ImportPanel = ({
             )}
 
             {isPreviewPending && previewItems.length === 0 && (
-              <PreviewSkeleton />
+              <LoadingSpinner />
             )}
 
             {previewItems.length > 0 && (

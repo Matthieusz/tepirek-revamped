@@ -53,7 +53,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/errors";
 import { AccountDisplayNameSchema } from "@/lib/form-schemas";
 import { formSubmission } from "@/lib/form-submission";
@@ -634,12 +633,6 @@ const OWNED_ACCOUNT_COLUMNS: ColumnDef<OwnedAccount>[] = [
     header: "Konto",
     meta: {
       expandedContent: (account) => <OwnedAccountRow account={account} />,
-      skeleton: (
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-10 w-8 rounded-none" />
-          <Skeleton className="h-8 w-32" />
-        </div>
-      ),
     },
   },
   {
@@ -648,7 +641,6 @@ const OWNED_ACCOUNT_COLUMNS: ColumnDef<OwnedAccount>[] = [
       <ReuiBadge variant="secondary">{row.original.characterCount}</ReuiBadge>
     ),
     header: "Postacie",
-    meta: { skeleton: <Skeleton className="h-5 w-12" /> },
   },
   {
     accessorKey: "lastFetchedAt",
@@ -658,7 +650,6 @@ const OWNED_ACCOUNT_COLUMNS: ColumnDef<OwnedAccount>[] = [
       </span>
     ),
     header: "Ostatnio pobrano",
-    meta: { skeleton: <Skeleton className="h-4 w-28" /> },
   },
   {
     cell: ({ row }) => (
@@ -674,7 +665,6 @@ const OWNED_ACCOUNT_COLUMNS: ColumnDef<OwnedAccount>[] = [
     ),
     header: "Profil",
     id: "profile",
-    meta: { skeleton: <Skeleton className="h-4 w-20" /> },
   },
   {
     cell: ({ row }) => (
@@ -690,7 +680,6 @@ const OWNED_ACCOUNT_COLUMNS: ColumnDef<OwnedAccount>[] = [
     ),
     header: "",
     id: "expand",
-    meta: { skeleton: <Skeleton className="h-8 w-20" /> },
   },
 ];
 
@@ -731,7 +720,7 @@ export const OwnedAccountsGrid = ({
           table={table}
           recordCount={accounts.length}
           isLoading={isLoading}
-          loadingMode="skeleton"
+          loadingMode="spinner"
           emptyMessage={
             <div className="flex flex-col items-center gap-2 py-6">
               <IconStack aria-hidden="true">

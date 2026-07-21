@@ -28,7 +28,7 @@ import { Frame, FramePanel } from "@/components/reui/frame";
 import { IconStack } from "@/components/reui/icon-stack";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   OptionalLevelSchema,
@@ -166,20 +166,6 @@ const SquadGroupListFilters = ({
     </squadFilterForm.Initialize>
   );
 };
-
-const CollectionSkeleton = () => (
-  <ul aria-hidden="true" className="divide-y divide-border">
-    {[0, 1, 2, 3].map((item) => (
-      <li className="flex items-center gap-4 px-4 py-3" key={item}>
-        <div className="min-w-0 flex-1 space-y-2">
-          <Skeleton className="h-4 w-48" />
-          <Skeleton className="h-3 w-64" />
-        </div>
-        <Skeleton className="h-5 w-20" />
-      </li>
-    ))}
-  </ul>
-);
 
 const CollectionFailure = ({ onRetry }: { readonly onRetry: () => void }) => (
   <Alert className="m-4" variant="destructive">
@@ -335,7 +321,7 @@ const CollectionPanel = ({
     return <CollectionFailure onRetry={onRetry} />;
   }
   if (!AsyncResult.isSuccess(result)) {
-    return <CollectionSkeleton />;
+    return <LoadingSpinner />;
   }
   if (result.value.length === 0) {
     return (
