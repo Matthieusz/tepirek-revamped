@@ -1,4 +1,5 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useNavigate } from "@tanstack/react-router";
 import type {
   SquadEditorInviteTargetSchema,
   SquadGroupEditorGrantSummarySchema,
@@ -25,11 +26,24 @@ import {
 } from "@/components/reui/autocomplete";
 import { Badge } from "@/components/reui/badge";
 import { Frame, FramePanel } from "@/components/reui/frame";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { getErrorMessage } from "@/lib/errors";
+import { deleteSquadGroupAtom } from "@/lib/squad-builder/squad-group-atoms";
 import {
   revokeSquadGroupEditorAtom,
   sendSquadGroupEditorInviteAtom,
@@ -44,6 +58,7 @@ type EditorGrant = SquadGroupEditorGrantSummarySchema;
 
 interface SquadGroupSettingsProps {
   readonly groupId: number;
+  readonly groupName: string;
 }
 
 const useDebouncedValue = <T,>(value: T, delayMs: number): T => {
@@ -318,13 +333,83 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
   );
 };
 
-export const SquadGroupSettings = (props: SquadGroupSettingsProps) => (
-  <section
-    aria-label="Udostępnianie grupy składów"
-    id="squad-group-sharing-panel"
-  >
-    <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
-      <EditorAccessPanel groupId={props.groupId} />
-    </Frame>
-  </section>
-);
+export const SquadGroupSettings = ({
+  groupId,
+  groupName,
+}: SquadGroupSettingsProps) => {
+  const navigate = useNavigate();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteSquadGroup = useAtomSet(deleteSquadGroupAtom, {
+    mode: "promise",
+  });
+
+  const remove = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteSquadGroup({ groupId });
+      toast.success("Grupa składów została usunięta");
+      await navigate({ to: "/dashboard/squad-builder/squads" });
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Nie udało się usunąć grupy składów"));
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <section
+      aria-label="Ustawienia grupy składów"
+      id="squad-group-settings-panel"
+    >
+      <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
+        <EditorAccessPanel groupId={groupId} />
+        <FramePanel className="p-0 shadow-none">
+          <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-semibold text-base">Usuń grupę</h2>
+              <p className="text-muted-foreground text-sm">
+                Trwale usuwa grupę, jej składy i wszystkie zaproszenia.
+              </p>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger render={<Button variant="destructive" />}>
+                <Trash2 className="size-4" />
+                Usuń grupę
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogMedia className="text-destructive">
+                    <Trash2 aria-hidden="true" />
+                  </AlertDialogMedia>
+                  <AlertDialogTitle>
+                    Usunąć grupę „{groupName}”?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tej operacji nie można cofnąć. Wszystkie składy, przydziały
+                    postaci i zaproszenia edytorów zostaną trwale usunięte.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isDeleting}>
+                    Anuluj
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={isDeleting}
+                    onClick={() => void remove()}
+                    variant="destructive"
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="size-4" />
+                    )}
+                    Usuń trwale
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </FramePanel>
+      </Frame>
+    </section>
+  );
+};

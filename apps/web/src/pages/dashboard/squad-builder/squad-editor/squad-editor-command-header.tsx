@@ -1,4 +1,4 @@
-import { Loader2, Save, Share2 } from "lucide-react";
+import { Loader2, Save, Settings } from "lucide-react";
 
 import {
   Alert,
@@ -19,7 +19,7 @@ interface SquadEditorCommandHeaderProps {
   readonly state: {
     readonly isDirty: boolean;
     readonly isSaving: boolean;
-    readonly isSharingOpen: boolean;
+    readonly isSettingsOpen: boolean;
     readonly isVisibilityPending: boolean;
   };
   readonly variant: "editor" | "viewer";
@@ -30,7 +30,7 @@ interface SquadEditorCommandHeaderProps {
   readonly onReloadLatest: () => void;
   readonly onNameChange: (name: string) => void;
   readonly onSave: () => void;
-  readonly onShareToggle: () => void;
+  readonly onSettingsToggle: () => void;
   readonly onVisibilityChange: (visibility: "private" | "global") => void;
 }
 
@@ -63,7 +63,7 @@ export const SquadEditorCommandHeader = ({
   variant,
   onNameChange,
   onSave,
-  onShareToggle,
+  onSettingsToggle,
   onVisibilityChange,
   role,
   isSaveConflict,
@@ -71,7 +71,7 @@ export const SquadEditorCommandHeader = ({
   saveError,
   visibility,
 }: SquadEditorCommandHeaderProps) => {
-  const { isDirty, isSaving, isSharingOpen, isVisibilityPending } = state;
+  const { isDirty, isSaving, isSettingsOpen, isVisibilityPending } = state;
   const isViewer = variant === "viewer";
 
   return (
@@ -132,14 +132,14 @@ export const SquadEditorCommandHeader = ({
             <div className="flex items-start gap-1">
               {role === "owner" && (
                 <Button
-                  aria-controls="squad-group-sharing-panel"
-                  aria-expanded={isSharingOpen}
-                  onClick={onShareToggle}
+                  aria-controls="squad-group-settings-panel"
+                  aria-expanded={isSettingsOpen}
+                  onClick={onSettingsToggle}
                   type="button"
-                  variant={isSharingOpen ? "secondary" : "outline"}
+                  variant={isSettingsOpen ? "secondary" : "outline"}
                 >
-                  <Share2 className="size-4" />
-                  Udostępnij
+                  <Settings className="size-4" />
+                  Ustawienia
                 </Button>
               )}
               <div className="flex flex-col items-center gap-1">

@@ -30,6 +30,9 @@ export type SquadGroupSummary = SquadGroupSummarySchema;
 interface CreateSquadGroupInput {
   readonly name: string;
 }
+interface DeleteSquadGroupInput {
+  readonly groupId: number;
+}
 interface ListGlobalSquadGroupsInput {
   readonly maxLevel?: number | null;
   readonly minLevel?: number | null;
@@ -209,6 +212,22 @@ export const createSquadGroupAtom = appHttpApiFn(
     });
     get.refresh(ownedSquadGroupsByActorAtom("default"));
     return squadGroup;
+  })
+);
+
+export const deleteSquadGroupAtom = appHttpApiFn(
+  Effect.fn("Web.SquadGroup.delete")(function* deleteSquadGroupEffect(
+    payload: DeleteSquadGroupInput,
+    get: Atom.FnContext
+  ) {
+    const client = yield* AppHttpApiClient;
+    const result = yield* client.squadBuilderSquadGroup.deleteSquadGroup({
+      payload: {
+        groupId: yield* asSquadGroupId(payload.groupId),
+      },
+    });
+    get.refresh(ownedSquadGroupsByActorAtom("default"));
+    return result;
   })
 );
 

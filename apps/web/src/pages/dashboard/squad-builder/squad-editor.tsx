@@ -18,7 +18,7 @@ import {
   AlertTitle,
 } from "@/components/reui/alert";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { getErrorMessage } from "@/lib/errors";
 import {
   availableSquadCharactersAtom,
@@ -50,25 +50,6 @@ const decodeSquadGroupId = Schema.decodeUnknownOption(
 );
 
 const makeClientKey = (): string => `new-${crypto.randomUUID()}`;
-
-const DetailSkeleton = () => (
-  <div aria-hidden="true" className="space-y-5">
-    <div className="flex items-center gap-3">
-      <Skeleton className="h-10 w-64" />
-      <div className="ml-auto flex items-center gap-2">
-        <Skeleton className="h-5 w-20" />
-        <Skeleton className="h-9 w-24" />
-      </div>
-    </div>
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_28rem]">
-      <div className="grid gap-3 lg:grid-cols-2">
-        <Skeleton className="h-72 w-full" />
-        <Skeleton className="h-72 w-full" />
-      </div>
-      <Skeleton className="h-96 w-full" />
-    </div>
-  </div>
-);
 
 const detailCharacters = (
   detail: SquadGroupDetail
@@ -150,7 +131,7 @@ const SquadBuilderEditorContent = ({
   const availableCharactersResult = useAtomValue(availableCharactersAtom);
   const [editorState, setEditorState] = useState(initialSquadEditorState);
   const { draft, savedSnapshot, updatedAt, visibility } = editorState;
-  const [isSharingOpen, setIsSharingOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isVisibilityPending, setIsVisibilityPending] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -373,7 +354,7 @@ const SquadBuilderEditorContent = ({
   };
 
   if (AsyncResult.isInitial(detailResult)) {
-    return <DetailSkeleton />;
+    return <LoadingSpinner />;
   }
 
   if (AsyncResult.isFailure(detailResult)) {
@@ -402,7 +383,7 @@ const SquadBuilderEditorContent = ({
   }
 
   if (draft === null || detail === undefined) {
-    return <DetailSkeleton />;
+    return <LoadingSpinner />;
   }
 
   return (
@@ -411,7 +392,7 @@ const SquadBuilderEditorContent = ({
       draft={draft}
       groupId={groupId}
       permissions={{ canEditPlacements, isOwner, isViewer }}
-      status={{ isDirty, isSaving, isSharingOpen, isVisibilityPending }}
+      status={{ isDirty, isSaving, isSettingsOpen, isVisibilityPending }}
       onAddSquad={addSquad}
       onDraftChange={updateDraft}
       onNameChange={(name) => {
@@ -424,8 +405,8 @@ const SquadBuilderEditorContent = ({
       onSave={() => {
         void save();
       }}
-      onShareToggle={() => {
-        setIsSharingOpen((current) => !current);
+      onSettingsToggle={() => {
+        setIsSettingsOpen((current) => !current);
       }}
       onSquadNameChange={updateSquadName}
       onVisibilityChange={(nextVisibility) => {

@@ -22,7 +22,7 @@ interface SquadEditorLayoutProps {
   readonly status: {
     readonly isDirty: boolean;
     readonly isSaving: boolean;
-    readonly isSharingOpen: boolean;
+    readonly isSettingsOpen: boolean;
     readonly isVisibilityPending: boolean;
   };
   readonly onAddSquad: () => void;
@@ -31,7 +31,7 @@ interface SquadEditorLayoutProps {
   readonly onRemoveCharacter: (characterId: number) => void;
   readonly onRemoveSquad: (squadKey: string) => void;
   readonly onSave: () => void;
-  readonly onShareToggle: () => void;
+  readonly onSettingsToggle: () => void;
   readonly onSquadNameChange: (squadKey: string, name: string) => void;
   readonly onVisibilityChange: (visibility: "private" | "global") => void;
   readonly role: "owner" | "editor" | "viewer";
@@ -59,7 +59,7 @@ export const SquadEditorLayout = ({
   onRemoveCharacter,
   onRemoveSquad,
   onSave,
-  onShareToggle,
+  onSettingsToggle,
   onSquadNameChange,
   onVisibilityChange,
   role,
@@ -69,7 +69,7 @@ export const SquadEditorLayout = ({
   visibility,
 }: SquadEditorLayoutProps) => {
   const { canEditPlacements, isOwner, isViewer } = permissions;
-  const { isDirty, isSaving, isSharingOpen, isVisibilityPending } = status;
+  const { isDirty, isSaving, isSettingsOpen, isVisibilityPending } = status;
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
@@ -77,18 +77,20 @@ export const SquadEditorLayout = ({
         draft={draft}
         onNameChange={onNameChange}
         onSave={onSave}
-        onShareToggle={onShareToggle}
+        onSettingsToggle={onSettingsToggle}
         onVisibilityChange={onVisibilityChange}
         role={role}
         isSaveConflict={isSaveConflict}
         onReloadLatest={onReloadLatest}
         saveError={saveError}
-        state={{ isDirty, isSaving, isSharingOpen, isVisibilityPending }}
+        state={{ isDirty, isSaving, isSettingsOpen, isVisibilityPending }}
         variant={isViewer ? "viewer" : "editor"}
         visibility={visibility}
       />
 
-      {isOwner && isSharingOpen && <SquadGroupSettings groupId={groupId} />}
+      {isOwner && isSettingsOpen && (
+        <SquadGroupSettings groupId={groupId} groupName={draft.name} />
+      )}
 
       {!isOwner && (
         <Alert variant={isViewer ? "default" : "info"}>
