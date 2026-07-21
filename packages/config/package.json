@@ -15,5 +15,8 @@
   },
   "dependencies": {
     "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/language-service": "^0.87.0"
   }
 }

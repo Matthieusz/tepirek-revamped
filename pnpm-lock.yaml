@@ -313,6 +313,10 @@ importers:
       effect:
         specifier: 'catalog:'
         version: 4.0.0-beta.93
+    devDependencies:
+      '@effect/language-service':
+        specifier: ^0.87.0
+        version: 0.87.0
 
   packages/db:
     dependencies:
@@ -578,6 +582,10 @@ packages:
       effect: ^4.0.0-beta.93
       react: ^19.2.4
       scheduler: '*'
+
+  '@effect/language-service@0.87.0':
+    resolution: {integrity: sha512-GwZtEwBaOMyKea6YAtN0T0OGBtzJ8/y0KUIfyg29u3hnMRiXKlR2BRDqJmi+SbgaODJNNB3YOd6KuRB/vsxnWw==}
+    hasBin: true
 
   '@effect/sql-pg@4.0.0-beta.93':
     resolution: {integrity: sha512-wpoGGezcmMVGG9p9vumFTR42+LPE2PaaUZ+vTcpo0hyc4TvChSRZiv4uZafrXEnDdYgdUFw7UQzrEO8+pa5crg==}
@@ -4649,6 +4657,8 @@ snapshots:
       effect: 4.0.0-beta.93
       react: 19.2.5
       scheduler: 0.27.0
+
+  '@effect/language-service@0.87.0': {}
 
   '@effect/sql-pg@4.0.0-beta.93(effect@4.0.0-beta.93)':
     dependencies:
