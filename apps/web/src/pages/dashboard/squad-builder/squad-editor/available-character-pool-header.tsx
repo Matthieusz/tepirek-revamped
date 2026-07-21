@@ -84,7 +84,7 @@ export const AvailableCharacterPoolHeader = ({
                 className={cn(
                   "h-6 min-h-0 gap-0.5 px-1 text-[10px]",
                   selected &&
-                    "border-primary bg-primary/10 text-foreground hover:bg-primary/15"
+                    "border-primary bg-primary/25 font-medium text-primary hover:bg-primary/30"
                 )}
                 key={profession}
                 onClick={() => onProfessionToggle(profession)}
