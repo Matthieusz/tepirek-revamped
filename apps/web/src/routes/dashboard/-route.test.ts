@@ -51,6 +51,10 @@ describe("dashboard authentication", () => {
     getUser.mockReset();
   });
 
+  it("disables SSR for the authenticated route branch", () => {
+    expect(Route.options.ssr).toBe(false);
+  });
+
   it("redirects an unauthenticated visitor to login", async () => {
     getUser.mockResolvedValue(null);
 

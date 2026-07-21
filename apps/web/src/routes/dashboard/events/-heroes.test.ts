@@ -1,9 +1,8 @@
-import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getRouter } from "@/router";
+import { Route as HeroesRoute } from "@/routes/dashboard/events/heroes";
+import { Route as DashboardRoute } from "@/routes/dashboard/route";
 import type { UserSession } from "@/types/route";
 
 const { getUser, preloadAtomResults } = vi.hoisted(() => ({
@@ -14,9 +13,6 @@ const { getUser, preloadAtomResults } = vi.hoisted(() => ({
 
 vi.mock("@/functions/get-user", () => ({ getUser }));
 vi.mock("@/lib/atom-preload", () => ({ preloadAtomResults }));
-vi.mock("@/routes/dashboard/events/-components/heroes-page", () => ({
-  default: () => createElement("h1", null, "Lazy heroes page"),
-}));
 
 const verifiedSession = {
   session: {
@@ -49,29 +45,26 @@ describe("direct heroes route loading", () => {
     preloadAtomResults.mockResolvedValue();
   });
 
-  it("inherits the verified session from the dashboard route", async () => {
+  it("preloads route data after the dashboard guard verifies the session", async () => {
     getUser.mockResolvedValue(verifiedSession);
+    const dashboardBeforeLoad = DashboardRoute.options.beforeLoad;
+    const heroesLoader = HeroesRoute.options.loader;
+    if (
+      typeof dashboardBeforeLoad !== "function" ||
+      typeof heroesLoader !== "function"
+    ) {
+      throw new TypeError("Dashboard guard and heroes loader must be defined");
+    }
+
+    const dashboardContext = await dashboardBeforeLoad({} as never);
     const router = getRouter();
-    router.update({
-      context: router.options.context,
-      history: createMemoryHistory({
-        initialEntries: ["/dashboard/events/heroes"],
-      }),
-    });
+    const context = { ...router.options.context, ...dashboardContext };
 
-    await router.load();
+    await heroesLoader({ context } as never);
 
-    const heroesMatch = router.state.matches.find(
-      (match) => match.routeId === "/dashboard/events/heroes"
-    );
-    expect(heroesMatch?.context).toMatchObject({ session: verifiedSession });
-    expect(
-      renderToStaticMarkup(createElement(RouterProvider, { router }))
-    ).toContain("Lazy heroes page");
+    expect(context.session).toBe(verifiedSession);
     expect(getUser).toHaveBeenCalledOnce();
     expect(preloadAtomResults).toHaveBeenCalledOnce();
-    expect(preloadAtomResults.mock.calls[0]?.[0]).toBe(
-      router.options.context.atomRegistry
-    );
+    expect(preloadAtomResults.mock.calls[0]?.[0]).toBe(context.atomRegistry);
   });
 });

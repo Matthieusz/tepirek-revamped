@@ -25,6 +25,7 @@ export const Route = createFileRoute("/dashboard")({
     ],
   }),
   pendingComponent: () => <LoadingSpinner />,
+  ssr: false,
   staticData: {
     crumb: "Dashboard",
   },
