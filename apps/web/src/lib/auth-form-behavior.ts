@@ -23,7 +23,7 @@ class AuthFormSubmissionError extends Schema.TaggedErrorClass<AuthFormSubmission
     kind: Schema.Literals(["provider", "request"]),
     message: Schema.String,
     operation: Schema.Literals(["login", "signup"]),
-    status: Schema.optional(Schema.Number),
+    status: Schema.optional(Schema.Finite),
   }
 ) {}
 

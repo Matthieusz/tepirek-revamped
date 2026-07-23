@@ -12,6 +12,7 @@ import type { FirecrawlClient } from "../../../services/squad-builder/firecrawl-
 import { parseFirecrawlCreditCount } from "../../../services/squad-builder/firecrawl-config.ts";
 
 const FirecrawlScrapeDeadline = "30 seconds";
+const FirecrawlMetadataNumber = Schema.Finite;
 
 const FirecrawlDocument = Schema.Struct({
   html: Schema.String.check(Schema.isMinLength(1)),
@@ -19,9 +20,9 @@ const FirecrawlDocument = Schema.Struct({
     Schema.Struct({
       cacheState: Schema.optionalKey(Schema.String),
       contentType: Schema.optionalKey(Schema.String),
-      creditsUsed: Schema.optionalKey(Schema.Number),
+      creditsUsed: Schema.optionalKey(FirecrawlMetadataNumber),
       sourceURL: Schema.optionalKey(Schema.String),
-      statusCode: Schema.optionalKey(Schema.Number),
+      statusCode: Schema.optionalKey(FirecrawlMetadataNumber),
       url: Schema.optionalKey(Schema.String),
     })
   ),

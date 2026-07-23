@@ -9,6 +9,8 @@ import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 export { EventIdSchema, HeroIdSchema };
 
+const RankingMetric = Schema.Finite;
+
 export const HeroIdPayload = Schema.Struct({ heroId: HeroIdSchema });
 export interface HeroIdPayload extends Schema.Schema.Type<
   typeof HeroIdPayload
@@ -21,15 +23,15 @@ export interface RankingPayload extends Schema.Schema.Type<
   typeof RankingPayload
 > {}
 export const HeroStats = Schema.Struct({
-  currentPointWorth: Schema.Number,
+  currentPointWorth: RankingMetric,
   heroId: HeroIdSchema,
   heroName: Schema.String,
-  totalBets: Schema.Number,
-  totalPoints: Schema.Number,
+  totalBets: RankingMetric,
+  totalPoints: RankingMetric,
 });
 export interface HeroStats extends Schema.Schema.Type<typeof HeroStats> {}
 export const RankingRow = Schema.Struct({
-  totalBets: Schema.Number,
+  totalBets: RankingMetric,
   totalEarnings: Schema.String,
   totalPoints: Schema.String,
   userId: AppUserIdSchema,
@@ -38,9 +40,9 @@ export const RankingRow = Schema.Struct({
 });
 export interface RankingRow extends Schema.Schema.Type<typeof RankingRow> {}
 export const RankingResult = Schema.Struct({
-  pointWorth: Schema.NullOr(Schema.Number),
+  pointWorth: Schema.NullOr(RankingMetric),
   ranking: Schema.Array(RankingRow),
-  totalBets: Schema.Number,
+  totalBets: RankingMetric,
 });
 export interface RankingResult extends Schema.Schema.Type<
   typeof RankingResult

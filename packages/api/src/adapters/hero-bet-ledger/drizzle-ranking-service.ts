@@ -29,7 +29,10 @@ import {
 } from "./persistence-query.ts";
 import type { EffectPgDatabase } from "./persistence-query.ts";
 
-const DatabaseNumber = Schema.Union([Schema.Number, Schema.NumberFromString]);
+const PersistedAggregateNumber = Schema.Union([
+  Schema.Finite,
+  Schema.FiniteFromString,
+]);
 const persistenceQuery = <A, E, R>(
   operation: string,
   self: Effect.Effect<A, E, R>
@@ -81,7 +84,7 @@ const normalizeRankingRow = (row: {
 }) =>
   Effect.gen(function* normalizeRankingRowEffect() {
     const totalBets = yield* decodePersisted(
-      DatabaseNumber,
+      PersistedAggregateNumber,
       row.totalBets,
       "getRanking.decode"
     );
@@ -127,12 +130,12 @@ const getHeroStatsWithDatabase = (database: EffectPgDatabase) =>
       "getHeroStats.decode"
     );
     const totalBets = yield* decodePersisted(
-      DatabaseNumber,
+      PersistedAggregateNumber,
       stats?.totalBets ?? 0,
       "getHeroStats.decode"
     );
     const totalPoints = yield* decodePersisted(
-      Schema.NumberFromString,
+      Schema.FiniteFromString,
       stats?.totalPoints ?? "0",
       "getHeroStats.decode"
     );
@@ -199,7 +202,7 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
           .where(eq(heroBet.heroId, input.heroId))
       );
       totalBets = yield* decodePersisted(
-        DatabaseNumber,
+        PersistedAggregateNumber,
         betsRows[0]?.count ?? 0,
         "getRanking.decode"
       );
@@ -209,7 +212,7 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
         database.select({ count: sql<number>`count(*)` }).from(heroBet)
       );
       totalBets = yield* decodePersisted(
-        DatabaseNumber,
+        PersistedAggregateNumber,
         betsRows[0]?.count ?? 0,
         "getRanking.decode"
       );
@@ -223,7 +226,7 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
           .where(eq(hero.eventId, input.eventId))
       );
       totalBets = yield* decodePersisted(
-        DatabaseNumber,
+        PersistedAggregateNumber,
         betsRows[0]?.count ?? 0,
         "getRanking.decode"
       );

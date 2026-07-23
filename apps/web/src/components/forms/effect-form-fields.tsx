@@ -23,7 +23,7 @@ import {
   getFieldId,
 } from "./effect-form-field-helpers";
 
-const decodeNumber = Schema.decodeUnknownOption(Schema.NumberFromString);
+const decodeNumber = Schema.decodeUnknownOption(Schema.FiniteFromString);
 
 interface TextFieldProps {
   readonly autoComplete?: string;

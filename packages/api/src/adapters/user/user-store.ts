@@ -24,7 +24,7 @@ import { UserAdapterError } from "./user-adapter-error.ts";
 
 const LAST_ADMIN_MESSAGE =
   "Nie można odebrać uprawnień ostatniemu administratorowi";
-const PersistedCount = Schema.Union([Schema.Number, Schema.NumberFromString]);
+const PersistedCount = Schema.Union([Schema.Finite, Schema.FiniteFromString]);
 
 const verifiedMemberSelect = {
   id: user.id,

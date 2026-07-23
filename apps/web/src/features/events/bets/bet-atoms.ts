@@ -20,10 +20,10 @@ type PaginatedBetKey = string;
 
 const PaginatedBetKeySchema = Schema.fromJsonString(
   Schema.Tuple([
-    Schema.NullOr(Schema.Number),
-    Schema.NullOr(Schema.Number),
-    Schema.NullOr(Schema.Number),
-    Schema.NullOr(Schema.Number),
+    Schema.NullOr(Schema.Finite),
+    Schema.NullOr(Schema.Finite),
+    Schema.NullOr(Schema.Finite),
+    Schema.NullOr(Schema.Finite),
   ])
 );
 

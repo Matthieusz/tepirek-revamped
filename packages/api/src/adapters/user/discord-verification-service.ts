@@ -32,7 +32,7 @@ const DISCORD_REQUEST_TIMEOUT = "10 seconds";
 const DISCORD_RETRY_LIMIT = 2;
 const DISCORD_RETRY_BASE_DELAY_MILLISECONDS = 100;
 const MILLISECONDS_PER_SECOND = 1000;
-const RetryAfterSeconds = Schema.NumberFromString.pipe(
+const RetryAfterSeconds = Schema.FiniteFromString.pipe(
   Schema.check(Schema.isGreaterThanOrEqualTo(0))
 );
 const decodeRetryAfterSeconds = Schema.decodeUnknownOption(RetryAfterSeconds);

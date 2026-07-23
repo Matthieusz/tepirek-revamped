@@ -2,7 +2,7 @@ import { POINTS_PER_HERO } from "@tepirek-revamped/config";
 import * as Schema from "effect/Schema";
 
 const PointWorth = Schema.NullOr(
-  Schema.Union([Schema.Number, Schema.NumberFromString])
+  Schema.Union([Schema.Finite, Schema.FiniteFromString])
 );
 
 /** Calculate points per member for a bet with given member count. */

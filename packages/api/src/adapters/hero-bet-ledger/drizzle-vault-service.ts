@@ -137,7 +137,7 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
           const decodedPoints = yield* Effect.all(
             heroUserStats.map((stat) =>
               decodePersisted(
-                Schema.NumberFromString,
+                Schema.FiniteFromString,
                 stat.points,
                 "distributeGold.decode"
               )
@@ -162,7 +162,7 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
             .set({ pointWorth: storedPointWorth })
             .where(eq(hero.id, heroId));
           const decodedPointWorth = yield* decodePersisted(
-            Schema.NumberFromString,
+            Schema.FiniteFromString,
             storedPointWorth,
             "distributeGold.decode"
           );

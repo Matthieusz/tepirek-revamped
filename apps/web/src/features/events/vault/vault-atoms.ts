@@ -26,7 +26,7 @@ const vaultKey = (payload: VaultInput): VaultKey =>
 const vaultInputFromKey = (key: VaultKey) =>
   key === "all"
     ? {}
-    : { eventId: Schema.decodeUnknownSync(Schema.NumberFromString)(key) };
+    : { eventId: Schema.decodeUnknownSync(Schema.FiniteFromString)(key) };
 
 const setPaidOutForUser = (
   rows: readonly VaultEntry[],

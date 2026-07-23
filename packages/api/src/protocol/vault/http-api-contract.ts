@@ -9,11 +9,12 @@ import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 export { EventIdSchema, HeroIdSchema };
 
-const PositiveNumber = Schema.Number.check(Schema.isGreaterThan(0));
+const PositiveNumber = Schema.Finite.check(Schema.isGreaterThan(0));
 const PositiveInt = Schema.Number.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
 );
+const VaultMetric = Schema.Finite;
 export const DistributeGoldPayload = Schema.Struct({
   goldAmount: PositiveNumber,
   heroId: HeroIdSchema,
@@ -39,16 +40,16 @@ export const DistributeGoldSuccess = Schema.Struct({
   goldAmount: PositiveNumber,
   heroId: HeroIdSchema,
   heroName: Schema.String,
-  pointWorth: Schema.Number,
+  pointWorth: VaultMetric,
   success: Schema.Boolean,
-  totalPoints: Schema.Number,
-  usersUpdated: Schema.Number,
+  totalPoints: VaultMetric,
+  usersUpdated: VaultMetric,
 });
 export interface DistributeGoldSuccess extends Schema.Schema.Type<
   typeof DistributeGoldSuccess
 > {}
 export const UserStatsRow = Schema.Struct({
-  bets: Schema.Number,
+  bets: VaultMetric,
   earnings: Schema.String,
   eventId: EventIdSchema,
   heroId: HeroIdSchema,

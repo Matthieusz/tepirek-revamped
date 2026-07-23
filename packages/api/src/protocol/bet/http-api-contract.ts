@@ -19,6 +19,7 @@ const PositiveInt = Schema.Number.check(
 );
 
 const UserId = AppUserIdSchema;
+const PaginationMetric = Schema.Finite;
 
 export const CreateBetPayload = Schema.Struct({
   heroId: HeroIdSchema,
@@ -74,7 +75,7 @@ export const BetSummary = Schema.Struct({
   eventId: EventIdSchema,
   heroId: HeroIdSchema,
   heroImage: Schema.NullOr(Schema.String),
-  heroLevel: Schema.optionalKey(Schema.Number),
+  heroLevel: Schema.optionalKey(Schema.Finite),
   heroName: Schema.String,
   id: BetIdSchema,
   memberCount: PositiveInt,
@@ -121,8 +122,8 @@ export const PaginatedBets = Schema.Struct({
     hasMore: Schema.Boolean,
     limit: PositiveInt,
     page: PositiveInt,
-    totalItems: Schema.Number,
-    totalPages: Schema.Number,
+    totalItems: PaginationMetric,
+    totalPages: PaginationMetric,
   }),
 });
 export interface PaginatedBets extends Schema.Schema.Type<

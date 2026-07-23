@@ -6,7 +6,7 @@ export class DiscordRequestFailureError extends Schema.TaggedErrorClass<DiscordR
   {
     cause: Schema.optional(Schema.Defect()),
     message: Schema.String,
-    retryAfterMilliseconds: Schema.optional(Schema.Number),
+    retryAfterMilliseconds: Schema.optional(Schema.Finite),
     retryable: Schema.Boolean,
   }
 ) {}

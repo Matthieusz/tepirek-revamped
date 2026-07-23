@@ -19,7 +19,7 @@ interface RankingInput {
 type RankingKey = string;
 
 const RankingKeySchema = Schema.fromJsonString(
-  Schema.Tuple([Schema.NullOr(Schema.Number), Schema.NullOr(Schema.Number)])
+  Schema.Tuple([Schema.NullOr(Schema.Finite), Schema.NullOr(Schema.Finite)])
 );
 
 const rankingKey = (payload: RankingInput): RankingKey =>

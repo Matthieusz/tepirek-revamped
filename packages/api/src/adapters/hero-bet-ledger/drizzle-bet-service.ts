@@ -441,7 +441,7 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
             });
           }
           const oldPointsPerMember = yield* decodePersisted(
-            Schema.NumberFromString,
+            Schema.FiniteFromString,
             currentMembers[0]?.points ?? "0",
             "editBet.decode"
           );
@@ -512,7 +512,7 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
           if (membersToKeep.length > 0) {
             const keepUserIds = membersToKeep.map((member) => member.userId);
             const decodedNewPointsPerMember = yield* decodePersisted(
-              Schema.NumberFromString,
+              Schema.FiniteFromString,
               newPointsPerMember,
               "editBet.decode"
             );
@@ -732,7 +732,7 @@ const getPaginatedBetsWithDatabase = (database: EffectPgDatabase) =>
         .where(whereClause)
     );
     const totalItems = yield* decodePersisted(
-      Schema.Union([Schema.Number, Schema.NumberFromString]),
+      Schema.Union([Schema.Finite, Schema.FiniteFromString]),
       countRows[0]?.count ?? 0,
       "getPaginatedBets.count.decode"
     );

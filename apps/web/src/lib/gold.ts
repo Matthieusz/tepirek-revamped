@@ -1,9 +1,9 @@
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-const decodeGoldNumber = Schema.decodeUnknownOption(Schema.NumberFromString);
+const decodeGoldNumber = Schema.decodeUnknownOption(Schema.FiniteFromString);
 const decodeGoldInteger = Schema.decodeUnknownOption(
-  Schema.NumberFromString.pipe(Schema.check(Schema.isInt()))
+  Schema.FiniteFromString.pipe(Schema.check(Schema.isInt()))
 );
 
 /**
@@ -43,9 +43,11 @@ export const parseGoldAmount = (value: string): number => {
 
   return Option.match(amount, {
     onNone: () => 0,
-    onSome: (parsedAmount) =>
-      hasBillionsSuffix
+    onSome: (parsedAmount) => {
+      const normalizedAmount = hasBillionsSuffix
         ? Math.floor(parsedAmount * 1_000_000_000)
-        : parsedAmount,
+        : parsedAmount;
+      return Number.isFinite(normalizedAmount) ? normalizedAmount : 0;
+    },
   });
 };
