@@ -123,10 +123,10 @@ const extractAttribute = (
 const extractProfileName = (
   html: string,
   profileId: MargonemProfileId
-): Effect.Effect<string | undefined, MargonemProfileNameNotFound> => {
+): Effect.Effect<string | null, MargonemProfileNameNotFound> => {
   const name = profileNamePattern.exec(html)?.groups?.name?.trim();
   return name === undefined || name.length === 0
-    ? Effect.succeed()
+    ? Effect.succeed(null)
     : decodeHtmlEntities(
         name,
         () => new MargonemProfileNameNotFound({ profileId })
@@ -136,7 +136,7 @@ const extractProfileName = (
 const extractProfessionLabel = (
   rowHtml: string,
   onInvalidEntity: () => MargonemCharacterRowInvalid
-): Effect.Effect<string | undefined, MargonemCharacterRowInvalid> => {
+): Effect.Effect<string | null, MargonemCharacterRowInvalid> => {
   const match =
     /<span\b[^>]*class="[^"]*\bcharacter-prof\b[^"]*"[^>]*>(?<profession>[\s\S]*?)<\/span>/u.exec(
       rowHtml
@@ -144,12 +144,12 @@ const extractProfessionLabel = (
   const text = match?.groups?.profession;
 
   if (text === undefined) {
-    return Effect.succeed();
+    return Effect.succeed(null);
   }
 
   const stripped = stripTags(text).trim();
   return stripped.length === 0
-    ? Effect.succeed()
+    ? Effect.succeed(null)
     : decodeHtmlEntities(stripped, onInvalidEntity);
 };
 
@@ -217,7 +217,7 @@ const parseJarunaCharacterRow = Effect.fnUntraced(
       });
     }
 
-    if (professionLabel === undefined) {
+    if (professionLabel === null) {
       return yield* new MargonemCharacterRowInvalid({
         profileId,
         safeReason: "missing profession label",
@@ -267,7 +267,7 @@ export const parseMargonemProfileHtml = Effect.fn("MargonemProfileHtml.parse")(
   > {
     const suggestedAccountName = yield* extractProfileName(html, profileId);
 
-    if (suggestedAccountName === undefined) {
+    if (suggestedAccountName === null) {
       return yield* new MargonemProfileNameNotFound({ profileId });
     }
 
