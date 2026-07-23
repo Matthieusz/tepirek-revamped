@@ -94,10 +94,10 @@ const accountAccessGrantsByKeyAtom = Atom.family(
   (key: AccountAccessGrantsKey) =>
     appHttpApiAtom(
       Effect.gen(function* accountAccessGrantsEffect() {
-        const client = yield* AppHttpApiClient;
         const [accountId] = yield* Schema.decodeUnknownEffect(
           AccountAccessGrantsKeySchema
         )(key);
+        const client = yield* AppHttpApiClient;
         return yield* client.squadBuilderAccountSharing.listAccountAccessGrants(
           {
             payload: {
@@ -113,10 +113,10 @@ const accountInviteTargetsByKeyAtom = Atom.family(
   (_key: AccountInviteTargetsKey) =>
     appHttpApiAtom(
       Effect.gen(function* accountInviteTargetsEffect() {
-        const client = yield* AppHttpApiClient;
         const [accountId, query] = yield* Schema.decodeUnknownEffect(
           AccountInviteTargetsKeySchema
         )(_key);
+        const client = yield* AppHttpApiClient;
         return yield* client.squadBuilderAccountSharing.searchAccountInviteTargets(
           {
             payload: {
