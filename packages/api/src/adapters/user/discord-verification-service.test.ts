@@ -110,6 +110,28 @@ describe("DiscordGuildVerifier", () => {
     })
   );
 
+  it.effect("ignores non-finite Retry-After values", () =>
+    Effect.gen(function* ignoreNonFiniteRetryAfter() {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(null, {
+            headers: { "Retry-After": "Infinity" },
+            status: 429,
+          })
+        )
+        .mockResolvedValueOnce(Response.json([{ id: "guild-1" }]));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const fiber = yield* verify().pipe(Effect.forkChild);
+      yield* Effect.yieldNow;
+      yield* TestClock.adjust(1000);
+
+      expect(yield* Fiber.join(fiber)).toBe(true);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    })
+  );
+
   it.effect("uses the Effect clock for HTTP-date Retry-After values", () =>
     Effect.gen(function* honorHttpDateRetryAfter() {
       const fetchMock = vi

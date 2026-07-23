@@ -55,12 +55,16 @@ describe("FirecrawlSdkClient", () => {
       })
   );
 
-  it.effect("rejects malformed Firecrawl metadata", () =>
+  it.effect.each([
+    ["wrong metadata type", { statusCode: "200" }],
+    ["non-finite status code", { statusCode: Number.POSITIVE_INFINITY }],
+    ["non-finite credit count", { creditsUsed: Number.NaN }],
+  ])("rejects %s", (_name, metadata) =>
     Effect.gen(function* rejectMalformedMetadata() {
       const scrape = vi.fn(() =>
         Promise.resolve({
           html: "<html></html>",
-          metadata: { statusCode: "200" },
+          metadata,
         })
       );
       const client = new FirecrawlSdkClient("test", { scrape });
