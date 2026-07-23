@@ -14,7 +14,7 @@ import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 export { AuctionSignupIdSchema };
 
-const PositiveInt = Schema.Number.check(
+const PositiveInt = Schema.Finite.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
 );
@@ -63,8 +63,8 @@ export interface AuctionSignupSummary extends Schema.Schema.Type<
   typeof AuctionSignupSummary
 > {}
 export const AuctionStats = Schema.Struct({
-  totalSignups: Schema.Number,
-  uniqueUsers: Schema.Number,
+  totalSignups: Schema.Finite,
+  uniqueUsers: Schema.Finite,
 });
 export interface AuctionStats extends Schema.Schema.Type<typeof AuctionStats> {}
 export const ToggleAuctionSignupSuccess = Schema.Struct({

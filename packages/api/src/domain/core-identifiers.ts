@@ -1,6 +1,6 @@
 import * as Schema from "effect/Schema";
 
-const PositiveInt = Schema.Number.check(
+const PositiveInt = Schema.Finite.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
 );

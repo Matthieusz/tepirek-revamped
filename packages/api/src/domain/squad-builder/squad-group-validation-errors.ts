@@ -20,7 +20,7 @@ export class TooManyCharactersInSquad extends Schema.TaggedErrorClass<TooManyCha
 export class DuplicateCharacterInSquad extends Schema.TaggedErrorClass<DuplicateCharacterInSquad>()(
   "DuplicateCharacterInSquad",
   {
-    characterId: Schema.Number,
+    characterId: Schema.Finite,
     squadClientKey: Schema.String,
   }
 ) {}
@@ -35,17 +35,17 @@ export class DuplicateAccountInSquad extends Schema.TaggedErrorClass<DuplicateAc
 
 export class DuplicateCharacterInSquadGroup extends Schema.TaggedErrorClass<DuplicateCharacterInSquadGroup>()(
   "DuplicateCharacterInSquadGroup",
-  { characterId: Schema.Number }
+  { characterId: Schema.Finite }
 ) {}
 
 export class SquadCharacterNotAccessible extends Schema.TaggedErrorClass<SquadCharacterNotAccessible>()(
   "SquadCharacterNotAccessible",
-  { characterId: Schema.Number }
+  { characterId: Schema.Finite }
 ) {}
 
 export class SquadCharacterNotJaruna extends Schema.TaggedErrorClass<SquadCharacterNotJaruna>()(
   "SquadCharacterNotJaruna",
-  { characterId: Schema.Number }
+  { characterId: Schema.Finite }
 ) {}
 
 export const SquadGroupValidationErrorSchema = Schema.Union([

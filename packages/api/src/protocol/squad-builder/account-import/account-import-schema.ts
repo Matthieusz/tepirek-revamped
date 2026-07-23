@@ -34,8 +34,8 @@ export interface PreviewOwnedAccountImportsPayload extends Schema.Schema.Type<
 const PreviewOwnedAccountImportLineError = Schema.TaggedUnion({
   DuplicateProfileInBatch: { firstLineNumber: PositiveInt },
   FirecrawlMonthlyBudgetExhausted: {
-    monthlyRequestBudget: Schema.Number,
-    usedRequests: Schema.Number,
+    monthlyRequestBudget: Schema.Finite,
+    usedRequests: Schema.Finite,
     yearMonth: Schema.String,
   },
   FirecrawlRequestFailed: { profileId: PositiveInt },
@@ -100,16 +100,16 @@ export interface DeleteOwnedAccountPayload extends Schema.Schema.Type<
 > {}
 export const DeleteOwnedAccountSuccess = Schema.Struct({
   accountId: MargonemAccountIdSchema,
-  removedAccessGrantCount: Schema.Number,
-  removedCharacterCount: Schema.Number,
-  removedSquadCharacterCount: Schema.Number,
+  removedAccessGrantCount: Schema.Finite,
+  removedCharacterCount: Schema.Finite,
+  removedSquadCharacterCount: Schema.Finite,
 });
 export interface DeleteOwnedAccountSuccess extends Schema.Schema.Type<
   typeof DeleteOwnedAccountSuccess
 > {}
 export const OwnedAccountCharacterPreviewSchema = Schema.Struct({
   avatarUrl: Schema.NullOr(Schema.String),
-  characterId: Schema.Number,
+  characterId: Schema.Finite,
   name: Schema.String,
   profession: Schema.String,
 });
@@ -119,7 +119,7 @@ export interface OwnedAccountCharacterPreviewSchema extends Schema.Schema.Type<
 
 export const OwnedMargonemAccountSummarySchema = Schema.Struct({
   accountId: MargonemAccountIdSchema,
-  characterCount: Schema.Number,
+  characterCount: Schema.Finite,
   characterPreviews: Schema.Array(OwnedAccountCharacterPreviewSchema),
   displayName: Schema.String,
   generatedProfileUrl: Schema.String,

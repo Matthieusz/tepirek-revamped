@@ -12,7 +12,7 @@ import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 export { ProfessionIdSchema, SkillIdSchema, SkillRangeIdSchema };
 
-const SkillLevel = Schema.Number.check(
+const SkillLevel = Schema.Finite.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: 300, minimum: 1 })
 );

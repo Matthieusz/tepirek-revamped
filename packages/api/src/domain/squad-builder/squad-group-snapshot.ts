@@ -28,7 +28,7 @@ import { parseSquadGroupName, parseSquadName } from "./squad-name.ts";
 import type { SquadGroupName, SquadName } from "./squad-name.ts";
 
 /** Position of a squad inside a group snapshot. */
-const Position = Schema.Number.check(
+const Position = Schema.Finite.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 0 })
 );

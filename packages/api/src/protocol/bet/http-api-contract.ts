@@ -13,7 +13,7 @@ import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 export { BetIdSchema, EventIdSchema, HeroIdSchema };
 
-const PositiveInt = Schema.Number.check(
+const PositiveInt = Schema.Finite.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
 );

@@ -61,13 +61,13 @@ export interface SquadGroupEditorGrantsPayload extends Schema.Schema.Type<
   typeof SquadGroupEditorGrantsPayload
 > {}
 export const SharedSquadGroupSummarySchema = Schema.Struct({
-  characterCount: Schema.Number,
+  characterCount: Schema.Finite,
   groupId: SquadGroupIdSchema,
   name: Schema.String,
   ownerUserId: AppUserIdSchema,
   ownerUserImage: Schema.NullOr(Schema.String),
   ownerUserName: Schema.String,
-  squadCount: Schema.Number,
+  squadCount: Schema.Finite,
   updatedAt: Schema.DateFromString,
 });
 export interface SharedSquadGroupSummarySchema extends Schema.Schema.Type<

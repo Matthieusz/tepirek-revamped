@@ -67,7 +67,7 @@ export interface RevokeAccountAccessPayload extends Schema.Schema.Type<
 export const RevokeAccountAccessSuccess = Schema.Struct({
   accessId: MargonemAccountAccessIdSchema,
   accountId: MargonemAccountIdSchema,
-  removedSquadCharacterCount: Schema.Number,
+  removedSquadCharacterCount: Schema.Finite,
   revokedUserId: AppUserIdSchema,
 });
 export interface RevokeAccountAccessSuccess extends Schema.Schema.Type<
@@ -81,7 +81,7 @@ export interface AccountAccessGrantsPayload extends Schema.Schema.Type<
 > {}
 export const SharedMargonemAccountSummarySchema = Schema.Struct({
   accountId: MargonemAccountIdSchema,
-  characterCount: Schema.Number,
+  characterCount: Schema.Finite,
   displayName: Schema.String,
   generatedProfileUrl: Schema.String,
   lastFetchedAt: Schema.DateFromString,

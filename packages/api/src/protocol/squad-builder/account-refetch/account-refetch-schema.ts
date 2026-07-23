@@ -11,9 +11,9 @@ import { PendingMargonemAccountRefetchIdSchema } from "../../../domain/squad-bui
 import { PositiveInt } from "../../../domain/squad-builder/positive-int.ts";
 
 const StoredMargonemCharacterSnapshotSchema = Schema.Struct({
-  affectedSquadCount: Schema.Number,
+  affectedSquadCount: Schema.Finite,
   avatarUrl: Schema.NullOr(Schema.String),
-  databaseCharacterId: Schema.Number,
+  databaseCharacterId: Schema.Finite,
   level: PositiveInt,
   margonemCharacterId: PositiveInt,
   name: Schema.String,
@@ -57,7 +57,7 @@ const ChangedMargonemCharacterDiffSchema = Schema.TaggedStruct(
   {
     changes: Schema.Array(MargonemCharacterFieldChangeSchema),
     current: StoredMargonemCharacterSnapshotSchema,
-    databaseCharacterId: Schema.Number,
+    databaseCharacterId: Schema.Finite,
     latest: MargonemCharacterPreviewSchema,
     margonemCharacterId: PositiveInt,
   }
@@ -70,7 +70,7 @@ export const MargonemAccountRefetchDiffSchema = Schema.Struct({
   fetchedAt: Schema.DateFromString,
   profileId: MargonemProfileIdSchema,
   removed: Schema.Array(RemovedMargonemCharacterDiffSchema),
-  unchangedCount: Schema.Number,
+  unchangedCount: Schema.Finite,
 });
 export interface MargonemAccountRefetchDiffSchema extends Schema.Schema.Type<
   typeof MargonemAccountRefetchDiffSchema
@@ -103,12 +103,12 @@ export interface ApplyAccountRefetchPayload extends Schema.Schema.Type<
 > {}
 export const ApplyAccountRefetchSuccess = Schema.Struct({
   accountId: MargonemAccountIdSchema,
-  addedCharacterCount: Schema.Number,
+  addedCharacterCount: Schema.Finite,
   lastFetchedAt: Schema.DateFromString,
   profileId: MargonemProfileIdSchema,
-  removedCharacterCount: Schema.Number,
-  removedSquadCharacterCount: Schema.Number,
-  updatedCharacterCount: Schema.Number,
+  removedCharacterCount: Schema.Finite,
+  removedSquadCharacterCount: Schema.Finite,
+  updatedCharacterCount: Schema.Finite,
 });
 export interface ApplyAccountRefetchSuccess extends Schema.Schema.Type<
   typeof ApplyAccountRefetchSuccess

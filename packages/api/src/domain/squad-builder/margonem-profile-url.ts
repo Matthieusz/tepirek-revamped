@@ -29,7 +29,7 @@ export type ParseMargonemProfileUrlError =
 const profilePathPattern = /^\/profile\/view,(?<profileId>\d+)$/u;
 
 const decodeUrl = Schema.decodeUnknownEffect(Schema.URLFromString);
-const decodeNumber = Schema.decodeUnknownEffect(Schema.NumberFromString);
+const decodeNumber = Schema.decodeUnknownEffect(Schema.FiniteFromString);
 
 /** Parse a Margonem profile URL and return the canonical numeric profile id. */
 export const parseMargonemProfileUrl = Effect.fn("MargonemProfileUrl.parse")(

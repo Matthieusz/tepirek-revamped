@@ -92,7 +92,7 @@ export const SquadBuilderSquadGroupSharingGroup = HttpApiGroup.make(
       {
         error: SquadBuilderSquadGroupSharingErrors,
         payload: NoPayload,
-        success: Schema.Number,
+        success: Schema.Finite,
       }
     )
   )

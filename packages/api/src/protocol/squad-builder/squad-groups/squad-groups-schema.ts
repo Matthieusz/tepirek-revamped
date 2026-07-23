@@ -31,10 +31,10 @@ export interface CreateSquadGroupPayload extends Schema.Schema.Type<
 > {}
 
 export const SquadGroupSummarySchema = Schema.Struct({
-  characterCount: Schema.Number,
+  characterCount: Schema.Finite,
   groupId: SquadGroupIdSchema,
   name: Schema.String,
-  squadCount: Schema.Number,
+  squadCount: Schema.Finite,
   updatedAt: Schema.DateFromString,
 });
 export interface SquadGroupSummarySchema extends Schema.Schema.Type<
@@ -42,13 +42,13 @@ export interface SquadGroupSummarySchema extends Schema.Schema.Type<
 > {}
 
 export const GlobalSquadGroupSummarySchema = Schema.Struct({
-  characterCount: Schema.Number,
+  characterCount: Schema.Finite,
   groupId: SquadGroupIdSchema,
   name: Schema.String,
   ownerUserId: AppUserIdSchema,
   ownerUserImage: Schema.NullOr(Schema.String),
   ownerUserName: Schema.String,
-  squadCount: Schema.Number,
+  squadCount: Schema.Finite,
   updatedAt: Schema.DateFromString,
 });
 export interface GlobalSquadGroupSummarySchema extends Schema.Schema.Type<
@@ -56,8 +56,8 @@ export interface GlobalSquadGroupSummarySchema extends Schema.Schema.Type<
 > {}
 
 export const ListGlobalSquadGroupsPayload = Schema.Struct({
-  maxLevel: Schema.optionalKey(Schema.NullOr(Schema.Number)),
-  minLevel: Schema.optionalKey(Schema.NullOr(Schema.Number)),
+  maxLevel: Schema.optionalKey(Schema.NullOr(Schema.Finite)),
+  minLevel: Schema.optionalKey(Schema.NullOr(Schema.Finite)),
   nameQuery: Schema.optionalKey(Schema.NullOr(Schema.String)),
 });
 export interface ListGlobalSquadGroupsPayload extends Schema.Schema.Type<
@@ -93,7 +93,7 @@ export const SquadGroupDetailCharacterSchema = Schema.Struct({
   margonemCharacterId: PositiveInt,
   name: Schema.String,
   placementId: PositiveInt,
-  position: Schema.Number,
+  position: Schema.Finite,
   profession: MargonemProfessionSchema,
 });
 export interface SquadGroupDetailCharacterSchema extends Schema.Schema.Type<
@@ -103,7 +103,7 @@ export interface SquadGroupDetailCharacterSchema extends Schema.Schema.Type<
 export const SquadDetailSchema = Schema.Struct({
   characters: Schema.Array(SquadGroupDetailCharacterSchema),
   name: Schema.String,
-  position: Schema.Number,
+  position: Schema.Finite,
   squadId: PositiveInt,
 });
 export interface SquadDetailSchema extends Schema.Schema.Type<
@@ -125,14 +125,14 @@ export interface SquadGroupDetailSchema extends Schema.Schema.Type<
 
 const SquadCharacterPlacementPayload = Schema.Struct({
   characterId: PositiveInt,
-  position: Schema.Number,
+  position: Schema.Finite,
 });
 
 const SaveSquadPayload = Schema.Struct({
   characters: Schema.Array(SquadCharacterPlacementPayload),
   clientKey: Schema.String,
   name: Schema.String,
-  position: Schema.Number,
+  position: Schema.Finite,
   squadId: Schema.optionalKey(SquadIdSchema),
 });
 

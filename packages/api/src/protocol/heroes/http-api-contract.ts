@@ -6,7 +6,7 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 import { EventIdSchema, HeroIdSchema } from "../../domain/core-identifiers.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-const HeroLevel = Schema.Number.check(
+const HeroLevel = Schema.Finite.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: 300, minimum: 1 })
 );
