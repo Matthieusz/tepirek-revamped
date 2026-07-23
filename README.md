@@ -27,7 +27,7 @@ The web and server applications use the same Effect HTTP contracts from `package
 
 ## Local setup
 
-You need Node.js 20 or newer, pnpm 11, Bun, and Docker.
+You need Node.js 24 or newer, pnpm 11, Bun, and Docker.
 
 ```bash
 git clone https://github.com/Matthieusz/tepirek-revamped.git
