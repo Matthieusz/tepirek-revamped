@@ -23,7 +23,10 @@ import type { Context } from "hono";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
-import { makeShutdown } from "./server-lifecycle.js";
+import {
+  makeShutdown,
+  stopServer as stopServerAndResources,
+} from "./server-lifecycle.js";
 import { readStartupConfig } from "./startup-config.js";
 
 initLogger({
@@ -84,8 +87,7 @@ export const stopServer = async (
   server: Bun.Server<unknown>
 ): Promise<void> => {
   try {
-    await server.stop();
-    await shutdown();
+    await stopServerAndResources(server, shutdown);
   } catch (error) {
     console.error("Failed to shut down server resources", error);
     throw error;
