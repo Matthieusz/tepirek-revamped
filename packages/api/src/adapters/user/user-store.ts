@@ -10,6 +10,7 @@ import { and, eq, sql } from "drizzle-orm";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
@@ -329,7 +330,7 @@ const getDiscordAccessTokenWithDatabase = (database: EffectPgDatabase) =>
       });
     }
 
-    return accessToken;
+    return Redacted.make(accessToken);
   });
 
 const markUserVerifiedWithDatabase =
@@ -357,7 +358,10 @@ export class UserStore extends Context.Service<
     >;
     readonly getDiscordAccessToken: (
       userId: typeof AppUserId.Type
-    ) => Effect.Effect<string, UserBadRequest | UserAdapterError>;
+    ) => Effect.Effect<
+      Redacted.Redacted<string>,
+      UserBadRequest | UserAdapterError
+    >;
     readonly getVerified: () => Effect.Effect<
       readonly VerifiedMember[],
       UserAdapterError

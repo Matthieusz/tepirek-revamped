@@ -5,6 +5,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as Option from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
 
@@ -17,7 +18,7 @@ export class DiscordGuildVerifier extends Context.Service<
   DiscordGuildVerifier,
   {
     readonly verifyMembership: (
-      accessToken: string
+      accessToken: Redacted.Redacted<string>
     ) => Effect.Effect<boolean, UserAdapterError>;
   }
 >()("@tepirek-revamped/api/user/DiscordGuildVerifier") {}
@@ -92,7 +93,7 @@ const retryTransient = <A>(
   );
 
 const fetchDiscordGuilds = (
-  accessToken: string
+  accessToken: Redacted.Redacted<string>
 ): Effect.Effect<readonly { readonly id: string }[] | null, UserAdapterError> =>
   Effect.tryPromise({
     catch: (cause) =>
@@ -105,7 +106,7 @@ const fetchDiscordGuilds = (
           }),
     try: (signal) =>
       fetch("https://discord.com/api/users/@me/guilds", {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: { Authorization: `Bearer ${Redacted.value(accessToken)}` },
         signal,
       }),
   }).pipe(

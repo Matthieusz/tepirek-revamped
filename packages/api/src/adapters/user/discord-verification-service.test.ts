@@ -3,6 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import { TestClock } from "effect/testing";
 import { afterEach, vi } from "vitest";
 
@@ -16,7 +17,7 @@ const verifierLayer = DiscordGuildVerifierLiveLayer.pipe(
   Layer.provide(makeDiscordVerificationConfigLayer({ guildId: "guild-1" }))
 );
 
-const verify = (accessToken = "token") =>
+const verify = (accessToken = Redacted.make("token")) =>
   DiscordGuildVerifier.use((verifier) =>
     verifier.verifyMembership(accessToken)
   ).pipe(Effect.provide(verifierLayer));
