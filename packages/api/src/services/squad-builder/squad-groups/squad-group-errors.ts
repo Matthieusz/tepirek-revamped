@@ -88,7 +88,7 @@ export class SquadGroupWriteConflict extends Schema.TaggedErrorClass<SquadGroupW
 export class SquadNotInGroup extends Schema.TaggedErrorClass<SquadNotInGroup>()(
   "SquadNotInGroup",
   {
-    squadId: Schema.Number,
+    squadId: Schema.Finite,
   },
   badRequest
 ) {}
@@ -161,8 +161,8 @@ export class PendingMargonemAccountRefetchNotFound extends Schema.TaggedErrorCla
 export class FirecrawlMonthlyBudgetExhausted extends Schema.TaggedErrorClass<FirecrawlMonthlyBudgetExhausted>()(
   "FirecrawlMonthlyBudgetExhausted",
   {
-    monthlyRequestBudget: Schema.Number,
-    usedRequests: Schema.Number,
+    monthlyRequestBudget: Schema.Finite,
+    usedRequests: Schema.Finite,
     yearMonth: FirecrawlYearMonth,
   }
 ) {}

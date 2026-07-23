@@ -79,7 +79,7 @@ export type PreviewOwnedAccountImportSuccess = Data.TaggedEnum.Value<
 
 export class DuplicateProfileInBatchError extends Schema.TaggedErrorClass<DuplicateProfileInBatchError>()(
   "DuplicateProfileInBatch",
-  { firstLineNumber: Schema.Number },
+  { firstLineNumber: Schema.Finite },
   {}
 ) {}
 
@@ -104,7 +104,7 @@ export interface PreviewOwnedAccountImportsOutput {
 // oxlint-disable-next-line max-classes-per-file -- Batch policy errors live with the use case.
 export class TooManyProfileUrlsInBatch extends Schema.TaggedErrorClass<TooManyProfileUrlsInBatch>()(
   "TooManyProfileUrlsInBatch",
-  { maxUrls: Schema.Number },
+  { maxUrls: Schema.Finite },
   {}
 ) {}
 

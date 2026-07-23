@@ -8,7 +8,7 @@ import { ParseFirecrawlConfigError } from "./firecrawl-config-errors.ts";
 export { ParseFirecrawlConfigError } from "./firecrawl-config-errors.ts";
 
 /** Number of Firecrawl credits consumed by a scrape. */
-export const FirecrawlCreditCount = Schema.Number.check(
+export const FirecrawlCreditCount = Schema.Finite.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 0 })
 ).pipe(Schema.brand("FirecrawlCreditCount"));

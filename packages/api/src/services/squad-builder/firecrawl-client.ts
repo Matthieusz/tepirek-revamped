@@ -29,7 +29,7 @@ export class FirecrawlRequestFailed extends Schema.TaggedErrorClass<FirecrawlReq
   "FirecrawlRequestFailed",
   {
     cause: Schema.Defect(),
-    profileId: Schema.Number,
+    profileId: Schema.Finite,
   },
   {}
 ) {}
@@ -38,7 +38,7 @@ export class FirecrawlResponseNotParseable extends Schema.TaggedErrorClass<Firec
   "FirecrawlResponseNotParseable",
   {
     cause: Schema.Defect(),
-    profileId: Schema.Number,
+    profileId: Schema.Finite,
   },
   {}
 ) {}
