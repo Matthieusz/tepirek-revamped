@@ -4,7 +4,6 @@ import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { DiscordGuildVerifier } from "../../adapters/user/discord-verification-service.ts";
 import type { UserAdapterError } from "../../adapters/user/user-adapter-error.ts";
 import { UserStore } from "../../adapters/user/user-store.ts";
 import type { RequestSession } from "../../protocol/auth/current-session.ts";
@@ -14,6 +13,7 @@ import {
   UserPersistenceUnavailable,
   UserUnauthorized,
 } from "../../protocol/user/http-api-contract.ts";
+import { VerifyDiscordGuildMembershipService } from "../../services/user/verify-discord-guild-membership-service.ts";
 import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireAdminSession, requireSession, requireVerifiedSession } =
@@ -162,23 +162,10 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("UserHttpApiHandlers.verifyDiscordGuildMembership")(
           function* verifyDiscordGuildMembership() {
             const session = yield* requireSession();
-            const store = yield* UserStore;
-            const verifier = yield* DiscordGuildVerifier;
-            const accessToken = yield* store
-              .getDiscordAccessToken(session.user.id)
+            const verification = yield* VerifyDiscordGuildMembershipService;
+            return yield* verification
+              .verify({ userId: session.user.id })
               .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
-            const valid = yield* verifier
-              .verifyMembership(accessToken)
-              .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
-
-            if (valid) {
-              const updatedAt = new Date(yield* Clock.currentTimeMillis);
-              yield* store
-                .markUserVerified({ updatedAt, userId: session.user.id })
-                .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
-            }
-
-            return { valid };
           }
         )
       )

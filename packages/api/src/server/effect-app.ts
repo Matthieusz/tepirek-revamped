@@ -98,6 +98,7 @@ import { layer as squadGroupEditorInvitesLayer } from "../services/squad-builder
 import { layer as setSquadGroupVisibilityLayer } from "../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
 import type { SetSquadGroupVisibilityService } from "../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
 import type { SquadGroupStoreService } from "../services/squad-builder/squad-groups/squad-group-store.ts";
+import { VerifyDiscordGuildMembershipService } from "../services/user/verify-discord-guild-membership-service.ts";
 import type { VaultService } from "../services/vault/vault-service.ts";
 
 const makeApiStableLayer = (
@@ -151,7 +152,8 @@ const makeApiStableLayer = (
     firecrawlLayer
   );
 
-  const squadBuilderUseCases = Layer.mergeAll(
+  const applicationUseCases = Layer.mergeAll(
+    VerifyDiscordGuildMembershipService.layer,
     createSquadGroupLayer,
     deleteSquadGroupLayer,
     listAvailableSquadCharactersLayer,
@@ -172,7 +174,7 @@ const makeApiStableLayer = (
 
   return Layer.mergeAll(
     stableServices,
-    squadBuilderUseCases.pipe(Layer.provideMerge(stableServices))
+    applicationUseCases.pipe(Layer.provideMerge(stableServices))
   );
 };
 
@@ -249,4 +251,5 @@ type SquadBuilderServices =
   | DeleteOwnedAccountService
   | UpdateOwnedAccountDisplayNameService
   | PreviewAccountRefetchService
-  | ApplyAccountRefetchService;
+  | ApplyAccountRefetchService
+  | VerifyDiscordGuildMembershipService;
