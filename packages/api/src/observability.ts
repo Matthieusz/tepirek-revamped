@@ -1,4 +1,5 @@
-import { Effect, Layer, Logger, References } from "effect";
+import { Layer, Logger, References } from "effect";
+import type { Effect } from "effect";
 import type { LogLevel } from "effect/LogLevel";
 
 import * as Logging from "./observability/logging.ts";
@@ -20,23 +21,17 @@ export const makeLoggerLayer = <
 ) => Logger.layer(loggers, { mergeWithExisting: false });
 
 /** Build observability from values parsed once by the executable boundary. */
-export const makeLayer = (config: ObservabilityConfig) =>
-  Layer.unwrap(
-    Effect.gen(function* makeObservabilityLayer() {
-      const logs = makeLoggerLayer([
-        ...(config.printLogs ? [Logging.stderrLogger] : []),
-        ...Otlp.loggers(config),
-      ]).pipe(
-        Layer.provide(
-          Layer.succeed(References.MinimumLogLevel, config.minimumLogLevel)
-        )
-      );
-
-      return Layer.merge(
-        logs,
-        yield* Effect.promise(() => Otlp.tracingLayer(config))
-      );
-    })
+export const makeLayer = (config: ObservabilityConfig) => {
+  const logs = makeLoggerLayer([
+    ...(config.printLogs ? [Logging.stderrLogger] : []),
+    ...Otlp.loggers(config),
+  ]).pipe(
+    Layer.provide(
+      Layer.succeed(References.MinimumLogLevel, config.minimumLogLevel)
+    )
   );
+
+  return Layer.merge(logs, Otlp.tracingLayer(config));
+};
 
 export { parseLogLevel } from "./observability/logging.ts";

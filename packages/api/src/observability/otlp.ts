@@ -71,16 +71,14 @@ export const loggers = (config: OtlpConfig) => {
 export const tracingLayer = (config: OtlpConfig) => {
   const url = otlpUrl("traces", config.endpoint);
 
-  return Promise.resolve(
-    url === undefined
-      ? Layer.empty
-      : OtlpTracer.layer({
-          headers:
-            config.headers === undefined
-              ? undefined
-              : Redacted.value(config.headers),
-          resource: resource(config),
-          url,
-        }).pipe(Layer.provide(otlpSupportLayer))
-  );
+  return url === undefined
+    ? Layer.empty
+    : OtlpTracer.layer({
+        headers:
+          config.headers === undefined
+            ? undefined
+            : Redacted.value(config.headers),
+        resource: resource(config),
+        url,
+      }).pipe(Layer.provide(otlpSupportLayer));
 };
