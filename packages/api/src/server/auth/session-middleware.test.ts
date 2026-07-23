@@ -49,6 +49,8 @@ it.effect(
       expect(failure).toEqual(
         new SessionUnavailable({ message: "SESSION_UNAVAILABLE" })
       );
+      // Trusted test value; sync encoding keeps the assertion focused.
+      // @effect-diagnostics-next-line schemaSyncInEffect:off
       const encoded = Schema.encodeUnknownSync(SessionUnavailable)(failure);
       expect(encoded).toEqual({
         _tag: "SessionUnavailable",
@@ -97,9 +99,10 @@ it.effect(
       expect(failure).toEqual(
         new InvalidSession({ message: "INVALID_SESSION" })
       );
-      expect(
-        JSON.stringify(Schema.encodeUnknownSync(InvalidSession)(failure))
-      ).not.toContain("session-token");
+      // Trusted test value; sync encoding keeps the assertion focused.
+      // @effect-diagnostics-next-line schemaSyncInEffect:off
+      const encoded = Schema.encodeUnknownSync(InvalidSession)(failure);
+      expect(JSON.stringify(encoded)).not.toContain("session-token");
     }).pipe(Effect.provide(adapterLayer));
   }
 );

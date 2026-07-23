@@ -8,7 +8,7 @@ import {
   isAuctionType,
   isEventIconId,
   slugifySkillRangeName,
-} from "./index";
+} from "./index.ts";
 
 describe("config type guards", () => {
   it("accepts every event icon id", () => {

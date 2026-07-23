@@ -9,7 +9,7 @@ import {
   getAuctionSlotColumnCount,
   getAuctionSlotColumns,
   isLegalAuctionSlot,
-} from "./index";
+} from "./index.ts";
 
 const legalSlot = {
   column: 1,
