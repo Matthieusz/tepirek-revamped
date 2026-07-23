@@ -22,7 +22,7 @@ import type {
 export const ALL_FILTER = "all" as const;
 export type FilterSelection = typeof ALL_FILTER | string;
 
-const PositiveIntegerIdFromString = Schema.NumberFromString.pipe(
+const PositiveIntegerIdFromString = Schema.FiniteFromString.pipe(
   Schema.check(Schema.isInt()),
   Schema.check(
     Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })

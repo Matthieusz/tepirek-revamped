@@ -66,7 +66,7 @@ const emptyFilterForm: SquadGroupListFilterFormState = {
   minLevel: "",
   nameQuery: "",
 };
-const PositiveLevelFromString = Schema.NumberFromString.pipe(
+const PositiveLevelFromString = Schema.FiniteFromString.pipe(
   Schema.check(Schema.isInt()),
   Schema.check(Schema.isGreaterThan(0))
 );

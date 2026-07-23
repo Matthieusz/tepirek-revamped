@@ -38,10 +38,10 @@ type AccountAccessGrantsKey = string;
 type AccountInviteTargetsKey = string;
 
 const AccountAccessGrantsKeySchema = Schema.fromJsonString(
-  Schema.Tuple([Schema.Number, Schema.String])
+  Schema.Tuple([Schema.Finite, Schema.String])
 );
 const AccountInviteTargetsKeySchema = Schema.fromJsonString(
-  Schema.Tuple([Schema.Number, Schema.String])
+  Schema.Tuple([Schema.Finite, Schema.String])
 );
 
 type AccountAccessGrant = AccountAccessGrantSummarySchema;
@@ -95,9 +95,9 @@ const accountAccessGrantsByKeyAtom = Atom.family(
     appHttpApiAtom(
       Effect.gen(function* accountAccessGrantsEffect() {
         const client = yield* AppHttpApiClient;
-        const [accountId] = Schema.decodeSync(AccountAccessGrantsKeySchema)(
-          key
-        );
+        const [accountId] = yield* Schema.decodeUnknownEffect(
+          AccountAccessGrantsKeySchema
+        )(key);
         return yield* client.squadBuilderAccountSharing.listAccountAccessGrants(
           {
             payload: {
@@ -114,7 +114,7 @@ const accountInviteTargetsByKeyAtom = Atom.family(
     appHttpApiAtom(
       Effect.gen(function* accountInviteTargetsEffect() {
         const client = yield* AppHttpApiClient;
-        const [accountId, query] = Schema.decodeSync(
+        const [accountId, query] = yield* Schema.decodeUnknownEffect(
           AccountInviteTargetsKeySchema
         )(_key);
         return yield* client.squadBuilderAccountSharing.searchAccountInviteTargets(

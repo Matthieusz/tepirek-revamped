@@ -42,7 +42,7 @@ type SquadGroupEditorGrantsKey = string;
 type SquadEditorInviteTargetsKey = string;
 
 const SquadEditorInviteTargetsKeySchema = Schema.fromJsonString(
-  Schema.Tuple([Schema.Number, Schema.String])
+  Schema.Tuple([Schema.Finite, Schema.String])
 );
 
 type SquadEditorInviteTarget = typeof SquadEditorInviteTargetSchema.Type;
@@ -109,7 +109,7 @@ export const sharedSquadGroupsAtom = sharedSquadGroupsByActorAtom("default");
 /** Resource atom for editor grants on one squad group. */
 const squadGroupEditorGrantsByKeyAtom = Atom.family(
   (key: SquadGroupEditorGrantsKey) => {
-    const groupId = Schema.decodeUnknownSync(Schema.NumberFromString)(key);
+    const groupId = Schema.decodeUnknownSync(Schema.FiniteFromString)(key);
     return appHttpApiAtom(
       Effect.gen(function* listSquadGroupEditorGrantsEffect() {
         const client = yield* AppHttpApiClient;

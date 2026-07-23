@@ -43,7 +43,7 @@ import type { SquadCharacterMetadata } from "@/pages/dashboard/squad-builder/squ
 type SquadGroupDetail = SquadGroupDetailSchema;
 
 const decodeSquadGroupId = Schema.decodeUnknownOption(
-  Schema.NumberFromString.pipe(
+  Schema.FiniteFromString.pipe(
     Schema.check(Schema.isInt()),
     Schema.check(Schema.isGreaterThan(0))
   )

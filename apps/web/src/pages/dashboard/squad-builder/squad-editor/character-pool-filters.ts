@@ -13,7 +13,7 @@ type CharacterPoolFilterField = "profession" | "characterName" | "accountName";
 const isUnsignedIntegerText = Schema.is(
   Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+$/u)))
 );
-const PositiveIntegerFromString = Schema.NumberFromString.pipe(
+const PositiveIntegerFromString = Schema.FiniteFromString.pipe(
   Schema.check(Schema.isInt()),
   Schema.check(Schema.isGreaterThan(0))
 );

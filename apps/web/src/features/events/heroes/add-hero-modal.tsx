@@ -37,7 +37,7 @@ interface AddHeroModalProps {
 const heroFormBuilder = FormBuilder.empty
   .addField("name", HeroNameSchema)
   .addField("image", Schema.String)
-  .addField("level", Schema.Number)
+  .addField("level", Schema.Finite)
   .addField("eventId", HeroEventIdSchema);
 
 interface HeroSubmission {

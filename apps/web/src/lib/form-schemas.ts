@@ -98,7 +98,7 @@ export const HeroNameSchema = Schema.String.pipe(
   })
 );
 
-const PositiveIntegerIdFromString = Schema.NumberFromString.pipe(
+const PositiveIntegerIdFromString = Schema.FiniteFromString.pipe(
   Schema.check(Schema.isInt()),
   Schema.check(Schema.isGreaterThan(0))
 );
@@ -228,7 +228,7 @@ export const CreateSquadGroupNameSchema =
     })
   );
 
-export const CalculatorLevelSchema = Schema.Number.check(
+export const CalculatorLevelSchema = Schema.Finite.check(
   Schema.isInt({ message: "Podaj liczbę całkowitą od 1 do 500" }),
   Schema.isBetween({
     maximum: 500,
@@ -236,7 +236,7 @@ export const CalculatorLevelSchema = Schema.Number.check(
   })
 ).annotate({ message: "Podaj liczbę całkowitą od 1 do 500" });
 
-export const CalculatorItemLevelSchema = Schema.Number.check(
+export const CalculatorItemLevelSchema = Schema.Finite.check(
   Schema.isInt({ message: "Podaj liczbę całkowitą od 1 do 300" }),
   Schema.isBetween({
     maximum: 300,

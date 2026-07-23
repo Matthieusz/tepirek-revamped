@@ -54,7 +54,7 @@ interface EventOption {
   readonly name: string;
 }
 
-const PositiveIntegerIdFromString = Schema.NumberFromString.pipe(
+const PositiveIntegerIdFromString = Schema.FiniteFromString.pipe(
   Schema.check(Schema.isInt()),
   Schema.check(Schema.isGreaterThan(0))
 );

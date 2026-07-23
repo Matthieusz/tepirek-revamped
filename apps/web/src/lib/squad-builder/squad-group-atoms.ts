@@ -72,8 +72,8 @@ type ListGlobalSquadGroupsKey = string;
 
 const ListGlobalSquadGroupsKeySchema = Schema.fromJsonString(
   Schema.Tuple([
-    Schema.NullOr(Schema.Number),
-    Schema.NullOr(Schema.Number),
+    Schema.NullOr(Schema.Finite),
+    Schema.NullOr(Schema.Finite),
     Schema.NullOr(Schema.String),
   ])
 );
@@ -146,7 +146,7 @@ export const globalSquadGroupsAtom = (payload: ListGlobalSquadGroupsInput) =>
 
 const squadGroupDetailByKeyAtom = Atom.family((key: string) => {
   const payload = {
-    groupId: Schema.decodeUnknownSync(Schema.NumberFromString)(key),
+    groupId: Schema.decodeUnknownSync(Schema.FiniteFromString)(key),
   } satisfies SquadGroupIdInput;
   return appHttpApiAtom(
     Effect.gen(function* getSquadGroupDetailEffect() {
@@ -167,7 +167,7 @@ export const squadGroupDetailAtom = (payload: SquadGroupIdInput) =>
 
 const availableSquadCharactersByKeyAtom = Atom.family((key: string) => {
   const payload = {
-    groupId: Schema.decodeUnknownSync(Schema.NumberFromString)(key),
+    groupId: Schema.decodeUnknownSync(Schema.FiniteFromString)(key),
   } satisfies SquadGroupIdInput;
   return appHttpApiAtom(
     Effect.gen(function* listAvailableSquadCharactersEffect() {

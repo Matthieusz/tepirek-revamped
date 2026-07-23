@@ -16,7 +16,7 @@ import * as Str from "effect/String";
 const MIN_LEVEL = 1;
 const MAX_LEVEL = 500;
 
-const LevelFromString = Schema.NumberFromString.pipe(
+const LevelFromString = Schema.FiniteFromString.pipe(
   Schema.check(Schema.isInt()),
   Schema.check(Schema.isBetween({ maximum: MAX_LEVEL, minimum: MIN_LEVEL }))
 );
