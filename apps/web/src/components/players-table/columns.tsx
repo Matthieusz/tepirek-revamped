@@ -51,7 +51,7 @@ import {
 } from "@/lib/user-atoms";
 import { formatDate } from "@/lib/utils";
 
-type Player = typeof PlayerSchema.Type;
+type Player = PlayerSchema;
 
 const ActionCell = ({ player }: { player: Player }) => {
   const [showRenameDialog, setShowRenameDialog] = useState(false);

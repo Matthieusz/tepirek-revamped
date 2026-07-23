@@ -20,22 +20,22 @@ import { TodoStoreError } from "./todo-store-error.ts";
 
 export interface CreateTodoInput {
   readonly text: string;
-  readonly userId: typeof AppUserId.Type;
+  readonly userId: AppUserId;
 }
 
 export interface DeleteTodoInput {
-  readonly id: typeof TodoId.Type;
-  readonly userId: typeof AppUserId.Type;
+  readonly id: TodoId;
+  readonly userId: AppUserId;
 }
 
 export interface ListTodosInput {
-  readonly userId: typeof AppUserId.Type;
+  readonly userId: AppUserId;
 }
 
 export interface ToggleTodoInput {
   readonly completed: boolean;
-  readonly id: typeof TodoId.Type;
-  readonly userId: typeof AppUserId.Type;
+  readonly id: TodoId;
+  readonly userId: AppUserId;
 }
 
 const persistenceQuery = makeDirectPersistenceQuery(

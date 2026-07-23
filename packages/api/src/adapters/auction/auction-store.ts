@@ -30,7 +30,7 @@ export interface AuctionGroupInput {
 }
 export interface RemoveSignupInput {
   readonly actorUserId: AppUserId;
-  readonly id: typeof AuctionSignupId.Type;
+  readonly id: AuctionSignupId;
 }
 export interface ToggleSignupInput {
   readonly actorUserId: AppUserId;

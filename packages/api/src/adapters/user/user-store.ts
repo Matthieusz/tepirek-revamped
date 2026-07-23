@@ -44,14 +44,14 @@ const playerListSelect = {
 };
 
 export interface VerifiedMember {
-  readonly id: typeof AppUserId.Type;
+  readonly id: AppUserId;
   readonly image: string | null;
   readonly name: string;
 }
 
 export interface Player {
   readonly createdAt: Date;
-  readonly id: typeof AppUserId.Type;
+  readonly id: AppUserId;
   readonly image: string | null;
   readonly name: string;
   readonly role: string | null;
@@ -94,28 +94,28 @@ type UserQueryExecutor = Pick<EffectPgDatabase, "select" | "update">;
 type UserMutationState = Partial<Pick<UserRow, "role" | "verified">>;
 
 export interface SetUserRoleInput {
-  readonly actorId: typeof AppUserId.Type;
+  readonly actorId: AppUserId;
   readonly role: NonNullable<UserRow["role"]>;
   readonly updatedAt: Date;
-  readonly userId: typeof AppUserId.Type;
+  readonly userId: AppUserId;
 }
 
 export interface SetUserVerifiedInput {
-  readonly actorId: typeof AppUserId.Type;
+  readonly actorId: AppUserId;
   readonly updatedAt: Date;
-  readonly userId: typeof AppUserId.Type;
+  readonly userId: AppUserId;
   readonly verified: boolean;
 }
 
 export interface UpdateUserNameInput {
   readonly name: string;
   readonly updatedAt: Date;
-  readonly userId: typeof AppUserId.Type;
+  readonly userId: AppUserId;
 }
 
 const loadTargetUser = Effect.fnUntraced(function* loadTargetUser(
   database: Pick<UserQueryExecutor, "select">,
-  userId: typeof AppUserId.Type
+  userId: AppUserId
 ) {
   const rows = yield* userPersistenceQuery(
     "loadTargetUser",
@@ -153,7 +153,7 @@ const assertAdminMutationAllowed = Effect.fnUntraced(
   function* assertAdminMutationAllowed(
     database: Pick<UserQueryExecutor, "select">,
     input: {
-      readonly actorId: typeof AppUserId.Type;
+      readonly actorId: AppUserId;
       readonly next: UserMutationState;
       readonly targetUser: Pick<UserRow, "id" | "role" | "verified">;
     }
@@ -208,10 +208,10 @@ const mutateAdminAvailabilityUser = Effect.fnUntraced(
   function* mutateAdminAvailabilityUser(
     database: EffectPgDatabase,
     input: {
-      readonly actorId: typeof AppUserId.Type;
+      readonly actorId: AppUserId;
       readonly next: UserMutationState;
       readonly updatedAt: Date;
-      readonly userId: typeof AppUserId.Type;
+      readonly userId: AppUserId;
     }
   ) {
     const transaction = database.transaction(
@@ -246,7 +246,7 @@ const mutateAdminAvailabilityUser = Effect.fnUntraced(
 );
 
 const deleteUserWithDatabase = (database: EffectPgDatabase) =>
-  Effect.fnUntraced(function* deleteUser(userId: typeof AppUserId.Type) {
+  Effect.fnUntraced(function* deleteUser(userId: AppUserId) {
     const targetUser = yield* loadTargetUser(database, userId);
 
     if (targetUser.verified) {
@@ -310,9 +310,7 @@ const updateProfileWithDatabase =
     );
 
 const getDiscordAccessTokenWithDatabase = (database: EffectPgDatabase) =>
-  Effect.fnUntraced(function* getDiscordAccessToken(
-    userId: typeof AppUserId.Type
-  ) {
+  Effect.fnUntraced(function* getDiscordAccessToken(userId: AppUserId) {
     const rows = yield* userPersistenceQuery(
       "getDiscordAccessToken",
       database
@@ -337,7 +335,7 @@ const markUserVerifiedWithDatabase =
   (database: EffectPgDatabase) =>
   (input: {
     readonly updatedAt: Date;
-    readonly userId: typeof AppUserId.Type;
+    readonly userId: AppUserId;
   }): Effect.Effect<void, UserAdapterError> =>
     userPersistenceQuery(
       "markUserVerified",
@@ -351,13 +349,13 @@ export class UserStore extends Context.Service<
   UserStore,
   {
     readonly deleteUser: (
-      userId: typeof AppUserId.Type
+      userId: AppUserId
     ) => Effect.Effect<
       { readonly success: true },
       UserBadRequest | UserNotFound | UserAdapterError
     >;
     readonly getDiscordAccessToken: (
-      userId: typeof AppUserId.Type
+      userId: AppUserId
     ) => Effect.Effect<
       Redacted.Redacted<string>,
       UserBadRequest | UserAdapterError
@@ -369,7 +367,7 @@ export class UserStore extends Context.Service<
     readonly list: () => Effect.Effect<readonly Player[], UserAdapterError>;
     readonly markUserVerified: (input: {
       readonly updatedAt: Date;
-      readonly userId: typeof AppUserId.Type;
+      readonly userId: AppUserId;
     }) => Effect.Effect<void, UserAdapterError>;
     readonly setRole: (
       input: SetUserRoleInput

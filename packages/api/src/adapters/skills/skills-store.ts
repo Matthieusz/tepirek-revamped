@@ -44,21 +44,21 @@ export interface CreateSkillInput {
   readonly link: string;
   readonly mastery: boolean;
   readonly name: string;
-  readonly professionId: typeof ProfessionId.Type;
-  readonly rangeId: typeof SkillRangeId.Type;
-  readonly userId: typeof AppUserId.Type;
+  readonly professionId: ProfessionId;
+  readonly rangeId: SkillRangeId;
+  readonly userId: AppUserId;
 }
 export interface DeleteRangeInput {
-  readonly id: typeof SkillRangeId.Type;
+  readonly id: SkillRangeId;
 }
 export interface DeleteSkillInput {
-  readonly id: typeof SkillId.Type;
+  readonly id: SkillId;
 }
 export interface GetRangeBySlugInput {
   readonly slug: string;
 }
 export interface GetSkillsByRangeInput {
-  readonly rangeId: typeof SkillRangeId.Type;
+  readonly rangeId: SkillRangeId;
 }
 
 const persistenceQuery = makeDirectPersistenceQuery(
