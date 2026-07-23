@@ -1,25 +1,34 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 
 import { parsePointWorth } from "./points.ts";
 
 describe("parsePointWorth", () => {
-  it.each(["not-a-number", "NaN", "Infinity", "-Infinity"])(
+  it.effect.each(["not-a-number", "NaN", "Infinity", "-Infinity"])(
     "rejects malformed persisted point worth %s",
-    (pointWorth) => {
-      expect(() => parsePointWorth(pointWorth)).toThrow();
-    }
+    (pointWorth) =>
+      Effect.gen(function* rejectMalformedPointWorth() {
+        const failure = yield* parsePointWorth(pointWorth).pipe(Effect.flip);
+        expect(failure._tag).toBe("SchemaError");
+      })
   );
 
-  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
-    "rejects non-finite persisted point worth %s",
-    (pointWorth) => {
-      expect(() => parsePointWorth(pointWorth)).toThrow();
-    }
+  it.effect.each([
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+  ])("rejects non-finite persisted point worth %s", (pointWorth) =>
+    Effect.gen(function* rejectNonFinitePointWorth() {
+      const failure = yield* parsePointWorth(pointWorth).pipe(Effect.flip);
+      expect(failure._tag).toBe("SchemaError");
+    })
   );
 
-  it("decodes finite numbers and null", () => {
-    expect(parsePointWorth("1.25")).toBe(1.25);
-    expect(parsePointWorth(2)).toBe(2);
-    expect(parsePointWorth(null)).toBeNull();
-  });
+  it.effect("decodes finite numbers and null", () =>
+    Effect.gen(function* decodePointWorth() {
+      expect(yield* parsePointWorth("1.25")).toBe(1.25);
+      expect(yield* parsePointWorth(2)).toBe(2);
+      expect(yield* parsePointWorth(null)).toBeNull();
+    })
+  );
 });

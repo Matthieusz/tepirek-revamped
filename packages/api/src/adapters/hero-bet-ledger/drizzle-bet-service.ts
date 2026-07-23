@@ -70,6 +70,13 @@ const decodePersisted = <A>(
       new BetPersistenceUnavailable({ cause, operation: failedOperation })
   );
 
+const decodePointWorth = (input: unknown, operation: string) =>
+  parsePointWorth(input).pipe(
+    Effect.mapError(
+      (cause) => new BetPersistenceUnavailable({ cause, operation })
+    )
+  );
+
 const toBetMember = (member: {
   readonly heroBetId: number;
   readonly points: string;
@@ -215,10 +222,14 @@ const refreshEarningsForHero = Effect.fnUntraced(
       .from(hero)
       .where(eq(hero.id, heroId));
     const [heroRow] = rows;
-    if (
-      heroRow === undefined ||
-      (parsePointWorth(heroRow.pointWorth) ?? 0) <= 0
-    ) {
+    if (heroRow === undefined) {
+      return;
+    }
+    const pointWorth = yield* decodePointWorth(
+      heroRow.pointWorth,
+      "refreshEarningsForHero.decode"
+    );
+    if ((pointWorth ?? 0) <= 0) {
       return;
     }
     yield* tx

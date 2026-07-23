@@ -9,7 +9,6 @@ const PointWorth = Schema.NullOr(
 export const calculatePointsPerMember = (memberCount: number): string =>
   (Math.floor((POINTS_PER_HERO / memberCount) * 100) / 100).toFixed(2);
 
-/** Parse a point worth value (number, string, or null) to number or null. */
-export const parsePointWorth = (
-  pointWorth: number | string | null
-): number | null => Schema.decodeUnknownSync(PointWorth)(pointWorth);
+/** Parse an unknown point worth value without escaping Effect's error channel. */
+export const parsePointWorth = (pointWorth: unknown) =>
+  Schema.decodeUnknownEffect(PointWorth)(pointWorth);

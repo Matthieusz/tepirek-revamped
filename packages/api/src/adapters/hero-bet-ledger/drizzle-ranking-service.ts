@@ -60,6 +60,13 @@ const decodePersisted = <A>(
       new RankingPersistenceUnavailable({ cause, operation: failedOperation })
   );
 
+const decodePointWorth = (input: unknown, operation: string) =>
+  parsePointWorth(input).pipe(
+    Effect.mapError(
+      (cause) => new RankingPersistenceUnavailable({ cause, operation })
+    )
+  );
+
 const buildUserStatsWhere = (input: {
   readonly eventId?: number | undefined;
   readonly heroId?: number | undefined;
@@ -139,8 +146,12 @@ const getHeroStatsWithDatabase = (database: EffectPgDatabase) =>
       stats?.totalPoints ?? "0",
       "getHeroStats.decode"
     );
+    const currentPointWorth = yield* decodePointWorth(
+      heroInfo.pointWorth,
+      "getHeroStats.decode"
+    );
     return {
-      currentPointWorth: parsePointWorth(heroInfo.pointWorth) ?? 0,
+      currentPointWorth: currentPointWorth ?? 0,
       heroId: decodedHeroId,
       heroName: heroInfo.name,
       totalBets,
@@ -245,7 +256,10 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
     const pointWorth =
       pointWorthRows === null
         ? null
-        : parsePointWorth(pointWorthRows[0]?.pointWorth ?? null);
+        : yield* decodePointWorth(
+            pointWorthRows[0]?.pointWorth ?? null,
+            "getRanking.decode"
+          );
 
     return {
       pointWorth,
