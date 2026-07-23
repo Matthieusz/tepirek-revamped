@@ -60,19 +60,55 @@ const characterRowPattern =
 const backgroundImagePattern =
   /background-image:\s*url\(\s*(?<avatarUrl>[^)]*?)\s*\)/u;
 
-const decodeNumber = Schema.decodeUnknownEffect(Schema.NumberFromString);
-const decodeNumberSync = Schema.decodeUnknownSync(Schema.NumberFromString);
+const decodeNumber = Schema.decodeUnknownEffect(Schema.FiniteFromString);
+const numericHtmlEntityPattern = /&#(?<codePoint>[^;]*);/gu;
+const maximumUnicodeCodePoint = 0x10_ff_ff;
 
-const decodeHtmlEntities = (value: string): string =>
-  value
-    .replaceAll("&amp;", "&")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#039;", "'")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll(/&#(?<codePoint>\d+);/gu, (_match, codePoint: string) =>
-      String.fromCodePoint(decodeNumberSync(codePoint))
-    );
+const decodeHtmlEntities = <Error>(
+  value: string,
+  onInvalidEntity: () => Error
+): Effect.Effect<string, Error> =>
+  Effect.gen(function* decodeEntities() {
+    const withNamedEntitiesDecoded = value
+      .replaceAll("&amp;", "&")
+      .replaceAll("&quot;", '"')
+      .replaceAll("&#039;", "'")
+      .replaceAll("&lt;", "<")
+      .replaceAll("&gt;", ">");
+    const decodedParts: string[] = [];
+    let previousEnd = 0;
+
+    for (const match of withNamedEntitiesDecoded.matchAll(
+      numericHtmlEntityPattern
+    )) {
+      const codePointText = match.groups?.codePoint;
+      const matchIndex = match.index;
+
+      if (codePointText === undefined) {
+        return yield* Effect.fail(onInvalidEntity());
+      }
+
+      const codePoint = yield* decodeNumber(codePointText).pipe(
+        Effect.filterOrFail(
+          (number) =>
+            Number.isInteger(number) &&
+            number >= 0 &&
+            number <= maximumUnicodeCodePoint,
+          onInvalidEntity
+        ),
+        Effect.mapError(onInvalidEntity)
+      );
+
+      decodedParts.push(
+        withNamedEntitiesDecoded.slice(previousEnd, matchIndex),
+        String.fromCodePoint(codePoint)
+      );
+      previousEnd = matchIndex + match[0].length;
+    }
+
+    decodedParts.push(withNamedEntitiesDecoded.slice(previousEnd));
+    return decodedParts.join("");
+  });
 
 const stripTags = (value: string): string => value.replaceAll(/<[^>]*>/gu, "");
 
@@ -84,14 +120,23 @@ const extractAttribute = (
   return pattern.exec(html)?.groups?.value;
 };
 
-const extractProfileName = (html: string): string | undefined => {
+const extractProfileName = (
+  html: string,
+  profileId: MargonemProfileId
+): Effect.Effect<string | undefined, MargonemProfileNameNotFound> => {
   const name = profileNamePattern.exec(html)?.groups?.name?.trim();
   return name === undefined || name.length === 0
-    ? undefined
-    : decodeHtmlEntities(name);
+    ? Effect.succeed()
+    : decodeHtmlEntities(
+        name,
+        () => new MargonemProfileNameNotFound({ profileId })
+      );
 };
 
-const extractProfessionLabel = (rowHtml: string): string | undefined => {
+const extractProfessionLabel = (
+  rowHtml: string,
+  onInvalidEntity: () => MargonemCharacterRowInvalid
+): Effect.Effect<string | undefined, MargonemCharacterRowInvalid> => {
   const match =
     /<span\b[^>]*class="[^"]*\bcharacter-prof\b[^"]*"[^>]*>(?<profession>[\s\S]*?)<\/span>/u.exec(
       rowHtml
@@ -99,31 +144,40 @@ const extractProfessionLabel = (rowHtml: string): string | undefined => {
   const text = match?.groups?.profession;
 
   if (text === undefined) {
-    return undefined;
+    return Effect.succeed();
   }
 
   const stripped = stripTags(text).trim();
-  return stripped.length === 0 ? undefined : decodeHtmlEntities(stripped);
+  return stripped.length === 0
+    ? Effect.succeed()
+    : decodeHtmlEntities(stripped, onInvalidEntity);
 };
 
-const extractAvatarUrl = (rowHtml: string): string | null => {
-  const match = backgroundImagePattern.exec(rowHtml);
-  const rawAvatarUrl = match?.groups?.avatarUrl;
+const extractAvatarUrl = (
+  rowHtml: string,
+  onInvalidEntity: () => MargonemCharacterRowInvalid
+): Effect.Effect<string | null, MargonemCharacterRowInvalid> =>
+  Effect.gen(function* decodeAvatarUrl() {
+    const match = backgroundImagePattern.exec(rowHtml);
+    const rawAvatarUrl = match?.groups?.avatarUrl;
 
-  if (rawAvatarUrl === undefined) {
-    return null;
-  }
+    if (rawAvatarUrl === undefined) {
+      return null;
+    }
 
-  const decodedAvatarUrl = decodeHtmlEntities(rawAvatarUrl).trim();
-  const hasWrappingQuotes =
-    (decodedAvatarUrl.startsWith('"') && decodedAvatarUrl.endsWith('"')) ||
-    (decodedAvatarUrl.startsWith("'") && decodedAvatarUrl.endsWith("'"));
-  const avatarUrl = hasWrappingQuotes
-    ? decodedAvatarUrl.slice(1, -1).trim()
-    : decodedAvatarUrl;
+    const decodedAvatarUrl = (yield* decodeHtmlEntities(
+      rawAvatarUrl,
+      onInvalidEntity
+    )).trim();
+    const hasWrappingQuotes =
+      (decodedAvatarUrl.startsWith('"') && decodedAvatarUrl.endsWith('"')) ||
+      (decodedAvatarUrl.startsWith("'") && decodedAvatarUrl.endsWith("'"));
+    const avatarUrl = hasWrappingQuotes
+      ? decodedAvatarUrl.slice(1, -1).trim()
+      : decodedAvatarUrl;
 
-  return avatarUrl.length === 0 ? null : avatarUrl;
-};
+    return avatarUrl.length === 0 ? null : avatarUrl;
+  });
 
 const parseJarunaCharacterRow = Effect.fnUntraced(
   function* parseJarunaCharacterRow(
@@ -142,7 +196,15 @@ const parseJarunaCharacterRow = Effect.fnUntraced(
     const characterIdText = extractAttribute(rowHtml, "data-id");
     const name = extractAttribute(rowHtml, "data-nick");
     const levelText = extractAttribute(rowHtml, "data-lvl");
-    const professionLabel = extractProfessionLabel(rowHtml);
+    const invalidEntity = () =>
+      new MargonemCharacterRowInvalid({
+        profileId,
+        safeReason: "invalid numeric HTML entity",
+      });
+    const professionLabel = yield* extractProfessionLabel(
+      rowHtml,
+      invalidEntity
+    );
 
     if (
       characterIdText === undefined ||
@@ -184,10 +246,10 @@ const parseJarunaCharacterRow = Effect.fnUntraced(
     ).pipe(Effect.mapError(invalidCharacter));
 
     return {
-      avatarUrl: extractAvatarUrl(rowHtml),
+      avatarUrl: yield* extractAvatarUrl(rowHtml, invalidEntity),
       characterId: parsedCharacterId,
       level: parsedLevel,
-      name: decodeHtmlEntities(name.trim()),
+      name: yield* decodeHtmlEntities(name.trim(), invalidEntity),
       profession: parsedProfession,
       world: "jaruna" as const,
     };
@@ -203,7 +265,7 @@ export const parseMargonemProfileHtml = Effect.fn("MargonemProfileHtml.parse")(
     ParsedMargonemProfile,
     ParseMargonemProfileHtmlError
   > {
-    const suggestedAccountName = extractProfileName(html);
+    const suggestedAccountName = yield* extractProfileName(html, profileId);
 
     if (suggestedAccountName === undefined) {
       return yield* new MargonemProfileNameNotFound({ profileId });

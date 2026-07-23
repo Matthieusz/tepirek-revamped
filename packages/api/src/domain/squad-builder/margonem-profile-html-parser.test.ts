@@ -18,6 +18,41 @@ describe("Margonem profile HTML parser", () => {
     })
   );
 
+  it.effect("returns a typed failure for a malformed numeric entity", () =>
+    Effect.gen(function* malformedNumericEntity() {
+      const profileId = yield* parseMargonemProfileId(7_298_897);
+      const error = yield* parseMargonemProfileHtml({
+        html: `
+          <div class="profile-header__name"><span>Informati &#oops;</span></div>
+          <li class="char-row"></li>
+        `,
+        profileId,
+      }).pipe(Effect.flip);
+
+      expect(error._tag).toBe("MargonemProfileNameNotFound");
+    })
+  );
+
+  it.effect("returns a typed failure for an out-of-range numeric entity", () =>
+    Effect.gen(function* outOfRangeNumericEntity() {
+      const profileId = yield* parseMargonemProfileId(7_298_897);
+      const error = yield* parseMargonemProfileHtml({
+        html: `
+          <div class="profile-header__name"><span>Informati</span></div>
+          <li class="char-row" data-world="#jaruna" data-id="123" data-nick="Hero &#1114112;" data-lvl="150">
+            <span class="character-prof">Mag</span>
+          </li>
+        `,
+        profileId,
+      }).pipe(Effect.flip);
+
+      expect(error._tag).toBe("MargonemCharacterRowInvalid");
+      if (error._tag === "MargonemCharacterRowInvalid") {
+        expect(error.safeReason).toBe("invalid numeric HTML entity");
+      }
+    })
+  );
+
   it.effect(
     "parses a valid Jaruna character row without running nested effects",
     () =>
