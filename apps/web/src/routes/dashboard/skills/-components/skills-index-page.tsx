@@ -4,13 +4,13 @@ import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Plus } from "lucide-react";
 
-import { AddProfessionModal } from "@/components/modals/add-profession-modal";
-import { AddRangeModal } from "@/components/modals/add-range-modal";
-import { RangeCard } from "@/components/skills/range-card";
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { skillRangesAtom } from "@/features/skills/skill-atoms";
 import { isAdmin } from "@/lib/route-helpers";
+import { AddProfessionModal } from "@/routes/dashboard/skills/-components/add-profession-modal";
+import { AddRangeModal } from "@/routes/dashboard/skills/-components/add-range-modal";
+import { RangeCard } from "@/routes/dashboard/skills/-components/range-card";
 import type { AuthSession } from "@/types/route";
 
 interface SkillsIndexPageProps {

@@ -7,7 +7,6 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { AddSkillModal } from "@/components/modals/add-skill-modal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +36,7 @@ import {
   skillsByRangeAtom,
 } from "@/features/skills/skill-atoms";
 import { isAdmin } from "@/lib/route-helpers";
+import { AddSkillModal } from "@/routes/dashboard/skills/$rangeName/-components/add-skill-modal";
 
 const routeApi = getRouteApi("/dashboard/skills/$rangeName");
 
