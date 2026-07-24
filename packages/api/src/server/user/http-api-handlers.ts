@@ -1,5 +1,5 @@
 // oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
-import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
@@ -94,7 +94,7 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
         }) {
           const session = yield* requireAdminSession();
           const store = yield* UserStore;
-          const updatedAt = new Date(yield* Clock.currentTimeMillis);
+          const updatedAt = yield* DateTime.nowAsDate;
           return yield* store
             .setRole({
               actorId: session.user.id,
@@ -112,7 +112,7 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
         }) {
           const session = yield* requireAdminSession();
           const store = yield* UserStore;
-          const updatedAt = new Date(yield* Clock.currentTimeMillis);
+          const updatedAt = yield* DateTime.nowAsDate;
           return yield* store
             .setVerified({
               actorId: session.user.id,
@@ -130,7 +130,7 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
         }) {
           const session = yield* requireVerifiedSession();
           const store = yield* UserStore;
-          const updatedAt = new Date(yield* Clock.currentTimeMillis);
+          const updatedAt = yield* DateTime.nowAsDate;
           return yield* store
             .updateProfile({
               name: payload.name,
@@ -146,7 +146,7 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
           function* updateUserName({ payload }) {
             yield* requireAdminSession();
             const store = yield* UserStore;
-            const updatedAt = new Date(yield* Clock.currentTimeMillis);
+            const updatedAt = yield* DateTime.nowAsDate;
             return yield* store
               .updateProfile({
                 name: payload.name,

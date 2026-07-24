@@ -1,5 +1,5 @@
-import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -33,7 +33,7 @@ export const layer = Layer.effect(
     return SquadGroupEditorRevocationsService.of({
       revoke: EffectRuntime.fn("SquadGroupEditorInvites.revoke")(
         function* revoke(input) {
-          const now = new Date(yield* Clock.currentTimeMillis);
+          const now = yield* DateTime.nowAsDate;
 
           return yield* store.revokeSquadGroupEditor({
             invitationId: input.invitationId,

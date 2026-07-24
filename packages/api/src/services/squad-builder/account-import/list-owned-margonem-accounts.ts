@@ -33,27 +33,24 @@ export class ListOwnedMargonemAccountsService extends Context.Service<
   ListOwnedMargonemAccounts
 >()("@tepirek-revamped/api/squad-builder/ListOwnedMargonemAccountsService") {}
 
-/** List Margonem accounts owned by the actor. */
-export const list = Effect.fn("AccountImport.listOwnedAccounts")(
-  (input: ListOwnedMargonemAccountsInput) =>
-    AccountImportStoreService.use((store) =>
+const makeList = (store: typeof AccountImportStoreService.Service) =>
+  Effect.fn("AccountImport.listOwnedAccounts")(
+    (input: ListOwnedMargonemAccountsInput) =>
       store.listOwnedAccounts({
         actorUserId: input.actorUserId,
       })
-    )
+  );
+
+/** List Margonem accounts owned by the actor. */
+export const list = Effect.fn("AccountImport.listOwnedAccountsIntegration")(
+  (input: ListOwnedMargonemAccountsInput) =>
+    AccountImportStoreService.use((store) => makeList(store)(input))
 );
 
 export const layer = Layer.effect(
   ListOwnedMargonemAccountsService,
   Effect.gen(function* makeService() {
     const store = yield* AccountImportStoreService;
-
-    return ListOwnedMargonemAccountsService.of({
-      list: Effect.fn("AccountImport.listOwnedAccounts")((input) =>
-        store.listOwnedAccounts({
-          actorUserId: input.actorUserId,
-        })
-      ),
-    });
+    return ListOwnedMargonemAccountsService.of({ list: makeList(store) });
   })
 );

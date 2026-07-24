@@ -27,14 +27,18 @@ export class FirecrawlConfigService extends Context.Service<
 >()("@tepirek-revamped/api/squad-builder/FirecrawlConfigService") {}
 
 /** Parse a number into a Firecrawl credit count. */
-export const parseFirecrawlCreditCount = (
-  input: number
-): EffectRuntime.Effect<FirecrawlCreditCount, ParseFirecrawlConfigError> =>
-  Schema.decodeUnknownEffect(FirecrawlCreditCount)(input).pipe(
-    EffectRuntime.mapError(
-      () =>
-        new ParseFirecrawlConfigError({
-          message: "Firecrawl credits used must be a non-negative integer",
-        })
+export const parseFirecrawlCreditCount = EffectRuntime.fn(
+  "FirecrawlConfig.parseCreditCount"
+)(
+  (
+    input: number
+  ): EffectRuntime.Effect<FirecrawlCreditCount, ParseFirecrawlConfigError> =>
+    Schema.decodeUnknownEffect(FirecrawlCreditCount)(input).pipe(
+      EffectRuntime.mapError(
+        () =>
+          new ParseFirecrawlConfigError({
+            message: "Firecrawl credits used must be a non-negative integer",
+          })
+      )
     )
-  );
+);

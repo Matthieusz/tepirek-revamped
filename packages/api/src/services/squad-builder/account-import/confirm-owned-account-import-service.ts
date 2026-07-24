@@ -1,5 +1,5 @@
-import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -28,9 +28,7 @@ export type ConfirmOwnedAccountImportError =
   | DuplicateMargonemAccountError
   | SquadBuilderPersistenceUnavailable;
 
-const currentDate = Clock.currentTimeMillis.pipe(
-  EffectRuntime.map((milliseconds) => new Date(milliseconds))
-);
+const currentDate = DateTime.nowAsDate;
 
 /** Save a previously previewed Margonem account and its Jaruna characters. */
 const makeConfirm = (store: typeof AccountImportStoreService.Service) =>
@@ -57,8 +55,10 @@ const makeConfirm = (store: typeof AccountImportStoreService.Service) =>
   );
 
 /** Integration seam that resolves the store from the Effect context. */
-export const confirm = (input: ConfirmOwnedAccountImportInput) =>
-  AccountImportStoreService.use((store) => makeConfirm(store)(input));
+export const confirm = EffectRuntime.fn("AccountImport.confirmIntegration")(
+  (input: ConfirmOwnedAccountImportInput) =>
+    AccountImportStoreService.use((store) => makeConfirm(store)(input))
+);
 
 export interface ConfirmOwnedAccountImport {
   readonly confirm: ReturnType<typeof makeConfirm>;

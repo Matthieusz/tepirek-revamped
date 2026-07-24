@@ -1,5 +1,5 @@
-import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -35,7 +35,7 @@ export const layer = Layer.effect(
     return SquadGroupEditorInvitesService.of({
       send: EffectRuntime.fn("SquadGroupEditorInvites.send")(
         function* send(input) {
-          const now = new Date(yield* Clock.currentTimeMillis);
+          const now = yield* DateTime.nowAsDate;
           yield* store.authorizeSquadGroupOwner({
             actorUserId: input.actorUserId,
             groupId: input.groupId,

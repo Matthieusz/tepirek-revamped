@@ -1,5 +1,5 @@
-import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -42,7 +42,7 @@ const makeVerify = (
       const valid = yield* verifier.verifyMembership(accessToken);
 
       if (valid) {
-        const updatedAt = new Date(yield* Clock.currentTimeMillis);
+        const updatedAt = yield* DateTime.nowAsDate;
         yield* store.markUserVerified({ updatedAt, userId: input.userId });
       }
 

@@ -1,5 +1,5 @@
-import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -146,7 +146,7 @@ const makeSave = (store: typeof SquadGroupStoreService.Service) =>
         });
       }
 
-      const now = new Date(yield* Clock.currentTimeMillis);
+      const now = yield* DateTime.nowAsDate;
       return yield* store.saveSharedSquadGroupCharacters({
         actorUserId: input.actorUserId,
         expectedUpdatedAt: input.expectedUpdatedAt,

@@ -7,29 +7,32 @@ import type { SqlError } from "effect/unstable/sql/SqlError";
 
 export type { EffectPgDatabase };
 
+function projectPersistenceError<E, P>(
+  operation: string,
+  error: E,
+  makeError: (cause: EffectDrizzleQueryError | SqlError, operation: string) => P
+): Exclude<E, EffectDrizzleQueryError | SqlError> | P;
+function projectPersistenceError<P>(
+  operation: string,
+  error: unknown,
+  makeError: (cause: EffectDrizzleQueryError | SqlError, operation: string) => P
+): unknown {
+  return error instanceof EffectDrizzleQueryError || isSqlError(error)
+    ? makeError(error, operation)
+    : error;
+}
+
 /** Map native Drizzle and SQL failures while preserving callback domain errors. */
-// oxlint-disable promise/prefer-await-to-callbacks, promise/valid-params -- Effect.catch is not Promise.catch.
-export function mapPersistenceErrors<A, E, P, R>(
+// oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params -- Effect.mapError is not Promise.catch.
+export const mapPersistenceErrors = <A, E, P, R>(
   operation: string,
   self: Effect.Effect<A, E, R>,
   makeError: (cause: EffectDrizzleQueryError | SqlError, operation: string) => P
-): Effect.Effect<A, Exclude<E, EffectDrizzleQueryError | SqlError> | P, R>;
-export function mapPersistenceErrors<A, P, R>(
-  operation: string,
-  self: Effect.Effect<A, unknown, R>,
-  makeError: (cause: EffectDrizzleQueryError | SqlError, operation: string) => P
-): Effect.Effect<A, unknown, R> {
-  return Effect.catch(self, (error) => {
-    if (error instanceof EffectDrizzleQueryError) {
-      return Effect.fail(makeError(error, operation));
-    }
-
-    return isSqlError(error)
-      ? Effect.fail(makeError(error, operation))
-      : Effect.fail(error);
-  });
-}
-// oxlint-enable promise/prefer-await-to-callbacks, promise/valid-params
+): Effect.Effect<A, Exclude<E, EffectDrizzleQueryError | SqlError> | P, R> =>
+  Effect.mapError(self, (error) =>
+    projectPersistenceError(operation, error, makeError)
+  );
+// oxlint-enable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
 
 /** Decodes persisted data and projects schema drift through the service's persistence error. */
 export const decodePersistedValue = <A, PersistenceError>(

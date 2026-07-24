@@ -1,7 +1,7 @@
 import * as Arr from "effect/Array";
-import * as ClockRuntime from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Data from "effect/Data";
+import * as DateTime from "effect/DateTime";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -156,25 +156,22 @@ const isEmpty = (value: string): boolean => Str.isEmpty(Str.trim(value));
 const defaultDisplayNameFor = (
   suggestedAccountName: string,
   profileId: MargonemProfileId
-): AccountDisplayName => {
-  const parsed = EffectRuntime.runSyncExit(
-    parseAccountDisplayName(suggestedAccountName)
+): Effect<AccountDisplayName> =>
+  parseAccountDisplayName(suggestedAccountName).pipe(
+    EffectRuntime.matchEffect({
+      onFailure: () =>
+        parseAccountDisplayName(`Profil ${profileIdToNumber(profileId)}`).pipe(
+          EffectRuntime.mapError(
+            () =>
+              new Error(
+                "Generated fallback profile display name violated the AccountDisplayName invariant"
+              )
+          ),
+          EffectRuntime.orDie
+        ),
+      onSuccess: EffectRuntime.succeed,
+    })
   );
-
-  if (parsed._tag === "Success") {
-    return parsed.value;
-  }
-
-  const fallback = EffectRuntime.runSyncExit(
-    parseAccountDisplayName(`Profil ${profileIdToNumber(profileId)}`)
-  );
-
-  if (fallback._tag === "Success") {
-    return fallback.value;
-  }
-
-  throw new Error("Generated profile display name violated its invariant");
-};
 
 const accessStateToLineError = (
   state: ProfileAccessState
@@ -214,53 +211,55 @@ const persistPendingImport = ({
   { readonly lineNumber: number; readonly item: PreviewOwnedAccountImportItem },
   never,
   never
-> => {
-  const expiresAt = new Date(
-    now.getTime() + pendingImportPolicy.expiresAfterMinutes * 60_000
-  );
-  const defaultDisplayName = defaultDisplayNameFor(
-    preview.suggestedAccountName,
-    preview.profileId
-  );
-
-  return store
-    .createPendingImport({
-      actorUserId,
-      defaultDisplayName,
-      expiresAt,
-      fetchedAt: preview.lastFetchedAt,
-      firecrawlCreditsUsed: preview.firecrawlCreditsUsed,
-      generatedProfileUrl: toMargonemProfileUrl(preview.profileId),
-      jarunaCharacters: preview.jarunaCharacters,
-      profileId: preview.profileId,
-      suggestedAccountName: preview.suggestedAccountName,
-    })
-    .pipe(
-      EffectRuntime.matchEffect({
-        onFailure: (error) =>
-          EffectRuntime.succeed({
-            item: toFailedItem({ error, inputUrl, lineNumber }),
-            lineNumber,
-          }),
-        onSuccess: (created) =>
-          EffectRuntime.succeed({
-            item: PreviewOwnedAccountImportItem.PreviewSucceeded({
-              defaultDisplayName,
-              firecrawlCreditsUsed: preview.firecrawlCreditsUsed,
-              generatedProfileUrl: toMargonemProfileUrl(preview.profileId),
-              inputUrl,
-              jarunaCharacters: preview.jarunaCharacters,
-              lastFetchedAt: preview.lastFetchedAt,
-              lineNumber,
-              pendingImportId: created.id,
-              profileId: preview.profileId,
-              suggestedAccountName: preview.suggestedAccountName,
-            }),
-            lineNumber,
-          }),
-      })
+> =>
+  EffectRuntime.gen(function* persistPendingImportEffect() {
+    const expiresAt = DateTime.fromDateUnsafe(now).pipe(
+      DateTime.add({ minutes: pendingImportPolicy.expiresAfterMinutes }),
+      DateTime.toDate
     );
-};
+    const defaultDisplayName = yield* defaultDisplayNameFor(
+      preview.suggestedAccountName,
+      preview.profileId
+    );
+
+    return yield* store
+      .createPendingImport({
+        actorUserId,
+        defaultDisplayName,
+        expiresAt,
+        fetchedAt: preview.lastFetchedAt,
+        firecrawlCreditsUsed: preview.firecrawlCreditsUsed,
+        generatedProfileUrl: toMargonemProfileUrl(preview.profileId),
+        jarunaCharacters: preview.jarunaCharacters,
+        profileId: preview.profileId,
+        suggestedAccountName: preview.suggestedAccountName,
+      })
+      .pipe(
+        EffectRuntime.matchEffect({
+          onFailure: (error) =>
+            EffectRuntime.succeed({
+              item: toFailedItem({ error, inputUrl, lineNumber }),
+              lineNumber,
+            }),
+          onSuccess: (created) =>
+            EffectRuntime.succeed({
+              item: PreviewOwnedAccountImportItem.PreviewSucceeded({
+                defaultDisplayName,
+                firecrawlCreditsUsed: preview.firecrawlCreditsUsed,
+                generatedProfileUrl: toMargonemProfileUrl(preview.profileId),
+                inputUrl,
+                jarunaCharacters: preview.jarunaCharacters,
+                lastFetchedAt: preview.lastFetchedAt,
+                lineNumber,
+                pendingImportId: created.id,
+                profileId: preview.profileId,
+                suggestedAccountName: preview.suggestedAccountName,
+              }),
+              lineNumber,
+            }),
+        })
+      );
+  });
 
 /** Preview and persist pending imports for a batch of pasted profile URLs. */
 const makePreview = (
@@ -270,8 +269,7 @@ const makePreview = (
   EffectRuntime.fn("AccountImport.previewBatch")(function* previewBatchEffect(
     input: PreviewOwnedAccountImportsInput
   ) {
-    const currentTimeMillis = yield* ClockRuntime.currentTimeMillis;
-    const now = new Date(currentTimeMillis);
+    const now = yield* DateTime.nowAsDate;
     const nonBlankLines = input.profileUrls
       .map((url, index) => ({ inputUrl: url, lineNumber: index + 1 }))
       .filter((line) => !isEmpty(line.inputUrl));

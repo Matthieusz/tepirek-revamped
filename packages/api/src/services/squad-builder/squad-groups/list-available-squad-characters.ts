@@ -42,40 +42,29 @@ export class ListAvailableSquadCharactersService extends Context.Service<
   "@tepirek-revamped/api/squad-builder/ListAvailableSquadCharactersService"
 ) {}
 
-/** List Jaruna characters accessible to the squad group owner. */
-export const list = Effect.fn("SquadGroups.listAvailableCharacters")(
-  function* listAvailableSquadCharacters(
-    input: ListAvailableSquadCharactersInput
-  ) {
-    const group = yield* SquadGroupStoreService.use((store) =>
-      store.getSquadGroupDetail(input)
-    );
+const makeList = (store: typeof SquadGroupStoreService.Service) =>
+  Effect.fn("SquadGroups.listAvailableCharacters")(
+    function* listAvailableSquadCharacters(
+      input: ListAvailableSquadCharactersInput
+    ) {
+      const group = yield* store.getSquadGroupDetail(input);
 
-    return yield* SquadGroupStoreService.use((store) =>
-      store.listAvailableCharactersForOwner({
+      return yield* store.listAvailableCharactersForOwner({
         ownerUserId: group.ownerUserId,
-      })
-    );
-  }
+      });
+    }
+  );
+
+/** List Jaruna characters accessible to the squad group owner. */
+export const list = Effect.fn("SquadGroups.listAvailableCharactersIntegration")(
+  (input: ListAvailableSquadCharactersInput) =>
+    SquadGroupStoreService.use((store) => makeList(store)(input))
 );
 
 export const layer = Layer.effect(
   ListAvailableSquadCharactersService,
   Effect.gen(function* makeService() {
     const store = yield* SquadGroupStoreService;
-
-    return ListAvailableSquadCharactersService.of({
-      list: Effect.fn("SquadGroups.listAvailableCharacters")(
-        function* listAvailableSquadCharacters(
-          input: ListAvailableSquadCharactersInput
-        ) {
-          const group = yield* store.getSquadGroupDetail(input);
-
-          return yield* store.listAvailableCharactersForOwner({
-            ownerUserId: group.ownerUserId,
-          });
-        }
-      ),
-    });
+    return ListAvailableSquadCharactersService.of({ list: makeList(store) });
   })
 );

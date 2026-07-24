@@ -1,5 +1,5 @@
-import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -32,9 +32,7 @@ const makeUpdate = (store: typeof AccountImportStoreService.Service) =>
       input: UpdateOwnedAccountDisplayNameInput
     ) {
       const displayName = yield* parseAccountDisplayName(input.displayName);
-      const now = yield* Clock.currentTimeMillis.pipe(
-        Effect.map((value) => new Date(value))
-      );
+      const now = yield* DateTime.nowAsDate;
 
       return yield* store.updateOwnedAccountDisplayName({
         accountId: input.accountId,
@@ -45,8 +43,11 @@ const makeUpdate = (store: typeof AccountImportStoreService.Service) =>
     }
   );
 
-export const update = (input: UpdateOwnedAccountDisplayNameInput) =>
-  AccountImportStoreService.use((store) => makeUpdate(store)(input));
+export const update = Effect.fn(
+  "AccountImport.updateOwnedAccountDisplayNameIntegration"
+)((input: UpdateOwnedAccountDisplayNameInput) =>
+  AccountImportStoreService.use((store) => makeUpdate(store)(input))
+);
 
 export interface UpdateOwnedAccountDisplayName {
   readonly update: ReturnType<typeof makeUpdate>;

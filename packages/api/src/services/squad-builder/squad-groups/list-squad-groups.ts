@@ -23,14 +23,18 @@ export type GetSquadGroupDetailError =
   | EffectSquadBuilderPersistenceUnavailable;
 
 /** Integration seam that resolves the store from the Effect context. */
-export const listMine = (input: { readonly actorUserId: AppUserId }) =>
-  SquadGroupStoreService.use((store) => store.listMySquadGroups(input));
+export const listMine = Effect.fn("SquadGroups.listMineIntegration")(
+  (input: { readonly actorUserId: AppUserId }) =>
+    SquadGroupStoreService.use((store) => store.listMySquadGroups(input))
+);
 
 /** Integration seam that resolves the store from the Effect context. */
-export const getMine = (input: {
-  readonly actorUserId: AppUserId;
-  readonly groupId: SquadGroupId;
-}) => SquadGroupStoreService.use((store) => store.getSquadGroupDetail(input));
+export const getMine = Effect.fn("SquadGroups.getMineIntegration")(
+  (input: {
+    readonly actorUserId: AppUserId;
+    readonly groupId: SquadGroupId;
+  }) => SquadGroupStoreService.use((store) => store.getSquadGroupDetail(input))
+);
 
 /** List squad groups owned by the actor. */
 export interface ListSquadGroups {

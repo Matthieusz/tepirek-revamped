@@ -1,5 +1,5 @@
-import * as ClockRuntime from "effect/Clock";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -56,12 +56,7 @@ export type PreviewAccountRefetchError =
 
 const pendingRefetchPolicy = { expiresAfterMinutes: 30 } as const;
 
-const currentDate = ClockRuntime.currentTimeMillis.pipe(
-  EffectRuntime.map((milliseconds) => new Date(milliseconds))
-);
-
-const addMinutes = (date: Date, minutes: number): Date =>
-  new Date(date.getTime() + minutes * 60_000);
+const currentDate = DateTime.nowAsDate;
 
 /** Fetch latest account HTML and store a pending refetch diff for owner confirmation. */
 const makePreview = (
@@ -72,8 +67,8 @@ const makePreview = (
   EffectRuntime.fn("AccountRefetch.preview")(
     function* previewAccountRefetchEffect(input: PreviewAccountRefetchInput) {
       const account = yield* store.getAccountForRefetch(input);
-      const requestTimeMillis = yield* ClockRuntime.currentTimeMillis;
-      const yearMonth = firecrawlYearMonthFromDate(new Date(requestTimeMillis));
+      const requestTime = yield* DateTime.nowAsDate;
+      const yearMonth = firecrawlYearMonthFromDate(requestTime);
       const reservedRequest = yield* store.reserveRequest({
         monthlyRequestBudget: config.monthlyRequestBudget,
         profileId: account.profileId,
@@ -144,8 +139,8 @@ const makePreview = (
         profileId: account.profileId,
       });
 
-      const fetchedTimeMillis = yield* ClockRuntime.currentTimeMillis;
-      const fetchedAt = new Date(fetchedTimeMillis);
+      const fetchedDateTime = yield* DateTime.now;
+      const fetchedAt = DateTime.toDate(fetchedDateTime);
       const diff = computeMargonemAccountRefetchDiff({
         accountId: account.accountId,
         currentCharacters: account.currentCharacters,
@@ -157,9 +152,9 @@ const makePreview = (
         accountId: account.accountId,
         actorUserId: input.actorUserId,
         diff,
-        expiresAt: addMinutes(
-          fetchedAt,
-          pendingRefetchPolicy.expiresAfterMinutes
+        expiresAt: fetchedDateTime.pipe(
+          DateTime.add({ minutes: pendingRefetchPolicy.expiresAfterMinutes }),
+          DateTime.toDate
         ),
         fetchedAt,
         firecrawlCreditsUsed: creditsUsed,

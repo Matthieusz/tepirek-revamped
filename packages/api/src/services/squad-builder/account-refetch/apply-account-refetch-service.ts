@@ -1,5 +1,5 @@
-import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -40,9 +40,7 @@ export type ApplyAccountRefetchError =
   | ActorDoesNotOwnMargonemAccount
   | SquadBuilderPersistenceUnavailable;
 
-const currentDate = Clock.currentTimeMillis.pipe(
-  EffectRuntime.map((milliseconds) => new Date(milliseconds))
-);
+const currentDate = DateTime.nowAsDate;
 
 /** Apply a previously previewed account refetch to account and character storage. */
 const makeApply = (store: AccountRefetchStoreServiceShape) =>
@@ -76,8 +74,10 @@ const makeApply = (store: AccountRefetchStoreServiceShape) =>
   });
 
 /** Integration seam that resolves the store from the Effect context. */
-export const apply = (input: ApplyAccountRefetchInput) =>
-  AccountRefetchStoreService.use((store) => makeApply(store)(input));
+export const apply = EffectRuntime.fn("AccountRefetch.applyIntegration")(
+  (input: ApplyAccountRefetchInput) =>
+    AccountRefetchStoreService.use((store) => makeApply(store)(input))
+);
 
 export interface ApplyAccountRefetch {
   readonly apply: ReturnType<typeof makeApply>;

@@ -1,4 +1,4 @@
-import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
@@ -51,7 +51,7 @@ export const BetHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("BetHttpApiHandlers.create")(function* create({ payload }) {
           const betService = yield* BetService;
           const session = yield* requireAdminSession();
-          const createdAt = new Date(yield* Clock.currentTimeMillis);
+          const createdAt = yield* DateTime.nowAsDate;
           return yield* mapBetError(
             "createBet",
             betService.createBet({

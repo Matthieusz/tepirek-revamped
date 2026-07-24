@@ -1,5 +1,5 @@
-import * as ClockRuntime from "effect/Clock";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -85,9 +85,7 @@ const profileAccessStateToDuplicateError = (
   }
 };
 
-const currentDate = ClockRuntime.currentTimeMillis.pipe(
-  EffectRuntime.map((milliseconds) => new Date(milliseconds))
-);
+const currentDate = DateTime.nowAsDate;
 
 /** Preview a Margonem profile import without saving the account. */
 export const makePreviewMargonemProfileImport = (
@@ -109,8 +107,8 @@ export const makePreviewMargonemProfileImport = (
       return yield* duplicateError;
     }
 
-    const requestTimeMillis = yield* ClockRuntime.currentTimeMillis;
-    const yearMonth = firecrawlYearMonthFromDate(new Date(requestTimeMillis));
+    const requestTime = yield* DateTime.nowAsDate;
+    const yearMonth = firecrawlYearMonthFromDate(requestTime);
     const reservedRequest = yield* store.reserveRequest({
       monthlyRequestBudget: config.monthlyRequestBudget,
       profileId,
@@ -181,13 +179,13 @@ export const makePreviewMargonemProfileImport = (
       profileId,
     });
 
-    const fetchedTimeMillis = yield* ClockRuntime.currentTimeMillis;
+    const lastFetchedAt = yield* DateTime.nowAsDate;
 
     return {
       firecrawlCreditsUsed: creditsUsed,
       generatedProfileUrl: toMargonemProfileUrl(profileId),
       jarunaCharacters: parsedHtml.jarunaCharacters,
-      lastFetchedAt: new Date(fetchedTimeMillis),
+      lastFetchedAt,
       profileId,
       suggestedAccountName: parsedHtml.suggestedAccountName,
     };
