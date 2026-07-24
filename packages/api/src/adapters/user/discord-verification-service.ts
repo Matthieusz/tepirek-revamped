@@ -66,11 +66,11 @@ const discordRetrySchedule: Schedule.Schedule<
   DiscordRequestFailureError,
   DiscordRequestFailureError
 > = Schedule.exponential(DISCORD_RETRY_BASE_DELAY_MILLISECONDS).pipe(
-  Schedule.take(DISCORD_RETRY_LIMIT),
+  Schedule.upTo({ times: DISCORD_RETRY_LIMIT }),
   Schedule.jittered,
   Schedule.setInputType<DiscordRequestFailureError>(),
   Schedule.passthrough,
-  Schedule.modifyDelay((failure, backoffDelay) =>
+  Schedule.modifyDelay(({ output: failure, duration: backoffDelay }) =>
     Effect.succeed(
       failure.retryAfterMilliseconds === undefined
         ? backoffDelay
