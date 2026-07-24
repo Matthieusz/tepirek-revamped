@@ -9,50 +9,40 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WaitingRoomRouteImport } from './routes/waiting-room'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as WaitingRoomRouteImport } from './routes/waiting-room'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
-import { Route as DashboardTasksRouteImport } from './routes/dashboard/tasks'
-import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
-import { Route as DashboardPlayerListRouteImport } from './routes/dashboard/player-list'
-import { Route as DashboardSquadBuilderRouteRouteImport } from './routes/dashboard/squad-builder/route'
-import { Route as DashboardSkillsRouteRouteImport } from './routes/dashboard/skills/route'
 import { Route as DashboardAuctionsRouteRouteImport } from './routes/dashboard/auctions/route'
-import { Route as DashboardSquadBuilderIndexRouteImport } from './routes/dashboard/squad-builder/index'
-import { Route as DashboardSkillsIndexRouteImport } from './routes/dashboard/skills/index'
-import { Route as DashboardSquadBuilderSquadsRouteImport } from './routes/dashboard/squad-builder/squads'
-import { Route as DashboardSquadBuilderAccountsRouteImport } from './routes/dashboard/squad-builder/accounts'
-import { Route as DashboardEventsVaultRouteImport } from './routes/dashboard/events/vault'
-import { Route as DashboardEventsRankingRouteImport } from './routes/dashboard/events/ranking'
-import { Route as DashboardEventsListRouteImport } from './routes/dashboard/events/list'
-import { Route as DashboardEventsHistoryRouteImport } from './routes/dashboard/events/history'
-import { Route as DashboardEventsHeroesRouteImport } from './routes/dashboard/events/heroes'
-import { Route as DashboardCalculatorUlepaRouteImport } from './routes/dashboard/calculator/ulepa'
-import { Route as DashboardCalculatorOdwRouteImport } from './routes/dashboard/calculator/odw'
-import { Route as DashboardCalculatorListRouteImport } from './routes/dashboard/calculator/list'
-import { Route as DashboardSkillsRangeNameRouteRouteImport } from './routes/dashboard/skills/$rangeName/route'
+import { Route as DashboardPlayerListRouteImport } from './routes/dashboard/player-list'
+import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
+import { Route as DashboardSkillsRouteRouteImport } from './routes/dashboard/skills/route'
+import { Route as DashboardSquadBuilderRouteRouteImport } from './routes/dashboard/squad-builder/route'
+import { Route as DashboardTasksRouteImport } from './routes/dashboard/tasks'
 import { Route as DashboardAuctionsTypeRouteRouteImport } from './routes/dashboard/auctions/$type/route'
+import { Route as DashboardCalculatorListRouteImport } from './routes/dashboard/calculator/list'
+import { Route as DashboardCalculatorOdwRouteImport } from './routes/dashboard/calculator/odw'
+import { Route as DashboardCalculatorUlepaRouteImport } from './routes/dashboard/calculator/ulepa'
+import { Route as DashboardEventsHeroesRouteImport } from './routes/dashboard/events/heroes'
+import { Route as DashboardEventsHistoryRouteImport } from './routes/dashboard/events/history'
+import { Route as DashboardEventsListRouteImport } from './routes/dashboard/events/list'
+import { Route as DashboardEventsRankingRouteImport } from './routes/dashboard/events/ranking'
+import { Route as DashboardEventsVaultRouteImport } from './routes/dashboard/events/vault'
+import { Route as DashboardSkillsIndexRouteImport } from './routes/dashboard/skills/index'
+import { Route as DashboardSkillsRangeNameRouteRouteImport } from './routes/dashboard/skills/$rangeName/route'
+import { Route as DashboardSquadBuilderIndexRouteImport } from './routes/dashboard/squad-builder/index'
+import { Route as DashboardSquadBuilderAccountsRouteImport } from './routes/dashboard/squad-builder/accounts'
+import { Route as DashboardSquadBuilderSquadsRouteImport } from './routes/dashboard/squad-builder/squads'
 import { Route as DashboardAuctionsTypeIndexRouteImport } from './routes/dashboard/auctions/$type/index'
-import { Route as DashboardSquadBuilderSquadsGroupIdRouteImport } from './routes/dashboard/squad-builder/squads_.$groupId'
-import { Route as DashboardEventsBetsAddRouteImport } from './routes/dashboard/events/bets.add'
 import { Route as DashboardAuctionsTypeProfessionRouteImport } from './routes/dashboard/auctions/$type/$profession'
+import { Route as DashboardEventsBetsAddRouteImport } from './routes/dashboard/events/bets.add'
+import { Route as DashboardSquadBuilderSquadsGroupIdRouteImport } from './routes/dashboard/squad-builder/squads_.$groupId'
 
-const WaitingRoomRoute = WaitingRoomRouteImport.update({
-  id: '/waiting-room',
-  path: '/waiting-room',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
@@ -60,9 +50,19 @@ const DashboardRouteRoute = DashboardRouteRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WaitingRoomRoute = WaitingRoomRouteImport.update({
+  id: '/waiting-room',
+  path: '/waiting-room',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
@@ -70,9 +70,14 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardTasksRoute = DashboardTasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
+const DashboardAuctionsRouteRoute = DashboardAuctionsRouteRouteImport.update({
+  id: '/auctions',
+  path: '/auctions',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardPlayerListRoute = DashboardPlayerListRouteImport.update({
+  id: '/player-list',
+  path: '/player-list',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardProfileRoute = DashboardProfileRouteImport.update({
@@ -80,9 +85,9 @@ const DashboardProfileRoute = DashboardProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardPlayerListRoute = DashboardPlayerListRouteImport.update({
-  id: '/player-list',
-  path: '/player-list',
+const DashboardSkillsRouteRoute = DashboardSkillsRouteRouteImport.update({
+  id: '/skills',
+  path: '/skills',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardSquadBuilderRouteRoute =
@@ -91,31 +96,75 @@ const DashboardSquadBuilderRouteRoute =
     path: '/squad-builder',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardSkillsRouteRoute = DashboardSkillsRouteRouteImport.update({
-  id: '/skills',
-  path: '/skills',
+const DashboardTasksRoute = DashboardTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardAuctionsRouteRoute = DashboardAuctionsRouteRouteImport.update({
-  id: '/auctions',
-  path: '/auctions',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardSquadBuilderIndexRoute =
-  DashboardSquadBuilderIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => DashboardSquadBuilderRouteRoute,
+const DashboardAuctionsTypeRouteRoute =
+  DashboardAuctionsTypeRouteRouteImport.update({
+    id: '/$type',
+    path: '/$type',
+    getParentRoute: () => DashboardAuctionsRouteRoute,
   } as any)
+const DashboardCalculatorListRoute = DashboardCalculatorListRouteImport.update({
+  id: '/calculator/list',
+  path: '/calculator/list',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardCalculatorOdwRoute = DashboardCalculatorOdwRouteImport.update({
+  id: '/calculator/odw',
+  path: '/calculator/odw',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardCalculatorUlepaRoute =
+  DashboardCalculatorUlepaRouteImport.update({
+    id: '/calculator/ulepa',
+    path: '/calculator/ulepa',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardEventsHeroesRoute = DashboardEventsHeroesRouteImport.update({
+  id: '/events/heroes',
+  path: '/events/heroes',
+  getParentRoute: () => DashboardRouteRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard/events/heroes.lazy').then((d) => d.Route),
+)
+const DashboardEventsHistoryRoute = DashboardEventsHistoryRouteImport.update({
+  id: '/events/history',
+  path: '/events/history',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardEventsListRoute = DashboardEventsListRouteImport.update({
+  id: '/events/list',
+  path: '/events/list',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardEventsRankingRoute = DashboardEventsRankingRouteImport.update({
+  id: '/events/ranking',
+  path: '/events/ranking',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardEventsVaultRoute = DashboardEventsVaultRouteImport.update({
+  id: '/events/vault',
+  path: '/events/vault',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardSkillsIndexRoute = DashboardSkillsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardSkillsRouteRoute,
 } as any)
-const DashboardSquadBuilderSquadsRoute =
-  DashboardSquadBuilderSquadsRouteImport.update({
-    id: '/squads',
-    path: '/squads',
+const DashboardSkillsRangeNameRouteRoute =
+  DashboardSkillsRangeNameRouteRouteImport.update({
+    id: '/$rangeName',
+    path: '/$rangeName',
+    getParentRoute: () => DashboardSkillsRouteRoute,
+  } as any)
+const DashboardSquadBuilderIndexRoute =
+  DashboardSquadBuilderIndexRouteImport.update({
+    id: '/',
+    path: '/',
     getParentRoute: () => DashboardSquadBuilderRouteRoute,
   } as any)
 const DashboardSquadBuilderAccountsRoute =
@@ -124,60 +173,11 @@ const DashboardSquadBuilderAccountsRoute =
     path: '/accounts',
     getParentRoute: () => DashboardSquadBuilderRouteRoute,
   } as any)
-const DashboardEventsVaultRoute = DashboardEventsVaultRouteImport.update({
-  id: '/events/vault',
-  path: '/events/vault',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardEventsRankingRoute = DashboardEventsRankingRouteImport.update({
-  id: '/events/ranking',
-  path: '/events/ranking',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardEventsListRoute = DashboardEventsListRouteImport.update({
-  id: '/events/list',
-  path: '/events/list',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardEventsHistoryRoute = DashboardEventsHistoryRouteImport.update({
-  id: '/events/history',
-  path: '/events/history',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardEventsHeroesRoute = DashboardEventsHeroesRouteImport.update({
-  id: '/events/heroes',
-  path: '/events/heroes',
-  getParentRoute: () => DashboardRouteRoute,
-} as any).lazy(() =>
-  import('./routes/dashboard/events/heroes.lazy').then((d) => d.Route),
-)
-const DashboardCalculatorUlepaRoute =
-  DashboardCalculatorUlepaRouteImport.update({
-    id: '/calculator/ulepa',
-    path: '/calculator/ulepa',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardCalculatorOdwRoute = DashboardCalculatorOdwRouteImport.update({
-  id: '/calculator/odw',
-  path: '/calculator/odw',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardCalculatorListRoute = DashboardCalculatorListRouteImport.update({
-  id: '/calculator/list',
-  path: '/calculator/list',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardSkillsRangeNameRouteRoute =
-  DashboardSkillsRangeNameRouteRouteImport.update({
-    id: '/$rangeName',
-    path: '/$rangeName',
-    getParentRoute: () => DashboardSkillsRouteRoute,
-  } as any)
-const DashboardAuctionsTypeRouteRoute =
-  DashboardAuctionsTypeRouteRouteImport.update({
-    id: '/$type',
-    path: '/$type',
-    getParentRoute: () => DashboardAuctionsRouteRoute,
+const DashboardSquadBuilderSquadsRoute =
+  DashboardSquadBuilderSquadsRouteImport.update({
+    id: '/squads',
+    path: '/squads',
+    getParentRoute: () => DashboardSquadBuilderRouteRoute,
   } as any)
 const DashboardAuctionsTypeIndexRoute =
   DashboardAuctionsTypeIndexRouteImport.update({
@@ -185,6 +185,17 @@ const DashboardAuctionsTypeIndexRoute =
     path: '/',
     getParentRoute: () => DashboardAuctionsTypeRouteRoute,
   } as any)
+const DashboardAuctionsTypeProfessionRoute =
+  DashboardAuctionsTypeProfessionRouteImport.update({
+    id: '/$profession',
+    path: '/$profession',
+    getParentRoute: () => DashboardAuctionsTypeRouteRoute,
+  } as any)
+const DashboardEventsBetsAddRoute = DashboardEventsBetsAddRouteImport.update({
+  id: '/events/bets/add',
+  path: '/events/bets/add',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardSquadBuilderSquadsGroupIdRoute =
   DashboardSquadBuilderSquadsGroupIdRouteImport.update({
     id: '/squads_/$groupId',
@@ -195,17 +206,6 @@ const DashboardSquadBuilderSquadsGroupIdRoute =
       (d) => d.Route,
     ),
   )
-const DashboardEventsBetsAddRoute = DashboardEventsBetsAddRouteImport.update({
-  id: '/events/bets/add',
-  path: '/events/bets/add',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardAuctionsTypeProfessionRoute =
-  DashboardAuctionsTypeProfessionRouteImport.update({
-    id: '/$profession',
-    path: '/$profession',
-    getParentRoute: () => DashboardAuctionsTypeRouteRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -405,25 +405,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/waiting-room': {
-      id: '/waiting-room'
-      path: '/waiting-room'
-      fullPath: '/waiting-room'
-      preLoaderRoute: typeof WaitingRoomRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -433,11 +419,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/waiting-room': {
+      id: '/waiting-room'
+      path: '/waiting-room'
+      fullPath: '/waiting-room'
+      preLoaderRoute: typeof WaitingRoomRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/': {
@@ -447,18 +447,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/tasks': {
-      id: '/dashboard/tasks'
-      path: '/tasks'
-      fullPath: '/dashboard/tasks'
-      preLoaderRoute: typeof DashboardTasksRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/profile': {
-      id: '/dashboard/profile'
-      path: '/profile'
-      fullPath: '/dashboard/profile'
-      preLoaderRoute: typeof DashboardProfileRouteImport
+    '/dashboard/auctions': {
+      id: '/dashboard/auctions'
+      path: '/auctions'
+      fullPath: '/dashboard/auctions'
+      preLoaderRoute: typeof DashboardAuctionsRouteRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/player-list': {
@@ -468,11 +461,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPlayerListRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/squad-builder': {
-      id: '/dashboard/squad-builder'
-      path: '/squad-builder'
-      fullPath: '/dashboard/squad-builder'
-      preLoaderRoute: typeof DashboardSquadBuilderRouteRouteImport
+    '/dashboard/profile': {
+      id: '/dashboard/profile'
+      path: '/profile'
+      fullPath: '/dashboard/profile'
+      preLoaderRoute: typeof DashboardProfileRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/skills': {
@@ -482,81 +475,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSkillsRouteRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/auctions': {
-      id: '/dashboard/auctions'
-      path: '/auctions'
-      fullPath: '/dashboard/auctions'
-      preLoaderRoute: typeof DashboardAuctionsRouteRouteImport
+    '/dashboard/squad-builder': {
+      id: '/dashboard/squad-builder'
+      path: '/squad-builder'
+      fullPath: '/dashboard/squad-builder'
+      preLoaderRoute: typeof DashboardSquadBuilderRouteRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/squad-builder/': {
-      id: '/dashboard/squad-builder/'
-      path: '/'
-      fullPath: '/dashboard/squad-builder/'
-      preLoaderRoute: typeof DashboardSquadBuilderIndexRouteImport
-      parentRoute: typeof DashboardSquadBuilderRouteRoute
-    }
-    '/dashboard/skills/': {
-      id: '/dashboard/skills/'
-      path: '/'
-      fullPath: '/dashboard/skills/'
-      preLoaderRoute: typeof DashboardSkillsIndexRouteImport
-      parentRoute: typeof DashboardSkillsRouteRoute
-    }
-    '/dashboard/squad-builder/squads': {
-      id: '/dashboard/squad-builder/squads'
-      path: '/squads'
-      fullPath: '/dashboard/squad-builder/squads'
-      preLoaderRoute: typeof DashboardSquadBuilderSquadsRouteImport
-      parentRoute: typeof DashboardSquadBuilderRouteRoute
-    }
-    '/dashboard/squad-builder/accounts': {
-      id: '/dashboard/squad-builder/accounts'
-      path: '/accounts'
-      fullPath: '/dashboard/squad-builder/accounts'
-      preLoaderRoute: typeof DashboardSquadBuilderAccountsRouteImport
-      parentRoute: typeof DashboardSquadBuilderRouteRoute
-    }
-    '/dashboard/events/vault': {
-      id: '/dashboard/events/vault'
-      path: '/events/vault'
-      fullPath: '/dashboard/events/vault'
-      preLoaderRoute: typeof DashboardEventsVaultRouteImport
+    '/dashboard/tasks': {
+      id: '/dashboard/tasks'
+      path: '/tasks'
+      fullPath: '/dashboard/tasks'
+      preLoaderRoute: typeof DashboardTasksRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/events/ranking': {
-      id: '/dashboard/events/ranking'
-      path: '/events/ranking'
-      fullPath: '/dashboard/events/ranking'
-      preLoaderRoute: typeof DashboardEventsRankingRouteImport
-      parentRoute: typeof DashboardRouteRoute
+    '/dashboard/auctions/$type': {
+      id: '/dashboard/auctions/$type'
+      path: '/$type'
+      fullPath: '/dashboard/auctions/$type'
+      preLoaderRoute: typeof DashboardAuctionsTypeRouteRouteImport
+      parentRoute: typeof DashboardAuctionsRouteRoute
     }
-    '/dashboard/events/list': {
-      id: '/dashboard/events/list'
-      path: '/events/list'
-      fullPath: '/dashboard/events/list'
-      preLoaderRoute: typeof DashboardEventsListRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/events/history': {
-      id: '/dashboard/events/history'
-      path: '/events/history'
-      fullPath: '/dashboard/events/history'
-      preLoaderRoute: typeof DashboardEventsHistoryRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/events/heroes': {
-      id: '/dashboard/events/heroes'
-      path: '/events/heroes'
-      fullPath: '/dashboard/events/heroes'
-      preLoaderRoute: typeof DashboardEventsHeroesRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/calculator/ulepa': {
-      id: '/dashboard/calculator/ulepa'
-      path: '/calculator/ulepa'
-      fullPath: '/dashboard/calculator/ulepa'
-      preLoaderRoute: typeof DashboardCalculatorUlepaRouteImport
+    '/dashboard/calculator/list': {
+      id: '/dashboard/calculator/list'
+      path: '/calculator/list'
+      fullPath: '/dashboard/calculator/list'
+      preLoaderRoute: typeof DashboardCalculatorListRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/calculator/odw': {
@@ -566,12 +510,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCalculatorOdwRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/calculator/list': {
-      id: '/dashboard/calculator/list'
-      path: '/calculator/list'
-      fullPath: '/dashboard/calculator/list'
-      preLoaderRoute: typeof DashboardCalculatorListRouteImport
+    '/dashboard/calculator/ulepa': {
+      id: '/dashboard/calculator/ulepa'
+      path: '/calculator/ulepa'
+      fullPath: '/dashboard/calculator/ulepa'
+      preLoaderRoute: typeof DashboardCalculatorUlepaRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/events/heroes': {
+      id: '/dashboard/events/heroes'
+      path: '/events/heroes'
+      fullPath: '/dashboard/events/heroes'
+      preLoaderRoute: typeof DashboardEventsHeroesRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/events/history': {
+      id: '/dashboard/events/history'
+      path: '/events/history'
+      fullPath: '/dashboard/events/history'
+      preLoaderRoute: typeof DashboardEventsHistoryRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/events/list': {
+      id: '/dashboard/events/list'
+      path: '/events/list'
+      fullPath: '/dashboard/events/list'
+      preLoaderRoute: typeof DashboardEventsListRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/events/ranking': {
+      id: '/dashboard/events/ranking'
+      path: '/events/ranking'
+      fullPath: '/dashboard/events/ranking'
+      preLoaderRoute: typeof DashboardEventsRankingRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/events/vault': {
+      id: '/dashboard/events/vault'
+      path: '/events/vault'
+      fullPath: '/dashboard/events/vault'
+      preLoaderRoute: typeof DashboardEventsVaultRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/skills/': {
+      id: '/dashboard/skills/'
+      path: '/'
+      fullPath: '/dashboard/skills/'
+      preLoaderRoute: typeof DashboardSkillsIndexRouteImport
+      parentRoute: typeof DashboardSkillsRouteRoute
     }
     '/dashboard/skills/$rangeName': {
       id: '/dashboard/skills/$rangeName'
@@ -580,12 +566,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSkillsRangeNameRouteRouteImport
       parentRoute: typeof DashboardSkillsRouteRoute
     }
-    '/dashboard/auctions/$type': {
-      id: '/dashboard/auctions/$type'
-      path: '/$type'
-      fullPath: '/dashboard/auctions/$type'
-      preLoaderRoute: typeof DashboardAuctionsTypeRouteRouteImport
-      parentRoute: typeof DashboardAuctionsRouteRoute
+    '/dashboard/squad-builder/': {
+      id: '/dashboard/squad-builder/'
+      path: '/'
+      fullPath: '/dashboard/squad-builder/'
+      preLoaderRoute: typeof DashboardSquadBuilderIndexRouteImport
+      parentRoute: typeof DashboardSquadBuilderRouteRoute
+    }
+    '/dashboard/squad-builder/accounts': {
+      id: '/dashboard/squad-builder/accounts'
+      path: '/accounts'
+      fullPath: '/dashboard/squad-builder/accounts'
+      preLoaderRoute: typeof DashboardSquadBuilderAccountsRouteImport
+      parentRoute: typeof DashboardSquadBuilderRouteRoute
+    }
+    '/dashboard/squad-builder/squads': {
+      id: '/dashboard/squad-builder/squads'
+      path: '/squads'
+      fullPath: '/dashboard/squad-builder/squads'
+      preLoaderRoute: typeof DashboardSquadBuilderSquadsRouteImport
+      parentRoute: typeof DashboardSquadBuilderRouteRoute
     }
     '/dashboard/auctions/$type/': {
       id: '/dashboard/auctions/$type/'
@@ -594,12 +594,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAuctionsTypeIndexRouteImport
       parentRoute: typeof DashboardAuctionsTypeRouteRoute
     }
-    '/dashboard/squad-builder/squads_/$groupId': {
-      id: '/dashboard/squad-builder/squads_/$groupId'
-      path: '/squads/$groupId'
-      fullPath: '/dashboard/squad-builder/squads/$groupId'
-      preLoaderRoute: typeof DashboardSquadBuilderSquadsGroupIdRouteImport
-      parentRoute: typeof DashboardSquadBuilderRouteRoute
+    '/dashboard/auctions/$type/$profession': {
+      id: '/dashboard/auctions/$type/$profession'
+      path: '/$profession'
+      fullPath: '/dashboard/auctions/$type/$profession'
+      preLoaderRoute: typeof DashboardAuctionsTypeProfessionRouteImport
+      parentRoute: typeof DashboardAuctionsTypeRouteRoute
     }
     '/dashboard/events/bets/add': {
       id: '/dashboard/events/bets/add'
@@ -608,12 +608,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardEventsBetsAddRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/auctions/$type/$profession': {
-      id: '/dashboard/auctions/$type/$profession'
-      path: '/$profession'
-      fullPath: '/dashboard/auctions/$type/$profession'
-      preLoaderRoute: typeof DashboardAuctionsTypeProfessionRouteImport
-      parentRoute: typeof DashboardAuctionsTypeRouteRoute
+    '/dashboard/squad-builder/squads_/$groupId': {
+      id: '/dashboard/squad-builder/squads_/$groupId'
+      path: '/squads/$groupId'
+      fullPath: '/dashboard/squad-builder/squads/$groupId'
+      preLoaderRoute: typeof DashboardSquadBuilderSquadsGroupIdRouteImport
+      parentRoute: typeof DashboardSquadBuilderRouteRoute
     }
   }
 }
