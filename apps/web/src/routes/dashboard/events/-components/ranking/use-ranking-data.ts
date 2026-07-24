@@ -6,7 +6,7 @@ import * as Order from "effect/Order";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 
 import { rankingAtom } from "@/features/events/ranking/ranking-atoms";
-import type { RankingItem } from "@/features/events/ranking/ranking-list";
+import type { RankingItem } from "@/routes/dashboard/events/-components/ranking/ranking-list";
 
 interface UseRankingDataParams {
   currentSortBy: "points" | "bets" | "gold";

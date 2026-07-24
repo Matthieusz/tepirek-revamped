@@ -38,7 +38,6 @@ import {
 import { eventsAtom } from "@/features/events/core/event-atoms";
 import { getEventSelectDisplay } from "@/features/events/core/select-display";
 import { EventSelectItems } from "@/features/events/core/select-utils";
-import { AddHeroModal } from "@/features/events/heroes/add-hero-modal";
 import {
   deleteHeroAtom,
   heroesAtom,
@@ -46,6 +45,7 @@ import {
 } from "@/features/events/heroes/hero-atoms";
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
+import { AddHeroModal } from "@/routes/dashboard/events/-components/heroes/add-hero-modal";
 import type { AuthSession } from "@/types/route";
 
 type HeroToDelete = {

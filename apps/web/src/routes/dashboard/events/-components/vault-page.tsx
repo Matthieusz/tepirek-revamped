@@ -35,10 +35,10 @@ import {
   togglePaidOutInVaultAtom,
   vaultAtom,
 } from "@/features/events/vault/vault-atoms";
-import { VaultUserCard } from "@/features/events/vault/vault-user-card";
 import { getErrorMessage } from "@/lib/errors";
 import { formatVaultEarnings } from "@/lib/gold";
 import { isAdmin } from "@/lib/route-helpers";
+import { VaultUserCard } from "@/routes/dashboard/events/-components/vault/vault-user-card";
 import type { AuthSession } from "@/types/route";
 
 const routeApi = getRouteApi("/dashboard/events/vault");

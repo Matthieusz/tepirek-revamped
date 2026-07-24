@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { EditBetModal } from "@/features/events/bets/edit-bet-modal";
+import { EditBetModal } from "@/routes/dashboard/events/-components/history/edit-bet-modal";
 
 interface BetCardMember {
   userId: string;

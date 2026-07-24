@@ -30,7 +30,6 @@ import {
   deleteBetAtom,
   paginatedBetsAtom,
 } from "@/features/events/bets/bet-atoms";
-import { BetCard } from "@/features/events/bets/bet-card";
 import { calculatePointsPerMember } from "@/features/events/bets/bet-helpers";
 import { eventsAtom } from "@/features/events/core/event-atoms";
 import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
@@ -47,6 +46,7 @@ import { heroesByEventAtom } from "@/features/events/heroes/hero-atoms";
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
+import { BetCard } from "@/routes/dashboard/events/-components/history/bet-card";
 import type { AuthSession } from "@/types/route";
 
 type BetToDelete = {

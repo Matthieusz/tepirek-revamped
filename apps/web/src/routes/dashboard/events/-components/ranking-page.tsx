@@ -26,15 +26,15 @@ import {
 import { useEventHeroFilter } from "@/features/events/core/use-event-hero-filter";
 import { heroesByEventAtom } from "@/features/events/heroes/hero-atoms";
 import { rankingAtom } from "@/features/events/ranking/ranking-atoms";
-import { RankingList } from "@/features/events/ranking/ranking-list";
-import type { RankingItem } from "@/features/events/ranking/ranking-list";
 import { RankingSortFiltersSchema } from "@/features/events/ranking/ranking-sort";
 import type { RankingSort } from "@/features/events/ranking/ranking-sort";
-import { StatsPopover } from "@/features/events/ranking/stats-popover";
-import { useRankingData } from "@/features/events/ranking/use-ranking-data";
-import { DistributeGoldModal } from "@/features/events/vault/distribute-gold-modal";
 import { isAdmin } from "@/lib/route-helpers";
 import { useFilterPersistence } from "@/lib/use-filter-persistence";
+import { DistributeGoldModal } from "@/routes/dashboard/events/-components/ranking/distribute-gold-modal";
+import { RankingList } from "@/routes/dashboard/events/-components/ranking/ranking-list";
+import type { RankingItem } from "@/routes/dashboard/events/-components/ranking/ranking-list";
+import { StatsPopover } from "@/routes/dashboard/events/-components/ranking/stats-popover";
+import { useRankingData } from "@/routes/dashboard/events/-components/ranking/use-ranking-data";
 import type { AuthSession } from "@/types/route";
 
 const routeApi = getRouteApi("/dashboard/events/ranking");

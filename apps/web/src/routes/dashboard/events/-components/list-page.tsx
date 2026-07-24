@@ -29,8 +29,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AddEventModal } from "@/features/events/core/add-event-modal";
-import { EventActionButtonLabel } from "@/features/events/core/event-action-button-label";
 import {
   deleteEventAtom,
   eventsAtom,
@@ -40,6 +38,8 @@ import {
 import { getEventIcon } from "@/lib/constants";
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
+import { AddEventModal } from "@/routes/dashboard/events/-components/list/add-event-modal";
+import { EventActionButtonLabel } from "@/routes/dashboard/events/-components/list/event-action-button-label";
 import type { AuthSession } from "@/types/route";
 
 type EventAction = {
