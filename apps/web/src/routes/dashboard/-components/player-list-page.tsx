@@ -5,12 +5,12 @@ import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { CheckCircle2, Clock, Search, Users } from "lucide-react";
 import { useState } from "react";
 
-import { buildPlayerColumns } from "@/components/players-table/columns";
-import { PlayerTable } from "@/components/players-table/player-table";
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Input } from "@/components/ui/input";
 import { usersAtom } from "@/features/users/user-atoms";
 import { isAdmin } from "@/lib/route-helpers";
+import { buildPlayerColumns } from "@/routes/dashboard/-components/players-table/columns";
+import { PlayerTable } from "@/routes/dashboard/-components/players-table/player-table";
 import type { AuthSession } from "@/types/route";
 
 interface PlayerListPageProps {
