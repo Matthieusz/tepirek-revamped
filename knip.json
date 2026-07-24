@@ -5,11 +5,12 @@
   "ignore": [
     "apps/web/src/components/reui/**",
     "apps/web/src/components/ui/**",
-    "apps/web/src/lib/route-helpers.ts",
     "apps/web/src/features/squad-builder/squad-group-atoms.ts",
-    "apps/web/src/types/route.ts",
-    "packages/api/src/test/integration/builders.ts",
     "packages/db/drizzle.config.ts"
   ],
-  "ignoreDependencies": ["@opentelemetry/api", "dotenv"]
+  "ignoreDependencies": [
+    "@effect/language-service",
+    "@opentelemetry/api",
+    "dotenv"
+  ]
 }
