@@ -1,10 +1,8 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { useParams } from "@tanstack/react-router";
+import { getRouteApi } from "@tanstack/react-router";
 import type { SquadGroupDetailSchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
 import * as HashMap from "effect/HashMap";
-import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
-import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { AlertTriangle, RotateCw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -42,12 +40,7 @@ import type { SquadGroupDraft } from "@/routes/dashboard/squad-builder/-state/sq
 // Kept as a named alias so route resource states and child props share one source type.
 type SquadGroupDetail = SquadGroupDetailSchema;
 
-const decodeSquadGroupId = Schema.decodeUnknownOption(
-  Schema.FiniteFromString.pipe(
-    Schema.check(Schema.isInt()),
-    Schema.check(Schema.isGreaterThan(0))
-  )
-);
+const routeApi = getRouteApi("/dashboard/squad-builder/squads_/$groupId");
 
 const makeClientKey = (): string => `new-${crypto.randomUUID()}`;
 
@@ -422,12 +415,9 @@ const SquadBuilderEditorContent = ({
 };
 
 export default function SquadBuilderEditorPage() {
-  const params = useParams({
-    from: "/dashboard/squad-builder/squads_/$groupId",
-  });
-  const groupId = decodeSquadGroupId(params.groupId);
+  const { groupId } = routeApi.useLoaderData();
 
-  if (Option.isNone(groupId)) {
+  if (groupId === null) {
     return (
       <Alert variant="destructive">
         <AlertTriangle aria-hidden="true" />
@@ -444,5 +434,5 @@ export default function SquadBuilderEditorPage() {
     );
   }
 
-  return <SquadBuilderEditorContent groupId={groupId.value} />;
+  return <SquadBuilderEditorContent groupId={groupId} />;
 }
