@@ -3,17 +3,19 @@ import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Num from "effect/Number";
-import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
+import type * as Redacted from "effect/Redacted";
 import * as Schedule from "effect/Schedule";
-import * as Schema from "effect/Schema";
+import type * as Schema from "effect/Schema";
+import * as HttpClient from "effect/unstable/http/HttpClient";
+import type * as HttpClientError from "effect/unstable/http/HttpClientError";
+import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
-import { hasDiscordGuild } from "./discord-guild.ts";
-import { DiscordRequestFailureError } from "./discord-request-failure-error.ts";
+import { DiscordGuilds, hasDiscordGuild } from "./discord-guild.ts";
 import { DiscordVerificationConfig } from "./discord-verification-config.ts";
 import { UserAdapterError } from "./user-adapter-error.ts";
 
+/** Verifies whether a user's linked Discord account belongs to the configured guild. */
 export class DiscordGuildVerifier extends Context.Service<
   DiscordGuildVerifier,
   {
@@ -23,161 +25,129 @@ export class DiscordGuildVerifier extends Context.Service<
   }
 >()("@tepirek-revamped/api/user/DiscordGuildVerifier") {}
 
-const DiscordGuilds = Schema.Array(
-  Schema.Struct({
-    id: Schema.String,
-  })
-);
-
+const DISCORD_API_BASE_URL = "https://discord.com/api";
+const DISCORD_GUILDS_PATH = "/users/@me/guilds";
 const DISCORD_REQUEST_TIMEOUT = "10 seconds";
 const DISCORD_RETRY_LIMIT = 2;
 const DISCORD_RETRY_BASE_DELAY_MILLISECONDS = 100;
 const MILLISECONDS_PER_SECOND = 1000;
-const RetryAfterSeconds = Schema.FiniteFromString.pipe(
-  Schema.check(Schema.isGreaterThanOrEqualTo(0))
-);
-const decodeRetryAfterSeconds = Schema.decodeUnknownOption(RetryAfterSeconds);
-const decodeRetryAfterDate = Schema.decodeUnknownOption(Schema.DateFromString);
 
 const parseRetryAfterMilliseconds = (
-  response: Response
+  error: HttpClientError.HttpClientError
 ): Effect.Effect<number | undefined> =>
   Effect.gen(function* parseRetryAfter() {
-    const retryAfter = response.headers.get("Retry-After");
-    if (retryAfter === null) {
+    if (
+      error.reason._tag !== "StatusCodeError" ||
+      error.reason.response.status !== 429
+    ) {
       return;
     }
 
-    const seconds = decodeRetryAfterSeconds(retryAfter);
-    if (Option.isSome(seconds)) {
-      return seconds.value * MILLISECONDS_PER_SECOND;
+    const retryAfter = error.reason.response.headers["retry-after"];
+    if (retryAfter === undefined) {
+      return;
     }
 
-    const retryAt = decodeRetryAfterDate(retryAfter);
-    if (Option.isNone(retryAt)) {
+    const seconds = Number(retryAfter);
+    if (!Number.isNaN(seconds)) {
+      return Number.isFinite(seconds) && seconds >= 0
+        ? seconds * MILLISECONDS_PER_SECOND
+        : undefined;
+    }
+
+    const retryAt = Date.parse(retryAfter);
+    if (!Number.isFinite(retryAt)) {
       return;
     }
 
     const currentTime = yield* Clock.currentTimeMillis;
-    return Num.max(0, retryAt.value.getTime() - currentTime);
+    const delay = retryAt - currentTime;
+    return delay >= 0 ? delay : undefined;
   });
 
 const discordRetrySchedule: Schedule.Schedule<
-  DiscordRequestFailureError,
-  DiscordRequestFailureError
+  HttpClientError.HttpClientError,
+  HttpClientError.HttpClientError
 > = Schedule.exponential(DISCORD_RETRY_BASE_DELAY_MILLISECONDS).pipe(
   Schedule.upTo({ times: DISCORD_RETRY_LIMIT }),
   Schedule.jittered,
-  Schedule.setInputType<DiscordRequestFailureError>(),
+  Schedule.setInputType<HttpClientError.HttpClientError>(),
   Schedule.passthrough,
   Schedule.modifyDelay(({ output: failure, duration: backoffDelay }) =>
-    Effect.succeed(
-      failure.retryAfterMilliseconds === undefined
-        ? backoffDelay
-        : Duration.max(
-            backoffDelay,
-            Duration.millis(failure.retryAfterMilliseconds)
-          )
+    parseRetryAfterMilliseconds(failure).pipe(
+      Effect.map((retryAfterMilliseconds) =>
+        retryAfterMilliseconds === undefined
+          ? backoffDelay
+          : Duration.max(backoffDelay, Duration.millis(retryAfterMilliseconds))
+      )
     )
   )
 );
 
-const retryTransient = <A>(
-  effect: Effect.Effect<A, DiscordRequestFailureError>
-): Effect.Effect<A, DiscordRequestFailureError> =>
-  effect.pipe(
-    Effect.retry({
+const isAcceptedDiscordStatus = (status: number): boolean =>
+  (status >= 200 && status < 300) || status === 401 || status === 403;
+
+const makeDiscordClient = (client: HttpClient.HttpClient) =>
+  client.pipe(
+    HttpClient.mapRequest(HttpClientRequest.prependUrl(DISCORD_API_BASE_URL)),
+    HttpClient.filterStatus(isAcceptedDiscordStatus),
+    // withRateLimiter retries 429 responses independently and could exceed this
+    // verifier's fixed three-attempt bound, so the bounded client retry owns it.
+    HttpClient.retryTransient({
+      retryOn: "errors-only",
       schedule: discordRetrySchedule,
-      while: (failure) => failure.retryable,
     })
   );
 
 const fetchDiscordGuilds = (
+  client: HttpClient.HttpClient,
   accessToken: Redacted.Redacted<string>
-): Effect.Effect<readonly { readonly id: string }[] | null, UserAdapterError> =>
-  Effect.tryPromise({
-    catch: (cause) =>
-      cause instanceof DiscordRequestFailureError
-        ? cause
-        : new DiscordRequestFailureError({
-            cause,
-            message: "Discord transport failure",
-            retryable: true,
-          }),
-    try: (signal) =>
-      fetch("https://discord.com/api/users/@me/guilds", {
-        headers: { Authorization: `Bearer ${Redacted.value(accessToken)}` },
-        signal,
-      }),
-  }).pipe(
-    Effect.flatMap((response) =>
-      Effect.gen(function* classifyDiscordResponse() {
-        if (response.status === 401 || response.status === 403) {
-          return null;
-        }
-
-        if (!response.ok) {
-          const retryable = response.status === 429 || response.status >= 500;
-          return yield* new DiscordRequestFailureError({
-            message: `Discord responded with status ${response.status}`,
-            retryAfterMilliseconds:
-              response.status === 429
-                ? yield* parseRetryAfterMilliseconds(response)
-                : undefined,
-            retryable,
-          });
-        }
-
-        return yield* Effect.tryPromise({
-          catch: (cause) =>
-            new DiscordRequestFailureError({
-              cause,
-              message: "Discord response decoding failed",
-              retryable: false,
-            }),
-          try: () => response.json(),
-        });
-      })
-    ),
-    retryTransient,
-    Effect.flatMap((payload) =>
-      payload === null
-        ? Effect.succeed(null)
-        : Schema.decodeUnknownEffect(DiscordGuilds)(payload)
-    ),
-    Effect.mapError(
-      (cause) =>
-        new UserAdapterError({
-          cause,
-          operation: "verifyDiscordGuildMembership",
-        })
-    ),
-    Effect.timeoutOrElse({
-      duration: DISCORD_REQUEST_TIMEOUT,
-      orElse: () =>
-        Effect.fail(
-          new UserAdapterError({
-            cause: new Error("Discord request timed out"),
-            operation: "verifyDiscordGuildMembership",
-          })
-        ),
-    })
+): Effect.Effect<
+  DiscordGuilds | false,
+  HttpClientError.HttpClientError | Schema.SchemaError
+> => {
+  const request = HttpClientRequest.get(DISCORD_GUILDS_PATH).pipe(
+    HttpClientRequest.acceptJson,
+    HttpClientRequest.bearerToken(accessToken)
   );
 
+  return Effect.gen(function* fetchGuilds() {
+    const response = yield* client.execute(request);
+    if (response.status === 401 || response.status === 403) {
+      return false as const;
+    }
+    return yield* HttpClientResponse.schemaBodyJson(DiscordGuilds)(response);
+  });
+};
+
+/** Live Discord verifier requiring explicit configuration and HTTP transport. */
 export const DiscordGuildVerifierLiveLayer: Layer.Layer<
   DiscordGuildVerifier,
   never,
-  DiscordVerificationConfig
+  DiscordVerificationConfig | HttpClient.HttpClient
 > = Layer.effect(
   DiscordGuildVerifier,
   Effect.gen(function* DiscordGuildVerifierLiveLayer() {
     const config = yield* DiscordVerificationConfig;
+    const client = makeDiscordClient(yield* HttpClient.HttpClient);
 
     return DiscordGuildVerifier.of({
       verifyMembership: Effect.fn("DiscordGuildVerifier.verifyMembership")(
         function* verifyMembership(accessToken) {
-          const guilds = yield* fetchDiscordGuilds(accessToken);
-          return hasDiscordGuild(guilds, config.guildId);
+          const guilds = yield* fetchDiscordGuilds(client, accessToken).pipe(
+            Effect.timeout(DISCORD_REQUEST_TIMEOUT),
+            Effect.mapError(
+              (cause) =>
+                new UserAdapterError({
+                  cause,
+                  operation: "verifyDiscordGuildMembership",
+                })
+            )
+          );
+
+          return guilds === false
+            ? false
+            : hasDiscordGuild(guilds, config.guildId);
         }
       ),
     });

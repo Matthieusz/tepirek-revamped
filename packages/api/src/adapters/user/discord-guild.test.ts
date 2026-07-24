@@ -13,10 +13,6 @@ describe("hasDiscordGuild", () => {
     expect(hasDiscordGuild([{ id: "guild-1" }], "guild-2")).toBe(false);
   });
 
-  it("returns false for invalid guild payloads", () => {
-    expect(hasDiscordGuild({ id: "guild-1" }, "guild-1")).toBe(false);
-  });
-
   it("returns false for an empty target guild id", () => {
     expect(hasDiscordGuild([{ id: "guild-1" }], "")).toBe(false);
   });

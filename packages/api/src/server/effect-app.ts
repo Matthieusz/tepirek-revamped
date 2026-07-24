@@ -5,6 +5,7 @@ import {
 } from "@tepirek-revamped/db/effect";
 import type { ConfigError } from "effect/Config";
 import * as Layer from "effect/Layer";
+import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import type { SqlError } from "effect/unstable/sql/SqlError";
 
 import { AnnouncementStoreLayer } from "../adapters/announcement/announcement-store.ts";
@@ -106,6 +107,10 @@ const makeApiStableLayer = (
   discordConfigLayer = DiscordVerificationConfig.layer,
   firecrawlConfigLayer = FirecrawlConfigServiceLiveLayer
 ): Layer.Layer<SquadBuilderServices, SqlError | ConfigError> => {
+  const discordVerifierLayer = DiscordGuildVerifierLiveLayer.pipe(
+    Layer.provide(Layer.merge(discordConfigLayer, FetchHttpClient.layer))
+  );
+
   const databaseBackedStores = Layer.mergeAll(
     AnnouncementStoreLayer.pipe(Layer.provide(databaseLayer)),
     TodoStoreLayer.pipe(Layer.provide(databaseLayer)),
@@ -118,7 +123,7 @@ const makeApiStableLayer = (
     AuctionStoreLayer.pipe(Layer.provide(databaseLayer)),
     UserStoreLayer.pipe(Layer.provide(databaseLayer)),
     discordConfigLayer,
-    DiscordGuildVerifierLiveLayer.pipe(Layer.provide(discordConfigLayer))
+    discordVerifierLayer
   );
 
   const squadBuilderStores = DrizzleSquadBuilderStoresLayer.pipe(

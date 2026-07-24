@@ -1,20 +1,21 @@
-import * as Arr from "effect/Array";
-import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-const DiscordGuilds = Schema.Array(
-  Schema.Struct({
-    id: Schema.String,
-  })
-);
+/** Schema for the Discord guild fields trusted by membership verification. */
+export const DiscordGuild = Schema.Struct({
+  id: Schema.String,
+});
 
-/** Returns whether a Discord guild payload contains the requested guild id. */
-export const hasDiscordGuild = (guilds: unknown, guildId: string): boolean => {
-  if (guildId === "") {
-    return false;
-  }
+/** A Discord guild decoded at the HTTP response boundary. */
+export type DiscordGuild = typeof DiscordGuild.Type;
 
-  return Schema.decodeUnknownOption(DiscordGuilds)(guilds).pipe(
-    Option.exists(Arr.some((guild) => guild.id === guildId))
-  );
-};
+/** Schema for the Discord guild-list response. */
+export const DiscordGuilds = Schema.Array(DiscordGuild);
+
+/** A decoded, readonly Discord guild-list response. */
+export type DiscordGuilds = typeof DiscordGuilds.Type;
+
+/** Returns whether decoded Discord guilds contain the requested guild id. */
+export const hasDiscordGuild = (
+  guilds: DiscordGuilds,
+  guildId: string
+): boolean => guildId !== "" && guilds.some((guild) => guild.id === guildId);

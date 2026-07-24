@@ -1,11 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import { TestClock } from "effect/testing";
-import { afterEach, vi } from "vitest";
+import * as HttpClient from "effect/unstable/http/HttpClient";
+import * as HttpClientError from "effect/unstable/http/HttpClientError";
+import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
 import { makeDiscordVerificationConfigLayer } from "./discord-verification-config.ts";
 import {
@@ -13,187 +17,364 @@ import {
   DiscordGuildVerifierLiveLayer,
 } from "./discord-verification-service.ts";
 
-const verifierLayer = DiscordGuildVerifierLiveLayer.pipe(
-  Layer.provide(makeDiscordVerificationConfigLayer({ guildId: "guild-1" }))
-);
+const TEST_ACCESS_TOKEN = Redacted.make("test-token");
 
-const verify = (accessToken = Redacted.make("token")) =>
+type ClientStep = (
+  request: HttpClientRequest.HttpClientRequest
+) => Effect.Effect<
+  HttpClientResponse.HttpClientResponse,
+  HttpClientError.HttpClientError
+>;
+
+const jsonResponse =
+  (body: unknown, status = 200): ClientStep =>
+  (request) =>
+    Effect.succeed(
+      HttpClientResponse.fromWeb(request, Response.json(body, { status }))
+    );
+
+const textResponse =
+  (body: string): ClientStep =>
+  (request) =>
+    Effect.succeed(HttpClientResponse.fromWeb(request, new Response(body)));
+
+const emptyResponse =
+  (status: number, headers?: Readonly<Record<string, string>>): ClientStep =>
+  (request) =>
+    Effect.succeed(
+      HttpClientResponse.fromWeb(
+        request,
+        new Response(null, {
+          status,
+          ...(headers === undefined ? {} : { headers }),
+        })
+      )
+    );
+
+const makeSequenceClient = (
+  steps: readonly ClientStep[],
+  requests: HttpClientRequest.HttpClientRequest[] = []
+): HttpClient.HttpClient => {
+  let attempt = 0;
+  return HttpClient.make((request) =>
+    Effect.suspend(() => {
+      requests.push(request);
+      const step = steps[attempt];
+      attempt += 1;
+      return step === undefined
+        ? Effect.die(new Error("Unexpected Discord HTTP attempt"))
+        : step(request);
+    })
+  );
+};
+
+const verifierLayer = (client: HttpClient.HttpClient) =>
+  DiscordGuildVerifierLiveLayer.pipe(
+    Layer.provide(
+      Layer.merge(
+        makeDiscordVerificationConfigLayer({ guildId: "guild-1" }),
+        Layer.succeed(HttpClient.HttpClient, client)
+      )
+    )
+  );
+
+const verify = (
+  client: HttpClient.HttpClient,
+  accessToken = TEST_ACCESS_TOKEN
+) =>
   DiscordGuildVerifier.use((verifier) =>
     verifier.verifyMembership(accessToken)
-  ).pipe(Effect.provide(verifierLayer));
+  ).pipe(Effect.provide(verifierLayer(client)));
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+const awaitAfter = <A, E>(
+  fiber: Fiber.Fiber<A, E>,
+  duration: Parameters<typeof TestClock.adjust>[0]
+) =>
+  Effect.gen(function* awaitAdjustedFiber() {
+    yield* TestClock.adjust(duration);
+    return yield* Fiber.await(fiber);
+  });
 
 describe("DiscordGuildVerifier", () => {
-  it.effect("recognizes membership from a decoded guild payload", () =>
-    Effect.gen(function* recognizeMembership() {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(() => Promise.resolve(Response.json([{ id: "guild-1" }])))
+  it.effect("constructs the authenticated Discord guild-list request", () =>
+    Effect.gen(function* requestDiscordGuilds() {
+      const requests: HttpClientRequest.HttpClientRequest[] = [];
+      const client = makeSequenceClient(
+        [jsonResponse([{ id: "guild-1" }])],
+        requests
       );
 
-      expect(yield* verify()).toBe(true);
+      expect(yield* verify(client)).toBe(true);
+      expect(requests).toHaveLength(1);
+      expect(requests[0]).toMatchObject({
+        headers: {
+          accept: "application/json",
+          authorization: "Bearer test-token",
+        },
+        method: "GET",
+        url: "https://discord.com/api/users/@me/guilds",
+      });
+      expect(JSON.stringify(requests[0])).not.toContain("test-token");
     })
   );
 
-  it.effect("returns false for non-membership and unauthorized tokens", () =>
+  it.effect("returns false when the decoded guild list has no match", () =>
     Effect.gen(function* rejectNonMembership() {
-      vi.stubGlobal(
-        "fetch",
-        vi
-          .fn()
-          .mockResolvedValueOnce(Response.json([{ id: "guild-2" }]))
-          .mockResolvedValueOnce(new Response(null, { status: 401 }))
-      );
-
-      expect(yield* verify()).toBe(false);
-      expect(yield* verify()).toBe(false);
+      const client = makeSequenceClient([jsonResponse([{ id: "guild-2" }])]);
+      expect(yield* verify(client)).toBe(false);
     })
   );
 
-  it.effect.each([
-    ["malformed payload", Response.json({ id: "guild-1" })],
-    ["rate limiting", new Response(null, { status: 429 })],
-    ["server failure", new Response(null, { status: 503 })],
-  ])("maps %s to UserAdapterError", (_name, response) =>
-    Effect.gen(function* mapFailure() {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(() => Promise.resolve(response))
-      );
+  it.effect.each([401, 403])(
+    "returns false when Discord responds with %s",
+    (status) =>
+      Effect.gen(function* rejectAuthorization() {
+        const client = makeSequenceClient([emptyResponse(status)]);
+        expect(yield* verify(client)).toBe(false);
+      })
+  );
 
-      const fiber = yield* verify().pipe(Effect.forkChild);
-      yield* TestClock.adjust(1000);
-      const exit = yield* Fiber.await(fiber);
-      expect(Exit.isFailure(exit)).toBe(true);
+  it.effect("maps a malformed Discord schema payload with its cause", () =>
+    Effect.gen(function* rejectMalformedPayload() {
+      const client = makeSequenceClient([jsonResponse({ id: "guild-1" })]);
+      const error = yield* Effect.flip(verify(client));
+
+      expect(error).toMatchObject({
+        _tag: "UserAdapterError",
+        cause: { _tag: "SchemaError" },
+        operation: "verifyDiscordGuildMembership",
+      });
     })
   );
 
-  it.effect("retries transient responses with a bounded policy", () =>
-    Effect.gen(function* retryTransientResponses() {
-      const fetchMock = vi
-        .fn()
-        .mockResolvedValueOnce(new Response(null, { status: 503 }))
-        .mockResolvedValueOnce(Response.json([{ id: "guild-1" }]));
-      vi.stubGlobal("fetch", fetchMock);
+  it.effect("maps malformed Discord JSON with its native decode cause", () =>
+    Effect.gen(function* rejectMalformedJson() {
+      const client = makeSequenceClient([textResponse("{")]);
+      const error = yield* Effect.flip(verify(client));
 
-      const fiber = yield* verify().pipe(Effect.forkChild);
-      yield* TestClock.adjust(200);
+      expect(error).toMatchObject({
+        _tag: "UserAdapterError",
+        cause: {
+          _tag: "HttpClientError",
+          reason: { _tag: "DecodeError" },
+        },
+        operation: "verifyDiscordGuildMembership",
+      });
+    })
+  );
+
+  it.effect("does not retry a non-transient Discord status", () =>
+    Effect.gen(function* rejectPermanentFailure() {
+      const requests: HttpClientRequest.HttpClientRequest[] = [];
+      const client = makeSequenceClient([emptyResponse(501)], requests);
+      const error = yield* Effect.flip(verify(client));
+
+      expect(requests).toHaveLength(1);
+      expect(error).toMatchObject({
+        _tag: "UserAdapterError",
+        cause: {
+          _tag: "HttpClientError",
+          reason: {
+            _tag: "StatusCodeError",
+            response: { status: 501 },
+          },
+        },
+      });
+    })
+  );
+
+  it.effect.each([408, 429, 500, 502, 503, 504])(
+    "retries transient Discord status %s exactly twice",
+    (status) =>
+      Effect.gen(function* retryTransientStatus() {
+        const requests: HttpClientRequest.HttpClientRequest[] = [];
+        const client = makeSequenceClient(
+          [emptyResponse(status), emptyResponse(status), emptyResponse(status)],
+          requests
+        );
+
+        const fiber = yield* verify(client).pipe(Effect.forkChild);
+        const exit = yield* awaitAfter(fiber, "2 seconds");
+
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(requests).toHaveLength(3);
+      })
+  );
+
+  it.effect("recovers after a transient Discord response", () =>
+    Effect.gen(function* recoverFromTransientStatus() {
+      const requests: HttpClientRequest.HttpClientRequest[] = [];
+      const client = makeSequenceClient(
+        [emptyResponse(503), jsonResponse([{ id: "guild-1" }])],
+        requests
+      );
+
+      const fiber = yield* verify(client).pipe(Effect.forkChild);
+      yield* TestClock.adjust("1 second");
 
       expect(yield* Fiber.join(fiber)).toBe(true);
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(requests).toHaveLength(2);
     })
   );
 
-  it.effect("honors Discord Retry-After guidance for rate limits", () =>
-    Effect.gen(function* honorRetryAfter() {
-      const fetchMock = vi
-        .fn()
-        .mockResolvedValueOnce(
-          new Response(null, {
-            headers: { "Retry-After": "2" },
-            status: 429,
-          })
-        )
-        .mockResolvedValueOnce(Response.json([{ id: "guild-1" }]));
-      vi.stubGlobal("fetch", fetchMock);
+  it.effect("keeps one attempt bound across mixed transient failures", () =>
+    Effect.gen(function* boundMixedFailures() {
+      const requests: HttpClientRequest.HttpClientRequest[] = [];
+      const transportErrors: HttpClientError.HttpClientError[] = [];
+      const transportFailure: ClientStep = (request) => {
+        const error = new HttpClientError.HttpClientError({
+          reason: new HttpClientError.TransportError({
+            cause: new Error("network unavailable"),
+            request,
+          }),
+        });
+        transportErrors.push(error);
+        return Effect.fail(error);
+      };
+      const client = makeSequenceClient(
+        [transportFailure, emptyResponse(503), transportFailure],
+        requests
+      );
 
-      const fiber = yield* verify().pipe(Effect.forkChild);
+      const fiber = yield* verify(client).pipe(Effect.forkChild);
+      yield* TestClock.adjust("2 seconds");
+      const error = yield* Effect.flip(Fiber.join(fiber));
+
+      expect(requests).toHaveLength(3);
+      expect(error.cause).toBe(transportErrors[1]);
+    })
+  );
+
+  it.effect("waits for delta-seconds Retry-After guidance", () =>
+    Effect.gen(function* honorDeltaSeconds() {
+      const requests: HttpClientRequest.HttpClientRequest[] = [];
+      const client = makeSequenceClient(
+        [
+          emptyResponse(429, { "Retry-After": "2" }),
+          jsonResponse([{ id: "guild-1" }]),
+        ],
+        requests
+      );
+
+      const fiber = yield* verify(client).pipe(Effect.forkChild);
       yield* Effect.yieldNow;
       yield* TestClock.adjust(1999);
-      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(requests).toHaveLength(1);
       yield* TestClock.adjust(1);
 
       expect(yield* Fiber.join(fiber)).toBe(true);
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(requests).toHaveLength(2);
     })
   );
 
-  it.effect("ignores non-finite Retry-After values", () =>
-    Effect.gen(function* ignoreNonFiniteRetryAfter() {
-      const fetchMock = vi
-        .fn()
-        .mockResolvedValueOnce(
-          new Response(null, {
-            headers: { "Retry-After": "Infinity" },
-            status: 429,
-          })
-        )
-        .mockResolvedValueOnce(Response.json([{ id: "guild-1" }]));
-      vi.stubGlobal("fetch", fetchMock);
+  it.effect("uses the Effect clock for HTTP-date Retry-After guidance", () =>
+    Effect.gen(function* honorHttpDate() {
+      const requests: HttpClientRequest.HttpClientRequest[] = [];
+      const client = makeSequenceClient(
+        [
+          emptyResponse(429, {
+            "Retry-After": "Thu, 01 Jan 1970 00:00:02 GMT",
+          }),
+          jsonResponse([{ id: "guild-1" }]),
+        ],
+        requests
+      );
 
-      const fiber = yield* verify().pipe(Effect.forkChild);
-      yield* Effect.yieldNow;
-      yield* TestClock.adjust(1000);
-
-      expect(yield* Fiber.join(fiber)).toBe(true);
-      expect(fetchMock).toHaveBeenCalledTimes(2);
-    })
-  );
-
-  it.effect("uses the Effect clock for HTTP-date Retry-After values", () =>
-    Effect.gen(function* honorHttpDateRetryAfter() {
-      const fetchMock = vi
-        .fn()
-        .mockResolvedValueOnce(
-          new Response(null, {
-            headers: { "Retry-After": "Thu, 01 Jan 1970 00:00:02 GMT" },
-            status: 429,
-          })
-        )
-        .mockResolvedValueOnce(Response.json([{ id: "guild-1" }]));
-      vi.stubGlobal("fetch", fetchMock);
-
-      const fiber = yield* verify().pipe(Effect.forkChild);
+      const fiber = yield* verify(client).pipe(Effect.forkChild);
       yield* Effect.yieldNow;
       yield* TestClock.adjust(1999);
-      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(requests).toHaveLength(1);
       yield* TestClock.adjust(1);
 
       expect(yield* Fiber.join(fiber)).toBe(true);
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(requests).toHaveLength(2);
     })
   );
 
-  it.effect("aborts a request that exceeds the timeout", () =>
-    Effect.gen(function* abortTimedOutRequest() {
-      let observedSignal: AbortSignal | undefined;
-      vi.stubGlobal(
-        "fetch",
-        vi.fn((_input: string | URL | Request, init?: RequestInit) => {
-          observedSignal = init?.signal ?? undefined;
-          return Promise.withResolvers<Response>().promise;
-        })
+  it.effect.each(["Infinity", "-1", "not-a-date"])(
+    "ignores invalid Retry-After value %s",
+    (retryAfter) =>
+      Effect.gen(function* ignoreInvalidRetryAfter() {
+        const requests: HttpClientRequest.HttpClientRequest[] = [];
+        const client = makeSequenceClient(
+          [
+            emptyResponse(429, { "Retry-After": retryAfter }),
+            jsonResponse([{ id: "guild-1" }]),
+          ],
+          requests
+        );
+
+        const fiber = yield* verify(client).pipe(Effect.forkChild);
+        yield* TestClock.adjust("1 second");
+
+        expect(yield* Fiber.join(fiber)).toBe(true);
+        expect(requests).toHaveLength(2);
+      })
+  );
+
+  it.effect("cuts off Retry-After guidance at the overall deadline", () =>
+    Effect.gen(function* timeOutProviderDelay() {
+      const requests: HttpClientRequest.HttpClientRequest[] = [];
+      const client = makeSequenceClient(
+        [emptyResponse(429, { "Retry-After": "20" })],
+        requests
       );
 
-      const fiber = yield* verify().pipe(Effect.forkChild);
+      const fiber = yield* verify(client).pipe(Effect.forkChild);
       yield* Effect.yieldNow;
-      yield* TestClock.adjust(10_000);
-      const exit = yield* Fiber.await(fiber);
+      yield* TestClock.adjust(9999);
+      expect(requests).toHaveLength(1);
+      yield* TestClock.adjust(1);
+      const error = yield* Effect.flip(Fiber.join(fiber));
 
-      expect(Exit.isFailure(exit)).toBe(true);
-      expect(observedSignal?.aborted).toBe(true);
+      expect(requests).toHaveLength(1);
+      expect(error).toMatchObject({
+        _tag: "UserAdapterError",
+        cause: { _tag: "TimeoutError" },
+      });
     })
   );
 
-  it.effect("forwards interruption to the request AbortSignal", () =>
-    Effect.gen(function* interruptRequest() {
-      let observedSignal: AbortSignal | undefined;
-      vi.stubGlobal(
-        "fetch",
-        vi.fn((_input: string | URL | Request, init?: RequestInit) => {
-          observedSignal = init?.signal ?? undefined;
-          return Promise.withResolvers<Response>().promise;
-        })
+  it.effect("applies ten seconds to the complete multi-attempt operation", () =>
+    Effect.gen(function* enforceOverallDeadline() {
+      const requests: HttpClientRequest.HttpClientRequest[] = [];
+      const slowFailure: ClientStep = (request) =>
+        emptyResponse(503)(request).pipe(Effect.delay("6 seconds"));
+      const client = makeSequenceClient(
+        [slowFailure, slowFailure, slowFailure],
+        requests
       );
 
-      const fiber = yield* verify().pipe(Effect.forkChild);
+      const fiber = yield* verify(client).pipe(Effect.forkChild);
       yield* Effect.yieldNow;
+      yield* TestClock.adjust("7 seconds");
+      expect(requests).toHaveLength(2);
+      yield* TestClock.adjust("3 seconds");
+      const error = yield* Effect.flip(Fiber.join(fiber));
+
+      expect(requests).toHaveLength(2);
+      expect(error.cause).toMatchObject({ _tag: "TimeoutError" });
+    })
+  );
+
+  it.effect("forwards interruption to the injected HTTP client effect", () =>
+    Effect.gen(function* interruptHttpClient() {
+      const started = yield* Deferred.make<true>();
+      const interrupted = yield* Deferred.make<true>();
+      const client = HttpClient.make((_request) =>
+        Deferred.succeed(started, true).pipe(
+          Effect.andThen(
+            Effect.never.pipe(
+              Effect.ensuring(Deferred.succeed(interrupted, true))
+            )
+          )
+        )
+      );
+
+      const fiber = yield* verify(client).pipe(Effect.forkChild);
+      yield* Deferred.await(started);
       yield* Fiber.interrupt(fiber);
-
-      expect(observedSignal?.aborted).toBe(true);
+      yield* Deferred.await(interrupted);
     })
   );
 });
