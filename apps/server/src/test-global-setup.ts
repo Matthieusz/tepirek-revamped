@@ -6,7 +6,6 @@ const defaultTestDatabaseUrl =
   "postgresql://postgres:password@localhost:5433/tepirek-revamped-test";
 const isManagedTestDatabase = process.env.TEST_DATABASE_URL === undefined;
 const testDatabaseUrl = process.env.TEST_DATABASE_URL ?? defaultTestDatabaseUrl;
-const { pool: testPool } = createDatabase(testDatabaseUrl);
 
 const runDockerCompose = (args: readonly string[]) => {
   execFileSync(
@@ -21,16 +20,30 @@ export const setup = async () => {
     runDockerCompose(["up", "-d", "--wait"]);
   }
 
+  const { pool: testPool } = createDatabase(testDatabaseUrl);
+
   try {
     await testPool.query("select 1");
-  } catch {
-    throw new Error("Could not connect to the smoke test database");
+  } catch (error) {
+    try {
+      await testPool.end();
+    } finally {
+      if (isManagedTestDatabase) {
+        runDockerCompose(["down"]);
+      }
+    }
+    throw new Error("Could not connect to the smoke test database", {
+      cause: error,
+    });
   }
 
   return async () => {
-    await testPool.end();
-    if (isManagedTestDatabase) {
-      runDockerCompose(["down"]);
+    try {
+      await testPool.end();
+    } finally {
+      if (isManagedTestDatabase) {
+        runDockerCompose(["down"]);
+      }
     }
   };
 };
