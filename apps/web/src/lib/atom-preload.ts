@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import type * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import type * as Atom from "effect/unstable/reactivity/Atom";
 import type * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry";
-import { getResult } from "effect/unstable/reactivity/AtomRegistry";
+import { getResult, mount } from "effect/unstable/reactivity/AtomRegistry";
 
 type AsyncResultAtom = Atom.Atom<AsyncResult.AsyncResult<unknown, unknown>>;
 
@@ -18,23 +18,23 @@ export const preloadAtomResults = async (
   atoms: readonly AsyncResultAtom[]
 ): Promise<void> => {
   for (const atom of atoms) {
-    const cachedResult = registry.getNodes().get(atom)?.value();
-    if (cachedResult?._tag === "Failure") {
+    if (registry.get(atom)._tag === "Failure") {
       registry.refresh(atom);
     }
   }
 
-  const unmount = atoms.map((atom) => registry.mount(atom));
-
-  try {
-    await Promise.all(
-      atoms.map((atom) =>
-        Effect.runPromise(getResult(registry, atom, { suspendOnWaiting: true }))
-      )
+  const preload = Effect.gen(function* preloadAtomResultsEffect() {
+    yield* Effect.all(
+      atoms.map((atom) => mount(registry, atom)),
+      { discard: true }
     );
-  } finally {
-    for (const release of unmount) {
-      release();
-    }
-  }
+    yield* Effect.all(
+      atoms.map((atom) =>
+        getResult(registry, atom, { suspendOnWaiting: true })
+      ),
+      { concurrency: "unbounded", discard: true }
+    );
+  });
+
+  await Effect.runPromise(Effect.scoped(preload));
 };

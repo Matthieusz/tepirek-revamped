@@ -29,6 +29,36 @@ describe("preloadAtomResults", () => {
     await preload;
   });
 
+  it("cancels sibling resources when one fails", async () => {
+    const siblingStarted = Deferred.makeUnsafe<boolean>();
+    let siblingInterrupted = false;
+    const sibling = Atom.make(
+      Effect.sync(() => {
+        Effect.runSync(Deferred.succeed(siblingStarted, true));
+      }).pipe(
+        Effect.andThen(Effect.never),
+        Effect.onInterrupt(() =>
+          Effect.sync(() => {
+            siblingInterrupted = true;
+          })
+        )
+      )
+    );
+    const failing = Atom.make(
+      Deferred.await(siblingStarted).pipe(
+        Effect.andThen(Effect.fail("load failed"))
+      )
+    );
+    const registry = AtomRegistry.make();
+
+    await expect(
+      preloadAtomResults(registry, [failing, sibling])
+    ).rejects.toThrow("load failed");
+    await vi.waitFor(() => {
+      expect(siblingInterrupted).toBe(true);
+    });
+  });
+
   it("reuses fresh successful values without duplicate requests", async () => {
     let requests = 0;
     const resource = Atom.make(
@@ -46,20 +76,23 @@ describe("preloadAtomResults", () => {
   });
 
   it("surfaces failures and refreshes them on retry", async () => {
+    const firstRequestRelease = Deferred.makeUnsafe<boolean>();
     let requests = 0;
     const resource = Atom.make(
       Effect.suspend(() => {
         requests += 1;
         return requests === 1
-          ? Effect.fail("load failed")
+          ? Deferred.await(firstRequestRelease).pipe(
+              Effect.andThen(Effect.fail("load failed"))
+            )
           : Effect.succeed("loaded");
       })
     );
     const registry = AtomRegistry.make({ defaultIdleTTL: 400 });
 
-    await expect(preloadAtomResults(registry, [resource])).rejects.toThrow(
-      "load failed"
-    );
+    const firstPreload = preloadAtomResults(registry, [resource]);
+    Effect.runSync(Deferred.succeed(firstRequestRelease, true));
+    await expect(firstPreload).rejects.toThrow("load failed");
     await preloadAtomResults(registry, [resource]);
 
     expect(requests).toBe(2);
