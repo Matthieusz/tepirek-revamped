@@ -8,6 +8,34 @@
     },
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "diagnosticSeverity": {
+          "lazyEffect": "off"
+        },
+        "ignoreEffectWarningsInTscExitCode": true,
+        "overrides": [
+          {
+            "include": ["src/**/*.ts"],
+            "exclude": ["src/**/*.test.ts"],
+            "options": {
+              "diagnosticSeverity": {
+                "globalFetch": "warning",
+                "globalFetchInEffect": "warning",
+                "globalRandom": "warning",
+                "globalRandomInEffect": "warning",
+                "globalTimers": "warning",
+                "globalTimersInEffect": "warning",
+                "processEnv": "warning",
+                "processEnvInEffect": "warning",
+                "unsafeEffectTypeAssertion": "warning"
+              }
+            }
+          }
+        ]
+      }
+    ]
   }
 }

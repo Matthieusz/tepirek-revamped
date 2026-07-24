@@ -37,7 +37,7 @@
   "languages": {
     "JavaScript": {
       "format_on_save": "on",
-      "language_servers": ["!biome"],
+      "language_servers": ["!biome", "!typescript-language-server", "..."],
       "prettier": {
         "allowed": false
       },
@@ -54,7 +54,7 @@
     },
     "TypeScript": {
       "format_on_save": "on",
-      "language_servers": ["!biome"],
+      "language_servers": ["!biome", "!typescript-language-server", "..."],
       "prettier": {
         "allowed": false
       },
@@ -71,7 +71,7 @@
     },
     "TSX": {
       "format_on_save": "on",
-      "language_servers": ["!biome"],
+      "language_servers": ["!biome", "!typescript-language-server", "..."],
       "prettier": {
         "allowed": false
       },

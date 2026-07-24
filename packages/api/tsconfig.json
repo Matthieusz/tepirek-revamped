@@ -6,7 +6,39 @@
     "sourceMap": true,
     "outDir": "dist",
     "composite": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "diagnosticSeverity": {
+          "lazyEffect": "off"
+        },
+        "ignoreEffectWarningsInTscExitCode": true,
+        "overrides": [
+          {
+            "include": ["src/**/*.ts"],
+            "exclude": [
+              "src/**/*.test.ts",
+              "src/**/*.integration.test.ts",
+              "src/test/**/*.ts"
+            ],
+            "options": {
+              "diagnosticSeverity": {
+                "globalFetch": "warning",
+                "globalFetchInEffect": "warning",
+                "globalRandom": "warning",
+                "globalRandomInEffect": "warning",
+                "globalTimers": "warning",
+                "globalTimersInEffect": "warning",
+                "processEnv": "warning",
+                "processEnvInEffect": "warning",
+                "unsafeEffectTypeAssertion": "warning"
+              }
+            }
+          }
+        ]
+      }
+    ]
   },
   "include": ["src"]
 }

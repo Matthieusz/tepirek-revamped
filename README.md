@@ -58,6 +58,20 @@ pnpm dev
 
 Open <http://localhost:3001>. The API is available at <http://localhost:3000>; its OpenAPI document is at <http://localhost:3000/api/openapi.json>.
 
+## Effect TypeScript tooling
+
+This repository uses `@effect/tsgo` as both its patched TypeScript compiler and its TypeScript language server. `pnpm install` runs `effect-tsgo patch` through the `prepare` script. Confirm the patched compiler with:
+
+```bash
+pnpm tsc --version
+```
+
+The version must include an `effect-tsgo` suffix. VS Code settings are checked in under [`.vscode/settings.json`](.vscode/settings.json); use the workspace TypeScript version when prompted. Do not run another TypeScript language server alongside the native TypeScript-Go server, because that duplicates diagnostics and degrades editor performance.
+
+Other editors must launch the patched workspace `tsgo` binary as their sole TypeScript language server. Run `pnpm effect-tsgo get-exe-path` to locate it for the current platform, and consult the [`@effect/tsgo` editor guidance](https://github.com/Effect-TS/tsgo#best-practices) when configuring the client.
+
+Effect diagnostics use their defaults throughout the repository. The API and server TypeScript projects additionally warn about direct global fetch, environment, timer, and randomness access, plus unsafe Effect type assertions. These checks are intentionally not enabled for the React web project.
+
 ## Commands
 
 | Command                 | Purpose                                      |
