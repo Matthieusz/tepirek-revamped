@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import CalculatorListPage from "@/pages/dashboard/calculator/list";
+import CalculatorListPage from "./-components/list-page";
 
 const routeApi = getRouteApi("/dashboard/calculator/list");
 

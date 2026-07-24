@@ -15,7 +15,7 @@ import * as Schema from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 
-import { parseLevels } from "@/lib/calculators/bounty";
+import { parseLevels } from "@/features/calculators/bounty";
 import { parseGoldAmount } from "@/lib/gold";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;

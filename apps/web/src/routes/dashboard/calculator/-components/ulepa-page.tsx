@@ -36,8 +36,8 @@ import {
   ULEPA_RARITIES,
   calculateUpgradeSummary,
   formatGold,
-} from "@/lib/calculators/ulepa";
-import type { UlepaRarity } from "@/lib/calculators/ulepa";
+} from "@/features/calculators/ulepa";
+import type { UlepaRarity } from "@/features/calculators/ulepa";
 import { CalculatorItemLevelSchema } from "@/lib/form-schemas";
 import type { AuthSession } from "@/types/route";
 

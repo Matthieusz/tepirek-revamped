@@ -18,11 +18,11 @@ import {
   calculateMinVictimLevelForPenalty,
   parseLevels,
   wouldReceivePenalty,
-} from "@/lib/calculators/bounty";
+} from "@/features/calculators/bounty";
 import type {
   GroupPenaltyResult,
   SinglePenaltyResult,
-} from "@/lib/calculators/bounty";
+} from "@/features/calculators/bounty";
 import {
   CalculatorLevelSchema,
   CalculatorLevelsSchema,

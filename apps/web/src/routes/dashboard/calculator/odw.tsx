@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import CalculatorOdwPage from "@/pages/dashboard/calculator/odw";
+import CalculatorOdwPage from "./-components/odw-page";
 
 const routeApi = getRouteApi("/dashboard/calculator/odw");
 

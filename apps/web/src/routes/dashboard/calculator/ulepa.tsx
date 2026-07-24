@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import CalculatorUlepaPage from "@/pages/dashboard/calculator/ulepa";
+import CalculatorUlepaPage from "./-components/ulepa-page";
 
 const routeApi = getRouteApi("/dashboard/calculator/ulepa");
 
