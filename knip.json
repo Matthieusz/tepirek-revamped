@@ -12,5 +12,12 @@
     "@effect/language-service",
     "@opentelemetry/api",
     "dotenv"
-  ]
+  ],
+  "workspaces": {
+    "apps/server": {
+      "vitest": {
+        "entry": ["src/*.test.ts"]
+      }
+    }
+  }
 }
