@@ -1,3 +1,4 @@
+import { makeBetterAuthServiceLayer } from "@tepirek-revamped/auth";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import * as Layer from "effect/Layer";
@@ -7,7 +8,6 @@ import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
 
 import { SquadGroupSummarySchema } from "./protocol/squad-builder/squad-groups/squad-groups-schema.ts";
-import { makeBetterAuthAdapterLayer } from "./server/auth/better-auth-adapter.ts";
 import { makeApiLiveLayerFromValues } from "./server/effect-app.ts";
 import { AppHttpApiLayer } from "./server/http-api-handlers.ts";
 import { testAuth } from "./test/integration/auth.ts";
@@ -24,7 +24,7 @@ const apiLiveLayer = makeApiLiveLayerFromValues({
 
 const appHttpApiLayer = AppHttpApiLayer.pipe(
   Layer.provideMerge(apiLiveLayer),
-  Layer.provideMerge(makeBetterAuthAdapterLayer(testAuth)),
+  Layer.provideMerge(makeBetterAuthServiceLayer(testAuth)),
   Layer.provide(HttpServer.layerServices)
 );
 

@@ -1,12 +1,12 @@
-import type { Auth } from "@tepirek-revamped/auth";
+import type { BetterAuthInstance } from "@tepirek-revamped/auth";
 
 /**
  * Session type inferred from Better Auth
  * Uses auth.$Infer.Session to get the exact types from the auth configuration
  */
 export interface AuthSession {
-  session: Auth["$Infer"]["Session"]["session"];
-  user: Auth["$Infer"]["Session"]["user"];
+  session: BetterAuthInstance["$Infer"]["Session"]["session"];
+  user: BetterAuthInstance["$Infer"]["Session"]["user"];
 }
 
 /**

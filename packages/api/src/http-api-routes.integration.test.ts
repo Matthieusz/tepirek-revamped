@@ -1,3 +1,4 @@
+import { makeBetterAuthServiceLayer } from "@tepirek-revamped/auth";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
@@ -8,7 +9,6 @@ import { describe, expect, it } from "vitest";
 
 import { AnnouncementStoreError } from "./adapters/announcement/announcement-store-error.ts";
 import { AnnouncementStore } from "./adapters/announcement/announcement-store.ts";
-import { makeBetterAuthAdapterLayer } from "./server/auth/better-auth-adapter.ts";
 import { makeApiLiveLayerFromValues } from "./server/effect-app.ts";
 import { AppHttpApiLayer } from "./server/http-api-handlers.ts";
 import { PreviewMargonemProfileImportService } from "./services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
@@ -31,7 +31,7 @@ const apiLiveLayer = makeApiLiveLayerFromValues({
 
 const appHttpApiLayer = AppHttpApiLayer.pipe(
   Layer.provideMerge(apiLiveLayer),
-  Layer.provideMerge(makeBetterAuthAdapterLayer(testAuth)),
+  Layer.provideMerge(makeBetterAuthServiceLayer(testAuth)),
   Layer.provide(HttpServer.layerServices)
 );
 
@@ -91,7 +91,7 @@ const failingAnnouncementHttpApi = HttpRouter.toWebHandler(
       Layer.merge(failingAnnouncementStoreLayer, failingProfilePreviewLayer)
     ),
     Layer.provideMerge(apiLiveLayer),
-    Layer.provideMerge(makeBetterAuthAdapterLayer(testAuth)),
+    Layer.provideMerge(makeBetterAuthServiceLayer(testAuth)),
     Layer.provide(HttpServer.layerServices)
   ),
   { disableLogger: true }

@@ -18,7 +18,7 @@ The monorepo has six workspaces: `apps/web` (TanStack Start + React frontend on 
 
 ### Executable boundary
 
-The outermost layer where environment values are parsed and dependencies are wired before any traffic flows. In the server (`apps/server/src/index.ts`) the Hono app is the executable boundary: it reads startup config, constructs the database, auth, and Effect `AppHttpApiLayer`, and narrows the exported web handler. Observability transport values are also parsed here because they configure external OTLP, but the observability layers themselves remain adapter concerns.
+The outermost layer where environment values are parsed and dependencies are wired before any traffic flows. In the server (`apps/server/src/index.ts`), startup configuration is parsed before the launched server layer acquires the shared PostgreSQL pool, Better Auth service, Effect HTTP handlers, or Bun listener. Hono remains the HTTP routing boundary, while Effect scope owns the complete long-lived resource graph. Observability transport values are parsed here because they configure external OTLP, but the observability layers themselves remain adapter concerns.
 
 ### HttpApi contract / handlers / adapters (Effect layering)
 

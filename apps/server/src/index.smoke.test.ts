@@ -1,9 +1,13 @@
+import { expect, it } from "@effect/vitest";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
-import { afterAll, describe, expect, it } from "vitest";
 
-import { makeServerApplication } from "./index.js";
+import { makeServerApplicationLayer, ServerApplication } from "./index.js";
+import type { ServerApplicationService } from "./index.js";
 
-const serverApplication = makeServerApplication({
+const serverApplicationLayer = makeServerApplicationLayer({
   auth: {
     betterAuthSecret: Redacted.make("test-secret-at-least-32-characters"),
     betterAuthUrl: "http://localhost:3000",
@@ -29,30 +33,48 @@ const serverApplication = makeServerApplication({
   },
 });
 
-afterAll(async () => {
-  await serverApplication.shutdown();
-});
+const withServerApplication = <A>(
+  use: (application: ServerApplicationService) => Effect.Effect<A>
+) =>
+  Effect.scoped(
+    Effect.gen(function* scopedServerApplication() {
+      const context = yield* Layer.build(serverApplicationLayer);
+      return yield* use(Context.get(context, ServerApplication));
+    })
+  );
 
-describe("server smoke", () => {
-  it("responds to the Effect HttpApi health endpoint", async () => {
-    const response = await serverApplication.app.request("/health");
+it.effect("responds to the Effect HttpApi health endpoint", () =>
+  withServerApplication(({ app }) =>
+    Effect.gen(function* healthRequest() {
+      const response = yield* Effect.promise(
+        async () => await app.request("/health")
+      );
+      const body = yield* Effect.promise(() => response.json());
 
-    await expect(response.json()).resolves.toBe("OK");
-    expect(response.status).toBe(200);
-  });
+      expect(body).toBe("OK");
+      expect(response.status).toBe(200);
+    })
+  )
+);
 
-  it("handles CORS preflight for the configured origin", async () => {
-    const response = await serverApplication.app.request("/health", {
-      headers: {
-        "Access-Control-Request-Method": "POST",
-        Origin: "http://localhost:3001",
-      },
-      method: "OPTIONS",
-    });
+it.effect("handles CORS preflight for the configured origin", () =>
+  withServerApplication(({ app }) =>
+    Effect.gen(function* corsRequest() {
+      const response = yield* Effect.promise(
+        async () =>
+          await app.request("/health", {
+            headers: {
+              "Access-Control-Request-Method": "POST",
+              Origin: "http://localhost:3001",
+            },
+            method: "OPTIONS",
+          })
+      );
 
-    expect(response.status).toBe(204);
-    expect(response.headers.get("access-control-allow-origin")).toBe(
-      "http://localhost:3001"
-    );
-  });
-});
+      expect(response.status).toBe(204);
+      expect(response.headers.get("access-control-allow-origin")).toBe(
+        "http://localhost:3001"
+      );
+    })
+  )
+);

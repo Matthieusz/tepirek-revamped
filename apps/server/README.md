@@ -29,15 +29,15 @@ Do not commit `.env`. Rotate credentials if they appear in logs, screenshots, is
 
 ## Runtime ownership
 
-[`src/index.ts`](src/index.ts) is the composition root. It creates the PostgreSQL pool, Better Auth instance, Effect handlers, and Bun server.
+[`src/index.ts`](src/index.ts) parses startup configuration and launches one Effect server layer through `BunRuntime.runMain`. The layer owns a single 10-connection PostgreSQL pool shared by the application and Better Auth Drizzle adapters, the Better Auth service, both Effect HTTP handlers, and the Bun server.
 
-On `SIGINT`, `SIGTERM`, or Bun hot-module disposal, shutdown follows one idempotent path:
+`SIGINT` and `SIGTERM` interrupt the root Effect through the Bun runtime. Hot-module disposal interrupts the same root lifecycle. Scope closure then:
 
-1. stop accepting requests;
-2. dispose both Effect handlers;
-3. close the PostgreSQL pool.
+1. stops accepting requests and lets ordinary in-flight requests finish;
+2. disposes both Effect handlers;
+3. closes the shared PostgreSQL pool.
 
-If startup fails, resources already acquired are released.
+If a later startup stage fails, the scope releases every resource already acquired.
 
 ## Commands
 

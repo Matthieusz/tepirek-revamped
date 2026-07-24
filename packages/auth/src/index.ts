@@ -1,4 +1,5 @@
-import type { Database } from "@tepirek-revamped/db";
+import { BetterAuthDatabaseService } from "@tepirek-revamped/db/effect";
+import type { BetterAuthDatabase } from "@tepirek-revamped/db/effect";
 // biome-ignore lint/performance/noNamespaceImport: <one time use>
 import * as schema from "@tepirek-revamped/db/schema/auth";
 import { betterAuth } from "better-auth";
@@ -10,6 +11,21 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
+import { BetterAuthInitializationError } from "./better-auth-initialization-error.ts";
+import {
+  BetterAuthService,
+  makeBetterAuthService,
+} from "./better-auth-service.ts";
+
+export { BetterAuthInitializationError } from "./better-auth-initialization-error.ts";
+export {
+  BetterAuthService,
+  makeBetterAuthService,
+} from "./better-auth-service.ts";
+export type { BetterAuthServiceInterface } from "./better-auth-service.ts";
+export { BetterAuthUnavailable } from "./better-auth-unavailable.ts";
+
+/** Validated runtime values required to configure Better Auth. */
 export interface AuthEnv {
   readonly betterAuthSecret: Redacted.Redacted;
   readonly betterAuthUrl: string;
@@ -43,12 +59,7 @@ const authEnvConfig = Config.all({
   ),
 });
 
-/**
- * Effect config service for Better Auth's runtime configuration.
- *
- * Secrets remain redacted until `createAuth`, the synchronous Better Auth
- * construction boundary that requires raw strings.
- */
+/** Effect config service for Better Auth's runtime configuration. */
 export class AuthConfig extends Context.Service<AuthConfig, AuthEnv>()(
   "@tepirek-revamped/auth/AuthConfig"
 ) {}
@@ -56,11 +67,7 @@ export class AuthConfig extends Context.Service<AuthConfig, AuthEnv>()(
 /** Live Better Auth config layer backed by Effect's environment provider. */
 export const AuthConfigLiveLayer = Layer.effect(AuthConfig, authEnvConfig);
 
-/**
- * Read Better Auth configuration through Effect Config.
- *
- * Tests can provide `AuthConfig` directly instead of mutating process.env.
- */
+/** Read Better Auth configuration through Effect Config. */
 export const readAuthEnv = AuthConfig;
 
 /**
@@ -69,7 +76,7 @@ export const readAuthEnv = AuthConfig;
  * Better Auth and its Drizzle adapter require synchronous raw strings, so
  * secrets are unwrapped only while constructing that library instance.
  */
-export const createAuth = (env: AuthEnv, database: Database) =>
+export const createAuth = (env: AuthEnv, database: BetterAuthDatabase) =>
   betterAuth({
     advanced: env.isProduction
       ? {
@@ -111,7 +118,6 @@ export const createAuth = (env: AuthEnv, database: Database) =>
       },
     },
     trustedOrigins: [env.corsOrigin],
-
     user: {
       additionalFields: {
         role: {
@@ -130,9 +136,34 @@ export const createAuth = (env: AuthEnv, database: Database) =>
     },
   });
 
-/** Build Better Auth from provided config and database resources. */
-export const makeAuth = (database: Database) =>
-  readAuthEnv.pipe(Effect.map((env) => createAuth(env, database)));
+/** Vendor Better Auth runtime instance used by Hono and evlog. */
+export type BetterAuthInstance = ReturnType<typeof createAuth>;
 
-/** Better Auth instance constructed by the executable composition root. */
-export type Auth = ReturnType<typeof createAuth>;
+/** Session payload returned by Better Auth's vendor API. */
+export type BetterAuthSession = Awaited<
+  ReturnType<BetterAuthInstance["api"]["getSession"]>
+>;
+
+/** Construct Better Auth from validated config and the shared database adapter. */
+export const BetterAuthServiceLiveLayer = Layer.effect(
+  BetterAuthService,
+  Effect.gen(function* makeLiveBetterAuthService() {
+    const config = yield* AuthConfig;
+    const database = yield* BetterAuthDatabaseService;
+    const instance = yield* Effect.try({
+      catch: (cause) => new BetterAuthInitializationError({ cause }),
+      try: () => createAuth(config, database),
+    });
+    return makeBetterAuthService(instance);
+  })
+);
+
+/** Construct a Better Auth service layer around a supplied vendor instance. */
+export const makeBetterAuthServiceLayer = (
+  instance: BetterAuthInstance
+): Layer.Layer<BetterAuthService> =>
+  Layer.succeed(BetterAuthService, makeBetterAuthService(instance));
+
+/** Build a vendor instance from provided config and a database resource. */
+export const makeAuth = (database: BetterAuthDatabase) =>
+  readAuthEnv.pipe(Effect.map((env) => createAuth(env, database)));

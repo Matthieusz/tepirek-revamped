@@ -1,3 +1,4 @@
+import { BetterAuthService } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
@@ -11,7 +12,6 @@ import {
   SessionMiddleware,
   SessionUnavailable,
 } from "../../protocol/auth/http-api-middleware.ts";
-import { BetterAuthAdapter } from "./better-auth-adapter.ts";
 
 const headersFromRequest = (
   request: HttpServerRequest.HttpServerRequest
@@ -21,7 +21,7 @@ const headersFromRequest = (
 /** Load and decode the request session through the Better Auth boundary. */
 export const loadCurrentSession = Effect.fn("SessionMiddleware.loadSession")(
   function* loadCurrentSession(headers: Headers) {
-    const auth = yield* BetterAuthAdapter;
+    const auth = yield* BetterAuthService;
     const session = yield* auth
       .getSession(headers)
       .pipe(
@@ -46,11 +46,11 @@ export const loadCurrentSession = Effect.fn("SessionMiddleware.loadSession")(
   }
 );
 
-/** Session middleware implementation backed by the injected Better Auth adapter. */
+/** Session middleware implementation backed by the Better Auth service. */
 export const SessionMiddlewareLayer = Layer.effect(
   SessionMiddleware,
   Effect.gen(function* makeSessionMiddleware() {
-    const auth = yield* BetterAuthAdapter;
+    const auth = yield* BetterAuthService;
     const loadRequestSession = Effect.fnUntraced(function* loadRequestSession<
       A,
       E,
@@ -59,7 +59,7 @@ export const SessionMiddlewareLayer = Layer.effect(
       const request = yield* HttpServerRequest.HttpServerRequest;
       const currentSession = yield* loadCurrentSession(
         headersFromRequest(request)
-      ).pipe(Effect.provideService(BetterAuthAdapter, auth));
+      ).pipe(Effect.provideService(BetterAuthService, auth));
       return yield* effect.pipe(
         Effect.provideService(CurrentSession, currentSession)
       );

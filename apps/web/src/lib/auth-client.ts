@@ -1,4 +1,4 @@
-import type { Auth } from "@tepirek-revamped/auth";
+import type { BetterAuthInstance } from "@tepirek-revamped/auth";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
@@ -9,5 +9,5 @@ export const authClient = createAuthClient({
   fetchOptions: {
     credentials: "include",
   },
-  plugins: [inferAdditionalFields<Auth>()],
+  plugins: [inferAdditionalFields<BetterAuthInstance>()],
 });

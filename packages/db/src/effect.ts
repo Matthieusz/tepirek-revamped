@@ -7,12 +7,25 @@ import type { Success } from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
-import { types } from "pg";
+import { ConnectionError, SqlError } from "effect/unstable/sql/SqlError";
+import { Pool, types } from "pg";
 
+import {
+  BetterAuthDatabaseService,
+  makeBetterAuthDatabase,
+} from "./better-auth-database.ts";
 import {
   DatabaseUrlConfig,
   DatabaseUrlConfigLayer,
 } from "./database-url-config.ts";
+import { SharedPostgresPool } from "./shared-postgres-pool.ts";
+
+export { BetterAuthDatabaseService } from "./better-auth-database.ts";
+export type { BetterAuthDatabase } from "./better-auth-database.ts";
+export { SharedPostgresPool } from "./shared-postgres-pool.ts";
+
+/** Maximum number of PostgreSQL connections shared by all server adapters. */
+export const DATABASE_POOL_MAX_CONNECTIONS = 10;
 
 /**
  * PostgreSQL type OIDs for date/time types. `pg` parses these into JS `Date`
@@ -21,25 +34,17 @@ import {
  * Drizzle handle parsing and avoids double-parsing / timezone bugs.
  */
 const DATE_TIME_TYPE_IDS = HashSet.fromIterable([
-  // timestamp
-  1114,
-  // timestamptz
-  1184,
-  // date
-  1082,
-  // interval
-  1186,
-  // numeric[]
-  1231,
-  // timestamp[]
-  1115,
-  // timestamptz[]
-  1185,
-  // interval[]
-  1187,
-  // date[]
-  1182,
+  1114, 1184, 1082, 1186, 1231, 1115, 1185, 1187, 1182,
 ]);
+
+const postgresTypes = {
+  getTypeParser: (typeId: number, format?: "text" | "binary") => {
+    if (HashSet.has(DATE_TIME_TYPE_IDS, typeId)) {
+      return (value: unknown) => value;
+    }
+    return types.getTypeParser(typeId, format);
+  },
+};
 
 const DrizzleServicesLayer = Layer.merge(
   EffectCache.Default,
@@ -63,34 +68,57 @@ export class EffectDatabase extends Context.Service<
   EffectPgDatabase
 >()("@tepirek-revamped/db/EffectDatabase") {}
 
-/** Create a managed PostgreSQL client layer from a redacted database URL. */
-export const makePgClientLayer = (databaseUrl: Redacted.Redacted) =>
-  Pg.layer({
-    types: {
-      getTypeParser: (typeId, format) => {
-        if (HashSet.has(DATE_TIME_TYPE_IDS, typeId)) {
-          return (val: unknown) => val;
-        }
-        return types.getTypeParser(typeId, format);
-      },
-    },
-    url: databaseUrl,
-  });
+/** Acquire one validated, scoped PostgreSQL pool with intentional capacity. */
+export const makeSharedPostgresPoolLayer = (
+  databaseUrl: Redacted.Redacted
+): Layer.Layer<SharedPostgresPool, SqlError> =>
+  Layer.effect(
+    SharedPostgresPool,
+    Effect.acquireRelease(
+      Effect.gen(function* acquireSharedPostgresPool() {
+        const pool = new Pool({
+          connectionString: Redacted.value(databaseUrl),
+          max: DATABASE_POOL_MAX_CONNECTIONS,
+          types: postgresTypes,
+        });
+        pool.on("error", (_error) => null);
 
-/** Create a managed PostgreSQL client layer from a raw boundary database URL. */
-export const makePgClientLayerFromUrl = (databaseUrl: string) =>
-  makePgClientLayer(Redacted.make(databaseUrl));
+        yield* Effect.tryPromise({
+          catch: (cause) =>
+            new SqlError({
+              reason: new ConnectionError({
+                cause,
+                message: "SharedPostgresPool: Failed to connect",
+                operation: "connect",
+              }),
+            }),
+          try: () => pool.query("SELECT 1"),
+        }).pipe(Effect.onError(() => Effect.promise(() => pool.end())));
 
-/**
- * Live PgClient layer that reads the database URL from DatabaseUrlConfig.
- *
- * Uses `Layer.unwrap` so the config service is resolved once during layer
- * construction, matching the reference pattern in `pg-live.ts`.
- */
-export const PgClientLiveFromConfig = Layer.unwrap(
-  Effect.gen(function* PgClientLiveFromConfig() {
-    const url = yield* DatabaseUrlConfig;
-    return makePgClientLayer(url);
+        return pool;
+      }),
+      (pool) => Effect.promise(() => pool.end()),
+      { interruptible: true }
+    )
+  );
+
+/** Build the Effect PostgreSQL client from the already-owned shared pool. */
+export const PgClientFromSharedPoolLayer = Pg.layerFrom(
+  Effect.gen(function* makePgClientFromSharedPool() {
+    const pool = yield* SharedPostgresPool;
+    return yield* Pg.fromPool({
+      acquire: Effect.succeed(pool),
+      types: postgresTypes,
+    });
+  })
+);
+
+/** Build Better Auth's node-postgres Drizzle adapter from the shared pool. */
+export const BetterAuthDatabaseLayer = Layer.effect(
+  BetterAuthDatabaseService,
+  Effect.gen(function* makeBetterAuthDatabaseService() {
+    const pool = yield* SharedPostgresPool;
+    return makeBetterAuthDatabase(pool);
   })
 );
 
@@ -101,13 +129,42 @@ export const EffectDatabaseLayer: Layer.Layer<
   Pg.PgClient
 > = Layer.effect(EffectDatabase, makeDrizzleDatabase());
 
-/**
- * Live EffectDatabase layer that reads `DATABASE_URL` from Effect Config.
- *
- * Composes `DatabaseUrlConfig`, `PgClientLiveFromConfig`, and
- * `EffectDatabaseLayer` so that the database URL is provided by config at
- * the composition root rather than a raw process.env read.
- */
+/** Create both database adapters over one scoped PostgreSQL pool. */
+export const makeSharedDatabaseLayer = (databaseUrl: Redacted.Redacted) => {
+  const poolLayer = makeSharedPostgresPoolLayer(databaseUrl);
+  const pgClientLayer = PgClientFromSharedPoolLayer.pipe(
+    Layer.provideMerge(poolLayer)
+  );
+  const effectDatabaseLayer = EffectDatabaseLayer.pipe(
+    Layer.provideMerge(pgClientLayer)
+  );
+  const betterAuthDatabaseLayer = BetterAuthDatabaseLayer.pipe(
+    Layer.provideMerge(poolLayer)
+  );
+
+  return Layer.merge(effectDatabaseLayer, betterAuthDatabaseLayer);
+};
+
+/** Create a managed PostgreSQL client layer from a redacted database URL. */
+export const makePgClientLayer = (databaseUrl: Redacted.Redacted) =>
+  Pg.layer({
+    types: postgresTypes,
+    url: databaseUrl,
+  });
+
+/** Create a managed PostgreSQL client layer from a raw boundary database URL. */
+export const makePgClientLayerFromUrl = (databaseUrl: string) =>
+  makePgClientLayer(Redacted.make(databaseUrl));
+
+/** Live PgClient layer that reads the database URL from DatabaseUrlConfig. */
+export const PgClientLiveFromConfig = Layer.unwrap(
+  Effect.gen(function* PgClientLiveFromConfig() {
+    const url = yield* DatabaseUrlConfig;
+    return makePgClientLayer(url);
+  })
+);
+
+/** Live EffectDatabase layer that reads `DATABASE_URL` from Effect Config. */
 export const EffectDatabaseLiveFromConfig = EffectDatabaseLayer.pipe(
   Layer.provide(
     PgClientLiveFromConfig.pipe(Layer.provide(DatabaseUrlConfigLayer))

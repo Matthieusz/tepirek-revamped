@@ -1,126 +1,102 @@
-import { describe, expect, it } from "vitest";
+import { expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import { Hono } from "hono";
 
-import { makeShutdown, stopServer } from "./server-lifecycle.js";
+import {
+  makeServerHostLayer,
+  ServerApplication,
+  withHotReload,
+} from "./index.js";
 
-describe("server lifecycle", () => {
-  it("awaits every finalizer and runs each one exactly once", async () => {
-    const calls: string[] = [];
-    const shutdown = makeShutdown([
-      {
-        dispose: async () => {
-          await Promise.resolve();
-          calls.push("app-http-api");
-        },
+const scopedBuild = <A, E>(layer: Layer.Layer<A, E>) =>
+  Effect.scoped(Layer.build(layer));
+
+it.effect("releases the server, handlers, and pool in dependency order", () => {
+  const calls: string[] = [];
+  const applicationLayer = Layer.effect(
+    ServerApplication,
+    Effect.gen(function* acquireControlledApplication() {
+      yield* Effect.acquireRelease(Effect.void, () =>
+        Effect.sync(() => {
+          calls.push("pool");
+        })
+      );
+      yield* Effect.acquireRelease(Effect.void, () =>
+        Effect.sync(() => {
+          calls.push("handlers");
+        })
+      );
+      return ServerApplication.of({ app: new Hono() });
+    })
+  );
+  const serverLayer = makeServerHostLayer(applicationLayer, () =>
+    Effect.succeed({
+      stop: () => {
+        calls.push("server");
+        return Promise.resolve();
       },
-      {
-        dispose: async () => {
-          await Promise.resolve();
-          calls.push("health-http-api");
-        },
-      },
-      {
-        dispose: async () => {
-          await Promise.resolve();
-          calls.push("database-pool");
-        },
-      },
-    ]);
+    })
+  );
 
-    const firstShutdown = shutdown();
-    const secondShutdown = shutdown();
-
-    expect(secondShutdown).toBe(firstShutdown);
-    await firstShutdown;
-    expect(calls.toSorted()).toEqual([
-      "app-http-api",
-      "database-pool",
-      "health-http-api",
-    ]);
+  return Effect.gen(function* verifyFinalizerOrder() {
+    yield* scopedBuild(serverLayer);
+    expect(calls).toEqual(["server", "handlers", "pool"]);
   });
+});
 
-  it("runs resource finalizers when stopping the server fails", async () => {
-    const calls: string[] = [];
-    const stopFailure = new Error("server stop failed");
-    const shutdown = makeShutdown([
-      {
-        dispose: async () => {
-          await Promise.resolve();
-          calls.push("app-http-api");
-        },
-      },
-      {
-        dispose: async () => {
-          await Promise.resolve();
-          calls.push("health-http-api");
-        },
-      },
-      {
-        dispose: async () => {
-          await Promise.resolve();
-          calls.push("database-pool");
-        },
-      },
-    ]);
+it.effect("releases acquired resources when server startup fails", () => {
+  const calls: string[] = [];
+  const applicationLayer = Layer.effect(
+    ServerApplication,
+    Effect.acquireRelease(
+      Effect.sync(() => ServerApplication.of({ app: new Hono() })),
+      () =>
+        Effect.sync(() => {
+          calls.push("application");
+        })
+    )
+  );
+  const startupFailure = new Error("server startup failed");
+  const serverLayer = makeServerHostLayer(applicationLayer, () =>
+    Effect.fail(startupFailure)
+  );
 
-    await expect(
-      stopServer({ stop: () => Promise.reject(stopFailure) }, shutdown)
-    ).rejects.toEqual(
-      new AggregateError([stopFailure], "Failed to stop server cleanly")
-    );
-    expect(calls.toSorted()).toEqual([
-      "app-http-api",
-      "database-pool",
-      "health-http-api",
-    ]);
+  return Effect.gen(function* verifyPartialStartupCleanup() {
+    const failure = yield* scopedBuild(serverLayer).pipe(Effect.flip);
+
+    expect(failure).toBe(startupFailure);
+    expect(calls).toEqual(["application"]);
   });
+});
 
-  it("preserves server stop and resource disposal failures", async () => {
-    const stopFailure = new Error("server stop failed");
-    const disposalFailure = new Error("resource disposal failed");
-    const shutdown = makeShutdown([
-      { dispose: () => Promise.reject(disposalFailure) },
-    ]);
+it.effect("hot reload interrupts the root and awaits finalization", () => {
+  const calls: string[] = [];
+  let dispose: (() => Promise<void>) | undefined;
+  const hot = {
+    dispose: (finalizer: () => Promise<void>) => {
+      dispose = finalizer;
+    },
+  };
+  const application = Effect.acquireRelease(Effect.void, () =>
+    Effect.sync(() => {
+      calls.push("finalized");
+    })
+  ).pipe(Effect.andThen(Effect.never));
 
-    await expect(
-      stopServer({ stop: () => Promise.reject(stopFailure) }, shutdown)
-    ).rejects.toEqual(
-      new AggregateError(
-        [
-          stopFailure,
-          new AggregateError(
-            [disposalFailure],
-            "Failed to dispose server resources"
-          ),
-        ],
-        "Failed to stop server cleanly"
-      )
+  return Effect.gen(function* verifyHotReload() {
+    const fiber = yield* withHotReload(Effect.scoped(application), hot).pipe(
+      Effect.forkChild
     );
-  });
+    yield* Effect.yieldNow;
 
-  it("awaits every finalizer before reporting disposal failures", async () => {
-    const calls: string[] = [];
-    const failure = new Error("app disposal failed");
-    const shutdown = makeShutdown([
-      {
-        dispose: () => Promise.reject(failure),
-      },
-      {
-        dispose: async () => {
-          await Promise.resolve();
-          calls.push("health-http-api");
-        },
-      },
-      {
-        dispose: async () => {
-          await Promise.resolve();
-          calls.push("database-pool");
-        },
-      },
-    ]);
+    if (dispose === undefined) {
+      return yield* Effect.die("Expected hot reload disposal to be registered");
+    }
+    yield* Effect.promise(dispose);
+    yield* Fiber.join(fiber);
 
-    await expect(shutdown()).rejects.toEqual(
-      new AggregateError([failure], "Failed to dispose server resources")
-    );
-    expect(calls.toSorted()).toEqual(["database-pool", "health-http-api"]);
+    expect(calls).toEqual(["finalized"]);
   });
 });

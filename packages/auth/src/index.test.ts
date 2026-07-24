@@ -7,7 +7,14 @@ import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 
-import { AuthConfig, AuthConfigLiveLayer, makeAuth } from "./index.ts";
+import {
+  AuthConfig,
+  AuthConfigLiveLayer,
+  BetterAuthService,
+  makeAuth,
+  makeBetterAuthServiceLayer,
+} from "./index.ts";
+import type { BetterAuthInstance } from "./index.ts";
 
 const validAuthEnvironment = {
   BETTER_AUTH_SECRET: "a".repeat(32),
@@ -27,6 +34,29 @@ const loadAuthConfig = (environment: Record<string, string>) =>
     ),
     Effect.exit
   );
+
+describe("Better Auth service", () => {
+  it.effect(
+    "projects rejected vendor session calls into a typed failure",
+    () => {
+      const cause = new Error("session store unavailable");
+      // SAFETY: The service only reads api.getSession in this test fixture.
+      const instance = {
+        api: {
+          getSession: () => Promise.reject(cause),
+        },
+      } as unknown as BetterAuthInstance;
+
+      return Effect.gen(function* rejectedSessionCall() {
+        const auth = yield* BetterAuthService;
+        const failure = yield* auth.getSession(new Headers()).pipe(Effect.flip);
+
+        expect(failure._tag).toBe("BetterAuthUnavailable");
+        expect(failure.cause).toBe(cause);
+      }).pipe(Effect.provide(makeBetterAuthServiceLayer(instance)));
+    }
+  );
+});
 
 describe("Better Auth config", () => {
   it.effect("constructs auth from an injected Effect config service", () =>

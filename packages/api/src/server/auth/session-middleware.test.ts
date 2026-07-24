@@ -1,4 +1,9 @@
 import { expect, it } from "@effect/vitest";
+import {
+  BetterAuthService,
+  BetterAuthUnavailable,
+} from "@tepirek-revamped/auth";
+import type { BetterAuthInstance } from "@tepirek-revamped/auth";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
@@ -6,9 +11,10 @@ import * as Schema from "effect/Schema";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import { InvalidSession } from "../../protocol/auth/invalid-session.ts";
 import { SessionUnavailable } from "../../protocol/auth/session-unavailable.ts";
-import { BetterAuthAdapter } from "./better-auth-adapter.ts";
-import { BetterAuthUnavailable } from "./better-auth-errors.ts";
 import { loadCurrentSession } from "./session-middleware.ts";
+
+// SAFETY: Session middleware tests only consume the service's getSession method.
+const testBetterAuthInstance = {} as BetterAuthInstance;
 
 const authenticatedSession = (userId: string) => ({
   session: {
@@ -36,9 +42,10 @@ it.effect(
   "projects a rejected Better Auth call into a safe middleware failure",
   () => {
     const internalCause = new Error("database connection and token details");
-    const adapterLayer = Layer.succeed(BetterAuthAdapter, {
+    const authLayer = Layer.succeed(BetterAuthService, {
       getSession: () =>
         Effect.fail(new BetterAuthUnavailable({ cause: internalCause })),
+      instance: testBetterAuthInstance,
     });
 
     return Effect.gen(function* rejectedSessionTest() {
@@ -57,38 +64,41 @@ it.effect(
         message: "SESSION_UNAVAILABLE",
       });
       expect(JSON.stringify(encoded)).not.toContain(internalCause.message);
-    }).pipe(Effect.provide(adapterLayer));
+    }).pipe(Effect.provide(authLayer));
   }
 );
 
 it.effect("provides an empty current session for an expired session", () => {
-  const adapterLayer = Layer.succeed(BetterAuthAdapter, {
+  const authLayer = Layer.succeed(BetterAuthService, {
     getSession: () => Effect.succeed(null),
+    instance: testBetterAuthInstance,
   });
 
   return Effect.gen(function* expiredSessionTest() {
     const session = yield* loadCurrentSession(new Headers());
     expect(session).toBeNull();
-  }).pipe(Effect.provide(adapterLayer));
+  }).pipe(Effect.provide(authLayer));
 });
 
 it.effect("decodes the authenticated user id at the session boundary", () => {
-  const adapterLayer = Layer.succeed(BetterAuthAdapter, {
+  const authLayer = Layer.succeed(BetterAuthService, {
     getSession: () => Effect.succeed(authenticatedSession("user-id")),
+    instance: testBetterAuthInstance,
   });
 
   return Effect.gen(function* validUserIdTest() {
     const session = yield* loadCurrentSession(new Headers());
 
     expect(session?.user.id).toBe(AppUserId.make("user-id"));
-  }).pipe(Effect.provide(adapterLayer));
+  }).pipe(Effect.provide(authLayer));
 });
 
 it.effect(
   "rejects an empty authenticated user id as an invalid session",
   () => {
-    const adapterLayer = Layer.succeed(BetterAuthAdapter, {
+    const authLayer = Layer.succeed(BetterAuthService, {
       getSession: () => Effect.succeed(authenticatedSession("")),
+      instance: testBetterAuthInstance,
     });
 
     return Effect.gen(function* invalidUserIdTest() {
@@ -103,6 +113,6 @@ it.effect(
       // @effect-diagnostics-next-line schemaSyncInEffect:off
       const encoded = Schema.encodeUnknownSync(InvalidSession)(failure);
       expect(JSON.stringify(encoded)).not.toContain("session-token");
-    }).pipe(Effect.provide(adapterLayer));
+    }).pipe(Effect.provide(authLayer));
   }
 );

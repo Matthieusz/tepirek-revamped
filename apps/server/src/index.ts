@@ -1,32 +1,38 @@
+import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as Observability from "@tepirek-revamped/api/observability";
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
-import { makeBetterAuthAdapterLayer } from "@tepirek-revamped/api/server/auth/better-auth-adapter";
-import { makeApiLiveLayerFromValues } from "@tepirek-revamped/api/server/effect-app";
+import { makeApiLiveLayerFromDatabase } from "@tepirek-revamped/api/server/effect-app";
 import { HealthHttpApiLayer } from "@tepirek-revamped/api/server/health/http-api-handlers";
 import { AppHttpApiLayer } from "@tepirek-revamped/api/server/http-api-handlers";
-import { AuthConfigLiveLayer, createAuth } from "@tepirek-revamped/auth";
-import { createDatabase } from "@tepirek-revamped/db";
+import {
+  AuthConfig,
+  AuthConfigLiveLayer,
+  BetterAuthService,
+  BetterAuthServiceLiveLayer,
+} from "@tepirek-revamped/auth";
+import {
+  EffectDatabase,
+  makeSharedDatabaseLayer,
+} from "@tepirek-revamped/db/effect";
 import * as Crypto from "effect/Crypto";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Predicate from "effect/Predicate";
-import * as Redacted from "effect/Redacted";
+import * as Schema from "effect/Schema";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { OpenApi } from "effect/unstable/httpapi";
 import { initLogger, parseError } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
-import type { BetterAuthInstance } from "evlog/better-auth";
 import { evlog } from "evlog/hono";
 import type { EvlogVariables } from "evlog/hono";
 import { Hono } from "hono";
-import type { Context } from "hono";
+import type { Context as HonoContext } from "hono";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
-import {
-  makeShutdown,
-  stopServer as stopServerAndResources,
-} from "./server-lifecycle.js";
+import { ServerApplication } from "./server-application.js";
+import type { ServerApplicationService } from "./server-application.js";
 import { readStartupConfig } from "./startup-config.js";
 import type { StartupConfig } from "./startup-config.js";
 
@@ -46,200 +52,266 @@ const cryptoLayer = Layer.succeed(
   })
 );
 
-/** Build the server from configuration already parsed by its executable boundary. */
-export const makeServerApplication = (startupConfig: StartupConfig) => {
-  initLogger({
-    env: { service: "tepirek-server" },
-  });
+/** Expected failure while binding the Bun HTTP server. */
+export class ServerStartupError extends Schema.TaggedErrorClass<ServerStartupError>()(
+  "ServerStartupError",
+  { cause: Schema.Defect() }
+) {}
 
-  const app = new Hono<EvlogVariables>();
-  const { corsOrigin } = startupConfig;
-  const { database, pool: dbPool } = createDatabase(
-    Redacted.value(startupConfig.databaseUrl)
-  );
-  const auth = createAuth(startupConfig.auth, database);
+export { ServerApplication } from "./server-application.js";
+export type { ServerApplicationService } from "./server-application.js";
 
-  // SAFETY: The production layer immediately provides the squad-builder services
-  // and HttpServer services required by the HttpApi layer before it reaches
-  // toWebHandler; this narrows the exported web handler to the Hono boundary.
-  const appHttpApiLayer = AppHttpApiLayer.pipe(
-    Layer.provideMerge(
-      makeApiLiveLayerFromValues({
-        databaseUrl: Redacted.value(startupConfig.databaseUrl),
-        discordGuildId: startupConfig.discordGuildId,
-        firecrawl: startupConfig.firecrawl,
-      })
-    ),
-    Layer.provideMerge(makeBetterAuthAdapterLayer(auth)),
-    Layer.provide(HttpServer.layerServices),
-    Layer.provide(Observability.makeLayer(startupConfig.observability)),
-    Layer.provide(cryptoLayer)
-  );
+const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
+  Layer.effect(
+    ServerApplication,
+    Effect.gen(function* makeHonoApplication() {
+      initLogger({ env: { service: "tepirek-server" } });
 
-  const appHttpApi = HttpRouter.toWebHandler(appHttpApiLayer, {
-    disableLogger: true,
-  });
+      const database = yield* EffectDatabase;
+      const auth = yield* BetterAuthService;
+      const app = new Hono<EvlogVariables>();
+      const apiLiveLayer = makeApiLiveLayerFromDatabase(
+        Layer.succeed(EffectDatabase, database),
+        {
+          discordGuildId: startupConfig.discordGuildId,
+          firecrawl: startupConfig.firecrawl,
+        }
+      );
+      const appHttpApiLayer = AppHttpApiLayer.pipe(
+        Layer.provideMerge(apiLiveLayer),
+        Layer.provideMerge(Layer.succeed(BetterAuthService, auth)),
+        Layer.provide(HttpServer.layerServices),
+        Layer.provide(Observability.makeLayer(startupConfig.observability)),
+        Layer.provide(cryptoLayer)
+      );
+      const appHttpApi = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          HttpRouter.toWebHandler(appHttpApiLayer, { disableLogger: true })
+        ),
+        (handler) => Effect.promise(handler.dispose)
+      );
+      const healthHttpApi = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          HttpRouter.toWebHandler(
+            HealthHttpApiLayer.pipe(Layer.provide(HttpServer.layerServices)),
+            { disableLogger: true }
+          )
+        ),
+        (handler) => Effect.promise(handler.dispose)
+      );
 
-  const healthHttpApiLayer = HealthHttpApiLayer.pipe(
-    Layer.provide(HttpServer.layerServices)
-  );
+      app.use(evlog());
 
-  const healthHttpApi = HttpRouter.toWebHandler(healthHttpApiLayer, {
-    disableLogger: true,
-  });
-
-  /** Release every process-owned server resource exactly once. */
-  const shutdown = makeShutdown([
-    { dispose: appHttpApi.dispose },
-    { dispose: healthHttpApi.dispose },
-    { dispose: () => dbPool.end() },
-  ]);
-
-  /** Gracefully stop the host and release all composition-root resources. */
-  const stopServer = async (server: Bun.Server<unknown>): Promise<void> => {
-    try {
-      await stopServerAndResources(server, shutdown);
-    } catch (error) {
-      console.error("Failed to shut down server resources", error);
-      throw error;
-    }
-  };
-
-  /** Start the Hono-hosted Bun server and make this composition root own shutdown. */
-  const startServer = async (): Promise<Bun.Server<unknown>> => {
-    let server: Bun.Server<unknown>;
-    try {
-      server = Bun.serve({
-        fetch: app.fetch,
-        id: "tepirek-server",
+      const identifyUser = createAuthMiddleware(auth.instance, {
+        exclude: ["/api/auth/**"],
+        maskEmail: true,
       });
-    } catch (error) {
-      await shutdown();
-      throw error;
-    }
 
-    const handleShutdownSignal = async (): Promise<void> => {
-      try {
-        await stopServer(server);
-        process.exit(0);
-      } catch {
-        process.exit(1);
-      }
-    };
-
-    process.once("SIGINT", handleShutdownSignal);
-    process.once("SIGTERM", handleShutdownSignal);
-
-    if (import.meta.hot) {
-      import.meta.hot.dispose(async () => {
-        process.off("SIGINT", handleShutdownSignal);
-        process.off("SIGTERM", handleShutdownSignal);
-        await stopServer(server);
+      app.use("*", async (context, next) => {
+        await identifyUser(
+          context.get("log"),
+          context.req.raw.headers,
+          context.req.path
+        );
+        return await next();
       });
-    }
 
-    return server;
-  };
+      app.use(
+        "/*",
+        cors({
+          allowHeaders: [
+            "Content-Type",
+            "Authorization",
+            "b3",
+            "traceparent",
+            "tracestate",
+            "baggage",
+            "x-request-id",
+          ],
+          allowMethods: ["GET", "POST", "OPTIONS"],
+          credentials: true,
+          origin: startupConfig.corsOrigin,
+        })
+      );
 
-  app.use(evlog());
+      app.on(["POST", "GET"], "/api/auth/*", (context) =>
+        auth.instance.handler(context.req.raw)
+      );
 
-  // Identify the authenticated user from the better-auth session and attach
-  // user context to every request's wide event. Skips auth routes (where a
-  // session is being established) and masks emails in logs.
-  const identifyUser = createAuthMiddleware(auth as BetterAuthInstance, {
-    exclude: ["/api/auth/**"],
-    maskEmail: true,
-  });
+      app.get("/api/openapi.json", (context) => {
+        context.get("log").set({ httpApi: { docs: "app-openapi" } });
+        return context.json(OpenApi.fromApi(AppHttpApi));
+      });
 
-  app.use("*", async (c, next) => {
-    await identifyUser(c.get("log"), c.req.raw.headers, c.req.path);
-    return await next();
-  });
+      // oxlint-disable-next-line unicorn/consistent-function-scoping
+      const handleHttpApiRequest = async (
+        context: HonoContext<EvlogVariables>,
+        handler: typeof appHttpApi
+      ) => {
+        const requestLog = context.get("log");
+        const { requestId } = requestLog.getContext();
+        const headers = new Headers(context.req.raw.headers);
 
-  app.use(
-    "/*",
-    cors({
-      allowHeaders: [
-        "Content-Type",
-        "Authorization",
-        "b3",
-        "traceparent",
-        "tracestate",
-        "baggage",
-        "x-request-id",
-      ],
-      allowMethods: ["GET", "POST", "OPTIONS"],
-      credentials: true,
-      origin: corsOrigin,
+        if (Predicate.isString(requestId) && requestId.length > 0) {
+          headers.set("x-request-id", requestId);
+        }
+
+        requestLog.set({ httpApi: { path: context.req.path } });
+        return await handler.handler(new Request(context.req.raw, { headers }));
+      };
+
+      app.use("/health", (context) =>
+        handleHttpApiRequest(context, healthHttpApi)
+      );
+      app.use("/announcements/*", (context) =>
+        handleHttpApiRequest(context, appHttpApi)
+      );
+      app.use("/todos/*", (context) =>
+        handleHttpApiRequest(context, appHttpApi)
+      );
+      app.use("/heroes/*", (context) =>
+        handleHttpApiRequest(context, appHttpApi)
+      );
+      app.use("/events/*", (context) =>
+        handleHttpApiRequest(context, appHttpApi)
+      );
+      app.use("/skills/*", (context) =>
+        handleHttpApiRequest(context, appHttpApi)
+      );
+      app.use("/auction/*", (context) =>
+        handleHttpApiRequest(context, appHttpApi)
+      );
+      app.use("/bet/*", (context) => handleHttpApiRequest(context, appHttpApi));
+      app.use("/ranking/*", (context) =>
+        handleHttpApiRequest(context, appHttpApi)
+      );
+      app.use("/user/*", (context) =>
+        handleHttpApiRequest(context, appHttpApi)
+      );
+      app.use("/vault/*", (context) =>
+        handleHttpApiRequest(context, appHttpApi)
+      );
+      app.use("/squad-builder/*", (context) =>
+        handleHttpApiRequest(context, appHttpApi)
+      );
+
+      app.get("/", (context) => context.text("OK"));
+
+      // oxlint-disable-next-line promise/prefer-await-to-callbacks
+      app.onError((error, context) => {
+        context.get("log").error(error);
+        const parsed = parseError(error);
+        return context.json(
+          {
+            fix: parsed.fix,
+            link: parsed.link,
+            message: parsed.message,
+            why: parsed.why,
+          },
+          parsed.status as ContentfulStatusCode
+        );
+      });
+
+      return ServerApplication.of({ app });
     })
   );
 
-  app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+/** Build the scoped Hono application and all of its owned dependencies. */
+export const makeServerApplicationLayer = (startupConfig: StartupConfig) => {
+  const databaseLayer = makeSharedDatabaseLayer(startupConfig.databaseUrl);
+  const authLayer = BetterAuthServiceLiveLayer.pipe(
+    Layer.provideMerge(Layer.succeed(AuthConfig, startupConfig.auth)),
+    Layer.provideMerge(databaseLayer)
+  );
+  const dependencies = Layer.merge(databaseLayer, authLayer);
 
-  app.get("/api/openapi.json", (c) => {
-    c.get("log").set({ httpApi: { docs: "app-openapi" } });
-    return c.json(OpenApi.fromApi(AppHttpApi));
-  });
-
-  // oxlint-disable-next-line unicorn/consistent-function-scoping
-  const handleHttpApiRequest = async (
-    c: Context<EvlogVariables>,
-    handler: typeof appHttpApi
-  ) => {
-    const requestLog = c.get("log");
-    const { requestId } = requestLog.getContext();
-    const headers = new Headers(c.req.raw.headers);
-
-    if (Predicate.isString(requestId) && requestId.length > 0) {
-      headers.set("x-request-id", requestId);
-    }
-
-    requestLog.set({ httpApi: { path: c.req.path } });
-    const response = await handler.handler(new Request(c.req.raw, { headers }));
-
-    return response;
-  };
-
-  app.use("/health", (c) => handleHttpApiRequest(c, healthHttpApi));
-  app.use("/announcements/*", (c) => handleHttpApiRequest(c, appHttpApi));
-  app.use("/todos/*", (c) => handleHttpApiRequest(c, appHttpApi));
-  app.use("/heroes/*", (c) => handleHttpApiRequest(c, appHttpApi));
-  app.use("/events/*", (c) => handleHttpApiRequest(c, appHttpApi));
-  app.use("/skills/*", (c) => handleHttpApiRequest(c, appHttpApi));
-  app.use("/auction/*", (c) => handleHttpApiRequest(c, appHttpApi));
-  app.use("/bet/*", (c) => handleHttpApiRequest(c, appHttpApi));
-  app.use("/ranking/*", (c) => handleHttpApiRequest(c, appHttpApi));
-  app.use("/user/*", (c) => handleHttpApiRequest(c, appHttpApi));
-  app.use("/vault/*", (c) => handleHttpApiRequest(c, appHttpApi));
-  app.use("/squad-builder/*", (c) => handleHttpApiRequest(c, appHttpApi));
-
-  app.get("/", (c) => c.text("OK"));
-
-  // oxlint-disable-next-line promise/prefer-await-to-callbacks
-  app.onError((error, c) => {
-    c.get("log").error(error);
-    const parsed = parseError(error);
-    return c.json(
-      {
-        fix: parsed.fix,
-        link: parsed.link,
-        message: parsed.message,
-        why: parsed.why,
-      },
-      parsed.status as ContentfulStatusCode
-    );
-  });
-
-  return { app, shutdown, startServer, stopServer };
+  return makeHonoApplicationLayer(startupConfig).pipe(
+    Layer.provide(dependencies)
+  );
 };
 
-if (import.meta.main) {
-  await import("dotenv/config");
+/** Minimal host resource owned by the server layer. */
+export interface ServerControl {
+  readonly stop: () => Promise<void>;
+}
 
-  // The executable adapter boundary parses all environment values before
-  // constructing handlers or accepting traffic.
-  const startupConfig = Effect.runSync(
-    readStartupConfig.pipe(Effect.provide(AuthConfigLiveLayer))
+/**
+ * Attach a scoped host to an application layer.
+ *
+ * The host is acquired last, so scope closure stops traffic before releasing
+ * application handlers and their dependencies.
+ */
+export const makeServerHostLayer = <ApplicationError, HostError>(
+  applicationLayer: Layer.Layer<ServerApplication, ApplicationError>,
+  serve: (
+    application: ServerApplicationService
+  ) => Effect.Effect<ServerControl, HostError>
+) =>
+  Layer.effectDiscard(
+    Effect.gen(function* acquireServerHost() {
+      const application = yield* ServerApplication;
+      yield* Effect.acquireRelease(serve(application), (server) =>
+        Effect.promise(() => server.stop())
+      );
+    })
+  ).pipe(Layer.provide(applicationLayer));
+
+/** Build the complete long-lived server ownership graph. */
+export const makeServerLayer = (startupConfig: StartupConfig) =>
+  makeServerHostLayer(makeServerApplicationLayer(startupConfig), ({ app }) =>
+    Effect.try({
+      catch: (cause) => new ServerStartupError({ cause }),
+      try: () =>
+        Bun.serve({
+          fetch: app.fetch,
+          id: "tepirek-server",
+        }),
+    })
   );
-  await makeServerApplication(startupConfig).startServer();
+
+interface HotModule {
+  readonly dispose: (finalizer: () => Promise<void>) => void;
+}
+
+/** Interrupt a root Effect and await scope finalization during Bun hot reload. */
+export const withHotReload = <A, E>(
+  application: Effect.Effect<A, E>,
+  hot: HotModule | undefined
+): Effect.Effect<A | undefined, E> => {
+  if (hot === undefined) {
+    return application;
+  }
+
+  return Effect.gen(function* hotReloadBridge() {
+    const reloadRequested = yield* Deferred.make<undefined>();
+    const finalized = yield* Deferred.make<undefined>();
+    const context = yield* Effect.context<never>();
+    const runPromise = Effect.runPromiseWith(context);
+
+    hot.dispose(async () => {
+      await runPromise(
+        Deferred.completeWith(reloadRequested, Effect.undefined)
+      );
+      await runPromise(Deferred.await(finalized));
+    });
+
+    return yield* application.pipe(
+      Effect.raceFirst(Deferred.await(reloadRequested)),
+      Effect.ensuring(Deferred.completeWith(finalized, Effect.undefined))
+    );
+  });
+};
+
+const main = Effect.promise(() => import("dotenv/config")).pipe(
+  Effect.flatMap(() =>
+    readStartupConfig.pipe(Effect.provide(AuthConfigLiveLayer))
+  ),
+  Effect.flatMap((startupConfig) =>
+    Layer.launch(makeServerLayer(startupConfig))
+  ),
+  (application) => withHotReload(application, import.meta.hot)
+);
+
+if (import.meta.main) {
+  BunRuntime.runMain(main);
 }

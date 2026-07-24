@@ -6,7 +6,6 @@ import {
 import type { ConfigError } from "effect/Config";
 import * as Layer from "effect/Layer";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
-import type { SqlError } from "effect/unstable/sql/SqlError";
 
 import { AnnouncementStoreLayer } from "../adapters/announcement/announcement-store.ts";
 import type { AnnouncementStore } from "../adapters/announcement/announcement-store.ts";
@@ -102,11 +101,11 @@ import type { SquadGroupStoreService } from "../services/squad-builder/squad-gro
 import { VerifyDiscordGuildMembershipService } from "../services/user/verify-discord-guild-membership-service.ts";
 import type { VaultService } from "../services/vault/vault-service.ts";
 
-const makeApiStableLayer = (
-  databaseLayer: Layer.Layer<EffectDatabase, SqlError | ConfigError, never>,
+const makeApiStableLayer = <DatabaseError>(
+  databaseLayer: Layer.Layer<EffectDatabase, DatabaseError, never>,
   discordConfigLayer = DiscordVerificationConfig.layer,
   firecrawlConfigLayer = FirecrawlConfigServiceLiveLayer
-): Layer.Layer<SquadBuilderServices, SqlError | ConfigError> => {
+): Layer.Layer<SquadBuilderServices, DatabaseError | ConfigError> => {
   const discordVerifierLayer = DiscordGuildVerifierLiveLayer.pipe(
     Layer.provide(Layer.merge(discordConfigLayer, FetchHttpClient.layer))
   );
@@ -191,17 +190,30 @@ export const makeApiSquadBuilderLayer = (databaseUrl: string) => {
 export const makeApiLiveLayer = (databaseUrl: string) =>
   makeApiStableLayer(makeLiveDatabaseLayer(databaseUrl));
 
+/** Build API services from parsed values and an executable-owned database. */
+export const makeApiLiveLayerFromDatabase = <DatabaseError>(
+  databaseLayer: Layer.Layer<EffectDatabase, DatabaseError>,
+  config: {
+    readonly discordGuildId: string;
+    readonly firecrawl: FirecrawlConfig;
+  }
+) =>
+  makeApiStableLayer(
+    databaseLayer,
+    makeDiscordVerificationConfigLayer({ guildId: config.discordGuildId }),
+    makeFirecrawlConfigLayer(config.firecrawl)
+  );
+
 /** Build API services from configuration parsed by an executable boundary. */
 export const makeApiLiveLayerFromValues = (config: {
   readonly databaseUrl: string;
   readonly discordGuildId: string;
   readonly firecrawl: FirecrawlConfig;
 }) =>
-  makeApiStableLayer(
-    makeLiveDatabaseLayer(config.databaseUrl),
-    makeDiscordVerificationConfigLayer({ guildId: config.discordGuildId }),
-    makeFirecrawlConfigLayer(config.firecrawl)
-  );
+  makeApiLiveLayerFromDatabase(makeLiveDatabaseLayer(config.databaseUrl), {
+    discordGuildId: config.discordGuildId,
+    firecrawl: config.firecrawl,
+  });
 
 /**
  * Build the full API live layer using Effect Config to read `DATABASE_URL`.
