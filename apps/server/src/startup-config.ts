@@ -1,18 +1,13 @@
 import { readFirecrawlConfig } from "@tepirek-revamped/api/adapters/squad-builder/firecrawl/firecrawl-config";
 import { readDiscordVerificationConfig } from "@tepirek-revamped/api/adapters/user/discord-verification-config";
-import { parseLogLevel } from "@tepirek-revamped/api/observability";
 import type { ObservabilityConfig } from "@tepirek-revamped/api/observability";
 import type { FirecrawlConfig } from "@tepirek-revamped/api/services/squad-builder/firecrawl-config";
 import { AuthConfig } from "@tepirek-revamped/auth";
 import type { AuthEnv } from "@tepirek-revamped/auth";
-import * as Arr from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
-import * as Option from "effect/Option";
-import * as Record from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
-import * as Str from "effect/String";
 
 class StartupConfigurationError extends Schema.TaggedErrorClass<StartupConfigurationError>()(
   "StartupConfigurationError",
@@ -22,7 +17,8 @@ class StartupConfigurationError extends Schema.TaggedErrorClass<StartupConfigura
   }
 ) {}
 
-interface StartupConfig {
+/** Values parsed at the executable boundary and required to build the server. */
+export interface StartupConfig {
   readonly auth: AuthEnv;
   readonly corsOrigin: string;
   readonly databaseUrl: Redacted.Redacted;
@@ -43,113 +39,32 @@ const parseUrl = (name: string, value: string) =>
     )
   );
 
-const parseEntries = (
-  name: string,
-  value: string,
-  decode: boolean
-): Effect.Effect<Record<string, string>, StartupConfigurationError> =>
-  Effect.try({
-    catch: () =>
-      new StartupConfigurationError({
-        message: `${name} entries must use valid non-empty key=value pairs`,
-        variable: name,
-      }),
-    try: () => {
-      if (value.length === 0) {
-        return Record.empty<string, string>();
-      }
-      return Record.fromEntries(
-        Arr.map(Str.split(value, ","), (entry) => {
-          const separator = Option.getOrThrow(Str.indexOf("=")(entry));
-          if (separator < 1 || separator === entry.length - 1) {
-            throw new Error("invalid entry");
-          }
-          const key = Str.trim(entry.slice(0, separator));
-          const entryValue = Str.trim(entry.slice(separator + 1));
-          if (Str.isEmpty(key) || Str.isEmpty(entryValue)) {
-            throw new Error("invalid entry");
-          }
-          return decode
-            ? [
-                Schema.decodeUnknownSync(Schema.StringFromUriComponent)(key),
-                Schema.decodeUnknownSync(Schema.StringFromUriComponent)(
-                  entryValue
-                ),
-              ]
-            : [key, entryValue];
-        })
-      );
-    },
-  });
-
-const readObservabilityConfig = Effect.gen(
-  function* readObservabilityConfigEffect() {
-    const values = yield* Config.all({
-      deploymentEnvironmentName: Config.string(
-        "OTEL_DEPLOYMENT_ENVIRONMENT_NAME"
-      ).pipe(Config.withDefault("")),
-      endpoint: Config.string("OTEL_EXPORTER_OTLP_ENDPOINT").pipe(
-        Config.withDefault("")
-      ),
-      headers: Config.redacted("OTEL_EXPORTER_OTLP_HEADERS").pipe(
-        Config.withDefault(Redacted.make(""))
-      ),
-      logLevel: Config.schema(
-        Schema.Literals(["DEBUG", "INFO", "WARN", "ERROR"]),
-        "TEPIREK_LOG_LEVEL"
-      ).pipe(Config.withDefault("INFO")),
-      nodeEnvironment: Config.string("NODE_ENV").pipe(
-        Config.withDefault("development")
-      ),
-      printLogs: Config.schema(
-        Schema.Literals(["0", "1"]),
-        "TEPIREK_PRINT_LOGS"
-      ).pipe(Config.withDefault("0")),
-      resourceAttributes: Config.string("OTEL_RESOURCE_ATTRIBUTES").pipe(
-        Config.withDefault("")
-      ),
-      serviceVersion: Config.string("npm_package_version").pipe(
-        Config.withDefault("0.0.0")
-      ),
-    });
-
-    const minimumLogLevel = parseLogLevel(values.logLevel);
-    if (minimumLogLevel === undefined) {
-      return yield* new StartupConfigurationError({
-        message: "TEPIREK_LOG_LEVEL must be DEBUG, INFO, WARN, or ERROR",
-        variable: "TEPIREK_LOG_LEVEL",
-      });
-    }
-    const endpoint =
-      values.endpoint.length === 0
-        ? undefined
-        : yield* parseUrl("OTEL_EXPORTER_OTLP_ENDPOINT", values.endpoint);
-    const parsedHeaders = yield* parseEntries(
-      "OTEL_EXPORTER_OTLP_HEADERS",
-      Redacted.value(values.headers),
-      false
-    );
-
-    return {
-      deploymentEnvironmentName:
-        values.deploymentEnvironmentName || values.nodeEnvironment,
-      ...(endpoint === undefined ? {} : { endpoint }),
-      ...(Record.isEmptyReadonlyRecord(parsedHeaders)
-        ? {}
-        : { headers: Redacted.make(parsedHeaders) }),
-      minimumLogLevel,
-      printLogs: values.printLogs === "1",
-      resourceAttributes: yield* parseEntries(
-        "OTEL_RESOURCE_ATTRIBUTES",
-        values.resourceAttributes,
-        true
-      ),
-      serviceVersion: values.serviceVersion,
-    } satisfies ObservabilityConfig;
-  }
+const readObservabilityConfig = Config.all({
+  minimumLogLevel: Config.logLevel("TEPIREK_LOG_LEVEL").pipe(
+    Config.withDefault("Info")
+  ),
+  nodeEnvironment: Config.string("NODE_ENV").pipe(
+    Config.withDefault("development")
+  ),
+  printLogs: Config.boolean("TEPIREK_PRINT_LOGS").pipe(
+    Config.withDefault(false)
+  ),
+  serviceVersion: Config.string("npm_package_version").pipe(
+    Config.withDefault("0.0.0")
+  ),
+}).pipe(
+  Config.map(
+    (values) =>
+      ({
+        deploymentEnvironmentName: values.nodeEnvironment,
+        minimumLogLevel: values.minimumLogLevel,
+        printLogs: values.printLogs,
+        serviceVersion: values.serviceVersion,
+      }) satisfies ObservabilityConfig
+  )
 );
 
-/** Parse and validate every executable dependency before server startup. */
+/** Parse and validate application configuration before server startup. */
 export const readStartupConfig: Effect.Effect<
   StartupConfig,
   Config.ConfigError | StartupConfigurationError,

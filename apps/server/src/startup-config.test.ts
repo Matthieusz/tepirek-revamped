@@ -16,6 +16,11 @@ const validEnvironment = {
   DISCORD_CLIENT_SECRET: "discord-secret",
   DISCORD_SERVER_ID: "discord-server",
   FIRECRAWL_API_KEY: "firecrawl-secret",
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:4318",
+  OTEL_EXPORTER_OTLP_HEADERS: "authorization=secret",
+  OTEL_RESOURCE_ATTRIBUTES: "service.name=tepirek,region=local",
+  TEPIREK_LOG_LEVEL: "Debug",
+  TEPIREK_PRINT_LOGS: "yes",
 };
 
 const configuredStartup = (environment: Record<string, string>) =>
@@ -37,15 +42,12 @@ const malformedConfigurations = [
   ["BETTER_AUTH_URL", "not a URL"],
   ["CORS_ORIGIN", "not a URL"],
   ["DATABASE_URL", "not a URL"],
-  ["OTEL_EXPORTER_OTLP_ENDPOINT", "not a URL"],
-  ["OTEL_EXPORTER_OTLP_HEADERS", "missing-value="],
-  ["OTEL_RESOURCE_ATTRIBUTES", "invalid=%E0%A4%A"],
   ["TEPIREK_LOG_LEVEL", "verbose"],
-  ["TEPIREK_PRINT_LOGS", "yes"],
+  ["TEPIREK_PRINT_LOGS", "sometimes"],
 ] as const;
 
 describe("startup config", () => {
-  it.effect("parses all executable configuration before startup", () =>
+  it.effect("parses application configuration before startup", () =>
     Effect.gen(function* parseStartupConfig() {
       const config = yield* configuredStartup(validEnvironment);
 
@@ -55,6 +57,8 @@ describe("startup config", () => {
       expect(config.observability.deploymentEnvironmentName).toBe(
         "development"
       );
+      expect(config.observability.minimumLogLevel).toBe("Debug");
+      expect(config.observability.printLogs).toBe(true);
     })
   );
 
