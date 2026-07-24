@@ -5,7 +5,7 @@ import {
   auctionStatsAtom,
   toggleAuctionSignupAtom,
   removeAuctionSignupFromGroupAtom,
-} from "@/lib/auction-atoms";
+} from "@/features/auctions/auction-atoms";
 import {
   makeTestLayer,
   waitForAtomResults,

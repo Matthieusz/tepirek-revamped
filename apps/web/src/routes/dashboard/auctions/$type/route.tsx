@@ -1,9 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
-import {
-  AUCTION_TYPE_META,
-  isAuctionType,
-} from "@/pages/dashboard/auctions/config";
+import { AUCTION_TYPE_META, isAuctionType } from "@/features/auctions/config";
 
 const RouteComponent = () => <Outlet />;
 

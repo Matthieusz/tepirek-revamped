@@ -6,7 +6,7 @@ import { Users } from "lucide-react";
 import type React from "react";
 
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
-import { auctionStatsAtom } from "@/lib/auction-atoms";
+import { auctionStatsAtom } from "@/features/auctions/auction-atoms";
 
 interface AuctionHeaderProps {
   title: string;
@@ -15,31 +15,6 @@ interface AuctionHeaderProps {
   profession: AuctionProfession;
   type: AuctionType;
 }
-
-export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
-  title,
-  description,
-  icon: Icon,
-  profession,
-  type,
-}) => {
-  const statsResult = useAtomValue(auctionStatsAtom({ profession, type }));
-  const refreshStats = useAtomRefresh(auctionStatsAtom({ profession, type }));
-
-  return (
-    <AsyncResultBoundary onRetry={refreshStats} result={statsResult}>
-      {() => (
-        <AuctionHeaderContent
-          description={description}
-          icon={Icon}
-          profession={profession}
-          title={title}
-          type={type}
-        />
-      )}
-    </AsyncResultBoundary>
-  );
-};
 
 const AuctionHeaderContent: React.FC<AuctionHeaderProps> = ({
   description,
@@ -82,5 +57,30 @@ const AuctionHeaderContent: React.FC<AuctionHeaderProps> = ({
         </div>
       </div>
     </div>
+  );
+};
+
+export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
+  title,
+  description,
+  icon: Icon,
+  profession,
+  type,
+}) => {
+  const statsResult = useAtomValue(auctionStatsAtom({ profession, type }));
+  const refreshStats = useAtomRefresh(auctionStatsAtom({ profession, type }));
+
+  return (
+    <AsyncResultBoundary onRetry={refreshStats} result={statsResult}>
+      {() => (
+        <AuctionHeaderContent
+          description={description}
+          icon={Icon}
+          profession={profession}
+          title={title}
+          type={type}
+        />
+      )}
+    </AsyncResultBoundary>
   );
 };

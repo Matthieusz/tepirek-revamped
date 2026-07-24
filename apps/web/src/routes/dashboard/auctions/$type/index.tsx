@@ -1,7 +1,7 @@
 import { createFileRoute, getRouteApi, redirect } from "@tanstack/react-router";
 
-import { isAuctionType } from "@/pages/dashboard/auctions/config";
-import AuctionsTypeIndexPage from "@/pages/dashboard/auctions/type-index";
+import { isAuctionType } from "@/features/auctions/config";
+import AuctionsTypeIndexPage from "@/routes/dashboard/auctions/$type/-components/type-index";
 
 const routeApi = getRouteApi("/dashboard/auctions/$type/");
 

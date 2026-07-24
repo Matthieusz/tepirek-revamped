@@ -7,6 +7,10 @@ import {
   announcementsAtom,
   optimisticAnnouncementsAtom,
 } from "@/features/announcements/announcement-atoms";
+import {
+  auctionSignupsAtom,
+  optimisticAuctionSignupsAtom,
+} from "@/features/auctions/auction-atoms";
 import { paginatedBetsAtom } from "@/features/events/bets/bet-atoms";
 import {
   optimisticEventsAtom,
@@ -26,10 +30,6 @@ import {
   skillRangesAtom,
 } from "@/features/skills/skill-atoms";
 import { optimisticTodosAtom, todosAtom } from "@/features/todos/todo-atoms";
-import {
-  auctionSignupsAtom,
-  optimisticAuctionSignupsAtom,
-} from "@/lib/auction-atoms";
 import { ownedSquadGroupsAtom } from "@/lib/squad-builder/squad-group-atoms";
 
 const failedResource = () => AsyncResult.fail("resource unavailable");

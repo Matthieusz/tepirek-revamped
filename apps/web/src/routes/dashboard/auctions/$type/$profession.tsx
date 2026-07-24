@@ -4,8 +4,8 @@ import {
   AUCTION_PROFESSION_META,
   isAuctionProfession,
   isAuctionType,
-} from "@/pages/dashboard/auctions/config";
-import AuctionsProfessionPage from "@/pages/dashboard/auctions/profession";
+} from "@/features/auctions/config";
+import AuctionsProfessionPage from "@/routes/dashboard/auctions/$type/-components/profession";
 
 const routeApi = getRouteApi("/dashboard/auctions/$type/$profession");
 

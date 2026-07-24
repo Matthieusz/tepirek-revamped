@@ -1,13 +1,13 @@
-import { AuctionHeader } from "@/components/auction-header";
-import AuctionTable from "@/components/auction-table";
 import {
   AUCTION_PROFESSION_META,
   AUCTION_TYPE_META,
-} from "@/pages/dashboard/auctions/config";
+} from "@/features/auctions/config";
 import type {
   AuctionProfession,
   AuctionType,
-} from "@/pages/dashboard/auctions/config";
+} from "@/features/auctions/config";
+import { AuctionHeader } from "@/routes/dashboard/auctions/$type/-components/auction-header";
+import AuctionTable from "@/routes/dashboard/auctions/$type/-components/auction-table";
 import type { AuthSession } from "@/types/route";
 
 interface AuctionsProfessionPageProps {

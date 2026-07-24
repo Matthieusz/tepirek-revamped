@@ -5,8 +5,8 @@ import {
   AUCTION_PROFESSION_META,
   AUCTION_PROFESSIONS,
   AUCTION_TYPE_META,
-} from "@/pages/dashboard/auctions/config";
-import type { AuctionType } from "@/pages/dashboard/auctions/config";
+} from "@/features/auctions/config";
+import type { AuctionType } from "@/features/auctions/config";
 import type { AuthSession } from "@/types/route";
 
 interface AuctionsTypeIndexPageProps {

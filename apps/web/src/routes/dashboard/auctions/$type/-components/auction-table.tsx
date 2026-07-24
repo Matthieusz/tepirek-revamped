@@ -15,16 +15,8 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
-import {
-  auctionSignupsAtom,
-  optimisticAuctionSignupsAtom,
-  removeAuctionSignupFromGroupAtom,
-  toggleAuctionSignupAtom,
-} from "@/lib/auction-atoms";
-import { getErrorMessage } from "@/lib/errors";
-
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Button } from "./ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -32,7 +24,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./ui/table";
+} from "@/components/ui/table";
+import {
+  auctionSignupsAtom,
+  optimisticAuctionSignupsAtom,
+  removeAuctionSignupFromGroupAtom,
+  toggleAuctionSignupAtom,
+} from "@/features/auctions/auction-atoms";
+import { getErrorMessage } from "@/lib/errors";
 
 interface SignupData {
   id: number;
@@ -159,29 +158,6 @@ interface AuctionTableProps {
 const rounds = AUCTION_SLOT_ROUNDS;
 const rowValues = AUCTION_SLOT_LEVELS;
 
-const AuctionTable: React.FC<AuctionTableProps> = ({
-  profession,
-  type,
-  currentUserId,
-}) => {
-  const signupsResult = useAtomValue(auctionSignupsAtom({ profession, type }));
-  const refreshSignups = useAtomRefresh(
-    auctionSignupsAtom({ profession, type })
-  );
-
-  return (
-    <AsyncResultBoundary onRetry={refreshSignups} result={signupsResult}>
-      {() => (
-        <AuctionTableContent
-          currentUserId={currentUserId}
-          profession={profession}
-          type={type}
-        />
-      )}
-    </AsyncResultBoundary>
-  );
-};
-
 const AuctionTableContent: React.FC<AuctionTableProps> = ({
   profession,
   type,
@@ -207,7 +183,6 @@ const AuctionTableContent: React.FC<AuctionTableProps> = ({
   } | null>(null);
   const toggleMutation = {
     isPending: isMutating,
-    variables: mutatingCell,
     mutate: (params: { level: number; round: number; column: number }) => {
       void (async () => {
         setIsMutating(true);
@@ -231,6 +206,7 @@ const AuctionTableContent: React.FC<AuctionTableProps> = ({
         }
       })();
     },
+    variables: mutatingCell,
   };
   const removeMutation = {
     isPending: isMutating,
@@ -307,7 +283,7 @@ const AuctionTableContent: React.FC<AuctionTableProps> = ({
                   const column = colIdx + 1;
                   const signup = getSignupForCell(value, round, column);
                   const isOwnSignup = signup?.userId === currentUserId;
-                  const isMutating =
+                  const isCellMutating =
                     toggleMutation.isPending &&
                     toggleMutation.variables?.level === value &&
                     toggleMutation.variables?.round === round &&
@@ -320,7 +296,7 @@ const AuctionTableContent: React.FC<AuctionTableProps> = ({
                     >
                       <div className="flex min-h-8 w-full items-center justify-center">
                         <CellContent
-                          isMutating={isMutating}
+                          isMutating={isCellMutating}
                           isOwnSignup={isOwnSignup ?? false}
                           onRemove={() => {
                             if (signup !== undefined) {
@@ -346,6 +322,29 @@ const AuctionTableContent: React.FC<AuctionTableProps> = ({
         ))}
       </Table>
     </div>
+  );
+};
+
+const AuctionTable: React.FC<AuctionTableProps> = ({
+  profession,
+  type,
+  currentUserId,
+}) => {
+  const signupsResult = useAtomValue(auctionSignupsAtom({ profession, type }));
+  const refreshSignups = useAtomRefresh(
+    auctionSignupsAtom({ profession, type })
+  );
+
+  return (
+    <AsyncResultBoundary onRetry={refreshSignups} result={signupsResult}>
+      {() => (
+        <AuctionTableContent
+          currentUserId={currentUserId}
+          profession={profession}
+          type={type}
+        />
+      )}
+    </AsyncResultBoundary>
   );
 };
 
