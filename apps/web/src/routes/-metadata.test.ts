@@ -51,6 +51,22 @@ describe("route metadata", () => {
     );
   });
 
+  it("prevents auth-gated routes from being indexed", async () => {
+    const loginHead = await LoginRoute.options.head?.({} as never);
+    const signupHead = await SignupRoute.options.head?.({} as never);
+    const waitingRoomHead = await WaitingRoomRoute.options.head?.({} as never);
+
+    expect(loginHead?.meta).toEqual(
+      expect.arrayContaining([{ content: "noindex, nofollow", name: "robots" }])
+    );
+    expect(signupHead?.meta).toEqual(
+      expect.arrayContaining([{ content: "noindex, nofollow", name: "robots" }])
+    );
+    expect(waitingRoomHead?.meta).toEqual(
+      expect.arrayContaining([{ content: "noindex, nofollow", name: "robots" }])
+    );
+  });
+
   it("inherits the actionable root error boundary for dashboard failures", () => {
     expect(DashboardRoute.options.errorComponent).toBeUndefined();
     expect(RootRoute.options.errorComponent).toBeDefined();

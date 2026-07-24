@@ -13,6 +13,9 @@ export const Route = createFileRoute("/login")({
   },
   component: LoginPage,
   head: () => ({
-    meta: [{ title: createPageTitle("Logowanie") }],
+    meta: [
+      { title: createPageTitle("Logowanie") },
+      { content: "noindex, nofollow", name: "robots" },
+    ],
   }),
 });

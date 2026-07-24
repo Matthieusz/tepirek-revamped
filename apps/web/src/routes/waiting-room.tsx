@@ -18,6 +18,9 @@ export const Route = createFileRoute("/waiting-room")({
   },
   component: WaitingRoomRoute,
   head: () => ({
-    meta: [{ title: createPageTitle("Oczekiwanie na weryfikację") }],
+    meta: [
+      { title: createPageTitle("Oczekiwanie na weryfikację") },
+      { content: "noindex, nofollow", name: "robots" },
+    ],
   }),
 });

@@ -13,6 +13,9 @@ export const Route = createFileRoute("/signup")({
   },
   component: SignupPage,
   head: () => ({
-    meta: [{ title: createPageTitle("Rejestracja") }],
+    meta: [
+      { title: createPageTitle("Rejestracja") },
+      { content: "noindex, nofollow", name: "robots" },
+    ],
   }),
 });
