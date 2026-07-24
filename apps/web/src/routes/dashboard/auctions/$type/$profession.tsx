@@ -1,10 +1,15 @@
 import { createFileRoute, getRouteApi, redirect } from "@tanstack/react-router";
 
 import {
+  auctionSignupsAtom,
+  auctionStatsAtom,
+} from "@/features/auctions/auction-atoms";
+import {
   AUCTION_PROFESSION_META,
   isAuctionProfession,
   isAuctionType,
 } from "@/features/auctions/config";
+import { preloadAtomResults } from "@/lib/atom-preload";
 import AuctionsProfessionPage from "@/routes/dashboard/auctions/$type/-components/profession";
 
 const routeApi = getRouteApi("/dashboard/auctions/$type/$profession");
@@ -43,9 +48,22 @@ export const Route = createFileRoute("/dashboard/auctions/$type/$profession")({
     }
   },
   component: AuctionsProfessionRoute,
-  loader: ({ params }) => ({
-    crumb: isAuctionProfession(params.profession)
-      ? AUCTION_PROFESSION_META[params.profession].name
-      : params.profession,
-  }),
+  loader: async ({ context, params }) => {
+    if (isAuctionType(params.type) && isAuctionProfession(params.profession)) {
+      const auctionGroup = {
+        profession: params.profession,
+        type: params.type,
+      };
+      await preloadAtomResults(context.atomRegistry, [
+        auctionSignupsAtom(auctionGroup),
+        auctionStatsAtom(auctionGroup),
+      ]);
+    }
+
+    return {
+      crumb: isAuctionProfession(params.profession)
+        ? AUCTION_PROFESSION_META[params.profession].name
+        : params.profession,
+    };
+  },
 });
