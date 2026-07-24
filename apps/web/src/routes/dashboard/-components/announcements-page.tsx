@@ -6,7 +6,6 @@ import { Calendar, Megaphone, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { AddAnnouncementModal } from "@/components/modals/add-announcement-modal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,10 +25,11 @@ import {
   announcementsAtom,
   deleteAnnouncementAtom,
   optimisticAnnouncementsAtom,
-} from "@/lib/announcement-atoms";
+} from "@/features/announcements/announcement-atoms";
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
+import { AddAnnouncementModal } from "@/routes/dashboard/-components/add-announcement-modal";
 import type { AuthSession } from "@/types/route";
 
 type AnnouncementToDelete = {

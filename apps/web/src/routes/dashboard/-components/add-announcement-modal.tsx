@@ -24,7 +24,7 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { createAnnouncementAtom } from "@/lib/announcement-atoms";
+import { createAnnouncementAtom } from "@/features/announcements/announcement-atoms";
 import { formSubmission } from "@/lib/form-submission";
 
 interface AddAnnouncementModalProps {

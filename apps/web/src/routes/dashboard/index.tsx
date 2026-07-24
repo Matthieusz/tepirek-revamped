@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import DashboardHomePage from "@/pages/dashboard/index";
+import DashboardHomePage from "@/routes/dashboard/-components/announcements-page";
 
 const routeApi = getRouteApi("/dashboard/");
 
