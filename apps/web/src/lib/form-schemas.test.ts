@@ -9,7 +9,6 @@ import {
   CalculatorItemLevelSchema,
   CalculatorLevelSchema,
   CalculatorLevelsSchema,
-  CreateSquadGroupNameSchema,
   EmailSchema,
   EventColorSchema,
   EventDateSchema,
@@ -26,7 +25,6 @@ import {
   RequiredSelectionSchema,
   SignupNameSchema,
   SkillLinkSchema,
-  SkillMasterySchema,
   SkillNameSchema,
   SkillProfessionIdSchema,
   SquadFilterNameSchema,
@@ -92,11 +90,10 @@ describe("form schemas", () => {
       });
     });
 
-    it("requires event and hero selections and preserves skill mastery", () => {
+    it("requires event, hero, and skill profession selections", () => {
       fails(HeroEventIdSchema, "");
       fails(HeroNameSchema, " ");
       expect(succeeds(SkillProfessionIdSchema, "3")).toBe(3);
-      expect(succeeds(SkillMasterySchema, true)).toBe(true);
       fails(SkillProfessionIdSchema, "");
     });
   });
@@ -134,9 +131,6 @@ describe("form schemas", () => {
     it("validates task, account, and squad mutation fields", () => {
       expect(succeeds(TodoTextSchema, "Nowe zadanie")).toBe("Nowe zadanie");
       fails(TodoTextSchema, "   ");
-      expect(succeeds(CreateSquadGroupNameSchema, "Rajd")).toBe("Rajd");
-      fails(CreateSquadGroupNameSchema, "");
-      fails(CreateSquadGroupNameSchema, "x".repeat(81));
       expect(succeeds(AccountDisplayNameSchema, " Konto ")).toBe(" Konto ");
       fails(AccountDisplayNameSchema, " ");
       fails(AccountDisplayNameSchema, "x".repeat(81));

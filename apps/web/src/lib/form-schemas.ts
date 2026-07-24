@@ -2,7 +2,6 @@ import {
   ConfirmOwnedAccountImportPayload,
   PreviewOwnedAccountImportsPayload,
 } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
-import { CreateSquadGroupPayload } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
 import { CreateTodoPayload } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
 import {
   DEFAULT_EVENT_ICON_ID,
@@ -123,8 +122,6 @@ export const SkillProfessionIdSchema = PositiveIntegerIdFromString.annotate({
   message: "Wybierz profesję",
 });
 
-export const SkillMasterySchema = Schema.Boolean;
-
 export const GoldAmountSchema = Schema.String.pipe(
   Schema.refine((value): value is string => value.trim().length > 0, {
     message: "Podaj kwotę złota",
@@ -217,16 +214,6 @@ export const OptionalLevelSchema = Schema.String.pipe(
     { message: "Podaj poziom jako liczbę całkowitą większą od 0" }
   )
 );
-
-export const CreateSquadGroupNameSchema =
-  CreateSquadGroupPayload.fields.name.pipe(
-    Schema.refine((value): value is string => value.trim().length > 0, {
-      message: "Podaj nazwę grupy składów",
-    }),
-    Schema.refine((value): value is string => value.length <= 80, {
-      message: "Nazwa grupy może mieć maksymalnie 80 znaków",
-    })
-  );
 
 export const CalculatorLevelSchema = Schema.Finite.check(
   Schema.isInt({ message: "Podaj liczbę całkowitą od 1 do 500" }),

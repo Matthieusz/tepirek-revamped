@@ -7,15 +7,6 @@ export { cn } from "cnfast";
 
 const isValidDate = Schema.is(Schema.Date.check(Schema.isDateValid()));
 
-export const slugify = (input: string) =>
-  input
-    .trim()
-    .toLowerCase()
-    .replaceAll(/\s+/gu, "-")
-    .replaceAll(/[^a-z0-9-]/gu, "")
-    .replaceAll(/--+/gu, "-")
-    .replaceAll(/^-+|-+$/gu, "");
-
 export const formatDate = (
   date: Date | string | number,
   formatStr = "dd-MM-yyyy"

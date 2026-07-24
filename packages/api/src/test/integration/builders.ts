@@ -1,8 +1,6 @@
-import { slugifySkillRangeName } from "@tepirek-revamped/config";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { hero } from "@tepirek-revamped/db/schema/bet";
 import { event } from "@tepirek-revamped/db/schema/event";
-import { professions, range } from "@tepirek-revamped/db/schema/skills";
 
 import { testDb } from "./database.ts";
 
@@ -67,14 +65,8 @@ const createTestUser = async ({
   return testUser;
 };
 
-export const createUnverifiedUser = (overrides: TestUserOverrides = {}) =>
-  createTestUser({ ...overrides, role: "user", verified: false });
-
 export const createVerifiedMember = (overrides: TestUserOverrides = {}) =>
   createTestUser({ ...overrides, role: "user", verified: true });
-
-export const createAdmin = (overrides: TestUserOverrides = {}) =>
-  createTestUser({ ...overrides, role: "admin", verified: true });
 
 interface TestEventOverrides {
   color?: string;
@@ -131,46 +123,4 @@ export const createHero = async ({
   }
 
   return createdHero;
-};
-
-interface TestProfessionOverrides {
-  name?: string;
-}
-
-interface TestRangeOverrides {
-  image?: string;
-  level?: number;
-  name?: string;
-}
-
-export const createProfession = async ({
-  name = "Test Profession",
-}: TestProfessionOverrides = {}) => {
-  const [createdProfession] = await testDb
-    .insert(professions)
-    .values({ name })
-    .returning();
-
-  if (!createdProfession) {
-    throw new Error("Failed to create test profession");
-  }
-
-  return createdProfession;
-};
-
-export const createRange = async ({
-  image = "https://example.com/range.png",
-  level = 100,
-  name = "Test Range",
-}: TestRangeOverrides = {}) => {
-  const [createdRange] = await testDb
-    .insert(range)
-    .values({ image, level, name, slug: slugifySkillRangeName(name) })
-    .returning();
-
-  if (!createdRange) {
-    throw new Error("Failed to create test range");
-  }
-
-  return createdRange;
 };

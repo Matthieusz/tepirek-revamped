@@ -1,15 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { cn, formatDate, formatDateTime, slugify } from "./utils";
+import { cn, formatDate, formatDateTime } from "./utils";
 
 describe("web utils", () => {
-  it("slugifies user-facing labels", () => {
-    expect(slugify("  Elita Lodowa 120  ")).toBe("elita-lodowa-120");
-    expect(slugify("Boss!!!   Event")).toBe("boss-event");
-    expect(slugify("---Boss---Event---")).toBe("boss-event");
-    expect(slugify("Żółć")).toBe("");
-  });
-
   it("formats valid dates with the Polish locale", () => {
     expect(formatDate(new Date("2030-01-02T03:04:05.000Z"))).toBe("02-01-2030");
     expect(formatDate("2030-01-02T03:04:05.000Z")).toBe("02-01-2030");
