@@ -4,8 +4,6 @@ import type { LogLevel } from "effect/LogLevel";
 import * as Predicate from "effect/Predicate";
 import * as Record from "effect/Record";
 
-import { runId } from "./shared.ts";
-
 const LOG_LEVELS = {
   DEBUG: "Debug",
   ERROR: "Error",
@@ -54,7 +52,7 @@ const formatValue = (input: unknown): string => {
   return SIMPLE_LOG_VALUE_PATTERN.test(value) ? value : JSON.stringify(value);
 };
 
-const formatter = (id: string = runId) =>
+const formatter = (runId: string) =>
   Logger.formatStructured.pipe(
     Logger.map((output) => {
       const messages = Arr.isArray(output.message)
@@ -67,7 +65,7 @@ const formatter = (id: string = runId) =>
       )([
         ["timestamp", output.timestamp],
         ["level", output.level],
-        ["run", id],
+        ["run", runId],
         ...Arr.flatMap((value: unknown) =>
           isPlainObject(value) ? flatten(value) : [["message", value] as const]
         )(messages),
@@ -82,11 +80,9 @@ const formatter = (id: string = runId) =>
 
 /** Create the structured stderr logger with an injectable output sink. */
 export const makeStderrLogger = (
+  runId: string,
   write: (output: string) => unknown = (output) => process.stderr.write(output)
-) => Logger.make((options) => write(`${formatter().log(options)}\n`));
-
-/** Production structured logger writing to process stderr. */
-export const stderrLogger = makeStderrLogger();
+) => Logger.make((options) => write(`${formatter(runId).log(options)}\n`));
 
 const isLogLevelName = (value: string): value is keyof typeof LOG_LEVELS =>
   Record.has(LOG_LEVELS_BY_NAME, value);

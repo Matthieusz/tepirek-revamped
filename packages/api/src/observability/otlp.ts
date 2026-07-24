@@ -1,18 +1,11 @@
-import { Effect, Layer } from "effect";
-import type * as Record from "effect/Record";
-import * as Redacted from "effect/Redacted";
+import { Layer } from "effect";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import * as OtlpLogger from "effect/unstable/observability/OtlpLogger";
 import * as OtlpSerialization from "effect/unstable/observability/OtlpSerialization";
 import * as OtlpTracer from "effect/unstable/observability/OtlpTracer";
 
-import { runId } from "./shared.ts";
-
 export interface OtlpConfig {
   readonly deploymentEnvironmentName: string;
-  readonly endpoint?: string;
-  readonly headers?: Redacted.Redacted<Readonly<Record<string, string>>>;
-  readonly resourceAttributes: Readonly<Record<string, string>>;
   readonly serviceVersion: string;
 }
 
@@ -21,26 +14,15 @@ const otlpSupportLayer = Layer.merge(
   OtlpSerialization.layerJson
 );
 
-const otlpUrl = (
-  path: "logs" | "traces",
-  otlpEndpoint: string | undefined
-): string | undefined => {
-  if (!otlpEndpoint) {
-    return undefined;
-  }
-
-  return `${otlpEndpoint.replace(/\/+$/u, "")}/v1/${path}`;
-};
-
 export const resource = (
-  config: OtlpConfig
+  config: OtlpConfig,
+  runId: string
 ): {
   readonly attributes: Record<string, string>;
   readonly serviceName: string;
   readonly serviceVersion: string;
 } => ({
   attributes: {
-    ...config.resourceAttributes,
     "deployment.environment.name": config.deploymentEnvironmentName,
     "service.instance.id": runId,
     "tepirek.run": runId,
@@ -49,36 +31,15 @@ export const resource = (
   serviceVersion: config.serviceVersion,
 });
 
-/** Build OTLP loggers from configuration parsed by the executable boundary. */
-export const loggers = (config: OtlpConfig) => {
-  const url = otlpUrl("logs", config.endpoint);
+/** Build the OTLP logger layer using Effect's OpenTelemetry configuration. */
+export const loggerLayer = (config: OtlpConfig, runId: string) =>
+  OtlpLogger.layerFromConfig({
+    mergeWithExisting: true,
+    resource: resource(config, runId),
+  }).pipe(Layer.provide(otlpSupportLayer));
 
-  return url === undefined
-    ? []
-    : [
-        OtlpLogger.make({
-          headers:
-            config.headers === undefined
-              ? undefined
-              : Redacted.value(config.headers),
-          resource: resource(config),
-          url,
-        }).pipe(Effect.provide(otlpSupportLayer)),
-      ];
-};
-
-/** Build the OTLP tracing layer from executable-boundary configuration. */
-export const tracingLayer = (config: OtlpConfig) => {
-  const url = otlpUrl("traces", config.endpoint);
-
-  return url === undefined
-    ? Layer.empty
-    : OtlpTracer.layer({
-        headers:
-          config.headers === undefined
-            ? undefined
-            : Redacted.value(config.headers),
-        resource: resource(config),
-        url,
-      }).pipe(Layer.provide(otlpSupportLayer));
-};
+/** Build the OTLP tracing layer using Effect's OpenTelemetry configuration. */
+export const tracingLayer = (config: OtlpConfig, runId: string) =>
+  OtlpTracer.layerFromConfig({
+    resource: resource(config, runId),
+  }).pipe(Layer.provide(otlpSupportLayer));

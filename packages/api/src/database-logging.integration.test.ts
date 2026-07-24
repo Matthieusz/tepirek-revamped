@@ -7,6 +7,7 @@ import {
 } from "@tepirek-revamped/db/effect";
 import { todo } from "@tepirek-revamped/db/schema/todo";
 import { eq, sql } from "drizzle-orm";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
@@ -72,15 +73,27 @@ describe("Effect database query logging", () => {
     }
 
     try {
-      const loggerLayer = makeLoggerLayer([
-        makeStderrLogger((output) => stderrEntries.push(output)),
-        ...Otlp.loggers({
-          deploymentEnvironmentName: "test",
-          endpoint: `http://127.0.0.1:${address.port}`,
-          resourceAttributes: {},
-          serviceVersion: "test",
-        }),
+      const applicationLoggerLayer = makeLoggerLayer([
+        makeStderrLogger("test-run", (output) => stderrEntries.push(output)),
       ]);
+      const loggerLayer = Otlp.loggerLayer(
+        {
+          deploymentEnvironmentName: "test",
+          serviceVersion: "test",
+        },
+        "test-run"
+      ).pipe(
+        Layer.provide(applicationLoggerLayer),
+        Layer.provide(
+          ConfigProvider.layer(
+            ConfigProvider.fromUnknown({
+              OTEL_EXPORTER_OTLP_ENDPOINT: `http://127.0.0.1:${address.port}`,
+              OTEL_LOGS_EXPORTER: "otlp",
+              OTEL_SERVICE_NAME: "tepirek-revamped-api",
+            })
+          )
+        )
+      );
 
       await Effect.runPromise(
         Effect.scoped(
