@@ -37,6 +37,7 @@
   "languages": {
     "JavaScript": {
       "format_on_save": "on",
+      "language_servers": ["!biome"],
       "prettier": {
         "allowed": false
       },
@@ -53,6 +54,7 @@
     },
     "TypeScript": {
       "format_on_save": "on",
+      "language_servers": ["!biome"],
       "prettier": {
         "allowed": false
       },
@@ -69,6 +71,7 @@
     },
     "TSX": {
       "format_on_save": "on",
+      "language_servers": ["!biome"],
       "prettier": {
         "allowed": false
       },
