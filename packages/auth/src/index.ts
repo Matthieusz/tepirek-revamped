@@ -28,8 +28,8 @@ export { BetterAuthUnavailable } from "./better-auth-unavailable.ts";
 /** Validated runtime values required to configure Better Auth. */
 export interface AuthEnv {
   readonly betterAuthSecret: Redacted.Redacted;
-  readonly betterAuthUrl: string;
-  readonly corsOrigin: string;
+  readonly betterAuthUrl: URL;
+  readonly corsOrigin: URL;
   readonly discordClientId: string;
   readonly discordClientSecret: Redacted.Redacted;
   readonly isProduction: boolean;
@@ -46,8 +46,8 @@ const authEnvConfig = Config.all({
     Schema.Redacted(BetterAuthSecret),
     "BETTER_AUTH_SECRET"
   ),
-  betterAuthUrl: Config.string("BETTER_AUTH_URL"),
-  corsOrigin: Config.string("CORS_ORIGIN").pipe(Config.withDefault("")),
+  betterAuthUrl: Config.url("BETTER_AUTH_URL"),
+  corsOrigin: Config.url("CORS_ORIGIN"),
   discordClientId: Config.schema(TrimmedNonEmptyString, "DISCORD_CLIENT_ID"),
   discordClientSecret: Config.schema(
     Schema.Redacted(NonEmptyString),
@@ -91,7 +91,7 @@ export const createAuth = (env: AuthEnv, database: BetterAuthDatabase) =>
           },
         }
       : undefined,
-    baseURL: env.betterAuthUrl,
+    baseURL: env.betterAuthUrl.toString(),
     database: drizzleAdapter(database, {
       provider: "pg",
       schema,
@@ -117,7 +117,7 @@ export const createAuth = (env: AuthEnv, database: BetterAuthDatabase) =>
         clientSecret: Redacted.value(env.discordClientSecret),
       },
     },
-    trustedOrigins: [env.corsOrigin],
+    trustedOrigins: [env.corsOrigin.origin],
     user: {
       additionalFields: {
         role: {

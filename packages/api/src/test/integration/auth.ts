@@ -6,8 +6,8 @@ import { testDb } from "./database.ts";
 
 const authEnv: AuthEnv = {
   betterAuthSecret: Redacted.make("test-secret"),
-  betterAuthUrl: "http://localhost:3000",
-  corsOrigin: "http://localhost:3001",
+  betterAuthUrl: new URL("http://localhost:3000"),
+  corsOrigin: new URL("http://localhost:3001"),
   discordClientId: "test-discord-client-id",
   discordClientSecret: Redacted.make("test-discord-client-secret"),
   isProduction: false,

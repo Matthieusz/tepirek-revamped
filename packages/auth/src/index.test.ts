@@ -73,8 +73,8 @@ describe("Better Auth config", () => {
         Effect.provide(
           Layer.succeed(AuthConfig, {
             betterAuthSecret: Redacted.make("test-secret"),
-            betterAuthUrl: "http://localhost:3000",
-            corsOrigin: "http://localhost:3001",
+            betterAuthUrl: new URL("http://localhost:3000"),
+            corsOrigin: new URL("http://localhost:3001"),
             discordClientId: "test-discord-client-id",
             discordClientSecret: Redacted.make("test-discord-client-secret"),
             isProduction: false,
@@ -89,6 +89,9 @@ describe("Better Auth config", () => {
   for (const [variable, value] of [
     ["BETTER_AUTH_SECRET", ""],
     ["BETTER_AUTH_SECRET", "short-secret-sentinel"],
+    ["BETTER_AUTH_URL", "not a URL"],
+    ["CORS_ORIGIN", ""],
+    ["CORS_ORIGIN", "not a URL"],
     ["DISCORD_CLIENT_ID", ""],
     ["DISCORD_CLIENT_SECRET", ""],
   ] as const) {
@@ -103,7 +106,7 @@ describe("Better Auth config", () => {
         if (Exit.isFailure(exit)) {
           expect(Cause.hasFails(exit.cause)).toBe(true);
           expect(Cause.hasDies(exit.cause)).toBe(false);
-          if (value.length > 0) {
+          if (variable.includes("SECRET") && value.length > 0) {
             expect(String(exit)).not.toContain(value);
           }
         }
