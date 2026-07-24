@@ -2,7 +2,8 @@ import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
 import { createPageTitle } from "@/lib/metadata";
 import { requireUnverified } from "@/lib/route-helpers";
-import WaitingRoomPage from "@/pages/(auth)/waiting-room";
+
+import WaitingRoomPage from "./-components/waiting-room-page";
 
 const routeApi = getRouteApi("/waiting-room");
 

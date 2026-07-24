@@ -12,8 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { verifyDiscordGuildMembershipAtom } from "@/features/users/user-atoms";
 import { authClient } from "@/lib/auth-client";
-import { verifyDiscordGuildMembershipAtom } from "@/lib/user-atoms";
 import type { AuthSession } from "@/types/route";
 
 interface WaitingRoomPageProps {

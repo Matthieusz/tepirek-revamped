@@ -29,9 +29,9 @@ import {
 import { editBetAtom } from "@/features/events/bets/bet-atoms";
 import { HeroBetMemberPicker } from "@/features/events/bets/hero-bet-member-picker";
 import type { SelectableUser } from "@/features/events/bets/user-select-list";
+import { verifiedUsersAtom } from "@/features/users/user-atoms";
 import { NonEmptyUserIdsSchema } from "@/lib/form-schemas";
 import { formSubmission } from "@/lib/form-submission";
-import { verifiedUsersAtom } from "@/lib/user-atoms";
 
 interface EditBetModalProps {
   betId: number;

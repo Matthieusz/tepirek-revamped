@@ -9,8 +9,8 @@ import { buildPlayerColumns } from "@/components/players-table/columns";
 import { PlayerTable } from "@/components/players-table/player-table";
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Input } from "@/components/ui/input";
+import { usersAtom } from "@/features/users/user-atoms";
 import { isAdmin } from "@/lib/route-helpers";
-import { usersAtom } from "@/lib/user-atoms";
 import type { AuthSession } from "@/types/route";
 
 interface PlayerListPageProps {

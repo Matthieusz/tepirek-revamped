@@ -2,8 +2,8 @@ import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
 import { eventsAtom } from "@/features/events/core/event-atoms";
 import { heroesAtom } from "@/features/events/heroes/hero-atoms";
+import { verifiedUsersAtom } from "@/features/users/user-atoms";
 import { preloadAtomResults } from "@/lib/atom-preload";
-import { verifiedUsersAtom } from "@/lib/user-atoms";
 import { BetsAddPage } from "@/routes/dashboard/events/-components/bets-add-page";
 import {
   EventsRouteError,

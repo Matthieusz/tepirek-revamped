@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { sessionAtom } from "@/features/users/user-atoms";
 import { getErrorMessage } from "@/lib/errors";
 import {
   accountAccessGrantsAtom,
@@ -29,7 +30,6 @@ import {
   revokeAccountAccessAtom,
   sendAccountAccessInviteAtom,
 } from "@/lib/squad-builder/account-sharing-atoms";
-import { sessionAtom } from "@/lib/user-atoms";
 import { userInitials } from "@/pages/dashboard/squad-builder/accounts/account-presenters";
 import { SectionFailure } from "@/pages/dashboard/squad-builder/accounts/section-failure";
 

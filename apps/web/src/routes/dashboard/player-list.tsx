@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import PlayerListPage from "@/pages/dashboard/player-list";
+import PlayerListPage from "./-components/player-list-page";
 
 const routeApi = getRouteApi("/dashboard/player-list");
 

@@ -39,11 +39,11 @@ import type { HeroCardOption } from "@/features/events/bets/hero-cards-grid";
 import type { SelectableUser } from "@/features/events/bets/user-select-list";
 import { eventsAtom } from "@/features/events/core/event-atoms";
 import { heroesAtom } from "@/features/events/heroes/hero-atoms";
+import { verifiedUsersAtom } from "@/features/users/user-atoms";
 import { getEventIcon } from "@/lib/constants";
 import { NonEmptyUserIdsSchema } from "@/lib/form-schemas";
 import { formSubmission } from "@/lib/form-submission";
 import { isAdmin } from "@/lib/route-helpers";
-import { verifiedUsersAtom } from "@/lib/user-atoms";
 import type { AuthSession } from "@/types/route";
 
 interface EventOption {

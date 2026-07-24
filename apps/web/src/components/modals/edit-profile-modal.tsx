@@ -21,8 +21,8 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import { updateProfileAtom } from "@/features/users/user-atoms";
 import { formSubmission } from "@/lib/form-submission";
-import { updateProfileAtom } from "@/lib/user-atoms";
 
 interface EditProfileModalProps {
   readonly defaultName: string;

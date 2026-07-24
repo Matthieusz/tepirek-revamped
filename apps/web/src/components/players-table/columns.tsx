@@ -48,7 +48,7 @@ import {
   setRoleAtom,
   setVerifiedAtom,
   updateUserNameAtom,
-} from "@/lib/user-atoms";
+} from "@/features/users/user-atoms";
 import { formatDate } from "@/lib/utils";
 
 type Player = PlayerSchema;
