@@ -1,5 +1,5 @@
-import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -39,7 +39,7 @@ export const layer = Layer.effect(
     return AccountAccessInviteResponsesService.of({
       respond: EffectRuntime.fn("AccountAccessInviteResponses.respond")(
         function* respond(input) {
-          const now = new Date(yield* Clock.currentTimeMillis);
+          const now = yield* DateTime.nowAsDate;
 
           return yield* store.respondToAccountAccessInvite({
             accessId: input.accessId,
