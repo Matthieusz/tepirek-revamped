@@ -15,13 +15,13 @@ import {
   parsePositiveLevel,
 } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
+import { makeAccountRefetchStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import { FirecrawlClientService } from "../firecrawl-client.ts";
 import type { FirecrawlClient } from "../firecrawl-client.ts";
 import {
   FirecrawlConfigService,
   parseFirecrawlCreditCount,
 } from "../firecrawl-config.ts";
-import { makeAccountRefetchStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.ts";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.ts";
 import { preview } from "./preview-account-refetch-service.ts";
 

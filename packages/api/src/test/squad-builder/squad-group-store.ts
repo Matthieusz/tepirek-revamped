@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect";
 
-import type { SquadBuilderStoreServiceShape } from "./squad-group-store.ts";
+import type { SquadBuilderStoreServiceShape } from "../../services/squad-builder/squad-groups/squad-group-store.ts";
 
 const unhandledStoreCall = (operation: keyof SquadBuilderStoreServiceShape) =>
   Effect.die(new Error(`Unexpected SquadGroupStoreService.${operation} call`));

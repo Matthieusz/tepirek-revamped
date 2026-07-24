@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
-import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.ts";
+import { makeAccountImportStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import { AccountImportStoreService } from "./account-import-store-service.ts";
 import { deleteOwnedAccount } from "./delete-owned-account-service.ts";
 

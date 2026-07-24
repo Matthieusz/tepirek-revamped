@@ -4,11 +4,11 @@ import * as Layer from "effect/Layer";
 
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
+import { makeSquadGroupStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import {
   layer as squadEditorInviteTargetsLayer,
   SquadEditorInviteTargetsService,
 } from "./search-squad-editor-invite-targets-service.ts";
-import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-support.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 const parseTestUserId = (value: string) =>

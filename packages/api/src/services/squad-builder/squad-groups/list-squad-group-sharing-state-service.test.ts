@@ -7,12 +7,12 @@ import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.
 import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
 import { emptySquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.ts";
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
+import { makeSquadGroupStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import {
   layer as squadGroupSharingStateLayer,
   SquadGroupSharingStateService,
 } from "./list-squad-group-sharing-state-service.ts";
 import { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.ts";
-import { makeSquadGroupStoreServiceTestService } from "./squad-group-store.test-support.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 const parseTestUserId = (value: string) =>

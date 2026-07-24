@@ -6,7 +6,7 @@ import { parseAccountDisplayName } from "../../../domain/squad-builder/account-d
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
-import { makeAccountSharingStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.ts";
+import { makeAccountSharingStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
 import {
   layer as accountInviteTargetsLayer,

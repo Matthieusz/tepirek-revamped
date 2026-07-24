@@ -7,10 +7,10 @@ import * as Fiber from "effect/Fiber";
 import * as Redacted from "effect/Redacted";
 
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { makeAccountImportStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import { FirecrawlClientService } from "../firecrawl-client.ts";
 import type { FirecrawlClient } from "../firecrawl-client.ts";
 import { FirecrawlConfigService } from "../firecrawl-config.ts";
-import { makeAccountImportStoreServiceTestService } from "../squad-groups/squad-group-store.test-support.ts";
 import { AccountImportStoreService } from "./account-import-store-service.ts";
 import { preview } from "./preview-margonem-profile-import-service.ts";
 
