@@ -1,3 +1,5 @@
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as Observability from "@tepirek-revamped/api/observability";
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
@@ -14,13 +16,18 @@ import {
   EffectDatabase,
   makeSharedDatabaseLayer,
 } from "@tepirek-revamped/db/effect";
-import * as Crypto from "effect/Crypto";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
-import { HttpEffect, HttpRouter, HttpServer } from "effect/unstable/http";
+import {
+  HttpEffect,
+  HttpMiddleware,
+  HttpRouter,
+  HttpServer,
+} from "effect/unstable/http";
 import { OpenApi } from "effect/unstable/httpapi";
 import { initLogger, parseError } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
@@ -35,22 +42,6 @@ import { ServerApplication } from "./server-application.js";
 import type { ServerApplicationService } from "./server-application.js";
 import { readStartupConfig } from "./startup-config.js";
 import type { StartupConfig } from "./startup-config.js";
-
-const cryptoLayer = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    digest: (algorithm, data) =>
-      Effect.promise(async () => {
-        const digest = await globalThis.crypto.subtle.digest(
-          algorithm,
-          Uint8Array.from(data)
-        );
-        return new Uint8Array(digest);
-      }),
-    randomBytes: (size) =>
-      globalThis.crypto.getRandomValues(new Uint8Array(size)),
-  })
-);
 
 /** Expected failure while binding the Bun HTTP server. */
 export class ServerStartupError extends Schema.TaggedErrorClass<ServerStartupError>()(
@@ -84,20 +75,38 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
       const appHttpApiLayer = AppHttpApiLayer.pipe(
         HttpRouter.provideRequest(appHttpApiServices),
         Layer.provide(appHttpApiServices),
-        Layer.provide(HttpServer.layerServices),
-        Layer.provide(Observability.makeLayer(startupConfig.observability)),
-        Layer.provide(cryptoLayer)
+        Layer.provide(HttpServer.layerServices)
       );
       const appHttpApi = HttpEffect.toWebHandler(
-        yield* HttpRouter.toHttpEffect(appHttpApiLayer)
+        yield* HttpRouter.toHttpEffect(appHttpApiLayer),
+        HttpMiddleware.logger
       );
       const healthHttpApi = HttpEffect.toWebHandler(
         yield* HttpRouter.toHttpEffect(
           HealthHttpApiLayer.pipe(Layer.provide(HttpServer.layerServices))
-        )
+        ),
+        HttpMiddleware.logger
       );
 
-      app.use(evlog());
+      app.use(
+        evlog({
+          // Effect owns routine response logging for routes crossing this bridge.
+          exclude: [
+            "/health",
+            "/announcements/**",
+            "/todos/**",
+            "/heroes/**",
+            "/events/**",
+            "/skills/**",
+            "/auction/**",
+            "/bet/**",
+            "/ranking/**",
+            "/user/**",
+            "/vault/**",
+            "/squad-builder/**",
+          ],
+        })
+      );
 
       const identifyUser = createAuthMiddleware(auth.instance, {
         exclude: ["/api/auth/**"],
@@ -299,12 +308,35 @@ export const withHotReload = <A, E>(
   });
 };
 
-const main = Effect.promise(() => import("dotenv/config")).pipe(
-  Effect.flatMap(() =>
-    readStartupConfig.pipe(Effect.provide(AuthConfigLiveLayer))
+const dotEnvProvider = ConfigProvider.fromDotEnv().pipe(
+  Effect.catchIf(
+    (error) => error.reason._tag === "NotFound",
+    () => Effect.succeed(ConfigProvider.fromUnknown({}))
   ),
+  Effect.provide(BunFileSystem.layer)
+);
+
+const startupConfigProvider = dotEnvProvider.pipe(
+  Effect.map((provider) =>
+    ConfigProvider.orElse(ConfigProvider.fromEnv(), provider)
+  )
+);
+
+const startupConfigLayer = Layer.merge(
+  AuthConfigLiveLayer,
+  ConfigProvider.layer(startupConfigProvider)
+);
+
+const main = readStartupConfig.pipe(
+  Effect.provide(startupConfigLayer),
   Effect.flatMap((startupConfig) =>
-    Layer.launch(makeServerLayer(startupConfig))
+    Layer.launch(makeServerLayer(startupConfig)).pipe(
+      Effect.provide(
+        Observability.makeLayer(startupConfig.observability).pipe(
+          Layer.provide(BunCrypto.layer)
+        )
+      )
+    )
   ),
   (application) => withHotReload(application, import.meta.hot)
 );

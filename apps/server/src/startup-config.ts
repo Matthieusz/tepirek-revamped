@@ -27,14 +27,14 @@ export interface StartupConfig {
   readonly observability: ObservabilityConfig;
 }
 
-const parseUrl = (name: string, value: string) =>
+const validateDatabaseUrl = (value: string) =>
   Schema.decodeUnknownEffect(Schema.URLFromString)(value).pipe(
-    Effect.map((url) => url.toString()),
+    Effect.asVoid,
     Effect.mapError(
       () =>
         new StartupConfigurationError({
-          message: `${name} must be a valid absolute URL`,
-          variable: name,
+          message: "DATABASE_URL must be a valid absolute URL",
+          variable: "DATABASE_URL",
         })
     )
   );
@@ -70,22 +70,20 @@ export const readStartupConfig: Effect.Effect<
   Config.ConfigError | StartupConfigurationError,
   AuthConfig
 > = Effect.gen(function* readStartupConfigEffect() {
-  const [auth, corsOrigin, databaseUrl, discord, firecrawl, observability] =
+  const [auth, databaseUrl, discord, firecrawl, observability] =
     yield* Effect.all([
       AuthConfig,
-      Config.schema(Schema.URLFromString, "CORS_ORIGIN"),
       Config.redacted("DATABASE_URL"),
       readDiscordVerificationConfig,
       readFirecrawlConfig,
       readObservabilityConfig,
     ] as const);
 
-  yield* parseUrl("BETTER_AUTH_URL", auth.betterAuthUrl);
-  yield* parseUrl("DATABASE_URL", Redacted.value(databaseUrl));
+  yield* validateDatabaseUrl(Redacted.value(databaseUrl));
 
   return {
     auth,
-    corsOrigin: corsOrigin.origin,
+    corsOrigin: auth.corsOrigin.origin,
     databaseUrl,
     discordGuildId: discord.guildId,
     firecrawl,
