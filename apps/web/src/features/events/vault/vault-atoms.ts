@@ -55,25 +55,6 @@ const vaultByKeyAtom = Atom.family((key: VaultKey) => {
 export const vaultAtom = (payload: VaultInput) =>
   vaultByKeyAtom(vaultKey(payload));
 
-/** Resource atom for user stats rows, optionally filtered by event. */
-const userStatsByKeyAtom = Atom.family((key: VaultKey) => {
-  const payload = vaultInputFromKey(key);
-  return appHttpApiAtom(
-    Effect.gen(function* getUserStatsEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.vault.getUserStats({
-        payload:
-          payload.eventId === undefined
-            ? {}
-            : { eventId: yield* asEventId(payload.eventId) },
-      });
-    })
-  );
-});
-
-export const userStatsAtom = (payload: VaultInput) =>
-  userStatsByKeyAtom(vaultKey(payload));
-
 /** Mutation atom for distributing gold for one hero. Refreshes affected vault resources on success. */
 export const distributeGoldAtom = appHttpApiFn(
   Effect.fn("Web.Vault.distributeGold")(function* distributeGoldEffect(
@@ -94,11 +75,9 @@ export const distributeGoldAtom = appHttpApiFn(
 
     const allKey = vaultKey({});
     get.refresh(vaultByKeyAtom(allKey));
-    get.refresh(userStatsByKeyAtom(allKey));
 
     const key = vaultKey({ eventId: payload.eventId });
     get.refresh(vaultByKeyAtom(key));
-    get.refresh(userStatsByKeyAtom(key));
     get.refresh(oldestUnpaidEventAtom);
 
     return result;

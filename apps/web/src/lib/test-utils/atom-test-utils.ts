@@ -148,7 +148,6 @@ const responseBodies: Readonly<Record<string, unknown>> = {
     totalPoints: 0,
     usersUpdated: 0,
   },
-  "vault/getUserStats": [],
   "vault/getVault": [],
 };
 
@@ -408,7 +407,6 @@ export const makeTestLayer = () => {
                 usersUpdated: 0,
               })
             ),
-            getUserStats: record("vault", "getUserStats", []),
             getVault: record("vault", "getVault", []),
           },
         }) satisfies AppHttpApiClientService

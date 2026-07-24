@@ -102,9 +102,6 @@ interface TestServices {
   readonly distributeGold: (
     input: Omit<DistributeGoldInput, "heroId"> & { readonly heroId: number }
   ) => ReturnType<VaultServiceInterface["distributeGold"]>;
-  readonly getUserStats: (
-    eventId?: number
-  ) => ReturnType<VaultServiceInterface["getUserStats"]>;
   readonly getVault: (
     eventId?: number
   ) => ReturnType<VaultServiceInterface["getVault"]>;
@@ -176,10 +173,6 @@ const withServices = <A>(
             ...(heroId === undefined ? {} : { heroId: HeroId.make(heroId) }),
           });
         },
-        getUserStats: (eventId) =>
-          vault.getUserStats(
-            eventId === undefined ? undefined : EventId.make(eventId)
-          ),
         getVault: (eventId) =>
           vault.getVault(
             eventId === undefined ? undefined : EventId.make(eventId)

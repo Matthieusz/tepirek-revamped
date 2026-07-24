@@ -60,19 +60,6 @@ export const VaultHttpApiHandlers = HttpApiBuilder.group(
         )
       )
       .handle(
-        "getUserStats",
-        Effect.fn("VaultHttpApiHandlers.getUserStats")(function* getUserStats({
-          payload,
-        }) {
-          const vaultService = yield* VaultService;
-          yield* requireVerifiedSession();
-          return yield* mapVaultError(
-            "getUserStats",
-            vaultService.getUserStats(payload.eventId)
-          );
-        })
-      )
-      .handle(
         "getVault",
         Effect.fn("VaultHttpApiHandlers.getVault")(function* getVault({
           payload,

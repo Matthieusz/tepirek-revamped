@@ -64,7 +64,6 @@ describe("AppHttpApi route contract", () => {
 
   it("exposes the migrated vault routes", () => {
     expectRoute("post", "/vault/distribute-gold");
-    expectRoute("post", "/vault/user-stats");
     expectRoute("post", "/vault");
     expectRoute("post", "/vault/toggle-paid-out");
   });

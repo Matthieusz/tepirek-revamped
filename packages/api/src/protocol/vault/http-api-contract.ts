@@ -10,10 +10,6 @@ import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 export { EventIdSchema, HeroIdSchema };
 
 const PositiveNumber = Schema.Finite.check(Schema.isGreaterThan(0));
-const PositiveInt = Schema.Finite.check(
-  Schema.isInt(),
-  Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
-);
 const VaultMetric = Schema.Finite;
 export const DistributeGoldPayload = Schema.Struct({
   goldAmount: PositiveNumber,
@@ -48,17 +44,6 @@ export const DistributeGoldSuccess = Schema.Struct({
 export interface DistributeGoldSuccess extends Schema.Schema.Type<
   typeof DistributeGoldSuccess
 > {}
-export const UserStatsRow = Schema.Struct({
-  bets: VaultMetric,
-  earnings: Schema.String,
-  eventId: EventIdSchema,
-  heroId: HeroIdSchema,
-  id: PositiveInt,
-  paidOut: Schema.Boolean,
-  points: Schema.String,
-  userId: AppUserIdSchema,
-});
-export interface UserStatsRow extends Schema.Schema.Type<typeof UserStatsRow> {}
 export const VaultRow = Schema.Struct({
   paidOut: Schema.Boolean,
   totalEarnings: Schema.String,
@@ -112,11 +97,6 @@ export const VaultHttpApiGroup = HttpApiGroup.make("vault")
       error: VaultError,
       payload: DistributeGoldPayload,
       success: DistributeGoldSuccess,
-    }),
-    HttpApiEndpoint.post("getUserStats", "/user-stats", {
-      error: VaultError,
-      payload: EventFilterPayload,
-      success: Schema.Array(UserStatsRow),
     }),
     HttpApiEndpoint.post("getVault", "/", {
       error: VaultError,

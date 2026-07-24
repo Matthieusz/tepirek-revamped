@@ -6,13 +6,11 @@ import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import type {
   DistributeGoldSuccess,
   MutationSuccess,
-  UserStatsRow,
   VaultRow,
 } from "../../protocol/vault/http-api-contract.ts";
 import type { VaultError } from "./vault-errors.ts";
 
 export type DistributeGoldResult = DistributeGoldSuccess;
-export type UserStatsResultRow = UserStatsRow;
 export type VaultResultRow = VaultRow;
 export type MutationSuccessResult = MutationSuccess;
 
@@ -31,9 +29,6 @@ export interface VaultServiceInterface {
   readonly distributeGold: (
     input: DistributeGoldInput
   ) => Effect<DistributeGoldResult, VaultError>;
-  readonly getUserStats: (
-    eventId?: EventId
-  ) => Effect<readonly UserStatsResultRow[], VaultError>;
   readonly getVault: (
     eventId?: EventId
   ) => Effect<readonly VaultResultRow[], VaultError>;

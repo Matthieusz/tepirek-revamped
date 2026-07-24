@@ -9,7 +9,7 @@ import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as Schema from "effect/Schema";
 
-import { EventId, HeroId } from "../../domain/core-identifiers.ts";
+import { HeroId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
   VaultBadRequest,
@@ -57,34 +57,6 @@ const decodePersisted = <A>(
     (cause, failedOperation) =>
       new VaultPersistenceUnavailable({ cause, operation: failedOperation })
   );
-
-const decodeUserStatsRow = <
-  T extends {
-    readonly eventId: number;
-    readonly heroId: number;
-    readonly userId: string;
-  },
->(
-  row: T
-) =>
-  Effect.gen(function* decodeUserStatsRowEffect() {
-    const eventId = yield* decodePersisted(
-      EventId,
-      row.eventId,
-      "getUserStats.decode"
-    );
-    const heroId = yield* decodePersisted(
-      HeroId,
-      row.heroId,
-      "getUserStats.decode"
-    );
-    const userId = yield* decodePersisted(
-      AppUserId,
-      row.userId,
-      "getUserStats.decode"
-    );
-    return { ...row, eventId, heroId, userId };
-  });
 
 const getHeroEventWithDatabase = (database: Pick<EffectPgDatabase, "select">) =>
   Effect.fnUntraced(function* getHeroEvent(heroId: number, message: string) {
@@ -191,22 +163,6 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
     };
   });
 
-const getUserStatsWithDatabase =
-  (database: EffectPgDatabase) => (eventId?: number) => {
-    if (eventId !== undefined) {
-      return persistenceQuery(
-        "getUserStats",
-        database.select().from(userStats).where(eq(userStats.eventId, eventId))
-      ).pipe(
-        Effect.flatMap((rows) => Effect.all(rows.map(decodeUserStatsRow)))
-      );
-    }
-    return persistenceQuery(
-      "getUserStats",
-      database.select().from(userStats)
-    ).pipe(Effect.flatMap((rows) => Effect.all(rows.map(decodeUserStatsRow))));
-  };
-
 const getVaultWithDatabase =
   (database: EffectPgDatabase) => (eventId?: number) => {
     const conditions = [];
@@ -265,9 +221,6 @@ const togglePaidOutWithDatabase = (database: EffectPgDatabase) =>
 const makeService = (database: EffectPgDatabase): VaultServiceInterface => ({
   distributeGold: Effect.fn("VaultService.distributeGold")(
     (input: DistributeGoldInput) => distributeGoldWithDatabase(database)(input)
-  ),
-  getUserStats: Effect.fn("VaultService.getUserStats")((eventId?: number) =>
-    getUserStatsWithDatabase(database)(eventId)
   ),
   getVault: Effect.fn("VaultService.getVault")((eventId?: number) =>
     getVaultWithDatabase(database)(eventId)
