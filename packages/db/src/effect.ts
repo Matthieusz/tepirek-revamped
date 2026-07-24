@@ -2,6 +2,7 @@ import * as Pg from "@effect/sql-pg/PgClient";
 import { EffectCache } from "drizzle-orm/cache/core/cache-effect";
 import * as PgDrizzle from "drizzle-orm/effect-postgres";
 import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import type { Success } from "effect/Effect";
 import * as HashSet from "effect/HashSet";
@@ -26,6 +27,9 @@ export { SharedPostgresPool } from "./shared-postgres-pool.ts";
 
 /** Maximum number of PostgreSQL connections shared by all server adapters. */
 export const DATABASE_POOL_MAX_CONNECTIONS = 10;
+
+const POSTGRES_CONNECTION_TIMEOUT = Duration.seconds(5);
+const POSTGRES_POOL_CLOSE_TIMEOUT = Duration.seconds(1);
 
 /**
  * PostgreSQL type OIDs for date/time types. `pg` parses these into JS `Date`
@@ -93,7 +97,26 @@ export const makeSharedPostgresPoolLayer = (
               }),
             }),
           try: () => pool.query("SELECT 1"),
-        }).pipe(Effect.onError(() => Effect.promise(() => pool.end())));
+        }).pipe(
+          Effect.timeoutOrElse({
+            duration: POSTGRES_CONNECTION_TIMEOUT,
+            orElse: () =>
+              Effect.fail(
+                new SqlError({
+                  reason: new ConnectionError({
+                    cause: new Error("Connection timed out"),
+                    message: "SharedPostgresPool: Connection timed out",
+                    operation: "connect",
+                  }),
+                })
+              ),
+          }),
+          Effect.onError(() =>
+            Effect.promise(() => pool.end()).pipe(
+              Effect.timeoutOption(POSTGRES_POOL_CLOSE_TIMEOUT)
+            )
+          )
+        );
 
         return pool;
       }),
