@@ -12,7 +12,7 @@ Tepirek Revamped is dark-mode-only guild operations software for [Margonem](http
 - ODW, "ulepa", and bounty calculators.
 - Email/password and Discord sign-in, with Discord guild-membership verification gating the `verified` flag an admin approves.
 
-The monorepo has four workspaces: `apps/web` (TanStack Start + React frontend on port 3001), `apps/server` (Hono host on Bun, port 3000), `packages/api` (Effect HttpApi contracts, domain logic, services, and handlers, plus Drizzle adapters), `packages/db` (Drizzle schemas and migrations), and `packages/auth` (Better Auth). `packages/config` holds shared types and configuration. The web app consumes the same Effect `AppHttpApi` contract the server implements; the server's OpenAPI document is at `/api/openapi.json`. See `README.md` for local setup and `DESIGN.md` / `PRODUCT.md` for the product and design direction.
+The monorepo has six workspaces: `apps/web` (TanStack Start + React frontend on port 3001), `apps/server` (Hono host on Bun, port 3000), `packages/api` (Effect HttpApi contracts, domain logic, services, and handlers, plus Drizzle adapters), `packages/db` (Drizzle schemas and migrations), and `packages/auth` (Better Auth). `packages/config` holds shared types and configuration. The web app consumes the same Effect `AppHttpApi` contract the server implements; the server's OpenAPI document is at `/api/openapi.json`. See `README.md` for local setup and `DESIGN.md` / `PRODUCT.md` for the product and design direction.
 
 ## Architecture vocabulary
 

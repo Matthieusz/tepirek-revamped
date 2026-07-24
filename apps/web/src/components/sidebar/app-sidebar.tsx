@@ -147,7 +147,7 @@ export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
               alt="Logo"
               className="size-6 rounded"
               height={24}
-              src="/favicon.ico"
+              src="/logo.webp"
               width={24}
             />
           </div>
