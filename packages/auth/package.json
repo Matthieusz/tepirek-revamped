@@ -1,5 +1,6 @@
 {
   "name": "@tepirek-revamped/auth",
+  "private": true,
   "type": "module",
   "exports": {
     ".": {

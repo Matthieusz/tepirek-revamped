@@ -1,5 +1,6 @@
 {
   "name": "@tepirek-revamped/api",
+  "private": true,
   "type": "module",
   "exports": {
     "./adapters/*": {

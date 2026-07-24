@@ -1,5 +1,6 @@
 {
   "name": "@tepirek-revamped/db",
+  "private": true,
   "type": "module",
   "exports": {
     ".": {
