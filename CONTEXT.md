@@ -95,4 +95,4 @@ A grant letting another user use an owner's `margonem_account` for squad plannin
 
 ### Discord guild verification
 
-The use-case (`VerifyDiscordGuildMembership`) that checks the signed-in user's linked Discord account against the configured guild and, on success, persists `user.verified = true`. It powers the admin-approval gate and the waiting room; retry uses a jittered schedule and the persisted access token is redacted in logs.
+The use-case (`VerifyDiscordGuildMembership`) that checks the signed-in user's linked Discord account against the configured guild and, on success, persists `user.verified = true`. Its boolean result means whether membership was verified: a valid guild list without the configured guild and a Discord `401` or `403` both mean “membership not verified,” while other dependency failures remain errors. It powers the admin-approval gate and the waiting room; retry uses a jittered schedule and the persisted access token is redacted in logs.
