@@ -2,13 +2,14 @@ import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
 
 import { AnnouncementStoreError } from "./adapters/announcement/announcement-store-error.ts";
 import { AnnouncementStore } from "./adapters/announcement/announcement-store.ts";
 import { makeBetterAuthAdapterLayer } from "./server/auth/better-auth-adapter.ts";
-import { makeApiLiveLayerFromConfig } from "./server/effect-app.ts";
+import { makeApiLiveLayerFromValues } from "./server/effect-app.ts";
 import { AppHttpApiLayer } from "./server/http-api-handlers.ts";
 import { PreviewMargonemProfileImportService } from "./services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import { FirecrawlRequestFailed } from "./services/squad-builder/firecrawl-client.ts";
@@ -17,15 +18,19 @@ import {
   createHero,
   createVerifiedMember,
 } from "./test/integration/builders.ts";
-import { testDb } from "./test/integration/database.ts";
+import { testDatabaseUrl, testDb } from "./test/integration/database.ts";
 
-process.env.BETTER_AUTH_SECRET ??= "test-secret";
-process.env.BETTER_AUTH_URL ??= "http://localhost:3000";
-process.env.DISCORD_CLIENT_ID ??= "test-discord-client-id";
-process.env.DISCORD_CLIENT_SECRET ??= "test-discord-client-secret";
+const apiLiveLayer = makeApiLiveLayerFromValues({
+  databaseUrl: testDatabaseUrl,
+  discordGuildId: "test-discord-server-id",
+  firecrawl: {
+    apiKey: Redacted.make("test-firecrawl-api-key"),
+    monthlyRequestBudget: 900,
+  },
+});
 
 const appHttpApiLayer = AppHttpApiLayer.pipe(
-  Layer.provideMerge(makeApiLiveLayerFromConfig()),
+  Layer.provideMerge(apiLiveLayer),
   Layer.provideMerge(makeBetterAuthAdapterLayer(testAuth)),
   Layer.provide(HttpServer.layerServices)
 );
@@ -85,7 +90,7 @@ const failingAnnouncementHttpApi = HttpRouter.toWebHandler(
     Layer.provideMerge(
       Layer.merge(failingAnnouncementStoreLayer, failingProfilePreviewLayer)
     ),
-    Layer.provideMerge(makeApiLiveLayerFromConfig()),
+    Layer.provideMerge(apiLiveLayer),
     Layer.provideMerge(makeBetterAuthAdapterLayer(testAuth)),
     Layer.provide(HttpServer.layerServices)
   ),

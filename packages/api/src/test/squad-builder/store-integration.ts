@@ -1,16 +1,22 @@
 import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
 
 import { parseAppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import { parseMargonemAccountId } from "../../domain/squad-builder/margonem-account-id.ts";
 import { parseMargonemProfileId } from "../../domain/squad-builder/margonem-profile-id.ts";
-import { makeApiSquadBuilderLayer } from "../../server/effect-app.ts";
+import { makeApiLiveLayerFromValues } from "../../server/effect-app.ts";
 import { parseFirecrawlCreditCount } from "../../services/squad-builder/firecrawl-config.ts";
 import { defaultTestDatabaseUrl } from "../integration/database.ts";
 
 /** Live squad-builder layer backed by the integration test database. */
-export const squadBuilderIntegrationTestLayer = makeApiSquadBuilderLayer(
-  defaultTestDatabaseUrl
-);
+export const squadBuilderIntegrationTestLayer = makeApiLiveLayerFromValues({
+  databaseUrl: defaultTestDatabaseUrl,
+  discordGuildId: "test-discord-server-id",
+  firecrawl: {
+    apiKey: Redacted.make("test-firecrawl-api-key"),
+    monthlyRequestBudget: 900,
+  },
+});
 
 /** Parse a fixture user identifier through the production domain parser. */
 export const parseTestUserId = (value: string) =>

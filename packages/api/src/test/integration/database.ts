@@ -100,8 +100,6 @@ if (!isVitestWorker) {
   });
 }
 
-process.env.DATABASE_URL = testDatabaseUrl;
-
 export const testPool = new Pool({ connectionString: testDatabaseUrl });
 
 export const testDb = drizzle({ client: testPool });

@@ -4,6 +4,5 @@ export default defineConfig({
   test: {
     exclude: ["src/**/*.integration.test.ts"],
     include: ["src/**/*.test.ts"],
-    setupFiles: ["src/test/setup-env.ts"],
   },
 });
