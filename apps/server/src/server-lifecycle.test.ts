@@ -46,6 +46,30 @@ it.effect("releases the server, handlers, and pool in dependency order", () => {
   });
 });
 
+it.effect("does not serve when handler-layer acquisition fails", () => {
+  const handlerFailure = new Error("handler layer failed");
+  const handlerLayer = Layer.effectDiscard(Effect.fail(handlerFailure));
+  const applicationLayer = Layer.effect(
+    ServerApplication,
+    Effect.gen(function* acquireApplicationHandlers() {
+      yield* Layer.build(handlerLayer);
+      return ServerApplication.of({ app: new Hono() });
+    })
+  );
+  let serveCalled = false;
+  const serverLayer = makeServerHostLayer(applicationLayer, () => {
+    serveCalled = true;
+    return Effect.succeed({ stop: () => Promise.resolve() });
+  });
+
+  return Effect.gen(function* verifyHandlerAcquisitionPrecedesServe() {
+    const failure = yield* scopedBuild(serverLayer).pipe(Effect.flip);
+
+    expect(failure).toBe(handlerFailure);
+    expect(serveCalled).toBe(false);
+  });
+});
+
 it.effect("releases acquired resources when server startup fails", () => {
   const calls: string[] = [];
   const applicationLayer = Layer.effect(

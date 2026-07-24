@@ -20,7 +20,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
-import { HttpRouter, HttpServer } from "effect/unstable/http";
+import { HttpEffect, HttpRouter, HttpServer } from "effect/unstable/http";
 import { OpenApi } from "effect/unstable/httpapi";
 import { initLogger, parseError } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
@@ -77,27 +77,24 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
           firecrawl: startupConfig.firecrawl,
         }
       );
+      const appHttpApiServices = Layer.merge(
+        apiLiveLayer,
+        Layer.succeed(BetterAuthService, auth)
+      );
       const appHttpApiLayer = AppHttpApiLayer.pipe(
-        Layer.provideMerge(apiLiveLayer),
-        Layer.provideMerge(Layer.succeed(BetterAuthService, auth)),
+        HttpRouter.provideRequest(appHttpApiServices),
+        Layer.provide(appHttpApiServices),
         Layer.provide(HttpServer.layerServices),
         Layer.provide(Observability.makeLayer(startupConfig.observability)),
         Layer.provide(cryptoLayer)
       );
-      const appHttpApi = yield* Effect.acquireRelease(
-        Effect.sync(() =>
-          HttpRouter.toWebHandler(appHttpApiLayer, { disableLogger: true })
-        ),
-        (handler) => Effect.promise(handler.dispose)
+      const appHttpApi = HttpEffect.toWebHandler(
+        yield* HttpRouter.toHttpEffect(appHttpApiLayer)
       );
-      const healthHttpApi = yield* Effect.acquireRelease(
-        Effect.sync(() =>
-          HttpRouter.toWebHandler(
-            HealthHttpApiLayer.pipe(Layer.provide(HttpServer.layerServices)),
-            { disableLogger: true }
-          )
-        ),
-        (handler) => Effect.promise(handler.dispose)
+      const healthHttpApi = HttpEffect.toWebHandler(
+        yield* HttpRouter.toHttpEffect(
+          HealthHttpApiLayer.pipe(Layer.provide(HttpServer.layerServices))
+        )
       );
 
       app.use(evlog());
@@ -157,7 +154,7 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
         }
 
         requestLog.set({ httpApi: { path: context.req.path } });
-        return await handler.handler(new Request(context.req.raw, { headers }));
+        return await handler(new Request(context.req.raw, { headers }));
       };
 
       app.use("/health", (context) =>
