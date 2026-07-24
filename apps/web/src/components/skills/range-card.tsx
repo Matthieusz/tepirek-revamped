@@ -22,8 +22,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { deleteSkillRangeAtom } from "@/features/skills/skill-atoms";
 import { getErrorMessage } from "@/lib/errors";
-import { deleteSkillRangeAtom } from "@/lib/skill-atoms";
 import { cn } from "@/lib/utils";
 import type { AuthUser } from "@/types/route";
 

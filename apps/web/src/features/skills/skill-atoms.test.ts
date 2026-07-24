@@ -8,7 +8,7 @@ import {
   skillRangeBySlugAtom,
   skillRangesAtom,
   skillsByRangeAtom,
-} from "@/lib/skill-atoms";
+} from "@/features/skills/skill-atoms";
 import {
   makeTestLayer,
   waitForAtomResults,

@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import SkillsIndexPage from "@/pages/dashboard/skills/index";
+import SkillsIndexPage from "./-components/skills-index-page";
 
 const routeApi = getRouteApi("/dashboard/skills/");
 

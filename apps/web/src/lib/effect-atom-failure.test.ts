@@ -18,6 +18,10 @@ import {
   vaultAtom,
 } from "@/features/events/vault/vault-atoms";
 import {
+  optimisticSkillRangesAtom,
+  skillRangesAtom,
+} from "@/features/skills/skill-atoms";
+import {
   announcementsAtom,
   optimisticAnnouncementsAtom,
 } from "@/lib/announcement-atoms";
@@ -25,7 +29,6 @@ import {
   auctionSignupsAtom,
   optimisticAuctionSignupsAtom,
 } from "@/lib/auction-atoms";
-import { optimisticSkillRangesAtom, skillRangesAtom } from "@/lib/skill-atoms";
 import { ownedSquadGroupsAtom } from "@/lib/squad-builder/squad-group-atoms";
 import { optimisticTodosAtom, todosAtom } from "@/lib/todo-atoms";
 

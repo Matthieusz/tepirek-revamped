@@ -21,8 +21,8 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import { createSkillProfessionAtom } from "@/features/skills/skill-atoms";
 import { formSubmission } from "@/lib/form-submission";
-import { createSkillProfessionAtom } from "@/lib/skill-atoms";
 
 interface AddProfessionModalProps {
   readonly trigger: React.ReactNode;

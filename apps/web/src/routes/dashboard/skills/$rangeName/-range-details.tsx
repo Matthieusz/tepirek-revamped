@@ -30,13 +30,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { isAdmin } from "@/lib/route-helpers";
 import {
   deleteSkillFromRangeAtom,
   skillProfessionsAtom,
   skillRangeBySlugAtom,
   skillsByRangeAtom,
-} from "@/lib/skill-atoms";
+} from "@/features/skills/skill-atoms";
+import { isAdmin } from "@/lib/route-helpers";
 
 const routeApi = getRouteApi("/dashboard/skills/$rangeName");
 

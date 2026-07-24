@@ -9,8 +9,8 @@ import { AddRangeModal } from "@/components/modals/add-range-modal";
 import { RangeCard } from "@/components/skills/range-card";
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
+import { skillRangesAtom } from "@/features/skills/skill-atoms";
 import { isAdmin } from "@/lib/route-helpers";
-import { skillRangesAtom } from "@/lib/skill-atoms";
 import type { AuthSession } from "@/types/route";
 
 interface SkillsIndexPageProps {

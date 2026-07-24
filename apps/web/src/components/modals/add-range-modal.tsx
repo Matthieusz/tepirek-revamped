@@ -24,8 +24,8 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
+import { createSkillRangeAtom } from "@/features/skills/skill-atoms";
 import { formSubmission } from "@/lib/form-submission";
-import { createSkillRangeAtom } from "@/lib/skill-atoms";
 
 interface AddRangeModalProps {
   readonly trigger: React.ReactNode;
