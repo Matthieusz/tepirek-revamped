@@ -114,11 +114,10 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
       });
 
       app.use("*", async (context, next) => {
-        await identifyUser(
-          context.get("log"),
-          context.req.raw.headers,
-          context.req.path
-        );
+        const log = context.get("log");
+        if (log !== undefined) {
+          await identifyUser(log, context.req.raw.headers, context.req.path);
+        }
         return await next();
       });
 
@@ -155,14 +154,18 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
         handler: typeof appHttpApi
       ) => {
         const requestLog = context.get("log");
-        const { requestId } = requestLog.getContext();
         const headers = new Headers(context.req.raw.headers);
 
-        if (Predicate.isString(requestId) && requestId.length > 0) {
-          headers.set("x-request-id", requestId);
+        if (requestLog !== undefined) {
+          const { requestId } = requestLog.getContext();
+
+          if (Predicate.isString(requestId) && requestId.length > 0) {
+            headers.set("x-request-id", requestId);
+          }
+
+          requestLog.set({ httpApi: { path: context.req.path } });
         }
 
-        requestLog.set({ httpApi: { path: context.req.path } });
         return await handler(new Request(context.req.raw, { headers }));
       };
 
@@ -205,7 +208,10 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
 
       // oxlint-disable-next-line promise/prefer-await-to-callbacks
       app.onError((error, context) => {
-        context.get("log").error(error);
+        const log = context.get("log");
+        if (log !== undefined) {
+          log.error(error);
+        }
         const parsed = parseError(error);
         return context.json(
           {
