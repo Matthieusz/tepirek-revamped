@@ -50,6 +50,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  confirmOwnedAccountImportAtom,
+  previewOwnedAccountImportsAtom,
+} from "@/features/squad-builder/account-import-atoms";
 import { getSquadBuilderLineErrorMessage } from "@/lib/errors";
 import {
   AccountDisplayNameSchema,
@@ -58,11 +62,7 @@ import {
   ProfileUrlsSchema,
 } from "@/lib/form-schemas";
 import { formSubmission } from "@/lib/form-submission";
-import {
-  confirmOwnedAccountImportAtom,
-  previewOwnedAccountImportsAtom,
-} from "@/lib/squad-builder/account-import-atoms";
-import { getProfessionPresentation } from "@/pages/dashboard/squad-builder/profession-presenters";
+import { getProfessionPresentation } from "@/routes/dashboard/squad-builder/-components/profession-presenters";
 
 interface ProfileUrlsFieldProps {
   readonly disabled?: boolean;

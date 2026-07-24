@@ -29,8 +29,8 @@ import {
   optimisticSkillRangesAtom,
   skillRangesAtom,
 } from "@/features/skills/skill-atoms";
+import { ownedSquadGroupsAtom } from "@/features/squad-builder/squad-group-atoms";
 import { optimisticTodosAtom, todosAtom } from "@/features/todos/todo-atoms";
-import { ownedSquadGroupsAtom } from "@/lib/squad-builder/squad-group-atoms";
 
 const failedResource = () => AsyncResult.fail("resource unavailable");
 

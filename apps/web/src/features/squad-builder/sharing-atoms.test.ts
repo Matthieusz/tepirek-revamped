@@ -5,12 +5,12 @@ import {
   accountInviteTargetsAtom,
   revokeAccountAccessAtom,
   sendAccountAccessInviteAtom,
-} from "@/lib/squad-builder/account-sharing-atoms";
+} from "@/features/squad-builder/account-sharing-atoms";
 import {
   revokeSquadGroupEditorAtom,
   squadEditorInviteTargetsAtom,
   squadGroupEditorGrantsAtom,
-} from "@/lib/squad-builder/squad-group-sharing-atoms";
+} from "@/features/squad-builder/squad-group-sharing-atoms";
 import {
   makeTestLayer,
   waitForAtomResults,

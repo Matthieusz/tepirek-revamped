@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
-import ProfilePage from "@/pages/dashboard/profile";
+import ProfilePage from "@/routes/dashboard/-components/profile-page";
 
 const routeApi = getRouteApi("/dashboard/profile");
 

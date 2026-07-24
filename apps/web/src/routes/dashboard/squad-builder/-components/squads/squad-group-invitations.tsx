@@ -15,11 +15,11 @@ import { Frame, FramePanel } from "@/components/reui/frame";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { getErrorMessage } from "@/lib/errors";
 import {
   incomingSquadGroupInvitesAtom,
   respondToSquadGroupInviteAtom,
-} from "@/lib/squad-builder/squad-group-sharing-atoms";
+} from "@/features/squad-builder/squad-group-sharing-atoms";
+import { getErrorMessage } from "@/lib/errors";
 import { formatDateTime } from "@/lib/utils";
 
 import { userInitials } from "./squad-group-presenters";

@@ -22,16 +22,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { sessionAtom } from "@/features/users/user-atoms";
-import { getErrorMessage } from "@/lib/errors";
 import {
   accountAccessGrantsAtom,
   accountInviteTargetsAtom,
   revokeAccountAccessAtom,
   sendAccountAccessInviteAtom,
-} from "@/lib/squad-builder/account-sharing-atoms";
-import { userInitials } from "@/pages/dashboard/squad-builder/accounts/account-presenters";
-import { SectionFailure } from "@/pages/dashboard/squad-builder/accounts/section-failure";
+} from "@/features/squad-builder/account-sharing-atoms";
+import { sessionAtom } from "@/features/users/user-atoms";
+import { getErrorMessage } from "@/lib/errors";
+import { userInitials } from "@/routes/dashboard/squad-builder/-components/accounts/account-presenters";
+import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
 
 type AccountAccessGrant = AccountAccessGrantSummarySchema;
 type AccountInviteTarget = AccountInviteTargetSchema;

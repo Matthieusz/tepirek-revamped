@@ -12,8 +12,8 @@ import { Frame, FramePanel } from "@/components/reui/frame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { createSquadGroupAtom } from "@/features/squad-builder/squad-group-atoms";
 import { getErrorMessage } from "@/lib/errors";
-import { createSquadGroupAtom } from "@/lib/squad-builder/squad-group-atoms";
 
 interface CreateSquadGroupFrameProps {
   readonly onClose: () => void;

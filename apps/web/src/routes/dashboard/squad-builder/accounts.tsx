@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import SquadBuilderAccountsPage from "@/pages/dashboard/squad-builder/accounts";
+import SquadBuilderAccountsPage from "@/routes/dashboard/squad-builder/-components/accounts-page";
 
 export const Route = createFileRoute("/dashboard/squad-builder/accounts")({
   component: SquadBuilderAccountsPage,

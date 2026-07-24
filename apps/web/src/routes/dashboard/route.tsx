@@ -3,7 +3,7 @@ import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { createPageTitle } from "@/lib/metadata";
 import { requireVerified } from "@/lib/route-helpers";
-import DashboardLayout from "@/pages/dashboard/route";
+import DashboardLayout from "@/routes/dashboard/-components/dashboard-layout";
 
 const routeApi = getRouteApi("/dashboard");
 

@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { getUser } from "@/functions/get-user";
 import { createPageTitle } from "@/lib/metadata";
-import SignupPage from "@/pages/(auth)/signup";
+import SignupPage from "@/routes/-components/signup-page";
 
 export const Route = createFileRoute("/signup")({
   beforeLoad: async () => {

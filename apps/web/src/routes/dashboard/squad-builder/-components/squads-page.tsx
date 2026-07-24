@@ -2,9 +2,9 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { CreateSquadGroupFrame } from "@/pages/dashboard/squad-builder/squads/create-squad-group-frame";
-import { SquadGroupInvitations } from "@/pages/dashboard/squad-builder/squads/squad-group-invitations";
-import { SquadGroupLibrary } from "@/pages/dashboard/squad-builder/squads/squad-group-library";
+import { CreateSquadGroupFrame } from "@/routes/dashboard/squad-builder/-components/squads/create-squad-group-frame";
+import { SquadGroupInvitations } from "@/routes/dashboard/squad-builder/-components/squads/squad-group-invitations";
+import { SquadGroupLibrary } from "@/routes/dashboard/squad-builder/-components/squads/squad-group-library";
 
 export default function SquadBuilderSquadsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);

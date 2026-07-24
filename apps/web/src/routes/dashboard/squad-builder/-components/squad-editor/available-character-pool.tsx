@@ -34,29 +34,29 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { availableSquadCharactersAtom } from "@/lib/squad-builder/squad-group-atoms";
+import { availableSquadCharactersAtom } from "@/features/squad-builder/squad-group-atoms";
 import { cn } from "@/lib/utils";
-
-import { MargonemCharacterAvatarImage } from "../margonem-character-avatar-image";
-import { getProfessionPresentation } from "../profession-presenters";
-import { AvailableCharacterPoolHeader } from "./available-character-pool-header";
 import {
   filterAvailableCharacters,
   getAssignedCharacterIds,
   groupCharactersByAccount,
   parseCharacterPoolFilters,
-} from "./character-pool-filters";
+} from "@/routes/dashboard/squad-builder/-state/character-pool-filters";
 import {
   MAX_SQUAD_CHARACTERS,
   PlacementError,
   applyPlacement,
   getPlacementError,
-} from "./squad-group-draft";
+} from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
 import type {
   AvailableCharacter,
   CharacterAccountInfo,
   SquadGroupDraft,
-} from "./squad-group-draft";
+} from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
+
+import { MargonemCharacterAvatarImage } from "../margonem-character-avatar-image";
+import { getProfessionPresentation } from "../profession-presenters";
+import { AvailableCharacterPoolHeader } from "./available-character-pool-header";
 import type { SquadCharacterMetadata } from "./squad-roster-workspace";
 
 interface AvailableCharacterPoolProps {

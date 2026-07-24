@@ -3,12 +3,12 @@ import { AlertTriangle } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert";
 import { Frame, FramePanel } from "@/components/reui/frame";
-import { AvailableCharacterPool } from "@/pages/dashboard/squad-builder/squad-editor/available-character-pool";
-import { SquadEditorCommandHeader } from "@/pages/dashboard/squad-builder/squad-editor/squad-editor-command-header";
-import type { SquadGroupDraft } from "@/pages/dashboard/squad-builder/squad-editor/squad-group-draft";
-import { SquadGroupSettings } from "@/pages/dashboard/squad-builder/squad-editor/squad-group-settings";
-import { SquadRosterWorkspace } from "@/pages/dashboard/squad-builder/squad-editor/squad-roster-workspace";
-import type { SquadCharacterMetadata } from "@/pages/dashboard/squad-builder/squad-editor/squad-roster-workspace";
+import { AvailableCharacterPool } from "@/routes/dashboard/squad-builder/-components/squad-editor/available-character-pool";
+import { SquadEditorCommandHeader } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-editor-command-header";
+import { SquadGroupSettings } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-group-settings";
+import { SquadRosterWorkspace } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-roster-workspace";
+import type { SquadCharacterMetadata } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-roster-workspace";
+import type { SquadGroupDraft } from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
 
 interface SquadEditorLayoutProps {
   readonly characterById: HashMap.HashMap<number, SquadCharacterMetadata>;

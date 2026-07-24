@@ -53,26 +53,26 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getErrorMessage } from "@/lib/errors";
-import { AccountDisplayNameSchema } from "@/lib/form-schemas";
-import { formSubmission } from "@/lib/form-submission";
 import {
   deleteOwnedAccountAtom,
   updateOwnedAccountDisplayNameAtom,
-} from "@/lib/squad-builder/account-import-atoms";
+} from "@/features/squad-builder/account-import-atoms";
 import {
   applyAccountRefetchAtom,
   previewAccountRefetchAtom,
-} from "@/lib/squad-builder/account-refetch-atoms";
+} from "@/features/squad-builder/account-refetch-atoms";
+import { getErrorMessage } from "@/lib/errors";
+import { AccountDisplayNameSchema } from "@/lib/form-schemas";
+import { formSubmission } from "@/lib/form-submission";
 import { formatDateTime } from "@/lib/utils";
 import {
   changeFieldLabel,
   formatChangeValue,
   formatProfession,
-} from "@/pages/dashboard/squad-builder/accounts/account-presenters";
-import { AccountSharingPanel } from "@/pages/dashboard/squad-builder/accounts/account-sharing-panel";
-import { MargonemCharacterAvatarImage } from "@/pages/dashboard/squad-builder/margonem-character-avatar-image";
-import { getProfessionPresentation } from "@/pages/dashboard/squad-builder/profession-presenters";
+} from "@/routes/dashboard/squad-builder/-components/accounts/account-presenters";
+import { AccountSharingPanel } from "@/routes/dashboard/squad-builder/-components/accounts/account-sharing-panel";
+import { MargonemCharacterAvatarImage } from "@/routes/dashboard/squad-builder/-components/margonem-character-avatar-image";
+import { getProfessionPresentation } from "@/routes/dashboard/squad-builder/-components/profession-presenters";
 
 type OwnedAccount = OwnedMargonemAccountSummarySchema;
 

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   ownedAccountsAtom,
   confirmOwnedAccountImportAtom,
-} from "@/lib/squad-builder/account-import-atoms";
+} from "@/features/squad-builder/account-import-atoms";
 import {
   makeTestLayer,
   waitForAtomResults,

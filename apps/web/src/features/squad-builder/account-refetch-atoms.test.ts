@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { ownedAccountsAtom } from "@/lib/squad-builder/account-import-atoms";
-import { applyAccountRefetchAtom } from "@/lib/squad-builder/account-refetch-atoms";
+import { ownedAccountsAtom } from "@/features/squad-builder/account-import-atoms";
+import { applyAccountRefetchAtom } from "@/features/squad-builder/account-refetch-atoms";
 import {
   makeTestLayer,
   waitForAtomResults,

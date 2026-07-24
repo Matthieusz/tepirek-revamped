@@ -2,19 +2,19 @@ import { Effect } from "effect";
 import type * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
+  incomingAccountInvitesAtom,
+  sharedAccountsAtom,
+} from "@/features/squad-builder/account-sharing-atoms";
+import {
+  asMargonemAccountId,
+  asPendingMargonemAccountImportId,
+} from "@/features/squad-builder/branded-ids";
+import { refreshVisibleSquadGroupAtoms } from "@/features/squad-builder/squad-group-atoms";
+import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
-import {
-  incomingAccountInvitesAtom,
-  sharedAccountsAtom,
-} from "@/lib/squad-builder/account-sharing-atoms";
-import {
-  asMargonemAccountId,
-  asPendingMargonemAccountImportId,
-} from "@/lib/squad-builder/branded-ids";
-import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
 
 interface ConfirmOwnedAccountImportInput {
   readonly displayName: string;

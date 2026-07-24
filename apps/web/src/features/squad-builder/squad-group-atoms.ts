@@ -11,11 +11,14 @@ import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
+  asSquadGroupId,
+  asSquadId,
+} from "@/features/squad-builder/branded-ids";
+import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
-import { asSquadGroupId, asSquadId } from "@/lib/squad-builder/branded-ids";
 
 interface SquadGroupIdInput {
   readonly groupId: number;

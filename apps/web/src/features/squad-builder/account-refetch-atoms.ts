@@ -1,13 +1,13 @@
 import { Effect } from "effect";
 import type * as Atom from "effect/unstable/reactivity/Atom";
 
-import { AppHttpApiClient, appHttpApiFn } from "@/lib/http-api-client-runtime";
-import { ownedAccountsAtom } from "@/lib/squad-builder/account-import-atoms";
+import { ownedAccountsAtom } from "@/features/squad-builder/account-import-atoms";
 import {
   asMargonemAccountId,
   asPendingMargonemAccountRefetchId,
-} from "@/lib/squad-builder/branded-ids";
-import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
+} from "@/features/squad-builder/branded-ids";
+import { refreshVisibleSquadGroupAtoms } from "@/features/squad-builder/squad-group-atoms";
+import { AppHttpApiClient, appHttpApiFn } from "@/lib/http-api-client-runtime";
 
 interface ApplyAccountRefetchInput {
   readonly refetchPreviewId: number;

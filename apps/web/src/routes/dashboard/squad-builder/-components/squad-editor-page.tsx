@@ -19,25 +19,25 @@ import {
 } from "@/components/reui/alert";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { getErrorMessage } from "@/lib/errors";
 import {
   availableSquadCharactersAtom,
   saveSharedSquadGroupCharactersAtom,
   saveSquadGroupAtom,
   setSquadGroupVisibilityAtom,
   squadGroupDetailAtom,
-} from "@/lib/squad-builder/squad-group-atoms";
-import type { AvailableSquadCharacter } from "@/lib/squad-builder/squad-group-atoms";
-import { SquadEditorLayout } from "@/pages/dashboard/squad-builder/squad-editor/squad-editor-layout";
+} from "@/features/squad-builder/squad-group-atoms";
+import type { AvailableSquadCharacter } from "@/features/squad-builder/squad-group-atoms";
+import { getErrorMessage } from "@/lib/errors";
+import { SquadEditorLayout } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-editor-layout";
+import type { SquadCharacterMetadata } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-roster-workspace";
 import {
   hydrateDraft,
   isDraftEqual,
   projectEditorPayload,
   projectOwnerPayload,
   removeCharacter,
-} from "@/pages/dashboard/squad-builder/squad-editor/squad-group-draft";
-import type { SquadGroupDraft } from "@/pages/dashboard/squad-builder/squad-editor/squad-group-draft";
-import type { SquadCharacterMetadata } from "@/pages/dashboard/squad-builder/squad-editor/squad-roster-workspace";
+} from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
+import type { SquadGroupDraft } from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
 
 // Kept as a named alias so route resource states and child props share one source type.
 type SquadGroupDetail = SquadGroupDetailSchema;

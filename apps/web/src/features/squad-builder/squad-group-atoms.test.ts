@@ -5,7 +5,7 @@ import {
   saveSharedSquadGroupCharactersAtom,
   saveSquadGroupAtom,
   squadGroupDetailAtom,
-} from "@/lib/squad-builder/squad-group-atoms";
+} from "@/features/squad-builder/squad-group-atoms";
 import {
   makeTestLayer,
   waitForAtomResults,

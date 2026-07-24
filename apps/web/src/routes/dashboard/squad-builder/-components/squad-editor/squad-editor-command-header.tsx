@@ -11,8 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-
-import type { SquadGroupDraft } from "./squad-group-draft";
+import type { SquadGroupDraft } from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
 
 interface SquadEditorCommandHeaderProps {
   readonly draft: SquadGroupDraft;

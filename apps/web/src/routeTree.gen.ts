@@ -190,7 +190,11 @@ const DashboardSquadBuilderSquadsGroupIdRoute =
     id: '/squads_/$groupId',
     path: '/squads/$groupId',
     getParentRoute: () => DashboardSquadBuilderRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/dashboard/squad-builder/squads_.$groupId.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const DashboardEventsBetsAddRoute = DashboardEventsBetsAddRouteImport.update({
   id: '/events/bets/add',
   path: '/events/bets/add',

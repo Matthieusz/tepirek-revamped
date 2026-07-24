@@ -1,11 +1,11 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 
-import { ownedAccountsAtom } from "@/lib/squad-builder/account-import-atoms";
-import { AccountAccessFrame } from "@/pages/dashboard/squad-builder/accounts/account-access-frame";
-import { AccountImportFrame } from "@/pages/dashboard/squad-builder/accounts/account-import-frame";
-import { OwnedAccountsGrid } from "@/pages/dashboard/squad-builder/accounts/owned-accounts-grid";
-import { SectionFailure } from "@/pages/dashboard/squad-builder/accounts/section-failure";
+import { ownedAccountsAtom } from "@/features/squad-builder/account-import-atoms";
+import { AccountAccessFrame } from "@/routes/dashboard/squad-builder/-components/accounts/account-access-frame";
+import { AccountImportFrame } from "@/routes/dashboard/squad-builder/-components/accounts/account-import-frame";
+import { OwnedAccountsGrid } from "@/routes/dashboard/squad-builder/-components/accounts/owned-accounts-grid";
+import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
 
 export default function SquadBuilderAccountsPage() {
   const ownedAccountsResult = useAtomValue(ownedAccountsAtom);

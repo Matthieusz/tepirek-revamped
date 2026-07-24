@@ -8,16 +8,16 @@ import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
+  asAppUserId,
+  asMargonemAccountAccessId,
+  asMargonemAccountId,
+} from "@/features/squad-builder/branded-ids";
+import { refreshVisibleSquadGroupAtoms } from "@/features/squad-builder/squad-group-atoms";
+import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
 } from "@/lib/http-api-client-runtime";
-import {
-  asAppUserId,
-  asMargonemAccountAccessId,
-  asMargonemAccountId,
-} from "@/lib/squad-builder/branded-ids";
-import { refreshVisibleSquadGroupAtoms } from "@/lib/squad-builder/squad-group-atoms";
 
 interface RespondToAccountAccessInviteInput {
   readonly accessId: number;

@@ -42,14 +42,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { getErrorMessage } from "@/lib/errors";
-import { deleteSquadGroupAtom } from "@/lib/squad-builder/squad-group-atoms";
+import { deleteSquadGroupAtom } from "@/features/squad-builder/squad-group-atoms";
 import {
   revokeSquadGroupEditorAtom,
   sendSquadGroupEditorInviteAtom,
   squadEditorInviteTargetsAtom,
   squadGroupEditorGrantsAtom,
-} from "@/lib/squad-builder/squad-group-sharing-atoms";
+} from "@/features/squad-builder/squad-group-sharing-atoms";
+import { getErrorMessage } from "@/lib/errors";
 
 import { userInitials } from "../squads/squad-group-presenters";
 

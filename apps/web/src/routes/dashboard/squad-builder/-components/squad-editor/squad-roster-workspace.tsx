@@ -22,11 +22,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MAX_SQUAD_CHARACTERS } from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
+import type {
+  DraftSquad,
+  SquadGroupDraft,
+} from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
 
 import { MargonemCharacterAvatarImage } from "../margonem-character-avatar-image";
 import { getProfessionPresentation } from "../profession-presenters";
-import { MAX_SQUAD_CHARACTERS } from "./squad-group-draft";
-import type { DraftSquad, SquadGroupDraft } from "./squad-group-draft";
 
 export interface SquadCharacterMetadata {
   readonly accountDisplayName: string;

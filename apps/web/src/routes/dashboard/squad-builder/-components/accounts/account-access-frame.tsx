@@ -10,15 +10,15 @@ import { IconStack } from "@/components/reui/icon-stack";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { getErrorMessage } from "@/lib/errors";
 import {
   incomingAccountInvitesAtom,
   respondToAccountAccessInviteAtom,
   sharedAccountsAtom,
-} from "@/lib/squad-builder/account-sharing-atoms";
+} from "@/features/squad-builder/account-sharing-atoms";
+import { getErrorMessage } from "@/lib/errors";
 import { formatDateTime } from "@/lib/utils";
-import { userInitials } from "@/pages/dashboard/squad-builder/accounts/account-presenters";
-import { SectionFailure } from "@/pages/dashboard/squad-builder/accounts/section-failure";
+import { userInitials } from "@/routes/dashboard/squad-builder/-components/accounts/account-presenters";
+import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
 
 const InviteInboxPanel = () => {
   const [respondingAccessId, setRespondingAccessId] = useState<number | null>(
