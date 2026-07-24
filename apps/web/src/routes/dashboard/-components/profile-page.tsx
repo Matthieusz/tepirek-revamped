@@ -1,10 +1,10 @@
 import { Calendar, Edit, Mail, Shield, UserCheck } from "lucide-react";
 
-import { EditProfileModal } from "@/components/modals/edit-profile-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDate } from "@/lib/utils";
+import { EditProfileModal } from "@/routes/dashboard/-components/edit-profile-modal";
 import type { AuthSession } from "@/types/route";
 
 interface ProfilePageProps {
