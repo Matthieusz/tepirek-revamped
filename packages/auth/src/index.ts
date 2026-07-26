@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file -- Collocated live construction error schema. */
 import { BetterAuthDatabaseService } from "@tepirek-revamped/db/effect";
 import type { BetterAuthDatabase } from "@tepirek-revamped/db/effect";
 // biome-ignore lint/performance/noNamespaceImport: <one time use>
@@ -11,19 +12,23 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
-import { BetterAuthInitializationError } from "./better-auth-initialization-error.ts";
 import {
   BetterAuthService,
   makeBetterAuthService,
 } from "./better-auth-service.ts";
 
-export { BetterAuthInitializationError } from "./better-auth-initialization-error.ts";
 export {
   BetterAuthService,
+  BetterAuthUnavailable,
   makeBetterAuthService,
 } from "./better-auth-service.ts";
 export type { BetterAuthServiceInterface } from "./better-auth-service.ts";
-export { BetterAuthUnavailable } from "./better-auth-unavailable.ts";
+
+/** Expected startup failure when Better Auth construction rejects its inputs. */
+export class BetterAuthInitializationError extends Schema.TaggedErrorClass<BetterAuthInitializationError>()(
+  "BetterAuthInitializationError",
+  { cause: Schema.Defect() }
+) {}
 
 /** Validated runtime values required to configure Better Auth. */
 export interface AuthEnv {

@@ -16,7 +16,7 @@ import { HeroesStoreLayer } from "../adapters/heroes/heroes-store.ts";
 import type { HeroesStore } from "../adapters/heroes/heroes-store.ts";
 import { SkillsStoreLayer } from "../adapters/skills/skills-store.ts";
 import type { SkillsStore } from "../adapters/skills/skills-store.ts";
-import { FirecrawlClientServiceLiveLayer } from "../adapters/squad-builder/firecrawl/firecrawl-client-service.ts";
+import { FirecrawlClientServiceLiveLayer } from "../adapters/squad-builder/firecrawl/firecrawl-client.ts";
 import { makeFirecrawlConfigLayer } from "../adapters/squad-builder/firecrawl/firecrawl-config.ts";
 import { DrizzleSquadBuilderStoresLayer } from "../adapters/squad-builder/persistence/squad-builder-stores-layer.ts";
 import { TodoStoreLayer } from "../adapters/todo/todo-store.ts";

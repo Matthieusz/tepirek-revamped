@@ -1,11 +1,14 @@
+/* eslint-disable max-classes-per-file -- Collocated config service and error schema. */
 import * as Context from "effect/Context";
 import * as EffectRuntime from "effect/Effect";
 import type { Redacted } from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
-import { ParseFirecrawlConfigError } from "./firecrawl-config-errors.ts";
-
-export { ParseFirecrawlConfigError } from "./firecrawl-config-errors.ts";
+/** Expected failure when Firecrawl config is missing or unsafe. */
+export class ParseFirecrawlConfigError extends Schema.TaggedErrorClass<ParseFirecrawlConfigError>()(
+  "InvalidFirecrawlConfig",
+  { message: Schema.String }
+) {}
 
 /** Number of Firecrawl credits consumed by a scrape. */
 export const FirecrawlCreditCount = Schema.Finite.check(

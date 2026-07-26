@@ -1,8 +1,15 @@
+/* eslint-disable max-classes-per-file -- Collocated service error schema. */
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
-import { BetterAuthUnavailable } from "./better-auth-unavailable.ts";
 import type { BetterAuthInstance, BetterAuthSession } from "./index.ts";
+
+/** Expected failure when Better Auth cannot load a session. */
+export class BetterAuthUnavailable extends Schema.TaggedErrorClass<BetterAuthUnavailable>()(
+  "BetterAuthUnavailable",
+  { cause: Schema.Defect() }
+) {}
 
 /** Operations and vendor instance exposed by the Better Auth boundary. */
 export interface BetterAuthServiceInterface {

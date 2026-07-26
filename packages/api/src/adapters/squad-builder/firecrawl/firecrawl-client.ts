@@ -1,15 +1,21 @@
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { Firecrawl } from "firecrawl";
 
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.ts";
 import {
+  FirecrawlClientService,
   FirecrawlRequestFailed,
   FirecrawlResponseNotParseable,
 } from "../../../services/squad-builder/firecrawl-client.ts";
 import type { FirecrawlClient } from "../../../services/squad-builder/firecrawl-client.ts";
-import { parseFirecrawlCreditCount } from "../../../services/squad-builder/firecrawl-config.ts";
+import {
+  FirecrawlConfigService,
+  parseFirecrawlCreditCount,
+} from "../../../services/squad-builder/firecrawl-config.ts";
 
 const FirecrawlScrapeDeadline = "30 seconds";
 const FirecrawlMetadataNumber = Schema.Finite;
@@ -130,3 +136,17 @@ export class FirecrawlSdkClient implements FirecrawlClient {
     }
   );
 }
+
+/** SDK-backed live Firecrawl client layer. */
+export const FirecrawlClientServiceLiveLayer: Layer.Layer<
+  FirecrawlClientService,
+  never,
+  FirecrawlConfigService
+> = Layer.effect(
+  FirecrawlClientService,
+  FirecrawlConfigService.useSync((config) =>
+    FirecrawlClientService.of(
+      new FirecrawlSdkClient(Redacted.value(config.apiKey))
+    )
+  )
+);

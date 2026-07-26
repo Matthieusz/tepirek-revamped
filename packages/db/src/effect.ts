@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file -- Collocated database resource service tags. */
 import * as Pg from "@effect/sql-pg/PgClient";
 import { EffectCache } from "drizzle-orm/cache/core/cache-effect";
 import * as PgDrizzle from "drizzle-orm/effect-postgres";
@@ -15,11 +16,15 @@ import {
   BetterAuthDatabaseService,
   makeBetterAuthDatabase,
 } from "./better-auth-database.ts";
-import { SharedPostgresPool } from "./shared-postgres-pool.ts";
 
 export { BetterAuthDatabaseService } from "./better-auth-database.ts";
 export type { BetterAuthDatabase } from "./better-auth-database.ts";
-export { SharedPostgresPool } from "./shared-postgres-pool.ts";
+
+/** Scoped node-postgres pool shared by both Drizzle adapters. */
+export class SharedPostgresPool extends Context.Service<
+  SharedPostgresPool,
+  Pool
+>()("@tepirek-revamped/db/SharedPostgresPool") {}
 
 /** Maximum number of PostgreSQL connections shared by all server adapters. */
 export const DATABASE_POOL_MAX_CONNECTIONS = 10;

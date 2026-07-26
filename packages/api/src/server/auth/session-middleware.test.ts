@@ -9,8 +9,10 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
-import { InvalidSession } from "../../protocol/auth/invalid-session.ts";
-import { SessionUnavailable } from "../../protocol/auth/session-unavailable.ts";
+import {
+  InvalidSession,
+  SessionUnavailable,
+} from "../../protocol/auth/http-api-middleware.ts";
 import { loadCurrentSession } from "./session-middleware.ts";
 
 // SAFETY: Session middleware tests only consume the service's getSession method.
