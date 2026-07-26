@@ -17,7 +17,7 @@ export type EffectSquadGroupPersistenceOperation =
   | "createSquadGroup"
   | "deleteOwnedAccount"
   | "deleteSquadGroup"
-  | "findOwnedAccountForSharing"
+  | "findAccountOwnerUserId"
   | "findVerifiedInviteTarget"
   | "findVerifiedSquadEditorInviteTarget"
   | "findPendingImportForConfirmation"
@@ -112,14 +112,6 @@ export const parsePersistedAppUserId = (
     )
   );
 // oxlint-enable promise/prefer-await-to-callbacks
-
-export const namedStoreMethod = <Input, A, E, R>(
-  name: string,
-  method: (input: Input) => Effect.Effect<A, E, R>
-): ((input: Input) => Effect.Effect<A, E, R>) =>
-  Effect.fn(name)(function* namedStoreMethodEffect(input: Input) {
-    return yield* method(input);
-  });
 
 // oxlint-disable promise/prefer-await-to-callbacks
 export const parsePersistedSquadGroupName = (

@@ -18,7 +18,6 @@ import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services
 import { FirecrawlMonthlyBudgetExhausted } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   failPersistence,
-  namedStoreMethod,
   persistenceQuery,
   usedFirecrawlRequestStatuses,
 } from "./persistence-query.ts";
@@ -151,18 +150,15 @@ export const DrizzleFirecrawlRequestAccountingStoreServiceLayer: Layer.Layer<
   FirecrawlRequestAccountingStoreService,
   EffectDatabase.useSync((database) =>
     FirecrawlRequestAccountingStoreService.of({
-      markRequestFailed: namedStoreMethod(
-        "FirecrawlRequestAccountingStore.markRequestFailed",
-        markRequestFailedWithDatabase(database)
-      ),
-      markRequestSucceeded: namedStoreMethod(
-        "FirecrawlRequestAccountingStore.markRequestSucceeded",
-        markRequestSucceededWithDatabase(database)
-      ),
-      reserveRequest: namedStoreMethod(
-        "FirecrawlRequestAccountingStore.reserveRequest",
-        reserveRequestWithDatabase(database)
-      ),
+      markRequestFailed: Effect.fn(
+        "FirecrawlRequestAccountingStore.markRequestFailed"
+      )(markRequestFailedWithDatabase(database)),
+      markRequestSucceeded: Effect.fn(
+        "FirecrawlRequestAccountingStore.markRequestSucceeded"
+      )(markRequestSucceededWithDatabase(database)),
+      reserveRequest: Effect.fn(
+        "FirecrawlRequestAccountingStore.reserveRequest"
+      )(reserveRequestWithDatabase(database)),
     })
   )
 );

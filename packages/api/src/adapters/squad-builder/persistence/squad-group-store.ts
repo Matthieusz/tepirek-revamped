@@ -103,7 +103,6 @@ import { SquadGroupStoreService } from "../../../services/squad-builder/squad-gr
 import {
   escapeLikePattern,
   failPersistence,
-  namedStoreMethod,
   parsePersistedAppUserId,
   parsePersistedSquadGroupName,
   persistenceQuery,
@@ -1719,82 +1718,63 @@ export const DrizzleSquadGroupStoreServiceLayer: Layer.Layer<
   SquadGroupStoreService,
   EffectDatabase.useSync((database) =>
     SquadGroupStoreService.of({
-      authorizeSquadGroupOwner: namedStoreMethod(
-        "SquadGroupStore.authorizeSquadGroupOwner",
-        authorizeSquadGroupOwnerWithDatabase(database)
-      ),
-      createSquadGroup: namedStoreMethod(
-        "SquadGroupStore.createSquadGroup",
+      authorizeSquadGroupOwner: Effect.fn(
+        "SquadGroupStore.authorizeSquadGroupOwner"
+      )(authorizeSquadGroupOwnerWithDatabase(database)),
+      createSquadGroup: Effect.fn("SquadGroupStore.createSquadGroup")(
         createSquadGroupWithDatabase(database)
       ),
-      deleteSquadGroup: namedStoreMethod(
-        "SquadGroupStore.deleteSquadGroup",
+      deleteSquadGroup: Effect.fn("SquadGroupStore.deleteSquadGroup")(
         deleteSquadGroupWithDatabase(database)
       ),
-      findVerifiedSquadEditorInviteTarget: namedStoreMethod(
-        "SquadGroupStore.findVerifiedSquadEditorInviteTarget",
-        findVerifiedSquadEditorInviteTargetWithDatabase(database)
-      ),
-      getPendingSquadGroupInviteCount: namedStoreMethod(
-        "SquadGroupStore.getPendingSquadGroupInviteCount",
-        getPendingSquadGroupInviteCountWithDatabase(database)
-      ),
-      getSquadGroupDetail: namedStoreMethod(
-        "SquadGroupStore.getSquadGroupDetail",
+      findVerifiedSquadEditorInviteTarget: Effect.fn(
+        "SquadGroupStore.findVerifiedSquadEditorInviteTarget"
+      )(findVerifiedSquadEditorInviteTargetWithDatabase(database)),
+      getPendingSquadGroupInviteCount: Effect.fn(
+        "SquadGroupStore.getPendingSquadGroupInviteCount"
+      )(getPendingSquadGroupInviteCountWithDatabase(database)),
+      getSquadGroupDetail: Effect.fn("SquadGroupStore.getSquadGroupDetail")(
         getSquadGroupDetailWithDatabase(database)
       ),
-      listAvailableCharactersForOwner: namedStoreMethod(
-        "SquadGroupStore.listAvailableCharactersForOwner",
-        listAvailableCharactersForOwnerWithDatabase(database)
-      ),
-      listGlobalSquadGroups: namedStoreMethod(
-        "SquadGroupStore.listGlobalSquadGroups",
+      listAvailableCharactersForOwner: Effect.fn(
+        "SquadGroupStore.listAvailableCharactersForOwner"
+      )(listAvailableCharactersForOwnerWithDatabase(database)),
+      listGlobalSquadGroups: Effect.fn("SquadGroupStore.listGlobalSquadGroups")(
         listGlobalSquadGroupsWithDatabase(database)
       ),
-      listIncomingSquadGroupInvites: namedStoreMethod(
-        "SquadGroupStore.listIncomingSquadGroupInvites",
-        listIncomingSquadGroupInvitesWithDatabase(database)
-      ),
-      listMySquadGroups: namedStoreMethod(
-        "SquadGroupStore.listMySquadGroups",
+      listIncomingSquadGroupInvites: Effect.fn(
+        "SquadGroupStore.listIncomingSquadGroupInvites"
+      )(listIncomingSquadGroupInvitesWithDatabase(database)),
+      listMySquadGroups: Effect.fn("SquadGroupStore.listMySquadGroups")(
         listMySquadGroupsWithDatabase(database)
       ),
-      listSharedSquadGroups: namedStoreMethod(
-        "SquadGroupStore.listSharedSquadGroups",
+      listSharedSquadGroups: Effect.fn("SquadGroupStore.listSharedSquadGroups")(
         listSharedSquadGroupsWithDatabase(database)
       ),
-      listSquadGroupEditorGrants: namedStoreMethod(
-        "SquadGroupStore.listSquadGroupEditorGrants",
-        listSquadGroupEditorGrantsWithDatabase(database)
-      ),
-      respondToSquadGroupInvite: namedStoreMethod(
-        "SquadGroupStore.respondToSquadGroupInvite",
-        respondToSquadGroupInviteWithDatabase(database)
-      ),
-      revokeSquadGroupEditor: namedStoreMethod(
-        "SquadGroupStore.revokeSquadGroupEditor",
-        revokeSquadGroupEditorWithDatabase(database)
-      ),
-      saveSharedSquadGroupCharacters: namedStoreMethod(
-        "SquadGroupStore.saveSharedSquadGroupCharacters",
-        saveSharedSquadGroupCharactersWithDatabase(database)
-      ),
-      saveSquadGroupSnapshot: namedStoreMethod(
-        "SquadGroupStore.saveSquadGroupSnapshot",
-        saveSquadGroupSnapshotWithDatabase(database)
-      ),
-      searchSquadEditorInviteTargets: namedStoreMethod(
-        "SquadGroupStore.searchSquadEditorInviteTargets",
-        searchSquadEditorInviteTargetsWithDatabase(database)
-      ),
-      setSquadGroupVisibility: namedStoreMethod(
-        "SquadGroupStore.setSquadGroupVisibility",
-        setSquadGroupVisibilityWithDatabase(database)
-      ),
-      upsertSquadGroupEditorInvite: namedStoreMethod(
-        "SquadGroupStore.upsertSquadGroupEditorInvite",
-        upsertSquadGroupEditorInviteWithDatabase(database)
-      ),
+      listSquadGroupEditorGrants: Effect.fn(
+        "SquadGroupStore.listSquadGroupEditorGrants"
+      )(listSquadGroupEditorGrantsWithDatabase(database)),
+      respondToSquadGroupInvite: Effect.fn(
+        "SquadGroupStore.respondToSquadGroupInvite"
+      )(respondToSquadGroupInviteWithDatabase(database)),
+      revokeSquadGroupEditor: Effect.fn(
+        "SquadGroupStore.revokeSquadGroupEditor"
+      )(revokeSquadGroupEditorWithDatabase(database)),
+      saveSharedSquadGroupCharacters: Effect.fn(
+        "SquadGroupStore.saveSharedSquadGroupCharacters"
+      )(saveSharedSquadGroupCharactersWithDatabase(database)),
+      saveSquadGroupSnapshot: Effect.fn(
+        "SquadGroupStore.saveSquadGroupSnapshot"
+      )(saveSquadGroupSnapshotWithDatabase(database)),
+      searchSquadEditorInviteTargets: Effect.fn(
+        "SquadGroupStore.searchSquadEditorInviteTargets"
+      )(searchSquadEditorInviteTargetsWithDatabase(database)),
+      setSquadGroupVisibility: Effect.fn(
+        "SquadGroupStore.setSquadGroupVisibility"
+      )(setSquadGroupVisibilityWithDatabase(database)),
+      upsertSquadGroupEditorInvite: Effect.fn(
+        "SquadGroupStore.upsertSquadGroupEditorInvite"
+      )(upsertSquadGroupEditorInviteWithDatabase(database)),
     })
   )
 );

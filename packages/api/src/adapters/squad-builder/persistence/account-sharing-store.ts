@@ -11,7 +11,7 @@ import {
   squadCharacter,
   squadGroup,
 } from "@tepirek-revamped/db/schema/squad-builder";
-import { and, asc, desc, eq, ilike, inArray, ne, not, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, ne, not, sql } from "drizzle-orm";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -36,11 +36,9 @@ import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,
   AccountInviteTarget,
-  FindOwnedAccountForSharingInput,
+  FindAccountOwnerUserIdInput,
   ListIncomingAccountInvitesInput,
-  ListOwnedMargonemAccountsInput,
   ListSharedAccountsInput,
-  OwnedMargonemAccountSummary,
   RespondToAccountAccessInviteStoreInput,
   RevokeAccountAccessStoreInput,
   SearchInviteTargetsStoreInput,
@@ -57,103 +55,10 @@ import {
 } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   failPersistence,
-  namedStoreMethod,
   parsePersistedAppUserId,
   persistenceQuery,
 } from "./persistence-query.ts";
 import type { EffectSquadGroupPersistenceOperation } from "./persistence-query.ts";
-
-const ACCOUNT_CHARACTER_PREVIEW_LIMIT = 1;
-
-const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
-  Effect.fnUntraced(function* listOwnedAccountsEffect({
-    actorUserId,
-  }: ListOwnedMargonemAccountsInput) {
-    const operation = "listOwnedAccounts" as const;
-    const select = database
-      .select({
-        accountId: margonemAccount.id,
-        characterCount: sql<number>`count(${margonemCharacter.id})::int`.as(
-          "character_count"
-        ),
-        createdAt: margonemAccount.createdAt,
-        displayName: margonemAccount.displayName,
-        lastFetchedAt: margonemAccount.lastFetchedAt,
-        profileId: margonemAccount.profileId,
-      })
-      .from(margonemAccount)
-      .leftJoin(
-        margonemCharacter,
-        eq(margonemCharacter.accountId, margonemAccount.id)
-      )
-      .where(eq(margonemAccount.ownerUserId, actorUserId))
-      .groupBy(margonemAccount.id)
-      .orderBy(desc(margonemAccount.createdAt), desc(margonemAccount.id));
-    const rows = yield* persistenceQuery(operation, select);
-    const accountIds = rows.map((row) => row.accountId);
-    const characterRows =
-      accountIds.length === 0
-        ? []
-        : yield* persistenceQuery(
-            operation,
-            database
-              .select({
-                accountId: margonemCharacter.accountId,
-                avatarUrl: margonemCharacter.avatarUrl,
-                characterId: margonemCharacter.characterId,
-                id: margonemCharacter.id,
-                level: margonemCharacter.level,
-                name: margonemCharacter.name,
-                profession: margonemCharacter.profession,
-              })
-              .from(margonemCharacter)
-              .where(inArray(margonemCharacter.accountId, accountIds))
-              .orderBy(
-                asc(margonemCharacter.accountId),
-                desc(margonemCharacter.level),
-                asc(margonemCharacter.id)
-              )
-          );
-    const characterRowsByAccount = Arr.groupBy(characterRows, (row) =>
-      String(row.accountId)
-    );
-
-    const accounts: OwnedMargonemAccountSummary[] = [];
-
-    for (const row of rows) {
-      const accountId = yield* parseMargonemAccountId(row.accountId).pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
-
-      const displayName = yield* parseAccountDisplayName(row.displayName).pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
-
-      const profileId = yield* parseMargonemProfileId(row.profileId).pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
-
-      accounts.push({
-        accountId,
-        characterCount: row.characterCount ?? 0,
-        characterPreviews:
-          characterRowsByAccount[String(row.accountId)]
-            ?.slice(0, ACCOUNT_CHARACTER_PREVIEW_LIMIT)
-            .map((character) => ({
-              avatarUrl: character.avatarUrl,
-              characterId: character.characterId,
-              name: character.name,
-              profession: character.profession,
-            })) ?? [],
-        displayName,
-        generatedProfileUrl: toMargonemProfileUrl(profileId),
-        lastFetchedAt: row.lastFetchedAt ?? row.createdAt,
-        profileId,
-      });
-    }
-
-    return accounts;
-  });
 
 const searchInviteTargetsWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* searchInviteTargetsEffect({
@@ -207,17 +112,13 @@ const searchInviteTargetsWithDatabase = (database: EffectPgDatabase) =>
     return targets;
   });
 
-const findOwnedAccountForSharingWithDatabase = (database: EffectPgDatabase) =>
-  Effect.fnUntraced(function* findOwnedAccountForSharingEffect({
+const findAccountOwnerUserIdWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* findAccountOwnerUserIdEffect({
     accountId,
-  }: FindOwnedAccountForSharingInput) {
-    const operation = "findOwnedAccountForSharing" as const;
+  }: FindAccountOwnerUserIdInput) {
+    const operation = "findAccountOwnerUserId" as const;
     const select = database
-      .select({
-        displayName: margonemAccount.displayName,
-        ownerUserId: margonemAccount.ownerUserId,
-        profileId: margonemAccount.profileId,
-      })
+      .select({ ownerUserId: margonemAccount.ownerUserId })
       .from(margonemAccount)
       .where(eq(margonemAccount.id, accountId))
       .limit(1);
@@ -229,24 +130,7 @@ const findOwnedAccountForSharingWithDatabase = (database: EffectPgDatabase) =>
       return yield* new MargonemAccountNotFound();
     }
 
-    const displayName = yield* parseAccountDisplayName(
-      account.displayName
-    ).pipe(Effect.catch((error) => failPersistence(operation, error)));
-
-    const ownerUserId = yield* parseAppUserId(account.ownerUserId).pipe(
-      Effect.catch((error) => failPersistence(operation, error))
-    );
-
-    const profileId = yield* parseMargonemProfileId(account.profileId).pipe(
-      Effect.catch((error) => failPersistence(operation, error))
-    );
-
-    return {
-      accountId,
-      displayName,
-      ownerUserId,
-      profileId,
-    };
+    return yield* parsePersistedAppUserId(operation, account.ownerUserId);
   });
 
 const loadAccountAccessInviteSummaryWithDatabase = (
@@ -932,46 +816,33 @@ export const DrizzleAccountSharingStoreServiceLayer: Layer.Layer<
   AccountSharingStoreService,
   EffectDatabase.useSync((database) =>
     AccountSharingStoreService.of({
-      findOwnedAccountForSharing: namedStoreMethod(
-        "AccountSharingStore.findOwnedAccountForSharing",
-        findOwnedAccountForSharingWithDatabase(database)
-      ),
-      findVerifiedInviteTarget: namedStoreMethod(
-        "AccountSharingStore.findVerifiedInviteTarget",
-        findVerifiedInviteTargetWithDatabase(database)
-      ),
-      listAccountAccessGrants: namedStoreMethod(
-        "AccountSharingStore.listAccountAccessGrants",
-        listAccountAccessGrantsWithDatabase(database)
-      ),
-      listIncomingAccountInvites: namedStoreMethod(
-        "AccountSharingStore.listIncomingAccountInvites",
-        listIncomingAccountInvitesWithDatabase(database)
-      ),
-      listOwnedAccounts: namedStoreMethod(
-        "AccountSharingStore.listOwnedAccounts",
-        listOwnedAccountsWithDatabase(database)
-      ),
-      listSharedAccounts: namedStoreMethod(
-        "AccountSharingStore.listSharedAccounts",
+      findAccountOwnerUserId: Effect.fn(
+        "AccountSharingStore.findAccountOwnerUserId"
+      )(findAccountOwnerUserIdWithDatabase(database)),
+      findVerifiedInviteTarget: Effect.fn(
+        "AccountSharingStore.findVerifiedInviteTarget"
+      )(findVerifiedInviteTargetWithDatabase(database)),
+      listAccountAccessGrants: Effect.fn(
+        "AccountSharingStore.listAccountAccessGrants"
+      )(listAccountAccessGrantsWithDatabase(database)),
+      listIncomingAccountInvites: Effect.fn(
+        "AccountSharingStore.listIncomingAccountInvites"
+      )(listIncomingAccountInvitesWithDatabase(database)),
+      listSharedAccounts: Effect.fn("AccountSharingStore.listSharedAccounts")(
         listSharedAccountsWithDatabase(database)
       ),
-      respondToAccountAccessInvite: namedStoreMethod(
-        "AccountSharingStore.respondToAccountAccessInvite",
-        respondToAccountAccessInviteWithDatabase(database)
-      ),
-      revokeAccountAccess: namedStoreMethod(
-        "AccountSharingStore.revokeAccountAccess",
+      respondToAccountAccessInvite: Effect.fn(
+        "AccountSharingStore.respondToAccountAccessInvite"
+      )(respondToAccountAccessInviteWithDatabase(database)),
+      revokeAccountAccess: Effect.fn("AccountSharingStore.revokeAccountAccess")(
         revokeAccountAccessWithDatabase(database)
       ),
-      searchInviteTargets: namedStoreMethod(
-        "AccountSharingStore.searchInviteTargets",
+      searchInviteTargets: Effect.fn("AccountSharingStore.searchInviteTargets")(
         searchInviteTargetsWithDatabase(database)
       ),
-      upsertAccountAccessInvite: namedStoreMethod(
-        "AccountSharingStore.upsertAccountAccessInvite",
-        upsertAccountAccessInviteWithDatabase(database)
-      ),
+      upsertAccountAccessInvite: Effect.fn(
+        "AccountSharingStore.upsertAccountAccessInvite"
+      )(upsertAccountAccessInviteWithDatabase(database)),
     })
   )
 );

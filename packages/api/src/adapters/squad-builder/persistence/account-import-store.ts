@@ -51,11 +51,7 @@ import {
   MargonemAccountOwnedByAnotherUser,
   PendingMargonemAccountImportNotFound,
 } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
-import {
-  failPersistence,
-  namedStoreMethod,
-  persistenceQuery,
-} from "./persistence-query.ts";
+import { failPersistence, persistenceQuery } from "./persistence-query.ts";
 
 const ACCOUNT_CHARACTER_PREVIEW_LIMIT = 1;
 
@@ -598,34 +594,27 @@ export const DrizzleAccountImportStoreServiceLayer: Layer.Layer<
   AccountImportStoreService,
   EffectDatabase.useSync((database) =>
     AccountImportStoreService.of({
-      createOwnedAccountFromPendingImport: namedStoreMethod(
-        "AccountImportStore.createOwnedAccountFromPendingImport",
-        createOwnedAccountFromPendingImportWithDatabase(database)
-      ),
-      createPendingImport: namedStoreMethod(
-        "AccountImportStore.createPendingImport",
+      createOwnedAccountFromPendingImport: Effect.fn(
+        "AccountImportStore.createOwnedAccountFromPendingImport"
+      )(createOwnedAccountFromPendingImportWithDatabase(database)),
+      createPendingImport: Effect.fn("AccountImportStore.createPendingImport")(
         createPendingImportWithDatabase(database)
       ),
-      deleteOwnedAccount: namedStoreMethod(
-        "AccountImportStore.deleteOwnedAccount",
+      deleteOwnedAccount: Effect.fn("AccountImportStore.deleteOwnedAccount")(
         deleteOwnedAccountWithDatabase(database)
       ),
-      findPendingImportForConfirmation: namedStoreMethod(
-        "AccountImportStore.findPendingImportForConfirmation",
-        findPendingImportForConfirmationWithDatabase(database)
-      ),
-      findProfileAccessState: namedStoreMethod(
-        "AccountImportStore.findProfileAccessState",
-        findProfileAccessStateWithDatabase(database)
-      ),
-      listOwnedAccounts: namedStoreMethod(
-        "AccountImportStore.listOwnedAccounts",
+      findPendingImportForConfirmation: Effect.fn(
+        "AccountImportStore.findPendingImportForConfirmation"
+      )(findPendingImportForConfirmationWithDatabase(database)),
+      findProfileAccessState: Effect.fn(
+        "AccountImportStore.findProfileAccessState"
+      )(findProfileAccessStateWithDatabase(database)),
+      listOwnedAccounts: Effect.fn("AccountImportStore.listOwnedAccounts")(
         listOwnedAccountsWithDatabase(database)
       ),
-      updateOwnedAccountDisplayName: namedStoreMethod(
-        "AccountImportStore.updateOwnedAccountDisplayName",
-        updateOwnedAccountDisplayNameWithDatabase(database)
-      ),
+      updateOwnedAccountDisplayName: Effect.fn(
+        "AccountImportStore.updateOwnedAccountDisplayName"
+      )(updateOwnedAccountDisplayNameWithDatabase(database)),
     })
   )
 );

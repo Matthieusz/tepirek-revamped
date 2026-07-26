@@ -49,7 +49,6 @@ import {
 } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   failPersistence,
-  namedStoreMethod,
   parsePersistedAppUserId,
   persistenceQuery,
 } from "./persistence-query.ts";
@@ -531,26 +530,21 @@ export const DrizzleAccountRefetchStoreServiceLayer: Layer.Layer<
   AccountRefetchStoreService,
   EffectDatabase.useSync((database) =>
     AccountRefetchStoreService.of({
-      applyRefetchedAccount: namedStoreMethod(
-        "AccountRefetchStore.applyRefetchedAccount",
-        applyRefetchedAccountWithDatabase(database)
-      ),
-      createPendingRefetch: namedStoreMethod(
-        "AccountRefetchStore.createPendingRefetch",
-        createPendingRefetchWithDatabase(database)
-      ),
-      findPendingRefetchForApply: namedStoreMethod(
-        "AccountRefetchStore.findPendingRefetchForApply",
-        findPendingRefetchForApplyWithDatabase(database)
-      ),
-      getAccountForRefetch: namedStoreMethod(
-        "AccountRefetchStore.getAccountForRefetch",
-        getAccountForRefetchWithDatabase(database)
-      ),
-      markPendingRefetchApplied: namedStoreMethod(
-        "AccountRefetchStore.markPendingRefetchApplied",
-        markPendingRefetchAppliedWithDatabase(database)
-      ),
+      applyRefetchedAccount: Effect.fn(
+        "AccountRefetchStore.applyRefetchedAccount"
+      )(applyRefetchedAccountWithDatabase(database)),
+      createPendingRefetch: Effect.fn(
+        "AccountRefetchStore.createPendingRefetch"
+      )(createPendingRefetchWithDatabase(database)),
+      findPendingRefetchForApply: Effect.fn(
+        "AccountRefetchStore.findPendingRefetchForApply"
+      )(findPendingRefetchForApplyWithDatabase(database)),
+      getAccountForRefetch: Effect.fn(
+        "AccountRefetchStore.getAccountForRefetch"
+      )(getAccountForRefetchWithDatabase(database)),
+      markPendingRefetchApplied: Effect.fn(
+        "AccountRefetchStore.markPendingRefetchApplied"
+      )(markPendingRefetchAppliedWithDatabase(database)),
     })
   )
 );
