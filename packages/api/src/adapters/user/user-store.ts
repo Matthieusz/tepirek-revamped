@@ -20,8 +20,10 @@ import {
   UserForbidden,
   UserNotFound,
 } from "../../protocol/user/http-api-contract.ts";
-import { decodePersistedValue } from "../persistence-query.ts";
-import { makeUserPersistenceQuery } from "./persistence-query.ts";
+import {
+  decodePersistedValue,
+  makeDirectPersistenceQuery,
+} from "../persistence-query.ts";
 
 const LAST_ADMIN_MESSAGE =
   "Nie można odebrać uprawnień ostatniemu administratorowi";
@@ -49,7 +51,7 @@ export class UserAdapterError extends Schema.TaggedErrorClass<UserAdapterError>(
   { cause: Schema.Defect(), operation: Schema.String }
 ) {}
 
-const userPersistenceQuery = makeUserPersistenceQuery(
+const userPersistenceQuery = makeDirectPersistenceQuery(
   (input) => new UserAdapterError(input)
 );
 

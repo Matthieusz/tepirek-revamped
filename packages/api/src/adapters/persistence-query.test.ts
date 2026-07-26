@@ -1,6 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Effect from "effect/Effect";
+import { SqlError, UnknownError } from "effect/unstable/sql/SqlError";
+import type { SqlError as SqlErrorType } from "effect/unstable/sql/SqlError";
 
 import { AnnouncementId } from "../domain/core-identifiers.ts";
 import { AnnouncementStoreError } from "./announcement/announcement-store.ts";
@@ -23,7 +25,7 @@ interface ProjectedError {
 const testProjection = <Error extends ProjectedError>(
   tag: string,
   makeError: (input: {
-    readonly cause: EffectDrizzleQueryError;
+    readonly cause: EffectDrizzleQueryError | SqlErrorType;
     readonly operation: string;
   }) => Error
 ): void => {
@@ -58,6 +60,40 @@ describe("makeDirectPersistenceQuery", () => {
   testProjection("HeroesStoreError", (input) => new HeroesStoreError(input));
   testProjection("SkillsStoreError", (input) => new SkillsStoreError(input));
   testProjection("TodoStoreError", (input) => new TodoStoreError(input));
+
+  it.effect("projects transaction-level SQL failures", () =>
+    Effect.gen(function* transactionFailureTest() {
+      const persistenceQuery = makeDirectPersistenceQuery(
+        (input) => new TodoStoreError(input)
+      );
+      const cause = new SqlError({
+        reason: new UnknownError({ cause: new Error("transaction failed") }),
+      });
+
+      const error = yield* Effect.flip(
+        persistenceQuery("transaction", Effect.fail(cause))
+      );
+
+      expect(error).toBeInstanceOf(TodoStoreError);
+      expect(error.cause).toBe(cause);
+      expect(error.operation).toBe("transaction");
+    })
+  );
+
+  it.effect("preserves callback domain errors", () =>
+    Effect.gen(function* callbackFailureTest() {
+      const persistenceQuery = makeDirectPersistenceQuery(
+        (input) => new TodoStoreError(input)
+      );
+      const domainError = { _tag: "DomainError" as const };
+
+      const error = yield* Effect.flip(
+        persistenceQuery("transaction", Effect.fail(domainError))
+      );
+
+      expect(error).toBe(domainError);
+    })
+  );
 });
 
 describe("decodePersistedValue", () => {
