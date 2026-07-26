@@ -21,12 +21,12 @@ import {
   parseTestUserId,
   squadBuilderIntegrationTestLayer,
 } from "../../../test/squad-builder/store-integration.ts";
-import { AccountImportStoreService } from "../account-import/account-import-store-service.ts";
 import { AccountSharingStateService } from "../account-sharing/list-account-sharing-state-service.ts";
-import { AccountAccessInviteResponsesService } from "../account-sharing/respond-to-account-access-invite-service.ts";
-import { AccountAccessRevocationsService } from "../account-sharing/revoke-account-access-service.ts";
-import { AccountInviteTargetsService } from "../account-sharing/search-account-invite-targets-service.ts";
-import { AccountAccessInvitesService } from "../account-sharing/send-account-access-invite-service.ts";
+import { respond } from "../account-sharing/respond-to-account-access-invite-service.ts";
+import { revoke } from "../account-sharing/revoke-account-access-service.ts";
+import { search } from "../account-sharing/search-account-invite-targets-service.ts";
+import { send } from "../account-sharing/send-account-access-invite-service.ts";
+import { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
 
 effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
   "Drizzle account sharing and Firecrawl accounting integration",
@@ -43,16 +43,17 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             new Date("2026-06-29T12:00:00.000Z")
           );
 
-          const reserved = yield* AccountImportStoreService.use((store) =>
-            store.reserveRequest({
-              monthlyRequestBudget: 10,
-              profileId,
-              requestedByUserId: parseTestUserId(member.id),
-              yearMonth,
-            })
+          const reserved = yield* FirecrawlRequestAccountingStoreService.use(
+            (store) =>
+              store.reserveRequest({
+                monthlyRequestBudget: 10,
+                profileId,
+                requestedByUserId: parseTestUserId(member.id),
+                yearMonth,
+              })
           );
 
-          yield* AccountImportStoreService.use((store) =>
+          yield* FirecrawlRequestAccountingStoreService.use((store) =>
             store.markRequestSucceeded({
               cacheState: "hit",
               completedAt: new Date("2026-06-29T12:00:00.000Z"),
@@ -114,13 +115,10 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           throw new Error("Failed to seed account");
         }
 
-        const targets = yield* Effect.gen(function* targets() {
-          const svc = yield* AccountInviteTargetsService;
-          return yield* svc.search({
-            accountId: parseTestAccountId(account.id),
-            actorUserId: parseTestUserId(owner.id),
-            query: "Store Search",
-          });
+        const targets = yield* search({
+          accountId: parseTestAccountId(account.id),
+          actorUserId: parseTestUserId(owner.id),
+          query: "Store Search",
         });
         const targetIds = targets.map((item) => item.userId);
 
@@ -158,13 +156,10 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           throw new Error("Failed to seed account");
         }
 
-        const invite = yield* Effect.gen(function* invite() {
-          const svc = yield* AccountAccessInvitesService;
-          return yield* svc.send({
-            accountId: parseTestAccountId(account.id),
-            actorUserId: parseTestUserId(owner.id),
-            invitedUserId: parseTestUserId(target.id),
-          });
+        const invite = yield* send({
+          accountId: parseTestAccountId(account.id),
+          actorUserId: parseTestUserId(owner.id),
+          invitedUserId: parseTestUserId(target.id),
         });
 
         expect(invite).toMatchObject({
@@ -185,13 +180,10 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         expect(stored?.status).toBe("pending");
 
         const duplicateFailure = yield* Effect.flip(
-          Effect.gen(function* sendDuplicateAccessInviteEffect() {
-            const svc = yield* AccountAccessInvitesService;
-            return yield* svc.send({
-              accountId: parseTestAccountId(account.id),
-              actorUserId: parseTestUserId(owner.id),
-              invitedUserId: parseTestUserId(target.id),
-            });
+          send({
+            accountId: parseTestAccountId(account.id),
+            actorUserId: parseTestUserId(owner.id),
+            invitedUserId: parseTestUserId(target.id),
           })
         );
 
@@ -230,21 +222,15 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           throw new Error("Failed to seed account");
         }
 
-        const invite = yield* Effect.gen(function* invite() {
-          const svc = yield* AccountAccessInvitesService;
-          return yield* svc.send({
-            accountId: parseTestAccountId(account.id),
-            actorUserId: parseTestUserId(owner.id),
-            invitedUserId: parseTestUserId(target.id),
-          });
+        const invite = yield* send({
+          accountId: parseTestAccountId(account.id),
+          actorUserId: parseTestUserId(owner.id),
+          invitedUserId: parseTestUserId(target.id),
         });
-        const accepted = yield* Effect.gen(function* accepted() {
-          const svc = yield* AccountAccessInviteResponsesService;
-          return yield* svc.respond({
-            accessId: invite.accessId,
-            actorUserId: parseTestUserId(target.id),
-            response: "accept",
-          });
+        const accepted = yield* respond({
+          accessId: invite.accessId,
+          actorUserId: parseTestUserId(target.id),
+          response: "accept",
         });
 
         expect(accepted).toMatchObject({
@@ -481,21 +467,15 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             throw new Error("Failed to seed squad");
           }
 
-          const invite = yield* Effect.gen(function* invite() {
-            const svc = yield* AccountAccessInvitesService;
-            return yield* svc.send({
-              accountId: parseTestAccountId(account.id),
-              actorUserId: parseTestUserId(owner.id),
-              invitedUserId: parseTestUserId(target.id),
-            });
+          const invite = yield* send({
+            accountId: parseTestAccountId(account.id),
+            actorUserId: parseTestUserId(owner.id),
+            invitedUserId: parseTestUserId(target.id),
           });
-          yield* Effect.gen(function* acceptAccountAccessInviteEffect() {
-            const svc = yield* AccountAccessInviteResponsesService;
-            return yield* svc.respond({
-              accessId: invite.accessId,
-              actorUserId: parseTestUserId(target.id),
-              response: "accept",
-            });
+          yield* respond({
+            accessId: invite.accessId,
+            actorUserId: parseTestUserId(target.id),
+            response: "accept",
           });
           yield* Effect.promise(() =>
             testDb.insert(squadCharacter).values({
@@ -507,12 +487,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             })
           );
 
-          const revoked = yield* Effect.gen(function* revoked() {
-            const svc = yield* AccountAccessRevocationsService;
-            return yield* svc.revoke({
-              accessId: invite.accessId,
-              actorUserId: parseTestUserId(owner.id),
-            });
+          const revoked = yield* revoke({
+            accessId: invite.accessId,
+            actorUserId: parseTestUserId(owner.id),
           });
 
           expect(revoked).toMatchObject({

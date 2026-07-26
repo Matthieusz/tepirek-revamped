@@ -1,47 +1,22 @@
-import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
-import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
-import * as Layer from "effect/Layer";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { SquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
-import type { SquadGroupSharingError } from "./squad-group-sharing-error.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
-import type { SquadGroupInvitationSummary } from "./squad-group-store.ts";
 
-export interface SquadGroupEditorRevocations {
-  /** Revoke pending or accepted editor access as the squad group owner. */
-  readonly revoke: (input: {
+/** Revoke pending or accepted squad group editor access. */
+export const revoke = EffectRuntime.fn("SquadGroups.revokeEditor")(
+  function* revoke(input: {
     readonly actorUserId: AppUserId;
     readonly invitationId: SquadGroupInvitationId;
-  }) => Effect<SquadGroupInvitationSummary, SquadGroupSharingError>;
-}
-
-/** Service module that revokes pending or accepted squad group editor access. */
-// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class SquadGroupEditorRevocationsService extends Context.Service<
-  SquadGroupEditorRevocationsService,
-  SquadGroupEditorRevocations
->()("@tepirek-revamped/api/squad-builder/SquadGroupEditorRevocations") {}
-
-export const layer = Layer.effect(
-  SquadGroupEditorRevocationsService,
-  EffectRuntime.gen(function* makeSquadGroupEditorRevocationsService() {
+  }) {
     const store = yield* SquadGroupStoreService;
-
-    return SquadGroupEditorRevocationsService.of({
-      revoke: EffectRuntime.fn("SquadGroupEditorInvites.revoke")(
-        function* revoke(input) {
-          const now = yield* DateTime.nowAsDate;
-
-          return yield* store.revokeSquadGroupEditor({
-            invitationId: input.invitationId,
-            now,
-            ownerUserId: input.actorUserId,
-          });
-        }
-      ),
+    const now = yield* DateTime.nowAsDate;
+    return yield* store.revokeSquadGroupEditor({
+      invitationId: input.invitationId,
+      now,
+      ownerUserId: input.actorUserId,
     });
-  })
+  }
 );

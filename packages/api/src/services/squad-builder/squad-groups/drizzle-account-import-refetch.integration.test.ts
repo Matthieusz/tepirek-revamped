@@ -53,7 +53,6 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const other = yield* Effect.promise(() =>
           createVerifiedMember({ id: "effect-owned-other" })
         );
-        const service = { list: listOwnedMargonemAccounts };
 
         const [ownedAccount] = yield* Effect.promise(() =>
           testDb
@@ -91,7 +90,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           })
         );
 
-        const accounts = yield* service.list({
+        const accounts = yield* listOwnedMargonemAccounts({
           actorUserId: parseTestUserId(member.id),
         });
 
@@ -286,7 +285,6 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           const member = yield* Effect.promise(() =>
             createVerifiedMember({ id: "effect-apply-owner" })
           );
-          const service = { apply: applyAccountRefetch };
           const [account] = yield* Effect.promise(() =>
             testDb
               .insert(margonemAccount)
@@ -415,7 +413,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             ])
           );
 
-          const applied = yield* service.apply({
+          const applied = yield* applyAccountRefetch({
             actorUserId: parseTestUserId(member.id),
             refetchPreviewId: yield* parsePendingMargonemAccountRefetchId(
               pending.id
@@ -473,7 +471,6 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(() =>
           createVerifiedMember({ id: "effect-confirm-user" })
         );
-        const service = { confirm: confirmOwnedAccountImport };
         const [pending] = yield* Effect.promise(() =>
           testDb
             .insert(margonemAccountImportPreview)
@@ -505,7 +502,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           })
         );
 
-        const confirmed = yield* service.confirm({
+        const confirmed = yield* confirmOwnedAccountImport({
           actorUserId: parseTestUserId(member.id),
           displayName: "  Confirmed Effect  ",
           pendingImportId: yield* parsePendingMargonemAccountImportId(

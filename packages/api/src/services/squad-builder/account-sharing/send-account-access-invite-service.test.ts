@@ -10,10 +10,7 @@ import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-a
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { makeAccountSharingStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
-import {
-  layer as accountAccessInvitesLayer,
-  AccountAccessInvitesService,
-} from "./send-account-access-invite-service.ts";
+import { send } from "./send-account-access-invite-service.ts";
 
 const parseTestUserId = (value: string) =>
   Effect.runSync(parseAppUserId(value));
@@ -79,14 +76,11 @@ it.effect("sends an account access invite for a verified target", () => {
       });
     },
   });
-  const testLayer = accountAccessInvitesLayer.pipe(
-    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
-  );
+  const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* sendAccountAccessInviteEffect() {
-    const svc = yield* AccountAccessInvitesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* svc.send({
+    const invite = yield* send({
       accountId,
       actorUserId,
       invitedUserId: targetUserId,
@@ -113,15 +107,12 @@ it.effect("rejects self-invites before resolving the target", () => {
         profileId,
       }),
   });
-  const testLayer = accountAccessInvitesLayer.pipe(
-    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
-  );
+  const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* sendAccountAccessInviteEffect() {
-    const svc = yield* AccountAccessInvitesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      svc.send({
+      send({
         accountId,
         actorUserId,
         invitedUserId: actorUserId,

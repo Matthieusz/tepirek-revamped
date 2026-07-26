@@ -66,11 +66,10 @@ it.effect("applies a pending account refetch and marks it applied", () => {
       return Effect.void;
     },
   });
-  const service = { apply };
 
   return Effect.gen(function* applyRefetchEffect() {
     yield* TestClock.setTime(fixedNow.getTime());
-    const applied = yield* service.apply({
+    const applied = yield* apply({
       actorUserId,
       refetchPreviewId,
     });

@@ -15,9 +15,9 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/account-refetch/http-api-contract.ts";
-import { ApplyAccountRefetchService } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.ts";
+import { apply as applyAccountRefetchWorkflow } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.ts";
 import type { ApplyAccountRefetchError } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.ts";
-import { PreviewAccountRefetchService } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.ts";
+import { preview as previewAccountRefetchWorkflow } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.ts";
 import type { PreviewAccountRefetchError } from "../../../services/squad-builder/account-refetch/preview-account-refetch-service.ts";
 import {
   requireSquadBuilderSession,
@@ -74,9 +74,7 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
   "squadBuilderAccountRefetch",
   Effect.fnUntraced(
     function* SquadBuilderAccountRefetchHttpApiHandlers(handlers) {
-      const previewAccountRefetchSvc = yield* PreviewAccountRefetchService;
-      const applyAccountRefetchSvc = yield* ApplyAccountRefetchService;
-
+      yield* Effect.void;
       return handlers
         .handle(
           "previewAccountRefetch",
@@ -88,7 +86,7 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
               ).pipe(Effect.mapError(mapInvalidId));
               return yield* withRequestCorrelation(
                 request,
-                previewAccountRefetchSvc.preview({
+                previewAccountRefetchWorkflow({
                   accountId,
                   actorUserId: sessionAppUserId(session),
                 })
@@ -107,7 +105,7 @@ export const SquadBuilderAccountRefetchHttpApiHandlers = HttpApiBuilder.group(
                 ).pipe(Effect.mapError(mapInvalidId));
               return yield* withRequestCorrelation(
                 request,
-                applyAccountRefetchSvc.apply({
+                applyAccountRefetchWorkflow({
                   actorUserId: sessionAppUserId(session),
                   refetchPreviewId,
                 })

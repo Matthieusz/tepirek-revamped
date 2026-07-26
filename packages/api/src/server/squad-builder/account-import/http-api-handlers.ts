@@ -14,17 +14,17 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/account-import/http-api-contract.ts";
-import { ConfirmOwnedAccountImportService } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
+import { confirm as confirmOwnedAccountImportWorkflow } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
 import type { ConfirmOwnedAccountImportError } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
-import { DeleteOwnedAccountService } from "../../../services/squad-builder/account-import/delete-owned-account-service.ts";
+import { deleteOwnedAccount as deleteOwnedAccountWorkflow } from "../../../services/squad-builder/account-import/delete-owned-account-service.ts";
 import type { DeleteOwnedAccountError } from "../../../services/squad-builder/account-import/delete-owned-account-service.ts";
 import type { ListOwnedMargonemAccountsError } from "../../../services/squad-builder/account-import/list-owned-margonem-accounts.ts";
-import { ListOwnedMargonemAccountsService } from "../../../services/squad-builder/account-import/list-owned-margonem-accounts.ts";
-import { PreviewMargonemProfileImportService } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
+import { list as listOwnedMargonemAccountsWorkflow } from "../../../services/squad-builder/account-import/list-owned-margonem-accounts.ts";
+import { preview as previewMargonemProfileImportWorkflow } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import type { PreviewMargonemProfileImportError } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
-import { PreviewOwnedAccountImportsService } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
+import { preview as previewOwnedAccountImportsWorkflow } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
 import type { PreviewOwnedAccountImportsError } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
-import { UpdateOwnedAccountDisplayNameService } from "../../../services/squad-builder/account-import/update-owned-account-display-name-service.ts";
+import { update as updateOwnedAccountDisplayNameWorkflow } from "../../../services/squad-builder/account-import/update-owned-account-display-name-service.ts";
 import type { UpdateOwnedAccountDisplayNameError } from "../../../services/squad-builder/account-import/update-owned-account-display-name-service.ts";
 import {
   requireSquadBuilderSession,
@@ -90,18 +90,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
   "squadBuilderAccountImport",
   Effect.fnUntraced(
     function* SquadBuilderAccountImportHttpApiHandlers(handlers) {
-      const previewMargonemProfileImportSvc =
-        yield* PreviewMargonemProfileImportService;
-      const previewOwnedAccountImportsSvc =
-        yield* PreviewOwnedAccountImportsService;
-      const confirmOwnedAccountImportSvc =
-        yield* ConfirmOwnedAccountImportService;
-      const updateOwnedAccountDisplayNameSvc =
-        yield* UpdateOwnedAccountDisplayNameService;
-      const deleteOwnedAccountSvc = yield* DeleteOwnedAccountService;
-      const listOwnedMargonemAccountsSvc =
-        yield* ListOwnedMargonemAccountsService;
-
+      yield* Effect.void;
       return handlers
         .handle(
           "previewMargonemProfileImport",
@@ -110,7 +99,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                previewMargonemProfileImportSvc.preview({
+                previewMargonemProfileImportWorkflow({
                   actorUserId: sessionAppUserId(session),
                   profileUrl: payload.profileUrl,
                 })
@@ -125,7 +114,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                previewOwnedAccountImportsSvc.preview({
+                previewOwnedAccountImportsWorkflow({
                   actorUserId: sessionAppUserId(session),
                   profileUrls: payload.profileUrls,
                 })
@@ -140,7 +129,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                confirmOwnedAccountImportSvc.confirm({
+                confirmOwnedAccountImportWorkflow({
                   actorUserId: sessionAppUserId(session),
                   displayName: payload.displayName,
                   pendingImportId: payload.pendingImportId,
@@ -156,7 +145,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                updateOwnedAccountDisplayNameSvc.update({
+                updateOwnedAccountDisplayNameWorkflow({
                   accountId: payload.accountId,
                   actorUserId: sessionAppUserId(session),
                   displayName: payload.displayName,
@@ -172,7 +161,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                deleteOwnedAccountSvc.delete({
+                deleteOwnedAccountWorkflow({
                   accountId: payload.accountId,
                   actorUserId: sessionAppUserId(session),
                 })
@@ -187,7 +176,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                listOwnedMargonemAccountsSvc.list({
+                listOwnedMargonemAccountsWorkflow({
                   actorUserId: sessionAppUserId(session),
                 })
               ).pipe(Effect.mapError(mapAccountImportError));

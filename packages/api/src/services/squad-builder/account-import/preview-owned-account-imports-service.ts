@@ -1,11 +1,9 @@
 import * as Arr from "effect/Array";
-import * as Context from "effect/Context";
 import * as Data from "effect/Data";
 import * as DateTime from "effect/DateTime";
 import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
 import * as HashMap from "effect/HashMap";
-import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
@@ -23,10 +21,15 @@ import {
   toMargonemProfileUrl,
 } from "../../../domain/squad-builder/margonem-profile-url.ts";
 import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
-import { FirecrawlClientService } from "../firecrawl-client.ts";
-import type { FirecrawlScrapeError } from "../firecrawl-client.ts";
-import { FirecrawlConfigService } from "../firecrawl-config.ts";
-import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
+import type {
+  FirecrawlClientService,
+  FirecrawlScrapeError,
+} from "../firecrawl-client.ts";
+import type {
+  FirecrawlConfigService,
+  FirecrawlCreditCount,
+} from "../firecrawl-config.ts";
+import type { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
 import {
   MargonemAccountAlreadyOwnedByActor,
   MargonemAccountAlreadySharedWithActor,
@@ -39,7 +42,7 @@ import type {
   FirecrawlBudgetError,
   SquadBuilderPersistenceUnavailable,
 } from "./account-import-store.ts";
-import { makePreviewMargonemProfileImport } from "./preview-margonem-profile-import-service.ts";
+import { preview as previewMargonemProfileImport } from "./preview-margonem-profile-import-service.ts";
 import type {
   PreviewMargonemProfileImportError,
   PreviewMargonemProfileImportInput,
@@ -147,7 +150,11 @@ export interface EffectSingleMargonemProfilePreview {
     input: PreviewMargonemProfileImportInput
   ) => Effect<
     PreviewMargonemProfileImportOutput,
-    PreviewMargonemProfileImportError
+    PreviewMargonemProfileImportError,
+    | AccountImportStoreService
+    | FirecrawlConfigService
+    | FirecrawlClientService
+    | FirecrawlRequestAccountingStoreService
   >;
 }
 
@@ -262,13 +269,12 @@ const persistPendingImport = ({
   });
 
 /** Preview and persist pending imports for a batch of pasted profile URLs. */
-const makePreview = (
-  store: typeof AccountImportStoreService.Service,
-  singleProfilePreview: EffectSingleMargonemProfilePreview
-) =>
-  EffectRuntime.fn("AccountImport.previewBatch")(function* previewBatchEffect(
-    input: PreviewOwnedAccountImportsInput
-  ) {
+export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
+  function* previewBatchEffect(input: PreviewOwnedAccountImportsInput) {
+    const store = yield* AccountImportStoreService;
+    const singleProfilePreview: EffectSingleMargonemProfilePreview = {
+      preview: previewMargonemProfileImport,
+    };
     const now = yield* DateTime.nowAsDate;
     const nonBlankLines = input.profileUrls
       .map((url, index) => ({ inputUrl: url, lineNumber: index + 1 }))
@@ -448,42 +454,5 @@ const makePreview = (
     );
 
     return { items };
-  });
-
-/** Integration seam that resolves dependencies from the Effect context. */
-export const preview = EffectRuntime.fn(
-  "AccountImport.previewBatchIntegration"
-)(function* previewIntegration(input: PreviewOwnedAccountImportsInput) {
-  const store = yield* AccountImportStoreService;
-  const config = yield* FirecrawlConfigService;
-  const firecrawl = yield* FirecrawlClientService;
-  const singleProfilePreview = {
-    preview: makePreviewMargonemProfileImport(store, config, firecrawl),
-  };
-  return yield* makePreview(store, singleProfilePreview)(input);
-});
-
-export interface PreviewOwnedAccountImports {
-  readonly preview: ReturnType<typeof makePreview>;
-}
-
-// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class PreviewOwnedAccountImportsService extends Context.Service<
-  PreviewOwnedAccountImportsService,
-  PreviewOwnedAccountImports
->()("@tepirek-revamped/api/squad-builder/PreviewOwnedAccountImportsService") {}
-
-export const layer = Layer.effect(
-  PreviewOwnedAccountImportsService,
-  EffectRuntime.gen(function* layer() {
-    const store = yield* AccountImportStoreService;
-    const config = yield* FirecrawlConfigService;
-    const firecrawl = yield* FirecrawlClientService;
-    const singleProfilePreview = {
-      preview: makePreviewMargonemProfileImport(store, config, firecrawl),
-    };
-    return PreviewOwnedAccountImportsService.of({
-      preview: makePreview(store, singleProfilePreview),
-    });
-  })
+  }
 );

@@ -8,10 +8,7 @@ import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.
 import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
 import { makeSquadGroupStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
-import {
-  layer as squadGroupEditorRevocationsLayer,
-  SquadGroupEditorRevocationsService,
-} from "./revoke-squad-group-editor-service.ts";
+import { revoke } from "./revoke-squad-group-editor-service.ts";
 import { ActorDoesNotOwnSquadGroup } from "./squad-group-errors.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
 
@@ -56,14 +53,11 @@ it.effect("revokes a squad group editor invite as the owner", () => {
       });
     },
   });
-  const testLayer = squadGroupEditorRevocationsLayer.pipe(
-    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
-  );
+  const testLayer = Layer.succeed(SquadGroupStoreService, store);
 
   return Effect.gen(function* revokeSquadGroupEditorEffect() {
-    const svc = yield* SquadGroupEditorRevocationsService;
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* svc.revoke({
+    const invite = yield* revoke({
       actorUserId,
       invitationId,
     });
@@ -82,15 +76,12 @@ it.effect("surfaces squad group ownership failures", () => {
   const store = makeSquadGroupStoreServiceTestService({
     revokeSquadGroupEditor: () => new ActorDoesNotOwnSquadGroup(),
   });
-  const testLayer = squadGroupEditorRevocationsLayer.pipe(
-    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
-  );
+  const testLayer = Layer.succeed(SquadGroupStoreService, store);
 
   return Effect.gen(function* revokeSquadGroupEditorEffect() {
-    const svc = yield* SquadGroupEditorRevocationsService;
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      svc.revoke({
+      revoke({
         actorUserId,
         invitationId,
       })

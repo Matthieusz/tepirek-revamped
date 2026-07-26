@@ -1,13 +1,10 @@
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
 import type { InvalidSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
 import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
-import type { SquadGroupStoreServiceShape } from "./squad-group-store.ts";
 
 /** Input for creating an empty squad group. */
 export interface CreateSquadGroupInput {
@@ -21,36 +18,14 @@ export type CreateSquadGroupError =
   | EffectSquadBuilderPersistenceUnavailable;
 
 /** Create an empty private squad group owned by the actor. */
-const makeCreate = (store: SquadGroupStoreServiceShape) =>
-  Effect.fn("SquadGroups.create")(function* createSquadGroup(
-    input: CreateSquadGroupInput
-  ) {
+export const create = Effect.fn("SquadGroups.create")(
+  function* createSquadGroup(input: CreateSquadGroupInput) {
+    const store = yield* SquadGroupStoreService;
     const name = yield* parseSquadGroupName(input.name);
 
     return yield* store.createSquadGroup({
       actorUserId: input.actorUserId,
       name,
     });
-  });
-
-/** Integration seam that resolves the store from the Effect context. */
-export const create = (input: CreateSquadGroupInput) =>
-  SquadGroupStoreService.use((store) => makeCreate(store)(input));
-
-export interface CreateSquadGroup {
-  readonly create: ReturnType<typeof makeCreate>;
-}
-
-// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class CreateSquadGroupService extends Context.Service<
-  CreateSquadGroupService,
-  CreateSquadGroup
->()("@tepirek-revamped/api/squad-builder/CreateSquadGroupService") {}
-
-export const layer = Layer.effect(
-  CreateSquadGroupService,
-  Effect.gen(function* layer() {
-    const store = yield* SquadGroupStoreService;
-    return CreateSquadGroupService.of({ create: makeCreate(store) });
-  })
+  }
 );

@@ -4,7 +4,6 @@ import type {
 } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import {
-  firecrawlProfileScrapeRequest,
   margonemAccount,
   margonemAccountAccess,
   margonemAccountImportPreview,
@@ -12,17 +11,7 @@ import {
   margonemCharacter,
   squadCharacter,
 } from "@tepirek-revamped/db/schema/squad-builder";
-import {
-  and,
-  asc,
-  count,
-  desc,
-  eq,
-  gt,
-  inArray,
-  isNull,
-  sql,
-} from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -33,7 +22,6 @@ import {
   parseAccountDisplayName,
 } from "../../../domain/squad-builder/account-display-name.ts";
 import { appUserIdToString } from "../../../domain/squad-builder/app-user-id.ts";
-import { firecrawlYearMonthToString } from "../../../domain/squad-builder/firecrawl-year-month.ts";
 import {
   margonemAccountIdToNumber,
   parseMargonemAccountId,
@@ -63,17 +51,12 @@ import type {
   FindPendingMargonemAccountImportInput,
   FindProfileAccessStateInput,
   ListOwnedMargonemAccountsInput,
-  MarkFirecrawlRequestFailedInput,
-  MarkFirecrawlRequestSucceededInput,
   OwnedMargonemAccountSummary,
-  ReserveFirecrawlRequestInput,
   UpdateOwnedAccountDisplayNameInput,
 } from "../../../services/squad-builder/account-import/account-import-store.ts";
 import { ProfileAccessState } from "../../../services/squad-builder/account-import/account-import-store.ts";
-import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   ActorDoesNotOwnMargonemAccount,
-  FirecrawlMonthlyBudgetExhausted,
   MargonemAccountAlreadyOwnedByActor,
   MargonemAccountNotFound,
   MargonemAccountOwnedByAnotherUser,
@@ -83,7 +66,6 @@ import {
   failPersistence,
   namedStoreMethod,
   persistenceQuery,
-  usedFirecrawlRequestStatuses,
 } from "./persistence-query.ts";
 
 const ACCOUNT_CHARACTER_PREVIEW_LIMIT = 1;
@@ -133,131 +115,6 @@ const findProfileAccessStateWithDatabase = (database: EffectPgDatabase) =>
 
     return ProfileAccessState.OwnedByAnotherUser();
   });
-
-const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
-  Effect.fnUntraced(function* reserveRequestEffect({
-    monthlyRequestBudget,
-    profileId,
-    requestedByUserId,
-    yearMonth,
-  }: ReserveFirecrawlRequestInput) {
-    const operation = "reserveRequest" as const;
-    const yearMonthText = firecrawlYearMonthToString(yearMonth);
-    const transaction = database.transaction(
-      Effect.fnUntraced(function* reserveInTransaction(
-        tx: TransactionDatabase
-      ) {
-        yield* tx.execute(
-          sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
-        );
-        const usageSelect = tx
-          .select({ usedRequests: count() })
-          .from(firecrawlProfileScrapeRequest)
-          .where(
-            and(
-              eq(firecrawlProfileScrapeRequest.yearMonth, yearMonthText),
-              inArray(
-                firecrawlProfileScrapeRequest.status,
-                usedFirecrawlRequestStatuses
-              )
-            )
-          );
-        const usageRows = yield* usageSelect;
-
-        const usedRequests = usageRows[0]?.usedRequests ?? 0;
-
-        if (usedRequests >= monthlyRequestBudget) {
-          return yield* new FirecrawlMonthlyBudgetExhausted({
-            monthlyRequestBudget,
-            usedRequests,
-            yearMonth,
-          });
-        }
-
-        const insert = tx
-          .insert(firecrawlProfileScrapeRequest)
-          .values({
-            profileId: profileIdToNumber(profileId),
-            requestedByUserId: appUserIdToString(requestedByUserId),
-            status: "reserved",
-            yearMonth: yearMonthText,
-          })
-          .returning({ id: firecrawlProfileScrapeRequest.id });
-        const insertedRows = yield* insert;
-
-        const [reserved] = insertedRows;
-
-        if (reserved === undefined) {
-          return yield* failPersistence(
-            operation,
-            new Error("Failed to reserve Firecrawl request")
-          );
-        }
-
-        const nextUsedRequests = usedRequests + 1;
-
-        return {
-          budgetState: {
-            monthlyRequestBudget,
-            remainingRequests: monthlyRequestBudget - nextUsedRequests,
-            usedRequests: nextUsedRequests,
-            yearMonth,
-          },
-          requestId: reserved.id,
-        };
-      })
-    );
-
-    return yield* persistenceQuery(operation, transaction);
-  });
-
-const markRequestSucceededWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({
-    cacheState,
-    completedAt,
-    creditsUsed,
-    firecrawlStatusCode,
-    requestId,
-  }: MarkFirecrawlRequestSucceededInput): Effect.Effect<
-    void,
-    EffectSquadBuilderPersistenceUnavailable,
-    never
-  > => {
-    const operation = "markRequestSucceeded" as const;
-    const update = database
-      .update(firecrawlProfileScrapeRequest)
-      .set({
-        cacheState,
-        completedAt,
-        creditsUsed,
-        firecrawlStatusCode,
-        status: "succeeded",
-      })
-      .where(eq(firecrawlProfileScrapeRequest.id, requestId));
-
-    return persistenceQuery(operation, update).pipe(Effect.asVoid);
-  };
-
-const markRequestFailedWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({
-    completedAt,
-    errorTag,
-    requestId,
-  }: MarkFirecrawlRequestFailedInput): Effect.Effect<
-    void,
-    EffectSquadBuilderPersistenceUnavailable,
-    never
-  > => {
-    const operation = "markRequestFailed" as const;
-    const update = database
-      .update(firecrawlProfileScrapeRequest)
-      .set({ completedAt, errorTag, status: "failed" })
-      .where(eq(firecrawlProfileScrapeRequest.id, requestId));
-
-    return persistenceQuery(operation, update).pipe(Effect.asVoid);
-  };
 
 const createPendingImportWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* createPendingImportEffect({
@@ -792,18 +649,6 @@ export const DrizzleAccountImportStoreServiceLayer: Layer.Layer<
       listOwnedAccounts: namedStoreMethod(
         "AccountImportStore.listOwnedAccounts",
         listOwnedAccountsWithDatabase(database)
-      ),
-      markRequestFailed: namedStoreMethod(
-        "AccountImportStore.markRequestFailed",
-        markRequestFailedWithDatabase(database)
-      ),
-      markRequestSucceeded: namedStoreMethod(
-        "AccountImportStore.markRequestSucceeded",
-        markRequestSucceededWithDatabase(database)
-      ),
-      reserveRequest: namedStoreMethod(
-        "AccountImportStore.reserveRequest",
-        reserveRequestWithDatabase(database)
       ),
       updateOwnedAccountDisplayName: namedStoreMethod(
         "AccountImportStore.updateOwnedAccountDisplayName",

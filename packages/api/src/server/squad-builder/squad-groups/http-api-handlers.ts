@@ -16,23 +16,26 @@ import {
   SquadBuilderPersistenceUnavailable,
 } from "../../../protocol/squad-builder/squad-groups/http-api-contract.ts";
 import type { CreateSquadGroupError } from "../../../services/squad-builder/squad-groups/create-squad-group.ts";
-import { CreateSquadGroupService } from "../../../services/squad-builder/squad-groups/create-squad-group.ts";
+import { create as createSquadGroupWorkflow } from "../../../services/squad-builder/squad-groups/create-squad-group.ts";
 import type { DeleteSquadGroupError } from "../../../services/squad-builder/squad-groups/delete-squad-group.ts";
-import { DeleteSquadGroupService } from "../../../services/squad-builder/squad-groups/delete-squad-group.ts";
+import { deleteSquadGroup as deleteSquadGroupWorkflow } from "../../../services/squad-builder/squad-groups/delete-squad-group.ts";
 import type { ListAvailableSquadCharactersError } from "../../../services/squad-builder/squad-groups/list-available-squad-characters.ts";
-import { ListAvailableSquadCharactersService } from "../../../services/squad-builder/squad-groups/list-available-squad-characters.ts";
-import { ListGlobalSquadGroupsService } from "../../../services/squad-builder/squad-groups/list-global-squad-groups.ts";
+import { list as listAvailableSquadCharactersWorkflow } from "../../../services/squad-builder/squad-groups/list-available-squad-characters.ts";
+import { list as listGlobalSquadGroupsWorkflow } from "../../../services/squad-builder/squad-groups/list-global-squad-groups.ts";
 import type {
   GetSquadGroupDetailError,
   ListMySquadGroupsError,
 } from "../../../services/squad-builder/squad-groups/list-squad-groups.ts";
-import { ListSquadGroupsService } from "../../../services/squad-builder/squad-groups/list-squad-groups.ts";
+import {
+  getMine,
+  listMine,
+} from "../../../services/squad-builder/squad-groups/list-squad-groups.ts";
 import type { EffectSharedSquadGroupSaveError } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.ts";
-import { SaveSharedSquadGroupCharactersService } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.ts";
+import { saveWithStoreService as saveSharedSquadGroupCharactersWorkflow } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.ts";
 import type { SaveSquadGroupError } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
-import { SaveSquadGroupService } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
+import { save as saveSquadGroupWorkflow } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
 import type { GlobalSquadVisibilityError } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
-import { SetSquadGroupVisibilityService } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
+import { set as setSquadGroupVisibilityWorkflow } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -98,17 +101,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "squadBuilderSquadGroup",
   Effect.fnUntraced(function* SquadBuilderSquadGroupHttpApiHandlers(handlers) {
-    const createSquadGroupSvc = yield* CreateSquadGroupService;
-    const deleteSquadGroupSvc = yield* DeleteSquadGroupService;
-    const listSquadGroupsSvc = yield* ListSquadGroupsService;
-    const listAvailableCharactersSvc =
-      yield* ListAvailableSquadCharactersService;
-    const listGlobalSquadGroupsSvc = yield* ListGlobalSquadGroupsService;
-    const saveSquadGroupSvc = yield* SaveSquadGroupService;
-    const saveSharedCharactersSvc =
-      yield* SaveSharedSquadGroupCharactersService;
-    const setVisibilitySvc = yield* SetSquadGroupVisibilityService;
-
+    yield* Effect.void;
     return handlers
       .handle(
         "createSquadGroup",
@@ -117,7 +110,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              createSquadGroupSvc.create({
+              createSquadGroupWorkflow({
                 actorUserId: sessionAppUserId(session),
                 name: payload.name,
               })
@@ -132,7 +125,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             yield* withRequestCorrelation(
               request,
-              deleteSquadGroupSvc.delete({
+              deleteSquadGroupWorkflow({
                 actorUserId: sessionAppUserId(session),
                 groupId: payload.groupId,
               })
@@ -148,7 +141,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              listSquadGroupsSvc.listMine({
+              listMine({
                 actorUserId: sessionAppUserId(session),
               })
             ).pipe(Effect.mapError(mapSquadGroupsError));
@@ -169,7 +162,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                   nameQuery: payload.nameQuery,
                 });
 
-                return yield* listGlobalSquadGroupsSvc.list({
+                return yield* listGlobalSquadGroupsWorkflow({
                   actorUserId: sessionAppUserId(session),
                   filters,
                 });
@@ -185,7 +178,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              listSquadGroupsSvc.getMine({
+              getMine({
                 actorUserId: sessionAppUserId(session),
                 groupId: payload.groupId,
               })
@@ -200,7 +193,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              listAvailableCharactersSvc.list({
+              listAvailableSquadCharactersWorkflow({
                 actorUserId: sessionAppUserId(session),
                 groupId: payload.groupId,
               })
@@ -215,7 +208,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              saveSquadGroupSvc.save({
+              saveSquadGroupWorkflow({
                 actorUserId: sessionAppUserId(session),
                 expectedUpdatedAt: payload.expectedUpdatedAt,
                 groupId: payload.groupId,
@@ -241,7 +234,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              saveSharedCharactersSvc.saveWithStoreService({
+              saveSharedSquadGroupCharactersWorkflow({
                 actorUserId: sessionAppUserId(session),
                 expectedUpdatedAt: payload.expectedUpdatedAt,
                 groupId: payload.groupId,
@@ -261,7 +254,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              setVisibilitySvc.set({
+              setSquadGroupVisibilityWorkflow({
                 actorUserId: sessionAppUserId(session),
                 groupId: payload.groupId,
                 visibility: payload.visibility,

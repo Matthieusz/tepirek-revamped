@@ -5,10 +5,7 @@ import * as Layer from "effect/Layer";
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
 import { makeSquadGroupStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
-import {
-  layer as squadEditorInviteTargetsLayer,
-  SquadEditorInviteTargetsService,
-} from "./search-squad-editor-invite-targets-service.ts";
+import { search } from "./search-squad-editor-invite-targets-service.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 const parseTestUserId = (value: string) =>
@@ -47,13 +44,10 @@ it.effect("searches squad editor invite targets for a group owner", () => {
       ]);
     },
   });
-  const testLayer = squadEditorInviteTargetsLayer.pipe(
-    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
-  );
+  const testLayer = Layer.succeed(SquadGroupStoreService, store);
 
   return Effect.gen(function* searchSquadEditorInviteTargetsEffect() {
-    const svc = yield* SquadEditorInviteTargetsService;
-    const targets = yield* svc.search({
+    const targets = yield* search({
       actorUserId,
       groupId,
       query: "  Target  ",

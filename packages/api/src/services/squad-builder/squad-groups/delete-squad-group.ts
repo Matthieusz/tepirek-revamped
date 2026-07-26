@@ -1,6 +1,4 @@
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
@@ -23,26 +21,10 @@ export type DeleteSquadGroupError =
   | ActorDoesNotOwnSquadGroup
   | EffectSquadBuilderPersistenceUnavailable;
 
-const makeDelete = (store: SquadGroupStore.SquadGroupStoreServiceShape) =>
-  Effect.fn("SquadGroups.delete")(function* deleteSquadGroup(
-    input: DeleteSquadGroupInput
-  ) {
-    yield* store.deleteSquadGroup(input);
-  });
-
-export interface DeleteSquadGroup {
-  readonly delete: ReturnType<typeof makeDelete>;
-}
-
-export class DeleteSquadGroupService extends Context.Service<
-  DeleteSquadGroupService,
-  DeleteSquadGroup
->()("@tepirek-revamped/api/squad-builder/DeleteSquadGroupService") {}
-
-export const layer = Layer.effect(
-  DeleteSquadGroupService,
-  Effect.gen(function* layer() {
+/** Permanently delete a squad group owned by the actor. */
+export const deleteSquadGroup = Effect.fn("SquadGroups.delete")(
+  function* deleteSquadGroup(input: DeleteSquadGroupInput) {
     const store = yield* SquadGroupStore.SquadGroupStoreService;
-    return DeleteSquadGroupService.of({ delete: makeDelete(store) });
-  })
+    yield* store.deleteSquadGroup(input);
+  }
 );

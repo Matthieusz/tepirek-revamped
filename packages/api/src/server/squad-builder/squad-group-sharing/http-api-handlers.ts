@@ -14,10 +14,10 @@ import {
   SquadBuilderPersistenceUnavailable,
 } from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.ts";
 import { SquadGroupSharingStateService } from "../../../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.ts";
-import { SquadGroupEditorInviteResponsesService } from "../../../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.ts";
-import { SquadGroupEditorRevocationsService } from "../../../services/squad-builder/squad-groups/revoke-squad-group-editor-service.ts";
-import { SquadEditorInviteTargetsService } from "../../../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.ts";
-import { SquadGroupEditorInvitesService } from "../../../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.ts";
+import { respond } from "../../../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.ts";
+import { revoke } from "../../../services/squad-builder/squad-groups/revoke-squad-group-editor-service.ts";
+import { search } from "../../../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.ts";
+import { send } from "../../../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.ts";
 import type { SquadGroupSharingError } from "../../../services/squad-builder/squad-groups/squad-group-sharing-error.ts";
 import {
   requireSquadBuilderSession,
@@ -87,14 +87,6 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
     Effect.fnUntraced(
       function* SquadBuilderSquadGroupSharingHttpApiHandlers(handlers) {
         const squadGroupSharingStateSvc = yield* SquadGroupSharingStateService;
-        const squadGroupEditorInviteResponsesSvc =
-          yield* SquadGroupEditorInviteResponsesService;
-        const squadGroupEditorRevocationsSvc =
-          yield* SquadGroupEditorRevocationsService;
-        const squadEditorInviteTargetsSvc =
-          yield* SquadEditorInviteTargetsService;
-        const squadGroupEditorInvitesSvc =
-          yield* SquadGroupEditorInvitesService;
 
         return handlers
           .handle(
@@ -105,7 +97,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                squadEditorInviteTargetsSvc.search({
+                search({
                   actorUserId: sessionAppUserId(session),
                   groupId: payload.groupId,
                   query: payload.query,
@@ -121,7 +113,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                squadGroupEditorInvitesSvc.send({
+                send({
                   actorUserId: sessionAppUserId(session),
                   groupId: payload.groupId,
                   invitedUserId: payload.invitedUserId,
@@ -137,7 +129,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                squadGroupEditorInviteResponsesSvc.respond({
+                respond({
                   actorUserId: sessionAppUserId(session),
                   invitationId: payload.invitationId,
                   response: payload.response,
@@ -152,7 +144,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                 const session = yield* requireSquadBuilderSession();
                 return yield* withRequestCorrelation(
                   request,
-                  squadGroupEditorRevocationsSvc.revoke({
+                  revoke({
                     actorUserId: sessionAppUserId(session),
                     invitationId: payload.invitationId,
                   })

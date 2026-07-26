@@ -8,10 +8,7 @@ import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.
 import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
 import { makeSquadGroupStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
-import {
-  layer as squadGroupEditorInvitesLayer,
-  SquadGroupEditorInvitesService,
-} from "./send-squad-group-editor-invite-service.ts";
+import { send } from "./send-squad-group-editor-invite-service.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 const parseTestUserId = (value: string) =>
@@ -76,14 +73,11 @@ it.effect("sends a squad group editor invite for a verified target", () => {
       });
     },
   });
-  const testLayer = squadGroupEditorInvitesLayer.pipe(
-    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
-  );
+  const testLayer = Layer.succeed(SquadGroupStoreService, store);
 
   return Effect.gen(function* sendSquadGroupEditorInviteEffect() {
-    const svc = yield* SquadGroupEditorInvitesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* svc.send({
+    const invite = yield* send({
       actorUserId,
       groupId,
       invitedUserId: targetUserId,
@@ -109,15 +103,12 @@ it.effect("rejects self-invites before resolving the target", () => {
         role: "owner" as const,
       }),
   });
-  const testLayer = squadGroupEditorInvitesLayer.pipe(
-    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
-  );
+  const testLayer = Layer.succeed(SquadGroupStoreService, store);
 
   return Effect.gen(function* sendSquadGroupEditorInviteEffect() {
-    const svc = yield* SquadGroupEditorInvitesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      svc.send({
+      send({
         actorUserId,
         groupId,
         invitedUserId: actorUserId,

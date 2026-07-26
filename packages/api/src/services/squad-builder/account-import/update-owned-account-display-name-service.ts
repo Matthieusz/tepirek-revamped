@@ -1,7 +1,5 @@
-import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { InvalidAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
@@ -48,24 +46,3 @@ export const update = Effect.fn(
 )((input: UpdateOwnedAccountDisplayNameInput) =>
   AccountImportStoreService.use((store) => makeUpdate(store)(input))
 );
-
-export interface UpdateOwnedAccountDisplayName {
-  readonly update: ReturnType<typeof makeUpdate>;
-}
-
-export class UpdateOwnedAccountDisplayNameService extends Context.Service<
-  UpdateOwnedAccountDisplayNameService,
-  UpdateOwnedAccountDisplayName
->()(
-  "@tepirek-revamped/api/squad-builder/UpdateOwnedAccountDisplayNameService"
-) {
-  static readonly layer = Layer.effect(
-    UpdateOwnedAccountDisplayNameService,
-    Effect.gen(function* updateOwnedAccountDisplayNameLayer() {
-      const store = yield* AccountImportStoreService;
-      return UpdateOwnedAccountDisplayNameService.of({
-        update: makeUpdate(store),
-      });
-    })
-  );
-}

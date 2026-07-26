@@ -8,10 +8,7 @@ import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-a
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { makeAccountSharingStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
-import {
-  layer as accountInviteTargetsLayer,
-  AccountInviteTargetsService,
-} from "./search-account-invite-targets-service.ts";
+import { search } from "./search-account-invite-targets-service.ts";
 
 const parseTestUserId = (value: string) =>
   Effect.runSync(parseAppUserId(value));
@@ -50,13 +47,10 @@ it.effect("searches invite targets for an account owner", () => {
       ]);
     },
   });
-  const testLayer = accountInviteTargetsLayer.pipe(
-    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
-  );
+  const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* searchInviteTargetsEffect() {
-    const svc = yield* AccountInviteTargetsService;
-    const targets = yield* svc.search({
+    const targets = yield* search({
       accountId,
       actorUserId,
       query: "  Target  ",

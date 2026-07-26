@@ -1,7 +1,5 @@
-import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as EffectRuntime from "effect/Effect";
-import * as Layer from "effect/Layer";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.ts";
@@ -24,6 +22,7 @@ import {
   parseFirecrawlCreditCount,
 } from "../firecrawl-config.ts";
 import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
+import { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
 import {
   MargonemAccountAlreadyOwnedByActor,
   MargonemAccountAlreadySharedWithActor,
@@ -88,14 +87,12 @@ const profileAccessStateToDuplicateError = (
 const currentDate = DateTime.nowAsDate;
 
 /** Preview a Margonem profile import without saving the account. */
-export const makePreviewMargonemProfileImport = (
-  store: typeof AccountImportStoreService.Service,
-  config: typeof FirecrawlConfigService.Service,
-  firecrawl: typeof FirecrawlClientService.Service
-) =>
-  EffectRuntime.fn("AccountImport.previewProfile")(function* previewEffect(
-    input: PreviewMargonemProfileImportInput
-  ) {
+export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
+  function* previewEffect(input: PreviewMargonemProfileImportInput) {
+    const store = yield* AccountImportStoreService;
+    const requestAccounting = yield* FirecrawlRequestAccountingStoreService;
+    const config = yield* FirecrawlConfigService;
+    const firecrawl = yield* FirecrawlClientService;
     const profileId = yield* parseMargonemProfileUrl(input.profileUrl);
     const accessState = yield* store.findProfileAccessState({
       actorUserId: input.actorUserId,
@@ -109,7 +106,7 @@ export const makePreviewMargonemProfileImport = (
 
     const requestTime = yield* DateTime.nowAsDate;
     const yearMonth = firecrawlYearMonthFromDate(requestTime);
-    const reservedRequest = yield* store.reserveRequest({
+    const reservedRequest = yield* requestAccounting.reserveRequest({
       monthlyRequestBudget: config.monthlyRequestBudget,
       profileId,
       requestedByUserId: input.actorUserId,
@@ -123,7 +120,7 @@ export const makePreviewMargonemProfileImport = (
             EffectRuntime.catch((error) =>
               EffectRuntime.gen(function* markRequestFailed() {
                 const completedAt = yield* currentDate;
-                yield* store.markRequestFailed({
+                yield* requestAccounting.markRequestFailed({
                   completedAt,
                   errorTag: error._tag,
                   requestId: reservedRequest.requestId,
@@ -138,7 +135,7 @@ export const makePreviewMargonemProfileImport = (
           EffectRuntime.catch(() =>
             EffectRuntime.gen(function* markInvalidResponseFailed() {
               const completedAt = yield* currentDate;
-              yield* store.markRequestFailed({
+              yield* requestAccounting.markRequestFailed({
                 completedAt,
                 errorTag: "FirecrawlResponseNotParseable",
                 requestId: reservedRequest.requestId,
@@ -151,7 +148,7 @@ export const makePreviewMargonemProfileImport = (
           )
         );
         const completedAt = yield* currentDate;
-        yield* store.markRequestSucceeded({
+        yield* requestAccounting.markRequestSucceeded({
           cacheState: scrapedProfile.metadata.cacheState ?? null,
           completedAt,
           creditsUsed,
@@ -164,7 +161,7 @@ export const makePreviewMargonemProfileImport = (
       EffectRuntime.onInterrupt(() =>
         EffectRuntime.gen(function* markInterruptedRequestFailed() {
           const completedAt = yield* currentDate;
-          yield* store.markRequestFailed({
+          yield* requestAccounting.markRequestFailed({
             completedAt,
             errorTag: "Interrupted",
             requestId: reservedRequest.requestId,
@@ -189,42 +186,5 @@ export const makePreviewMargonemProfileImport = (
       profileId,
       suggestedAccountName: parsedHtml.suggestedAccountName,
     };
-  });
-
-/** Integration seam that resolves dependencies from the Effect context. */
-export const preview = EffectRuntime.fn(
-  "AccountImport.previewProfileIntegration"
-)(function* previewIntegration(input: PreviewMargonemProfileImportInput) {
-  const store = yield* AccountImportStoreService;
-  const config = yield* FirecrawlConfigService;
-  const firecrawl = yield* FirecrawlClientService;
-  return yield* makePreviewMargonemProfileImport(
-    store,
-    config,
-    firecrawl
-  )(input);
-});
-
-export interface PreviewMargonemProfileImport {
-  readonly preview: ReturnType<typeof makePreviewMargonemProfileImport>;
-}
-
-// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class PreviewMargonemProfileImportService extends Context.Service<
-  PreviewMargonemProfileImportService,
-  PreviewMargonemProfileImport
->()(
-  "@tepirek-revamped/api/squad-builder/PreviewMargonemProfileImportService"
-) {}
-
-export const layer = Layer.effect(
-  PreviewMargonemProfileImportService,
-  EffectRuntime.gen(function* layer() {
-    const store = yield* AccountImportStoreService;
-    const config = yield* FirecrawlConfigService;
-    const firecrawl = yield* FirecrawlClientService;
-    return PreviewMargonemProfileImportService.of({
-      preview: makePreviewMargonemProfileImport(store, config, firecrawl),
-    });
-  })
+  }
 );

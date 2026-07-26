@@ -15,10 +15,10 @@ import {
 } from "../../../protocol/squad-builder/account-sharing/http-api-contract.ts";
 import type { AccountSharingError } from "../../../services/squad-builder/account-sharing/account-sharing-error.ts";
 import { AccountSharingStateService } from "../../../services/squad-builder/account-sharing/list-account-sharing-state-service.ts";
-import { AccountAccessInviteResponsesService } from "../../../services/squad-builder/account-sharing/respond-to-account-access-invite-service.ts";
-import { AccountAccessRevocationsService } from "../../../services/squad-builder/account-sharing/revoke-account-access-service.ts";
-import { AccountInviteTargetsService } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.ts";
-import { AccountAccessInvitesService } from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.ts";
+import { respond } from "../../../services/squad-builder/account-sharing/respond-to-account-access-invite-service.ts";
+import { revoke } from "../../../services/squad-builder/account-sharing/revoke-account-access-service.ts";
+import { search } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.ts";
+import { send } from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -67,12 +67,6 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
   Effect.fnUntraced(
     function* SquadBuilderAccountSharingHttpApiHandlers(handlers) {
       const accountSharingStateSvc = yield* AccountSharingStateService;
-      const accountAccessInviteResponsesSvc =
-        yield* AccountAccessInviteResponsesService;
-      const accountAccessRevocationsSvc =
-        yield* AccountAccessRevocationsService;
-      const accountInviteTargetsSvc = yield* AccountInviteTargetsService;
-      const accountAccessInvitesSvc = yield* AccountAccessInvitesService;
 
       return handlers
         .handle(
@@ -82,7 +76,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                accountInviteTargetsSvc.search({
+                search({
                   accountId: payload.accountId,
                   actorUserId: sessionAppUserId(session),
                   query: payload.query,
@@ -98,7 +92,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                accountAccessInvitesSvc.send({
+                send({
                   accountId: payload.accountId,
                   actorUserId: sessionAppUserId(session),
                   invitedUserId: payload.invitedUserId,
@@ -114,7 +108,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                accountAccessInviteResponsesSvc.respond({
+                respond({
                   accessId: payload.accessId,
                   actorUserId: sessionAppUserId(session),
                   response: payload.response,
@@ -130,7 +124,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                accountAccessRevocationsSvc.revoke({
+                revoke({
                   accessId: payload.accessId,
                   actorUserId: sessionAppUserId(session),
                 })

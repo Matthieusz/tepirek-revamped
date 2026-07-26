@@ -27,7 +27,7 @@ The API follows a three-tier Effect structure in `packages/api`:
 - **Protocol contract** (`src/protocol/**`) — the Effect `HttpApi` / `HttpApiGroup` declarations plus request/response `Schema`s. Shared verbatim by the server (handlers) and the web app (typed client).
 - **Server handlers** (`src/server/**`) — wire each contract endpoint to application services and the session middleware.
 - **Services** (`src/services/**`) — the application use-cases (`Effect.fn`-based, `Service.of`-wrapped contracts). Pure domain orchestration; no HTTP or Drizzle imports.
-- **Adapters** (`src/adapters/**`) — the "live" implementations of service contracts: Drizzle-backed stores, Firecrawl, Discord verification, etc. Composed into `makeApiLiveLayerFromValues` / `makeApiLiveLayerFromConfig` in `src/server/effect-app.ts`.
+- **Adapters** (`src/adapters/**`) — the "live" implementations of service contracts: Drizzle-backed stores, Firecrawl, Discord verification, etc. Composed into `makeApiLiveLayerFromDatabase` / `makeApiLiveLayerFromValues` in `src/server/effect-app.ts`.
 
 The session middleware (`SessionMiddleware`) is attached at the contract level only to squad-builder groups, which are the user-owned, auth-protected surface. Legacy guild-critical groups (events, bets, vault, auction, skills, heroes, ranking, announcements, todos, user) currently sit outside the session middleware at the contract layer.
 

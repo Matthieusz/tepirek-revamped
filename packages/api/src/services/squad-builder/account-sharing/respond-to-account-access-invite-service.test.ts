@@ -10,10 +10,7 @@ import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-a
 import { makeAccountSharingStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import { ActorIsNotInviteRecipient } from "../squad-groups/squad-group-errors.ts";
 import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
-import {
-  layer as accountAccessInviteResponsesLayer,
-  AccountAccessInviteResponsesService,
-} from "./respond-to-account-access-invite-service.ts";
+import { respond } from "./respond-to-account-access-invite-service.ts";
 
 const parseTestUserId = (value: string) =>
   Effect.runSync(parseAppUserId(value));
@@ -59,14 +56,11 @@ it.effect("accepts an account access invite as the invited user", () => {
       });
     },
   });
-  const testLayer = accountAccessInviteResponsesLayer.pipe(
-    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
-  );
+  const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* respondToAccountAccessInviteEffect() {
-    const svc = yield* AccountAccessInviteResponsesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const invite = yield* svc.respond({
+    const invite = yield* respond({
       accessId,
       actorUserId,
       response: "accept",
@@ -86,15 +80,12 @@ it.effect("surfaces invite recipient authorization failures", () => {
   const store = makeAccountSharingStoreServiceTestService({
     respondToAccountAccessInvite: () => new ActorIsNotInviteRecipient(),
   });
-  const testLayer = accountAccessInviteResponsesLayer.pipe(
-    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
-  );
+  const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* respondToAccountAccessInviteEffect() {
-    const svc = yield* AccountAccessInviteResponsesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      svc.respond({
+      respond({
         accessId,
         actorUserId,
         response: "decline",

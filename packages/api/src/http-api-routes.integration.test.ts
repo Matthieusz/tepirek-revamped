@@ -11,8 +11,10 @@ import { AnnouncementStoreError } from "./adapters/announcement/announcement-sto
 import { AnnouncementStore } from "./adapters/announcement/announcement-store.ts";
 import { makeApiLiveLayerFromValues } from "./server/effect-app.ts";
 import { AppHttpApiLayer } from "./server/http-api-handlers.ts";
-import { PreviewMargonemProfileImportService } from "./services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
-import { FirecrawlRequestFailed } from "./services/squad-builder/firecrawl-client.ts";
+import {
+  FirecrawlClientService,
+  FirecrawlRequestFailed,
+} from "./services/squad-builder/firecrawl-client.ts";
 import { testAuth } from "./test/integration/auth.ts";
 import {
   createHero,
@@ -72,15 +74,15 @@ const failingAnnouncementStoreLayer = Layer.succeed(
   })
 );
 const failingProfilePreviewLayer = Layer.succeed(
-  PreviewMargonemProfileImportService,
-  PreviewMargonemProfileImportService.of({
-    preview: () =>
+  FirecrawlClientService,
+  FirecrawlClientService.of({
+    scrapeProfileHtml: (profileId) =>
       Effect.fail(
         new FirecrawlRequestFailed({
           cause: new Error(
             "FetchError: https://provider.example/profile?token=secret"
           ),
-          profileId: 123,
+          profileId,
         })
       ),
   })

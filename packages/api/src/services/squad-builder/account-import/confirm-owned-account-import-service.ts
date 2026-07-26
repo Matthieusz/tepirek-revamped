@@ -1,7 +1,5 @@
-import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as EffectRuntime from "effect/Effect";
-import * as Layer from "effect/Layer";
 
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { InvalidAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
@@ -31,49 +29,25 @@ export type ConfirmOwnedAccountImportError =
 const currentDate = DateTime.nowAsDate;
 
 /** Save a previously previewed Margonem account and its Jaruna characters. */
-const makeConfirm = (store: typeof AccountImportStoreService.Service) =>
-  EffectRuntime.fn("AccountImport.confirm")(
-    function* confirmOwnedAccountImportEffect(
-      input: ConfirmOwnedAccountImportInput
-    ) {
-      const displayName = yield* parseAccountDisplayName(input.displayName);
-
-      const now = yield* currentDate;
-      const pending = yield* store.findPendingImportForConfirmation({
-        actorUserId: input.actorUserId,
-        now,
-        pendingImportId: input.pendingImportId,
-      });
-
-      return yield* store.createOwnedAccountFromPendingImport({
-        actorUserId: input.actorUserId,
-        confirmedAt: now,
-        displayName,
-        pending,
-      });
-    }
-  );
-
-/** Integration seam that resolves the store from the Effect context. */
-export const confirm = EffectRuntime.fn("AccountImport.confirmIntegration")(
-  (input: ConfirmOwnedAccountImportInput) =>
-    AccountImportStoreService.use((store) => makeConfirm(store)(input))
-);
-
-export interface ConfirmOwnedAccountImport {
-  readonly confirm: ReturnType<typeof makeConfirm>;
-}
-
-// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class ConfirmOwnedAccountImportService extends Context.Service<
-  ConfirmOwnedAccountImportService,
-  ConfirmOwnedAccountImport
->()("@tepirek-revamped/api/squad-builder/ConfirmOwnedAccountImportService") {}
-
-export const layer = Layer.effect(
-  ConfirmOwnedAccountImportService,
-  EffectRuntime.gen(function* layer() {
+export const confirm = EffectRuntime.fn("AccountImport.confirm")(
+  function* confirmOwnedAccountImportEffect(
+    input: ConfirmOwnedAccountImportInput
+  ) {
     const store = yield* AccountImportStoreService;
-    return ConfirmOwnedAccountImportService.of({ confirm: makeConfirm(store) });
-  })
+    const displayName = yield* parseAccountDisplayName(input.displayName);
+
+    const now = yield* currentDate;
+    const pending = yield* store.findPendingImportForConfirmation({
+      actorUserId: input.actorUserId,
+      now,
+      pendingImportId: input.pendingImportId,
+    });
+
+    return yield* store.createOwnedAccountFromPendingImport({
+      actorUserId: input.actorUserId,
+      confirmedAt: now,
+      displayName,
+      pending,
+    });
+  }
 );

@@ -1,49 +1,24 @@
-import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
-import type { Effect } from "effect/Effect";
 import * as EffectRuntime from "effect/Effect";
-import * as Layer from "effect/Layer";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { SquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
-import type { SquadGroupSharingError } from "./squad-group-sharing-error.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
-import type { SquadGroupInvitationSummary } from "./squad-group-store.ts";
 
-export interface SquadGroupEditorInviteResponses {
-  /** Accept or decline a squad group editor invite as the invited user. */
-  readonly respond: (input: {
+/** Accept or decline a squad group editor invite. */
+export const respond = EffectRuntime.fn("SquadGroups.respondToEditorInvite")(
+  function* respond(input: {
     readonly actorUserId: AppUserId;
     readonly invitationId: SquadGroupInvitationId;
     readonly response: "accept" | "decline";
-  }) => Effect<SquadGroupInvitationSummary, SquadGroupSharingError>;
-}
-
-/** Service module that lets invited users accept or decline squad group editor invites. */
-// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class SquadGroupEditorInviteResponsesService extends Context.Service<
-  SquadGroupEditorInviteResponsesService,
-  SquadGroupEditorInviteResponses
->()("@tepirek-revamped/api/squad-builder/SquadGroupEditorInviteResponses") {}
-
-export const layer = Layer.effect(
-  SquadGroupEditorInviteResponsesService,
-  EffectRuntime.gen(function* makeSquadGroupEditorInviteResponsesService() {
+  }) {
     const store = yield* SquadGroupStoreService;
-
-    return SquadGroupEditorInviteResponsesService.of({
-      respond: EffectRuntime.fn("SquadGroupEditorInvites.respond")(
-        function* respond(input) {
-          const now = yield* DateTime.nowAsDate;
-
-          return yield* store.respondToSquadGroupInvite({
-            invitationId: input.invitationId,
-            invitedUserId: input.actorUserId,
-            now,
-            response: input.response,
-          });
-        }
-      ),
+    const now = yield* DateTime.nowAsDate;
+    return yield* store.respondToSquadGroupInvite({
+      invitationId: input.invitationId,
+      invitedUserId: input.actorUserId,
+      now,
+      response: input.response,
     });
-  })
+  }
 );

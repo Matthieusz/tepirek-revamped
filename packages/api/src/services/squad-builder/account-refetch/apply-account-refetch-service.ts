@@ -1,14 +1,12 @@
-import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as EffectRuntime from "effect/Effect";
-import * as Layer from "effect/Layer";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
-import type { AccountRefetchStoreServiceShape } from "../squad-groups/squad-group-store.ts";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.ts";
+import type { AccountRefetchStoreServiceShape } from "./account-refetch-store-service.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
@@ -77,22 +75,4 @@ const makeApply = (store: AccountRefetchStoreServiceShape) =>
 export const apply = EffectRuntime.fn("AccountRefetch.applyIntegration")(
   (input: ApplyAccountRefetchInput) =>
     AccountRefetchStoreService.use((store) => makeApply(store)(input))
-);
-
-export interface ApplyAccountRefetch {
-  readonly apply: ReturnType<typeof makeApply>;
-}
-
-// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class ApplyAccountRefetchService extends Context.Service<
-  ApplyAccountRefetchService,
-  ApplyAccountRefetch
->()("@tepirek-revamped/api/squad-builder/ApplyAccountRefetchService") {}
-
-export const layer = Layer.effect(
-  ApplyAccountRefetchService,
-  EffectRuntime.gen(function* layer() {
-    const store = yield* AccountRefetchStoreService;
-    return ApplyAccountRefetchService.of({ apply: makeApply(store) });
-  })
 );

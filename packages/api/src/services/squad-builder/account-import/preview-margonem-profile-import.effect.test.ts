@@ -7,10 +7,14 @@ import * as Fiber from "effect/Fiber";
 import * as Redacted from "effect/Redacted";
 
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
-import { makeAccountImportStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
+import {
+  makeAccountImportStoreServiceTestService,
+  makeFirecrawlRequestAccountingStoreServiceTestService,
+} from "../../../test/squad-builder/squad-group-store.ts";
 import { FirecrawlClientService } from "../firecrawl-client.ts";
 import type { FirecrawlClient } from "../firecrawl-client.ts";
 import { FirecrawlConfigService } from "../firecrawl-config.ts";
+import { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
 import { AccountImportStoreService } from "./account-import-store-service.ts";
 import { preview } from "./preview-margonem-profile-import-service.ts";
 
@@ -41,25 +45,27 @@ it.effect("previews an available Margonem profile through services", () => {
   };
   const store = makeAccountImportStoreServiceTestService({
     findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),
-    markRequestSucceeded: (input) => {
-      succeededRequestIds.push(input.requestId);
-      return Effect.void;
-    },
-    reserveRequest: (input) =>
-      Effect.succeed({
-        budgetState: {
-          monthlyRequestBudget: input.monthlyRequestBudget,
-          remainingRequests: input.monthlyRequestBudget - 1,
-          usedRequests: 1,
-          yearMonth: input.yearMonth,
-        },
-        requestId: 123,
-      }),
   });
-  const service = { preview };
+  const requestAccounting =
+    makeFirecrawlRequestAccountingStoreServiceTestService({
+      markRequestSucceeded: (input) => {
+        succeededRequestIds.push(input.requestId);
+        return Effect.void;
+      },
+      reserveRequest: (input) =>
+        Effect.succeed({
+          budgetState: {
+            monthlyRequestBudget: input.monthlyRequestBudget,
+            remainingRequests: input.monthlyRequestBudget - 1,
+            usedRequests: 1,
+            yearMonth: input.yearMonth,
+          },
+          requestId: 123,
+        }),
+    });
 
   return Effect.gen(function* previewEffect() {
-    const profilePreview = yield* service.preview({
+    const profilePreview = yield* preview({
       actorUserId,
       profileUrl: "https://www.margonem.pl/profile/view,7298897",
     });
@@ -76,7 +82,10 @@ it.effect("previews an available Margonem profile through services", () => {
       monthlyRequestBudget: 900,
     }),
     Effect.provideService(FirecrawlClientService)(firecrawl),
-    Effect.provideService(AccountImportStoreService)(store)
+    Effect.provideService(AccountImportStoreService)(store),
+    Effect.provideService(FirecrawlRequestAccountingStoreService)(
+      requestAccounting
+    )
   );
 });
 
@@ -94,21 +103,24 @@ it.effect("marks a reserved import request failed when interrupted", () =>
     };
     const store = makeAccountImportStoreServiceTestService({
       findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),
-      markRequestFailed: (input) =>
-        Effect.sync(() => {
-          failedRequests.push(input);
-        }),
-      reserveRequest: (input) =>
-        Effect.succeed({
-          budgetState: {
-            monthlyRequestBudget: input.monthlyRequestBudget,
-            remainingRequests: input.monthlyRequestBudget - 1,
-            usedRequests: 1,
-            yearMonth: input.yearMonth,
-          },
-          requestId: 123,
-        }),
     });
+    const requestAccounting =
+      makeFirecrawlRequestAccountingStoreServiceTestService({
+        markRequestFailed: (input) =>
+          Effect.sync(() => {
+            failedRequests.push(input);
+          }),
+        reserveRequest: (input) =>
+          Effect.succeed({
+            budgetState: {
+              monthlyRequestBudget: input.monthlyRequestBudget,
+              remainingRequests: input.monthlyRequestBudget - 1,
+              usedRequests: 1,
+              yearMonth: input.yearMonth,
+            },
+            requestId: 123,
+          }),
+      });
     const operation = preview({
       actorUserId,
       profileUrl: "https://www.margonem.pl/profile/view,7298897",
@@ -118,7 +130,10 @@ it.effect("marks a reserved import request failed when interrupted", () =>
         monthlyRequestBudget: 900,
       }),
       Effect.provideService(FirecrawlClientService)(firecrawl),
-      Effect.provideService(AccountImportStoreService)(store)
+      Effect.provideService(AccountImportStoreService)(store),
+      Effect.provideService(FirecrawlRequestAccountingStoreService)(
+        requestAccounting
+      )
     );
     const fiber = yield* Effect.forkChild(operation);
 

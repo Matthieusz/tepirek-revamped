@@ -15,13 +15,17 @@ import {
   parsePositiveLevel,
 } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
-import { makeAccountRefetchStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
+import {
+  makeAccountRefetchStoreServiceTestService,
+  makeFirecrawlRequestAccountingStoreServiceTestService,
+} from "../../../test/squad-builder/squad-group-store.ts";
 import { FirecrawlClientService } from "../firecrawl-client.ts";
 import type { FirecrawlClient } from "../firecrawl-client.ts";
 import {
   FirecrawlConfigService,
   parseFirecrawlCreditCount,
 } from "../firecrawl-config.ts";
+import { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.ts";
 import { preview } from "./preview-account-refetch-service.ts";
 
@@ -86,22 +90,24 @@ it.effect("previews account refetch and stores the pending diff", () => {
         displayName,
         profileId,
       }),
-    markRequestSucceeded: () => Effect.void,
-    reserveRequest: (input) =>
-      Effect.succeed({
-        budgetState: {
-          monthlyRequestBudget: input.monthlyRequestBudget,
-          remainingRequests: input.monthlyRequestBudget - 1,
-          usedRequests: 1,
-          yearMonth: input.yearMonth,
-        },
-        requestId: 123,
-      }),
   });
-  const service = { preview };
+  const requestAccounting =
+    makeFirecrawlRequestAccountingStoreServiceTestService({
+      markRequestSucceeded: () => Effect.void,
+      reserveRequest: (input) =>
+        Effect.succeed({
+          budgetState: {
+            monthlyRequestBudget: input.monthlyRequestBudget,
+            remainingRequests: input.monthlyRequestBudget - 1,
+            usedRequests: 1,
+            yearMonth: input.yearMonth,
+          },
+          requestId: 123,
+        }),
+    });
 
   return Effect.gen(function* previewRefetchEffect() {
-    const refetchPreview = yield* service.preview({
+    const refetchPreview = yield* preview({
       accountId,
       actorUserId,
     });
@@ -120,7 +126,10 @@ it.effect("previews account refetch and stores the pending diff", () => {
       monthlyRequestBudget: 900,
     }),
     Effect.provideService(FirecrawlClientService)(firecrawl),
-    Effect.provideService(AccountRefetchStoreService)(store)
+    Effect.provideService(AccountRefetchStoreService)(store),
+    Effect.provideService(FirecrawlRequestAccountingStoreService)(
+      requestAccounting
+    )
   );
 });
 
@@ -147,28 +156,34 @@ it.effect("marks a reserved refetch request failed when interrupted", () =>
           displayName,
           profileId,
         }),
-      markRequestFailed: (input) =>
-        Effect.sync(() => {
-          failedRequests.push(input);
-        }),
-      reserveRequest: (input) =>
-        Effect.succeed({
-          budgetState: {
-            monthlyRequestBudget: input.monthlyRequestBudget,
-            remainingRequests: input.monthlyRequestBudget - 1,
-            usedRequests: 1,
-            yearMonth: input.yearMonth,
-          },
-          requestId: 123,
-        }),
     });
+    const requestAccounting =
+      makeFirecrawlRequestAccountingStoreServiceTestService({
+        markRequestFailed: (input) =>
+          Effect.sync(() => {
+            failedRequests.push(input);
+          }),
+        reserveRequest: (input) =>
+          Effect.succeed({
+            budgetState: {
+              monthlyRequestBudget: input.monthlyRequestBudget,
+              remainingRequests: input.monthlyRequestBudget - 1,
+              usedRequests: 1,
+              yearMonth: input.yearMonth,
+            },
+            requestId: 123,
+          }),
+      });
     const operation = preview({ accountId, actorUserId }).pipe(
       Effect.provideService(FirecrawlConfigService)({
         apiKey: Redacted.make("test-key"),
         monthlyRequestBudget: 900,
       }),
       Effect.provideService(FirecrawlClientService)(firecrawl),
-      Effect.provideService(AccountRefetchStoreService)(store)
+      Effect.provideService(AccountRefetchStoreService)(store),
+      Effect.provideService(FirecrawlRequestAccountingStoreService)(
+        requestAccounting
+      )
     );
     const fiber = yield* Effect.forkChild(operation);
 

@@ -1,7 +1,5 @@
-import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
@@ -20,12 +18,14 @@ export type GlobalSquadVisibilityError =
   | InvalidSquadGroupVisibility
   | EffectSquadBuilderPersistenceUnavailable;
 
-const makeSet = (store: SquadGroupStore.SquadGroupStoreServiceShape) =>
-  Effect.fn("SquadGroups.setVisibility")(function* setVisibility(input: {
+/** Change squad group visibility for its owner. */
+export const set = Effect.fn("SquadGroups.setVisibility")(
+  function* setVisibility(input: {
     readonly actorUserId: AppUserId;
     readonly groupId: SquadGroupId;
     readonly visibility: SquadGroupVisibility;
   }) {
+    const store = yield* SquadGroupStore.SquadGroupStoreService;
     const now = yield* DateTime.nowAsDate;
     return yield* store.setSquadGroupVisibility({
       actorUserId: input.actorUserId,
@@ -33,30 +33,5 @@ const makeSet = (store: SquadGroupStore.SquadGroupStoreServiceShape) =>
       now,
       visibility: input.visibility,
     });
-  });
-
-/** Integration seam that resolves the store from the Effect context. */
-export const set = (input: {
-  readonly actorUserId: AppUserId;
-  readonly groupId: SquadGroupId;
-  readonly visibility: SquadGroupVisibility;
-}) =>
-  SquadGroupStore.SquadGroupStoreService.use((store) => makeSet(store)(input));
-
-export interface SetSquadGroupVisibility {
-  readonly set: ReturnType<typeof makeSet>;
-}
-
-// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class SetSquadGroupVisibilityService extends Context.Service<
-  SetSquadGroupVisibilityService,
-  SetSquadGroupVisibility
->()("@tepirek-revamped/api/squad-builder/SetSquadGroupVisibilityService") {}
-
-export const layer = Layer.effect(
-  SetSquadGroupVisibilityService,
-  Effect.gen(function* layer() {
-    const store = yield* SquadGroupStore.SquadGroupStoreService;
-    return SetSquadGroupVisibilityService.of({ set: makeSet(store) });
-  })
+  }
 );

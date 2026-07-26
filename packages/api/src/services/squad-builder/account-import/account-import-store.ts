@@ -2,7 +2,6 @@ import * as Data from "effect/Data";
 
 import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
-import type { FirecrawlYearMonth } from "../../../domain/squad-builder/firecrawl-year-month.ts";
 import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.ts";
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
@@ -10,12 +9,19 @@ import type { PendingMargonemAccountImportId } from "../../../domain/squad-build
 import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
 import type {
   EffectSquadBuilderPersistenceUnavailable,
-  FirecrawlMonthlyBudgetExhausted,
   MargonemAccountAlreadyOwnedByActor,
   MargonemAccountAlreadySharedWithActor,
   MargonemAccountOwnedByAnotherUser,
   PendingMargonemAccountImportNotFound as CanonicalPendingMargonemAccountImportNotFound,
 } from "../squad-groups/squad-group-errors.ts";
+
+export type {
+  FirecrawlBudgetError,
+  MarkFirecrawlRequestFailedInput,
+  MarkFirecrawlRequestSucceededInput,
+  ReserveFirecrawlRequestInput,
+  ReservedFirecrawlRequest,
+} from "../firecrawl-request-accounting-store.ts";
 
 /** Access state for a Margonem profile relative to the current user. */
 export type ProfileAccessState = Data.TaggedEnum<{
@@ -34,49 +40,6 @@ export type SquadBuilderPersistenceUnavailable =
 export interface FindProfileAccessStateInput {
   readonly profileId: MargonemProfileId;
   readonly actorUserId: AppUserId;
-}
-
-/** Current state of Firecrawl monthly budget usage. */
-export interface FirecrawlBudgetState {
-  readonly yearMonth: FirecrawlYearMonth;
-  readonly monthlyRequestBudget: number;
-  readonly usedRequests: number;
-  readonly remainingRequests: number;
-}
-
-/** Expected failure while reserving Firecrawl request budget. */
-export type FirecrawlBudgetError =
-  | FirecrawlMonthlyBudgetExhausted
-  | SquadBuilderPersistenceUnavailable;
-
-/** Input for reserving one Firecrawl request. */
-export interface ReserveFirecrawlRequestInput {
-  readonly profileId: MargonemProfileId;
-  readonly requestedByUserId: AppUserId;
-  readonly yearMonth: FirecrawlYearMonth;
-  readonly monthlyRequestBudget: number;
-}
-
-/** Reserved Firecrawl request row and budget summary. */
-export interface ReservedFirecrawlRequest {
-  readonly requestId: number;
-  readonly budgetState: FirecrawlBudgetState;
-}
-
-/** Input for marking a reserved Firecrawl request as successful. */
-export interface MarkFirecrawlRequestSucceededInput {
-  readonly completedAt: Date;
-  readonly requestId: number;
-  readonly creditsUsed: FirecrawlCreditCount;
-  readonly firecrawlStatusCode: number | null;
-  readonly cacheState: string | null;
-}
-
-/** Input for marking a reserved Firecrawl request as failed. */
-export interface MarkFirecrawlRequestFailedInput {
-  readonly completedAt: Date;
-  readonly requestId: number;
-  readonly errorTag: string;
 }
 
 /** Expected duplicate/access failures for owned account imports. */

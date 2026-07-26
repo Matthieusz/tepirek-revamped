@@ -8,10 +8,7 @@ import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.
 import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
 import { makeSquadGroupStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
-import {
-  layer as squadGroupEditorInviteResponsesLayer,
-  SquadGroupEditorInviteResponsesService,
-} from "./respond-to-squad-group-invite-service.ts";
+import { respond } from "./respond-to-squad-group-invite-service.ts";
 import { ActorIsNotSquadGroupInviteRecipient } from "./squad-group-errors.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
 
@@ -58,14 +55,11 @@ it.effect("accepts a squad group editor invite as the invited user", () => {
       });
     },
   });
-  const testLayer = squadGroupEditorInviteResponsesLayer.pipe(
-    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
-  );
+  const testLayer = Layer.succeed(SquadGroupStoreService, store);
 
   return Effect.gen(function* respondToSquadGroupInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const svc = yield* SquadGroupEditorInviteResponsesService;
-    const invite = yield* svc.respond({
+    const invite = yield* respond({
       actorUserId,
       invitationId,
       response: "accept",
@@ -85,15 +79,12 @@ it.effect("surfaces squad invite recipient authorization failures", () => {
   const store = makeSquadGroupStoreServiceTestService({
     respondToSquadGroupInvite: () => new ActorIsNotSquadGroupInviteRecipient(),
   });
-  const testLayer = squadGroupEditorInviteResponsesLayer.pipe(
-    Layer.provide(Layer.succeed(SquadGroupStoreService, store))
-  );
+  const testLayer = Layer.succeed(SquadGroupStoreService, store);
 
   return Effect.gen(function* respondToSquadGroupInviteEffect() {
-    const svc = yield* SquadGroupEditorInviteResponsesService;
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      svc.respond({
+      respond({
         actorUserId,
         invitationId,
         response: "decline",

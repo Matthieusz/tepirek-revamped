@@ -24,10 +24,10 @@ import { create as createSquadGroup } from "./create-squad-group.ts";
 import { list as listAvailableSquadCharacters } from "./list-available-squad-characters.ts";
 import { list as listGlobalSquadGroups } from "./list-global-squad-groups.ts";
 import { getMine, listMine } from "./list-squad-groups.ts";
-import { SquadGroupEditorInviteResponsesService } from "./respond-to-squad-group-invite-service.ts";
-import { SquadGroupEditorRevocationsService } from "./revoke-squad-group-editor-service.ts";
+import { respond } from "./respond-to-squad-group-invite-service.ts";
+import { revoke } from "./revoke-squad-group-editor-service.ts";
 import { save as saveSquadGroup } from "./save-squad-group.ts";
-import { SquadGroupEditorInvitesService } from "./send-squad-group-editor-invite-service.ts";
+import { send } from "./send-squad-group-editor-invite-service.ts";
 import { set as setSquadGroupVisibility } from "./set-squad-group-visibility.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
 
@@ -47,9 +47,8 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(() =>
           createVerifiedMember({ id: "effect-create-owner" })
         );
-        const service = { create: createSquadGroup };
 
-        const created = yield* service.create({
+        const created = yield* createSquadGroup({
           actorUserId: parseTestUserId(member.id),
           name: "  Effect group  ",
         });
@@ -88,18 +87,17 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const other = yield* Effect.promise(() =>
           createVerifiedMember({ id: "effect-list-other" })
         );
-        const service = { create: createSquadGroup };
         const listService = { getMine, listMine };
 
-        yield* service.create({
+        yield* createSquadGroup({
           actorUserId: parseTestUserId(member.id),
           name: "First listed group",
         });
-        yield* service.create({
+        yield* createSquadGroup({
           actorUserId: parseTestUserId(member.id),
           name: "Second listed group",
         });
-        yield* service.create({
+        yield* createSquadGroup({
           actorUserId: parseTestUserId(other.id),
           name: "Other listed group",
         });
@@ -121,10 +119,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(() =>
           createVerifiedMember({ id: "effect-detail-owner" })
         );
-        const service = { create: createSquadGroup };
         const listService = { getMine, listMine };
 
-        const created = yield* service.create({
+        const created = yield* createSquadGroup({
           actorUserId: parseTestUserId(member.id),
           name: "Effect detail group",
         });
@@ -381,10 +378,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           const member = yield* Effect.promise(() =>
             createVerifiedMember({ id: "effect-available-owner" })
           );
-          const service = { create: createSquadGroup };
           const listService = { list: listAvailableSquadCharacters };
 
-          const created = yield* service.create({
+          const created = yield* createSquadGroup({
             actorUserId: parseTestUserId(member.id),
             name: "Effect available group",
           });
@@ -497,13 +493,10 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           name: "Effect store squad send group",
         });
 
-        const invite = yield* Effect.gen(function* invite() {
-          const svc = yield* SquadGroupEditorInvitesService;
-          return yield* svc.send({
-            actorUserId: parseTestUserId(owner.id),
-            groupId: group.groupId,
-            invitedUserId: parseTestUserId(target.id),
-          });
+        const invite = yield* send({
+          actorUserId: parseTestUserId(owner.id),
+          groupId: group.groupId,
+          invitedUserId: parseTestUserId(target.id),
         });
 
         expect(invite).toMatchObject({
@@ -530,13 +523,10 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         });
 
         const duplicateFailure = yield* Effect.flip(
-          Effect.gen(function* sendDuplicateEditorInviteEffect() {
-            const svc = yield* SquadGroupEditorInvitesService;
-            return yield* svc.send({
-              actorUserId: parseTestUserId(owner.id),
-              groupId: group.groupId,
-              invitedUserId: parseTestUserId(target.id),
-            });
+          send({
+            actorUserId: parseTestUserId(owner.id),
+            groupId: group.groupId,
+            invitedUserId: parseTestUserId(target.id),
           })
         );
 
@@ -565,21 +555,15 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           actorUserId: parseTestUserId(owner.id),
           name: "Effect store squad respond group",
         });
-        const invite = yield* Effect.gen(function* invite() {
-          const svc = yield* SquadGroupEditorInvitesService;
-          return yield* svc.send({
-            actorUserId: parseTestUserId(owner.id),
-            groupId: group.groupId,
-            invitedUserId: parseTestUserId(target.id),
-          });
+        const invite = yield* send({
+          actorUserId: parseTestUserId(owner.id),
+          groupId: group.groupId,
+          invitedUserId: parseTestUserId(target.id),
         });
-        const accepted = yield* Effect.gen(function* accepted() {
-          const svc = yield* SquadGroupEditorInviteResponsesService;
-          return yield* svc.respond({
-            actorUserId: parseTestUserId(target.id),
-            invitationId: invite.invitationId,
-            response: "accept",
-          });
+        const accepted = yield* respond({
+          actorUserId: parseTestUserId(target.id),
+          invitationId: invite.invitationId,
+          response: "accept",
         });
 
         expect(accepted).toMatchObject({
@@ -619,20 +603,14 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           actorUserId: parseTestUserId(owner.id),
           name: "Effect store squad revoke group",
         });
-        const invite = yield* Effect.gen(function* invite() {
-          const svc = yield* SquadGroupEditorInvitesService;
-          return yield* svc.send({
-            actorUserId: parseTestUserId(owner.id),
-            groupId: group.groupId,
-            invitedUserId: parseTestUserId(target.id),
-          });
+        const invite = yield* send({
+          actorUserId: parseTestUserId(owner.id),
+          groupId: group.groupId,
+          invitedUserId: parseTestUserId(target.id),
         });
-        const revoked = yield* Effect.gen(function* revoked() {
-          const svc = yield* SquadGroupEditorRevocationsService;
-          return yield* svc.revoke({
-            actorUserId: parseTestUserId(owner.id),
-            invitationId: invite.invitationId,
-          });
+        const revoked = yield* revoke({
+          actorUserId: parseTestUserId(owner.id),
+          invitationId: invite.invitationId,
         });
 
         expect(revoked).toMatchObject({

@@ -20,71 +20,15 @@ import type {
 import type { SquadGroupVisibility } from "../../../domain/squad-builder/squad-group-visibility.ts";
 import type { SquadId } from "../../../domain/squad-builder/squad-id.ts";
 import type { SquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
-import type {
-  CreateOwnedAccountFromPendingImportInput,
-  CreatePendingMargonemAccountImportInput,
-  DeleteOwnedAccountInput,
-  DeleteOwnedAccountResult,
-  DuplicateMargonemAccountError,
-  FindPendingMargonemAccountImportInput,
-  FindProfileAccessStateInput,
-  FirecrawlBudgetError,
-  ListOwnedMargonemAccountsInput,
-  MarkFirecrawlRequestFailedInput,
-  MarkFirecrawlRequestSucceededInput,
-  OwnedMargonemAccountSummary,
-  PendingMargonemAccountImport,
-  PendingMargonemAccountImportForConfirmation,
-  ProfileAccessState,
-  ReserveFirecrawlRequestInput,
-  ReservedFirecrawlRequest,
-  UpdateOwnedAccountDisplayNameInput,
-} from "../account-import/account-import-store.ts";
-import type {
-  ApplyRefetchedAccountInput,
-  CreatePendingMargonemAccountRefetchInput,
-  MarkPendingMargonemAccountRefetchAppliedInput,
-  PendingMargonemAccountRefetch,
-  PendingMargonemAccountRefetchForApply,
-  RefetchableMargonemAccount,
-} from "../account-refetch/account-refetch-store.ts";
-import type { ApplyAccountRefetchOutput } from "../account-refetch/apply-account-refetch-service.ts";
-import type {
-  AccountAccessGrantSummary,
-  AccountAccessInviteSummary,
-  AccountInviteTarget,
-  FindOwnedAccountForSharingInput,
-  FindVerifiedInviteTargetInput,
-  ListAccountAccessGrantsInput,
-  ListIncomingAccountInvitesInput,
-  ListSharedAccountsInput,
-  OwnedAccountForSharing,
-  RespondToAccountAccessInviteStoreInput,
-  RevokeAccountAccessResult,
-  RevokeAccountAccessStoreInput,
-  SearchInviteTargetsStoreInput,
-  SharedMargonemAccountSummary,
-  UpsertAccountAccessInviteInput,
-  VerifiedInviteTarget,
-} from "../account-sharing/account-sharing-store.ts";
 import type { SharedSquadGroupCharactersSnapshot } from "./save-shared-squad-group-characters.ts";
 import type {
-  AccountAccessInviteNotFound,
-  AccountAccessTransitionNotAllowed,
   ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
-  ActorDoesNotOwnMargonemAccount,
   ActorDoesNotOwnSquadGroup,
-  ActorIsNotInviteRecipient,
   ActorIsNotSquadGroupInviteRecipient,
   CannotInviteSelf,
   EditorCannotChangeSquadStructure,
   EffectSquadBuilderPersistenceUnavailable,
-  InviteTargetNotFound,
-  InviteTargetNotVerified,
-  MargonemAccountNotFound,
-  PendingMargonemAccountImportNotFound,
-  PendingMargonemAccountRefetchNotFound,
   SquadCharacterNotAccessible,
   SquadEditorInviteTargetNotFound,
   SquadEditorInviteTargetNotVerified,
@@ -338,7 +282,7 @@ export interface SaveSharedSquadGroupCharactersStoreInput {
   readonly now: Date;
 }
 
-export interface SquadBuilderStoreServiceShape {
+export interface SquadGroupStoreServiceShape {
   readonly createSquadGroup: (
     input: CreateSquadGroupStoreInput
   ) => Effect<SquadGroupSummary, EffectSquadBuilderPersistenceUnavailable>;
@@ -453,157 +397,6 @@ export interface SquadBuilderStoreServiceShape {
     | SquadGroupInvitationTransitionNotAllowed
     | EffectSquadBuilderPersistenceUnavailable
   >;
-  readonly listOwnedAccounts: (
-    input: ListOwnedMargonemAccountsInput
-  ) => Effect<
-    readonly OwnedMargonemAccountSummary[],
-    EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly updateOwnedAccountDisplayName: (
-    input: UpdateOwnedAccountDisplayNameInput
-  ) => Effect<
-    OwnedMargonemAccountSummary,
-    | MargonemAccountNotFound
-    | ActorDoesNotOwnMargonemAccount
-    | EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly deleteOwnedAccount: (
-    input: DeleteOwnedAccountInput
-  ) => Effect<
-    DeleteOwnedAccountResult,
-    | MargonemAccountNotFound
-    | ActorDoesNotOwnMargonemAccount
-    | EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly findProfileAccessState: (
-    input: FindProfileAccessStateInput
-  ) => Effect<ProfileAccessState, EffectSquadBuilderPersistenceUnavailable>;
-  readonly reserveRequest: (
-    input: ReserveFirecrawlRequestInput
-  ) => Effect<
-    ReservedFirecrawlRequest,
-    FirecrawlBudgetError | EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly createPendingImport: (
-    input: CreatePendingMargonemAccountImportInput
-  ) => Effect<
-    PendingMargonemAccountImport,
-    EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly findPendingImportForConfirmation: (
-    input: FindPendingMargonemAccountImportInput
-  ) => Effect<
-    PendingMargonemAccountImportForConfirmation,
-    | PendingMargonemAccountImportNotFound
-    | EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly createOwnedAccountFromPendingImport: (
-    input: CreateOwnedAccountFromPendingImportInput
-  ) => Effect<
-    OwnedMargonemAccountSummary,
-    DuplicateMargonemAccountError | EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly markRequestSucceeded: (
-    input: MarkFirecrawlRequestSucceededInput
-  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable>;
-  readonly markRequestFailed: (
-    input: MarkFirecrawlRequestFailedInput
-  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable>;
-  readonly getAccountForRefetch: (input: {
-    readonly actorUserId: AppUserId;
-    readonly accountId: MargonemAccountId;
-  }) => Effect<
-    RefetchableMargonemAccount,
-    | MargonemAccountNotFound
-    | ActorDoesNotOwnMargonemAccount
-    | EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly createPendingRefetch: (
-    input: CreatePendingMargonemAccountRefetchInput
-  ) => Effect<
-    PendingMargonemAccountRefetch,
-    EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly findPendingRefetchForApply: (input: {
-    readonly actorUserId: AppUserId;
-    readonly refetchPreviewId: PendingMargonemAccountRefetch["id"];
-    readonly now: Date;
-  }) => Effect<
-    PendingMargonemAccountRefetchForApply,
-    | PendingMargonemAccountRefetchNotFound
-    | EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly applyRefetchedAccount: (
-    input: ApplyRefetchedAccountInput
-  ) => Effect<
-    ApplyAccountRefetchOutput,
-    EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly markPendingRefetchApplied: (
-    input: MarkPendingMargonemAccountRefetchAppliedInput
-  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable>;
-  readonly findOwnedAccountForSharing: (
-    input: FindOwnedAccountForSharingInput
-  ) => Effect<
-    OwnedAccountForSharing,
-    MargonemAccountNotFound | EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly searchInviteTargets: (
-    input: SearchInviteTargetsStoreInput
-  ) => Effect<
-    readonly AccountInviteTarget[],
-    EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly findVerifiedInviteTarget: (
-    input: FindVerifiedInviteTargetInput
-  ) => Effect<
-    VerifiedInviteTarget,
-    | InviteTargetNotFound
-    | InviteTargetNotVerified
-    | EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly upsertAccountAccessInvite: (
-    input: UpsertAccountAccessInviteInput
-  ) => Effect<
-    AccountAccessInviteSummary,
-    AccountAccessTransitionNotAllowed | EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly respondToAccountAccessInvite: (
-    input: RespondToAccountAccessInviteStoreInput
-  ) => Effect<
-    AccountAccessInviteSummary,
-    | AccountAccessInviteNotFound
-    | ActorIsNotInviteRecipient
-    | AccountAccessTransitionNotAllowed
-    | EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly revokeAccountAccess: (
-    input: RevokeAccountAccessStoreInput
-  ) => Effect<
-    RevokeAccountAccessResult,
-    | AccountAccessInviteNotFound
-    | ActorDoesNotOwnMargonemAccount
-    | AccountAccessTransitionNotAllowed
-    | EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly listIncomingAccountInvites: (
-    input: ListIncomingAccountInvitesInput
-  ) => Effect<
-    readonly AccountAccessInviteSummary[],
-    EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly listSharedAccounts: (
-    input: ListSharedAccountsInput
-  ) => Effect<
-    readonly SharedMargonemAccountSummary[],
-    EffectSquadBuilderPersistenceUnavailable
-  >;
-  readonly listAccountAccessGrants: (
-    input: ListAccountAccessGrantsInput
-  ) => Effect<
-    readonly AccountAccessGrantSummary[],
-    EffectSquadBuilderPersistenceUnavailable
-  >;
   readonly listIncomingSquadGroupInvites: (input: {
     readonly actorUserId: AppUserId;
   }) => Effect<
@@ -631,114 +424,9 @@ export interface SquadBuilderStoreServiceShape {
   >;
 }
 
-export type SquadGroupStoreServiceShape = Pick<
-  SquadBuilderStoreServiceShape,
-  | "authorizeSquadGroupOwner"
-  | "createSquadGroup"
-  | "deleteSquadGroup"
-  | "findVerifiedSquadEditorInviteTarget"
-  | "getPendingSquadGroupInviteCount"
-  | "getSquadGroupDetail"
-  | "listAvailableCharactersForOwner"
-  | "listGlobalSquadGroups"
-  | "listIncomingSquadGroupInvites"
-  | "listMySquadGroups"
-  | "listSharedSquadGroups"
-  | "listSquadGroupEditorGrants"
-  | "respondToSquadGroupInvite"
-  | "revokeSquadGroupEditor"
-  | "saveSharedSquadGroupCharacters"
-  | "saveSquadGroupSnapshot"
-  | "searchSquadEditorInviteTargets"
-  | "setSquadGroupVisibility"
-  | "upsertSquadGroupEditorInvite"
->;
-
-export type AccountImportStoreServiceShape = Pick<
-  SquadBuilderStoreServiceShape,
-  | "createOwnedAccountFromPendingImport"
-  | "createPendingImport"
-  | "deleteOwnedAccount"
-  | "findPendingImportForConfirmation"
-  | "findProfileAccessState"
-  | "listOwnedAccounts"
-  | "markRequestFailed"
-  | "markRequestSucceeded"
-  | "reserveRequest"
-  | "updateOwnedAccountDisplayName"
->;
-
-export type AccountRefetchStoreServiceShape = Pick<
-  SquadBuilderStoreServiceShape,
-  | "applyRefetchedAccount"
-  | "createPendingRefetch"
-  | "findPendingRefetchForApply"
-  | "getAccountForRefetch"
-  | "markPendingRefetchApplied"
-  | "markRequestFailed"
-  | "markRequestSucceeded"
-  | "reserveRequest"
->;
-
-export type AccountSharingStoreServiceShape = Pick<
-  SquadBuilderStoreServiceShape,
-  | "findOwnedAccountForSharing"
-  | "findVerifiedInviteTarget"
-  | "listAccountAccessGrants"
-  | "listIncomingAccountInvites"
-  | "listOwnedAccounts"
-  | "listSharedAccounts"
-  | "respondToAccountAccessInvite"
-  | "revokeAccountAccess"
-  | "searchInviteTargets"
-  | "upsertAccountAccessInvite"
->;
+export type { AvailableSquadCharacter };
 
 export class SquadGroupStoreService extends Context.Service<
   SquadGroupStoreService,
   SquadGroupStoreServiceShape
 >()("@tepirek-revamped/api/squad-builder/SquadGroupStoreService") {}
-
-export type {
-  AccountAccessGrantSummary,
-  AccountAccessInviteSummary,
-  AccountInviteTarget,
-  ApplyRefetchedAccountInput,
-  AvailableSquadCharacter,
-  CreateOwnedAccountFromPendingImportInput,
-  CreatePendingMargonemAccountImportInput,
-  CreatePendingMargonemAccountRefetchInput,
-  DeleteOwnedAccountInput,
-  DeleteOwnedAccountResult,
-  DuplicateMargonemAccountError,
-  FindOwnedAccountForSharingInput,
-  FindPendingMargonemAccountImportInput,
-  FindProfileAccessStateInput,
-  FindVerifiedInviteTargetInput,
-  FirecrawlBudgetError,
-  ListAccountAccessGrantsInput,
-  ListIncomingAccountInvitesInput,
-  ListOwnedMargonemAccountsInput,
-  ListSharedAccountsInput,
-  MarkFirecrawlRequestFailedInput,
-  MarkFirecrawlRequestSucceededInput,
-  MarkPendingMargonemAccountRefetchAppliedInput,
-  OwnedAccountForSharing,
-  OwnedMargonemAccountSummary,
-  PendingMargonemAccountImport,
-  PendingMargonemAccountImportForConfirmation,
-  PendingMargonemAccountRefetch,
-  PendingMargonemAccountRefetchForApply,
-  ProfileAccessState,
-  RefetchableMargonemAccount,
-  ReserveFirecrawlRequestInput,
-  ReservedFirecrawlRequest,
-  RespondToAccountAccessInviteStoreInput,
-  RevokeAccountAccessResult,
-  RevokeAccountAccessStoreInput,
-  SearchInviteTargetsStoreInput,
-  SharedMargonemAccountSummary,
-  UpdateOwnedAccountDisplayNameInput,
-  UpsertAccountAccessInviteInput,
-  VerifiedInviteTarget,
-};

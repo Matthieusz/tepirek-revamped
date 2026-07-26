@@ -15,10 +15,6 @@ import {
   BetterAuthDatabaseService,
   makeBetterAuthDatabase,
 } from "./better-auth-database.ts";
-import {
-  DatabaseUrlConfig,
-  DatabaseUrlConfigLayer,
-} from "./database-url-config.ts";
 import { SharedPostgresPool } from "./shared-postgres-pool.ts";
 
 export { BetterAuthDatabaseService } from "./better-auth-database.ts";
@@ -178,21 +174,6 @@ export const makePgClientLayer = (databaseUrl: Redacted.Redacted) =>
 /** Create a managed PostgreSQL client layer from a raw boundary database URL. */
 export const makePgClientLayerFromUrl = (databaseUrl: string) =>
   makePgClientLayer(Redacted.make(databaseUrl));
-
-/** Live PgClient layer that reads the database URL from DatabaseUrlConfig. */
-export const PgClientLiveFromConfig = Layer.unwrap(
-  Effect.gen(function* PgClientLiveFromConfig() {
-    const url = yield* DatabaseUrlConfig;
-    return makePgClientLayer(url);
-  })
-);
-
-/** Live EffectDatabase layer that reads `DATABASE_URL` from Effect Config. */
-export const EffectDatabaseLiveFromConfig = EffectDatabaseLayer.pipe(
-  Layer.provide(
-    PgClientLiveFromConfig.pipe(Layer.provide(DatabaseUrlConfigLayer))
-  )
-);
 
 /** Create the live Effect database layer for application composition. */
 export const makeLiveDatabaseLayer = (databaseUrl: string) =>

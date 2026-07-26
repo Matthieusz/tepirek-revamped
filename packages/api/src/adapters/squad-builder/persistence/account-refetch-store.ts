@@ -4,7 +4,6 @@ import type {
 } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import {
-  firecrawlProfileScrapeRequest,
   margonemAccount,
   margonemAccountRefetchPreview,
   margonemAccountRefetchPreviewCharacter,
@@ -12,7 +11,7 @@ import {
   squadCharacter,
   squadGroup,
 } from "@tepirek-revamped/db/schema/squad-builder";
-import { and, count, eq, gt, inArray, isNull, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -23,7 +22,6 @@ import * as Option from "effect/Option";
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { appUserIdToString } from "../../../domain/squad-builder/app-user-id.ts";
-import { firecrawlYearMonthToString } from "../../../domain/squad-builder/firecrawl-year-month.ts";
 import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import {
   margonemAccountIdToNumber,
@@ -49,17 +47,13 @@ import { AccountRefetchStoreService } from "../../../services/squad-builder/acco
 import type {
   ApplyRefetchedAccountInput,
   CreatePendingMargonemAccountRefetchInput,
-  MarkFirecrawlRequestFailedInput,
-  MarkFirecrawlRequestSucceededInput,
   MarkPendingMargonemAccountRefetchAppliedInput,
   PendingMargonemAccountRefetch,
   RefetchableMargonemAccount,
-  ReserveFirecrawlRequestInput,
 } from "../../../services/squad-builder/account-refetch/account-refetch-store.ts";
 import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   ActorDoesNotOwnMargonemAccount,
-  FirecrawlMonthlyBudgetExhausted,
   MargonemAccountNotFound,
   PendingMargonemAccountRefetchNotFound,
 } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
@@ -68,133 +62,7 @@ import {
   namedStoreMethod,
   parsePersistedAppUserId,
   persistenceQuery,
-  usedFirecrawlRequestStatuses,
 } from "./persistence-query.ts";
-
-const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
-  Effect.fnUntraced(function* reserveRequestEffect({
-    monthlyRequestBudget,
-    profileId,
-    requestedByUserId,
-    yearMonth,
-  }: ReserveFirecrawlRequestInput) {
-    const operation = "reserveRequest" as const;
-    const yearMonthText = firecrawlYearMonthToString(yearMonth);
-    const transaction = database.transaction(
-      Effect.fnUntraced(function* reserveInTransaction(
-        tx: TransactionDatabase
-      ) {
-        yield* tx.execute(
-          sql`select pg_advisory_xact_lock(hashtext(${`firecrawl:${yearMonthText}`}))`
-        );
-        const usageSelect = tx
-          .select({ usedRequests: count() })
-          .from(firecrawlProfileScrapeRequest)
-          .where(
-            and(
-              eq(firecrawlProfileScrapeRequest.yearMonth, yearMonthText),
-              inArray(
-                firecrawlProfileScrapeRequest.status,
-                usedFirecrawlRequestStatuses
-              )
-            )
-          );
-        const usageRows = yield* usageSelect;
-
-        const usedRequests = usageRows[0]?.usedRequests ?? 0;
-
-        if (usedRequests >= monthlyRequestBudget) {
-          return yield* new FirecrawlMonthlyBudgetExhausted({
-            monthlyRequestBudget,
-            usedRequests,
-            yearMonth,
-          });
-        }
-
-        const insert = tx
-          .insert(firecrawlProfileScrapeRequest)
-          .values({
-            profileId: profileIdToNumber(profileId),
-            requestedByUserId: appUserIdToString(requestedByUserId),
-            status: "reserved",
-            yearMonth: yearMonthText,
-          })
-          .returning({ id: firecrawlProfileScrapeRequest.id });
-        const insertedRows = yield* insert;
-
-        const [reserved] = insertedRows;
-
-        if (reserved === undefined) {
-          return yield* failPersistence(
-            operation,
-            new Error("Failed to reserve Firecrawl request")
-          );
-        }
-
-        const nextUsedRequests = usedRequests + 1;
-
-        return {
-          budgetState: {
-            monthlyRequestBudget,
-            remainingRequests: monthlyRequestBudget - nextUsedRequests,
-            usedRequests: nextUsedRequests,
-            yearMonth,
-          },
-          requestId: reserved.id,
-        };
-      })
-    );
-
-    return yield* persistenceQuery(operation, transaction);
-  });
-
-const markRequestSucceededWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({
-    cacheState,
-    completedAt,
-    creditsUsed,
-    firecrawlStatusCode,
-    requestId,
-  }: MarkFirecrawlRequestSucceededInput): Effect.Effect<
-    void,
-    EffectSquadBuilderPersistenceUnavailable,
-    never
-  > => {
-    const operation = "markRequestSucceeded" as const;
-    const update = database
-      .update(firecrawlProfileScrapeRequest)
-      .set({
-        cacheState,
-        completedAt,
-        creditsUsed,
-        firecrawlStatusCode,
-        status: "succeeded",
-      })
-      .where(eq(firecrawlProfileScrapeRequest.id, requestId));
-
-    return persistenceQuery(operation, update).pipe(Effect.asVoid);
-  };
-
-const markRequestFailedWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({
-    completedAt,
-    errorTag,
-    requestId,
-  }: MarkFirecrawlRequestFailedInput): Effect.Effect<
-    void,
-    EffectSquadBuilderPersistenceUnavailable,
-    never
-  > => {
-    const operation = "markRequestFailed" as const;
-    const update = database
-      .update(firecrawlProfileScrapeRequest)
-      .set({ completedAt, errorTag, status: "failed" })
-      .where(eq(firecrawlProfileScrapeRequest.id, requestId));
-
-    return persistenceQuery(operation, update).pipe(Effect.asVoid);
-  };
 
 const getAccountForRefetchWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* getAccountForRefetchEffect({
@@ -705,18 +573,6 @@ export const DrizzleAccountRefetchStoreServiceLayer: Layer.Layer<
       markPendingRefetchApplied: namedStoreMethod(
         "AccountRefetchStore.markPendingRefetchApplied",
         markPendingRefetchAppliedWithDatabase(database)
-      ),
-      markRequestFailed: namedStoreMethod(
-        "AccountRefetchStore.markRequestFailed",
-        markRequestFailedWithDatabase(database)
-      ),
-      markRequestSucceeded: namedStoreMethod(
-        "AccountRefetchStore.markRequestSucceeded",
-        markRequestSucceededWithDatabase(database)
-      ),
-      reserveRequest: namedStoreMethod(
-        "AccountRefetchStore.reserveRequest",
-        reserveRequestWithDatabase(database)
       ),
     })
   )

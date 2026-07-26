@@ -1,7 +1,5 @@
-import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as EffectRuntime from "effect/Effect";
-import * as Layer from "effect/Layer";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.ts";
@@ -23,6 +21,7 @@ import {
   parseFirecrawlCreditCount,
 } from "../firecrawl-config.ts";
 import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
+import { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
@@ -61,6 +60,7 @@ const currentDate = DateTime.nowAsDate;
 /** Fetch latest account HTML and store a pending refetch diff for owner confirmation. */
 const makePreview = (
   store: typeof AccountRefetchStoreService.Service,
+  requestAccounting: typeof FirecrawlRequestAccountingStoreService.Service,
   config: typeof FirecrawlConfigService.Service,
   firecrawl: typeof FirecrawlClientService.Service
 ) =>
@@ -69,7 +69,7 @@ const makePreview = (
       const account = yield* store.getAccountForRefetch(input);
       const requestTime = yield* DateTime.nowAsDate;
       const yearMonth = firecrawlYearMonthFromDate(requestTime);
-      const reservedRequest = yield* store.reserveRequest({
+      const reservedRequest = yield* requestAccounting.reserveRequest({
         monthlyRequestBudget: config.monthlyRequestBudget,
         profileId: account.profileId,
         requestedByUserId: input.actorUserId,
@@ -83,7 +83,7 @@ const makePreview = (
               EffectRuntime.catch((error) =>
                 EffectRuntime.gen(function* markRequestFailed() {
                   const completedAt = yield* currentDate;
-                  yield* store.markRequestFailed({
+                  yield* requestAccounting.markRequestFailed({
                     completedAt,
                     errorTag: error._tag,
                     requestId: reservedRequest.requestId,
@@ -98,7 +98,7 @@ const makePreview = (
             EffectRuntime.catch(() =>
               EffectRuntime.gen(function* markInvalidResponseFailed() {
                 const completedAt = yield* currentDate;
-                yield* store.markRequestFailed({
+                yield* requestAccounting.markRequestFailed({
                   completedAt,
                   errorTag: "FirecrawlResponseNotParseable",
                   requestId: reservedRequest.requestId,
@@ -111,7 +111,7 @@ const makePreview = (
             )
           );
           const completedAt = yield* currentDate;
-          yield* store.markRequestSucceeded({
+          yield* requestAccounting.markRequestSucceeded({
             cacheState: scrapedProfile.metadata.cacheState ?? null,
             completedAt,
             creditsUsed,
@@ -124,7 +124,7 @@ const makePreview = (
         EffectRuntime.onInterrupt(() =>
           EffectRuntime.gen(function* markInterruptedRequestFailed() {
             const completedAt = yield* currentDate;
-            yield* store.markRequestFailed({
+            yield* requestAccounting.markRequestFailed({
               completedAt,
               errorTag: "Interrupted",
               requestId: reservedRequest.requestId,
@@ -178,30 +178,14 @@ const makePreview = (
 export const preview = EffectRuntime.fn("AccountRefetch.previewIntegration")(
   function* previewIntegration(input: PreviewAccountRefetchInput) {
     const store = yield* AccountRefetchStoreService;
+    const requestAccounting = yield* FirecrawlRequestAccountingStoreService;
     const config = yield* FirecrawlConfigService;
     const firecrawl = yield* FirecrawlClientService;
-    return yield* makePreview(store, config, firecrawl)(input);
+    return yield* makePreview(
+      store,
+      requestAccounting,
+      config,
+      firecrawl
+    )(input);
   }
-);
-
-export interface PreviewAccountRefetch {
-  readonly preview: ReturnType<typeof makePreview>;
-}
-
-// oxlint-disable-next-line max-classes-per-file -- Service tag lives with its use-case implementation.
-export class PreviewAccountRefetchService extends Context.Service<
-  PreviewAccountRefetchService,
-  PreviewAccountRefetch
->()("@tepirek-revamped/api/squad-builder/PreviewAccountRefetchService") {}
-
-export const layer = Layer.effect(
-  PreviewAccountRefetchService,
-  EffectRuntime.gen(function* layer() {
-    const store = yield* AccountRefetchStoreService;
-    const config = yield* FirecrawlConfigService;
-    const firecrawl = yield* FirecrawlClientService;
-    return PreviewAccountRefetchService.of({
-      preview: makePreview(store, config, firecrawl),
-    });
-  })
 );

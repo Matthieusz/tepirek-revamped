@@ -9,10 +9,7 @@ import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-a
 import { makeAccountSharingStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.ts";
 import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
-import {
-  layer as accountAccessRevocationsLayer,
-  AccountAccessRevocationsService,
-} from "./revoke-account-access-service.ts";
+import { revoke } from "./revoke-account-access-service.ts";
 
 const parseTestUserId = (value: string) =>
   Effect.runSync(parseAppUserId(value));
@@ -47,14 +44,11 @@ it.effect("revokes account access as the account owner", () => {
       });
     },
   });
-  const testLayer = accountAccessRevocationsLayer.pipe(
-    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
-  );
+  const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* revokeAccountAccessEffect() {
-    const svc = yield* AccountAccessRevocationsService;
     yield* TestClock.setTime(fixedClock.now().getTime());
-    const revoked = yield* svc.revoke({
+    const revoked = yield* revoke({
       accessId,
       actorUserId,
     });
@@ -74,15 +68,12 @@ it.effect("surfaces owner authorization failures", () => {
   const store = makeAccountSharingStoreServiceTestService({
     revokeAccountAccess: () => new ActorDoesNotOwnMargonemAccount(),
   });
-  const testLayer = accountAccessRevocationsLayer.pipe(
-    Layer.provide(Layer.succeed(AccountSharingStoreService, store))
-  );
+  const testLayer = Layer.succeed(AccountSharingStoreService, store);
 
   return Effect.gen(function* revokeAccountAccessEffect() {
-    const svc = yield* AccountAccessRevocationsService;
     yield* TestClock.setTime(fixedClock.now().getTime());
     const error = yield* Effect.flip(
-      svc.revoke({
+      revoke({
         accessId,
         actorUserId,
       })
