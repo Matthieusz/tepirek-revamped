@@ -11,20 +11,13 @@ import type {
 import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.ts";
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
-import type { SquadBuilderPersistenceUnavailable } from "../account-import/account-import-store.ts";
+import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
-} from "../account-sharing/account-sharing-store.ts";
-import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
-import type {
-  FirecrawlBudgetError,
-  MarkFirecrawlRequestFailedInput,
-  MarkFirecrawlRequestSucceededInput,
-  ReserveFirecrawlRequestInput,
-  ReservedFirecrawlRequest,
-} from "../firecrawl-request-accounting-store.ts";
-import type { PendingMargonemAccountRefetchNotFound as CanonicalPendingMargonemAccountRefetchNotFound } from "../squad-groups/squad-group-errors.ts";
+  PendingMargonemAccountRefetchNotFound,
+  SquadBuilderPersistenceUnavailable,
+} from "../squad-groups/squad-group-errors.ts";
 
 /** Account and current character state needed for a manual refetch preview. */
 export interface RefetchableMargonemAccount {
@@ -33,10 +26,6 @@ export interface RefetchableMargonemAccount {
   readonly displayName: AccountDisplayName;
   readonly currentCharacters: readonly StoredMargonemCharacterSnapshot[];
 }
-
-/** Expected failure when a pending refetch cannot be applied. */
-export type PendingMargonemAccountRefetchNotFound =
-  CanonicalPendingMargonemAccountRefetchNotFound;
 
 /** Input for storing a manual refetch preview. */
 export interface CreatePendingMargonemAccountRefetchInput {
@@ -53,13 +42,6 @@ export interface CreatePendingMargonemAccountRefetchInput {
 /** Stored pending refetch identity. */
 export interface PendingMargonemAccountRefetch {
   readonly id: PendingMargonemAccountRefetchId;
-}
-
-/** Input for loading a pending refetch to apply. */
-export interface FindPendingMargonemAccountRefetchInput {
-  readonly actorUserId: AppUserId;
-  readonly refetchPreviewId: PendingMargonemAccountRefetchId;
-  readonly now: Date;
 }
 
 /** Server-trusted pending refetch data ready for application. */
@@ -133,14 +115,3 @@ export class AccountRefetchStoreService extends Context.Service<
   AccountRefetchStoreService,
   AccountRefetchStoreServiceShape
 >()("@tepirek-revamped/api/squad-builder/AccountRefetchStoreService") {}
-
-export type {
-  ActorDoesNotOwnMargonemAccount,
-  FirecrawlBudgetError,
-  MargonemAccountNotFound,
-  MarkFirecrawlRequestFailedInput,
-  MarkFirecrawlRequestSucceededInput,
-  ReserveFirecrawlRequestInput,
-  ReservedFirecrawlRequest,
-  SquadBuilderPersistenceUnavailable,
-};

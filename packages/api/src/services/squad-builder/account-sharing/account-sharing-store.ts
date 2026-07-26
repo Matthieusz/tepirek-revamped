@@ -7,28 +7,16 @@ import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
 import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
-import type { SquadBuilderPersistenceUnavailable } from "../account-import/account-import-store.ts";
 import type {
   AccountAccessInviteNotFound,
   AccountAccessTransitionNotAllowed,
   ActorDoesNotOwnMargonemAccount,
   ActorIsNotInviteRecipient,
-  CannotInviteSelf,
   InviteTargetNotFound,
   InviteTargetNotVerified,
   MargonemAccountNotFound,
+  SquadBuilderPersistenceUnavailable,
 } from "../squad-groups/squad-group-errors.ts";
-/** Expected authorization failures for account sharing operations. */
-export type AccountSharingAuthorizationError =
-  | MargonemAccountNotFound
-  | ActorDoesNotOwnMargonemAccount
-  | CannotInviteSelf
-  | InviteTargetNotFound
-  | InviteTargetNotVerified
-  | AccountAccessInviteNotFound
-  | ActorIsNotInviteRecipient
-  | AccountAccessTransitionNotAllowed;
-
 /** A verified user that may be invited to use an account. */
 export interface AccountInviteTarget {
   readonly userId: AppUserId;
@@ -215,11 +203,3 @@ export class AccountSharingStoreService extends Context.Service<
   AccountSharingStoreService,
   AccountSharingStoreServiceShape
 >()("@tepirek-revamped/api/squad-builder/AccountSharingStoreService") {}
-
-/** Expected failure when a Margonem account does not exist. */
-export type { MargonemAccountNotFound };
-
-/** Expected failure when an actor is not the Margonem account owner. */
-export type { ActorDoesNotOwnMargonemAccount };
-
-export type { SquadBuilderPersistenceUnavailable };

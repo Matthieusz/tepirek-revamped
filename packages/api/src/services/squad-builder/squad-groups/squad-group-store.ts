@@ -26,9 +26,8 @@ import type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnSquadGroup,
   ActorIsNotSquadGroupInviteRecipient,
-  CannotInviteSelf,
   EditorCannotChangeSquadStructure,
-  EffectSquadBuilderPersistenceUnavailable,
+  SquadBuilderPersistenceUnavailable,
   SquadCharacterNotAccessible,
   SquadEditorInviteTargetNotFound,
   SquadEditorInviteTargetNotVerified,
@@ -38,45 +37,6 @@ import type {
   SquadGroupWriteConflict,
   SquadNotInGroup,
 } from "./squad-group-errors.ts";
-
-export type {
-  AccountAccessInviteNotFound,
-  AccountAccessTransitionNotAllowed,
-  ActorCannotEditSquadGroup,
-  ActorCannotViewSquadGroup,
-  ActorDoesNotOwnMargonemAccount,
-  ActorDoesNotOwnSquadGroup,
-  ActorIsNotInviteRecipient,
-  ActorIsNotSquadGroupInviteRecipient,
-  CannotInviteSelf,
-  EditorCannotChangeSquadStructure,
-  InviteTargetNotFound,
-  InviteTargetNotVerified,
-  MargonemAccountNotFound,
-  PendingMargonemAccountImportNotFound,
-  PendingMargonemAccountRefetchNotFound,
-  SquadCharacterNotAccessible,
-  SquadEditorInviteTargetNotFound,
-  SquadEditorInviteTargetNotVerified,
-  SquadGroupInvitationNotFound,
-  SquadGroupInvitationTransitionNotAllowed,
-  SquadGroupNotFound,
-  SquadGroupWriteConflict,
-  SquadNotInGroup,
-} from "./squad-group-errors.ts";
-
-/** Expected authorization failures for squad group sharing operations. */
-export type SquadGroupSharingAuthorizationError =
-  | SquadGroupNotFound
-  | ActorDoesNotOwnSquadGroup
-  | ActorCannotViewSquadGroup
-  | ActorCannotEditSquadGroup
-  | CannotInviteSelf
-  | SquadEditorInviteTargetNotFound
-  | SquadEditorInviteTargetNotVerified
-  | SquadGroupInvitationNotFound
-  | ActorIsNotSquadGroupInviteRecipient
-  | SquadGroupInvitationTransitionNotAllowed;
 
 /** Summary row for a squad group list. */
 export interface SquadGroupSummary {
@@ -199,12 +159,6 @@ export interface ListGlobalSquadGroupsInput {
   readonly limit: number;
 }
 
-/** Store input for authorizing squad group viewer access. */
-export interface AuthorizeSquadGroupViewerInput {
-  readonly actorUserId: AppUserId;
-  readonly groupId: SquadGroupId;
-}
-
 /** Store input for creating a squad group. */
 export interface CreateSquadGroupStoreInput {
   readonly actorUserId: AppUserId;
@@ -285,34 +239,31 @@ export interface SaveSharedSquadGroupCharactersStoreInput {
 export interface SquadGroupStoreServiceShape {
   readonly createSquadGroup: (
     input: CreateSquadGroupStoreInput
-  ) => Effect<SquadGroupSummary, EffectSquadBuilderPersistenceUnavailable>;
+  ) => Effect<SquadGroupSummary, SquadBuilderPersistenceUnavailable>;
   readonly deleteSquadGroup: (
     input: DeleteSquadGroupStoreInput
   ) => Effect<
     void,
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable
+    | SquadBuilderPersistenceUnavailable
   >;
   readonly listMySquadGroups: (
     input: ListMySquadGroupsInput
-  ) => Effect<
-    readonly SquadGroupSummary[],
-    EffectSquadBuilderPersistenceUnavailable
-  >;
+  ) => Effect<readonly SquadGroupSummary[], SquadBuilderPersistenceUnavailable>;
   readonly getSquadGroupDetail: (
     input: GetSquadGroupDetailInput
   ) => Effect<
     SquadGroupDetail,
     | SquadGroupNotFound
     | ActorCannotViewSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable
+    | SquadBuilderPersistenceUnavailable
   >;
   readonly listAvailableCharactersForOwner: (
     input: ListAvailableCharactersForOwnerInput
   ) => Effect<
     readonly AvailableSquadCharacter[],
-    EffectSquadBuilderPersistenceUnavailable
+    SquadBuilderPersistenceUnavailable
   >;
   readonly saveSquadGroupSnapshot: (
     input: SaveSquadGroupSnapshotStoreInput
@@ -321,7 +272,7 @@ export interface SquadGroupStoreServiceShape {
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
     | SquadGroupWriteConflict
-    | EffectSquadBuilderPersistenceUnavailable
+    | SquadBuilderPersistenceUnavailable
   >;
   readonly saveSharedSquadGroupCharacters: (
     input: SaveSharedSquadGroupCharactersStoreInput
@@ -333,13 +284,13 @@ export interface SquadGroupStoreServiceShape {
     | EditorCannotChangeSquadStructure
     | SquadCharacterNotAccessible
     | SquadGroupWriteConflict
-    | EffectSquadBuilderPersistenceUnavailable
+    | SquadBuilderPersistenceUnavailable
   >;
   readonly listGlobalSquadGroups: (
     input: ListGlobalSquadGroupsInput
   ) => Effect<
     readonly GlobalSquadGroupSummary[],
-    EffectSquadBuilderPersistenceUnavailable
+    SquadBuilderPersistenceUnavailable
   >;
   readonly setSquadGroupVisibility: (
     input: SetSquadGroupVisibilityStoreInput
@@ -347,7 +298,7 @@ export interface SquadGroupStoreServiceShape {
     SquadGroupVisibilityChange,
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable
+    | SquadBuilderPersistenceUnavailable
   >;
   readonly authorizeSquadGroupOwner: (input: {
     readonly actorUserId: AppUserId;
@@ -356,13 +307,13 @@ export interface SquadGroupStoreServiceShape {
     SquadGroupOwnerAccess,
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable
+    | SquadBuilderPersistenceUnavailable
   >;
   readonly searchSquadEditorInviteTargets: (
     input: SearchSquadEditorInviteTargetsStoreInput
   ) => Effect<
     readonly SquadEditorInviteTarget[],
-    EffectSquadBuilderPersistenceUnavailable
+    SquadBuilderPersistenceUnavailable
   >;
   readonly findVerifiedSquadEditorInviteTarget: (input: {
     readonly targetUserId: AppUserId;
@@ -370,14 +321,14 @@ export interface SquadGroupStoreServiceShape {
     SquadEditorInviteTarget,
     | SquadEditorInviteTargetNotFound
     | SquadEditorInviteTargetNotVerified
-    | EffectSquadBuilderPersistenceUnavailable
+    | SquadBuilderPersistenceUnavailable
   >;
   readonly upsertSquadGroupEditorInvite: (
     input: UpsertSquadGroupEditorInviteInput
   ) => Effect<
     SquadGroupInvitationSummary,
     | SquadGroupInvitationTransitionNotAllowed
-    | EffectSquadBuilderPersistenceUnavailable
+    | SquadBuilderPersistenceUnavailable
   >;
   readonly respondToSquadGroupInvite: (
     input: RespondToSquadGroupInviteStoreInput
@@ -386,7 +337,7 @@ export interface SquadGroupStoreServiceShape {
     | SquadGroupInvitationNotFound
     | ActorIsNotSquadGroupInviteRecipient
     | SquadGroupInvitationTransitionNotAllowed
-    | EffectSquadBuilderPersistenceUnavailable
+    | SquadBuilderPersistenceUnavailable
   >;
   readonly revokeSquadGroupEditor: (
     input: RevokeSquadGroupEditorStoreInput
@@ -395,23 +346,23 @@ export interface SquadGroupStoreServiceShape {
     | SquadGroupInvitationNotFound
     | ActorDoesNotOwnSquadGroup
     | SquadGroupInvitationTransitionNotAllowed
-    | EffectSquadBuilderPersistenceUnavailable
+    | SquadBuilderPersistenceUnavailable
   >;
   readonly listIncomingSquadGroupInvites: (input: {
     readonly actorUserId: AppUserId;
   }) => Effect<
     readonly SquadGroupInvitationSummary[],
-    EffectSquadBuilderPersistenceUnavailable
+    SquadBuilderPersistenceUnavailable
   >;
   readonly getPendingSquadGroupInviteCount: (input: {
     readonly actorUserId: AppUserId;
-  }) => Effect<number, EffectSquadBuilderPersistenceUnavailable>;
+  }) => Effect<number, SquadBuilderPersistenceUnavailable>;
   readonly listSharedSquadGroups: (input: {
     readonly actorUserId: AppUserId;
     readonly filters: ListGlobalSquadGroupsInput["filters"];
   }) => Effect<
     readonly SharedSquadGroupSummary[],
-    EffectSquadBuilderPersistenceUnavailable
+    SquadBuilderPersistenceUnavailable
   >;
   readonly listSquadGroupEditorGrants: (input: {
     readonly actorUserId: AppUserId;
@@ -420,7 +371,7 @@ export interface SquadGroupStoreServiceShape {
     readonly SquadGroupEditorGrantSummary[],
     | SquadGroupNotFound
     | ActorDoesNotOwnSquadGroup
-    | EffectSquadBuilderPersistenceUnavailable
+    | SquadBuilderPersistenceUnavailable
   >;
 }
 

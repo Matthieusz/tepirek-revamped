@@ -11,21 +11,13 @@ import type { PendingMargonemAccountImportId } from "../../../domain/squad-build
 import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
-  EffectSquadBuilderPersistenceUnavailable,
+  SquadBuilderPersistenceUnavailable,
   MargonemAccountAlreadyOwnedByActor,
   MargonemAccountAlreadySharedWithActor,
   MargonemAccountOwnedByAnotherUser,
   MargonemAccountNotFound,
-  PendingMargonemAccountImportNotFound as CanonicalPendingMargonemAccountImportNotFound,
+  PendingMargonemAccountImportNotFound,
 } from "../squad-groups/squad-group-errors.ts";
-
-export type {
-  FirecrawlBudgetError,
-  MarkFirecrawlRequestFailedInput,
-  MarkFirecrawlRequestSucceededInput,
-  ReserveFirecrawlRequestInput,
-  ReservedFirecrawlRequest,
-} from "../firecrawl-request-accounting-store.ts";
 
 /** Access state for a Margonem profile relative to the current user. */
 export type ProfileAccessState = Data.TaggedEnum<{
@@ -35,10 +27,6 @@ export type ProfileAccessState = Data.TaggedEnum<{
   readonly SharedWithActor: Record<never, never>;
 }>;
 export const ProfileAccessState = Data.taggedEnum<ProfileAccessState>();
-
-/** Expected persistence failure for squad-builder storage operations. */
-export type SquadBuilderPersistenceUnavailable =
-  EffectSquadBuilderPersistenceUnavailable;
 
 /** Input for checking whether a profile can be imported. */
 export interface FindProfileAccessStateInput {
@@ -51,10 +39,6 @@ export type DuplicateMargonemAccountError =
   | MargonemAccountAlreadyOwnedByActor
   | MargonemAccountOwnedByAnotherUser
   | MargonemAccountAlreadySharedWithActor;
-
-/** Expected failure when a pending import cannot be found for confirmation. */
-export type PendingMargonemAccountImportNotFound =
-  CanonicalPendingMargonemAccountImportNotFound;
 
 /** Input for storing a successful preview as a pending import. */
 export interface CreatePendingMargonemAccountImportInput {
@@ -89,12 +73,6 @@ export interface PendingMargonemAccountImportForConfirmation {
   readonly profileId: MargonemProfileId;
   readonly fetchedAt: Date;
   readonly jarunaCharacters: readonly MargonemCharacterPreview[];
-}
-
-/** Input for marking a pending import as confirmed. */
-export interface MarkPendingMargonemAccountImportConfirmedInput {
-  readonly pendingImportId: PendingMargonemAccountImportId;
-  readonly confirmedAt: Date;
 }
 
 /** Small character identity preview shown in the owned accounts list. */
@@ -157,7 +135,7 @@ export interface AccountImportStoreServiceShape {
     input: ListOwnedMargonemAccountsInput
   ) => Effect<
     readonly OwnedMargonemAccountSummary[],
-    EffectSquadBuilderPersistenceUnavailable
+    SquadBuilderPersistenceUnavailable
   >;
   readonly updateOwnedAccountDisplayName: (
     input: UpdateOwnedAccountDisplayNameInput
@@ -165,7 +143,7 @@ export interface AccountImportStoreServiceShape {
     OwnedMargonemAccountSummary,
     | MargonemAccountNotFound
     | ActorDoesNotOwnMargonemAccount
-    | EffectSquadBuilderPersistenceUnavailable
+    | SquadBuilderPersistenceUnavailable
   >;
   readonly deleteOwnedAccount: (
     input: DeleteOwnedAccountInput
@@ -173,29 +151,25 @@ export interface AccountImportStoreServiceShape {
     DeleteOwnedAccountResult,
     | MargonemAccountNotFound
     | ActorDoesNotOwnMargonemAccount
-    | EffectSquadBuilderPersistenceUnavailable
+    | SquadBuilderPersistenceUnavailable
   >;
   readonly findProfileAccessState: (
     input: FindProfileAccessStateInput
-  ) => Effect<ProfileAccessState, EffectSquadBuilderPersistenceUnavailable>;
+  ) => Effect<ProfileAccessState, SquadBuilderPersistenceUnavailable>;
   readonly createPendingImport: (
     input: CreatePendingMargonemAccountImportInput
-  ) => Effect<
-    PendingMargonemAccountImport,
-    EffectSquadBuilderPersistenceUnavailable
-  >;
+  ) => Effect<PendingMargonemAccountImport, SquadBuilderPersistenceUnavailable>;
   readonly findPendingImportForConfirmation: (
     input: FindPendingMargonemAccountImportInput
   ) => Effect<
     PendingMargonemAccountImportForConfirmation,
-    | PendingMargonemAccountImportNotFound
-    | EffectSquadBuilderPersistenceUnavailable
+    PendingMargonemAccountImportNotFound | SquadBuilderPersistenceUnavailable
   >;
   readonly createOwnedAccountFromPendingImport: (
     input: CreateOwnedAccountFromPendingImportInput
   ) => Effect<
     OwnedMargonemAccountSummary,
-    DuplicateMargonemAccountError | EffectSquadBuilderPersistenceUnavailable
+    DuplicateMargonemAccountError | SquadBuilderPersistenceUnavailable
   >;
 }
 

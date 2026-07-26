@@ -6,7 +6,7 @@ import type { FirecrawlYearMonth } from "../../domain/squad-builder/firecrawl-ye
 import type { MargonemProfileId } from "../../domain/squad-builder/margonem-profile-id.ts";
 import type { FirecrawlCreditCount } from "./firecrawl-config.ts";
 import type {
-  EffectSquadBuilderPersistenceUnavailable,
+  SquadBuilderPersistenceUnavailable,
   FirecrawlMonthlyBudgetExhausted,
 } from "./squad-groups/squad-group-errors.ts";
 
@@ -21,7 +21,7 @@ export interface FirecrawlBudgetState {
 /** Expected failure while reserving Firecrawl request budget. */
 export type FirecrawlBudgetError =
   | FirecrawlMonthlyBudgetExhausted
-  | EffectSquadBuilderPersistenceUnavailable;
+  | SquadBuilderPersistenceUnavailable;
 
 /** Input for reserving one Firecrawl request. */
 export interface ReserveFirecrawlRequestInput {
@@ -59,14 +59,14 @@ export interface FirecrawlRequestAccountingStoreServiceShape {
     input: ReserveFirecrawlRequestInput
   ) => Effect<
     ReservedFirecrawlRequest,
-    FirecrawlBudgetError | EffectSquadBuilderPersistenceUnavailable
+    FirecrawlBudgetError | SquadBuilderPersistenceUnavailable
   >;
   readonly markRequestSucceeded: (
     input: MarkFirecrawlRequestSucceededInput
-  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable>;
+  ) => Effect<void, SquadBuilderPersistenceUnavailable>;
   readonly markRequestFailed: (
     input: MarkFirecrawlRequestFailedInput
-  ) => Effect<void, EffectSquadBuilderPersistenceUnavailable>;
+  ) => Effect<void, SquadBuilderPersistenceUnavailable>;
 }
 
 /** Store seam shared by workflows that account for Firecrawl requests. */
