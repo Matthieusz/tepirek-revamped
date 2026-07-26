@@ -4,20 +4,20 @@ import * as Schema from "effect/Schema";
 import { isSqlError } from "effect/unstable/sql/SqlError";
 import type { SqlError } from "effect/unstable/sql/SqlError";
 
-interface PersistenceErrorInput {
+interface PersistenceErrorInput<Operation extends string> {
   readonly cause: EffectDrizzleQueryError | SqlError;
-  readonly operation: string;
+  readonly operation: Operation;
 }
 
-function projectPersistenceError<E, PersistenceError>(
-  operation: string,
+function projectPersistenceError<E, PersistenceError, Operation extends string>(
+  operation: Operation,
   error: E,
-  makeError: (input: PersistenceErrorInput) => PersistenceError
+  makeError: (input: PersistenceErrorInput<Operation>) => PersistenceError
 ): Exclude<E, EffectDrizzleQueryError | SqlError> | PersistenceError;
-function projectPersistenceError<PersistenceError>(
-  operation: string,
+function projectPersistenceError<PersistenceError, Operation extends string>(
+  operation: Operation,
   error: unknown,
-  makeError: (input: PersistenceErrorInput) => PersistenceError
+  makeError: (input: PersistenceErrorInput<Operation>) => PersistenceError
 ): unknown {
   return error instanceof EffectDrizzleQueryError || isSqlError(error)
     ? makeError({ cause: error, operation })
@@ -26,11 +26,11 @@ function projectPersistenceError<PersistenceError>(
 
 /** Builds a persistence failure projector while preserving callback errors. */
 export const makeDirectPersistenceQuery =
-  <PersistenceError>(
-    makeError: (input: PersistenceErrorInput) => PersistenceError
+  <PersistenceError, Operation extends string>(
+    makeError: (input: PersistenceErrorInput<Operation>) => PersistenceError
   ) =>
   <A, E, R>(
-    operation: string,
+    operation: Operation,
     self: Effect.Effect<A, E, R>
   ): Effect.Effect<
     A,
@@ -43,13 +43,17 @@ export const makeDirectPersistenceQuery =
     );
 
 /** Decodes a value read from persistence and projects schema drift as an adapter failure. */
-export const decodePersistedValue = <A, PersistenceError>(
+export const decodePersistedValue = <
+  A,
+  PersistenceError,
+  Operation extends string,
+>(
   schema: Schema.ConstraintDecoder<A, never>,
   input: unknown,
-  operation: string,
+  operation: Operation,
   makeError: (input: {
     readonly cause: unknown;
-    readonly operation: string;
+    readonly operation: Operation;
   }) => PersistenceError
 ) =>
   Schema.decodeUnknownEffect(schema)(input).pipe(

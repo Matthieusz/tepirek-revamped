@@ -1,5 +1,9 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
 import { MIN_EARNINGS } from "@tepirek-revamped/config";
+import type {
+  EffectPgDatabase,
+  TransactionDatabase,
+} from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { hero, userStats } from "@tepirek-revamped/db/schema/bet";
@@ -21,29 +25,20 @@ import type {
   VaultServiceInterface,
 } from "../../services/vault/vault-service.ts";
 import { VaultService } from "../../services/vault/vault-service.ts";
-import { lockHeroLedger } from "./hero-ledger-lock.ts";
 import {
   decodePersistedValue,
-  mapPersistenceErrors,
-} from "./persistence-query.ts";
-import type {
-  EffectPgDatabase,
-  TransactionDatabase,
-} from "./persistence-query.ts";
+  makeDirectPersistenceQuery,
+} from "../persistence-query.ts";
+import { lockHeroLedger } from "./hero-ledger-lock.ts";
 
+const directPersistenceQuery = makeDirectPersistenceQuery(
+  ({ cause, operation }) =>
+    new VaultPersistenceUnavailable({ cause, operation })
+);
 const persistenceQuery = <A, E, R>(
   operation: string,
   self: Effect.Effect<A, E, R>
-) =>
-  mapPersistenceErrors(
-    operation,
-    self,
-    (cause, failedOperation) =>
-      new VaultPersistenceUnavailable({
-        cause,
-        operation: failedOperation,
-      })
-  );
+) => directPersistenceQuery(operation, self);
 
 const decodePersisted = <A>(
   schema: Schema.ConstraintDecoder<A, never>,
@@ -54,7 +49,7 @@ const decodePersisted = <A>(
     schema,
     input,
     operation,
-    (cause, failedOperation) =>
+    ({ cause, operation: failedOperation }) =>
       new VaultPersistenceUnavailable({ cause, operation: failedOperation })
   );
 

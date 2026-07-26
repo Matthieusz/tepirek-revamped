@@ -1,12 +1,10 @@
-import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import * as Effect from "effect/Effect";
-import { isSqlError } from "effect/unstable/sql/SqlError";
-import type { SqlError } from "effect/unstable/sql/SqlError";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
-import { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
+import { SquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
+import { makeDirectPersistenceQuery } from "../../persistence-query.ts";
 
 export type EffectSquadGroupPersistenceOperation =
   | "applyRefetchedAccount"
@@ -67,45 +65,30 @@ export const failPersistence = (
   cause: unknown
 ) =>
   Effect.fail(
-    new EffectSquadBuilderPersistenceUnavailable({
+    new SquadBuilderPersistenceUnavailable({
       cause,
       operation,
       provider: "postgres",
     })
   );
 
-function projectPersistenceError<E>(
-  operation: EffectSquadGroupPersistenceOperation,
-  error: E
-):
-  | Exclude<E, EffectDrizzleQueryError | SqlError>
-  | EffectSquadBuilderPersistenceUnavailable;
-function projectPersistenceError(
-  operation: EffectSquadGroupPersistenceOperation,
-  error: unknown
-): unknown {
-  return error instanceof EffectDrizzleQueryError || isSqlError(error)
-    ? new EffectSquadBuilderPersistenceUnavailable({
-        cause: error,
-        operation,
-        provider: "postgres",
-      })
-    : error;
-}
-
-// oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
-export const persistenceQuery = <A, E, R>(
-  operation: EffectSquadGroupPersistenceOperation,
-  self: Effect.Effect<A, E, R>
-) =>
-  Effect.mapError(self, (error) => projectPersistenceError(operation, error));
-// oxlint-enable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params
+export const persistenceQuery = makeDirectPersistenceQuery<
+  SquadBuilderPersistenceUnavailable,
+  EffectSquadGroupPersistenceOperation
+>(
+  ({ cause, operation }) =>
+    new SquadBuilderPersistenceUnavailable({
+      cause,
+      operation,
+      provider: "postgres",
+    })
+);
 
 // oxlint-disable promise/prefer-await-to-callbacks
 export const parsePersistedAppUserId = (
   operation: EffectSquadGroupPersistenceOperation,
   value: string
-): Effect.Effect<AppUserId, EffectSquadBuilderPersistenceUnavailable, never> =>
+): Effect.Effect<AppUserId, SquadBuilderPersistenceUnavailable, never> =>
   parseAppUserId(value).pipe(
     Effect.catchTag("InvalidAppUserId", (error) =>
       failPersistence(operation, error)
@@ -121,7 +104,7 @@ export const parsePersistedSquadGroupName = (
   parseSquadGroupName(value).pipe(
     Effect.mapError(
       (error) =>
-        new EffectSquadBuilderPersistenceUnavailable({
+        new SquadBuilderPersistenceUnavailable({
           cause: error,
           operation,
           provider: "postgres",

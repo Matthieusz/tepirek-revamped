@@ -1,5 +1,6 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
 import { MIN_EARNINGS } from "@tepirek-revamped/config";
+import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { hero, heroBet, userStats } from "@tepirek-revamped/db/schema/bet";
@@ -25,27 +26,21 @@ import type {
 import { RankingService } from "../../services/ranking/ranking-service.ts";
 import {
   decodePersistedValue,
-  mapPersistenceErrors,
-} from "./persistence-query.ts";
-import type { EffectPgDatabase } from "./persistence-query.ts";
+  makeDirectPersistenceQuery,
+} from "../persistence-query.ts";
 
 const PersistedAggregateNumber = Schema.Union([
   Schema.Finite,
   Schema.FiniteFromString,
 ]);
+const directPersistenceQuery = makeDirectPersistenceQuery(
+  ({ cause, operation }) =>
+    new RankingPersistenceUnavailable({ cause, operation })
+);
 const persistenceQuery = <A, E, R>(
   operation: string,
   self: Effect.Effect<A, E, R>
-) =>
-  mapPersistenceErrors(
-    operation,
-    self,
-    (cause, failedOperation) =>
-      new RankingPersistenceUnavailable({
-        cause,
-        operation: failedOperation,
-      })
-  );
+) => directPersistenceQuery(operation, self);
 
 const decodePersisted = <A>(
   schema: Schema.ConstraintDecoder<A, never>,
@@ -56,7 +51,7 @@ const decodePersisted = <A>(
     schema,
     input,
     operation,
-    (cause, failedOperation) =>
+    ({ cause, operation: failedOperation }) =>
       new RankingPersistenceUnavailable({ cause, operation: failedOperation })
   );
 

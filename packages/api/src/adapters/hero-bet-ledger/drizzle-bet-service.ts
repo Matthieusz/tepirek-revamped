@@ -1,5 +1,9 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
 import { calculatePointsPerMember } from "@tepirek-revamped/config";
+import type {
+  EffectPgDatabase,
+  TransactionDatabase,
+} from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import {
@@ -31,29 +35,19 @@ import type {
   GetPaginatedBetsInput,
 } from "../../services/bet/bet-service.ts";
 import { BetService } from "../../services/bet/bet-service.ts";
-import { lockHeroLedger } from "./hero-ledger-lock.ts";
 import {
   decodePersistedValue,
-  mapPersistenceErrors,
-} from "./persistence-query.ts";
-import type {
-  EffectPgDatabase,
-  TransactionDatabase,
-} from "./persistence-query.ts";
+  makeDirectPersistenceQuery,
+} from "../persistence-query.ts";
+import { lockHeroLedger } from "./hero-ledger-lock.ts";
 
+const directPersistenceQuery = makeDirectPersistenceQuery(
+  ({ cause, operation }) => new BetPersistenceUnavailable({ cause, operation })
+);
 const persistenceQuery = <A, E, R>(
   operation: string,
   self: Effect.Effect<A, E, R>
-) =>
-  mapPersistenceErrors(
-    operation,
-    self,
-    (cause, failedOperation) =>
-      new BetPersistenceUnavailable({
-        cause,
-        operation: failedOperation,
-      })
-  );
+) => directPersistenceQuery(operation, self);
 
 const decodePersisted = <A>(
   schema: Schema.ConstraintDecoder<A, never>,
@@ -64,7 +58,7 @@ const decodePersisted = <A>(
     schema,
     input,
     operation,
-    (cause, failedOperation) =>
+    ({ cause, operation: failedOperation }) =>
       new BetPersistenceUnavailable({ cause, operation: failedOperation })
   );
 

@@ -1,6 +1,5 @@
+import type { TransactionDatabase } from "@tepirek-revamped/db/effect";
 import { sql } from "drizzle-orm";
-
-import type { TransactionDatabase } from "./persistence-query.ts";
 
 const heroLedgerLockNamespace = "hero-ledger";
 
