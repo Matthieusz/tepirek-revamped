@@ -31,6 +31,11 @@ import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  OptionalLevelSchema,
+  SquadFilterNameSchema,
+  validateSquadFilterLevelOrder,
+} from "@/features/squad-builder/squad-filter-form-schemas";
+import {
   globalSquadGroupsAtom,
   ownedSquadGroupsAtom,
 } from "@/features/squad-builder/squad-group-atoms";
@@ -39,11 +44,6 @@ import type {
   SquadGroupSummary,
 } from "@/features/squad-builder/squad-group-atoms";
 import { sharedSquadGroupsAtom } from "@/features/squad-builder/squad-group-sharing-atoms";
-import {
-  OptionalLevelSchema,
-  SquadFilterNameSchema,
-  validateSquadFilterLevelOrder,
-} from "@/lib/form-schemas";
 import { formatDateTime } from "@/lib/utils";
 
 import {

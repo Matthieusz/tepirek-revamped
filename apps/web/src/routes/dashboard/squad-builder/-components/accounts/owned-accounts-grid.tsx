@@ -53,6 +53,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { AccountDisplayNameSchema } from "@/features/squad-builder/account-form-schemas";
 import {
   deleteOwnedAccountAtom,
   updateOwnedAccountDisplayNameAtom,
@@ -62,7 +63,6 @@ import {
   previewAccountRefetchAtom,
 } from "@/features/squad-builder/account-refetch-atoms";
 import { getErrorMessage } from "@/lib/errors";
-import { AccountDisplayNameSchema } from "@/lib/form-schemas";
 import { formSubmission } from "@/lib/form-submission";
 import { formatDateTime } from "@/lib/utils";
 import {

@@ -7,7 +7,10 @@ import {
   groupCharactersByAccount,
   parseCharacterPoolFilters,
 } from "./character-pool-filters";
-import type { CharacterPoolCharacter } from "./character-pool-filters";
+import type {
+  CharacterPoolCharacter,
+  CharacterPoolFilter,
+} from "./character-pool-filters";
 
 const characters: readonly CharacterPoolCharacter[] = [
   {
@@ -48,12 +51,15 @@ const characters: readonly CharacterPoolCharacter[] = [
   },
 ];
 
-const makeFilter = (field: string, operator: string, values: unknown[]) => ({
-  field,
-  id: `${field}-test`,
-  operator,
+const professionFilter = (values: readonly string[]): CharacterPoolFilter => ({
+  field: "profession",
   values,
 });
+
+const textFilter = (
+  field: "accountName" | "characterName",
+  value: string
+): CharacterPoolFilter => ({ field, value });
 
 const ids = (filtered: readonly CharacterPoolCharacter[]): number[] =>
   filtered.map((character) => character.characterId);
@@ -78,7 +84,7 @@ describe("character pool filters", () => {
 
   it("matches selected professions with OR semantics", () => {
     const filters = parseCharacterPoolFilters(
-      [makeFilter("profession", "is_any_of", ["mage", "hunter"])],
+      [professionFilter(["mage", "hunter"])],
       "",
       ""
     );
@@ -91,9 +97,9 @@ describe("character pool filters", () => {
   it("combines profession, names, and levels with AND semantics", () => {
     const filters = parseCharacterPoolFilters(
       [
-        makeFilter("profession", "is_any_of", ["mage"]),
-        makeFilter("characterName", "contains", ["ŁU"]),
-        makeFilter("accountName", "contains", ["MAG"]),
+        professionFilter(["mage"]),
+        textFilter("characterName", "ŁU"),
+        textFilter("accountName", "MAG"),
       ],
       "40",
       "40"
@@ -114,7 +120,7 @@ describe("character pool filters", () => {
 
   it("ignores a reversed level range while retaining other filters", () => {
     const filters = parseCharacterPoolFilters(
-      [makeFilter("profession", "is_any_of", ["mage"])],
+      [professionFilter(["mage"])],
       "60",
       "40"
     );
@@ -137,7 +143,7 @@ describe("character pool filters", () => {
   it("keeps unknown professions visible until a known profession is selected", () => {
     const allFilters = parseCharacterPoolFilters([], "", "");
     const knownFilters = parseCharacterPoolFilters(
-      [makeFilter("profession", "is_any_of", ["mage"])],
+      [professionFilter(["mage"])],
       "",
       ""
     );

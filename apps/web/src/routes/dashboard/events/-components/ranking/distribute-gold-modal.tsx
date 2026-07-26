@@ -56,9 +56,12 @@ import {
   HeroSelectItems,
 } from "@/features/events/core/select-utils";
 import { heroesAtom } from "@/features/events/heroes/hero-atoms";
+import {
+  GoldAmountSchema,
+  RequiredSelectionSchema,
+} from "@/features/events/ranking/form-schemas";
 import { heroStatsAtom } from "@/features/events/ranking/ranking-atoms";
 import { distributeGoldAtom } from "@/features/events/vault/vault-atoms";
-import { GoldAmountSchema, RequiredSelectionSchema } from "@/lib/form-schemas";
 import { formSubmission } from "@/lib/form-submission";
 import { parseGoldAmount } from "@/lib/gold";
 

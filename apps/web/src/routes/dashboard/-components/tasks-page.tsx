@@ -20,6 +20,7 @@ import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { TodoTextSchema } from "@/features/todos/form-schemas";
 import {
   createTodoAtom,
   deleteTodoAtom,
@@ -27,7 +28,6 @@ import {
   todosAtom,
   toggleTodoAtom,
 } from "@/features/todos/todo-atoms";
-import { TodoTextSchema } from "@/lib/form-schemas";
 import { formSubmission } from "@/lib/form-submission";
 import type { AuthSession } from "@/types/route";
 

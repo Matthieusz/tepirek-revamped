@@ -2,13 +2,24 @@ import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
-import * as Predicate from "effect/Predicate";
 import * as Record from "effect/Record";
 import * as Schema from "effect/Schema";
 
-import type { Filter } from "@/components/reui/filters-model";
+/** Filter variants supported by the available-character pool. */
+export type CharacterPoolFilter =
+  | {
+      readonly field: "profession";
+      readonly values: readonly string[];
+    }
+  | {
+      readonly field: "accountName" | "characterName";
+      readonly value: string;
+    };
 
-type CharacterPoolFilterField = "profession" | "characterName" | "accountName";
+type CharacterPoolTextFilter = Extract<
+  CharacterPoolFilter,
+  { readonly field: "accountName" | "characterName" }
+>;
 
 const isUnsignedIntegerText = Schema.is(
   Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+$/u)))
@@ -69,36 +80,32 @@ const parseLevelInput = (
   });
 };
 
-const getStringValues = (filter: Filter<unknown>): readonly string[] =>
-  Arr.filter(Predicate.isString)(filter.values);
-
 const getTextFilterValue = (
-  filters: readonly Filter<unknown>[],
-  field: CharacterPoolFilterField
+  filters: readonly CharacterPoolFilter[],
+  field: "accountName" | "characterName"
 ): string => {
   const filter = Arr.findFirst(
     filters,
-    (candidate) =>
-      candidate.field === field && candidate.operator === "contains"
+    (candidate): candidate is CharacterPoolTextFilter =>
+      candidate.field === field
   );
-  const value = Option.match(filter, {
-    onNone: () => "",
-    onSome: (matchedFilter) => getStringValues(matchedFilter)[0] ?? "",
-  });
-  return normalizeText(value);
+  return normalizeText(
+    Option.match(filter, {
+      onNone: () => "",
+      onSome: (matchedFilter) => matchedFilter.value,
+    })
+  );
 };
 
-/** Parses ReUI filter values and raw level controls into local pool criteria. */
+/** Parses character-pool filter state and raw level controls into local criteria. */
 export const parseCharacterPoolFilters = (
-  filters: readonly Filter<unknown>[],
+  filters: readonly CharacterPoolFilter[],
   levelFromInput: string,
   levelToInput: string
 ): CharacterPoolFilters => {
   const professionValues = Arr.dedupe(
-    Arr.flatMap((filter: Filter<unknown>) =>
-      filter.field === "profession" && filter.operator === "is_any_of"
-        ? Arr.map(normalizeText)(getStringValues(filter))
-        : []
+    Arr.flatMap((filter: CharacterPoolFilter) =>
+      filter.field === "profession" ? Arr.map(normalizeText)(filter.values) : []
     )(filters)
   );
   const levelFrom = parseLevelInput(levelFromInput);

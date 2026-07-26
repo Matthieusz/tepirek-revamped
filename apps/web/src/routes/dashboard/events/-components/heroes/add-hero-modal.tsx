@@ -26,8 +26,11 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { eventsAtom } from "@/features/events/core/event-atoms";
+import {
+  HeroEventIdSchema,
+  HeroNameSchema,
+} from "@/features/events/heroes/form-schemas";
 import { createHeroAtom } from "@/features/events/heroes/hero-atoms";
-import { HeroEventIdSchema, HeroNameSchema } from "@/lib/form-schemas";
 import { formSubmission } from "@/lib/form-submission";
 
 interface AddHeroModalProps {

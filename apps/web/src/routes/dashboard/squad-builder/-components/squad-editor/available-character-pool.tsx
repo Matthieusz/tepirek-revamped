@@ -2,7 +2,6 @@ import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
-import * as Predicate from "effect/Predicate";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import {
   AlertTriangle,
@@ -19,7 +18,6 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/components/reui/alert";
-import type { Filter } from "@/components/reui/filters-model";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { IconStack } from "@/components/reui/icon-stack";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -42,6 +40,7 @@ import {
   groupCharactersByAccount,
   parseCharacterPoolFilters,
 } from "@/routes/dashboard/squad-builder/-state/character-pool-filters";
+import type { CharacterPoolFilter } from "@/routes/dashboard/squad-builder/-state/character-pool-filters";
 import {
   MAX_SQUAD_CHARACTERS,
   PlacementError,
@@ -67,17 +66,6 @@ interface AvailableCharacterPoolProps {
   readonly onDraftChange: (draft: SquadGroupDraft) => void;
 }
 
-const createFilter = <T = unknown,>(
-  field: string,
-  operator = "is",
-  values: T[] = []
-): Filter<T> => ({
-  field,
-  id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
-  operator,
-  values,
-});
-
 const toMetadata = (character: AvailableCharacter): SquadCharacterMetadata => ({
   accountDisplayName: character.accountDisplayName,
   accountId: character.accountId,
@@ -91,12 +79,10 @@ const toMetadata = (character: AvailableCharacter): SquadCharacterMetadata => ({
 });
 
 const getProfessionFilterValues = (
-  filters: readonly Filter<unknown>[]
+  filters: readonly CharacterPoolFilter[]
 ): string[] =>
   filters.flatMap((filter) =>
-    filter.field === "profession" && filter.operator === "is_any_of"
-      ? Arr.filter(Predicate.isString)(filter.values)
-      : []
+    filter.field === "profession" ? filter.values : []
   );
 
 const placementErrorMessage = (
@@ -128,7 +114,7 @@ const getAccountInfoMap = (
 
 interface CharacterPoolState {
   readonly collapsedAccountIds: HashSet.HashSet<string>;
-  readonly filters: Filter<unknown>[];
+  readonly filters: readonly CharacterPoolFilter[];
   readonly characterNameQuery: string;
   readonly levelFromInput: string;
   readonly levelToInput: string;
@@ -136,7 +122,10 @@ interface CharacterPoolState {
 
 type CharacterPoolAction =
   | { readonly type: "clear-filters" }
-  | { readonly type: "set-filters"; readonly filters: Filter<unknown>[] }
+  | {
+      readonly type: "set-filters";
+      readonly filters: readonly CharacterPoolFilter[];
+    }
   | { readonly type: "set-level-from"; readonly value: string }
   | { readonly type: "set-level-to"; readonly value: string }
   | { readonly type: "set-name"; readonly value: string }
@@ -181,9 +170,10 @@ const characterPoolReducer = (
           ...state.filters.filter((filter) => filter.field !== "characterName"),
           ...(action.value.length > 0
             ? [
-                createFilter<unknown>("characterName", "contains", [
-                  action.value,
-                ]),
+                {
+                  field: "characterName" as const,
+                  value: action.value,
+                },
               ]
             : []),
         ],
@@ -471,11 +461,10 @@ export const AvailableCharacterPool = ({
     const hasProfessionFilter = filters.some(
       (filter) => filter.field === "profession"
     );
-    const nextProfessionFilter = createFilter<unknown>(
-      "profession",
-      "is_any_of",
-      nextValues
-    );
+    const nextProfessionFilter: CharacterPoolFilter = {
+      field: "profession",
+      values: nextValues,
+    };
     dispatch({
       filters: hasProfessionFilter
         ? filters.map((filter) =>

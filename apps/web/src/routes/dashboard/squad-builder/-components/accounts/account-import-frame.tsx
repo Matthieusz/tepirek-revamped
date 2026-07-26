@@ -47,16 +47,16 @@ import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  confirmOwnedAccountImportAtom,
-  previewOwnedAccountImportsAtom,
-} from "@/features/squad-builder/account-import-atoms";
-import { getSquadBuilderLineErrorMessage } from "@/lib/errors";
-import {
   AccountDisplayNameSchema,
   getProfileLines,
   MAX_PROFILE_URLS,
   ProfileUrlsSchema,
-} from "@/lib/form-schemas";
+} from "@/features/squad-builder/account-form-schemas";
+import {
+  confirmOwnedAccountImportAtom,
+  previewOwnedAccountImportsAtom,
+} from "@/features/squad-builder/account-import-atoms";
+import { getSquadBuilderLineErrorMessage } from "@/lib/errors";
 import { formSubmission } from "@/lib/form-submission";
 import { getProfessionPresentation } from "@/routes/dashboard/squad-builder/-components/profession-presenters";
 

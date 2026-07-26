@@ -27,10 +27,10 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { editBetAtom } from "@/features/events/bets/bet-atoms";
+import { NonEmptyUserIdsSchema } from "@/features/events/bets/form-schemas";
 import { HeroBetMemberPicker } from "@/features/events/bets/hero-bet-member-picker";
 import type { SelectableUser } from "@/features/events/bets/user-select-list";
 import { verifiedUsersAtom } from "@/features/users/user-atoms";
-import { NonEmptyUserIdsSchema } from "@/lib/form-schemas";
 import { formSubmission } from "@/lib/form-submission";
 
 interface EditBetModalProps {

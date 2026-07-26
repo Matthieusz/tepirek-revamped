@@ -38,7 +38,6 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { createEventAtom } from "@/features/events/core/event-atoms";
-import { EVENT_ICON_MAP } from "@/lib/constants";
 import {
   EventColorSchema,
   EventColors,
@@ -46,8 +45,9 @@ import {
   EventFormDefaults,
   EventIconSchema,
   EventNameSchema,
-} from "@/lib/form-schemas";
-import type { EventColor } from "@/lib/form-schemas";
+} from "@/features/events/core/form-schemas";
+import type { EventColor } from "@/features/events/core/form-schemas";
+import { EVENT_ICON_MAP } from "@/lib/constants";
 import { formSubmission } from "@/lib/form-submission";
 import { cn } from "@/lib/utils";
 

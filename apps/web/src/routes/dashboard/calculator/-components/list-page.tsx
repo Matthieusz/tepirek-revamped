@@ -26,7 +26,7 @@ import type {
 import {
   CalculatorLevelSchema,
   CalculatorLevelsSchema,
-} from "@/lib/form-schemas";
+} from "@/features/calculators/form-schemas";
 import type { AuthSession } from "@/types/route";
 
 const singleFormBuilder = FormBuilder.empty

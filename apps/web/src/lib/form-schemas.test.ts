@@ -3,33 +3,47 @@ import * as Exit from "effect/Exit";
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
-import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
 import {
-  AccountDisplayNameSchema,
   CalculatorItemLevelSchema,
   CalculatorLevelSchema,
   CalculatorLevelsSchema,
-  EmailSchema,
+} from "@/features/calculators/form-schemas";
+import { NonEmptyUserIdsSchema } from "@/features/events/bets/form-schemas";
+import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
+import {
   EventColorSchema,
   EventDateSchema,
   EventFormDefaults,
   EventIconSchema,
   EventNameSchema,
-  GoldAmountSchema,
+} from "@/features/events/core/form-schemas";
+import {
   HeroEventIdSchema,
   HeroNameSchema,
-  NonEmptyUserIdsSchema,
-  OptionalLevelSchema,
-  PasswordSchema,
-  ProfileUrlsSchema,
+} from "@/features/events/heroes/form-schemas";
+import {
+  GoldAmountSchema,
   RequiredSelectionSchema,
-  SignupNameSchema,
+} from "@/features/events/ranking/form-schemas";
+import {
   SkillLinkSchema,
   SkillNameSchema,
   SkillProfessionIdSchema,
+} from "@/features/skills/form-schemas";
+import {
+  AccountDisplayNameSchema,
+  ProfileUrlsSchema,
+} from "@/features/squad-builder/account-form-schemas";
+import {
+  OptionalLevelSchema,
   SquadFilterNameSchema,
-  TodoTextSchema,
   validateSquadFilterLevelOrder,
+} from "@/features/squad-builder/squad-filter-form-schemas";
+import { TodoTextSchema } from "@/features/todos/form-schemas";
+import {
+  EmailSchema,
+  PasswordSchema,
+  SignupNameSchema,
 } from "@/lib/form-schemas";
 
 const succeeds = <S extends Schema.ConstraintDecoder<unknown>>(

@@ -31,6 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { CalculatorItemLevelSchema } from "@/features/calculators/form-schemas";
 import {
   ULEPA_DEFAULT_ITEM_LEVEL,
   ULEPA_RARITIES,
@@ -38,7 +39,6 @@ import {
   formatGold,
 } from "@/features/calculators/ulepa";
 import type { UlepaRarity } from "@/features/calculators/ulepa";
-import { CalculatorItemLevelSchema } from "@/lib/form-schemas";
 import type { AuthSession } from "@/types/route";
 
 type Rarity = UlepaRarity;

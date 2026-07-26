@@ -23,12 +23,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CalculatorItemLevelSchema } from "@/features/calculators/form-schemas";
 import {
   calculateUnbindCost,
   getOdwRarityInfo,
 } from "@/features/calculators/odw";
 import type { OdwRarity } from "@/features/calculators/odw";
-import { CalculatorItemLevelSchema } from "@/lib/form-schemas";
 import type { AuthSession } from "@/types/route";
 
 type Rarity = OdwRarity;

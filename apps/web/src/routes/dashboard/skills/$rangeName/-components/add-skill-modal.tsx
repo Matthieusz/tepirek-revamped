@@ -26,14 +26,14 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import {
-  createSkillAtom,
-  skillProfessionsAtom,
-} from "@/features/skills/skill-atoms";
-import {
   SkillLinkSchema,
   SkillNameSchema,
   SkillProfessionIdSchema,
-} from "@/lib/form-schemas";
+} from "@/features/skills/form-schemas";
+import {
+  createSkillAtom,
+  skillProfessionsAtom,
+} from "@/features/skills/skill-atoms";
 import { formSubmission } from "@/lib/form-submission";
 
 interface AddSkillModalProps {
