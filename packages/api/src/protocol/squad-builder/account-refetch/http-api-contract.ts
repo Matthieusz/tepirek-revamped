@@ -1,9 +1,6 @@
-import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import {
-  SquadBuilderConflict,
-  SquadBuilderErrorsWithUpstream,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
@@ -18,33 +15,33 @@ import {
   PreviewAccountRefetchSuccess,
 } from "./account-refetch-schema.ts";
 
-export {
-  SquadBuilderConflict,
+export const PreviewAccountRefetchErrors = [
+  SquadBuilderUnauthorized,
   SquadBuilderForbidden,
+  SquadBuilderNotFound,
   SquadBuilderInvalidInput,
+  SquadBuilderUpstreamUnavailable,
+  SquadBuilderPersistenceUnavailable,
+] as const;
+
+export const ApplyAccountRefetchErrors = [
+  SquadBuilderUnauthorized,
+  SquadBuilderForbidden,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
-  SquadBuilderUnauthorized,
-  SquadBuilderUpstreamUnavailable,
-};
-
-export const SquadBuilderAccountRefetchError = Schema.Union([
-  ...SquadBuilderErrorsWithUpstream,
-]);
-
-export const SquadBuilderAccountRefetchErrors = SquadBuilderErrorsWithUpstream;
+] as const;
 
 export const SquadBuilderAccountRefetchGroup = HttpApiGroup.make(
   "squadBuilderAccountRefetch"
 )
   .add(
     HttpApiEndpoint.post("previewAccountRefetch", "/preview", {
-      error: SquadBuilderAccountRefetchErrors,
+      error: PreviewAccountRefetchErrors,
       payload: PreviewAccountRefetchPayload,
       success: PreviewAccountRefetchSuccess,
     }),
     HttpApiEndpoint.post("applyAccountRefetch", "/apply", {
-      error: SquadBuilderAccountRefetchErrors,
+      error: ApplyAccountRefetchErrors,
       payload: ApplyAccountRefetchPayload,
       success: ApplyAccountRefetchSuccess,
     })

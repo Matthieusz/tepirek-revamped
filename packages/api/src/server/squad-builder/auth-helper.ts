@@ -3,7 +3,7 @@ import type { RequestSession } from "../../protocol/auth/current-session.ts";
 import {
   SquadBuilderForbidden,
   SquadBuilderUnauthorized,
-} from "../../protocol/squad-builder/squad-groups/http-api-contract.ts";
+} from "../../protocol/squad-builder/errors.ts";
 import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireVerifiedSession } = makeAuthorizationPolicy({

@@ -3,13 +3,11 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import {
   SquadBuilderConflict,
-  SquadBuilderErrorsWithUpstream,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUnauthorized,
-  SquadBuilderUpstreamUnavailable,
 } from "../errors.ts";
 import {
   AvailableSquadCharacterSchema,
@@ -26,68 +24,118 @@ import {
   SquadGroupVisibilityChangeSchema,
 } from "./squad-groups-schema.ts";
 
-export {
-  SquadBuilderConflict,
+export const CreateSquadGroupErrors = [
+  SquadBuilderUnauthorized,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
+  SquadBuilderPersistenceUnavailable,
+] as const;
+
+export const ListOwnedSquadGroupsErrors = [
+  SquadBuilderUnauthorized,
+  SquadBuilderForbidden,
+  SquadBuilderPersistenceUnavailable,
+] as const;
+
+export const DeleteSquadGroupErrors = [
+  SquadBuilderUnauthorized,
+  SquadBuilderForbidden,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
+] as const;
+
+export const ListGlobalSquadGroupsErrors = [
   SquadBuilderUnauthorized,
-  SquadBuilderUpstreamUnavailable,
-};
+  SquadBuilderForbidden,
+  SquadBuilderInvalidInput,
+  SquadBuilderPersistenceUnavailable,
+] as const;
 
-export const SquadBuilderSquadGroupErrors = SquadBuilderErrorsWithUpstream;
+export const GetSquadGroupDetailErrors = [
+  SquadBuilderUnauthorized,
+  SquadBuilderForbidden,
+  SquadBuilderNotFound,
+  SquadBuilderPersistenceUnavailable,
+] as const;
 
-export const SquadBuilderSquadGroupError = Schema.Union(
-  SquadBuilderSquadGroupErrors
-);
+export const ListAvailableSquadCharactersErrors = [
+  SquadBuilderUnauthorized,
+  SquadBuilderForbidden,
+  SquadBuilderNotFound,
+  SquadBuilderPersistenceUnavailable,
+] as const;
+
+export const SaveSquadGroupErrors = [
+  SquadBuilderUnauthorized,
+  SquadBuilderForbidden,
+  SquadBuilderNotFound,
+  SquadBuilderConflict,
+  SquadBuilderInvalidInput,
+  SquadBuilderPersistenceUnavailable,
+] as const;
+
+export const SaveSharedSquadGroupCharactersErrors = [
+  SquadBuilderUnauthorized,
+  SquadBuilderForbidden,
+  SquadBuilderNotFound,
+  SquadBuilderConflict,
+  SquadBuilderInvalidInput,
+  SquadBuilderPersistenceUnavailable,
+] as const;
+
+export const SetSquadGroupVisibilityErrors = [
+  SquadBuilderUnauthorized,
+  SquadBuilderForbidden,
+  SquadBuilderNotFound,
+  SquadBuilderPersistenceUnavailable,
+] as const;
 
 export const SquadBuilderSquadGroupGroup = HttpApiGroup.make(
   "squadBuilderSquadGroup"
 )
   .add(
     HttpApiEndpoint.post("createSquadGroup", "/", {
-      error: SquadBuilderSquadGroupErrors,
+      error: CreateSquadGroupErrors,
       payload: CreateSquadGroupPayload,
       success: SquadGroupSummarySchema,
     }),
     HttpApiEndpoint.post("listOwnedSquadGroups", "/owned", {
-      error: SquadBuilderSquadGroupErrors,
+      error: ListOwnedSquadGroupsErrors,
       payload: Schema.Struct({}),
       success: Schema.Array(SquadGroupSummarySchema),
     }),
     HttpApiEndpoint.post("deleteSquadGroup", "/delete", {
-      error: SquadBuilderSquadGroupErrors,
+      error: DeleteSquadGroupErrors,
       payload: SquadGroupIdPayload,
       success: DeleteSquadGroupSuccessSchema,
     }),
     HttpApiEndpoint.post("listGlobalSquadGroups", "/global", {
-      error: SquadBuilderSquadGroupErrors,
+      error: ListGlobalSquadGroupsErrors,
       payload: ListGlobalSquadGroupsPayload,
       success: Schema.Array(GlobalSquadGroupSummarySchema),
     }),
     HttpApiEndpoint.post("getSquadGroupDetail", "/detail", {
-      error: SquadBuilderSquadGroupErrors,
+      error: GetSquadGroupDetailErrors,
       payload: SquadGroupIdPayload,
       success: SquadGroupDetailSchema,
     }),
     HttpApiEndpoint.post("listAvailableSquadCharacters", "/characters", {
-      error: SquadBuilderSquadGroupErrors,
+      error: ListAvailableSquadCharactersErrors,
       payload: SquadGroupIdPayload,
       success: Schema.Array(AvailableSquadCharacterSchema),
     }),
     HttpApiEndpoint.post("saveSquadGroup", "/save", {
-      error: SquadBuilderSquadGroupErrors,
+      error: SaveSquadGroupErrors,
       payload: SaveSquadGroupPayload,
       success: SquadGroupDetailSchema,
     }),
     HttpApiEndpoint.post("saveSharedSquadGroupCharacters", "/save-shared", {
-      error: SquadBuilderSquadGroupErrors,
+      error: SaveSharedSquadGroupCharactersErrors,
       payload: SaveSharedSquadGroupCharactersPayload,
       success: SquadGroupDetailSchema,
     }),
     HttpApiEndpoint.post("setSquadGroupVisibility", "/visibility", {
-      error: SquadBuilderSquadGroupErrors,
+      error: SetSquadGroupVisibilityErrors,
       payload: SetSquadGroupVisibilityPayload,
       success: SquadGroupVisibilityChangeSchema,
     })

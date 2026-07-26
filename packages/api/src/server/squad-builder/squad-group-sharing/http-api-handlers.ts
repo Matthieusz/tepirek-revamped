@@ -1,22 +1,19 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params -- Effect.catch uses callback pattern
 import * as Effect from "effect/Effect";
-import type * as Schema from "effect/Schema";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { emptySquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.ts";
 import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
-import type { SquadBuilderSquadGroupSharingError } from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.ts";
 import {
   SquadBuilderConflict,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
-} from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.ts";
+} from "../../../protocol/squad-builder/errors.ts";
 import { search } from "../../../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.ts";
 import { send } from "../../../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.ts";
-import type { SquadGroupSharingError } from "../../../services/squad-builder/squad-groups/squad-group-sharing-error.ts";
 import {
   respond,
   revoke,
@@ -28,14 +25,79 @@ import {
 } from "../auth-helper.ts";
 import { withRequestCorrelation } from "../request-correlation.ts";
 
-type ProtocolError = Schema.Schema.Type<
-  typeof SquadBuilderSquadGroupSharingError
+type EffectError<EffectType> =
+  EffectType extends Effect.Effect<unknown, infer Error, unknown>
+    ? Error
+    : never;
+type SearchSquadEditorInviteTargetsError = EffectError<
+  ReturnType<typeof search>
 >;
+type SendSquadGroupEditorInviteError = EffectError<ReturnType<typeof send>>;
+type RespondToSquadGroupInviteError = EffectError<ReturnType<typeof respond>>;
+type RevokeSquadGroupEditorError = EffectError<ReturnType<typeof revoke>>;
+type SquadGroupStore = typeof SquadGroupStoreService.Service;
+type ListIncomingSquadGroupInvitesError = EffectError<
+  ReturnType<SquadGroupStore["listIncomingSquadGroupInvites"]>
+>;
+type ListSharedSquadGroupsError = EffectError<
+  ReturnType<SquadGroupStore["listSharedSquadGroups"]>
+>;
+type ListSquadGroupEditorGrantsError = EffectError<
+  ReturnType<SquadGroupStore["listSquadGroupEditorGrants"]>
+>;
+type CountPendingSquadGroupInvitesError = EffectError<
+  ReturnType<SquadGroupStore["getPendingSquadGroupInviteCount"]>
+>;
+type SquadGroupSharingHandlerError =
+  | SearchSquadEditorInviteTargetsError
+  | SendSquadGroupEditorInviteError
+  | RespondToSquadGroupInviteError
+  | RevokeSquadGroupEditorError
+  | ListIncomingSquadGroupInvitesError
+  | ListSharedSquadGroupsError
+  | ListSquadGroupEditorGrantsError
+  | CountPendingSquadGroupInvitesError;
 
+type SearchSquadEditorInviteTargetsProtocolError =
+  | SquadBuilderNotFound
+  | SquadBuilderForbidden
+  | SquadBuilderInvalidInput
+  | SquadBuilderPersistenceUnavailable;
+type SendSquadGroupEditorInviteProtocolError =
+  | SearchSquadEditorInviteTargetsProtocolError
+  | SquadBuilderConflict;
+type RespondToSquadGroupInviteProtocolError =
+  | SquadBuilderNotFound
+  | SquadBuilderForbidden
+  | SquadBuilderConflict
+  | SquadBuilderPersistenceUnavailable;
+type ListSquadGroupEditorGrantsProtocolError =
+  | SquadBuilderNotFound
+  | SquadBuilderForbidden
+  | SquadBuilderPersistenceUnavailable;
+
+function mapSquadGroupSharingError(
+  error:
+    | ListIncomingSquadGroupInvitesError
+    | ListSharedSquadGroupsError
+    | CountPendingSquadGroupInvitesError
+): SquadBuilderPersistenceUnavailable;
+function mapSquadGroupSharingError(
+  error: ListSquadGroupEditorGrantsError
+): ListSquadGroupEditorGrantsProtocolError;
+function mapSquadGroupSharingError(
+  error: SearchSquadEditorInviteTargetsError
+): SearchSquadEditorInviteTargetsProtocolError;
+function mapSquadGroupSharingError(
+  error: RespondToSquadGroupInviteError | RevokeSquadGroupEditorError
+): RespondToSquadGroupInviteProtocolError;
+function mapSquadGroupSharingError(
+  error: SendSquadGroupEditorInviteError
+): SendSquadGroupEditorInviteProtocolError;
 // oxlint-disable-next-line eslint/complexity
-const mapSquadGroupSharingError = (
-  error: SquadGroupSharingError
-): ProtocolError => {
+function mapSquadGroupSharingError(
+  error: SquadGroupSharingHandlerError
+): SendSquadGroupEditorInviteProtocolError {
   switch (error._tag) {
     case "SquadGroupNotFound":
     case "SquadGroupInvitationNotFound":
@@ -43,32 +105,15 @@ const mapSquadGroupSharingError = (
       return new SquadBuilderNotFound({ message: error._tag });
     }
     case "ActorDoesNotOwnSquadGroup":
-    case "ActorCannotViewSquadGroup":
-    case "ActorCannotEditSquadGroup":
     case "ActorIsNotSquadGroupInviteRecipient":
-    case "SquadEditorInviteTargetNotVerified":
-    case "EditorCannotChangeSquadStructure":
-    case "SquadCharacterNotAccessible": {
+    case "SquadEditorInviteTargetNotVerified": {
       return new SquadBuilderForbidden({ message: error._tag });
     }
     case "SquadGroupInvitationTransitionNotAllowed": {
       return new SquadBuilderConflict({ message: error._tag });
     }
     case "CannotInviteSelf":
-    case "SquadNotInGroup":
-    case "InvalidSquadGroupName":
-    case "InvalidSquadName":
-    case "InvalidAppUserId":
-    case "InvalidSquadGroupId":
-    case "InvalidSquadGroupInvitationId":
-    case "InvalidSquadId":
-    case "InvalidAccountInviteTargetQuery":
-    case "TooManyCharactersInSquad":
-    case "DuplicateCharacterInSquad":
-    case "DuplicateAccountInSquad":
-    case "DuplicateCharacterInSquadGroup":
-    case "SquadCharacterNotJaruna":
-    case "InvalidSquadSnapshot": {
+    case "InvalidAccountInviteTargetQuery": {
       return new SquadBuilderInvalidInput({ message: error._tag });
     }
     case "SquadBuilderPersistenceUnavailable": {
@@ -81,7 +126,33 @@ const mapSquadGroupSharingError = (
       return exhaustive;
     }
   }
-};
+}
+
+const mapSearchSquadEditorInviteTargetsError = (
+  error: SearchSquadEditorInviteTargetsError
+): SearchSquadEditorInviteTargetsProtocolError =>
+  mapSquadGroupSharingError(error);
+const mapSendSquadGroupEditorInviteError = (
+  error: SendSquadGroupEditorInviteError
+): SendSquadGroupEditorInviteProtocolError => mapSquadGroupSharingError(error);
+const mapRespondToSquadGroupInviteError = (
+  error: RespondToSquadGroupInviteError
+): RespondToSquadGroupInviteProtocolError => mapSquadGroupSharingError(error);
+const mapRevokeSquadGroupEditorError = (
+  error: RevokeSquadGroupEditorError
+): RespondToSquadGroupInviteProtocolError => mapSquadGroupSharingError(error);
+const mapListIncomingSquadGroupInvitesError = (
+  error: ListIncomingSquadGroupInvitesError
+): SquadBuilderPersistenceUnavailable => mapSquadGroupSharingError(error);
+const mapListSharedSquadGroupsError = (
+  error: ListSharedSquadGroupsError
+): SquadBuilderPersistenceUnavailable => mapSquadGroupSharingError(error);
+const mapListSquadGroupEditorGrantsError = (
+  error: ListSquadGroupEditorGrantsError
+): ListSquadGroupEditorGrantsProtocolError => mapSquadGroupSharingError(error);
+const mapCountPendingSquadGroupInvitesError = (
+  error: CountPendingSquadGroupInvitesError
+): SquadBuilderPersistenceUnavailable => mapSquadGroupSharingError(error);
 
 export const SquadBuilderSquadGroupSharingHttpApiHandlers =
   HttpApiBuilder.group(
@@ -105,7 +176,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                   groupId: payload.groupId,
                   query: payload.query,
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(Effect.mapError(mapSearchSquadEditorInviteTargetsError));
             })
           )
           .handle(
@@ -121,7 +192,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                   groupId: payload.groupId,
                   invitedUserId: payload.invitedUserId,
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(Effect.mapError(mapSendSquadGroupEditorInviteError));
             })
           )
           .handle(
@@ -137,7 +208,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                   invitationId: payload.invitationId,
                   response: payload.response,
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(Effect.mapError(mapRespondToSquadGroupInviteError));
             })
           )
           .handle(
@@ -151,7 +222,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                     actorUserId: sessionAppUserId(session),
                     invitationId: payload.invitationId,
                   })
-                ).pipe(Effect.mapError(mapSquadGroupSharingError));
+                ).pipe(Effect.mapError(mapRevokeSquadGroupEditorError));
               }
             )
           )
@@ -166,7 +237,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                 squadGroupStore.listIncomingSquadGroupInvites({
                   actorUserId: sessionAppUserId(session),
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(Effect.mapError(mapListIncomingSquadGroupInvitesError));
             })
           )
           .handle(
@@ -180,7 +251,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                     actorUserId: sessionAppUserId(session),
                     filters: emptySquadGroupListFilters,
                   })
-                ).pipe(Effect.mapError(mapSquadGroupSharingError));
+                ).pipe(Effect.mapError(mapListSharedSquadGroupsError));
               }
             )
           )
@@ -196,7 +267,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                   actorUserId: sessionAppUserId(session),
                   groupId: payload.groupId,
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(Effect.mapError(mapListSquadGroupEditorGrantsError));
             })
           )
           .handle(
@@ -210,7 +281,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                 squadGroupStore.getPendingSquadGroupInviteCount({
                   actorUserId: sessionAppUserId(session),
                 })
-              ).pipe(Effect.mapError(mapSquadGroupSharingError));
+              ).pipe(Effect.mapError(mapCountPendingSquadGroupInvitesError));
             })
           );
       }

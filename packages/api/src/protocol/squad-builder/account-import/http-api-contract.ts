@@ -3,7 +3,6 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import {
   SquadBuilderConflict,
-  SquadBuilderErrorsWithUpstream,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
@@ -23,53 +22,83 @@ import {
   UpdateOwnedAccountDisplayNamePayload,
 } from "./account-import-schema.ts";
 
-export {
+export const PreviewMargonemProfileImportErrors = [
+  SquadBuilderUnauthorized,
+  SquadBuilderForbidden,
   SquadBuilderConflict,
+  SquadBuilderInvalidInput,
+  SquadBuilderUpstreamUnavailable,
+  SquadBuilderPersistenceUnavailable,
+] as const;
+
+export const PreviewOwnedAccountImportsErrors = [
+  SquadBuilderUnauthorized,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
+  SquadBuilderPersistenceUnavailable,
+] as const;
+
+export const ConfirmOwnedAccountImportErrors = [
+  SquadBuilderUnauthorized,
+  SquadBuilderForbidden,
+  SquadBuilderNotFound,
+  SquadBuilderConflict,
+  SquadBuilderInvalidInput,
+  SquadBuilderPersistenceUnavailable,
+] as const;
+
+export const UpdateOwnedAccountDisplayNameErrors = [
+  SquadBuilderUnauthorized,
+  SquadBuilderForbidden,
+  SquadBuilderNotFound,
+  SquadBuilderInvalidInput,
+  SquadBuilderPersistenceUnavailable,
+] as const;
+
+export const DeleteOwnedAccountErrors = [
+  SquadBuilderUnauthorized,
+  SquadBuilderForbidden,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
+] as const;
+
+export const ListOwnedAccountsErrors = [
   SquadBuilderUnauthorized,
-  SquadBuilderUpstreamUnavailable,
-};
-
-export const SquadBuilderAccountImportError = Schema.Union([
-  ...SquadBuilderErrorsWithUpstream,
-]);
-
-export const SquadBuilderAccountImportErrors = SquadBuilderErrorsWithUpstream;
+  SquadBuilderForbidden,
+  SquadBuilderPersistenceUnavailable,
+] as const;
 
 export const SquadBuilderAccountImportGroup = HttpApiGroup.make(
   "squadBuilderAccountImport"
 )
   .add(
     HttpApiEndpoint.post("previewMargonemProfileImport", "/preview-profile", {
-      error: SquadBuilderAccountImportErrors,
+      error: PreviewMargonemProfileImportErrors,
       payload: PreviewMargonemProfileImportPayload,
       success: PreviewMargonemProfileImportSuccess,
     }),
     HttpApiEndpoint.post("previewOwnedAccountImports", "/preview-owned", {
-      error: SquadBuilderAccountImportErrors,
+      error: PreviewOwnedAccountImportsErrors,
       payload: PreviewOwnedAccountImportsPayload,
       success: PreviewOwnedAccountImportsSuccess,
     }),
     HttpApiEndpoint.post("confirmOwnedAccountImport", "/confirm-owned", {
-      error: SquadBuilderAccountImportErrors,
+      error: ConfirmOwnedAccountImportErrors,
       payload: ConfirmOwnedAccountImportPayload,
       success: OwnedMargonemAccountSummarySchema,
     }),
     HttpApiEndpoint.post("updateOwnedAccountDisplayName", "/rename-owned", {
-      error: SquadBuilderAccountImportErrors,
+      error: UpdateOwnedAccountDisplayNameErrors,
       payload: UpdateOwnedAccountDisplayNamePayload,
       success: OwnedMargonemAccountSummarySchema,
     }),
     HttpApiEndpoint.post("deleteOwnedAccount", "/delete-owned", {
-      error: SquadBuilderAccountImportErrors,
+      error: DeleteOwnedAccountErrors,
       payload: DeleteOwnedAccountPayload,
       success: DeleteOwnedAccountSuccess,
     }),
     HttpApiEndpoint.post("listOwnedAccounts", "/owned", {
-      error: SquadBuilderAccountImportErrors,
+      error: ListOwnedAccountsErrors,
       payload: Schema.Struct({}),
       success: Schema.Array(OwnedMargonemAccountSummarySchema),
     })

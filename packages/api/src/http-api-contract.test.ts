@@ -22,8 +22,7 @@ const expectPostResponseStatuses = (
 ) => {
   const statuses = Record.keys(appOpenApi.paths[path]?.post?.responses ?? {});
 
-  expect(statuses).toEqual(expect.arrayContaining([...expectedStatuses]));
-  expect(statuses).not.toContain("500");
+  expect(statuses).toEqual(expectedStatuses);
 };
 
 describe("AppHttpApi route contract", () => {
@@ -68,44 +67,131 @@ describe("AppHttpApi route contract", () => {
     expectRoute("post", "/vault/toggle-paid-out");
   });
 
-  it("preserves squad-builder endpoint error statuses", () => {
-    expectPostResponseStatuses("/squad-builder/squad-groups", [
-      "200",
-      "400",
-      "401",
-      "403",
-      "404",
-      "409",
-      "502",
-      "503",
-    ]);
-    expectPostResponseStatuses(
-      "/squad-builder/account-sharing/invite-targets/search",
-      ["200", "400", "401", "403", "404", "409", "503"]
-    );
-    expectPostResponseStatuses("/squad-builder/account-imports/owned", [
-      "200",
-      "400",
-      "401",
-      "403",
-      "404",
-      "409",
-      "502",
-      "503",
-    ]);
-    expectPostResponseStatuses("/squad-builder/account-refetches/preview", [
-      "200",
-      "400",
-      "401",
-      "403",
-      "404",
-      "409",
-      "502",
-      "503",
-    ]);
-    expectPostResponseStatuses(
-      "/squad-builder/squad-group-sharing/shared-groups",
-      ["200", "400", "401", "403", "404", "409", "503"]
-    );
+  it("exposes only reachable squad-builder error statuses", () => {
+    const endpointStatuses = [
+      ["/squad-builder/squad-groups", ["200", "400", "401", "403", "503"]],
+      ["/squad-builder/squad-groups/owned", ["200", "401", "403", "503"]],
+      [
+        "/squad-builder/squad-groups/delete",
+        ["200", "401", "403", "404", "503"],
+      ],
+      [
+        "/squad-builder/squad-groups/global",
+        ["200", "400", "401", "403", "503"],
+      ],
+      [
+        "/squad-builder/squad-groups/detail",
+        ["200", "401", "403", "404", "503"],
+      ],
+      [
+        "/squad-builder/squad-groups/characters",
+        ["200", "401", "403", "404", "503"],
+      ],
+      [
+        "/squad-builder/squad-groups/save",
+        ["200", "400", "401", "403", "404", "409", "503"],
+      ],
+      [
+        "/squad-builder/squad-groups/save-shared",
+        ["200", "400", "401", "403", "404", "409", "503"],
+      ],
+      [
+        "/squad-builder/squad-groups/visibility",
+        ["200", "401", "403", "404", "503"],
+      ],
+      [
+        "/squad-builder/account-imports/preview-profile",
+        ["200", "400", "401", "403", "409", "502", "503"],
+      ],
+      [
+        "/squad-builder/account-imports/preview-owned",
+        ["200", "400", "401", "403", "503"],
+      ],
+      [
+        "/squad-builder/account-imports/confirm-owned",
+        ["200", "400", "401", "403", "404", "409", "503"],
+      ],
+      [
+        "/squad-builder/account-imports/rename-owned",
+        ["200", "400", "401", "403", "404", "503"],
+      ],
+      [
+        "/squad-builder/account-imports/delete-owned",
+        ["200", "401", "403", "404", "503"],
+      ],
+      ["/squad-builder/account-imports/owned", ["200", "401", "403", "503"]],
+      [
+        "/squad-builder/account-refetches/preview",
+        ["200", "400", "401", "403", "404", "502", "503"],
+      ],
+      [
+        "/squad-builder/account-refetches/apply",
+        ["200", "401", "403", "404", "503"],
+      ],
+      [
+        "/squad-builder/account-sharing/invite-targets/search",
+        ["200", "400", "401", "403", "404", "503"],
+      ],
+      [
+        "/squad-builder/account-sharing/invites",
+        ["200", "400", "401", "403", "404", "409", "503"],
+      ],
+      [
+        "/squad-builder/account-sharing/invites/respond",
+        ["200", "401", "403", "404", "409", "503"],
+      ],
+      [
+        "/squad-builder/account-sharing/access/revoke",
+        ["200", "401", "403", "404", "409", "503"],
+      ],
+      [
+        "/squad-builder/account-sharing/incoming-invites",
+        ["200", "401", "403", "503"],
+      ],
+      [
+        "/squad-builder/account-sharing/shared-accounts",
+        ["200", "401", "403", "503"],
+      ],
+      [
+        "/squad-builder/account-sharing/access-grants",
+        ["200", "401", "403", "404", "503"],
+      ],
+      [
+        "/squad-builder/squad-group-sharing/editor-targets/search",
+        ["200", "400", "401", "403", "404", "503"],
+      ],
+      [
+        "/squad-builder/squad-group-sharing/editor-invites",
+        ["200", "400", "401", "403", "404", "409", "503"],
+      ],
+      [
+        "/squad-builder/squad-group-sharing/editor-invites/respond",
+        ["200", "401", "403", "404", "409", "503"],
+      ],
+      [
+        "/squad-builder/squad-group-sharing/editors/revoke",
+        ["200", "401", "403", "404", "409", "503"],
+      ],
+      [
+        "/squad-builder/squad-group-sharing/incoming-invites",
+        ["200", "401", "403", "503"],
+      ],
+      [
+        "/squad-builder/squad-group-sharing/shared-groups",
+        ["200", "401", "403", "503"],
+      ],
+      [
+        "/squad-builder/squad-group-sharing/editor-grants",
+        ["200", "401", "403", "404", "503"],
+      ],
+      [
+        "/squad-builder/squad-group-sharing/pending-invite-count",
+        ["200", "401", "403", "503"],
+      ],
+    ] as const;
+
+    for (const [path, statuses] of endpointStatuses) {
+      expectPostResponseStatuses(path, statuses);
+    }
   });
 });

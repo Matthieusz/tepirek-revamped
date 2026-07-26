@@ -42,22 +42,3 @@ export class SquadBuilderPersistenceUnavailable extends Schema.TaggedErrorClass<
   { operation: Schema.String },
   { httpApiStatus: 503 }
 ) {}
-
-export const SquadBuilderBaseErrors = [
-  SquadBuilderUnauthorized,
-  SquadBuilderForbidden,
-  SquadBuilderNotFound,
-  SquadBuilderConflict,
-  SquadBuilderInvalidInput,
-  SquadBuilderPersistenceUnavailable,
-] as const;
-
-export const SquadBuilderErrorsWithUpstream = [
-  SquadBuilderUnauthorized,
-  SquadBuilderForbidden,
-  SquadBuilderNotFound,
-  SquadBuilderConflict,
-  SquadBuilderInvalidInput,
-  SquadBuilderUpstreamUnavailable,
-  SquadBuilderPersistenceUnavailable,
-] as const;

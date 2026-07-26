@@ -1,19 +1,16 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params -- Effect.catch uses callback pattern
 import * as Effect from "effect/Effect";
-import type * as Schema from "effect/Schema";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
-import type { SquadBuilderAccountSharingError } from "../../../protocol/squad-builder/account-sharing/http-api-contract.ts";
 import {
   SquadBuilderConflict,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
-} from "../../../protocol/squad-builder/account-sharing/http-api-contract.ts";
-import type { AccountSharingError } from "../../../services/squad-builder/account-sharing/account-sharing-error.ts";
+} from "../../../protocol/squad-builder/errors.ts";
 import {
   respond,
   revoke,
@@ -28,9 +25,71 @@ import {
 } from "../auth-helper.ts";
 import { withRequestCorrelation } from "../request-correlation.ts";
 
-type ProtocolError = Schema.Schema.Type<typeof SquadBuilderAccountSharingError>;
+type EffectError<EffectType> =
+  EffectType extends Effect.Effect<unknown, infer Error, unknown>
+    ? Error
+    : never;
+type SearchAccountInviteTargetsError = EffectError<ReturnType<typeof search>>;
+type SendAccountAccessInviteError = EffectError<ReturnType<typeof send>>;
+type RespondToAccountAccessInviteError = EffectError<
+  ReturnType<typeof respond>
+>;
+type RevokeAccountAccessError = EffectError<ReturnType<typeof revoke>>;
+type AccountSharingStore = typeof AccountSharingStoreService.Service;
+type ListIncomingAccountInvitesError = EffectError<
+  ReturnType<AccountSharingStore["listIncomingAccountInvites"]>
+>;
+type ListSharedAccountsError = EffectError<
+  ReturnType<AccountSharingStore["listSharedAccounts"]>
+>;
+type ListAccountAccessGrantsError = EffectError<
+  ReturnType<typeof listAccountAccessGrantsWorkflow>
+>;
+type AccountSharingHandlerError =
+  | SearchAccountInviteTargetsError
+  | SendAccountAccessInviteError
+  | RespondToAccountAccessInviteError
+  | RevokeAccountAccessError
+  | ListIncomingAccountInvitesError
+  | ListSharedAccountsError
+  | ListAccountAccessGrantsError;
 
-const mapAccountSharingError = (error: AccountSharingError): ProtocolError => {
+type SearchAccountInviteTargetsProtocolError =
+  | SquadBuilderNotFound
+  | SquadBuilderForbidden
+  | SquadBuilderInvalidInput
+  | SquadBuilderPersistenceUnavailable;
+type SendAccountAccessInviteProtocolError =
+  | SearchAccountInviteTargetsProtocolError
+  | SquadBuilderConflict;
+type RespondToAccountAccessInviteProtocolError =
+  | SquadBuilderNotFound
+  | SquadBuilderForbidden
+  | SquadBuilderConflict
+  | SquadBuilderPersistenceUnavailable;
+type ListAccountAccessGrantsProtocolError =
+  | SquadBuilderNotFound
+  | SquadBuilderForbidden
+  | SquadBuilderPersistenceUnavailable;
+
+function mapAccountSharingError(
+  error: ListIncomingAccountInvitesError | ListSharedAccountsError
+): SquadBuilderPersistenceUnavailable;
+function mapAccountSharingError(
+  error: ListAccountAccessGrantsError
+): ListAccountAccessGrantsProtocolError;
+function mapAccountSharingError(
+  error: SearchAccountInviteTargetsError
+): SearchAccountInviteTargetsProtocolError;
+function mapAccountSharingError(
+  error: RespondToAccountAccessInviteError | RevokeAccountAccessError
+): RespondToAccountAccessInviteProtocolError;
+function mapAccountSharingError(
+  error: SendAccountAccessInviteError
+): SendAccountAccessInviteProtocolError;
+function mapAccountSharingError(
+  error: AccountSharingHandlerError
+): SendAccountAccessInviteProtocolError {
   switch (error._tag) {
     case "MargonemAccountNotFound":
     case "AccountAccessInviteNotFound":
@@ -46,9 +105,6 @@ const mapAccountSharingError = (error: AccountSharingError): ProtocolError => {
       return new SquadBuilderConflict({ message: error._tag });
     }
     case "CannotInviteSelf":
-    case "InvalidMargonemAccountId":
-    case "InvalidMargonemAccountAccessId":
-    case "InvalidAppUserId":
     case "InvalidAccountInviteTargetQuery": {
       return new SquadBuilderInvalidInput({ message: error._tag });
     }
@@ -62,7 +118,29 @@ const mapAccountSharingError = (error: AccountSharingError): ProtocolError => {
       return exhaustive;
     }
   }
-};
+}
+
+const mapSearchAccountInviteTargetsError = (
+  error: SearchAccountInviteTargetsError
+): SearchAccountInviteTargetsProtocolError => mapAccountSharingError(error);
+const mapSendAccountAccessInviteError = (
+  error: SendAccountAccessInviteError
+): SendAccountAccessInviteProtocolError => mapAccountSharingError(error);
+const mapRespondToAccountAccessInviteError = (
+  error: RespondToAccountAccessInviteError
+): RespondToAccountAccessInviteProtocolError => mapAccountSharingError(error);
+const mapRevokeAccountAccessError = (
+  error: RevokeAccountAccessError
+): RespondToAccountAccessInviteProtocolError => mapAccountSharingError(error);
+const mapListIncomingAccountInvitesError = (
+  error: ListIncomingAccountInvitesError
+): SquadBuilderPersistenceUnavailable => mapAccountSharingError(error);
+const mapListSharedAccountsError = (
+  error: ListSharedAccountsError
+): SquadBuilderPersistenceUnavailable => mapAccountSharingError(error);
+const mapListAccountAccessGrantsError = (
+  error: ListAccountAccessGrantsError
+): ListAccountAccessGrantsProtocolError => mapAccountSharingError(error);
 
 export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
@@ -84,7 +162,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                   actorUserId: sessionAppUserId(session),
                   query: payload.query,
                 })
-              ).pipe(Effect.mapError(mapAccountSharingError));
+              ).pipe(Effect.mapError(mapSearchAccountInviteTargetsError));
             }
           )
         )
@@ -100,7 +178,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                   actorUserId: sessionAppUserId(session),
                   invitedUserId: payload.invitedUserId,
                 })
-              ).pipe(Effect.mapError(mapAccountSharingError));
+              ).pipe(Effect.mapError(mapSendAccountAccessInviteError));
             }
           )
         )
@@ -116,7 +194,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                   actorUserId: sessionAppUserId(session),
                   response: payload.response,
                 })
-              ).pipe(Effect.mapError(mapAccountSharingError));
+              ).pipe(Effect.mapError(mapRespondToAccountAccessInviteError));
             }
           )
         )
@@ -131,7 +209,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                   accessId: payload.accessId,
                   actorUserId: sessionAppUserId(session),
                 })
-              ).pipe(Effect.mapError(mapAccountSharingError));
+              ).pipe(Effect.mapError(mapRevokeAccountAccessError));
             }
           )
         )
@@ -145,7 +223,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                 accountSharingStore.listIncomingAccountInvites({
                   actorUserId: sessionAppUserId(session),
                 })
-              ).pipe(Effect.mapError(mapAccountSharingError));
+              ).pipe(Effect.mapError(mapListIncomingAccountInvitesError));
             }
           )
         )
@@ -159,7 +237,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                 accountSharingStore.listSharedAccounts({
                   actorUserId: sessionAppUserId(session),
                 })
-              ).pipe(Effect.mapError(mapAccountSharingError));
+              ).pipe(Effect.mapError(mapListSharedAccountsError));
             }
           )
         )
@@ -174,7 +252,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
                   accountId: payload.accountId,
                   actorUserId: sessionAppUserId(session),
                 })
-              ).pipe(Effect.mapError(mapAccountSharingError));
+              ).pipe(Effect.mapError(mapListAccountAccessGrantsError));
             }
           )
         );

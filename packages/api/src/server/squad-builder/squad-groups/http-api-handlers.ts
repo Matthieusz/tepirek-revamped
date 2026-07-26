@@ -1,20 +1,18 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params -- Effect.catch uses callback pattern
 import * as Effect from "effect/Effect";
-import type * as Schema from "effect/Schema";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import type { SquadGroupListFilterError } from "../../../domain/squad-builder/squad-group-list-filters.ts";
 import { parseSquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.ts";
 import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
-import type { SquadBuilderSquadGroupError } from "../../../protocol/squad-builder/squad-groups/http-api-contract.ts";
 import {
   SquadBuilderConflict,
   SquadBuilderForbidden,
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
-} from "../../../protocol/squad-builder/squad-groups/http-api-contract.ts";
+} from "../../../protocol/squad-builder/errors.ts";
 import type { CreateSquadGroupError } from "../../../services/squad-builder/squad-groups/create-squad-group.ts";
 import { create as createSquadGroupWorkflow } from "../../../services/squad-builder/squad-groups/create-squad-group.ts";
 import type { ListAvailableSquadCharactersError } from "../../../services/squad-builder/squad-groups/list-available-squad-characters.ts";
@@ -24,7 +22,6 @@ import type { EffectSharedSquadGroupSaveError } from "../../../services/squad-bu
 import { saveWithStoreService as saveSharedSquadGroupCharactersWorkflow } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.ts";
 import type { SaveSquadGroupError } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
 import { save as saveSquadGroupWorkflow } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
-import type { GlobalSquadVisibilityError } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
 import { set as setSquadGroupVisibilityWorkflow } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
 import { SquadGroupStoreService } from "../../../services/squad-builder/squad-groups/squad-group-store.ts";
 import {
@@ -33,18 +30,78 @@ import {
 } from "../auth-helper.ts";
 import { withRequestCorrelation } from "../request-correlation.ts";
 
-type ProtocolError = Schema.Schema.Type<typeof SquadBuilderSquadGroupError>;
+type EffectError<EffectType> =
+  EffectType extends Effect.Effect<unknown, infer Error, unknown>
+    ? Error
+    : never;
+type SquadGroupStore = typeof SquadGroupStoreService.Service;
+type DeleteSquadGroupError = EffectError<
+  ReturnType<SquadGroupStore["deleteSquadGroup"]>
+>;
+type ListOwnedSquadGroupsError = EffectError<
+  ReturnType<SquadGroupStore["listMySquadGroups"]>
+>;
+type ListGlobalSquadGroupsError =
+  | SquadGroupListFilterError
+  | EffectError<ReturnType<typeof listGlobalSquadGroupsWorkflow>>;
+type GetSquadGroupDetailError = EffectError<
+  ReturnType<SquadGroupStore["getSquadGroupDetail"]>
+>;
+type SetSquadGroupVisibilityError = EffectError<
+  ReturnType<typeof setSquadGroupVisibilityWorkflow>
+>;
 
 type SquadGroupsHandlerError =
   | CreateSquadGroupError
   | ListAvailableSquadCharactersError
   | SaveSquadGroupError
   | EffectSharedSquadGroupSaveError
-  | GlobalSquadVisibilityError
-  | SquadGroupListFilterError;
+  | DeleteSquadGroupError
+  | ListOwnedSquadGroupsError
+  | ListGlobalSquadGroupsError
+  | GetSquadGroupDetailError
+  | SetSquadGroupVisibilityError;
 
+type CreateSquadGroupProtocolError =
+  | SquadBuilderInvalidInput
+  | SquadBuilderPersistenceUnavailable;
+type DeleteSquadGroupProtocolError =
+  | SquadBuilderNotFound
+  | SquadBuilderForbidden
+  | SquadBuilderPersistenceUnavailable;
+type ListGlobalSquadGroupsProtocolError =
+  | SquadBuilderInvalidInput
+  | SquadBuilderPersistenceUnavailable;
+type SaveSquadGroupProtocolError =
+  | SquadBuilderNotFound
+  | SquadBuilderForbidden
+  | SquadBuilderConflict
+  | SquadBuilderInvalidInput
+  | SquadBuilderPersistenceUnavailable;
+
+function mapSquadGroupsError(
+  error: ListOwnedSquadGroupsError
+): SquadBuilderPersistenceUnavailable;
+function mapSquadGroupsError(
+  error: CreateSquadGroupError
+): CreateSquadGroupProtocolError;
+function mapSquadGroupsError(
+  error: ListGlobalSquadGroupsError
+): ListGlobalSquadGroupsProtocolError;
+function mapSquadGroupsError(
+  error:
+    | DeleteSquadGroupError
+    | GetSquadGroupDetailError
+    | ListAvailableSquadCharactersError
+    | SetSquadGroupVisibilityError
+): DeleteSquadGroupProtocolError;
+function mapSquadGroupsError(
+  error: SaveSquadGroupError | EffectSharedSquadGroupSaveError
+): SaveSquadGroupProtocolError;
 // oxlint-disable-next-line complexity
-const mapSquadGroupsError = (error: SquadGroupsHandlerError): ProtocolError => {
+function mapSquadGroupsError(
+  error: SquadGroupsHandlerError
+): SaveSquadGroupProtocolError {
   switch (error._tag) {
     case "SquadGroupNotFound": {
       return new SquadBuilderNotFound({ message: error._tag });
@@ -62,7 +119,6 @@ const mapSquadGroupsError = (error: SquadGroupsHandlerError): ProtocolError => {
     case "SquadNotInGroup":
     case "InvalidSquadGroupName":
     case "InvalidSquadName":
-    case "InvalidSquadGroupVisibility":
     case "TooManyCharactersInSquad":
     case "DuplicateCharacterInSquad":
     case "DuplicateAccountInSquad":
@@ -83,7 +139,35 @@ const mapSquadGroupsError = (error: SquadGroupsHandlerError): ProtocolError => {
       return exhaustive;
     }
   }
-};
+}
+
+const mapCreateSquadGroupError = (
+  error: CreateSquadGroupError
+): CreateSquadGroupProtocolError => mapSquadGroupsError(error);
+const mapDeleteSquadGroupError = (
+  error: DeleteSquadGroupError
+): DeleteSquadGroupProtocolError => mapSquadGroupsError(error);
+const mapListOwnedSquadGroupsError = (
+  error: ListOwnedSquadGroupsError
+): SquadBuilderPersistenceUnavailable => mapSquadGroupsError(error);
+const mapListGlobalSquadGroupsError = (
+  error: ListGlobalSquadGroupsError
+): ListGlobalSquadGroupsProtocolError => mapSquadGroupsError(error);
+const mapGetSquadGroupDetailError = (
+  error: GetSquadGroupDetailError
+): DeleteSquadGroupProtocolError => mapSquadGroupsError(error);
+const mapListAvailableSquadCharactersError = (
+  error: ListAvailableSquadCharactersError
+): DeleteSquadGroupProtocolError => mapSquadGroupsError(error);
+const mapSaveSquadGroupError = (
+  error: SaveSquadGroupError
+): SaveSquadGroupProtocolError => mapSquadGroupsError(error);
+const mapSaveSharedSquadGroupCharactersError = (
+  error: EffectSharedSquadGroupSaveError
+): SaveSquadGroupProtocolError => mapSquadGroupsError(error);
+const mapSetSquadGroupVisibilityError = (
+  error: SetSquadGroupVisibilityError
+): DeleteSquadGroupProtocolError => mapSquadGroupsError(error);
 
 export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
@@ -101,7 +185,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 name: payload.name,
               })
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(Effect.mapError(mapCreateSquadGroupError));
           }
         )
       )
@@ -118,7 +202,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                   groupId: payload.groupId,
                 })
               )
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(Effect.mapError(mapDeleteSquadGroupError));
             return { groupId: payload.groupId };
           }
         )
@@ -135,7 +219,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                   actorUserId: sessionAppUserId(session),
                 })
               )
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(Effect.mapError(mapListOwnedSquadGroupsError));
           }
         )
       )
@@ -158,7 +242,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                   filters,
                 });
               })
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(Effect.mapError(mapListGlobalSquadGroupsError));
           }
         )
       )
@@ -175,7 +259,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                   groupId: payload.groupId,
                 })
               )
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(Effect.mapError(mapGetSquadGroupDetailError));
           }
         )
       )
@@ -190,7 +274,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 groupId: payload.groupId,
               })
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(Effect.mapError(mapListAvailableSquadCharactersError));
           }
         )
       )
@@ -216,7 +300,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                     : { squadId: squad.squadId }),
                 })),
               })
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(Effect.mapError(mapSaveSquadGroupError));
           }
         )
       )
@@ -236,7 +320,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                   squadId: squad.squadId,
                 })),
               })
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(Effect.mapError(mapSaveSharedSquadGroupCharactersError));
           }
         )
       )
@@ -252,7 +336,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                 groupId: payload.groupId,
                 visibility: payload.visibility,
               })
-            ).pipe(Effect.mapError(mapSquadGroupsError));
+            ).pipe(Effect.mapError(mapSetSquadGroupVisibilityError));
           }
         )
       )

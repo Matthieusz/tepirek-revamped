@@ -1,11 +1,9 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params -- Effect.catch uses callback pattern
 import * as Effect from "effect/Effect";
-import type * as Schema from "effect/Schema";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
-import type { SquadBuilderAccountImportError } from "../../../protocol/squad-builder/account-import/http-api-contract.ts";
 import {
   SquadBuilderConflict,
   SquadBuilderForbidden,
@@ -13,7 +11,7 @@ import {
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
-} from "../../../protocol/squad-builder/account-import/http-api-contract.ts";
+} from "../../../protocol/squad-builder/errors.ts";
 import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store.ts";
 import { confirm as confirmOwnedAccountImportWorkflow } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
 import type { ConfirmOwnedAccountImportError } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
@@ -29,17 +27,74 @@ import {
 } from "../auth-helper.ts";
 import { withRequestCorrelation } from "../request-correlation.ts";
 
-type ProtocolError = Schema.Schema.Type<typeof SquadBuilderAccountImportError>;
+type EffectError<EffectType> =
+  EffectType extends Effect.Effect<unknown, infer Error, unknown>
+    ? Error
+    : never;
+
+type AccountImportStore = typeof AccountImportStoreService.Service;
+type DeleteOwnedAccountError = EffectError<
+  ReturnType<AccountImportStore["deleteOwnedAccount"]>
+>;
+type ListOwnedAccountsError = EffectError<
+  ReturnType<AccountImportStore["listOwnedAccounts"]>
+>;
 
 type AccountImportHandlerError =
   | PreviewMargonemProfileImportError
   | PreviewOwnedAccountImportsError
   | ConfirmOwnedAccountImportError
-  | UpdateOwnedAccountDisplayNameError;
+  | UpdateOwnedAccountDisplayNameError
+  | DeleteOwnedAccountError
+  | ListOwnedAccountsError;
 
-const mapAccountImportError = (
+type PreviewMargonemProfileImportProtocolError =
+  | SquadBuilderConflict
+  | SquadBuilderInvalidInput
+  | SquadBuilderUpstreamUnavailable
+  | SquadBuilderPersistenceUnavailable;
+type PreviewOwnedAccountImportsProtocolError =
+  | SquadBuilderInvalidInput
+  | SquadBuilderPersistenceUnavailable;
+type ConfirmOwnedAccountImportProtocolError =
+  | SquadBuilderNotFound
+  | SquadBuilderConflict
+  | SquadBuilderInvalidInput
+  | SquadBuilderPersistenceUnavailable;
+type UpdateOwnedAccountDisplayNameProtocolError =
+  | SquadBuilderNotFound
+  | SquadBuilderForbidden
+  | SquadBuilderInvalidInput
+  | SquadBuilderPersistenceUnavailable;
+type DeleteOwnedAccountProtocolError =
+  | SquadBuilderNotFound
+  | SquadBuilderForbidden
+  | SquadBuilderPersistenceUnavailable;
+
+function mapAccountImportError(
+  error: ListOwnedAccountsError
+): SquadBuilderPersistenceUnavailable;
+function mapAccountImportError(
+  error: DeleteOwnedAccountError
+): DeleteOwnedAccountProtocolError;
+function mapAccountImportError(
+  error: PreviewOwnedAccountImportsError
+): PreviewOwnedAccountImportsProtocolError;
+function mapAccountImportError(
+  error: UpdateOwnedAccountDisplayNameError
+): UpdateOwnedAccountDisplayNameProtocolError;
+function mapAccountImportError(
+  error: ConfirmOwnedAccountImportError
+): ConfirmOwnedAccountImportProtocolError;
+function mapAccountImportError(
+  error: PreviewMargonemProfileImportError
+): PreviewMargonemProfileImportProtocolError;
+function mapAccountImportError(
   error: AccountImportHandlerError
-): ProtocolError => {
+):
+  | PreviewMargonemProfileImportProtocolError
+  | SquadBuilderNotFound
+  | SquadBuilderForbidden {
   switch (error._tag) {
     case "PendingMargonemAccountImportNotFound":
     case "MargonemAccountNotFound": {
@@ -78,7 +133,26 @@ const mapAccountImportError = (
       return exhaustive;
     }
   }
-};
+}
+
+const mapPreviewMargonemProfileImportError = (
+  error: PreviewMargonemProfileImportError
+): PreviewMargonemProfileImportProtocolError => mapAccountImportError(error);
+const mapPreviewOwnedAccountImportsError = (
+  error: PreviewOwnedAccountImportsError
+): PreviewOwnedAccountImportsProtocolError => mapAccountImportError(error);
+const mapConfirmOwnedAccountImportError = (
+  error: ConfirmOwnedAccountImportError
+): ConfirmOwnedAccountImportProtocolError => mapAccountImportError(error);
+const mapUpdateOwnedAccountDisplayNameError = (
+  error: UpdateOwnedAccountDisplayNameError
+): UpdateOwnedAccountDisplayNameProtocolError => mapAccountImportError(error);
+const mapDeleteOwnedAccountError = (
+  error: DeleteOwnedAccountError
+): DeleteOwnedAccountProtocolError => mapAccountImportError(error);
+const mapListOwnedAccountsError = (
+  error: ListOwnedAccountsError
+): SquadBuilderPersistenceUnavailable => mapAccountImportError(error);
 
 export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
@@ -96,7 +170,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 profileUrl: payload.profileUrl,
               })
-            ).pipe(Effect.mapError(mapAccountImportError));
+            ).pipe(Effect.mapError(mapPreviewMargonemProfileImportError));
           }
         )
       )
@@ -111,7 +185,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 profileUrls: payload.profileUrls,
               })
-            ).pipe(Effect.mapError(mapAccountImportError));
+            ).pipe(Effect.mapError(mapPreviewOwnedAccountImportsError));
           }
         )
       )
@@ -127,7 +201,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
                 displayName: payload.displayName,
                 pendingImportId: payload.pendingImportId,
               })
-            ).pipe(Effect.mapError(mapAccountImportError));
+            ).pipe(Effect.mapError(mapConfirmOwnedAccountImportError));
           }
         )
       )
@@ -143,7 +217,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
                 actorUserId: sessionAppUserId(session),
                 displayName: payload.displayName,
               })
-            ).pipe(Effect.mapError(mapAccountImportError));
+            ).pipe(Effect.mapError(mapUpdateOwnedAccountDisplayNameError));
           }
         )
       )
@@ -160,7 +234,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
                   actorUserId: sessionAppUserId(session),
                 })
               )
-            ).pipe(Effect.mapError(mapAccountImportError));
+            ).pipe(Effect.mapError(mapDeleteOwnedAccountError));
           }
         )
       )
@@ -176,7 +250,7 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
                   actorUserId: sessionAppUserId(session),
                 })
               )
-            ).pipe(Effect.mapError(mapAccountImportError));
+            ).pipe(Effect.mapError(mapListOwnedAccountsError));
           }
         )
       )
