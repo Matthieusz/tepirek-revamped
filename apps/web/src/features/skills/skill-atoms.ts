@@ -47,7 +47,7 @@ export const skillProfessionsAtom = appHttpApiAtom(
 );
 
 /** Resource atom for one skill range by slug. */
-const skillRangeBySlugFamilyAtom = Atom.family((slug: string) =>
+export const skillRangeBySlugAtom = Atom.family((slug: string) =>
   appHttpApiAtom(
     Effect.gen(function* getSkillRangeBySlugEffect() {
       const client = yield* AppHttpApiClient;
@@ -55,9 +55,6 @@ const skillRangeBySlugFamilyAtom = Atom.family((slug: string) =>
     })
   )
 );
-
-export const skillRangeBySlugAtom = (slug: string) =>
-  skillRangeBySlugFamilyAtom(slug);
 
 /** Resource atom for skills in one range. */
 const skillsByRangeIdAtom = Atom.family((rangeId: number) =>
@@ -167,21 +164,15 @@ export const deleteSkillRangeAtom = Atom.optimisticFn(
 );
 
 /** Optimistic skill resource that preserves loading and failure states. */
-const optimisticSkillsByRangeIdAtom = Atom.family((rangeId: number) =>
+export const optimisticSkillsByRangeAtom = Atom.family((rangeId: number) =>
   Atom.optimistic(skillsByRangeAtom(rangeId))
 );
 
-export const optimisticSkillsByRangeAtom = (rangeId: number) =>
-  optimisticSkillsByRangeIdAtom(rangeId);
-
 /** Optimistic mutation atom for deleting a skill from one range detail list. */
-const deleteSkillFromRangeIdAtom = Atom.family((rangeId: number) =>
+export const deleteSkillFromRangeAtom = Atom.family((rangeId: number) =>
   Atom.optimisticFn(optimisticSkillsByRangeAtom(rangeId), {
     fn: deleteSkillRequestAtom,
     reducer: (current, input) =>
       updateResultSuccess(current, (skills) => removeSkillById(skills, input)),
   })
 );
-
-export const deleteSkillFromRangeAtom = (rangeId: number) =>
-  deleteSkillFromRangeIdAtom(rangeId);

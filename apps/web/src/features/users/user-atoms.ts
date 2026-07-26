@@ -107,18 +107,17 @@ export const deleteUserAtom = appHttpApiFn(
   })
 );
 
-const verifyDiscordGuildMembershipRequest = Effect.fn(
-  "Web.User.verifyDiscordGuildMembership"
-)(function* verifyDiscordGuildMembershipEffect(
-  _: unknown,
-  get: Atom.FnContext
-) {
-  const client = yield* AppHttpApiClient;
-  const session = yield* client.user.verifyDiscordGuildMembership({});
-  get.refresh(sessionAtom);
-  return session;
-});
-
-export const verifyDiscordGuildMembershipAtom = appHttpApiFn((payload, get) =>
-  verifyDiscordGuildMembershipRequest(payload, get)
+// oxlint-disable-next-line typescript/no-invalid-void-type -- Atom uses void for no-input mutation functions.
+export const verifyDiscordGuildMembershipAtom = appHttpApiFn<void>()(
+  Effect.fn("Web.User.verifyDiscordGuildMembership")(
+    function* verifyDiscordGuildMembershipEffect(
+      _: unknown,
+      get: Atom.FnContext
+    ) {
+      const client = yield* AppHttpApiClient;
+      const session = yield* client.user.verifyDiscordGuildMembership({});
+      get.refresh(sessionAtom);
+      return session;
+    }
+  )
 );

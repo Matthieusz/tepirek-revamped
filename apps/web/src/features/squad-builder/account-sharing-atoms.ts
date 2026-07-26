@@ -66,28 +66,22 @@ const accountInviteTargetsKey = (
 ): AccountInviteTargetsKey =>
   Schema.encodeSync(AccountInviteTargetsKeySchema)([accountId, query]);
 
-const incomingAccountInvitesByActorAtom = Atom.family((_actorUserId: string) =>
-  appHttpApiAtom(
-    Effect.gen(function* incomingAccountInvitesEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.squadBuilderAccountSharing.listIncomingAccountInvites(
-        {
-          payload: {},
-        }
-      );
-    })
-  )
+export const incomingAccountInvitesAtom = appHttpApiAtom(
+  Effect.gen(function* incomingAccountInvitesEffect() {
+    const client = yield* AppHttpApiClient;
+    return yield* client.squadBuilderAccountSharing.listIncomingAccountInvites({
+      payload: {},
+    });
+  })
 );
 
-const sharedAccountsByActorAtom = Atom.family((_actorUserId: string) =>
-  appHttpApiAtom(
-    Effect.gen(function* sharedAccountsEffect() {
-      const client = yield* AppHttpApiClient;
-      return yield* client.squadBuilderAccountSharing.listSharedAccounts({
-        payload: {},
-      });
-    })
-  )
+export const sharedAccountsAtom = appHttpApiAtom(
+  Effect.gen(function* sharedAccountsEffect() {
+    const client = yield* AppHttpApiClient;
+    return yield* client.squadBuilderAccountSharing.listSharedAccounts({
+      payload: {},
+    });
+  })
 );
 
 const accountAccessGrantsByKeyAtom = Atom.family(
@@ -129,11 +123,6 @@ const accountInviteTargetsByKeyAtom = Atom.family(
     ).pipe(Atom.setIdleTTL("5 minutes"))
 );
 
-export const incomingAccountInvitesAtom =
-  incomingAccountInvitesByActorAtom("default");
-
-export const sharedAccountsAtom = sharedAccountsByActorAtom("default");
-
 export const accountAccessGrantsAtom = (
   accountId: number,
   actorUserId: string
@@ -153,8 +142,8 @@ const refreshVisibleAccountSharingAtoms = (
   get: Atom.FnContext,
   options: { readonly accountId?: number; readonly actorUserId?: string } = {}
 ) => {
-  get.refresh(incomingAccountInvitesByActorAtom("default"));
-  get.refresh(sharedAccountsByActorAtom("default"));
+  get.refresh(incomingAccountInvitesAtom);
+  get.refresh(sharedAccountsAtom);
 
   if (options.accountId !== undefined && options.accountId > 0) {
     get.refresh(
@@ -167,7 +156,7 @@ const refreshVisibleAccountSharingAtoms = (
     );
   }
 
-  refreshVisibleSquadGroupAtoms(get, { actorUserId: "default" });
+  refreshVisibleSquadGroupAtoms(get);
 };
 
 /** Mutation atom for sending account access invite. */
