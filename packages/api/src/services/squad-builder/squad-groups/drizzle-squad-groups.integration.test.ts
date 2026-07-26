@@ -23,12 +23,12 @@ import {
 import { create as createSquadGroup } from "./create-squad-group.ts";
 import { list as listAvailableSquadCharacters } from "./list-available-squad-characters.ts";
 import { list as listGlobalSquadGroups } from "./list-global-squad-groups.ts";
-import { getMine, listMine } from "./list-squad-groups.ts";
 import { respond } from "./respond-to-squad-group-invite-service.ts";
 import { revoke } from "./revoke-squad-group-editor-service.ts";
 import { save as saveSquadGroup } from "./save-squad-group.ts";
 import { send } from "./send-squad-group-editor-invite-service.ts";
 import { set as setSquadGroupVisibility } from "./set-squad-group-visibility.ts";
+import { getMine, listMine } from "./squad-group-operations.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 const parseTestSquadGroupId = (value: number) =>

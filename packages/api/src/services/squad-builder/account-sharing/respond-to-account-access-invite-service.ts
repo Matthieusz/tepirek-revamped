@@ -3,7 +3,7 @@ import * as EffectRuntime from "effect/Effect";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
-import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
+import { AccountSharingStoreService } from "./account-sharing-store.ts";
 
 /** Input for responding to an account access invite. */
 export interface RespondToAccountAccessInviteInput {

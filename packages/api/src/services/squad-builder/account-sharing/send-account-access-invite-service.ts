@@ -7,7 +7,7 @@ import {
   ActorDoesNotOwnMargonemAccount,
   CannotInviteSelf,
 } from "../squad-groups/squad-group-errors.ts";
-import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
+import { AccountSharingStoreService } from "./account-sharing-store.ts";
 
 /** Input for sending an account access invite. */
 export interface SendAccountAccessInviteInput {

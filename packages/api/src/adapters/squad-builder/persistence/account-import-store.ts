@@ -30,7 +30,10 @@ import {
 } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.ts";
 import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
-import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store-service.ts";
+import {
+  AccountImportStoreService,
+  ProfileAccessState,
+} from "../../../services/squad-builder/account-import/account-import-store.ts";
 import type {
   CreateOwnedAccountFromPendingImportInput,
   CreatePendingMargonemAccountImportInput,
@@ -41,7 +44,6 @@ import type {
   OwnedMargonemAccountSummary,
   UpdateOwnedAccountDisplayNameInput,
 } from "../../../services/squad-builder/account-import/account-import-store.ts";
-import { ProfileAccessState } from "../../../services/squad-builder/account-import/account-import-store.ts";
 import {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountAlreadyOwnedByActor,

@@ -22,7 +22,7 @@ import {
 } from "../firecrawl-config.ts";
 import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
 import { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
-import { AccountRefetchStoreService } from "./account-refetch-store-service.ts";
+import { AccountRefetchStoreService } from "./account-refetch-store.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
   FirecrawlBudgetError,

@@ -1,3 +1,6 @@
+import * as Context from "effect/Context";
+import type { Effect } from "effect/Effect";
+
 import type { AccountAccessStatus } from "../../../domain/squad-builder/account-access-status.ts";
 import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
@@ -155,6 +158,83 @@ export interface AccountAccessGrantSummary {
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
+
+/** Persistence operations used by account sharing workflows. */
+export interface AccountSharingStoreServiceShape {
+  readonly findOwnedAccountForSharing: (
+    input: FindOwnedAccountForSharingInput
+  ) => Effect<
+    OwnedAccountForSharing,
+    MargonemAccountNotFound | SquadBuilderPersistenceUnavailable
+  >;
+  readonly searchInviteTargets: (
+    input: SearchInviteTargetsStoreInput
+  ) => Effect<
+    readonly AccountInviteTarget[],
+    SquadBuilderPersistenceUnavailable
+  >;
+  readonly findVerifiedInviteTarget: (
+    input: FindVerifiedInviteTargetInput
+  ) => Effect<
+    VerifiedInviteTarget,
+    | InviteTargetNotFound
+    | InviteTargetNotVerified
+    | SquadBuilderPersistenceUnavailable
+  >;
+  readonly upsertAccountAccessInvite: (
+    input: UpsertAccountAccessInviteInput
+  ) => Effect<
+    AccountAccessInviteSummary,
+    AccountAccessTransitionNotAllowed | SquadBuilderPersistenceUnavailable
+  >;
+  readonly respondToAccountAccessInvite: (
+    input: RespondToAccountAccessInviteStoreInput
+  ) => Effect<
+    AccountAccessInviteSummary,
+    | AccountAccessInviteNotFound
+    | ActorIsNotInviteRecipient
+    | AccountAccessTransitionNotAllowed
+    | SquadBuilderPersistenceUnavailable
+  >;
+  readonly revokeAccountAccess: (
+    input: RevokeAccountAccessStoreInput
+  ) => Effect<
+    RevokeAccountAccessResult,
+    | AccountAccessInviteNotFound
+    | ActorDoesNotOwnMargonemAccount
+    | AccountAccessTransitionNotAllowed
+    | SquadBuilderPersistenceUnavailable
+  >;
+  readonly listIncomingAccountInvites: (
+    input: ListIncomingAccountInvitesInput
+  ) => Effect<
+    readonly AccountAccessInviteSummary[],
+    SquadBuilderPersistenceUnavailable
+  >;
+  readonly listSharedAccounts: (
+    input: ListSharedAccountsInput
+  ) => Effect<
+    readonly SharedMargonemAccountSummary[],
+    SquadBuilderPersistenceUnavailable
+  >;
+  readonly listAccountAccessGrants: (
+    input: ListAccountAccessGrantsInput
+  ) => Effect<
+    readonly AccountAccessGrantSummary[],
+    SquadBuilderPersistenceUnavailable
+  >;
+  readonly listOwnedAccounts: (
+    input: ListOwnedMargonemAccountsInput
+  ) => Effect<
+    readonly OwnedMargonemAccountSummary[],
+    SquadBuilderPersistenceUnavailable
+  >;
+}
+
+export class AccountSharingStoreService extends Context.Service<
+  AccountSharingStoreService,
+  AccountSharingStoreServiceShape
+>()("@tepirek-revamped/api/squad-builder/AccountSharingStoreService") {}
 
 /** Expected failure when a Margonem account does not exist. */
 export type { MargonemAccountNotFound };

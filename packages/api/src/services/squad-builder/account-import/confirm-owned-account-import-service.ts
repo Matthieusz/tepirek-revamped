@@ -5,7 +5,7 @@ import { parseAccountDisplayName } from "../../../domain/squad-builder/account-d
 import type { InvalidAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
-import { AccountImportStoreService } from "./account-import-store-service.ts";
+import { AccountImportStoreService } from "./account-import-store.ts";
 import type {
   DuplicateMargonemAccountError,
   PendingMargonemAccountImportNotFound,

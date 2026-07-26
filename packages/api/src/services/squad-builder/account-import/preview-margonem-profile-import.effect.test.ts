@@ -15,7 +15,7 @@ import { FirecrawlClientService } from "../firecrawl-client.ts";
 import type { FirecrawlClient } from "../firecrawl-client.ts";
 import { FirecrawlConfigService } from "../firecrawl-config.ts";
 import { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
-import { AccountImportStoreService } from "./account-import-store-service.ts";
+import { AccountImportStoreService } from "./account-import-store.ts";
 import { preview } from "./preview-margonem-profile-import-service.ts";
 
 const parseTestUserId = () =>

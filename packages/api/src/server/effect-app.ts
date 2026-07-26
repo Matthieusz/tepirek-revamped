@@ -29,9 +29,9 @@ import { UserStoreLayer } from "../adapters/user/user-store.ts";
 import type { UserStore } from "../adapters/user/user-store.ts";
 import type { BetService } from "../services/bet/bet-service.ts";
 import type { RankingService } from "../services/ranking/ranking-service.ts";
-import type { AccountImportStoreService } from "../services/squad-builder/account-import/account-import-store-service.ts";
-import type { AccountRefetchStoreService } from "../services/squad-builder/account-refetch/account-refetch-store-service.ts";
-import type { AccountSharingStoreService } from "../services/squad-builder/account-sharing/account-sharing-store-service.ts";
+import type { AccountImportStoreService } from "../services/squad-builder/account-import/account-import-store.ts";
+import type { AccountRefetchStoreService } from "../services/squad-builder/account-refetch/account-refetch-store.ts";
+import type { AccountSharingStoreService } from "../services/squad-builder/account-sharing/account-sharing-store.ts";
 import type { FirecrawlClientService } from "../services/squad-builder/firecrawl-client.ts";
 import type {
   FirecrawlConfig,

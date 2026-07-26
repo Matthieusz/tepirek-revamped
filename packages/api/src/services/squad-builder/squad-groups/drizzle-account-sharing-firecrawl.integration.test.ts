@@ -21,7 +21,7 @@ import {
   parseTestUserId,
   squadBuilderIntegrationTestLayer,
 } from "../../../test/squad-builder/store-integration.ts";
-import { AccountSharingStoreService } from "../account-sharing/account-sharing-store-service.ts";
+import { AccountSharingStoreService } from "../account-sharing/account-sharing-store.ts";
 import { listAccountAccessGrants } from "../account-sharing/list-account-access-grants.ts";
 import { respond } from "../account-sharing/respond-to-account-access-invite-service.ts";
 import { revoke } from "../account-sharing/revoke-account-access-service.ts";

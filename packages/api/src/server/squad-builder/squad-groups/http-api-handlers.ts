@@ -17,25 +17,20 @@ import {
 } from "../../../protocol/squad-builder/squad-groups/http-api-contract.ts";
 import type { CreateSquadGroupError } from "../../../services/squad-builder/squad-groups/create-squad-group.ts";
 import { create as createSquadGroupWorkflow } from "../../../services/squad-builder/squad-groups/create-squad-group.ts";
-import type { DeleteSquadGroupError } from "../../../services/squad-builder/squad-groups/delete-squad-group.ts";
-import { deleteSquadGroup as deleteSquadGroupWorkflow } from "../../../services/squad-builder/squad-groups/delete-squad-group.ts";
 import type { ListAvailableSquadCharactersError } from "../../../services/squad-builder/squad-groups/list-available-squad-characters.ts";
 import { list as listAvailableSquadCharactersWorkflow } from "../../../services/squad-builder/squad-groups/list-available-squad-characters.ts";
 import { list as listGlobalSquadGroupsWorkflow } from "../../../services/squad-builder/squad-groups/list-global-squad-groups.ts";
-import type {
-  GetSquadGroupDetailError,
-  ListMySquadGroupsError,
-} from "../../../services/squad-builder/squad-groups/list-squad-groups.ts";
-import {
-  getMine,
-  listMine,
-} from "../../../services/squad-builder/squad-groups/list-squad-groups.ts";
 import type { EffectSharedSquadGroupSaveError } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.ts";
 import { saveWithStoreService as saveSharedSquadGroupCharactersWorkflow } from "../../../services/squad-builder/squad-groups/save-shared-squad-group-characters.ts";
 import type { SaveSquadGroupError } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
 import { save as saveSquadGroupWorkflow } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
 import type { GlobalSquadVisibilityError } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
 import { set as setSquadGroupVisibilityWorkflow } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
+import {
+  deleteSquadGroup as deleteSquadGroupWorkflow,
+  getMine,
+  listMine,
+} from "../../../services/squad-builder/squad-groups/squad-group-operations.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -46,9 +41,6 @@ type ProtocolError = Schema.Schema.Type<typeof SquadBuilderSquadGroupError>;
 
 type SquadGroupsHandlerError =
   | CreateSquadGroupError
-  | DeleteSquadGroupError
-  | ListMySquadGroupsError
-  | GetSquadGroupDetailError
   | ListAvailableSquadCharactersError
   | SaveSquadGroupError
   | EffectSharedSquadGroupSaveError

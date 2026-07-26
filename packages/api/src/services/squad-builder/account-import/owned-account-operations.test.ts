@@ -4,8 +4,8 @@ import * as Effect from "effect/Effect";
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import { makeAccountImportStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
-import { AccountImportStoreService } from "./account-import-store-service.ts";
-import { deleteOwnedAccount } from "./delete-owned-account-service.ts";
+import { AccountImportStoreService } from "./account-import-store.ts";
+import { deleteOwnedAccount } from "./owned-account-operations.ts";
 
 it.effect("deletes an owned account and returns its impact counts", () => {
   const actorUserId = Effect.runSync(parseAppUserId("delete-user"));

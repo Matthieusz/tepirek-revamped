@@ -8,7 +8,7 @@ import { parseMargonemAccountAccessId } from "../../../domain/squad-builder/marg
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import { makeAccountSharingStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.ts";
-import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
+import { AccountSharingStoreService } from "./account-sharing-store.ts";
 import { revoke } from "./revoke-account-access-service.ts";
 
 const parseTestUserId = (value: string) =>

@@ -33,7 +33,7 @@ import {
   parsePositiveLevel,
 } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
-import { AccountRefetchStoreService } from "../../../services/squad-builder/account-refetch/account-refetch-store-service.ts";
+import { AccountRefetchStoreService } from "../../../services/squad-builder/account-refetch/account-refetch-store.ts";
 import type {
   ApplyRefetchedAccountInput,
   CreatePendingMargonemAccountRefetchInput,

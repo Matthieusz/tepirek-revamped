@@ -7,7 +7,7 @@ import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { makeAccountSharingStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
-import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
+import { AccountSharingStoreService } from "./account-sharing-store.ts";
 import { search } from "./search-account-invite-targets-service.ts";
 
 const parseTestUserId = (value: string) =>

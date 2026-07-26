@@ -4,7 +4,7 @@ import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseInviteTargetQuery } from "../../../domain/squad-builder/invite-target-search.ts";
 import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import { ActorDoesNotOwnMargonemAccount } from "../squad-groups/squad-group-errors.ts";
-import { AccountSharingStoreService } from "./account-sharing-store-service.ts";
+import { AccountSharingStoreService } from "./account-sharing-store.ts";
 
 export interface SearchAccountInviteTargetsInput {
   readonly actorUserId: AppUserId;

@@ -8,7 +8,7 @@ import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-a
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
 import { makeAccountRefetchStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
-import { AccountRefetchStoreService } from "./account-refetch-store-service.ts";
+import { AccountRefetchStoreService } from "./account-refetch-store.ts";
 import { apply } from "./apply-account-refetch-service.ts";
 
 const parseTestUserId = () =>

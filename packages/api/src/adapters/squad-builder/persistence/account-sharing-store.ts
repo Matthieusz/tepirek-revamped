@@ -31,7 +31,7 @@ import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-a
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.ts";
-import { AccountSharingStoreService } from "../../../services/squad-builder/account-sharing/account-sharing-store-service.ts";
+import { AccountSharingStoreService } from "../../../services/squad-builder/account-sharing/account-sharing-store.ts";
 import type {
   AccountAccessGrantSummary,
   AccountAccessInviteSummary,

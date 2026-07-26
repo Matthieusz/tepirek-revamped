@@ -1,4 +1,6 @@
+import * as Context from "effect/Context";
 import * as Data from "effect/Data";
+import type { Effect } from "effect/Effect";
 
 import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
@@ -8,10 +10,12 @@ import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-p
 import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
 import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
 import type {
+  ActorDoesNotOwnMargonemAccount,
   EffectSquadBuilderPersistenceUnavailable,
   MargonemAccountAlreadyOwnedByActor,
   MargonemAccountAlreadySharedWithActor,
   MargonemAccountOwnedByAnotherUser,
+  MargonemAccountNotFound,
   PendingMargonemAccountImportNotFound as CanonicalPendingMargonemAccountImportNotFound,
 } from "../squad-groups/squad-group-errors.ts";
 
@@ -146,3 +150,56 @@ export interface CreateOwnedAccountFromPendingImportInput {
 export interface ListOwnedMargonemAccountsInput {
   readonly actorUserId: AppUserId;
 }
+
+/** Persistence operations used by account import workflows. */
+export interface AccountImportStoreServiceShape {
+  readonly listOwnedAccounts: (
+    input: ListOwnedMargonemAccountsInput
+  ) => Effect<
+    readonly OwnedMargonemAccountSummary[],
+    EffectSquadBuilderPersistenceUnavailable
+  >;
+  readonly updateOwnedAccountDisplayName: (
+    input: UpdateOwnedAccountDisplayNameInput
+  ) => Effect<
+    OwnedMargonemAccountSummary,
+    | MargonemAccountNotFound
+    | ActorDoesNotOwnMargonemAccount
+    | EffectSquadBuilderPersistenceUnavailable
+  >;
+  readonly deleteOwnedAccount: (
+    input: DeleteOwnedAccountInput
+  ) => Effect<
+    DeleteOwnedAccountResult,
+    | MargonemAccountNotFound
+    | ActorDoesNotOwnMargonemAccount
+    | EffectSquadBuilderPersistenceUnavailable
+  >;
+  readonly findProfileAccessState: (
+    input: FindProfileAccessStateInput
+  ) => Effect<ProfileAccessState, EffectSquadBuilderPersistenceUnavailable>;
+  readonly createPendingImport: (
+    input: CreatePendingMargonemAccountImportInput
+  ) => Effect<
+    PendingMargonemAccountImport,
+    EffectSquadBuilderPersistenceUnavailable
+  >;
+  readonly findPendingImportForConfirmation: (
+    input: FindPendingMargonemAccountImportInput
+  ) => Effect<
+    PendingMargonemAccountImportForConfirmation,
+    | PendingMargonemAccountImportNotFound
+    | EffectSquadBuilderPersistenceUnavailable
+  >;
+  readonly createOwnedAccountFromPendingImport: (
+    input: CreateOwnedAccountFromPendingImportInput
+  ) => Effect<
+    OwnedMargonemAccountSummary,
+    DuplicateMargonemAccountError | EffectSquadBuilderPersistenceUnavailable
+  >;
+}
+
+export class AccountImportStoreService extends Context.Service<
+  AccountImportStoreService,
+  AccountImportStoreServiceShape
+>()("@tepirek-revamped/api/squad-builder/AccountImportStoreService") {}

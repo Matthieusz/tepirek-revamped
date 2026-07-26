@@ -11,7 +11,7 @@ import {
 } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
 import { makeAccountImportStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
-import { AccountImportStoreService } from "./account-import-store-service.ts";
+import { AccountImportStoreService } from "./account-import-store.ts";
 import { confirm } from "./confirm-owned-account-import-service.ts";
 
 const parseTestUserId = () =>

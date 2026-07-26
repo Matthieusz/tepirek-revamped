@@ -20,33 +20,24 @@ import {
   toMargonemProfileUrl,
 } from "../../../domain/squad-builder/margonem-profile-url.ts";
 import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
-import type {
-  FirecrawlClientService,
-  FirecrawlScrapeError,
-} from "../firecrawl-client.ts";
-import type {
-  FirecrawlConfigService,
-  FirecrawlCreditCount,
-} from "../firecrawl-config.ts";
-import type { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
+import type { FirecrawlScrapeError } from "../firecrawl-client.ts";
+import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
 import {
   MargonemAccountAlreadyOwnedByActor,
   MargonemAccountAlreadySharedWithActor,
   MargonemAccountOwnedByAnotherUser,
 } from "../squad-groups/squad-group-errors.ts";
-import { AccountImportStoreService } from "./account-import-store-service.ts";
-import { ProfileAccessState } from "./account-import-store.ts";
+import {
+  AccountImportStoreService,
+  ProfileAccessState,
+} from "./account-import-store.ts";
 import type {
   DuplicateMargonemAccountError,
   FirecrawlBudgetError,
   SquadBuilderPersistenceUnavailable,
 } from "./account-import-store.ts";
 import { preview as previewMargonemProfileImport } from "./preview-margonem-profile-import-service.ts";
-import type {
-  PreviewMargonemProfileImportError,
-  PreviewMargonemProfileImportInput,
-  PreviewMargonemProfileImportOutput,
-} from "./preview-margonem-profile-import-service.ts";
+import type { PreviewMargonemProfileImportOutput } from "./preview-margonem-profile-import-service.ts";
 
 export interface PreviewOwnedAccountImportsInput {
   readonly actorUserId: AppUserId;
@@ -141,20 +132,6 @@ interface LineFailure {
   readonly lineNumber: number;
   readonly inputUrl: string;
   readonly error: PreviewOwnedAccountImportLineError;
-}
-
-/** Effect seam over the single-profile preview service for batch use. */
-export interface EffectSingleMargonemProfilePreview {
-  readonly preview: (
-    input: PreviewMargonemProfileImportInput
-  ) => Effect<
-    PreviewMargonemProfileImportOutput,
-    PreviewMargonemProfileImportError,
-    | AccountImportStoreService
-    | FirecrawlConfigService
-    | FirecrawlClientService
-    | FirecrawlRequestAccountingStoreService
-  >;
 }
 
 const isEmpty = (value: string): boolean => Str.isEmpty(Str.trim(value));
@@ -271,9 +248,6 @@ const persistPendingImport = ({
 export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
   function* previewBatchEffect(input: PreviewOwnedAccountImportsInput) {
     const store = yield* AccountImportStoreService;
-    const singleProfilePreview: EffectSingleMargonemProfilePreview = {
-      preview: previewMargonemProfileImport,
-    };
     const now = yield* DateTime.nowAsDate;
     const nonBlankLines = input.profileUrls
       .map((url, index) => ({ inputUrl: url, lineNumber: index + 1 }))
@@ -403,33 +377,31 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
 
     const fetchedItems = yield* EffectRuntime.all(
       availableLines.map((line) =>
-        singleProfilePreview
-          .preview({
-            actorUserId: input.actorUserId,
-            profileUrl: line.inputUrl,
-          })
-          .pipe(
-            EffectRuntime.matchEffect({
-              onFailure: (error) =>
-                EffectRuntime.succeed({
-                  item: toFailedItem({
-                    error,
-                    inputUrl: line.inputUrl,
-                    lineNumber: line.lineNumber,
-                  }),
-                  lineNumber: line.lineNumber,
-                }),
-              onSuccess: (profilePreview) =>
-                persistPendingImport({
-                  actorUserId: input.actorUserId,
+        previewMargonemProfileImport({
+          actorUserId: input.actorUserId,
+          profileUrl: line.inputUrl,
+        }).pipe(
+          EffectRuntime.matchEffect({
+            onFailure: (error) =>
+              EffectRuntime.succeed({
+                item: toFailedItem({
+                  error,
                   inputUrl: line.inputUrl,
                   lineNumber: line.lineNumber,
-                  now,
-                  preview: profilePreview,
-                  store,
                 }),
-            })
-          )
+                lineNumber: line.lineNumber,
+              }),
+            onSuccess: (profilePreview) =>
+              persistPendingImport({
+                actorUserId: input.actorUserId,
+                inputUrl: line.inputUrl,
+                lineNumber: line.lineNumber,
+                now,
+                preview: profilePreview,
+                store,
+              }),
+          })
+        )
       ),
       { concurrency: batchImportPolicy.fetchConcurrency }
     );

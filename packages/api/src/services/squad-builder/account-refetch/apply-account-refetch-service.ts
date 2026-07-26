@@ -2,10 +2,8 @@ import * as DateTime from "effect/DateTime";
 import * as EffectRuntime from "effect/Effect";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
-import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
-import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
-import { AccountRefetchStoreService } from "./account-refetch-store-service.ts";
+import { AccountRefetchStoreService } from "./account-refetch-store.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
@@ -19,16 +17,7 @@ export interface ApplyAccountRefetchInput {
   readonly refetchPreviewId: PendingMargonemAccountRefetchId;
 }
 
-/** Result summary for applying a pending account refetch. */
-export interface ApplyAccountRefetchOutput {
-  readonly accountId: MargonemAccountId;
-  readonly profileId: MargonemProfileId;
-  readonly lastFetchedAt: Date;
-  readonly addedCharacterCount: number;
-  readonly updatedCharacterCount: number;
-  readonly removedCharacterCount: number;
-  readonly removedSquadCharacterCount: number;
-}
+export type { ApplyAccountRefetchOutput } from "./account-refetch-store.ts";
 
 /** Expected failures returned by the account refetch apply service. */
 export type ApplyAccountRefetchError =

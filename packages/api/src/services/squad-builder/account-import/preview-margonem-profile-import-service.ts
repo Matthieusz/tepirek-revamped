@@ -28,7 +28,7 @@ import {
   MargonemAccountAlreadySharedWithActor,
   MargonemAccountOwnedByAnotherUser,
 } from "../squad-groups/squad-group-errors.ts";
-import { AccountImportStoreService } from "./account-import-store-service.ts";
+import { AccountImportStoreService } from "./account-import-store.ts";
 import type {
   DuplicateMargonemAccountError,
   FirecrawlBudgetError,

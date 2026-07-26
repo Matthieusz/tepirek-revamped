@@ -30,10 +30,10 @@ import {
   parseTestUserId,
   squadBuilderIntegrationTestLayer,
 } from "../../../test/squad-builder/store-integration.ts";
-import { AccountImportStoreService } from "../account-import/account-import-store-service.ts";
+import { AccountImportStoreService } from "../account-import/account-import-store.ts";
 import { confirm as confirmOwnedAccountImport } from "../account-import/confirm-owned-account-import-service.ts";
-import { list as listOwnedMargonemAccounts } from "../account-import/list-owned-margonem-accounts.ts";
-import { AccountRefetchStoreService } from "../account-refetch/account-refetch-store-service.ts";
+import { listOwnedAccounts as listOwnedMargonemAccounts } from "../account-import/owned-account-operations.ts";
+import { AccountRefetchStoreService } from "../account-refetch/account-refetch-store.ts";
 import { apply as applyAccountRefetch } from "../account-refetch/apply-account-refetch-service.ts";
 
 const parseTestCharacterId = (value: number) =>

@@ -16,10 +16,10 @@ import {
 } from "../../../protocol/squad-builder/account-import/http-api-contract.ts";
 import { confirm as confirmOwnedAccountImportWorkflow } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
 import type { ConfirmOwnedAccountImportError } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
-import { deleteOwnedAccount as deleteOwnedAccountWorkflow } from "../../../services/squad-builder/account-import/delete-owned-account-service.ts";
-import type { DeleteOwnedAccountError } from "../../../services/squad-builder/account-import/delete-owned-account-service.ts";
-import type { ListOwnedMargonemAccountsError } from "../../../services/squad-builder/account-import/list-owned-margonem-accounts.ts";
-import { list as listOwnedMargonemAccountsWorkflow } from "../../../services/squad-builder/account-import/list-owned-margonem-accounts.ts";
+import {
+  deleteOwnedAccount as deleteOwnedAccountWorkflow,
+  listOwnedAccounts as listOwnedMargonemAccountsWorkflow,
+} from "../../../services/squad-builder/account-import/owned-account-operations.ts";
 import { preview as previewMargonemProfileImportWorkflow } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import type { PreviewMargonemProfileImportError } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import { preview as previewOwnedAccountImportsWorkflow } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
@@ -38,9 +38,7 @@ type AccountImportHandlerError =
   | PreviewMargonemProfileImportError
   | PreviewOwnedAccountImportsError
   | ConfirmOwnedAccountImportError
-  | UpdateOwnedAccountDisplayNameError
-  | DeleteOwnedAccountError
-  | ListOwnedMargonemAccountsError;
+  | UpdateOwnedAccountDisplayNameError;
 
 const mapAccountImportError = (
   error: AccountImportHandlerError

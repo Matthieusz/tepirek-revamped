@@ -1,3 +1,6 @@
+import * as Context from "effect/Context";
+import type { Effect } from "effect/Effect";
+
 import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
@@ -69,6 +72,17 @@ export interface PendingMargonemAccountRefetchForApply {
   readonly latestCharacters: readonly MargonemCharacterPreview[];
 }
 
+/** Result summary for applying a pending account refetch. */
+export interface ApplyAccountRefetchOutput {
+  readonly accountId: MargonemAccountId;
+  readonly profileId: MargonemProfileId;
+  readonly lastFetchedAt: Date;
+  readonly addedCharacterCount: number;
+  readonly updatedCharacterCount: number;
+  readonly removedCharacterCount: number;
+  readonly removedSquadCharacterCount: number;
+}
+
 /** Input for marking a pending refetch as applied. */
 export interface MarkPendingMargonemAccountRefetchAppliedInput {
   readonly refetchPreviewId: PendingMargonemAccountRefetchId;
@@ -81,6 +95,44 @@ export interface ApplyRefetchedAccountInput {
   readonly pendingRefetch: PendingMargonemAccountRefetchForApply;
   readonly now: Date;
 }
+
+/** Persistence operations used by account refetch workflows. */
+export interface AccountRefetchStoreServiceShape {
+  readonly getAccountForRefetch: (input: {
+    readonly actorUserId: AppUserId;
+    readonly accountId: MargonemAccountId;
+  }) => Effect<
+    RefetchableMargonemAccount,
+    | MargonemAccountNotFound
+    | ActorDoesNotOwnMargonemAccount
+    | SquadBuilderPersistenceUnavailable
+  >;
+  readonly createPendingRefetch: (
+    input: CreatePendingMargonemAccountRefetchInput
+  ) => Effect<
+    PendingMargonemAccountRefetch,
+    SquadBuilderPersistenceUnavailable
+  >;
+  readonly findPendingRefetchForApply: (input: {
+    readonly actorUserId: AppUserId;
+    readonly refetchPreviewId: PendingMargonemAccountRefetch["id"];
+    readonly now: Date;
+  }) => Effect<
+    PendingMargonemAccountRefetchForApply,
+    PendingMargonemAccountRefetchNotFound | SquadBuilderPersistenceUnavailable
+  >;
+  readonly applyRefetchedAccount: (
+    input: ApplyRefetchedAccountInput
+  ) => Effect<ApplyAccountRefetchOutput, SquadBuilderPersistenceUnavailable>;
+  readonly markPendingRefetchApplied: (
+    input: MarkPendingMargonemAccountRefetchAppliedInput
+  ) => Effect<void, SquadBuilderPersistenceUnavailable>;
+}
+
+export class AccountRefetchStoreService extends Context.Service<
+  AccountRefetchStoreService,
+  AccountRefetchStoreServiceShape
+>()("@tepirek-revamped/api/squad-builder/AccountRefetchStoreService") {}
 
 export type {
   ActorDoesNotOwnMargonemAccount,
