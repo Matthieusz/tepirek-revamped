@@ -25,24 +25,20 @@ import {
 } from "../auth-helper.ts";
 import { withRequestCorrelation } from "../request-correlation.ts";
 
-type EffectError<EffectType> =
-  EffectType extends Effect.Effect<unknown, infer Error, unknown>
-    ? Error
-    : never;
-type SearchAccountInviteTargetsError = EffectError<ReturnType<typeof search>>;
-type SendAccountAccessInviteError = EffectError<ReturnType<typeof send>>;
-type RespondToAccountAccessInviteError = EffectError<
+type SearchAccountInviteTargetsError = Effect.Error<ReturnType<typeof search>>;
+type SendAccountAccessInviteError = Effect.Error<ReturnType<typeof send>>;
+type RespondToAccountAccessInviteError = Effect.Error<
   ReturnType<typeof respond>
 >;
-type RevokeAccountAccessError = EffectError<ReturnType<typeof revoke>>;
+type RevokeAccountAccessError = Effect.Error<ReturnType<typeof revoke>>;
 type AccountSharingStore = typeof AccountSharingStoreService.Service;
-type ListIncomingAccountInvitesError = EffectError<
+type ListIncomingAccountInvitesError = Effect.Error<
   ReturnType<AccountSharingStore["listIncomingAccountInvites"]>
 >;
-type ListSharedAccountsError = EffectError<
+type ListSharedAccountsError = Effect.Error<
   ReturnType<AccountSharingStore["listSharedAccounts"]>
 >;
-type ListAccountAccessGrantsError = EffectError<
+type ListAccountAccessGrantsError = Effect.Error<
   ReturnType<typeof listAccountAccessGrantsWorkflow>
 >;
 type AccountSharingHandlerError =

@@ -41,7 +41,6 @@ export const AuctionSignupPayload = AuctionSignupPayloadFields.pipe(
     { message: "Nieprawidłowe pole licytacji" }
   )
 );
-export type AuctionSignupPayloadType = typeof AuctionSignupPayload.Type;
 export const RemoveAuctionSignupPayload = Schema.Struct({
   id: AuctionSignupId,
 });

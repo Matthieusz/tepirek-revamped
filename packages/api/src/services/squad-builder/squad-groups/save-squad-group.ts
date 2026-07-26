@@ -9,7 +9,10 @@ import type {
 } from "../../../domain/squad-builder/squad-group-snapshot.ts";
 import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.ts";
 import type {
-  EffectSquadBuilderPersistenceUnavailable,
+  ActorCannotViewSquadGroup,
+  ActorDoesNotOwnSquadGroup,
+  SquadBuilderPersistenceUnavailable,
+  SquadGroupNotFound,
   SquadGroupWriteConflict,
 } from "./squad-group-errors.ts";
 import * as SquadGroupStore from "./squad-group-store.ts";
@@ -27,12 +30,12 @@ export interface SaveSquadGroupInput {
 
 /** Expected failures returned by squad group snapshot save. */
 export type SaveSquadGroupError =
-  | SquadGroupStore.SquadGroupNotFound
-  | SquadGroupStore.ActorCannotViewSquadGroup
-  | SquadGroupStore.ActorDoesNotOwnSquadGroup
+  | SquadGroupNotFound
+  | ActorCannotViewSquadGroup
+  | ActorDoesNotOwnSquadGroup
   | SquadGroupWriteConflict
   | SquadGroupValidationError
-  | EffectSquadBuilderPersistenceUnavailable;
+  | SquadBuilderPersistenceUnavailable;
 
 /** Save a full squad group snapshot for its owner. */
 export const save = Effect.fn("SquadGroups.save")(function* saveSquadGroup(

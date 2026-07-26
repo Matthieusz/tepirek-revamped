@@ -5,12 +5,9 @@ import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.ts";
 import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import { computeMargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.ts";
-import type { MargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.ts";
 import { parseMargonemProfileHtml } from "../../../domain/squad-builder/margonem-profile-html-parser.ts";
 import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.ts";
-import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.ts";
-import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
 import {
   FirecrawlClientService,
   FirecrawlResponseNotParseable,
@@ -20,29 +17,18 @@ import {
   FirecrawlConfigService,
   parseFirecrawlCreditCount,
 } from "../firecrawl-config.ts";
-import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
 import { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";
-import { AccountRefetchStoreService } from "./account-refetch-store.ts";
+import type { FirecrawlBudgetError } from "../firecrawl-request-accounting-store.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
-  FirecrawlBudgetError,
   MargonemAccountNotFound,
   SquadBuilderPersistenceUnavailable,
-} from "./account-refetch-store.ts";
+} from "../squad-groups/squad-group-errors.ts";
+import { AccountRefetchStoreService } from "./account-refetch-store.ts";
 
 export interface PreviewAccountRefetchInput {
   readonly actorUserId: AppUserId;
   readonly accountId: MargonemAccountId;
-}
-
-export interface PreviewAccountRefetchOutput {
-  readonly refetchPreviewId: PendingMargonemAccountRefetchId;
-  readonly accountId: MargonemAccountId;
-  readonly profileId: MargonemProfileId;
-  readonly generatedProfileUrl: string;
-  readonly fetchedAt: Date;
-  readonly firecrawlCreditsUsed: FirecrawlCreditCount;
-  readonly diff: MargonemAccountRefetchDiff;
 }
 
 export type PreviewAccountRefetchError =

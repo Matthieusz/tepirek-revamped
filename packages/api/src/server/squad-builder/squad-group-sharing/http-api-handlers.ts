@@ -25,27 +25,23 @@ import {
 } from "../auth-helper.ts";
 import { withRequestCorrelation } from "../request-correlation.ts";
 
-type EffectError<EffectType> =
-  EffectType extends Effect.Effect<unknown, infer Error, unknown>
-    ? Error
-    : never;
-type SearchSquadEditorInviteTargetsError = EffectError<
+type SearchSquadEditorInviteTargetsError = Effect.Error<
   ReturnType<typeof search>
 >;
-type SendSquadGroupEditorInviteError = EffectError<ReturnType<typeof send>>;
-type RespondToSquadGroupInviteError = EffectError<ReturnType<typeof respond>>;
-type RevokeSquadGroupEditorError = EffectError<ReturnType<typeof revoke>>;
+type SendSquadGroupEditorInviteError = Effect.Error<ReturnType<typeof send>>;
+type RespondToSquadGroupInviteError = Effect.Error<ReturnType<typeof respond>>;
+type RevokeSquadGroupEditorError = Effect.Error<ReturnType<typeof revoke>>;
 type SquadGroupStore = typeof SquadGroupStoreService.Service;
-type ListIncomingSquadGroupInvitesError = EffectError<
+type ListIncomingSquadGroupInvitesError = Effect.Error<
   ReturnType<SquadGroupStore["listIncomingSquadGroupInvites"]>
 >;
-type ListSharedSquadGroupsError = EffectError<
+type ListSharedSquadGroupsError = Effect.Error<
   ReturnType<SquadGroupStore["listSharedSquadGroups"]>
 >;
-type ListSquadGroupEditorGrantsError = EffectError<
+type ListSquadGroupEditorGrantsError = Effect.Error<
   ReturnType<SquadGroupStore["listSquadGroupEditorGrants"]>
 >;
-type CountPendingSquadGroupInvitesError = EffectError<
+type CountPendingSquadGroupInvitesError = Effect.Error<
   ReturnType<SquadGroupStore["getPendingSquadGroupInviteCount"]>
 >;
 type SquadGroupSharingHandlerError =

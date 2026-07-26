@@ -22,20 +22,18 @@ import {
 import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
 import type { FirecrawlScrapeError } from "../firecrawl-client.ts";
 import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
+import type { FirecrawlBudgetError } from "../firecrawl-request-accounting-store.ts";
 import {
   MargonemAccountAlreadyOwnedByActor,
   MargonemAccountAlreadySharedWithActor,
   MargonemAccountOwnedByAnotherUser,
 } from "../squad-groups/squad-group-errors.ts";
+import type { SquadBuilderPersistenceUnavailable } from "../squad-groups/squad-group-errors.ts";
 import {
   AccountImportStoreService,
   ProfileAccessState,
 } from "./account-import-store.ts";
-import type {
-  DuplicateMargonemAccountError,
-  FirecrawlBudgetError,
-  SquadBuilderPersistenceUnavailable,
-} from "./account-import-store.ts";
+import type { DuplicateMargonemAccountError } from "./account-import-store.ts";
 import { preview as previewMargonemProfileImport } from "./preview-margonem-profile-import-service.ts";
 import type { PreviewMargonemProfileImportOutput } from "./preview-margonem-profile-import-service.ts";
 
@@ -65,11 +63,6 @@ export type PreviewOwnedAccountImportItem = Data.TaggedEnum<{
 }>;
 export const PreviewOwnedAccountImportItem =
   Data.taggedEnum<PreviewOwnedAccountImportItem>();
-export type PreviewOwnedAccountImportSuccess = Data.TaggedEnum.Value<
-  PreviewOwnedAccountImportItem,
-  "PreviewSucceeded"
->;
-
 export class DuplicateProfileInBatchError extends Schema.TaggedErrorClass<DuplicateProfileInBatchError>()(
   "DuplicateProfileInBatch",
   { firstLineNumber: Schema.Finite },
@@ -84,15 +77,6 @@ export type PreviewOwnedAccountImportLineError =
   | FirecrawlScrapeError
   | ParseMargonemProfileHtmlError
   | SquadBuilderPersistenceUnavailable;
-
-export type PreviewOwnedAccountImportFailure = Data.TaggedEnum.Value<
-  PreviewOwnedAccountImportItem,
-  "PreviewFailed"
->;
-
-export interface PreviewOwnedAccountImportsOutput {
-  readonly items: readonly PreviewOwnedAccountImportItem[];
-}
 
 // oxlint-disable-next-line max-classes-per-file -- Batch policy errors live with the use case.
 export class TooManyProfileUrlsInBatch extends Schema.TaggedErrorClass<TooManyProfileUrlsInBatch>()(

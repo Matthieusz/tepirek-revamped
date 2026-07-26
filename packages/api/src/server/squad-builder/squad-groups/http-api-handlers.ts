@@ -30,24 +30,20 @@ import {
 } from "../auth-helper.ts";
 import { withRequestCorrelation } from "../request-correlation.ts";
 
-type EffectError<EffectType> =
-  EffectType extends Effect.Effect<unknown, infer Error, unknown>
-    ? Error
-    : never;
 type SquadGroupStore = typeof SquadGroupStoreService.Service;
-type DeleteSquadGroupError = EffectError<
+type DeleteSquadGroupError = Effect.Error<
   ReturnType<SquadGroupStore["deleteSquadGroup"]>
 >;
-type ListOwnedSquadGroupsError = EffectError<
+type ListOwnedSquadGroupsError = Effect.Error<
   ReturnType<SquadGroupStore["listMySquadGroups"]>
 >;
 type ListGlobalSquadGroupsError =
   | SquadGroupListFilterError
-  | EffectError<ReturnType<typeof listGlobalSquadGroupsWorkflow>>;
-type GetSquadGroupDetailError = EffectError<
+  | Effect.Error<ReturnType<typeof listGlobalSquadGroupsWorkflow>>;
+type GetSquadGroupDetailError = Effect.Error<
   ReturnType<SquadGroupStore["getSquadGroupDetail"]>
 >;
-type SetSquadGroupVisibilityError = EffectError<
+type SetSquadGroupVisibilityError = Effect.Error<
   ReturnType<typeof setSquadGroupVisibilityWorkflow>
 >;
 

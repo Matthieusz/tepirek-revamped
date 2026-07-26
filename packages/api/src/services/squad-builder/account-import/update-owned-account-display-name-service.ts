@@ -8,9 +8,9 @@ import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-a
 import type {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
+  SquadBuilderPersistenceUnavailable,
 } from "../squad-groups/squad-group-errors.ts";
 import { AccountImportStoreService } from "./account-import-store.ts";
-import type { SquadBuilderPersistenceUnavailable } from "./account-import-store.ts";
 
 export interface UpdateOwnedAccountDisplayNameInput {
   readonly actorUserId: AppUserId;

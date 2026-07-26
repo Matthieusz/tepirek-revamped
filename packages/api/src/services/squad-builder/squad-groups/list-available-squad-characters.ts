@@ -2,11 +2,11 @@ import * as Effect from "effect/Effect";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
-import type { EffectSquadBuilderPersistenceUnavailable } from "./squad-group-errors.ts";
 import type {
   ActorCannotViewSquadGroup,
+  SquadBuilderPersistenceUnavailable,
   SquadGroupNotFound,
-} from "./squad-group-store.ts";
+} from "./squad-group-errors.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 /** Input for listing characters available to a squad group. */
@@ -19,7 +19,7 @@ export interface ListAvailableSquadCharactersInput {
 export type ListAvailableSquadCharactersError =
   | SquadGroupNotFound
   | ActorCannotViewSquadGroup
-  | EffectSquadBuilderPersistenceUnavailable;
+  | SquadBuilderPersistenceUnavailable;
 
 /** List Jaruna characters accessible to the squad group owner. */
 export const list = Effect.fn("SquadGroups.listAvailableCharacters")(

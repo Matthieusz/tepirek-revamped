@@ -27,16 +27,11 @@ import {
 } from "../auth-helper.ts";
 import { withRequestCorrelation } from "../request-correlation.ts";
 
-type EffectError<EffectType> =
-  EffectType extends Effect.Effect<unknown, infer Error, unknown>
-    ? Error
-    : never;
-
 type AccountImportStore = typeof AccountImportStoreService.Service;
-type DeleteOwnedAccountError = EffectError<
+type DeleteOwnedAccountError = Effect.Error<
   ReturnType<AccountImportStore["deleteOwnedAccount"]>
 >;
-type ListOwnedAccountsError = EffectError<
+type ListOwnedAccountsError = Effect.Error<
   ReturnType<AccountImportStore["listOwnedAccounts"]>
 >;
 

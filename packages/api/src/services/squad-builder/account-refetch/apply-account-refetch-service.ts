@@ -3,13 +3,13 @@ import * as EffectRuntime from "effect/Effect";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
-import { AccountRefetchStoreService } from "./account-refetch-store.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
   PendingMargonemAccountRefetchNotFound,
   SquadBuilderPersistenceUnavailable,
-} from "./account-refetch-store.ts";
+} from "../squad-groups/squad-group-errors.ts";
+import { AccountRefetchStoreService } from "./account-refetch-store.ts";
 
 /** Input for applying a previously previewed account refetch. */
 export interface ApplyAccountRefetchInput {

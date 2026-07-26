@@ -12,21 +12,17 @@ import type {
 } from "../../../domain/squad-builder/squad-group-snapshot.ts";
 import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.ts";
 import type { SquadId } from "../../../domain/squad-builder/squad-id.ts";
-import type { SquadBuilderPersistenceUnavailable } from "../account-import/account-import-store.ts";
 import {
   ActorCannotEditSquadGroup,
   EditorCannotChangeSquadStructure,
   SquadNotInGroup,
 } from "./squad-group-errors.ts";
 import type {
-  EffectSquadBuilderPersistenceUnavailable,
-  SquadCharacterNotAccessible,
+  ActorCannotViewSquadGroup,
+  SquadBuilderPersistenceUnavailable,
+  SquadGroupNotFound,
   SquadGroupWriteConflict,
 } from "./squad-group-errors.ts";
-import type {
-  ActorCannotViewSquadGroup,
-  SquadGroupNotFound,
-} from "./squad-group-store.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 export interface SharedSquadCharactersInput {
@@ -59,16 +55,6 @@ export type EffectSharedSquadGroupSaveError =
   | SquadNotInGroup
   | EditorCannotChangeSquadStructure
   | SquadGroupWriteConflict
-  | SquadGroupValidationError
-  | EffectSquadBuilderPersistenceUnavailable;
-
-export type SharedSquadGroupSaveError =
-  | SquadGroupNotFound
-  | ActorCannotViewSquadGroup
-  | ActorCannotEditSquadGroup
-  | SquadNotInGroup
-  | EditorCannotChangeSquadStructure
-  | SquadCharacterNotAccessible
   | SquadGroupValidationError
   | SquadBuilderPersistenceUnavailable;
 
