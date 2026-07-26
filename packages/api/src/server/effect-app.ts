@@ -1,6 +1,5 @@
 import type { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { makeLiveDatabaseLayer } from "@tepirek-revamped/db/effect";
-import type { ConfigError } from "effect/Config";
 import * as Layer from "effect/Layer";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 
@@ -18,17 +17,11 @@ import type { HeroesStore } from "../adapters/heroes/heroes-store.ts";
 import { SkillsStoreLayer } from "../adapters/skills/skills-store.ts";
 import type { SkillsStore } from "../adapters/skills/skills-store.ts";
 import { FirecrawlClientServiceLiveLayer } from "../adapters/squad-builder/firecrawl/firecrawl-client-service.ts";
-import {
-  FirecrawlConfigServiceLiveLayer,
-  makeFirecrawlConfigLayer,
-} from "../adapters/squad-builder/firecrawl/firecrawl-config.ts";
+import { makeFirecrawlConfigLayer } from "../adapters/squad-builder/firecrawl/firecrawl-config.ts";
 import { DrizzleSquadBuilderStoresLayer } from "../adapters/squad-builder/persistence/squad-builder-stores-layer.ts";
 import { TodoStoreLayer } from "../adapters/todo/todo-store.ts";
 import type { TodoStore } from "../adapters/todo/todo-store.ts";
-import {
-  DiscordVerificationConfig,
-  makeDiscordVerificationConfigLayer,
-} from "../adapters/user/discord-verification-config.ts";
+import { makeDiscordVerificationConfigLayer } from "../adapters/user/discord-verification-config.ts";
 import type { DiscordVerificationConfig as DiscordVerificationConfigService } from "../adapters/user/discord-verification-config.ts";
 import { DiscordGuildVerifierLiveLayer } from "../adapters/user/discord-verification-service.ts";
 import type { DiscordGuildVerifier } from "../adapters/user/discord-verification-service.ts";
@@ -39,25 +32,21 @@ import type { RankingService } from "../services/ranking/ranking-service.ts";
 import type { AccountImportStoreService } from "../services/squad-builder/account-import/account-import-store-service.ts";
 import type { AccountRefetchStoreService } from "../services/squad-builder/account-refetch/account-refetch-store-service.ts";
 import type { AccountSharingStoreService } from "../services/squad-builder/account-sharing/account-sharing-store-service.ts";
-import type { AccountSharingStateService } from "../services/squad-builder/account-sharing/list-account-sharing-state-service.ts";
-import { layer as accountSharingStateLayer } from "../services/squad-builder/account-sharing/list-account-sharing-state-service.ts";
 import type { FirecrawlClientService } from "../services/squad-builder/firecrawl-client.ts";
 import type {
   FirecrawlConfig,
   FirecrawlConfigService,
 } from "../services/squad-builder/firecrawl-config.ts";
 import type { FirecrawlRequestAccountingStoreService } from "../services/squad-builder/firecrawl-request-accounting-store.ts";
-import type { SquadGroupSharingStateService } from "../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.ts";
-import { layer as squadGroupSharingStateLayer } from "../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.ts";
 import type { SquadGroupStoreService } from "../services/squad-builder/squad-groups/squad-group-store.ts";
 import { VerifyDiscordGuildMembershipService } from "../services/user/verify-discord-guild-membership-service.ts";
 import type { VaultService } from "../services/vault/vault-service.ts";
 
 const makeApiStableLayer = <DatabaseError>(
   databaseLayer: Layer.Layer<EffectDatabase, DatabaseError, never>,
-  discordConfigLayer = DiscordVerificationConfig.layer,
-  firecrawlConfigLayer = FirecrawlConfigServiceLiveLayer
-): Layer.Layer<SquadBuilderServices, DatabaseError | ConfigError> => {
+  discordConfigLayer: Layer.Layer<DiscordVerificationConfigService>,
+  firecrawlConfigLayer: Layer.Layer<FirecrawlConfigService>
+): Layer.Layer<SquadBuilderServices, DatabaseError> => {
   const discordVerifierLayer = DiscordGuildVerifierLiveLayer.pipe(
     Layer.provide(Layer.merge(discordConfigLayer, FetchHttpClient.layer))
   );
@@ -81,12 +70,6 @@ const makeApiStableLayer = <DatabaseError>(
     Layer.provide(databaseLayer)
   );
 
-  const squadBuilderSharing = Layer.mergeAll(
-    squadBuilderStores,
-    accountSharingStateLayer.pipe(Layer.provide(squadBuilderStores)),
-    squadGroupSharingStateLayer.pipe(Layer.provide(squadBuilderStores))
-  );
-
   const firecrawlLayer = Layer.mergeAll(
     firecrawlConfigLayer,
     FirecrawlClientServiceLiveLayer.pipe(Layer.provide(firecrawlConfigLayer))
@@ -94,7 +77,7 @@ const makeApiStableLayer = <DatabaseError>(
 
   const stableServices = Layer.mergeAll(
     databaseBackedStores,
-    squadBuilderSharing,
+    squadBuilderStores,
     firecrawlLayer
   );
 
@@ -151,6 +134,4 @@ type SquadBuilderServices =
   | FirecrawlClientService
   | FirecrawlConfigService
   | FirecrawlRequestAccountingStoreService
-  | AccountSharingStateService
-  | SquadGroupSharingStateService
   | VerifyDiscordGuildMembershipService;

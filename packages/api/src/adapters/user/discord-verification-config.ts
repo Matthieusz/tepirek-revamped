@@ -10,17 +10,7 @@ const discordGuildIdConfig = Config.schema(DiscordGuildId, "DISCORD_SERVER_ID");
 export class DiscordVerificationConfig extends Context.Service<
   DiscordVerificationConfig,
   { readonly guildId: string }
->()("@tepirek-revamped/api/user/DiscordVerificationConfig") {
-  static readonly layer: Layer.Layer<
-    DiscordVerificationConfig,
-    Config.ConfigError
-  > = Layer.effect(
-    DiscordVerificationConfig,
-    discordGuildIdConfig.pipe(
-      Effect.map((guildId) => DiscordVerificationConfig.of({ guildId }))
-    )
-  );
-}
+>()("@tepirek-revamped/api/user/DiscordVerificationConfig") {}
 
 /** Discord guild configuration parsed from the active Config provider. */
 export const readDiscordVerificationConfig = discordGuildIdConfig.pipe(

@@ -21,7 +21,8 @@ import {
   parseTestUserId,
   squadBuilderIntegrationTestLayer,
 } from "../../../test/squad-builder/store-integration.ts";
-import { AccountSharingStateService } from "../account-sharing/list-account-sharing-state-service.ts";
+import { AccountSharingStoreService } from "../account-sharing/account-sharing-store-service.ts";
+import { listAccountAccessGrants } from "../account-sharing/list-account-access-grants.ts";
 import { respond } from "../account-sharing/respond-to-account-access-invite-service.ts";
 import { revoke } from "../account-sharing/revoke-account-access-service.ts";
 import { search } from "../account-sharing/search-account-invite-targets-service.ts";
@@ -301,12 +302,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           })
         );
 
-        const accounts = yield* Effect.gen(function* accounts() {
-          const svc = yield* AccountSharingStateService;
-          return yield* svc.listSharedAccounts({
+        const accounts = yield* AccountSharingStoreService.use((store) =>
+          store.listSharedAccounts({
             actorUserId: parseTestUserId(target.id),
-          });
-        });
+          })
+        );
 
         expect(accounts).toHaveLength(1);
         expect(accounts[0]).toMatchObject({
@@ -370,12 +370,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           ])
         );
 
-        const grants = yield* Effect.gen(function* grants() {
-          const svc = yield* AccountSharingStateService;
-          return yield* svc.listAccountAccessGrants({
-            accountId: parseTestAccountId(account.id),
-            actorUserId: parseTestUserId(owner.id),
-          });
+        const grants = yield* listAccountAccessGrants({
+          accountId: parseTestAccountId(account.id),
+          actorUserId: parseTestUserId(owner.id),
         });
 
         expect(grants).toHaveLength(1);

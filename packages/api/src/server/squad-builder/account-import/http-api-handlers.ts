@@ -88,101 +88,97 @@ const mapAccountImportError = (
 export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "squadBuilderAccountImport",
-  Effect.fnUntraced(
-    function* SquadBuilderAccountImportHttpApiHandlers(handlers) {
-      yield* Effect.void;
-      return handlers
-        .handle(
-          "previewMargonemProfileImport",
-          Effect.fn("SquadBuilderAccountImport.previewMargonemProfileImport")(
-            function* previewMargonemProfileImport({ payload, request }) {
-              const session = yield* requireSquadBuilderSession();
-              return yield* withRequestCorrelation(
-                request,
-                previewMargonemProfileImportWorkflow({
-                  actorUserId: sessionAppUserId(session),
-                  profileUrl: payload.profileUrl,
-                })
-              ).pipe(Effect.mapError(mapAccountImportError));
-            }
-          )
+  (handlers) =>
+    handlers
+      .handle(
+        "previewMargonemProfileImport",
+        Effect.fn("SquadBuilderAccountImport.previewMargonemProfileImport")(
+          function* previewMargonemProfileImport({ payload, request }) {
+            const session = yield* requireSquadBuilderSession();
+            return yield* withRequestCorrelation(
+              request,
+              previewMargonemProfileImportWorkflow({
+                actorUserId: sessionAppUserId(session),
+                profileUrl: payload.profileUrl,
+              })
+            ).pipe(Effect.mapError(mapAccountImportError));
+          }
         )
-        .handle(
-          "previewOwnedAccountImports",
-          Effect.fn("SquadBuilderAccountImport.previewOwnedAccountImports")(
-            function* previewOwnedAccountImports({ payload, request }) {
-              const session = yield* requireSquadBuilderSession();
-              return yield* withRequestCorrelation(
-                request,
-                previewOwnedAccountImportsWorkflow({
-                  actorUserId: sessionAppUserId(session),
-                  profileUrls: payload.profileUrls,
-                })
-              ).pipe(Effect.mapError(mapAccountImportError));
-            }
-          )
+      )
+      .handle(
+        "previewOwnedAccountImports",
+        Effect.fn("SquadBuilderAccountImport.previewOwnedAccountImports")(
+          function* previewOwnedAccountImports({ payload, request }) {
+            const session = yield* requireSquadBuilderSession();
+            return yield* withRequestCorrelation(
+              request,
+              previewOwnedAccountImportsWorkflow({
+                actorUserId: sessionAppUserId(session),
+                profileUrls: payload.profileUrls,
+              })
+            ).pipe(Effect.mapError(mapAccountImportError));
+          }
         )
-        .handle(
-          "confirmOwnedAccountImport",
-          Effect.fn("SquadBuilderAccountImport.confirmOwnedAccountImport")(
-            function* confirmOwnedAccountImport({ payload, request }) {
-              const session = yield* requireSquadBuilderSession();
-              return yield* withRequestCorrelation(
-                request,
-                confirmOwnedAccountImportWorkflow({
-                  actorUserId: sessionAppUserId(session),
-                  displayName: payload.displayName,
-                  pendingImportId: payload.pendingImportId,
-                })
-              ).pipe(Effect.mapError(mapAccountImportError));
-            }
-          )
+      )
+      .handle(
+        "confirmOwnedAccountImport",
+        Effect.fn("SquadBuilderAccountImport.confirmOwnedAccountImport")(
+          function* confirmOwnedAccountImport({ payload, request }) {
+            const session = yield* requireSquadBuilderSession();
+            return yield* withRequestCorrelation(
+              request,
+              confirmOwnedAccountImportWorkflow({
+                actorUserId: sessionAppUserId(session),
+                displayName: payload.displayName,
+                pendingImportId: payload.pendingImportId,
+              })
+            ).pipe(Effect.mapError(mapAccountImportError));
+          }
         )
-        .handle(
-          "updateOwnedAccountDisplayName",
-          Effect.fn("SquadBuilderAccountImport.updateOwnedAccountDisplayName")(
-            function* updateOwnedAccountDisplayName({ payload, request }) {
-              const session = yield* requireSquadBuilderSession();
-              return yield* withRequestCorrelation(
-                request,
-                updateOwnedAccountDisplayNameWorkflow({
-                  accountId: payload.accountId,
-                  actorUserId: sessionAppUserId(session),
-                  displayName: payload.displayName,
-                })
-              ).pipe(Effect.mapError(mapAccountImportError));
-            }
-          )
+      )
+      .handle(
+        "updateOwnedAccountDisplayName",
+        Effect.fn("SquadBuilderAccountImport.updateOwnedAccountDisplayName")(
+          function* updateOwnedAccountDisplayName({ payload, request }) {
+            const session = yield* requireSquadBuilderSession();
+            return yield* withRequestCorrelation(
+              request,
+              updateOwnedAccountDisplayNameWorkflow({
+                accountId: payload.accountId,
+                actorUserId: sessionAppUserId(session),
+                displayName: payload.displayName,
+              })
+            ).pipe(Effect.mapError(mapAccountImportError));
+          }
         )
-        .handle(
-          "deleteOwnedAccount",
-          Effect.fn("SquadBuilderAccountImport.deleteOwnedAccount")(
-            function* deleteOwnedAccount({ payload, request }) {
-              const session = yield* requireSquadBuilderSession();
-              return yield* withRequestCorrelation(
-                request,
-                deleteOwnedAccountWorkflow({
-                  accountId: payload.accountId,
-                  actorUserId: sessionAppUserId(session),
-                })
-              ).pipe(Effect.mapError(mapAccountImportError));
-            }
-          )
+      )
+      .handle(
+        "deleteOwnedAccount",
+        Effect.fn("SquadBuilderAccountImport.deleteOwnedAccount")(
+          function* deleteOwnedAccount({ payload, request }) {
+            const session = yield* requireSquadBuilderSession();
+            return yield* withRequestCorrelation(
+              request,
+              deleteOwnedAccountWorkflow({
+                accountId: payload.accountId,
+                actorUserId: sessionAppUserId(session),
+              })
+            ).pipe(Effect.mapError(mapAccountImportError));
+          }
         )
-        .handle(
-          "listOwnedAccounts",
-          Effect.fn("SquadBuilderAccountImport.listOwnedAccounts")(
-            function* listOwnedAccounts({ request }) {
-              const session = yield* requireSquadBuilderSession();
-              return yield* withRequestCorrelation(
-                request,
-                listOwnedMargonemAccountsWorkflow({
-                  actorUserId: sessionAppUserId(session),
-                })
-              ).pipe(Effect.mapError(mapAccountImportError));
-            }
-          )
-        );
-    }
-  )
+      )
+      .handle(
+        "listOwnedAccounts",
+        Effect.fn("SquadBuilderAccountImport.listOwnedAccounts")(
+          function* listOwnedAccounts({ request }) {
+            const session = yield* requireSquadBuilderSession();
+            return yield* withRequestCorrelation(
+              request,
+              listOwnedMargonemAccountsWorkflow({
+                actorUserId: sessionAppUserId(session),
+              })
+            ).pipe(Effect.mapError(mapAccountImportError));
+          }
+        )
+      )
 );

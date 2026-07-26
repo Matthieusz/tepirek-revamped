@@ -58,134 +58,116 @@ const pendingRefetchPolicy = { expiresAfterMinutes: 30 } as const;
 const currentDate = DateTime.nowAsDate;
 
 /** Fetch latest account HTML and store a pending refetch diff for owner confirmation. */
-const makePreview = (
-  store: typeof AccountRefetchStoreService.Service,
-  requestAccounting: typeof FirecrawlRequestAccountingStoreService.Service,
-  config: typeof FirecrawlConfigService.Service,
-  firecrawl: typeof FirecrawlClientService.Service
-) =>
-  EffectRuntime.fn("AccountRefetch.preview")(
-    function* previewAccountRefetchEffect(input: PreviewAccountRefetchInput) {
-      const account = yield* store.getAccountForRefetch(input);
-      const requestTime = yield* DateTime.nowAsDate;
-      const yearMonth = firecrawlYearMonthFromDate(requestTime);
-      const reservedRequest = yield* requestAccounting.reserveRequest({
-        monthlyRequestBudget: config.monthlyRequestBudget,
-        profileId: account.profileId,
-        requestedByUserId: input.actorUserId,
-        yearMonth,
-      });
-      const finalizedRequest = yield* EffectRuntime.gen(
-        function* finalizeReservedRequest() {
-          const scrapedProfile = yield* firecrawl
-            .scrapeProfileHtml(account.profileId)
-            .pipe(
-              EffectRuntime.catch((error) =>
-                EffectRuntime.gen(function* markRequestFailed() {
-                  const completedAt = yield* currentDate;
-                  yield* requestAccounting.markRequestFailed({
-                    completedAt,
-                    errorTag: error._tag,
-                    requestId: reservedRequest.requestId,
-                  });
-                  return yield* error;
-                })
-              )
-            );
-          const creditsUsed = yield* parseFirecrawlCreditCount(
-            scrapedProfile.metadata.creditsUsed ?? 1
-          ).pipe(
-            EffectRuntime.catch(() =>
-              EffectRuntime.gen(function* markInvalidResponseFailed() {
-                const completedAt = yield* currentDate;
-                yield* requestAccounting.markRequestFailed({
-                  completedAt,
-                  errorTag: "FirecrawlResponseNotParseable",
-                  requestId: reservedRequest.requestId,
-                });
-                return yield* new FirecrawlResponseNotParseable({
-                  cause: new Error("Invalid Firecrawl creditsUsed"),
-                  profileId: account.profileId,
-                });
-              })
-            )
-          );
-          const completedAt = yield* currentDate;
-          yield* requestAccounting.markRequestSucceeded({
-            cacheState: scrapedProfile.metadata.cacheState ?? null,
-            completedAt,
-            creditsUsed,
-            firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
-            requestId: reservedRequest.requestId,
-          });
-          return { creditsUsed, scrapedProfile };
-        }
-      ).pipe(
-        EffectRuntime.onInterrupt(() =>
-          EffectRuntime.gen(function* markInterruptedRequestFailed() {
-            const completedAt = yield* currentDate;
-            yield* requestAccounting.markRequestFailed({
-              completedAt,
-              errorTag: "Interrupted",
-              requestId: reservedRequest.requestId,
-            });
-          })
-        )
-      );
-      const { creditsUsed, scrapedProfile } = finalizedRequest;
-
-      const parsedHtml = yield* parseMargonemProfileHtml({
-        html: scrapedProfile.html,
-        profileId: account.profileId,
-      });
-
-      const fetchedDateTime = yield* DateTime.now;
-      const fetchedAt = DateTime.toDate(fetchedDateTime);
-      const diff = computeMargonemAccountRefetchDiff({
-        accountId: account.accountId,
-        currentCharacters: account.currentCharacters,
-        fetchedAt,
-        latestCharacters: parsedHtml.jarunaCharacters,
-        profileId: account.profileId,
-      });
-      const pending = yield* store.createPendingRefetch({
-        accountId: account.accountId,
-        actorUserId: input.actorUserId,
-        diff,
-        expiresAt: fetchedDateTime.pipe(
-          DateTime.add({ minutes: pendingRefetchPolicy.expiresAfterMinutes }),
-          DateTime.toDate
-        ),
-        fetchedAt,
-        firecrawlCreditsUsed: creditsUsed,
-        latestCharacters: parsedHtml.jarunaCharacters,
-        profileId: account.profileId,
-      });
-
-      return {
-        accountId: account.accountId,
-        diff,
-        fetchedAt,
-        firecrawlCreditsUsed: creditsUsed,
-        generatedProfileUrl: toMargonemProfileUrl(account.profileId),
-        profileId: account.profileId,
-        refetchPreviewId: pending.id,
-      };
-    }
-  );
-
-/** Integration seam that resolves dependencies from the Effect context. */
-export const preview = EffectRuntime.fn("AccountRefetch.previewIntegration")(
-  function* previewIntegration(input: PreviewAccountRefetchInput) {
+export const preview = EffectRuntime.fn("AccountRefetch.preview")(
+  function* previewAccountRefetchEffect(input: PreviewAccountRefetchInput) {
     const store = yield* AccountRefetchStoreService;
     const requestAccounting = yield* FirecrawlRequestAccountingStoreService;
     const config = yield* FirecrawlConfigService;
     const firecrawl = yield* FirecrawlClientService;
-    return yield* makePreview(
-      store,
-      requestAccounting,
-      config,
-      firecrawl
-    )(input);
+    const account = yield* store.getAccountForRefetch(input);
+    const requestTime = yield* DateTime.nowAsDate;
+    const yearMonth = firecrawlYearMonthFromDate(requestTime);
+    const reservedRequest = yield* requestAccounting.reserveRequest({
+      monthlyRequestBudget: config.monthlyRequestBudget,
+      profileId: account.profileId,
+      requestedByUserId: input.actorUserId,
+      yearMonth,
+    });
+    const finalizedRequest = yield* EffectRuntime.gen(
+      function* finalizeReservedRequest() {
+        const scrapedProfile = yield* firecrawl
+          .scrapeProfileHtml(account.profileId)
+          .pipe(
+            EffectRuntime.catch((error) =>
+              EffectRuntime.gen(function* markRequestFailed() {
+                const completedAt = yield* currentDate;
+                yield* requestAccounting.markRequestFailed({
+                  completedAt,
+                  errorTag: error._tag,
+                  requestId: reservedRequest.requestId,
+                });
+                return yield* error;
+              })
+            )
+          );
+        const creditsUsed = yield* parseFirecrawlCreditCount(
+          scrapedProfile.metadata.creditsUsed ?? 1
+        ).pipe(
+          EffectRuntime.catch(() =>
+            EffectRuntime.gen(function* markInvalidResponseFailed() {
+              const completedAt = yield* currentDate;
+              yield* requestAccounting.markRequestFailed({
+                completedAt,
+                errorTag: "FirecrawlResponseNotParseable",
+                requestId: reservedRequest.requestId,
+              });
+              return yield* new FirecrawlResponseNotParseable({
+                cause: new Error("Invalid Firecrawl creditsUsed"),
+                profileId: account.profileId,
+              });
+            })
+          )
+        );
+        const completedAt = yield* currentDate;
+        yield* requestAccounting.markRequestSucceeded({
+          cacheState: scrapedProfile.metadata.cacheState ?? null,
+          completedAt,
+          creditsUsed,
+          firecrawlStatusCode: scrapedProfile.metadata.statusCode ?? null,
+          requestId: reservedRequest.requestId,
+        });
+        return { creditsUsed, scrapedProfile };
+      }
+    ).pipe(
+      EffectRuntime.onInterrupt(() =>
+        EffectRuntime.gen(function* markInterruptedRequestFailed() {
+          const completedAt = yield* currentDate;
+          yield* requestAccounting.markRequestFailed({
+            completedAt,
+            errorTag: "Interrupted",
+            requestId: reservedRequest.requestId,
+          });
+        })
+      )
+    );
+    const { creditsUsed, scrapedProfile } = finalizedRequest;
+
+    const parsedHtml = yield* parseMargonemProfileHtml({
+      html: scrapedProfile.html,
+      profileId: account.profileId,
+    });
+
+    const fetchedDateTime = yield* DateTime.now;
+    const fetchedAt = DateTime.toDate(fetchedDateTime);
+    const diff = computeMargonemAccountRefetchDiff({
+      accountId: account.accountId,
+      currentCharacters: account.currentCharacters,
+      fetchedAt,
+      latestCharacters: parsedHtml.jarunaCharacters,
+      profileId: account.profileId,
+    });
+    const pending = yield* store.createPendingRefetch({
+      accountId: account.accountId,
+      actorUserId: input.actorUserId,
+      diff,
+      expiresAt: fetchedDateTime.pipe(
+        DateTime.add({ minutes: pendingRefetchPolicy.expiresAfterMinutes }),
+        DateTime.toDate
+      ),
+      fetchedAt,
+      firecrawlCreditsUsed: creditsUsed,
+      latestCharacters: parsedHtml.jarunaCharacters,
+      profileId: account.profileId,
+    });
+
+    return {
+      accountId: account.accountId,
+      diff,
+      fetchedAt,
+      firecrawlCreditsUsed: creditsUsed,
+      generatedProfileUrl: toMargonemProfileUrl(account.profileId),
+      profileId: account.profileId,
+      refetchPreviewId: pending.id,
+    };
   }
 );

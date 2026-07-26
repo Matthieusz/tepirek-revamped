@@ -24,25 +24,19 @@ export type UpdateOwnedAccountDisplayNameError =
   | ActorDoesNotOwnMargonemAccount
   | SquadBuilderPersistenceUnavailable;
 
-const makeUpdate = (store: typeof AccountImportStoreService.Service) =>
-  Effect.fn("AccountImport.updateOwnedAccountDisplayName")(
-    function* updateOwnedAccountDisplayNameEffect(
-      input: UpdateOwnedAccountDisplayNameInput
-    ) {
-      const displayName = yield* parseAccountDisplayName(input.displayName);
-      const now = yield* DateTime.nowAsDate;
+export const update = Effect.fn("AccountImport.updateOwnedAccountDisplayName")(
+  function* updateOwnedAccountDisplayNameEffect(
+    input: UpdateOwnedAccountDisplayNameInput
+  ) {
+    const store = yield* AccountImportStoreService;
+    const displayName = yield* parseAccountDisplayName(input.displayName);
+    const now = yield* DateTime.nowAsDate;
 
-      return yield* store.updateOwnedAccountDisplayName({
-        accountId: input.accountId,
-        actorUserId: input.actorUserId,
-        displayName,
-        now,
-      });
-    }
-  );
-
-export const update = Effect.fn(
-  "AccountImport.updateOwnedAccountDisplayNameIntegration"
-)((input: UpdateOwnedAccountDisplayNameInput) =>
-  AccountImportStoreService.use((store) => makeUpdate(store)(input))
+    return yield* store.updateOwnedAccountDisplayName({
+      accountId: input.accountId,
+      actorUserId: input.actorUserId,
+      displayName,
+      now,
+    });
+  }
 );

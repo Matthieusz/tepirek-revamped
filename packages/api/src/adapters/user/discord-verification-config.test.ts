@@ -2,11 +2,10 @@ import { expect, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 
-import { DiscordVerificationConfig } from "./discord-verification-config.ts";
+import { readDiscordVerificationConfig } from "./discord-verification-config.ts";
 
 it.effect("loads a trimmed Discord guild ID", () => {
-  const program = DiscordVerificationConfig.pipe(
-    Effect.provide(DiscordVerificationConfig.layer),
+  const program = readDiscordVerificationConfig.pipe(
     Effect.provideService(
       ConfigProvider.ConfigProvider,
       ConfigProvider.fromUnknown({ DISCORD_SERVER_ID: " guild-1 " })
@@ -20,9 +19,8 @@ it.effect("loads a trimmed Discord guild ID", () => {
   });
 });
 
-it.effect("fails layer construction for an empty Discord guild ID", () => {
-  const program = DiscordVerificationConfig.pipe(
-    Effect.provide(DiscordVerificationConfig.layer),
+it.effect("fails for an empty Discord guild ID", () => {
+  const program = readDiscordVerificationConfig.pipe(
     Effect.provideService(
       ConfigProvider.ConfigProvider,
       ConfigProvider.fromUnknown({ DISCORD_SERVER_ID: "" })

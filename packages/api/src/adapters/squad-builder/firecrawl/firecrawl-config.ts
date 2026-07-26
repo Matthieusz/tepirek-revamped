@@ -1,5 +1,4 @@
 import * as Config from "effect/Config";
-import * as EffectRuntime from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
@@ -24,17 +23,6 @@ export const readFirecrawlConfig = Config.all({
     "FIRECRAWL_MONTHLY_REQUEST_BUDGET"
   ).pipe(Config.withDefault(900)),
 });
-
-/** Live Firecrawl config layer parsed at the runtime boundary. */
-export const FirecrawlConfigServiceLiveLayer: Layer.Layer<
-  FirecrawlConfigService,
-  Config.ConfigError
-> = Layer.effect(
-  FirecrawlConfigService,
-  EffectRuntime.gen(function* makeFirecrawlConfig() {
-    return FirecrawlConfigService.of(yield* readFirecrawlConfig);
-  })
-);
 
 /** Provide an already-parsed Firecrawl configuration. */
 export const makeFirecrawlConfigLayer = (config: FirecrawlConfig) =>

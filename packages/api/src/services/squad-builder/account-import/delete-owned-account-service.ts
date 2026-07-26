@@ -22,16 +22,13 @@ export type DeleteOwnedAccountError =
   | ActorDoesNotOwnMargonemAccount
   | SquadBuilderPersistenceUnavailable;
 
-const makeDelete = (store: typeof AccountImportStoreService.Service) =>
-  Effect.fn("AccountImport.deleteOwnedAccount")(
-    function* deleteOwnedAccountEffect(input: DeleteOwnedAccountInput) {
-      return yield* store.deleteOwnedAccount({
-        accountId: input.accountId,
-        actorUserId: input.actorUserId,
-      });
-    }
-  );
-
-export const deleteOwnedAccount = (input: DeleteOwnedAccountInput) =>
-  AccountImportStoreService.use((store) => makeDelete(store)(input));
+export const deleteOwnedAccount = Effect.fn("AccountImport.deleteOwnedAccount")(
+  function* deleteOwnedAccountEffect(input: DeleteOwnedAccountInput) {
+    const store = yield* AccountImportStoreService;
+    return yield* store.deleteOwnedAccount({
+      accountId: input.accountId,
+      actorUserId: input.actorUserId,
+    });
+  }
+);
 export type { DeleteOwnedAccountResult };

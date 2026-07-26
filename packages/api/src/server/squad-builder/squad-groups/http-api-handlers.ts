@@ -100,9 +100,8 @@ const mapSquadGroupsError = (error: SquadGroupsHandlerError): ProtocolError => {
 export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "squadBuilderSquadGroup",
-  Effect.fnUntraced(function* SquadBuilderSquadGroupHttpApiHandlers(handlers) {
-    yield* Effect.void;
-    return handlers
+  (handlers) =>
+    handlers
       .handle(
         "createSquadGroup",
         Effect.fn("SquadBuilderSquadGroup.createSquadGroup")(
@@ -262,6 +261,5 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             ).pipe(Effect.mapError(mapSquadGroupsError));
           }
         )
-      );
-  })
+      )
 );

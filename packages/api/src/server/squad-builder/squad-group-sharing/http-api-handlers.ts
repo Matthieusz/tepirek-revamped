@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import type * as Schema from "effect/Schema";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import { emptySquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.ts";
 import { AppHttpApi } from "../../../protocol/http-api-contract.ts";
 import type { SquadBuilderSquadGroupSharingError } from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.ts";
 import {
@@ -13,12 +14,12 @@ import {
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
 } from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.ts";
-import { SquadGroupSharingStateService } from "../../../services/squad-builder/squad-groups/list-squad-group-sharing-state-service.ts";
 import { respond } from "../../../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.ts";
 import { revoke } from "../../../services/squad-builder/squad-groups/revoke-squad-group-editor-service.ts";
 import { search } from "../../../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.ts";
 import { send } from "../../../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.ts";
 import type { SquadGroupSharingError } from "../../../services/squad-builder/squad-groups/squad-group-sharing-error.ts";
+import { SquadGroupStoreService } from "../../../services/squad-builder/squad-groups/squad-group-store.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -86,7 +87,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
     "squadBuilderSquadGroupSharing",
     Effect.fnUntraced(
       function* SquadBuilderSquadGroupSharingHttpApiHandlers(handlers) {
-        const squadGroupSharingStateSvc = yield* SquadGroupSharingStateService;
+        const squadGroupStore = yield* SquadGroupStoreService;
 
         return handlers
           .handle(
@@ -160,7 +161,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                squadGroupSharingStateSvc.listIncomingInvites({
+                squadGroupStore.listIncomingSquadGroupInvites({
                   actorUserId: sessionAppUserId(session),
                 })
               ).pipe(Effect.mapError(mapSquadGroupSharingError));
@@ -173,8 +174,9 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
                 const session = yield* requireSquadBuilderSession();
                 return yield* withRequestCorrelation(
                   request,
-                  squadGroupSharingStateSvc.listSharedGroups({
+                  squadGroupStore.listSharedSquadGroups({
                     actorUserId: sessionAppUserId(session),
+                    filters: emptySquadGroupListFilters,
                   })
                 ).pipe(Effect.mapError(mapSquadGroupSharingError));
               }
@@ -188,7 +190,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                squadGroupSharingStateSvc.listEditorGrants({
+                squadGroupStore.listSquadGroupEditorGrants({
                   actorUserId: sessionAppUserId(session),
                   groupId: payload.groupId,
                 })
@@ -203,7 +205,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                squadGroupSharingStateSvc.countPendingInvites({
+                squadGroupStore.getPendingSquadGroupInviteCount({
                   actorUserId: sessionAppUserId(session),
                 })
               ).pipe(Effect.mapError(mapSquadGroupSharingError));

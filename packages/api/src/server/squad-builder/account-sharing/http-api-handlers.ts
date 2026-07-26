@@ -14,7 +14,8 @@ import {
   SquadBuilderPersistenceUnavailable,
 } from "../../../protocol/squad-builder/account-sharing/http-api-contract.ts";
 import type { AccountSharingError } from "../../../services/squad-builder/account-sharing/account-sharing-error.ts";
-import { AccountSharingStateService } from "../../../services/squad-builder/account-sharing/list-account-sharing-state-service.ts";
+import { AccountSharingStoreService } from "../../../services/squad-builder/account-sharing/account-sharing-store-service.ts";
+import { listAccountAccessGrants as listAccountAccessGrantsWorkflow } from "../../../services/squad-builder/account-sharing/list-account-access-grants.ts";
 import { respond } from "../../../services/squad-builder/account-sharing/respond-to-account-access-invite-service.ts";
 import { revoke } from "../../../services/squad-builder/account-sharing/revoke-account-access-service.ts";
 import { search } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.ts";
@@ -66,7 +67,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
   "squadBuilderAccountSharing",
   Effect.fnUntraced(
     function* SquadBuilderAccountSharingHttpApiHandlers(handlers) {
-      const accountSharingStateSvc = yield* AccountSharingStateService;
+      const accountSharingStore = yield* AccountSharingStoreService;
 
       return handlers
         .handle(
@@ -139,7 +140,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                accountSharingStateSvc.listIncomingInvites({
+                accountSharingStore.listIncomingAccountInvites({
                   actorUserId: sessionAppUserId(session),
                 })
               ).pipe(Effect.mapError(mapAccountSharingError));
@@ -153,7 +154,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                accountSharingStateSvc.listSharedAccounts({
+                accountSharingStore.listSharedAccounts({
                   actorUserId: sessionAppUserId(session),
                 })
               ).pipe(Effect.mapError(mapAccountSharingError));
@@ -167,7 +168,7 @@ export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
               const session = yield* requireSquadBuilderSession();
               return yield* withRequestCorrelation(
                 request,
-                accountSharingStateSvc.listAccountAccessGrants({
+                listAccountAccessGrantsWorkflow({
                   accountId: payload.accountId,
                   actorUserId: sessionAppUserId(session),
                 })

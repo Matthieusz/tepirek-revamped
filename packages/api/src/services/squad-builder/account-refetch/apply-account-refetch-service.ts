@@ -6,7 +6,6 @@ import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-a
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
 import { AccountRefetchStoreService } from "./account-refetch-store-service.ts";
-import type { AccountRefetchStoreServiceShape } from "./account-refetch-store-service.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
@@ -41,10 +40,9 @@ export type ApplyAccountRefetchError =
 const currentDate = DateTime.nowAsDate;
 
 /** Apply a previously previewed account refetch to account and character storage. */
-const makeApply = (store: AccountRefetchStoreServiceShape) =>
-  EffectRuntime.fn("AccountRefetch.apply")(function* applyAccountRefetchEffect(
-    input: ApplyAccountRefetchInput
-  ) {
+export const apply = EffectRuntime.fn("AccountRefetch.apply")(
+  function* applyAccountRefetchEffect(input: ApplyAccountRefetchInput) {
+    const store = yield* AccountRefetchStoreService;
     const now = yield* currentDate;
     const pending = yield* store.findPendingRefetchForApply({
       actorUserId: input.actorUserId,
@@ -69,10 +67,5 @@ const makeApply = (store: AccountRefetchStoreServiceShape) =>
     });
 
     return applied;
-  });
-
-/** Integration seam that resolves the store from the Effect context. */
-export const apply = EffectRuntime.fn("AccountRefetch.applyIntegration")(
-  (input: ApplyAccountRefetchInput) =>
-    AccountRefetchStoreService.use((store) => makeApply(store)(input))
+  }
 );
