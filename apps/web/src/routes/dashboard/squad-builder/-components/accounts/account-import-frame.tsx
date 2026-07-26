@@ -20,11 +20,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import {
-  EffectForm,
-  EffectFormFeedback,
-  useEffectFormProtection,
-} from "@/components/forms/effect-form";
+import { EffectForm, EffectFormFeedback } from "@/components/forms/effect-form";
 import {
   getFieldErrorId,
   getFieldId,
@@ -229,8 +225,6 @@ const PreviewRow = ({
   const submit = useAtomSet(confirmationForm.submit);
   const reset = useAtomSet(confirmationForm.reset);
   const submitResult = useAtomValue(confirmationForm.submit);
-  const isDirty = useAtomValue(confirmationForm.isDirty);
-  useEffectFormProtection(isDirty);
 
   if (item.status === "error") {
     return (
@@ -535,8 +529,6 @@ export const AccountImportFrame = () => {
   const submitPreview = useAtomSet(accountPreviewForm.submit);
   const resetPreview = useAtomSet(accountPreviewForm.reset);
   const submitResult = useAtomValue(accountPreviewForm.submit);
-  const previewIsDirty = useAtomValue(accountPreviewForm.isDirty);
-  useEffectFormProtection(previewIsDirty, submitResult.waiting);
 
   useEffect(() => {
     if (!AsyncResult.isSuccess(submitResult)) {

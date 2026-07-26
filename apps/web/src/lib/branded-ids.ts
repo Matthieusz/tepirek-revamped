@@ -51,5 +51,5 @@ export const asTodoId = (value: unknown) =>
   Schema.decodeUnknownEffect(TodoIdSchema)(value);
 
 /** Decode an application-user identifier received from browser state. */
-export const asUserId = (value: unknown) =>
+export const asAppUserId = (value: unknown) =>
   Schema.decodeUnknownEffect(AppUserIdSchema)(value);

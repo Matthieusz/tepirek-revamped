@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   EffectForm,
   EffectFormFeedback,
-  useEffectFormProtection,
+  useCanCloseForm,
 } from "@/components/forms/effect-form";
 import {
   EffectNumberField,
@@ -79,8 +79,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
   const submit = useAtomSet(heroForm.submit, { mode: "promise" });
   const reset = useAtomSet(heroForm.reset);
   const submitResult = useAtomValue(heroForm.submit);
-  const isDirty = useAtomValue(heroForm.isDirty);
-  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
+  const canDiscard = useCanCloseForm(submitResult.waiting);
   let submitLabel = "Utwórz herosa";
   if (eventsLoading) {
     submitLabel = "Ładowanie...";

@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import * as Schema from "effect/Schema";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
-import { asBetId, asEventId, asHeroId, asUserId } from "@/lib/branded-ids";
+import { asAppUserId, asBetId, asEventId, asHeroId } from "@/lib/branded-ids";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
@@ -92,11 +92,11 @@ export const createBetAtom = appHttpApiFn(
     const client = yield* AppHttpApiClient;
     const [firstUserId, ...remainingUserIds] = payload.userIds;
     const decodedRemainingUserIds =
-      yield* Effect.forEach(asUserId)(remainingUserIds);
+      yield* Effect.forEach(asAppUserId)(remainingUserIds);
     const bet = yield* client.bet.create({
       payload: {
         heroId: yield* asHeroId(payload.heroId),
-        userIds: [yield* asUserId(firstUserId), ...decodedRemainingUserIds],
+        userIds: [yield* asAppUserId(firstUserId), ...decodedRemainingUserIds],
       },
     });
     get.refresh(latestBetForCopyAtom);
@@ -135,11 +135,14 @@ export const editBetAtom = appHttpApiFn(
     const client = yield* AppHttpApiClient;
     const [firstUserId, ...remainingUserIds] = payload.newUserIds;
     const decodedRemainingUserIds =
-      yield* Effect.forEach(asUserId)(remainingUserIds);
+      yield* Effect.forEach(asAppUserId)(remainingUserIds);
     const result = yield* client.bet.edit({
       payload: {
         betId: yield* asBetId(payload.betId),
-        newUserIds: [yield* asUserId(firstUserId), ...decodedRemainingUserIds],
+        newUserIds: [
+          yield* asAppUserId(firstUserId),
+          ...decodedRemainingUserIds,
+        ],
       },
     });
     get.refresh(paginatedBetsAtom(payload.refreshInput));

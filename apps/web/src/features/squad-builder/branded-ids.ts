@@ -1,4 +1,3 @@
-import { AppUserIdSchema } from "@tepirek-revamped/api/domain/squad-builder/app-user-id";
 import { MargonemAccountAccessIdSchema } from "@tepirek-revamped/api/domain/squad-builder/margonem-account-access-id";
 import { MargonemAccountIdSchema } from "@tepirek-revamped/api/domain/squad-builder/margonem-account-id";
 import { PendingMargonemAccountImportIdSchema } from "@tepirek-revamped/api/domain/squad-builder/pending-margonem-account-import-id";
@@ -7,10 +6,6 @@ import { SquadGroupIdSchema } from "@tepirek-revamped/api/domain/squad-builder/s
 import { SquadGroupInvitationIdSchema } from "@tepirek-revamped/api/domain/squad-builder/squad-group-invitation-id";
 import { SquadIdSchema } from "@tepirek-revamped/api/domain/squad-builder/squad-id";
 import * as Schema from "effect/Schema";
-
-/** Build an `AppUserId` from a plain string. */
-export const asAppUserId = (value: string) =>
-  Schema.decodeUnknownEffect(AppUserIdSchema)(value);
 
 /** Build a `SquadGroupId` from a plain number. */
 export const asSquadGroupId = (value: number) =>

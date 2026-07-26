@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import {
   EffectForm,
   EffectFormFeedback,
-  useEffectFormProtection,
+  useCanCloseForm,
 } from "@/components/forms/effect-form";
 import {
   getFieldErrorId,
@@ -379,8 +379,7 @@ export const DistributeGoldModal = ({
   const submit = useAtomSet(distributeGoldForm.submit, { mode: "promise" });
   const reset = useAtomSet(distributeGoldForm.reset);
   const submitResult = useAtomValue(distributeGoldForm.submit);
-  const isDirty = useAtomValue(distributeGoldForm.isDirty);
-  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
+  const canDiscard = useCanCloseForm(submitResult.waiting);
 
   const handleSubmit = async (): Promise<void> => {
     try {

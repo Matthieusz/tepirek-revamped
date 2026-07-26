@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   EffectForm,
   EffectFormFeedback,
-  useEffectFormProtection,
+  useCanCloseForm,
 } from "@/components/forms/effect-form";
 import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
@@ -52,8 +52,7 @@ export const EditProfileModal = ({
   const submit = useAtomSet(profileForm.submit);
   const reset = useAtomSet(profileForm.reset);
   const submitResult = useAtomValue(profileForm.submit);
-  const isDirty = useAtomValue(profileForm.isDirty);
-  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
+  const canDiscard = useCanCloseForm(submitResult.waiting);
 
   useEffect(() => {
     if (AsyncResult.isSuccess(submitResult)) {

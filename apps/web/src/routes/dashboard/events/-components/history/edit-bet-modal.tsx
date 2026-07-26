@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import {
   EffectForm,
   EffectFormFeedback,
-  useEffectFormProtection,
+  useCanCloseForm,
 } from "@/components/forms/effect-form";
 import {
   EffectFieldError,
@@ -154,8 +154,7 @@ export const EditBetModal = ({
   const submit = useAtomSet(form.submit);
   const reset = useAtomSet(form.reset);
   const submitResult = useAtomValue(form.submit);
-  const isDirty = useAtomValue(form.isDirty);
-  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
+  const canDiscard = useCanCloseForm(submitResult.waiting);
   let submitLabel = "Zapisz zmiany";
   if (usersLoading) {
     submitLabel = "Ładowanie...";

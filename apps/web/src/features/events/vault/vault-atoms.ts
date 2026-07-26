@@ -4,7 +4,7 @@ import * as Schema from "effect/Schema";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
 import { oldestUnpaidEventAtom } from "@/features/events/ranking/ranking-atoms";
-import { asEventId, asHeroId, asUserId } from "@/lib/branded-ids";
+import { asAppUserId, asEventId, asHeroId } from "@/lib/branded-ids";
 import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
@@ -98,7 +98,7 @@ const togglePaidOutRequestAtom = appHttpApiFn(
       payload: {
         ...payload,
         eventId: yield* asEventId(payload.eventId),
-        userId: yield* asUserId(payload.userId),
+        userId: yield* asAppUserId(payload.userId),
       },
     });
     get.refresh(oldestUnpaidEventAtom);

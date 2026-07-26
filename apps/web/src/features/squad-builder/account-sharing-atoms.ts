@@ -8,11 +8,11 @@ import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
-  asAppUserId,
   asMargonemAccountAccessId,
   asMargonemAccountId,
 } from "@/features/squad-builder/branded-ids";
 import { refreshVisibleSquadGroupAtoms } from "@/features/squad-builder/squad-group-atoms";
+import { asAppUserId } from "@/lib/branded-ids";
 import {
   AppHttpApiClient,
   appHttpApiAtom,

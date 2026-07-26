@@ -4,10 +4,7 @@ import { Loader2, Plus, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import {
-  EffectForm,
-  useEffectFormProtection,
-} from "@/components/forms/effect-form";
+import { EffectForm } from "@/components/forms/effect-form";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,8 +30,6 @@ export const CreateSquadGroupFrame = ({
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
-
-  useEffectFormProtection(name.trim().length > 0, isCreating);
 
   const submit = async () => {
     const trimmedName = name.trim();

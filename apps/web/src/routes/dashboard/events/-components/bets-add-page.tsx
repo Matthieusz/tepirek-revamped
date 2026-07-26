@@ -8,11 +8,7 @@ import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
-import {
-  EffectForm,
-  EffectFormFeedback,
-  useEffectFormProtection,
-} from "@/components/forms/effect-form";
+import { EffectForm, EffectFormFeedback } from "@/components/forms/effect-form";
 import {
   EffectFieldError,
   getFieldErrorId,
@@ -324,8 +320,6 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
   const refreshUsers = useAtomRefresh(verifiedUsersAtom);
   const submit = useAtomSet(addBetForm.submit);
   const submitResult = useAtomValue(addBetForm.submit);
-  const isDirty = useAtomValue(addBetForm.isDirty);
-  useEffectFormProtection(isDirty, submitResult.waiting);
   const clearHero = useAtomSet(
     addBetForm.getFieldAtoms(addBetForm.fields.heroId).setValue
   );

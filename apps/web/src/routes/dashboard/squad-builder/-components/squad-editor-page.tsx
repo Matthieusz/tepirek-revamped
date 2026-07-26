@@ -8,7 +8,6 @@ import { AlertTriangle, RotateCw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { useEffectFormProtection } from "@/components/forms/effect-form";
 import {
   Alert,
   AlertAction,
@@ -142,7 +141,6 @@ const SquadBuilderEditorContent = ({
     draftRef.current = draft;
     isDirtyRef.current = isDirty;
   }, [draft, isDirty]);
-  useEffectFormProtection(isDirty, isSaving);
   const saveSquadGroup = useAtomSet(saveSquadGroupAtom, { mode: "promise" });
   const saveSharedSquadGroupCharacters = useAtomSet(
     saveSharedSquadGroupCharactersAtom,

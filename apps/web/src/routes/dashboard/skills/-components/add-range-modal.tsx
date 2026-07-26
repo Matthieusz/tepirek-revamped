@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   EffectForm,
   EffectFormFeedback,
-  useEffectFormProtection,
+  useCanCloseForm,
 } from "@/components/forms/effect-form";
 import {
   EffectNumberField,
@@ -57,8 +57,7 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
   const submit = useAtomSet(rangeForm.submit);
   const reset = useAtomSet(rangeForm.reset);
   const submitResult = useAtomValue(rangeForm.submit);
-  const isDirty = useAtomValue(rangeForm.isDirty);
-  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
+  const canDiscard = useCanCloseForm(submitResult.waiting);
 
   useEffect(() => {
     if (AsyncResult.isSuccess(submitResult)) {

@@ -6,11 +6,7 @@ import {
   BackToHomeButton,
   DiscordLoginButton,
 } from "@/components/auth-buttons";
-import {
-  EffectForm,
-  EffectFormFeedback,
-  useEffectFormProtection,
-} from "@/components/forms/effect-form";
+import { EffectForm, EffectFormFeedback } from "@/components/forms/effect-form";
 import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
@@ -64,8 +60,6 @@ export const SignUpForm = ({
     });
   const submit = useAtomSet(signupForm.submit);
   const submitResult = useAtomValue(signupForm.submit);
-  const isDirty = useAtomValue(signupForm.isDirty);
-  useEffectFormProtection(isDirty, submitResult.waiting);
 
   return (
     <signupForm.Initialize

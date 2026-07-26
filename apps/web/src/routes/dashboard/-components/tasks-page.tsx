@@ -15,11 +15,7 @@ import {
 import { useEffect } from "react";
 import { toast } from "sonner";
 
-import {
-  EffectForm,
-  EffectFormFeedback,
-  useEffectFormProtection,
-} from "@/components/forms/effect-form";
+import { EffectForm, EffectFormFeedback } from "@/components/forms/effect-form";
 import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
@@ -80,8 +76,6 @@ const TasksContent = ({ session }: TasksPageProps) => {
   const submit = useAtomSet(todoForm.submit, { mode: "promise" });
   const reset = useAtomSet(todoForm.reset);
   const submitResult = useAtomValue(todoForm.submit);
-  const isDirty = useAtomValue(todoForm.isDirty);
-  useEffectFormProtection(isDirty, submitResult.waiting);
   const canCreateTodo = session.user.id.length > 0;
 
   useEffect(() => {

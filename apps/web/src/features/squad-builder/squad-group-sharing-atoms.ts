@@ -8,10 +8,10 @@ import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
 import {
-  asAppUserId,
   asSquadGroupId,
   asSquadGroupInvitationId,
 } from "@/features/squad-builder/branded-ids";
+import { asAppUserId } from "@/lib/branded-ids";
 import {
   AppHttpApiClient,
   appHttpApiAtom,

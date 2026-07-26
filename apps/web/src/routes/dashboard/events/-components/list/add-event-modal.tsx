@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import {
   EffectForm,
   EffectFormFeedback,
-  useEffectFormProtection,
+  useCanCloseForm,
 } from "@/components/forms/effect-form";
 import {
   getFieldErrorId,
@@ -244,8 +244,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
   const submit = useAtomSet(eventForm.submit, { mode: "promise" });
   const reset = useAtomSet(eventForm.reset);
   const submitResult = useAtomValue(eventForm.submit);
-  const isDirty = useAtomValue(eventForm.isDirty);
-  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
+  const canDiscard = useCanCloseForm(submitResult.waiting);
 
   const handleSubmit = async (): Promise<void> => {
     try {

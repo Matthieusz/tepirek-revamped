@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   EffectForm,
   EffectFormFeedback,
-  useEffectFormProtection,
+  useCanCloseForm,
 } from "@/components/forms/effect-form";
 import {
   EffectTextField,
@@ -59,8 +59,7 @@ export const AddAnnouncementModal = ({
   const submit = useAtomSet(announcementForm.submit);
   const reset = useAtomSet(announcementForm.reset);
   const submitResult = useAtomValue(announcementForm.submit);
-  const isDirty = useAtomValue(announcementForm.isDirty);
-  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
+  const canDiscard = useCanCloseForm(submitResult.waiting);
 
   useEffect(() => {
     if (AsyncResult.isSuccess(submitResult)) {

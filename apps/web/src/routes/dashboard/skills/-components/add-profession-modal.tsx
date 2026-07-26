@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   EffectForm,
   EffectFormFeedback,
-  useEffectFormProtection,
+  useCanCloseForm,
 } from "@/components/forms/effect-form";
 import { EffectTextField } from "@/components/forms/effect-form-fields";
 import { Button } from "@/components/ui/button";
@@ -50,8 +50,7 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
   const submit = useAtomSet(professionForm.submit);
   const reset = useAtomSet(professionForm.reset);
   const submitResult = useAtomValue(professionForm.submit);
-  const isDirty = useAtomValue(professionForm.isDirty);
-  const canDiscard = useEffectFormProtection(isDirty, submitResult.waiting);
+  const canDiscard = useCanCloseForm(submitResult.waiting);
 
   useEffect(() => {
     if (AsyncResult.isSuccess(submitResult)) {

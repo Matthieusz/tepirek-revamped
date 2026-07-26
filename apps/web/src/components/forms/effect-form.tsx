@@ -190,11 +190,6 @@ export const EffectFormFeedback = ({
   return null;
 };
 
-/**
- * Allows dirty forms to be discarded without browser or route confirmations.
- * Dialogs still remain open while their submission is in progress.
- */
-export const useEffectFormProtection = (
-  _isDirty: boolean,
-  isSubmitting = false
-): (() => boolean) => useCallback(() => !isSubmitting, [isSubmitting]);
+/** Returns a stable predicate that prevents closing a form while it submits. */
+export const useCanCloseForm = (isSubmitting = false): (() => boolean) =>
+  useCallback(() => !isSubmitting, [isSubmitting]);
