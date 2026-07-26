@@ -23,12 +23,10 @@ import {
 import { create as createSquadGroup } from "./create-squad-group.ts";
 import { list as listAvailableSquadCharacters } from "./list-available-squad-characters.ts";
 import { list as listGlobalSquadGroups } from "./list-global-squad-groups.ts";
-import { respond } from "./respond-to-squad-group-invite-service.ts";
-import { revoke } from "./revoke-squad-group-editor-service.ts";
 import { save as saveSquadGroup } from "./save-squad-group.ts";
 import { send } from "./send-squad-group-editor-invite-service.ts";
 import { set as setSquadGroupVisibility } from "./set-squad-group-visibility.ts";
-import { getMine, listMine } from "./squad-group-operations.ts";
+import { respond, revoke } from "./squad-group-sharing-operations.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 const parseTestSquadGroupId = (value: number) =>
@@ -87,7 +85,6 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const other = yield* Effect.promise(() =>
           createVerifiedMember({ id: "effect-list-other" })
         );
-        const listService = { getMine, listMine };
 
         yield* createSquadGroup({
           actorUserId: parseTestUserId(member.id),
@@ -102,9 +99,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           name: "Other listed group",
         });
 
-        const groups = yield* listService.listMine({
-          actorUserId: parseTestUserId(member.id),
-        });
+        const groups = yield* SquadGroupStoreService.use((store) =>
+          store.listMySquadGroups({
+            actorUserId: parseTestUserId(member.id),
+          })
+        );
 
         const groupNames = groups.map((group) => group.name);
 
@@ -119,17 +118,18 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(() =>
           createVerifiedMember({ id: "effect-detail-owner" })
         );
-        const listService = { getMine, listMine };
 
         const created = yield* createSquadGroup({
           actorUserId: parseTestUserId(member.id),
           name: "Effect detail group",
         });
 
-        const detail = yield* listService.getMine({
-          actorUserId: parseTestUserId(member.id),
-          groupId: created.groupId,
-        });
+        const detail = yield* SquadGroupStoreService.use((store) =>
+          store.getSquadGroupDetail({
+            actorUserId: parseTestUserId(member.id),
+            groupId: created.groupId,
+          })
+        );
 
         expect(detail).toMatchObject({
           accessRole: "owner",

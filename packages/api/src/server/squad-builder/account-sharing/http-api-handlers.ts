@@ -14,10 +14,12 @@ import {
   SquadBuilderPersistenceUnavailable,
 } from "../../../protocol/squad-builder/account-sharing/http-api-contract.ts";
 import type { AccountSharingError } from "../../../services/squad-builder/account-sharing/account-sharing-error.ts";
+import {
+  respond,
+  revoke,
+} from "../../../services/squad-builder/account-sharing/account-sharing-operations.ts";
 import { AccountSharingStoreService } from "../../../services/squad-builder/account-sharing/account-sharing-store.ts";
 import { listAccountAccessGrants as listAccountAccessGrantsWorkflow } from "../../../services/squad-builder/account-sharing/list-account-access-grants.ts";
-import { respond } from "../../../services/squad-builder/account-sharing/respond-to-account-access-invite-service.ts";
-import { revoke } from "../../../services/squad-builder/account-sharing/revoke-account-access-service.ts";
 import { search } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.ts";
 import { send } from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.ts";
 import {

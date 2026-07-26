@@ -14,11 +14,13 @@ import {
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
 } from "../../../protocol/squad-builder/squad-group-sharing/http-api-contract.ts";
-import { respond } from "../../../services/squad-builder/squad-groups/respond-to-squad-group-invite-service.ts";
-import { revoke } from "../../../services/squad-builder/squad-groups/revoke-squad-group-editor-service.ts";
 import { search } from "../../../services/squad-builder/squad-groups/search-squad-editor-invite-targets-service.ts";
 import { send } from "../../../services/squad-builder/squad-groups/send-squad-group-editor-invite-service.ts";
 import type { SquadGroupSharingError } from "../../../services/squad-builder/squad-groups/squad-group-sharing-error.ts";
+import {
+  respond,
+  revoke,
+} from "../../../services/squad-builder/squad-groups/squad-group-sharing-operations.ts";
 import { SquadGroupStoreService } from "../../../services/squad-builder/squad-groups/squad-group-store.ts";
 import {
   requireSquadBuilderSession,

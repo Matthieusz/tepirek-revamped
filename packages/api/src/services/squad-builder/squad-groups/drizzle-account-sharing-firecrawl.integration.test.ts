@@ -21,10 +21,12 @@ import {
   parseTestUserId,
   squadBuilderIntegrationTestLayer,
 } from "../../../test/squad-builder/store-integration.ts";
+import {
+  respond,
+  revoke,
+} from "../account-sharing/account-sharing-operations.ts";
 import { AccountSharingStoreService } from "../account-sharing/account-sharing-store.ts";
 import { listAccountAccessGrants } from "../account-sharing/list-account-access-grants.ts";
-import { respond } from "../account-sharing/respond-to-account-access-invite-service.ts";
-import { revoke } from "../account-sharing/revoke-account-access-service.ts";
 import { search } from "../account-sharing/search-account-invite-targets-service.ts";
 import { send } from "../account-sharing/send-account-access-invite-service.ts";
 import { FirecrawlRequestAccountingStoreService } from "../firecrawl-request-accounting-store.ts";

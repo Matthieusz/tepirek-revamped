@@ -32,7 +32,6 @@ import {
 } from "../../../test/squad-builder/store-integration.ts";
 import { AccountImportStoreService } from "../account-import/account-import-store.ts";
 import { confirm as confirmOwnedAccountImport } from "../account-import/confirm-owned-account-import-service.ts";
-import { listOwnedAccounts as listOwnedMargonemAccounts } from "../account-import/owned-account-operations.ts";
 import { AccountRefetchStoreService } from "../account-refetch/account-refetch-store.ts";
 import { apply as applyAccountRefetch } from "../account-refetch/apply-account-refetch-service.ts";
 
@@ -90,9 +89,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           })
         );
 
-        const accounts = yield* listOwnedMargonemAccounts({
-          actorUserId: parseTestUserId(member.id),
-        });
+        const accounts = yield* AccountImportStoreService.use((store) =>
+          store.listOwnedAccounts({
+            actorUserId: parseTestUserId(member.id),
+          })
+        );
 
         expect(accounts).toHaveLength(1);
         expect(accounts[0]).toMatchObject({

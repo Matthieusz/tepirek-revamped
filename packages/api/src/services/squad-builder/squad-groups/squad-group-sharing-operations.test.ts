@@ -8,8 +8,11 @@ import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.
 import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
 import { makeSquadGroupStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
-import { revoke } from "./revoke-squad-group-editor-service.ts";
-import { ActorDoesNotOwnSquadGroup } from "./squad-group-errors.ts";
+import {
+  ActorDoesNotOwnSquadGroup,
+  ActorIsNotSquadGroupInviteRecipient,
+} from "./squad-group-errors.ts";
+import { respond, revoke } from "./squad-group-sharing-operations.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 const parseTestUserId = (value: string) =>
@@ -21,11 +24,79 @@ const parseTestInvitationId = () =>
   Effect.runSync(parseSquadGroupInvitationId(456));
 
 const parseTestGroupName = () =>
-  Effect.runSync(parseSquadGroupName("Effect revoke group"));
+  Effect.runSync(parseSquadGroupName("Effect respond group"));
 
 const fixedClock = {
   now: () => new Date("2026-06-29T12:00:00.000Z"),
 };
+
+it.effect("accepts a squad group editor invite as the invited user", () => {
+  const actorUserId = parseTestUserId("effect-squad-respond-recipient");
+  const ownerUserId = parseTestUserId("effect-squad-respond-owner");
+  const invitationId = parseTestInvitationId();
+  const squadGroupId = parseTestGroupId();
+  const squadGroupName = parseTestGroupName();
+  const store = makeSquadGroupStoreServiceTestService({
+    respondToSquadGroupInvite: (input) => {
+      expect(input).toMatchObject({
+        invitationId,
+        invitedUserId: actorUserId,
+        now: fixedClock.now(),
+        response: "accept",
+      });
+
+      return Effect.succeed({
+        createdAt: fixedClock.now(),
+        invitationId,
+        ownerUserId,
+        ownerUserImage: null,
+        ownerUserName: "owner",
+        squadGroupId,
+        squadGroupName,
+        status: "accepted" as const,
+        updatedAt: fixedClock.now(),
+      });
+    },
+  });
+  const testLayer = Layer.succeed(SquadGroupStoreService, store);
+
+  return Effect.gen(function* respondToSquadGroupInviteEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
+    const invite = yield* respond({
+      actorUserId,
+      invitationId,
+      response: "accept",
+    });
+
+    expect(invite).toMatchObject({
+      invitationId,
+      squadGroupId,
+      status: "accepted",
+    });
+  }).pipe(Effect.provide(testLayer));
+});
+
+it.effect("surfaces squad invite recipient authorization failures", () => {
+  const actorUserId = parseTestUserId("effect-squad-respond-attacker");
+  const invitationId = parseTestInvitationId();
+  const store = makeSquadGroupStoreServiceTestService({
+    respondToSquadGroupInvite: () => new ActorIsNotSquadGroupInviteRecipient(),
+  });
+  const testLayer = Layer.succeed(SquadGroupStoreService, store);
+
+  return Effect.gen(function* respondToSquadGroupInviteEffect() {
+    yield* TestClock.setTime(fixedClock.now().getTime());
+    const error = yield* Effect.flip(
+      respond({
+        actorUserId,
+        invitationId,
+        response: "decline",
+      })
+    );
+
+    expect(error._tag).toBe("ActorIsNotSquadGroupInviteRecipient");
+  }).pipe(Effect.provide(testLayer));
+});
 
 it.effect("revokes a squad group editor invite as the owner", () => {
   const actorUserId = parseTestUserId("effect-squad-revoke-owner");

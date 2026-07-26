@@ -26,11 +26,7 @@ import type { SaveSquadGroupError } from "../../../services/squad-builder/squad-
 import { save as saveSquadGroupWorkflow } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
 import type { GlobalSquadVisibilityError } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
 import { set as setSquadGroupVisibilityWorkflow } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
-import {
-  deleteSquadGroup as deleteSquadGroupWorkflow,
-  getMine,
-  listMine,
-} from "../../../services/squad-builder/squad-groups/squad-group-operations.ts";
+import { SquadGroupStoreService } from "../../../services/squad-builder/squad-groups/squad-group-store.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -116,10 +112,12 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             yield* withRequestCorrelation(
               request,
-              deleteSquadGroupWorkflow({
-                actorUserId: sessionAppUserId(session),
-                groupId: payload.groupId,
-              })
+              SquadGroupStoreService.use((store) =>
+                store.deleteSquadGroup({
+                  actorUserId: sessionAppUserId(session),
+                  groupId: payload.groupId,
+                })
+              )
             ).pipe(Effect.mapError(mapSquadGroupsError));
             return { groupId: payload.groupId };
           }
@@ -132,9 +130,11 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              listMine({
-                actorUserId: sessionAppUserId(session),
-              })
+              SquadGroupStoreService.use((store) =>
+                store.listMySquadGroups({
+                  actorUserId: sessionAppUserId(session),
+                })
+              )
             ).pipe(Effect.mapError(mapSquadGroupsError));
           }
         )
@@ -169,10 +169,12 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              getMine({
-                actorUserId: sessionAppUserId(session),
-                groupId: payload.groupId,
-              })
+              SquadGroupStoreService.use((store) =>
+                store.getSquadGroupDetail({
+                  actorUserId: sessionAppUserId(session),
+                  groupId: payload.groupId,
+                })
+              )
             ).pipe(Effect.mapError(mapSquadGroupsError));
           }
         )

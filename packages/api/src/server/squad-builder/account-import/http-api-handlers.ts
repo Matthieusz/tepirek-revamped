@@ -14,12 +14,9 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/account-import/http-api-contract.ts";
+import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store.ts";
 import { confirm as confirmOwnedAccountImportWorkflow } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
 import type { ConfirmOwnedAccountImportError } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
-import {
-  deleteOwnedAccount as deleteOwnedAccountWorkflow,
-  listOwnedAccounts as listOwnedMargonemAccountsWorkflow,
-} from "../../../services/squad-builder/account-import/owned-account-operations.ts";
 import { preview as previewMargonemProfileImportWorkflow } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import type { PreviewMargonemProfileImportError } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
 import { preview as previewOwnedAccountImportsWorkflow } from "../../../services/squad-builder/account-import/preview-owned-account-imports-service.ts";
@@ -157,10 +154,12 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              deleteOwnedAccountWorkflow({
-                accountId: payload.accountId,
-                actorUserId: sessionAppUserId(session),
-              })
+              AccountImportStoreService.use((store) =>
+                store.deleteOwnedAccount({
+                  accountId: payload.accountId,
+                  actorUserId: sessionAppUserId(session),
+                })
+              )
             ).pipe(Effect.mapError(mapAccountImportError));
           }
         )
@@ -172,9 +171,11 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              listOwnedMargonemAccountsWorkflow({
-                actorUserId: sessionAppUserId(session),
-              })
+              AccountImportStoreService.use((store) =>
+                store.listOwnedAccounts({
+                  actorUserId: sessionAppUserId(session),
+                })
+              )
             ).pipe(Effect.mapError(mapAccountImportError));
           }
         )

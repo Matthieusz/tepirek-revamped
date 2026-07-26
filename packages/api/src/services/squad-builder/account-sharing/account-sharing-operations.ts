@@ -1,5 +1,5 @@
 import * as DateTime from "effect/DateTime";
-import * as EffectRuntime from "effect/Effect";
+import * as Effect from "effect/Effect";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
@@ -12,8 +12,14 @@ export interface RespondToAccountAccessInviteInput {
   readonly response: "accept" | "decline";
 }
 
+/** Input for revoking account access. */
+export interface RevokeAccountAccessInput {
+  readonly actorUserId: AppUserId;
+  readonly accessId: MargonemAccountAccessId;
+}
+
 /** Accept or decline an account access invite as the invited user. */
-export const respond = EffectRuntime.fn("AccountSharing.respondToInvite")(
+export const respond = Effect.fn("AccountSharing.respondToInvite")(
   function* respond(input: RespondToAccountAccessInviteInput) {
     const store = yield* AccountSharingStoreService;
     const now = yield* DateTime.nowAsDate;
@@ -25,3 +31,16 @@ export const respond = EffectRuntime.fn("AccountSharing.respondToInvite")(
     });
   }
 );
+
+/** Revoke pending or accepted account access as the account owner. */
+export const revoke = Effect.fn("AccountSharing.revokeAccess")(function* revoke(
+  input: RevokeAccountAccessInput
+) {
+  const store = yield* AccountSharingStoreService;
+  const now = yield* DateTime.nowAsDate;
+  return yield* store.revokeAccountAccess({
+    accessId: input.accessId,
+    now,
+    ownerUserId: input.actorUserId,
+  });
+});
