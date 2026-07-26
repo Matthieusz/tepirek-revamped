@@ -51,7 +51,7 @@ import {
 } from "@/features/squad-builder/squad-group-sharing-atoms";
 import { getErrorMessage } from "@/lib/errors";
 
-import { userInitials } from "../squads/squad-group-presenters";
+import { userInitials } from "../user-presenters";
 
 type InviteTarget = typeof SquadEditorInviteTargetSchema.Type;
 type EditorGrant = SquadGroupEditorGrantSummarySchema;

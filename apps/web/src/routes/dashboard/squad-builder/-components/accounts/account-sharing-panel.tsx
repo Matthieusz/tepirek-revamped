@@ -30,8 +30,8 @@ import {
 } from "@/features/squad-builder/account-sharing-atoms";
 import { sessionAtom } from "@/features/users/user-atoms";
 import { getErrorMessage } from "@/lib/errors";
-import { userInitials } from "@/routes/dashboard/squad-builder/-components/accounts/account-presenters";
 import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
+import { userInitials } from "@/routes/dashboard/squad-builder/-components/user-presenters";
 
 type AccountAccessGrant = AccountAccessGrantSummarySchema;
 type AccountInviteTarget = AccountInviteTargetSchema;

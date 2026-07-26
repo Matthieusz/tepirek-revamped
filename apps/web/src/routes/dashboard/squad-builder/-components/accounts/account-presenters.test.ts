@@ -1,13 +1,11 @@
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 
-import { getProfessionPresentation } from "../profession-presenters";
 import {
-  changeFieldLabel,
-  formatChangeValue,
   formatProfession,
-  userInitials,
-} from "./account-presenters";
+  getProfessionPresentation,
+} from "../profession-presenters";
+import { changeFieldLabel, formatChangeValue } from "./account-presenters";
 
 describe("account presenters", () => {
   it("localizes known professions and preserves unknown values", () => {
@@ -46,11 +44,5 @@ describe("account presenters", () => {
     expect(formatChangeValue(null)).toBe("brak");
     expect(formatChangeValue(123)).toBe("123");
     expect(formatChangeValue("warrior")).toBe("Wojownik");
-  });
-
-  it("creates stable two-part avatar initials", () => {
-    expect(userInitials("  Jan   Kowalski Nowak ")).toBe("JK");
-    expect(userInitials("żmija")).toBe("Ż");
-    expect(userInitials("   ")).toBe("");
   });
 });

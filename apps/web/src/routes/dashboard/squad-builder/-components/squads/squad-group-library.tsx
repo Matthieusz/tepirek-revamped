@@ -46,10 +46,10 @@ import type {
 import { sharedSquadGroupsAtom } from "@/features/squad-builder/squad-group-sharing-atoms";
 import { formatDateTime } from "@/lib/utils";
 
+import { userInitials } from "../user-presenters";
 import {
   formatCharacterCount,
   formatSquadCount,
-  userInitials,
 } from "./squad-group-presenters";
 
 type SharedSquadGroupSummary = SharedSquadGroupSummarySchema;

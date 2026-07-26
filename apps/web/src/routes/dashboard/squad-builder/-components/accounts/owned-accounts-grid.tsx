@@ -68,11 +68,13 @@ import { formatDateTime } from "@/lib/utils";
 import {
   changeFieldLabel,
   formatChangeValue,
-  formatProfession,
 } from "@/routes/dashboard/squad-builder/-components/accounts/account-presenters";
 import { AccountSharingPanel } from "@/routes/dashboard/squad-builder/-components/accounts/account-sharing-panel";
 import { MargonemCharacterAvatarImage } from "@/routes/dashboard/squad-builder/-components/margonem-character-avatar-image";
-import { getProfessionPresentation } from "@/routes/dashboard/squad-builder/-components/profession-presenters";
+import {
+  formatProfession,
+  getProfessionPresentation,
+} from "@/routes/dashboard/squad-builder/-components/profession-presenters";
 
 type OwnedAccount = OwnedMargonemAccountSummarySchema;
 

@@ -17,8 +17,8 @@ import {
 } from "@/features/squad-builder/account-sharing-atoms";
 import { getErrorMessage } from "@/lib/errors";
 import { formatDateTime } from "@/lib/utils";
-import { userInitials } from "@/routes/dashboard/squad-builder/-components/accounts/account-presenters";
 import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
+import { userInitials } from "@/routes/dashboard/squad-builder/-components/user-presenters";
 
 const InviteInboxPanel = () => {
   const [respondingAccessId, setRespondingAccessId] = useState<number | null>(

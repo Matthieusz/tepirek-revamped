@@ -22,7 +22,7 @@ import {
 import { getErrorMessage } from "@/lib/errors";
 import { formatDateTime } from "@/lib/utils";
 
-import { userInitials } from "./squad-group-presenters";
+import { userInitials } from "../user-presenters";
 
 export const SquadGroupInvitations = () => {
   const result = useAtomValue(incomingSquadGroupInvitesAtom);
