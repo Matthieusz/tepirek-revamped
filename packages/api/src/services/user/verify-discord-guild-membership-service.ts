@@ -4,8 +4,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import { DiscordGuildVerifier } from "../../adapters/user/discord-verification-service.ts";
-import type { UserAdapterError } from "../../adapters/user/user-adapter-error.ts";
 import { UserStore } from "../../adapters/user/user-store.ts";
+import type { UserAdapterError } from "../../adapters/user/user-store.ts";
 import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import type { UserBadRequest } from "../../protocol/user/http-api-contract.ts";
 
