@@ -11,9 +11,6 @@ export const MargonemAccountId = PositiveInt.pipe(
 });
 export type MargonemAccountId = typeof MargonemAccountId.Type;
 
-/** HTTP/API schema for a persisted Margonem account row id. */
-export const MargonemAccountIdSchema = MargonemAccountId;
-
 /** Expected failure when an account id is not a positive integer. */
 export class InvalidMargonemAccountId extends Schema.TaggedErrorClass<InvalidMargonemAccountId>()(
   "InvalidMargonemAccountId",

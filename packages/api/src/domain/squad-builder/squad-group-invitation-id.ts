@@ -11,9 +11,6 @@ export const SquadGroupInvitationId = PositiveInt.pipe(
 });
 export type SquadGroupInvitationId = typeof SquadGroupInvitationId.Type;
 
-/** HTTP/API schema for a persisted squad group invitation id. */
-export const SquadGroupInvitationIdSchema = SquadGroupInvitationId;
-
 /** Expected failure when a squad group invitation id is invalid. */
 export class InvalidSquadGroupInvitationId extends Schema.TaggedErrorClass<InvalidSquadGroupInvitationId>()(
   "InvalidSquadGroupInvitationId",

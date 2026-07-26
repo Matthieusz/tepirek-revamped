@@ -2,10 +2,7 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import {
-  MargonemCharacterIdSchema,
-  PositiveLevelSchema,
-} from "./margonem-profile-id.ts";
+import { MargonemCharacterId, PositiveLevel } from "./margonem-profile-id.ts";
 
 /** The only Margonem world supported by squad builder v1. */
 export const MargonemWorld = Schema.Literal("jaruna");
@@ -44,8 +41,8 @@ export type MargonemProfession = typeof MargonemProfessionSchema.Type;
 /** HTTP/API schema for a Jaruna character parsed from a Margonem profile. */
 export const MargonemCharacterPreviewSchema = Schema.Struct({
   avatarUrl: Schema.NullOr(Schema.String),
-  characterId: MargonemCharacterIdSchema,
-  level: PositiveLevelSchema,
+  characterId: MargonemCharacterId,
+  level: PositiveLevel,
   name: Schema.String,
   profession: MargonemProfessionSchema,
   world: MargonemWorld,

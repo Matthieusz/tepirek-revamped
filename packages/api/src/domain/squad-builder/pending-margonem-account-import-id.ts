@@ -12,10 +12,6 @@ export const PendingMargonemAccountImportId = PositiveInt.pipe(
 export type PendingMargonemAccountImportId =
   typeof PendingMargonemAccountImportId.Type;
 
-/** HTTP/API schema for a validated pending account import id. */
-export const PendingMargonemAccountImportIdSchema =
-  PendingMargonemAccountImportId;
-
 /** Expected failure when a pending import id is not a positive integer. */
 export class InvalidPendingMargonemAccountImportId extends Schema.TaggedErrorClass<InvalidPendingMargonemAccountImportId>()(
   "InvalidPendingMargonemAccountImportId",

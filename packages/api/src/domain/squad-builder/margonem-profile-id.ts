@@ -11,9 +11,6 @@ export const MargonemProfileId = PositiveInt.pipe(
 });
 export type MargonemProfileId = typeof MargonemProfileId.Type;
 
-/** HTTP/API schema for a parsed Margonem profile id. */
-export const MargonemProfileIdSchema = MargonemProfileId;
-
 /** A parsed Margonem character id. */
 export const MargonemCharacterId = PositiveInt.pipe(
   Schema.brand("MargonemCharacterId")
@@ -22,9 +19,6 @@ export const MargonemCharacterId = PositiveInt.pipe(
 });
 export type MargonemCharacterId = typeof MargonemCharacterId.Type;
 
-/** HTTP/API schema for a parsed Margonem character id. */
-export const MargonemCharacterIdSchema = MargonemCharacterId;
-
 /** A positive character level. */
 export const PositiveLevel = PositiveInt.pipe(
   Schema.brand("PositiveLevel")
@@ -32,9 +26,6 @@ export const PositiveLevel = PositiveInt.pipe(
   identifier: "PositiveLevel",
 });
 export type PositiveLevel = typeof PositiveLevel.Type;
-
-/** HTTP/API schema for a positive character level. */
-export const PositiveLevelSchema = PositiveLevel;
 
 /** Failure returned when a numeric id is not valid for the domain. */
 export class InvalidPositiveInteger extends Schema.TaggedErrorClass<InvalidPositiveInteger>()(

@@ -9,9 +9,6 @@ export const AppUserId = Schema.NonEmptyString.pipe(
 });
 export type AppUserId = typeof AppUserId.Type;
 
-/** HTTP/API schema for a BetterAuth application user id. */
-export const AppUserIdSchema = AppUserId;
-
 /** Failure returned when an app user id is missing or empty. */
 export class InvalidAppUserId extends Schema.TaggedErrorClass<InvalidAppUserId>()(
   "InvalidAppUserId",

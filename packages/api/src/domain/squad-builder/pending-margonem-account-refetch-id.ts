@@ -12,10 +12,6 @@ export const PendingMargonemAccountRefetchId = PositiveInt.pipe(
 export type PendingMargonemAccountRefetchId =
   typeof PendingMargonemAccountRefetchId.Type;
 
-/** HTTP/API schema for a validated pending account refetch preview id. */
-export const PendingMargonemAccountRefetchIdSchema =
-  PendingMargonemAccountRefetchId;
-
 /** Expected failure when a pending refetch id is not a positive integer. */
 export class InvalidPendingMargonemAccountRefetchId extends Schema.TaggedErrorClass<InvalidPendingMargonemAccountRefetchId>()(
   "InvalidPendingMargonemAccountRefetchId",

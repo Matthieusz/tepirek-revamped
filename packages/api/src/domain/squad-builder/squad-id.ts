@@ -9,9 +9,6 @@ export const SquadId = PositiveInt.pipe(Schema.brand("SquadId")).annotate({
 });
 export type SquadId = typeof SquadId.Type;
 
-/** HTTP/API schema for a persisted squad id. */
-export const SquadIdSchema = SquadId;
-
 /** Expected failure when a squad id is invalid. */
 export class InvalidSquadId extends Schema.TaggedErrorClass<InvalidSquadId>()(
   "InvalidSquadId",
