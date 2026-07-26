@@ -7,7 +7,6 @@ import { parseAccountDisplayName } from "../../../domain/squad-builder/account-d
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseMargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
-import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { makeAccountSharingStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import { AccountSharingStoreService } from "./account-sharing-store.ts";
 import { send } from "./send-account-access-invite-service.ts";
@@ -20,8 +19,6 @@ const parseTestAccountId = () => Effect.runSync(parseMargonemAccountId(123));
 const parseTestAccessId = () =>
   Effect.runSync(parseMargonemAccountAccessId(456));
 
-const profileId = Effect.runSync(parseMargonemProfileId(7_298_897));
-
 const fixedClock = {
   now: () => new Date("2026-06-29T12:00:00.000Z"),
 };
@@ -33,16 +30,10 @@ it.effect("sends an account access invite for a verified target", () => {
   const accessId = parseTestAccessId();
   const displayName = Effect.runSync(parseAccountDisplayName("Send account"));
   const store = makeAccountSharingStoreServiceTestService({
-    findOwnedAccountForSharing: (input) => {
-      expect(input.accountId).toBe(accountId);
-      expect(input.actorUserId).toBe(actorUserId);
+    findAccountOwnerUserId: (input) => {
+      expect(input).toEqual({ accountId });
 
-      return Effect.succeed({
-        accountId: input.accountId,
-        displayName,
-        ownerUserId: actorUserId,
-        profileId,
-      });
+      return Effect.succeed(actorUserId);
     },
     findVerifiedInviteTarget: (input) => {
       expect(input.targetUserId).toBe(targetUserId);
@@ -97,15 +88,8 @@ it.effect("sends an account access invite for a verified target", () => {
 it.effect("rejects self-invites before resolving the target", () => {
   const actorUserId = parseTestUserId("effect-account-self-owner");
   const accountId = parseTestAccountId();
-  const displayName = Effect.runSync(parseAccountDisplayName("Self account"));
   const store = makeAccountSharingStoreServiceTestService({
-    findOwnedAccountForSharing: () =>
-      Effect.succeed({
-        accountId,
-        displayName,
-        ownerUserId: actorUserId,
-        profileId,
-      }),
+    findAccountOwnerUserId: () => Effect.succeed(actorUserId),
   });
   const testLayer = Layer.succeed(AccountSharingStoreService, store);
 

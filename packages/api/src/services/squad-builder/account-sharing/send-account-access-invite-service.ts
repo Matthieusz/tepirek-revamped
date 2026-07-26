@@ -21,11 +21,10 @@ export const send = EffectRuntime.fn("AccountSharing.sendInvite")(
   function* send(input: SendAccountAccessInviteInput) {
     const store = yield* AccountSharingStoreService;
     const now = yield* DateTime.nowAsDate;
-    const owned = yield* store.findOwnedAccountForSharing({
+    const ownerUserId = yield* store.findAccountOwnerUserId({
       accountId: input.accountId,
-      actorUserId: input.actorUserId,
     });
-    if (owned.ownerUserId !== input.actorUserId) {
+    if (ownerUserId !== input.actorUserId) {
       return yield* new ActorDoesNotOwnMargonemAccount();
     }
     if (input.actorUserId === input.invitedUserId) {

@@ -17,11 +17,10 @@ export const search = EffectRuntime.fn("AccountSharing.searchInviteTargets")(
   function* search(input: SearchAccountInviteTargetsInput) {
     const store = yield* AccountSharingStoreService;
     const query = yield* parseInviteTargetQuery(input.query);
-    const owned = yield* store.findOwnedAccountForSharing({
+    const ownerUserId = yield* store.findAccountOwnerUserId({
       accountId: input.accountId,
-      actorUserId: input.actorUserId,
     });
-    if (owned.ownerUserId !== input.actorUserId) {
+    if (ownerUserId !== input.actorUserId) {
       return yield* new ActorDoesNotOwnMargonemAccount();
     }
     return yield* store.searchInviteTargets({

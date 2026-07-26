@@ -194,7 +194,7 @@ export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedError
       "deleteOwnedAccount",
       "createPendingImport",
       "createPendingRefetch",
-      "findOwnedAccountForSharing",
+      "findAccountOwnerUserId",
       "findVerifiedInviteTarget",
       "findVerifiedSquadEditorInviteTarget",
       "findPendingImportForConfirmation",
