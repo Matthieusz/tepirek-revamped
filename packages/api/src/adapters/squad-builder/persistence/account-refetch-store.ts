@@ -41,7 +41,7 @@ import type {
   PendingMargonemAccountRefetch,
   RefetchableMargonemAccount,
 } from "../../../services/squad-builder/account-refetch/account-refetch-store.ts";
-import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
+import type { SquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
@@ -329,7 +329,7 @@ const markPendingRefetchAppliedWithDatabase =
     refetchPreviewId,
   }: MarkPendingMargonemAccountRefetchAppliedInput): Effect.Effect<
     void,
-    EffectSquadBuilderPersistenceUnavailable,
+    SquadBuilderPersistenceUnavailable,
     never
   > => {
     const operation = "markPendingRefetchApplied" as const;

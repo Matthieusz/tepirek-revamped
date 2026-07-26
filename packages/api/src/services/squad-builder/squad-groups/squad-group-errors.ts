@@ -182,7 +182,7 @@ export class MargonemAccountAlreadySharedWithActor extends Schema.TaggedErrorCla
   {}
 ) {}
 
-export class EffectSquadBuilderPersistenceUnavailable extends Schema.TaggedErrorClass<EffectSquadBuilderPersistenceUnavailable>()(
+export class SquadBuilderPersistenceUnavailable extends Schema.TaggedErrorClass<SquadBuilderPersistenceUnavailable>()(
   "SquadBuilderPersistenceUnavailable",
   {
     cause: Schema.Defect(),

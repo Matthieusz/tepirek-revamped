@@ -66,7 +66,7 @@ import {
   ActorDoesNotOwnSquadGroup,
   ActorIsNotSquadGroupInviteRecipient,
   EditorCannotChangeSquadStructure,
-  EffectSquadBuilderPersistenceUnavailable,
+  SquadBuilderPersistenceUnavailable,
   SquadCharacterNotAccessible,
   SquadEditorInviteTargetNotFound,
   SquadEditorInviteTargetNotVerified,
@@ -1442,7 +1442,7 @@ const saveSharedSquadGroupCharactersWithDatabase = (
           never,
           | SquadGroupNotFound
           | ActorCannotEditSquadGroup
-          | EffectSquadBuilderPersistenceUnavailable
+          | SquadBuilderPersistenceUnavailable
         > => {
           if (error._tag === "ActorCannotViewSquadGroup") {
             return new ActorCannotEditSquadGroup();
@@ -1527,7 +1527,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
           const [insertedSquad] = insertedSquadRows;
 
           if (insertedSquad === undefined) {
-            return yield* new EffectSquadBuilderPersistenceUnavailable({
+            return yield* new SquadBuilderPersistenceUnavailable({
               cause: new Error("Failed to insert squad"),
               operation,
               provider: "postgres",
@@ -1547,7 +1547,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
             ).pipe(Option.getOrUndefined);
 
             if (character === undefined) {
-              return yield* new EffectSquadBuilderPersistenceUnavailable({
+              return yield* new SquadBuilderPersistenceUnavailable({
                 cause: new Error("Validated character was not available"),
                 operation,
                 provider: "postgres",
@@ -1583,7 +1583,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
           never,
           | SquadGroupNotFound
           | ActorDoesNotOwnSquadGroup
-          | EffectSquadBuilderPersistenceUnavailable
+          | SquadBuilderPersistenceUnavailable
         > => {
           if (error._tag === "ActorCannotViewSquadGroup") {
             return new ActorDoesNotOwnSquadGroup();

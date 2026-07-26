@@ -14,7 +14,7 @@ import type {
   MarkFirecrawlRequestSucceededInput,
   ReserveFirecrawlRequestInput,
 } from "../../../services/squad-builder/firecrawl-request-accounting-store.ts";
-import type { EffectSquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
+import type { SquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import { FirecrawlMonthlyBudgetExhausted } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   failPersistence,
@@ -105,7 +105,7 @@ const markRequestSucceededWithDatabase =
     requestId,
   }: MarkFirecrawlRequestSucceededInput): Effect.Effect<
     void,
-    EffectSquadBuilderPersistenceUnavailable,
+    SquadBuilderPersistenceUnavailable,
     never
   > =>
     persistenceQuery(
@@ -130,7 +130,7 @@ const markRequestFailedWithDatabase =
     requestId,
   }: MarkFirecrawlRequestFailedInput): Effect.Effect<
     void,
-    EffectSquadBuilderPersistenceUnavailable,
+    SquadBuilderPersistenceUnavailable,
     never
   > =>
     persistenceQuery(
