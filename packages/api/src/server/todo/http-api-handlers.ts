@@ -3,8 +3,8 @@
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { TodoStoreError } from "../../adapters/todo/todo-store-error.ts";
 import { TodoStore } from "../../adapters/todo/todo-store.ts";
+import type { TodoStoreError } from "../../adapters/todo/todo-store.ts";
 import { AppHttpApi } from "../../protocol/http-api-contract.ts";
 import {
   TodoForbidden,

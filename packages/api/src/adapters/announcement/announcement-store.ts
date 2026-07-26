@@ -1,4 +1,4 @@
-/* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
+/* eslint-disable max-classes-per-file, no-shadow -- The store contract owns its typed error; named Effect generators mirror service names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
@@ -8,7 +8,7 @@ import { desc, eq } from "drizzle-orm";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import type * as Schema from "effect/Schema";
+import * as Schema from "effect/Schema";
 
 import { AnnouncementId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
@@ -17,7 +17,11 @@ import {
   decodePersistedValue,
   makeDirectPersistenceQuery,
 } from "../persistence-query.ts";
-import { AnnouncementStoreError } from "./announcement-store-error.ts";
+/** Internal persistence failure retained for diagnostics at the server boundary. */
+export class AnnouncementStoreError extends Schema.TaggedErrorClass<AnnouncementStoreError>()(
+  "AnnouncementStoreError",
+  { cause: Schema.Defect(), operation: Schema.String }
+) {}
 
 export interface CreateAnnouncementInput {
   readonly createdAt: Date;

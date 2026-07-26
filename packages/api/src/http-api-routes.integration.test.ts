@@ -7,8 +7,10 @@ import * as Redacted from "effect/Redacted";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
 
-import { AnnouncementStoreError } from "./adapters/announcement/announcement-store-error.ts";
-import { AnnouncementStore } from "./adapters/announcement/announcement-store.ts";
+import {
+  AnnouncementStore,
+  AnnouncementStoreError,
+} from "./adapters/announcement/announcement-store.ts";
 import { makeApiLiveLayerFromValues } from "./server/effect-app.ts";
 import { AppHttpApiLayer } from "./server/http-api-handlers.ts";
 import {

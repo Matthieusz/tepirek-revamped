@@ -4,8 +4,8 @@ import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import type { UserAdapterError } from "../../adapters/user/user-adapter-error.ts";
 import { UserStore } from "../../adapters/user/user-store.ts";
+import type { UserAdapterError } from "../../adapters/user/user-store.ts";
 import type { RequestSession } from "../../protocol/auth/current-session.ts";
 import { AppHttpApi } from "../../protocol/http-api-contract.ts";
 import {

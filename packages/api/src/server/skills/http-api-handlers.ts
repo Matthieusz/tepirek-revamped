@@ -3,8 +3,8 @@
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { SkillsStoreError } from "../../adapters/skills/skills-store-error.ts";
 import { SkillsStore } from "../../adapters/skills/skills-store.ts";
+import type { SkillsStoreError } from "../../adapters/skills/skills-store.ts";
 import { AppHttpApi } from "../../protocol/http-api-contract.ts";
 import {
   SkillsForbidden,

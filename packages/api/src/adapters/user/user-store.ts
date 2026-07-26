@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file -- The store contract owns its typed error. */
 // oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import type {
   EffectPgDatabase,
@@ -20,8 +21,7 @@ import {
   UserNotFound,
 } from "../../protocol/user/http-api-contract.ts";
 import { decodePersistedValue } from "../persistence-query.ts";
-import { userPersistenceQuery } from "./persistence-query.ts";
-import { UserAdapterError } from "./user-adapter-error.ts";
+import { makeUserPersistenceQuery } from "./persistence-query.ts";
 
 const LAST_ADMIN_MESSAGE =
   "Nie można odebrać uprawnień ostatniemu administratorowi";
@@ -42,6 +42,16 @@ const playerListSelect = {
   updatedAt: user.updatedAt,
   verified: user.verified,
 };
+
+/** Internal dependency failure retained for diagnostics at the server boundary. */
+export class UserAdapterError extends Schema.TaggedErrorClass<UserAdapterError>()(
+  "UserAdapterError",
+  { cause: Schema.Defect(), operation: Schema.String }
+) {}
+
+const userPersistenceQuery = makeUserPersistenceQuery(
+  (input) => new UserAdapterError(input)
+);
 
 export interface VerifiedMember {
   readonly id: AppUserId;

@@ -3,8 +3,8 @@
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { AuctionStoreError } from "../../adapters/auction/auction-store-error.ts";
 import { AuctionStore } from "../../adapters/auction/auction-store.ts";
+import type { AuctionStoreError } from "../../adapters/auction/auction-store.ts";
 import {
   AuctionForbidden,
   AuctionPersistenceUnavailable,

@@ -1,4 +1,4 @@
-/* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
+/* eslint-disable max-classes-per-file, no-shadow -- The store contract owns its typed error; named Effect generators mirror service names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import { slugifySkillRangeName } from "@tepirek-revamped/config";
 import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
@@ -30,7 +30,11 @@ import {
   decodePersistedValue,
   makeDirectPersistenceQuery,
 } from "../persistence-query.ts";
-import { SkillsStoreError } from "./skills-store-error.ts";
+/** Internal persistence failure retained for diagnostics at the server boundary. */
+export class SkillsStoreError extends Schema.TaggedErrorClass<SkillsStoreError>()(
+  "SkillsStoreError",
+  { cause: Schema.Defect(), operation: Schema.String }
+) {}
 
 export interface CreateProfessionInput {
   readonly name: string;

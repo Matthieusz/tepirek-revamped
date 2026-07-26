@@ -4,8 +4,8 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { AnnouncementStoreError } from "../../adapters/announcement/announcement-store-error.ts";
 import { AnnouncementStore } from "../../adapters/announcement/announcement-store.ts";
+import type { AnnouncementStoreError } from "../../adapters/announcement/announcement-store.ts";
 import {
   AnnouncementForbidden,
   AnnouncementPersistenceUnavailable,

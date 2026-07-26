@@ -13,7 +13,7 @@ import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
 import { DiscordGuilds, hasDiscordGuild } from "./discord-guild.ts";
 import { DiscordVerificationConfig } from "./discord-verification-config.ts";
-import { UserAdapterError } from "./user-adapter-error.ts";
+import { UserAdapterError } from "./user-store.ts";
 
 /** Verifies whether a user's linked Discord account belongs to the configured guild. */
 export class DiscordGuildVerifier extends Context.Service<

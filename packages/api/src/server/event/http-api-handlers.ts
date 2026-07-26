@@ -3,8 +3,8 @@
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { EventStoreError } from "../../adapters/event/event-store-error.ts";
 import { EventStore } from "../../adapters/event/event-store.ts";
+import type { EventStoreError } from "../../adapters/event/event-store.ts";
 import {
   EventForbidden,
   EventPersistenceUnavailable,

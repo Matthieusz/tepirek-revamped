@@ -3,8 +3,8 @@
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import type { HeroesStoreError } from "../../adapters/heroes/heroes-store-error.ts";
 import { HeroesStore } from "../../adapters/heroes/heroes-store.ts";
+import type { HeroesStoreError } from "../../adapters/heroes/heroes-store.ts";
 import {
   HeroesForbidden,
   HeroesPersistenceUnavailable,

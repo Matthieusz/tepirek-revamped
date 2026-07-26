@@ -7,7 +7,12 @@ import {
   UserForbidden,
   UserNotFound,
 } from "../../protocol/user/http-api-contract.ts";
-import { userPersistenceQuery } from "./persistence-query.ts";
+import { makeUserPersistenceQuery } from "./persistence-query.ts";
+import { UserAdapterError } from "./user-store.ts";
+
+const userPersistenceQuery = makeUserPersistenceQuery(
+  (input) => new UserAdapterError(input)
+);
 
 describe("userPersistenceQuery", () => {
   it.effect("projects direct Drizzle query failures", () =>
