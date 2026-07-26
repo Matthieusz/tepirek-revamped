@@ -1,7 +1,7 @@
+import { calculatePointsPerMember } from "@tepirek-revamped/config";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 
-import { calculatePointsPerMember } from "@/features/events/bets/bet-helpers";
 import type { SelectableUser } from "@/features/events/bets/user-select-list";
 
 /**

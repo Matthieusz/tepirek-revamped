@@ -10,10 +10,6 @@ import type {
 } from "../../protocol/vault/http-api-contract.ts";
 import type { VaultError } from "./vault-errors.ts";
 
-export type DistributeGoldResult = DistributeGoldSuccess;
-export type VaultResultRow = VaultRow;
-export type MutationSuccessResult = MutationSuccess;
-
 export interface DistributeGoldInput {
   readonly goldAmount: number;
   readonly heroId: HeroId;
@@ -28,13 +24,13 @@ export interface TogglePaidOutInput {
 export interface VaultServiceInterface {
   readonly distributeGold: (
     input: DistributeGoldInput
-  ) => Effect<DistributeGoldResult, VaultError>;
+  ) => Effect<DistributeGoldSuccess, VaultError>;
   readonly getVault: (
     eventId?: EventId
-  ) => Effect<readonly VaultResultRow[], VaultError>;
+  ) => Effect<readonly VaultRow[], VaultError>;
   readonly togglePaidOut: (
     input: TogglePaidOutInput
-  ) => Effect<MutationSuccessResult, VaultError>;
+  ) => Effect<MutationSuccess, VaultError>;
 }
 
 export class VaultService extends Context.Service<

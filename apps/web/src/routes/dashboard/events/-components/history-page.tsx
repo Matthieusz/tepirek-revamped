@@ -1,6 +1,7 @@
 /* oxlint-disable no-use-before-define */
 
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { calculatePointsPerMember } from "@tepirek-revamped/config";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { History, Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -30,7 +31,6 @@ import {
   deleteBetAtom,
   paginatedBetsAtom,
 } from "@/features/events/bets/bet-atoms";
-import { calculatePointsPerMember } from "@/features/events/bets/bet-helpers";
 import { eventsAtom } from "@/features/events/core/event-atoms";
 import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
 import {

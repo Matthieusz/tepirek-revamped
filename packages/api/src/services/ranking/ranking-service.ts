@@ -9,9 +9,6 @@ import type {
 } from "../../protocol/ranking/http-api-contract.ts";
 import type { RankingError } from "./ranking-errors.ts";
 
-export type HeroStatsResult = HeroStats;
-export type RankingResultType = RankingResult;
-
 export interface GetRankingInput {
   readonly eventId?: EventId | undefined;
   readonly heroId?: HeroId | undefined;
@@ -27,13 +24,11 @@ export interface RankingRow {
 }
 
 export interface RankingServiceInterface {
-  readonly getHeroStats: (
-    heroId: HeroId
-  ) => Effect<HeroStatsResult, RankingError>;
+  readonly getHeroStats: (heroId: HeroId) => Effect<HeroStats, RankingError>;
   readonly getOldestUnpaidEvent: () => Effect<EventId | null, RankingError>;
   readonly getRanking: (
     input: GetRankingInput
-  ) => Effect<RankingResultType, RankingError>;
+  ) => Effect<RankingResult, RankingError>;
 }
 
 export class RankingService extends Context.Service<

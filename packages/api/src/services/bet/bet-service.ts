@@ -14,13 +14,7 @@ import type {
 } from "../../protocol/bet/http-api-contract.ts";
 import type { BetError } from "./bet-errors.ts";
 
-export type CreatedBetResult = CreatedBet;
-export type BetSummaryResult = BetSummary;
-export type BetByEventSummaryResult = BetByEventSummary;
-export type StoredBetMemberResult = StoredBetMember;
 export type LatestBetForCopyResult = typeof LatestBetForCopy.Type;
-export type PaginatedBetsResult = PaginatedBets;
-export type MutationSuccessResult = MutationSuccess;
 
 export interface CreateBetInput {
   readonly createdAt: Date;
@@ -42,23 +36,19 @@ export interface GetPaginatedBetsInput {
 }
 
 export interface BetServiceInterface {
-  readonly createBet: (
-    input: CreateBetInput
-  ) => Effect<CreatedBetResult, BetError>;
-  readonly deleteBet: (id: BetId) => Effect<MutationSuccessResult, BetError>;
-  readonly editBet: (
-    input: EditBetInput
-  ) => Effect<MutationSuccessResult, BetError>;
-  readonly getAllBets: () => Effect<readonly BetSummaryResult[], BetError>;
+  readonly createBet: (input: CreateBetInput) => Effect<CreatedBet, BetError>;
+  readonly deleteBet: (id: BetId) => Effect<MutationSuccess, BetError>;
+  readonly editBet: (input: EditBetInput) => Effect<MutationSuccess, BetError>;
+  readonly getAllBets: () => Effect<readonly BetSummary[], BetError>;
   readonly getPaginatedBets: (
     input: GetPaginatedBetsInput
-  ) => Effect<PaginatedBetsResult, BetError>;
+  ) => Effect<PaginatedBets, BetError>;
   readonly getBetMembers: (
     betId: BetId
-  ) => Effect<readonly StoredBetMemberResult[], BetError>;
+  ) => Effect<readonly StoredBetMember[], BetError>;
   readonly getBetsByEvent: (
     eventId: EventId
-  ) => Effect<readonly BetByEventSummaryResult[], BetError>;
+  ) => Effect<readonly BetByEventSummary[], BetError>;
   readonly getLatestBetForCopy: () => Effect<LatestBetForCopyResult, BetError>;
 }
 

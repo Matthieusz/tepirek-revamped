@@ -1,4 +1,5 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
+import { calculatePointsPerMember } from "@tepirek-revamped/config";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import {
@@ -16,10 +17,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
 import { BetId, EventId, HeroId } from "../../domain/core-identifiers.ts";
-import {
-  calculatePointsPerMember,
-  parsePointWorth,
-} from "../../domain/hero-bet-ledger/points.ts";
+import { parsePointWorth } from "../../domain/hero-bet-ledger/points.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
   BetBadRequest,
@@ -258,7 +256,8 @@ const createBetWithDatabase = (database: EffectPgDatabase) =>
           const memberUserIds =
             yield* validateVerifiedMemberIdsWithDatabase(tx)(userIds);
           const memberCount = memberUserIds.length;
-          const pointsPerMember = calculatePointsPerMember(memberCount);
+          const pointsPerMember =
+            calculatePointsPerMember(memberCount).toFixed(2);
           const heroData = yield* getHeroEventWithDatabase(tx)(
             heroId,
             "Nie znaleziono herosów"
@@ -456,7 +455,8 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
             currentMembers[0]?.points ?? "0",
             "editBet.decode"
           );
-          const newPointsPerMember = calculatePointsPerMember(newMemberCount);
+          const newPointsPerMember =
+            calculatePointsPerMember(newMemberCount).toFixed(2);
           const membersToRemove = currentMembers.filter(
             (member) => !memberUserIds.includes(member.userId)
           );

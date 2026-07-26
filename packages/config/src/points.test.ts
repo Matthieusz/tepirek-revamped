@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { calculatePointsPerMember } from "./bet-helpers";
+import { calculatePointsPerMember } from "./index.ts";
 
 describe("calculatePointsPerMember", () => {
   it("calculates points for a single member", () => {
