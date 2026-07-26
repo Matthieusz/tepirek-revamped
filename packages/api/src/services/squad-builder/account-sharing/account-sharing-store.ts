@@ -7,11 +7,7 @@ import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
 import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
-import type {
-  ListOwnedMargonemAccountsInput,
-  OwnedMargonemAccountSummary,
-  SquadBuilderPersistenceUnavailable,
-} from "../account-import/account-import-store.ts";
+import type { SquadBuilderPersistenceUnavailable } from "../account-import/account-import-store.ts";
 import type {
   AccountAccessInviteNotFound,
   AccountAccessTransitionNotAllowed,
@@ -47,18 +43,9 @@ export interface SearchInviteTargetsStoreInput {
   readonly query: string;
 }
 
-/** Input for loading an owned account for sharing authorization. */
-export interface FindOwnedAccountForSharingInput {
-  readonly actorUserId: AppUserId;
+/** Input for resolving an account owner for sharing authorization. */
+export interface FindAccountOwnerUserIdInput {
   readonly accountId: MargonemAccountId;
-}
-
-/** An owned account loaded for sharing authorization. */
-export interface OwnedAccountForSharing {
-  readonly accountId: MargonemAccountId;
-  readonly ownerUserId: AppUserId;
-  readonly displayName: AccountDisplayName;
-  readonly profileId: MargonemProfileId;
 }
 
 /** Input for resolving a verified invite target by user id. */
@@ -142,9 +129,8 @@ export interface SharedMargonemAccountSummary {
   readonly characterCount: number;
 }
 
-/** Input for listing access grants for an owned account. */
-export interface ListAccountAccessGrantsInput {
-  readonly actorUserId: AppUserId;
+/** Input for listing access grants after ownership has been authorized. */
+export interface ListAccountAccessGrantsStoreInput {
   readonly accountId: MargonemAccountId;
 }
 
@@ -161,10 +147,10 @@ export interface AccountAccessGrantSummary {
 
 /** Persistence operations used by account sharing workflows. */
 export interface AccountSharingStoreServiceShape {
-  readonly findOwnedAccountForSharing: (
-    input: FindOwnedAccountForSharingInput
+  readonly findAccountOwnerUserId: (
+    input: FindAccountOwnerUserIdInput
   ) => Effect<
-    OwnedAccountForSharing,
+    AppUserId,
     MargonemAccountNotFound | SquadBuilderPersistenceUnavailable
   >;
   readonly searchInviteTargets: (
@@ -218,15 +204,9 @@ export interface AccountSharingStoreServiceShape {
     SquadBuilderPersistenceUnavailable
   >;
   readonly listAccountAccessGrants: (
-    input: ListAccountAccessGrantsInput
+    input: ListAccountAccessGrantsStoreInput
   ) => Effect<
     readonly AccountAccessGrantSummary[],
-    SquadBuilderPersistenceUnavailable
-  >;
-  readonly listOwnedAccounts: (
-    input: ListOwnedMargonemAccountsInput
-  ) => Effect<
-    readonly OwnedMargonemAccountSummary[],
     SquadBuilderPersistenceUnavailable
   >;
 }
@@ -242,8 +222,4 @@ export type { MargonemAccountNotFound };
 /** Expected failure when an actor is not the Margonem account owner. */
 export type { ActorDoesNotOwnMargonemAccount };
 
-export type {
-  ListOwnedMargonemAccountsInput,
-  OwnedMargonemAccountSummary,
-  SquadBuilderPersistenceUnavailable,
-};
+export type { SquadBuilderPersistenceUnavailable };

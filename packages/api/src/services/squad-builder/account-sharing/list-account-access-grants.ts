@@ -15,17 +15,13 @@ export const listAccountAccessGrants = Effect.fn(
   "AccountSharing.listAccountAccessGrants"
 )(function* listAccountAccessGrants(input: ListAccountAccessGrantsInput) {
   const store = yield* AccountSharingStoreService;
-  const owned = yield* store.findOwnedAccountForSharing({
+  const ownerUserId = yield* store.findAccountOwnerUserId({
     accountId: input.accountId,
-    actorUserId: input.actorUserId,
   });
 
-  if (owned.ownerUserId !== input.actorUserId) {
+  if (ownerUserId !== input.actorUserId) {
     return yield* new ActorDoesNotOwnMargonemAccount();
   }
 
-  return yield* store.listAccountAccessGrants({
-    accountId: input.accountId,
-    actorUserId: input.actorUserId,
-  });
+  return yield* store.listAccountAccessGrants({ accountId: input.accountId });
 });

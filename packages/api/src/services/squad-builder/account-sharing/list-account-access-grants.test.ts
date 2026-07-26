@@ -2,11 +2,9 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseMargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
 import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
-import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { makeAccountSharingStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import { AccountSharingStoreService } from "./account-sharing-store.ts";
 import { listAccountAccessGrants } from "./list-account-access-grants.ts";
@@ -19,12 +17,6 @@ const parseTestAccountId = () => Effect.runSync(parseMargonemAccountId(123));
 const parseTestAccessId = () =>
   Effect.runSync(parseMargonemAccountAccessId(456));
 
-const parseTestDisplayName = () =>
-  Effect.runSync(parseAccountDisplayName("Effect shared account"));
-
-const parseTestProfileId = () =>
-  Effect.runSync(parseMargonemProfileId(7_299_020));
-
 it.effect("lists account access grants for an owned account", () => {
   const actorUserId = parseTestUserId("effect-grants-owner");
   const invitedUserId = parseTestUserId("effect-grants-invited");
@@ -32,18 +24,13 @@ it.effect("lists account access grants for an owned account", () => {
   const accessId = parseTestAccessId();
   const createdAt = new Date("2026-06-29T12:00:00.000Z");
   const store = makeAccountSharingStoreServiceTestService({
-    findOwnedAccountForSharing: (input) => {
-      expect(input).toMatchObject({ accountId, actorUserId });
+    findAccountOwnerUserId: (input) => {
+      expect(input).toEqual({ accountId });
 
-      return Effect.succeed({
-        accountId,
-        displayName: parseTestDisplayName(),
-        ownerUserId: actorUserId,
-        profileId: parseTestProfileId(),
-      });
+      return Effect.succeed(actorUserId);
     },
     listAccountAccessGrants: (input) => {
-      expect(input).toMatchObject({ accountId, actorUserId });
+      expect(input).toEqual({ accountId });
 
       return Effect.succeed([
         {
@@ -78,13 +65,7 @@ it.effect(
     const ownerUserId = parseTestUserId("effect-grants-real-owner");
     const accountId = parseTestAccountId();
     const store = makeAccountSharingStoreServiceTestService({
-      findOwnedAccountForSharing: () =>
-        Effect.succeed({
-          accountId,
-          displayName: parseTestDisplayName(),
-          ownerUserId,
-          profileId: parseTestProfileId(),
-        }),
+      findAccountOwnerUserId: () => Effect.succeed(ownerUserId),
     });
 
     return Effect.gen(function* listAccountAccessGrantsForbiddenEffect() {
