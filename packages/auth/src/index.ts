@@ -72,9 +72,6 @@ export class AuthConfig extends Context.Service<AuthConfig, AuthEnv>()(
 /** Live Better Auth config layer backed by Effect's environment provider. */
 export const AuthConfigLiveLayer = Layer.effect(AuthConfig, authEnvConfig);
 
-/** Read Better Auth configuration through Effect Config. */
-export const readAuthEnv = AuthConfig;
-
 /**
  * Pure Better Auth construction seam.
  *
@@ -168,7 +165,3 @@ export const makeBetterAuthServiceLayer = (
   instance: BetterAuthInstance
 ): Layer.Layer<BetterAuthService> =>
   Layer.succeed(BetterAuthService, makeBetterAuthService(instance));
-
-/** Build a vendor instance from provided config and a database resource. */
-export const makeAuth = (database: BetterAuthDatabase) =>
-  readAuthEnv.pipe(Effect.map((env) => createAuth(env, database)));

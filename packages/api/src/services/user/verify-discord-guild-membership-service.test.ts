@@ -8,7 +8,7 @@ import { TestClock } from "effect/testing";
 import { DiscordGuildVerifier } from "../../adapters/user/discord-verification-service.ts";
 import { UserStore } from "../../adapters/user/user-store.ts";
 import { parseAppUserId } from "../../domain/squad-builder/app-user-id.ts";
-import { VerifyDiscordGuildMembershipService } from "./verify-discord-guild-membership-service.ts";
+import { verifyDiscordGuildMembership } from "./verify-discord-guild-membership-service.ts";
 
 const FIXED_TIME = new Date("2026-02-20T12:00:00.000Z");
 
@@ -31,13 +31,9 @@ const makeLayer = (
   const verifier = DiscordGuildVerifier.of({
     verifyMembership: () => Effect.succeed(valid),
   });
-  const dependencies = Layer.merge(
+  return Layer.merge(
     Layer.succeed(UserStore, store),
     Layer.succeed(DiscordGuildVerifier, verifier)
-  );
-
-  return VerifyDiscordGuildMembershipService.layer.pipe(
-    Layer.provide(dependencies)
   );
 };
 
@@ -50,9 +46,9 @@ it.effect("marks a Discord guild member as verified at the current time", () =>
     const layer = makeLayer(true, (input) => Ref.set(markedUsers, [input]));
 
     yield* TestClock.setTime(FIXED_TIME.getTime());
-    const result = yield* VerifyDiscordGuildMembershipService.use((service) =>
-      service.verify({ userId })
-    ).pipe(Effect.provide(layer));
+    const result = yield* verifyDiscordGuildMembership({ userId }).pipe(
+      Effect.provide(layer)
+    );
 
     expect(result).toEqual({ valid: true });
     expect(yield* Ref.get(markedUsers)).toEqual([
@@ -72,9 +68,9 @@ it.effect("does not mutate verification state for a non-member", () =>
       Ref.update(markCount, (count) => count + 1)
     );
 
-    const result = yield* VerifyDiscordGuildMembershipService.use((service) =>
-      service.verify({ userId })
-    ).pipe(Effect.provide(layer));
+    const result = yield* verifyDiscordGuildMembership({ userId }).pipe(
+      Effect.provide(layer)
+    );
 
     expect(result).toEqual({ valid: false });
     expect(yield* Ref.get(markCount)).toBe(0);

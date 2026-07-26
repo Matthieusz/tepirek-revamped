@@ -1,7 +1,5 @@
-import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 
 import { DiscordGuildVerifier } from "../../adapters/user/discord-verification-service.ts";
 import { UserStore } from "../../adapters/user/user-store.ts";
@@ -30,58 +28,21 @@ export type VerifyDiscordGuildMembershipError =
   | UserBadRequest
   | UserAdapterError;
 
-const makeVerify = (
-  store: typeof UserStore.Service,
-  verifier: typeof DiscordGuildVerifier.Service
-) =>
-  Effect.fn("User.verifyDiscordGuildMembership")(
-    function* verifyDiscordGuildMembership(
-      input: VerifyDiscordGuildMembershipInput
-    ) {
-      const accessToken = yield* store.getDiscordAccessToken(input.userId);
-      const valid = yield* verifier.verifyMembership(accessToken);
+/** Check Discord guild membership and persist successful user verification. */
+export const verifyDiscordGuildMembership = Effect.fn(
+  "User.verifyDiscordGuildMembership"
+)(function* verifyDiscordGuildMembership(
+  input: VerifyDiscordGuildMembershipInput
+) {
+  const store = yield* UserStore;
+  const verifier = yield* DiscordGuildVerifier;
+  const accessToken = yield* store.getDiscordAccessToken(input.userId);
+  const valid = yield* verifier.verifyMembership(accessToken);
 
-      if (valid) {
-        const updatedAt = yield* DateTime.nowAsDate;
-        yield* store.markUserVerified({ updatedAt, userId: input.userId });
-      }
+  if (valid) {
+    const updatedAt = yield* DateTime.nowAsDate;
+    yield* store.markUserVerified({ updatedAt, userId: input.userId });
+  }
 
-      return { valid };
-    }
-  );
-
-/** Application-service contract for verifying Discord guild membership. */
-export interface VerifyDiscordGuildMembership {
-  /**
-   * Checks the user's linked Discord account and marks the user verified when
-   * membership is present. Expected failures remain in the Effect error channel.
-   */
-  readonly verify: (
-    input: VerifyDiscordGuildMembershipInput
-  ) => Effect.Effect<
-    VerifyDiscordGuildMembershipResult,
-    VerifyDiscordGuildMembershipError
-  >;
-}
-
-/**
- * Effect Context service for Discord guild membership verification.
- * Its live layer requires the user store and Discord guild verifier services.
- */
-export class VerifyDiscordGuildMembershipService extends Context.Service<
-  VerifyDiscordGuildMembershipService,
-  VerifyDiscordGuildMembership
->()("@tepirek-revamped/api/user/VerifyDiscordGuildMembershipService") {
-  /** Layer that constructs the service from its persistence and Discord ports. */
-  static readonly layer = Layer.effect(
-    VerifyDiscordGuildMembershipService,
-    Effect.gen(function* verifyDiscordGuildMembershipLayer() {
-      const store = yield* UserStore;
-      const verifier = yield* DiscordGuildVerifier;
-
-      return VerifyDiscordGuildMembershipService.of({
-        verify: makeVerify(store, verifier),
-      });
-    })
-  );
-}
+  return { valid };
+});

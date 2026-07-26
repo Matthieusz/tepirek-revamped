@@ -4,14 +4,13 @@ import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 
 import {
   AuthConfig,
   AuthConfigLiveLayer,
   BetterAuthService,
-  makeAuth,
+  createAuth,
   makeBetterAuthServiceLayer,
 } from "./index.ts";
 import type { BetterAuthInstance } from "./index.ts";
@@ -59,7 +58,7 @@ describe("Better Auth service", () => {
 });
 
 describe("Better Auth config", () => {
-  it.effect("constructs auth from an injected Effect config service", () =>
+  it.effect("constructs auth through the pure construction seam", () =>
     Effect.gen(function* constructAuth() {
       const { database } = yield* Effect.acquireRelease(
         Effect.sync(() =>
@@ -69,17 +68,16 @@ describe("Better Auth config", () => {
         ),
         ({ pool }) => Effect.promise(() => pool.end())
       );
-      const auth = yield* makeAuth(database).pipe(
-        Effect.provide(
-          Layer.succeed(AuthConfig, {
-            betterAuthSecret: Redacted.make("test-secret"),
-            betterAuthUrl: new URL("http://localhost:3000"),
-            corsOrigin: new URL("http://localhost:3001"),
-            discordClientId: "test-discord-client-id",
-            discordClientSecret: Redacted.make("test-discord-client-secret"),
-            isProduction: false,
-          })
-        )
+      const auth = createAuth(
+        {
+          betterAuthSecret: Redacted.make("test-secret"),
+          betterAuthUrl: new URL("http://localhost:3000"),
+          corsOrigin: new URL("http://localhost:3001"),
+          discordClientId: "test-discord-client-id",
+          discordClientSecret: Redacted.make("test-discord-client-secret"),
+          isProduction: false,
+        },
+        database
       );
 
       expect(auth.handler).toBeTypeOf("function");

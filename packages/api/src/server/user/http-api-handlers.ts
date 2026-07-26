@@ -13,7 +13,7 @@ import {
   UserPersistenceUnavailable,
   UserUnauthorized,
 } from "../../protocol/user/http-api-contract.ts";
-import { VerifyDiscordGuildMembershipService } from "../../services/user/verify-discord-guild-membership-service.ts";
+import { verifyDiscordGuildMembership as verifyDiscordGuildMembershipWorkflow } from "../../services/user/verify-discord-guild-membership-service.ts";
 import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireAdminSession, requireSession, requireVerifiedSession } =
@@ -162,10 +162,9 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
         Effect.fn("UserHttpApiHandlers.verifyDiscordGuildMembership")(
           function* verifyDiscordGuildMembership() {
             const session = yield* requireSession();
-            const verification = yield* VerifyDiscordGuildMembershipService;
-            return yield* verification
-              .verify({ userId: session.user.id })
-              .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
+            return yield* verifyDiscordGuildMembershipWorkflow({
+              userId: session.user.id,
+            }).pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
           }
         )
       )

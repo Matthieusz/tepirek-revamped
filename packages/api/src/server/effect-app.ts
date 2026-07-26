@@ -39,7 +39,6 @@ import type {
 } from "../services/squad-builder/firecrawl-config.ts";
 import type { FirecrawlRequestAccountingStoreService } from "../services/squad-builder/firecrawl-request-accounting-store.ts";
 import type { SquadGroupStoreService } from "../services/squad-builder/squad-groups/squad-group-store.ts";
-import { VerifyDiscordGuildMembershipService } from "../services/user/verify-discord-guild-membership-service.ts";
 import type { VaultService } from "../services/vault/vault-service.ts";
 
 const makeApiStableLayer = <DatabaseError>(
@@ -81,12 +80,7 @@ const makeApiStableLayer = <DatabaseError>(
     firecrawlLayer
   );
 
-  const applicationUseCases = VerifyDiscordGuildMembershipService.layer;
-
-  return Layer.mergeAll(
-    stableServices,
-    applicationUseCases.pipe(Layer.provideMerge(stableServices))
-  );
+  return stableServices;
 };
 
 /** Build API services from parsed values and an executable-owned database. */
@@ -133,5 +127,4 @@ type SquadBuilderServices =
   | AccountSharingStoreService
   | FirecrawlClientService
   | FirecrawlConfigService
-  | FirecrawlRequestAccountingStoreService
-  | VerifyDiscordGuildMembershipService;
+  | FirecrawlRequestAccountingStoreService;
