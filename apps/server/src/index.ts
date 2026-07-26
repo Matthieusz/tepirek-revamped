@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file -- Collocated server service and startup error. */
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
@@ -17,6 +18,7 @@ import {
   makeSharedDatabaseLayer,
 } from "@tepirek-revamped/db/effect";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -38,19 +40,25 @@ import type { Context as HonoContext } from "hono";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
-import { ServerApplication } from "./server-application.js";
-import type { ServerApplicationService } from "./server-application.js";
 import { readStartupConfig } from "./startup-config.js";
 import type { StartupConfig } from "./startup-config.js";
+
+/** Scoped Hono application value used by tests and the Bun host. */
+export interface ServerApplicationService {
+  readonly app: Hono<EvlogVariables>;
+}
+
+/** Scoped Hono application with its Effect HTTP handler runtimes alive. */
+export class ServerApplication extends Context.Service<
+  ServerApplication,
+  ServerApplicationService
+>()("@tepirek-revamped/server/ServerApplication") {}
 
 /** Expected failure while binding the Bun HTTP server. */
 export class ServerStartupError extends Schema.TaggedErrorClass<ServerStartupError>()(
   "ServerStartupError",
   { cause: Schema.Defect() }
 ) {}
-
-export { ServerApplication } from "./server-application.js";
-export type { ServerApplicationService } from "./server-application.js";
 
 const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
   Layer.effect(

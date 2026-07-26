@@ -36,6 +36,9 @@ describe("account import atoms", () => {
     const { calls, makeRegistry } = makeTestLayer();
     const registry = makeRegistry();
 
+    registry.mount(ownedAccountsAtom);
+    await waitForAtomResults(registry, [ownedAccountsAtom]);
+
     registry.set(confirmOwnedAccountImportAtom, {
       displayName: "My Account",
       pendingImportId: 99,

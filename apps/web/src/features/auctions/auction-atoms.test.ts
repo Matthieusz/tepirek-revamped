@@ -26,8 +26,8 @@ describe("auction atoms", () => {
     await waitForAtomResults(registry, [signups, stats]);
 
     registry.set(toggleAuctionSignupAtom, {
-      column: 0,
-      level: 1,
+      column: 1,
+      level: 30,
       profession,
       round: 1,
       type,
@@ -76,7 +76,7 @@ describe("auction atoms", () => {
 
     registry.set(toggleAuctionSignupAtom, {
       column: 1,
-      level: 2,
+      level: 30,
       ...groupA,
       round: 1,
     });
