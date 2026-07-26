@@ -8,11 +8,11 @@ import {
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { AuctionSignupIdSchema } from "../../domain/core-identifiers.ts";
-import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
+import { AuctionSignupId } from "../../domain/core-identifiers.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-export { AuctionSignupIdSchema };
+export { AuctionSignupId };
 
 const PositiveInt = Schema.Finite.check(
   Schema.isInt(),
@@ -43,7 +43,7 @@ export const AuctionSignupPayload = AuctionSignupPayloadFields.pipe(
 );
 export type AuctionSignupPayloadType = typeof AuctionSignupPayload.Type;
 export const RemoveAuctionSignupPayload = Schema.Struct({
-  id: AuctionSignupIdSchema,
+  id: AuctionSignupId,
 });
 export interface RemoveAuctionSignupPayload extends Schema.Schema.Type<
   typeof RemoveAuctionSignupPayload
@@ -52,10 +52,10 @@ export interface RemoveAuctionSignupPayload extends Schema.Schema.Type<
 export const AuctionSignupSummary = Schema.Struct({
   column: PositiveInt,
   createdAt: Schema.DateFromString,
-  id: AuctionSignupIdSchema,
+  id: AuctionSignupId,
   level: PositiveInt,
   round: PositiveInt,
-  userId: AppUserIdSchema,
+  userId: AppUserId,
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });

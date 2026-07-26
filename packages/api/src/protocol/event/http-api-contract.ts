@@ -7,10 +7,10 @@ import {
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { EventIdSchema } from "../../domain/core-identifiers.ts";
+import { EventId } from "../../domain/core-identifiers.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-export { EventIdSchema };
+export { EventId };
 
 const EventIcon = Schema.Literals(EVENT_ICON_IDS);
 
@@ -23,13 +23,13 @@ export const CreateEventPayload = Schema.Struct({
 export interface CreateEventPayload extends Schema.Schema.Type<
   typeof CreateEventPayload
 > {}
-export const DeleteEventPayload = Schema.Struct({ id: EventIdSchema });
+export const DeleteEventPayload = Schema.Struct({ id: EventId });
 export interface DeleteEventPayload extends Schema.Schema.Type<
   typeof DeleteEventPayload
 > {}
 export const ToggleEventActivePayload = Schema.Struct({
   active: Schema.Boolean,
-  id: EventIdSchema,
+  id: EventId,
 });
 export interface ToggleEventActivePayload extends Schema.Schema.Type<
   typeof ToggleEventActivePayload
@@ -40,7 +40,7 @@ export const EventSummary = Schema.Struct({
   color: Schema.String,
   endTime: Schema.DateFromString,
   icon: Schema.String,
-  id: EventIdSchema,
+  id: EventId,
   name: Schema.String,
 });
 export interface EventSummary extends Schema.Schema.Type<typeof EventSummary> {}

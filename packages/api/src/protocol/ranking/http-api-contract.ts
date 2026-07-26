@@ -3,28 +3,28 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { EventIdSchema, HeroIdSchema } from "../../domain/core-identifiers.ts";
-import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
+import { EventId, HeroId } from "../../domain/core-identifiers.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-export { EventIdSchema, HeroIdSchema };
+export { EventId, HeroId };
 
 const RankingMetric = Schema.Finite;
 
-export const HeroIdPayload = Schema.Struct({ heroId: HeroIdSchema });
+export const HeroIdPayload = Schema.Struct({ heroId: HeroId });
 export interface HeroIdPayload extends Schema.Schema.Type<
   typeof HeroIdPayload
 > {}
 export const RankingPayload = Schema.Struct({
-  eventId: Schema.optionalKey(EventIdSchema),
-  heroId: Schema.optionalKey(HeroIdSchema),
+  eventId: Schema.optionalKey(EventId),
+  heroId: Schema.optionalKey(HeroId),
 });
 export interface RankingPayload extends Schema.Schema.Type<
   typeof RankingPayload
 > {}
 export const HeroStats = Schema.Struct({
   currentPointWorth: RankingMetric,
-  heroId: HeroIdSchema,
+  heroId: HeroId,
   heroName: Schema.String,
   totalBets: RankingMetric,
   totalPoints: RankingMetric,
@@ -34,7 +34,7 @@ export const RankingRow = Schema.Struct({
   totalBets: RankingMetric,
   totalEarnings: Schema.String,
   totalPoints: Schema.String,
-  userId: AppUserIdSchema,
+  userId: AppUserId,
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });
@@ -85,7 +85,7 @@ export const RankingHttpApiGroup = HttpApiGroup.make("ranking")
     }),
     HttpApiEndpoint.get("getOldestUnpaidEvent", "/oldest-unpaid-event", {
       error: RankingError,
-      success: Schema.NullOr(EventIdSchema),
+      success: Schema.NullOr(EventId),
     }),
     HttpApiEndpoint.post("getRanking", "/", {
       error: RankingError,

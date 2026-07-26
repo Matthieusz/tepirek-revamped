@@ -3,11 +3,11 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { AnnouncementIdSchema } from "../../domain/core-identifiers.ts";
-import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
+import { AnnouncementId } from "../../domain/core-identifiers.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-export { AnnouncementIdSchema };
+export { AnnouncementId };
 
 const { NonEmptyString } = Schema;
 export const CreateAnnouncementPayload = Schema.Struct({
@@ -18,14 +18,14 @@ export interface CreateAnnouncementPayload extends Schema.Schema.Type<
   typeof CreateAnnouncementPayload
 > {}
 export const DeleteAnnouncementPayload = Schema.Struct({
-  id: AnnouncementIdSchema,
+  id: AnnouncementId,
 });
 export interface DeleteAnnouncementPayload extends Schema.Schema.Type<
   typeof DeleteAnnouncementPayload
 > {}
 
 export const AnnouncementAuthor = Schema.Struct({
-  id: AppUserIdSchema,
+  id: AppUserId,
   image: Schema.NullOr(Schema.String),
   name: Schema.NullOr(Schema.String),
 });
@@ -35,7 +35,7 @@ export interface AnnouncementAuthor extends Schema.Schema.Type<
 export const AnnouncementSummary = Schema.Struct({
   createdAt: Schema.DateFromString,
   description: Schema.String,
-  id: AnnouncementIdSchema,
+  id: AnnouncementId,
   title: Schema.String,
   user: Schema.NullOr(AnnouncementAuthor),
 });

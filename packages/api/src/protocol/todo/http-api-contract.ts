@@ -3,11 +3,11 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { TodoIdSchema } from "../../domain/core-identifiers.ts";
-import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
+import { TodoId } from "../../domain/core-identifiers.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-export { TodoIdSchema };
+export { TodoId };
 
 export const CreateTodoPayload = Schema.Struct({
   text: Schema.NonEmptyString,
@@ -17,7 +17,7 @@ export interface CreateTodoPayload extends Schema.Schema.Type<
 > {}
 
 export const DeleteTodoPayload = Schema.Struct({
-  id: TodoIdSchema,
+  id: TodoId,
 });
 export interface DeleteTodoPayload extends Schema.Schema.Type<
   typeof DeleteTodoPayload
@@ -25,7 +25,7 @@ export interface DeleteTodoPayload extends Schema.Schema.Type<
 
 export const ToggleTodoPayload = Schema.Struct({
   completed: Schema.Boolean,
-  id: TodoIdSchema,
+  id: TodoId,
 });
 export interface ToggleTodoPayload extends Schema.Schema.Type<
   typeof ToggleTodoPayload
@@ -33,9 +33,9 @@ export interface ToggleTodoPayload extends Schema.Schema.Type<
 
 export const TodoSummary = Schema.Struct({
   completed: Schema.Boolean,
-  id: TodoIdSchema,
+  id: TodoId,
   text: Schema.String,
-  userId: AppUserIdSchema,
+  userId: AppUserId,
 });
 export interface TodoSummary extends Schema.Schema.Type<typeof TodoSummary> {}
 

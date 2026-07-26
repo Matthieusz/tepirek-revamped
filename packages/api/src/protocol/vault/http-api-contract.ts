@@ -3,38 +3,38 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { EventIdSchema, HeroIdSchema } from "../../domain/core-identifiers.ts";
-import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
+import { EventId, HeroId } from "../../domain/core-identifiers.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-export { EventIdSchema, HeroIdSchema };
+export { EventId, HeroId };
 
 const PositiveNumber = Schema.Finite.check(Schema.isGreaterThan(0));
 const VaultMetric = Schema.Finite;
 export const DistributeGoldPayload = Schema.Struct({
   goldAmount: PositiveNumber,
-  heroId: HeroIdSchema,
+  heroId: HeroId,
 });
 export interface DistributeGoldPayload extends Schema.Schema.Type<
   typeof DistributeGoldPayload
 > {}
 export const EventFilterPayload = Schema.Struct({
-  eventId: Schema.optionalKey(EventIdSchema),
+  eventId: Schema.optionalKey(EventId),
 });
 export interface EventFilterPayload extends Schema.Schema.Type<
   typeof EventFilterPayload
 > {}
 export const TogglePaidOutPayload = Schema.Struct({
-  eventId: EventIdSchema,
+  eventId: EventId,
   paidOut: Schema.Boolean,
-  userId: AppUserIdSchema,
+  userId: AppUserId,
 });
 export interface TogglePaidOutPayload extends Schema.Schema.Type<
   typeof TogglePaidOutPayload
 > {}
 export const DistributeGoldSuccess = Schema.Struct({
   goldAmount: PositiveNumber,
-  heroId: HeroIdSchema,
+  heroId: HeroId,
   heroName: Schema.String,
   pointWorth: VaultMetric,
   success: Schema.Boolean,
@@ -47,7 +47,7 @@ export interface DistributeGoldSuccess extends Schema.Schema.Type<
 export const VaultRow = Schema.Struct({
   paidOut: Schema.Boolean,
   totalEarnings: Schema.String,
-  userId: AppUserIdSchema,
+  userId: AppUserId,
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });

@@ -4,23 +4,22 @@ import { USER_ROLES } from "@tepirek-revamped/config";
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-export const UserId = AppUserIdSchema;
 export const Role = Schema.Literals(USER_ROLES);
 export const Name = Schema.NonEmptyString.check(Schema.isMinLength(2));
 
-export const DeleteUserPayload = Schema.Struct({ userId: UserId });
+export const DeleteUserPayload = Schema.Struct({ userId: AppUserId });
 export interface DeleteUserPayload extends Schema.Schema.Type<
   typeof DeleteUserPayload
 > {}
-export const SetRolePayload = Schema.Struct({ role: Role, userId: UserId });
+export const SetRolePayload = Schema.Struct({ role: Role, userId: AppUserId });
 export interface SetRolePayload extends Schema.Schema.Type<
   typeof SetRolePayload
 > {}
 export const SetVerifiedPayload = Schema.Struct({
-  userId: UserId,
+  userId: AppUserId,
   verified: Schema.Boolean,
 });
 export interface SetVerifiedPayload extends Schema.Schema.Type<
@@ -32,7 +31,7 @@ export interface UpdateProfilePayload extends Schema.Schema.Type<
 > {}
 export const UpdateUserNamePayload = Schema.Struct({
   name: Name,
-  userId: UserId,
+  userId: AppUserId,
 });
 export interface UpdateUserNamePayload extends Schema.Schema.Type<
   typeof UpdateUserNamePayload
@@ -42,7 +41,7 @@ export interface MutationSuccess extends Schema.Schema.Type<
   typeof MutationSuccess
 > {}
 export const VerifiedMember = Schema.Struct({
-  id: UserId,
+  id: AppUserId,
   image: Schema.NullOr(Schema.String),
   name: Schema.String,
 });
@@ -51,7 +50,7 @@ export interface VerifiedMember extends Schema.Schema.Type<
 > {}
 export const Player = Schema.Struct({
   createdAt: Schema.DateFromString,
-  id: UserId,
+  id: AppUserId,
   image: Schema.NullOr(Schema.String),
   name: Schema.String,
   role: Schema.NullOr(Schema.String),
@@ -72,7 +71,7 @@ export const Session = Schema.Struct({
   token: Schema.NonEmptyString,
   updatedAt: Schema.DateFromString,
   userAgent: Schema.optionalKey(Schema.NullOr(Schema.String)),
-  userId: UserId,
+  userId: AppUserId,
 });
 export interface Session extends Schema.Schema.Type<typeof Session> {}
 export const AuthenticatedSession = Schema.Struct({
@@ -81,7 +80,7 @@ export const AuthenticatedSession = Schema.Struct({
     createdAt: Schema.DateFromString,
     email: Schema.String,
     emailVerified: Schema.Boolean,
-    id: UserId,
+    id: AppUserId,
     image: Schema.optionalKey(Schema.NullOr(Schema.String)),
     name: Schema.String,
     role: Schema.optionalKey(Schema.NullOr(Schema.String)),

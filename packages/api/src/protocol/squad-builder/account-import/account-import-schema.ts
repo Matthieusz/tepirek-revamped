@@ -1,10 +1,10 @@
 /* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 import * as Schema from "effect/Schema";
 
-import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-account-id.ts";
+import { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import { MargonemCharacterPreviewSchema } from "../../../domain/squad-builder/margonem-character.ts";
-import { MargonemProfileIdSchema } from "../../../domain/squad-builder/margonem-profile-id.ts";
-import { PendingMargonemAccountImportIdSchema } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
+import { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
+import { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
 import { PositiveInt } from "../../../domain/squad-builder/positive-int.ts";
 
 export const PreviewMargonemProfileImportPayload = Schema.Struct({
@@ -18,7 +18,7 @@ export const PreviewMargonemProfileImportSuccess = Schema.Struct({
   generatedProfileUrl: Schema.String,
   jarunaCharacters: Schema.Array(MargonemCharacterPreviewSchema),
   lastFetchedAt: Schema.DateFromString,
-  profileId: MargonemProfileIdSchema,
+  profileId: MargonemProfileId,
   suggestedAccountName: Schema.String,
 });
 export interface PreviewMargonemProfileImportSuccess extends Schema.Schema.Type<
@@ -45,11 +45,11 @@ const PreviewOwnedAccountImportLineError = Schema.TaggedUnion({
   MargonemAccountAlreadySharedWithActor: {},
   MargonemAccountOwnedByAnotherUser: {},
   MargonemCharacterRowInvalid: {
-    profileId: MargonemProfileIdSchema,
+    profileId: MargonemProfileId,
     safeReason: Schema.String,
   },
-  MargonemCharacterRowsNotFound: { profileId: MargonemProfileIdSchema },
-  MargonemProfileNameNotFound: { profileId: MargonemProfileIdSchema },
+  MargonemCharacterRowsNotFound: { profileId: MargonemProfileId },
+  MargonemProfileNameNotFound: { profileId: MargonemProfileId },
   MissingMargonemProfileId: { message: Schema.String },
   SquadBuilderPersistenceUnavailable: { operation: Schema.String },
 });
@@ -67,8 +67,8 @@ const PreviewOwnedAccountImportItem = Schema.TaggedUnion({
     jarunaCharacters: Schema.Array(MargonemCharacterPreviewSchema),
     lastFetchedAt: Schema.DateFromString,
     lineNumber: PositiveInt,
-    pendingImportId: PendingMargonemAccountImportIdSchema,
-    profileId: MargonemProfileIdSchema,
+    pendingImportId: PendingMargonemAccountImportId,
+    profileId: MargonemProfileId,
     suggestedAccountName: Schema.String,
   },
 });
@@ -81,25 +81,25 @@ export interface PreviewOwnedAccountImportsSuccess extends Schema.Schema.Type<
 
 export const ConfirmOwnedAccountImportPayload = Schema.Struct({
   displayName: Schema.String,
-  pendingImportId: PendingMargonemAccountImportIdSchema,
+  pendingImportId: PendingMargonemAccountImportId,
 });
 export interface ConfirmOwnedAccountImportPayload extends Schema.Schema.Type<
   typeof ConfirmOwnedAccountImportPayload
 > {}
 export const UpdateOwnedAccountDisplayNamePayload = Schema.Struct({
-  accountId: MargonemAccountIdSchema,
+  accountId: MargonemAccountId,
   displayName: Schema.String,
 });
 export interface UpdateOwnedAccountDisplayNamePayload extends Schema.Schema
   .Type<typeof UpdateOwnedAccountDisplayNamePayload> {}
 export const DeleteOwnedAccountPayload = Schema.Struct({
-  accountId: MargonemAccountIdSchema,
+  accountId: MargonemAccountId,
 });
 export interface DeleteOwnedAccountPayload extends Schema.Schema.Type<
   typeof DeleteOwnedAccountPayload
 > {}
 export const DeleteOwnedAccountSuccess = Schema.Struct({
-  accountId: MargonemAccountIdSchema,
+  accountId: MargonemAccountId,
   removedAccessGrantCount: Schema.Finite,
   removedCharacterCount: Schema.Finite,
   removedSquadCharacterCount: Schema.Finite,
@@ -118,13 +118,13 @@ export interface OwnedAccountCharacterPreviewSchema extends Schema.Schema.Type<
 > {}
 
 export const OwnedMargonemAccountSummarySchema = Schema.Struct({
-  accountId: MargonemAccountIdSchema,
+  accountId: MargonemAccountId,
   characterCount: Schema.Finite,
   characterPreviews: Schema.Array(OwnedAccountCharacterPreviewSchema),
   displayName: Schema.String,
   generatedProfileUrl: Schema.String,
   lastFetchedAt: Schema.DateFromString,
-  profileId: MargonemProfileIdSchema,
+  profileId: MargonemProfileId,
 });
 export interface OwnedMargonemAccountSummarySchema extends Schema.Schema.Type<
   typeof OwnedMargonemAccountSummarySchema

@@ -3,64 +3,60 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import {
-  BetIdSchema,
-  EventIdSchema,
-  HeroIdSchema,
-} from "../../domain/core-identifiers.ts";
-import { AppUserIdSchema } from "../../domain/squad-builder/app-user-id.ts";
+import { BetId, EventId, HeroId } from "../../domain/core-identifiers.ts";
+import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-export { BetIdSchema, EventIdSchema, HeroIdSchema };
+export { BetId, EventId, HeroId };
 
 const PositiveInt = Schema.Finite.check(
   Schema.isInt(),
   Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
 );
 
-const UserId = AppUserIdSchema;
+const UserId = AppUserId;
 const PaginationMetric = Schema.Finite;
 
 export const CreateBetPayload = Schema.Struct({
-  heroId: HeroIdSchema,
+  heroId: HeroId,
   userIds: Schema.NonEmptyArray(UserId),
 });
 export interface CreateBetPayload extends Schema.Schema.Type<
   typeof CreateBetPayload
 > {}
-export const DeleteBetPayload = Schema.Struct({ id: BetIdSchema });
+export const DeleteBetPayload = Schema.Struct({ id: BetId });
 export interface DeleteBetPayload extends Schema.Schema.Type<
   typeof DeleteBetPayload
 > {}
 export const EditBetPayload = Schema.Struct({
-  betId: BetIdSchema,
+  betId: BetId,
   newUserIds: Schema.NonEmptyArray(UserId),
 });
 export interface EditBetPayload extends Schema.Schema.Type<
   typeof EditBetPayload
 > {}
 export const GetAllPaginatedBetsPayload = Schema.Struct({
-  eventId: Schema.optionalKey(EventIdSchema),
-  heroId: Schema.optionalKey(HeroIdSchema),
+  eventId: Schema.optionalKey(EventId),
+  heroId: Schema.optionalKey(HeroId),
   limit: Schema.optionalKey(PositiveInt.check(Schema.isLessThanOrEqualTo(50))),
   page: Schema.optionalKey(PositiveInt),
 });
 export interface GetAllPaginatedBetsPayload extends Schema.Schema.Type<
   typeof GetAllPaginatedBetsPayload
 > {}
-export const GetBetMembersPayload = Schema.Struct({ betId: BetIdSchema });
+export const GetBetMembersPayload = Schema.Struct({ betId: BetId });
 export interface GetBetMembersPayload extends Schema.Schema.Type<
   typeof GetBetMembersPayload
 > {}
-export const GetBetsByEventPayload = Schema.Struct({ eventId: EventIdSchema });
+export const GetBetsByEventPayload = Schema.Struct({ eventId: EventId });
 export interface GetBetsByEventPayload extends Schema.Schema.Type<
   typeof GetBetsByEventPayload
 > {}
 
 export const BetMemberSummary = Schema.Struct({
-  heroBetId: BetIdSchema,
+  heroBetId: BetId,
   points: Schema.String,
-  userId: AppUserIdSchema,
+  userId: AppUserId,
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.NullOr(Schema.String),
 });
@@ -69,26 +65,26 @@ export interface BetMemberSummary extends Schema.Schema.Type<
 > {}
 export const BetSummary = Schema.Struct({
   createdAt: Schema.DateFromString,
-  createdBy: AppUserIdSchema,
+  createdBy: AppUserId,
   createdByImage: Schema.NullOr(Schema.String),
   createdByName: Schema.NullOr(Schema.String),
-  eventId: EventIdSchema,
-  heroId: HeroIdSchema,
+  eventId: EventId,
+  heroId: HeroId,
   heroImage: Schema.NullOr(Schema.String),
   heroLevel: Schema.optionalKey(Schema.Finite),
   heroName: Schema.String,
-  id: BetIdSchema,
+  id: BetId,
   memberCount: PositiveInt,
   members: Schema.Array(BetMemberSummary),
 });
 export interface BetSummary extends Schema.Schema.Type<typeof BetSummary> {}
 export const BetByEventSummary = Schema.Struct({
   createdAt: Schema.DateFromString,
-  createdBy: AppUserIdSchema,
-  eventId: EventIdSchema,
-  heroId: HeroIdSchema,
+  createdBy: AppUserId,
+  eventId: EventId,
+  heroId: HeroId,
   heroName: Schema.String,
-  id: BetIdSchema,
+  id: BetId,
   memberCount: PositiveInt,
 });
 export interface BetByEventSummary extends Schema.Schema.Type<
@@ -97,7 +93,7 @@ export interface BetByEventSummary extends Schema.Schema.Type<
 export const StoredBetMember = Schema.Struct({
   id: PositiveInt,
   points: Schema.String,
-  userId: AppUserIdSchema,
+  userId: AppUserId,
 });
 export interface StoredBetMember extends Schema.Schema.Type<
   typeof StoredBetMember
@@ -105,14 +101,14 @@ export interface StoredBetMember extends Schema.Schema.Type<
 export const CreatedBet = Schema.Struct({
   createdAt: Schema.DateFromString,
   createdBy: UserId,
-  heroId: HeroIdSchema,
-  id: BetIdSchema,
+  heroId: HeroId,
+  id: BetId,
   memberCount: PositiveInt,
 });
 export interface CreatedBet extends Schema.Schema.Type<typeof CreatedBet> {}
 export const LatestBetForCopy = Schema.NullOr(
   Schema.Struct({
-    id: BetIdSchema,
+    id: BetId,
     members: Schema.Array(BetMemberSummary),
   })
 );

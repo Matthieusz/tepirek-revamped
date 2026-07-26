@@ -1,13 +1,13 @@
 /* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 import * as Schema from "effect/Schema";
 
-import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-account-id.ts";
+import { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import {
   MargonemCharacterPreviewSchema,
   MargonemProfessionSchema,
 } from "../../../domain/squad-builder/margonem-character.ts";
-import { MargonemProfileIdSchema } from "../../../domain/squad-builder/margonem-profile-id.ts";
-import { PendingMargonemAccountRefetchIdSchema } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
+import { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
+import { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
 import { PositiveInt } from "../../../domain/squad-builder/positive-int.ts";
 
 const StoredMargonemCharacterSnapshotSchema = Schema.Struct({
@@ -64,11 +64,11 @@ const ChangedMargonemCharacterDiffSchema = Schema.TaggedStruct(
 );
 
 export const MargonemAccountRefetchDiffSchema = Schema.Struct({
-  accountId: MargonemAccountIdSchema,
+  accountId: MargonemAccountId,
   added: Schema.Array(AddedMargonemCharacterDiffSchema),
   changed: Schema.Array(ChangedMargonemCharacterDiffSchema),
   fetchedAt: Schema.DateFromString,
-  profileId: MargonemProfileIdSchema,
+  profileId: MargonemProfileId,
   removed: Schema.Array(RemovedMargonemCharacterDiffSchema),
   unchangedCount: Schema.Finite,
 });
@@ -77,35 +77,35 @@ export interface MargonemAccountRefetchDiffSchema extends Schema.Schema.Type<
 > {}
 
 export const PreviewAccountRefetchPayload = Schema.Struct({
-  accountId: MargonemAccountIdSchema,
+  accountId: MargonemAccountId,
 });
 export interface PreviewAccountRefetchPayload extends Schema.Schema.Type<
   typeof PreviewAccountRefetchPayload
 > {}
 export const PreviewAccountRefetchSuccess = Schema.Struct({
-  accountId: MargonemAccountIdSchema,
+  accountId: MargonemAccountId,
   diff: MargonemAccountRefetchDiffSchema,
   fetchedAt: Schema.DateFromString,
   firecrawlCreditsUsed: PositiveInt,
   generatedProfileUrl: Schema.String,
-  profileId: MargonemProfileIdSchema,
-  refetchPreviewId: PendingMargonemAccountRefetchIdSchema,
+  profileId: MargonemProfileId,
+  refetchPreviewId: PendingMargonemAccountRefetchId,
 });
 export interface PreviewAccountRefetchSuccess extends Schema.Schema.Type<
   typeof PreviewAccountRefetchSuccess
 > {}
 
 export const ApplyAccountRefetchPayload = Schema.Struct({
-  refetchPreviewId: PendingMargonemAccountRefetchIdSchema,
+  refetchPreviewId: PendingMargonemAccountRefetchId,
 });
 export interface ApplyAccountRefetchPayload extends Schema.Schema.Type<
   typeof ApplyAccountRefetchPayload
 > {}
 export const ApplyAccountRefetchSuccess = Schema.Struct({
-  accountId: MargonemAccountIdSchema,
+  accountId: MargonemAccountId,
   addedCharacterCount: Schema.Finite,
   lastFetchedAt: Schema.DateFromString,
-  profileId: MargonemProfileIdSchema,
+  profileId: MargonemProfileId,
   removedCharacterCount: Schema.Finite,
   removedSquadCharacterCount: Schema.Finite,
   updatedCharacterCount: Schema.Finite,

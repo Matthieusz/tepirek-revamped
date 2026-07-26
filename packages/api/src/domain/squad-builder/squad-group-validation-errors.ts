@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file -- Validation variants are one domain-owned error union. */
 import * as Schema from "effect/Schema";
 
-import { MargonemAccountIdSchema } from "./margonem-account-id.ts";
+import { MargonemAccountId } from "./margonem-account-id.ts";
 import { InvalidSquadGroupName, InvalidSquadName } from "./squad-name.ts";
 
 export class InvalidSquadSnapshot extends Schema.TaggedErrorClass<InvalidSquadSnapshot>()(
@@ -28,7 +28,7 @@ export class DuplicateCharacterInSquad extends Schema.TaggedErrorClass<Duplicate
 export class DuplicateAccountInSquad extends Schema.TaggedErrorClass<DuplicateAccountInSquad>()(
   "DuplicateAccountInSquad",
   {
-    accountId: MargonemAccountIdSchema,
+    accountId: MargonemAccountId,
     squadClientKey: Schema.String,
   }
 ) {}

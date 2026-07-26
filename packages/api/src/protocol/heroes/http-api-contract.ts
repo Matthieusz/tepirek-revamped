@@ -3,7 +3,7 @@
 import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
-import { EventIdSchema, HeroIdSchema } from "../../domain/core-identifiers.ts";
+import { EventId, HeroId } from "../../domain/core-identifiers.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 const HeroLevel = Schema.Finite.check(
@@ -11,10 +11,10 @@ const HeroLevel = Schema.Finite.check(
   Schema.isBetween({ maximum: 300, minimum: 1 })
 );
 
-export { EventIdSchema, HeroIdSchema };
+export { EventId, HeroId };
 
 export const CreateHeroPayload = Schema.Struct({
-  eventId: EventIdSchema,
+  eventId: EventId,
   image: Schema.optionalKey(Schema.NonEmptyString),
   level: Schema.optionalKey(HeroLevel),
   name: Schema.NonEmptyString,
@@ -22,18 +22,18 @@ export const CreateHeroPayload = Schema.Struct({
 export interface CreateHeroPayload extends Schema.Schema.Type<
   typeof CreateHeroPayload
 > {}
-export const DeleteHeroPayload = Schema.Struct({ id: HeroIdSchema });
+export const DeleteHeroPayload = Schema.Struct({ id: HeroId });
 export interface DeleteHeroPayload extends Schema.Schema.Type<
   typeof DeleteHeroPayload
 > {}
-export const HeroesByEventPayload = Schema.Struct({ eventId: EventIdSchema });
+export const HeroesByEventPayload = Schema.Struct({ eventId: EventId });
 export interface HeroesByEventPayload extends Schema.Schema.Type<
   typeof HeroesByEventPayload
 > {}
 
 export const HeroSummary = Schema.Struct({
-  eventId: EventIdSchema,
-  id: HeroIdSchema,
+  eventId: EventId,
+  id: HeroId,
   image: Schema.NullOr(Schema.String),
   level: HeroLevel,
   name: Schema.String,

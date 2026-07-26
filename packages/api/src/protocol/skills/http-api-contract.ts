@@ -4,13 +4,13 @@ import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import {
-  ProfessionIdSchema,
-  SkillIdSchema,
-  SkillRangeIdSchema,
+  ProfessionId,
+  SkillId,
+  SkillRangeId,
 } from "../../domain/core-identifiers.ts";
 import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
-export { ProfessionIdSchema, SkillIdSchema, SkillRangeIdSchema };
+export { ProfessionId, SkillId, SkillRangeId };
 
 const SkillLevel = Schema.Finite.check(
   Schema.isInt(),
@@ -39,17 +39,17 @@ export const CreateSkillPayload = Schema.Struct({
   link: Schema.NonEmptyString,
   mastery: Schema.Boolean,
   name: Schema.NonEmptyString,
-  professionId: ProfessionIdSchema,
-  rangeId: SkillRangeIdSchema,
+  professionId: ProfessionId,
+  rangeId: SkillRangeId,
 });
 export interface CreateSkillPayload extends Schema.Schema.Type<
   typeof CreateSkillPayload
 > {}
-export const DeleteRangePayload = Schema.Struct({ id: SkillRangeIdSchema });
+export const DeleteRangePayload = Schema.Struct({ id: SkillRangeId });
 export interface DeleteRangePayload extends Schema.Schema.Type<
   typeof DeleteRangePayload
 > {}
-export const DeleteSkillPayload = Schema.Struct({ id: SkillIdSchema });
+export const DeleteSkillPayload = Schema.Struct({ id: SkillId });
 export interface DeleteSkillPayload extends Schema.Schema.Type<
   typeof DeleteSkillPayload
 > {}
@@ -58,21 +58,21 @@ export interface GetRangeBySlugPayload extends Schema.Schema.Type<
   typeof GetRangeBySlugPayload
 > {}
 export const GetSkillsByRangePayload = Schema.Struct({
-  rangeId: SkillRangeIdSchema,
+  rangeId: SkillRangeId,
 });
 export interface GetSkillsByRangePayload extends Schema.Schema.Type<
   typeof GetSkillsByRangePayload
 > {}
 
 export const ProfessionSummary = Schema.Struct({
-  id: ProfessionIdSchema,
+  id: ProfessionId,
   name: Schema.String,
 });
 export interface ProfessionSummary extends Schema.Schema.Type<
   typeof ProfessionSummary
 > {}
 export const RangeSummary = Schema.Struct({
-  id: SkillRangeIdSchema,
+  id: SkillRangeId,
   image: Schema.NullOr(Schema.String),
   level: SkillLevel,
   name: Schema.String,
@@ -82,11 +82,11 @@ export interface RangeSummary extends Schema.Schema.Type<typeof RangeSummary> {}
 export const SkillSummary = Schema.Struct({
   addedBy: Schema.NullOr(Schema.String),
   addedByImage: Schema.NullOr(Schema.String),
-  id: SkillIdSchema,
+  id: SkillId,
   link: Schema.String,
   mastery: Schema.Boolean,
   name: Schema.String,
-  professionId: ProfessionIdSchema,
+  professionId: ProfessionId,
   professionName: Schema.String,
 });
 export interface SkillSummary extends Schema.Schema.Type<typeof SkillSummary> {}

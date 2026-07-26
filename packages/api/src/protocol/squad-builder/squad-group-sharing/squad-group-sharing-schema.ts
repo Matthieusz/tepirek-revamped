@@ -1,9 +1,9 @@
 /* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 import * as Schema from "effect/Schema";
 
-import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.ts";
-import { SquadGroupIdSchema } from "../../../domain/squad-builder/squad-group-id.ts";
-import { SquadGroupInvitationIdSchema } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
+import { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
+import { SquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
 import {
   ActiveSquadGroupInvitationStatusSchema,
   SquadGroupInvitationStatusSchema,
@@ -15,25 +15,25 @@ import {
 
 export const SquadEditorInviteTargetSchema = AccountInviteTargetSchema;
 export const SearchSquadEditorInviteTargetsPayload = Schema.Struct({
-  groupId: SquadGroupIdSchema,
+  groupId: SquadGroupId,
   query: Schema.String,
 });
 export interface SearchSquadEditorInviteTargetsPayload extends Schema.Schema
   .Type<typeof SearchSquadEditorInviteTargetsPayload> {}
 export const SendSquadGroupEditorInvitePayload = Schema.Struct({
-  groupId: SquadGroupIdSchema,
-  invitedUserId: AppUserIdSchema,
+  groupId: SquadGroupId,
+  invitedUserId: AppUserId,
 });
 export interface SendSquadGroupEditorInvitePayload extends Schema.Schema.Type<
   typeof SendSquadGroupEditorInvitePayload
 > {}
 export const SquadGroupInvitationSummarySchema = Schema.Struct({
   createdAt: Schema.DateFromString,
-  invitationId: SquadGroupInvitationIdSchema,
-  ownerUserId: AppUserIdSchema,
+  invitationId: SquadGroupInvitationId,
+  ownerUserId: AppUserId,
   ownerUserImage: Schema.NullOr(Schema.String),
   ownerUserName: Schema.String,
-  squadGroupId: SquadGroupIdSchema,
+  squadGroupId: SquadGroupId,
   squadGroupName: Schema.String,
   status: SquadGroupInvitationStatusSchema,
   updatedAt: Schema.DateFromString,
@@ -42,29 +42,29 @@ export interface SquadGroupInvitationSummarySchema extends Schema.Schema.Type<
   typeof SquadGroupInvitationSummarySchema
 > {}
 export const RespondToSquadGroupInvitePayload = Schema.Struct({
-  invitationId: SquadGroupInvitationIdSchema,
+  invitationId: SquadGroupInvitationId,
   response: InviteResponseSchema,
 });
 export interface RespondToSquadGroupInvitePayload extends Schema.Schema.Type<
   typeof RespondToSquadGroupInvitePayload
 > {}
 export const RevokeSquadGroupEditorPayload = Schema.Struct({
-  invitationId: SquadGroupInvitationIdSchema,
+  invitationId: SquadGroupInvitationId,
 });
 export interface RevokeSquadGroupEditorPayload extends Schema.Schema.Type<
   typeof RevokeSquadGroupEditorPayload
 > {}
 export const SquadGroupEditorGrantsPayload = Schema.Struct({
-  groupId: SquadGroupIdSchema,
+  groupId: SquadGroupId,
 });
 export interface SquadGroupEditorGrantsPayload extends Schema.Schema.Type<
   typeof SquadGroupEditorGrantsPayload
 > {}
 export const SharedSquadGroupSummarySchema = Schema.Struct({
   characterCount: Schema.Finite,
-  groupId: SquadGroupIdSchema,
+  groupId: SquadGroupId,
   name: Schema.String,
-  ownerUserId: AppUserIdSchema,
+  ownerUserId: AppUserId,
   ownerUserImage: Schema.NullOr(Schema.String),
   ownerUserName: Schema.String,
   squadCount: Schema.Finite,
@@ -75,10 +75,10 @@ export interface SharedSquadGroupSummarySchema extends Schema.Schema.Type<
 > {}
 export const SquadGroupEditorGrantSummarySchema = Schema.Struct({
   createdAt: Schema.DateFromString,
-  invitationId: SquadGroupInvitationIdSchema,
+  invitationId: SquadGroupInvitationId,
   status: ActiveSquadGroupInvitationStatusSchema,
   updatedAt: Schema.DateFromString,
-  userId: AppUserIdSchema,
+  userId: AppUserId,
   userImage: Schema.NullOr(Schema.String),
   userName: Schema.String,
 });

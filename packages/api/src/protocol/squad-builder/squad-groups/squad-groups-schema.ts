@@ -1,23 +1,23 @@
 /* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
 import * as Schema from "effect/Schema";
 
-import { AppUserIdSchema } from "../../../domain/squad-builder/app-user-id.ts";
-import { MargonemAccountIdSchema } from "../../../domain/squad-builder/margonem-account-id.ts";
+import { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import { MargonemProfessionSchema } from "../../../domain/squad-builder/margonem-character.ts";
 import { PositiveInt } from "../../../domain/squad-builder/positive-int.ts";
-import { SquadGroupIdSchema } from "../../../domain/squad-builder/squad-group-id.ts";
+import { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
 import { SquadGroupVisibilitySchema } from "../../../domain/squad-builder/squad-group-visibility.ts";
-import { SquadIdSchema } from "../../../domain/squad-builder/squad-id.ts";
+import { SquadId } from "../../../domain/squad-builder/squad-id.ts";
 
 export const SquadGroupIdPayload = Schema.Struct({
-  groupId: SquadGroupIdSchema,
+  groupId: SquadGroupId,
 });
 export interface SquadGroupIdPayload extends Schema.Schema.Type<
   typeof SquadGroupIdPayload
 > {}
 
 export const DeleteSquadGroupSuccessSchema = Schema.Struct({
-  groupId: SquadGroupIdSchema,
+  groupId: SquadGroupId,
 });
 export interface DeleteSquadGroupSuccessSchema extends Schema.Schema.Type<
   typeof DeleteSquadGroupSuccessSchema
@@ -32,7 +32,7 @@ export interface CreateSquadGroupPayload extends Schema.Schema.Type<
 
 export const SquadGroupSummarySchema = Schema.Struct({
   characterCount: Schema.Finite,
-  groupId: SquadGroupIdSchema,
+  groupId: SquadGroupId,
   name: Schema.String,
   squadCount: Schema.Finite,
   updatedAt: Schema.DateFromString,
@@ -43,9 +43,9 @@ export interface SquadGroupSummarySchema extends Schema.Schema.Type<
 
 export const GlobalSquadGroupSummarySchema = Schema.Struct({
   characterCount: Schema.Finite,
-  groupId: SquadGroupIdSchema,
+  groupId: SquadGroupId,
   name: Schema.String,
-  ownerUserId: AppUserIdSchema,
+  ownerUserId: AppUserId,
   ownerUserImage: Schema.NullOr(Schema.String),
   ownerUserName: Schema.String,
   squadCount: Schema.Finite,
@@ -66,8 +66,8 @@ export interface ListGlobalSquadGroupsPayload extends Schema.Schema.Type<
 
 export const AvailableSquadCharacterSchema = Schema.Struct({
   accountDisplayName: Schema.String,
-  accountId: MargonemAccountIdSchema,
-  accountOwnerUserId: AppUserIdSchema,
+  accountId: MargonemAccountId,
+  accountOwnerUserId: AppUserId,
   accountOwnerUserImage: Schema.NullOr(Schema.String),
   accountOwnerUserName: Schema.String,
   avatarUrl: Schema.NullOr(Schema.String),
@@ -84,7 +84,7 @@ export interface AvailableSquadCharacterSchema extends Schema.Schema.Type<
 
 export const SquadGroupDetailCharacterSchema = Schema.Struct({
   accountDisplayName: Schema.String,
-  accountId: MargonemAccountIdSchema,
+  accountId: MargonemAccountId,
   accountOwnerUserImage: Schema.NullOr(Schema.String),
   accountOwnerUserName: Schema.String,
   avatarUrl: Schema.NullOr(Schema.String),
@@ -112,9 +112,9 @@ export interface SquadDetailSchema extends Schema.Schema.Type<
 
 export const SquadGroupDetailSchema = Schema.Struct({
   accessRole: Schema.Literals(["owner", "editor", "viewer"]),
-  groupId: SquadGroupIdSchema,
+  groupId: SquadGroupId,
   name: Schema.String,
-  ownerUserId: AppUserIdSchema,
+  ownerUserId: AppUserId,
   squads: Schema.Array(SquadDetailSchema),
   updatedAt: Schema.DateFromString,
   visibility: Schema.Literals(["private", "global"]),
@@ -133,12 +133,12 @@ const SaveSquadPayload = Schema.Struct({
   clientKey: Schema.String,
   name: Schema.String,
   position: Schema.Finite,
-  squadId: Schema.optionalKey(SquadIdSchema),
+  squadId: Schema.optionalKey(SquadId),
 });
 
 export const SaveSquadGroupPayload = Schema.Struct({
   expectedUpdatedAt: Schema.DateFromString,
-  groupId: SquadGroupIdSchema,
+  groupId: SquadGroupId,
   name: Schema.String,
   squads: Schema.Array(SaveSquadPayload),
 });
@@ -148,19 +148,19 @@ export interface SaveSquadGroupPayload extends Schema.Schema.Type<
 
 const SaveSharedSquadCharactersPayload = Schema.Struct({
   characters: Schema.Array(SquadCharacterPlacementPayload),
-  squadId: SquadIdSchema,
+  squadId: SquadId,
 });
 
 export const SaveSharedSquadGroupCharactersPayload = Schema.Struct({
   expectedUpdatedAt: Schema.DateFromString,
-  groupId: SquadGroupIdSchema,
+  groupId: SquadGroupId,
   squads: Schema.Array(SaveSharedSquadCharactersPayload),
 });
 export interface SaveSharedSquadGroupCharactersPayload extends Schema.Schema
   .Type<typeof SaveSharedSquadGroupCharactersPayload> {}
 
 export const SetSquadGroupVisibilityPayload = Schema.Struct({
-  groupId: SquadGroupIdSchema,
+  groupId: SquadGroupId,
   visibility: SquadGroupVisibilitySchema,
 });
 export interface SetSquadGroupVisibilityPayload extends Schema.Schema.Type<
@@ -168,7 +168,7 @@ export interface SetSquadGroupVisibilityPayload extends Schema.Schema.Type<
 > {}
 
 export const SquadGroupVisibilityChangeSchema = Schema.Struct({
-  groupId: SquadGroupIdSchema,
+  groupId: SquadGroupId,
   updatedAt: Schema.DateFromString,
   visibility: SquadGroupVisibilitySchema,
 });
