@@ -34,7 +34,7 @@ export const AsyncResultFailure = ({
 );
 
 /** Renders every AsyncResult lifecycle without treating failures as empty data. */
-const AsyncResultBoundaryContent = <A, E>({
+export const AsyncResultBoundary = <A, E>({
   children,
   onRetry,
   result,
@@ -98,7 +98,3 @@ const AsyncResultBoundaryContent = <A, E>({
     />
   );
 };
-
-export const AsyncResultBoundary = <A, E>(
-  props: AsyncResultBoundaryProps<A, E>
-): ReactNode => <AsyncResultBoundaryContent {...props} />;

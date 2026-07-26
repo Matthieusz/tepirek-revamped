@@ -39,7 +39,6 @@ import { getEventIcon } from "@/lib/constants";
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { AddEventModal } from "@/routes/dashboard/events/-components/list/add-event-modal";
-import { EventActionButtonLabel } from "@/routes/dashboard/events/-components/list/event-action-button-label";
 import type { AuthSession } from "@/types/route";
 
 type EventAction = {
@@ -76,6 +75,14 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
   const isAdminUser = isAdmin(session);
 
   const [actionPending, setActionPending] = useState(false);
+  let actionButtonLabel =
+    eventAction?.active === true ? "Dezaktywuj" : "Aktywuj";
+  if (actionPending) {
+    actionButtonLabel = "Przetwarzanie...";
+  } else if (eventAction?.type === "delete") {
+    actionButtonLabel = "Usuń";
+  }
+
   const deleteMutation = {
     isPending: actionPending,
     mutate: (id: number) => {
@@ -284,11 +291,7 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
                 }
               }}
             >
-              <EventActionButtonLabel
-                actionPending={actionPending}
-                actionType={eventAction?.type}
-                active={eventAction?.active === true}
-              />
+              {actionButtonLabel}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

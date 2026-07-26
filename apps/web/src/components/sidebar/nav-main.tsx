@@ -3,9 +3,11 @@ import { ChevronRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 
-import { Collapsible } from "@/components/ui/collapsible";
-import { CollapsibleContent } from "@/components/ui/collapsible-content";
-import { CollapsibleTrigger } from "@/components/ui/collapsible-trigger";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupLabel,
