@@ -14,7 +14,6 @@ import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.ts";
 import type { ParseMargonemProfileHtmlError } from "../../../domain/squad-builder/margonem-profile-html-parser.ts";
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
-import { profileIdToNumber } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import type { ParseMargonemProfileUrlError } from "../../../domain/squad-builder/margonem-profile-url.ts";
 import {
   parseMargonemProfileUrl,
@@ -167,7 +166,7 @@ const defaultDisplayNameFor = (
   parseAccountDisplayName(suggestedAccountName).pipe(
     EffectRuntime.matchEffect({
       onFailure: () =>
-        parseAccountDisplayName(`Profil ${profileIdToNumber(profileId)}`).pipe(
+        parseAccountDisplayName(`Profil ${profileId}`).pipe(
           EffectRuntime.mapError(
             () =>
               new Error(
@@ -314,7 +313,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
         continue;
       }
 
-      const profileIdNumber = profileIdToNumber(parsedProfileId);
+      const profileIdNumber = parsedProfileId;
       const firstLineNumber = HashMap.get(
         firstLineForProfileId,
         profileIdNumber

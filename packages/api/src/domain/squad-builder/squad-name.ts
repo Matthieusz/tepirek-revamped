@@ -77,9 +77,3 @@ export const parseSquadName = Effect.fn("SquadName.parse")(
     );
   }
 );
-
-/** Convert a squad group name to its primitive representation. */
-export const squadGroupNameToString = (name: SquadGroupName): string => name;
-
-/** Convert a squad name to its primitive representation. */
-export const squadNameToString = (name: SquadName): string => name;

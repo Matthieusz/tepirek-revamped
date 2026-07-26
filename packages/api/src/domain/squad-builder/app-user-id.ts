@@ -26,6 +26,3 @@ export const parseAppUserId = Effect.fn("AppUserId.parse")(
     );
   }
 );
-
-/** Convert an app user id to its primitive representation. */
-export const appUserIdToString = (userId: AppUserId): string => userId;

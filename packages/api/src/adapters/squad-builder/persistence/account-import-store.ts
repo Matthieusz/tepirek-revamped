@@ -17,32 +17,19 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 
-import {
-  accountDisplayNameToString,
-  parseAccountDisplayName,
-} from "../../../domain/squad-builder/account-display-name.ts";
-import { appUserIdToString } from "../../../domain/squad-builder/app-user-id.ts";
-import {
-  margonemAccountIdToNumber,
-  parseMargonemAccountId,
-} from "../../../domain/squad-builder/margonem-account-id.ts";
+import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import {
   parseMargonemProfession,
   parseMargonemWorld,
 } from "../../../domain/squad-builder/margonem-character.ts";
 import {
-  characterIdToNumber,
-  levelToNumber,
   parseMargonemCharacterId,
   parseMargonemProfileId,
   parsePositiveLevel,
-  profileIdToNumber,
 } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.ts";
-import {
-  parsePendingMargonemAccountImportId,
-  pendingImportIdToNumber,
-} from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
+import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
 import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store-service.ts";
 import type {
   CreateOwnedAccountFromPendingImportInput,
@@ -82,7 +69,7 @@ const findProfileAccessStateWithDatabase = (database: EffectPgDatabase) =>
         ownerUserId: margonemAccount.ownerUserId,
       })
       .from(margonemAccount)
-      .where(eq(margonemAccount.profileId, profileIdToNumber(profileId)))
+      .where(eq(margonemAccount.profileId, profileId))
       .limit(1);
     const accountRows = yield* persistenceQuery(operation, accountSelect);
 
@@ -92,7 +79,7 @@ const findProfileAccessStateWithDatabase = (database: EffectPgDatabase) =>
       return ProfileAccessState.Available();
     }
 
-    if (account.ownerUserId === appUserIdToString(actorUserId)) {
+    if (account.ownerUserId === actorUserId) {
       return ProfileAccessState.OwnedByActor();
     }
 
@@ -102,7 +89,7 @@ const findProfileAccessStateWithDatabase = (database: EffectPgDatabase) =>
       .where(
         and(
           eq(margonemAccountAccess.accountId, account.id),
-          eq(margonemAccountAccess.userId, appUserIdToString(actorUserId)),
+          eq(margonemAccountAccess.userId, actorUserId),
           eq(margonemAccountAccess.status, "accepted")
         )
       )
@@ -135,12 +122,12 @@ const createPendingImportWithDatabase = (database: EffectPgDatabase) =>
         const insert = tx
           .insert(margonemAccountImportPreview)
           .values({
-            actorUserId: appUserIdToString(actorUserId),
-            defaultDisplayName: accountDisplayNameToString(defaultDisplayName),
+            actorUserId,
+            defaultDisplayName,
             expiresAt,
             fetchedAt,
             firecrawlCreditsUsed,
-            profileId: profileIdToNumber(profileId),
+            profileId,
             suggestedAccountName,
           })
           .returning({ id: margonemAccountImportPreview.id });
@@ -161,9 +148,9 @@ const createPendingImportWithDatabase = (database: EffectPgDatabase) =>
             .values(
               jarunaCharacters.map((character) => ({
                 avatarUrl: character.avatarUrl,
-                characterId: characterIdToNumber(character.characterId),
+                characterId: character.characterId,
                 importPreviewId: preview.id,
-                level: levelToNumber(character.level),
+                level: character.level,
                 name: character.name,
                 profession: character.profession,
                 world: character.world,
@@ -204,14 +191,8 @@ const findPendingImportForConfirmationWithDatabase = (
       .from(margonemAccountImportPreview)
       .where(
         and(
-          eq(
-            margonemAccountImportPreview.id,
-            pendingImportIdToNumber(pendingImportId)
-          ),
-          eq(
-            margonemAccountImportPreview.actorUserId,
-            appUserIdToString(actorUserId)
-          ),
+          eq(margonemAccountImportPreview.id, pendingImportId),
+          eq(margonemAccountImportPreview.actorUserId, actorUserId),
           isNull(margonemAccountImportPreview.confirmedAt),
           gt(margonemAccountImportPreview.expiresAt, now)
         )
@@ -300,20 +281,14 @@ const createOwnedAccountFromPendingImportWithDatabase = (
           const existingSelect = tx
             .select({ ownerUserId: margonemAccount.ownerUserId })
             .from(margonemAccount)
-            .where(
-              eq(
-                margonemAccount.profileId,
-                profileIdToNumber(pending.profileId)
-              )
-            )
+            .where(eq(margonemAccount.profileId, pending.profileId))
             .limit(1);
           const existingRows = yield* existingSelect;
 
           const [existing] = existingRows;
 
           if (existing !== undefined) {
-            return yield* existing.ownerUserId ===
-            appUserIdToString(actorUserId)
+            return yield* existing.ownerUserId === actorUserId
               ? new MargonemAccountAlreadyOwnedByActor()
               : new MargonemAccountOwnedByAnotherUser();
           }
@@ -321,10 +296,10 @@ const createOwnedAccountFromPendingImportWithDatabase = (
           const insert = tx
             .insert(margonemAccount)
             .values({
-              displayName: accountDisplayNameToString(displayName),
+              displayName,
               lastFetchedAt: pending.fetchedAt,
-              ownerUserId: appUserIdToString(actorUserId),
-              profileId: profileIdToNumber(pending.profileId),
+              ownerUserId: actorUserId,
+              profileId: pending.profileId,
             })
             .returning({
               createdAt: margonemAccount.createdAt,
@@ -346,8 +321,8 @@ const createOwnedAccountFromPendingImportWithDatabase = (
               pending.jarunaCharacters.map((character) => ({
                 accountId: account.id,
                 avatarUrl: character.avatarUrl,
-                characterId: characterIdToNumber(character.characterId),
-                level: levelToNumber(character.level),
+                characterId: character.characterId,
+                level: character.level,
                 name: character.name,
                 profession: character.profession,
                 world: character.world,
@@ -359,12 +334,7 @@ const createOwnedAccountFromPendingImportWithDatabase = (
           const update = tx
             .update(margonemAccountImportPreview)
             .set({ confirmedAt })
-            .where(
-              eq(
-                margonemAccountImportPreview.id,
-                pendingImportIdToNumber(pending.id)
-              )
-            );
+            .where(eq(margonemAccountImportPreview.id, pending.id));
           yield* update;
 
           const accountId = yield* parseMargonemAccountId(account.id).pipe(
@@ -412,7 +382,7 @@ const updateOwnedAccountDisplayNameWithDatabase = (
     now,
   }: UpdateOwnedAccountDisplayNameInput) {
     const operation = "updateOwnedAccountDisplayName" as const;
-    const accountIdNumber = margonemAccountIdToNumber(accountId);
+    const accountIdNumber = accountId;
     const accountSelect = database
       .select({ ownerUserId: margonemAccount.ownerUserId })
       .from(margonemAccount)
@@ -425,7 +395,7 @@ const updateOwnedAccountDisplayNameWithDatabase = (
       return yield* new MargonemAccountNotFound();
     }
 
-    if (account.ownerUserId !== appUserIdToString(actorUserId)) {
+    if (account.ownerUserId !== actorUserId) {
       return yield* new ActorDoesNotOwnMargonemAccount();
     }
 
@@ -434,7 +404,7 @@ const updateOwnedAccountDisplayNameWithDatabase = (
       database
         .update(margonemAccount)
         .set({
-          displayName: accountDisplayNameToString(displayName),
+          displayName,
           updatedAt: now,
         })
         .where(eq(margonemAccount.id, accountIdNumber))
@@ -464,7 +434,7 @@ const deleteOwnedAccountWithDatabase = (database: EffectPgDatabase) =>
     actorUserId,
   }: DeleteOwnedAccountInput) {
     const operation = "deleteOwnedAccount" as const;
-    const accountIdNumber = margonemAccountIdToNumber(accountId);
+    const accountIdNumber = accountId;
     const transaction = database.transaction(
       Effect.fnUntraced(function* deleteOwnedAccountTransaction(
         tx: TransactionDatabase
@@ -481,7 +451,7 @@ const deleteOwnedAccountWithDatabase = (database: EffectPgDatabase) =>
           return yield* new MargonemAccountNotFound();
         }
 
-        if (account.ownerUserId !== appUserIdToString(actorUserId)) {
+        if (account.ownerUserId !== actorUserId) {
           return yield* new ActorDoesNotOwnMargonemAccount();
         }
 
@@ -549,7 +519,7 @@ const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
         margonemCharacter,
         eq(margonemCharacter.accountId, margonemAccount.id)
       )
-      .where(eq(margonemAccount.ownerUserId, appUserIdToString(actorUserId)))
+      .where(eq(margonemAccount.ownerUserId, actorUserId))
       .groupBy(margonemAccount.id)
       .orderBy(desc(margonemAccount.createdAt), desc(margonemAccount.id));
     const rows = yield* persistenceQuery(operation, select);

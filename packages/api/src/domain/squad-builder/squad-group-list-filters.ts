@@ -93,16 +93,6 @@ export interface ParseSquadGroupListFiltersInput {
   readonly maxLevel?: number | null | undefined;
 }
 
-/** Convert a parsed name query to its string representation. */
-export const squadGroupNameQueryToString = (
-  query: SquadGroupNameQuery
-): string => query;
-
-/** Convert a parsed level bound to its number representation. */
-export const squadGroupLevelBoundToNumber = (
-  bound: SquadGroupLevelBound
-): number => bound;
-
 type ParsedNameQuery = Data.TaggedEnum<{
   readonly Absent: Record<never, never>;
   readonly Present: { readonly value: SquadGroupNameQuery };

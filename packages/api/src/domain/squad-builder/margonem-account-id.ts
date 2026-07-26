@@ -28,6 +28,3 @@ export const parseMargonemAccountId = Effect.fn("MargonemAccountId.parse")(
     );
   }
 );
-
-/** Convert a Margonem account id to its primitive representation. */
-export const margonemAccountIdToNumber = (id: MargonemAccountId): number => id;

@@ -28,8 +28,3 @@ export const parseMargonemAccountAccessId = Effect.fn(
     Effect.catchTag("SchemaError", () => new InvalidMargonemAccountAccessId())
   );
 });
-
-/** Convert a Margonem account access id to its primitive representation. */
-export const margonemAccountAccessIdToNumber = (
-  id: MargonemAccountAccessId
-): number => id;

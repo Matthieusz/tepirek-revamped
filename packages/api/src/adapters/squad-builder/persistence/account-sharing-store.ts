@@ -24,20 +24,11 @@ import {
 } from "../../../domain/squad-builder/account-access-status.ts";
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
-import {
-  appUserIdToString,
-  parseAppUserId,
-} from "../../../domain/squad-builder/app-user-id.ts";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { MargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
-import {
-  margonemAccountAccessIdToNumber,
-  parseMargonemAccountAccessId,
-} from "../../../domain/squad-builder/margonem-account-access-id.ts";
+import { parseMargonemAccountAccessId } from "../../../domain/squad-builder/margonem-account-access-id.ts";
 import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
-import {
-  margonemAccountIdToNumber,
-  parseMargonemAccountId,
-} from "../../../domain/squad-builder/margonem-account-id.ts";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { toMargonemProfileUrl } from "../../../domain/squad-builder/margonem-profile-url.ts";
 import { AccountSharingStoreService } from "../../../services/squad-builder/account-sharing/account-sharing-store-service.ts";
@@ -95,7 +86,7 @@ const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
         margonemCharacter,
         eq(margonemCharacter.accountId, margonemAccount.id)
       )
-      .where(eq(margonemAccount.ownerUserId, appUserIdToString(actorUserId)))
+      .where(eq(margonemAccount.ownerUserId, actorUserId))
       .groupBy(margonemAccount.id)
       .orderBy(desc(margonemAccount.createdAt), desc(margonemAccount.id));
     const rows = yield* persistenceQuery(operation, select);
@@ -171,8 +162,8 @@ const searchInviteTargetsWithDatabase = (database: EffectPgDatabase) =>
     query,
   }: SearchInviteTargetsStoreInput) {
     const operation = "searchInviteTargets" as const;
-    const accountIdNumber = margonemAccountIdToNumber(accountId);
-    const actor = appUserIdToString(actorUserId);
+    const accountIdNumber = accountId;
+    const actor = actorUserId;
     const select = database
       .select({
         image: user.image,
@@ -228,7 +219,7 @@ const findOwnedAccountForSharingWithDatabase = (database: EffectPgDatabase) =>
         profileId: margonemAccount.profileId,
       })
       .from(margonemAccount)
-      .where(eq(margonemAccount.id, margonemAccountIdToNumber(accountId)))
+      .where(eq(margonemAccount.id, accountId))
       .limit(1);
     const rows = yield* persistenceQuery(operation, select);
 
@@ -346,7 +337,7 @@ const findVerifiedInviteTargetWithDatabase = (database: EffectPgDatabase) =>
         verified: user.verified,
       })
       .from(user)
-      .where(eq(user.id, appUserIdToString(targetUserId)))
+      .where(eq(user.id, targetUserId))
       .limit(1);
     const rows = yield* persistenceQuery(operation, select);
 
@@ -382,9 +373,9 @@ const upsertAccountAccessInviteWithDatabase = (database: EffectPgDatabase) =>
     readonly now: Date;
   }) {
     const operation = "upsertAccountAccessInvite" as const;
-    const accountIdNumber = margonemAccountIdToNumber(accountId);
-    const invitedUser = appUserIdToString(invitedUserId);
-    const owner = appUserIdToString(ownerUserId);
+    const accountIdNumber = accountId;
+    const invitedUser = invitedUserId;
+    const owner = ownerUserId;
     const transaction = database.transaction(
       Effect.fnUntraced(function* upsertAccountAccessInviteTransaction(
         tx: TransactionDatabase
@@ -509,7 +500,7 @@ const listIncomingAccountInvitesWithDatabase = (database: EffectPgDatabase) =>
       .innerJoin(user, eq(user.id, margonemAccount.ownerUserId))
       .where(
         and(
-          eq(margonemAccountAccess.userId, appUserIdToString(actorUserId)),
+          eq(margonemAccountAccess.userId, actorUserId),
           eq(margonemAccountAccess.status, "pending")
         )
       )
@@ -597,7 +588,7 @@ const listSharedAccountsWithDatabase = (database: EffectPgDatabase) =>
       )
       .where(
         and(
-          eq(margonemAccountAccess.userId, appUserIdToString(actorUserId)),
+          eq(margonemAccountAccess.userId, actorUserId),
           eq(margonemAccountAccess.status, "accepted")
         )
       )
@@ -661,10 +652,7 @@ const listAccountAccessGrantsWithDatabase = (database: EffectPgDatabase) =>
       .innerJoin(user, eq(user.id, margonemAccountAccess.userId))
       .where(
         and(
-          eq(
-            margonemAccountAccess.accountId,
-            margonemAccountIdToNumber(accountId)
-          ),
+          eq(margonemAccountAccess.accountId, accountId),
           inArray(margonemAccountAccess.status, ["pending", "accepted"])
         )
       )
@@ -716,7 +704,7 @@ const respondToAccountAccessInviteWithDatabase = (database: EffectPgDatabase) =>
     response,
   }: RespondToAccountAccessInviteStoreInput) {
     const operation = "respondToAccountAccessInvite" as const;
-    const invitedUser = appUserIdToString(invitedUserId);
+    const invitedUser = invitedUserId;
     const transaction = database.transaction(
       Effect.fnUntraced(function* respondToAccountAccessInviteTransaction(
         tx: TransactionDatabase
@@ -794,8 +782,8 @@ const revokeAccountAccessWithDatabase = (database: EffectPgDatabase) =>
     ownerUserId,
   }: RevokeAccountAccessStoreInput) {
     const operation = "revokeAccountAccess" as const;
-    const accessIdNumber = margonemAccountAccessIdToNumber(accessId);
-    const owner = appUserIdToString(ownerUserId);
+    const accessIdNumber = accessId;
+    const owner = ownerUserId;
     const transaction = database.transaction(
       Effect.fnUntraced(function* revokeAccountAccessTransaction(
         tx: TransactionDatabase

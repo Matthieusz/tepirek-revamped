@@ -35,8 +35,3 @@ export const parsePendingMargonemAccountRefetchId = Effect.fn(
     )
   );
 });
-
-/** Convert a pending refetch id to its primitive representation. */
-export const pendingRefetchIdToNumber = (
-  id: PendingMargonemAccountRefetchId
-): number => id;

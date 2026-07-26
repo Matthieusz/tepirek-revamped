@@ -8,9 +8,6 @@ import { and, count, eq, inArray, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { appUserIdToString } from "../../../domain/squad-builder/app-user-id.ts";
-import { firecrawlYearMonthToString } from "../../../domain/squad-builder/firecrawl-year-month.ts";
-import { profileIdToNumber } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { FirecrawlRequestAccountingStoreService } from "../../../services/squad-builder/firecrawl-request-accounting-store.ts";
 import type {
   MarkFirecrawlRequestFailedInput,
@@ -34,7 +31,7 @@ const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
     yearMonth,
   }: ReserveFirecrawlRequestInput) {
     const operation = "reserveRequest" as const;
-    const yearMonthText = firecrawlYearMonthToString(yearMonth);
+    const yearMonthText = yearMonth;
     const transaction = database.transaction(
       Effect.fnUntraced(function* reserveInTransaction(
         tx: TransactionDatabase
@@ -67,8 +64,8 @@ const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
         const insertedRows = yield* tx
           .insert(firecrawlProfileScrapeRequest)
           .values({
-            profileId: profileIdToNumber(profileId),
-            requestedByUserId: appUserIdToString(requestedByUserId),
+            profileId,
+            requestedByUserId,
             status: "reserved",
             yearMonth: yearMonthText,
           })

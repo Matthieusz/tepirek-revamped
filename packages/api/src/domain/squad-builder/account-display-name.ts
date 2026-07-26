@@ -45,7 +45,3 @@ export const parseAccountDisplayName = Effect.fn("AccountDisplayName.parse")(
     );
   }
 );
-
-/** Convert an account display name to its primitive representation. */
-export const accountDisplayNameToString = (name: AccountDisplayName): string =>
-  name;

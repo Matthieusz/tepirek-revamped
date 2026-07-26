@@ -79,14 +79,3 @@ export const parsePositiveLevel = Effect.fn("PositiveLevel.parse")(
     );
   }
 );
-
-/** Convert a Margonem profile id to its primitive representation. */
-export const profileIdToNumber = (profileId: MargonemProfileId): number =>
-  profileId;
-
-/** Convert a Margonem character id to its primitive representation. */
-export const characterIdToNumber = (characterId: MargonemCharacterId): number =>
-  characterId;
-
-/** Convert a character level to its primitive representation. */
-export const levelToNumber = (level: PositiveLevel): number => level;

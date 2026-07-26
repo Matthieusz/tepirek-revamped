@@ -28,6 +28,3 @@ export const parseSquadGroupId = Effect.fn("SquadGroupId.parse")(
     );
   }
 );
-
-/** Convert a squad group id to its primitive representation. */
-export const squadGroupIdToNumber = (id: SquadGroupId): number => id;

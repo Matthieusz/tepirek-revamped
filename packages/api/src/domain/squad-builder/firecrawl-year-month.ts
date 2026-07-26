@@ -32,8 +32,3 @@ export const firecrawlYearMonthFromDate = (date: Date): FirecrawlYearMonth => {
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   return FirecrawlYearMonth.make(`${year}-${month}`);
 };
-
-/** Convert a Firecrawl budget month to its primitive representation. */
-export const firecrawlYearMonthToString = (
-  yearMonth: FirecrawlYearMonth
-): string => yearMonth;

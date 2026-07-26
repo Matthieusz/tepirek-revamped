@@ -2,11 +2,7 @@ import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { describe } from "vitest";
 
-import {
-  parseSquadGroupListFilters,
-  squadGroupLevelBoundToNumber,
-  squadGroupNameQueryToString,
-} from "./squad-group-list-filters.ts";
+import { parseSquadGroupListFilters } from "./squad-group-list-filters.ts";
 
 describe("parseSquadGroupListFilters", () => {
   it.effect(
@@ -27,9 +23,7 @@ describe("parseSquadGroupListFilters", () => {
       if (result.nameQuery === undefined) {
         return;
       }
-      expect(squadGroupNameQueryToString(result.nameQuery)).toBe(
-        "Smoki jaruna"
-      );
+      expect(result.nameQuery).toBe("Smoki jaruna");
     })
   );
 
@@ -67,12 +61,8 @@ describe("parseSquadGroupListFilters", () => {
       ) {
         return;
       }
-      expect(squadGroupLevelBoundToNumber(result.levelRange.minLevel)).toBe(
-        120
-      );
-      expect(squadGroupLevelBoundToNumber(result.levelRange.maxLevel)).toBe(
-        180
-      );
+      expect(result.levelRange.minLevel).toBe(120);
+      expect(result.levelRange.maxLevel).toBe(180);
     })
   );
 

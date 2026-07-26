@@ -35,8 +35,3 @@ export const parsePendingMargonemAccountImportId = Effect.fn(
     )
   );
 });
-
-/** Convert a pending import id to its primitive representation. */
-export const pendingImportIdToNumber = (
-  id: PendingMargonemAccountImportId
-): number => id;

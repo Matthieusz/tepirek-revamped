@@ -21,28 +21,18 @@ import * as Option from "effect/Option";
 
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
-import { appUserIdToString } from "../../../domain/squad-builder/app-user-id.ts";
 import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
-import {
-  margonemAccountIdToNumber,
-  parseMargonemAccountId,
-} from "../../../domain/squad-builder/margonem-account-id.ts";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import {
   parseMargonemProfession,
   parseMargonemWorld,
 } from "../../../domain/squad-builder/margonem-character.ts";
 import {
-  characterIdToNumber,
-  levelToNumber,
   parseMargonemCharacterId,
   parseMargonemProfileId,
   parsePositiveLevel,
-  profileIdToNumber,
 } from "../../../domain/squad-builder/margonem-profile-id.ts";
-import {
-  parsePendingMargonemAccountRefetchId,
-  pendingRefetchIdToNumber,
-} from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
+import { parsePendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
 import { AccountRefetchStoreService } from "../../../services/squad-builder/account-refetch/account-refetch-store-service.ts";
 import type {
   ApplyRefetchedAccountInput,
@@ -73,7 +63,7 @@ const getAccountForRefetchWithDatabase = (database: EffectPgDatabase) =>
     readonly accountId: MargonemAccountId;
   }) {
     const operation = "getAccountForRefetch" as const;
-    const accountIdNumber = margonemAccountIdToNumber(accountId);
+    const accountIdNumber = accountId;
     const accountSelect = database
       .select({
         displayName: margonemAccount.displayName,
@@ -91,7 +81,7 @@ const getAccountForRefetchWithDatabase = (database: EffectPgDatabase) =>
       return yield* new MargonemAccountNotFound();
     }
 
-    if (account.ownerUserId !== appUserIdToString(actorUserId)) {
+    if (account.ownerUserId !== actorUserId) {
       return yield* new ActorDoesNotOwnMargonemAccount();
     }
 
@@ -182,13 +172,13 @@ const createPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
         const insert = tx
           .insert(margonemAccountRefetchPreview)
           .values({
-            accountId: margonemAccountIdToNumber(accountId),
-            actorUserId: appUserIdToString(actorUserId),
+            accountId,
+            actorUserId,
             diffJson: JSON.stringify(diff),
             expiresAt,
             fetchedAt,
             firecrawlCreditsUsed,
-            profileId: profileIdToNumber(profileId),
+            profileId,
           })
           .returning({ id: margonemAccountRefetchPreview.id });
         const insertedRows = yield* insert;
@@ -208,8 +198,8 @@ const createPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
             .values(
               latestCharacters.map((character) => ({
                 avatarUrl: character.avatarUrl,
-                characterId: characterIdToNumber(character.characterId),
-                level: levelToNumber(character.level),
+                characterId: character.characterId,
+                level: character.level,
                 name: character.name,
                 profession: character.profession,
                 refetchPreviewId: preview.id,
@@ -252,14 +242,8 @@ const findPendingRefetchForApplyWithDatabase = (database: EffectPgDatabase) =>
       .from(margonemAccountRefetchPreview)
       .where(
         and(
-          eq(
-            margonemAccountRefetchPreview.id,
-            pendingRefetchIdToNumber(refetchPreviewId)
-          ),
-          eq(
-            margonemAccountRefetchPreview.actorUserId,
-            appUserIdToString(actorUserId)
-          ),
+          eq(margonemAccountRefetchPreview.id, refetchPreviewId),
+          eq(margonemAccountRefetchPreview.actorUserId, actorUserId),
           isNull(margonemAccountRefetchPreview.appliedAt),
           gt(margonemAccountRefetchPreview.expiresAt, now)
         )
@@ -353,12 +337,7 @@ const markPendingRefetchAppliedWithDatabase =
     const update = database
       .update(margonemAccountRefetchPreview)
       .set({ appliedAt })
-      .where(
-        eq(
-          margonemAccountRefetchPreview.id,
-          pendingRefetchIdToNumber(refetchPreviewId)
-        )
-      );
+      .where(eq(margonemAccountRefetchPreview.id, refetchPreviewId));
     return persistenceQuery(operation, update).pipe(Effect.asVoid);
   };
 
@@ -373,9 +352,7 @@ const applyRefetchedAccountWithDatabase = (database: EffectPgDatabase) =>
       Effect.fnUntraced(function* applyRefetchedAccountTransaction(
         tx: TransactionDatabase
       ) {
-        const accountIdNumber = margonemAccountIdToNumber(
-          pendingRefetch.accountId
-        );
+        const accountIdNumber = pendingRefetch.accountId;
 
         yield* tx.execute(
           sql`select pg_advisory_xact_lock(hashtext(${`margonem-refetch:${accountIdNumber}`}))`
@@ -387,7 +364,7 @@ const applyRefetchedAccountWithDatabase = (database: EffectPgDatabase) =>
           .where(
             and(
               eq(margonemAccount.id, accountIdNumber),
-              eq(margonemAccount.ownerUserId, appUserIdToString(actorUserId))
+              eq(margonemAccount.ownerUserId, actorUserId)
             )
           )
           .limit(1);
@@ -423,8 +400,8 @@ const applyRefetchedAccountWithDatabase = (database: EffectPgDatabase) =>
         const removedDatabaseCharacterIds = [];
 
         for (const latest of pendingRefetch.latestCharacters) {
-          const latestCharacterId = characterIdToNumber(latest.characterId);
-          const latestLevel = levelToNumber(latest.level);
+          const latestCharacterId = latest.characterId;
+          const latestLevel = latest.level;
           const current = HashMap.get(
             currentByCharacterId,
             latestCharacterId

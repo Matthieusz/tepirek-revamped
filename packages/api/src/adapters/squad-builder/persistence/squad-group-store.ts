@@ -37,14 +37,8 @@ import * as Option from "effect/Option";
 
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
-import {
-  appUserIdToString,
-  parseAppUserId,
-} from "../../../domain/squad-builder/app-user-id.ts";
-import {
-  margonemAccountIdToNumber,
-  parseMargonemAccountId,
-} from "../../../domain/squad-builder/margonem-account-id.ts";
+import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
+import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
 import {
   parseMargonemProfession,
   parseMargonemWorld,
@@ -55,31 +49,17 @@ import {
 } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { SquadGroupAccess } from "../../../domain/squad-builder/squad-group-access.ts";
 import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
-import {
-  parseSquadGroupId,
-  squadGroupIdToNumber,
-} from "../../../domain/squad-builder/squad-group-id.ts";
+import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
 import type { SquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
-import {
-  parseSquadGroupInvitationId,
-  squadGroupInvitationIdToNumber,
-} from "../../../domain/squad-builder/squad-group-invitation-id.ts";
+import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
 import type { SquadGroupInvitationStatus } from "../../../domain/squad-builder/squad-group-invitation-status.ts";
 import {
   canTransitionSquadGroupInvitation,
   parseSquadGroupInvitationStatus,
 } from "../../../domain/squad-builder/squad-group-invitation-status.ts";
-import {
-  squadGroupLevelBoundToNumber,
-  squadGroupNameQueryToString,
-} from "../../../domain/squad-builder/squad-group-list-filters.ts";
 import { parseSquadGroupVisibility } from "../../../domain/squad-builder/squad-group-visibility.ts";
 import { parseSquadId } from "../../../domain/squad-builder/squad-id.ts";
-import {
-  parseSquadGroupName,
-  squadGroupNameToString,
-  squadNameToString,
-} from "../../../domain/squad-builder/squad-name.ts";
+import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
 import {
   ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
@@ -138,8 +118,8 @@ const createSquadGroupWithDatabase = (database: EffectPgDatabase) =>
     const insert = database
       .insert(squadGroup)
       .values({
-        name: squadGroupNameToString(name),
-        ownerUserId: appUserIdToString(actorUserId),
+        name,
+        ownerUserId: actorUserId,
         visibility: "private",
       })
       .returning({
@@ -177,7 +157,7 @@ const deleteSquadGroupWithDatabase = (database: EffectPgDatabase) =>
     groupId,
   }: DeleteSquadGroupStoreInput) {
     const operation = "deleteSquadGroup" as const;
-    const groupIdNumber = squadGroupIdToNumber(groupId);
+    const groupIdNumber = groupId;
     const existingRows = yield* persistenceQuery(
       operation,
       database
@@ -191,7 +171,7 @@ const deleteSquadGroupWithDatabase = (database: EffectPgDatabase) =>
     if (existing === undefined) {
       return yield* new SquadGroupNotFound({});
     }
-    if (existing.ownerUserId !== appUserIdToString(actorUserId)) {
+    if (existing.ownerUserId !== actorUserId) {
       return yield* new ActorDoesNotOwnSquadGroup({});
     }
 
@@ -202,7 +182,7 @@ const deleteSquadGroupWithDatabase = (database: EffectPgDatabase) =>
         .where(
           and(
             eq(squadGroup.id, groupIdNumber),
-            eq(squadGroup.ownerUserId, appUserIdToString(actorUserId))
+            eq(squadGroup.ownerUserId, actorUserId)
           )
         )
     );
@@ -223,7 +203,7 @@ const listMySquadGroupsWithDatabase = (database: EffectPgDatabase) =>
       .from(squadGroup)
       .leftJoin(squad, eq(squad.squadGroupId, squadGroup.id))
       .leftJoin(squadCharacter, eq(squadCharacter.squadId, squad.id))
-      .where(eq(squadGroup.ownerUserId, appUserIdToString(actorUserId)))
+      .where(eq(squadGroup.ownerUserId, actorUserId))
       .groupBy(squadGroup.id)
       .orderBy(desc(squadGroup.updatedAt), desc(squadGroup.id));
 
@@ -264,7 +244,7 @@ const authorizeSquadGroupOwnerWithDatabase = (database: EffectPgDatabase) =>
     const select = database
       .select({ ownerUserId: squadGroup.ownerUserId })
       .from(squadGroup)
-      .where(eq(squadGroup.id, squadGroupIdToNumber(groupId)))
+      .where(eq(squadGroup.id, groupId))
       .limit(1);
     const rows = yield* persistenceQuery(operation, select);
 
@@ -274,7 +254,7 @@ const authorizeSquadGroupOwnerWithDatabase = (database: EffectPgDatabase) =>
       return yield* new SquadGroupNotFound();
     }
 
-    if (group.ownerUserId !== appUserIdToString(actorUserId)) {
+    if (group.ownerUserId !== actorUserId) {
       return yield* new ActorDoesNotOwnSquadGroup();
     }
 
@@ -295,8 +275,8 @@ const searchSquadEditorInviteTargetsWithDatabase = (
     query,
   }: SearchSquadEditorInviteTargetsStoreInput) {
     const operation = "searchSquadEditorInviteTargets" as const;
-    const groupIdNumber = squadGroupIdToNumber(groupId);
-    const owner = appUserIdToString(ownerUserId);
+    const groupIdNumber = groupId;
+    const owner = ownerUserId;
     const select = database
       .select({ image: user.image, name: user.name, userId: user.id })
       .from(user)
@@ -353,7 +333,7 @@ const findVerifiedSquadEditorInviteTargetWithDatabase = (
         verified: user.verified,
       })
       .from(user)
-      .where(eq(user.id, appUserIdToString(targetUserId)))
+      .where(eq(user.id, targetUserId))
       .limit(1);
     const rows = yield* persistenceQuery(operation, select);
 
@@ -401,12 +381,7 @@ const loadSquadGroupInvitationSummaryWithDatabase = (
         eq(squadGroup.id, squadGroupInvitation.squadGroupId)
       )
       .innerJoin(user, eq(user.id, squadGroup.ownerUserId))
-      .where(
-        eq(
-          squadGroupInvitation.id,
-          squadGroupInvitationIdToNumber(invitationId)
-        )
-      )
+      .where(eq(squadGroupInvitation.id, invitationId))
       .limit(1);
     const rows = yield* persistenceQuery(operation, select);
 
@@ -455,9 +430,9 @@ const upsertSquadGroupEditorInviteWithDatabase = (database: EffectPgDatabase) =>
     ownerUserId,
   }: UpsertSquadGroupEditorInviteInput) {
     const operation = "upsertSquadGroupEditorInvite" as const;
-    const groupIdNumber = squadGroupIdToNumber(groupId);
-    const invitedUser = appUserIdToString(invitedUserId);
-    const owner = appUserIdToString(ownerUserId);
+    const groupIdNumber = groupId;
+    const invitedUser = invitedUserId;
+    const owner = ownerUserId;
     const transaction = database.transaction(
       Effect.fnUntraced(function* upsertSquadGroupEditorInviteTransaction(
         tx: TransactionDatabase
@@ -557,8 +532,8 @@ const respondToSquadGroupInviteWithDatabase = (database: EffectPgDatabase) =>
     response,
   }: RespondToSquadGroupInviteStoreInput) {
     const operation = "respondToSquadGroupInvite" as const;
-    const invitedUser = appUserIdToString(invitedUserId);
-    const invitationIdNumber = squadGroupInvitationIdToNumber(invitationId);
+    const invitedUser = invitedUserId;
+    const invitationIdNumber = invitationId;
     const transaction = database.transaction(
       Effect.fnUntraced(function* respondToSquadGroupInviteTransaction(
         tx: TransactionDatabase
@@ -632,8 +607,8 @@ const revokeSquadGroupEditorWithDatabase = (database: EffectPgDatabase) =>
     ownerUserId,
   }: RevokeSquadGroupEditorStoreInput) {
     const operation = "revokeSquadGroupEditor" as const;
-    const owner = appUserIdToString(ownerUserId);
-    const invitationIdNumber = squadGroupInvitationIdToNumber(invitationId);
+    const owner = ownerUserId;
+    const invitationIdNumber = invitationId;
     const transaction = database.transaction(
       Effect.fnUntraced(function* revokeSquadGroupEditorTransaction(
         tx: TransactionDatabase
@@ -729,10 +704,7 @@ const listIncomingSquadGroupInvitesWithDatabase = (
       .innerJoin(user, eq(user.id, squadGroup.ownerUserId))
       .where(
         and(
-          eq(
-            squadGroupInvitation.invitedUserId,
-            appUserIdToString(actorUserId)
-          ),
+          eq(squadGroupInvitation.invitedUserId, actorUserId),
           eq(squadGroupInvitation.status, "pending")
         )
       )
@@ -795,10 +767,7 @@ const getPendingSquadGroupInviteCountWithDatabase = (
       .from(squadGroupInvitation)
       .where(
         and(
-          eq(
-            squadGroupInvitation.invitedUserId,
-            appUserIdToString(actorUserId)
-          ),
+          eq(squadGroupInvitation.invitedUserId, actorUserId),
           eq(squadGroupInvitation.status, "pending")
         )
       );
@@ -835,7 +804,7 @@ const listSquadGroupEditorGrantsWithDatabase = (database: EffectPgDatabase) =>
       .innerJoin(user, eq(user.id, squadGroupInvitation.invitedUserId))
       .where(
         and(
-          eq(squadGroupInvitation.squadGroupId, squadGroupIdToNumber(groupId)),
+          eq(squadGroupInvitation.squadGroupId, groupId),
           inArray(squadGroupInvitation.status, ["pending", "accepted"])
         )
       )
@@ -883,7 +852,7 @@ const listAvailableCharactersForOwnerWithDatabase = (
     ownerUserId,
   }: ListAvailableCharactersForOwnerInput) {
     const operation = "listAvailableCharactersForOwner" as const;
-    const owner = appUserIdToString(ownerUserId);
+    const owner = ownerUserId;
     const select = database
       .select({
         accountDisplayName: margonemAccount.displayName,
@@ -978,8 +947,8 @@ const getSquadGroupDetailWithDatabase = (database: EffectPgDatabase) =>
     groupId,
   }: GetSquadGroupDetailInput) {
     const operation = "getSquadGroupDetail" as const;
-    const groupIdNumber = squadGroupIdToNumber(groupId);
-    const actor = appUserIdToString(actorUserId);
+    const groupIdNumber = groupId;
+    const actor = actorUserId;
     const groupSelect = database
       .select({
         name: squadGroup.name,
@@ -1189,9 +1158,7 @@ const buildSquadGroupListFilterPredicates = (
   const predicates = [];
 
   if (filters.nameQuery !== undefined) {
-    const escapedQuery = escapeLikePattern(
-      squadGroupNameQueryToString(filters.nameQuery)
-    );
+    const escapedQuery = escapeLikePattern(filters.nameQuery);
     const namePredicate = or(
       ilike(squadGroup.name, `%${escapedQuery}%`),
       exists(
@@ -1217,19 +1184,13 @@ const buildSquadGroupListFilterPredicates = (
 
     if (filters.levelRange.minLevel !== undefined) {
       levelPredicates.push(
-        gte(
-          margonemCharacter.level,
-          squadGroupLevelBoundToNumber(filters.levelRange.minLevel)
-        )
+        gte(margonemCharacter.level, filters.levelRange.minLevel)
       );
     }
 
     if (filters.levelRange.maxLevel !== undefined) {
       levelPredicates.push(
-        lte(
-          margonemCharacter.level,
-          squadGroupLevelBoundToNumber(filters.levelRange.maxLevel)
-        )
+        lte(margonemCharacter.level, filters.levelRange.maxLevel)
       );
     }
 
@@ -1285,10 +1246,7 @@ const listSharedSquadGroupsWithDatabase = (database: EffectPgDatabase) =>
       .leftJoin(squadCharacter, eq(squadCharacter.squadId, squad.id))
       .where(
         and(
-          eq(
-            squadGroupInvitation.invitedUserId,
-            appUserIdToString(actorUserId)
-          ),
+          eq(squadGroupInvitation.invitedUserId, actorUserId),
           eq(squadGroupInvitation.status, "accepted"),
           ...filterPredicates
         )
@@ -1336,8 +1294,8 @@ const saveSharedSquadGroupCharactersWithDatabase = (
     snapshot,
   }: SaveSharedSquadGroupCharactersStoreInput) {
     const operation = "saveSharedSquadGroupCharacters" as const;
-    const groupIdNumber = squadGroupIdToNumber(groupId);
-    const actor = appUserIdToString(actorUserId);
+    const groupIdNumber = groupId;
+    const actor = actorUserId;
     const transaction = database.transaction(
       Effect.fnUntraced(function* saveSharedSquadGroupCharactersTransaction(
         tx: TransactionDatabase
@@ -1506,7 +1464,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
     snapshot,
   }: SaveSquadGroupSnapshotStoreInput) {
     const operation = "saveSquadGroupSnapshot" as const;
-    const groupIdNumber = squadGroupIdToNumber(snapshot.groupId);
+    const groupIdNumber = snapshot.groupId;
     const availableByCharacterId = HashMap.fromIterable(
       availableCharacters.map(
         (character) => [character.characterId, character] as const
@@ -1541,14 +1499,14 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
           return yield* new SquadGroupWriteConflict();
         }
 
-        if (group.ownerUserId !== appUserIdToString(actorUserId)) {
+        if (group.ownerUserId !== actorUserId) {
           return yield* new ActorDoesNotOwnSquadGroup();
         }
 
         yield* tx
           .update(squadGroup)
           .set({
-            name: squadGroupNameToString(snapshot.name),
+            name: snapshot.name,
             updatedAt: now,
           })
           .where(eq(squadGroup.id, groupIdNumber));
@@ -1559,7 +1517,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
           const insertSquad = tx
             .insert(squad)
             .values({
-              name: squadNameToString(squadSnapshot.name),
+              name: squadSnapshot.name,
               position: squadSnapshot.position,
               squadGroupId: groupIdNumber,
               updatedAt: now,
@@ -1598,7 +1556,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
             }
 
             placementRows.push({
-              accountId: margonemAccountIdToNumber(character.accountId),
+              accountId: character.accountId,
               characterId: placement.characterId,
               position: placement.position,
               squadGroupId: groupIdNumber,
@@ -1708,7 +1666,7 @@ const setSquadGroupVisibilityWithDatabase = (database: EffectPgDatabase) =>
     visibility,
   }: SetSquadGroupVisibilityStoreInput) {
     const operation = "setSquadGroupVisibility" as const;
-    const groupIdNumber = squadGroupIdToNumber(groupId);
+    const groupIdNumber = groupId;
     const select = database
       .select({
         ownerUserId: squadGroup.ownerUserId,
@@ -1726,7 +1684,7 @@ const setSquadGroupVisibilityWithDatabase = (database: EffectPgDatabase) =>
       return yield* new SquadGroupNotFound();
     }
 
-    if (existing.ownerUserId !== appUserIdToString(actorUserId)) {
+    if (existing.ownerUserId !== actorUserId) {
       return yield* new ActorDoesNotOwnSquadGroup();
     }
 

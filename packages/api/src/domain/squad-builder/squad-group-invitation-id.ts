@@ -28,8 +28,3 @@ export const parseSquadGroupInvitationId = Effect.fn(
     Effect.catchTag("SchemaError", () => new InvalidSquadGroupInvitationId())
   );
 });
-
-/** Convert a squad group invitation id to its primitive representation. */
-export const squadGroupInvitationIdToNumber = (
-  id: SquadGroupInvitationId
-): number => id;
