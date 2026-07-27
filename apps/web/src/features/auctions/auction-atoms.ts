@@ -1,6 +1,7 @@
 import type { AuctionSignupSummary } from "@tepirek-revamped/api/protocol/auction/http-api-contract";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import { Effect } from "effect";
+import * as Data from "effect/Data";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
 import { asAuctionSignupId } from "@/lib/branded-ids";
@@ -23,43 +24,33 @@ interface AuctionGroupInput {
   readonly type: AuctionType;
 }
 
-type AuctionGroupKey = string;
-
-const auctionGroupKey = (payload: AuctionGroupInput): AuctionGroupKey =>
-  `${payload.profession}:${payload.type}`;
-
-const auctionGroupInputFromKey = (key: AuctionGroupKey): AuctionGroupInput => {
-  const [profession, type] = key.split(":") as [AuctionProfession, AuctionType];
-  return { profession, type };
-};
+class AuctionGroupKey extends Data.Class<AuctionGroupInput> {}
 
 /** Resource atom for auction signups in one group. */
-const auctionSignupsByGroupAtom = Atom.family((key: AuctionGroupKey) => {
-  const payload = auctionGroupInputFromKey(key);
-  return appHttpApiAtom(
+const auctionSignupsByGroupAtom = Atom.family((payload: AuctionGroupKey) =>
+  appHttpApiAtom(
     Effect.gen(function* getAuctionSignupsEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.auction.getAuctionSignups({ payload });
     })
-  );
-});
+  )
+);
 
 export const auctionSignupsAtom = (payload: AuctionGroupInput) =>
-  auctionSignupsByGroupAtom(auctionGroupKey(payload));
+  auctionSignupsByGroupAtom(new AuctionGroupKey(payload));
 
 /** Resource atom for auction stats in one group. */
-const auctionStatsByGroupAtom = Atom.family((key: AuctionGroupKey) => {
-  const payload = auctionGroupInputFromKey(key);
-  return appHttpApiAtom(
+const auctionStatsByGroupAtom = Atom.family((payload: AuctionGroupKey) =>
+  appHttpApiAtom(
     Effect.gen(function* getAuctionStatsEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.auction.getAuctionStats({ payload });
     })
-  );
-});
+  )
+);
 
 export const auctionStatsAtom = (payload: AuctionGroupInput) =>
-  auctionStatsByGroupAtom(auctionGroupKey(payload));
+  auctionStatsByGroupAtom(new AuctionGroupKey(payload));
 
 /** Mutation atom for toggling an auction signup. Refreshes the affected group on success. */
 export const toggleAuctionSignupAtom = appHttpApiFn(
@@ -75,7 +66,7 @@ export const toggleAuctionSignupAtom = appHttpApiFn(
   ) {
     const client = yield* AppHttpApiClient;
     const result = yield* client.auction.toggleAuctionSignup({ payload });
-    const key = auctionGroupKey({
+    const key = new AuctionGroupKey({
       profession: payload.profession,
       type: payload.type,
     });
@@ -92,7 +83,7 @@ const optimisticAuctionSignupsByGroupAtom = Atom.family(
 
 /** Optimistic auction signups resource for one auction group. */
 export const optimisticAuctionSignupsAtom = (payload: AuctionGroupInput) =>
-  optimisticAuctionSignupsByGroupAtom(auctionGroupKey(payload));
+  optimisticAuctionSignupsByGroupAtom(new AuctionGroupKey(payload));
 
 /** Optimistic mutation atom for removing a signup from one auction group. Refreshes signups and stats on success. */
 const removeAuctionSignupFromGroupByGroupAtom = Atom.family(
@@ -124,4 +115,4 @@ const removeAuctionSignupFromGroupByGroupAtom = Atom.family(
 );
 
 export const removeAuctionSignupFromGroupAtom = (payload: AuctionGroupInput) =>
-  removeAuctionSignupFromGroupByGroupAtom(auctionGroupKey(payload));
+  removeAuctionSignupFromGroupByGroupAtom(new AuctionGroupKey(payload));

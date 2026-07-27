@@ -5,7 +5,7 @@ import type {
   SquadGroupSummarySchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
 import { Effect } from "effect";
-import * as Schema from "effect/Schema";
+import * as Data from "effect/Data";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
@@ -69,41 +69,22 @@ interface SetSquadGroupVisibilityInput {
   readonly visibility: "private" | "global";
 }
 
-type ListGlobalSquadGroupsKey = string;
-
-const ListGlobalSquadGroupsKeySchema = Schema.fromJsonString(
-  Schema.Tuple([
-    Schema.NullOr(Schema.Finite),
-    Schema.NullOr(Schema.Finite),
-    Schema.NullOr(Schema.String),
-  ])
-);
+class ListGlobalSquadGroupsKey extends Data.Class<{
+  readonly maxLevel: number | null;
+  readonly minLevel: number | null;
+  readonly nameQuery: string | null;
+}> {}
 
 interface RefreshVisibleSquadGroupAtomsOptions {
   readonly groupId?: number;
 }
 
-const globalSquadGroupsKey = (
-  payload: ListGlobalSquadGroupsInput
-): ListGlobalSquadGroupsKey =>
-  Schema.encodeSync(ListGlobalSquadGroupsKeySchema)([
-    payload.maxLevel ?? null,
-    payload.minLevel ?? null,
-    payload.nameQuery ?? null,
-  ]);
-
-const globalSquadGroupsPayloadFromKey = (
-  key: ListGlobalSquadGroupsKey
-): ListGlobalSquadGroupsInput => {
-  const [maxLevel, minLevel, nameQuery] = Schema.decodeUnknownSync(
-    ListGlobalSquadGroupsKeySchema
-  )(key);
-  return {
-    maxLevel,
-    minLevel,
-    nameQuery,
-  };
-};
+const globalSquadGroupsKey = (payload: ListGlobalSquadGroupsInput) =>
+  new ListGlobalSquadGroupsKey({
+    maxLevel: payload.maxLevel ?? null,
+    minLevel: payload.minLevel ?? null,
+    nameQuery: payload.nameQuery ?? null,
+  });
 
 const disabledSquadGroupDetailAtom = Atom.make<
   AsyncResult.AsyncResult<SquadGroupDetail, never>
@@ -122,17 +103,15 @@ export const ownedSquadGroupsAtom = appHttpApiAtom(
 );
 
 const globalSquadGroupsByKeyAtom = Atom.family(
-  (key: ListGlobalSquadGroupsKey) => {
-    const payload = globalSquadGroupsPayloadFromKey(key);
-    return appHttpApiAtom(
+  (payload: ListGlobalSquadGroupsKey) =>
+    appHttpApiAtom(
       Effect.gen(function* listGlobalSquadGroupsEffect() {
         const client = yield* AppHttpApiClient;
         return yield* client.squadBuilderSquadGroup.listGlobalSquadGroups({
           payload,
         });
       })
-    );
-  }
+    )
 );
 
 export const globalSquadGroupsAtom = (payload: ListGlobalSquadGroupsInput) =>

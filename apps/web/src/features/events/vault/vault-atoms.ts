@@ -1,6 +1,6 @@
 import type { VaultRow } from "@tepirek-revamped/api/protocol/vault/http-api-contract";
 import { Effect } from "effect";
-import * as Schema from "effect/Schema";
+import * as Data from "effect/Data";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
 import { oldestUnpaidEventAtom } from "@/features/events/ranking/ranking-atoms";
@@ -18,15 +18,12 @@ interface VaultInput {
   readonly eventId?: number | undefined;
 }
 
-type VaultKey = string;
+class VaultKey extends Data.Class<{
+  readonly eventId: number | undefined;
+}> {}
 
-const vaultKey = (payload: VaultInput): VaultKey =>
-  String(payload.eventId ?? "all");
-
-const vaultInputFromKey = (key: VaultKey) =>
-  key === "all"
-    ? {}
-    : { eventId: Schema.decodeUnknownSync(Schema.FiniteFromString)(key) };
+const vaultKey = (payload: VaultInput) =>
+  new VaultKey({ eventId: payload.eventId });
 
 const setPaidOutForUser = (
   rows: readonly VaultEntry[],
@@ -37,9 +34,8 @@ const setPaidOutForUser = (
   );
 
 /** Resource atom for vault rows, optionally filtered by event. */
-const vaultByKeyAtom = Atom.family((key: VaultKey) => {
-  const payload = vaultInputFromKey(key);
-  return appHttpApiAtom(
+const vaultByKeyAtom = Atom.family((payload: VaultKey) =>
+  appHttpApiAtom(
     Effect.gen(function* getVaultEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.vault.getVault({
@@ -49,8 +45,8 @@ const vaultByKeyAtom = Atom.family((key: VaultKey) => {
             : { eventId: yield* asEventId(payload.eventId) },
       });
     })
-  );
-});
+  )
+);
 
 export const vaultAtom = (payload: VaultInput) =>
   vaultByKeyAtom(vaultKey(payload));

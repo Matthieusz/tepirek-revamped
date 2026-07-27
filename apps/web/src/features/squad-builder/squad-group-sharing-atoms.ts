@@ -3,7 +3,7 @@ import type {
   SquadGroupEditorGrantSummarySchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
 import { Effect } from "effect";
-import * as Schema from "effect/Schema";
+import * as Data from "effect/Data";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
@@ -38,11 +38,7 @@ interface SquadGroupEditorGrantsInput {
   readonly groupId: number;
 }
 
-type SquadEditorInviteTargetsKey = string;
-
-const SquadEditorInviteTargetsKeySchema = Schema.fromJsonString(
-  Schema.Tuple([Schema.Finite, Schema.String])
-);
+class SquadEditorInviteTargetsKey extends Data.Class<SearchSquadEditorInviteTargetsInput> {}
 
 type SquadEditorInviteTarget = typeof SquadEditorInviteTargetSchema.Type;
 type SquadGroupEditorGrant = SquadGroupEditorGrantSummarySchema;
@@ -56,20 +52,7 @@ const disabledSquadEditorInviteTargetsAtom = Atom.make<
 
 const squadEditorInviteTargetsKey = (
   payload: SearchSquadEditorInviteTargetsInput
-): SquadEditorInviteTargetsKey =>
-  Schema.encodeSync(SquadEditorInviteTargetsKeySchema)([
-    payload.groupId,
-    payload.query,
-  ]);
-
-const squadEditorInviteTargetsPayloadFromKey = (
-  key: SquadEditorInviteTargetsKey
-): SearchSquadEditorInviteTargetsInput => {
-  const [groupId, query] = Schema.decodeUnknownSync(
-    SquadEditorInviteTargetsKeySchema
-  )(key);
-  return { groupId, query };
-};
+) => new SquadEditorInviteTargetsKey(payload);
 
 /** Resource atom for incoming squad-group editor invitations. */
 export const incomingSquadGroupInvitesAtom = appHttpApiAtom(
@@ -129,9 +112,8 @@ const pendingSquadGroupInviteCountAtom = appHttpApiAtom(
 );
 
 const squadEditorInviteTargetsByKeyAtom = Atom.family(
-  (key: SquadEditorInviteTargetsKey) => {
-    const payload = squadEditorInviteTargetsPayloadFromKey(key);
-    return appHttpApiAtom(
+  (payload: SquadEditorInviteTargetsKey) =>
+    appHttpApiAtom(
       Effect.gen(function* searchSquadEditorInviteTargetsEffect() {
         const client = yield* AppHttpApiClient;
         return yield* client.squadBuilderSquadGroupSharing.searchSquadEditorInviteTargets(
@@ -143,8 +125,7 @@ const squadEditorInviteTargetsByKeyAtom = Atom.family(
           }
         );
       })
-    ).pipe(Atom.setIdleTTL("5 minutes"));
-  }
+    ).pipe(Atom.setIdleTTL("5 minutes"))
 );
 
 export const squadEditorInviteTargetsAtom = (

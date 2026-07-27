@@ -1,7 +1,7 @@
 import type { HeroStats } from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
 import { HeroId } from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
 import { Effect } from "effect";
-import * as Schema from "effect/Schema";
+import * as Data from "effect/Data";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
@@ -16,30 +16,20 @@ interface RankingInput {
   readonly heroId?: number | undefined;
 }
 
-type RankingKey = string;
+class RankingKey extends Data.Class<{
+  readonly eventId: number | undefined;
+  readonly heroId: number | undefined;
+}> {}
 
-const RankingKeySchema = Schema.fromJsonString(
-  Schema.Tuple([Schema.NullOr(Schema.Finite), Schema.NullOr(Schema.Finite)])
-);
-
-const rankingKey = (payload: RankingInput): RankingKey =>
-  Schema.encodeSync(RankingKeySchema)([
-    payload.eventId ?? null,
-    payload.heroId ?? null,
-  ]);
-
-const rankingInputFromKey = (key: RankingKey) => {
-  const [eventId, heroId] = Schema.decodeUnknownSync(RankingKeySchema)(key);
-  return {
-    ...(eventId === null ? {} : { eventId }),
-    ...(heroId === null ? {} : { heroId }),
-  };
-};
+const rankingKey = (payload: RankingInput) =>
+  new RankingKey({
+    eventId: payload.eventId,
+    heroId: payload.heroId,
+  });
 
 /** Resource atom for ranking data. */
-const rankingByKeyAtom = Atom.family((key: RankingKey) => {
-  const payload = rankingInputFromKey(key);
-  return appHttpApiAtom(
+const rankingByKeyAtom = Atom.family((payload: RankingKey) =>
+  appHttpApiAtom(
     Effect.gen(function* getRankingEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.ranking.getRanking({
@@ -53,8 +43,8 @@ const rankingByKeyAtom = Atom.family((key: RankingKey) => {
         },
       });
     })
-  );
-});
+  )
+);
 
 export const rankingAtom = (payload: RankingInput) =>
   rankingByKeyAtom(rankingKey(payload));

@@ -3,7 +3,7 @@ import type {
   AccountInviteTargetSchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/account-sharing/account-sharing-schema";
 import { Effect } from "effect";
-import * as Schema from "effect/Schema";
+import * as Data from "effect/Data";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
@@ -34,15 +34,10 @@ interface SendAccountAccessInviteInput {
   readonly invitedUserId: string;
 }
 
-type AccountAccessGrantsKey = string;
-type AccountInviteTargetsKey = string;
-
-const AccountAccessGrantsKeySchema = Schema.fromJsonString(
-  Schema.Tuple([Schema.Finite, Schema.String])
-);
-const AccountInviteTargetsKeySchema = Schema.fromJsonString(
-  Schema.Tuple([Schema.Finite, Schema.String])
-);
+class AccountSharingKey extends Data.Class<{
+  readonly accountId: number;
+  readonly scope: string;
+}> {}
 
 type AccountAccessGrant = AccountAccessGrantSummarySchema;
 type AccountInviteTarget = AccountInviteTargetSchema;
@@ -53,18 +48,6 @@ const disabledAccountAccessGrantsAtom = Atom.make<
 const disabledAccountInviteTargetsAtom = Atom.make<
   AsyncResult.AsyncResult<readonly AccountInviteTarget[], never>
 >(AsyncResult.success([]));
-
-const accountAccessGrantsKey = (
-  accountId: number,
-  actorUserId: string
-): AccountAccessGrantsKey =>
-  Schema.encodeSync(AccountAccessGrantsKeySchema)([accountId, actorUserId]);
-
-const accountInviteTargetsKey = (
-  accountId: number,
-  query: string
-): AccountInviteTargetsKey =>
-  Schema.encodeSync(AccountInviteTargetsKeySchema)([accountId, query]);
 
 export const incomingAccountInvitesAtom = appHttpApiAtom(
   Effect.gen(function* incomingAccountInvitesEffect() {
@@ -84,58 +67,49 @@ export const sharedAccountsAtom = appHttpApiAtom(
   })
 );
 
-const accountAccessGrantsByKeyAtom = Atom.family(
-  (key: AccountAccessGrantsKey) =>
-    appHttpApiAtom(
-      Effect.gen(function* accountAccessGrantsEffect() {
-        const [accountId] = yield* Schema.decodeUnknownEffect(
-          AccountAccessGrantsKeySchema
-        )(key);
-        const client = yield* AppHttpApiClient;
-        return yield* client.squadBuilderAccountSharing.listAccountAccessGrants(
-          {
-            payload: {
-              accountId: yield* asMargonemAccountId(accountId),
-            },
-          }
-        );
-      })
-    ).pipe(Atom.setIdleTTL("5 minutes"))
+const accountAccessGrantsByKeyAtom = Atom.family((key: AccountSharingKey) =>
+  appHttpApiAtom(
+    Effect.gen(function* accountAccessGrantsEffect() {
+      const client = yield* AppHttpApiClient;
+      return yield* client.squadBuilderAccountSharing.listAccountAccessGrants({
+        payload: {
+          accountId: yield* asMargonemAccountId(key.accountId),
+        },
+      });
+    })
+  ).pipe(Atom.setIdleTTL("5 minutes"))
 );
 
-const accountInviteTargetsByKeyAtom = Atom.family(
-  (_key: AccountInviteTargetsKey) =>
-    appHttpApiAtom(
-      Effect.gen(function* accountInviteTargetsEffect() {
-        const [accountId, query] = yield* Schema.decodeUnknownEffect(
-          AccountInviteTargetsKeySchema
-        )(_key);
-        const client = yield* AppHttpApiClient;
-        return yield* client.squadBuilderAccountSharing.searchAccountInviteTargets(
-          {
-            payload: {
-              accountId: yield* asMargonemAccountId(accountId),
-              query,
-            },
-          }
-        );
-      })
-    ).pipe(Atom.setIdleTTL("5 minutes"))
+const accountInviteTargetsByKeyAtom = Atom.family((key: AccountSharingKey) =>
+  appHttpApiAtom(
+    Effect.gen(function* accountInviteTargetsEffect() {
+      const client = yield* AppHttpApiClient;
+      return yield* client.squadBuilderAccountSharing.searchAccountInviteTargets(
+        {
+          payload: {
+            accountId: yield* asMargonemAccountId(key.accountId),
+            query: key.scope,
+          },
+        }
+      );
+    })
+  ).pipe(Atom.setIdleTTL("5 minutes"))
 );
+
+const accountSharingKey = (accountId: number, scope: string) =>
+  new AccountSharingKey({ accountId, scope });
 
 export const accountAccessGrantsAtom = (
   accountId: number,
   actorUserId: string
 ) =>
   accountId > 0
-    ? accountAccessGrantsByKeyAtom(
-        accountAccessGrantsKey(accountId, actorUserId)
-      )
+    ? accountAccessGrantsByKeyAtom(accountSharingKey(accountId, actorUserId))
     : disabledAccountAccessGrantsAtom;
 
 export const accountInviteTargetsAtom = (accountId: number, query: string) =>
   accountId > 0
-    ? accountInviteTargetsByKeyAtom(accountInviteTargetsKey(accountId, query))
+    ? accountInviteTargetsByKeyAtom(accountSharingKey(accountId, query))
     : disabledAccountInviteTargetsAtom;
 
 const refreshVisibleAccountSharingAtoms = (
@@ -148,10 +122,7 @@ const refreshVisibleAccountSharingAtoms = (
   if (options.accountId !== undefined && options.accountId > 0) {
     get.refresh(
       accountAccessGrantsByKeyAtom(
-        accountAccessGrantsKey(
-          options.accountId,
-          options.actorUserId ?? "default"
-        )
+        accountSharingKey(options.accountId, options.actorUserId ?? "default")
       )
     );
   }

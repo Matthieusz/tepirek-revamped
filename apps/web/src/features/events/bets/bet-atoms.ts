@@ -1,5 +1,5 @@
 import { Effect } from "effect";
-import * as Schema from "effect/Schema";
+import * as Data from "effect/Data";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
 import { asAppUserId, asBetId, asEventId, asHeroId } from "@/lib/branded-ids";
@@ -16,41 +16,24 @@ interface PaginatedBetInput {
   readonly page?: number | undefined;
 }
 
-type PaginatedBetKey = string;
+class PaginatedBetKey extends Data.Class<{
+  readonly eventId: number | undefined;
+  readonly heroId: number | undefined;
+  readonly limit: number | undefined;
+  readonly page: number | undefined;
+}> {}
 
-const PaginatedBetKeySchema = Schema.fromJsonString(
-  Schema.Tuple([
-    Schema.NullOr(Schema.Finite),
-    Schema.NullOr(Schema.Finite),
-    Schema.NullOr(Schema.Finite),
-    Schema.NullOr(Schema.Finite),
-  ])
-);
-
-const paginatedBetKey = (input: PaginatedBetInput): PaginatedBetKey =>
-  Schema.encodeSync(PaginatedBetKeySchema)([
-    input.eventId ?? null,
-    input.heroId ?? null,
-    input.limit ?? null,
-    input.page ?? null,
-  ]);
-
-const paginatedBetInputFromKey = (key: PaginatedBetKey) => {
-  const [eventId, heroId, limit, page] = Schema.decodeUnknownSync(
-    PaginatedBetKeySchema
-  )(key);
-  return {
-    ...(eventId === null ? {} : { eventId }),
-    ...(heroId === null ? {} : { heroId }),
-    ...(limit === null ? {} : { limit }),
-    ...(page === null ? {} : { page }),
-  };
-};
+const paginatedBetKey = (input: PaginatedBetInput) =>
+  new PaginatedBetKey({
+    eventId: input.eventId,
+    heroId: input.heroId,
+    limit: input.limit,
+    page: input.page,
+  });
 
 /** Resource atom for paginated bets. */
-const paginatedBetsByKeyAtom = Atom.family((key: PaginatedBetKey) => {
-  const payload = paginatedBetInputFromKey(key);
-  return appHttpApiAtom(
+const paginatedBetsByKeyAtom = Atom.family((payload: PaginatedBetKey) =>
+  appHttpApiAtom(
     Effect.gen(function* getAllPaginatedBetsEffect() {
       const client = yield* AppHttpApiClient;
       return yield* client.bet.getAllPaginated({
@@ -66,8 +49,8 @@ const paginatedBetsByKeyAtom = Atom.family((key: PaginatedBetKey) => {
         },
       });
     })
-  );
-});
+  )
+);
 
 export const paginatedBetsAtom = (input: PaginatedBetInput) =>
   paginatedBetsByKeyAtom(paginatedBetKey(input));
