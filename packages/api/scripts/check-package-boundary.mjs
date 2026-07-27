@@ -65,13 +65,9 @@ for (const [subpath, conditions] of Object.entries(packageExports)) {
   if (typeof target !== "string") {
     fail(`Export ${subpath} has no default target`);
   }
-  const isServerOnlyExport = [
-    "./adapters/*",
-    "./observability",
-    "./server/*",
-    "./services/*",
-  ].includes(subpath);
-  if (isServerOnlyExport && conditions.browser !== null) {
+  const isBrowserContractExport =
+    subpath === "./domain/squad-builder/*" || subpath === "./protocol/*";
+  if (!isBrowserContractExport && conditions.browser !== null) {
     fail(`Server-only export ${subpath} must be blocked in browsers`);
   }
 }
@@ -87,20 +83,20 @@ const apiSpecifiers = async (exportPrefix, sourceDirectory) => {
   });
 };
 
-const packageSpecifiers = async (packageName, packagePath) => {
-  const sourceDirectory = resolve(repositoryDirectory, packagePath, "src");
-  const files = await productionTypeScriptFiles(sourceDirectory);
-  return [
-    packageName,
-    ...files
-      .filter((path) => relative(sourceDirectory, path) !== "index.ts")
-      .map((path) => {
-        const subpath = relative(sourceDirectory, path)
-          .replaceAll(sep, "/")
-          .replace(/\.tsx?$/, "");
-        return `${packageName}/${subpath}`;
-      }),
-  ];
+const exportedPackageSpecifiers = async (packageName, packagePath) => {
+  const manifest = JSON.parse(
+    await readFile(
+      resolve(repositoryDirectory, packagePath, "package.json"),
+      "utf-8"
+    )
+  );
+
+  return Object.keys(manifest.exports).map((subpath) => {
+    if (subpath.includes("*")) {
+      fail(`${packageName} must not expose wildcard subpaths`);
+    }
+    return subpath === "." ? packageName : `${packageName}/${subpath.slice(2)}`;
+  });
 };
 
 const browserSpecifiers = [
@@ -108,13 +104,18 @@ const browserSpecifiers = [
   ...(await apiSpecifiers("protocol", "protocol")),
 ];
 const serverSpecifiers = [
-  ...(await apiSpecifiers("adapters", "adapters")),
-  "@tepirek-revamped/api/observability",
-  ...(await apiSpecifiers("server", "server")),
-  ...(await apiSpecifiers("services", "services")),
-  ...(await packageSpecifiers("@tepirek-revamped/auth", "packages/auth")),
+  ...Object.keys(packageExports)
+    .filter(
+      (subpath) =>
+        subpath !== "./domain/squad-builder/*" && subpath !== "./protocol/*"
+    )
+    .map((subpath) => `@tepirek-revamped/api/${subpath.slice(2)}`),
+  ...(await exportedPackageSpecifiers(
+    "@tepirek-revamped/auth",
+    "packages/auth"
+  )),
   "@tepirek-revamped/config",
-  ...(await packageSpecifiers("@tepirek-revamped/db", "packages/db")),
+  ...(await exportedPackageSpecifiers("@tepirek-revamped/db", "packages/db")),
 ];
 
 const runImportCheck = (

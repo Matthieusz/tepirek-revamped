@@ -3,11 +3,35 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "default": "./src/index.ts"
+    "./effect": {
+      "default": "./src/effect.ts"
     },
-    "./*": {
-      "default": "./src/*.ts"
+    "./schema/announcement": {
+      "default": "./src/schema/announcement.ts"
+    },
+    "./schema/auction": {
+      "default": "./src/schema/auction.ts"
+    },
+    "./schema/auth": {
+      "default": "./src/schema/auth.ts"
+    },
+    "./schema/bet": {
+      "default": "./src/schema/bet.ts"
+    },
+    "./schema/event": {
+      "default": "./src/schema/event.ts"
+    },
+    "./schema/skills": {
+      "default": "./src/schema/skills.ts"
+    },
+    "./schema/squad-builder": {
+      "default": "./src/schema/squad-builder.ts"
+    },
+    "./schema/todo": {
+      "default": "./src/schema/todo.ts"
+    },
+    "./test": {
+      "default": "./src/test.ts"
     }
   },
   "scripts": {

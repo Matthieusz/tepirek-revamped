@@ -3,9 +3,13 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./adapters/*": {
+    "./adapters/squad-builder/firecrawl/firecrawl-config": {
       "browser": null,
-      "default": "./src/adapters/*.ts"
+      "default": "./src/adapters/squad-builder/firecrawl/firecrawl-config.ts"
+    },
+    "./adapters/user/discord-verification-config": {
+      "browser": null,
+      "default": "./src/adapters/user/discord-verification-config.ts"
     },
     "./domain/squad-builder/*": {
       "default": "./src/domain/squad-builder/*.ts"
@@ -17,13 +21,21 @@
     "./protocol/*": {
       "default": "./src/protocol/*.ts"
     },
-    "./server/*": {
+    "./server/effect-app": {
       "browser": null,
-      "default": "./src/server/*.ts"
+      "default": "./src/server/effect-app.ts"
     },
-    "./services/*": {
+    "./server/health/http-api-handlers": {
       "browser": null,
-      "default": "./src/services/*.ts"
+      "default": "./src/server/health/http-api-handlers.ts"
+    },
+    "./server/http-api-handlers": {
+      "browser": null,
+      "default": "./src/server/http-api-handlers.ts"
+    },
+    "./services/squad-builder/firecrawl-config": {
+      "browser": null,
+      "default": "./src/services/squad-builder/firecrawl-config.ts"
     }
   },
   "scripts": {
