@@ -37,19 +37,19 @@ export interface FindAccountOwnerUserIdInput {
 }
 
 /** Input for resolving a verified invite target by user id. */
-export interface FindVerifiedInviteTargetInput {
+interface FindVerifiedInviteTargetInput {
   readonly targetUserId: AppUserId;
 }
 
 /** A verified user resolved as a valid invite target. */
-export interface VerifiedInviteTarget {
+interface VerifiedInviteTarget {
   readonly userId: AppUserId;
   readonly name: string;
   readonly image: string | null;
 }
 
 /** Input for upserting an account access invite as the account owner. */
-export interface UpsertAccountAccessInviteInput {
+interface UpsertAccountAccessInviteInput {
   readonly accountId: MargonemAccountId;
   readonly ownerUserId: AppUserId;
   readonly invitedUserId: AppUserId;
@@ -92,7 +92,7 @@ export interface RevokeAccountAccessStoreInput {
 }
 
 /** Result of revoking account access, including squad cleanup impact. */
-export interface RevokeAccountAccessResult {
+interface RevokeAccountAccessResult {
   readonly accessId: MargonemAccountAccessId;
   readonly accountId: MargonemAccountId;
   readonly revokedUserId: AppUserId;
@@ -118,7 +118,7 @@ export interface SharedMargonemAccountSummary {
 }
 
 /** Input for listing access grants after ownership has been authorized. */
-export interface ListAccountAccessGrantsStoreInput {
+interface ListAccountAccessGrantsStoreInput {
   readonly accountId: MargonemAccountId;
 }
 

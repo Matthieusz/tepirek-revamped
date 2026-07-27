@@ -54,7 +54,7 @@ export interface CreatePendingMargonemAccountImportInput {
 }
 
 /** Stored pending import identity. */
-export interface PendingMargonemAccountImport {
+interface PendingMargonemAccountImport {
   readonly id: PendingMargonemAccountImportId;
   readonly profileId: MargonemProfileId;
 }
@@ -67,7 +67,7 @@ export interface FindPendingMargonemAccountImportInput {
 }
 
 /** Server-trusted pending import data ready for confirmation. */
-export interface PendingMargonemAccountImportForConfirmation {
+interface PendingMargonemAccountImportForConfirmation {
   readonly id: PendingMargonemAccountImportId;
   readonly actorUserId: AppUserId;
   readonly profileId: MargonemProfileId;
@@ -76,7 +76,7 @@ export interface PendingMargonemAccountImportForConfirmation {
 }
 
 /** Small character identity preview shown in the owned accounts list. */
-export interface OwnedAccountCharacterPreview {
+interface OwnedAccountCharacterPreview {
   readonly characterId: number;
   readonly name: string;
   readonly avatarUrl: string | null;
@@ -109,7 +109,7 @@ export interface DeleteOwnedAccountInput {
 }
 
 /** Impact counts returned after deleting an owned account. */
-export interface DeleteOwnedAccountResult {
+interface DeleteOwnedAccountResult {
   readonly accountId: MargonemAccountId;
   readonly removedCharacterCount: number;
   readonly removedSquadCharacterCount: number;

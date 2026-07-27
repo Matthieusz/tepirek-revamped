@@ -17,8 +17,6 @@ export interface ApplyAccountRefetchInput {
   readonly refetchPreviewId: PendingMargonemAccountRefetchId;
 }
 
-export type { ApplyAccountRefetchOutput } from "./account-refetch-store.ts";
-
 /** Expected failures returned by the account refetch apply service. */
 export type ApplyAccountRefetchError =
   | PendingMargonemAccountRefetchNotFound

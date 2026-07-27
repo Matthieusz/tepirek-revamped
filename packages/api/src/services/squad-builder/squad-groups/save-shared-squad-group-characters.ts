@@ -25,7 +25,7 @@ import type {
 } from "./squad-group-errors.ts";
 import { SquadGroupStoreService } from "./squad-group-store.ts";
 
-export interface SharedSquadCharactersInput {
+interface SharedSquadCharactersInput {
   readonly squadId: SquadId;
   readonly characters: readonly {
     readonly characterId: number;

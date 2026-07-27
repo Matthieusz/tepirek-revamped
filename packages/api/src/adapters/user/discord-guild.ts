@@ -1,12 +1,12 @@
 import * as Schema from "effect/Schema";
 
 /** Schema for the Discord guild fields trusted by membership verification. */
-export const DiscordGuild = Schema.Struct({
+const DiscordGuild = Schema.Struct({
   id: Schema.String,
 });
 
 /** A Discord guild decoded at the HTTP response boundary. */
-export type DiscordGuild = typeof DiscordGuild.Type;
+type DiscordGuild = typeof DiscordGuild.Type;
 
 /** Schema for the Discord guild-list response. */
 export const DiscordGuilds = Schema.Array(DiscordGuild);

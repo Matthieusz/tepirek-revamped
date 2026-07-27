@@ -14,7 +14,7 @@ import type {
 } from "../../protocol/bet/http-api-contract.ts";
 import type { BetError } from "./bet-errors.ts";
 
-export type LatestBetForCopyResult = typeof LatestBetForCopy.Type;
+type LatestBetForCopyResult = typeof LatestBetForCopy.Type;
 
 export interface CreateBetInput {
   readonly createdAt: Date;

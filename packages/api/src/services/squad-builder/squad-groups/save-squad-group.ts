@@ -17,8 +17,6 @@ import type {
 } from "./squad-group-errors.ts";
 import * as SquadGroupStore from "./squad-group-store.ts";
 
-export type { SaveSquadInput };
-
 /** Input for saving a full squad group snapshot. */
 export interface SaveSquadGroupInput {
   readonly actorUserId: AppUserId;

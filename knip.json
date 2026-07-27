@@ -5,7 +5,6 @@
   "ignore": [
     "apps/web/src/components/reui/**",
     "apps/web/src/components/ui/**",
-    "apps/web/src/features/squad-builder/squad-group-atoms.ts",
     "packages/db/drizzle.config.ts"
   ],
   "ignoreDependencies": [

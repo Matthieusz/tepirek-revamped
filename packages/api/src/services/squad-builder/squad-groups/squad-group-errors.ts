@@ -9,7 +9,7 @@ const badRequest = { httpApiStatus: 400 } as const;
 const conflict = { httpApiStatus: 409 } as const;
 const serviceUnavailable = { httpApiStatus: 503 } as const;
 
-export const InvitationStatusSchema = Schema.Literals([
+const InvitationStatusSchema = Schema.Literals([
   "pending",
   "accepted",
   "declined",
@@ -182,7 +182,7 @@ export class MargonemAccountAlreadySharedWithActor extends Schema.TaggedErrorCla
   {}
 ) {}
 
-export const SquadBuilderPersistenceOperationSchema = Schema.Literals([
+const SquadBuilderPersistenceOperationSchema = Schema.Literals([
   "applyRefetchedAccount",
   "authorizeSquadGroupOwner",
   "createSquadGroup",

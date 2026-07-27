@@ -96,7 +96,7 @@ const assertHttpUrl = (link: string) =>
     )
   );
 
-export const createProfessionWithDatabase =
+const createProfessionWithDatabase =
   (database: EffectPgDatabase) =>
   ({ name }: CreateProfessionInput) =>
     persistenceQuery(
@@ -104,7 +104,7 @@ export const createProfessionWithDatabase =
       database.insert(professions).values({ name })
     );
 
-export const createRangeWithDatabase = (database: EffectPgDatabase) =>
+const createRangeWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* createRangeWithDatabase({
     image,
     level,

@@ -11,7 +11,7 @@ import type {
 } from "./squad-groups/squad-group-errors.ts";
 
 /** Current state of Firecrawl monthly budget usage. */
-export interface FirecrawlBudgetState {
+interface FirecrawlBudgetState {
   readonly yearMonth: FirecrawlYearMonth;
   readonly monthlyRequestBudget: number;
   readonly usedRequests: number;
@@ -32,7 +32,7 @@ export interface ReserveFirecrawlRequestInput {
 }
 
 /** Reserved Firecrawl request row and budget summary. */
-export interface ReservedFirecrawlRequest {
+interface ReservedFirecrawlRequest {
   readonly requestId: number;
   readonly budgetState: FirecrawlBudgetState;
 }

@@ -45,7 +45,7 @@ export interface PendingMargonemAccountRefetch {
 }
 
 /** Server-trusted pending refetch data ready for application. */
-export interface PendingMargonemAccountRefetchForApply {
+interface PendingMargonemAccountRefetchForApply {
   readonly id: PendingMargonemAccountRefetchId;
   readonly actorUserId: AppUserId;
   readonly accountId: MargonemAccountId;
@@ -55,7 +55,7 @@ export interface PendingMargonemAccountRefetchForApply {
 }
 
 /** Result summary for applying a pending account refetch. */
-export interface ApplyAccountRefetchOutput {
+interface ApplyAccountRefetchOutput {
   readonly accountId: MargonemAccountId;
   readonly profileId: MargonemProfileId;
   readonly lastFetchedAt: Date;

@@ -63,13 +63,13 @@ export type PreviewOwnedAccountImportItem = Data.TaggedEnum<{
 }>;
 export const PreviewOwnedAccountImportItem =
   Data.taggedEnum<PreviewOwnedAccountImportItem>();
-export class DuplicateProfileInBatchError extends Schema.TaggedErrorClass<DuplicateProfileInBatchError>()(
+class DuplicateProfileInBatchError extends Schema.TaggedErrorClass<DuplicateProfileInBatchError>()(
   "DuplicateProfileInBatch",
   { firstLineNumber: Schema.Finite },
   {}
 ) {}
 
-export type PreviewOwnedAccountImportLineError =
+type PreviewOwnedAccountImportLineError =
   | ParseMargonemProfileUrlError
   | DuplicateProfileInBatchError
   | DuplicateMargonemAccountError
@@ -79,14 +79,14 @@ export type PreviewOwnedAccountImportLineError =
   | SquadBuilderPersistenceUnavailable;
 
 // oxlint-disable-next-line max-classes-per-file -- Batch policy errors live with the use case.
-export class TooManyProfileUrlsInBatch extends Schema.TaggedErrorClass<TooManyProfileUrlsInBatch>()(
+class TooManyProfileUrlsInBatch extends Schema.TaggedErrorClass<TooManyProfileUrlsInBatch>()(
   "TooManyProfileUrlsInBatch",
   { maxUrls: Schema.Finite },
   {}
 ) {}
 
 // oxlint-disable-next-line max-classes-per-file -- Batch policy errors live with the use case.
-export class EmptyProfileUrlBatch extends Schema.TaggedErrorClass<EmptyProfileUrlBatch>()(
+class EmptyProfileUrlBatch extends Schema.TaggedErrorClass<EmptyProfileUrlBatch>()(
   "EmptyProfileUrlBatch",
   {},
   {}

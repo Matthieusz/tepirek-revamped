@@ -6,7 +6,7 @@ export class VaultBadRequest extends Schema.TaggedErrorClass<VaultBadRequest>()(
   { message: Schema.String }
 ) {}
 
-export class VaultNotFound extends Schema.TaggedErrorClass<VaultNotFound>()(
+class VaultNotFound extends Schema.TaggedErrorClass<VaultNotFound>()(
   "VaultNotFound",
   { message: Schema.String }
 ) {}
