@@ -18,7 +18,11 @@ import { SkillsStoreLayer } from "../adapters/skills/skills-store.ts";
 import type { SkillsStore } from "../adapters/skills/skills-store.ts";
 import { FirecrawlClientServiceLiveLayer } from "../adapters/squad-builder/firecrawl/firecrawl-client.ts";
 import { makeFirecrawlConfigLayer } from "../adapters/squad-builder/firecrawl/firecrawl-config.ts";
-import { DrizzleSquadBuilderStoresLayer } from "../adapters/squad-builder/persistence/squad-builder-stores-layer.ts";
+import { DrizzleAccountImportStoreServiceLayer } from "../adapters/squad-builder/persistence/account-import-store.ts";
+import { DrizzleAccountRefetchStoreServiceLayer } from "../adapters/squad-builder/persistence/account-refetch-store.ts";
+import { DrizzleAccountSharingStoreServiceLayer } from "../adapters/squad-builder/persistence/account-sharing-store.ts";
+import { DrizzleFirecrawlRequestAccountingStoreServiceLayer } from "../adapters/squad-builder/persistence/firecrawl-request-accounting-store.ts";
+import { DrizzleSquadGroupStoreServiceLayer } from "../adapters/squad-builder/persistence/squad-group-store.ts";
 import { TodoStoreLayer } from "../adapters/todo/todo-store.ts";
 import type { TodoStore } from "../adapters/todo/todo-store.ts";
 import { makeDiscordVerificationConfigLayer } from "../adapters/user/discord-verification-config.ts";
@@ -61,13 +65,16 @@ const makeApiStableLayer = <DatabaseError>(
     SkillsStoreLayer.pipe(Layer.provide(databaseLayer)),
     AuctionStoreLayer.pipe(Layer.provide(databaseLayer)),
     UserStoreLayer.pipe(Layer.provide(databaseLayer)),
-    discordConfigLayer,
     discordVerifierLayer
   );
 
-  const squadBuilderStores = DrizzleSquadBuilderStoresLayer.pipe(
-    Layer.provide(databaseLayer)
-  );
+  const squadBuilderStores = Layer.mergeAll(
+    DrizzleAccountImportStoreServiceLayer,
+    DrizzleAccountRefetchStoreServiceLayer,
+    DrizzleAccountSharingStoreServiceLayer,
+    DrizzleFirecrawlRequestAccountingStoreServiceLayer,
+    DrizzleSquadGroupStoreServiceLayer
+  ).pipe(Layer.provide(databaseLayer));
 
   const firecrawlLayer = Layer.mergeAll(
     firecrawlConfigLayer,
@@ -120,7 +127,6 @@ type SquadBuilderServices =
   | AuctionStore
   | UserStore
   | DiscordGuildVerifier
-  | DiscordVerificationConfigService
   | SquadGroupStoreService
   | AccountImportStoreService
   | AccountRefetchStoreService
