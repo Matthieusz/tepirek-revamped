@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { createDatabase } from "@tepirek-revamped/db";
+import { makeTestBetterAuthDatabase } from "@tepirek-revamped/db/test";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -60,13 +60,8 @@ describe("Better Auth service", () => {
 describe("Better Auth config", () => {
   it.effect("constructs auth through the pure construction seam", () =>
     Effect.gen(function* constructAuth() {
-      const { database } = yield* Effect.acquireRelease(
-        Effect.sync(() =>
-          createDatabase(
-            "postgresql://postgres:password@localhost:5433/tepirek-revamped-test"
-          )
-        ),
-        ({ pool }) => Effect.promise(() => pool.end())
+      const database = yield* makeTestBetterAuthDatabase(
+        "postgresql://postgres:password@localhost:5433/tepirek-revamped-test"
       );
       const auth = createAuth(
         {

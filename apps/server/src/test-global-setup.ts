@@ -1,6 +1,11 @@
 import { execFileSync } from "node:child_process";
 
-import { createDatabase } from "@tepirek-revamped/db";
+import {
+  makeSharedPostgresPoolLayer,
+  SharedPostgresPool,
+} from "@tepirek-revamped/db/effect";
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
 
 const defaultTestDatabaseUrl =
   "postgresql://postgres:password@localhost:5433/tepirek-revamped-test";
@@ -20,30 +25,30 @@ export const setup = async () => {
     runDockerCompose(["up", "-d", "--wait"]);
   }
 
-  const { pool: testPool } = createDatabase(testDatabaseUrl);
-
   try {
-    await testPool.query("select 1");
+    await Effect.runPromise(
+      Effect.gen(function* verifyTestDatabaseConnection() {
+        const testPool = yield* SharedPostgresPool;
+        yield* Effect.promise(() => testPool.query("select 1"));
+      }).pipe(
+        Effect.provide(
+          makeSharedPostgresPoolLayer(Redacted.make(testDatabaseUrl))
+        ),
+        Effect.scoped
+      )
+    );
   } catch (error) {
-    try {
-      await testPool.end();
-    } finally {
-      if (isManagedTestDatabase) {
-        runDockerCompose(["down"]);
-      }
+    if (isManagedTestDatabase) {
+      runDockerCompose(["down"]);
     }
     throw new Error("Could not connect to the smoke test database", {
       cause: error,
     });
   }
 
-  return async () => {
-    try {
-      await testPool.end();
-    } finally {
-      if (isManagedTestDatabase) {
-        runDockerCompose(["down"]);
-      }
+  return () => {
+    if (isManagedTestDatabase) {
+      runDockerCompose(["down"]);
     }
   };
 };

@@ -154,16 +154,18 @@ export const EffectDatabaseLayer: Layer.Layer<
 > = Layer.effect(EffectDatabase, makeDrizzleDatabase());
 
 /** Create both database adapters over one scoped PostgreSQL pool. */
-export const makeSharedDatabaseLayer = (databaseUrl: Redacted.Redacted) => {
+export const makeSharedDatabaseLayer = (
+  databaseUrl: Redacted.Redacted
+): Layer.Layer<EffectDatabase | BetterAuthDatabaseService, SqlError> => {
   const poolLayer = makeSharedPostgresPoolLayer(databaseUrl);
   const pgClientLayer = PgClientFromSharedPoolLayer.pipe(
-    Layer.provideMerge(poolLayer)
+    Layer.provide(poolLayer)
   );
   const effectDatabaseLayer = EffectDatabaseLayer.pipe(
-    Layer.provideMerge(pgClientLayer)
+    Layer.provide(pgClientLayer)
   );
   const betterAuthDatabaseLayer = BetterAuthDatabaseLayer.pipe(
-    Layer.provideMerge(poolLayer)
+    Layer.provide(poolLayer)
   );
 
   return Layer.merge(effectDatabaseLayer, betterAuthDatabaseLayer);

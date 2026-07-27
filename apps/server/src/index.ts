@@ -240,8 +240,8 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
 export const makeServerApplicationLayer = (startupConfig: StartupConfig) => {
   const databaseLayer = makeSharedDatabaseLayer(startupConfig.databaseUrl);
   const authLayer = BetterAuthServiceLiveLayer.pipe(
-    Layer.provideMerge(Layer.succeed(AuthConfig, startupConfig.auth)),
-    Layer.provideMerge(databaseLayer)
+    Layer.provide(Layer.succeed(AuthConfig, startupConfig.auth)),
+    Layer.provide(databaseLayer)
   );
   const dependencies = Layer.merge(databaseLayer, authLayer);
 
