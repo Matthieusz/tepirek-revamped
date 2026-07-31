@@ -16,7 +16,7 @@
   </p>
 </div>
 
-Tepirek Revamped is dark-mode-only guild operations software for [Margonem](https://www.margonem.com/) players, built for the Polish-speaking **Gildia Złodziei** community. It brings the shared guild state out of spreadsheets and chat threads and into one place.
+Tepirek Revamped is  guild operations software for [Margonem](https://www.margonem.com/) players. It brings the shared guild state out of spreadsheets and chat threads and into one place.
 
 ## What it does
 
