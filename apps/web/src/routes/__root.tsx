@@ -87,7 +87,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         rel: "stylesheet",
       },
       {
-        href: "/logo.webp",
+        href: "/logo.svg",
         rel: "icon",
       },
     ],

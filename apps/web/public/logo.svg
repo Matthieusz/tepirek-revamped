@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title description">
+  <title id="title">Tepirek Revamped</title>
+  <desc id="description">A mint guild crest with a dagger-shaped letter T</desc>
+  <path
+    fill="#79ad98"
+    d="M32 4 54 12v18c0 13.4-8.8 24.6-22 30C18.8 54.6 10 43.4 10 30V12L32 4Z"
+  />
+  <path
+    fill="#181713"
+    d="m32 9.7 16.5 6v14.2c0 10.1-6.4 18.8-16.5 23.7-10.1-4.9-16.5-13.6-16.5-23.7V15.7l16.5-6Z"
+  />
+  <path
+    fill="#e7e5dc"
+    d="M20 19h24v8h-8v13l-4 7-4-7V27h-8v-8Z"
+  />
+  <path fill="#79ad98" d="m20 19 4-3h16l4 3H20Z" />
+</svg>

@@ -144,10 +144,10 @@ export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
         <div className="flex items-center gap-3 py-1.5">
           <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary/10">
             <img
-              alt="Logo"
-              className="size-6 rounded"
+              alt="Tepirek Revamped"
+              className="size-6"
               height={24}
-              src="/logo.webp"
+              src="/logo.svg"
               width={24}
             />
           </div>
