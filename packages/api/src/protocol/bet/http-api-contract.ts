@@ -5,7 +5,6 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { BetId, EventId, HeroId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
-import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 export { BetId, EventId, HeroId };
 
@@ -205,5 +204,4 @@ export const BetHttpApiGroup = HttpApiGroup.make("bet")
       success: LatestBetForCopy,
     })
   )
-  .middleware(SessionMiddleware)
   .prefix("/bet");

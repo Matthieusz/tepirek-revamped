@@ -1,4 +1,4 @@
-/* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
+/* eslint-disable import/namespace -- Effect's namespace imports keep related schema operations grouped. */
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
@@ -13,8 +13,8 @@ import type {
  * Deep Event/Hero filter module.
  *
  * One source of truth for the Event/Hero filter concept shared by Ranking,
- * History, and Vault. Owns the `"all"` sentinel, URL/persisted precedence,
- * conversion to router query inputs, and Event/Hero sorting. The
+ * History, and Vault. Owns the `"all"` sentinel, conversion to router query
+ * inputs, and Event/Hero sorting. The
  * React/Lucide select rendering stays in `select-utils.tsx`; this module
  * only deals with the filter's shape and rules.
  */
@@ -33,7 +33,7 @@ const decodePositiveIntegerId = Schema.decodeUnknownOption(
 );
 const isValidDate = Schema.is(Schema.Date.check(Schema.isDateValid()));
 
-/** Schema for a URL or persisted positive integer ID encoded as a string. */
+/** Schema for a validated URL positive integer ID encoded as a string. */
 export const FilterIdSearchSchema = Schema.String.pipe(
   Schema.refine(
     (value): value is string => Option.isSome(decodePositiveIntegerId(value)),
@@ -42,19 +42,6 @@ export const FilterIdSearchSchema = Schema.String.pipe(
     }
   )
 );
-
-const PersistedFilterSelectionSchema = Schema.Union([
-  Schema.Literal(ALL_FILTER),
-  FilterIdSearchSchema,
-]);
-
-export const EventHeroFilterPersistenceSchema = Schema.Struct({
-  eventId: Schema.optional(PersistedFilterSelectionSchema),
-  heroId: Schema.optional(PersistedFilterSelectionSchema),
-});
-export interface EventHeroFilterPersistenceSchema extends Schema.Schema.Type<
-  typeof EventHeroFilterPersistenceSchema
-> {}
 
 export interface EventHeroFilterState {
   eventId: FilterSelection;
@@ -70,20 +57,16 @@ export const isAllFilter = (value: FilterSelection): boolean =>
   value === ALL_FILTER;
 
 /**
- * Normalize raw URL search and persisted fallback into one Event/Hero
- * filter state. URL search wins over persisted; missing both falls back
- * to all Events and all Heroes. Choosing all Events always clears Hero,
- * even when a persisted Hero value exists.
+ * Normalize validated URL search into an Event/Hero filter state. Missing
+ * values select all Events and all Heroes. Choosing all Events always clears
+ * Hero.
  */
 export const normalizeEventHeroFilter = (input: {
   urlEventId: string | undefined;
   urlHeroId: string | undefined;
-  persistedEventId: string | undefined;
-  persistedHeroId: string | undefined;
 }): EventHeroFilterState => {
-  const resolvedEventId =
-    input.urlEventId ?? input.persistedEventId ?? ALL_FILTER;
-  const resolvedHeroId = input.urlHeroId ?? input.persistedHeroId ?? ALL_FILTER;
+  const resolvedEventId = input.urlEventId ?? ALL_FILTER;
+  const resolvedHeroId = input.urlHeroId ?? ALL_FILTER;
 
   const eventId: FilterSelection = isAllFilter(resolvedEventId)
     ? ALL_FILTER

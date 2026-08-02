@@ -13,30 +13,16 @@ import {
 } from "./event-hero-filter";
 
 describe("normalizeEventHeroFilter", () => {
-  it("URL search wins over persisted filters", () => {
+  it("uses validated URL search as the filter state", () => {
     const state = normalizeEventHeroFilter({
-      persistedEventId: "2",
-      persistedHeroId: "20",
       urlEventId: "1",
       urlHeroId: "10",
     });
     expect(state).toEqual({ eventId: "1", heroId: "10" });
   });
 
-  it("missing URL search falls back to persisted filters", () => {
+  it("defaults missing URL search to all Events and all Heroes", () => {
     const state = normalizeEventHeroFilter({
-      persistedEventId: "2",
-      persistedHeroId: "20",
-      urlEventId: undefined,
-      urlHeroId: undefined,
-    });
-    expect(state).toEqual({ eventId: "2", heroId: "20" });
-  });
-
-  it("missing both URL and persisted falls back to all Events and all Heroes", () => {
-    const state = normalizeEventHeroFilter({
-      persistedEventId: undefined,
-      persistedHeroId: undefined,
       urlEventId: undefined,
       urlHeroId: undefined,
     });
@@ -45,20 +31,8 @@ describe("normalizeEventHeroFilter", () => {
 
   it("choosing all Events clears the Hero selection", () => {
     const state = normalizeEventHeroFilter({
-      persistedEventId: ALL_FILTER,
-      persistedHeroId: "20",
-      urlEventId: undefined,
-      urlHeroId: undefined,
-    });
-    expect(state).toEqual({ eventId: ALL_FILTER, heroId: ALL_FILTER });
-  });
-
-  it("URL all Events clears Hero even when a persisted Hero exists", () => {
-    const state = normalizeEventHeroFilter({
-      persistedEventId: "2",
-      persistedHeroId: "20",
       urlEventId: ALL_FILTER,
-      urlHeroId: undefined,
+      urlHeroId: "20",
     });
     expect(state).toEqual({ eventId: ALL_FILTER, heroId: ALL_FILTER });
   });

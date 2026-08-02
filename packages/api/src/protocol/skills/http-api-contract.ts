@@ -8,7 +8,6 @@ import {
   SkillId,
   SkillRangeId,
 } from "../../domain/core-identifiers.ts";
-import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 export { ProfessionId, SkillId, SkillRangeId };
 
@@ -171,5 +170,4 @@ export const SkillsHttpApiGroup = HttpApiGroup.make("skills")
       success: Schema.Array(SkillSummary),
     })
   )
-  .middleware(SessionMiddleware)
   .prefix("/skills");

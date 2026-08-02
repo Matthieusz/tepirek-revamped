@@ -13,8 +13,6 @@ import {
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 
-import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
-import { computeMargonemAccountRefetchDiff } from "../../../domain/squad-builder/margonem-account-refetch-diff.ts";
 import {
   parseMargonemCharacterId,
   parsePositiveLevel,
@@ -25,7 +23,6 @@ import { createVerifiedMember } from "../../../test/integration/builders.ts";
 import { testDb } from "../../../test/integration/database.ts";
 import {
   parseTestAccountId,
-  parseTestCredits,
   parseTestProfileId,
   parseTestUserId,
   squadBuilderIntegrationTestLayer,
@@ -111,16 +108,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(() =>
           createVerifiedMember({ id: "effect-pending-user" })
         );
-        const displayName = yield* parseAccountDisplayName("Effect pending");
-
         const pending = yield* AccountImportStoreService.use((store) =>
           store.createPendingImport({
             actorUserId: parseTestUserId(member.id),
-            defaultDisplayName: displayName,
             expiresAt: new Date("2026-06-29T12:30:00.000Z"),
             fetchedAt: new Date("2026-06-29T12:00:00.000Z"),
-            firecrawlCreditsUsed: parseTestCredits(1),
-            generatedProfileUrl: "https://www.margonem.pl/profile/view,8100150",
             jarunaCharacters: [
               {
                 avatarUrl: null,
@@ -132,7 +124,6 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               },
             ],
             profileId: parseTestProfileId(8_100_150),
-            suggestedAccountName: "Effect pending",
           })
         );
 
@@ -140,8 +131,6 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           testDb
             .select({
               actorUserId: margonemAccountImportPreview.actorUserId,
-              defaultDisplayName:
-                margonemAccountImportPreview.defaultDisplayName,
               profileId: margonemAccountImportPreview.profileId,
             })
             .from(margonemAccountImportPreview)
@@ -163,7 +152,6 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
         expect(stored).toEqual({
           actorUserId: member.id,
-          defaultDisplayName: "Effect pending",
           profileId: 8_100_150,
         });
         expect(characters).toEqual([{ name: "pendingchar" }]);
@@ -171,7 +159,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
     );
 
     it.effect(
-      "loads accounts and creates pending refetch previews through the Effect store",
+      "loads accounts and stores pending refetch previews through the Effect store",
       () =>
         Effect.gen(function* testEffect() {
           const member = yield* Effect.promise(() =>
@@ -226,16 +214,8 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             store.createPendingRefetch({
               accountId: loaded.accountId,
               actorUserId: parseTestUserId(member.id),
-              diff: computeMargonemAccountRefetchDiff({
-                accountId: loaded.accountId,
-                currentCharacters: loaded.currentCharacters,
-                fetchedAt,
-                latestCharacters,
-                profileId: loaded.profileId,
-              }),
               expiresAt: new Date("2026-06-29T12:30:00.000Z"),
               fetchedAt,
-              firecrawlCreditsUsed: parseTestCredits(1),
               latestCharacters,
               profileId: loaded.profileId,
             })
@@ -378,10 +358,8 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               .values({
                 accountId: account.id,
                 actorUserId: member.id,
-                diffJson: "{}",
                 expiresAt: new Date("2099-06-29T12:30:00.000Z"),
                 fetchedAt: new Date("2026-06-29T12:00:00.000Z"),
-                firecrawlCreditsUsed: 1,
                 profileId: 8_100_170,
               })
               .returning({ id: margonemAccountRefetchPreview.id })
@@ -439,12 +417,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               .from(margonemCharacter)
               .where(eq(margonemCharacter.accountId, account.id))
           );
-          const [storedPreview] = yield* Effect.promise(() =>
+          const remainingRefetchPreviews = yield* Effect.promise(() =>
             testDb
-              .select({ appliedAt: margonemAccountRefetchPreview.appliedAt })
+              .select({ id: margonemAccountRefetchPreview.id })
               .from(margonemAccountRefetchPreview)
               .where(eq(margonemAccountRefetchPreview.id, pending.id))
-              .limit(1)
           );
           const remainingPlacements = yield* Effect.promise(() =>
             testDb
@@ -462,7 +439,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           expect(
             storedCharacters.map((character) => character.characterId)
           ).not.toContain(1_296_631);
-          expect(storedPreview?.appliedAt).toBeInstanceOf(Date);
+          expect(remainingRefetchPreviews).toEqual([]);
           expect(remainingPlacements).toEqual([]);
         })
     );
@@ -477,12 +454,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             .insert(margonemAccountImportPreview)
             .values({
               actorUserId: member.id,
-              defaultDisplayName: "Effect confirm",
               expiresAt: new Date("2099-06-29T12:30:00.000Z"),
               fetchedAt: new Date("2026-06-29T12:00:00.000Z"),
-              firecrawlCreditsUsed: 1,
               profileId: 8_100_175,
-              suggestedAccountName: "Effect confirm",
             })
             .returning({ id: margonemAccountImportPreview.id })
         );
@@ -532,17 +506,16 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             .where(eq(margonemCharacter.accountId, confirmed.accountId))
             .limit(1)
         );
-        const [storedPreview] = yield* Effect.promise(() =>
+        const remainingImportPreviews = yield* Effect.promise(() =>
           testDb
-            .select({ confirmedAt: margonemAccountImportPreview.confirmedAt })
+            .select({ id: margonemAccountImportPreview.id })
             .from(margonemAccountImportPreview)
             .where(eq(margonemAccountImportPreview.id, pending.id))
-            .limit(1)
         );
 
         expect(storedAccount).toEqual({ displayName: "Confirmed Effect" });
         expect(storedCharacter).toEqual({ name: "confirmedchar" });
-        expect(storedPreview?.confirmedAt).toBeInstanceOf(Date);
+        expect(remainingImportPreviews).toEqual([]);
       })
     );
   }

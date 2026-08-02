@@ -209,7 +209,6 @@ const SquadBuilderPersistenceOperationSchema = Schema.Literals([
   "listSharedAccounts",
   "listSharedSquadGroups",
   "listSquadGroupEditorGrants",
-  "markPendingRefetchApplied",
   "markRequestFailed",
   "markRequestSucceeded",
   "reserveRequest",

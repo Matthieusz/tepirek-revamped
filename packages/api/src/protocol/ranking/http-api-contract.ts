@@ -5,7 +5,6 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { EventId, HeroId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
-import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 export { EventId, HeroId };
 
@@ -93,5 +92,4 @@ export const RankingHttpApiGroup = HttpApiGroup.make("ranking")
       success: RankingResult,
     })
   )
-  .middleware(SessionMiddleware)
   .prefix("/ranking");

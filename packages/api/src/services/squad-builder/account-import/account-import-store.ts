@@ -8,7 +8,6 @@ import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-a
 import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.ts";
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import type { PendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
-import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
   SquadBuilderPersistenceUnavailable,
@@ -44,12 +43,8 @@ export type DuplicateMargonemAccountError =
 export interface CreatePendingMargonemAccountImportInput {
   readonly actorUserId: AppUserId;
   readonly profileId: MargonemProfileId;
-  readonly suggestedAccountName: string;
-  readonly defaultDisplayName: AccountDisplayName;
-  readonly generatedProfileUrl: string;
   readonly fetchedAt: Date;
   readonly expiresAt: Date;
-  readonly firecrawlCreditsUsed: FirecrawlCreditCount;
   readonly jarunaCharacters: readonly MargonemCharacterPreview[];
 }
 
@@ -119,7 +114,6 @@ interface DeleteOwnedAccountResult {
 /** Input for confirming a pending import into an owned account. */
 export interface CreateOwnedAccountFromPendingImportInput {
   readonly actorUserId: AppUserId;
-  readonly confirmedAt: Date;
   readonly pending: PendingMargonemAccountImportForConfirmation;
   readonly displayName: AccountDisplayName;
 }

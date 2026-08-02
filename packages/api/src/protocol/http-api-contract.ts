@@ -29,10 +29,11 @@ export const AppHttpApi = HttpApi.make("tepirekApi")
   .add(RankingHttpApiGroup)
   .add(UserHttpApiGroup)
   .add(VaultHttpApiGroup)
-  .add(SquadBuilderAccountImportGroup.middleware(SessionMiddleware))
-  .add(SquadBuilderAccountRefetchGroup.middleware(SessionMiddleware))
-  .add(SquadBuilderSquadGroupGroup.middleware(SessionMiddleware))
-  .add(SquadBuilderAccountSharingGroup.middleware(SessionMiddleware))
-  .add(SquadBuilderSquadGroupSharingGroup.middleware(SessionMiddleware));
+  .add(SquadBuilderAccountImportGroup)
+  .add(SquadBuilderAccountRefetchGroup)
+  .add(SquadBuilderSquadGroupGroup)
+  .add(SquadBuilderAccountSharingGroup)
+  .add(SquadBuilderSquadGroupSharingGroup)
+  .middleware(SessionMiddleware);
 
 export type AppHttpApi = typeof AppHttpApi;

@@ -192,14 +192,10 @@ const persistPendingImport = ({
     return yield* store
       .createPendingImport({
         actorUserId,
-        defaultDisplayName,
         expiresAt,
         fetchedAt: preview.lastFetchedAt,
-        firecrawlCreditsUsed: preview.firecrawlCreditsUsed,
-        generatedProfileUrl: toMargonemProfileUrl(preview.profileId),
         jarunaCharacters: preview.jarunaCharacters,
         profileId: preview.profileId,
-        suggestedAccountName: preview.suggestedAccountName,
       })
       .pipe(
         EffectRuntime.matchEffect({

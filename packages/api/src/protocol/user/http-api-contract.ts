@@ -5,7 +5,6 @@ import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
-import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 export const Role = Schema.Literals(USER_ROLES);
 export const Name = Schema.NonEmptyString.check(Schema.isMinLength(2));
@@ -171,5 +170,4 @@ export const UserHttpApiGroup = HttpApiGroup.make("user")
       { error: UserError, success: DiscordMembershipResult }
     )
   )
-  .middleware(SessionMiddleware)
   .prefix("/user");

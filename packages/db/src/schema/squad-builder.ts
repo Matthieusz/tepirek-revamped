@@ -196,20 +196,15 @@ export const margonemAccountImportPreview = pgTable(
     actorUserId: text("actor_user_id")
       .references(() => user.id, { onDelete: "cascade" })
       .notNull(),
-    confirmedAt: timestamp("confirmed_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    defaultDisplayName: text("default_display_name").notNull(),
     expiresAt: timestamp("expires_at").notNull(),
     fetchedAt: timestamp("fetched_at").notNull(),
-    firecrawlCreditsUsed: integer("firecrawl_credits_used").notNull(),
     id: serial("id").primaryKey(),
     profileId: integer("profile_id").notNull(),
-    suggestedAccountName: text("suggested_account_name").notNull(),
   },
   (table) => [
-    index("margonem_import_previews_actor_status_idx").on(
+    index("margonem_import_previews_actor_expires_idx").on(
       table.actorUserId,
-      table.confirmedAt,
       table.expiresAt
     ),
     index("margonem_import_previews_profile_id_idx").on(table.profileId),
@@ -253,19 +248,15 @@ export const margonemAccountRefetchPreview = pgTable(
     actorUserId: text("actor_user_id")
       .references(() => user.id, { onDelete: "cascade" })
       .notNull(),
-    appliedAt: timestamp("applied_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    diffJson: text("diff_json").notNull(),
     expiresAt: timestamp("expires_at").notNull(),
     fetchedAt: timestamp("fetched_at").notNull(),
-    firecrawlCreditsUsed: integer("firecrawl_credits_used").notNull(),
     id: serial("id").primaryKey(),
     profileId: integer("profile_id").notNull(),
   },
   (table) => [
-    index("margonem_refetch_previews_actor_status_idx").on(
+    index("margonem_refetch_previews_actor_expires_idx").on(
       table.actorUserId,
-      table.appliedAt,
       table.expiresAt
     ),
     index("margonem_refetch_previews_account_id_idx").on(table.accountId),

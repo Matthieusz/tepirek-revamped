@@ -60,6 +60,8 @@ export class ServerStartupError extends Schema.TaggedErrorClass<ServerStartupErr
   { cause: Schema.Defect() }
 ) {}
 
+const appHttpApiMountPath = "/**";
+
 const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
   Layer.effect(
     ServerApplication,
@@ -98,21 +100,8 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
 
       app.use(
         evlog({
-          // Effect owns routine response logging for routes crossing this bridge.
-          exclude: [
-            "/health",
-            "/announcements/**",
-            "/todos/**",
-            "/heroes/**",
-            "/events/**",
-            "/skills/**",
-            "/auction/**",
-            "/bet/**",
-            "/ranking/**",
-            "/user/**",
-            "/vault/**",
-            "/squad-builder/**",
-          ],
+          // Effect owns routine response logging for requests crossing this bridge.
+          exclude: ["/health", appHttpApiMountPath],
         })
       );
 
@@ -152,7 +141,10 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
       );
 
       app.get("/api/openapi.json", (context) => {
-        context.get("log").set({ httpApi: { docs: "app-openapi" } });
+        const log = context.get("log");
+        if (log !== undefined) {
+          log.set({ httpApi: { docs: "app-openapi" } });
+        }
         return context.json(OpenApi.fromApi(AppHttpApi));
       });
 
@@ -180,35 +172,7 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
       app.use("/health", (context) =>
         handleHttpApiRequest(context, healthHttpApi)
       );
-      app.use("/announcements/*", (context) =>
-        handleHttpApiRequest(context, appHttpApi)
-      );
-      app.use("/todos/*", (context) =>
-        handleHttpApiRequest(context, appHttpApi)
-      );
-      app.use("/heroes/*", (context) =>
-        handleHttpApiRequest(context, appHttpApi)
-      );
-      app.use("/events/*", (context) =>
-        handleHttpApiRequest(context, appHttpApi)
-      );
-      app.use("/skills/*", (context) =>
-        handleHttpApiRequest(context, appHttpApi)
-      );
-      app.use("/auction/*", (context) =>
-        handleHttpApiRequest(context, appHttpApi)
-      );
-      app.use("/bet/*", (context) => handleHttpApiRequest(context, appHttpApi));
-      app.use("/ranking/*", (context) =>
-        handleHttpApiRequest(context, appHttpApi)
-      );
-      app.use("/user/*", (context) =>
-        handleHttpApiRequest(context, appHttpApi)
-      );
-      app.use("/vault/*", (context) =>
-        handleHttpApiRequest(context, appHttpApi)
-      );
-      app.use("/squad-builder/*", (context) =>
+      app.use(appHttpApiMountPath, (context) =>
         handleHttpApiRequest(context, appHttpApi)
       );
 

@@ -5,7 +5,6 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { AnnouncementId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
-import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 export { AnnouncementId };
 
@@ -84,5 +83,4 @@ export const AnnouncementHttpApiGroup = HttpApiGroup.make("announcement")
       success: Schema.Array(AnnouncementSummary),
     })
   )
-  .middleware(SessionMiddleware)
   .prefix("/announcements");

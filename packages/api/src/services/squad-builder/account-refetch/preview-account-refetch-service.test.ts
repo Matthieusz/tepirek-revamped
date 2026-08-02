@@ -68,7 +68,6 @@ it.effect("previews account refetch and stores the pending diff", () => {
   const store = makeAccountRefetchStoreServiceTestService({
     createPendingRefetch: (input) => {
       expect(input.latestCharacters).toHaveLength(1);
-      expect(input.diff.changed).toHaveLength(1);
       createdPendingIds.push(456);
       return Effect.succeed({ id: refetchPreviewId });
     },

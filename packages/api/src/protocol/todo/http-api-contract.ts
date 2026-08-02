@@ -5,7 +5,6 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { TodoId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
-import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 export { TodoId };
 
@@ -85,5 +84,4 @@ export const TodoHttpApiGroup = HttpApiGroup.make("todo")
       success: Schema.Void,
     })
   )
-  .middleware(SessionMiddleware)
   .prefix("/todos");

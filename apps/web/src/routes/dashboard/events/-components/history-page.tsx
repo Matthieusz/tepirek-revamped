@@ -69,7 +69,6 @@ const historyFilterKey = (input: {
 
 export default function HistoryPage({ session }: HistoryPageProps) {
   const filter = useEventHeroFilter({
-    persistenceKey: "history-filters",
     routeId: "/dashboard/events/history",
   });
 

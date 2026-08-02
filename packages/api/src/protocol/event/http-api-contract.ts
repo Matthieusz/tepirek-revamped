@@ -8,7 +8,6 @@ import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { EventId } from "../../domain/core-identifiers.ts";
-import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 export { EventId };
 
@@ -92,5 +91,4 @@ export const EventHttpApiGroup = HttpApiGroup.make("event")
       success: Schema.Void,
     })
   )
-  .middleware(SessionMiddleware)
   .prefix("/events");

@@ -11,7 +11,7 @@ import {
   squadCharacter,
   squadGroup,
 } from "@tepirek-revamped/db/schema/squad-builder";
-import { and, eq, gt, inArray, isNull, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, lte, sql } from "drizzle-orm";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -37,11 +37,9 @@ import { AccountRefetchStoreService } from "../../../services/squad-builder/acco
 import type {
   ApplyRefetchedAccountInput,
   CreatePendingMargonemAccountRefetchInput,
-  MarkPendingMargonemAccountRefetchAppliedInput,
   PendingMargonemAccountRefetch,
   RefetchableMargonemAccount,
 } from "../../../services/squad-builder/account-refetch/account-refetch-store.ts";
-import type { SquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
@@ -156,10 +154,8 @@ const createPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* createPendingRefetchEffect({
     accountId,
     actorUserId,
-    diff,
     expiresAt,
     fetchedAt,
-    firecrawlCreditsUsed,
     latestCharacters,
     profileId,
   }: CreatePendingMargonemAccountRefetchInput) {
@@ -168,15 +164,17 @@ const createPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
       Effect.fnUntraced(function* createPendingRefetchTransaction(
         tx: TransactionDatabase
       ) {
+        yield* tx
+          .delete(margonemAccountRefetchPreview)
+          .where(lte(margonemAccountRefetchPreview.expiresAt, sql`now()`));
+
         const insert = tx
           .insert(margonemAccountRefetchPreview)
           .values({
             accountId,
             actorUserId,
-            diffJson: JSON.stringify(diff),
             expiresAt,
             fetchedAt,
-            firecrawlCreditsUsed,
             profileId,
           })
           .returning({ id: margonemAccountRefetchPreview.id });
@@ -230,6 +228,13 @@ const findPendingRefetchForApplyWithDatabase = (database: EffectPgDatabase) =>
     readonly now: Date;
   }) {
     const operation = "findPendingRefetchForApply" as const;
+    yield* persistenceQuery(
+      operation,
+      database
+        .delete(margonemAccountRefetchPreview)
+        .where(lte(margonemAccountRefetchPreview.expiresAt, sql`now()`))
+    );
+
     const previewSelect = database
       .select({
         accountId: margonemAccountRefetchPreview.accountId,
@@ -243,7 +248,6 @@ const findPendingRefetchForApplyWithDatabase = (database: EffectPgDatabase) =>
         and(
           eq(margonemAccountRefetchPreview.id, refetchPreviewId),
           eq(margonemAccountRefetchPreview.actorUserId, actorUserId),
-          isNull(margonemAccountRefetchPreview.appliedAt),
           gt(margonemAccountRefetchPreview.expiresAt, now)
         )
       )
@@ -321,24 +325,6 @@ const findPendingRefetchForApplyWithDatabase = (database: EffectPgDatabase) =>
       profileId,
     };
   });
-
-const markPendingRefetchAppliedWithDatabase =
-  (database: EffectPgDatabase) =>
-  ({
-    appliedAt,
-    refetchPreviewId,
-  }: MarkPendingMargonemAccountRefetchAppliedInput): Effect.Effect<
-    void,
-    SquadBuilderPersistenceUnavailable,
-    never
-  > => {
-    const operation = "markPendingRefetchApplied" as const;
-    const update = database
-      .update(margonemAccountRefetchPreview)
-      .set({ appliedAt })
-      .where(eq(margonemAccountRefetchPreview.id, refetchPreviewId));
-    return persistenceQuery(operation, update).pipe(Effect.asVoid);
-  };
 
 const applyRefetchedAccountWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* applyRefetchedAccountEffect({
@@ -507,6 +493,23 @@ const applyRefetchedAccountWithDatabase = (database: EffectPgDatabase) =>
           .set({ lastFetchedAt: pendingRefetch.fetchedAt, updatedAt: now })
           .where(eq(margonemAccount.id, accountIdNumber));
 
+        const deletedRows = yield* tx
+          .delete(margonemAccountRefetchPreview)
+          .where(
+            and(
+              eq(margonemAccountRefetchPreview.id, pendingRefetch.id),
+              eq(margonemAccountRefetchPreview.actorUserId, actorUserId)
+            )
+          )
+          .returning({ id: margonemAccountRefetchPreview.id });
+
+        if (deletedRows[0] === undefined) {
+          return yield* failPersistence(
+            operation,
+            new Error("Failed to delete consumed account refetch preview")
+          );
+        }
+
         return {
           accountId: pendingRefetch.accountId,
           addedCharacterCount: charactersToInsert.length,
@@ -542,9 +545,6 @@ export const DrizzleAccountRefetchStoreServiceLayer: Layer.Layer<
       getAccountForRefetch: Effect.fn(
         "AccountRefetchStore.getAccountForRefetch"
       )(getAccountForRefetchWithDatabase(database)),
-      markPendingRefetchApplied: Effect.fn(
-        "AccountRefetchStore.markPendingRefetchApplied"
-      )(markPendingRefetchAppliedWithDatabase(database)),
     })
   )
 );

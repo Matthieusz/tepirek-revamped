@@ -11,7 +11,7 @@ import {
   margonemCharacter,
   squadCharacter,
 } from "@tepirek-revamped/db/schema/squad-builder";
-import { and, asc, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lte, sql } from "drizzle-orm";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -104,29 +104,27 @@ const findProfileAccessStateWithDatabase = (database: EffectPgDatabase) =>
 const createPendingImportWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* createPendingImportEffect({
     actorUserId,
-    defaultDisplayName,
     expiresAt,
     fetchedAt,
-    firecrawlCreditsUsed,
     jarunaCharacters,
     profileId,
-    suggestedAccountName,
   }: CreatePendingMargonemAccountImportInput) {
     const operation = "createPendingImport" as const;
     const transaction = database.transaction(
       Effect.fnUntraced(function* createPendingImportTransaction(
         tx: TransactionDatabase
       ) {
+        yield* tx
+          .delete(margonemAccountImportPreview)
+          .where(lte(margonemAccountImportPreview.expiresAt, sql`now()`));
+
         const insert = tx
           .insert(margonemAccountImportPreview)
           .values({
             actorUserId,
-            defaultDisplayName,
             expiresAt,
             fetchedAt,
-            firecrawlCreditsUsed,
             profileId,
-            suggestedAccountName,
           })
           .returning({ id: margonemAccountImportPreview.id });
         const insertedRows = yield* insert;
@@ -180,6 +178,13 @@ const findPendingImportForConfirmationWithDatabase = (
     pendingImportId,
   }: FindPendingMargonemAccountImportInput) {
     const operation = "findPendingImportForConfirmation" as const;
+    yield* persistenceQuery(
+      operation,
+      database
+        .delete(margonemAccountImportPreview)
+        .where(lte(margonemAccountImportPreview.expiresAt, sql`now()`))
+    );
+
     const previewSelect = database
       .select({
         fetchedAt: margonemAccountImportPreview.fetchedAt,
@@ -191,7 +196,6 @@ const findPendingImportForConfirmationWithDatabase = (
         and(
           eq(margonemAccountImportPreview.id, pendingImportId),
           eq(margonemAccountImportPreview.actorUserId, actorUserId),
-          isNull(margonemAccountImportPreview.confirmedAt),
           gt(margonemAccountImportPreview.expiresAt, now)
         )
       )
@@ -266,7 +270,6 @@ const createOwnedAccountFromPendingImportWithDatabase = (
 ) =>
   Effect.fnUntraced(function* createOwnedAccountFromPendingImportEffect({
     actorUserId,
-    confirmedAt,
     displayName,
     pending,
   }: CreateOwnedAccountFromPendingImportInput) {
@@ -329,11 +332,22 @@ const createOwnedAccountFromPendingImportWithDatabase = (
             yield* characterInsert;
           }
 
-          const update = tx
-            .update(margonemAccountImportPreview)
-            .set({ confirmedAt })
-            .where(eq(margonemAccountImportPreview.id, pending.id));
-          yield* update;
+          const deletedRows = yield* tx
+            .delete(margonemAccountImportPreview)
+            .where(
+              and(
+                eq(margonemAccountImportPreview.id, pending.id),
+                eq(margonemAccountImportPreview.actorUserId, actorUserId)
+              )
+            )
+            .returning({ id: margonemAccountImportPreview.id });
+
+          if (deletedRows[0] === undefined) {
+            return yield* failPersistence(
+              operation,
+              new Error("Failed to delete consumed account import preview")
+            );
+          }
 
           const accountId = yield* parseMargonemAccountId(account.id).pipe(
             Effect.catch((error) => failPersistence(operation, error))

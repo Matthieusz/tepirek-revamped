@@ -48,11 +48,6 @@ export const apply = EffectRuntime.fn("AccountRefetch.apply")(
       pendingRefetch: pending,
     });
 
-    yield* store.markPendingRefetchApplied({
-      appliedAt: now,
-      refetchPreviewId: input.refetchPreviewId,
-    });
-
     return applied;
   }
 );

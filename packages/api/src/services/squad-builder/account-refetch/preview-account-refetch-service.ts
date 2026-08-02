@@ -135,13 +135,11 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
     const pending = yield* store.createPendingRefetch({
       accountId: account.accountId,
       actorUserId: input.actorUserId,
-      diff,
       expiresAt: fetchedDateTime.pipe(
         DateTime.add({ minutes: pendingRefetchPolicy.expiresAfterMinutes }),
         DateTime.toDate
       ),
       fetchedAt,
-      firecrawlCreditsUsed: creditsUsed,
       latestCharacters: parsedHtml.jarunaCharacters,
       profileId: account.profileId,
     });

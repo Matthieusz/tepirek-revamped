@@ -4,7 +4,6 @@ import * as Schema from "effect/Schema";
 import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 import { EventId, HeroId } from "../../domain/core-identifiers.ts";
-import { SessionMiddleware } from "../auth/http-api-middleware.ts";
 
 const HeroLevel = Schema.Finite.check(
   Schema.isInt(),
@@ -85,5 +84,4 @@ export const HeroesHttpApiGroup = HttpApiGroup.make("heroes")
       success: Schema.Array(HeroSummary),
     })
   )
-  .middleware(SessionMiddleware)
   .prefix("/heroes");

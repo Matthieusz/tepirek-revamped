@@ -26,10 +26,8 @@ import {
 import { useEventHeroFilter } from "@/features/events/core/use-event-hero-filter";
 import { heroesByEventAtom } from "@/features/events/heroes/hero-atoms";
 import { rankingAtom } from "@/features/events/ranking/ranking-atoms";
-import { RankingSortFiltersSchema } from "@/features/events/ranking/ranking-sort";
 import type { RankingSort } from "@/features/events/ranking/ranking-sort";
 import { isAdmin } from "@/lib/route-helpers";
-import { useFilterPersistence } from "@/lib/use-filter-persistence";
 import { DistributeGoldModal } from "@/routes/dashboard/events/-components/ranking/distribute-gold-modal";
 import { RankingList } from "@/routes/dashboard/events/-components/ranking/ranking-list";
 import type { RankingItem } from "@/routes/dashboard/events/-components/ranking/ranking-list";
@@ -38,7 +36,6 @@ import { useRankingData } from "@/routes/dashboard/events/-components/ranking/us
 import type { AuthSession } from "@/types/route";
 
 const routeApi = getRouteApi("/dashboard/events/ranking");
-const DEFAULT_RANKING_SORT_FILTERS = { sortBy: undefined };
 
 const buildRankingContent = (params: {
   sortedRanking: RankingItem[];
@@ -59,16 +56,9 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
   const { sortBy } = routeApi.useSearch();
   const navigate = useNavigate({ from: "/dashboard/events/ranking" });
 
-  const [persistedSort, updatePersistedSort] = useFilterPersistence(
-    "ranking-sort",
-    RankingSortFiltersSchema,
-    DEFAULT_RANKING_SORT_FILTERS
-  );
-
-  const currentSortBy: RankingSort = sortBy ?? persistedSort.sortBy ?? "points";
+  const currentSortBy: RankingSort = sortBy ?? "points";
 
   const filter = useEventHeroFilter({
-    persistenceKey: "ranking-filters",
     routeId: "/dashboard/events/ranking",
   });
 
@@ -86,14 +76,13 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
   const refreshRanking = useAtomRefresh(rankingAtom(filter.queryInputs));
   const rankingContent = buildRankingContent({ sortedRanking });
 
-  const navigateSortWithPersist = useCallback(
-    (updates: Partial<typeof persistedSort>) => {
-      updatePersistedSort(updates);
+  const navigateSort = useCallback(
+    (updates: { sortBy: RankingSort | undefined }) => {
       navigate({
         search: (prev) => ({ ...prev, ...updates }),
       });
     },
-    [navigate, updatePersistedSort]
+    [navigate]
   );
 
   return (
@@ -177,7 +166,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
                       )}
                       <Button
                         onClick={() => {
-                          navigateSortWithPersist({ sortBy: undefined });
+                          navigateSort({ sortBy: undefined });
                         }}
                         size="sm"
                         variant={
@@ -188,7 +177,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
                       </Button>
                       <Button
                         onClick={() => {
-                          navigateSortWithPersist({ sortBy: "bets" });
+                          navigateSort({ sortBy: "bets" });
                         }}
                         size="sm"
                         variant={
@@ -204,7 +193,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
                             : ""
                         }
                         onClick={() => {
-                          navigateSortWithPersist({ sortBy: "gold" });
+                          navigateSort({ sortBy: "gold" });
                         }}
                         size="sm"
                         variant={currentSortBy === "gold" ? "outline" : "ghost"}

@@ -1,12 +1,10 @@
 import { useAtomValue } from "@effect/atom-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import * as Predicate from "effect/Predicate";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useCallback } from "react";
 
 import { eventsAtom } from "@/features/events/core/event-atoms";
 import {
-  EventHeroFilterPersistenceSchema,
   isHeroQueryEnabled,
   normalizeEventHeroFilter,
   selectEventUpdate,
@@ -23,7 +21,6 @@ import type {
   HeroSelectOption,
 } from "@/features/events/core/select-utils";
 import { heroesByEventAtom } from "@/features/events/heroes/hero-atoms";
-import { useFilterPersistence } from "@/lib/use-filter-persistence";
 
 /**
  * Route ids that share the Event/Hero URL search shape (eventId/heroId).
@@ -34,13 +31,9 @@ type EventHeroFilterRouteId =
   | "/dashboard/events/history"
   | "/dashboard/events/ranking";
 
-const DEFAULT_EVENT_HERO_FILTERS = { eventId: undefined, heroId: undefined };
-
 interface UseEventHeroFilterOptions {
   /** Route id, e.g. "/dashboard/events/ranking". */
   routeId: EventHeroFilterRouteId;
-  /** localStorage key for persisted Event/Hero fallback. */
-  persistenceKey: string;
 }
 
 interface UseEventHeroFilterResult {
@@ -62,31 +55,20 @@ interface UseEventHeroFilterResult {
 }
 
 /**
- * Connects the pure Event/Hero filter module to the router: route search,
- * localStorage persistence, navigation, and the Event/Hero list queries.
- * Page-specific data queries (ranking, vault, bets) stay in the pages.
+ * Connects the pure Event/Hero filter module to the router: validated route
+ * search, navigation, and the Event/Hero list queries. Page-specific data
+ * queries (ranking, vault, bets) stay in the pages.
  */
 export const useEventHeroFilter = (
   options: UseEventHeroFilterOptions
 ): UseEventHeroFilterResult => {
-  const { routeId, persistenceKey } = options;
+  const { routeId } = options;
   const { eventId: urlEventId, heroId: urlHeroId } = useSearch({
     from: routeId,
   });
   const navigate = useNavigate({ from: routeId });
 
-  const [persistedFilters, updatePersistedFilters] = useFilterPersistence(
-    persistenceKey,
-    EventHeroFilterPersistenceSchema,
-    DEFAULT_EVENT_HERO_FILTERS
-  );
-
-  const state = normalizeEventHeroFilter({
-    persistedEventId: persistedFilters.eventId,
-    persistedHeroId: persistedFilters.heroId,
-    urlEventId: Predicate.isString(urlEventId) ? urlEventId : undefined,
-    urlHeroId: Predicate.isString(urlHeroId) ? urlHeroId : undefined,
-  });
+  const state = normalizeEventHeroFilter({ urlEventId, urlHeroId });
 
   const eventsResult = useAtomValue(eventsAtom);
   const events = AsyncResult.isSuccess(eventsResult)
@@ -108,28 +90,27 @@ export const useEventHeroFilter = (
     heroId: toQueryInput(state.heroId),
   };
 
-  const navigateWithPersist = useCallback(
+  const navigateWithSearch = useCallback(
     (updates: Record<string, unknown>) => {
-      updatePersistedFilters(updates);
       navigate({
         search: (prev) => ({ ...prev, ...updates }),
       });
     },
-    [navigate, updatePersistedFilters]
+    [navigate]
   );
 
   const selectEvent = useCallback(
     (eventId: FilterSelection) => {
-      navigateWithPersist(selectEventUpdate(eventId));
+      navigateWithSearch(selectEventUpdate(eventId));
     },
-    [navigateWithPersist]
+    [navigateWithSearch]
   );
 
   const selectHero = useCallback(
     (heroId: FilterSelection) => {
-      navigateWithPersist(selectHeroUpdate(state, heroId));
+      navigateWithSearch(selectHeroUpdate(state, heroId));
     },
-    [navigateWithPersist, state]
+    [navigateWithSearch, state]
   );
 
   return {

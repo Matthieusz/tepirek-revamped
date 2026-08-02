@@ -4,14 +4,10 @@ import type { Effect } from "effect/Effect";
 import type { AccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { MargonemAccountId } from "../../../domain/squad-builder/margonem-account-id.ts";
-import type {
-  MargonemAccountRefetchDiff,
-  StoredMargonemCharacterSnapshot,
-} from "../../../domain/squad-builder/margonem-account-refetch-diff.ts";
+import type { StoredMargonemCharacterSnapshot } from "../../../domain/squad-builder/margonem-account-refetch-diff.ts";
 import type { MargonemCharacterPreview } from "../../../domain/squad-builder/margonem-character.ts";
 import type { MargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import type { PendingMargonemAccountRefetchId } from "../../../domain/squad-builder/pending-margonem-account-refetch-id.ts";
-import type { FirecrawlCreditCount } from "../firecrawl-config.ts";
 import type {
   ActorDoesNotOwnMargonemAccount,
   MargonemAccountNotFound,
@@ -34,9 +30,7 @@ export interface CreatePendingMargonemAccountRefetchInput {
   readonly profileId: MargonemProfileId;
   readonly fetchedAt: Date;
   readonly expiresAt: Date;
-  readonly firecrawlCreditsUsed: FirecrawlCreditCount;
   readonly latestCharacters: readonly MargonemCharacterPreview[];
-  readonly diff: MargonemAccountRefetchDiff;
 }
 
 /** Stored pending refetch identity. */
@@ -63,12 +57,6 @@ interface ApplyAccountRefetchOutput {
   readonly updatedCharacterCount: number;
   readonly removedCharacterCount: number;
   readonly removedSquadCharacterCount: number;
-}
-
-/** Input for marking a pending refetch as applied. */
-export interface MarkPendingMargonemAccountRefetchAppliedInput {
-  readonly refetchPreviewId: PendingMargonemAccountRefetchId;
-  readonly appliedAt: Date;
 }
 
 /** Input for transactionally applying pending refetch data. */
@@ -106,9 +94,6 @@ export interface AccountRefetchStoreServiceShape {
   readonly applyRefetchedAccount: (
     input: ApplyRefetchedAccountInput
   ) => Effect<ApplyAccountRefetchOutput, SquadBuilderPersistenceUnavailable>;
-  readonly markPendingRefetchApplied: (
-    input: MarkPendingMargonemAccountRefetchAppliedInput
-  ) => Effect<void, SquadBuilderPersistenceUnavailable>;
 }
 
 export class AccountRefetchStoreService extends Context.Service<
