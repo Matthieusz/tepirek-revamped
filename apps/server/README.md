@@ -4,7 +4,7 @@ The Bun entry point for Tepirek Revamped. Hono hosts Better Auth and two Effect 
 
 ## Run locally
 
-Complete the [repository setup](../../README.md#local-setup), then run:
+Complete the [repository setup](../../README.md#get-started), then run:
 
 ```bash
 pnpm dev:server

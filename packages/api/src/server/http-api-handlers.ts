@@ -19,7 +19,7 @@ import { TodoHttpApiHandlers } from "./todo/http-api-handlers.ts";
 import { UserHttpApiHandlers } from "./user/http-api-handlers.ts";
 import { VaultHttpApiHandlers } from "./vault/http-api-handlers.ts";
 
-/** Application-level Effect HttpApi route layer for all migrated API groups. */
+/** Application-level Effect HttpApi route layer for all API groups. */
 const AppEndpointHandlers = Layer.mergeAll(
   AnnouncementHttpApiHandlers,
   TodoHttpApiHandlers,

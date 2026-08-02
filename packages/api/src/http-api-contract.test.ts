@@ -32,7 +32,7 @@ describe("AppHttpApi route contract", () => {
     expect(Record.keys(healthOpenApi.paths)).toEqual(["/health"]);
   });
 
-  it("exposes the migrated bet routes", () => {
+  it("exposes the bet routes", () => {
     expectRoute("post", "/bet");
     expectRoute("post", "/bet/delete");
     expectRoute("post", "/bet/edit");
@@ -43,13 +43,13 @@ describe("AppHttpApi route contract", () => {
     expectRoute("get", "/bet/latest-for-copy");
   });
 
-  it("exposes the migrated ranking routes", () => {
+  it("exposes the ranking routes", () => {
     expectRoute("post", "/ranking/hero-stats");
     expectRoute("get", "/ranking/oldest-unpaid-event");
     expectRoute("post", "/ranking");
   });
 
-  it("exposes the migrated user routes", () => {
+  it("exposes the user routes", () => {
     expectRoute("post", "/user/delete");
     expectRoute("get", "/user/session");
     expectRoute("get", "/user/verified");
@@ -61,7 +61,7 @@ describe("AppHttpApi route contract", () => {
     expectRoute("post", "/user/verify-discord-guild-membership");
   });
 
-  it("exposes the migrated vault routes", () => {
+  it("exposes the vault routes", () => {
     expectRoute("post", "/vault/distribute-gold");
     expectRoute("post", "/vault");
     expectRoute("post", "/vault/toggle-paid-out");

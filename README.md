@@ -16,7 +16,7 @@
   </p>
 </div>
 
-Tepirek Revamped is  guild operations software for [Margonem](https://www.margonem.com/) players. It brings the shared guild state out of spreadsheets and chat threads and into one place.
+Tepirek Revamped is guild operations software for [Margonem](https://www.margonem.com/) players. It brings the shared guild state out of spreadsheets and chat threads and into one place.
 
 ## What it does
 
@@ -144,7 +144,7 @@ This repository uses `@effect/tsgo` as both its patched TypeScript compiler and 
 pnpm tsc --version
 ```
 
-The version must include an `effect-tsgo` suffix. VS Code settings are checked in under [`.vscode/settings.json`](.vscode/settings.json); use the workspace TypeScript version when prompted. Do not run another TypeScript language server alongside the native TypeScript-Go server, because that duplicates diagnostics and degrades editor performance.
+The version must include an `effect-tsgo` suffix. In VS Code, use the workspace TypeScript version when prompted. Do not run another TypeScript language server alongside the native TypeScript-Go server, because that duplicates diagnostics and degrades editor performance.
 
 Other editors must launch the patched workspace `tsgo` binary as their sole TypeScript language server. Run `pnpm effect-tsgo get-exe-path` to locate it for the current platform, and consult the [`@effect/tsgo` editor guidance](https://github.com/Effect-TS/tsgo#best-practices) when configuring the client.
 

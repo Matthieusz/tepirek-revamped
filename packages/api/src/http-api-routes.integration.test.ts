@@ -148,7 +148,7 @@ const authenticatedGet = (cookie: string): RequestInit => ({
   method: "GET",
 });
 
-describe("migrated Effect HttpApi routes", () => {
+describe("Effect HttpApi routes", () => {
   it("redacts persistence causes from route responses", async () => {
     const { cookie } = await createSignedInAdmin("redaction-admin");
     const response = await failingAnnouncementHttpApi.handler(

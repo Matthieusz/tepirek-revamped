@@ -17,7 +17,7 @@ import { TodoHttpApiGroup } from "./todo/http-api-contract.ts";
 import { UserHttpApiGroup } from "./user/http-api-contract.ts";
 import { VaultHttpApiGroup } from "./vault/http-api-contract.ts";
 
-/** Application-level Effect HttpApi contract for migrated API groups. */
+/** Application-level Effect HttpApi contract for all API groups. */
 export const AppHttpApi = HttpApi.make("tepirekApi")
   .add(AnnouncementHttpApiGroup)
   .add(TodoHttpApiGroup)
