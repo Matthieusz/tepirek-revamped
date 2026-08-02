@@ -531,7 +531,7 @@ export const AccountImportFrame = () => {
   const submitResult = useAtomValue(accountPreviewForm.submit);
 
   useEffect(() => {
-    if (!AsyncResult.isSuccess(submitResult)) {
+    if (!AsyncResult.isSuccess(submitResult) || submitResult.waiting) {
       isResettingRef.current = false;
       return;
     }

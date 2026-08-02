@@ -333,7 +333,7 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
   });
 
   useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult)) {
+    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
       toast.success("Obstawienie dodano pomyślnie");
       clearUsers([]);
     }

@@ -62,7 +62,7 @@ export const AddAnnouncementModal = ({
   const canDiscard = useCanCloseForm(submitResult.waiting);
 
   useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult)) {
+    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
       toast.success("Ogłoszenie utworzone pomyślnie");
       reset();
       setOpen(false);

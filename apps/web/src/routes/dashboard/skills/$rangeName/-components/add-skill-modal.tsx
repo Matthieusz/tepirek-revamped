@@ -111,7 +111,7 @@ export const AddSkillModal = ({
   }
 
   useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult)) {
+    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
       toast.success("Zestaw utworzony");
       reset();
       setOpen(false);

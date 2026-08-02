@@ -55,7 +55,7 @@ export const EditProfileModal = ({
   const canDiscard = useCanCloseForm(submitResult.waiting);
 
   useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult)) {
+    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
       toast.success("Profil zaktualizowany");
       reset();
       setOpen(false);

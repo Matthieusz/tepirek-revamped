@@ -60,7 +60,7 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
   const canDiscard = useCanCloseForm(submitResult.waiting);
 
   useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult)) {
+    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
       toast.success("Przedział utworzony pomyślnie");
       reset();
       setOpen(false);

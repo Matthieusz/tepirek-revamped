@@ -92,7 +92,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
   }
 
   useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult)) {
+    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
       toast.success("Heros utworzony pomyślnie");
       reset();
       setOpen(false);

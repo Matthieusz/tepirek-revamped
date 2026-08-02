@@ -79,7 +79,7 @@ const TasksContent = ({ session }: TasksPageProps) => {
   const canCreateTodo = session.user.id.length > 0;
 
   useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult)) {
+    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
       toast.success("Zadanie zostało dodane");
       reset();
     }

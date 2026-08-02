@@ -53,7 +53,7 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
   const canDiscard = useCanCloseForm(submitResult.waiting);
 
   useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult)) {
+    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
       toast.success("Profesja utworzona");
       reset();
       setOpen(false);
