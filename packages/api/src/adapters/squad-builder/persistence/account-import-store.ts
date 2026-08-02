@@ -35,10 +35,9 @@ import {
   ProfileAccessState,
 } from "../../../services/squad-builder/account-import/account-import-store.ts";
 import type {
-  CreateOwnedAccountFromPendingImportInput,
+  ConfirmPendingImportInput,
   CreatePendingMargonemAccountImportInput,
   DeleteOwnedAccountInput,
-  FindPendingMargonemAccountImportInput,
   FindProfileAccessStateInput,
   ListOwnedMargonemAccountsInput,
   OwnedMargonemAccountSummary,
@@ -169,216 +168,196 @@ const createPendingImportWithDatabase = (database: EffectPgDatabase) =>
     return yield* persistenceQuery(operation, transaction);
   });
 
-const findPendingImportForConfirmationWithDatabase = (
-  database: EffectPgDatabase
-) =>
-  Effect.fnUntraced(function* findPendingImportForConfirmationEffect({
-    actorUserId,
-    now,
-    pendingImportId,
-  }: FindPendingMargonemAccountImportInput) {
-    const operation = "findPendingImportForConfirmation" as const;
-    yield* persistenceQuery(
-      operation,
-      database
-        .delete(margonemAccountImportPreview)
-        .where(lte(margonemAccountImportPreview.expiresAt, sql`now()`))
-    );
-
-    const previewSelect = database
-      .select({
-        fetchedAt: margonemAccountImportPreview.fetchedAt,
-        id: margonemAccountImportPreview.id,
-        profileId: margonemAccountImportPreview.profileId,
-      })
-      .from(margonemAccountImportPreview)
-      .where(
-        and(
-          eq(margonemAccountImportPreview.id, pendingImportId),
-          eq(margonemAccountImportPreview.actorUserId, actorUserId),
-          gt(margonemAccountImportPreview.expiresAt, now)
-        )
-      )
-      .limit(1);
-    const previewRows = yield* persistenceQuery(operation, previewSelect);
-
-    const [preview] = previewRows;
-
-    if (preview === undefined) {
-      return yield* new PendingMargonemAccountImportNotFound();
-    }
-
-    const characterSelect = database
-      .select({
-        avatarUrl: margonemAccountImportPreviewCharacter.avatarUrl,
-        characterId: margonemAccountImportPreviewCharacter.characterId,
-        level: margonemAccountImportPreviewCharacter.level,
-        name: margonemAccountImportPreviewCharacter.name,
-        profession: margonemAccountImportPreviewCharacter.profession,
-        world: margonemAccountImportPreviewCharacter.world,
-      })
-      .from(margonemAccountImportPreviewCharacter)
-      .where(
-        eq(margonemAccountImportPreviewCharacter.importPreviewId, preview.id)
-      );
-    const characterRows = yield* persistenceQuery(operation, characterSelect);
-
-    const jarunaCharacters = [];
-
-    for (const row of characterRows) {
-      const characterId = yield* parseMargonemCharacterId(row.characterId).pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
-
-      const level = yield* parsePositiveLevel(row.level).pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
-
-      const profession = yield* parseMargonemProfession(row.profession).pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
-
-      const world = yield* parseMargonemWorld(row.world).pipe(
-        Effect.catch((error) => failPersistence(operation, error))
-      );
-
-      jarunaCharacters.push({
-        avatarUrl: row.avatarUrl,
-        characterId,
-        level,
-        name: row.name,
-        profession,
-        world,
-      });
-    }
-
-    const profileId = yield* parseMargonemProfileId(preview.profileId).pipe(
-      Effect.catch((error) => failPersistence(operation, error))
-    );
-
-    return {
-      actorUserId,
-      fetchedAt: preview.fetchedAt,
-      id: pendingImportId,
-      jarunaCharacters,
-      profileId,
-    };
-  });
-
-const createOwnedAccountFromPendingImportWithDatabase = (
-  database: EffectPgDatabase
-) =>
-  Effect.fnUntraced(function* createOwnedAccountFromPendingImportEffect({
+const confirmPendingImportWithDatabase = (database: EffectPgDatabase) =>
+  Effect.fnUntraced(function* confirmPendingImportEffect({
     actorUserId,
     displayName,
-    pending,
-  }: CreateOwnedAccountFromPendingImportInput) {
-    const operation = "createOwnedAccountFromPendingImport" as const;
+    now,
+    pendingImportId,
+  }: ConfirmPendingImportInput) {
+    const operation = "confirmPendingImport" as const;
     const transaction = database.transaction(
-      Effect.fnUntraced(
-        function* createOwnedAccountFromPendingImportTransaction(
-          tx: TransactionDatabase
-        ) {
-          const existingSelect = tx
-            .select({ ownerUserId: margonemAccount.ownerUserId })
-            .from(margonemAccount)
-            .where(eq(margonemAccount.profileId, pending.profileId))
-            .limit(1);
-          const existingRows = yield* existingSelect;
+      Effect.fnUntraced(function* confirmPendingImportTransaction(
+        tx: TransactionDatabase
+      ) {
+        yield* tx
+          .delete(margonemAccountImportPreview)
+          .where(lte(margonemAccountImportPreview.expiresAt, sql`now()`));
 
-          const [existing] = existingRows;
-
-          if (existing !== undefined) {
-            return yield* existing.ownerUserId === actorUserId
-              ? new MargonemAccountAlreadyOwnedByActor()
-              : new MargonemAccountOwnedByAnotherUser();
-          }
-
-          const insert = tx
-            .insert(margonemAccount)
-            .values({
-              displayName,
-              lastFetchedAt: pending.fetchedAt,
-              ownerUserId: actorUserId,
-              profileId: pending.profileId,
-            })
-            .returning({
-              createdAt: margonemAccount.createdAt,
-              id: margonemAccount.id,
-            });
-          const accountRows = yield* insert;
-
-          const [account] = accountRows;
-
-          if (account === undefined) {
-            return yield* failPersistence(
-              operation,
-              new Error("Failed to insert owned account")
-            );
-          }
-
-          if (pending.jarunaCharacters.length > 0) {
-            const characterInsert = tx.insert(margonemCharacter).values(
-              pending.jarunaCharacters.map((character) => ({
-                accountId: account.id,
-                avatarUrl: character.avatarUrl,
-                characterId: character.characterId,
-                level: character.level,
-                name: character.name,
-                profession: character.profession,
-                world: character.world,
-              }))
-            );
-            yield* characterInsert;
-          }
-
-          const deletedRows = yield* tx
-            .delete(margonemAccountImportPreview)
-            .where(
-              and(
-                eq(margonemAccountImportPreview.id, pending.id),
-                eq(margonemAccountImportPreview.actorUserId, actorUserId)
-              )
+        const previewSelect = tx
+          .select({
+            fetchedAt: margonemAccountImportPreview.fetchedAt,
+            id: margonemAccountImportPreview.id,
+            profileId: margonemAccountImportPreview.profileId,
+          })
+          .from(margonemAccountImportPreview)
+          .where(
+            and(
+              eq(margonemAccountImportPreview.id, pendingImportId),
+              eq(margonemAccountImportPreview.actorUserId, actorUserId),
+              gt(margonemAccountImportPreview.expiresAt, now)
             )
-            .returning({ id: margonemAccountImportPreview.id });
+          )
+          .limit(1)
+          .for("update");
+        const previewRows = yield* previewSelect;
+        const [preview] = previewRows;
 
-          if (deletedRows[0] === undefined) {
-            return yield* failPersistence(
-              operation,
-              new Error("Failed to delete consumed account import preview")
-            );
-          }
+        if (preview === undefined) {
+          return yield* new PendingMargonemAccountImportNotFound();
+        }
 
-          const accountId = yield* parseMargonemAccountId(account.id).pipe(
+        const characterRows = yield* tx
+          .select({
+            avatarUrl: margonemAccountImportPreviewCharacter.avatarUrl,
+            characterId: margonemAccountImportPreviewCharacter.characterId,
+            level: margonemAccountImportPreviewCharacter.level,
+            name: margonemAccountImportPreviewCharacter.name,
+            profession: margonemAccountImportPreviewCharacter.profession,
+            world: margonemAccountImportPreviewCharacter.world,
+          })
+          .from(margonemAccountImportPreviewCharacter)
+          .where(
+            eq(
+              margonemAccountImportPreviewCharacter.importPreviewId,
+              preview.id
+            )
+          );
+        const jarunaCharacters = [];
+
+        for (const row of characterRows) {
+          const characterId = yield* parseMargonemCharacterId(
+            row.characterId
+          ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+          const level = yield* parsePositiveLevel(row.level).pipe(
+            Effect.catch((error) => failPersistence(operation, error))
+          );
+          const profession = yield* parseMargonemProfession(
+            row.profession
+          ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+          const world = yield* parseMargonemWorld(row.world).pipe(
             Effect.catch((error) => failPersistence(operation, error))
           );
 
-          return {
-            accountId,
-            characterCount: pending.jarunaCharacters.length,
-            characterPreviews: Arr.map(
-              Arr.take(
-                Arr.sortWith(
-                  pending.jarunaCharacters,
-                  (character) => character.level,
-                  Order.flip(Order.Number)
-                ),
-                ACCOUNT_CHARACTER_PREVIEW_LIMIT
-              ),
-              (character) => ({
-                avatarUrl: character.avatarUrl,
-                characterId: character.characterId,
-                name: character.name,
-                profession: character.profession,
-              })
-            ),
-            displayName,
-            generatedProfileUrl: toMargonemProfileUrl(pending.profileId),
-            lastFetchedAt: pending.fetchedAt,
-            profileId: pending.profileId,
-          };
+          jarunaCharacters.push({
+            avatarUrl: row.avatarUrl,
+            characterId,
+            level,
+            name: row.name,
+            profession,
+            world,
+          });
         }
-      )
+
+        const profileId = yield* parseMargonemProfileId(preview.profileId).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
+        const pending = {
+          fetchedAt: preview.fetchedAt,
+          id: pendingImportId,
+          jarunaCharacters,
+          profileId,
+        };
+
+        const existingSelect = tx
+          .select({ ownerUserId: margonemAccount.ownerUserId })
+          .from(margonemAccount)
+          .where(eq(margonemAccount.profileId, pending.profileId))
+          .limit(1);
+        const existingRows = yield* existingSelect;
+
+        const [existing] = existingRows;
+
+        if (existing !== undefined) {
+          return yield* existing.ownerUserId === actorUserId
+            ? new MargonemAccountAlreadyOwnedByActor()
+            : new MargonemAccountOwnedByAnotherUser();
+        }
+
+        const insert = tx
+          .insert(margonemAccount)
+          .values({
+            displayName,
+            lastFetchedAt: pending.fetchedAt,
+            ownerUserId: actorUserId,
+            profileId: pending.profileId,
+          })
+          .returning({
+            createdAt: margonemAccount.createdAt,
+            id: margonemAccount.id,
+          });
+        const accountRows = yield* insert;
+
+        const [account] = accountRows;
+
+        if (account === undefined) {
+          return yield* failPersistence(
+            operation,
+            new Error("Failed to insert owned account")
+          );
+        }
+
+        if (pending.jarunaCharacters.length > 0) {
+          const characterInsert = tx.insert(margonemCharacter).values(
+            pending.jarunaCharacters.map((character) => ({
+              accountId: account.id,
+              avatarUrl: character.avatarUrl,
+              characterId: character.characterId,
+              level: character.level,
+              name: character.name,
+              profession: character.profession,
+              world: character.world,
+            }))
+          );
+          yield* characterInsert;
+        }
+
+        const deletedRows = yield* tx
+          .delete(margonemAccountImportPreview)
+          .where(
+            and(
+              eq(margonemAccountImportPreview.id, pending.id),
+              eq(margonemAccountImportPreview.actorUserId, actorUserId)
+            )
+          )
+          .returning({ id: margonemAccountImportPreview.id });
+
+        if (deletedRows[0] === undefined) {
+          return yield* failPersistence(
+            operation,
+            new Error("Failed to delete consumed account import preview")
+          );
+        }
+
+        const accountId = yield* parseMargonemAccountId(account.id).pipe(
+          Effect.catch((error) => failPersistence(operation, error))
+        );
+
+        return {
+          accountId,
+          characterCount: pending.jarunaCharacters.length,
+          characterPreviews: Arr.map(
+            Arr.take(
+              Arr.sortWith(
+                pending.jarunaCharacters,
+                (character) => character.level,
+                Order.flip(Order.Number)
+              ),
+              ACCOUNT_CHARACTER_PREVIEW_LIMIT
+            ),
+            (character) => ({
+              avatarUrl: character.avatarUrl,
+              characterId: character.characterId,
+              name: character.name,
+              profession: character.profession,
+            })
+          ),
+          displayName,
+          generatedProfileUrl: toMargonemProfileUrl(pending.profileId),
+          lastFetchedAt: pending.fetchedAt,
+          profileId: pending.profileId,
+        };
+      })
     );
 
     return yield* persistenceQuery(operation, transaction);
@@ -608,18 +587,15 @@ export const DrizzleAccountImportStoreServiceLayer: Layer.Layer<
   AccountImportStoreService,
   EffectDatabase.useSync((database) =>
     AccountImportStoreService.of({
-      createOwnedAccountFromPendingImport: Effect.fn(
-        "AccountImportStore.createOwnedAccountFromPendingImport"
-      )(createOwnedAccountFromPendingImportWithDatabase(database)),
+      confirmPendingImport: Effect.fn(
+        "AccountImportStore.confirmPendingImport"
+      )(confirmPendingImportWithDatabase(database)),
       createPendingImport: Effect.fn("AccountImportStore.createPendingImport")(
         createPendingImportWithDatabase(database)
       ),
       deleteOwnedAccount: Effect.fn("AccountImportStore.deleteOwnedAccount")(
         deleteOwnedAccountWithDatabase(database)
       ),
-      findPendingImportForConfirmation: Effect.fn(
-        "AccountImportStore.findPendingImportForConfirmation"
-      )(findPendingImportForConfirmationWithDatabase(database)),
       findProfileAccessState: Effect.fn(
         "AccountImportStore.findProfileAccessState"
       )(findProfileAccessStateWithDatabase(database)),

@@ -37,16 +37,11 @@ export const confirm = EffectRuntime.fn("AccountImport.confirm")(
     const displayName = yield* parseAccountDisplayName(input.displayName);
 
     const now = yield* currentDate;
-    const pending = yield* store.findPendingImportForConfirmation({
-      actorUserId: input.actorUserId,
-      now,
-      pendingImportId: input.pendingImportId,
-    });
-
-    return yield* store.createOwnedAccountFromPendingImport({
+    return yield* store.confirmPendingImport({
       actorUserId: input.actorUserId,
       displayName,
-      pending,
+      now,
+      pendingImportId: input.pendingImportId,
     });
   }
 );

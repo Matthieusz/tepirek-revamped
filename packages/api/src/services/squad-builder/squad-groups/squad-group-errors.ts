@@ -183,18 +183,16 @@ export class MargonemAccountAlreadySharedWithActor extends Schema.TaggedErrorCla
 ) {}
 
 const SquadBuilderPersistenceOperationSchema = Schema.Literals([
-  "applyRefetchedAccount",
+  "applyPendingRefetch",
   "authorizeSquadGroupOwner",
   "createSquadGroup",
-  "createOwnedAccountFromPendingImport",
+  "confirmPendingImport",
   "deleteOwnedAccount",
   "createPendingImport",
   "createPendingRefetch",
   "findAccountOwnerUserId",
   "findVerifiedInviteTarget",
   "findVerifiedSquadEditorInviteTarget",
-  "findPendingImportForConfirmation",
-  "findPendingRefetchForApply",
   "findProfileAccessState",
   "getAccountForRefetch",
   "getPendingSquadGroupInviteCount",

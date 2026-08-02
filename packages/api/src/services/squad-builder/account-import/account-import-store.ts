@@ -54,20 +54,12 @@ interface PendingMargonemAccountImport {
   readonly profileId: MargonemProfileId;
 }
 
-/** Input for loading a pending import for confirmation. */
-export interface FindPendingMargonemAccountImportInput {
+/** Input for atomically confirming and consuming a pending import. */
+export interface ConfirmPendingImportInput {
   readonly actorUserId: AppUserId;
   readonly pendingImportId: PendingMargonemAccountImportId;
+  readonly displayName: AccountDisplayName;
   readonly now: Date;
-}
-
-/** Server-trusted pending import data ready for confirmation. */
-interface PendingMargonemAccountImportForConfirmation {
-  readonly id: PendingMargonemAccountImportId;
-  readonly actorUserId: AppUserId;
-  readonly profileId: MargonemProfileId;
-  readonly fetchedAt: Date;
-  readonly jarunaCharacters: readonly MargonemCharacterPreview[];
 }
 
 /** Small character identity preview shown in the owned accounts list. */
@@ -111,13 +103,6 @@ interface DeleteOwnedAccountResult {
   readonly removedAccessGrantCount: number;
 }
 
-/** Input for confirming a pending import into an owned account. */
-export interface CreateOwnedAccountFromPendingImportInput {
-  readonly actorUserId: AppUserId;
-  readonly pending: PendingMargonemAccountImportForConfirmation;
-  readonly displayName: AccountDisplayName;
-}
-
 /** Input for listing owned Margonem accounts. */
 export interface ListOwnedMargonemAccountsInput {
   readonly actorUserId: AppUserId;
@@ -153,17 +138,13 @@ export interface AccountImportStoreServiceShape {
   readonly createPendingImport: (
     input: CreatePendingMargonemAccountImportInput
   ) => Effect<PendingMargonemAccountImport, SquadBuilderPersistenceUnavailable>;
-  readonly findPendingImportForConfirmation: (
-    input: FindPendingMargonemAccountImportInput
-  ) => Effect<
-    PendingMargonemAccountImportForConfirmation,
-    PendingMargonemAccountImportNotFound | SquadBuilderPersistenceUnavailable
-  >;
-  readonly createOwnedAccountFromPendingImport: (
-    input: CreateOwnedAccountFromPendingImportInput
+  readonly confirmPendingImport: (
+    input: ConfirmPendingImportInput
   ) => Effect<
     OwnedMargonemAccountSummary,
-    DuplicateMargonemAccountError | SquadBuilderPersistenceUnavailable
+    | PendingMargonemAccountImportNotFound
+    | DuplicateMargonemAccountError
+    | SquadBuilderPersistenceUnavailable
   >;
 }
 

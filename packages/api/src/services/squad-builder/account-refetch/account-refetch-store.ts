@@ -38,18 +38,8 @@ export interface PendingMargonemAccountRefetch {
   readonly id: PendingMargonemAccountRefetchId;
 }
 
-/** Server-trusted pending refetch data ready for application. */
-interface PendingMargonemAccountRefetchForApply {
-  readonly id: PendingMargonemAccountRefetchId;
-  readonly actorUserId: AppUserId;
-  readonly accountId: MargonemAccountId;
-  readonly profileId: MargonemProfileId;
-  readonly fetchedAt: Date;
-  readonly latestCharacters: readonly MargonemCharacterPreview[];
-}
-
 /** Result summary for applying a pending account refetch. */
-interface ApplyAccountRefetchOutput {
+export interface ApplyPendingRefetchOutput {
   readonly accountId: MargonemAccountId;
   readonly profileId: MargonemProfileId;
   readonly lastFetchedAt: Date;
@@ -59,10 +49,10 @@ interface ApplyAccountRefetchOutput {
   readonly removedSquadCharacterCount: number;
 }
 
-/** Input for transactionally applying pending refetch data. */
-export interface ApplyRefetchedAccountInput {
+/** Input for atomically applying and consuming a pending refetch. */
+export interface ApplyPendingRefetchInput {
   readonly actorUserId: AppUserId;
-  readonly pendingRefetch: PendingMargonemAccountRefetchForApply;
+  readonly refetchPreviewId: PendingMargonemAccountRefetchId;
   readonly now: Date;
 }
 
@@ -83,17 +73,15 @@ export interface AccountRefetchStoreServiceShape {
     PendingMargonemAccountRefetch,
     SquadBuilderPersistenceUnavailable
   >;
-  readonly findPendingRefetchForApply: (input: {
-    readonly actorUserId: AppUserId;
-    readonly refetchPreviewId: PendingMargonemAccountRefetch["id"];
-    readonly now: Date;
-  }) => Effect<
-    PendingMargonemAccountRefetchForApply,
-    PendingMargonemAccountRefetchNotFound | SquadBuilderPersistenceUnavailable
+  readonly applyPendingRefetch: (
+    input: ApplyPendingRefetchInput
+  ) => Effect<
+    ApplyPendingRefetchOutput,
+    | PendingMargonemAccountRefetchNotFound
+    | MargonemAccountNotFound
+    | ActorDoesNotOwnMargonemAccount
+    | SquadBuilderPersistenceUnavailable
   >;
-  readonly applyRefetchedAccount: (
-    input: ApplyRefetchedAccountInput
-  ) => Effect<ApplyAccountRefetchOutput, SquadBuilderPersistenceUnavailable>;
 }
 
 export class AccountRefetchStoreService extends Context.Service<

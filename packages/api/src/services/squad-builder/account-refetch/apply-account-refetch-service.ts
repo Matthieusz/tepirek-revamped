@@ -31,21 +31,10 @@ export const apply = EffectRuntime.fn("AccountRefetch.apply")(
   function* applyAccountRefetchEffect(input: ApplyAccountRefetchInput) {
     const store = yield* AccountRefetchStoreService;
     const now = yield* currentDate;
-    const pending = yield* store.findPendingRefetchForApply({
+    const applied = yield* store.applyPendingRefetch({
       actorUserId: input.actorUserId,
       now,
       refetchPreviewId: input.refetchPreviewId,
-    });
-
-    yield* store.getAccountForRefetch({
-      accountId: pending.accountId,
-      actorUserId: input.actorUserId,
-    });
-
-    const applied = yield* store.applyRefetchedAccount({
-      actorUserId: input.actorUserId,
-      now,
-      pendingRefetch: pending,
     });
 
     return applied;

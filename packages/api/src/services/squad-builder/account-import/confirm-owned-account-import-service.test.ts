@@ -7,7 +7,6 @@ import { parseMargonemAccountId } from "../../../domain/squad-builder/margonem-a
 import {
   parseMargonemCharacterId,
   parseMargonemProfileId,
-  parsePositiveLevel,
 } from "../../../domain/squad-builder/margonem-profile-id.ts";
 import { parsePendingMargonemAccountImportId } from "../../../domain/squad-builder/pending-margonem-account-import-id.ts";
 import { makeAccountImportStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
@@ -33,42 +32,28 @@ it.effect("confirms a pending owned account import through services", () => {
   const accountId = parseTestAccountId();
   const profileId = parseTestProfileId();
   const characterId = Effect.runSync(parseMargonemCharacterId(1_296_625));
-  const level = Effect.runSync(parsePositiveLevel(315));
   const store = makeAccountImportStoreServiceTestService({
-    createOwnedAccountFromPendingImport: ({ displayName, pending }) =>
-      Effect.succeed({
+    confirmPendingImport: ({ displayName, now, pendingImportId: inputId }) => {
+      expect(now).toEqual(FIXED_TIME);
+      expect(inputId).toBe(pendingImportId);
+
+      return Effect.succeed({
         accountId,
-        characterCount: pending.jarunaCharacters.length,
-        characterPreviews: pending.jarunaCharacters
-          .slice(0, 4)
-          .map((character) => ({
-            avatarUrl: character.avatarUrl,
-            characterId: character.characterId,
-            name: character.name,
-            profession: character.profession,
-          })),
-        displayName,
-        generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
-        lastFetchedAt: pending.fetchedAt,
-        profileId: pending.profileId,
-      }),
-    findPendingImportForConfirmation: () =>
-      Effect.succeed({
-        actorUserId,
-        fetchedAt: new Date("2026-06-29T11:30:00.000Z"),
-        id: pendingImportId,
-        jarunaCharacters: [
+        characterCount: 1,
+        characterPreviews: [
           {
             avatarUrl: null,
             characterId,
-            level,
             name: "informati",
             profession: "tracker",
-            world: "jaruna",
           },
         ],
+        displayName,
+        generatedProfileUrl: "https://www.margonem.pl/profile/view,7298897",
+        lastFetchedAt: new Date("2026-06-29T11:30:00.000Z"),
         profileId,
-      }),
+      });
+    },
   });
 
   return Effect.gen(function* confirmEffect() {
