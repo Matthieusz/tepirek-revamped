@@ -25,7 +25,7 @@ const RootDocument = () => {
   const { atomRegistry } = useRouteContext({ from: "__root__" });
 
   return (
-    <html className="dark" lang="pl" suppressHydrationWarning>
+    <html className="dark" lang="pl">
       <head>
         <HeadContent />
       </head>

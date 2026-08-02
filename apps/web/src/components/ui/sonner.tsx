@@ -5,17 +5,13 @@ import {
   OctagonXIcon,
   Loader2Icon,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { Toaster as Sonner } from "sonner";
 import type { ToasterProps } from "sonner";
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme } = useTheme();
-  const resolvedTheme = theme ?? "system";
-
   return (
     <Sonner
-      theme={resolvedTheme as NonNullable<ToasterProps["theme"]>}
+      theme="dark"
       className="toaster group"
       icons={{
         error: <OctagonXIcon className="size-4" />,
