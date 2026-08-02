@@ -1,81 +1,16 @@
 import {
-  AnnouncementForbidden,
-  AnnouncementPersistenceUnavailable,
-  AnnouncementUnauthorized,
-} from "@tepirek-revamped/api/protocol/announcement/http-api-contract";
-import type { AnnouncementError } from "@tepirek-revamped/api/protocol/announcement/http-api-contract";
-import {
-  AuctionForbidden,
-  AuctionPersistenceUnavailable,
-  AuctionUnauthorized,
-} from "@tepirek-revamped/api/protocol/auction/http-api-contract";
-import type { AuctionError } from "@tepirek-revamped/api/protocol/auction/http-api-contract";
-import {
-  BetBadRequest,
-  BetForbidden,
-  BetNotFound,
-  BetPersistenceUnavailable,
-  BetUnauthorized,
-} from "@tepirek-revamped/api/protocol/bet/http-api-contract";
-import type { BetError } from "@tepirek-revamped/api/protocol/bet/http-api-contract";
-import {
-  EventForbidden,
-  EventPersistenceUnavailable,
-  EventUnauthorized,
-} from "@tepirek-revamped/api/protocol/event/http-api-contract";
-import type { EventError } from "@tepirek-revamped/api/protocol/event/http-api-contract";
-import {
-  HeroesForbidden,
-  HeroesPersistenceUnavailable,
-  HeroesUnauthorized,
-} from "@tepirek-revamped/api/protocol/heroes/http-api-contract";
-import type { HeroesError } from "@tepirek-revamped/api/protocol/heroes/http-api-contract";
-import {
-  RankingForbidden,
-  RankingPersistenceUnavailable,
-  RankingUnauthorized,
-} from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
-import type { RankingError } from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
-import {
-  SkillsBadRequest,
-  SkillsConflict,
-  SkillsForbidden,
-  SkillsPersistenceUnavailable,
-  SkillsUnauthorized,
-} from "@tepirek-revamped/api/protocol/skills/http-api-contract";
-import type { SkillsError } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
+  HttpApiBadRequestError,
+  HttpApiConflictError,
+  HttpApiError,
+  HttpApiForbiddenError,
+  HttpApiNotFoundError,
+  HttpApiPersistenceUnavailableError,
+  HttpApiUnauthorizedError,
+  HttpApiUpstreamUnavailableError,
+} from "@tepirek-revamped/api/protocol/http-api-errors";
+import type { HttpApiError as HttpApiErrorType } from "@tepirek-revamped/api/protocol/http-api-errors";
 import type { PreviewOwnedAccountImportsSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
-import {
-  SquadBuilderConflict,
-  SquadBuilderForbidden,
-  SquadBuilderInvalidInput,
-  SquadBuilderNotFound,
-  SquadBuilderPersistenceUnavailable,
-  SquadBuilderUnauthorized,
-  SquadBuilderUpstreamUnavailable,
-} from "@tepirek-revamped/api/protocol/squad-builder/errors";
-import {
-  TodoForbidden,
-  TodoPersistenceUnavailable,
-  TodoUnauthorized,
-} from "@tepirek-revamped/api/protocol/todo/http-api-contract";
-import type { TodoError } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
-import {
-  UserBadRequest,
-  UserForbidden,
-  UserNotFound,
-  UserPersistenceUnavailable,
-  UserUnauthorized,
-} from "@tepirek-revamped/api/protocol/user/http-api-contract";
-import type { UserError } from "@tepirek-revamped/api/protocol/user/http-api-contract";
-import {
-  VaultBadRequest,
-  VaultForbidden,
-  VaultNotFound,
-  VaultPersistenceUnavailable,
-  VaultUnauthorized,
-} from "@tepirek-revamped/api/protocol/vault/http-api-contract";
-import type { VaultError } from "@tepirek-revamped/api/protocol/vault/http-api-contract";
+import * as Schema from "effect/Schema";
 
 const fallbackErrorMessage = "Wystąpił błąd. Spróbuj ponownie później.";
 const forbiddenMessage = "Nie masz uprawnień do wykonania tej akcji.";
@@ -85,26 +20,6 @@ const conflictMessage =
   "Nie można zapisać zmian, bo zasób został już zmieniony.";
 const validationMessage = "Sprawdź dane i spróbuj ponownie.";
 
-/** All tagged errors that may cross the typed HTTP API boundary. */
-type ApiError =
-  | typeof AnnouncementError.Type
-  | typeof AuctionError.Type
-  | typeof BetError.Type
-  | typeof EventError.Type
-  | typeof HeroesError.Type
-  | typeof RankingError.Type
-  | typeof SkillsError.Type
-  | typeof TodoError.Type
-  | typeof UserError.Type
-  | typeof VaultError.Type
-  | InstanceType<typeof SquadBuilderConflict>
-  | InstanceType<typeof SquadBuilderForbidden>
-  | InstanceType<typeof SquadBuilderInvalidInput>
-  | InstanceType<typeof SquadBuilderNotFound>
-  | InstanceType<typeof SquadBuilderPersistenceUnavailable>
-  | InstanceType<typeof SquadBuilderUnauthorized>
-  | InstanceType<typeof SquadBuilderUpstreamUnavailable>;
-
 type PreviewOwnedAccountImportFailure = Extract<
   PreviewOwnedAccountImportsSuccess["items"][number],
   { readonly _tag: "PreviewFailed" }
@@ -112,75 +27,22 @@ type PreviewOwnedAccountImportFailure = Extract<
 
 type SquadBuilderLineError = PreviewOwnedAccountImportFailure["error"];
 
-const isUnauthorizedApiError = (error: unknown): boolean =>
-  error instanceof AnnouncementUnauthorized ||
-  error instanceof AuctionUnauthorized ||
-  error instanceof BetUnauthorized ||
-  error instanceof EventUnauthorized ||
-  error instanceof HeroesUnauthorized ||
-  error instanceof RankingUnauthorized ||
-  error instanceof SkillsUnauthorized ||
-  error instanceof TodoUnauthorized ||
-  error instanceof UserUnauthorized ||
-  error instanceof VaultUnauthorized ||
-  error instanceof SquadBuilderUnauthorized;
-
-const isForbiddenApiError = (error: unknown): boolean =>
-  error instanceof AnnouncementForbidden ||
-  error instanceof AuctionForbidden ||
-  error instanceof BetForbidden ||
-  error instanceof EventForbidden ||
-  error instanceof HeroesForbidden ||
-  error instanceof RankingForbidden ||
-  error instanceof SkillsForbidden ||
-  error instanceof TodoForbidden ||
-  error instanceof UserForbidden ||
-  error instanceof VaultForbidden ||
-  error instanceof SquadBuilderForbidden;
-
-const isBadRequestApiError = (error: unknown): boolean =>
-  error instanceof BetBadRequest ||
-  error instanceof SkillsBadRequest ||
-  error instanceof UserBadRequest ||
-  error instanceof VaultBadRequest;
-
-const isConflictApiError = (error: unknown): boolean =>
-  error instanceof SkillsConflict || error instanceof SquadBuilderConflict;
-
-const isNotFoundApiError = (error: unknown): boolean =>
-  error instanceof BetNotFound ||
-  error instanceof UserNotFound ||
-  error instanceof VaultNotFound ||
-  error instanceof SquadBuilderNotFound;
-
-const isPersistenceApiError = (error: unknown): boolean =>
-  error instanceof AnnouncementPersistenceUnavailable ||
-  error instanceof AuctionPersistenceUnavailable ||
-  error instanceof BetPersistenceUnavailable ||
-  error instanceof EventPersistenceUnavailable ||
-  error instanceof HeroesPersistenceUnavailable ||
-  error instanceof RankingPersistenceUnavailable ||
-  error instanceof SkillsPersistenceUnavailable ||
-  error instanceof TodoPersistenceUnavailable ||
-  error instanceof UserPersistenceUnavailable ||
-  error instanceof VaultPersistenceUnavailable ||
-  error instanceof SquadBuilderPersistenceUnavailable;
-
-const isApiError = (error: unknown): error is ApiError =>
-  isUnauthorizedApiError(error) ||
-  isForbiddenApiError(error) ||
-  isBadRequestApiError(error) ||
-  isConflictApiError(error) ||
-  isNotFoundApiError(error) ||
-  isPersistenceApiError(error) ||
-  error instanceof SquadBuilderInvalidInput ||
-  error instanceof SquadBuilderUpstreamUnavailable;
+const isUnauthorizedApiError = Schema.is(HttpApiUnauthorizedError);
+const isForbiddenApiError = Schema.is(HttpApiForbiddenError);
+const isBadRequestApiError = Schema.is(HttpApiBadRequestError);
+const isConflictApiError = Schema.is(HttpApiConflictError);
+const isNotFoundApiError = Schema.is(HttpApiNotFoundError);
+const isPersistenceApiError = Schema.is(HttpApiPersistenceUnavailableError);
+const isUpstreamUnavailableApiError = Schema.is(
+  HttpApiUpstreamUnavailableError
+);
+const isApiError = Schema.is(HttpApiError);
 
 const publicMessage = (message: string, fallback: string): string =>
   message.length > 0 ? message : fallback;
 
-/** Maps a decoded HTTP API error while its tagged error type is known. */
-export const getApiErrorMessage = (error: ApiError): string => {
+/** Maps a decoded HTTP API error to semantic Polish UI copy. */
+export const getApiErrorMessage = (error: HttpApiErrorType): string => {
   if (isUnauthorizedApiError(error)) {
     return unauthorizedMessage;
   }
@@ -201,12 +63,12 @@ export const getApiErrorMessage = (error: ApiError): string => {
     return notFoundMessage;
   }
 
-  if (error instanceof SquadBuilderInvalidInput) {
-    return validationMessage;
+  if (isUpstreamUnavailableApiError(error)) {
+    return "Nie udało się pobrać danych z zewnętrznej usługi.";
   }
 
-  if (error instanceof SquadBuilderUpstreamUnavailable) {
-    return "Nie udało się pobrać danych z zewnętrznej usługi.";
+  if (isPersistenceApiError(error)) {
+    return fallbackErrorMessage;
   }
 
   return fallbackErrorMessage;
@@ -265,7 +127,7 @@ export const getSquadBuilderLineErrorMessage = (
 
 /**
  * Converts errors at JavaScript and Promise boundaries into safe UI copy.
- * HTTP API errors are already decoded and are matched by their concrete types.
+ * HTTP API errors are matched by their stable protocol tags and schemas.
  */
 export const getErrorMessage = (
   error: unknown,

@@ -90,9 +90,12 @@ describe("getErrorMessage", () => {
     }
   });
 
-  it("does not trust an arbitrary object with a tag-shaped property", () => {
+  it("classifies decoded protocol errors without constructor identity", () => {
     expect(
       getErrorMessage({ _tag: "UserForbidden", message: "raw server copy" })
+    ).toBe("Nie masz uprawnień do wykonania tej akcji.");
+    expect(
+      getErrorMessage({ _tag: "NotAnApiError", message: "raw server copy" })
     ).toBe(fallback);
   });
 
