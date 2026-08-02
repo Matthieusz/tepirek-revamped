@@ -1,6 +1,6 @@
-import { once } from "node:events";
 import { createServer } from "node:http";
 
+import { describe, expect, it as effectIt } from "@effect/vitest";
 import {
   EffectDatabase,
   makeLiveDatabaseLayer,
@@ -12,7 +12,6 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as References from "effect/References";
-import { describe, expect, it } from "vitest";
 
 import { makeDirectPersistenceQuery } from "./adapters/persistence-query.ts";
 import { UserAdapterError } from "./adapters/user/user-store.ts";
@@ -28,150 +27,171 @@ const userPersistenceQuery = makeDirectPersistenceQuery(
 );
 
 describe("Effect database query logging", () => {
-  it("does not emit SQL parameters through an installed Effect logger", async () => {
-    const secretParameter = "database-logging-secret-7f43f2";
-    const capturedEntries: unknown[] = [];
-    const capturingLogger = Logger.make((options) => {
-      capturedEntries.push({
-        annotations: options.fiber.getRef(References.CurrentLogAnnotations),
-        message: options.message,
+  effectIt.effect(
+    "does not emit SQL parameters through an installed Effect logger",
+    () => {
+      const secretParameter = "database-logging-secret-7f43f2";
+      const capturedEntries: unknown[] = [];
+      const capturingLogger = Logger.make((options) => {
+        capturedEntries.push({
+          annotations: options.fiber.getRef(References.CurrentLogAnnotations),
+          message: options.message,
+        });
       });
-    });
 
-    await Effect.runPromise(
-      EffectDatabase.use((database) =>
-        database.execute<{ readonly value: string }>(
-          sql`select ${secretParameter}::text as value`
-        )
-      ).pipe(
-        Effect.provide(
-          Layer.merge(databaseLayer, Logger.layer([capturingLogger]))
-        )
-      )
-    );
-
-    const serializedEntries = JSON.stringify(capturedEntries);
-    expect(serializedEntries).not.toContain(secretParameter);
-    expect(serializedEntries).not.toContain("params");
-  });
-
-  it("keeps parameters private with stderr and OTLP logging enabled", async () => {
-    const secretParameter = "combined-observability-secret-52d19c";
-    const sentinel = "combined-observability-enabled";
-    const stderrEntries: string[] = [];
-    const otlpRequests: string[] = [];
-    const collector = createServer((request, response) => {
-      const chunks: Buffer[] = [];
-      request.on("data", (chunk: Buffer) => chunks.push(chunk));
-      request.on("end", () => {
-        otlpRequests.push(Buffer.concat(chunks).toString("utf-8"));
-        response.writeHead(200).end();
-      });
-    });
-
-    collector.listen(0, "127.0.0.1");
-    await once(collector, "listening");
-    const address = collector.address();
-    if (address === null || typeof address === "string") {
-      throw new Error("Expected the local OTLP collector to use a TCP port");
-    }
-
-    try {
-      const applicationLoggerLayer = makeLoggerLayer([
-        makeStderrLogger("test-run", (output) => stderrEntries.push(output)),
-      ]);
-      const loggerLayer = Otlp.loggerLayer(
-        {
-          deploymentEnvironmentName: "test",
-          serviceVersion: "test",
-        },
-        "test-run"
-      ).pipe(
-        Layer.provide(applicationLoggerLayer),
-        Layer.provide(
-          ConfigProvider.layer(
-            ConfigProvider.fromUnknown({
-              OTEL_EXPORTER_OTLP_ENDPOINT: `http://127.0.0.1:${address.port}`,
-              OTEL_LOGS_EXPORTER: "otlp",
-              OTEL_SERVICE_NAME: "tepirek-revamped-api",
-            })
+      return Effect.gen(function* installedLoggerTest() {
+        yield* EffectDatabase.use((database) =>
+          database.execute<{ readonly value: string }>(
+            sql`select ${secretParameter}::text as value`
           )
-        )
-      );
+        ).pipe(
+          Effect.provide(
+            Layer.merge(databaseLayer, Logger.layer([capturingLogger]))
+          )
+        );
 
-      await Effect.runPromise(
-        Effect.scoped(
-          EffectDatabase.use((database) =>
-            Effect.gen(function* combinedObservabilityTest() {
-              yield* database.execute(
-                sql`select ${secretParameter}::text as value`
-              );
-              yield* Effect.log(sentinel);
-            })
-          ).pipe(Effect.provide(Layer.merge(databaseLayer, loggerLayer)))
-        )
-      );
-    } finally {
-      const closed = once(collector, "close");
-      collector.close();
-      await closed;
-    }
-
-    const stderrOutput = stderrEntries.join("\n");
-    const otlpOutput = otlpRequests.join("\n");
-    expect(stderrOutput).toContain(sentinel);
-    expect(otlpOutput).toContain(sentinel);
-    expect(stderrOutput).not.toContain(secretParameter);
-    expect(stderrOutput).not.toContain("params");
-    expect(otlpOutput).not.toContain(secretParameter);
-    expect(otlpOutput).not.toContain("params");
-  });
-
-  it("rolls back and safely projects a parameterized transaction failure", async () => {
-    const actor = await createVerifiedMember({
-      id: "transaction-rollback-user",
-    });
-    const insertedText = "must-be-rolled-back";
-    const secretParameter = "transaction-secret-cf395a";
-    const capturedEntries: unknown[] = [];
-    const capturingLogger = Logger.make((options) => {
-      capturedEntries.push({
-        annotations: options.fiber.getRef(References.CurrentLogAnnotations),
-        message: options.message,
+        const serializedEntries = JSON.stringify(capturedEntries);
+        expect(serializedEntries).not.toContain(secretParameter);
+        expect(serializedEntries).not.toContain("params");
       });
-    });
-    const observabilityLayer = Logger.layer([capturingLogger]);
+    }
+  );
 
-    const error = await Effect.runPromise(
-      Effect.flip(
-        EffectDatabase.use((database) =>
-          userPersistenceQuery(
-            "transactionRollbackTest",
-            database.transaction((tx) =>
-              Effect.gen(function* transactionRollbackTest() {
-                yield* tx.insert(todo).values({
-                  text: insertedText,
-                  userId: actor.id,
-                });
-                yield* tx.execute(sql`select ${secretParameter}::integer`);
+  effectIt.effect(
+    "keeps parameters private with stderr and OTLP logging enabled",
+    () => {
+      const secretParameter = "combined-observability-secret-52d19c";
+      const sentinel = "combined-observability-enabled";
+      const stderrEntries: string[] = [];
+      const otlpRequests: string[] = [];
+
+      return Effect.gen(function* combinedObservabilityIntegrationTest() {
+        const collector = yield* Effect.acquireRelease(
+          Effect.callback<ReturnType<typeof createServer>, Error>((resume) => {
+            const server = createServer((request, response) => {
+              const chunks: Buffer[] = [];
+              request.on("data", (chunk: Buffer) => chunks.push(chunk));
+              request.on("end", () => {
+                otlpRequests.push(Buffer.concat(chunks).toString("utf-8"));
+                response.writeHead(200).end();
+              });
+            });
+            server.once("error", (error) => resume(Effect.fail(error)));
+            server.listen(0, "127.0.0.1", () => resume(Effect.succeed(server)));
+          }),
+          (server) =>
+            Effect.callback<null, Error>((resume) => {
+              server.close((error) =>
+                resume(
+                  error === undefined
+                    ? Effect.succeed(null)
+                    : Effect.fail(error)
+                )
+              );
+            }).pipe(Effect.orDie)
+        );
+        const address = collector.address();
+        if (address === null || typeof address === "string") {
+          return yield* Effect.die(
+            new Error("Expected the local OTLP collector to use a TCP port")
+          );
+        }
+
+        const applicationLoggerLayer = makeLoggerLayer([
+          makeStderrLogger("test-run", (output) => stderrEntries.push(output)),
+        ]);
+        const loggerLayer = Otlp.loggerLayer(
+          {
+            deploymentEnvironmentName: "test",
+            serviceVersion: "test",
+          },
+          "test-run"
+        ).pipe(
+          Layer.provide(applicationLoggerLayer),
+          Layer.provide(
+            ConfigProvider.layer(
+              ConfigProvider.fromUnknown({
+                OTEL_EXPORTER_OTLP_ENDPOINT: `http://127.0.0.1:${address.port}`,
+                OTEL_LOGS_EXPORTER: "otlp",
+                OTEL_SERVICE_NAME: "tepirek-revamped-api",
               })
             )
           )
-        )
-      ).pipe(Effect.provide(Layer.merge(databaseLayer, observabilityLayer)))
-    );
+        );
 
-    expect(error).toMatchObject({
-      _tag: "UserAdapterError",
-      operation: "transactionRollbackTest",
-    });
-    const persistedRows = await testDb
-      .select({ id: todo.id })
-      .from(todo)
-      .where(eq(todo.text, insertedText));
-    expect(persistedRows).toEqual([]);
-    const serializedEntries = JSON.stringify(capturedEntries);
-    expect(serializedEntries).not.toContain(secretParameter);
-    expect(serializedEntries).not.toContain("params");
-  });
+        yield* EffectDatabase.use((database) =>
+          Effect.gen(function* combinedObservabilityTest() {
+            yield* database.execute(
+              sql`select ${secretParameter}::text as value`
+            );
+            yield* Effect.log(sentinel);
+          })
+        ).pipe(Effect.provide(Layer.merge(databaseLayer, loggerLayer)));
+
+        const stderrOutput = stderrEntries.join("\n");
+        const otlpOutput = otlpRequests.join("\n");
+        expect(stderrOutput).toContain(sentinel);
+        expect(otlpOutput).toContain(sentinel);
+        expect(stderrOutput).not.toContain(secretParameter);
+        expect(stderrOutput).not.toContain("params");
+        expect(otlpOutput).not.toContain(secretParameter);
+        expect(otlpOutput).not.toContain("params");
+      });
+    }
+  );
+
+  effectIt.effect(
+    "rolls back and safely projects a parameterized transaction failure",
+    () => {
+      const insertedText = "must-be-rolled-back";
+      const secretParameter = "transaction-secret-cf395a";
+      const capturedEntries: unknown[] = [];
+      const capturingLogger = Logger.make((options) => {
+        capturedEntries.push({
+          annotations: options.fiber.getRef(References.CurrentLogAnnotations),
+          message: options.message,
+        });
+      });
+      const observabilityLayer = Logger.layer([capturingLogger]);
+
+      return Effect.gen(function* transactionRollbackIntegrationTest() {
+        const actor = yield* Effect.promise(() =>
+          createVerifiedMember({
+            id: "transaction-rollback-user",
+          })
+        );
+        const error = yield* Effect.flip(
+          EffectDatabase.use((database) =>
+            userPersistenceQuery(
+              "transactionRollbackTest",
+              database.transaction((tx) =>
+                Effect.gen(function* transactionRollbackTest() {
+                  yield* tx.insert(todo).values({
+                    text: insertedText,
+                    userId: actor.id,
+                  });
+                  yield* tx.execute(sql`select ${secretParameter}::integer`);
+                })
+              )
+            )
+          ).pipe(Effect.provide(Layer.merge(databaseLayer, observabilityLayer)))
+        );
+
+        expect(error).toMatchObject({
+          _tag: "UserAdapterError",
+          operation: "transactionRollbackTest",
+        });
+        const persistedRows = yield* Effect.promise(() =>
+          testDb
+            .select({ id: todo.id })
+            .from(todo)
+            .where(eq(todo.text, insertedText))
+        );
+        expect(persistedRows).toEqual([]);
+        const serializedEntries = JSON.stringify(capturedEntries);
+        expect(serializedEntries).not.toContain(secretParameter);
+        expect(serializedEntries).not.toContain("params");
+      });
+    }
+  );
 });

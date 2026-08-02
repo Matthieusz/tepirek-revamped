@@ -1,17 +1,20 @@
+import { describe, expect, it as effectIt } from "@effect/vitest";
 import { makeBetterAuthServiceLayer } from "@tepirek-revamped/auth";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
-import { HttpRouter, HttpServer } from "effect/unstable/http";
-import { describe, expect, it } from "vitest";
+import { HttpServer } from "effect/unstable/http";
 
 import { SquadGroupSummarySchema } from "./protocol/squad-builder/squad-groups/squad-groups-schema.ts";
 import { makeApiLiveLayerFromValues } from "./server/effect-app.ts";
 import { AppHttpApiLayer } from "./server/http-api-handlers.ts";
 import { testAuth } from "./test/integration/auth.ts";
 import { testDatabaseUrl, testDb } from "./test/integration/database.ts";
+import { integrationHandler } from "./test/integration/http-handler.ts";
+import type { IntegrationHandler } from "./test/integration/http-handler.ts";
 
 const apiLiveLayer = makeApiLiveLayerFromValues({
   databaseUrl: testDatabaseUrl,
@@ -28,12 +31,19 @@ const appHttpApiLayer = AppHttpApiLayer.pipe(
   Layer.provide(HttpServer.layerServices)
 );
 
-const appHttpApi = HttpRouter.toWebHandler(appHttpApiLayer, {
-  disableLogger: true,
-});
+const withAppHttpApi = <A>(
+  use: (appHttpApi: IntegrationHandler) => Promise<A>
+) =>
+  Effect.gen(function* acquireAppHttpApi() {
+    const appHttpApi = yield* integrationHandler(appHttpApiLayer);
+    return yield* Effect.promise(() => use(appHttpApi));
+  });
 
-const requestHttpApi = (path: string, init?: RequestInit) =>
-  appHttpApi.handler(new Request(`http://localhost:3000${path}`, init));
+const requestHttpApi = (
+  appHttpApi: IntegrationHandler,
+  path: string,
+  init?: RequestInit
+) => appHttpApi.handler(new Request(`http://localhost:3000${path}`, init));
 
 const createSignedInUser = async (name: string, verified = true) => {
   const email = `${name}@example.com`;
@@ -89,189 +99,242 @@ const expectUnauthorized = (response: Response) => {
 };
 
 describe("squad-builder squad-group route auth", () => {
-  it("returns 401 for unauthenticated create squad group", async () => {
-    const response = await requestHttpApi(
-      "/squad-builder/squad-groups",
-      jsonPost({ name: "My Group" })
-    );
+  effectIt.effect("returns 401 for unauthenticated create squad group", () =>
+    withAppHttpApi(async (appHttpApi) => {
+      const response = await requestHttpApi(
+        appHttpApi,
+        "/squad-builder/squad-groups",
+        jsonPost({ name: "My Group" })
+      );
 
-    await expectUnauthorized(response);
-  });
+      await expectUnauthorized(response);
+    })
+  );
 
-  it("returns 401 for unauthenticated list owned squad groups", async () => {
-    const response = await requestHttpApi(
-      "/squad-builder/squad-groups/owned",
-      jsonPost({})
-    );
+  effectIt.effect(
+    "returns 401 for unauthenticated list owned squad groups",
+    () =>
+      withAppHttpApi(async (appHttpApi) => {
+        const response = await requestHttpApi(
+          appHttpApi,
+          "/squad-builder/squad-groups/owned",
+          jsonPost({})
+        );
 
-    await expectUnauthorized(response);
-  });
+        await expectUnauthorized(response);
+      })
+  );
 
-  it("returns 401 for unauthenticated get squad group detail", async () => {
-    const response = await requestHttpApi(
-      "/squad-builder/squad-groups/detail",
-      jsonPost({ groupId: 1 })
-    );
+  effectIt.effect(
+    "returns 401 for unauthenticated get squad group detail",
+    () =>
+      withAppHttpApi(async (appHttpApi) => {
+        const response = await requestHttpApi(
+          appHttpApi,
+          "/squad-builder/squad-groups/detail",
+          jsonPost({ groupId: 1 })
+        );
 
-    await expectUnauthorized(response);
-  });
+        await expectUnauthorized(response);
+      })
+  );
 
-  it("ignores actorUserId in create payload and derives actor from session", async () => {
-    const user1 = await createSignedInUser("spoof-user1");
-    const user2 = await createSignedInUser("spoof-user2");
+  effectIt.effect(
+    "ignores actorUserId in create payload and derives actor from session",
+    () =>
+      withAppHttpApi(async (appHttpApi) => {
+        const user1 = await createSignedInUser("spoof-user1");
+        const user2 = await createSignedInUser("spoof-user2");
 
-    const createResponse = await requestHttpApi(
-      "/squad-builder/squad-groups",
-      jsonPost({ actorUserId: user2.id, name: "Spoofed Group" }, user1.cookie)
-    );
+        const createResponse = await requestHttpApi(
+          appHttpApi,
+          "/squad-builder/squad-groups",
+          jsonPost(
+            { actorUserId: user2.id, name: "Spoofed Group" },
+            user1.cookie
+          )
+        );
 
-    expect(createResponse.status).toBe(200);
+        expect(createResponse.status).toBe(200);
 
-    const user1OwnedResponse = await requestHttpApi(
-      "/squad-builder/squad-groups/owned",
-      jsonPost({}, user1.cookie)
-    );
-    expect(user1OwnedResponse.status).toBe(200);
-    const user1Owned = Schema.decodeUnknownSync(
-      Schema.Array(SquadGroupSummarySchema)
-    )(await user1OwnedResponse.json());
-    expect(user1Owned).toHaveLength(1);
-    expect(user1Owned[0]).toMatchObject({ name: "Spoofed Group" });
+        const user1OwnedResponse = await requestHttpApi(
+          appHttpApi,
+          "/squad-builder/squad-groups/owned",
+          jsonPost({}, user1.cookie)
+        );
+        expect(user1OwnedResponse.status).toBe(200);
+        const user1Owned = Schema.decodeUnknownSync(
+          Schema.Array(SquadGroupSummarySchema)
+        )(await user1OwnedResponse.json());
+        expect(user1Owned).toHaveLength(1);
+        expect(user1Owned[0]).toMatchObject({ name: "Spoofed Group" });
 
-    const user2OwnedResponse = await requestHttpApi(
-      "/squad-builder/squad-groups/owned",
-      jsonPost({}, user2.cookie)
-    );
-    expect(user2OwnedResponse.status).toBe(200);
-    const user2Owned = await user2OwnedResponse.json();
-    expect(user2Owned).toHaveLength(0);
-  });
+        const user2OwnedResponse = await requestHttpApi(
+          appHttpApi,
+          "/squad-builder/squad-groups/owned",
+          jsonPost({}, user2.cookie)
+        );
+        expect(user2OwnedResponse.status).toBe(200);
+        const user2Owned = await user2OwnedResponse.json();
+        expect(user2Owned).toHaveLength(0);
+      })
+  );
 
-  it("authenticated user only sees their own squad groups", async () => {
-    const user1 = await createSignedInUser("owner-1");
-    const user2 = await createSignedInUser("owner-2");
+  effectIt.effect("authenticated user only sees their own squad groups", () =>
+    withAppHttpApi(async (appHttpApi) => {
+      const user1 = await createSignedInUser("owner-1");
+      const user2 = await createSignedInUser("owner-2");
 
-    const response1 = await requestHttpApi(
-      "/squad-builder/squad-groups",
-      jsonPost({ name: "User1 Group" }, user1.cookie)
-    );
-    expect(response1.status).toBe(200);
+      const response1 = await requestHttpApi(
+        appHttpApi,
+        "/squad-builder/squad-groups",
+        jsonPost({ name: "User1 Group" }, user1.cookie)
+      );
+      expect(response1.status).toBe(200);
 
-    const response2 = await requestHttpApi(
-      "/squad-builder/squad-groups",
-      jsonPost({ name: "User2 Group" }, user2.cookie)
-    );
-    expect(response2.status).toBe(200);
+      const response2 = await requestHttpApi(
+        appHttpApi,
+        "/squad-builder/squad-groups",
+        jsonPost({ name: "User2 Group" }, user2.cookie)
+      );
+      expect(response2.status).toBe(200);
 
-    const owned1 = await requestHttpApi(
-      "/squad-builder/squad-groups/owned",
-      jsonPost({}, user1.cookie)
-    );
-    expect(owned1.status).toBe(200);
-    const owned1Json = Schema.decodeUnknownSync(
-      Schema.Array(SquadGroupSummarySchema)
-    )(await owned1.json());
-    expect(owned1Json).toHaveLength(1);
-    expect(owned1Json[0]).toMatchObject({ name: "User1 Group" });
+      const owned1 = await requestHttpApi(
+        appHttpApi,
+        "/squad-builder/squad-groups/owned",
+        jsonPost({}, user1.cookie)
+      );
+      expect(owned1.status).toBe(200);
+      const owned1Json = Schema.decodeUnknownSync(
+        Schema.Array(SquadGroupSummarySchema)
+      )(await owned1.json());
+      expect(owned1Json).toHaveLength(1);
+      expect(owned1Json[0]).toMatchObject({ name: "User1 Group" });
 
-    const owned2 = await requestHttpApi(
-      "/squad-builder/squad-groups/owned",
-      jsonPost({}, user2.cookie)
-    );
-    expect(owned2.status).toBe(200);
-    const owned2Json = Schema.decodeUnknownSync(
-      Schema.Array(SquadGroupSummarySchema)
-    )(await owned2.json());
-    expect(owned2Json).toHaveLength(1);
-    expect(owned2Json[0]).toMatchObject({ name: "User2 Group" });
-  });
+      const owned2 = await requestHttpApi(
+        appHttpApi,
+        "/squad-builder/squad-groups/owned",
+        jsonPost({}, user2.cookie)
+      );
+      expect(owned2.status).toBe(200);
+      const owned2Json = Schema.decodeUnknownSync(
+        Schema.Array(SquadGroupSummarySchema)
+      )(await owned2.json());
+      expect(owned2Json).toHaveLength(1);
+      expect(owned2Json[0]).toMatchObject({ name: "User2 Group" });
+    })
+  );
 
-  it("only the owner can permanently delete a squad group", async () => {
-    const owner = await createSignedInUser("delete-owner");
-    const otherUser = await createSignedInUser("delete-other");
-    const createResponse = await requestHttpApi(
-      "/squad-builder/squad-groups",
-      jsonPost({ name: "Delete Me" }, owner.cookie)
-    );
-    expect(createResponse.status).toBe(200);
-    const created = Schema.decodeUnknownSync(SquadGroupSummarySchema)(
-      await createResponse.json()
-    );
+  effectIt.effect("only the owner can permanently delete a squad group", () =>
+    withAppHttpApi(async (appHttpApi) => {
+      const owner = await createSignedInUser("delete-owner");
+      const otherUser = await createSignedInUser("delete-other");
+      const createResponse = await requestHttpApi(
+        appHttpApi,
+        "/squad-builder/squad-groups",
+        jsonPost({ name: "Delete Me" }, owner.cookie)
+      );
+      expect(createResponse.status).toBe(200);
+      const created = Schema.decodeUnknownSync(SquadGroupSummarySchema)(
+        await createResponse.json()
+      );
 
-    const forbiddenResponse = await requestHttpApi(
-      "/squad-builder/squad-groups/delete",
-      jsonPost({ groupId: created.groupId }, otherUser.cookie)
-    );
-    expect(forbiddenResponse.status).toBe(403);
+      const forbiddenResponse = await requestHttpApi(
+        appHttpApi,
+        "/squad-builder/squad-groups/delete",
+        jsonPost({ groupId: created.groupId }, otherUser.cookie)
+      );
+      expect(forbiddenResponse.status).toBe(403);
 
-    const deleteResponse = await requestHttpApi(
-      "/squad-builder/squad-groups/delete",
-      jsonPost({ groupId: created.groupId }, owner.cookie)
-    );
-    expect(deleteResponse.status).toBe(200);
-    await expect(deleteResponse.json()).resolves.toEqual({
-      groupId: created.groupId,
-    });
+      const deleteResponse = await requestHttpApi(
+        appHttpApi,
+        "/squad-builder/squad-groups/delete",
+        jsonPost({ groupId: created.groupId }, owner.cookie)
+      );
+      expect(deleteResponse.status).toBe(200);
+      await expect(deleteResponse.json()).resolves.toEqual({
+        groupId: created.groupId,
+      });
 
-    const detailResponse = await requestHttpApi(
-      "/squad-builder/squad-groups/detail",
-      jsonPost({ groupId: created.groupId }, owner.cookie)
-    );
-    expect(detailResponse.status).toBe(404);
-  });
+      const detailResponse = await requestHttpApi(
+        appHttpApi,
+        "/squad-builder/squad-groups/detail",
+        jsonPost({ groupId: created.groupId }, owner.cookie)
+      );
+      expect(detailResponse.status).toBe(404);
+    })
+  );
 
-  it("rejects a warmed session immediately after admin privileges are removed", async () => {
-    const admin = await createSignedInUser("revoked-admin");
-    await testDb
-      .update(user)
-      .set({ role: "admin" })
-      .where(eq(user.id, admin.id));
+  effectIt.effect(
+    "rejects a warmed session immediately after admin privileges are removed",
+    () =>
+      withAppHttpApi(async (appHttpApi) => {
+        const admin = await createSignedInUser("revoked-admin");
+        await testDb
+          .update(user)
+          .set({ role: "admin" })
+          .where(eq(user.id, admin.id));
 
-    const warmedResponse = await requestHttpApi(
-      "/events",
-      jsonPost(
-        { endTime: "2030-01-01T00:00:00.000Z", name: "Warmed Admin Event" },
-        admin.cookie
-      )
-    );
-    expect(warmedResponse.status).toBe(200);
+        const warmedResponse = await requestHttpApi(
+          appHttpApi,
+          "/events",
+          jsonPost(
+            {
+              endTime: "2030-01-01T00:00:00.000Z",
+              name: "Warmed Admin Event",
+            },
+            admin.cookie
+          )
+        );
+        expect(warmedResponse.status).toBe(200);
 
-    await testDb
-      .update(user)
-      .set({ role: "user" })
-      .where(eq(user.id, admin.id));
+        await testDb
+          .update(user)
+          .set({ role: "user" })
+          .where(eq(user.id, admin.id));
 
-    const revokedResponse = await requestHttpApi(
-      "/events",
-      jsonPost(
-        { endTime: "2030-01-02T00:00:00.000Z", name: "Should Be Rejected" },
-        admin.cookie
-      )
-    );
-    expect(revokedResponse.status).not.toBe(200);
-    await expect(revokedResponse.json()).resolves.toMatchObject({
-      _tag: "EventForbidden",
-    });
-  });
+        const revokedResponse = await requestHttpApi(
+          appHttpApi,
+          "/events",
+          jsonPost(
+            {
+              endTime: "2030-01-02T00:00:00.000Z",
+              name: "Should Be Rejected",
+            },
+            admin.cookie
+          )
+        );
+        expect(revokedResponse.status).not.toBe(200);
+        await expect(revokedResponse.json()).resolves.toMatchObject({
+          _tag: "EventForbidden",
+        });
+      })
+  );
 
-  it("accepts a warmed session immediately after verification is granted", async () => {
-    const userToVerify = await createSignedInUser("newly-verified", false);
+  effectIt.effect(
+    "accepts a warmed session immediately after verification is granted",
+    () =>
+      withAppHttpApi(async (appHttpApi) => {
+        const userToVerify = await createSignedInUser("newly-verified", false);
 
-    const warmedResponse = await requestHttpApi(
-      "/squad-builder/squad-groups",
-      jsonPost({ name: "Before Verification" }, userToVerify.cookie)
-    );
-    expect(warmedResponse.status).toBe(403);
+        const warmedResponse = await requestHttpApi(
+          appHttpApi,
+          "/squad-builder/squad-groups",
+          jsonPost({ name: "Before Verification" }, userToVerify.cookie)
+        );
+        expect(warmedResponse.status).toBe(403);
 
-    await testDb
-      .update(user)
-      .set({ verified: true })
-      .where(eq(user.id, userToVerify.id));
+        await testDb
+          .update(user)
+          .set({ verified: true })
+          .where(eq(user.id, userToVerify.id));
 
-    const verifiedResponse = await requestHttpApi(
-      "/squad-builder/squad-groups",
-      jsonPost({ name: "After Verification" }, userToVerify.cookie)
-    );
-    expect(verifiedResponse.status).toBe(200);
-  });
+        const verifiedResponse = await requestHttpApi(
+          appHttpApi,
+          "/squad-builder/squad-groups",
+          jsonPost({ name: "After Verification" }, userToVerify.cookie)
+        );
+        expect(verifiedResponse.status).toBe(200);
+      })
+  );
 });
