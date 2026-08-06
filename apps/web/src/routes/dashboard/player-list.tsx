@@ -14,8 +14,9 @@ const PlayerListRoute = () => {
 
 export const Route = createFileRoute("/dashboard/player-list")({
   component: PlayerListRoute,
-  loader: ({ context }) =>
-    preloadAtomResults(context.atomRegistry, [usersAtom]),
+  loader: async ({ context }) => {
+    await preloadAtomResults(context.atomRegistry, [usersAtom]);
+  },
   staticData: {
     crumb: "Lista graczy",
   },

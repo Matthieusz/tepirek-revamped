@@ -20,12 +20,13 @@ const BetsAddRoute = () => {
 export const Route = createFileRoute("/dashboard/events/bets/add")({
   component: BetsAddRoute,
   errorComponent: EventsRouteError,
-  loader: ({ context }) =>
-    preloadAtomResults(context.atomRegistry, [
+  loader: async ({ context }) => {
+    await preloadAtomResults(context.atomRegistry, [
       eventsAtom,
       heroesAtom,
       verifiedUsersAtom,
-    ]),
+    ]);
+  },
   pendingComponent: EventsRoutePending,
   staticData: {
     crumb: "Dodaj obstawienie",

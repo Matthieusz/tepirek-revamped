@@ -201,8 +201,11 @@ export const waitForAtomResults = async (
   atoms: readonly AsyncResultAtom[]
 ): Promise<void> => {
   await Promise.all(
-    atoms.map((atom) =>
-      Effect.runPromise(getResult(registry, atom, { suspendOnWaiting: true }))
+    atoms.map(
+      async (atom) =>
+        await Effect.runPromise(
+          getResult(registry, atom, { suspendOnWaiting: true })
+        )
     )
   );
 };

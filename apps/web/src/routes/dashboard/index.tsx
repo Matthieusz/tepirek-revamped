@@ -13,8 +13,9 @@ const DashboardHomeRoute = () => {
 
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardHomeRoute,
-  loader: ({ context }) =>
-    preloadAtomResults(context.atomRegistry, [announcementsAtom]),
+  loader: async ({ context }) => {
+    await preloadAtomResults(context.atomRegistry, [announcementsAtom]);
+  },
   staticData: {
     crumb: "Strona główna",
   },

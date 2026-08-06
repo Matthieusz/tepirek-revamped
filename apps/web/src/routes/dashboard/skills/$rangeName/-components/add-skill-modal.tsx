@@ -86,14 +86,15 @@ export const AddSkillModal = ({
         },
         mode: { validation: "onSubmit" },
         onSubmit: (submitArgs: SkillSubmitArgs, { decoded }) =>
-          formSubmission(() =>
-            submitArgs.createSkill({
-              link: decoded.link,
-              mastery: decoded.mastery,
-              name: decoded.name,
-              professionId: decoded.professionId,
-              rangeId: submitArgs.rangeId,
-            })
+          formSubmission(
+            async () =>
+              await submitArgs.createSkill({
+                link: decoded.link,
+                mastery: decoded.mastery,
+                name: decoded.name,
+                professionId: decoded.professionId,
+                rangeId: submitArgs.rangeId,
+              })
           ),
       }),
     []
@@ -145,7 +146,9 @@ export const AddSkillModal = ({
           key={defaultProfessionId ?? "no-default-profession"}
         >
           <EffectForm
-            action={() => submit({ createSkill, rangeId: defaultRangeId })}
+            action={() => {
+              submit({ createSkill, rangeId: defaultRangeId });
+            }}
             submitResult={submitResult}
           >
             <ResponsiveDialogHeader>
@@ -183,7 +186,9 @@ export const AddSkillModal = ({
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
-                onClick={() => handleOpenChange(false)}
+                onClick={() => {
+                  handleOpenChange(false);
+                }}
                 type="button"
                 variant="outline"
               >

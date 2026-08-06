@@ -21,8 +21,9 @@ const RankingRoute = () => {
 export const Route = createFileRoute("/dashboard/events/ranking")({
   component: RankingRoute,
   errorComponent: EventsRouteError,
-  loader: ({ context }) =>
-    preloadAtomResults(context.atomRegistry, [eventsAtom]),
+  loader: async ({ context }) => {
+    await preloadAtomResults(context.atomRegistry, [eventsAtom]);
+  },
   pendingComponent: EventsRoutePending,
   staticData: {
     crumb: "Ranking",

@@ -269,7 +269,7 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
     <ulepaForm.Initialize
       defaultValues={{
         itemLevel: ULEPA_DEFAULT_ITEM_LEVEL,
-        itemRarity: "legendarny" as Rarity,
+        itemRarity: "legendarny",
       }}
     >
       <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -297,7 +297,9 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
             <div className="p-6">
               {/* Calculator input is disposable and intentionally has no draft blocker. */}
               <EffectForm
-                action={() => submit()}
+                action={() => {
+                  submit();
+                }}
                 className="grid gap-4"
                 submitResult={submitResult}
               >

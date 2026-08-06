@@ -71,7 +71,9 @@ export const CreateSquadGroupFrame = ({
               disabled={isCreating}
               id="new-squad-group-name"
               maxLength={80}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => {
+                setName(event.target.value);
+              }}
               onKeyDown={(event) => {
                 if (
                   event.key === "Escape" &&

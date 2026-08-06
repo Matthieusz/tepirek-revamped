@@ -46,7 +46,7 @@ const announcementForm = FormReact.make(announcementFormBuilder, {
   },
   mode: { validation: "onSubmit" },
   onSubmit: (createAnnouncement: CreateAnnouncement, { decoded }) =>
-    formSubmission(() => createAnnouncement(decoded)),
+    formSubmission(async () => await createAnnouncement(decoded)),
 });
 
 export const AddAnnouncementModal = ({
@@ -87,7 +87,9 @@ export const AddAnnouncementModal = ({
           defaultValues={{ description: "", title: "" }}
         >
           <EffectForm
-            action={() => submit(() => createAnnouncement)}
+            action={() => {
+              submit(() => createAnnouncement);
+            }}
             submitResult={submitResult}
           >
             <ResponsiveDialogHeader>
@@ -112,7 +114,9 @@ export const AddAnnouncementModal = ({
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
-                onClick={() => handleOpenChange(false)}
+                onClick={() => {
+                  handleOpenChange(false);
+                }}
                 type="button"
                 variant="outline"
               >

@@ -141,12 +141,13 @@ export const EditBetModal = ({
         fields: { userIds: EditMembersField },
         mode: { validation: "onSubmit" },
         onSubmit: (submitArgs: EditBetSubmitArgs, { decoded }) =>
-          formSubmission(() =>
-            submitArgs.editBet({
-              betId: submitArgs.betId,
-              newUserIds: decoded.userIds,
-              refreshInput: submitArgs.refreshInput,
-            })
+          formSubmission(
+            async () =>
+              await submitArgs.editBet({
+                betId: submitArgs.betId,
+                newUserIds: decoded.userIds,
+                refreshInput: submitArgs.refreshInput,
+              })
           ),
       }),
     []
@@ -193,7 +194,7 @@ export const EditBetModal = ({
           key={currentMemberIds.join("\u0000")}
         >
           <EffectForm
-            action={() =>
+            action={() => {
               submit({
                 betId,
                 editBet: async (update) => {
@@ -204,8 +205,8 @@ export const EditBetModal = ({
                   return result;
                 },
                 refreshInput,
-              })
-            }
+              });
+            }}
             submitResult={submitResult}
           >
             <ResponsiveDialogHeader>
@@ -227,7 +228,9 @@ export const EditBetModal = ({
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
-                onClick={() => handleOpenChange(false)}
+                onClick={() => {
+                  handleOpenChange(false);
+                }}
                 type="button"
                 variant="outline"
               >

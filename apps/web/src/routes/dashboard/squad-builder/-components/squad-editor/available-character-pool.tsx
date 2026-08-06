@@ -621,9 +621,9 @@ export const AvailableCharacterPool = ({
                             aria-expanded={!isCollapsed}
                             aria-label={`${isCollapsed ? "Rozwiń" : "Zwiń"} konto ${accountGroup.accountDisplayName}`}
                             className="ms-auto size-8 shrink-0"
-                            onClick={() =>
-                              toggleAccountGroup(accountGroup.accountId)
-                            }
+                            onClick={() => {
+                              toggleAccountGroup(accountGroup.accountId);
+                            }}
                             size="icon-sm"
                             type="button"
                             variant="ghost"

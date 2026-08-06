@@ -43,11 +43,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
   (it) => {
     it.effect("lists only Margonem accounts owned by the actor", () =>
       Effect.gen(function* testEffect() {
-        const member = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "effect-owned-owner" })
+        const member = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "effect-owned-owner" })
         );
-        const other = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "effect-owned-other" })
+        const other = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "effect-owned-other" })
         );
 
         const [ownedAccount] = yield* Effect.promise(() =>
@@ -105,8 +105,8 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("creates pending account imports through the Effect store", () =>
       Effect.gen(function* testEffect() {
-        const member = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "effect-pending-user" })
+        const member = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "effect-pending-user" })
         );
         const pending = yield* AccountImportStoreService.use((store) =>
           store.createPendingImport({
@@ -162,8 +162,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
       "loads accounts and stores pending refetch previews through the Effect store",
       () =>
         Effect.gen(function* testEffect() {
-          const member = yield* Effect.promise(() =>
-            createVerifiedMember({ id: "effect-refetch-owner" })
+          const member = yield* Effect.promise(
+            async () =>
+              await createVerifiedMember({ id: "effect-refetch-owner" })
           );
           const [account] = yield* Effect.promise(() =>
             testDb
@@ -263,8 +264,8 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
       "applies pending account refetches through the Effect store",
       () =>
         Effect.gen(function* testEffect() {
-          const member = yield* Effect.promise(() =>
-            createVerifiedMember({ id: "effect-apply-owner" })
+          const member = yield* Effect.promise(
+            async () => await createVerifiedMember({ id: "effect-apply-owner" })
           );
           const [account] = yield* Effect.promise(() =>
             testDb
@@ -446,8 +447,8 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("confirms pending account imports through the Effect store", () =>
       Effect.gen(function* testEffect() {
-        const member = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "effect-confirm-user" })
+        const member = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "effect-confirm-user" })
         );
         const [pending] = yield* Effect.promise(() =>
           testDb

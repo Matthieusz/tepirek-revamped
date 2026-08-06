@@ -26,5 +26,8 @@ export const integrationHandler = <
         disableLogger: true,
       })
     ),
-    (runtime) => Effect.promise(() => runtime.dispose())
+    (runtime) =>
+      Effect.promise(async () => {
+        await runtime.dispose();
+      })
   );

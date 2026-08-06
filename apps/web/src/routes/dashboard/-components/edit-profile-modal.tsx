@@ -40,7 +40,7 @@ const profileForm = FormReact.make(profileFormBuilder, {
   fields: { name: EffectTextField },
   mode: { validation: "onSubmit" },
   onSubmit: (updateProfile: UpdateProfile, { decoded }) =>
-    formSubmission(() => updateProfile(decoded)),
+    formSubmission(async () => await updateProfile(decoded)),
 });
 
 export const EditProfileModal = ({
@@ -82,7 +82,9 @@ export const EditProfileModal = ({
               key={defaultName}
             >
               <EffectForm
-                action={() => submit(() => updateProfile)}
+                action={() => {
+                  submit(() => updateProfile);
+                }}
                 submitResult={submitResult}
               >
                 <ResponsiveDialogHeader>
@@ -101,7 +103,9 @@ export const EditProfileModal = ({
                 <ResponsiveDialogFooter>
                   <Button
                     disabled={submitResult.waiting}
-                    onClick={() => handleOpenChange(false)}
+                    onClick={() => {
+                      handleOpenChange(false);
+                    }}
                     type="button"
                     variant="outline"
                   >

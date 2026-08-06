@@ -92,13 +92,13 @@ const squadFilterForm = FormReact.make(squadFilterFormBuilder, {
     }: { readonly onApply: (value: SquadGroupListFilterFormState) => void },
     { decoded }
   ) =>
-    Effect.sync(() =>
+    Effect.sync(() => {
       onApply({
         maxLevel: decoded.maxLevel.trim(),
         minLevel: decoded.minLevel.trim(),
         nameQuery: decoded.nameQuery.trim(),
-      })
-    ),
+      });
+    }),
 });
 
 const hasActiveFilters = (filters: SquadGroupListFilterFormState): boolean =>
@@ -122,7 +122,9 @@ const SquadGroupListFilters = ({
   return (
     <squadFilterForm.Initialize defaultValues={emptyFilterForm}>
       <EffectForm
-        action={() => submit({ onApply })}
+        action={() => {
+          submit({ onApply });
+        }}
         className="grid gap-3 border-b border-border px-4 py-4 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_auto] sm:items-end"
         submitResult={submitResult}
       >
@@ -382,7 +384,9 @@ export const SquadGroupLibrary = ({
 
   return (
     <Tabs
-      onValueChange={(value) => setActiveTab(value as SquadListTab)}
+      onValueChange={(value) => {
+        setActiveTab(value as SquadListTab);
+      }}
       value={activeTab}
       className={"flex-col"}
     >
@@ -433,7 +437,9 @@ export const SquadGroupLibrary = ({
           <TabsContent aria-label="Publiczne grupy składów" value="public">
             <SquadGroupListFilters
               onApply={setAppliedFilters}
-              onClear={() => setAppliedFilters(emptyFilterForm)}
+              onClear={() => {
+                setAppliedFilters(emptyFilterForm);
+              }}
             />
             <CollectionPanel
               filtered={activeFilters}

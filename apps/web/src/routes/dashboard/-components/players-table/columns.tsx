@@ -97,8 +97,13 @@ const ActionCell = ({ player }: { player: Player }) => {
           <DropdownMenuItem
             disabled={pendingAction === "verified"}
             onClick={() => {
-              runAction("verified", () =>
-                setVerified({ userId: player.id, verified: !player.verified })
+              runAction(
+                "verified",
+                async () =>
+                  await setVerified({
+                    userId: player.id,
+                    verified: !player.verified,
+                  })
               );
             }}
           >
@@ -112,11 +117,13 @@ const ActionCell = ({ player }: { player: Player }) => {
           <DropdownMenuItem
             disabled={pendingAction === "role"}
             onClick={() => {
-              runAction("role", () =>
-                setRole({
-                  role: player.role === "admin" ? "user" : "admin",
-                  userId: player.id,
-                })
+              runAction(
+                "role",
+                async () =>
+                  await setRole({
+                    role: player.role === "admin" ? "user" : "admin",
+                    userId: player.id,
+                  })
               );
             }}
           >

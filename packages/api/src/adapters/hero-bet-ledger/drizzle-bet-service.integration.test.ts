@@ -247,26 +247,29 @@ effectIt.layer(testLayer)("HeroBetLedger characterization", (it) => {
       Effect.gen(function* testEffect() {
         const creationTime = new Date("2026-07-05T10:11:12.000Z");
 
-        const creator = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "ledger-create-admin" })
+        const creator = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "ledger-create-admin" })
         );
-        const firstMember = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "ledger-create-first",
-          })
+        const firstMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "ledger-create-first",
+            })
         );
-        const secondMember = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "ledger-create-second",
-          })
+        const secondMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "ledger-create-second",
+            })
         );
-        const thirdMember = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "ledger-create-third",
-          })
+        const thirdMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "ledger-create-third",
+            })
         );
-        const createdHero = yield* Effect.promise(() =>
-          createHero({ name: "Ledger Create Hero" })
+        const createdHero = yield* Effect.promise(
+          async () => await createHero({ name: "Ledger Create Hero" })
         );
 
         const bet = yield* withServices(
@@ -348,14 +351,14 @@ effectIt.layer(testLayer)("HeroBetLedger characterization", (it) => {
     "returns typed ledger errors for validation and not-found failures",
     () =>
       Effect.gen(function* testEffect() {
-        const creator = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "ledger-errors-admin" })
+        const creator = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "ledger-errors-admin" })
         );
-        const member = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "ledger-errors-member" })
+        const member = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "ledger-errors-member" })
         );
-        const createdHero = yield* Effect.promise(() =>
-          createHero({ name: "Ledger Errors Hero" })
+        const createdHero = yield* Effect.promise(
+          async () => await createHero({ name: "Ledger Errors Hero" })
         );
 
         yield* expectLedgerError(
@@ -402,25 +405,27 @@ effectIt.layer(testLayer)("HeroBetLedger characterization", (it) => {
     "distributes gold into point worth, rankings, vault rows, and paid-out toggles",
     () =>
       Effect.gen(function* testEffect() {
-        const creator = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "ledger-dist-admin" })
+        const creator = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "ledger-dist-admin" })
         );
-        const firstMember = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "ledger-dist-first",
-            image: "https://example.com/first.png",
-            name: "First Ledger Member",
-          })
+        const firstMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "ledger-dist-first",
+              image: "https://example.com/first.png",
+              name: "First Ledger Member",
+            })
         );
-        const secondMember = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "ledger-dist-second",
-            image: "https://example.com/second.png",
-            name: "Second Ledger Member",
-          })
+        const secondMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "ledger-dist-second",
+              image: "https://example.com/second.png",
+              name: "Second Ledger Member",
+            })
         );
-        const createdHero = yield* Effect.promise(() =>
-          createHero({ name: "Ledger Distribution Hero" })
+        const createdHero = yield* Effect.promise(
+          async () => await createHero({ name: "Ledger Distribution Hero" })
         );
         yield* withServices((ledger) =>
           ledger.createBet({
@@ -527,22 +532,23 @@ effectIt.layer(testLayer)("HeroBetLedger characterization", (it) => {
     "refreshes stats and distributed earnings when editing and deleting bets",
     () =>
       Effect.gen(function* testEffect() {
-        const creator = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "ledger-edit-admin" })
+        const creator = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "ledger-edit-admin" })
         );
-        const firstMember = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "ledger-edit-first" })
+        const firstMember = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "ledger-edit-first" })
         );
-        const secondMember = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "ledger-edit-second",
-          })
+        const secondMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "ledger-edit-second",
+            })
         );
-        const thirdMember = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "ledger-edit-third" })
+        const thirdMember = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "ledger-edit-third" })
         );
-        const createdHero = yield* Effect.promise(() =>
-          createHero({ name: "Ledger Edit Hero" })
+        const createdHero = yield* Effect.promise(
+          async () => await createHero({ name: "Ledger Edit Hero" })
         );
         const bet = yield* withServices((ledger) =>
           ledger.createBet({
@@ -643,26 +649,29 @@ effectIt.layer(testLayer)("HeroBetLedger characterization", (it) => {
     "keeps edit and distribution mutations coherent when they overlap",
     () =>
       Effect.gen(function* testEffect() {
-        const creator = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "ledger-overlap-admin" })
+        const creator = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "ledger-overlap-admin" })
         );
-        const firstMember = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "ledger-overlap-first",
-          })
+        const firstMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "ledger-overlap-first",
+            })
         );
-        const secondMember = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "ledger-overlap-second",
-          })
+        const secondMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "ledger-overlap-second",
+            })
         );
-        const thirdMember = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "ledger-overlap-third",
-          })
+        const thirdMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "ledger-overlap-third",
+            })
         );
-        const createdHero = yield* Effect.promise(() =>
-          createHero({ name: "Ledger Overlap Hero" })
+        const createdHero = yield* Effect.promise(
+          async () => await createHero({ name: "Ledger Overlap Hero" })
         );
         const bet = yield* withServices((ledger) =>
           ledger.createBet({
@@ -698,20 +707,23 @@ effectIt.layer(testLayer)("HeroBetLedger characterization", (it) => {
 
   it.effect("keeps deletion and distribution coherent when they overlap", () =>
     Effect.gen(function* testEffect() {
-      const creator = yield* Effect.promise(() =>
-        createVerifiedMember({
-          id: "ledger-delete-overlap-admin",
-        })
+      const creator = yield* Effect.promise(
+        async () =>
+          await createVerifiedMember({
+            id: "ledger-delete-overlap-admin",
+          })
       );
-      const member = yield* Effect.promise(() =>
-        createVerifiedMember({
-          id: "ledger-delete-overlap-member",
-        })
+      const member = yield* Effect.promise(
+        async () =>
+          await createVerifiedMember({
+            id: "ledger-delete-overlap-member",
+          })
       );
-      const createdHero = yield* Effect.promise(() =>
-        createHero({
-          name: "Ledger Delete Overlap Hero",
-        })
+      const createdHero = yield* Effect.promise(
+        async () =>
+          await createHero({
+            name: "Ledger Delete Overlap Hero",
+          })
       );
       const bet = yield* withServices((ledger) =>
         ledger.createBet({
@@ -739,33 +751,38 @@ effectIt.layer(testLayer)("HeroBetLedger characterization", (it) => {
 
   it.effect("does not mix aggregate rows across overlapping edits", () =>
     Effect.gen(function* testEffect() {
-      const creator = yield* Effect.promise(() =>
-        createVerifiedMember({
-          id: "ledger-two-edits-admin",
-        })
+      const creator = yield* Effect.promise(
+        async () =>
+          await createVerifiedMember({
+            id: "ledger-two-edits-admin",
+          })
       );
-      const firstMember = yield* Effect.promise(() =>
-        createVerifiedMember({
-          id: "ledger-two-edits-first",
-        })
+      const firstMember = yield* Effect.promise(
+        async () =>
+          await createVerifiedMember({
+            id: "ledger-two-edits-first",
+          })
       );
-      const secondMember = yield* Effect.promise(() =>
-        createVerifiedMember({
-          id: "ledger-two-edits-second",
-        })
+      const secondMember = yield* Effect.promise(
+        async () =>
+          await createVerifiedMember({
+            id: "ledger-two-edits-second",
+          })
       );
-      const thirdMember = yield* Effect.promise(() =>
-        createVerifiedMember({
-          id: "ledger-two-edits-third",
-        })
+      const thirdMember = yield* Effect.promise(
+        async () =>
+          await createVerifiedMember({
+            id: "ledger-two-edits-third",
+          })
       );
-      const fourthMember = yield* Effect.promise(() =>
-        createVerifiedMember({
-          id: "ledger-two-edits-fourth",
-        })
+      const fourthMember = yield* Effect.promise(
+        async () =>
+          await createVerifiedMember({
+            id: "ledger-two-edits-fourth",
+          })
       );
-      const createdHero = yield* Effect.promise(() =>
-        createHero({ name: "Ledger Two Edits Hero" })
+      const createdHero = yield* Effect.promise(
+        async () => await createHero({ name: "Ledger Two Edits Hero" })
       );
       const bet = yield* withServices((ledger) =>
         ledger.createBet({
@@ -808,26 +825,29 @@ effectIt.layer(testLayer)("HeroBetLedger characterization", (it) => {
 
   it.effect("allows independent hero ledgers to mutate concurrently", () =>
     Effect.gen(function* testEffect() {
-      const creator = yield* Effect.promise(() =>
-        createVerifiedMember({
-          id: "ledger-independent-admin",
-        })
+      const creator = yield* Effect.promise(
+        async () =>
+          await createVerifiedMember({
+            id: "ledger-independent-admin",
+          })
       );
-      const firstMember = yield* Effect.promise(() =>
-        createVerifiedMember({
-          id: "ledger-independent-first",
-        })
+      const firstMember = yield* Effect.promise(
+        async () =>
+          await createVerifiedMember({
+            id: "ledger-independent-first",
+          })
       );
-      const secondMember = yield* Effect.promise(() =>
-        createVerifiedMember({
-          id: "ledger-independent-second",
-        })
+      const secondMember = yield* Effect.promise(
+        async () =>
+          await createVerifiedMember({
+            id: "ledger-independent-second",
+          })
       );
-      const firstHero = yield* Effect.promise(() =>
-        createHero({ name: "Ledger Independent First" })
+      const firstHero = yield* Effect.promise(
+        async () => await createHero({ name: "Ledger Independent First" })
       );
-      const secondHero = yield* Effect.promise(() =>
-        createHero({ name: "Ledger Independent Second" })
+      const secondHero = yield* Effect.promise(
+        async () => await createHero({ name: "Ledger Independent Second" })
       );
 
       yield* Effect.all(
@@ -872,26 +892,29 @@ effectIt.layer(testLayer)("HeroBetLedger characterization", (it) => {
 
   it.effect("returns paginated bet row shapes with attached member rows", () =>
     Effect.gen(function* testEffect() {
-      const creator = yield* Effect.promise(() =>
-        createVerifiedMember({
-          id: "ledger-page-admin",
-          image: "https://example.com/admin.png",
-          name: "Ledger Admin",
-        })
+      const creator = yield* Effect.promise(
+        async () =>
+          await createVerifiedMember({
+            id: "ledger-page-admin",
+            image: "https://example.com/admin.png",
+            name: "Ledger Admin",
+          })
       );
-      const member = yield* Effect.promise(() =>
-        createVerifiedMember({
-          id: "ledger-page-member",
-          image: "https://example.com/member.png",
-          name: "Ledger Page Member",
-        })
+      const member = yield* Effect.promise(
+        async () =>
+          await createVerifiedMember({
+            id: "ledger-page-member",
+            image: "https://example.com/member.png",
+            name: "Ledger Page Member",
+          })
       );
-      const createdHero = yield* Effect.promise(() =>
-        createHero({
-          image: "https://example.com/hero.png",
-          level: 321,
-          name: "Ledger Page Hero",
-        })
+      const createdHero = yield* Effect.promise(
+        async () =>
+          await createHero({
+            image: "https://example.com/hero.png",
+            level: 321,
+            name: "Ledger Page Hero",
+          })
       );
 
       const olderBet = yield* withServices(

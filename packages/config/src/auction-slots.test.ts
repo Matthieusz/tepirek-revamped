@@ -99,9 +99,7 @@ describe("isLegalAuctionSlot", () => {
   });
 
   it("rejects round 5", () => {
-    expect(isLegalAuctionSlot({ ...legalSlot, round: 5 as number })).toBe(
-      false
-    );
+    expect(isLegalAuctionSlot({ ...legalSlot, round: 5 })).toBe(false);
   });
 
   it("rejects unrendered levels such as 35", () => {

@@ -173,9 +173,9 @@ const assertAdminMutationAllowed = Effect.fnUntraced(
     const { actorId, next, targetUser } = input;
     const nextRole = next.role ?? targetUser.role;
     const nextVerified = next.verified ?? targetUser.verified;
-    const willBeVerifiedAdmin = nextRole === "admin" && nextVerified === true;
+    const willBeVerifiedAdmin = nextRole === "admin" && nextVerified;
     const isCurrentlyVerifiedAdmin =
-      targetUser.role === "admin" && targetUser.verified === true;
+      targetUser.role === "admin" && targetUser.verified;
 
     if (!isCurrentlyVerifiedAdmin || willBeVerifiedAdmin) {
       return;

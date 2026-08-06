@@ -39,7 +39,7 @@ const professionForm = FormReact.make(professionFormBuilder, {
   fields: { name: EffectTextField },
   mode: { validation: "onSubmit" },
   onSubmit: (createProfession: CreateProfession, { decoded }) =>
-    formSubmission(() => createProfession(decoded)),
+    formSubmission(async () => await createProfession(decoded)),
 });
 
 export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
@@ -76,7 +76,9 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
       <ResponsiveDialogContent className="sm:max-w-[425px]">
         <professionForm.Initialize defaultValues={{ name: "" }}>
           <EffectForm
-            action={() => submit(() => createSkillProfession)}
+            action={() => {
+              submit(() => createSkillProfession);
+            }}
             submitResult={submitResult}
           >
             <ResponsiveDialogHeader>
@@ -95,7 +97,9 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
-                onClick={() => handleOpenChange(false)}
+                onClick={() => {
+                  handleOpenChange(false);
+                }}
                 type="button"
                 variant="outline"
               >

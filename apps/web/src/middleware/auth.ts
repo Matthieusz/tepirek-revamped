@@ -12,7 +12,7 @@ export const authMiddleware = createMiddleware().server(
       },
     });
 
-    return next({
+    return await next({
       context: { session },
     });
   }

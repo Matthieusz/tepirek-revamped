@@ -136,8 +136,10 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
         })
       );
 
-      app.on(["POST", "GET"], "/api/auth/*", (context) =>
-        auth.instance.handler(context.req.raw)
+      app.on(
+        ["POST", "GET"],
+        "/api/auth/*",
+        async (context) => await auth.instance.handler(context.req.raw)
       );
 
       app.get("/api/openapi.json", (context) => {
@@ -169,11 +171,13 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
         return await handler(new Request(context.req.raw, { headers }));
       };
 
-      app.use("/health", (context) =>
-        handleHttpApiRequest(context, healthHttpApi)
+      app.use(
+        "/health",
+        async (context) => await handleHttpApiRequest(context, healthHttpApi)
       );
-      app.use(appHttpApiMountPath, (context) =>
-        handleHttpApiRequest(context, appHttpApi)
+      app.use(
+        appHttpApiMountPath,
+        async (context) => await handleHttpApiRequest(context, appHttpApi)
       );
 
       app.get("/", (context) => context.text("OK"));

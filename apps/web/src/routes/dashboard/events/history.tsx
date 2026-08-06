@@ -20,8 +20,9 @@ const HistoryRoute = () => {
 export const Route = createFileRoute("/dashboard/events/history")({
   component: HistoryRoute,
   errorComponent: EventsRouteError,
-  loader: ({ context }) =>
-    preloadAtomResults(context.atomRegistry, [eventsAtom]),
+  loader: async ({ context }) => {
+    await preloadAtomResults(context.atomRegistry, [eventsAtom]);
+  },
   pendingComponent: EventsRoutePending,
   staticData: {
     crumb: "Historia obstawień",

@@ -10,12 +10,13 @@ import SquadBuilderAccountsPage from "@/routes/dashboard/squad-builder/-componen
 
 export const Route = createFileRoute("/dashboard/squad-builder/accounts")({
   component: SquadBuilderAccountsPage,
-  loader: ({ context }) =>
-    preloadAtomResults(context.atomRegistry, [
+  loader: async ({ context }) => {
+    await preloadAtomResults(context.atomRegistry, [
       ownedAccountsAtom,
       incomingAccountInvitesAtom,
       sharedAccountsAtom,
-    ]),
+    ]);
+  },
   staticData: {
     crumb: "Konta",
   },

@@ -61,13 +61,14 @@ const heroForm = FormReact.make(heroFormBuilder, {
   },
   mode: { validation: "onSubmit" },
   onSubmit: (createHero: CreateHero, { decoded }) =>
-    formSubmission(() =>
-      createHero({
-        eventId: decoded.eventId,
-        ...(decoded.image ? { image: decoded.image } : {}),
-        level: decoded.level,
-        name: decoded.name,
-      })
+    formSubmission(
+      async () =>
+        await createHero({
+          eventId: decoded.eventId,
+          ...(decoded.image ? { image: decoded.image } : {}),
+          level: decoded.level,
+          name: decoded.name,
+        })
     ),
 });
 
@@ -156,7 +157,9 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
-                onClick={() => handleOpenChange(false)}
+                onClick={() => {
+                  handleOpenChange(false);
+                }}
                 type="button"
                 variant="outline"
               >

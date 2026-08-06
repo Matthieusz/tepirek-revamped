@@ -268,11 +268,12 @@ const addBetForm = FormReact.make(addBetFormBuilder, {
   },
   mode: { validation: "onSubmit" },
   onSubmit: (createBet: CreateBet, { decoded }) =>
-    formSubmission(() =>
-      createBet({
-        heroId: decoded.heroId,
-        userIds: decoded.userIds,
-      })
+    formSubmission(
+      async () =>
+        await createBet({
+          heroId: decoded.heroId,
+          userIds: decoded.userIds,
+        })
     ),
 });
 

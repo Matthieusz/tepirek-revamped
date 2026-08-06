@@ -29,7 +29,7 @@ export const setup = async () => {
     await Effect.runPromise(
       Effect.gen(function* verifyTestDatabaseConnection() {
         const testPool = yield* SharedPostgresPool;
-        yield* Effect.promise(() => testPool.query("select 1"));
+        yield* Effect.promise(async () => await testPool.query("select 1"));
       }).pipe(
         Effect.provide(
           makeSharedPostgresPoolLayer(Redacted.make(testDatabaseUrl))

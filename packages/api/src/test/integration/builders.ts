@@ -65,8 +65,8 @@ const createTestUser = async ({
   return testUser;
 };
 
-export const createVerifiedMember = (overrides: TestUserOverrides = {}) =>
-  createTestUser({ ...overrides, role: "user", verified: true });
+export const createVerifiedMember = async (overrides: TestUserOverrides = {}) =>
+  await createTestUser({ ...overrides, role: "user", verified: true });
 
 interface TestEventOverrides {
   color?: string;

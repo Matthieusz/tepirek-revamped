@@ -97,7 +97,7 @@ export const makeSharedPostgresPoolLayer = (
                 operation: "connect",
               }),
             }),
-          try: () => pool.query("SELECT 1"),
+          try: async () => await pool.query("SELECT 1"),
         }).pipe(
           Effect.timeoutOrElse({
             duration: POSTGRES_CONNECTION_TIMEOUT,
@@ -113,15 +113,18 @@ export const makeSharedPostgresPoolLayer = (
               ),
           }),
           Effect.onError(() =>
-            Effect.promise(() => pool.end()).pipe(
-              Effect.timeoutOption(POSTGRES_POOL_CLOSE_TIMEOUT)
-            )
+            Effect.promise(async () => {
+              await pool.end();
+            }).pipe(Effect.timeoutOption(POSTGRES_POOL_CLOSE_TIMEOUT))
           )
         );
 
         return pool;
       }),
-      (pool) => Effect.promise(() => pool.end()),
+      (pool) =>
+        Effect.promise(async () => {
+          await pool.end();
+        }),
       { interruptible: true }
     )
   );

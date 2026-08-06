@@ -11,6 +11,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [{ title: createPageTitle("Strona główna") }],
   }),
-  loader: ({ context }) =>
-    preloadAtomResults(context.atomRegistry, [healthAtom]),
+  loader: async ({ context }) => {
+    await preloadAtomResults(context.atomRegistry, [healthAtom]);
+  },
 });

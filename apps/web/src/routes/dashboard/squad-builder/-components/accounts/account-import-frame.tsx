@@ -104,7 +104,9 @@ const ProfileUrlsField: FormReact.FieldComponent<
         id={fieldId}
         name={field.path}
         onBlur={field.onBlur}
-        onChange={(event) => field.onChange(event.target.value)}
+        onChange={(event) => {
+          field.onChange(event.target.value);
+        }}
         placeholder="https://www.margonem.pl/profile/view,7298897"
         value={field.value}
       />
@@ -127,7 +129,7 @@ const accountPreviewForm = FormReact.make(accountPreviewFormBuilder, {
   onSubmit: (
     previewOwnedAccountImports: PreviewOwnedAccountImports,
     { decoded }
-  ) => formSubmission(() => previewOwnedAccountImports(decoded)),
+  ) => formSubmission(async () => await previewOwnedAccountImports(decoded)),
 });
 
 const DEFAULT_ACCOUNT_PREVIEW_VALUES = { profileUrls: "" } as const;
@@ -164,11 +166,12 @@ const makeAccountConfirmationForm = () =>
       }: AccountConfirmationSubmitArgs,
       { decoded }
     ) =>
-      formSubmission(() =>
-        confirmOwnedAccountImport({
-          displayName: decoded.displayName.trim(),
-          pendingImportId,
-        })
+      formSubmission(
+        async () =>
+          await confirmOwnedAccountImport({
+            displayName: decoded.displayName.trim(),
+            pendingImportId,
+          })
       ),
   });
 
@@ -318,7 +321,7 @@ const PreviewRow = ({
           >
             <EffectFormFeedback result={submitResult} />
             <EffectForm
-              action={() =>
+              action={() => {
                 submit({
                   confirmOwnedAccountImport: async (payload) => {
                     const result = await onConfirm(item, payload);
@@ -327,8 +330,8 @@ const PreviewRow = ({
                     return result;
                   },
                   pendingImportId: item.pendingImportId,
-                })
-              }
+                });
+              }}
               className="flex flex-wrap items-end gap-2"
               submitResult={submitResult}
             >
@@ -406,7 +409,9 @@ const ImportPanel = ({
 
       <Stepper
         value={activeStep}
-        onValueChange={(value) => onStepChange(value === 2 ? 2 : 1)}
+        onValueChange={(value) => {
+          onStepChange(value === 2 ? 2 : 1);
+        }}
       >
         <StepperNav className="border-b border-border px-5 py-3">
           <StepperItem
@@ -578,9 +583,11 @@ export const AccountImportFrame = () => {
         isConfirming={confirmingId !== null}
         isPreviewPending={submitResult.waiting}
         onClear={clearImport}
-        onConfirm={(item, payload) => {
+        onConfirm={async (item, payload) => {
           setConfirmingId(item.pendingImportId);
-          return confirmImport(payload).finally(() => setConfirmingId(null));
+          return await confirmImport(payload).finally(() => {
+            setConfirmingId(null);
+          });
         }}
         onConfirmed={(item) => {
           setPreviewItems((current) =>
@@ -593,7 +600,9 @@ export const AccountImportFrame = () => {
           toast.success("Konto zostało zapisane");
         }}
         onStepChange={setActiveStep}
-        onSubmitPreview={() => submitPreview(() => previewImports)}
+        onSubmitPreview={() => {
+          submitPreview(() => previewImports);
+        }}
         previewItems={previewItems}
         submitResult={submitResult}
       />

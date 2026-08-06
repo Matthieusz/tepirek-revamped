@@ -105,7 +105,9 @@ const GoldAmountField: FormReact.FieldComponent<
         id={fieldId}
         name={field.path}
         onBlur={field.onBlur}
-        onChange={(event) => field.onChange(event.target.value)}
+        onChange={(event) => {
+          field.onChange(event.target.value);
+        }}
         placeholder="np. 2g lub 50000000"
         type="text"
         value={field.value}
@@ -229,7 +231,9 @@ const HeroField: FormReact.FieldComponent<string, HeroFieldProps> = ({
       <Select
         disabled={props.disabled}
         name={field.path}
-        onValueChange={(value) => field.onChange(value ?? ALL_FILTER)}
+        onValueChange={(value) => {
+          field.onChange(value ?? ALL_FILTER);
+        }}
         value={props.disabled ? "" : field.value}
       >
         <SelectTrigger
@@ -345,12 +349,13 @@ const distributeGoldForm = FormReact.make(distributeGoldFormBuilder, {
   mode: { validation: "onSubmit" },
   onSubmit: (distributeGold: DistributeGold, { decoded }) => {
     const goldAmount = parseGoldAmount(decoded.goldAmount);
-    return formSubmission(() =>
-      distributeGold({
-        eventId: decoded.eventId,
-        goldAmount,
-        heroId: decoded.heroId,
-      })
+    return formSubmission(
+      async () =>
+        await distributeGold({
+          eventId: decoded.eventId,
+          goldAmount,
+          heroId: decoded.heroId,
+        })
     ).pipe(Effect.map((result) => ({ goldAmount, result })));
   },
 });
@@ -489,7 +494,9 @@ export const DistributeGoldModal = ({
               <distributeGoldForm.eventId
                 events={events}
                 loading={eventsLoading}
-                onEventChange={() => clearHero(ALL_FILTER)}
+                onEventChange={() => {
+                  clearHero(ALL_FILTER);
+                }}
               />
               <distributeGoldForm.heroId
                 disabled={eventId === ALL_FILTER || heroesLoading}
@@ -559,7 +566,9 @@ export const DistributeGoldModal = ({
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
-                onClick={() => handleOpenChange(false)}
+                onClick={() => {
+                  handleOpenChange(false);
+                }}
                 type="button"
                 variant="outline"
               >

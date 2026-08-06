@@ -22,41 +22,43 @@ const assertSafe = (input: {
   readonly isExplicitTestDatabase: boolean;
   readonly testDatabase: ReturnType<typeof parseDatabaseUrl>;
   readonly allowDatabaseReset: boolean;
-}) => assertIntegrationDatabaseResetSafety(input);
+}) => {
+  assertIntegrationDatabaseResetSafety(input);
+};
 
 describe("integration database reset safety", () => {
   it("allows the built-in managed Docker database without acknowledgement", () => {
-    expect(() =>
+    expect(() => {
       assertSafe({
         allowDatabaseReset: false,
         developmentDatabase: undefined,
         isExplicitTestDatabase: false,
         isManagedDatabase: true,
         testDatabase: defaultDatabase,
-      })
-    ).not.toThrow();
+      });
+    }).not.toThrow();
   });
 
   it("requires exact reset acknowledgement for an explicit external database", () => {
-    expect(() =>
+    expect(() => {
       assertSafe({
         allowDatabaseReset: false,
         developmentDatabase: undefined,
         isExplicitTestDatabase: true,
         isManagedDatabase: false,
         testDatabase: externalDatabase,
-      })
-    ).toThrow("API_INTEGRATION_ALLOW_DATABASE_RESET=1");
+      });
+    }).toThrow("API_INTEGRATION_ALLOW_DATABASE_RESET=1");
 
-    expect(() =>
+    expect(() => {
       assertSafe({
         allowDatabaseReset: true,
         developmentDatabase: undefined,
         isExplicitTestDatabase: true,
         isManagedDatabase: false,
         testDatabase: externalDatabase,
-      })
-    ).not.toThrow();
+      });
+    }).not.toThrow();
   });
 
   it("rejects a test database that matches the development database", () => {
@@ -72,27 +74,27 @@ describe("integration database reset safety", () => {
     expect(databaseUrlsMatch(developmentDatabase, equivalentTestDatabase)).toBe(
       true
     );
-    expect(() =>
+    expect(() => {
       assertSafe({
         allowDatabaseReset: true,
         developmentDatabase,
         isExplicitTestDatabase: true,
         isManagedDatabase: false,
         testDatabase: equivalentTestDatabase,
-      })
-    ).toThrow("TEST_DATABASE_URL must not match DATABASE_URL");
+      });
+    }).toThrow("TEST_DATABASE_URL must not match DATABASE_URL");
   });
 
   it("allows an external database when DATABASE_URL is absent and consent is exact", () => {
-    expect(() =>
+    expect(() => {
       assertSafe({
         allowDatabaseReset: true,
         developmentDatabase: undefined,
         isExplicitTestDatabase: true,
         isManagedDatabase: false,
         testDatabase: externalDatabase,
-      })
-    ).not.toThrow();
+      });
+    }).not.toThrow();
   });
 
   it("rejects malformed database URLs before a pool can be created", () => {

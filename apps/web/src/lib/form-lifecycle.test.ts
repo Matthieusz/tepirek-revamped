@@ -46,7 +46,10 @@ const initialize = (form: Form, defaultName: string) =>
       );
       return registry;
     }),
-    (registry) => Effect.sync(() => registry.dispose())
+    (registry) =>
+      Effect.sync(() => {
+        registry.dispose();
+      })
   );
 
 describe("Effect Form submission lifecycle", () => {

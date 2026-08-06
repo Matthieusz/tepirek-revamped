@@ -49,7 +49,7 @@ it.effect("responds to the Effect HttpApi health endpoint", () =>
       const response = yield* Effect.promise(
         async () => await app.request("/health")
       );
-      const body = yield* Effect.promise(() => response.json());
+      const body = yield* Effect.promise(async () => await response.json());
 
       expect(body).toBe("OK");
       expect(response.status).toBe(200);

@@ -42,8 +42,8 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
   (it) => {
     it.effect("creates a private squad group for the actor", () =>
       Effect.gen(function* testEffect() {
-        const member = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "effect-create-owner" })
+        const member = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "effect-create-owner" })
         );
 
         const created = yield* createSquadGroup({
@@ -79,11 +79,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("lists only squad groups owned by the actor", () =>
       Effect.gen(function* testEffect() {
-        const member = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "effect-list-owner" })
+        const member = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "effect-list-owner" })
         );
-        const other = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "effect-list-other" })
+        const other = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "effect-list-other" })
         );
 
         yield* createSquadGroup({
@@ -115,8 +115,8 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("loads a squad group detail for the owner", () =>
       Effect.gen(function* testEffect() {
-        const member = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "effect-detail-owner" })
+        const member = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "effect-detail-owner" })
         );
 
         const created = yield* createSquadGroup({
@@ -144,8 +144,8 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("saves a squad group snapshot through the Effect store", () =>
       Effect.gen(function* testEffect() {
-        const member = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "effect-save-owner" })
+        const member = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "effect-save-owner" })
         );
         const createService = { create: createSquadGroup };
         const saveService = { save: saveSquadGroup };
@@ -181,8 +181,8 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("rejects an owner save made from a stale detail version", () =>
       Effect.gen(function* testEffect() {
-        const member = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "effect-stale-owner" })
+        const member = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "effect-stale-owner" })
         );
         const createService = { create: createSquadGroup };
         const saveService = { save: saveSquadGroup };
@@ -219,8 +219,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
       "rolls back a shared save when a submitted character is inaccessible",
       () =>
         Effect.gen(function* testEffect() {
-          const member = yield* Effect.promise(() =>
-            createVerifiedMember({ id: "effect-rollback-owner" })
+          const member = yield* Effect.promise(
+            async () =>
+              await createVerifiedMember({ id: "effect-rollback-owner" })
           );
           const [account] = yield* Effect.promise(() =>
             testDb
@@ -375,8 +376,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
       "lists available Jaruna characters for the squad group owner",
       () =>
         Effect.gen(function* testEffect() {
-          const member = yield* Effect.promise(() =>
-            createVerifiedMember({ id: "effect-available-owner" })
+          const member = yield* Effect.promise(
+            async () =>
+              await createVerifiedMember({ id: "effect-available-owner" })
           );
           const listService = { list: listAvailableSquadCharacters };
 
@@ -437,10 +439,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("changes squad group visibility for the owner", () =>
       Effect.gen(function* testEffect() {
-        const member = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-visibility-owner",
-          })
+        const member = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-visibility-owner",
+            })
         );
         const createService = { create: createSquadGroup };
         const visibilityService = { set: setSquadGroupVisibility };
@@ -475,17 +478,19 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("sends squad group editor invites", () =>
       Effect.gen(function* testEffect() {
-        const owner = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-squad-send-owner",
-            name: "Effect Store Squad Send Owner",
-          })
+        const owner = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-squad-send-owner",
+              name: "Effect Store Squad Send Owner",
+            })
         );
-        const target = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-squad-send-target",
-            name: "Effect Store Squad Send Target",
-          })
+        const target = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-squad-send-target",
+              name: "Effect Store Squad Send Target",
+            })
         );
         const createService = { create: createSquadGroup };
         const group = yield* createService.create({
@@ -538,17 +543,19 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("responds to squad group editor invites", () =>
       Effect.gen(function* testEffect() {
-        const owner = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-squad-respond-owner",
-            name: "Effect Store Squad Respond Owner",
-          })
+        const owner = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-squad-respond-owner",
+              name: "Effect Store Squad Respond Owner",
+            })
         );
-        const target = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-squad-respond-target",
-            name: "Effect Store Squad Respond Target",
-          })
+        const target = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-squad-respond-target",
+              name: "Effect Store Squad Respond Target",
+            })
         );
         const createService = { create: createSquadGroup };
         const group = yield* createService.create({
@@ -586,17 +593,19 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("revokes squad group editor invites", () =>
       Effect.gen(function* testEffect() {
-        const owner = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-squad-revoke-owner",
-            name: "Effect Store Squad Revoke Owner",
-          })
+        const owner = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-squad-revoke-owner",
+              name: "Effect Store Squad Revoke Owner",
+            })
         );
-        const target = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-squad-revoke-target",
-            name: "Effect Store Squad Revoke Target",
-          })
+        const target = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-squad-revoke-target",
+              name: "Effect Store Squad Revoke Target",
+            })
         );
         const createService = { create: createSquadGroup };
         const group = yield* createService.create({
@@ -633,11 +642,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("lists globally visible squad groups", () =>
       Effect.gen(function* testEffect() {
-        const member = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "effect-global-owner" })
+        const member = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "effect-global-owner" })
         );
-        const other = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "effect-global-other" })
+        const other = yield* Effect.promise(
+          async () => await createVerifiedMember({ id: "effect-global-other" })
         );
         const createService = { create: createSquadGroup };
         const visibilityService = { set: setSquadGroupVisibility };

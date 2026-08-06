@@ -26,7 +26,7 @@ export const makeAuthorizationPolicy = <Unauthorized, Forbidden>(
     "AuthorizationPolicy.requireVerifiedSession"
   )(function* requireVerifiedSession() {
     const session = yield* requireSession();
-    if (session.user.verified !== true) {
+    if (!session.user.verified) {
       return yield* Effect.fail(failures.unverified());
     }
     return session;

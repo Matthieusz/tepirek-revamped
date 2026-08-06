@@ -76,18 +76,22 @@ describe("Effect database query logging", () => {
                 response.writeHead(200).end();
               });
             });
-            server.once("error", (error) => resume(Effect.fail(error)));
-            server.listen(0, "127.0.0.1", () => resume(Effect.succeed(server)));
+            server.once("error", (error) => {
+              resume(Effect.fail(error));
+            });
+            server.listen(0, "127.0.0.1", () => {
+              resume(Effect.succeed(server));
+            });
           }),
           (server) =>
             Effect.callback<null, Error>((resume) => {
-              server.close((error) =>
+              server.close((error) => {
                 resume(
                   error === undefined
                     ? Effect.succeed(null)
                     : Effect.fail(error)
-                )
-              );
+                );
+              });
             }).pipe(Effect.orDie)
         );
         const address = collector.address();
@@ -155,10 +159,11 @@ describe("Effect database query logging", () => {
       const observabilityLayer = Logger.layer([capturingLogger]);
 
       return Effect.gen(function* transactionRollbackIntegrationTest() {
-        const actor = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "transaction-rollback-user",
-          })
+        const actor = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "transaction-rollback-user",
+            })
         );
         const error = yield* Effect.flip(
           EffectDatabase.use((database) =>

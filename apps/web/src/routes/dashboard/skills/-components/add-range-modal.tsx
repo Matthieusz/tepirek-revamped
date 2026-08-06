@@ -46,7 +46,7 @@ const rangeForm = FormReact.make(rangeFormBuilder, {
   },
   mode: { validation: "onSubmit" },
   onSubmit: (createRange: CreateRange, { decoded }) =>
-    formSubmission(() => createRange(decoded)),
+    formSubmission(async () => await createRange(decoded)),
 });
 
 export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
@@ -83,7 +83,9 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
       <ResponsiveDialogContent className="sm:max-w-106.25">
         <rangeForm.Initialize defaultValues={{ image: "", level: 1, name: "" }}>
           <EffectForm
-            action={() => submit(() => createSkillRange)}
+            action={() => {
+              submit(() => createSkillRange);
+            }}
             submitResult={submitResult}
           >
             <ResponsiveDialogHeader>
@@ -109,7 +111,9 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
-                onClick={() => handleOpenChange(false)}
+                onClick={() => {
+                  handleOpenChange(false);
+                }}
                 type="button"
                 variant="outline"
               >

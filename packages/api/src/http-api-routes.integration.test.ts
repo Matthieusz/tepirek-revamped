@@ -46,14 +46,15 @@ const withAppHttpApi = <A>(
 ) =>
   Effect.gen(function* acquireAppHttpApi() {
     const appHttpApi = yield* integrationHandler(appHttpApiLayer);
-    return yield* Effect.promise(() => use(appHttpApi));
+    return yield* Effect.promise(async () => await use(appHttpApi));
   });
 
-const requestHttpApi = (
+const requestHttpApi = async (
   appHttpApi: IntegrationHandler,
   path: string,
   init?: RequestInit
-) => appHttpApi.handler(new Request(`http://localhost:3000${path}`, init));
+) =>
+  await appHttpApi.handler(new Request(`http://localhost:3000${path}`, init));
 
 const sensitivePersistenceCause = new Error(
   "DatabaseError: relation users does not exist at postgres://admin:secret@database.internal/app"
@@ -114,7 +115,7 @@ const withFailingAnnouncementHttpApi = <A>(
     const appHttpApi = yield* integrationHandler(
       failingAnnouncementHttpApiLayer
     );
-    return yield* Effect.promise(() => use(appHttpApi));
+    return yield* Effect.promise(async () => await use(appHttpApi));
   });
 
 const createSignedInAdmin = async (name: string) => {

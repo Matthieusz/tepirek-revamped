@@ -33,7 +33,7 @@ export const makeBetterAuthService = (
     getSession: Effect.fn("BetterAuthService.getSession")((headers: Headers) =>
       Effect.tryPromise({
         catch: (cause) => new BetterAuthUnavailable({ cause }),
-        try: () => instance.api.getSession({ headers }),
+        try: async () => await instance.api.getSession({ headers }),
       })
     ),
     instance,

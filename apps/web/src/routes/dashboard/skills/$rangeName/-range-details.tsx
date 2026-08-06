@@ -165,13 +165,13 @@ const RangeSkillsContent = ({
                           {isAdminUser && (
                             <TableCell>
                               <Button
-                                onClick={() =>
+                                onClick={() => {
                                   setSkillToDelete({
                                     id: skill.id,
                                     name: skill.name,
                                     rangeId,
-                                  })
-                                }
+                                  });
+                                }}
                                 size="sm"
                                 type="button"
                                 variant="ghost"

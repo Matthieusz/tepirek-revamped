@@ -94,7 +94,9 @@ const makeAccountRenameForm = () =>
     fields: { displayName: EffectTextField },
     mode: { validation: "onSubmit" },
     onSubmit: ({ renameAccount }: RenameAccountSubmitArgs, { decoded }) =>
-      formSubmission(() => renameAccount(decoded.displayName.trim())),
+      formSubmission(
+        async () => await renameAccount(decoded.displayName.trim())
+      ),
   });
 
 interface AccountRefetchPreview {
@@ -190,7 +192,7 @@ const RenameAccountForm = ({
   return (
     <renameForm.Initialize defaultValues={{ displayName: account.displayName }}>
       <EffectForm
-        action={() =>
+        action={() => {
           submit({
             renameAccount: async (displayName) => {
               const result = await updateAccount({
@@ -201,8 +203,8 @@ const RenameAccountForm = ({
               onSuccess();
               return result;
             },
-          })
-        }
+          });
+        }}
         className="space-y-2"
         submitResult={submitResult}
       >
@@ -365,7 +367,9 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
         {isEditing ? (
           <RenameAccountForm
             account={account}
-            onCancel={() => setIsEditing(false)}
+            onCancel={() => {
+              setIsEditing(false);
+            }}
             onSuccess={() => {
               setIsEditing(false);
               toast.success("Nazwa konta została zmieniona");
@@ -436,7 +440,9 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
           </Button>
           {!isEditing && (
             <Button
-              onClick={() => setIsEditing(true)}
+              onClick={() => {
+                setIsEditing(true);
+              }}
               size="sm"
               type="button"
               variant="ghost"
@@ -447,7 +453,9 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
           )}
           <Button
             className="text-destructive hover:text-destructive"
-            onClick={() => setIsDeleteOpen(true)}
+            onClick={() => {
+              setIsDeleteOpen(true);
+            }}
             size="sm"
             type="button"
             variant="ghost"
@@ -459,7 +467,9 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
 
         <DeleteAccountDialog
           account={account}
-          onDeleted={() => setIsDeleteOpen(false)}
+          onDeleted={() => {
+            setIsDeleteOpen(false);
+          }}
           onOpenChange={setIsDeleteOpen}
           open={isDeleteOpen}
         />
@@ -594,7 +604,9 @@ const OwnedAccountRow = ({ account }: OwnedAccountRowProps) => {
               </Button>
               <Button
                 disabled={isApplyingRefetch}
-                onClick={() => setRefetchPreview(null)}
+                onClick={() => {
+                  setRefetchPreview(null);
+                }}
                 size="sm"
                 variant="ghost"
               >
@@ -675,7 +687,9 @@ const OWNED_ACCOUNT_COLUMNS: ColumnDef<OwnedAccount>[] = [
         size="sm"
         variant="outline"
         aria-label={`${row.getIsExpanded() ? "Ukryj" : "Pokaż"} szczegóły konta ${row.original.displayName}`}
-        onClick={() => row.toggleExpanded()}
+        onClick={() => {
+          row.toggleExpanded();
+        }}
       >
         {row.getIsExpanded() ? "Ukryj" : "Zarządzaj"}
       </Button>

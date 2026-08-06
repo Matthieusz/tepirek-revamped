@@ -14,8 +14,9 @@ const SkillsIndexRoute = () => {
 
 export const Route = createFileRoute("/dashboard/skills/")({
   component: SkillsIndexRoute,
-  loader: ({ context }) =>
-    preloadAtomResults(context.atomRegistry, [skillRangesAtom]),
+  loader: async ({ context }) => {
+    await preloadAtomResults(context.atomRegistry, [skillRangesAtom]);
+  },
   staticData: {
     crumb: "Lista przedziałów",
   },

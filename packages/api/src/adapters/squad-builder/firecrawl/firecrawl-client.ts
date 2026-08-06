@@ -64,8 +64,8 @@ export class FirecrawlSdkClient implements FirecrawlClient {
               cause,
               profileId,
             }),
-          try: () =>
-            sdk.scrape(toMargonemProfileUrl(profileId), {
+          try: async () =>
+            await sdk.scrape(toMargonemProfileUrl(profileId), {
               formats: ["html"],
             }),
         }).pipe(

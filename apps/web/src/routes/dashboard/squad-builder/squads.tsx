@@ -13,13 +13,14 @@ import SquadBuilderSquadsPage from "@/routes/dashboard/squad-builder/-components
 
 export const Route = createFileRoute("/dashboard/squad-builder/squads")({
   component: SquadBuilderSquadsPage,
-  loader: ({ context }) =>
-    preloadAtomResults(context.atomRegistry, [
+  loader: async ({ context }) => {
+    await preloadAtomResults(context.atomRegistry, [
       incomingSquadGroupInvitesAtom,
       ownedSquadGroupsAtom,
       sharedSquadGroupsAtom,
       globalSquadGroupsAtom({}),
-    ]),
+    ]);
+  },
   staticData: {
     crumb: "Składy",
   },

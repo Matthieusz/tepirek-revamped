@@ -87,7 +87,9 @@ export const AvailableCharacterPoolHeader = ({
                     "border-primary bg-primary/25 font-medium text-primary hover:bg-primary/30"
                 )}
                 key={profession}
-                onClick={() => onProfessionToggle(profession)}
+                onClick={() => {
+                  onProfessionToggle(profession);
+                }}
                 size="sm"
                 type="button"
                 variant="outline"
@@ -111,7 +113,9 @@ export const AvailableCharacterPoolHeader = ({
             <Input
               aria-label="Szukaj po nazwie postaci"
               className="h-8 pl-7"
-              onChange={(event) => onCharacterNameChange(event.target.value)}
+              onChange={(event) => {
+                onCharacterNameChange(event.target.value);
+              }}
               placeholder="Nazwa postaci"
               value={characterNameQuery}
             />
@@ -141,7 +145,9 @@ export const AvailableCharacterPoolHeader = ({
               id={`level-from-${groupId}`}
               inputMode="numeric"
               min={1}
-              onChange={(event) => onLevelFromChange(event.target.value)}
+              onChange={(event) => {
+                onLevelFromChange(event.target.value);
+              }}
               placeholder="Min"
               step={1}
               type="number"
@@ -159,7 +165,9 @@ export const AvailableCharacterPoolHeader = ({
               id={`level-to-${groupId}`}
               inputMode="numeric"
               min={1}
-              onChange={(event) => onLevelToChange(event.target.value)}
+              onChange={(event) => {
+                onLevelToChange(event.target.value);
+              }}
               placeholder="Maks"
               step={1}
               type="number"

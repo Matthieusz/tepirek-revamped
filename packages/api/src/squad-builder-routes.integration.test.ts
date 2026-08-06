@@ -36,14 +36,15 @@ const withAppHttpApi = <A>(
 ) =>
   Effect.gen(function* acquireAppHttpApi() {
     const appHttpApi = yield* integrationHandler(appHttpApiLayer);
-    return yield* Effect.promise(() => use(appHttpApi));
+    return yield* Effect.promise(async () => await use(appHttpApi));
   });
 
-const requestHttpApi = (
+const requestHttpApi = async (
   appHttpApi: IntegrationHandler,
   path: string,
   init?: RequestInit
-) => appHttpApi.handler(new Request(`http://localhost:3000${path}`, init));
+) =>
+  await appHttpApi.handler(new Request(`http://localhost:3000${path}`, init));
 
 const createSignedInUser = async (name: string, verified = true) => {
   const email = `${name}@example.com`;
@@ -90,10 +91,10 @@ const jsonPost = (body: unknown, cookie?: string): RequestInit => ({
   method: "POST",
 });
 
-const expectUnauthorized = (response: Response) => {
+const expectUnauthorized = async (response: Response) => {
   expect(response.status).toBe(401);
   expect(response.headers.get("content-type")).toBe("application/json");
-  return expect(response.json()).resolves.toMatchObject({
+  await expect(response.json()).resolves.toMatchObject({
     _tag: "SquadBuilderUnauthorized",
   });
 };

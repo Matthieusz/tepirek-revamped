@@ -43,7 +43,7 @@ const todoForm = FormReact.make(todoFormBuilder, {
   fields: { text: EffectTextField },
   mode: { validation: "onSubmit" },
   onSubmit: (createTodo: CreateTodo, { decoded }) =>
-    formSubmission(() => createTodo(decoded)),
+    formSubmission(async () => await createTodo(decoded)),
 });
 
 const runMutation = (
@@ -93,10 +93,12 @@ const TasksContent = ({ session }: TasksPageProps) => {
     }
   };
 
-  const toggleTodoMutation = (input: { id: number; completed: boolean }) =>
-    runMutation(() => toggleTodo(input));
-  const deleteTodoMutation = (input: { id: number }) =>
-    runMutation(() => deleteTodo(input));
+  const toggleTodoMutation = (input: { id: number; completed: boolean }) => {
+    runMutation(async () => await toggleTodo(input));
+  };
+  const deleteTodoMutation = (input: { id: number }) => {
+    runMutation(async () => await deleteTodo(input));
+  };
 
   const handleToggleTodo = (id: number, completed: boolean) => {
     toggleTodoMutation({ completed: !completed, id });

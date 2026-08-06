@@ -10,8 +10,9 @@ import {
 
 export const Route = createFileRoute("/dashboard/events/heroes")({
   errorComponent: EventsRouteError,
-  loader: ({ context }) =>
-    preloadAtomResults(context.atomRegistry, [heroesAtom, eventsAtom]),
+  loader: async ({ context }) => {
+    await preloadAtomResults(context.atomRegistry, [heroesAtom, eventsAtom]);
+  },
   pendingComponent: EventsRoutePending,
   staticData: {
     crumb: "Herosi",

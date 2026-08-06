@@ -38,8 +38,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
       "reserves and completes Firecrawl requests through the Effect store",
       () =>
         Effect.gen(function* testEffect() {
-          const member = yield* Effect.promise(() =>
-            createVerifiedMember({ id: "effect-firecrawl-user" })
+          const member = yield* Effect.promise(
+            async () =>
+              await createVerifiedMember({ id: "effect-firecrawl-user" })
           );
           const profileId = parseTestProfileId(8_100_201);
           const yearMonth = firecrawlYearMonthFromDate(
@@ -91,17 +92,19 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("searches account invite targets", () =>
       Effect.gen(function* testEffect() {
-        const owner = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-search-owner",
-            name: "Effect Store Search Owner",
-          })
+        const owner = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-search-owner",
+              name: "Effect Store Search Owner",
+            })
         );
-        const target = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-search-target",
-            name: "Effect Store Search Target",
-          })
+        const target = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-search-target",
+              name: "Effect Store Search Target",
+            })
         );
         const [account] = yield* Effect.promise(() =>
           testDb
@@ -132,17 +135,19 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("sends account access invites", () =>
       Effect.gen(function* testEffect() {
-        const owner = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-send-owner",
-            name: "Effect Store Send Owner",
-          })
+        const owner = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-send-owner",
+              name: "Effect Store Send Owner",
+            })
         );
-        const target = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-send-target",
-            name: "Effect Store Send Target",
-          })
+        const target = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-send-target",
+              name: "Effect Store Send Target",
+            })
         );
         const [account] = yield* Effect.promise(() =>
           testDb
@@ -198,17 +203,19 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("responds to account access invites", () =>
       Effect.gen(function* testEffect() {
-        const owner = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-respond-owner",
-            name: "Effect Store Respond Owner",
-          })
+        const owner = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-respond-owner",
+              name: "Effect Store Respond Owner",
+            })
         );
-        const target = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-respond-target",
-            name: "Effect Store Respond Target",
-          })
+        const target = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-respond-target",
+              name: "Effect Store Respond Target",
+            })
         );
         const [account] = yield* Effect.promise(() =>
           testDb
@@ -256,17 +263,19 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("lists shared accounts for accepted access", () =>
       Effect.gen(function* testEffect() {
-        const owner = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-shared-owner",
-            name: "Effect Store Shared Owner",
-          })
+        const owner = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-shared-owner",
+              name: "Effect Store Shared Owner",
+            })
         );
-        const target = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-shared-target",
-            name: "Effect Store Shared Target",
-          })
+        const target = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-shared-target",
+              name: "Effect Store Shared Target",
+            })
         );
         const [account] = yield* Effect.promise(() =>
           testDb
@@ -322,23 +331,26 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
 
     it.effect("lists account access grants for an owned account", () =>
       Effect.gen(function* testEffect() {
-        const owner = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-grants-owner",
-            name: "Effect Store Grants Owner",
-          })
+        const owner = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-grants-owner",
+              name: "Effect Store Grants Owner",
+            })
         );
-        const invited = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-grants-invited",
-            name: "Effect Store Grants Invited",
-          })
+        const invited = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-grants-invited",
+              name: "Effect Store Grants Invited",
+            })
         );
-        const declined = yield* Effect.promise(() =>
-          createVerifiedMember({
-            id: "effect-store-grants-declined",
-            name: "Effect Store Grants Declined",
-          })
+        const declined = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-store-grants-declined",
+              name: "Effect Store Grants Declined",
+            })
         );
         const [account] = yield* Effect.promise(() =>
           testDb
@@ -390,17 +402,19 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
       "revokes accepted account access and removes recipient squad placements",
       () =>
         Effect.gen(function* testEffect() {
-          const owner = yield* Effect.promise(() =>
-            createVerifiedMember({
-              id: "effect-store-revoke-owner",
-              name: "Effect Store Revoke Owner",
-            })
+          const owner = yield* Effect.promise(
+            async () =>
+              await createVerifiedMember({
+                id: "effect-store-revoke-owner",
+                name: "Effect Store Revoke Owner",
+              })
           );
-          const target = yield* Effect.promise(() =>
-            createVerifiedMember({
-              id: "effect-store-revoke-target",
-              name: "Effect Store Revoke Target",
-            })
+          const target = yield* Effect.promise(
+            async () =>
+              await createVerifiedMember({
+                id: "effect-store-revoke-target",
+                name: "Effect Store Revoke Target",
+              })
           );
           const [account] = yield* Effect.promise(() =>
             testDb

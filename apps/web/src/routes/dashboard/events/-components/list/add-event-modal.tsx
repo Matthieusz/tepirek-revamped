@@ -101,7 +101,9 @@ const IconField: FormReact.FieldComponent<EventIconId, IconFieldProps> = ({
                 key={item.id}
                 name={field.path}
                 onBlur={field.onBlur}
-                onClick={() => field.onChange(item.id)}
+                onClick={() => {
+                  field.onChange(item.id);
+                }}
                 type="button"
               >
                 <IconComponent
@@ -153,7 +155,9 @@ const ColorField: FormReact.FieldComponent<
               key={color.id}
               name={field.path}
               onBlur={field.onBlur}
-              onClick={() => field.onChange(color.id)}
+              onClick={() => {
+                field.onChange(color.id);
+              }}
               style={{ backgroundColor: color.id }}
               title={color.name}
               type="button"
@@ -201,7 +205,9 @@ const DateField: FormReact.FieldComponent<
         <PopoverContent className="w-auto p-0">
           <Calendar
             mode="single"
-            onSelect={(date) => field.onChange(date ?? null)}
+            onSelect={(date) => {
+              field.onChange(date ?? null);
+            }}
             selected={field.value ?? undefined}
           />
         </PopoverContent>
@@ -228,13 +234,14 @@ const eventForm = FormReact.make(eventFormBuilder, {
   },
   mode: { validation: "onSubmit" },
   onSubmit: (createEvent: CreateEvent, { decoded }) =>
-    formSubmission(() =>
-      createEvent({
-        color: decoded.color,
-        endTime: decoded.date,
-        icon: decoded.icon,
-        name: decoded.name,
-      })
+    formSubmission(
+      async () =>
+        await createEvent({
+          color: decoded.color,
+          endTime: decoded.date,
+          icon: decoded.icon,
+          name: decoded.name,
+        })
     ),
 });
 
@@ -302,7 +309,9 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
             <ResponsiveDialogFooter>
               <Button
                 disabled={submitResult.waiting}
-                onClick={() => handleOpenChange(false)}
+                onClick={() => {
+                  handleOpenChange(false);
+                }}
                 type="button"
                 variant="outline"
               >

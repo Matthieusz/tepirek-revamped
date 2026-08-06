@@ -286,7 +286,9 @@ const SquadPanel = ({
                     disabled={isSaving}
                     id={`squad-name-${squad.clientKey}`}
                     maxLength={60}
-                    onChange={(event) => onNameChange(event.target.value)}
+                    onChange={(event) => {
+                      onNameChange(event.target.value);
+                    }}
                     value={squad.name}
                   />
                 </div>
@@ -346,7 +348,9 @@ const SquadPanel = ({
               <Button
                 aria-label={`Usuń skład ${squad.name}`}
                 disabled={isSaving}
-                onClick={() => setIsDeleteDialogOpen(true)}
+                onClick={() => {
+                  setIsDeleteDialogOpen(true);
+                }}
                 size="icon-sm"
                 type="button"
                 variant="ghost"
@@ -359,7 +363,9 @@ const SquadPanel = ({
               aria-expanded={isExpanded}
               aria-label={`${isExpanded ? "Ukryj" : "Pokaż"} postacie w składzie ${squad.name}`}
               className="shrink-0"
-              onClick={() => setIsExpanded((current) => !current)}
+              onClick={() => {
+                setIsExpanded((current) => !current);
+              }}
               size="icon-sm"
               type="button"
               variant="ghost"
@@ -512,9 +518,13 @@ export const SquadRosterWorkspace = ({
                 isOwner={isOwner}
                 isSaving={isSaving}
                 key={squad.clientKey}
-                onNameChange={(name) => onNameChange(squad.clientKey, name)}
+                onNameChange={(name) => {
+                  onNameChange(squad.clientKey, name);
+                }}
                 onRemoveCharacter={onRemoveCharacter}
-                onRemoveSquad={() => onRemoveSquad(squad.clientKey)}
+                onRemoveSquad={() => {
+                  onRemoveSquad(squad.clientKey);
+                }}
                 squad={squad}
               />
             ))}

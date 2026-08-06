@@ -319,7 +319,9 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
               <div className="p-6">
                 {/* Calculator input is disposable and intentionally has no draft blocker. */}
                 <EffectForm
-                  action={() => singleSubmit()}
+                  action={() => {
+                    singleSubmit();
+                  }}
                   className="mt-2 grid gap-4"
                   submitResult={singleSubmitResult}
                 >
@@ -360,7 +362,9 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
               <div className="p-6">
                 {/* Calculator input is disposable and intentionally has no draft blocker. */}
                 <EffectForm
-                  action={() => groupSubmit()}
+                  action={() => {
+                    groupSubmit();
+                  }}
                   className="mt-2 grid gap-4"
                   submitResult={groupSubmitResult}
                 >

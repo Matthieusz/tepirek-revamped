@@ -18,8 +18,9 @@ const EventsListRoute = () => {
 export const Route = createFileRoute("/dashboard/events/list")({
   component: EventsListRoute,
   errorComponent: EventsRouteError,
-  loader: ({ context }) =>
-    preloadAtomResults(context.atomRegistry, [eventsAtom]),
+  loader: async ({ context }) => {
+    await preloadAtomResults(context.atomRegistry, [eventsAtom]);
+  },
   pendingComponent: EventsRoutePending,
   staticData: {
     crumb: "Lista eventów",

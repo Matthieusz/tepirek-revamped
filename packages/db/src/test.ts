@@ -7,5 +7,8 @@ import { makeBetterAuthDatabase } from "./better-auth-database.ts";
 export const makeTestBetterAuthDatabase = (databaseUrl: string) =>
   Effect.acquireRelease(
     Effect.sync(() => new Pool({ connectionString: databaseUrl })),
-    (pool) => Effect.promise(() => pool.end())
+    (pool) =>
+      Effect.promise(async () => {
+        await pool.end();
+      })
   ).pipe(Effect.map(makeBetterAuthDatabase));

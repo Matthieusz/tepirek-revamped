@@ -21,7 +21,9 @@ export default function SquadBuilderSquadsPage() {
           </p>
         </div>
         <Button
-          onClick={() => setIsCreateOpen((current) => !current)}
+          onClick={() => {
+            setIsCreateOpen((current) => !current);
+          }}
           type="button"
         >
           <Plus className="size-4" />
@@ -30,11 +32,19 @@ export default function SquadBuilderSquadsPage() {
       </header>
 
       {isCreateOpen && (
-        <CreateSquadGroupFrame onClose={() => setIsCreateOpen(false)} />
+        <CreateSquadGroupFrame
+          onClose={() => {
+            setIsCreateOpen(false);
+          }}
+        />
       )}
 
       <SquadGroupInvitations />
-      <SquadGroupLibrary onCreateGroup={() => setIsCreateOpen(true)} />
+      <SquadGroupLibrary
+        onCreateGroup={() => {
+          setIsCreateOpen(true);
+        }}
+      />
     </div>
   );
 }

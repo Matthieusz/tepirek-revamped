@@ -13,8 +13,9 @@ const TasksRoute = () => {
 
 export const Route = createFileRoute("/dashboard/tasks")({
   component: TasksRoute,
-  loader: ({ context }) =>
-    preloadAtomResults(context.atomRegistry, [todosAtom]),
+  loader: async ({ context }) => {
+    await preloadAtomResults(context.atomRegistry, [todosAtom]);
+  },
   staticData: {
     crumb: "Zadania",
   },
