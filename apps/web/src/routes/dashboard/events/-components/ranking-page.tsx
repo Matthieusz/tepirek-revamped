@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { eventsAtom } from "@/features/events/core/event-atoms";
 import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
 import {
   getEventSelectDisplay,
@@ -24,7 +23,6 @@ import {
   HeroSelectItems,
 } from "@/features/events/core/select-utils";
 import { useEventHeroFilter } from "@/features/events/core/use-event-hero-filter";
-import { heroesByEventAtom } from "@/features/events/heroes/hero-atoms";
 import { rankingAtom } from "@/features/events/ranking/ranking-atoms";
 import type { RankingSort } from "@/features/events/ranking/ranking-sort";
 import { isAdmin } from "@/lib/route-helpers";
@@ -69,10 +67,6 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
     });
 
   const isAdminUser = isAdmin(session);
-  const refreshEvents = useAtomRefresh(eventsAtom);
-  const refreshHeroes = useAtomRefresh(
-    heroesByEventAtom(filter.queryInputs.eventId ?? null)
-  );
   const refreshRanking = useAtomRefresh(rankingAtom(filter.queryInputs));
   const rankingContent = buildRankingContent({ sortedRanking });
 
@@ -86,149 +80,120 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
   );
 
   return (
-    <AsyncResultBoundary onRetry={refreshEvents} result={filter.eventsResult}>
-      {() => (
-        <AsyncResultBoundary
-          onRetry={refreshHeroes}
-          result={filter.heroesResult}
-        >
-          {() => (
-            <AsyncResultBoundary
-              onRetry={refreshRanking}
-              result={rankingResult}
-            >
-              {() => (
-                <div className="mx-auto w-full max-w-4xl space-y-6">
-                  <h1 className="font-serif font-bold tracking-tight text-center text-foreground text-2xl">
-                    Ranking graczy
-                  </h1>
+    <div className="mx-auto w-full max-w-4xl space-y-6">
+      <h1 className="font-serif font-bold tracking-tight text-center text-foreground text-2xl">
+        Ranking graczy
+      </h1>
 
-                  {/* Filters Section */}
-                  <div className="flex flex-col space-y-3 lg:flex-row lg:justify-between lg:space-y-0">
-                    {/* Event and Hero Selects - Stack on mobile */}
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 md:flex md:items-center">
-                      {/* Event Select */}
-                      <Select
-                        onValueChange={(value) => {
-                          filter.selectEvent(value ?? ALL_FILTER);
-                        }}
-                        value={filter.state.eventId}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue>
-                            {getEventSelectDisplay({
-                              events: filter.events,
-                              selectedEventId: filter.state.eventId,
-                            })}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <EventSelectItems events={filter.events} />
-                        </SelectContent>
-                      </Select>
+      {/* Filters Section */}
+      <div className="flex flex-col space-y-3 lg:flex-row lg:justify-between lg:space-y-0">
+        {/* Event and Hero Selects - Stack on mobile */}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 md:flex md:items-center">
+          {/* Event Select */}
+          <Select
+            onValueChange={(value) => {
+              filter.selectEvent(value ?? ALL_FILTER);
+            }}
+            value={filter.state.eventId}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue>
+                {getEventSelectDisplay({
+                  events: filter.events,
+                  selectedEventId: filter.state.eventId,
+                })}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <EventSelectItems events={filter.events} />
+            </SelectContent>
+          </Select>
 
-                      {/* Hero Select */}
-                      <Select
-                        disabled={!filter.heroQueryEnabled}
-                        onValueChange={(value) => {
-                          filter.selectHero(value ?? ALL_FILTER);
-                        }}
-                        value={
-                          filter.heroQueryEnabled ? filter.state.heroId : ""
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue>
-                            {getHeroSelectDisplay({
-                              selectedEventId: filter.state.eventId,
-                              selectedHeroId: filter.state.heroId,
-                              sortedHeroes: filter.sortedHeroes,
-                            })}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <HeroSelectItems
-                            heroesLoading={filter.heroesLoading}
-                            sortedHeroes={filter.sortedHeroes}
-                          />
-                        </SelectContent>
-                      </Select>
-                    </div>
+          {/* Hero Select */}
+          <Select
+            disabled={!filter.heroQueryEnabled}
+            onValueChange={(value) => {
+              filter.selectHero(value ?? ALL_FILTER);
+            }}
+            value={filter.heroQueryEnabled ? filter.state.heroId : ""}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue>
+                {getHeroSelectDisplay({
+                  selectedEventId: filter.state.eventId,
+                  selectedHeroId: filter.state.heroId,
+                  sortedHeroes: filter.sortedHeroes,
+                })}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <HeroSelectItems
+                heroesLoading={filter.heroesLoading}
+                sortedHeroes={filter.sortedHeroes}
+              />
+            </SelectContent>
+          </Select>
+        </div>
 
-                    {/* Sort Buttons with Gold Distribution */}
-                    <div className="flex items-center justify-center gap-1 sm:justify-start">
-                      {/* Stats Popover */}
-                      {filter.state.heroId !== ALL_FILTER && (
-                        <StatsPopover
-                          pointWorth={pointWorth}
-                          totalBets={totalBets}
-                        />
-                      )}
-                      <Button
-                        onClick={() => {
-                          navigateSort({ sortBy: undefined });
-                        }}
-                        size="sm"
-                        variant={
-                          currentSortBy === "points" ? "secondary" : "ghost"
-                        }
-                      >
-                        Punkty
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          navigateSort({ sortBy: "bets" });
-                        }}
-                        size="sm"
-                        variant={
-                          currentSortBy === "bets" ? "secondary" : "ghost"
-                        }
-                      >
-                        Obstawienia
-                      </Button>
-                      <Button
-                        className={
-                          currentSortBy === "gold"
-                            ? "border border-primary"
-                            : ""
-                        }
-                        onClick={() => {
-                          navigateSort({ sortBy: "gold" });
-                        }}
-                        size="sm"
-                        variant={currentSortBy === "gold" ? "outline" : "ghost"}
-                      >
-                        Złoto
-                      </Button>
-
-                      {/* Gold Distribution Button - Admin Only */}
-                      {isAdminUser && (
-                        <DistributeGoldModal
-                          selectedEventId={filter.state.eventId}
-                          selectedHeroId={filter.state.heroId}
-                          trigger={
-                            <Button
-                              aria-label="Rozdziel złoto"
-                              className="ml-1 shrink-0"
-                              size="icon"
-                              variant="outline"
-                            >
-                              <Coins className="size-4 text-muted-foreground" />
-                            </Button>
-                          }
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Ranking List */}
-                  {rankingContent}
-                </div>
-              )}
-            </AsyncResultBoundary>
+        {/* Sort Buttons with Gold Distribution */}
+        <div className="flex items-center justify-center gap-1 sm:justify-start">
+          {/* Stats Popover */}
+          {filter.state.heroId !== ALL_FILTER && (
+            <StatsPopover pointWorth={pointWorth} totalBets={totalBets} />
           )}
-        </AsyncResultBoundary>
-      )}
-    </AsyncResultBoundary>
+          <Button
+            onClick={() => {
+              navigateSort({ sortBy: undefined });
+            }}
+            size="sm"
+            variant={currentSortBy === "points" ? "secondary" : "ghost"}
+          >
+            Punkty
+          </Button>
+          <Button
+            onClick={() => {
+              navigateSort({ sortBy: "bets" });
+            }}
+            size="sm"
+            variant={currentSortBy === "bets" ? "secondary" : "ghost"}
+          >
+            Obstawienia
+          </Button>
+          <Button
+            className={currentSortBy === "gold" ? "border border-primary" : ""}
+            onClick={() => {
+              navigateSort({ sortBy: "gold" });
+            }}
+            size="sm"
+            variant={currentSortBy === "gold" ? "outline" : "ghost"}
+          >
+            Złoto
+          </Button>
+
+          {/* Gold Distribution Button - Admin Only */}
+          {isAdminUser && (
+            <DistributeGoldModal
+              selectedEventId={filter.state.eventId}
+              selectedHeroId={filter.state.heroId}
+              trigger={
+                <Button
+                  aria-label="Rozdziel złoto"
+                  className="ml-1 shrink-0"
+                  size="icon"
+                  variant="outline"
+                >
+                  <Coins className="size-4 text-muted-foreground" />
+                </Button>
+              }
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Ranking List */}
+      <AsyncResultBoundary onRetry={refreshRanking} result={rankingResult}>
+        {() => rankingContent}
+      </AsyncResultBoundary>
+    </div>
   );
 };

@@ -1,10 +1,11 @@
 /* oxlint-disable no-use-before-define */
 
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import type { PaginatedBets } from "@tepirek-revamped/api/protocol/bet/http-api-contract";
 import { calculatePointsPerMember } from "@tepirek-revamped/config";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { History, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
@@ -31,7 +32,6 @@ import {
   deleteBetAtom,
   paginatedBetsAtom,
 } from "@/features/events/bets/bet-atoms";
-import { eventsAtom } from "@/features/events/core/event-atoms";
 import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
 import {
   getEventSelectDisplay,
@@ -42,7 +42,6 @@ import {
   HeroSelectItems,
 } from "@/features/events/core/select-utils";
 import { useEventHeroFilter } from "@/features/events/core/use-event-hero-filter";
-import { heroesByEventAtom } from "@/features/events/heroes/hero-atoms";
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
@@ -84,37 +83,20 @@ export default function HistoryPage({ session }: HistoryPageProps) {
   };
   const betsResult = useAtomValue(paginatedBetsAtom(betPageInput));
   const refreshBets = useAtomRefresh(paginatedBetsAtom(betPageInput));
-  const refreshEvents = useAtomRefresh(eventsAtom);
-  const refreshHeroes = useAtomRefresh(
-    heroesByEventAtom(filter.queryInputs.eventId ?? null)
-  );
 
   return (
-    <AsyncResultBoundary onRetry={refreshEvents} result={filter.eventsResult}>
-      {() => (
-        <AsyncResultBoundary
-          onRetry={refreshHeroes}
-          result={filter.heroesResult}
-        >
-          {() => (
-            <AsyncResultBoundary onRetry={refreshBets} result={betsResult}>
-              {() => (
-                <HistoryContent
-                  betPageInput={betPageInput}
-                  filter={filter}
-                  key={historyFilterKey(betPageInput)}
-                  session={session}
-                />
-              )}
-            </AsyncResultBoundary>
-          )}
-        </AsyncResultBoundary>
-      )}
-    </AsyncResultBoundary>
+    <HistoryContent
+      betPageInput={betPageInput}
+      betsResult={betsResult}
+      filter={filter}
+      onRetryBets={refreshBets}
+      session={session}
+    />
   );
 }
 
 interface HistoryContentProps extends HistoryPageProps {
+  readonly betsResult: AsyncResult.AsyncResult<PaginatedBets, unknown>;
   readonly betPageInput: {
     readonly eventId?: number;
     readonly heroId?: number;
@@ -122,23 +104,32 @@ interface HistoryContentProps extends HistoryPageProps {
     readonly page: number;
   };
   readonly filter: ReturnType<typeof useEventHeroFilter>;
+  readonly onRetryBets: () => void;
 }
 
 const HistoryContent = ({
   betPageInput,
+  betsResult,
   filter,
+  onRetryBets,
   session,
 }: HistoryContentProps) => {
   const [betToDelete, setBetToDelete] = useState<BetToDelete>(null);
   const [loadedPages, setLoadedPages] = useState<readonly number[]>([1]);
   const deleteBet = useAtomSet(deleteBetAtom, { mode: "promise" });
-  const betsDataResult = useAtomValue(paginatedBetsAtom(betPageInput));
-  const betsData = AsyncResult.getOrThrow(betsDataResult);
+  const betsData = AsyncResult.isSuccess(betsResult)
+    ? betsResult.value
+    : undefined;
   const isAdminUser = isAdmin(session);
+  const filterKey = historyFilterKey(betPageInput);
 
-  const allBets = betsData.items;
-  const totalBets = betsData.pagination.totalItems;
-  const hasNextPage = betsData.pagination.hasMore;
+  const allBets = betsData?.items ?? [];
+  const totalBets = betsData?.pagination.totalItems ?? 0;
+  const hasNextPage = betsData?.pagination.hasMore ?? false;
+
+  useEffect(() => {
+    setLoadedPages([1]);
+  }, [filterKey]);
 
   const loadPage = (page: number) => {
     setLoadedPages((pages) =>
@@ -169,10 +160,19 @@ const HistoryContent = ({
     },
   };
 
-  const betsContent: ReactNode =
-    allBets.length === 0 ? (
+  let betsContent: ReactNode;
+  if (!AsyncResult.isSuccess(betsResult)) {
+    betsContent = (
+      <AsyncResultBoundary onRetry={onRetryBets} result={betsResult}>
+        {() => null}
+      </AsyncResultBoundary>
+    );
+  } else if (allBets.length === 0) {
+    betsContent = (
       <EmptyState icon={History} message="Brak obstawień do wyświetlenia" />
-    ) : (
+    );
+  } else {
+    betsContent = (
       <div className="grid gap-4">
         {allBets.map((bet) => (
           <BetCard
@@ -194,7 +194,13 @@ const HistoryContent = ({
           />
         ))}
 
-        {hasNextPage && <LoadMoreTrigger onVisible={() => loadPage(2)} />}
+        {hasNextPage && (
+          <LoadMoreTrigger
+            onVisible={() => {
+              loadPage(2);
+            }}
+          />
+        )}
         {loadedPages.slice(1).map((page) => (
           <HistoryPageChunk
             baseInput={betPageInput}
@@ -207,6 +213,7 @@ const HistoryContent = ({
         ))}
       </div>
     );
+  }
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -369,7 +376,11 @@ const LoadedHistoryPageChunk = ({
         />
       ))}
       {data.pagination.hasMore && (
-        <LoadMoreTrigger onVisible={() => onLoadPage(page + 1)} />
+        <LoadMoreTrigger
+          onVisible={() => {
+            onLoadPage(page + 1);
+          }}
+        />
       )}
     </>
   );

@@ -90,17 +90,23 @@ describe("events route loaders predeclare atoms on the request-scoped registry",
     expect(preloadAtomResults.mock.calls[0]?.[0]).toBe(context.atomRegistry);
   });
 
-  it("preloads the events, oldest-unpaid, and search-scoped vault atoms for the vault route", async () => {
+  it("preloads stable route data for the vault route", async () => {
     const context = await runDashboardGuard();
     const vaultLoader = VaultRoute.options.loader;
     if (typeof vaultLoader !== "function") {
       throw new TypeError("Vault loader must be defined");
     }
 
-    await vaultLoader({ context, deps: { eventId: undefined } } as never);
+    await vaultLoader({ context } as never);
 
     expect(preloadAtomResults).toHaveBeenCalledOnce();
     expect(preloadAtomResults.mock.calls[0]?.[0]).toBe(context.atomRegistry);
+  });
+
+  it("keeps filter changes out of the event data route loaders", () => {
+    expect(HistoryRoute.options.loaderDeps).toBeUndefined();
+    expect(RankingRoute.options.loaderDeps).toBeUndefined();
+    expect(VaultRoute.options.loaderDeps).toBeUndefined();
   });
 
   it("preloads only the events atom for the ranking route", async () => {

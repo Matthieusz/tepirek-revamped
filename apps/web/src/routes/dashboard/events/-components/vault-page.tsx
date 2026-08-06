@@ -59,7 +59,6 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
   const eventQueryInput = toQueryInput(effectiveEventId);
   const vaultInput =
     eventQueryInput === undefined ? {} : { eventId: eventQueryInput };
-  const vaultResult = useAtomValue(vaultAtom(vaultInput));
   const refreshEvents = useAtomRefresh(eventsAtom);
   const refreshOldestUnpaid = useAtomRefresh(oldestUnpaidEventAtom);
   const refreshVault = useAtomRefresh(vaultAtom(vaultInput));
@@ -93,24 +92,21 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
         >
           {() =>
             hasInitialized ? (
-              <AsyncResultBoundary onRetry={refreshVault} result={vaultResult}>
-                {() => (
-                  <VaultContent
-                    effectiveEventId={effectiveEventId}
-                    events={[...events]}
-                    hasSpecificEvent={hasSpecificEvent}
-                    onEventChange={(eventId) => {
-                      void navigate({
-                        search: {
-                          eventId,
-                        },
-                      });
-                    }}
-                    session={session}
-                    vaultInput={vaultInput}
-                  />
-                )}
-              </AsyncResultBoundary>
+              <VaultContent
+                effectiveEventId={effectiveEventId}
+                events={[...events]}
+                hasSpecificEvent={hasSpecificEvent}
+                onEventChange={(eventId) => {
+                  void navigate({
+                    search: {
+                      eventId,
+                    },
+                  });
+                }}
+                onRetryVault={refreshVault}
+                session={session}
+                vaultInput={vaultInput}
+              />
             ) : (
               <LoadingSpinner />
             )
@@ -132,6 +128,7 @@ interface VaultContentProps extends EventsVaultPageProps {
   }[];
   readonly hasSpecificEvent: boolean;
   readonly onEventChange: (eventId: string | undefined) => void;
+  readonly onRetryVault: () => void;
   readonly vaultInput: { readonly eventId?: number };
 }
 
@@ -140,11 +137,15 @@ const VaultContent = ({
   events,
   hasSpecificEvent,
   onEventChange,
+  onRetryVault,
   session,
   vaultInput,
 }: VaultContentProps) => {
   const optimisticVaultResult = useAtomValue(optimisticVaultAtom(vaultInput));
-  const vault = AsyncResult.getOrThrow(optimisticVaultResult);
+  const vault = AsyncResult.isSuccess(optimisticVaultResult)
+    ? optimisticVaultResult.value
+    : [];
+  const vaultLoading = !AsyncResult.isSuccess(optimisticVaultResult);
   const togglePaidOut = useAtomSet(togglePaidOutInVaultAtom(vaultInput), {
     mode: "promise",
   });
@@ -210,172 +211,183 @@ const VaultContent = ({
         </Select>
       </div>
 
-      {isAdminUser && !hasSpecificEvent && (
-        <p className="text-center text-muted-foreground text-sm">
-          Wybierz konkretny event, aby oznaczać wypłaty.
-        </p>
-      )}
+      {vaultLoading ? (
+        <AsyncResultBoundary
+          onRetry={onRetryVault}
+          result={optimisticVaultResult}
+        >
+          {() => null}
+        </AsyncResultBoundary>
+      ) : (
+        <>
+          {isAdminUser && !hasSpecificEvent && (
+            <p className="text-center text-muted-foreground text-sm">
+              Wybierz konkretny event, aby oznaczać wypłaty.
+            </p>
+          )}
 
-      <>
-        {/* Next to receive payment - highlighted */}
-        {Option.isSome(nextToPay) && (
-          <div className="rounded-xl border-2 border-primary/50 bg-primary/5 p-6">
-            <div className="mb-2 flex items-center justify-center gap-2">
-              <span className="font-semibold text-primary text-sm">
-                Następny do wypłaty
-              </span>
-            </div>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar className="size-12 border-2 border-primary">
-                  <AvatarImage
-                    alt={nextToPay.value.userName ?? ""}
-                    src={nextToPay.value.userImage ?? undefined}
-                  />
-                  <AvatarFallback>
-                    <User className="size-6" />
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-bold text-lg">
-                    {nextToPay.value.userName}
-                  </p>
-                  <p className="font-mono text-muted-foreground">
-                    {formatVaultEarnings(nextToPay.value.totalEarnings)} złota
-                  </p>
-                </div>
+          {/* Next to receive payment - highlighted */}
+          {Option.isSome(nextToPay) && (
+            <div className="rounded-xl border-2 border-primary/50 bg-primary/5 p-6">
+              <div className="mb-2 flex items-center justify-center gap-2">
+                <span className="font-semibold text-primary text-sm">
+                  Następny do wypłaty
+                </span>
               </div>
-              {isAdminUser && hasSpecificEvent && (
-                <Button
-                  disabled={toggleMutation.isPending}
-                  onClick={() => {
-                    toggleMutation.mutate({
-                      paidOut: true,
-                      userId: nextToPay.value.userId,
-                    });
-                  }}
-                  size="sm"
-                  variant="default"
-                >
-                  <Check className="size-4 sm:mr-2" />
-                  <span className="hidden sm:inline">
-                    Oznacz jako wypłacone
-                  </span>
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Empty state */}
-        {(!vault || vault.length === 0) && (
-          <EmptyState
-            icon={VaultIcon}
-            message="Brak graczy z zarobkami powyżej 100 000 000 złota"
-          />
-        )}
-
-        {/* Unpaid users list */}
-        {unpaidUsers.length > 1 && (
-          <div className="space-y-2">
-            <h2 className="font-semibold text-lg">
-              Do wypłaty ({unpaidUsers.length})
-            </h2>
-            {unpaidUsers.slice(1).map((player, index) => (
-              <div
-                className="rounded-xl border border-border bg-card transition-colors hover:bg-accent/50"
-                key={player.userId}
-              >
-                <div className="flex items-center gap-4 px-4 py-3">
-                  {/* Position */}
-                  <div className="flex w-8 shrink-0 items-center justify-center">
-                    <span className="font-medium text-muted-foreground">
-                      {index + 2}
-                    </span>
-                  </div>
-                  {/* Avatar */}
-                  <Avatar className="size-10 shrink-0 border border-border">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <Avatar className="size-12 border-2 border-primary">
                     <AvatarImage
-                      alt={player.userName ?? ""}
-                      src={player.userImage ?? undefined}
+                      alt={nextToPay.value.userName ?? ""}
+                      src={nextToPay.value.userImage ?? undefined}
                     />
                     <AvatarFallback>
-                      <User className="size-5" />
+                      <User className="size-6" />
                     </AvatarFallback>
                   </Avatar>
-                  {/* Name */}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{player.userName}</p>
-                  </div>
-                  {/* Earnings */}
-                  <div className="flex items-center gap-2">
-                    <Coins className="size-4 text-muted-foreground" />
-                    <p className="font-mono font-semibold">
-                      {formatVaultEarnings(player.totalEarnings)}
+                  <div>
+                    <p className="font-bold text-lg">
+                      {nextToPay.value.userName}
+                    </p>
+                    <p className="font-mono text-muted-foreground">
+                      {formatVaultEarnings(nextToPay.value.totalEarnings)} złota
                     </p>
                   </div>
-                  {/* Checkbox for admin */}
-                  {isAdminUser && hasSpecificEvent && (
-                    <Checkbox
-                      checked={player.paidOut}
-                      disabled={toggleMutation.isPending}
-                      onClick={(event) => {
-                        event.preventDefault();
-                      }}
-                      onCheckedChange={(checked) => {
-                        if (Predicate.isBoolean(checked)) {
-                          toggleMutation.mutate({
-                            paidOut: checked,
-                            userId: player.userId,
-                          });
-                        }
-                      }}
-                    />
-                  )}
                 </div>
+                {isAdminUser && hasSpecificEvent && (
+                  <Button
+                    disabled={toggleMutation.isPending}
+                    onClick={() => {
+                      toggleMutation.mutate({
+                        paidOut: true,
+                        userId: nextToPay.value.userId,
+                      });
+                    }}
+                    size="sm"
+                    variant="default"
+                  >
+                    <Check className="size-4 sm:mr-2" />
+                    <span className="hidden sm:inline">
+                      Oznacz jako wypłacone
+                    </span>
+                  </Button>
+                )}
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          )}
 
-        {/* Paid users list */}
-        {paidUsers.length > 0 && (
-          <div className="space-y-2">
-            <h2 className="font-semibold text-lg">
-              Wypłacone ({paidUsers.length})
-            </h2>
-            {paidUsers.map((player) => (
-              <VaultUserCard
-                className="opacity-60 transition-colors hover:bg-accent/50"
-                key={player.userId}
-                rightSlot={
-                  isAdminUser &&
-                  hasSpecificEvent && (
-                    <Checkbox
-                      checked={player.paidOut}
-                      disabled={toggleMutation.isPending}
-                      onClick={(event) => {
-                        event.preventDefault();
-                      }}
-                      onCheckedChange={(checked) => {
-                        if (Predicate.isBoolean(checked)) {
-                          toggleMutation.mutate({
-                            paidOut: checked,
-                            userId: player.userId,
-                          });
-                        }
-                      }}
-                    />
-                  )
-                }
-                totalEarnings={player.totalEarnings}
-                userImage={player.userImage}
-                userName={player.userName ?? ""}
-              />
-            ))}
-          </div>
-        )}
-      </>
+          {/* Empty state */}
+          {(!vault || vault.length === 0) && (
+            <EmptyState
+              icon={VaultIcon}
+              message="Brak graczy z zarobkami powyżej 100 000 000 złota"
+            />
+          )}
+
+          {/* Unpaid users list */}
+          {unpaidUsers.length > 1 && (
+            <div className="space-y-2">
+              <h2 className="font-semibold text-lg">
+                Do wypłaty ({unpaidUsers.length})
+              </h2>
+              {unpaidUsers.slice(1).map((player, index) => (
+                <div
+                  className="rounded-xl border border-border bg-card transition-colors hover:bg-accent/50"
+                  key={player.userId}
+                >
+                  <div className="flex items-center gap-4 px-4 py-3">
+                    {/* Position */}
+                    <div className="flex w-8 shrink-0 items-center justify-center">
+                      <span className="font-medium text-muted-foreground">
+                        {index + 2}
+                      </span>
+                    </div>
+                    {/* Avatar */}
+                    <Avatar className="size-10 shrink-0 border border-border">
+                      <AvatarImage
+                        alt={player.userName ?? ""}
+                        src={player.userImage ?? undefined}
+                      />
+                      <AvatarFallback>
+                        <User className="size-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    {/* Name */}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">
+                        {player.userName}
+                      </p>
+                    </div>
+                    {/* Earnings */}
+                    <div className="flex items-center gap-2">
+                      <Coins className="size-4 text-muted-foreground" />
+                      <p className="font-mono font-semibold">
+                        {formatVaultEarnings(player.totalEarnings)}
+                      </p>
+                    </div>
+                    {/* Checkbox for admin */}
+                    {isAdminUser && hasSpecificEvent && (
+                      <Checkbox
+                        checked={player.paidOut}
+                        disabled={toggleMutation.isPending}
+                        onClick={(event) => {
+                          event.preventDefault();
+                        }}
+                        onCheckedChange={(checked) => {
+                          if (Predicate.isBoolean(checked)) {
+                            toggleMutation.mutate({
+                              paidOut: checked,
+                              userId: player.userId,
+                            });
+                          }
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Paid users list */}
+          {paidUsers.length > 0 && (
+            <div className="space-y-2">
+              <h2 className="font-semibold text-lg">
+                Wypłacone ({paidUsers.length})
+              </h2>
+              {paidUsers.map((player) => (
+                <VaultUserCard
+                  className="opacity-60 transition-colors hover:bg-accent/50"
+                  key={player.userId}
+                  rightSlot={
+                    isAdminUser &&
+                    hasSpecificEvent && (
+                      <Checkbox
+                        checked={player.paidOut}
+                        disabled={toggleMutation.isPending}
+                        onClick={(event) => {
+                          event.preventDefault();
+                        }}
+                        onCheckedChange={(checked) => {
+                          if (Predicate.isBoolean(checked)) {
+                            toggleMutation.mutate({
+                              paidOut: checked,
+                              userId: player.userId,
+                            });
+                          }
+                        }}
+                      />
+                    )
+                  }
+                  totalEarnings={player.totalEarnings}
+                  userImage={player.userImage}
+                  userName={player.userName ?? ""}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
