@@ -44,10 +44,10 @@ type SquadEditorInviteTarget = typeof SquadEditorInviteTargetSchema.Type;
 type SquadGroupEditorGrant = SquadGroupEditorGrantSummarySchema;
 
 const disabledSquadGroupEditorGrantsAtom = Atom.make<
-  AsyncResult.AsyncResult<readonly SquadGroupEditorGrant[], never>
+  AsyncResult.AsyncResult<readonly SquadGroupEditorGrant[]>
 >(AsyncResult.success([]));
 const disabledSquadEditorInviteTargetsAtom = Atom.make<
-  AsyncResult.AsyncResult<readonly SquadEditorInviteTarget[], never>
+  AsyncResult.AsyncResult<readonly SquadEditorInviteTarget[]>
 >(AsyncResult.success([]));
 
 const squadEditorInviteTargetsKey = (

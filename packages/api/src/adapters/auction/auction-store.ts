@@ -49,7 +49,7 @@ const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new AuctionStoreError(input)
 );
 const decodePersisted = <A>(
-  schema: Schema.ConstraintDecoder<A, never>,
+  schema: Schema.ConstraintDecoder<A>,
   input: unknown
 ) =>
   decodePersistedValue(

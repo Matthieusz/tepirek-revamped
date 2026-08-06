@@ -69,7 +69,7 @@ const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new SkillsStoreError(input)
 );
 const decodePersisted = <A>(
-  schema: Schema.ConstraintDecoder<A, never>,
+  schema: Schema.ConstraintDecoder<A>,
   input: unknown,
   operation: string
 ) =>

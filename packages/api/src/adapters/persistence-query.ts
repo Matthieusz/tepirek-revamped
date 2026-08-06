@@ -48,7 +48,7 @@ export const decodePersistedValue = <
   PersistenceError,
   Operation extends string,
 >(
-  schema: Schema.ConstraintDecoder<A, never>,
+  schema: Schema.ConstraintDecoder<A>,
   input: unknown,
   operation: Operation,
   makeError: (input: {

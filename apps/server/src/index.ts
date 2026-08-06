@@ -269,7 +269,7 @@ export const withHotReload = <A, E>(
   return Effect.gen(function* hotReloadBridge() {
     const reloadRequested = yield* Deferred.make<undefined>();
     const finalized = yield* Deferred.make<undefined>();
-    const context = yield* Effect.context<never>();
+    const context = yield* Effect.context();
     const runPromise = Effect.runPromiseWith(context);
 
     hot.dispose(async () => {

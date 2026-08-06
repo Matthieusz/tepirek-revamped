@@ -46,7 +46,7 @@ const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new TodoStoreError(input)
 );
 const decodePersisted = <A>(
-  schema: Schema.ConstraintDecoder<A, never>,
+  schema: Schema.ConstraintDecoder<A>,
   input: unknown
 ) =>
   decodePersistedValue(

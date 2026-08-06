@@ -25,7 +25,7 @@ const formBuilder = FormBuilder.empty.addField("name", nameSchema);
 
 const makeForm = (
   onSubmit: (name: string) => Effect.Effect<string, Error>
-): FormAtoms.FormAtoms<typeof formBuilder.fields, never, string, Error, void> =>
+): FormAtoms.FormAtoms<typeof formBuilder.fields, never, string, Error> =>
   FormAtoms.make({
     formBuilder,
     mode: { validation: "onSubmit" },

@@ -47,7 +47,7 @@ export const persistenceQuery = makeDirectPersistenceQuery<
 export const parsePersistedAppUserId = (
   operation: EffectSquadGroupPersistenceOperation,
   value: string
-): Effect.Effect<AppUserId, SquadBuilderPersistenceUnavailable, never> =>
+): Effect.Effect<AppUserId, SquadBuilderPersistenceUnavailable> =>
   parseAppUserId(value).pipe(
     Effect.catchTag("InvalidAppUserId", (error) =>
       failPersistence(operation, error)

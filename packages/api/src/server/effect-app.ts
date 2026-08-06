@@ -46,7 +46,7 @@ import type { SquadGroupStoreService } from "../services/squad-builder/squad-gro
 import type { VaultService } from "../services/vault/vault-service.ts";
 
 const makeApiStableLayer = <DatabaseError>(
-  databaseLayer: Layer.Layer<EffectDatabase, DatabaseError, never>,
+  databaseLayer: Layer.Layer<EffectDatabase, DatabaseError>,
   discordConfigLayer: Layer.Layer<DiscordVerificationConfigService>,
   firecrawlConfigLayer: Layer.Layer<FirecrawlConfigService>
 ): Layer.Layer<SquadBuilderServices, DatabaseError> => {

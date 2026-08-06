@@ -368,10 +368,7 @@ export class UserStore extends Context.Service<
     >;
     readonly getDiscordAccessToken: (
       userId: AppUserId
-    ) => Effect.Effect<
-      Redacted.Redacted<string>,
-      UserBadRequest | UserAdapterError
-    >;
+    ) => Effect.Effect<Redacted.Redacted, UserBadRequest | UserAdapterError>;
     readonly getVerified: () => Effect.Effect<
       readonly VerifiedMember[],
       UserAdapterError

@@ -20,7 +20,7 @@ export class DiscordGuildVerifier extends Context.Service<
   DiscordGuildVerifier,
   {
     readonly verifyMembership: (
-      accessToken: Redacted.Redacted<string>
+      accessToken: Redacted.Redacted
     ) => Effect.Effect<boolean, UserAdapterError>;
   }
 >()("@tepirek-revamped/api/user/DiscordGuildVerifier") {}
@@ -101,7 +101,7 @@ const makeDiscordClient = (client: HttpClient.HttpClient) =>
 
 const fetchDiscordGuilds = (
   client: HttpClient.HttpClient,
-  accessToken: Redacted.Redacted<string>
+  accessToken: Redacted.Redacted
 ): Effect.Effect<
   DiscordGuilds | false,
   HttpClientError.HttpClientError | Schema.SchemaError

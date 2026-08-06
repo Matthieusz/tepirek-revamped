@@ -87,10 +87,10 @@ const globalSquadGroupsKey = (payload: ListGlobalSquadGroupsInput) =>
   });
 
 const disabledSquadGroupDetailAtom = Atom.make<
-  AsyncResult.AsyncResult<SquadGroupDetail, never>
+  AsyncResult.AsyncResult<SquadGroupDetail>
 >(AsyncResult.initial());
 const disabledAvailableSquadCharactersAtom = Atom.make<
-  AsyncResult.AsyncResult<readonly AvailableSquadCharacter[], never>
+  AsyncResult.AsyncResult<readonly AvailableSquadCharacter[]>
 >(AsyncResult.success([]));
 
 export const ownedSquadGroupsAtom = appHttpApiAtom(

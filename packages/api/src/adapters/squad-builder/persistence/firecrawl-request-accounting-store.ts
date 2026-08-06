@@ -105,8 +105,7 @@ const markRequestSucceededWithDatabase =
     requestId,
   }: MarkFirecrawlRequestSucceededInput): Effect.Effect<
     void,
-    SquadBuilderPersistenceUnavailable,
-    never
+    SquadBuilderPersistenceUnavailable
   > =>
     persistenceQuery(
       "markRequestSucceeded",
@@ -130,8 +129,7 @@ const markRequestFailedWithDatabase =
     requestId,
   }: MarkFirecrawlRequestFailedInput): Effect.Effect<
     void,
-    SquadBuilderPersistenceUnavailable,
-    never
+    SquadBuilderPersistenceUnavailable
   > =>
     persistenceQuery(
       "markRequestFailed",

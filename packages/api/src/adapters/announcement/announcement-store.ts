@@ -38,7 +38,7 @@ const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new AnnouncementStoreError(input)
 );
 const decodePersisted =
-  <A>(schema: Schema.ConstraintDecoder<A, never>) =>
+  <A>(schema: Schema.ConstraintDecoder<A>) =>
   (input: unknown) =>
     decodePersistedValue(
       schema,

@@ -43,10 +43,10 @@ type AccountAccessGrant = AccountAccessGrantSummarySchema;
 type AccountInviteTarget = AccountInviteTargetSchema;
 
 const disabledAccountAccessGrantsAtom = Atom.make<
-  AsyncResult.AsyncResult<readonly AccountAccessGrant[], never>
+  AsyncResult.AsyncResult<readonly AccountAccessGrant[]>
 >(AsyncResult.success([]));
 const disabledAccountInviteTargetsAtom = Atom.make<
-  AsyncResult.AsyncResult<readonly AccountInviteTarget[], never>
+  AsyncResult.AsyncResult<readonly AccountInviteTarget[]>
 >(AsyncResult.success([]));
 
 export const incomingAccountInvitesAtom = appHttpApiAtom(

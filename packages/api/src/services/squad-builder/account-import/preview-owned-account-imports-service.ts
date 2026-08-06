@@ -174,11 +174,10 @@ const persistPendingImport = ({
   readonly now: Date;
   readonly preview: PreviewMargonemProfileImportOutput;
   readonly store: typeof AccountImportStoreService.Service;
-}): Effect<
-  { readonly lineNumber: number; readonly item: PreviewOwnedAccountImportItem },
-  never,
-  never
-> =>
+}): Effect<{
+  readonly lineNumber: number;
+  readonly item: PreviewOwnedAccountImportItem;
+}> =>
   EffectRuntime.gen(function* persistPendingImportEffect() {
     const expiresAt = DateTime.fromDateUnsafe(now).pipe(
       DateTime.add({ minutes: pendingImportPolicy.expiresAfterMinutes }),
