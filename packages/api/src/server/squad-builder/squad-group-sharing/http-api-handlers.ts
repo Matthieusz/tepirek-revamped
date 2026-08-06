@@ -50,9 +50,7 @@ type SquadGroupSharingHandlerError =
   | RespondToSquadGroupInviteError
   | RevokeSquadGroupEditorError
   | ListIncomingSquadGroupInvitesError
-  | ListSharedSquadGroupsError
-  | ListSquadGroupEditorGrantsError
-  | CountPendingSquadGroupInvitesError;
+  | ListSquadGroupEditorGrantsError;
 
 type SearchSquadEditorInviteTargetsProtocolError =
   | SquadBuilderNotFound
@@ -73,10 +71,7 @@ type ListSquadGroupEditorGrantsProtocolError =
   | SquadBuilderPersistenceUnavailable;
 
 function mapSquadGroupSharingError(
-  error:
-    | ListIncomingSquadGroupInvitesError
-    | ListSharedSquadGroupsError
-    | CountPendingSquadGroupInvitesError
+  error: ListIncomingSquadGroupInvitesError
 ): SquadBuilderPersistenceUnavailable;
 function mapSquadGroupSharingError(
   error: ListSquadGroupEditorGrantsError

@@ -47,7 +47,6 @@ type AccountSharingHandlerError =
   | RespondToAccountAccessInviteError
   | RevokeAccountAccessError
   | ListIncomingAccountInvitesError
-  | ListSharedAccountsError
   | ListAccountAccessGrantsError;
 
 type SearchAccountInviteTargetsProtocolError =
@@ -69,7 +68,7 @@ type ListAccountAccessGrantsProtocolError =
   | SquadBuilderPersistenceUnavailable;
 
 function mapAccountSharingError(
-  error: ListIncomingAccountInvitesError | ListSharedAccountsError
+  error: ListIncomingAccountInvitesError
 ): SquadBuilderPersistenceUnavailable;
 function mapAccountSharingError(
   error: ListAccountAccessGrantsError

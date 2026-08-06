@@ -55,8 +55,7 @@ type SquadGroupsHandlerError =
   | DeleteSquadGroupError
   | ListOwnedSquadGroupsError
   | ListGlobalSquadGroupsError
-  | GetSquadGroupDetailError
-  | SetSquadGroupVisibilityError;
+  | GetSquadGroupDetailError;
 
 type CreateSquadGroupProtocolError =
   | SquadBuilderInvalidInput
@@ -89,7 +88,6 @@ function mapSquadGroupsError(
     | DeleteSquadGroupError
     | GetSquadGroupDetailError
     | ListAvailableSquadCharactersError
-    | SetSquadGroupVisibilityError
 ): DeleteSquadGroupProtocolError;
 function mapSquadGroupsError(
   error: SaveSquadGroupError | EffectSharedSquadGroupSaveError
