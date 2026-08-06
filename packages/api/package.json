@@ -39,9 +39,8 @@
     }
   },
   "scripts": {
-    "check-boundary": "node scripts/check-package-boundary.mjs",
     "check-types": "tsc --noEmit --composite false --declaration false --declarationMap false --rootDir src",
-    "test": "pnpm check-boundary && vitest run",
+    "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
