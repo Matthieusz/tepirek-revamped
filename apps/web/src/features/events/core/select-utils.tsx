@@ -2,21 +2,11 @@ import { Loader2 } from "lucide-react";
 
 import { SelectItem } from "@/components/ui/select";
 import { sortEventsByEndTimeDesc } from "@/features/events/core/event-hero-filter";
+import type {
+  EventSelectOption,
+  HeroSelectOption,
+} from "@/features/events/core/event-hero-options";
 import { getEventIcon } from "@/lib/constants";
-
-export interface EventSelectOption {
-  id: number;
-  name: string;
-  icon: string;
-  color: string | null;
-  endTime?: Date | string;
-}
-
-export interface HeroSelectOption {
-  id: number;
-  name: string;
-  level?: number;
-}
 
 interface EventSelectItemsProps {
   events: EventSelectOption[] | undefined;

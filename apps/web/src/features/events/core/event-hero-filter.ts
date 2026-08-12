@@ -7,7 +7,7 @@ import * as Schema from "effect/Schema";
 import type {
   EventSelectOption,
   HeroSelectOption,
-} from "@/features/events/core/select-utils";
+} from "@/features/events/core/event-hero-options";
 
 /**
  * Deep Event/Hero filter module.

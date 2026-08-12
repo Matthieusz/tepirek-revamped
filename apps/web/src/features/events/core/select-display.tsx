@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type {
   EventSelectOption,
   HeroSelectOption,
-} from "@/features/events/core/select-utils";
+} from "@/features/events/core/event-hero-options";
 import { getEventIcon } from "@/lib/constants";
 
 interface EventSelectDisplayParams {

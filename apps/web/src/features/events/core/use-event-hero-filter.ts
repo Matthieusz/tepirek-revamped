@@ -20,7 +20,7 @@ import type {
 import type {
   EventSelectOption,
   HeroSelectOption,
-} from "@/features/events/core/select-utils";
+} from "@/features/events/core/event-hero-options";
 import { heroesByEventAtom } from "@/features/events/heroes/hero-atoms";
 
 /**

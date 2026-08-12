@@ -1,5 +1,3 @@
-/* oxlint-disable complexity, no-negated-condition */
-
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useSelector } from "@tanstack/react-form";
 import * as Arr from "effect/Array";
@@ -7,18 +5,11 @@ import * as Order from "effect/Order";
 import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Coins } from "lucide-react";
-import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form, FormFeedback, useCanCloseForm } from "@/components/forms/form";
-import {
-  FormFieldFrame,
-  getFieldErrorMessage,
-  getFieldErrorId,
-  getFieldId,
-} from "@/components/forms/form-field-helpers";
 import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,26 +21,15 @@ import {
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { eventsAtom } from "@/features/events/core/event-atoms";
 import {
   ALL_FILTER,
   toQueryInput,
 } from "@/features/events/core/event-hero-filter";
 import {
-  getEventSelectDisplay,
-  getHeroSelectDisplay,
-} from "@/features/events/core/select-display";
-import {
-  EventSelectItems,
-  HeroSelectItems,
-} from "@/features/events/core/select-utils";
+  EventFormField,
+  HeroFormField,
+} from "@/features/events/core/event-hero-form-fields";
 import { heroesAtom } from "@/features/events/heroes/hero-atoms";
 import {
   GoldAmountSchema,
@@ -76,57 +56,48 @@ interface HeroStats {
   totalPoints: number;
 }
 
-const getModalEventSelectDisplay = (params: {
-  readonly selectedEventId: string;
-  readonly events:
-    | {
-        color: string | null;
-        endTime: Date;
-        icon: string;
-        id: number;
-        name: string;
-      }[]
-    | undefined;
-}): ReactNode =>
-  getEventSelectDisplay({
-    events: params.events,
-    selectedEventId: params.selectedEventId,
-  });
+type HeroStatsPreviewState =
+  | { readonly _tag: "hidden" }
+  | { readonly _tag: "loading" }
+  | { readonly _tag: "failure"; readonly onRetry: () => void }
+  | { readonly _tag: "empty" }
+  | { readonly _tag: "success"; readonly heroStats: HeroStats };
 
-const getModalHeroSelectDisplay = (params: {
-  readonly selectedEventId: string;
-  readonly selectedHeroId: string;
-  readonly heroes: { id: number; name: string }[] | undefined;
-}): string =>
-  getHeroSelectDisplay({
-    allLabel: "Wybierz herosa...",
-    placeholder: "Wybierz herosa...",
-    selectedEventId: params.selectedEventId,
-    selectedHeroId: params.selectedHeroId,
-    sortedHeroes: params.heroes,
-  });
+const getHeroStatsPreviewState = (params: {
+  readonly enabled: boolean;
+  readonly onRetry: () => void;
+  readonly result: AsyncResult.AsyncResult<HeroStats | undefined, unknown>;
+}): HeroStatsPreviewState => {
+  if (!params.enabled) {
+    return { _tag: "hidden" };
+  }
+  if (AsyncResult.isFailure(params.result)) {
+    return { _tag: "failure", onRetry: params.onRetry };
+  }
+  if (!AsyncResult.isSuccess(params.result)) {
+    return { _tag: "loading" };
+  }
+  if (params.result.value === undefined) {
+    return { _tag: "empty" };
+  }
+  return { _tag: "success", heroStats: params.result.value };
+};
 
 const HeroStatsPreview = ({
-  heroStats,
-  isFailure,
-  isPending,
-  onRetry,
+  state,
 }: {
-  heroStats: HeroStats | undefined;
-  isFailure: boolean;
-  isPending: boolean;
-  onRetry: () => void;
+  readonly state: Exclude<HeroStatsPreviewState, { readonly _tag: "hidden" }>;
 }) => {
-  if (isFailure) {
+  if (state._tag === "failure") {
     return (
       <AsyncResultFailure
         message="Nie udało się wczytać statystyk herosa."
-        onRetry={onRetry}
+        onRetry={state.onRetry}
       />
     );
   }
 
-  if (isPending) {
+  if (state._tag === "loading") {
     return (
       <div className="rounded-lg border bg-muted/30 p-4">
         <p className="text-muted-foreground text-sm">Ładowanie statystyk...</p>
@@ -134,7 +105,7 @@ const HeroStatsPreview = ({
     );
   }
 
-  if (!heroStats) {
+  if (state._tag === "empty") {
     return (
       <div className="rounded-lg border bg-muted/30 p-4">
         <p className="text-muted-foreground text-sm">
@@ -147,24 +118,163 @@ const HeroStatsPreview = ({
   return (
     <div className="rounded-lg border bg-muted/30 p-4">
       <div className="space-y-2">
-        <h4 className="font-semibold">{heroStats.heroName}</h4>
+        <h4 className="font-semibold">{state.heroStats.heroName}</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-muted-foreground">Suma punktów</p>
             <p className="font-mono font-semibold">
-              {heroStats.totalPoints.toFixed(2)}
+              {state.heroStats.totalPoints.toFixed(2)}
             </p>
           </div>
-          {heroStats.currentPointWorth > 0 && (
+          {state.heroStats.currentPointWorth > 0 && (
             <div>
               <p className="text-muted-foreground">Aktualna wartość punktu</p>
               <p className="font-mono font-semibold">
-                {heroStats.currentPointWorth.toLocaleString("pl-PL")} złota
+                {state.heroStats.currentPointWorth.toLocaleString("pl-PL")}{" "}
+                złota
               </p>
             </div>
           )}
         </div>
       </div>
+    </div>
+  );
+};
+
+const getEventsState = (
+  result: AsyncResult.AsyncResult<
+    readonly {
+      color: string | null;
+      endTime: Date;
+      icon: string;
+      id: number;
+      name: string;
+    }[],
+    unknown
+  >
+) => {
+  if (AsyncResult.isSuccess(result)) {
+    return { events: [...result.value], loading: false };
+  }
+  return { events: [], loading: true };
+};
+
+const getHeroesState = (
+  result: AsyncResult.AsyncResult<
+    readonly {
+      eventId: number | null;
+      id: number;
+      level: number;
+      name: string;
+    }[],
+    unknown
+  >
+) => {
+  if (AsyncResult.isSuccess(result)) {
+    return { heroes: result.value, loading: false };
+  }
+  return { heroes: [], loading: true };
+};
+
+const filterHeroesForEvent = (
+  eventId: string,
+  heroes: readonly {
+    eventId: number | null;
+    id: number;
+    level: number;
+    name: string;
+  }[]
+) =>
+  Arr.sortWith(
+    Arr.filter<(typeof heroes)[number]>(
+      (hero) => hero.eventId?.toString() === eventId
+    )(eventId === ALL_FILTER ? [] : heroes),
+    (hero) => hero.level,
+    Order.Number
+  );
+
+const getHeroStats = (state: HeroStatsPreviewState): HeroStats | undefined =>
+  state._tag === "success" ? state.heroStats : undefined;
+
+const getSubmitLabel = (params: {
+  readonly dependentDataLoading: boolean;
+  readonly isSubmitting: boolean;
+}): string => {
+  if (params.isSubmitting) {
+    return "Rozdzielanie...";
+  }
+  if (params.dependentDataLoading) {
+    return "Ładowanie...";
+  }
+  return "Rozdziel złoto";
+};
+
+const HeroStatsPreviewSlot = ({
+  state,
+}: {
+  readonly state: HeroStatsPreviewState;
+}) => {
+  if (state._tag === "hidden") {
+    return null;
+  }
+  return <HeroStatsPreview state={state} />;
+};
+
+const GoldAmountPreview = ({ goldAmount }: { readonly goldAmount: number }) => {
+  if (goldAmount <= 0) {
+    return null;
+  }
+  return (
+    <p className="font-mono text-muted-foreground text-xs">
+      = {goldAmount.toLocaleString("pl-PL")} złota
+    </p>
+  );
+};
+
+const DistributionPreview = ({
+  goldAmount,
+  heroId,
+  heroStats,
+  pointWorth,
+}: {
+  readonly goldAmount: number;
+  readonly heroId: string;
+  readonly heroStats: HeroStats | undefined;
+  readonly pointWorth: number;
+}) => {
+  if (
+    heroId === ALL_FILTER ||
+    goldAmount <= 0 ||
+    heroStats === undefined ||
+    heroStats.totalPoints <= 0
+  ) {
+    return null;
+  }
+  return (
+    <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+      <h4 className="mb-2 font-semibold text-primary text-sm">
+        Podgląd rozdziału
+      </h4>
+      <div className="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <p className="text-muted-foreground">Wartość jednego punktu</p>
+          <p className="font-mono font-semibold">
+            {pointWorth.toLocaleString("pl-PL", {
+              maximumFractionDigits: 2,
+            })}{" "}
+            złota
+          </p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Złoto do rozdzielenia</p>
+          <p className="font-mono font-semibold">
+            {goldAmount.toLocaleString("pl-PL")}
+          </p>
+        </div>
+      </div>
+      <p className="mt-2 text-muted-foreground text-xs">
+        Formuła: złoto gracza = punkty gracza × {pointWorth.toFixed(2)}
+      </p>
     </div>
   );
 };
@@ -186,14 +296,12 @@ export const DistributeGoldModal = ({
   const distributeGold = useAtomSet(distributeGoldAtom, { mode: "promise" });
 
   const eventsResult = useAtomValue(eventsAtom);
-  const events = AsyncResult.isSuccess(eventsResult)
-    ? [...eventsResult.value]
-    : [];
-  const eventsLoading = !AsyncResult.isSuccess(eventsResult);
+  const eventsState = getEventsState(eventsResult);
+  const { events, loading: eventsLoading } = eventsState;
 
   const heroesResult = useAtomValue(heroesAtom);
-  const heroes = AsyncResult.isSuccess(heroesResult) ? heroesResult.value : [];
-  const heroesLoading = !AsyncResult.isSuccess(heroesResult);
+  const heroesState = getHeroesState(heroesResult);
+  const { heroes, loading: heroesLoading } = heroesState;
 
   const form = useAppForm({
     defaultValues: {
@@ -258,41 +366,28 @@ export const DistributeGoldModal = ({
     setOpen(nextOpen);
   };
 
-  const filteredHeroes = Arr.sortWith(
-    eventId === ALL_FILTER
-      ? []
-      : Arr.filter<(typeof heroes)[number]>(
-          (hero) => hero.eventId?.toString() === eventId
-        )(heroes ?? []),
-    (hero) => hero.level,
-    Order.Number
-  );
+  const filteredHeroes = filterHeroesForEvent(eventId, heroes);
   const parsedHeroId = toQueryInput(heroId) ?? null;
   const heroStatsAtomValue = heroStatsAtom({ heroId: parsedHeroId });
   const heroStatsResult = useAtomValue(heroStatsAtomValue);
   const refreshHeroStats = useAtomRefresh(heroStatsAtomValue);
-  const heroStats =
-    heroId !== ALL_FILTER && open && AsyncResult.isSuccess(heroStatsResult)
-      ? heroStatsResult.value
-      : undefined;
-  const heroStatsPending =
-    heroId !== ALL_FILTER && open && !AsyncResult.isSuccess(heroStatsResult);
-  const heroStatsFailure =
-    heroId !== ALL_FILTER && open && AsyncResult.isFailure(heroStatsResult);
+  const heroStatsPreviewState = getHeroStatsPreviewState({
+    enabled: heroId !== ALL_FILTER && open,
+    onRetry: refreshHeroStats,
+    result: heroStatsResult,
+  });
+  const heroStats = getHeroStats(heroStatsPreviewState);
   const dependentDataLoading =
-    eventsLoading || heroesLoading || heroStatsPending;
+    eventsLoading || heroesLoading || heroStatsPreviewState._tag === "loading";
   const goldAmount = parseGoldAmount(goldAmountValue || "0");
   const pointWorth =
     heroStats && heroStats.totalPoints > 0
       ? goldAmount / heroStats.totalPoints
       : 0;
-  let submitLabel = "Rozdziel złoto";
-  if (dependentDataLoading) {
-    submitLabel = "Ładowanie...";
-  }
-  if (isSubmitting) {
-    submitLabel = "Rozdzielanie...";
-  }
+  const submitLabel = getSubmitLabel({
+    dependentDataLoading,
+    isSubmitting,
+  });
 
   return (
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
@@ -312,126 +407,39 @@ export const DistributeGoldModal = ({
             </ResponsiveDialogHeader>
             <div className="grid gap-4 py-4">
               <form.Field name="eventId">
-                {(field) => {
-                  const fieldId = getFieldId(field.name);
-                  const errorId = getFieldErrorId(fieldId);
-                  const error = getFieldErrorMessage(field.state.meta.errors);
-                  const showError =
-                    error !== undefined &&
-                    (field.state.meta.isTouched ||
-                      field.form.state.submissionAttempts > 0);
-                  return (
-                    <FormFieldFrame
-                      error={showError ? error : undefined}
-                      fieldId={fieldId}
-                      label="Event"
-                    >
-                      <Select
-                        disabled={eventsLoading}
-                        name={field.name}
-                        onValueChange={(value) => {
-                          field.handleChange(value ?? ALL_FILTER);
-                          form.setFieldValue("heroId", ALL_FILTER);
-                        }}
-                        value={field.state.value}
-                      >
-                        <SelectTrigger
-                          aria-describedby={showError ? errorId : undefined}
-                          aria-invalid={showError || undefined}
-                          className="w-full"
-                          id={fieldId}
-                          onBlur={field.handleBlur}
-                        >
-                          <SelectValue>
-                            {getModalEventSelectDisplay({
-                              events,
-                              selectedEventId: field.state.value,
-                            })}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {eventsLoading ? (
-                            <SelectItem disabled value="loading">
-                              Ładowanie...
-                            </SelectItem>
-                          ) : (
-                            <EventSelectItems events={events} />
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </FormFieldFrame>
-                  );
-                }}
+                {(field) => (
+                  <EventFormField
+                    events={events}
+                    eventsLoading={eventsLoading}
+                    field={field}
+                    onChange={(nextEventId) => {
+                      field.handleChange(nextEventId);
+                      form.setFieldValue("heroId", ALL_FILTER);
+                    }}
+                  />
+                )}
               </form.Field>
 
               <form.Field name="heroId">
-                {(field) => {
-                  const fieldId = getFieldId(field.name);
-                  const errorId = getFieldErrorId(fieldId);
-                  const error = getFieldErrorMessage(field.state.meta.errors);
-                  const showError =
-                    error !== undefined &&
-                    (field.state.meta.isTouched ||
-                      field.form.state.submissionAttempts > 0);
-                  return (
-                    <FormFieldFrame
-                      error={showError ? error : undefined}
-                      fieldId={fieldId}
-                      label="Heros"
-                    >
-                      <Select
-                        disabled={eventId === ALL_FILTER || heroesLoading}
-                        name={field.name}
-                        onValueChange={(value) => {
-                          field.handleChange(value ?? ALL_FILTER);
-                        }}
-                        value={
-                          eventId === ALL_FILTER
-                            ? ALL_FILTER
-                            : field.state.value
-                        }
-                      >
-                        <SelectTrigger
-                          aria-describedby={showError ? errorId : undefined}
-                          aria-invalid={showError || undefined}
-                          className="w-full"
-                          id={fieldId}
-                          onBlur={field.handleBlur}
-                        >
-                          <SelectValue>
-                            {getModalHeroSelectDisplay({
-                              heroes: [...filteredHeroes],
-                              selectedEventId: eventId,
-                              selectedHeroId: field.state.value,
-                            })}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <HeroSelectItems
-                            allLabel="Wybierz herosa..."
-                            heroesLoading={heroesLoading}
-                            sortedHeroes={[...filteredHeroes]}
-                          />
-                        </SelectContent>
-                      </Select>
-                    </FormFieldFrame>
-                  );
-                }}
+                {(field) => (
+                  <HeroFormField
+                    eventId={eventId}
+                    field={field}
+                    heroes={[...filteredHeroes]}
+                    heroesLoading={heroesLoading}
+                  />
+                )}
               </form.Field>
 
-              {heroId !== ALL_FILTER && (
-                <HeroStatsPreview
-                  heroStats={heroStats}
-                  isFailure={heroStatsFailure}
-                  isPending={heroStatsPending}
-                  onRetry={refreshHeroStats}
-                />
-              )}
+              <HeroStatsPreviewSlot state={heroStatsPreviewState} />
 
               <form.AppField name="goldAmount">
                 {(field) => (
                   <field.TextField
-                    disabled={heroId === ALL_FILTER || heroStatsPending}
+                    disabled={
+                      heroId === ALL_FILTER ||
+                      heroStatsPreviewState._tag === "loading"
+                    }
                     helperText={
                       <p className="text-muted-foreground text-xs">
                         Użyj &quot;g&quot; dla miliardów (np. 2g = 2 000 000
@@ -443,47 +451,14 @@ export const DistributeGoldModal = ({
                   />
                 )}
               </form.AppField>
-              {goldAmount > 0 && (
-                <p className="font-mono text-muted-foreground text-xs">
-                  = {goldAmount.toLocaleString("pl-PL")} złota
-                </p>
-              )}
+              <GoldAmountPreview goldAmount={goldAmount} />
 
-              {heroId !== ALL_FILTER &&
-                goldAmount > 0 &&
-                heroStats &&
-                heroStats.totalPoints > 0 && (
-                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-                    <h4 className="mb-2 font-semibold text-primary text-sm">
-                      Podgląd rozdziału
-                    </h4>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">
-                          Wartość jednego punktu
-                        </p>
-                        <p className="font-mono font-semibold">
-                          {pointWorth.toLocaleString("pl-PL", {
-                            maximumFractionDigits: 2,
-                          })}{" "}
-                          złota
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">
-                          Złoto do rozdzielenia
-                        </p>
-                        <p className="font-mono font-semibold">
-                          {goldAmount.toLocaleString("pl-PL")}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="mt-2 text-muted-foreground text-xs">
-                      Formuła: złoto gracza = punkty gracza ×{" "}
-                      {pointWorth.toFixed(2)}
-                    </p>
-                  </div>
-                )}
+              <DistributionPreview
+                goldAmount={goldAmount}
+                heroId={heroId}
+                heroStats={heroStats}
+                pointWorth={pointWorth}
+              />
             </div>
             <FormFeedback failure={submissionFailure} />
             <ResponsiveDialogFooter>
