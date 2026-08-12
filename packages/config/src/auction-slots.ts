@@ -1,7 +1,7 @@
 import * as Arr from "effect/Array";
 import * as Schema from "effect/Schema";
 
-import type { AuctionProfession, AuctionType } from "./index.ts";
+import type { AuctionProfession, AuctionType } from "./auction-vocabulary.ts";
 
 /**
  * Auction slot rules shared by the API router and the web table.

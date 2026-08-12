@@ -50,27 +50,16 @@ export const EVENT_ICON_OPTIONS: readonly EventIconOption[] = [
 export const DEFAULT_EVENT_ICON_ID: EventIconId = "calendar";
 
 // ---------------------------------------------------------------------------
-// Auction types & professions
+// Auction vocabulary
 // ---------------------------------------------------------------------------
 
-export const AUCTION_TYPES = ["main", "support"] as const;
-export type AuctionType = (typeof AUCTION_TYPES)[number];
-
-const AuctionTypeSchema = Schema.Literals(AUCTION_TYPES);
-export const isAuctionType = Schema.is(AuctionTypeSchema);
-
-export const AUCTION_PROFESSIONS = [
-  "tracker",
-  "paladin",
-  "mage",
-  "hunter",
-  "blade-dancer",
-  "warrior",
-] as const;
-export type AuctionProfession = (typeof AUCTION_PROFESSIONS)[number];
-
-const AuctionProfessionSchema = Schema.Literals(AUCTION_PROFESSIONS);
-export const isAuctionProfession = Schema.is(AuctionProfessionSchema);
+export {
+  AUCTION_PROFESSIONS,
+  AUCTION_TYPES,
+  isAuctionProfession,
+  isAuctionType,
+} from "./auction-vocabulary.ts";
+export type { AuctionProfession, AuctionType } from "./auction-vocabulary.ts";
 
 // ---------------------------------------------------------------------------
 // Auction slot rules (levels, rounds, columns, legality)
