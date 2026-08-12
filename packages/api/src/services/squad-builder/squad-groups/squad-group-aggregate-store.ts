@@ -49,7 +49,7 @@ export interface SquadGroupCharacter {
 }
 
 /** Saved squad shown in a squad group detail. */
-export interface SquadDetail {
+interface SquadDetail {
   readonly squadId: SquadId;
   readonly name: string;
   readonly position: number;

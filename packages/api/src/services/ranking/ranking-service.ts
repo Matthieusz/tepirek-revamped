@@ -5,7 +5,7 @@ import type { EventId, HeroId } from "../../domain/core-identifiers.ts";
 import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import type { RankingError } from "./ranking-errors.ts";
 
-export interface HeroStats {
+interface HeroStats {
   readonly currentPointWorth: number;
   readonly heroId: HeroId;
   readonly heroName: string;
@@ -13,7 +13,7 @@ export interface HeroStats {
   readonly totalPoints: number;
 }
 
-export interface RankingResult {
+interface RankingResult {
   readonly pointWorth: number | null;
   readonly ranking: readonly RankingRow[];
   readonly totalBets: number;

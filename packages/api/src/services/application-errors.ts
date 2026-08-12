@@ -30,10 +30,3 @@ export class ApplicationDependencyUnavailable extends Schema.TaggedErrorClass<Ap
   "ApplicationDependencyUnavailable",
   { cause: Schema.Defect(), operation: Schema.String }
 ) {}
-
-export type ApplicationError =
-  | ApplicationInvalidInput
-  | ApplicationForbidden
-  | ApplicationNotFound
-  | ApplicationConflict
-  | ApplicationDependencyUnavailable;

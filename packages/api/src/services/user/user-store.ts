@@ -11,7 +11,7 @@ import type {
   ApplicationNotFound,
 } from "../application-errors.ts";
 
-export type UserRole = (typeof USER_ROLES)[number];
+type UserRole = (typeof USER_ROLES)[number];
 
 export interface VerifiedMember {
   readonly id: AppUserId;

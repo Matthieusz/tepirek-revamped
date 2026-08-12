@@ -5,7 +5,7 @@ import type { EventId, HeroId } from "../../domain/core-identifiers.ts";
 import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import type { VaultError } from "./vault-errors.ts";
 
-export interface DistributeGoldSuccess {
+interface DistributeGoldSuccess {
   readonly goldAmount: number;
   readonly heroId: HeroId;
   readonly heroName: string;
@@ -14,14 +14,14 @@ export interface DistributeGoldSuccess {
   readonly totalPoints: number;
   readonly usersUpdated: number;
 }
-export interface VaultRow {
+interface VaultRow {
   readonly paidOut: boolean;
   readonly totalEarnings: string;
   readonly userId: AppUserId;
   readonly userImage: string | null;
   readonly userName: string | null;
 }
-export interface MutationSuccess {
+interface MutationSuccess {
   readonly success: boolean;
 }
 

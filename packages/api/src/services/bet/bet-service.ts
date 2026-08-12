@@ -5,14 +5,14 @@ import type { BetId, EventId, HeroId } from "../../domain/core-identifiers.ts";
 import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import type { BetError } from "./bet-errors.ts";
 
-export interface BetMemberSummary {
+interface BetMemberSummary {
   readonly heroBetId: BetId;
   readonly points: string;
   readonly userId: AppUserId;
   readonly userImage: string | null;
   readonly userName: string | null;
 }
-export interface BetSummary {
+interface BetSummary {
   readonly createdAt: Date;
   readonly createdBy: AppUserId;
   readonly createdByImage: string | null;
@@ -26,7 +26,7 @@ export interface BetSummary {
   readonly memberCount: number;
   readonly members: BetMemberSummary[];
 }
-export interface BetByEventSummary {
+interface BetByEventSummary {
   readonly createdAt: Date;
   readonly createdBy: AppUserId;
   readonly eventId: EventId;
@@ -35,23 +35,23 @@ export interface BetByEventSummary {
   readonly id: BetId;
   readonly memberCount: number;
 }
-export interface StoredBetMember {
+interface StoredBetMember {
   readonly id: number;
   readonly points: string;
   readonly userId: AppUserId;
 }
-export interface CreatedBet {
+interface CreatedBet {
   readonly createdAt: Date;
   readonly createdBy: AppUserId;
   readonly heroId: HeroId;
   readonly id: BetId;
   readonly memberCount: number;
 }
-export interface LatestBetForCopy {
+interface LatestBetForCopy {
   readonly id: BetId;
   readonly members: readonly BetMemberSummary[];
 }
-export interface PaginatedBets {
+interface PaginatedBets {
   readonly items: BetSummary[];
   readonly pagination: {
     readonly hasMore: boolean;
@@ -61,7 +61,7 @@ export interface PaginatedBets {
     readonly totalPages: number;
   };
 }
-export interface MutationSuccess {
+interface MutationSuccess {
   readonly success: boolean;
 }
 
