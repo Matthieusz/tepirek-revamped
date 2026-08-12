@@ -1,5 +1,3 @@
-/* oxlint-disable complexity, no-negated-condition, no-nested-ternary, no-use-before-define */
-
 import * as HashSet from "effect/HashSet";
 import { Copy, CopyX, Search, User, X } from "lucide-react";
 import type { ReactNode } from "react";
@@ -12,58 +10,49 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  copyLastBet,
   getAvailableListState,
   getAvailableUsers,
   getPointsPreview,
   getSelectedUsers,
   removeUser,
-  toggleUser,
-  clearSelection,
-  copyLastBet,
   restoreSelection,
+  toggleUser,
 } from "@/features/events/bets/member-selection";
+import type { LastBetState } from "@/features/events/bets/member-selection";
 import { UserSelectList } from "@/features/events/bets/user-select-list";
 import type { SelectableUser } from "@/features/events/bets/user-select-list";
 
-/**
- * Deep Hero bet member picker component.
- *
- * One implementation of member selection for the add-bet and edit-bet
- * flows. Owns search state, available/selected derivation, empty states,
- * the toggle/clear/restore/copy actions, and the optional points preview.
- * Router mutations and submission stay in the calling page/modal.
- */
-
-interface HeroBetMemberPickerProps {
+interface HeroBetMemberPickerBaseProps {
   readonly fieldName?: string;
   readonly users: SelectableUser[] | undefined;
   readonly usersLoading: boolean;
   readonly selectedUserIds: string[];
   readonly onBlur?: () => void;
   readonly onChange: (userIds: string[]) => void;
-  /** Layout variant: "add" uses a card grid, "edit" uses a list + pills. */
-  readonly variant: "add" | "edit";
-  /** Show the clear-selection action. */
-  readonly clearEnabled?: boolean;
-  /** Show the restore-to-initial action (edit flow). */
-  readonly restoreEnabled?: boolean;
-  readonly initialMemberIds?: string[];
-  /** Show the copy-last-bet action (add flow). */
-  readonly copyLastBetEnabled?: boolean;
-  readonly lastBet?: { members: { userId: string }[] } | undefined;
-  readonly lastBetAvailable?: boolean;
-  /** Show the points preview (edit flow). */
-  readonly pointsPreview?: {
-    currentMemberCount: number;
-  };
   /** Accessible id prefix for checkbox/label pairing. */
   readonly idPrefix?: string;
 }
 
+interface AddPickerProps extends HeroBetMemberPickerBaseProps {
+  readonly variant: "add";
+  readonly lastBet: LastBetState;
+}
+
+interface EditPickerProps extends HeroBetMemberPickerBaseProps {
+  readonly variant: "edit";
+  readonly initialMemberIds: readonly string[];
+  readonly pointsPreview: {
+    readonly currentMemberCount: number;
+  };
+}
+
+type HeroBetMemberPickerProps = AddPickerProps | EditPickerProps;
+
 const AvailableListEmptyState = ({
   state,
 }: {
-  state: ReturnType<typeof getAvailableListState>;
+  readonly state: ReturnType<typeof getAvailableListState>;
 }) => {
   if (state === "loading") {
     return <p className="text-muted-foreground text-sm">Ładowanie...</p>;
@@ -85,214 +74,136 @@ const AvailableListEmptyState = ({
   return null;
 };
 
-export const HeroBetMemberPicker = ({
-  users,
-  usersLoading,
-  selectedUserIds,
-  fieldName,
-  onBlur,
-  onChange,
-  variant,
-  clearEnabled = false,
-  restoreEnabled = false,
-  initialMemberIds,
-  copyLastBetEnabled = false,
-  lastBet,
-  lastBetAvailable = false,
-  pointsPreview,
-  idPrefix = "user",
-}: HeroBetMemberPickerProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
+interface SelectionActionsProps {
+  readonly variant: HeroBetMemberPickerProps["variant"];
+  readonly selectedUserIds: string[];
+  readonly onBlur?: () => void;
+  readonly onChange: (userIds: string[]) => void;
+}
 
-  const selectedUserIdSet = HashSet.fromIterable(selectedUserIds);
-  const availableUsers = getAvailableUsers(users, selectedUserIds, searchQuery);
-  const selectedUsers = getSelectedUsers(users, selectedUserIds);
-  const availableCount =
-    users?.filter((user) => !HashSet.has(selectedUserIdSet, user.id)).length ??
-    0;
-  const listState = getAvailableListState({
-    availableUsers,
-    users,
-    usersLoading,
-  });
+type SelectionActionsWithModeProps =
+  | (Omit<SelectionActionsProps, "variant"> &
+      Pick<AddPickerProps, "lastBet"> & { readonly variant: "add" })
+  | (Omit<SelectionActionsProps, "variant"> &
+      Pick<EditPickerProps, "initialMemberIds"> & { readonly variant: "edit" });
 
-  const preview =
-    pointsPreview === undefined
-      ? null
-      : getPointsPreview(
-          selectedUserIds.length,
-          pointsPreview.currentMemberCount
-        );
+const SelectionActions = (props: SelectionActionsWithModeProps) => {
+  const { onBlur, onChange, selectedUserIds, variant } = props;
 
   return (
-    <div className="grid gap-1.5">
-      {preview && (
-        <div className="flex items-center justify-between rounded-lg border bg-muted/30 p-3">
-          <div className="flex items-center gap-4">
-            <div className="text-center">
-              <p className="text-muted-foreground text-xs">Obecnie</p>
-              <p className="font-semibold text-lg">
-                {preview.currentMemberCount} os.
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {preview.currentPointsPerMember} pkt/os
-              </p>
-            </div>
-            <div className="text-muted-foreground">→</div>
-            <div className="text-center">
-              <p className="text-muted-foreground text-xs">Po zmianie</p>
-              <p className="font-semibold text-lg">
-                {preview.newMemberCount} os.
-              </p>
-              <Badge variant={preview.variant}>
-                {preview.newPointsPerMember} pkt/os
-              </Badge>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <Label>Gracze ({availableCount} dostępnych)</Label>
-        <div className="flex flex-wrap gap-2">
-          {clearEnabled && (
-            <Button
-              disabled={selectedUserIds.length === 0}
-              onClick={() => {
-                onChange(clearSelection());
-              }}
-              onBlur={onBlur}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <CopyX className="size-4" />
-              {variant === "edit" ? (
-                <span>Wyczyść</span>
-              ) : (
-                <>
-                  <span className="hidden sm:inline">Odznacz wszystkich</span>
-                  <span className="sm:hidden">Odznacz</span>
-                </>
-              )}
-            </Button>
-          )}
-          {restoreEnabled && initialMemberIds !== undefined && (
-            <Button
-              onClick={() => {
-                onChange(restoreSelection(initialMemberIds));
-              }}
-              onBlur={onBlur}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <Copy className="size-4" />
-              <span>Przywróć</span>
-            </Button>
-          )}
-          {copyLastBetEnabled && (
-            <Button
-              disabled={!lastBetAvailable}
-              onClick={() => {
-                onChange(copyLastBet(lastBet));
-              }}
-              onBlur={onBlur}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <Copy className="size-4" />
-              <span className="hidden sm:inline">Kopiuj ostatnie</span>
-              <span className="sm:hidden">Kopiuj</span>
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="relative">
-        <Search className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground" />
-        <Input
-          aria-label="Szukaj gracza"
-          className="pl-9"
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-          }}
-          placeholder="Szukaj gracza..."
-          onBlur={onBlur}
-          type="text"
-          value={searchQuery}
-        />
-      </div>
-
-      <div
-        className={
-          variant === "edit"
-            ? "max-h-48 overflow-y-auto rounded-md border p-4"
-            : "max-h-64 overflow-y-auto rounded-md border p-4"
-        }
+    <div className="flex flex-wrap gap-2">
+      <Button
+        disabled={selectedUserIds.length === 0}
+        onClick={() => {
+          onChange([]);
+        }}
+        onBlur={onBlur}
+        size="sm"
+        type="button"
+        variant="outline"
       >
-        {variant === "edit" && (
-          <p className="mb-2 text-muted-foreground text-sm">Dostępni gracze:</p>
-        )}
-        {listState === "has-users" ? (
-          variant === "add" ? (
-            <UserSelectList
-              {...(fieldName === undefined ? {} : { fieldName })}
-              idPrefix={idPrefix}
-              {...(onBlur === undefined ? {} : { onBlur })}
-              onToggleUser={(userId) => {
-                onChange(toggleUser(userId, selectedUserIds));
-              }}
-              selectedUserIds={selectedUserIds}
-              users={availableUsers}
-            />
-          ) : (
-            <div className="grid grid-cols-1 gap-2">
-              {availableUsers.map((user) => (
-                <label
-                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50"
-                  htmlFor={`${idPrefix}-${user.id}`}
-                  key={user.id}
-                >
-                  <Checkbox
-                    id={`${idPrefix}-${user.id}`}
-                    {...(fieldName === undefined ? {} : { name: fieldName })}
-                    onBlur={onBlur}
-                    onCheckedChange={() => {
-                      onChange(toggleUser(user.id, selectedUserIds));
-                    }}
-                  />
-                  <Avatar className="size-8">
-                    <AvatarImage
-                      alt={user.name}
-                      src={user.image ?? undefined}
-                    />
-                    <AvatarFallback>
-                      <User className="size-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="truncate font-normal">{user.name}</span>
-                </label>
-              ))}
-            </div>
-          )
+        <CopyX className="size-4" />
+        {variant === "edit" ? (
+          <span>Wyczyść</span>
         ) : (
-          <AvailableListEmptyState state={listState} />
+          <>
+            <span className="hidden sm:inline">Odznacz wszystkich</span>
+            <span className="sm:hidden">Odznacz</span>
+          </>
         )}
-      </div>
-
-      {selectedUserIds.length > 0 && (
-        <SelectedUsers
-          {...(fieldName === undefined ? {} : { fieldName })}
-          idPrefix={idPrefix}
-          {...(onBlur === undefined ? {} : { onBlur })}
-          onChange={onChange}
-          selectedUserIds={selectedUserIds}
-          selectedUsers={selectedUsers}
-          variant={variant}
-        />
+      </Button>
+      {variant === "edit" ? (
+        <Button
+          onClick={() => {
+            onChange(restoreSelection(props.initialMemberIds));
+          }}
+          onBlur={onBlur}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          <Copy className="size-4" />
+          <span>Przywróć</span>
+        </Button>
+      ) : (
+        <Button
+          disabled={props.lastBet._tag === "unavailable"}
+          onClick={() => {
+            onChange(copyLastBet(props.lastBet));
+          }}
+          onBlur={onBlur}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          <Copy className="size-4" />
+          <span className="hidden sm:inline">Kopiuj ostatnie</span>
+          <span className="sm:hidden">Kopiuj</span>
+        </Button>
       )}
+    </div>
+  );
+};
+
+interface AvailableUsersProps {
+  readonly fieldName?: string;
+  readonly idPrefix: string;
+  readonly onBlur?: () => void;
+  readonly onChange: (userIds: string[]) => void;
+  readonly selectedUserIds: string[];
+  readonly users: SelectableUser[];
+  readonly variant: HeroBetMemberPickerProps["variant"];
+}
+
+const AvailableUsers = ({
+  fieldName,
+  idPrefix,
+  onBlur,
+  onChange,
+  selectedUserIds,
+  users,
+  variant,
+}: AvailableUsersProps) => {
+  if (variant === "add") {
+    return (
+      <UserSelectList
+        {...(fieldName === undefined ? {} : { fieldName })}
+        idPrefix={idPrefix}
+        {...(onBlur === undefined ? {} : { onBlur })}
+        onToggleUser={(userId) => {
+          onChange(toggleUser(userId, selectedUserIds));
+        }}
+        selectedUserIds={selectedUserIds}
+        users={users}
+      />
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-2">
+      {users.map((user) => (
+        <label
+          className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50"
+          htmlFor={`${idPrefix}-${user.id}`}
+          key={user.id}
+        >
+          <Checkbox
+            id={`${idPrefix}-${user.id}`}
+            {...(fieldName === undefined ? {} : { name: fieldName })}
+            onBlur={onBlur}
+            onCheckedChange={() => {
+              onChange(toggleUser(user.id, selectedUserIds));
+            }}
+          />
+          <Avatar className="size-8">
+            <AvatarImage alt={user.name} src={user.image ?? undefined} />
+            <AvatarFallback>
+              <User className="size-4" />
+            </AvatarFallback>
+          </Avatar>
+          <span className="truncate font-normal">{user.name}</span>
+        </label>
+      ))}
     </div>
   );
 };
@@ -304,7 +215,7 @@ interface SelectedUsersProps {
   readonly onChange: (userIds: string[]) => void;
   readonly selectedUserIds: string[];
   readonly selectedUsers: SelectableUser[];
-  readonly variant: "add" | "edit";
+  readonly variant: HeroBetMemberPickerProps["variant"];
 }
 
 const SelectedUsers = ({
@@ -392,6 +303,151 @@ const SelectedUsers = ({
           </div>
         ))}
       </div>
+    </div>
+  );
+};
+
+interface PointsPreviewProps {
+  readonly preview: ReturnType<typeof getPointsPreview> | undefined;
+}
+
+const PointsPreview = ({ preview }: PointsPreviewProps): ReactNode => {
+  if (preview === undefined) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center justify-between rounded-lg border bg-muted/30 p-3">
+      <div className="flex items-center gap-4">
+        <div className="text-center">
+          <p className="text-muted-foreground text-xs">Obecnie</p>
+          <p className="font-semibold text-lg">
+            {preview.currentMemberCount} os.
+          </p>
+          <p className="text-muted-foreground text-xs">
+            {preview.currentPointsPerMember} pkt/os
+          </p>
+        </div>
+        <div className="text-muted-foreground">→</div>
+        <div className="text-center">
+          <p className="text-muted-foreground text-xs">Po zmianie</p>
+          <p className="font-semibold text-lg">{preview.newMemberCount} os.</p>
+          <Badge variant={preview.variant}>
+            {preview.newPointsPerMember} pkt/os
+          </Badge>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/** Renders add or edit member selection without allowing controls from the other flow. */
+export const HeroBetMemberPicker = (props: HeroBetMemberPickerProps) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const idPrefix = props.idPrefix ?? "user";
+  const selectedUserIdSet = HashSet.fromIterable(props.selectedUserIds);
+  const availableUsers = getAvailableUsers(
+    props.users,
+    props.selectedUserIds,
+    searchQuery
+  );
+  const selectedUsers = getSelectedUsers(props.users, props.selectedUserIds);
+  const availableCount =
+    props.users?.filter((user) => !HashSet.has(selectedUserIdSet, user.id))
+      .length ?? 0;
+  const listState = getAvailableListState({
+    availableUsers,
+    users: props.users,
+    usersLoading: props.usersLoading,
+  });
+  const preview =
+    props.variant === "edit"
+      ? getPointsPreview(
+          props.selectedUserIds.length,
+          props.pointsPreview.currentMemberCount
+        )
+      : undefined;
+
+  return (
+    <div className="grid gap-1.5">
+      <PointsPreview preview={preview} />
+
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <Label>Gracze ({availableCount} dostępnych)</Label>
+        {props.variant === "add" ? (
+          <SelectionActions
+            {...(props.onBlur === undefined ? {} : { onBlur: props.onBlur })}
+            lastBet={props.lastBet}
+            onChange={props.onChange}
+            selectedUserIds={props.selectedUserIds}
+            variant="add"
+          />
+        ) : (
+          <SelectionActions
+            {...(props.onBlur === undefined ? {} : { onBlur: props.onBlur })}
+            initialMemberIds={props.initialMemberIds}
+            onChange={props.onChange}
+            selectedUserIds={props.selectedUserIds}
+            variant="edit"
+          />
+        )}
+      </div>
+
+      <div className="relative">
+        <Search className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground" />
+        <Input
+          aria-label="Szukaj gracza"
+          className="pl-9"
+          onChange={(event) => {
+            setSearchQuery(event.target.value);
+          }}
+          {...(props.onBlur === undefined ? {} : { onBlur: props.onBlur })}
+          placeholder="Szukaj gracza..."
+          type="text"
+          value={searchQuery}
+        />
+      </div>
+
+      <div
+        className={
+          props.variant === "edit"
+            ? "max-h-48 overflow-y-auto rounded-md border p-4"
+            : "max-h-64 overflow-y-auto rounded-md border p-4"
+        }
+      >
+        {props.variant === "edit" && (
+          <p className="mb-2 text-muted-foreground text-sm">Dostępni gracze:</p>
+        )}
+        {listState === "has-users" ? (
+          <AvailableUsers
+            {...(props.fieldName === undefined
+              ? {}
+              : { fieldName: props.fieldName })}
+            idPrefix={idPrefix}
+            {...(props.onBlur === undefined ? {} : { onBlur: props.onBlur })}
+            onChange={props.onChange}
+            selectedUserIds={props.selectedUserIds}
+            users={availableUsers}
+            variant={props.variant}
+          />
+        ) : (
+          <AvailableListEmptyState state={listState} />
+        )}
+      </div>
+
+      {props.selectedUserIds.length > 0 && (
+        <SelectedUsers
+          {...(props.fieldName === undefined
+            ? {}
+            : { fieldName: props.fieldName })}
+          idPrefix={idPrefix}
+          {...(props.onBlur === undefined ? {} : { onBlur: props.onBlur })}
+          onChange={props.onChange}
+          selectedUserIds={props.selectedUserIds}
+          selectedUsers={selectedUsers}
+          variant={props.variant}
+        />
+      )}
     </div>
   );
 };

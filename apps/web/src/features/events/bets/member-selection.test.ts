@@ -107,13 +107,14 @@ describe("restoreSelection", () => {
 describe("copyLastBet", () => {
   it("maps the last bet's members to selected user IDs", () => {
     const lastBet = {
+      _tag: "available" as const,
       members: [{ userId: "u2" }, { userId: "u3" }],
     };
     expect(copyLastBet(lastBet)).toEqual(["u2", "u3"]);
   });
 
-  it("returns an empty array when there is no last bet", () => {
-    expect(copyLastBet()).toEqual([]);
+  it("returns an empty array when the last bet is unavailable", () => {
+    expect(copyLastBet({ _tag: "unavailable" })).toEqual([]);
   });
 });
 

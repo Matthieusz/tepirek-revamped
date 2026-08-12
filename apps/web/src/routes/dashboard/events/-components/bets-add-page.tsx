@@ -34,6 +34,7 @@ import {
 import { NonEmptyUserIdsSchema } from "@/features/events/bets/form-schemas";
 import { HeroBetMemberPicker } from "@/features/events/bets/hero-bet-member-picker";
 import { HeroCardsGrid } from "@/features/events/bets/hero-cards-grid";
+import type { LastBetState } from "@/features/events/bets/member-selection";
 import { eventsAtom } from "@/features/events/core/event-atoms";
 import { heroesAtom } from "@/features/events/heroes/hero-atoms";
 import { verifiedUsersAtom } from "@/features/users/user-atoms";
@@ -103,6 +104,10 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
     latestBetRaw === null
       ? null
       : { ...latestBetRaw, members: [...latestBetRaw.members] };
+  const lastBet: LastBetState =
+    latestBet === null
+      ? { _tag: "unavailable" }
+      : { _tag: "available", members: latestBet.members };
   const refreshEvents = useAtomRefresh(eventsAtom);
   const refreshHeroes = useAtomRefresh(heroesAtom);
   const refreshUsers = useAtomRefresh(verifiedUsersAtom);
@@ -408,12 +413,9 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
                                   Gracze
                                 </legend>
                                 <HeroBetMemberPicker
-                                  clearEnabled
-                                  copyLastBetEnabled
                                   fieldName={field.name}
                                   idPrefix={fieldId}
-                                  lastBet={latestBet ?? undefined}
-                                  lastBetAvailable={latestBet !== null}
+                                  lastBet={lastBet}
                                   onBlur={field.handleBlur}
                                   onChange={(userIds) => {
                                     field.handleChange(userIds);

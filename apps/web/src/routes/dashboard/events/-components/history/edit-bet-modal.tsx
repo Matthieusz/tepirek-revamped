@@ -173,7 +173,6 @@ export const EditBetModal = ({
                       Gracze
                     </legend>
                     <HeroBetMemberPicker
-                      clearEnabled
                       fieldName={field.name}
                       idPrefix={fieldId}
                       initialMemberIds={currentMemberIds}
@@ -182,7 +181,6 @@ export const EditBetModal = ({
                         field.handleChange(userIds);
                       }}
                       pointsPreview={{ currentMemberCount: memberCount }}
-                      restoreEnabled
                       selectedUserIds={[...field.state.value]}
                       users={verifiedUsers}
                       usersLoading={usersLoading}

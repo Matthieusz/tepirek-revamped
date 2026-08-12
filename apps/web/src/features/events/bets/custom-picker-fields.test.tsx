@@ -36,9 +36,9 @@ describe("custom picker fields", () => {
   it("keeps member selection controls named and exposes selected users", () => {
     const markup = renderToStaticMarkup(
       <HeroBetMemberPicker
-        clearEnabled
         fieldName="userIds"
         idPrefix="members"
+        lastBet={{ _tag: "unavailable" }}
         onBlur={() => {}}
         onChange={() => {}}
         selectedUserIds={["u1"]}

@@ -16,6 +16,14 @@ import type { SelectableUser } from "@/features/events/bets/user-select-list";
 
 type PointsPreviewVariant = "default" | "destructive" | "secondary";
 
+/** Closed state for the add-flow copy-last-bet action. */
+export type LastBetState =
+  | {
+      readonly _tag: "available";
+      readonly members: readonly { readonly userId: string }[];
+    }
+  | { readonly _tag: "unavailable" };
+
 interface PointsPreview {
   currentMemberCount: number;
   currentPointsPerMember: number;
@@ -107,15 +115,11 @@ export const restoreSelection = (
 /**
  * Copy the last bet's member IDs into the selection (add flow).
  */
-export const copyLastBet = (lastBet?: {
-  members: { userId: string }[];
-}): string[] => {
-  if (!lastBet) {
+export const copyLastBet = (lastBet: LastBetState): string[] => {
+  if (lastBet._tag === "unavailable") {
     return [];
   }
-  return Arr.map((member: { userId: string }) => member.userId)(
-    lastBet.members
-  );
+  return Arr.map((member) => member.userId)(lastBet.members);
 };
 
 type PickerEmptyState =
