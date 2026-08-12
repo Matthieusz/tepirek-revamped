@@ -1,3 +1,4 @@
+import { validateSquadPlacements } from "@tepirek-revamped/api/domain/squad-builder/squad-placement";
 import type {
   AvailableSquadCharacterSchema,
   SquadGroupDetailSchema,
@@ -8,8 +9,6 @@ import * as Option from "effect/Option";
 
 type SquadGroupDetail = SquadGroupDetailSchema;
 export type AvailableCharacter = AvailableSquadCharacterSchema;
-
-export const MAX_SQUAD_CHARACTERS = 10;
 
 interface DraftCharacter {
   readonly characterId: number;
@@ -37,6 +36,11 @@ export type PlacementError = Data.TaggedEnum<{
     readonly squadName: string;
     readonly accountDisplayName: string;
   };
+  readonly duplicateCharacterInSquad: {
+    readonly characterId: number;
+    readonly squadName: string;
+  };
+  readonly duplicateCharacterInGroup: { readonly characterId: number };
 }>;
 export const PlacementError = Data.taggedEnum<PlacementError>();
 
@@ -128,6 +132,79 @@ const getCurrentSquad = (
 const hasCharacterInSquad = (squad: DraftSquad, characterId: number): boolean =>
   squad.characters.some((character) => character.characterId === characterId);
 
+const toPlacementSquads = (
+  draft: SquadGroupDraft,
+  characterId: number,
+  targetSquadKey: string,
+  character: CharacterAccountInfo,
+  charactersById: HashMap.HashMap<number, CharacterAccountInfo>
+) =>
+  draft.squads.map((squad) => {
+    const characters = squad.characters
+      .filter((draftCharacter) => draftCharacter.characterId !== characterId)
+      .map((draftCharacter) => {
+        const accountInfo = HashMap.get(
+          charactersById,
+          draftCharacter.characterId
+        ).pipe(Option.getOrUndefined);
+        return accountInfo === undefined
+          ? { characterId: draftCharacter.characterId }
+          : {
+              accountId: accountInfo.accountId,
+              characterId: draftCharacter.characterId,
+            };
+      });
+    const targetCharacter =
+      squad.clientKey === targetSquadKey
+        ? [{ accountId: character.accountId, characterId }]
+        : [];
+
+    return {
+      characters: [...characters, ...targetCharacter],
+      squadClientKey: squad.clientKey,
+    };
+  });
+
+const unreachablePlacementError = (error: never): never => {
+  throw new Error(`Unhandled squad placement error: ${String(error)}`);
+};
+
+const policyErrorToPlacementError = (
+  error: ReturnType<typeof validateSquadPlacements>,
+  targetSquadName: string,
+  character: CharacterAccountInfo
+): PlacementError | undefined => {
+  if (error === undefined) {
+    return undefined;
+  }
+
+  switch (error._tag) {
+    case "TooManyCharactersInSquad": {
+      return PlacementError.squadFull({ squadName: targetSquadName });
+    }
+    case "DuplicateAccountInSquad": {
+      return PlacementError.accountAlreadyRepresented({
+        accountDisplayName: character.accountDisplayName,
+        squadName: targetSquadName,
+      });
+    }
+    case "DuplicateCharacterInSquad": {
+      return PlacementError.duplicateCharacterInSquad({
+        characterId: error.characterId,
+        squadName: targetSquadName,
+      });
+    }
+    case "DuplicateCharacterInSquadGroup": {
+      return PlacementError.duplicateCharacterInGroup({
+        characterId: error.characterId,
+      });
+    }
+    default: {
+      return unreachablePlacementError(error);
+    }
+  }
+};
+
 export const getPlacementError = (
   draft: SquadGroupDraft,
   characterId: number,
@@ -156,31 +233,13 @@ export const getPlacementError = (
     return undefined;
   }
 
-  const targetCharacters = squad.characters.filter(
-    (current) => current.characterId !== characterId
+  return policyErrorToPlacementError(
+    validateSquadPlacements(
+      toPlacementSquads(draft, characterId, squadKey, character, charactersById)
+    ),
+    squad.name,
+    character
   );
-  if (targetCharacters.length >= MAX_SQUAD_CHARACTERS) {
-    return PlacementError.squadFull({ squadName: squad.name });
-  }
-
-  const sameAccountCharacter = targetCharacters.find((current) => {
-    const currentCharacter = HashMap.get(
-      charactersById,
-      current.characterId
-    ).pipe(Option.getOrUndefined);
-    return (
-      currentCharacter !== undefined &&
-      String(currentCharacter.accountId) === String(character.accountId)
-    );
-  });
-  if (sameAccountCharacter !== undefined) {
-    return PlacementError.accountAlreadyRepresented({
-      accountDisplayName: character.accountDisplayName,
-      squadName: squad.name,
-    });
-  }
-
-  return undefined;
 };
 
 export const applyPlacement = (

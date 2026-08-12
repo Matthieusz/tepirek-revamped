@@ -1,3 +1,4 @@
+import { MAX_SQUAD_CHARACTERS } from "@tepirek-revamped/api/domain/squad-builder/squad-placement";
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
@@ -22,7 +23,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MAX_SQUAD_CHARACTERS } from "@/routes/dashboard/squad-builder/-state/squad-group-draft";
 import type {
   DraftSquad,
   SquadGroupDraft,

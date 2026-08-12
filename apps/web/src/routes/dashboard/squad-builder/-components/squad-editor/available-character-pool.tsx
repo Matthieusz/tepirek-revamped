@@ -1,4 +1,5 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import { MAX_SQUAD_CHARACTERS } from "@tepirek-revamped/api/domain/squad-builder/squad-placement";
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -42,7 +43,6 @@ import {
 } from "@/routes/dashboard/squad-builder/-state/character-pool-filters";
 import type { CharacterPoolFilter } from "@/routes/dashboard/squad-builder/-state/character-pool-filters";
 import {
-  MAX_SQUAD_CHARACTERS,
   PlacementError,
   applyPlacement,
   getPlacementError,
@@ -93,6 +93,10 @@ const placementErrorMessage = (
   PlacementError.$match(error, {
     accountAlreadyRepresented: ({ squadName }) =>
       `${characterName} nie może trafić do składu ${squadName}.`,
+    duplicateCharacterInGroup: ({ characterId }) =>
+      `Postać #${characterId} jest już przypisana do innego składu.`,
+    duplicateCharacterInSquad: ({ characterId, squadName }) =>
+      `Postać #${characterId} występuje już w składzie ${squadName}.`,
     readOnly: () => "Ten widok jest tylko do odczytu.",
     squadFull: ({ squadName }) =>
       `Skład ${squadName} ma już ${MAX_SQUAD_CHARACTERS} postaci.`,
@@ -356,29 +360,26 @@ const CharacterPoolTile = ({
   );
 };
 
-// oxlint-disable-next-line complexity
-export const AvailableCharacterPool = ({
+const useCharacterPoolModel = ({
   characterById,
   draft,
+  filters,
   groupId,
-  isSaving,
-  onDraftChange,
-}: AvailableCharacterPoolProps) => {
-  const [state, dispatch] = useReducer(
-    characterPoolReducer,
-    initialCharacterPoolState
-  );
-  const {
-    characterNameQuery,
-    collapsedAccountIds,
-    filters,
-    levelFromInput,
-    levelToInput,
-  } = state;
+  characterNameQuery,
+  levelFromInput,
+  levelToInput,
+}: {
+  readonly characterById: HashMap.HashMap<number, SquadCharacterMetadata>;
+  readonly draft: SquadGroupDraft;
+  readonly filters: readonly CharacterPoolFilter[];
+  readonly groupId: number;
+  readonly characterNameQuery: string;
+  readonly levelFromInput: string;
+  readonly levelToInput: string;
+}) => {
   const atom = availableSquadCharactersAtom({ groupId });
   const result = useAtomValue(atom);
   const refresh = useAtomRefresh(atom);
-
   const allCharacterById = useMemo(() => {
     let merged = characterById;
     if (AsyncResult.isSuccess(result)) {
@@ -437,12 +438,67 @@ export const AvailableCharacterPool = ({
     characterNameQuery.trim().length > 0 ||
     levelFromInput.trim().length > 0 ||
     levelToInput.trim().length > 0;
-  const levelErrorId = `character-pool-level-error-${groupId}`;
   const hasLevelError =
     parsedFilters.hasInvalidLevelInput || parsedFilters.hasReversedLevelRange;
   const levelErrorMessage = parsedFilters.hasReversedLevelRange
     ? "Poziom od nie może być większy niż poziom do."
     : "Poziom musi być dodatnią liczbą całkowitą.";
+
+  return {
+    accountInfoByCharacterId,
+    characters,
+    filteredCharacters,
+    groupedCharacters,
+    hasActiveFilters,
+    hasLevelError,
+    levelErrorMessage,
+    refresh,
+    result,
+    selectedProfessions,
+    unassignedCharacters,
+  };
+};
+
+export const AvailableCharacterPool = ({
+  characterById,
+  draft,
+  groupId,
+  isSaving,
+  onDraftChange,
+}: AvailableCharacterPoolProps) => {
+  const [state, dispatch] = useReducer(
+    characterPoolReducer,
+    initialCharacterPoolState
+  );
+  const {
+    characterNameQuery,
+    collapsedAccountIds,
+    filters,
+    levelFromInput,
+    levelToInput,
+  } = state;
+  const {
+    accountInfoByCharacterId,
+    characters,
+    filteredCharacters,
+    groupedCharacters,
+    hasActiveFilters,
+    hasLevelError,
+    levelErrorMessage,
+    refresh,
+    result,
+    selectedProfessions,
+    unassignedCharacters,
+  } = useCharacterPoolModel({
+    characterById,
+    characterNameQuery,
+    draft,
+    filters,
+    groupId,
+    levelFromInput,
+    levelToInput,
+  });
+  const levelErrorId = `character-pool-level-error-${groupId}`;
 
   const updateProfessionFilter = (profession: string) => {
     const currentValues = getProfessionFilterValues(filters);
