@@ -26,8 +26,9 @@ import { list as listGlobalSquadGroups } from "./list-global-squad-groups.ts";
 import { save as saveSquadGroup } from "./save-squad-group.ts";
 import { send } from "./send-squad-group-editor-invite-service.ts";
 import { set as setSquadGroupVisibility } from "./set-squad-group-visibility.ts";
+import { SquadGroupAggregateStoreService } from "./squad-group-aggregate-store.ts";
 import { respond, revoke } from "./squad-group-sharing-operations.ts";
-import { SquadGroupStoreService } from "./squad-group-store.ts";
+import { SquadGroupSharingStoreService } from "./squad-group-sharing-store.ts";
 
 const parseTestSquadGroupId = (value: number) =>
   Effect.runSync(parseSquadGroupId(value));
@@ -99,7 +100,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           name: "Other listed group",
         });
 
-        const groups = yield* SquadGroupStoreService.use((store) =>
+        const groups = yield* SquadGroupAggregateStoreService.use((store) =>
           store.listMySquadGroups({
             actorUserId: parseTestUserId(member.id),
           })
@@ -124,7 +125,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           name: "Effect detail group",
         });
 
-        const detail = yield* SquadGroupStoreService.use((store) =>
+        const detail = yield* SquadGroupAggregateStoreService.use((store) =>
           store.getSquadGroupDetail({
             actorUserId: parseTestUserId(member.id),
             groupId: created.groupId,
@@ -176,6 +177,59 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           name: "Effect save updated",
           squads: [{ characters: [], name: "First squad", position: 0 }],
         });
+
+        const [firstSquad] = saved.squads;
+        if (firstSquad === undefined) {
+          throw new Error("Failed to load saved squad");
+        }
+
+        const resaved = yield* saveService.save({
+          actorUserId: parseTestUserId(member.id),
+          expectedUpdatedAt: saved.updatedAt,
+          groupId: created.groupId,
+          name: "Effect save reconciled",
+          squads: [
+            {
+              characters: [],
+              clientKey: "first-squad",
+              name: "Renamed first squad",
+              position: 0,
+              squadId: firstSquad.squadId,
+            },
+            {
+              characters: [],
+              clientKey: "second-squad",
+              name: "Second squad",
+              position: 1,
+            },
+          ],
+        });
+        const secondSquad = resaved.squads.find(
+          (item) => item.name === "Second squad"
+        );
+
+        expect(resaved.squads).toHaveLength(2);
+        expect(resaved.squads[0]?.squadId).toBe(firstSquad.squadId);
+        expect(secondSquad?.squadId).toBeDefined();
+
+        const deletedNewSquad = yield* saveService.save({
+          actorUserId: parseTestUserId(member.id),
+          expectedUpdatedAt: resaved.updatedAt,
+          groupId: created.groupId,
+          name: "Effect save reconciled again",
+          squads: [
+            {
+              characters: [],
+              clientKey: "first-squad",
+              name: "Renamed first squad",
+              position: 0,
+              squadId: firstSquad.squadId,
+            },
+          ],
+        });
+
+        expect(deletedNewSquad.squads).toHaveLength(1);
+        expect(deletedNewSquad.squads[0]?.squadId).toBe(firstSquad.squadId);
       })
     );
 
@@ -326,7 +380,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           }
 
           const failure = yield* Effect.flip(
-            SquadGroupStoreService.use((store) =>
+            SquadGroupSharingStoreService.use((store) =>
               store.saveSharedSquadGroupCharacters({
                 actorUserId: parseTestUserId(member.id),
                 expectedUpdatedAt: beforeGroup.updatedAt,

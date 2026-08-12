@@ -2,12 +2,13 @@ import * as Effect from "effect/Effect";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
+import { SquadGroupAggregateStoreService } from "./squad-group-aggregate-store.ts";
+import { SquadGroupDirectoryStoreService } from "./squad-group-directory-store.ts";
 import type {
   ActorCannotViewSquadGroup,
   SquadBuilderPersistenceUnavailable,
   SquadGroupNotFound,
 } from "./squad-group-errors.ts";
-import { SquadGroupStoreService } from "./squad-group-store.ts";
 
 /** Input for listing characters available to a squad group. */
 export interface ListAvailableSquadCharactersInput {
@@ -26,9 +27,10 @@ export const list = Effect.fn("SquadGroups.listAvailableCharacters")(
   function* listAvailableSquadCharacters(
     input: ListAvailableSquadCharactersInput
   ) {
-    const store = yield* SquadGroupStoreService;
-    const group = yield* store.getSquadGroupDetail(input);
-    return yield* store.listAvailableCharactersForOwner({
+    const aggregateStore = yield* SquadGroupAggregateStoreService;
+    const directoryStore = yield* SquadGroupDirectoryStoreService;
+    const group = yield* aggregateStore.getSquadGroupDetail(input);
+    return yield* directoryStore.listAvailableCharactersForOwner({
       ownerUserId: group.ownerUserId,
     });
   }

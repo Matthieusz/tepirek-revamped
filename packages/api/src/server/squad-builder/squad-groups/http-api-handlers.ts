@@ -23,25 +23,25 @@ import { saveWithStoreService as saveSharedSquadGroupCharactersWorkflow } from "
 import type { SaveSquadGroupError } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
 import { save as saveSquadGroupWorkflow } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
 import { set as setSquadGroupVisibilityWorkflow } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
-import { SquadGroupStoreService } from "../../../services/squad-builder/squad-groups/squad-group-store.ts";
+import { SquadGroupAggregateStoreService } from "../../../services/squad-builder/squad-groups/squad-group-aggregate-store.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
 } from "../auth-helper.ts";
 import { withRequestCorrelation } from "../request-correlation.ts";
 
-type SquadGroupStore = typeof SquadGroupStoreService.Service;
+type SquadGroupAggregateStore = typeof SquadGroupAggregateStoreService.Service;
 type DeleteSquadGroupError = Effect.Error<
-  ReturnType<SquadGroupStore["deleteSquadGroup"]>
+  ReturnType<SquadGroupAggregateStore["deleteSquadGroup"]>
 >;
 type ListOwnedSquadGroupsError = Effect.Error<
-  ReturnType<SquadGroupStore["listMySquadGroups"]>
+  ReturnType<SquadGroupAggregateStore["listMySquadGroups"]>
 >;
 type ListGlobalSquadGroupsError =
   | SquadGroupListFilterError
   | Effect.Error<ReturnType<typeof listGlobalSquadGroupsWorkflow>>;
 type GetSquadGroupDetailError = Effect.Error<
-  ReturnType<SquadGroupStore["getSquadGroupDetail"]>
+  ReturnType<SquadGroupAggregateStore["getSquadGroupDetail"]>
 >;
 type SetSquadGroupVisibilityError = Effect.Error<
   ReturnType<typeof setSquadGroupVisibilityWorkflow>
@@ -190,7 +190,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             yield* withRequestCorrelation(
               request,
-              SquadGroupStoreService.use((store) =>
+              SquadGroupAggregateStoreService.use((store) =>
                 store.deleteSquadGroup({
                   actorUserId: sessionAppUserId(session),
                   groupId: payload.groupId,
@@ -208,7 +208,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              SquadGroupStoreService.use((store) =>
+              SquadGroupAggregateStoreService.use((store) =>
                 store.listMySquadGroups({
                   actorUserId: sessionAppUserId(session),
                 })
@@ -247,7 +247,7 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              SquadGroupStoreService.use((store) =>
+              SquadGroupAggregateStoreService.use((store) =>
                 store.getSquadGroupDetail({
                   actorUserId: sessionAppUserId(session),
                   groupId: payload.groupId,

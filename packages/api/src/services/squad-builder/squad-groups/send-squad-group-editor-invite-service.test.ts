@@ -7,9 +7,13 @@ import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
 import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
-import { makeSquadGroupStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
+import {
+  makeSquadGroupDirectoryStoreServiceTestService,
+  makeSquadGroupSharingStoreServiceTestService,
+} from "../../../test/squad-builder/squad-group-store.ts";
 import { send } from "./send-squad-group-editor-invite-service.ts";
-import { SquadGroupStoreService } from "./squad-group-store.ts";
+import { SquadGroupDirectoryStoreService } from "./squad-group-directory-store.ts";
+import { SquadGroupSharingStoreService } from "./squad-group-sharing-store.ts";
 
 const parseTestUserId = (value: string) =>
   Effect.runSync(parseAppUserId(value));
@@ -31,7 +35,7 @@ it.effect("sends a squad group editor invite for a verified target", () => {
   const targetUserId = parseTestUserId("effect-squad-send-target");
   const groupId = parseTestGroupId();
   const invitationId = parseTestInvitationId();
-  const store = makeSquadGroupStoreServiceTestService({
+  const sharingStore = makeSquadGroupSharingStoreServiceTestService({
     authorizeSquadGroupOwner: (input) => {
       expect(input.actorUserId).toBe(actorUserId);
       expect(input.groupId).toBe(groupId);
@@ -41,15 +45,6 @@ it.effect("sends a squad group editor invite for a verified target", () => {
         groupId,
         ownerUserId: actorUserId,
         role: "owner" as const,
-      });
-    },
-    findVerifiedSquadEditorInviteTarget: (input) => {
-      expect(input.targetUserId).toBe(targetUserId);
-
-      return Effect.succeed({
-        image: null,
-        name: "Send Target",
-        userId: targetUserId,
       });
     },
     upsertSquadGroupEditorInvite: (input) => {
@@ -73,7 +68,21 @@ it.effect("sends a squad group editor invite for a verified target", () => {
       });
     },
   });
-  const testLayer = Layer.succeed(SquadGroupStoreService, store);
+  const directoryStore = makeSquadGroupDirectoryStoreServiceTestService({
+    findVerifiedSquadEditorInviteTarget: (input) => {
+      expect(input.targetUserId).toBe(targetUserId);
+
+      return Effect.succeed({
+        image: null,
+        name: "Send Target",
+        userId: targetUserId,
+      });
+    },
+  });
+  const testLayer = Layer.merge(
+    Layer.succeed(SquadGroupSharingStoreService, sharingStore),
+    Layer.succeed(SquadGroupDirectoryStoreService, directoryStore)
+  );
 
   return Effect.gen(function* sendSquadGroupEditorInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
@@ -94,7 +103,7 @@ it.effect("sends a squad group editor invite for a verified target", () => {
 it.effect("rejects self-invites before resolving the target", () => {
   const actorUserId = parseTestUserId("effect-squad-self-owner");
   const groupId = parseTestGroupId();
-  const store = makeSquadGroupStoreServiceTestService({
+  const sharingStore = makeSquadGroupSharingStoreServiceTestService({
     authorizeSquadGroupOwner: () =>
       Effect.succeed({
         _tag: "SquadGroupOwnerAccess" as const,
@@ -103,7 +112,13 @@ it.effect("rejects self-invites before resolving the target", () => {
         role: "owner" as const,
       }),
   });
-  const testLayer = Layer.succeed(SquadGroupStoreService, store);
+  const testLayer = Layer.merge(
+    Layer.succeed(SquadGroupSharingStoreService, sharingStore),
+    Layer.succeed(
+      SquadGroupDirectoryStoreService,
+      makeSquadGroupDirectoryStoreServiceTestService({})
+    )
+  );
 
   return Effect.gen(function* sendSquadGroupEditorInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());

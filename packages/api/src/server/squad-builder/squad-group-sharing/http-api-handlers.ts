@@ -18,7 +18,7 @@ import {
   respond,
   revoke,
 } from "../../../services/squad-builder/squad-groups/squad-group-sharing-operations.ts";
-import { SquadGroupStoreService } from "../../../services/squad-builder/squad-groups/squad-group-store.ts";
+import { SquadGroupSharingStoreService } from "../../../services/squad-builder/squad-groups/squad-group-sharing-store.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
@@ -31,18 +31,18 @@ type SearchSquadEditorInviteTargetsError = Effect.Error<
 type SendSquadGroupEditorInviteError = Effect.Error<ReturnType<typeof send>>;
 type RespondToSquadGroupInviteError = Effect.Error<ReturnType<typeof respond>>;
 type RevokeSquadGroupEditorError = Effect.Error<ReturnType<typeof revoke>>;
-type SquadGroupStore = typeof SquadGroupStoreService.Service;
+type SquadGroupSharingStore = typeof SquadGroupSharingStoreService.Service;
 type ListIncomingSquadGroupInvitesError = Effect.Error<
-  ReturnType<SquadGroupStore["listIncomingSquadGroupInvites"]>
+  ReturnType<SquadGroupSharingStore["listIncomingSquadGroupInvites"]>
 >;
 type ListSharedSquadGroupsError = Effect.Error<
-  ReturnType<SquadGroupStore["listSharedSquadGroups"]>
+  ReturnType<SquadGroupSharingStore["listSharedSquadGroups"]>
 >;
 type ListSquadGroupEditorGrantsError = Effect.Error<
-  ReturnType<SquadGroupStore["listSquadGroupEditorGrants"]>
+  ReturnType<SquadGroupSharingStore["listSquadGroupEditorGrants"]>
 >;
 type CountPendingSquadGroupInvitesError = Effect.Error<
-  ReturnType<SquadGroupStore["getPendingSquadGroupInviteCount"]>
+  ReturnType<SquadGroupSharingStore["getPendingSquadGroupInviteCount"]>
 >;
 type SquadGroupSharingHandlerError =
   | SearchSquadEditorInviteTargetsError
@@ -151,7 +151,7 @@ export const SquadBuilderSquadGroupSharingHttpApiHandlers =
     "squadBuilderSquadGroupSharing",
     Effect.fnUntraced(
       function* SquadBuilderSquadGroupSharingHttpApiHandlers(handlers) {
-        const squadGroupStore = yield* SquadGroupStoreService;
+        const squadGroupStore = yield* SquadGroupSharingStoreService;
 
         return handlers
           .handle(

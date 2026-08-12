@@ -6,7 +6,8 @@ import {
   parseInviteTargetQuery,
 } from "../../../domain/squad-builder/invite-target-search.ts";
 import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
-import { SquadGroupStoreService } from "./squad-group-store.ts";
+import { SquadGroupDirectoryStoreService } from "./squad-group-directory-store.ts";
+import { SquadGroupSharingStoreService } from "./squad-group-sharing-store.ts";
 
 /** Search verified users the group owner may invite. */
 export const search = EffectRuntime.fn("SquadGroups.searchEditorInviteTargets")(
@@ -15,13 +16,14 @@ export const search = EffectRuntime.fn("SquadGroups.searchEditorInviteTargets")(
     readonly groupId: SquadGroupId;
     readonly query: string;
   }) {
-    const store = yield* SquadGroupStoreService;
+    const directoryStore = yield* SquadGroupDirectoryStoreService;
+    const sharingStore = yield* SquadGroupSharingStoreService;
     const query = yield* parseInviteTargetQuery(input.query);
-    yield* store.authorizeSquadGroupOwner({
+    yield* sharingStore.authorizeSquadGroupOwner({
       actorUserId: input.actorUserId,
       groupId: input.groupId,
     });
-    return yield* store.searchSquadEditorInviteTargets({
+    return yield* directoryStore.searchSquadEditorInviteTargets({
       groupId: input.groupId,
       maxResults: inviteTargetSearchPolicy.maxResults,
       ownerUserId: input.actorUserId,

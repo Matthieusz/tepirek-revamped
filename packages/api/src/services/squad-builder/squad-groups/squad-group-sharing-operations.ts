@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { SquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
-import { SquadGroupStoreService } from "./squad-group-store.ts";
+import { SquadGroupSharingStoreService } from "./squad-group-sharing-store.ts";
 
 /** Input for responding to a squad group editor invite. */
 export interface RespondToSquadGroupInviteInput {
@@ -21,7 +21,7 @@ export interface RevokeSquadGroupEditorInput {
 /** Accept or decline a squad group editor invite. */
 export const respond = Effect.fn("SquadGroups.respondToEditorInvite")(
   function* respond(input: RespondToSquadGroupInviteInput) {
-    const store = yield* SquadGroupStoreService;
+    const store = yield* SquadGroupSharingStoreService;
     const now = yield* DateTime.nowAsDate;
     return yield* store.respondToSquadGroupInvite({
       invitationId: input.invitationId,
@@ -36,7 +36,7 @@ export const respond = Effect.fn("SquadGroups.respondToEditorInvite")(
 export const revoke = Effect.fn("SquadGroups.revokeEditor")(function* revoke(
   input: RevokeSquadGroupEditorInput
 ) {
-  const store = yield* SquadGroupStoreService;
+  const store = yield* SquadGroupSharingStoreService;
   const now = yield* DateTime.nowAsDate;
   return yield* store.revokeSquadGroupEditor({
     invitationId: input.invitationId,

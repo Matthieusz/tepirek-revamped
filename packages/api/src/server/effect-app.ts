@@ -22,7 +22,9 @@ import { DrizzleAccountImportStoreServiceLayer } from "../adapters/squad-builder
 import { DrizzleAccountRefetchStoreServiceLayer } from "../adapters/squad-builder/persistence/account-refetch-store.ts";
 import { DrizzleAccountSharingStoreServiceLayer } from "../adapters/squad-builder/persistence/account-sharing-store.ts";
 import { DrizzleFirecrawlRequestAccountingStoreServiceLayer } from "../adapters/squad-builder/persistence/firecrawl-request-accounting-store.ts";
-import { DrizzleSquadGroupStoreServiceLayer } from "../adapters/squad-builder/persistence/squad-group-store.ts";
+import { DrizzleSquadGroupAggregateStoreServiceLayer } from "../adapters/squad-builder/persistence/squad-group-aggregate-store.ts";
+import { DrizzleSquadGroupDirectoryStoreServiceLayer } from "../adapters/squad-builder/persistence/squad-group-directory-store.ts";
+import { DrizzleSquadGroupSharingStoreServiceLayer } from "../adapters/squad-builder/persistence/squad-group-sharing-store.ts";
 import { TodoStoreLayer } from "../adapters/todo/todo-store.ts";
 import type { TodoStore } from "../adapters/todo/todo-store.ts";
 import { makeDiscordVerificationConfigLayer } from "../adapters/user/discord-verification-config.ts";
@@ -42,7 +44,9 @@ import type {
   FirecrawlConfigService,
 } from "../services/squad-builder/firecrawl-config.ts";
 import type { FirecrawlRequestAccountingStoreService } from "../services/squad-builder/firecrawl-request-accounting-store.ts";
-import type { SquadGroupStoreService } from "../services/squad-builder/squad-groups/squad-group-store.ts";
+import type { SquadGroupAggregateStoreService } from "../services/squad-builder/squad-groups/squad-group-aggregate-store.ts";
+import type { SquadGroupDirectoryStoreService } from "../services/squad-builder/squad-groups/squad-group-directory-store.ts";
+import type { SquadGroupSharingStoreService } from "../services/squad-builder/squad-groups/squad-group-sharing-store.ts";
 import type { VaultService } from "../services/vault/vault-service.ts";
 
 const makeApiStableLayer = <DatabaseError>(
@@ -73,7 +77,9 @@ const makeApiStableLayer = <DatabaseError>(
     DrizzleAccountRefetchStoreServiceLayer,
     DrizzleAccountSharingStoreServiceLayer,
     DrizzleFirecrawlRequestAccountingStoreServiceLayer,
-    DrizzleSquadGroupStoreServiceLayer
+    DrizzleSquadGroupAggregateStoreServiceLayer,
+    DrizzleSquadGroupDirectoryStoreServiceLayer,
+    DrizzleSquadGroupSharingStoreServiceLayer
   ).pipe(Layer.provide(databaseLayer));
 
   const firecrawlLayer = Layer.mergeAll(
@@ -127,7 +133,9 @@ type SquadBuilderServices =
   | AuctionStore
   | UserStore
   | DiscordGuildVerifier
-  | SquadGroupStoreService
+  | SquadGroupAggregateStoreService
+  | SquadGroupDirectoryStoreService
+  | SquadGroupSharingStoreService
   | AccountImportStoreService
   | AccountRefetchStoreService
   | AccountSharingStoreService

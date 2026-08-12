@@ -7,15 +7,16 @@ import type {
   SaveSquadInput,
   SquadGroupValidationError,
 } from "../../../domain/squad-builder/squad-group-snapshot.ts";
-import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.ts";
+import { parseSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.ts";
+import { SquadGroupAggregateStoreService } from "./squad-group-aggregate-store.ts";
 import type {
   ActorCannotViewSquadGroup,
   ActorDoesNotOwnSquadGroup,
   SquadBuilderPersistenceUnavailable,
   SquadGroupNotFound,
   SquadGroupWriteConflict,
+  SquadNotInGroup,
 } from "./squad-group-errors.ts";
-import * as SquadGroupStore from "./squad-group-store.ts";
 
 /** Input for saving a full squad group snapshot. */
 export interface SaveSquadGroupInput {
@@ -32,6 +33,7 @@ export type SaveSquadGroupError =
   | ActorCannotViewSquadGroup
   | ActorDoesNotOwnSquadGroup
   | SquadGroupWriteConflict
+  | SquadNotInGroup
   | SquadGroupValidationError
   | SquadBuilderPersistenceUnavailable;
 
@@ -39,28 +41,16 @@ export type SaveSquadGroupError =
 export const save = Effect.fn("SquadGroups.save")(function* saveSquadGroup(
   input: SaveSquadGroupInput
 ) {
-  const store = yield* SquadGroupStore.SquadGroupStoreService;
-  yield* store.getSquadGroupDetail({
-    actorUserId: input.actorUserId,
-    groupId: input.groupId,
-  });
-
-  const availableCharacters = yield* store.listAvailableCharactersForOwner({
-    ownerUserId: input.actorUserId,
-  });
-
-  const snapshot = yield* validateSquadGroupSnapshot({
-    actorUserId: input.actorUserId,
-    availableCharacters,
+  const aggregateStore = yield* SquadGroupAggregateStoreService;
+  const snapshot = yield* parseSquadGroupSnapshot({
     groupId: input.groupId,
     name: input.name,
     squads: input.squads,
   });
 
   const now = yield* DateTime.nowAsDate;
-  return yield* store.saveSquadGroupSnapshot({
+  return yield* aggregateStore.saveSquadGroupSnapshot({
     actorUserId: input.actorUserId,
-    availableCharacters,
     expectedUpdatedAt: input.expectedUpdatedAt,
     now,
     snapshot,

@@ -7,13 +7,13 @@ import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseSquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
 import { parseSquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
 import { parseSquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
-import { makeSquadGroupStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
+import { makeSquadGroupSharingStoreServiceTestService } from "../../../test/squad-builder/squad-group-store.ts";
 import {
   ActorDoesNotOwnSquadGroup,
   ActorIsNotSquadGroupInviteRecipient,
 } from "./squad-group-errors.ts";
 import { respond, revoke } from "./squad-group-sharing-operations.ts";
-import { SquadGroupStoreService } from "./squad-group-store.ts";
+import { SquadGroupSharingStoreService } from "./squad-group-sharing-store.ts";
 
 const parseTestUserId = (value: string) =>
   Effect.runSync(parseAppUserId(value));
@@ -36,7 +36,7 @@ it.effect("accepts a squad group editor invite as the invited user", () => {
   const invitationId = parseTestInvitationId();
   const squadGroupId = parseTestGroupId();
   const squadGroupName = parseTestGroupName();
-  const store = makeSquadGroupStoreServiceTestService({
+  const store = makeSquadGroupSharingStoreServiceTestService({
     respondToSquadGroupInvite: (input) => {
       expect(input).toMatchObject({
         invitationId,
@@ -58,7 +58,7 @@ it.effect("accepts a squad group editor invite as the invited user", () => {
       });
     },
   });
-  const testLayer = Layer.succeed(SquadGroupStoreService, store);
+  const testLayer = Layer.succeed(SquadGroupSharingStoreService, store);
 
   return Effect.gen(function* respondToSquadGroupInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
@@ -79,10 +79,10 @@ it.effect("accepts a squad group editor invite as the invited user", () => {
 it.effect("surfaces squad invite recipient authorization failures", () => {
   const actorUserId = parseTestUserId("effect-squad-respond-attacker");
   const invitationId = parseTestInvitationId();
-  const store = makeSquadGroupStoreServiceTestService({
+  const store = makeSquadGroupSharingStoreServiceTestService({
     respondToSquadGroupInvite: () => new ActorIsNotSquadGroupInviteRecipient(),
   });
-  const testLayer = Layer.succeed(SquadGroupStoreService, store);
+  const testLayer = Layer.succeed(SquadGroupSharingStoreService, store);
 
   return Effect.gen(function* respondToSquadGroupInviteEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
@@ -103,7 +103,7 @@ it.effect("revokes a squad group editor invite as the owner", () => {
   const invitationId = parseTestInvitationId();
   const squadGroupId = parseTestGroupId();
   const squadGroupName = parseTestGroupName();
-  const store = makeSquadGroupStoreServiceTestService({
+  const store = makeSquadGroupSharingStoreServiceTestService({
     revokeSquadGroupEditor: (input) => {
       expect(input).toMatchObject({
         invitationId,
@@ -124,7 +124,7 @@ it.effect("revokes a squad group editor invite as the owner", () => {
       });
     },
   });
-  const testLayer = Layer.succeed(SquadGroupStoreService, store);
+  const testLayer = Layer.succeed(SquadGroupSharingStoreService, store);
 
   return Effect.gen(function* revokeSquadGroupEditorEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());
@@ -144,10 +144,10 @@ it.effect("revokes a squad group editor invite as the owner", () => {
 it.effect("surfaces squad group ownership failures", () => {
   const actorUserId = parseTestUserId("effect-squad-revoke-attacker");
   const invitationId = parseTestInvitationId();
-  const store = makeSquadGroupStoreServiceTestService({
+  const store = makeSquadGroupSharingStoreServiceTestService({
     revokeSquadGroupEditor: () => new ActorDoesNotOwnSquadGroup(),
   });
-  const testLayer = Layer.succeed(SquadGroupStoreService, store);
+  const testLayer = Layer.succeed(SquadGroupSharingStoreService, store);
 
   return Effect.gen(function* revokeSquadGroupEditorEffect() {
     yield* TestClock.setTime(fixedClock.now().getTime());

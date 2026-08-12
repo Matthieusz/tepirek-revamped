@@ -1,8 +1,5 @@
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as HashMap from "effect/HashMap";
-import * as HashSet from "effect/HashSet";
-import * as Option from "effect/Option";
 
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
@@ -10,20 +7,19 @@ import type {
   SquadCharacterDraftPlacement,
   SquadGroupValidationError,
 } from "../../../domain/squad-builder/squad-group-snapshot.ts";
-import { validateSquadGroupSnapshot } from "../../../domain/squad-builder/squad-group-snapshot.ts";
+import { parseCharacterPosition } from "../../../domain/squad-builder/squad-group-snapshot.ts";
 import type { SquadId } from "../../../domain/squad-builder/squad-id.ts";
-import {
-  ActorCannotEditSquadGroup,
-  EditorCannotChangeSquadStructure,
-  SquadNotInGroup,
-} from "./squad-group-errors.ts";
+import { SquadGroupAggregateStoreService } from "./squad-group-aggregate-store.ts";
 import type {
+  ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
+  EditorCannotChangeSquadStructure,
   SquadBuilderPersistenceUnavailable,
   SquadGroupNotFound,
   SquadGroupWriteConflict,
+  SquadNotInGroup,
 } from "./squad-group-errors.ts";
-import { SquadGroupStoreService } from "./squad-group-store.ts";
+import { SquadGroupSharingStoreService } from "./squad-group-sharing-store.ts";
 
 interface SharedSquadCharactersInput {
   readonly squadId: SquadId;
@@ -64,76 +60,23 @@ export const saveWithStoreService = Effect.fn(
 )(function* saveSharedSquadGroupCharacters(
   input: SaveSharedSquadGroupCharactersInput
 ) {
-  const store = yield* SquadGroupStoreService;
-  const detail = yield* store.getSquadGroupDetail({
-    actorUserId: input.actorUserId,
-    groupId: input.groupId,
-  });
-
-  if (detail.accessRole === "viewer") {
-    return yield* new ActorCannotEditSquadGroup();
-  }
-
-  const existingSquadIds = HashSet.fromIterable(
-    detail.squads.map((squad) => squad.squadId)
-  );
-
-  if (input.squads.length !== detail.squads.length) {
-    return yield* new EditorCannotChangeSquadStructure();
-  }
-
-  for (const submitted of input.squads) {
-    if (!HashSet.has(existingSquadIds, submitted.squadId)) {
-      return yield* new SquadNotInGroup({ squadId: submitted.squadId });
-    }
-  }
-
-  const submittedIds = HashSet.fromIterable(
-    input.squads.map((squad) => squad.squadId)
-  );
-  if (HashSet.size(submittedIds) !== HashSet.size(existingSquadIds)) {
-    return yield* new EditorCannotChangeSquadStructure();
-  }
-
-  const availableCharacters = yield* store.listAvailableCharactersForOwner({
-    ownerUserId: detail.ownerUserId,
-  });
-
-  const submittedBySquadId = HashMap.fromIterable(
-    input.squads.map((submitted) => [submitted.squadId, submitted] as const)
-  );
-
-  const validation = yield* validateSquadGroupSnapshot({
-    actorUserId: detail.ownerUserId,
-    availableCharacters,
-    groupId: input.groupId,
-    name: detail.name,
-    squads: detail.squads.map((squad) => ({
-      characters: HashMap.get(submittedBySquadId, squad.squadId).pipe(
-        Option.map((submitted) => submitted.characters),
-        Option.getOrElse(() => [])
-      ),
-      clientKey: `squad-${squad.squadId}`,
-      name: squad.name,
-      position: squad.position,
-      squadId: squad.squadId,
-    })),
-  });
-
+  const sharingStore = yield* SquadGroupSharingStoreService;
   const snapshotSquads: SharedSquadGroupCharactersSnapshot["squads"][number][] =
     [];
-  for (const squad of validation.squads) {
-    if (squad.squadId === undefined) {
-      return yield* new EditorCannotChangeSquadStructure();
+
+  for (const squad of input.squads) {
+    const characters: SquadCharacterDraftPlacement[] = [];
+    for (const character of squad.characters) {
+      characters.push({
+        characterId: character.characterId,
+        position: yield* parseCharacterPosition(character.position),
+      });
     }
-    snapshotSquads.push({
-      characters: squad.characters,
-      squadId: squad.squadId,
-    });
+    snapshotSquads.push({ characters, squadId: squad.squadId });
   }
 
   const now = yield* DateTime.nowAsDate;
-  return yield* store.saveSharedSquadGroupCharacters({
+  yield* sharingStore.saveSharedSquadGroupCharacters({
     actorUserId: input.actorUserId,
     expectedUpdatedAt: input.expectedUpdatedAt,
     groupId: input.groupId,
@@ -143,4 +86,11 @@ export const saveWithStoreService = Effect.fn(
       squads: snapshotSquads,
     },
   });
+
+  return yield* SquadGroupAggregateStoreService.use((aggregateStore) =>
+    aggregateStore.getSquadGroupDetail({
+      actorUserId: input.actorUserId,
+      groupId: input.groupId,
+    })
+  );
 });

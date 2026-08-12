@@ -6,7 +6,7 @@ import {
   squadGroupListFilterPolicy,
 } from "../../../domain/squad-builder/squad-group-list-filters.ts";
 import type { SquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.ts";
-import { SquadGroupStoreService } from "./squad-group-store.ts";
+import { SquadGroupDirectoryStoreService } from "./squad-group-directory-store.ts";
 
 /** List globally visible squad groups for a verified actor. */
 export const list = Effect.fn("SquadGroups.listGlobal")(
@@ -14,7 +14,7 @@ export const list = Effect.fn("SquadGroups.listGlobal")(
     readonly actorUserId: AppUserId;
     readonly filters?: SquadGroupListFilters;
   }) {
-    const store = yield* SquadGroupStoreService;
+    const store = yield* SquadGroupDirectoryStoreService;
     return yield* store.listGlobalSquadGroups({
       actorUserId: input.actorUserId,
       filters: input.filters ?? emptySquadGroupListFilters,
