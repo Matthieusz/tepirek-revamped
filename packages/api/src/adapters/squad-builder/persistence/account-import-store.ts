@@ -363,6 +363,92 @@ const confirmPendingImportWithDatabase = (database: EffectPgDatabase) =>
     return yield* persistenceQuery(operation, transaction);
   });
 
+const loadOwnedAccountWithDatabase = (
+  database: EffectPgDatabase | TransactionDatabase
+) =>
+  Effect.fnUntraced(function* loadOwnedAccountEffect({
+    accountId,
+    actorUserId,
+  }: {
+    readonly accountId: number;
+    readonly actorUserId: string;
+  }) {
+    const operation = "updateOwnedAccountDisplayName" as const;
+    const accountSelect = database
+      .select({
+        accountId: margonemAccount.id,
+        characterCount: sql<number>`count(${margonemCharacter.id})::int`,
+        createdAt: margonemAccount.createdAt,
+        displayName: margonemAccount.displayName,
+        lastFetchedAt: margonemAccount.lastFetchedAt,
+        profileId: margonemAccount.profileId,
+      })
+      .from(margonemAccount)
+      .leftJoin(
+        margonemCharacter,
+        eq(margonemCharacter.accountId, margonemAccount.id)
+      )
+      .where(
+        and(
+          eq(margonemAccount.id, accountId),
+          eq(margonemAccount.ownerUserId, actorUserId)
+        )
+      )
+      .groupBy(margonemAccount.id)
+      .limit(1);
+    const accountRows = yield* persistenceQuery(operation, accountSelect);
+    const [account] = accountRows;
+
+    if (account === undefined) {
+      return yield* failPersistence(
+        operation,
+        new Error("Updated owned account was not found")
+      );
+    }
+
+    const characterRows = yield* persistenceQuery(
+      operation,
+      database
+        .select({
+          avatarUrl: margonemCharacter.avatarUrl,
+          characterId: margonemCharacter.characterId,
+          id: margonemCharacter.id,
+          level: margonemCharacter.level,
+          name: margonemCharacter.name,
+          profession: margonemCharacter.profession,
+        })
+        .from(margonemCharacter)
+        .where(eq(margonemCharacter.accountId, accountId))
+        .orderBy(desc(margonemCharacter.level), asc(margonemCharacter.id))
+        .limit(ACCOUNT_CHARACTER_PREVIEW_LIMIT)
+    );
+
+    const accountIdValue = yield* parseMargonemAccountId(
+      account.accountId
+    ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+    const displayName = yield* parseAccountDisplayName(
+      account.displayName
+    ).pipe(Effect.catch((error) => failPersistence(operation, error)));
+    const profileId = yield* parseMargonemProfileId(account.profileId).pipe(
+      Effect.catch((error) => failPersistence(operation, error))
+    );
+
+    return {
+      accountId: accountIdValue,
+      characterCount: account.characterCount ?? 0,
+      characterPreviews: characterRows.map((character) => ({
+        avatarUrl: character.avatarUrl,
+        characterId: character.characterId,
+        name: character.name,
+        profession: character.profession,
+      })),
+      displayName,
+      generatedProfileUrl: toMargonemProfileUrl(profileId),
+      lastFetchedAt: account.lastFetchedAt ?? account.createdAt,
+      profileId,
+    };
+  });
+
 const updateOwnedAccountDisplayNameWithDatabase = (
   database: EffectPgDatabase
 ) =>
@@ -374,49 +460,45 @@ const updateOwnedAccountDisplayNameWithDatabase = (
   }: UpdateOwnedAccountDisplayNameInput) {
     const operation = "updateOwnedAccountDisplayName" as const;
     const accountIdNumber = accountId;
-    const accountSelect = database
-      .select({ ownerUserId: margonemAccount.ownerUserId })
-      .from(margonemAccount)
-      .where(eq(margonemAccount.id, accountIdNumber))
-      .limit(1);
-    const accountRows = yield* persistenceQuery(operation, accountSelect);
-    const [account] = accountRows;
+    const transaction = database.transaction(
+      Effect.fnUntraced(function* updateOwnedAccountDisplayNameTransaction(
+        tx: TransactionDatabase
+      ) {
+        yield* tx.execute(sql`set transaction isolation level repeatable read`);
 
-    if (account === undefined) {
-      return yield* new MargonemAccountNotFound();
-    }
+        const accountSelect = tx
+          .select({ ownerUserId: margonemAccount.ownerUserId })
+          .from(margonemAccount)
+          .where(eq(margonemAccount.id, accountIdNumber))
+          .limit(1)
+          .for("update");
+        const accountRows = yield* accountSelect;
+        const [account] = accountRows;
 
-    if (account.ownerUserId !== actorUserId) {
-      return yield* new ActorDoesNotOwnMargonemAccount();
-    }
+        if (account === undefined) {
+          return yield* new MargonemAccountNotFound();
+        }
 
-    yield* persistenceQuery(
-      operation,
-      database
-        .update(margonemAccount)
-        .set({
-          displayName,
-          updatedAt: now,
-        })
-        .where(eq(margonemAccount.id, accountIdNumber))
+        if (account.ownerUserId !== actorUserId) {
+          return yield* new ActorDoesNotOwnMargonemAccount();
+        }
+
+        yield* tx
+          .update(margonemAccount)
+          .set({
+            displayName,
+            updatedAt: now,
+          })
+          .where(eq(margonemAccount.id, accountIdNumber));
+
+        return yield* loadOwnedAccountWithDatabase(tx)({
+          accountId: accountIdNumber,
+          actorUserId,
+        });
+      })
     );
 
-    // oxlint-disable-next-line no-use-before-define -- The list projection is reused after the transactional update.
-    const accounts = yield* listOwnedAccountsWithDatabase(database)({
-      actorUserId,
-    });
-    const updatedAccount = accounts.find(
-      (candidate) => candidate.accountId === accountId
-    );
-
-    if (updatedAccount === undefined) {
-      return yield* failPersistence(
-        operation,
-        new Error("Updated owned account was not found")
-      );
-    }
-
-    return updatedAccount;
+    return yield* persistenceQuery(operation, transaction);
   });
 
 const deleteOwnedAccountWithDatabase = (database: EffectPgDatabase) =>

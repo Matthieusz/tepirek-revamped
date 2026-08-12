@@ -181,8 +181,10 @@ const listMySquadGroupsWithDatabase = (database: EffectPgDatabase) =>
     return groups;
   });
 
-const getSquadGroupDetailWithDatabase = (database: EffectPgDatabase) =>
-  Effect.fnUntraced(function* getSquadGroupDetailEffect({
+export const loadSquadGroupDetailWithDatabase = (
+  database: EffectPgDatabase | TransactionDatabase
+) =>
+  Effect.fnUntraced(function* loadSquadGroupDetailEffect({
     actorUserId,
     groupId,
   }: GetSquadGroupDetailInput) {
@@ -405,6 +407,7 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
       Effect.fnUntraced(function* saveSquadGroupSnapshotTransaction(
         tx: TransactionDatabase
       ) {
+        yield* tx.execute(sql`set transaction isolation level repeatable read`);
         yield* tx.execute(
           sql`select pg_advisory_xact_lock(hashtext(${`squad-group:${groupIdNumber}`}))`
         );
@@ -591,31 +594,17 @@ const saveSquadGroupSnapshotWithDatabase = (database: EffectPgDatabase) =>
           yield* tx.insert(squadCharacter).values(placementRows);
         }
 
-        return { _tag: "Saved" as const };
+        return yield* loadSquadGroupDetailWithDatabase(tx)({
+          actorUserId,
+          groupId: snapshot.groupId,
+        });
       })
     );
 
-    yield* persistenceQuery(operation, transaction);
-
-    return yield* getSquadGroupDetailWithDatabase(database)({
-      actorUserId,
-      groupId: snapshot.groupId,
-    }).pipe(
-      Effect.catch(
-        (
-          error
-        ): Effect.Effect<
-          never,
-          | SquadGroupNotFound
-          | ActorDoesNotOwnSquadGroup
-          | SquadBuilderPersistenceUnavailable
-        > => {
-          if (error._tag === "ActorCannotViewSquadGroup") {
-            return new ActorDoesNotOwnSquadGroup();
-          }
-
-          return Effect.fail(error);
-        }
+    return yield* persistenceQuery(operation, transaction).pipe(
+      Effect.catchTag(
+        "ActorCannotViewSquadGroup",
+        () => new ActorDoesNotOwnSquadGroup()
       )
     );
   });
@@ -690,7 +679,20 @@ export const DrizzleSquadGroupAggregateStoreServiceLayer: Layer.Layer<
       ),
       getSquadGroupDetail: Effect.fn(
         "SquadGroupAggregateStore.getSquadGroupDetail"
-      )(getSquadGroupDetailWithDatabase(database)),
+      )(function* getSquadGroupDetailWithSnapshot(input) {
+        const transaction = database.transaction(
+          Effect.fnUntraced(function* getSquadGroupDetailTransaction(
+            tx: TransactionDatabase
+          ) {
+            yield* tx.execute(
+              sql`set transaction isolation level repeatable read`
+            );
+            return yield* loadSquadGroupDetailWithDatabase(tx)(input);
+          })
+        );
+
+        return yield* persistenceQuery("getSquadGroupDetail", transaction);
+      }),
       listMySquadGroups: Effect.fn(
         "SquadGroupAggregateStore.listMySquadGroups"
       )(listMySquadGroupsWithDatabase(database)),

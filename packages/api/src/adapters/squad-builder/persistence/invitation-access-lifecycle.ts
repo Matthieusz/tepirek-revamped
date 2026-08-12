@@ -6,23 +6,21 @@ import type {
 } from "../../../domain/squad-builder/invitation-access-lifecycle.ts";
 import { transitionInvitationAccess } from "../../../domain/squad-builder/invitation-access-lifecycle.ts";
 
-/** A persisted invitation/access row after one legal lifecycle transition. */
-export interface TransitionedInvitationAccessRow<A> {
+/** The validated status change shared by invitation persistence adapters. */
+export interface ValidatedInvitationAccessTransition {
   readonly previousStatus: InvitationAccessStatus;
   readonly nextStatus: InvitationAccessStatus;
-  readonly result: A;
 }
 
 /**
- * Validate and persist one lifecycle transition inside the caller's transaction.
+ * Parse and validate a lifecycle transition.
  *
- * The query, status parser, and feature error remain adapter-owned; this helper
- * shares only the invariant and the validate-then-update control-flow shape.
+ * The caller owns the table-specific transaction and must lock the persisted
+ * row before invoking this helper. Keeping the SQL in each adapter makes the
+ * natural key, authorization joins, and lock scope explicit.
  */
-export const transitionInvitationAccessRow = <
-  A,
+export const validateInvitationAccessTransition = <
   ParseError,
-  UpdateError,
   TransitionError,
 >(input: {
   readonly currentStatus: string;
@@ -33,20 +31,16 @@ export const transitionInvitationAccessRow = <
   readonly onTransitionNotAllowed: (
     error: InvitationAccessTransitionNotAllowed
   ) => TransitionError;
-  readonly update: (
-    nextStatus: InvitationAccessStatus
-  ) => Effect.Effect<A, UpdateError>;
 }): Effect.Effect<
-  TransitionedInvitationAccessRow<A>,
-  ParseError | TransitionError | UpdateError
+  ValidatedInvitationAccessTransition,
+  ParseError | TransitionError
 > =>
-  Effect.gen(function* transitionInvitationAccessRowEffect() {
+  Effect.gen(function* validateInvitationAccessTransitionEffect() {
     const previousStatus = yield* input.parseStatus(input.currentStatus);
     const nextStatus = yield* transitionInvitationAccess(
       previousStatus,
       input.nextStatus
     ).pipe(Effect.mapError(input.onTransitionNotAllowed));
-    const result = yield* input.update(nextStatus);
 
-    return { nextStatus, previousStatus, result };
+    return { nextStatus, previousStatus };
   });

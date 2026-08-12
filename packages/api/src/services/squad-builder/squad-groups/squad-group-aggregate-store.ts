@@ -49,7 +49,7 @@ export interface SquadGroupCharacter {
 }
 
 /** Saved squad shown in a squad group detail. */
-interface SquadDetail {
+export interface SquadDetail {
   readonly squadId: SquadId;
   readonly name: string;
   readonly position: number;
@@ -57,7 +57,7 @@ interface SquadDetail {
 }
 
 /** Full saved squad group detail. */
-interface SquadGroupDetail {
+export interface SquadGroupDetail {
   readonly accessRole: SquadGroupAccessRole;
   readonly groupId: SquadGroupId;
   readonly name: string;

@@ -23,25 +23,28 @@ import { saveWithStoreService as saveSharedSquadGroupCharactersWorkflow } from "
 import type { SaveSquadGroupError } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
 import { save as saveSquadGroupWorkflow } from "../../../services/squad-builder/squad-groups/save-squad-group.ts";
 import { set as setSquadGroupVisibilityWorkflow } from "../../../services/squad-builder/squad-groups/set-squad-group-visibility.ts";
-import { SquadGroupAggregateStoreService } from "../../../services/squad-builder/squad-groups/squad-group-aggregate-store.ts";
+import {
+  deleteSquadGroup as deleteSquadGroupWorkflow,
+  getSquadGroupDetail as getSquadGroupDetailWorkflow,
+  listOwnedSquadGroups as listOwnedSquadGroupsWorkflow,
+} from "../../../services/squad-builder/squad-groups/squad-group-queries.ts";
 import {
   requireSquadBuilderSession,
   sessionAppUserId,
 } from "../auth-helper.ts";
 import { withRequestCorrelation } from "../request-correlation.ts";
 
-type SquadGroupAggregateStore = typeof SquadGroupAggregateStoreService.Service;
 type DeleteSquadGroupError = Effect.Error<
-  ReturnType<SquadGroupAggregateStore["deleteSquadGroup"]>
+  ReturnType<typeof deleteSquadGroupWorkflow>
 >;
 type ListOwnedSquadGroupsError = Effect.Error<
-  ReturnType<SquadGroupAggregateStore["listMySquadGroups"]>
+  ReturnType<typeof listOwnedSquadGroupsWorkflow>
 >;
 type ListGlobalSquadGroupsError =
   | SquadGroupListFilterError
   | Effect.Error<ReturnType<typeof listGlobalSquadGroupsWorkflow>>;
 type GetSquadGroupDetailError = Effect.Error<
-  ReturnType<SquadGroupAggregateStore["getSquadGroupDetail"]>
+  ReturnType<typeof getSquadGroupDetailWorkflow>
 >;
 type SetSquadGroupVisibilityError = Effect.Error<
   ReturnType<typeof setSquadGroupVisibilityWorkflow>
@@ -186,16 +189,14 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
       .handle(
         "deleteSquadGroup",
         Effect.fn("SquadBuilderSquadGroup.deleteSquadGroup")(
-          function* deleteSquadGroup({ payload, request }) {
+          function* deleteSquadGroupHandler({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
             yield* withRequestCorrelation(
               request,
-              SquadGroupAggregateStoreService.use((store) =>
-                store.deleteSquadGroup({
-                  actorUserId: sessionAppUserId(session),
-                  groupId: payload.groupId,
-                })
-              )
+              deleteSquadGroupWorkflow({
+                actorUserId: sessionAppUserId(session),
+                groupId: payload.groupId,
+              })
             ).pipe(Effect.mapError(mapDeleteSquadGroupError));
             return { groupId: payload.groupId };
           }
@@ -204,15 +205,13 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
       .handle(
         "listOwnedSquadGroups",
         Effect.fn("SquadBuilderSquadGroup.listOwnedSquadGroups")(
-          function* listOwnedSquadGroups({ request }) {
+          function* listOwnedSquadGroupsHandler({ request }) {
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              SquadGroupAggregateStoreService.use((store) =>
-                store.listMySquadGroups({
-                  actorUserId: sessionAppUserId(session),
-                })
-              )
+              listOwnedSquadGroupsWorkflow({
+                actorUserId: sessionAppUserId(session),
+              })
             ).pipe(Effect.mapError(mapListOwnedSquadGroupsError));
           }
         )
@@ -243,16 +242,14 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
       .handle(
         "getSquadGroupDetail",
         Effect.fn("SquadBuilderSquadGroup.getSquadGroupDetail")(
-          function* getSquadGroupDetail({ payload, request }) {
+          function* getSquadGroupDetailHandler({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              SquadGroupAggregateStoreService.use((store) =>
-                store.getSquadGroupDetail({
-                  actorUserId: sessionAppUserId(session),
-                  groupId: payload.groupId,
-                })
-              )
+              getSquadGroupDetailWorkflow({
+                actorUserId: sessionAppUserId(session),
+                groupId: payload.groupId,
+              })
             ).pipe(Effect.mapError(mapGetSquadGroupDetailError));
           }
         )

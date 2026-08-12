@@ -15,7 +15,10 @@ import {
   respond,
   revoke,
 } from "../../../services/squad-builder/account-sharing/account-sharing-operations.ts";
-import { AccountSharingStoreService } from "../../../services/squad-builder/account-sharing/account-sharing-store.ts";
+import {
+  listIncomingAccountInvites as listIncomingAccountInvitesWorkflow,
+  listSharedAccounts as listSharedAccountsWorkflow,
+} from "../../../services/squad-builder/account-sharing/account-sharing-queries.ts";
 import { listAccountAccessGrants as listAccountAccessGrantsWorkflow } from "../../../services/squad-builder/account-sharing/list-account-access-grants.ts";
 import { search } from "../../../services/squad-builder/account-sharing/search-account-invite-targets-service.ts";
 import { send } from "../../../services/squad-builder/account-sharing/send-account-access-invite-service.ts";
@@ -31,12 +34,11 @@ type RespondToAccountAccessInviteError = Effect.Error<
   ReturnType<typeof respond>
 >;
 type RevokeAccountAccessError = Effect.Error<ReturnType<typeof revoke>>;
-type AccountSharingStore = typeof AccountSharingStoreService.Service;
 type ListIncomingAccountInvitesError = Effect.Error<
-  ReturnType<AccountSharingStore["listIncomingAccountInvites"]>
+  ReturnType<typeof listIncomingAccountInvitesWorkflow>
 >;
 type ListSharedAccountsError = Effect.Error<
-  ReturnType<AccountSharingStore["listSharedAccounts"]>
+  ReturnType<typeof listSharedAccountsWorkflow>
 >;
 type ListAccountAccessGrantsError = Effect.Error<
   ReturnType<typeof listAccountAccessGrantsWorkflow>
@@ -140,117 +142,112 @@ const mapListAccountAccessGrantsError = (
 export const SquadBuilderAccountSharingHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "squadBuilderAccountSharing",
-  Effect.fnUntraced(
-    function* SquadBuilderAccountSharingHttpApiHandlers(handlers) {
-      const accountSharingStore = yield* AccountSharingStoreService;
-
-      return handlers
-        .handle(
-          "searchAccountInviteTargets",
-          Effect.fn("SquadBuilderAccountSharing.searchAccountInviteTargets")(
-            function* searchAccountInviteTargets({ payload, request }) {
-              const session = yield* requireSquadBuilderSession();
-              return yield* withRequestCorrelation(
-                request,
-                search({
-                  accountId: payload.accountId,
-                  actorUserId: sessionAppUserId(session),
-                  query: payload.query,
-                })
-              ).pipe(Effect.mapError(mapSearchAccountInviteTargetsError));
-            }
-          )
+  (handlers) =>
+    handlers
+      .handle(
+        "searchAccountInviteTargets",
+        Effect.fn("SquadBuilderAccountSharing.searchAccountInviteTargets")(
+          function* searchAccountInviteTargets({ payload, request }) {
+            const session = yield* requireSquadBuilderSession();
+            return yield* withRequestCorrelation(
+              request,
+              search({
+                accountId: payload.accountId,
+                actorUserId: sessionAppUserId(session),
+                query: payload.query,
+              })
+            ).pipe(Effect.mapError(mapSearchAccountInviteTargetsError));
+          }
         )
-        .handle(
-          "sendAccountAccessInvite",
-          Effect.fn("SquadBuilderAccountSharing.sendAccountAccessInvite")(
-            function* sendAccountAccessInvite({ payload, request }) {
-              const session = yield* requireSquadBuilderSession();
-              return yield* withRequestCorrelation(
-                request,
-                send({
-                  accountId: payload.accountId,
-                  actorUserId: sessionAppUserId(session),
-                  invitedUserId: payload.invitedUserId,
-                })
-              ).pipe(Effect.mapError(mapSendAccountAccessInviteError));
-            }
-          )
+      )
+      .handle(
+        "sendAccountAccessInvite",
+        Effect.fn("SquadBuilderAccountSharing.sendAccountAccessInvite")(
+          function* sendAccountAccessInvite({ payload, request }) {
+            const session = yield* requireSquadBuilderSession();
+            return yield* withRequestCorrelation(
+              request,
+              send({
+                accountId: payload.accountId,
+                actorUserId: sessionAppUserId(session),
+                invitedUserId: payload.invitedUserId,
+              })
+            ).pipe(Effect.mapError(mapSendAccountAccessInviteError));
+          }
         )
-        .handle(
-          "respondToAccountAccessInvite",
-          Effect.fn("SquadBuilderAccountSharing.respondToAccountAccessInvite")(
-            function* respondToAccountAccessInvite({ payload, request }) {
-              const session = yield* requireSquadBuilderSession();
-              return yield* withRequestCorrelation(
-                request,
-                respond({
-                  accessId: payload.accessId,
-                  actorUserId: sessionAppUserId(session),
-                  response: payload.response,
-                })
-              ).pipe(Effect.mapError(mapRespondToAccountAccessInviteError));
-            }
-          )
+      )
+      .handle(
+        "respondToAccountAccessInvite",
+        Effect.fn("SquadBuilderAccountSharing.respondToAccountAccessInvite")(
+          function* respondToAccountAccessInvite({ payload, request }) {
+            const session = yield* requireSquadBuilderSession();
+            return yield* withRequestCorrelation(
+              request,
+              respond({
+                accessId: payload.accessId,
+                actorUserId: sessionAppUserId(session),
+                response: payload.response,
+              })
+            ).pipe(Effect.mapError(mapRespondToAccountAccessInviteError));
+          }
         )
-        .handle(
-          "revokeAccountAccess",
-          Effect.fn("SquadBuilderAccountSharing.revokeAccountAccess")(
-            function* revokeAccountAccess({ payload, request }) {
-              const session = yield* requireSquadBuilderSession();
-              return yield* withRequestCorrelation(
-                request,
-                revoke({
-                  accessId: payload.accessId,
-                  actorUserId: sessionAppUserId(session),
-                })
-              ).pipe(Effect.mapError(mapRevokeAccountAccessError));
-            }
-          )
+      )
+      .handle(
+        "revokeAccountAccess",
+        Effect.fn("SquadBuilderAccountSharing.revokeAccountAccess")(
+          function* revokeAccountAccess({ payload, request }) {
+            const session = yield* requireSquadBuilderSession();
+            return yield* withRequestCorrelation(
+              request,
+              revoke({
+                accessId: payload.accessId,
+                actorUserId: sessionAppUserId(session),
+              })
+            ).pipe(Effect.mapError(mapRevokeAccountAccessError));
+          }
         )
-        .handle(
-          "listIncomingAccountInvites",
-          Effect.fn("SquadBuilderAccountSharing.listIncomingAccountInvites")(
-            function* listIncomingAccountInvites({ request }) {
-              const session = yield* requireSquadBuilderSession();
-              return yield* withRequestCorrelation(
-                request,
-                accountSharingStore.listIncomingAccountInvites({
-                  actorUserId: sessionAppUserId(session),
-                })
-              ).pipe(Effect.mapError(mapListIncomingAccountInvitesError));
-            }
-          )
+      )
+      .handle(
+        "listIncomingAccountInvites",
+        Effect.fn("SquadBuilderAccountSharing.listIncomingAccountInvites")(
+          function* listIncomingAccountInvitesHandler({ request }) {
+            const session = yield* requireSquadBuilderSession();
+            return yield* withRequestCorrelation(
+              request,
+              listIncomingAccountInvitesWorkflow({
+                actorUserId: sessionAppUserId(session),
+              })
+            ).pipe(Effect.mapError(mapListIncomingAccountInvitesError));
+          }
         )
-        .handle(
-          "listSharedAccounts",
-          Effect.fn("SquadBuilderAccountSharing.listSharedAccounts")(
-            function* listSharedAccounts({ request }) {
-              const session = yield* requireSquadBuilderSession();
-              return yield* withRequestCorrelation(
-                request,
-                accountSharingStore.listSharedAccounts({
-                  actorUserId: sessionAppUserId(session),
-                })
-              ).pipe(Effect.mapError(mapListSharedAccountsError));
-            }
-          )
+      )
+      .handle(
+        "listSharedAccounts",
+        Effect.fn("SquadBuilderAccountSharing.listSharedAccounts")(
+          function* listSharedAccountsHandler({ request }) {
+            const session = yield* requireSquadBuilderSession();
+            return yield* withRequestCorrelation(
+              request,
+              listSharedAccountsWorkflow({
+                actorUserId: sessionAppUserId(session),
+              })
+            ).pipe(Effect.mapError(mapListSharedAccountsError));
+          }
         )
-        .handle(
-          "listAccountAccessGrants",
-          Effect.fn("SquadBuilderAccountSharing.listAccountAccessGrants")(
-            function* listAccountAccessGrants({ payload, request }) {
-              const session = yield* requireSquadBuilderSession();
-              return yield* withRequestCorrelation(
-                request,
-                listAccountAccessGrantsWorkflow({
-                  accountId: payload.accountId,
-                  actorUserId: sessionAppUserId(session),
-                })
-              ).pipe(Effect.mapError(mapListAccountAccessGrantsError));
-            }
-          )
-        );
-    }
-  )
+      )
+      .handle(
+        "listAccountAccessGrants",
+        Effect.fn("SquadBuilderAccountSharing.listAccountAccessGrants")(
+          function* listAccountAccessGrants({ payload, request }) {
+            const session = yield* requireSquadBuilderSession();
+            return yield* withRequestCorrelation(
+              request,
+              listAccountAccessGrantsWorkflow({
+                accountId: payload.accountId,
+                actorUserId: sessionAppUserId(session),
+              })
+            ).pipe(Effect.mapError(mapListAccountAccessGrantsError));
+          }
+        )
+      )
 );

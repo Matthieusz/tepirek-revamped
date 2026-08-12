@@ -7,11 +7,15 @@ import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.
 import type { SquadGroupInvitationId } from "../../../domain/squad-builder/squad-group-invitation-id.ts";
 import type { SquadGroupInvitationStatus } from "../../../domain/squad-builder/squad-group-invitation-status.ts";
 import type { SquadGroupListFilters } from "../../../domain/squad-builder/squad-group-list-filters.ts";
-import type { SquadGroupValidationError } from "../../../domain/squad-builder/squad-group-snapshot.ts";
+import type {
+  SharedSquadGroupCharactersSnapshot,
+  SquadGroupValidationError,
+} from "../../../domain/squad-builder/squad-group-snapshot.ts";
 import type { SquadGroupName } from "../../../domain/squad-builder/squad-name.ts";
-import type { SharedSquadGroupCharactersSnapshot } from "./save-shared-squad-group-characters.ts";
+import type { SquadGroupDetail } from "./squad-group-aggregate-store.ts";
 import type {
   ActorCannotEditSquadGroup,
+  ActorCannotViewSquadGroup,
   ActorDoesNotOwnSquadGroup,
   ActorIsNotSquadGroupInviteRecipient,
   EditorCannotChangeSquadStructure,
@@ -105,8 +109,9 @@ export interface SquadGroupSharingStoreContract {
   readonly saveSharedSquadGroupCharacters: (
     input: SaveSharedSquadGroupCharactersStoreInput
   ) => Effect<
-    void,
+    SquadGroupDetail,
     | SquadGroupNotFound
+    | ActorCannotViewSquadGroup
     | ActorCannotEditSquadGroup
     | SquadNotInGroup
     | EditorCannotChangeSquadStructure

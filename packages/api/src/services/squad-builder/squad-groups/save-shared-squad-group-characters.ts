@@ -4,12 +4,12 @@ import * as Effect from "effect/Effect";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import type { SquadGroupId } from "../../../domain/squad-builder/squad-group-id.ts";
 import type {
+  SharedSquadGroupCharactersSnapshot,
   SquadCharacterDraftPlacement,
   SquadGroupValidationError,
 } from "../../../domain/squad-builder/squad-group-snapshot.ts";
 import { parseCharacterPosition } from "../../../domain/squad-builder/squad-group-snapshot.ts";
 import type { SquadId } from "../../../domain/squad-builder/squad-id.ts";
-import { SquadGroupAggregateStoreService } from "./squad-group-aggregate-store.ts";
 import type {
   ActorCannotEditSquadGroup,
   ActorCannotViewSquadGroup,
@@ -34,14 +34,6 @@ export interface SaveSharedSquadGroupCharactersInput {
   readonly groupId: SquadGroupId;
   readonly expectedUpdatedAt: Date;
   readonly squads: readonly SharedSquadCharactersInput[];
-}
-
-export interface SharedSquadGroupCharactersSnapshot {
-  readonly groupId: SquadGroupId;
-  readonly squads: readonly {
-    readonly squadId: SquadId;
-    readonly characters: readonly SquadCharacterDraftPlacement[];
-  }[];
 }
 
 export type EffectSharedSquadGroupSaveError =
@@ -76,7 +68,7 @@ export const saveWithStoreService = Effect.fn(
   }
 
   const now = yield* DateTime.nowAsDate;
-  yield* sharingStore.saveSharedSquadGroupCharacters({
+  return yield* sharingStore.saveSharedSquadGroupCharacters({
     actorUserId: input.actorUserId,
     expectedUpdatedAt: input.expectedUpdatedAt,
     groupId: input.groupId,
@@ -86,11 +78,4 @@ export const saveWithStoreService = Effect.fn(
       squads: snapshotSquads,
     },
   });
-
-  return yield* SquadGroupAggregateStoreService.use((aggregateStore) =>
-    aggregateStore.getSquadGroupDetail({
-      actorUserId: input.actorUserId,
-      groupId: input.groupId,
-    })
-  );
 });

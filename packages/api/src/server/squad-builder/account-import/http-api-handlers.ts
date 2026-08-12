@@ -12,7 +12,10 @@ import {
   SquadBuilderPersistenceUnavailable,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/errors.ts";
-import { AccountImportStoreService } from "../../../services/squad-builder/account-import/account-import-store.ts";
+import {
+  deleteOwnedAccount as deleteOwnedAccountWorkflow,
+  listOwnedAccounts as listOwnedAccountsWorkflow,
+} from "../../../services/squad-builder/account-import/account-import-queries.ts";
 import { confirm as confirmOwnedAccountImportWorkflow } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
 import type { ConfirmOwnedAccountImportError } from "../../../services/squad-builder/account-import/confirm-owned-account-import-service.ts";
 import { preview as previewMargonemProfileImportWorkflow } from "../../../services/squad-builder/account-import/preview-margonem-profile-import-service.ts";
@@ -27,12 +30,11 @@ import {
 } from "../auth-helper.ts";
 import { withRequestCorrelation } from "../request-correlation.ts";
 
-type AccountImportStore = typeof AccountImportStoreService.Service;
 type DeleteOwnedAccountError = Effect.Error<
-  ReturnType<AccountImportStore["deleteOwnedAccount"]>
+  ReturnType<typeof deleteOwnedAccountWorkflow>
 >;
 type ListOwnedAccountsError = Effect.Error<
-  ReturnType<AccountImportStore["listOwnedAccounts"]>
+  ReturnType<typeof listOwnedAccountsWorkflow>
 >;
 
 type AccountImportHandlerError =
@@ -219,16 +221,14 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
       .handle(
         "deleteOwnedAccount",
         Effect.fn("SquadBuilderAccountImport.deleteOwnedAccount")(
-          function* deleteOwnedAccount({ payload, request }) {
+          function* deleteOwnedAccountHandler({ payload, request }) {
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              AccountImportStoreService.use((store) =>
-                store.deleteOwnedAccount({
-                  accountId: payload.accountId,
-                  actorUserId: sessionAppUserId(session),
-                })
-              )
+              deleteOwnedAccountWorkflow({
+                accountId: payload.accountId,
+                actorUserId: sessionAppUserId(session),
+              })
             ).pipe(Effect.mapError(mapDeleteOwnedAccountError));
           }
         )
@@ -236,15 +236,13 @@ export const SquadBuilderAccountImportHttpApiHandlers = HttpApiBuilder.group(
       .handle(
         "listOwnedAccounts",
         Effect.fn("SquadBuilderAccountImport.listOwnedAccounts")(
-          function* listOwnedAccounts({ request }) {
+          function* listOwnedAccountsHandler({ request }) {
             const session = yield* requireSquadBuilderSession();
             return yield* withRequestCorrelation(
               request,
-              AccountImportStoreService.use((store) =>
-                store.listOwnedAccounts({
-                  actorUserId: sessionAppUserId(session),
-                })
-              )
+              listOwnedAccountsWorkflow({
+                actorUserId: sessionAppUserId(session),
+              })
             ).pipe(Effect.mapError(mapListOwnedAccountsError));
           }
         )

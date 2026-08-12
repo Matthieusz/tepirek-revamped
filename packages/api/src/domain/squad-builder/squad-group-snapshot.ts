@@ -63,6 +63,15 @@ export interface AvailableSquadCharacter {
   readonly world: string;
 }
 
+/** Character placements saved for a shared squad group. */
+export interface SharedSquadGroupCharactersSnapshot {
+  readonly groupId: SquadGroupId;
+  readonly squads: readonly {
+    readonly squadId: SquadId;
+    readonly characters: readonly SquadCharacterDraftPlacement[];
+  }[];
+}
+
 /** Parsed full draft snapshot for an explicit squad group save. */
 export interface SquadGroupDraftSnapshot {
   readonly groupId: SquadGroupId;
