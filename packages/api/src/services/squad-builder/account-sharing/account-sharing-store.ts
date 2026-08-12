@@ -134,7 +134,7 @@ export interface AccountAccessGrantSummary {
 }
 
 /** Persistence operations used by account sharing workflows. */
-export interface AccountSharingStoreServiceShape {
+export interface AccountSharingStoreContract {
   readonly findAccountOwnerUserId: (
     input: FindAccountOwnerUserIdInput
   ) => Effect<
@@ -201,5 +201,5 @@ export interface AccountSharingStoreServiceShape {
 
 export class AccountSharingStoreService extends Context.Service<
   AccountSharingStoreService,
-  AccountSharingStoreServiceShape
+  AccountSharingStoreContract
 >()("@tepirek-revamped/api/squad-builder/AccountSharingStoreService") {}

@@ -23,10 +23,7 @@ interface ProfessionPresentation {
   readonly label: string;
 }
 
-const PROFESSION_PRESENTATIONS: Record<
-  KnownProfession,
-  ProfessionPresentation
-> = {
+const PROFESSION_PRESENTATIONS = {
   bladeDancer: {
     colorClass: "text-chart-1",
     icon: Swords,
@@ -57,7 +54,7 @@ const PROFESSION_PRESENTATIONS: Record<
     icon: Axe,
     label: "Wojownik",
   },
-};
+} satisfies Record<KnownProfession, ProfessionPresentation>;
 
 const UNKNOWN_PROFESSION_PRESENTATION: ProfessionPresentation = {
   colorClass: "text-muted-foreground",

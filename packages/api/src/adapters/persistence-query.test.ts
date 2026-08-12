@@ -104,10 +104,9 @@ describe("decodePersistedValue", () => {
         const error = yield* Effect.flip(
           decodePersistedValue(
             AnnouncementId,
-            0,
             "listAnnouncements.decode",
             (input) => new AnnouncementStoreError(input)
-          )
+          )(0)
         );
 
         expect(error).toBeInstanceOf(AnnouncementStoreError);

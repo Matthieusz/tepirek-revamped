@@ -46,9 +46,13 @@ import {
   SignupNameSchema,
 } from "@/lib/form-schemas";
 
+type StandardSchemaInput = Parameters<
+  ReturnType<typeof Schema.decodeUnknownExit>
+>[0];
+
 const succeeds = <S extends Schema.ConstraintDecoder<unknown>>(
   schema: S,
-  value: unknown
+  value: StandardSchemaInput
 ): S["Type"] => {
   const result = Schema.decodeUnknownExit(schema)(value);
   expect(Exit.isSuccess(result)).toBe(true);
@@ -60,7 +64,7 @@ const succeeds = <S extends Schema.ConstraintDecoder<unknown>>(
 
 const fails = <S extends Schema.ConstraintDecoder<unknown>>(
   schema: S,
-  value: unknown
+  value: StandardSchemaInput
 ): void => {
   expect(Exit.isFailure(Schema.decodeUnknownExit(schema)(value))).toBe(true);
 };

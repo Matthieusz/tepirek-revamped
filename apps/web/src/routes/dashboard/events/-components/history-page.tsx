@@ -59,6 +59,13 @@ interface HistoryPageProps {
   session: AuthSession;
 }
 
+interface BetPageInput {
+  eventId?: number;
+  heroId?: number;
+  limit: number;
+  page: number;
+}
+
 const historyFilterKey = (input: {
   readonly eventId?: number;
   readonly heroId?: number;
@@ -71,16 +78,16 @@ export default function HistoryPage({ session }: HistoryPageProps) {
     routeId: "/dashboard/events/history",
   });
 
-  const betPageInput = {
-    ...(filter.queryInputs.eventId === undefined
-      ? {}
-      : { eventId: filter.queryInputs.eventId }),
-    ...(filter.queryInputs.heroId === undefined
-      ? {}
-      : { heroId: filter.queryInputs.heroId }),
+  const betPageInput: BetPageInput = {
     limit: ITEMS_PER_PAGE,
     page: 1,
   };
+  if (filter.queryInputs.eventId !== undefined) {
+    betPageInput.eventId = filter.queryInputs.eventId;
+  }
+  if (filter.queryInputs.heroId !== undefined) {
+    betPageInput.heroId = filter.queryInputs.heroId;
+  }
   const betsResult = useAtomValue(paginatedBetsAtom(betPageInput));
   const refreshBets = useAtomRefresh(paginatedBetsAtom(betPageInput));
 
@@ -97,12 +104,7 @@ export default function HistoryPage({ session }: HistoryPageProps) {
 
 interface HistoryContentProps extends HistoryPageProps {
   readonly betsResult: AsyncResult.AsyncResult<PaginatedBets, unknown>;
-  readonly betPageInput: {
-    readonly eventId?: number;
-    readonly heroId?: number;
-    readonly limit: number;
-    readonly page: number;
-  };
+  readonly betPageInput: BetPageInput;
   readonly filter: ReturnType<typeof useEventHeroFilter>;
   readonly onRetryBets: () => void;
 }

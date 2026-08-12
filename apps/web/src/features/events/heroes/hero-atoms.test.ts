@@ -1,3 +1,4 @@
+import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry";
 import { describe, expect, it } from "vitest";
 
@@ -10,8 +11,12 @@ describe("hero atoms", () => {
 
     const value = registry.get(atom);
 
-    expect(value).toBeDefined();
-    expect(typeof value).toBe("object");
+    const expected = AsyncResult.success([]);
+    expect(value).toMatchObject({
+      _tag: expected._tag,
+      value: expected.value,
+      waiting: expected.waiting,
+    });
   });
 
   it("heroesByEventAtom with a number returns a different atom than the null one", () => {

@@ -38,6 +38,9 @@ const isUpstreamUnavailableApiError = Schema.is(
 );
 const isApiError = Schema.is(HttpApiError);
 
+/** Values accepted at the JavaScript exception boundary and narrowed below. */
+export type CaughtError = Parameters<typeof isApiError>[0];
+
 const publicMessage = (message: string, fallback: string): string =>
   message.length > 0 ? message : fallback;
 
@@ -130,7 +133,7 @@ export const getSquadBuilderLineErrorMessage = (
  * HTTP API errors are matched by their stable protocol tags and schemas.
  */
 export const getErrorMessage = (
-  error: unknown,
+  error: CaughtError,
   fallback = fallbackErrorMessage
 ): string => {
   if (isApiError(error)) {

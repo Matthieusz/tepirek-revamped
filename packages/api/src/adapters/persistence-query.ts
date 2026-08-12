@@ -14,11 +14,11 @@ function projectPersistenceError<E, PersistenceError, Operation extends string>(
   error: E,
   makeError: (input: PersistenceErrorInput<Operation>) => PersistenceError
 ): Exclude<E, EffectDrizzleQueryError | SqlError> | PersistenceError;
-function projectPersistenceError<PersistenceError, Operation extends string>(
+function projectPersistenceError<E, PersistenceError, Operation extends string>(
   operation: Operation,
-  error: unknown,
+  error: E,
   makeError: (input: PersistenceErrorInput<Operation>) => PersistenceError
-): unknown {
+): E | PersistenceError {
   return error instanceof EffectDrizzleQueryError || isSqlError(error)
     ? makeError({ cause: error, operation })
     : error;
@@ -49,13 +49,15 @@ export const decodePersistedValue = <
   Operation extends string,
 >(
   schema: Schema.ConstraintDecoder<A>,
-  input: unknown,
   operation: Operation,
   makeError: (input: {
     readonly cause: unknown;
     readonly operation: Operation;
   }) => PersistenceError
-) =>
-  Schema.decodeUnknownEffect(schema)(input).pipe(
-    Effect.mapError((cause) => makeError({ cause, operation }))
-  );
+) => {
+  const decode = Schema.decodeUnknownEffect(schema);
+  return (input: Parameters<typeof decode>[0]) =>
+    decode(input).pipe(
+      Effect.mapError((cause) => makeError({ cause, operation }))
+    );
+};

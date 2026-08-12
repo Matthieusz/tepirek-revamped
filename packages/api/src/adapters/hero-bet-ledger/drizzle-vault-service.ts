@@ -42,12 +42,10 @@ const persistenceQuery = <A, E, R>(
 
 const decodePersisted = <A>(
   schema: Schema.ConstraintDecoder<A>,
-  input: unknown,
   operation: string
 ) =>
   decodePersistedValue(
     schema,
-    input,
     operation,
     ({ cause, operation: failedOperation }) =>
       new VaultPersistenceUnavailable({ cause, operation: failedOperation })
@@ -105,9 +103,8 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
             heroUserStats.map((stat) =>
               decodePersisted(
                 Schema.FiniteFromString,
-                stat.points,
                 "distributeGold.decode"
-              )
+              )(stat.points)
             )
           );
           const totalPoints = Num.sumAll(decodedPoints);
@@ -130,9 +127,8 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
             .where(eq(hero.id, heroId));
           const decodedPointWorth = yield* decodePersisted(
             Schema.FiniteFromString,
-            storedPointWorth,
             "distributeGold.decode"
-          );
+          )(storedPointWorth);
           return {
             heroName: heroData.name,
             pointWorth: decodedPointWorth,
@@ -144,9 +140,8 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
     );
     const decodedHeroId = yield* decodePersisted(
       HeroId,
-      heroId,
       "distributeGold.decode"
-    );
+    )(heroId);
     return {
       goldAmount,
       heroId: decodedHeroId,
@@ -187,9 +182,10 @@ const getVaultWithDatabase =
       Effect.flatMap((rows) =>
         Effect.all(
           rows.map((row) =>
-            decodePersisted(AppUserId, row.userId, "getVault.decode").pipe(
-              Effect.map((userId) => ({ ...row, userId }))
-            )
+            decodePersisted(
+              AppUserId,
+              "getVault.decode"
+            )(row.userId).pipe(Effect.map((userId) => ({ ...row, userId })))
           )
         )
       )

@@ -24,9 +24,7 @@ const decodeVaultSearch = Schema.decodeUnknownSync(
   })
 );
 
-const validateVaultSearch = (
-  input: unknown
-): { readonly eventId?: string | undefined } => decodeVaultSearch(input);
+const validateVaultSearch = decodeVaultSearch;
 
 export const Route = createFileRoute("/dashboard/events/vault")({
   component: EventsVaultRoute,

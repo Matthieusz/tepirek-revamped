@@ -188,7 +188,7 @@ const DeleteAccountDialog = ({
           <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
           <AlertDialogAction
             disabled={isDeleting}
-            onClick={() => void handleDelete()}
+            onClick={handleDelete}
             variant="destructive"
           >
             {isDeleting ? (

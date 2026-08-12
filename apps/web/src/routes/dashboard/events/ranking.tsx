@@ -2,7 +2,7 @@ import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 
 import { eventsAtom } from "@/features/events/core/event-atoms";
-import { FilterIdSearchSchema } from "@/features/events/core/event-hero-filter";
+import { EventHeroFilterSearchSchema } from "@/features/events/core/event-hero-filter";
 import { RankingSortSchema } from "@/features/events/ranking/ranking-sort";
 import { preloadAtomResults } from "@/lib/atom-preload";
 import { RankingPage } from "@/routes/dashboard/events/-components/ranking-page";
@@ -30,8 +30,7 @@ export const Route = createFileRoute("/dashboard/events/ranking")({
   },
   validateSearch: Schema.decodeUnknownSync(
     Schema.Struct({
-      eventId: Schema.optional(FilterIdSearchSchema),
-      heroId: Schema.optional(FilterIdSearchSchema),
+      ...EventHeroFilterSearchSchema.fields,
       sortBy: Schema.optional(RankingSortSchema),
     })
   ),

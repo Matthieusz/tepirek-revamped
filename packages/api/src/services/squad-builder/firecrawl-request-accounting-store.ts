@@ -54,7 +54,7 @@ export interface MarkFirecrawlRequestFailedInput {
 }
 
 /** Persistence operations for transactionally accounting for Firecrawl requests. */
-export interface FirecrawlRequestAccountingStoreServiceShape {
+export interface FirecrawlRequestAccountingStoreContract {
   readonly reserveRequest: (
     input: ReserveFirecrawlRequestInput
   ) => Effect<
@@ -72,7 +72,7 @@ export interface FirecrawlRequestAccountingStoreServiceShape {
 /** Store seam shared by workflows that account for Firecrawl requests. */
 export class FirecrawlRequestAccountingStoreService extends Context.Service<
   FirecrawlRequestAccountingStoreService,
-  FirecrawlRequestAccountingStoreServiceShape
+  FirecrawlRequestAccountingStoreContract
 >()(
   "@tepirek-revamped/api/squad-builder/FirecrawlRequestAccountingStoreService"
 ) {}

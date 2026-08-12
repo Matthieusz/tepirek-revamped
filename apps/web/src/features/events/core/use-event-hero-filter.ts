@@ -13,6 +13,7 @@ import {
   toQueryInput,
 } from "@/features/events/core/event-hero-filter";
 import type {
+  EventHeroFilterSearch,
   EventHeroFilterState,
   FilterSelection,
 } from "@/features/events/core/event-hero-filter";
@@ -91,7 +92,7 @@ export const useEventHeroFilter = (
   };
 
   const navigateWithSearch = useCallback(
-    (updates: Record<string, unknown>) => {
+    (updates: EventHeroFilterSearch) => {
       navigate({
         search: (prev) => ({ ...prev, ...updates }),
       });

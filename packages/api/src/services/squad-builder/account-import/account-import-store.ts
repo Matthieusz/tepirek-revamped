@@ -109,7 +109,7 @@ export interface ListOwnedMargonemAccountsInput {
 }
 
 /** Persistence operations used by account import workflows. */
-export interface AccountImportStoreServiceShape {
+export interface AccountImportStoreContract {
   readonly listOwnedAccounts: (
     input: ListOwnedMargonemAccountsInput
   ) => Effect<
@@ -150,5 +150,5 @@ export interface AccountImportStoreServiceShape {
 
 export class AccountImportStoreService extends Context.Service<
   AccountImportStoreService,
-  AccountImportStoreServiceShape
+  AccountImportStoreContract
 >()("@tepirek-revamped/api/squad-builder/AccountImportStoreService") {}

@@ -59,6 +59,16 @@ export interface SquadGroupListFilters {
   readonly levelRange: SquadGroupLevelRange;
 }
 
+interface BoundedLevelRangeFields {
+  minLevel?: SquadGroupLevelBound;
+  maxLevel?: SquadGroupLevelBound;
+}
+
+interface SquadGroupListFilterProjection {
+  levelRange: SquadGroupLevelRange;
+  nameQuery?: SquadGroupNameQuery;
+}
+
 /** Empty squad group list filters matching the unfiltered list behavior. */
 export const emptySquadGroupListFilters: SquadGroupListFilters = {
   levelRange: SquadGroupLevelRange.AnyLevel(),
@@ -176,16 +186,23 @@ export const parseSquadGroupListFilters = Effect.fn(
     });
   }
 
-  const levelRange: SquadGroupLevelRange =
-    minLevel._tag === "Absent" && maxLevel._tag === "Absent"
-      ? SquadGroupLevelRange.AnyLevel()
-      : SquadGroupLevelRange.BoundedLevelRange({
-          ...(maxLevel._tag === "Absent" ? {} : { maxLevel: maxLevel.value }),
-          ...(minLevel._tag === "Absent" ? {} : { minLevel: minLevel.value }),
-        });
+  let levelRange: SquadGroupLevelRange;
+  if (minLevel._tag === "Absent" && maxLevel._tag === "Absent") {
+    levelRange = SquadGroupLevelRange.AnyLevel();
+  } else {
+    const boundedLevelRange: BoundedLevelRangeFields = {};
+    if (maxLevel._tag === "Present") {
+      boundedLevelRange.maxLevel = maxLevel.value;
+    }
+    if (minLevel._tag === "Present") {
+      boundedLevelRange.minLevel = minLevel.value;
+    }
+    levelRange = SquadGroupLevelRange.BoundedLevelRange(boundedLevelRange);
+  }
 
-  return {
-    levelRange,
-    ...(nameQuery._tag === "Absent" ? {} : { nameQuery: nameQuery.value }),
-  };
+  const filters: SquadGroupListFilterProjection = { levelRange };
+  if (nameQuery._tag === "Present") {
+    filters.nameQuery = nameQuery.value;
+  }
+  return filters;
 });

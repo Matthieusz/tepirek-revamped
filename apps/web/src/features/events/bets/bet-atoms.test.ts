@@ -11,6 +11,19 @@ import {
 } from "@/lib/test-utils/atom-test-utils";
 
 describe("bet atoms", () => {
+  it("omits undefined pagination filters from the serialized request", async () => {
+    const { calls, makeRegistry } = makeTestLayer();
+    const registry = makeRegistry();
+    const paginatedBets = paginatedBetsAtom({});
+
+    registry.mount(paginatedBets);
+    await waitForAtomResults(registry, [paginatedBets]);
+
+    const request = calls.find((call) => call.method === "getAllPaginated");
+    expect(request?.args).toEqual({});
+    expect(JSON.stringify(request?.args)).toBe("{}");
+  });
+
   it("deletes a bet and refreshes the active first page", async () => {
     const { calls, makeRegistry } = makeTestLayer();
     const registry = makeRegistry();

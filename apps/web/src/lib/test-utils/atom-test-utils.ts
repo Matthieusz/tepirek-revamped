@@ -1,20 +1,31 @@
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { Effect, Layer } from "effect";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { HttpApiClient } from "effect/unstable/httpapi";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
-import type * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import type * as AtomType from "effect/unstable/reactivity/Atom";
 import type * as AtomRegistryType from "effect/unstable/reactivity/AtomRegistry";
 import { getResult } from "effect/unstable/reactivity/AtomRegistry";
 
+import type { preloadAtomResults } from "@/lib/atom-preload";
 import {
   AppHttpApiClient,
   appHttpApiRuntime,
 } from "@/lib/http-api-client-runtime";
 
+type HttpJsonBody = Parameters<typeof Response.json>[0];
+
+type FixtureResponseValue =
+  | boolean
+  | null
+  | number
+  | string
+  | readonly FixtureResponseValue[]
+  | { readonly [key: string]: FixtureResponseValue };
+
 interface ApiCall {
-  readonly args: unknown;
+  readonly args: HttpJsonBody;
   readonly group: string;
   readonly method: string;
 }
@@ -24,7 +35,7 @@ interface EndpointIdentity {
   readonly method: string;
 }
 
-const responseBodies: Readonly<Record<string, unknown>> = {
+const responseBodies = {
   "auction/getAuctionSignups": [],
   "auction/getAuctionStats": { totalSignups: 0, uniqueUsers: 0 },
   "auction/removeAuctionSignup": { success: true },
@@ -43,6 +54,7 @@ const responseBodies: Readonly<Record<string, unknown>> = {
   },
   "bet/getLatestForCopy": null,
   "ranking/getOldestUnpaidEvent": null,
+  "ranking/getRanking": { pointWorth: null, ranking: [], totalBets: 0 },
   "skills/getRangeBySlug": null,
   "skills/listProfessions": [],
   "skills/listRanges": [],
@@ -127,7 +139,10 @@ const responseBodies: Readonly<Record<string, unknown>> = {
     usersUpdated: 0,
   },
   "vault/getVault": [],
-};
+} satisfies Readonly<Record<string, FixtureResponseValue>>;
+
+const hasResponseBody = (key: string): key is keyof typeof responseBodies =>
+  Object.hasOwn(responseBodies, key);
 
 const makeEndpointLookup = (): ReadonlyMap<string, EndpointIdentity> => {
   const endpoints = new Map<string, EndpointIdentity>();
@@ -141,13 +156,16 @@ const makeEndpointLookup = (): ReadonlyMap<string, EndpointIdentity> => {
   return endpoints;
 };
 
-const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u;
-
-const decodePayload = (body: Uint8Array): unknown =>
-  JSON.parse(new TextDecoder().decode(body), (_key, value: unknown) =>
-    typeof value === "string" && ISO_DATE_PATTERN.test(value)
-      ? new Date(value)
-      : value
+type JsonReviver = NonNullable<Parameters<typeof JSON.parse>[1]>;
+const JsonDateSchema = Schema.DateFromString.pipe(
+  Schema.check(Schema.isDateValid())
+);
+const decodeJsonDate = Schema.decodeUnknownOption(JsonDateSchema);
+const decodeJsonValue = (_key: string, value: Parameters<JsonReviver>[1]) =>
+  Option.getOrElse(decodeJsonDate(value), () => value);
+const decodePayload = (body: Uint8Array): HttpJsonBody =>
+  Schema.decodeUnknownSync(Schema.Unknown)(
+    JSON.parse(new TextDecoder().decode(body), decodeJsonValue)
   );
 
 export const makeTestLayer = () => {
@@ -167,7 +185,9 @@ export const makeTestLayer = () => {
     calls.push({ args, ...endpoint });
 
     const responseKey = `${endpoint.group}/${endpoint.method}`;
-    const responseBody = responseBodies[responseKey];
+    const responseBody = hasResponseBody(responseKey)
+      ? responseBodies[responseKey]
+      : undefined;
     const response =
       responseBody === undefined
         ? new Response(null, { status: 200 })
@@ -193,7 +213,7 @@ export const makeTestLayer = () => {
   };
 };
 
-type AsyncResultAtom = AtomType.Atom<AsyncResult.AsyncResult<unknown, unknown>>;
+type AsyncResultAtom = Parameters<typeof preloadAtomResults>[1][number];
 
 /** Waits until every supplied atom has reached a non-waiting result. */
 export const waitForAtomResults = async (

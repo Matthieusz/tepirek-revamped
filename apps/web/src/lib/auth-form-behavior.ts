@@ -71,7 +71,7 @@ export const authFormSubmission = <Response extends AuthResponse>(
 
       return Effect.fail(
         new AuthFormSubmissionError({
-          ...(response.error.code ? { code: response.error.code } : {}),
+          code: response.error.code || undefined,
           kind: "provider",
           message: getAuthProviderErrorMessage(response.error),
           operation,

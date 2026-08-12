@@ -15,41 +15,31 @@ import { TodoId } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
 import * as Schema from "effect/Schema";
 
 /** Decode an announcement identifier received from browser state. */
-export const asAnnouncementId = (value: unknown) =>
-  Schema.decodeUnknownEffect(AnnouncementId)(value);
+export const asAnnouncementId = Schema.decodeUnknownEffect(AnnouncementId);
 
 /** Decode an auction-signup identifier received from browser state. */
-export const asAuctionSignupId = (value: unknown) =>
-  Schema.decodeUnknownEffect(AuctionSignupId)(value);
+export const asAuctionSignupId = Schema.decodeUnknownEffect(AuctionSignupId);
 
 /** Decode a bet identifier received from browser state. */
-export const asBetId = (value: unknown) =>
-  Schema.decodeUnknownEffect(BetId)(value);
+export const asBetId = Schema.decodeUnknownEffect(BetId);
 
 /** Decode an event identifier received from browser state. */
-export const asEventId = (value: unknown) =>
-  Schema.decodeUnknownEffect(EventId)(value);
+export const asEventId = Schema.decodeUnknownEffect(EventId);
 
 /** Decode a hero identifier received from browser state. */
-export const asHeroId = (value: unknown) =>
-  Schema.decodeUnknownEffect(HeroId)(value);
+export const asHeroId = Schema.decodeUnknownEffect(HeroId);
 
 /** Decode a profession identifier received from browser state. */
-export const asProfessionId = (value: unknown) =>
-  Schema.decodeUnknownEffect(ProfessionId)(value);
+export const asProfessionId = Schema.decodeUnknownEffect(ProfessionId);
 
 /** Decode a skill identifier received from browser state. */
-export const asSkillId = (value: unknown) =>
-  Schema.decodeUnknownEffect(SkillId)(value);
+export const asSkillId = Schema.decodeUnknownEffect(SkillId);
 
 /** Decode a skill-range identifier received from browser state. */
-export const asSkillRangeId = (value: unknown) =>
-  Schema.decodeUnknownEffect(SkillRangeId)(value);
+export const asSkillRangeId = Schema.decodeUnknownEffect(SkillRangeId);
 
 /** Decode a todo identifier received from browser state. */
-export const asTodoId = (value: unknown) =>
-  Schema.decodeUnknownEffect(TodoId)(value);
+export const asTodoId = Schema.decodeUnknownEffect(TodoId);
 
 /** Decode an application-user identifier received from browser state. */
-export const asAppUserId = (value: unknown) =>
-  Schema.decodeUnknownEffect(AppUserId)(value);
+export const asAppUserId = Schema.decodeUnknownEffect(AppUserId);

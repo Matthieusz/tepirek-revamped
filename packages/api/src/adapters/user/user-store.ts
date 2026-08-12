@@ -71,10 +71,9 @@ export interface Player {
   readonly verified: boolean;
 }
 
-const decodeAppUserId = (input: unknown, operation: string) =>
+const decodeAppUserId = (operation: string) =>
   decodePersistedValue(
     AppUserId,
-    input,
     operation,
     (error) => new UserAdapterError(error)
   );
@@ -84,7 +83,7 @@ const toVerifiedMember = Effect.fnUntraced(function* toVerifiedMember(row: {
   readonly image: string | null;
   readonly name: string;
 }) {
-  const id = yield* decodeAppUserId(row.id, "getVerified.decode");
+  const id = yield* decodeAppUserId("getVerified.decode")(row.id);
   return { ...row, id };
 });
 
@@ -97,7 +96,7 @@ const toPlayer = Effect.fnUntraced(function* toPlayer(row: {
   readonly updatedAt: Date;
   readonly verified: boolean;
 }) {
-  const id = yield* decodeAppUserId(row.id, "listUsers.decode");
+  const id = yield* decodeAppUserId("listUsers.decode")(row.id);
   return { ...row, id };
 });
 
@@ -155,10 +154,9 @@ const countVerifiedAdmins = Effect.fnUntraced(function* countVerifiedAdmins(
 
   return yield* decodePersistedValue(
     PersistedCount,
-    rows[0]?.count ?? 0,
     "countVerifiedAdmins.decode",
     (error) => new UserAdapterError(error)
-  );
+  )(rows[0]?.count ?? 0);
 });
 
 const assertAdminMutationAllowed = Effect.fnUntraced(

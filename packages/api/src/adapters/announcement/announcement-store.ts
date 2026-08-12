@@ -37,15 +37,12 @@ export interface DeleteAnnouncementInput {
 const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new AnnouncementStoreError(input)
 );
-const decodePersisted =
-  <A>(schema: Schema.ConstraintDecoder<A>) =>
-  (input: unknown) =>
-    decodePersistedValue(
-      schema,
-      input,
-      "listAnnouncements.decode",
-      (error) => new AnnouncementStoreError(error)
-    );
+const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
+  decodePersistedValue(
+    schema,
+    "listAnnouncements.decode",
+    (error) => new AnnouncementStoreError(error)
+  );
 
 const createWithDatabase =
   (database: EffectPgDatabase) =>

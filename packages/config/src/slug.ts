@@ -1,4 +1,4 @@
-const POLISH_LETTER_REPLACEMENTS: Record<string, string> = {
+const POLISH_LETTER_REPLACEMENTS = {
   Ó: "o",
   ó: "o",
   Ą: "a",
@@ -17,14 +17,20 @@ const POLISH_LETTER_REPLACEMENTS: Record<string, string> = {
   ź: "z",
   Ż: "z",
   ż: "z",
-};
+} satisfies Record<string, string>;
+
+const hasPolishLetterReplacement = (
+  letter: string
+): letter is keyof typeof POLISH_LETTER_REPLACEMENTS =>
+  Object.hasOwn(POLISH_LETTER_REPLACEMENTS, letter);
 
 export const slugifySkillRangeName = (input: string) =>
   input
     .trim()
-    .replaceAll(
-      /[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/gu,
-      (letter) => POLISH_LETTER_REPLACEMENTS[letter] ?? ""
+    .replaceAll(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/gu, (letter) =>
+      hasPolishLetterReplacement(letter)
+        ? POLISH_LETTER_REPLACEMENTS[letter]
+        : ""
     )
     .toLowerCase()
     .replaceAll(/\s+/gu, "-")

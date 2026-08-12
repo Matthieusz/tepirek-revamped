@@ -5,5 +5,4 @@ const PointWorth = Schema.NullOr(
 );
 
 /** Parse an unknown point worth value without escaping Effect's error channel. */
-export const parsePointWorth = (pointWorth: unknown) =>
-  Schema.decodeUnknownEffect(PointWorth)(pointWorth);
+export const parsePointWorth = Schema.decodeUnknownEffect(PointWorth);

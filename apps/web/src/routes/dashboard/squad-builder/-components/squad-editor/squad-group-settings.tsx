@@ -398,7 +398,7 @@ export const SquadGroupSettings = ({
                   </AlertDialogCancel>
                   <AlertDialogAction
                     disabled={isDeleting}
-                    onClick={() => void remove()}
+                    onClick={remove}
                     variant="destructive"
                   >
                     {isDeleting ? (

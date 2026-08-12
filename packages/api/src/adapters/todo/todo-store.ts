@@ -45,13 +45,9 @@ export interface ToggleTodoInput {
 const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new TodoStoreError(input)
 );
-const decodePersisted = <A>(
-  schema: Schema.ConstraintDecoder<A>,
-  input: unknown
-) =>
+const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
   decodePersistedValue(
     schema,
-    input,
     "listTodos.decode",
     (error) => new TodoStoreError(error)
   );
@@ -83,9 +79,8 @@ const listWithDatabase =
         Effect.all(
           rows.map((row) =>
             Effect.gen(function* decodeTodoRow() {
-              const id = yield* decodePersisted(TodoId, row.id);
-              const decodedUserId = yield* decodePersisted(
-                AppUserId,
+              const id = yield* decodePersisted(TodoId)(row.id);
+              const decodedUserId = yield* decodePersisted(AppUserId)(
                 row.userId
               );
               return { ...row, id, userId: decodedUserId };

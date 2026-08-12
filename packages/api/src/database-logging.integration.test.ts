@@ -12,6 +12,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as References from "effect/References";
+import * as Schema from "effect/Schema";
 
 import { makeDirectPersistenceQuery } from "./adapters/persistence-query.ts";
 import { UserAdapterError } from "./adapters/user/user-store.ts";
@@ -94,12 +95,9 @@ describe("Effect database query logging", () => {
               });
             }).pipe(Effect.orDie)
         );
-        const address = collector.address();
-        if (address === null || typeof address === "string") {
-          return yield* Effect.die(
-            new Error("Expected the local OTLP collector to use a TCP port")
-          );
-        }
+        const address = yield* Schema.decodeUnknownEffect(
+          Schema.Struct({ port: Schema.Finite })
+        )(collector.address());
 
         const applicationLoggerLayer = makeLoggerLayer([
           makeStderrLogger("test-run", (output) => stderrEntries.push(output)),

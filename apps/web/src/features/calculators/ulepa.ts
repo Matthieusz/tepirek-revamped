@@ -11,13 +11,13 @@ export type UlepaRarity =
 /**
  * Rarities in display order, used by the calculator page's rarity select.
  */
-export const ULEPA_RARITIES: readonly UlepaRarity[] = [
+export const ULEPA_RARITIES = [
   "heroiczny",
   "legendarny",
   "ulepszony",
   "unikatowy",
   "zwykły",
-] as const;
+] as const satisfies readonly UlepaRarity[];
 
 /**
  * Default item level pre-filled in the calculator form.
@@ -41,16 +41,18 @@ const GAME_CONSTANTS = {
   STANDARD_BASE_COST: 180,
 } as const;
 
-const rarityFactors: Record<UlepaRarity, RarityFactor> = {
+const rarityFactors = {
   heroiczny: { upgradeGoldFactor: 30, upgradeRarityFactor: 100 },
   legendarny: { upgradeGoldFactor: 60, upgradeRarityFactor: 1000 },
   ulepszony: { upgradeGoldFactor: 40, upgradeRarityFactor: -1 },
   unikatowy: { upgradeGoldFactor: 10, upgradeRarityFactor: 10 },
   zwykły: { upgradeGoldFactor: 1, upgradeRarityFactor: 1 },
-};
+} satisfies Record<UlepaRarity, RarityFactor>;
 
 /** Multipliers for each upgrade level (1-5). */
-const UPGRADE_LEVEL_FACTORS: readonly number[] = [1, 2.1, 3.4, 5, 7];
+const UPGRADE_LEVEL_FACTORS = [
+  1, 2.1, 3.4, 5, 7,
+] as const satisfies readonly number[];
 
 const MIN_LEVEL = 1;
 const MAX_LEVEL = 300;
@@ -113,17 +115,20 @@ export const calculateDifferentialCosts = (upgradeCosts: number[]): number[] =>
     (cost, previousCost) => cost - previousCost
   );
 
+/** Result of calculating upgrade and extraction costs for an item. */
+export interface UlepaUpgradeSummary {
+  readonly cumulativeCosts: number[];
+  readonly differentialCosts: number[];
+  readonly totalUpgradeCost: number;
+  readonly total75Percent: number;
+  readonly upgradeGoldCost: number;
+  readonly extractionGoldCost: number;
+}
+
 export const calculateUpgradeSummary = (
   level: number,
   rarity: UlepaRarity
-): {
-  cumulativeCosts: number[];
-  differentialCosts: number[];
-  totalUpgradeCost: number;
-  total75Percent: number;
-  upgradeGoldCost: number;
-  extractionGoldCost: number;
-} => {
+): UlepaUpgradeSummary => {
   const cumulativeCosts = calculateUpgradePoints(level, rarity);
   const differentialCosts = calculateDifferentialCosts(cumulativeCosts);
   const totalUpgradeCost = Num.sumAll(differentialCosts);

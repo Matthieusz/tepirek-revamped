@@ -25,7 +25,7 @@ interface AuctionTypeMeta {
   professionDescription: string;
 }
 
-export const AUCTION_TYPE_META: Record<AuctionType, AuctionTypeMeta> = {
+export const AUCTION_TYPE_META = {
   main: {
     crumb: "Bronie główne",
     indexTitle: "Licytacje broni głównych",
@@ -36,7 +36,7 @@ export const AUCTION_TYPE_META: Record<AuctionType, AuctionTypeMeta> = {
     indexTitle: "Licytacje broni pomocniczych",
     professionDescription: "Licytacje broni wsparcia",
   },
-};
+} satisfies Record<AuctionType, AuctionTypeMeta>;
 
 interface AuctionProfessionMeta {
   cardIcon: Record<AuctionType, LucideIcon>;
@@ -44,10 +44,7 @@ interface AuctionProfessionMeta {
   name: string;
 }
 
-export const AUCTION_PROFESSION_META: Record<
-  AuctionProfession,
-  AuctionProfessionMeta
-> = {
+export const AUCTION_PROFESSION_META = {
   "blade-dancer": {
     cardIcon: {
       main: Swords,
@@ -96,4 +93,4 @@ export const AUCTION_PROFESSION_META: Record<
     headerIcon: Axe,
     name: "Wojownik",
   },
-};
+} satisfies Record<AuctionProfession, AuctionProfessionMeta>;

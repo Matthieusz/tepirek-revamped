@@ -28,33 +28,33 @@ import type { AuthSession } from "@/types/route";
 
 type Rarity = OdwRarity;
 
-const RARITY_ORDER: readonly Rarity[] = [
+const RARITY_ORDER = [
   "heroiczny",
   "legendarny",
   "unikatowy",
   "zwykły",
-];
+] as const satisfies readonly Rarity[];
 
-const rarityColors: Record<Rarity, string> = {
+const rarityColors = {
   heroiczny: "text-blue-500",
   legendarny: "text-orange-500",
   unikatowy: "text-yellow-500",
   zwykły: "text-gray-400",
-};
+} satisfies Record<Rarity, string>;
 
-const rarityBgColors: Record<Rarity, string> = {
+const rarityBgColors = {
   heroiczny: "bg-blue-500/10 border-blue-500/20",
   legendarny: "bg-orange-500/10 border-orange-500/20",
   unikatowy: "bg-yellow-500/10 border-yellow-500/20",
   zwykły: "bg-gray-500/10 border-gray-500/20",
-};
+} satisfies Record<Rarity, string>;
 
-const rarityBonusText: Record<Rarity, string> = {
+const rarityBonusText = {
   heroiczny: "+50%",
   legendarny: "+200%",
   unikatowy: "+20%",
   zwykły: "brak bonusu",
-};
+} satisfies Record<Rarity, string>;
 
 const ItemRaritySchema = Schema.Literals([
   "zwykły",

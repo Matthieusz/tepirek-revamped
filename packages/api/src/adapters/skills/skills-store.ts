@@ -70,12 +70,10 @@ const persistenceQuery = makeDirectPersistenceQuery(
 );
 const decodePersisted = <A>(
   schema: Schema.ConstraintDecoder<A>,
-  input: unknown,
   operation: string
 ) =>
   decodePersistedValue(
     schema,
-    input,
     operation,
     (error) => new SkillsStoreError(error)
   );
@@ -163,9 +161,10 @@ const listProfessionsWithDatabase = (database: EffectPgDatabase) => () =>
     Effect.flatMap((rows) =>
       Effect.all(
         rows.map((row) =>
-          decodePersisted(ProfessionId, row.id, "listProfessions.decode").pipe(
-            Effect.map((id) => ({ ...row, id }))
-          )
+          decodePersisted(
+            ProfessionId,
+            "listProfessions.decode"
+          )(row.id).pipe(Effect.map((id) => ({ ...row, id })))
         )
       )
     )
@@ -175,9 +174,10 @@ const listRangesWithDatabase = (database: EffectPgDatabase) => () =>
     Effect.flatMap((rows) =>
       Effect.all(
         rows.map((row) =>
-          decodePersisted(SkillRangeId, row.id, "listRanges.decode").pipe(
-            Effect.map((id) => ({ ...row, id }))
-          )
+          decodePersisted(
+            SkillRangeId,
+            "listRanges.decode"
+          )(row.id).pipe(Effect.map((id) => ({ ...row, id })))
         )
       )
     )
@@ -196,9 +196,8 @@ const getRangeBySlugWithDatabase = (database: EffectPgDatabase) =>
     }
     const id = yield* decodePersisted(
       SkillRangeId,
-      row.id,
       "getRangeBySlug.decode"
-    );
+    )(row.id);
     return { ...row, id };
   });
 const listSkillsByRangeWithDatabase =
@@ -228,14 +227,12 @@ const listSkillsByRangeWithDatabase =
             Effect.gen(function* decodeSkillRow() {
               const id = yield* decodePersisted(
                 SkillId,
-                row.id,
                 "listSkillsByRange.decode"
-              );
+              )(row.id);
               const professionId = yield* decodePersisted(
                 ProfessionId,
-                row.professionId,
                 "listSkillsByRange.decode"
-              );
+              )(row.professionId);
               return { ...row, id, professionId };
             })
           )

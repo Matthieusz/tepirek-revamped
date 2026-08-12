@@ -61,7 +61,7 @@ describe("persistenceQuery", () => {
   );
 
   it.effect("does not translate a tag-shaped non-Drizzle failure", () =>
-    Effect.gen(function* tagShapedFailureTest() {
+    Effect.gen(function* taggedFailureTest() {
       const domainError = { _tag: "EffectDrizzleQueryError" as const };
 
       const error = yield* Effect.flip(

@@ -62,9 +62,12 @@ interface CharacterAccountGroup<T extends CharacterPoolCharacter> {
 const normalizeText = (value: string): string =>
   value.trim().normalize("NFC").toLocaleLowerCase("pl-PL");
 
-const parseLevelInput = (
-  rawValue: string
-): { readonly invalid: boolean; readonly value: number | null } => {
+interface ParsedLevelInput {
+  readonly invalid: boolean;
+  readonly value: number | null;
+}
+
+const parseLevelInput = (rawValue: string): ParsedLevelInput => {
   const value = rawValue.trim();
   if (value.length === 0) {
     return { invalid: false, value: null };

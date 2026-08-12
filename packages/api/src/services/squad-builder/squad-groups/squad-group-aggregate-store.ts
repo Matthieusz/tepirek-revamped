@@ -114,7 +114,7 @@ export interface SquadGroupVisibilityChange {
 }
 
 /** Persistence port for loading and saving the squad-group aggregate. */
-export interface SquadGroupAggregateStoreServiceShape {
+export interface SquadGroupAggregateStoreContract {
   readonly createSquadGroup: (
     input: CreateSquadGroupStoreInput
   ) => Effect<SquadGroupSummary, SquadBuilderPersistenceUnavailable>;
@@ -161,5 +161,5 @@ export interface SquadGroupAggregateStoreServiceShape {
 /** Load/save access to the squad-group aggregate. */
 export class SquadGroupAggregateStoreService extends Context.Service<
   SquadGroupAggregateStoreService,
-  SquadGroupAggregateStoreServiceShape
+  SquadGroupAggregateStoreContract
 >()("@tepirek-revamped/api/squad-builder/SquadGroupAggregateStoreService") {}

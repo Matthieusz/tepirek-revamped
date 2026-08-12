@@ -27,7 +27,7 @@ type ClientStep = (
 >;
 
 const jsonResponse =
-  (body: unknown, status = 200): ClientStep =>
+  (body: Parameters<typeof Response.json>[0], status = 200): ClientStep =>
   (request) =>
     Effect.succeed(
       HttpClientResponse.fromWeb(request, Response.json(body, { status }))
@@ -40,16 +40,13 @@ const textResponse =
 
 const emptyResponse =
   (status: number, headers?: Readonly<Record<string, string>>): ClientStep =>
-  (request) =>
-    Effect.succeed(
-      HttpClientResponse.fromWeb(
-        request,
-        new Response(null, {
-          status,
-          ...(headers === undefined ? {} : { headers }),
-        })
-      )
+  (request) => {
+    const responseInit =
+      headers === undefined ? { status } : { headers, status };
+    return Effect.succeed(
+      HttpClientResponse.fromWeb(request, new Response(null, responseInit))
     );
+  };
 
 const makeSequenceClient = (
   steps: readonly ClientStep[],

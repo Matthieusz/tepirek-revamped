@@ -284,15 +284,17 @@ export const SquadBuilderSquadGroupHttpApiHandlers = HttpApiBuilder.group(
                 expectedUpdatedAt: payload.expectedUpdatedAt,
                 groupId: payload.groupId,
                 name: payload.name,
-                squads: payload.squads.map((squad) => ({
-                  characters: squad.characters,
-                  clientKey: squad.clientKey,
-                  name: squad.name,
-                  position: squad.position,
-                  ...(squad.squadId === undefined
-                    ? {}
-                    : { squadId: squad.squadId }),
-                })),
+                squads: payload.squads.map((squad) => {
+                  const mappedSquad = {
+                    characters: squad.characters,
+                    clientKey: squad.clientKey,
+                    name: squad.name,
+                    position: squad.position,
+                  };
+                  return squad.squadId === undefined
+                    ? mappedSquad
+                    : { ...mappedSquad, squadId: squad.squadId };
+                }),
               })
             ).pipe(Effect.mapError(mapSaveSquadGroupError));
           }

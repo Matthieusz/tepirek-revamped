@@ -57,7 +57,7 @@ export interface ApplyPendingRefetchInput {
 }
 
 /** Persistence operations used by account refetch workflows. */
-export interface AccountRefetchStoreServiceShape {
+export interface AccountRefetchStoreContract {
   readonly getAccountForRefetch: (input: {
     readonly actorUserId: AppUserId;
     readonly accountId: MargonemAccountId;
@@ -86,5 +86,5 @@ export interface AccountRefetchStoreServiceShape {
 
 export class AccountRefetchStoreService extends Context.Service<
   AccountRefetchStoreService,
-  AccountRefetchStoreServiceShape
+  AccountRefetchStoreContract
 >()("@tepirek-revamped/api/squad-builder/AccountRefetchStoreService") {}

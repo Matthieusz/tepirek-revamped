@@ -37,15 +37,12 @@ export interface ListHeroesByEventInput {
 const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new HeroesStoreError(input)
 );
-const decodePersisted =
-  <A>(schema: Schema.ConstraintDecoder<A>) =>
-  (input: unknown) =>
-    decodePersistedValue(
-      schema,
-      input,
-      "decodeHeroRow",
-      (error) => new HeroesStoreError(error)
-    );
+const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
+  decodePersistedValue(
+    schema,
+    "decodeHeroRow",
+    (error) => new HeroesStoreError(error)
+  );
 
 const decodeHeroRow = <
   T extends { readonly eventId: number; readonly id: number },

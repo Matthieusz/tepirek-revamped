@@ -43,15 +43,21 @@ export const FilterIdSearchSchema = Schema.String.pipe(
   )
 );
 
+/** Shared validated search contract for Event/Hero filter routes. */
+export const EventHeroFilterSearchSchema = Schema.Struct({
+  eventId: Schema.optional(FilterIdSearchSchema),
+  heroId: Schema.optional(FilterIdSearchSchema),
+});
+
+/** Decoded Event/Hero search values accepted by the shared filter routes. */
+export type EventHeroFilterSearch = typeof EventHeroFilterSearchSchema.Type;
+
 export interface EventHeroFilterState {
   eventId: FilterSelection;
   heroId: FilterSelection;
 }
 
-interface EventHeroFilterUpdate extends Record<string, unknown> {
-  eventId?: FilterSelection | undefined;
-  heroId?: FilterSelection | undefined;
-}
+type EventHeroFilterUpdate = EventHeroFilterSearch;
 
 export const isAllFilter = (value: FilterSelection): boolean =>
   value === ALL_FILTER;

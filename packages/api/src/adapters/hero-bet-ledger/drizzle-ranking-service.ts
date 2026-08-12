@@ -44,23 +44,24 @@ const persistenceQuery = <A, E, R>(
 
 const decodePersisted = <A>(
   schema: Schema.ConstraintDecoder<A>,
-  input: unknown,
   operation: string
 ) =>
   decodePersistedValue(
     schema,
-    input,
     operation,
     ({ cause, operation: failedOperation }) =>
       new RankingPersistenceUnavailable({ cause, operation: failedOperation })
   );
 
-const decodePointWorth = (input: unknown, operation: string) =>
-  parsePointWorth(input).pipe(
-    Effect.mapError(
-      (cause) => new RankingPersistenceUnavailable({ cause, operation })
-    )
-  );
+const decodePointWorth = (operation: string) => {
+  const decode = parsePointWorth;
+  return (input: Parameters<typeof decode>[0]) =>
+    decode(input).pipe(
+      Effect.mapError(
+        (cause) => new RankingPersistenceUnavailable({ cause, operation })
+      )
+    );
+};
 
 const buildUserStatsWhere = (input: {
   readonly eventId?: number | undefined;
@@ -87,14 +88,12 @@ const normalizeRankingRow = (row: {
   Effect.gen(function* normalizeRankingRowEffect() {
     const totalBets = yield* decodePersisted(
       PersistedAggregateNumber,
-      row.totalBets,
       "getRanking.decode"
-    );
+    )(row.totalBets);
     const userId = yield* decodePersisted(
       AppUserId,
-      row.userId,
       "getRanking.decode"
-    );
+    )(row.userId);
     return { ...row, totalBets, userId } satisfies RankingRow;
   });
 
@@ -128,22 +127,18 @@ const getHeroStatsWithDatabase = (database: EffectPgDatabase) =>
     const [stats] = statsRows;
     const decodedHeroId = yield* decodePersisted(
       HeroId,
-      heroId,
       "getHeroStats.decode"
-    );
+    )(heroId);
     const totalBets = yield* decodePersisted(
       PersistedAggregateNumber,
-      stats?.totalBets ?? 0,
       "getHeroStats.decode"
-    );
+    )(stats?.totalBets ?? 0);
     const totalPoints = yield* decodePersisted(
       Schema.FiniteFromString,
-      stats?.totalPoints ?? "0",
       "getHeroStats.decode"
-    );
-    const currentPointWorth = yield* decodePointWorth(
-      heroInfo.pointWorth,
-      "getHeroStats.decode"
+    )(stats?.totalPoints ?? "0");
+    const currentPointWorth = yield* decodePointWorth("getHeroStats.decode")(
+      heroInfo.pointWorth
     );
     return {
       currentPointWorth: currentPointWorth ?? 0,
@@ -171,7 +166,7 @@ const getOldestUnpaidEventWithDatabase = (database: EffectPgDatabase) =>
     const eventId = result[0]?.eventId;
     return eventId === undefined
       ? null
-      : yield* decodePersisted(EventId, eventId, "getOldestUnpaidEvent.decode");
+      : yield* decodePersisted(EventId, "getOldestUnpaidEvent.decode")(eventId);
   });
 
 const getRankingWithDatabase = (database: EffectPgDatabase) =>
@@ -209,9 +204,8 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
       );
       totalBets = yield* decodePersisted(
         PersistedAggregateNumber,
-        betsRows[0]?.count ?? 0,
         "getRanking.decode"
-      );
+      )(betsRows[0]?.count ?? 0);
     } else if (input.eventId === undefined) {
       const betsRows = yield* persistenceQuery(
         "getRanking.totalBets",
@@ -219,9 +213,8 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
       );
       totalBets = yield* decodePersisted(
         PersistedAggregateNumber,
-        betsRows[0]?.count ?? 0,
         "getRanking.decode"
-      );
+      )(betsRows[0]?.count ?? 0);
     } else {
       const betsRows = yield* persistenceQuery(
         "getRanking.totalEventBets",
@@ -233,9 +226,8 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
       );
       totalBets = yield* decodePersisted(
         PersistedAggregateNumber,
-        betsRows[0]?.count ?? 0,
         "getRanking.decode"
-      );
+      )(betsRows[0]?.count ?? 0);
     }
 
     const pointWorthRows =
@@ -251,9 +243,8 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
     const pointWorth =
       pointWorthRows === null
         ? null
-        : yield* decodePointWorth(
-            pointWorthRows[0]?.pointWorth ?? null,
-            "getRanking.decode"
+        : yield* decodePointWorth("getRanking.decode")(
+            pointWorthRows[0]?.pointWorth ?? null
           );
 
     return {

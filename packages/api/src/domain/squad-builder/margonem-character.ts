@@ -61,7 +61,7 @@ export class UnknownMargonemProfession extends Schema.TaggedErrorClass<UnknownMa
   }
 ) {}
 
-const professionLabels: Readonly<Record<string, MargonemProfession>> = {
+const professionLabels = {
   Mag: "mage",
   Paladyn: "paladin",
   "Tancerz ostrzy": "bladeDancer",
@@ -74,7 +74,12 @@ const professionLabels: Readonly<Record<string, MargonemProfession>> = {
   tracker: "tracker",
   warrior: "warrior",
   Łowca: "hunter",
-};
+} satisfies Readonly<Record<string, MargonemProfession>>;
+
+const hasProfessionLabel = (
+  label: string
+): label is keyof typeof professionLabels =>
+  Object.hasOwn(professionLabels, label);
 
 const cleanProfessionLabel = (label: string): string =>
   label.replace(/,$/u, "").trim();
@@ -83,12 +88,10 @@ const cleanProfessionLabel = (label: string): string =>
 export const parseMargonemProfession = Effect.fn("MargonemProfession.parse")(
   function* parseMargonemProfession(label: string) {
     const cleanLabel = cleanProfessionLabel(label);
-    const profession = professionLabels[cleanLabel];
-
-    if (profession === undefined) {
+    if (!hasProfessionLabel(cleanLabel)) {
       return yield* new UnknownMargonemProfession({ label: cleanLabel });
     }
 
-    return profession;
+    return professionLabels[cleanLabel];
   }
 );

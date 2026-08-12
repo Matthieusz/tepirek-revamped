@@ -51,23 +51,24 @@ const persistenceQuery = <A, E, R>(
 
 const decodePersisted = <A>(
   schema: Schema.ConstraintDecoder<A>,
-  input: unknown,
   operation: string
 ) =>
   decodePersistedValue(
     schema,
-    input,
     operation,
     ({ cause, operation: failedOperation }) =>
       new BetPersistenceUnavailable({ cause, operation: failedOperation })
   );
 
-const decodePointWorth = (input: unknown, operation: string) =>
-  parsePointWorth(input).pipe(
-    Effect.mapError(
-      (cause) => new BetPersistenceUnavailable({ cause, operation })
-    )
-  );
+const decodePointWorth = (operation: string) => {
+  const decode = parsePointWorth;
+  return (input: Parameters<typeof decode>[0]) =>
+    decode(input).pipe(
+      Effect.mapError(
+        (cause) => new BetPersistenceUnavailable({ cause, operation })
+      )
+    );
+};
 
 const toBetMember = (member: {
   readonly heroBetId: number;
@@ -79,14 +80,12 @@ const toBetMember = (member: {
   Effect.gen(function* decodeBetMember() {
     const heroBetId = yield* decodePersisted(
       BetId,
-      member.heroBetId,
       "decodeBetMember"
-    );
+    )(member.heroBetId);
     const userId = yield* decodePersisted(
       AppUserId,
-      member.userId,
       "decodeBetMember"
-    );
+    )(member.userId);
     return { ...member, heroBetId, userId };
   });
 
@@ -110,20 +109,17 @@ const toBetSummary = <
   Effect.gen(function* decodeBetSummary() {
     const createdBy = yield* decodePersisted(
       AppUserId,
-      bet.createdBy,
       "decodeBetSummary"
-    );
+    )(bet.createdBy);
     const eventId = yield* decodePersisted(
       EventId,
-      bet.eventId,
       "decodeBetSummary"
-    );
+    )(bet.eventId);
     const heroId = yield* decodePersisted(
       HeroId,
-      bet.heroId,
       "decodeBetSummary"
-    );
-    const id = yield* decodePersisted(BetId, bet.id, "decodeBetSummary");
+    )(bet.heroId);
+    const id = yield* decodePersisted(BetId, "decodeBetSummary")(bet.id);
     const members = yield* Effect.all(bet.members.map(toBetMember));
     return { ...bet, createdBy, eventId, heroId, id, members };
   });
@@ -217,9 +213,8 @@ const refreshEarningsForHero = Effect.fnUntraced(
     if (heroRow === undefined) {
       return;
     }
-    const pointWorth = yield* decodePointWorth(
-      heroRow.pointWorth,
-      "refreshEarningsForHero.decode"
+    const pointWorth = yield* decodePointWorth("refreshEarningsForHero.decode")(
+      heroRow.pointWorth
     );
     if ((pointWorth ?? 0) <= 0) {
       return;
@@ -300,19 +295,16 @@ const createBetWithDatabase = (database: EffectPgDatabase) =>
           yield* refreshEarningsForHero(tx, heroId);
           const decodedCreatedBy = yield* decodePersisted(
             AppUserId,
-            bet.createdBy,
             "createBet.decode"
-          );
+          )(bet.createdBy);
           const decodedHeroId = yield* decodePersisted(
             HeroId,
-            bet.heroId,
             "createBet.decode"
-          );
+          )(bet.heroId);
           const decodedId = yield* decodePersisted(
             BetId,
-            bet.id,
             "createBet.decode"
-          );
+          )(bet.id);
           return {
             ...bet,
             createdBy: decodedCreatedBy,
@@ -446,9 +438,8 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
           }
           const oldPointsPerMember = yield* decodePersisted(
             Schema.FiniteFromString,
-            currentMembers[0]?.points ?? "0",
             "editBet.decode"
-          );
+          )(currentMembers[0]?.points ?? "0");
           const newPointsPerMember =
             calculatePointsPerMember(newMemberCount).toFixed(2);
           const membersToRemove = currentMembers.filter(
@@ -518,9 +509,8 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
             const keepUserIds = membersToKeep.map((member) => member.userId);
             const decodedNewPointsPerMember = yield* decodePersisted(
               Schema.FiniteFromString,
-              newPointsPerMember,
               "editBet.decode"
-            );
+            )(newPointsPerMember);
             const pointsDiff = decodedNewPointsPerMember - oldPointsPerMember;
             yield* tx
               .update(heroBetMember)
@@ -600,9 +590,10 @@ const getBetMembersWithDatabase =
       Effect.flatMap((rows) =>
         Effect.all(
           rows.map((row) =>
-            decodePersisted(AppUserId, row.userId, "getBetMembers.decode").pipe(
-              Effect.map((userId) => ({ ...row, userId }))
-            )
+            decodePersisted(
+              AppUserId,
+              "getBetMembers.decode"
+            )(row.userId).pipe(Effect.map((userId) => ({ ...row, userId })))
           )
         )
       )
@@ -633,24 +624,20 @@ const getBetsByEventWithDatabase =
             Effect.gen(function* decodeBetByEvent() {
               const createdBy = yield* decodePersisted(
                 AppUserId,
-                row.createdBy,
                 "getBetsByEvent.decode"
-              );
+              )(row.createdBy);
               const decodedEventId = yield* decodePersisted(
                 EventId,
-                row.eventId,
                 "getBetsByEvent.decode"
-              );
+              )(row.eventId);
               const heroId = yield* decodePersisted(
                 HeroId,
-                row.heroId,
                 "getBetsByEvent.decode"
-              );
+              )(row.heroId);
               const id = yield* decodePersisted(
                 BetId,
-                row.id,
                 "getBetsByEvent.decode"
-              );
+              )(row.id);
               return { ...row, createdBy, eventId: decodedEventId, heroId, id };
             })
           )
@@ -680,9 +667,8 @@ const getLatestBetForCopyWithDatabase = (database: EffectPgDatabase) =>
     }
     const id = yield* decodePersisted(
       BetId,
-      withMembers.id,
       "getLatestBetForCopy.decode"
-    );
+    )(withMembers.id);
     const members = yield* Effect.all(withMembers.members.map(toBetMember));
     return { id, members };
   });
@@ -738,9 +724,8 @@ const getPaginatedBetsWithDatabase = (database: EffectPgDatabase) =>
     );
     const totalItems = yield* decodePersisted(
       Schema.Union([Schema.Finite, Schema.FiniteFromString]),
-      countRows[0]?.count ?? 0,
       "getPaginatedBets.count.decode"
-    );
+    )(countRows[0]?.count ?? 0);
     const totalPages = Math.ceil(totalItems / limit);
 
     return {

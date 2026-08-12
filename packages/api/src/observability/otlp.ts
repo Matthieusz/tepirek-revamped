@@ -14,14 +14,14 @@ const otlpSupportLayer = Layer.merge(
   OtlpSerialization.layerJson
 );
 
-export const resource = (
-  config: OtlpConfig,
-  runId: string
-): {
+/** Resource attributes attached to OTLP logs and traces. */
+export interface OtlpResource {
   readonly attributes: Record<string, string>;
   readonly serviceName: string;
   readonly serviceVersion: string;
-} => ({
+}
+
+export const resource = (config: OtlpConfig, runId: string): OtlpResource => ({
   attributes: {
     "deployment.environment.name": config.deploymentEnvironmentName,
     "service.instance.id": runId,

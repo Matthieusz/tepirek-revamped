@@ -316,16 +316,20 @@ export const projectOwnerPayload = (
 ): SaveSquadGroupPayload => ({
   groupId: draft.groupId,
   name: draft.name.trim(),
-  squads: draft.squads.map((squad, position) => ({
-    characters: squad.characters.map((character, characterPosition) => ({
-      characterId: character.characterId,
-      position: characterPosition,
-    })),
-    clientKey: squad.clientKey,
-    name: squad.name.trim(),
-    position,
-    ...(squad.squadId === undefined ? {} : { squadId: squad.squadId }),
-  })),
+  squads: draft.squads.map((squad, position) => {
+    const payload = {
+      characters: squad.characters.map((character, characterPosition) => ({
+        characterId: character.characterId,
+        position: characterPosition,
+      })),
+      clientKey: squad.clientKey,
+      name: squad.name.trim(),
+      position,
+    };
+    return squad.squadId === undefined
+      ? payload
+      : { ...payload, squadId: squad.squadId };
+  }),
 });
 
 export const projectEditorPayload = (

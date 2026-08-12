@@ -16,24 +16,23 @@ export const AUCTION_SLOT_LEVELS: readonly number[] = Arr.makeBy(
   (index) => 30 + index * 10
 );
 
-export const AUCTION_SLOT_ROUNDS = [1, 2, 3, 4] as const;
+export const AUCTION_SLOT_ROUNDS = [
+  1, 2, 3, 4,
+] as const satisfies readonly number[];
 export type AuctionSlotRound = (typeof AUCTION_SLOT_ROUNDS)[number];
 
-export const AUCTION_SLOT_ROUND_LABELS: Record<AuctionSlotRound, string> = {
+export const AUCTION_SLOT_ROUND_LABELS = {
   1: "Pierwsza",
   2: "Druga",
   3: "Trzecia",
   4: "Czwarta (SŁ)",
-};
+} satisfies Record<AuctionSlotRound, string>;
 
 /**
  * Column labels per profession/type. The label count is the legal column
  * count for that slot; column numbers are 1..count.
  */
-export const AUCTION_SLOT_COLUMNS: Record<
-  AuctionProfession,
-  Record<AuctionType, readonly string[]>
-> = {
+export const AUCTION_SLOT_COLUMNS = {
   "blade-dancer": {
     main: ["Fizyczna", "GR", "Trucizna"],
     support: ["Fizyczna", "GR", "Trucizna"],
@@ -58,7 +57,7 @@ export const AUCTION_SLOT_COLUMNS: Record<
     main: ["Fizyczna", "GR", "Dwureczna"],
     support: ["Blok przebicia", "Bez bloku przebicia"],
   },
-};
+} satisfies Record<AuctionProfession, Record<AuctionType, readonly string[]>>;
 
 export const getAuctionSlotColumns = (
   profession: AuctionProfession,

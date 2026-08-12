@@ -218,13 +218,17 @@ export const parseSquadGroupSnapshot = Effect.fn("SquadGroupSnapshot.parse")(
         });
       }
 
-      parsedSquads.push({
+      const parsedSquad = {
         characters: parsedCharacters,
         clientKey: squad.clientKey,
         name: yield* parseSquadName(squad.name),
         position: yield* parseSquadPosition(squad.position),
-        ...(squad.squadId === undefined ? {} : { squadId: squad.squadId }),
-      });
+      };
+      parsedSquads.push(
+        squad.squadId === undefined
+          ? parsedSquad
+          : { ...parsedSquad, squadId: squad.squadId }
+      );
     }
 
     return {

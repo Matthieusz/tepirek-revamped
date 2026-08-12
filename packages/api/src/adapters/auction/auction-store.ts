@@ -48,13 +48,9 @@ export interface ToggleSignupInput {
 const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new AuctionStoreError(input)
 );
-const decodePersisted = <A>(
-  schema: Schema.ConstraintDecoder<A>,
-  input: unknown
-) =>
+const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
   decodePersistedValue(
     schema,
-    input,
     "getAuctionSignups.decode",
     (error) => new AuctionStoreError(error)
   );
@@ -88,8 +84,8 @@ const getSignupsWithDatabase =
         Effect.all(
           rows.map((row) =>
             Effect.gen(function* decodeAuctionSignup() {
-              const id = yield* decodePersisted(AuctionSignupId, row.id);
-              const userId = yield* decodePersisted(AppUserId, row.userId);
+              const id = yield* decodePersisted(AuctionSignupId)(row.id);
+              const userId = yield* decodePersisted(AppUserId)(row.userId);
               return { ...row, id, userId };
             })
           )

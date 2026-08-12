@@ -1,6 +1,7 @@
 import { isRedirect } from "@tanstack/react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { CaughtError } from "@/lib/errors";
 import { Route } from "@/routes/dashboard/route";
 import type { UserSession } from "@/types/route";
 
@@ -59,7 +60,7 @@ describe("dashboard authentication", () => {
     getUser.mockResolvedValue(null);
 
     const error = await runDashboardGuard().catch(
-      (caughtError: unknown) => caughtError
+      (caughtError: CaughtError) => caughtError
     );
 
     expect(isRedirect(error)).toBe(true);
@@ -70,7 +71,7 @@ describe("dashboard authentication", () => {
     getUser.mockResolvedValue(makeSession(false));
 
     const error = await runDashboardGuard().catch(
-      (caughtError: unknown) => caughtError
+      (caughtError: CaughtError) => caughtError
     );
 
     expect(isRedirect(error)).toBe(true);

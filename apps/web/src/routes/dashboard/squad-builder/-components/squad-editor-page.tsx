@@ -25,6 +25,7 @@ import {
 } from "@/features/squad-builder/squad-group-atoms";
 import type { AvailableSquadCharacter } from "@/features/squad-builder/squad-group-atoms";
 import { getErrorMessage } from "@/lib/errors";
+import type { CaughtError } from "@/lib/errors";
 import { SquadEditorLayout } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-editor-layout";
 import type { SquadCharacterMetadata } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-roster-workspace";
 import {
@@ -88,7 +89,7 @@ interface SquadBuilderEditorContentProps {
   readonly groupId: number;
 }
 
-const isSquadBuilderConflict = (error: unknown): boolean =>
+const isSquadBuilderConflict = (error: CaughtError): boolean =>
   Predicate.isTagged(error, "SquadBuilderConflict");
 
 const SquadBuilderEditorContent = ({

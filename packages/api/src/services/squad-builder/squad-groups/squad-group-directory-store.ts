@@ -54,7 +54,7 @@ export interface SearchSquadEditorInviteTargetsStoreInput {
 }
 
 /** Persistence port for user, character, and global-group discovery. */
-export interface SquadGroupDirectoryStoreServiceShape {
+export interface SquadGroupDirectoryStoreContract {
   readonly listAvailableCharactersForOwner: (
     input: ListAvailableCharactersForOwnerInput
   ) => Effect<
@@ -86,5 +86,5 @@ export interface SquadGroupDirectoryStoreServiceShape {
 /** Discovery access for users, characters, and globally visible groups. */
 export class SquadGroupDirectoryStoreService extends Context.Service<
   SquadGroupDirectoryStoreService,
-  SquadGroupDirectoryStoreServiceShape
+  SquadGroupDirectoryStoreContract
 >()("@tepirek-revamped/api/squad-builder/SquadGroupDirectoryStoreService") {}

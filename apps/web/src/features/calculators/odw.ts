@@ -1,6 +1,6 @@
 export type OdwRarity = "zwykły" | "unikatowy" | "heroiczny" | "legendarny";
 /** Rarity multipliers applied to base value */
-const ODW_RARITY_MULTIPLIERS: Record<OdwRarity, number> = {
+const ODW_RARITY_MULTIPLIERS = {
   // +50%
   heroiczny: 1.5,
   // +200%
@@ -9,13 +9,10 @@ const ODW_RARITY_MULTIPLIERS: Record<OdwRarity, number> = {
   unikatowy: 1.2,
   // No bonus
   zwykły: 1,
-};
+} satisfies Record<OdwRarity, number>;
 
 /** Cap threshold for base value (i) per rarity */
-const ODW_RARITY_CAPS: Record<
-  OdwRarity,
-  { threshold: number; maxCost: number }
-> = {
+const ODW_RARITY_CAPS = {
   // i >= 30
   heroiczny: { maxCost: 3375, threshold: 30 },
   // i >= 30
@@ -24,7 +21,20 @@ const ODW_RARITY_CAPS: Record<
   unikatowy: { maxCost: 1800, threshold: 20 },
   // i > 20
   zwykły: { maxCost: 1500, threshold: 20 },
-};
+} satisfies Record<OdwRarity, { threshold: number; maxCost: number }>;
+
+/** Result of calculating an item's unbind cost. */
+export interface OdwUnbindCost {
+  readonly baseValue: number;
+  readonly totalCost: number;
+  readonly isCapped: boolean;
+}
+
+/** Rarity-specific facts used to explain an item's unbind cost. */
+export interface OdwRarityInfo {
+  readonly maxCost: number;
+  readonly multiplier: number;
+}
 
 /**
  * Calculates unbind cost based on original game formula
@@ -34,7 +44,7 @@ const ODW_RARITY_CAPS: Record<
 export const calculateUnbindCost = (
   level: number,
   rarity: OdwRarity
-): { baseValue: number; totalCost: number; isCapped: boolean } => {
+): OdwUnbindCost => {
   // i = 10 + 0.1 * a
   const baseValue = 10 + 0.1 * level;
   const cap = ODW_RARITY_CAPS[rarity];
@@ -63,12 +73,7 @@ export const calculateUnbindCost = (
  * intention-shaped accessor so the page does not reach into the internal
  * rarity records.
  */
-export const getOdwRarityInfo = (
-  rarity: OdwRarity
-): {
-  maxCost: number;
-  multiplier: number;
-} => ({
+export const getOdwRarityInfo = (rarity: OdwRarity): OdwRarityInfo => ({
   maxCost: ODW_RARITY_CAPS[rarity].maxCost,
   multiplier: ODW_RARITY_MULTIPLIERS[rarity],
 });

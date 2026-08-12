@@ -155,7 +155,7 @@ export const AccountRefetchWorkflow = ({
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <Button
           disabled={isPreviewing}
-          onClick={() => void handlePreview()}
+          onClick={handlePreview}
           size="sm"
           variant="outline"
         >
@@ -259,11 +259,7 @@ export const AccountRefetchWorkflow = ({
           )}
 
           <div className="flex flex-wrap gap-2">
-            <Button
-              disabled={isApplying}
-              onClick={() => void handleApply()}
-              size="sm"
-            >
+            <Button disabled={isApplying} onClick={handleApply} size="sm">
               {isApplying ? (
                 <Loader2 className="size-3.5 animate-spin" />
               ) : (

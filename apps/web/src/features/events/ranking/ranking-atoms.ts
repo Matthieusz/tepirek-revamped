@@ -1,4 +1,7 @@
-import type { HeroStats } from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
+import type {
+  EventId,
+  HeroStats,
+} from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
 import { HeroId } from "@tepirek-revamped/api/protocol/ranking/http-api-contract";
 import { Effect } from "effect";
 import * as Data from "effect/Data";
@@ -21,6 +24,11 @@ class RankingKey extends Data.Class<{
   readonly heroId: number | undefined;
 }> {}
 
+interface RankingRequestPayload {
+  eventId?: EventId;
+  heroId?: HeroId;
+}
+
 const rankingKey = (payload: RankingInput) =>
   new RankingKey({
     eventId: payload.eventId,
@@ -32,16 +40,14 @@ const rankingByKeyAtom = Atom.family((payload: RankingKey) =>
   appHttpApiAtom(
     Effect.gen(function* getRankingEffect() {
       const client = yield* AppHttpApiClient;
-      return yield* client.ranking.getRanking({
-        payload: {
-          ...(payload.eventId === undefined
-            ? {}
-            : { eventId: yield* asEventId(payload.eventId) }),
-          ...(payload.heroId === undefined
-            ? {}
-            : { heroId: yield* asHeroId(payload.heroId) }),
-        },
-      });
+      const requestPayload: RankingRequestPayload = {};
+      if (payload.eventId !== undefined) {
+        requestPayload.eventId = yield* asEventId(payload.eventId);
+      }
+      if (payload.heroId !== undefined) {
+        requestPayload.heroId = yield* asHeroId(payload.heroId);
+      }
+      return yield* client.ranking.getRanking({ payload: requestPayload });
     })
   )
 );

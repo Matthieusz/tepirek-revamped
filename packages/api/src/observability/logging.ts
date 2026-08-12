@@ -2,7 +2,7 @@ import { Formatter, Logger } from "effect";
 import * as Arr from "effect/Array";
 import type { LogLevel } from "effect/LogLevel";
 import * as Predicate from "effect/Predicate";
-import * as Record from "effect/Record";
+import * as RecordUtils from "effect/Record";
 
 const LOG_LEVELS = {
   DEBUG: "Debug",
@@ -10,11 +10,15 @@ const LOG_LEVELS = {
   INFO: "Info",
   WARN: "Warn",
 } as const satisfies Record<string, LogLevel>;
-const LOG_LEVELS_BY_NAME: Readonly<Record<string, LogLevel>> = LOG_LEVELS;
+const LOG_LEVELS_BY_NAME = LOG_LEVELS satisfies Readonly<
+  Record<string, LogLevel>
+>;
+type LogValue = Parameters<typeof Formatter.format>[0];
+type LogObject = Record<string, LogValue>;
 
 const SIMPLE_LOG_VALUE_PATTERN = /^[^\s="\\]+$/u;
 
-const isPlainObject = (input: unknown): input is Record<string, unknown> => {
+const isPlainObject = (input: LogValue): input is LogObject => {
   if (!Predicate.isObject(input)) {
     return false;
   }
@@ -24,22 +28,22 @@ const isPlainObject = (input: unknown): input is Record<string, unknown> => {
 };
 
 const flatten = (
-  input: Record<string, unknown>,
+  input: LogObject,
   prefix = "",
   seen = new WeakSet<object>()
-): (readonly [string, unknown])[] => {
+): (readonly [string, LogValue])[] => {
   if (seen.has(input)) {
     return [[prefix, "[Circular]"]];
   }
 
   seen.add(input);
 
-  const entries = Record.toEntries(input);
+  const entries = RecordUtils.toEntries(input);
   if (Arr.isArrayEmpty(entries) && prefix) {
     return [[prefix, input]];
   }
 
-  return Arr.flatMap(([key, value]: readonly [string, unknown]) => {
+  return Arr.flatMap(([key, value]: readonly [string, LogValue]) => {
     const path = prefix ? `${prefix}.${key}` : key;
     return isPlainObject(value)
       ? flatten(value, path, seen)
@@ -47,7 +51,7 @@ const flatten = (
   })(entries);
 };
 
-const formatValue = (input: unknown): string => {
+const formatValue = (input: LogValue): string => {
   const value = Predicate.isString(input) ? input : Formatter.format(input);
   return SIMPLE_LOG_VALUE_PATTERN.test(value) ? value : JSON.stringify(value);
 };
@@ -60,13 +64,13 @@ const formatter = (runId: string) =>
         : [output.message];
 
       return Arr.map(
-        ([key, value]: readonly [string, unknown]) =>
+        ([key, value]: readonly [string, LogValue]) =>
           `${key}=${formatValue(value)}`
       )([
         ["timestamp", output.timestamp],
         ["level", output.level],
         ["run", runId],
-        ...Arr.flatMap((value: unknown) =>
+        ...Arr.flatMap((value: LogValue) =>
           isPlainObject(value) ? flatten(value) : [["message", value] as const]
         )(messages),
         ...(output.cause === undefined
@@ -81,11 +85,11 @@ const formatter = (runId: string) =>
 /** Create the structured stderr logger with an injectable output sink. */
 export const makeStderrLogger = (
   runId: string,
-  write: (output: string) => unknown = (output) => process.stderr.write(output)
+  write: (output: string) => void = (output) => process.stderr.write(output)
 ) => Logger.make((options) => write(`${formatter(runId).log(options)}\n`));
 
 const isLogLevelName = (value: string): value is keyof typeof LOG_LEVELS =>
-  Record.has(LOG_LEVELS_BY_NAME, value);
+  Object.hasOwn(LOG_LEVELS_BY_NAME, value);
 
 /** Parse a configured minimum log level. */
 export const parseLogLevel = (value: string): LogLevel | undefined => {

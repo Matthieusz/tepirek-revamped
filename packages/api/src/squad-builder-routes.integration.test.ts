@@ -82,14 +82,21 @@ const createSignedInUser = async (name: string, verified = true) => {
   return { cookie, id: createdUser.id };
 };
 
-const jsonPost = (body: unknown, cookie?: string): RequestInit => ({
-  body: JSON.stringify(body),
-  headers: {
-    "Content-Type": "application/json",
-    ...(cookie === undefined ? {} : { Cookie: cookie }),
-  },
-  method: "POST",
-});
+const jsonPost = (
+  body: Parameters<typeof JSON.stringify>[0],
+  cookie?: string
+): RequestInit => {
+  const headers = new Headers({ "Content-Type": "application/json" });
+  if (cookie !== undefined) {
+    headers.set("Cookie", cookie);
+  }
+
+  return {
+    body: JSON.stringify(body),
+    headers,
+    method: "POST",
+  };
+};
 
 const expectUnauthorized = async (response: Response) => {
   expect(response.status).toBe(401);

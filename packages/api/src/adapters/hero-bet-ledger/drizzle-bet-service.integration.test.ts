@@ -151,15 +151,15 @@ const withServices = <A>(
         const { eventId, heroId, ...pagination } = input;
         return bet.getPaginatedBets({
           ...pagination,
-          ...(eventId === undefined ? {} : { eventId: EventId.make(eventId) }),
-          ...(heroId === undefined ? {} : { heroId: HeroId.make(heroId) }),
+          eventId: eventId === undefined ? undefined : EventId.make(eventId),
+          heroId: heroId === undefined ? undefined : HeroId.make(heroId),
         });
       },
       getRanking: (input) => {
         const { eventId, heroId } = input;
         return ranking.getRanking({
-          ...(eventId === undefined ? {} : { eventId: EventId.make(eventId) }),
-          ...(heroId === undefined ? {} : { heroId: HeroId.make(heroId) }),
+          eventId: eventId === undefined ? undefined : EventId.make(eventId),
+          heroId: heroId === undefined ? undefined : HeroId.make(heroId),
         });
       },
       getVault: (eventId) =>

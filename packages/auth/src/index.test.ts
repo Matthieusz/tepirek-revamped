@@ -5,6 +5,7 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Redacted from "effect/Redacted";
+import { vi } from "vitest";
 
 import {
   AuthConfig,
@@ -13,7 +14,6 @@ import {
   createAuth,
   makeBetterAuthServiceLayer,
 } from "./index.ts";
-import type { BetterAuthInstance } from "./index.ts";
 
 const validAuthEnvironment = {
   BETTER_AUTH_SECRET: "a".repeat(32),
@@ -39,20 +39,32 @@ describe("Better Auth service", () => {
     "projects rejected vendor session calls into a typed failure",
     () => {
       const cause = new Error("session store unavailable");
-      // SAFETY: The service only reads api.getSession in this test fixture.
-      const instance = {
-        api: {
-          getSession: () => Promise.reject(cause),
-        },
-      } as unknown as BetterAuthInstance;
 
       return Effect.gen(function* rejectedSessionCall() {
-        const auth = yield* BetterAuthService;
-        const failure = yield* auth.getSession(new Headers()).pipe(Effect.flip);
+        const database = yield* makeTestBetterAuthDatabase(
+          "postgresql://postgres:password@localhost:5433/tepirek-revamped-test"
+        );
+        const instance = createAuth(
+          {
+            betterAuthSecret: Redacted.make("test-secret"),
+            betterAuthUrl: new URL("http://localhost:3000"),
+            corsOrigin: new URL("http://localhost:3001"),
+            discordClientId: "test-discord-client-id",
+            discordClientSecret: Redacted.make("test-discord-client-secret"),
+            isProduction: false,
+          },
+          database
+        );
+        vi.spyOn(instance.api, "getSession").mockRejectedValue(cause);
+
+        const failure = yield* Effect.gen(function* inspectRejectedSession() {
+          const auth = yield* BetterAuthService;
+          return yield* auth.getSession(new Headers()).pipe(Effect.flip);
+        }).pipe(Effect.provide(makeBetterAuthServiceLayer(instance)));
 
         expect(failure._tag).toBe("BetterAuthUnavailable");
         expect(failure.cause).toBe(cause);
-      }).pipe(Effect.provide(makeBetterAuthServiceLayer(instance)));
+      });
     }
   );
 });

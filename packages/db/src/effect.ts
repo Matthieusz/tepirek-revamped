@@ -42,10 +42,14 @@ const DATE_TIME_TYPE_IDS = HashSet.fromIterable([
   1114, 1184, 1082, 1186, 1231, 1115, 1185, 1187, 1182,
 ]);
 
+type PostgresTypeParserInput = Parameters<
+  ReturnType<typeof types.getTypeParser>
+>[0];
+
 const postgresTypes = {
   getTypeParser: (typeId: number, format?: "text" | "binary") => {
     if (HashSet.has(DATE_TIME_TYPE_IDS, typeId)) {
-      return (value: unknown) => value;
+      return (value: PostgresTypeParserInput) => value;
     }
     return types.getTypeParser(typeId, format);
   },

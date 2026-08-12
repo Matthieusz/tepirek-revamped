@@ -29,22 +29,40 @@ const { requireAdminSession, requireSession, requireVerifiedSession } =
 const projectAdapterError = (error: UserAdapterError) =>
   Effect.fail(new UserPersistenceUnavailable({ operation: error.operation }));
 
-const projectAuthenticatedSession = (requestSession: RequestSession) => {
+type ProjectedSession = Omit<
+  RequestSession["session"],
+  "ipAddress" | "userAgent"
+> & {
+  ipAddress?: Exclude<RequestSession["session"]["ipAddress"], undefined>;
+  userAgent?: Exclude<RequestSession["session"]["userAgent"], undefined>;
+};
+
+type ProjectedUser = Omit<RequestSession["user"], "image" | "role"> & {
+  image?: Exclude<RequestSession["user"]["image"], undefined>;
+  role?: Exclude<RequestSession["user"]["role"], undefined>;
+};
+
+/** Projects an authenticated vendor session without manufacturing optional fields. */
+export const projectAuthenticatedSession = (requestSession: RequestSession) => {
   const { ipAddress, userAgent, ...session } = requestSession.session;
   const { image, role, ...user } = requestSession.user;
+  const projectedSession: ProjectedSession = { ...session };
+  const projectedUser: ProjectedUser = { ...user };
 
-  return {
-    session: {
-      ...session,
-      ...(ipAddress === undefined ? {} : { ipAddress }),
-      ...(userAgent === undefined ? {} : { userAgent }),
-    },
-    user: {
-      ...user,
-      ...(image === undefined ? {} : { image }),
-      ...(role === undefined ? {} : { role }),
-    },
-  };
+  if (ipAddress !== undefined) {
+    projectedSession.ipAddress = ipAddress;
+  }
+  if (userAgent !== undefined) {
+    projectedSession.userAgent = userAgent;
+  }
+  if (image !== undefined) {
+    projectedUser.image = image;
+  }
+  if (role !== undefined) {
+    projectedUser.role = role;
+  }
+
+  return { session: projectedSession, user: projectedUser };
 };
 
 export const UserHttpApiHandlers = HttpApiBuilder.group(

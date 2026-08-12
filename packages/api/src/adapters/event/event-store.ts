@@ -42,13 +42,9 @@ export interface ToggleEventActiveInput {
 const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new EventStoreError(input)
 );
-const decodePersisted = <A>(
-  schema: Schema.ConstraintDecoder<A>,
-  input: unknown
-) =>
+const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
   decodePersistedValue(
     schema,
-    input,
     "listEvents.decode",
     (error) => new EventStoreError(error)
   );
@@ -79,7 +75,7 @@ const listWithDatabase = (database: EffectPgDatabase) => () =>
     Effect.flatMap((rows) =>
       Effect.all(
         rows.map((row) =>
-          decodePersisted(EventId, row.id).pipe(
+          decodePersisted(EventId)(row.id).pipe(
             Effect.map((id) => ({ ...row, id }))
           )
         )

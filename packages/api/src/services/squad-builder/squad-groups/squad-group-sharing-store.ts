@@ -92,7 +92,7 @@ export interface RevokeSquadGroupEditorStoreInput {
 }
 
 /** Persistence port for group sharing, authorization, and invitations. */
-export interface SquadGroupSharingStoreServiceShape {
+export interface SquadGroupSharingStoreContract {
   readonly authorizeSquadGroupOwner: (input: {
     readonly actorUserId: AppUserId;
     readonly groupId: SquadGroupId;
@@ -169,5 +169,5 @@ export interface SquadGroupSharingStoreServiceShape {
 /** Sharing and invitation access for squad groups. */
 export class SquadGroupSharingStoreService extends Context.Service<
   SquadGroupSharingStoreService,
-  SquadGroupSharingStoreServiceShape
+  SquadGroupSharingStoreContract
 >()("@tepirek-revamped/api/squad-builder/SquadGroupSharingStoreService") {}
