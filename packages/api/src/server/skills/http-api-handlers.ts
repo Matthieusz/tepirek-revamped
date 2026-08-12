@@ -1,16 +1,30 @@
-/* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { SkillsStore } from "../../adapters/skills/skills-store.ts";
-import type { SkillsStoreError } from "../../adapters/skills/skills-store.ts";
 import { AppHttpApi } from "../../protocol/http-api-contract.ts";
 import {
+  SkillsBadRequest,
+  SkillsConflict,
   SkillsForbidden,
   SkillsPersistenceUnavailable,
   SkillsUnauthorized,
 } from "../../protocol/skills/http-api-contract.ts";
+import type {
+  ApplicationConflict,
+  ApplicationDependencyUnavailable,
+  ApplicationInvalidInput,
+} from "../../services/application-errors.ts";
+import {
+  createProfession,
+  createRange,
+  createSkill,
+  deleteRange,
+  deleteSkill,
+  getRangeBySlug,
+  listProfessions,
+  listRanges,
+  listSkillsByRange,
+} from "../../services/skills/skills-service.ts";
 import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
@@ -18,128 +32,97 @@ const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
     forbidden: () => new SkillsForbidden({ message: "FORBIDDEN" }),
     unauthorized: () => new SkillsUnauthorized({ message: "UNAUTHORIZED" }),
     unverified: () =>
-      new SkillsForbidden({
-        message: "Konto oczekuje na weryfikację",
-      }),
+      new SkillsForbidden({ message: "Konto oczekuje na weryfikację" }),
   }
 );
-
-const projectStoreError = Effect.fn("SkillsHttpApiHandlers.projectStoreError")(
-  (error: SkillsStoreError) =>
-    Effect.fail(
-      new SkillsPersistenceUnavailable({ operation: error.operation })
-    )
-);
+const mapSkillsError = (
+  error:
+    | ApplicationConflict
+    | ApplicationDependencyUnavailable
+    | ApplicationInvalidInput
+) => {
+  switch (error._tag) {
+    case "ApplicationConflict": {
+      return new SkillsConflict({ message: error.message });
+    }
+    case "ApplicationInvalidInput": {
+      return new SkillsBadRequest({ message: error.message });
+    }
+    case "ApplicationDependencyUnavailable": {
+      return new SkillsPersistenceUnavailable({ operation: error.operation });
+    }
+    default: {
+      const exhaustive: never = error;
+      return exhaustive;
+    }
+  }
+};
 
 export const SkillsHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "skills",
   (handlers) =>
     handlers
-      .handle(
-        "createProfession",
-        Effect.fn("SkillsHttpApiHandlers.createProfession")(
-          function* createProfession({ payload }) {
-            yield* requireAdminSession();
-            const store = yield* SkillsStore;
-            yield* store
-              .createProfession(payload)
-              .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
-          }
-        )
-      )
-      .handle(
-        "createRange",
-        Effect.fn("SkillsHttpApiHandlers.createRange")(function* createRange({
-          payload,
-        }) {
+      .handle("createProfession", ({ payload }) =>
+        Effect.gen(function* createProfessionHandler() {
           yield* requireAdminSession();
-          const store = yield* SkillsStore;
-          yield* store
-            .createRange(payload)
-            .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
+          yield* createProfession(payload).pipe(
+            Effect.mapError(mapSkillsError)
+          );
         })
       )
-      .handle(
-        "createSkill",
-        Effect.fn("SkillsHttpApiHandlers.createSkill")(function* createSkill({
-          payload,
-        }) {
+      .handle("createRange", ({ payload }) =>
+        Effect.gen(function* createRangeHandler() {
+          yield* requireAdminSession();
+          yield* createRange(payload).pipe(Effect.mapError(mapSkillsError));
+        })
+      )
+      .handle("createSkill", ({ payload }) =>
+        Effect.gen(function* createSkillHandler() {
           const session = yield* requireVerifiedSession();
-          const store = yield* SkillsStore;
-          yield* store
-            .createSkill({ ...payload, userId: session.user.id })
-            .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
+          yield* createSkill({ ...payload, userId: session.user.id }).pipe(
+            Effect.mapError(mapSkillsError)
+          );
         })
       )
-      .handle(
-        "deleteRange",
-        Effect.fn("SkillsHttpApiHandlers.deleteRange")(function* deleteRange({
-          payload,
-        }) {
+      .handle("deleteRange", ({ payload }) =>
+        Effect.gen(function* deleteRangeHandler() {
           yield* requireAdminSession();
-          const store = yield* SkillsStore;
-          yield* store
-            .deleteRange(payload)
-            .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
+          yield* deleteRange(payload).pipe(Effect.mapError(mapSkillsError));
         })
       )
-      .handle(
-        "deleteSkill",
-        Effect.fn("SkillsHttpApiHandlers.deleteSkill")(function* deleteSkill({
-          payload,
-        }) {
+      .handle("deleteSkill", ({ payload }) =>
+        Effect.gen(function* deleteSkillHandler() {
           yield* requireAdminSession();
-          const store = yield* SkillsStore;
-          yield* store
-            .deleteSkill(payload)
-            .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
+          yield* deleteSkill(payload).pipe(Effect.mapError(mapSkillsError));
         })
       )
-      .handle(
-        "listProfessions",
-        Effect.fn("SkillsHttpApiHandlers.listProfessions")(
-          function* listProfessions() {
-            yield* requireVerifiedSession();
-            const store = yield* SkillsStore;
-            return yield* store
-              .listProfessions()
-              .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
-          }
-        )
-      )
-      .handle(
-        "listRanges",
-        Effect.fn("SkillsHttpApiHandlers.listRanges")(function* listRanges() {
+      .handle("listProfessions", () =>
+        Effect.gen(function* listProfessionsHandler() {
           yield* requireVerifiedSession();
-          const store = yield* SkillsStore;
-          return yield* store
-            .listRanges()
-            .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
+          return yield* listProfessions().pipe(Effect.mapError(mapSkillsError));
         })
       )
-      .handle(
-        "getRangeBySlug",
-        Effect.fn("SkillsHttpApiHandlers.getRangeBySlug")(
-          function* getRangeBySlug({ payload }) {
-            yield* requireVerifiedSession();
-            const store = yield* SkillsStore;
-            return yield* store
-              .getRangeBySlug(payload)
-              .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
-          }
-        )
+      .handle("listRanges", () =>
+        Effect.gen(function* listRangesHandler() {
+          yield* requireVerifiedSession();
+          return yield* listRanges().pipe(Effect.mapError(mapSkillsError));
+        })
       )
-      .handle(
-        "listSkillsByRange",
-        Effect.fn("SkillsHttpApiHandlers.listSkillsByRange")(
-          function* listSkillsByRange({ payload }) {
-            yield* requireVerifiedSession();
-            const store = yield* SkillsStore;
-            return yield* store
-              .listSkillsByRange(payload)
-              .pipe(Effect.catchTag("SkillsStoreError", projectStoreError));
-          }
-        )
+      .handle("getRangeBySlug", ({ payload }) =>
+        Effect.gen(function* getRangeBySlugHandler() {
+          yield* requireVerifiedSession();
+          return yield* getRangeBySlug(payload).pipe(
+            Effect.mapError(mapSkillsError)
+          );
+        })
+      )
+      .handle("listSkillsByRange", ({ payload }) =>
+        Effect.gen(function* listSkillsByRangeHandler() {
+          yield* requireVerifiedSession();
+          return yield* listSkillsByRange(payload).pipe(
+            Effect.mapError(mapSkillsError)
+          );
+        })
       )
 );

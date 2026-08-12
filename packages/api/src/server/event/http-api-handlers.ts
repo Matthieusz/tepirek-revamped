@@ -1,16 +1,19 @@
-/* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { EventStore } from "../../adapters/event/event-store.ts";
-import type { EventStoreError } from "../../adapters/event/event-store.ts";
 import {
   EventForbidden,
   EventPersistenceUnavailable,
   EventUnauthorized,
 } from "../../protocol/event/http-api-contract.ts";
 import { AppHttpApi } from "../../protocol/http-api-contract.ts";
+import type { ApplicationDependencyUnavailable } from "../../services/application-errors.ts";
+import {
+  createEvent,
+  deleteEvent,
+  listEvents,
+  toggleEventActive,
+} from "../../services/event/event-service.ts";
 import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
@@ -18,66 +21,41 @@ const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
     forbidden: () => new EventForbidden({ message: "FORBIDDEN" }),
     unauthorized: () => new EventUnauthorized({ message: "UNAUTHORIZED" }),
     unverified: () =>
-      new EventForbidden({
-        message: "Konto oczekuje na weryfikację",
-      }),
+      new EventForbidden({ message: "Konto oczekuje na weryfikację" }),
   }
 );
-
-const projectStoreError = Effect.fn("EventHttpApiHandlers.projectStoreError")(
-  (error: EventStoreError) =>
-    Effect.fail(new EventPersistenceUnavailable({ operation: error.operation }))
-);
+const mapEventError = (error: ApplicationDependencyUnavailable) =>
+  new EventPersistenceUnavailable({ operation: error.operation });
 
 export const EventHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "event",
   (handlers) =>
     handlers
-      .handle(
-        "createEvent",
-        Effect.fn("EventHttpApiHandlers.createEvent")(function* createEvent({
-          payload,
-        }) {
+      .handle("createEvent", ({ payload }) =>
+        Effect.gen(function* createEventHandler() {
           yield* requireAdminSession();
-          const store = yield* EventStore;
-          yield* store
-            .create(payload)
-            .pipe(Effect.catchTag("EventStoreError", projectStoreError));
+          yield* createEvent(payload).pipe(Effect.mapError(mapEventError));
         })
       )
-      .handle(
-        "deleteEvent",
-        Effect.fn("EventHttpApiHandlers.deleteEvent")(function* deleteEvent({
-          payload,
-        }) {
+      .handle("deleteEvent", ({ payload }) =>
+        Effect.gen(function* deleteEventHandler() {
           yield* requireAdminSession();
-          const store = yield* EventStore;
-          yield* store
-            .delete(payload)
-            .pipe(Effect.catchTag("EventStoreError", projectStoreError));
+          yield* deleteEvent(payload).pipe(Effect.mapError(mapEventError));
         })
       )
-      .handle(
-        "listEvents",
-        Effect.fn("EventHttpApiHandlers.listEvents")(function* listEvents() {
+      .handle("listEvents", () =>
+        Effect.gen(function* listEventsHandler() {
           yield* requireVerifiedSession();
-          const store = yield* EventStore;
-          return yield* store
-            .list()
-            .pipe(Effect.catchTag("EventStoreError", projectStoreError));
+          return yield* listEvents().pipe(Effect.mapError(mapEventError));
         })
       )
-      .handle(
-        "toggleEventActive",
-        Effect.fn("EventHttpApiHandlers.toggleEventActive")(
-          function* toggleEventActive({ payload }) {
-            yield* requireAdminSession();
-            const store = yield* EventStore;
-            yield* store
-              .toggleActive(payload)
-              .pipe(Effect.catchTag("EventStoreError", projectStoreError));
-          }
-        )
+      .handle("toggleEventActive", ({ payload }) =>
+        Effect.gen(function* toggleEventActiveHandler() {
+          yield* requireAdminSession();
+          yield* toggleEventActive(payload).pipe(
+            Effect.mapError(mapEventError)
+          );
+        })
       )
 );

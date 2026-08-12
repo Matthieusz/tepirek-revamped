@@ -1,5 +1,4 @@
 import * as Clock from "effect/Clock";
-import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -11,19 +10,10 @@ import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
+import { ApplicationDependencyUnavailable } from "../../services/application-errors.ts";
+import { DiscordGuildVerifier } from "../../services/user/discord-guild-verifier.ts";
 import { DiscordGuilds, hasDiscordGuild } from "./discord-guild.ts";
 import { DiscordVerificationConfig } from "./discord-verification-config.ts";
-import { UserAdapterError } from "./user-store.ts";
-
-/** Verifies whether a user's linked Discord account belongs to the configured guild. */
-export class DiscordGuildVerifier extends Context.Service<
-  DiscordGuildVerifier,
-  {
-    readonly verifyMembership: (
-      accessToken: Redacted.Redacted
-    ) => Effect.Effect<boolean, UserAdapterError>;
-  }
->()("@tepirek-revamped/api/user/DiscordGuildVerifier") {}
 
 const DISCORD_API_BASE_URL = "https://discord.com/api";
 const DISCORD_GUILDS_PATH = "/users/@me/guilds";
@@ -138,7 +128,7 @@ export const DiscordGuildVerifierLiveLayer: Layer.Layer<
             Effect.timeout(DISCORD_REQUEST_TIMEOUT),
             Effect.mapError(
               (cause) =>
-                new UserAdapterError({
+                new ApplicationDependencyUnavailable({
                   cause,
                   operation: "verifyDiscordGuildMembership",
                 })

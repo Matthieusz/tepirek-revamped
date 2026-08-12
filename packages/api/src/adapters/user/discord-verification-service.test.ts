@@ -11,11 +11,9 @@ import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
+import { DiscordGuildVerifier } from "../../services/user/discord-guild-verifier.ts";
 import { makeDiscordVerificationConfigLayer } from "./discord-verification-config.ts";
-import {
-  DiscordGuildVerifier,
-  DiscordGuildVerifierLiveLayer,
-} from "./discord-verification-service.ts";
+import { DiscordGuildVerifierLiveLayer } from "./discord-verification-service.ts";
 
 const TEST_ACCESS_TOKEN = Redacted.make("test-token");
 
@@ -137,7 +135,7 @@ describe("DiscordGuildVerifier", () => {
       const error = yield* Effect.flip(verify(client));
 
       expect(error).toMatchObject({
-        _tag: "UserAdapterError",
+        _tag: "ApplicationDependencyUnavailable",
         cause: { _tag: "SchemaError" },
         operation: "verifyDiscordGuildMembership",
       });
@@ -150,7 +148,7 @@ describe("DiscordGuildVerifier", () => {
       const error = yield* Effect.flip(verify(client));
 
       expect(error).toMatchObject({
-        _tag: "UserAdapterError",
+        _tag: "ApplicationDependencyUnavailable",
         cause: {
           _tag: "HttpClientError",
           reason: { _tag: "DecodeError" },
@@ -168,7 +166,7 @@ describe("DiscordGuildVerifier", () => {
 
       expect(requests).toHaveLength(1);
       expect(error).toMatchObject({
-        _tag: "UserAdapterError",
+        _tag: "ApplicationDependencyUnavailable",
         cause: {
           _tag: "HttpClientError",
           reason: {
@@ -326,7 +324,7 @@ describe("DiscordGuildVerifier", () => {
 
       expect(requests).toHaveLength(1);
       expect(error).toMatchObject({
-        _tag: "UserAdapterError",
+        _tag: "ApplicationDependencyUnavailable",
         cause: { _tag: "TimeoutError" },
       });
     })

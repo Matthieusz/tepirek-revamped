@@ -15,16 +15,16 @@ import * as References from "effect/References";
 import * as Schema from "effect/Schema";
 
 import { makeDirectPersistenceQuery } from "./adapters/persistence-query.ts";
-import { UserAdapterError } from "./adapters/user/user-store.ts";
 import { makeLoggerLayer } from "./observability.ts";
 import { makeStderrLogger } from "./observability/logging.ts";
 import * as Otlp from "./observability/otlp.ts";
+import { ApplicationDependencyUnavailable } from "./services/application-errors.ts";
 import { createVerifiedMember } from "./test/integration/builders.ts";
 import { defaultTestDatabaseUrl, testDb } from "./test/integration/database.ts";
 
 const databaseLayer = makeLiveDatabaseLayer(defaultTestDatabaseUrl);
 const userPersistenceQuery = makeDirectPersistenceQuery(
-  (input) => new UserAdapterError(input)
+  (input) => new ApplicationDependencyUnavailable(input)
 );
 
 describe("Effect database query logging", () => {
@@ -181,7 +181,7 @@ describe("Effect database query logging", () => {
         );
 
         expect(error).toMatchObject({
-          _tag: "UserAdapterError",
+          _tag: "ApplicationDependencyUnavailable",
           operation: "transactionRollbackTest",
         });
         const persistedRows = yield* Effect.promise(() =>

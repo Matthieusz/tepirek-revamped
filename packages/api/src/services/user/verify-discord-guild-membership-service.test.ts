@@ -5,9 +5,9 @@ import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import { TestClock } from "effect/testing";
 
-import { DiscordGuildVerifier } from "../../adapters/user/discord-verification-service.ts";
-import { UserStore } from "../../adapters/user/user-store.ts";
 import { parseAppUserId } from "../../domain/squad-builder/app-user-id.ts";
+import { DiscordGuildVerifier } from "./discord-guild-verifier.ts";
+import { UserStore } from "./user-store.ts";
 import { verifyDiscordGuildMembership } from "./verify-discord-guild-membership-service.ts";
 
 const FIXED_TIME = new Date("2026-02-20T12:00:00.000Z");

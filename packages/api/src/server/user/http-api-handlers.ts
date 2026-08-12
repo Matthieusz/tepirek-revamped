@@ -1,19 +1,32 @@
-// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
-import * as DateTime from "effect/DateTime";
+/* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-/* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-import { UserStore } from "../../adapters/user/user-store.ts";
-import type { UserAdapterError } from "../../adapters/user/user-store.ts";
 import type { RequestSession } from "../../protocol/auth/current-session.ts";
 import { AppHttpApi } from "../../protocol/http-api-contract.ts";
 import {
+  UserBadRequest,
   UserForbidden,
+  UserNotFound,
   UserPersistenceUnavailable,
   UserUnauthorized,
 } from "../../protocol/user/http-api-contract.ts";
-import { verifyDiscordGuildMembership as verifyDiscordGuildMembershipWorkflow } from "../../services/user/verify-discord-guild-membership-service.ts";
+import type {
+  ApplicationConflict,
+  ApplicationDependencyUnavailable,
+  ApplicationForbidden,
+  ApplicationInvalidInput,
+  ApplicationNotFound,
+} from "../../services/application-errors.ts";
+import {
+  deleteUser,
+  getVerifiedUsers,
+  listUsers,
+  setRole,
+  setVerified,
+  updateProfile,
+  verifyDiscordGuildMembership,
+} from "../../services/user/user-service.ts";
 import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireAdminSession, requireSession, requireVerifiedSession } =
@@ -21,13 +34,37 @@ const { requireAdminSession, requireSession, requireVerifiedSession } =
     forbidden: () => new UserForbidden({ message: "FORBIDDEN" }),
     unauthorized: () => new UserUnauthorized({ message: "UNAUTHORIZED" }),
     unverified: () =>
-      new UserForbidden({
-        message: "Konto oczekuje na weryfikację",
-      }),
+      new UserForbidden({ message: "Konto oczekuje na weryfikację" }),
   });
 
-const projectAdapterError = (error: UserAdapterError) =>
-  Effect.fail(new UserPersistenceUnavailable({ operation: error.operation }));
+const mapUserError = (
+  error:
+    | ApplicationConflict
+    | ApplicationDependencyUnavailable
+    | ApplicationForbidden
+    | ApplicationInvalidInput
+    | ApplicationNotFound
+) => {
+  switch (error._tag) {
+    case "ApplicationConflict":
+    case "ApplicationInvalidInput": {
+      return new UserBadRequest({ message: error.message });
+    }
+    case "ApplicationForbidden": {
+      return new UserForbidden({ message: error.message });
+    }
+    case "ApplicationNotFound": {
+      return new UserNotFound({ message: error.message });
+    }
+    case "ApplicationDependencyUnavailable": {
+      return new UserPersistenceUnavailable({ operation: error.operation });
+    }
+    default: {
+      const exhaustive: never = error;
+      return exhaustive;
+    }
+  }
+};
 
 type ProjectedSession = Omit<
   RequestSession["session"],
@@ -70,120 +107,73 @@ export const UserHttpApiHandlers = HttpApiBuilder.group(
   "user",
   (handlers) =>
     handlers
-      .handle(
-        "deleteUser",
-        Effect.fn("UserHttpApiHandlers.deleteUser")(function* deleteUser({
-          payload,
-        }) {
+      .handle("deleteUser", ({ payload }) =>
+        Effect.gen(function* deleteUserHandler() {
           yield* requireAdminSession();
-          const store = yield* UserStore;
-          return yield* store
-            .deleteUser(payload.userId)
-            .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
+          return yield* deleteUser({ userId: payload.userId }).pipe(
+            Effect.mapError(mapUserError)
+          );
         })
       )
       .handle("getSession", () =>
         requireSession().pipe(Effect.map(projectAuthenticatedSession))
       )
-      .handle(
-        "getVerified",
-        Effect.fn("UserHttpApiHandlers.getVerified")(function* getVerified() {
+      .handle("getVerified", () =>
+        Effect.gen(function* getVerifiedHandler() {
           yield* requireVerifiedSession();
-          const store = yield* UserStore;
-          return yield* store
-            .getVerified()
-            .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
+          return yield* getVerifiedUsers().pipe(Effect.mapError(mapUserError));
         })
       )
-      .handle(
-        "list",
-        Effect.fn("UserHttpApiHandlers.list")(function* list() {
+      .handle("list", () =>
+        Effect.gen(function* listUsersHandler() {
           yield* requireVerifiedSession();
-          const store = yield* UserStore;
-          return yield* store
-            .list()
-            .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
+          return yield* listUsers().pipe(Effect.mapError(mapUserError));
         })
       )
-      .handle(
-        "setRole",
-        Effect.fn("UserHttpApiHandlers.setRole")(function* setRole({
-          payload,
-        }) {
+      .handle("setRole", ({ payload }) =>
+        Effect.gen(function* setRoleHandler() {
           const session = yield* requireAdminSession();
-          const store = yield* UserStore;
-          const updatedAt = yield* DateTime.nowAsDate;
-          return yield* store
-            .setRole({
-              actorId: session.user.id,
-              role: payload.role,
-              updatedAt,
-              userId: payload.userId,
-            })
-            .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
+          return yield* setRole({
+            actorId: session.user.id,
+            role: payload.role,
+            userId: payload.userId,
+          }).pipe(Effect.mapError(mapUserError));
         })
       )
-      .handle(
-        "setVerified",
-        Effect.fn("UserHttpApiHandlers.setVerified")(function* setVerified({
-          payload,
-        }) {
+      .handle("setVerified", ({ payload }) =>
+        Effect.gen(function* setVerifiedHandler() {
           const session = yield* requireAdminSession();
-          const store = yield* UserStore;
-          const updatedAt = yield* DateTime.nowAsDate;
-          return yield* store
-            .setVerified({
-              actorId: session.user.id,
-              updatedAt,
-              userId: payload.userId,
-              verified: payload.verified,
-            })
-            .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
+          return yield* setVerified({
+            actorId: session.user.id,
+            userId: payload.userId,
+            verified: payload.verified,
+          }).pipe(Effect.mapError(mapUserError));
         })
       )
-      .handle(
-        "updateProfile",
-        Effect.fn("UserHttpApiHandlers.updateProfile")(function* updateProfile({
-          payload,
-        }) {
+      .handle("updateProfile", ({ payload }) =>
+        Effect.gen(function* updateProfileHandler() {
           const session = yield* requireVerifiedSession();
-          const store = yield* UserStore;
-          const updatedAt = yield* DateTime.nowAsDate;
-          return yield* store
-            .updateProfile({
-              name: payload.name,
-              updatedAt,
-              userId: session.user.id,
-            })
-            .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
+          return yield* updateProfile({
+            name: payload.name,
+            userId: session.user.id,
+          }).pipe(Effect.mapError(mapUserError));
         })
       )
-      .handle(
-        "updateUserName",
-        Effect.fn("UserHttpApiHandlers.updateUserName")(
-          function* updateUserName({ payload }) {
-            yield* requireAdminSession();
-            const store = yield* UserStore;
-            const updatedAt = yield* DateTime.nowAsDate;
-            return yield* store
-              .updateProfile({
-                name: payload.name,
-                updatedAt,
-                userId: payload.userId,
-              })
-              .pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
-          }
-        )
+      .handle("updateUserName", ({ payload }) =>
+        Effect.gen(function* updateUserNameHandler() {
+          yield* requireAdminSession();
+          return yield* updateProfile({
+            name: payload.name,
+            userId: payload.userId,
+          }).pipe(Effect.mapError(mapUserError));
+        })
       )
-      .handle(
-        "verifyDiscordGuildMembership",
-        Effect.fn("UserHttpApiHandlers.verifyDiscordGuildMembership")(
-          function* verifyDiscordGuildMembership() {
-            const session = yield* requireSession();
-            return yield* verifyDiscordGuildMembershipWorkflow({
-              userId: session.user.id,
-            }).pipe(Effect.catchTag("UserAdapterError", projectAdapterError));
-          }
-        )
+      .handle("verifyDiscordGuildMembership", () =>
+        Effect.gen(function* verifyDiscordGuildMembershipHandler() {
+          const session = yield* requireSession();
+          return yield* verifyDiscordGuildMembership({
+            userId: session.user.id,
+          }).pipe(Effect.mapError(mapUserError));
+        })
       )
 );

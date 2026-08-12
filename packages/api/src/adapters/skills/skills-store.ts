@@ -1,4 +1,4 @@
-/* eslint-disable max-classes-per-file, no-shadow -- The store contract owns its typed error; named Effect generators mirror service names for traces. */
+/* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import { slugifySkillRangeName } from "@tepirek-revamped/config";
 import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
@@ -6,7 +6,6 @@ import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { professions, range, skills } from "@tepirek-revamped/db/schema/skills";
 import { eq } from "drizzle-orm";
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
@@ -16,57 +15,28 @@ import {
   SkillId,
   SkillRangeId,
 } from "../../domain/core-identifiers.ts";
-import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
-  SkillsBadRequest,
-  SkillsConflict,
-} from "../../protocol/skills/http-api-contract.ts";
+  ApplicationConflict,
+  ApplicationDependencyUnavailable,
+  ApplicationInvalidInput,
+} from "../../services/application-errors.ts";
+import { SkillsStore } from "../../services/skills/skills-store.ts";
 import type {
-  ProfessionSummary,
-  RangeSummary,
-  SkillSummary,
-} from "../../protocol/skills/http-api-contract.ts";
+  CreateProfessionInput,
+  CreateRangeInput,
+  CreateSkillInput,
+  DeleteRangeInput,
+  DeleteSkillInput,
+  GetRangeBySlugInput,
+  GetSkillsByRangeInput,
+} from "../../services/skills/skills-store.ts";
 import {
   decodePersistedValue,
   makeDirectPersistenceQuery,
 } from "../persistence-query.ts";
-/** Internal persistence failure retained for diagnostics at the server boundary. */
-export class SkillsStoreError extends Schema.TaggedErrorClass<SkillsStoreError>()(
-  "SkillsStoreError",
-  { cause: Schema.Defect(), operation: Schema.String }
-) {}
-
-export interface CreateProfessionInput {
-  readonly name: string;
-}
-export interface CreateRangeInput {
-  readonly image: string;
-  readonly level: number;
-  readonly name: string;
-}
-export interface CreateSkillInput {
-  readonly link: string;
-  readonly mastery: boolean;
-  readonly name: string;
-  readonly professionId: ProfessionId;
-  readonly rangeId: SkillRangeId;
-  readonly userId: AppUserId;
-}
-export interface DeleteRangeInput {
-  readonly id: SkillRangeId;
-}
-export interface DeleteSkillInput {
-  readonly id: SkillId;
-}
-export interface GetRangeBySlugInput {
-  readonly slug: string;
-}
-export interface GetSkillsByRangeInput {
-  readonly rangeId: SkillRangeId;
-}
 
 const persistenceQuery = makeDirectPersistenceQuery(
-  (input) => new SkillsStoreError(input)
+  (input) => new ApplicationDependencyUnavailable(input)
 );
 const decodePersisted = <A>(
   schema: Schema.ConstraintDecoder<A>,
@@ -75,19 +45,19 @@ const decodePersisted = <A>(
   decodePersistedValue(
     schema,
     operation,
-    (error) => new SkillsStoreError(error)
+    (error) => new ApplicationDependencyUnavailable(error)
   );
 
 const assertHttpUrl = (link: string) =>
   Schema.decodeUnknownEffect(Schema.URLFromString)(link).pipe(
     Effect.mapError(
-      () => new SkillsBadRequest({ message: "Podaj poprawny URL" })
+      () => new ApplicationInvalidInput({ message: "Podaj poprawny URL" })
     ),
     Effect.flatMap((url) =>
       url.protocol === "http:" || url.protocol === "https:"
         ? Effect.void
         : Effect.fail(
-            new SkillsBadRequest({
+            new ApplicationInvalidInput({
               message: "Link musi zaczynać się od http:// albo https://",
             })
           )
@@ -110,7 +80,7 @@ const createRangeWithDatabase = (database: EffectPgDatabase) =>
   }: CreateRangeInput) {
     const slug = slugifySkillRangeName(name);
     if (slug === "") {
-      return yield* new SkillsBadRequest({
+      return yield* new ApplicationInvalidInput({
         message: "Nazwa przedziału musi zawierać litery lub cyfry",
       });
     }
@@ -123,7 +93,7 @@ const createRangeWithDatabase = (database: EffectPgDatabase) =>
         .limit(1)
     );
     if (existing[0]) {
-      return yield* new SkillsConflict({
+      return yield* new ApplicationConflict({
         message: "Przedział o tej nazwie już istnieje",
       });
     }
@@ -239,44 +209,6 @@ const listSkillsByRangeWithDatabase =
         )
       )
     );
-
-export class SkillsStore extends Context.Service<
-  SkillsStore,
-  {
-    readonly createProfession: (
-      input: CreateProfessionInput
-    ) => Effect.Effect<void, SkillsStoreError>;
-    readonly createRange: (
-      input: CreateRangeInput
-    ) => Effect.Effect<
-      void,
-      SkillsBadRequest | SkillsConflict | SkillsStoreError
-    >;
-    readonly createSkill: (
-      input: CreateSkillInput
-    ) => Effect.Effect<void, SkillsBadRequest | SkillsStoreError>;
-    readonly deleteRange: (
-      input: DeleteRangeInput
-    ) => Effect.Effect<void, SkillsStoreError>;
-    readonly deleteSkill: (
-      input: DeleteSkillInput
-    ) => Effect.Effect<void, SkillsStoreError>;
-    readonly listProfessions: () => Effect.Effect<
-      readonly ProfessionSummary[],
-      SkillsStoreError
-    >;
-    readonly listRanges: () => Effect.Effect<
-      readonly RangeSummary[],
-      SkillsStoreError
-    >;
-    readonly getRangeBySlug: (
-      input: GetRangeBySlugInput
-    ) => Effect.Effect<RangeSummary | null, SkillsStoreError>;
-    readonly listSkillsByRange: (
-      input: GetSkillsByRangeInput
-    ) => Effect.Effect<readonly SkillSummary[], SkillsStoreError>;
-  }
->()("@tepirek-revamped/api/SkillsStore") {}
 
 export const SkillsStoreLayer: Layer.Layer<SkillsStore, never, EffectDatabase> =
   Layer.effect(

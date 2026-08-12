@@ -1,47 +1,34 @@
-/* eslint-disable max-classes-per-file, no-shadow -- The store contract owns its typed error; named Effect generators mirror service names for traces. */
+/* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { hero } from "@tepirek-revamped/db/schema/bet";
 import { eq } from "drizzle-orm";
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Schema from "effect/Schema";
+import type * as Schema from "effect/Schema";
 
 import { EventId, HeroId } from "../../domain/core-identifiers.ts";
-import type { HeroSummary } from "../../protocol/heroes/http-api-contract.ts";
+import { ApplicationDependencyUnavailable } from "../../services/application-errors.ts";
+import { HeroesStore } from "../../services/heroes/heroes-store.ts";
+import type {
+  CreateHeroInput,
+  DeleteHeroInput,
+  ListHeroesByEventInput,
+} from "../../services/heroes/heroes-store.ts";
 import {
   decodePersistedValue,
   makeDirectPersistenceQuery,
 } from "../persistence-query.ts";
-/** Internal persistence failure retained for diagnostics at the server boundary. */
-export class HeroesStoreError extends Schema.TaggedErrorClass<HeroesStoreError>()(
-  "HeroesStoreError",
-  { cause: Schema.Defect(), operation: Schema.String }
-) {}
-
-export interface CreateHeroInput {
-  readonly eventId: EventId;
-  readonly image?: string | undefined;
-  readonly level?: number | undefined;
-  readonly name: string;
-}
-export interface DeleteHeroInput {
-  readonly id: HeroId;
-}
-export interface ListHeroesByEventInput {
-  readonly eventId: EventId;
-}
 
 const persistenceQuery = makeDirectPersistenceQuery(
-  (input) => new HeroesStoreError(input)
+  (input) => new ApplicationDependencyUnavailable(input)
 );
 const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
   decodePersistedValue(
     schema,
     "decodeHeroRow",
-    (error) => new HeroesStoreError(error)
+    (error) => new ApplicationDependencyUnavailable(error)
   );
 
 const decodeHeroRow = <
@@ -85,25 +72,6 @@ const listByEventWithDatabase =
       "listHeroesByEvent",
       database.select().from(hero).where(eq(hero.eventId, eventId))
     ).pipe(Effect.flatMap((rows) => Effect.all(rows.map(decodeHeroRow))));
-
-export class HeroesStore extends Context.Service<
-  HeroesStore,
-  {
-    readonly create: (
-      input: CreateHeroInput
-    ) => Effect.Effect<void, HeroesStoreError>;
-    readonly delete: (
-      input: DeleteHeroInput
-    ) => Effect.Effect<void, HeroesStoreError>;
-    readonly list: () => Effect.Effect<
-      readonly HeroSummary[],
-      HeroesStoreError
-    >;
-    readonly listByEvent: (
-      input: ListHeroesByEventInput
-    ) => Effect.Effect<readonly HeroSummary[], HeroesStoreError>;
-  }
->()("@tepirek-revamped/api/HeroesStore") {}
 
 export const HeroesStoreLayer: Layer.Layer<HeroesStore, never, EffectDatabase> =
   Layer.effect(

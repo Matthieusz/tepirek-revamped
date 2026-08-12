@@ -1,52 +1,38 @@
-/* eslint-disable max-classes-per-file, no-shadow -- The store contract owns its typed error; named Effect generators mirror service names for traces. */
+/* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
+import { DEFAULT_EVENT_ICON_ID } from "@tepirek-revamped/config";
 // oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { event } from "@tepirek-revamped/db/schema/event";
 import { eq } from "drizzle-orm";
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Schema from "effect/Schema";
+import type * as Schema from "effect/Schema";
 
 import { EventId } from "../../domain/core-identifiers.ts";
-import {
-  defaultEventColor,
-  defaultEventIcon,
-} from "../../protocol/event/http-api-contract.ts";
-import type { EventSummary } from "../../protocol/event/http-api-contract.ts";
+import { ApplicationDependencyUnavailable } from "../../services/application-errors.ts";
+import { EventStore } from "../../services/event/event-store.ts";
+import type {
+  CreateEventInput,
+  DeleteEventInput,
+  ToggleEventActiveInput,
+} from "../../services/event/event-store.ts";
 import {
   decodePersistedValue,
   makeDirectPersistenceQuery,
 } from "../persistence-query.ts";
-/** Internal persistence failure retained for diagnostics at the server boundary. */
-export class EventStoreError extends Schema.TaggedErrorClass<EventStoreError>()(
-  "EventStoreError",
-  { cause: Schema.Defect(), operation: Schema.String }
-) {}
 
-export interface CreateEventInput {
-  readonly color?: string | undefined;
-  readonly endTime: Date;
-  readonly icon?: string | undefined;
-  readonly name: string;
-}
-export interface DeleteEventInput {
-  readonly id: EventId;
-}
-export interface ToggleEventActiveInput {
-  readonly active: boolean;
-  readonly id: EventId;
-}
+const defaultEventColor = "#6366f1";
+const defaultEventIcon = DEFAULT_EVENT_ICON_ID;
 
 const persistenceQuery = makeDirectPersistenceQuery(
-  (input) => new EventStoreError(input)
+  (input) => new ApplicationDependencyUnavailable(input)
 );
 const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
   decodePersistedValue(
     schema,
     "listEvents.decode",
-    (error) => new EventStoreError(error)
+    (error) => new ApplicationDependencyUnavailable(error)
   );
 
 const createWithDatabase =
@@ -90,25 +76,6 @@ const toggleActiveWithDatabase =
       "toggleEventActive",
       database.update(event).set({ active }).where(eq(event.id, id))
     );
-
-export class EventStore extends Context.Service<
-  EventStore,
-  {
-    readonly create: (
-      input: CreateEventInput
-    ) => Effect.Effect<void, EventStoreError>;
-    readonly delete: (
-      input: DeleteEventInput
-    ) => Effect.Effect<void, EventStoreError>;
-    readonly list: () => Effect.Effect<
-      readonly EventSummary[],
-      EventStoreError
-    >;
-    readonly toggleActive: (
-      input: ToggleEventActiveInput
-    ) => Effect.Effect<void, EventStoreError>;
-  }
->()("@tepirek-revamped/api/EventStore") {}
 
 export const EventStoreLayer: Layer.Layer<EventStore, never, EffectDatabase> =
   Layer.effect(

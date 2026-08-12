@@ -1,4 +1,4 @@
-/* eslint-disable max-classes-per-file -- The store contract owns its typed error. */
+/* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import type {
   EffectPgDatabase,
@@ -8,7 +8,6 @@ import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { account, user } from "@tepirek-revamped/db/schema/auth";
 import type { SQL } from "drizzle-orm";
 import { and, eq, sql } from "drizzle-orm";
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
@@ -16,10 +15,17 @@ import * as Schema from "effect/Schema";
 
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
-  UserBadRequest,
-  UserForbidden,
-  UserNotFound,
-} from "../../protocol/user/http-api-contract.ts";
+  ApplicationDependencyUnavailable,
+  ApplicationForbidden,
+  ApplicationInvalidInput,
+  ApplicationNotFound,
+} from "../../services/application-errors.ts";
+import { UserStore } from "../../services/user/user-store.ts";
+import type {
+  SetUserRoleInput,
+  SetUserVerifiedInput,
+  UpdateUserNameInput,
+} from "../../services/user/user-store.ts";
 import {
   decodePersistedValue,
   makeDirectPersistenceQuery,
@@ -45,37 +51,15 @@ const playerListSelect = {
   verified: user.verified,
 };
 
-/** Internal dependency failure retained for diagnostics at the server boundary. */
-export class UserAdapterError extends Schema.TaggedErrorClass<UserAdapterError>()(
-  "UserAdapterError",
-  { cause: Schema.Defect(), operation: Schema.String }
-) {}
-
 const userPersistenceQuery = makeDirectPersistenceQuery(
-  (input) => new UserAdapterError(input)
+  (input) => new ApplicationDependencyUnavailable(input)
 );
-
-export interface VerifiedMember {
-  readonly id: AppUserId;
-  readonly image: string | null;
-  readonly name: string;
-}
-
-export interface Player {
-  readonly createdAt: Date;
-  readonly id: AppUserId;
-  readonly image: string | null;
-  readonly name: string;
-  readonly role: string | null;
-  readonly updatedAt: Date;
-  readonly verified: boolean;
-}
 
 const decodeAppUserId = (operation: string) =>
   decodePersistedValue(
     AppUserId,
     operation,
-    (error) => new UserAdapterError(error)
+    (error) => new ApplicationDependencyUnavailable(error)
   );
 
 const toVerifiedMember = Effect.fnUntraced(function* toVerifiedMember(row: {
@@ -104,26 +88,6 @@ type UserRow = typeof user.$inferSelect;
 type UserQueryExecutor = Pick<EffectPgDatabase, "select" | "update">;
 type UserMutationState = Partial<Pick<UserRow, "role" | "verified">>;
 
-export interface SetUserRoleInput {
-  readonly actorId: AppUserId;
-  readonly role: NonNullable<UserRow["role"]>;
-  readonly updatedAt: Date;
-  readonly userId: AppUserId;
-}
-
-export interface SetUserVerifiedInput {
-  readonly actorId: AppUserId;
-  readonly updatedAt: Date;
-  readonly userId: AppUserId;
-  readonly verified: boolean;
-}
-
-export interface UpdateUserNameInput {
-  readonly name: string;
-  readonly updatedAt: Date;
-  readonly userId: AppUserId;
-}
-
 const loadTargetUser = Effect.fnUntraced(function* loadTargetUser(
   database: Pick<UserQueryExecutor, "select">,
   userId: AppUserId
@@ -135,7 +99,9 @@ const loadTargetUser = Effect.fnUntraced(function* loadTargetUser(
   const [targetUser] = rows;
 
   if (targetUser === undefined) {
-    return yield* new UserNotFound({ message: "Użytkownik nie istnieje" });
+    return yield* new ApplicationNotFound({
+      message: "Użytkownik nie istnieje",
+    });
   }
 
   return targetUser;
@@ -155,7 +121,7 @@ const countVerifiedAdmins = Effect.fnUntraced(function* countVerifiedAdmins(
   return yield* decodePersistedValue(
     PersistedCount,
     "countVerifiedAdmins.decode",
-    (error) => new UserAdapterError(error)
+    (error) => new ApplicationDependencyUnavailable(error)
   )(rows[0]?.count ?? 0);
 });
 
@@ -180,13 +146,13 @@ const assertAdminMutationAllowed = Effect.fnUntraced(
     }
 
     if (targetUser.id === actorId) {
-      return yield* new UserForbidden({ message: LAST_ADMIN_MESSAGE });
+      return yield* new ApplicationForbidden({ message: LAST_ADMIN_MESSAGE });
     }
 
     const verifiedAdminCount = yield* countVerifiedAdmins(database);
 
     if (verifiedAdminCount <= 1) {
-      return yield* new UserForbidden({ message: LAST_ADMIN_MESSAGE });
+      return yield* new ApplicationForbidden({ message: LAST_ADMIN_MESSAGE });
     }
   }
 );
@@ -260,7 +226,7 @@ const deleteUserWithDatabase = (database: EffectPgDatabase) =>
     const targetUser = yield* loadTargetUser(database, userId);
 
     if (targetUser.verified) {
-      return yield* new UserBadRequest({
+      return yield* new ApplicationInvalidInput({
         message: "Nie można usunąć zweryfikowanego użytkownika",
       });
     }
@@ -333,7 +299,7 @@ const getDiscordAccessTokenWithDatabase = (database: EffectPgDatabase) =>
     const accessToken = rows[0]?.accessToken;
 
     if (!accessToken) {
-      return yield* new UserBadRequest({
+      return yield* new ApplicationInvalidInput({
         message: "Połącz konto Discord, aby zweryfikować członkostwo",
       });
     }
@@ -346,7 +312,7 @@ const markUserVerifiedWithDatabase =
   (input: {
     readonly updatedAt: Date;
     readonly userId: AppUserId;
-  }): Effect.Effect<void, UserAdapterError> =>
+  }): Effect.Effect<void, ApplicationDependencyUnavailable> =>
     userPersistenceQuery(
       "markUserVerified",
       database
@@ -354,45 +320,6 @@ const markUserVerifiedWithDatabase =
         .set({ updatedAt: input.updatedAt, verified: true })
         .where(eq(user.id, input.userId))
     ).pipe(Effect.asVoid);
-
-export class UserStore extends Context.Service<
-  UserStore,
-  {
-    readonly deleteUser: (
-      userId: AppUserId
-    ) => Effect.Effect<
-      { readonly success: true },
-      UserBadRequest | UserNotFound | UserAdapterError
-    >;
-    readonly getDiscordAccessToken: (
-      userId: AppUserId
-    ) => Effect.Effect<Redacted.Redacted, UserBadRequest | UserAdapterError>;
-    readonly getVerified: () => Effect.Effect<
-      readonly VerifiedMember[],
-      UserAdapterError
-    >;
-    readonly list: () => Effect.Effect<readonly Player[], UserAdapterError>;
-    readonly markUserVerified: (input: {
-      readonly updatedAt: Date;
-      readonly userId: AppUserId;
-    }) => Effect.Effect<void, UserAdapterError>;
-    readonly setRole: (
-      input: SetUserRoleInput
-    ) => Effect.Effect<
-      Player | null,
-      UserForbidden | UserNotFound | UserAdapterError
-    >;
-    readonly setVerified: (
-      input: SetUserVerifiedInput
-    ) => Effect.Effect<
-      Player | null,
-      UserForbidden | UserNotFound | UserAdapterError
-    >;
-    readonly updateProfile: (
-      input: UpdateUserNameInput
-    ) => Effect.Effect<Player | null, UserAdapterError>;
-  }
->()("@tepirek-revamped/api/UserStore") {}
 
 export const UserStoreLayer: Layer.Layer<UserStore, never, EffectDatabase> =
   Layer.effect(

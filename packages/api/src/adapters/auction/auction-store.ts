@@ -1,58 +1,41 @@
-/* eslint-disable max-classes-per-file, no-shadow -- The store contract owns its typed error; named Effect generators mirror service names for traces. */
+/* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
 // oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { auction } from "@tepirek-revamped/db/schema/auction";
 import { user } from "@tepirek-revamped/db/schema/auth";
 import { and, count, countDistinct, eq } from "drizzle-orm";
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Schema from "effect/Schema";
+import type * as Schema from "effect/Schema";
 
 import { AuctionSignupId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
-  AuctionConflict,
-  AuctionForbidden,
-  AuctionNotFound,
-} from "../../protocol/auction/http-api-contract.ts";
-import type { AuctionSignupSummary } from "../../protocol/auction/http-api-contract.ts";
+  ApplicationConflict,
+  ApplicationDependencyUnavailable,
+  ApplicationForbidden,
+  ApplicationNotFound,
+} from "../../services/application-errors.ts";
+import { AuctionStore } from "../../services/auction/auction-store.ts";
+import type {
+  AuctionGroupInput,
+  RemoveSignupInput,
+  ToggleSignupInput,
+} from "../../services/auction/auction-store.ts";
 import {
   decodePersistedValue,
   makeDirectPersistenceQuery,
 } from "../persistence-query.ts";
-/** Internal persistence failure retained for diagnostics at the server boundary. */
-export class AuctionStoreError extends Schema.TaggedErrorClass<AuctionStoreError>()(
-  "AuctionStoreError",
-  { cause: Schema.Defect(), operation: Schema.String }
-) {}
-
-export interface AuctionGroupInput {
-  readonly profession: string;
-  readonly type: string;
-}
-export interface RemoveSignupInput {
-  readonly actorUserId: AppUserId;
-  readonly id: AuctionSignupId;
-}
-export interface ToggleSignupInput {
-  readonly actorUserId: AppUserId;
-  readonly column: number;
-  readonly level: number;
-  readonly profession: string;
-  readonly round: number;
-  readonly type: string;
-}
 
 const persistenceQuery = makeDirectPersistenceQuery(
-  (input) => new AuctionStoreError(input)
+  (input) => new ApplicationDependencyUnavailable(input)
 );
 const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
   decodePersistedValue(
     schema,
     "getAuctionSignups.decode",
-    (error) => new AuctionStoreError(error)
+    (error) => new ApplicationDependencyUnavailable(error)
   );
 
 const getSignupsWithDatabase =
@@ -129,10 +112,12 @@ const removeSignupWithDatabase = (database: EffectPgDatabase) =>
     );
     const [signup] = signups;
     if (!signup) {
-      return yield* new AuctionNotFound({ message: "Zapis nie znaleziony" });
+      return yield* new ApplicationNotFound({
+        message: "Zapis nie znaleziony",
+      });
     }
     if (signup.userId !== actorUserId) {
-      return yield* new AuctionForbidden({
+      return yield* new ApplicationForbidden({
         message: "Nie masz uprawnień do usunięcia tego zapisu",
       });
     }
@@ -172,7 +157,7 @@ const toggleSignupWithDatabase = (database: EffectPgDatabase) =>
         );
         return { action: "removed" as const };
       }
-      return yield* new AuctionConflict({
+      return yield* new ApplicationConflict({
         message: "To pole jest już zajęte",
       });
     }
@@ -192,39 +177,12 @@ const toggleSignupWithDatabase = (database: EffectPgDatabase) =>
         .returning({ id: auction.id })
     );
     if (inserted.length === 0) {
-      return yield* new AuctionConflict({
+      return yield* new ApplicationConflict({
         message: "To pole jest już zajęte",
       });
     }
     return { action: "added" as const };
   });
-
-export class AuctionStore extends Context.Service<
-  AuctionStore,
-  {
-    readonly getSignups: (
-      input: AuctionGroupInput
-    ) => Effect.Effect<readonly AuctionSignupSummary[], AuctionStoreError>;
-    readonly getStats: (
-      input: AuctionGroupInput
-    ) => Effect.Effect<
-      { readonly totalSignups: number; readonly uniqueUsers: number },
-      AuctionStoreError
-    >;
-    readonly removeSignup: (
-      input: RemoveSignupInput
-    ) => Effect.Effect<
-      { readonly success: true },
-      AuctionForbidden | AuctionNotFound | AuctionStoreError
-    >;
-    readonly toggleSignup: (
-      input: ToggleSignupInput
-    ) => Effect.Effect<
-      { readonly action: "added" | "removed" },
-      AuctionConflict | AuctionStoreError
-    >;
-  }
->()("@tepirek-revamped/api/AuctionStore") {}
 
 export const AuctionStoreLayer: Layer.Layer<
   AuctionStore,

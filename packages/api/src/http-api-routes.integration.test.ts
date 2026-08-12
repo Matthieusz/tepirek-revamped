@@ -7,12 +7,10 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import { HttpServer } from "effect/unstable/http";
 
-import {
-  AnnouncementStore,
-  AnnouncementStoreError,
-} from "./adapters/announcement/announcement-store.ts";
 import { makeApiLiveLayerFromValues } from "./server/effect-app.ts";
 import { AppHttpApiLayer } from "./server/http-api-handlers.ts";
+import { AnnouncementStore } from "./services/announcement/announcement-store.ts";
+import { ApplicationDependencyUnavailable } from "./services/application-errors.ts";
 import {
   FirecrawlClientService,
   FirecrawlRequestFailed,
@@ -64,21 +62,21 @@ const failingAnnouncementStoreLayer = Layer.succeed(
   AnnouncementStore.of({
     create: () =>
       Effect.fail(
-        new AnnouncementStoreError({
+        new ApplicationDependencyUnavailable({
           cause: sensitivePersistenceCause,
           operation: "createAnnouncement",
         })
       ),
     delete: () =>
       Effect.fail(
-        new AnnouncementStoreError({
+        new ApplicationDependencyUnavailable({
           cause: sensitivePersistenceCause,
           operation: "deleteAnnouncement",
         })
       ),
     list: () =>
       Effect.fail(
-        new AnnouncementStoreError({
+        new ApplicationDependencyUnavailable({
           cause: sensitivePersistenceCause,
           operation: "listAnnouncements",
         })

@@ -1,16 +1,19 @@
-/* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { HeroesStore } from "../../adapters/heroes/heroes-store.ts";
-import type { HeroesStoreError } from "../../adapters/heroes/heroes-store.ts";
 import {
   HeroesForbidden,
   HeroesPersistenceUnavailable,
   HeroesUnauthorized,
 } from "../../protocol/heroes/http-api-contract.ts";
 import { AppHttpApi } from "../../protocol/http-api-contract.ts";
+import type { ApplicationDependencyUnavailable } from "../../services/application-errors.ts";
+import {
+  createHero,
+  deleteHero,
+  listHeroes,
+  listHeroesByEvent,
+} from "../../services/heroes/heroes-service.ts";
 import { makeAuthorizationPolicy } from "../auth/authorization-policy.ts";
 
 const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
@@ -18,68 +21,41 @@ const { requireAdminSession, requireVerifiedSession } = makeAuthorizationPolicy(
     forbidden: () => new HeroesForbidden({ message: "FORBIDDEN" }),
     unauthorized: () => new HeroesUnauthorized({ message: "UNAUTHORIZED" }),
     unverified: () =>
-      new HeroesForbidden({
-        message: "Konto oczekuje na weryfikację",
-      }),
+      new HeroesForbidden({ message: "Konto oczekuje na weryfikację" }),
   }
 );
-
-const projectStoreError = Effect.fn("HeroesHttpApiHandlers.projectStoreError")(
-  (error: HeroesStoreError) =>
-    Effect.fail(
-      new HeroesPersistenceUnavailable({ operation: error.operation })
-    )
-);
+const mapHeroesError = (error: ApplicationDependencyUnavailable) =>
+  new HeroesPersistenceUnavailable({ operation: error.operation });
 
 export const HeroesHttpApiHandlers = HttpApiBuilder.group(
   AppHttpApi,
   "heroes",
   (handlers) =>
     handlers
-      .handle(
-        "createHero",
-        Effect.fn("HeroesHttpApiHandlers.createHero")(function* createHero({
-          payload,
-        }) {
+      .handle("createHero", ({ payload }) =>
+        Effect.gen(function* createHeroHandler() {
           yield* requireAdminSession();
-          const store = yield* HeroesStore;
-          yield* store
-            .create(payload)
-            .pipe(Effect.catchTag("HeroesStoreError", projectStoreError));
+          yield* createHero(payload).pipe(Effect.mapError(mapHeroesError));
         })
       )
-      .handle(
-        "deleteHero",
-        Effect.fn("HeroesHttpApiHandlers.deleteHero")(function* deleteHero({
-          payload,
-        }) {
+      .handle("deleteHero", ({ payload }) =>
+        Effect.gen(function* deleteHeroHandler() {
           yield* requireAdminSession();
-          const store = yield* HeroesStore;
-          yield* store
-            .delete(payload)
-            .pipe(Effect.catchTag("HeroesStoreError", projectStoreError));
+          yield* deleteHero(payload).pipe(Effect.mapError(mapHeroesError));
         })
       )
-      .handle(
-        "listHeroes",
-        Effect.fn("HeroesHttpApiHandlers.listHeroes")(function* listHeroes() {
+      .handle("listHeroes", () =>
+        Effect.gen(function* listHeroesHandler() {
           yield* requireVerifiedSession();
-          const store = yield* HeroesStore;
-          return yield* store
-            .list()
-            .pipe(Effect.catchTag("HeroesStoreError", projectStoreError));
+          return yield* listHeroes().pipe(Effect.mapError(mapHeroesError));
         })
       )
-      .handle(
-        "listHeroesByEvent",
-        Effect.fn("HeroesHttpApiHandlers.listHeroesByEvent")(
-          function* listHeroesByEvent({ payload }) {
-            yield* requireVerifiedSession();
-            const store = yield* HeroesStore;
-            return yield* store
-              .listByEvent(payload)
-              .pipe(Effect.catchTag("HeroesStoreError", projectStoreError));
-          }
-        )
+      .handle("listHeroesByEvent", ({ payload }) =>
+        Effect.gen(function* listHeroesByEventHandler() {
+          yield* requireVerifiedSession();
+          return yield* listHeroesByEvent(payload).pipe(
+            Effect.mapError(mapHeroesError)
+          );
+        })
       )
 );
