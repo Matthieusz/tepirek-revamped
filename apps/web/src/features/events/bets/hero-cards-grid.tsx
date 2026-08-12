@@ -1,6 +1,6 @@
 import { Sword } from "lucide-react";
 
-export interface HeroCardOption {
+interface HeroCardOption {
   id: number;
   name: string;
   level: number;

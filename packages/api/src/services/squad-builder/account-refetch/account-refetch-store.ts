@@ -34,12 +34,12 @@ export interface CreatePendingMargonemAccountRefetchInput {
 }
 
 /** Stored pending refetch identity. */
-export interface PendingMargonemAccountRefetch {
+interface PendingMargonemAccountRefetch {
   readonly id: PendingMargonemAccountRefetchId;
 }
 
 /** Result summary for applying a pending account refetch. */
-export interface ApplyPendingRefetchOutput {
+interface ApplyPendingRefetchOutput {
   readonly accountId: MargonemAccountId;
   readonly profileId: MargonemProfileId;
   readonly lastFetchedAt: Date;
