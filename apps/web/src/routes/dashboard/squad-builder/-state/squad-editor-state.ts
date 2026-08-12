@@ -4,7 +4,7 @@ import { hydrateDraft, isDraftEqual } from "./squad-group-draft";
 import type { SquadGroupDraft } from "./squad-group-draft";
 
 type SquadGroupDetail = SquadGroupDetailSchema;
-export type SquadEditorVisibility = "private" | "global";
+type SquadEditorVisibility = "private" | "global";
 
 interface HydratedEditorData {
   readonly draft: SquadGroupDraft;
@@ -47,7 +47,7 @@ export type SquadEditorState =
   | ErrorEditorState
   | ConflictEditorState;
 
-export type HydratedSquadEditorState = Exclude<
+type HydratedSquadEditorState = Exclude<
   SquadEditorState,
   { readonly phase: "loading" }
 >;

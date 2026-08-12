@@ -49,7 +49,7 @@ export interface SquadGroupCharacter {
 }
 
 /** Saved squad shown in a squad group detail. */
-export interface SquadDetail {
+interface SquadDetail {
   readonly squadId: SquadId;
   readonly name: string;
   readonly position: number;
@@ -57,7 +57,7 @@ export interface SquadDetail {
 }
 
 /** Full saved squad group detail. */
-export interface SquadGroupDetail {
+interface SquadGroupDetail {
   readonly accessRole: SquadGroupAccessRole;
   readonly groupId: SquadGroupId;
   readonly name: string;
@@ -107,7 +107,7 @@ export interface SetSquadGroupVisibilityStoreInput {
 }
 
 /** Result of changing squad group visibility. */
-export interface SquadGroupVisibilityChange {
+interface SquadGroupVisibilityChange {
   readonly groupId: SquadGroupId;
   readonly visibility: SquadGroupVisibility;
   readonly updatedAt: Date;

@@ -4,43 +4,11 @@ import type { AccountImportStoreService } from "../../services/squad-builder/acc
 import type { AccountRefetchStoreService } from "../../services/squad-builder/account-refetch/account-refetch-store.ts";
 import type { AccountSharingStoreService } from "../../services/squad-builder/account-sharing/account-sharing-store.ts";
 import type { FirecrawlRequestAccountingStoreService } from "../../services/squad-builder/firecrawl-request-accounting-store.ts";
-import type { SquadGroupAggregateStoreService } from "../../services/squad-builder/squad-groups/squad-group-aggregate-store.ts";
 import type { SquadGroupDirectoryStoreService } from "../../services/squad-builder/squad-groups/squad-group-directory-store.ts";
 import type { SquadGroupSharingStoreService } from "../../services/squad-builder/squad-groups/squad-group-sharing-store.ts";
 
 const missingStoreOperation = (serviceName: string, operation: string) => () =>
   Effect.die(new Error(`Unexpected ${serviceName}.${operation} call`));
-
-/** Build an aggregate store test service with explicit operation overrides. */
-export const makeSquadGroupAggregateStoreServiceTestService = (
-  overrides: Partial<typeof SquadGroupAggregateStoreService.Service>
-): typeof SquadGroupAggregateStoreService.Service => ({
-  createSquadGroup: missingStoreOperation(
-    "SquadGroupAggregateStoreService",
-    "createSquadGroup"
-  ),
-  deleteSquadGroup: missingStoreOperation(
-    "SquadGroupAggregateStoreService",
-    "deleteSquadGroup"
-  ),
-  getSquadGroupDetail: missingStoreOperation(
-    "SquadGroupAggregateStoreService",
-    "getSquadGroupDetail"
-  ),
-  listMySquadGroups: missingStoreOperation(
-    "SquadGroupAggregateStoreService",
-    "listMySquadGroups"
-  ),
-  saveSquadGroupSnapshot: missingStoreOperation(
-    "SquadGroupAggregateStoreService",
-    "saveSquadGroupSnapshot"
-  ),
-  setSquadGroupVisibility: missingStoreOperation(
-    "SquadGroupAggregateStoreService",
-    "setSquadGroupVisibility"
-  ),
-  ...overrides,
-});
 
 /** Build a directory store test service with explicit operation overrides. */
 export const makeSquadGroupDirectoryStoreServiceTestService = (
