@@ -3,11 +3,21 @@ import type { Effect } from "effect/Effect";
 
 import type { EventId, HeroId } from "../../domain/core-identifiers.ts";
 import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
-import type {
-  HeroStats,
-  RankingResult,
-} from "../../protocol/ranking/http-api-contract.ts";
 import type { RankingError } from "./ranking-errors.ts";
+
+export interface HeroStats {
+  readonly currentPointWorth: number;
+  readonly heroId: HeroId;
+  readonly heroName: string;
+  readonly totalBets: number;
+  readonly totalPoints: number;
+}
+
+export interface RankingResult {
+  readonly pointWorth: number | null;
+  readonly ranking: readonly RankingRow[];
+  readonly totalBets: number;
+}
 
 export interface GetRankingInput {
   readonly eventId?: EventId | undefined;

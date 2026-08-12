@@ -3,18 +3,67 @@ import type { Effect } from "effect/Effect";
 
 import type { BetId, EventId, HeroId } from "../../domain/core-identifiers.ts";
 import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
-import type {
-  BetByEventSummary,
-  BetSummary,
-  CreatedBet,
-  LatestBetForCopy,
-  MutationSuccess,
-  PaginatedBets,
-  StoredBetMember,
-} from "../../protocol/bet/http-api-contract.ts";
 import type { BetError } from "./bet-errors.ts";
 
-type LatestBetForCopyResult = typeof LatestBetForCopy.Type;
+export interface BetMemberSummary {
+  readonly heroBetId: BetId;
+  readonly points: string;
+  readonly userId: AppUserId;
+  readonly userImage: string | null;
+  readonly userName: string | null;
+}
+export interface BetSummary {
+  readonly createdAt: Date;
+  readonly createdBy: AppUserId;
+  readonly createdByImage: string | null;
+  readonly createdByName: string | null;
+  readonly eventId: EventId;
+  readonly heroId: HeroId;
+  readonly heroImage: string | null;
+  readonly heroLevel?: number;
+  readonly heroName: string;
+  readonly id: BetId;
+  readonly memberCount: number;
+  readonly members: BetMemberSummary[];
+}
+export interface BetByEventSummary {
+  readonly createdAt: Date;
+  readonly createdBy: AppUserId;
+  readonly eventId: EventId;
+  readonly heroId: HeroId;
+  readonly heroName: string;
+  readonly id: BetId;
+  readonly memberCount: number;
+}
+export interface StoredBetMember {
+  readonly id: number;
+  readonly points: string;
+  readonly userId: AppUserId;
+}
+export interface CreatedBet {
+  readonly createdAt: Date;
+  readonly createdBy: AppUserId;
+  readonly heroId: HeroId;
+  readonly id: BetId;
+  readonly memberCount: number;
+}
+export interface LatestBetForCopy {
+  readonly id: BetId;
+  readonly members: readonly BetMemberSummary[];
+}
+export interface PaginatedBets {
+  readonly items: BetSummary[];
+  readonly pagination: {
+    readonly hasMore: boolean;
+    readonly limit: number;
+    readonly page: number;
+    readonly totalItems: number;
+    readonly totalPages: number;
+  };
+}
+export interface MutationSuccess {
+  readonly success: boolean;
+}
 
 export interface CreateBetInput {
   readonly createdAt: Date;
@@ -49,7 +98,7 @@ export interface BetServiceInterface {
   readonly getBetsByEvent: (
     eventId: EventId
   ) => Effect<readonly BetByEventSummary[], BetError>;
-  readonly getLatestBetForCopy: () => Effect<LatestBetForCopyResult, BetError>;
+  readonly getLatestBetForCopy: () => Effect<LatestBetForCopy | null, BetError>;
 }
 
 export class BetService extends Context.Service<

@@ -3,12 +3,27 @@ import type { Effect } from "effect/Effect";
 
 import type { EventId, HeroId } from "../../domain/core-identifiers.ts";
 import type { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
-import type {
-  DistributeGoldSuccess,
-  MutationSuccess,
-  VaultRow,
-} from "../../protocol/vault/http-api-contract.ts";
 import type { VaultError } from "./vault-errors.ts";
+
+export interface DistributeGoldSuccess {
+  readonly goldAmount: number;
+  readonly heroId: HeroId;
+  readonly heroName: string;
+  readonly pointWorth: number;
+  readonly success: boolean;
+  readonly totalPoints: number;
+  readonly usersUpdated: number;
+}
+export interface VaultRow {
+  readonly paidOut: boolean;
+  readonly totalEarnings: string;
+  readonly userId: AppUserId;
+  readonly userImage: string | null;
+  readonly userName: string | null;
+}
+export interface MutationSuccess {
+  readonly success: boolean;
+}
 
 export interface DistributeGoldInput {
   readonly goldAmount: number;
