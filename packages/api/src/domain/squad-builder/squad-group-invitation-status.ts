@@ -1,22 +1,22 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
+import {
+  ActiveInvitationAccessStatusSchema,
+  canTransitionInvitationAccess,
+  InvitationAccessStatusSchema,
+  parseInvitationAccessStatus,
+} from "./invitation-access-lifecycle.ts";
+
 /** HTTP/API schema for squad-group editor invitation status. */
-export const SquadGroupInvitationStatusSchema = Schema.Literals([
-  "pending",
-  "accepted",
-  "declined",
-  "revoked",
-]);
+export const SquadGroupInvitationStatusSchema = InvitationAccessStatusSchema;
 /** Lifecycle status of a squad group editor invitation. */
 export type SquadGroupInvitationStatus =
   typeof SquadGroupInvitationStatusSchema.Type;
 
 /** HTTP/API schema for invitation statuses that grant editor access. */
-export const ActiveSquadGroupInvitationStatusSchema = Schema.Literals([
-  "pending",
-  "accepted",
-]);
+export const ActiveSquadGroupInvitationStatusSchema =
+  ActiveInvitationAccessStatusSchema;
 
 /** Expected failure when a persisted squad group invitation status is unknown. */
 export class InvalidSquadGroupInvitationStatus extends Schema.TaggedErrorClass<InvalidSquadGroupInvitationStatus>()(
@@ -31,26 +31,9 @@ export const parseSquadGroupInvitationStatus = (
   SquadGroupInvitationStatus,
   InvalidSquadGroupInvitationStatus
 > =>
-  Schema.decodeUnknownEffect(SquadGroupInvitationStatusSchema)(value).pipe(
+  parseInvitationAccessStatus(value).pipe(
     Effect.mapError(() => new InvalidSquadGroupInvitationStatus({ value }))
   );
 
 /** Whether an invitation row may move from `from` to `to`. */
-export const canTransitionSquadGroupInvitation = (
-  from: SquadGroupInvitationStatus,
-  to: SquadGroupInvitationStatus
-): boolean => {
-  if (from === "pending" && (to === "accepted" || to === "declined")) {
-    return true;
-  }
-
-  if ((from === "pending" || from === "accepted") && to === "revoked") {
-    return true;
-  }
-
-  if ((from === "declined" || from === "revoked") && to === "pending") {
-    return true;
-  }
-
-  return false;
-};
+export const canTransitionSquadGroupInvitation = canTransitionInvitationAccess;

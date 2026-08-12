@@ -26,6 +26,11 @@ import type { SquadGroupValidationError } from "./squad-group-validation-errors.
 import type { SquadId } from "./squad-id.ts";
 import { parseSquadGroupName, parseSquadName } from "./squad-name.ts";
 import type { SquadGroupName, SquadName } from "./squad-name.ts";
+import {
+  validateSquadPlacementCount,
+  validateSquadPlacements,
+} from "./squad-placement.ts";
+import type { SquadPlacementValidationError } from "./squad-placement.ts";
 
 /** Position of a squad inside a group snapshot. */
 const Position = Schema.Finite.check(
@@ -67,7 +72,9 @@ export interface SquadGroupDraftSnapshot {
 
 /** Parsed squad draft snapshot. */
 export interface SquadDraftSnapshot {
+  /** Client-only key used to address a draft squad; it is not persisted. */
   readonly clientKey: string;
+  /** Existing persisted squad to update; omitted for a new squad. */
   readonly squadId?: SquadId;
   readonly name: SquadName;
   readonly position: SquadPosition;
@@ -82,7 +89,9 @@ export interface SquadCharacterDraftPlacement {
 
 /** Raw squad input accepted by the save service after id parsing. */
 export interface SaveSquadInput {
+  /** Client-only key used to address a draft squad; it is not persisted. */
   readonly clientKey: string;
+  /** Existing persisted squad to update; omitted for a new squad. */
   readonly squadId?: SquadId;
   readonly name: string;
   readonly position: number;
@@ -94,16 +103,24 @@ export interface SaveSquadInput {
 
 export type { SquadGroupValidationError };
 
-/** Input for validating a full squad group snapshot. */
-export interface ValidateSquadGroupSnapshotInput {
-  readonly actorUserId: AppUserId;
+/** Input for parsing a full squad group snapshot before persistence. */
+export interface ParseSquadGroupSnapshotInput {
   readonly groupId: SquadGroupId;
   readonly name: string;
   readonly squads: readonly SaveSquadInput[];
+}
+
+/** Input for validating a parsed snapshot against accessible characters. */
+export interface ValidateParsedSquadGroupSnapshotInput {
+  readonly snapshot: SquadGroupDraftSnapshot;
   readonly availableCharacters: readonly AvailableSquadCharacter[];
 }
 
-const maxCharactersPerSquad = 10;
+/** Input for validating a full squad group snapshot. */
+export interface ValidateSquadGroupSnapshotInput extends ParseSquadGroupSnapshotInput {
+  readonly actorUserId: AppUserId;
+  readonly availableCharacters: readonly AvailableSquadCharacter[];
+}
 
 const invalidPosition = () =>
   new InvalidSquadSnapshot({
@@ -116,56 +133,126 @@ const parseSquadPosition = (input: number) =>
     Effect.mapError(invalidPosition)
   );
 
-const parseCharacterPosition = (input: number) =>
+/** Parse a character position and return a typed validation failure when invalid. */
+export const parseCharacterPosition = (input: number) =>
   Schema.decodeUnknownEffect(CharacterPosition)(input).pipe(
     Effect.mapError(invalidPosition)
   );
 
-/** Validate a squad group snapshot against accessible Jaruna characters and group rules. */
-export const validateSquadGroupSnapshot = Effect.fn(
-  "SquadGroupSnapshot.validate"
-)(function* validateSquadGroupSnapshot(
-  input: ValidateSquadGroupSnapshotInput
+const unreachablePlacementError = (error: never): never => {
+  throw new Error(`Unhandled squad placement error: ${String(error)}`);
+};
+
+const toSnapshotValidationError = (
+  error: SquadPlacementValidationError<MargonemAccountId>
+): SquadGroupValidationError => {
+  switch (error._tag) {
+    case "TooManyCharactersInSquad": {
+      return new TooManyCharactersInSquad({
+        maxCharacters: error.maxCharacters,
+        squadClientKey: error.squadClientKey,
+      });
+    }
+    case "DuplicateCharacterInSquad": {
+      return new DuplicateCharacterInSquad({
+        characterId: error.characterId,
+        squadClientKey: error.squadClientKey,
+      });
+    }
+    case "DuplicateCharacterInSquadGroup": {
+      return new DuplicateCharacterInSquadGroup({
+        characterId: error.characterId,
+      });
+    }
+    case "DuplicateAccountInSquad": {
+      return new DuplicateAccountInSquad({
+        accountId: error.accountId,
+        squadClientKey: error.squadClientKey,
+      });
+    }
+    default: {
+      return unreachablePlacementError(error);
+    }
+  }
+};
+
+/** Parse names, positions, and snapshot structure without consulting access state. */
+export const parseSquadGroupSnapshot = Effect.fn("SquadGroupSnapshot.parse")(
+  function* parseSquadGroupSnapshot(
+    input: ParseSquadGroupSnapshotInput
+  ): Effect.fn.Return<SquadGroupDraftSnapshot, SquadGroupValidationError> {
+    const parsedName = yield* parseSquadGroupName(input.name);
+    const parsedSquads: SquadDraftSnapshot[] = [];
+    let squadIds = HashSet.empty<number>();
+
+    for (const squad of input.squads) {
+      if (squad.squadId !== undefined && HashSet.has(squadIds, squad.squadId)) {
+        return yield* new InvalidSquadSnapshot({
+          message: "Identyfikator składu może wystąpić tylko raz",
+        });
+      }
+
+      if (squad.squadId !== undefined) {
+        squadIds = HashSet.add(squadIds, squad.squadId);
+      }
+
+      if (squad.clientKey.trim().length === 0) {
+        return yield* new InvalidSquadSnapshot({
+          message: "Każdy skład musi mieć klucz klienta",
+        });
+      }
+
+      const placementCountError = validateSquadPlacementCount(
+        squad.clientKey,
+        squad.characters.length
+      );
+      if (placementCountError !== undefined) {
+        return yield* toSnapshotValidationError(placementCountError);
+      }
+
+      const parsedCharacters: SquadCharacterDraftPlacement[] = [];
+      for (const character of squad.characters) {
+        parsedCharacters.push({
+          characterId: character.characterId,
+          position: yield* parseCharacterPosition(character.position),
+        });
+      }
+
+      parsedSquads.push({
+        characters: parsedCharacters,
+        clientKey: squad.clientKey,
+        name: yield* parseSquadName(squad.name),
+        position: yield* parseSquadPosition(squad.position),
+        ...(squad.squadId === undefined ? {} : { squadId: squad.squadId }),
+      });
+    }
+
+    return {
+      groupId: input.groupId,
+      name: parsedName,
+      squads: parsedSquads,
+    };
+  }
+);
+
+/** Validate a parsed snapshot against current accessible Jaruna characters. */
+export const validateParsedSquadGroupSnapshot = Effect.fn(
+  "SquadGroupSnapshot.validateParsed"
+)(function* validateParsedSquadGroupSnapshot(
+  input: ValidateParsedSquadGroupSnapshotInput
 ): Effect.fn.Return<SquadGroupDraftSnapshot, SquadGroupValidationError> {
-  const { availableCharacters, groupId, name, squads } = input;
-
-  const parsedName = yield* parseSquadGroupName(name);
-
+  const { availableCharacters, snapshot } = input;
   const availableByCharacterId = HashMap.fromIterable(
     availableCharacters.map(
       (character) => [character.characterId, character] as const
     )
   );
 
-  let groupCharacterIds = HashSet.empty<number>();
-  const parsedSquads: SquadDraftSnapshot[] = [];
-
-  for (const squad of squads) {
-    if (squad.clientKey.trim().length === 0) {
-      return yield* new InvalidSquadSnapshot({
-        message: "Każdy skład musi mieć klucz klienta",
-      });
-    }
-
-    const parsedSquadName = yield* parseSquadName(squad.name);
-    const parsedSquadPosition = yield* parseSquadPosition(squad.position);
-
-    if (squad.characters.length > maxCharactersPerSquad) {
-      return yield* new TooManyCharactersInSquad({
-        maxCharacters: maxCharactersPerSquad,
-        squadClientKey: squad.clientKey,
-      });
-    }
-
-    let squadCharacterIds = HashSet.empty<number>();
-    let squadAccountIds = HashSet.empty<number>();
-    const parsedCharacters: SquadCharacterDraftPlacement[] = [];
+  const placementSquads = [];
+  for (const squad of snapshot.squads) {
+    const placementCharacters = [];
 
     for (const character of squad.characters) {
-      const parsedCharacterPosition = yield* parseCharacterPosition(
-        character.position
-      );
-
       const availableCharacterOption = HashMap.get(
         availableByCharacterId,
         character.characterId
@@ -183,50 +270,35 @@ export const validateSquadGroupSnapshot = Effect.fn(
         });
       }
 
-      if (HashSet.has(squadCharacterIds, character.characterId)) {
-        return yield* new DuplicateCharacterInSquad({
-          characterId: character.characterId,
-          squadClientKey: squad.clientKey,
-        });
-      }
-
-      if (HashSet.has(groupCharacterIds, character.characterId)) {
-        return yield* new DuplicateCharacterInSquadGroup({
-          characterId: character.characterId,
-        });
-      }
-
-      if (HashSet.has(squadAccountIds, availableCharacter.accountId)) {
-        return yield* new DuplicateAccountInSquad({
-          accountId: availableCharacter.accountId,
-          squadClientKey: squad.clientKey,
-        });
-      }
-
-      squadCharacterIds = HashSet.add(squadCharacterIds, character.characterId);
-      groupCharacterIds = HashSet.add(groupCharacterIds, character.characterId);
-      squadAccountIds = HashSet.add(
-        squadAccountIds,
-        availableCharacter.accountId
-      );
-      parsedCharacters.push({
+      placementCharacters.push({
+        accountId: availableCharacter.accountId,
         characterId: character.characterId,
-        position: parsedCharacterPosition,
       });
     }
 
-    parsedSquads.push({
-      characters: parsedCharacters,
-      clientKey: squad.clientKey,
-      name: parsedSquadName,
-      position: parsedSquadPosition,
-      ...(squad.squadId === undefined ? {} : { squadId: squad.squadId }),
+    placementSquads.push({
+      characters: placementCharacters,
+      squadClientKey: squad.clientKey,
     });
   }
 
-  return {
-    groupId,
-    name: parsedName,
-    squads: parsedSquads,
-  };
+  const placementError = validateSquadPlacements(placementSquads);
+  if (placementError !== undefined) {
+    return yield* toSnapshotValidationError(placementError);
+  }
+
+  return snapshot;
+});
+
+/** Validate a full squad group snapshot against accessible Jaruna characters and group rules. */
+export const validateSquadGroupSnapshot = Effect.fn(
+  "SquadGroupSnapshot.validate"
+)(function* validateSquadGroupSnapshot(
+  input: ValidateSquadGroupSnapshotInput
+): Effect.fn.Return<SquadGroupDraftSnapshot, SquadGroupValidationError> {
+  const snapshot = yield* parseSquadGroupSnapshot(input);
+  return yield* validateParsedSquadGroupSnapshot({
+    availableCharacters: input.availableCharacters,
+    snapshot,
+  });
 });

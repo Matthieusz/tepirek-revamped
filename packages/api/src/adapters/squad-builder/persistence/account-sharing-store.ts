@@ -15,13 +15,9 @@ import { and, desc, eq, ilike, inArray, ne, not, sql } from "drizzle-orm";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Predicate from "effect/Predicate";
 
 import type { AccountAccessStatus } from "../../../domain/squad-builder/account-access-status.ts";
-import {
-  canTransitionAccountAccess,
-  parseAccountAccessStatus,
-} from "../../../domain/squad-builder/account-access-status.ts";
+import { parseAccountAccessStatus } from "../../../domain/squad-builder/account-access-status.ts";
 import { parseAccountDisplayName } from "../../../domain/squad-builder/account-display-name.ts";
 import type { AppUserId } from "../../../domain/squad-builder/app-user-id.ts";
 import { parseAppUserId } from "../../../domain/squad-builder/app-user-id.ts";
@@ -53,6 +49,7 @@ import {
   InviteTargetNotVerified,
   MargonemAccountNotFound,
 } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
+import { transitionInvitationAccessRow } from "./invitation-access-lifecycle.ts";
 import {
   failPersistence,
   parsePersistedAppUserId,
@@ -305,25 +302,30 @@ const upsertAccountAccessInviteWithDatabase = (database: EffectPgDatabase) =>
           return inserted.id;
         }
 
-        const status = yield* parseAccountAccessStatus(existing.status).pipe(
-          Effect.catch((error) => failPersistence(operation, error))
-        );
-
-        if (!canTransitionAccountAccess(status, "pending")) {
-          return new AccountAccessTransitionNotAllowed({
-            attempted: "pending",
-            currentStatus: status,
-          });
-        }
-
-        const update = tx
-          .update(margonemAccountAccess)
-          .set({ invitedByUserId: owner, status: "pending", updatedAt: now })
-          .where(eq(margonemAccountAccess.id, existing.id))
-          .returning({ id: margonemAccountAccess.id });
-        const updatedRows = yield* update;
-
-        const [updated] = updatedRows;
+        const transitioned = yield* transitionInvitationAccessRow({
+          currentStatus: existing.status,
+          nextStatus: "pending",
+          onTransitionNotAllowed: ({ attempted, currentStatus }) =>
+            new AccountAccessTransitionNotAllowed({
+              attempted,
+              currentStatus,
+            }),
+          parseStatus: (value) =>
+            parseAccountAccessStatus(value).pipe(
+              Effect.catch((error) => failPersistence(operation, error))
+            ),
+          update: (nextStatus) =>
+            tx
+              .update(margonemAccountAccess)
+              .set({
+                invitedByUserId: owner,
+                status: nextStatus,
+                updatedAt: now,
+              })
+              .where(eq(margonemAccountAccess.id, existing.id))
+              .returning({ id: margonemAccountAccess.id }),
+        });
+        const [updated] = transitioned.result;
 
         if (updated === undefined) {
           return yield* failPersistence(
@@ -336,10 +338,6 @@ const upsertAccountAccessInviteWithDatabase = (database: EffectPgDatabase) =>
       })
     );
     const upserted = yield* persistenceQuery(operation, transaction);
-
-    if (!Predicate.isNumber(upserted)) {
-      return yield* upserted;
-    }
 
     const accessId = yield* parseMargonemAccountAccessId(upserted).pipe(
       Effect.catch((error) => failPersistence(operation, error))
@@ -614,28 +612,29 @@ const respondToAccountAccessInviteWithDatabase = (database: EffectPgDatabase) =>
           return new ActorIsNotInviteRecipient();
         }
 
-        const status = yield* parseAccountAccessStatus(existing.status).pipe(
-          Effect.catch((error) => failPersistence(operation, error))
-        );
-
         const nextStatus: AccountAccessStatus =
           response === "accept" ? "accepted" : "declined";
 
-        if (!canTransitionAccountAccess(status, nextStatus)) {
-          return new AccountAccessTransitionNotAllowed({
-            attempted: nextStatus,
-            currentStatus: status,
-          });
-        }
-
-        const update = tx
-          .update(margonemAccountAccess)
-          .set({ status: nextStatus, updatedAt: now })
-          .where(eq(margonemAccountAccess.id, existing.id))
-          .returning({ id: margonemAccountAccess.id });
-        const updatedRows = yield* update;
-
-        const [updated] = updatedRows;
+        const transitioned = yield* transitionInvitationAccessRow({
+          currentStatus: existing.status,
+          nextStatus,
+          onTransitionNotAllowed: ({ attempted, currentStatus }) =>
+            new AccountAccessTransitionNotAllowed({
+              attempted,
+              currentStatus,
+            }),
+          parseStatus: (value) =>
+            parseAccountAccessStatus(value).pipe(
+              Effect.catch((error) => failPersistence(operation, error))
+            ),
+          update: (status) =>
+            tx
+              .update(margonemAccountAccess)
+              .set({ status, updatedAt: now })
+              .where(eq(margonemAccountAccess.id, existing.id))
+              .returning({ id: margonemAccountAccess.id }),
+        });
+        const [updated] = transitioned.result;
 
         if (updated === undefined) {
           return yield* failPersistence(
@@ -706,25 +705,28 @@ const revokeAccountAccessWithDatabase = (database: EffectPgDatabase) =>
           return new ActorDoesNotOwnMargonemAccount();
         }
 
-        const status = yield* parseAccountAccessStatus(access.status).pipe(
-          Effect.catch((error) => failPersistence(operation, error))
-        );
-
-        if (!canTransitionAccountAccess(status, "revoked")) {
-          return new AccountAccessTransitionNotAllowed({
-            attempted: "revoked",
-            currentStatus: status,
-          });
-        }
-
-        yield* tx
-          .update(margonemAccountAccess)
-          .set({ status: "revoked", updatedAt: now })
-          .where(eq(margonemAccountAccess.id, accessIdNumber));
+        const transitioned = yield* transitionInvitationAccessRow({
+          currentStatus: access.status,
+          nextStatus: "revoked",
+          onTransitionNotAllowed: ({ attempted, currentStatus }) =>
+            new AccountAccessTransitionNotAllowed({
+              attempted,
+              currentStatus,
+            }),
+          parseStatus: (value) =>
+            parseAccountAccessStatus(value).pipe(
+              Effect.catch((error) => failPersistence(operation, error))
+            ),
+          update: (status) =>
+            tx
+              .update(margonemAccountAccess)
+              .set({ status, updatedAt: now })
+              .where(eq(margonemAccountAccess.id, accessIdNumber)),
+        });
 
         let removedSquadCharacterCount = 0;
 
-        if (status === "accepted") {
+        if (transitioned.previousStatus === "accepted") {
           const characterSelect = tx
             .select({ id: margonemCharacter.id })
             .from(margonemCharacter)

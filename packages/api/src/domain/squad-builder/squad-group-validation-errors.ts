@@ -3,6 +3,7 @@ import * as Schema from "effect/Schema";
 
 import { MargonemAccountId } from "./margonem-account-id.ts";
 import { InvalidSquadGroupName, InvalidSquadName } from "./squad-name.ts";
+import { MAX_SQUAD_CHARACTERS } from "./squad-placement.ts";
 
 export class InvalidSquadSnapshot extends Schema.TaggedErrorClass<InvalidSquadSnapshot>()(
   "InvalidSquadSnapshot",
@@ -12,7 +13,7 @@ export class InvalidSquadSnapshot extends Schema.TaggedErrorClass<InvalidSquadSn
 export class TooManyCharactersInSquad extends Schema.TaggedErrorClass<TooManyCharactersInSquad>()(
   "TooManyCharactersInSquad",
   {
-    maxCharacters: Schema.Literal(10),
+    maxCharacters: Schema.Literal(MAX_SQUAD_CHARACTERS),
     squadClientKey: Schema.String,
   }
 ) {}
