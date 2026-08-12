@@ -5,10 +5,10 @@ import { beforeEach, vi } from "vitest";
 
 import {
   authFormSubmission,
+  runAuthFormSubmission,
   getAuthProviderErrorMessage,
   handleLoginSuccess,
   handleSignupSuccess,
-  submitWhenIdle,
 } from "@/lib/auth-form-behavior";
 
 vi.mock("sonner", () => ({
@@ -30,15 +30,6 @@ describe("auth form behavior", () => {
     expect(getAuthProviderErrorMessage({ statusText: "Unauthorized" })).toBe(
       "Unauthorized"
     );
-  });
-
-  it("does not start a duplicate submit while the first request is waiting", () => {
-    const submit = vi.fn(() => "submitted");
-
-    expect(submitWhenIdle(true, submit)).toBeUndefined();
-    expect(submit).not.toHaveBeenCalled();
-    expect(submitWhenIdle(false, submit)).toBe("submitted");
-    expect(submit).toHaveBeenCalledOnce();
   });
 
   it.effect(
@@ -90,6 +81,25 @@ describe("auth form behavior", () => {
       expect(toast.success).not.toHaveBeenCalled();
     })
   );
+
+  it("returns auth success and typed provider failure as values", async () => {
+    await expect(
+      runAuthFormSubmission("login", () =>
+        Promise.resolve({ data: null, error: null })
+      )
+    ).resolves.toEqual({ _tag: "success" });
+
+    const result = await runAuthFormSubmission("login", () =>
+      Promise.resolve({
+        data: null,
+        error: { message: "Niepoprawne dane", status: 401 },
+      })
+    );
+    expect(result._tag).toBe("failure");
+    if (result._tag === "failure") {
+      expect(result.error.message).toBe("Niepoprawne dane");
+    }
+  });
 
   it("invalidates before navigating after login", async () => {
     const calls: string[] = [];

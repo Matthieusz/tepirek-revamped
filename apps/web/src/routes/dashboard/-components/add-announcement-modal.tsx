@@ -1,19 +1,12 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import { useAtomSet } from "@effect/atom-react";
+import { useSelector } from "@tanstack/react-form";
 import { CreateAnnouncementPayload } from "@tepirek-revamped/api/protocol/announcement/http-api-contract";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { useEffect, useState } from "react";
+import * as Schema from "effect/Schema";
+import { useState } from "react";
 import { toast } from "sonner";
 
-import {
-  EffectForm,
-  EffectFormFeedback,
-  useCanCloseForm,
-} from "@/components/forms/effect-form";
-import {
-  EffectTextField,
-  EffectTextareaField,
-} from "@/components/forms/effect-form-fields";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form, FormFeedback, useCanCloseForm } from "@/components/forms/form";
 import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
@@ -25,56 +18,64 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { createAnnouncementAtom } from "@/features/announcements/announcement-atoms";
-import { formSubmission } from "@/lib/form-submission";
+import type { FormSubmissionError } from "@/lib/form-submission";
+import { runFormSubmission } from "@/lib/form-submission";
 
 interface AddAnnouncementModalProps {
   readonly trigger: React.ReactNode;
 }
 
-const announcementFormBuilder = FormBuilder.empty
-  .addField("title", CreateAnnouncementPayload.fields.title)
-  .addField("description", CreateAnnouncementPayload.fields.description);
-
-type CreateAnnouncement = (
-  payload: CreateAnnouncementPayload
-) => Promise<unknown>;
-
-const announcementForm = FormReact.make(announcementFormBuilder, {
-  fields: {
-    description: EffectTextareaField,
-    title: EffectTextField,
-  },
-  mode: { validation: "onSubmit" },
-  onSubmit: (createAnnouncement: CreateAnnouncement, { decoded }) =>
-    formSubmission(async () => await createAnnouncement(decoded)),
+const AnnouncementFormSchema = Schema.Struct({
+  description: CreateAnnouncementPayload.fields.description,
+  title: CreateAnnouncementPayload.fields.title,
 });
+const AnnouncementFormValidator = Schema.toStandardSchemaV1(
+  AnnouncementFormSchema
+);
 
 export const AddAnnouncementModal = ({
   trigger,
 }: AddAnnouncementModalProps) => {
   const [open, setOpen] = useState(false);
+  const [submissionFailure, setSubmissionFailure] =
+    useState<FormSubmissionError>();
   const createAnnouncement = useAtomSet(createAnnouncementAtom, {
     mode: "promise",
   });
-  const submit = useAtomSet(announcementForm.submit);
-  const reset = useAtomSet(announcementForm.reset);
-  const submitResult = useAtomValue(announcementForm.submit);
-  const canDiscard = useCanCloseForm(submitResult.waiting);
+  const form = useAppForm({
+    defaultValues: { description: "", title: "" },
+    onSubmit: async ({ value }) => {
+      setSubmissionFailure(undefined);
+      const decoded =
+        await AnnouncementFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
 
-  useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
+      const result = await runFormSubmission(() =>
+        createAnnouncement(decoded.value)
+      );
+      if (result._tag === "failure") {
+        setSubmissionFailure(result.error);
+        return;
+      }
+
       toast.success("Ogłoszenie utworzone pomyślnie");
-      reset();
+      form.reset();
       setOpen(false);
-    }
-  }, [reset, submitResult]);
+    },
+    validators: { onSubmit: AnnouncementFormValidator },
+  });
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
+  const canDiscard = useCanCloseForm(isSubmitting);
 
-  const handleOpenChange = (nextOpen: boolean) => {
+  const handleOpenChange = (nextOpen: boolean): void => {
     if (!nextOpen) {
       if (!canDiscard()) {
         return;
       }
-      reset();
+      form.reset();
+      setSubmissionFailure(undefined);
     }
     setOpen(nextOpen);
   };
@@ -83,15 +84,8 @@ export const AddAnnouncementModal = ({
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-150">
-        <announcementForm.Initialize
-          defaultValues={{ description: "", title: "" }}
-        >
-          <EffectForm
-            action={() => {
-              submit(() => createAnnouncement);
-            }}
-            submitResult={submitResult}
-          >
+        <form.AppForm>
+          <Form form={form}>
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>
                 Dodaj nowe ogłoszenie
@@ -101,19 +95,27 @@ export const AddAnnouncementModal = ({
               </ResponsiveDialogDescription>
             </ResponsiveDialogHeader>
             <div className="grid gap-4 py-4">
-              <announcementForm.title
-                label="Tytuł ogłoszenia"
-                placeholder="Wpisz tytuł ogłoszenia"
-              />
-              <announcementForm.description
-                label="Opis ogłoszenia"
-                placeholder="Wpisz opis ogłoszenia"
-              />
+              <form.AppField name="title">
+                {(field) => (
+                  <field.TextField
+                    label="Tytuł ogłoszenia"
+                    placeholder="Wpisz tytuł ogłoszenia"
+                  />
+                )}
+              </form.AppField>
+              <form.AppField name="description">
+                {(field) => (
+                  <field.TextareaField
+                    label="Opis ogłoszenia"
+                    placeholder="Wpisz opis ogłoszenia"
+                  />
+                )}
+              </form.AppField>
             </div>
-            <EffectFormFeedback result={submitResult} />
+            <FormFeedback failure={submissionFailure} />
             <ResponsiveDialogFooter>
               <Button
-                disabled={submitResult.waiting}
+                disabled={isSubmitting}
                 onClick={() => {
                   handleOpenChange(false);
                 }}
@@ -122,12 +124,12 @@ export const AddAnnouncementModal = ({
               >
                 Anuluj
               </Button>
-              <Button disabled={submitResult.waiting} type="submit">
-                {submitResult.waiting ? "Tworzenie..." : "Dodaj ogłoszenie"}
+              <Button disabled={isSubmitting} type="submit">
+                {isSubmitting ? "Tworzenie..." : "Dodaj ogłoszenie"}
               </Button>
             </ResponsiveDialogFooter>
-          </EffectForm>
-        </announcementForm.Initialize>
+          </Form>
+        </form.AppForm>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

@@ -1,17 +1,10 @@
-import * as Option from "effect/Option";
-import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import {
-  startTransition,
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react";
+import { useSelector } from "@tanstack/react-form";
+import type { AnyFormApi } from "@tanstack/react-form";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { ReactNode, SubmitEvent } from "react";
 
-import { getErrorMessage } from "@/lib/errors";
+import type { AuthFormSubmissionError } from "@/lib/auth-form-behavior";
+import type { FormSubmissionError } from "@/lib/form-submission";
 
 const FOCUSABLE_CONTROL_SELECTOR =
   'button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -19,13 +12,6 @@ const FOCUSABLE_CONTROL_SELECTOR =
 interface InvalidControl {
   readonly id: string;
   readonly label: string;
-}
-
-type EffectFormResult = AsyncResult.AsyncResult<unknown, unknown>;
-
-interface EffectFormProps extends Omit<React.ComponentProps<"form">, "action"> {
-  readonly action: (formData: FormData) => void | Promise<void>;
-  readonly submitResult?: EffectFormResult;
 }
 
 const getInvalidControls = (
@@ -66,47 +52,65 @@ const focusControl = (form: HTMLFormElement, id: string): void => {
   control?.focus();
 };
 
-/**
- * Renders an Effect Form submit target with native validation disabled and
- * schema failures focused on their first invalid control.
- */
-export const EffectForm = ({
-  action,
+interface FormProps extends Omit<React.ComponentProps<"form">, "action"> {
+  readonly form: AnyFormApi;
+}
+
+/** Renders a TanStack form with native validation disabled and invalid-field focus management. */
+export const Form = ({
   children,
+  form,
   onSubmit,
-  submitResult,
   ...props
-}: EffectFormProps): ReactNode => {
+}: FormProps): ReactNode => {
   const formRef = useRef<HTMLFormElement>(null);
   const errorSummaryId = useId();
+  const submissionAttempts = useSelector(
+    form.store,
+    (state) => state.submissionAttempts
+  );
+  const validationErrorCount = useSelector(
+    form.store,
+    (state) =>
+      Object.values(state.fieldMeta).filter(
+        (meta) => (meta?.errors?.length ?? 0) > 0
+      ).length
+  );
   const [invalidControls, setInvalidControls] = useState<
     readonly InvalidControl[]
   >([]);
-
-  const handleSubmit = (event: SubmitEvent<HTMLFormElement>): void => {
-    event.preventDefault();
-    onSubmit?.(event);
-
-    const formData = new FormData(event.currentTarget);
-    startTransition(() => action(formData));
-  };
+  const lastFocusedSubmissionAttempt = useRef(0);
 
   useEffect(() => {
-    if (submitResult === undefined || !AsyncResult.isFailure(submitResult)) {
+    if (submissionAttempts === 0) {
+      lastFocusedSubmissionAttempt.current = 0;
       setInvalidControls([]);
       return;
     }
 
-    const form = formRef.current;
-    if (form !== null) {
-      const controls = getInvalidControls(form);
-      setInvalidControls(controls.length >= 3 ? controls : []);
-      const firstControl = controls[0];
-      if (firstControl !== undefined) {
-        focusControl(form, firstControl.id);
-      }
+    const formElement = formRef.current;
+    if (formElement === null) {
+      return;
     }
-  }, [submitResult]);
+
+    const controls = getInvalidControls(formElement);
+    setInvalidControls(controls.length >= 3 ? controls : []);
+    if (lastFocusedSubmissionAttempt.current === submissionAttempts) {
+      return;
+    }
+
+    const firstControl = controls[0];
+    if (firstControl !== undefined) {
+      focusControl(formElement, firstControl.id);
+      lastFocusedSubmissionAttempt.current = submissionAttempts;
+    }
+  }, [submissionAttempts, validationErrorCount]);
+
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    onSubmit?.(event);
+    void form.handleSubmit();
+  };
 
   return (
     <form {...props} noValidate onSubmit={handleSubmit} ref={formRef}>
@@ -126,9 +130,9 @@ export const EffectForm = ({
                 <button
                   className="underline underline-offset-2"
                   onClick={() => {
-                    const form = formRef.current;
-                    if (form !== null) {
-                      focusControl(form, control.id);
+                    const formElement = formRef.current;
+                    if (formElement !== null) {
+                      focusControl(formElement, control.id);
                     }
                   }}
                   type="button"
@@ -145,41 +149,31 @@ export const EffectForm = ({
   );
 };
 
-interface EffectFormFeedbackProps {
-  readonly failureMessage?: string;
-  readonly result: EffectFormResult;
+type FormFailure = FormSubmissionError | AuthFormSubmissionError;
+
+interface FormFeedbackProps {
+  readonly failure?: FormFailure | undefined;
   readonly successMessage?: string;
 }
 
-/** Renders one persistent, accessible message for a form submission result. */
-export const EffectFormFeedback = ({
-  failureMessage = "Nie udało się wysłać formularza. Spróbuj ponownie.",
-  result,
+/** Renders typed application submission feedback. */
+export const FormFeedback = ({
+  failure,
   successMessage,
-}: EffectFormFeedbackProps): ReactNode => {
-  if (AsyncResult.isFailure(result)) {
-    const error = AsyncResult.error(result);
-    if (Option.exists(error, Schema.isSchemaError)) {
-      return null;
-    }
-
-    const message = Option.match(error, {
-      onNone: () => failureMessage,
-      onSome: (value) => getErrorMessage(value, failureMessage),
-    });
-
+}: FormFeedbackProps): ReactNode => {
+  if (failure !== undefined) {
     return (
       <p
         aria-live="assertive"
         className="text-destructive text-sm"
         role="alert"
       >
-        {message}
+        {failure.message}
       </p>
     );
   }
 
-  if (successMessage !== undefined && AsyncResult.isSuccess(result)) {
+  if (successMessage !== undefined) {
     return (
       <p aria-live="polite" className="text-primary text-sm" role="status">
         {successMessage}
@@ -190,6 +184,6 @@ export const EffectFormFeedback = ({
   return null;
 };
 
-/** Returns a stable predicate that prevents closing a form while it submits. */
-export const useCanCloseForm = (isSubmitting = false): (() => boolean) =>
+/** Returns a predicate that prevents closing a form while TanStack is submitting. */
+export const useCanCloseForm = (isSubmitting: boolean): (() => boolean) =>
   useCallback(() => !isSubmitting, [isSubmitting]);

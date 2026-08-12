@@ -1,20 +1,16 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
-import * as Effect from "effect/Effect";
-import * as Option from "effect/Option";
+import { useSelector } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Calculator, Sparkles, TrendingUp } from "lucide-react";
+import { useState } from "react";
 
-import { EffectForm } from "@/components/forms/effect-form";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form } from "@/components/forms/form";
 import {
+  FormFieldFrame,
   getFieldErrorId,
+  getFieldErrorMessage,
   getFieldId,
-} from "@/components/forms/effect-form-field-helpers";
-import {
-  EffectFieldFrame,
-  EffectNumberField,
-} from "@/components/forms/effect-form-fields";
+} from "@/components/forms/form-field-helpers";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -66,55 +62,11 @@ const ItemRaritySchema = Schema.Literals([
   "ulepszony",
   "legendarny",
 ]);
-
-const ulepaFormBuilder = FormBuilder.empty
-  .addField("itemLevel", CalculatorItemLevelSchema)
-  .addField("itemRarity", ItemRaritySchema);
-
-interface UlepaRaritySelectProps {
-  readonly label: string;
-}
-
-const UlepaRaritySelect: FormReact.FieldComponent<
-  Rarity,
-  UlepaRaritySelectProps
-> = ({ field, props }) => {
-  const fieldId = getFieldId(field.path);
-  const errorId = getFieldErrorId(fieldId);
-  const hasError = Option.isSome(field.error);
-  return (
-    <EffectFieldFrame error={field.error} fieldId={fieldId} label={props.label}>
-      <Select
-        name={field.path}
-        onValueChange={(val) => {
-          const rarity = ULEPA_RARITIES.find((item) => item === val);
-          if (rarity !== undefined) {
-            field.onChange(rarity);
-          }
-        }}
-        value={field.value}
-      >
-        <SelectTrigger
-          aria-describedby={hasError ? errorId : undefined}
-          aria-invalid={hasError}
-          id={fieldId}
-          onBlur={field.onBlur}
-        >
-          <SelectValue placeholder="Wybierz rzadkość" />
-        </SelectTrigger>
-        <SelectContent>
-          {ULEPA_RARITIES.map((rarity) => (
-            <SelectItem key={rarity} value={rarity}>
-              <span className={`font-medium ${rarityColors[rarity]}`}>
-                {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
-              </span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </EffectFieldFrame>
-  );
-};
+const UlepaFormSchema = Schema.Struct({
+  itemLevel: CalculatorItemLevelSchema,
+  itemRarity: ItemRaritySchema,
+});
+const UlepaFormValidator = Schema.toStandardSchemaV1(UlepaFormSchema);
 
 interface CalculatorUlepaPageProps {
   session: AuthSession;
@@ -247,31 +199,34 @@ const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
   </div>
 );
 
-const ulepaForm = FormReact.make(ulepaFormBuilder, {
-  fields: { itemLevel: EffectNumberField, itemRarity: UlepaRaritySelect },
-  mode: { validation: "onChange" },
-  onSubmit: (_, { decoded }) =>
-    Effect.sync(() => ({
-      ...calculateUpgradeSummary(decoded.itemLevel, decoded.itemRarity),
-      itemLevel: decoded.itemLevel,
-      itemRarity: decoded.itemRarity,
-    })),
-});
-
 export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
-  const submit = useAtomSet(ulepaForm.submit);
-  const submitResult = useAtomValue(ulepaForm.submit);
-  const result = AsyncResult.isSuccess(submitResult)
-    ? submitResult.value
-    : null;
+  const [result, setResult] = useState<UlepaResult | null>(null);
+  const form = useAppForm({
+    defaultValues: {
+      itemLevel: ULEPA_DEFAULT_ITEM_LEVEL,
+      itemRarity: "legendarny" as Rarity,
+    },
+    onSubmit: async ({ value }) => {
+      const decoded = await UlepaFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
+
+      setResult({
+        ...calculateUpgradeSummary(
+          decoded.value.itemLevel,
+          decoded.value.itemRarity
+        ),
+        itemLevel: decoded.value.itemLevel,
+        itemRarity: decoded.value.itemRarity,
+      });
+    },
+    validators: { onChange: UlepaFormValidator },
+  });
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
-    <ulepaForm.Initialize
-      defaultValues={{
-        itemLevel: ULEPA_DEFAULT_ITEM_LEVEL,
-        itemRarity: "legendarny",
-      }}
-    >
+    <form.AppForm>
       <div className="mx-auto w-full max-w-4xl space-y-6">
         <div>
           <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
@@ -295,24 +250,71 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
               </p>
             </div>
             <div className="p-6">
-              {/* Calculator input is disposable and intentionally has no draft blocker. */}
-              <EffectForm
-                action={() => {
-                  submit();
-                }}
-                className="grid gap-4"
-                submitResult={submitResult}
-              >
-                <ulepaForm.itemLevel label="Poziom przedmiotu" />
-                <ulepaForm.itemRarity label="Rzadkość przedmiotu" />
+              <Form className="grid gap-4" form={form}>
+                <form.AppField name="itemLevel">
+                  {(field) => <field.NumberField label="Poziom przedmiotu" />}
+                </form.AppField>
+                <form.Field name="itemRarity">
+                  {(field) => {
+                    const fieldId = getFieldId(field.name);
+                    const error = getFieldErrorMessage(field.state.meta.errors);
+                    const showError =
+                      error !== undefined &&
+                      (field.state.meta.isTouched ||
+                        field.form.state.submissionAttempts > 0);
+                    const errorId = getFieldErrorId(fieldId);
+
+                    return (
+                      <FormFieldFrame
+                        error={showError ? error : undefined}
+                        fieldId={fieldId}
+                        label="Rzadkość przedmiotu"
+                      >
+                        <Select
+                          name={field.name}
+                          onValueChange={(value) => {
+                            const rarity = ULEPA_RARITIES.find(
+                              (item) => item === value
+                            );
+                            if (rarity !== undefined) {
+                              field.handleChange(rarity);
+                            }
+                          }}
+                          value={field.state.value}
+                        >
+                          <SelectTrigger
+                            aria-describedby={showError ? errorId : undefined}
+                            aria-invalid={showError || undefined}
+                            id={fieldId}
+                            onBlur={field.handleBlur}
+                          >
+                            <SelectValue placeholder="Wybierz rzadkość" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ULEPA_RARITIES.map((rarity) => (
+                              <SelectItem key={rarity} value={rarity}>
+                                <span
+                                  className={`font-medium ${rarityColors[rarity]}`}
+                                >
+                                  {rarity.charAt(0).toUpperCase() +
+                                    rarity.slice(1)}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormFieldFrame>
+                    );
+                  }}
+                </form.Field>
                 <Button
                   className="w-full"
-                  disabled={submitResult.waiting}
+                  disabled={isSubmitting}
                   type="submit"
                 >
-                  {submitResult.waiting ? "Obliczanie..." : "Oblicz koszty"}
+                  {isSubmitting ? "Obliczanie..." : "Oblicz koszty"}
                 </Button>
-              </EffectForm>
+              </Form>
             </div>
           </div>
 
@@ -321,6 +323,6 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
 
         {result && <UlepaCostsTable result={result} />}
       </div>
-    </ulepaForm.Initialize>
+    </form.AppForm>
   );
 }

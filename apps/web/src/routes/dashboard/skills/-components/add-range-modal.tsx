@@ -1,19 +1,12 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import { useAtomSet } from "@effect/atom-react";
+import { useSelector } from "@tanstack/react-form";
 import { CreateRangePayload } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { useEffect, useState } from "react";
+import * as Schema from "effect/Schema";
+import { useState } from "react";
 import { toast } from "sonner";
 
-import {
-  EffectForm,
-  EffectFormFeedback,
-  useCanCloseForm,
-} from "@/components/forms/effect-form";
-import {
-  EffectNumberField,
-  EffectTextField,
-} from "@/components/forms/effect-form-fields";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form, FormFeedback, useCanCloseForm } from "@/components/forms/form";
 import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
@@ -25,54 +18,60 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { createSkillRangeAtom } from "@/features/skills/skill-atoms";
-import { formSubmission } from "@/lib/form-submission";
+import type { FormSubmissionError } from "@/lib/form-submission";
+import { runFormSubmission } from "@/lib/form-submission";
 
 interface AddRangeModalProps {
   readonly trigger: React.ReactNode;
 }
 
-const rangeFormBuilder = FormBuilder.empty
-  .addField("name", CreateRangePayload.fields.name)
-  .addField("level", CreateRangePayload.fields.level)
-  .addField("image", CreateRangePayload.fields.image);
-
-type CreateRange = (payload: CreateRangePayload) => Promise<unknown>;
-
-const rangeForm = FormReact.make(rangeFormBuilder, {
-  fields: {
-    image: EffectTextField,
-    level: EffectNumberField,
-    name: EffectTextField,
-  },
-  mode: { validation: "onSubmit" },
-  onSubmit: (createRange: CreateRange, { decoded }) =>
-    formSubmission(async () => await createRange(decoded)),
+const RangeFormSchema = Schema.Struct({
+  image: CreateRangePayload.fields.image,
+  level: CreateRangePayload.fields.level,
+  name: CreateRangePayload.fields.name,
 });
+const RangeFormValidator = Schema.toStandardSchemaV1(RangeFormSchema);
 
 export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
   const [open, setOpen] = useState(false);
+  const [submissionFailure, setSubmissionFailure] =
+    useState<FormSubmissionError>();
   const createSkillRange = useAtomSet(createSkillRangeAtom, {
     mode: "promise",
   });
-  const submit = useAtomSet(rangeForm.submit);
-  const reset = useAtomSet(rangeForm.reset);
-  const submitResult = useAtomValue(rangeForm.submit);
-  const canDiscard = useCanCloseForm(submitResult.waiting);
+  const form = useAppForm({
+    defaultValues: { image: "", level: 1, name: "" },
+    onSubmit: async ({ value }) => {
+      setSubmissionFailure(undefined);
+      const decoded = await RangeFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
 
-  useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
+      const result = await runFormSubmission(() =>
+        createSkillRange(decoded.value)
+      );
+      if (result._tag === "failure") {
+        setSubmissionFailure(result.error);
+        return;
+      }
+
       toast.success("Przedział utworzony pomyślnie");
-      reset();
+      form.reset();
       setOpen(false);
-    }
-  }, [reset, submitResult]);
+    },
+    validators: { onSubmit: RangeFormValidator },
+  });
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
+  const canDiscard = useCanCloseForm(isSubmitting);
 
-  const handleOpenChange = (nextOpen: boolean) => {
+  const handleOpenChange = (nextOpen: boolean): void => {
     if (!nextOpen) {
       if (!canDiscard()) {
         return;
       }
-      reset();
+      form.reset();
+      setSubmissionFailure(undefined);
     }
     setOpen(nextOpen);
   };
@@ -81,13 +80,8 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-106.25">
-        <rangeForm.Initialize defaultValues={{ image: "", level: 1, name: "" }}>
-          <EffectForm
-            action={() => {
-              submit(() => createSkillRange);
-            }}
-            submitResult={submitResult}
-          >
+        <form.AppForm>
+          <Form form={form}>
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>
                 Dodaj nowy przedział
@@ -97,20 +91,35 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
               </ResponsiveDialogDescription>
             </ResponsiveDialogHeader>
             <div className="grid gap-4 py-4">
-              <rangeForm.name
-                label="Nazwa przedziału"
-                placeholder="Wpisz nazwę przedziału"
-              />
-              <rangeForm.level label="Poziom" placeholder="Wpisz poziom" />
-              <rangeForm.image
-                label="URL obrazka"
-                placeholder="Wpisz URL obrazka"
-              />
+              <form.AppField name="name">
+                {(field) => (
+                  <field.TextField
+                    label="Nazwa przedziału"
+                    placeholder="Wpisz nazwę przedziału"
+                  />
+                )}
+              </form.AppField>
+              <form.AppField name="level">
+                {(field) => (
+                  <field.NumberField
+                    label="Poziom"
+                    placeholder="Wpisz poziom"
+                  />
+                )}
+              </form.AppField>
+              <form.AppField name="image">
+                {(field) => (
+                  <field.TextField
+                    label="URL obrazka"
+                    placeholder="Wpisz URL obrazka"
+                  />
+                )}
+              </form.AppField>
             </div>
-            <EffectFormFeedback result={submitResult} />
+            <FormFeedback failure={submissionFailure} />
             <ResponsiveDialogFooter>
               <Button
-                disabled={submitResult.waiting}
+                disabled={isSubmitting}
                 onClick={() => {
                   handleOpenChange(false);
                 }}
@@ -119,12 +128,12 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
               >
                 Anuluj
               </Button>
-              <Button disabled={submitResult.waiting} type="submit">
-                {submitResult.waiting ? "Tworzenie..." : "Utwórz przedział"}
+              <Button disabled={isSubmitting} type="submit">
+                {isSubmitting ? "Tworzenie..." : "Utwórz przedział"}
               </Button>
             </ResponsiveDialogFooter>
-          </EffectForm>
-        </rangeForm.Initialize>
+          </Form>
+        </form.AppForm>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

@@ -1,20 +1,12 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import { useSelector } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
-import {
-  EffectForm,
-  EffectFormFeedback,
-  useCanCloseForm,
-} from "@/components/forms/effect-form";
-import {
-  EffectNumberField,
-  EffectStringSelectField,
-  EffectTextField,
-} from "@/components/forms/effect-form-fields";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form, FormFeedback, useCanCloseForm } from "@/components/forms/form";
 import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
@@ -31,89 +23,76 @@ import {
   HeroNameSchema,
 } from "@/features/events/heroes/form-schemas";
 import { createHeroAtom } from "@/features/events/heroes/hero-atoms";
-import { formSubmission } from "@/lib/form-submission";
+import type { FormSubmissionError } from "@/lib/form-submission";
+import { runFormSubmission } from "@/lib/form-submission";
 
 interface AddHeroModalProps {
   readonly trigger: React.ReactNode;
 }
 
-const heroFormBuilder = FormBuilder.empty
-  .addField("name", HeroNameSchema)
-  .addField("image", Schema.String)
-  .addField("level", Schema.Finite)
-  .addField("eventId", HeroEventIdSchema);
-
-interface HeroSubmission {
-  readonly eventId: number;
-  readonly image?: string;
-  readonly level: number;
-  readonly name: string;
-}
-
-type CreateHero = (payload: HeroSubmission) => Promise<unknown>;
-
-const heroForm = FormReact.make(heroFormBuilder, {
-  fields: {
-    eventId: EffectStringSelectField,
-    image: EffectTextField,
-    level: EffectNumberField,
-    name: EffectTextField,
-  },
-  mode: { validation: "onSubmit" },
-  onSubmit: (createHero: CreateHero, { decoded }) =>
-    formSubmission(
-      async () =>
-        await createHero({
-          eventId: decoded.eventId,
-          ...(decoded.image ? { image: decoded.image } : {}),
-          level: decoded.level,
-          name: decoded.name,
-        })
-    ),
+const HeroFormSchema = Schema.Struct({
+  eventId: HeroEventIdSchema,
+  image: Schema.String,
+  level: Schema.Finite,
+  name: HeroNameSchema,
 });
+const HeroFormValidator = Schema.toStandardSchemaV1(HeroFormSchema);
 
 export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
   const [open, setOpen] = useState(false);
+  const [submissionFailure, setSubmissionFailure] =
+    useState<FormSubmissionError>();
   const createHero = useAtomSet(createHeroAtom, { mode: "promise" });
   const eventsResult = useAtomValue(eventsAtom);
   const events = AsyncResult.isSuccess(eventsResult)
     ? [...eventsResult.value]
     : [];
   const eventsLoading = !AsyncResult.isSuccess(eventsResult);
-  const submit = useAtomSet(heroForm.submit, { mode: "promise" });
-  const reset = useAtomSet(heroForm.reset);
-  const submitResult = useAtomValue(heroForm.submit);
-  const canDiscard = useCanCloseForm(submitResult.waiting);
+  const form = useAppForm({
+    defaultValues: { eventId: "", image: "", level: 1, name: "" },
+    onSubmit: async ({ value }) => {
+      setSubmissionFailure(undefined);
+      const decoded = await HeroFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
+
+      const result = await runFormSubmission(() =>
+        createHero({
+          eventId: decoded.value.eventId,
+          ...(decoded.value.image ? { image: decoded.value.image } : {}),
+          level: decoded.value.level,
+          name: decoded.value.name,
+        })
+      );
+      if (result._tag === "failure") {
+        setSubmissionFailure(result.error);
+        return;
+      }
+
+      toast.success("Heros utworzony pomyślnie");
+      form.reset();
+      setSubmissionFailure(undefined);
+      setOpen(false);
+    },
+    validators: { onSubmit: HeroFormValidator },
+  });
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
+  const canDiscard = useCanCloseForm(isSubmitting);
   let submitLabel = "Utwórz herosa";
   if (eventsLoading) {
     submitLabel = "Ładowanie...";
-  }
-  if (submitResult.waiting) {
+  } else if (isSubmitting) {
     submitLabel = "Tworzenie...";
   }
 
-  useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
-      toast.success("Heros utworzony pomyślnie");
-      reset();
-      setOpen(false);
-    }
-  }, [reset, submitResult]);
-
-  const handleSubmit = async (): Promise<void> => {
-    try {
-      await submit(createHero);
-    } catch {
-      // Effect Form owns the persistent failure message and keeps the draft.
-    }
-  };
-
-  const handleOpenChange = (nextOpen: boolean) => {
+  const handleOpenChange = (nextOpen: boolean): void => {
     if (!nextOpen) {
       if (!canDiscard()) {
         return;
       }
-      reset();
+      form.reset();
+      setSubmissionFailure(undefined);
     }
     setOpen(nextOpen);
   };
@@ -122,10 +101,8 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-106.25">
-        <heroForm.Initialize
-          defaultValues={{ eventId: "", image: "", level: 1, name: "" }}
-        >
-          <EffectForm action={handleSubmit} submitResult={submitResult}>
+        <form.AppForm>
+          <Form form={form}>
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>Dodaj nowego herosa</ResponsiveDialogTitle>
               <ResponsiveDialogDescription>
@@ -133,30 +110,49 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
               </ResponsiveDialogDescription>
             </ResponsiveDialogHeader>
             <div className="grid gap-4 py-4">
-              <heroForm.name
-                label="Nazwa herosa"
-                placeholder="Wprowadź nazwę herosa"
-              />
-              <heroForm.image
-                label="URL obrazka (opcjonalnie)"
-                placeholder="Wprowadź URL obrazka"
-              />
-              <heroForm.level label="Poziom" placeholder="Wprowadź poziom" />
-              <heroForm.eventId
-                disabled={eventsLoading}
-                label="Event"
-                loading={eventsLoading}
-                options={events.map((event) => ({
-                  label: event.name,
-                  value: event.id.toString(),
-                }))}
-                placeholder="Wybierz event"
-              />
+              <form.AppField name="name">
+                {(field) => (
+                  <field.TextField
+                    label="Nazwa herosa"
+                    placeholder="Wprowadź nazwę herosa"
+                  />
+                )}
+              </form.AppField>
+              <form.AppField name="image">
+                {(field) => (
+                  <field.TextField
+                    label="URL obrazka (opcjonalnie)"
+                    placeholder="Wprowadź URL obrazka"
+                  />
+                )}
+              </form.AppField>
+              <form.AppField name="level">
+                {(field) => (
+                  <field.NumberField
+                    label="Poziom"
+                    placeholder="Wprowadź poziom"
+                  />
+                )}
+              </form.AppField>
+              <form.AppField name="eventId">
+                {(field) => (
+                  <field.StringSelectField
+                    disabled={eventsLoading}
+                    label="Event"
+                    loading={eventsLoading}
+                    options={events.map((event) => ({
+                      label: event.name,
+                      value: event.id.toString(),
+                    }))}
+                    placeholder="Wybierz event"
+                  />
+                )}
+              </form.AppField>
             </div>
-            <EffectFormFeedback result={submitResult} />
+            <FormFeedback failure={submissionFailure} />
             <ResponsiveDialogFooter>
               <Button
-                disabled={submitResult.waiting}
+                disabled={isSubmitting}
                 onClick={() => {
                   handleOpenChange(false);
                 }}
@@ -165,15 +161,12 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
               >
                 Anuluj
               </Button>
-              <Button
-                disabled={submitResult.waiting || eventsLoading}
-                type="submit"
-              >
+              <Button disabled={isSubmitting || eventsLoading} type="submit">
                 {submitLabel}
               </Button>
             </ResponsiveDialogFooter>
-          </EffectForm>
-        </heroForm.Initialize>
+          </Form>
+        </form.AppForm>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

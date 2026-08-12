@@ -1,5 +1,5 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import { useAtomSet } from "@effect/atom-react";
+import { useSelector } from "@tanstack/react-form";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   getCoreRowModel,
@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-table";
 import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
 import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-refetch/account-refetch-schema";
+import * as Schema from "effect/Schema";
 import {
   AlertTriangle,
   Check,
@@ -22,11 +23,11 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { EffectForm, EffectFormFeedback } from "@/components/forms/effect-form";
-import { EffectTextField } from "@/components/forms/effect-form-fields";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form, FormFeedback } from "@/components/forms/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert";
 import { Badge as ReuiBadge } from "@/components/reui/badge";
 import {
@@ -63,7 +64,8 @@ import {
   previewAccountRefetchAtom,
 } from "@/features/squad-builder/account-refetch-atoms";
 import { getErrorMessage } from "@/lib/errors";
-import { formSubmission } from "@/lib/form-submission";
+import type { FormSubmissionError } from "@/lib/form-submission";
+import { runFormSubmission } from "@/lib/form-submission";
 import { formatDateTime } from "@/lib/utils";
 import {
   changeFieldLabel,
@@ -78,26 +80,12 @@ import {
 
 type OwnedAccount = OwnedMargonemAccountSummarySchema;
 
-type RenameAccount = (displayName: string) => Promise<unknown>;
-
-interface RenameAccountSubmitArgs {
-  readonly renameAccount: RenameAccount;
-}
-
-const accountRenameFormBuilder = FormBuilder.empty.addField(
-  "displayName",
-  AccountDisplayNameSchema
+const AccountRenameFormSchema = Schema.Struct({
+  displayName: AccountDisplayNameSchema,
+});
+const AccountRenameFormValidator = Schema.toStandardSchemaV1(
+  AccountRenameFormSchema
 );
-
-const makeAccountRenameForm = () =>
-  FormReact.make(accountRenameFormBuilder, {
-    fields: { displayName: EffectTextField },
-    mode: { validation: "onSubmit" },
-    onSubmit: ({ renameAccount }: RenameAccountSubmitArgs, { decoded }) =>
-      formSubmission(
-        async () => await renameAccount(decoded.displayName.trim())
-      ),
-  });
 
 interface AccountRefetchPreview {
   readonly refetchPreviewId: number;
@@ -180,41 +168,56 @@ const RenameAccountForm = ({
   onCancel,
   onSuccess,
 }: RenameAccountFormProps) => {
-  const renameForm = useMemo(makeAccountRenameForm, []);
-  const submit = useAtomSet(renameForm.submit);
-  const reset = useAtomSet(renameForm.reset);
-  const submitResult = useAtomValue(renameForm.submit);
+  const [submissionFailure, setSubmissionFailure] =
+    useState<FormSubmissionError>();
   const updateAccount = useAtomSet(updateOwnedAccountDisplayNameAtom, {
     mode: "promise",
   });
-  const isSubmitting = submitResult.waiting;
+  const form = useAppForm({
+    defaultValues: { displayName: account.displayName },
+    onSubmit: async ({ value }) => {
+      setSubmissionFailure(undefined);
+      const decoded =
+        await AccountRenameFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
+      const result = await runFormSubmission(() =>
+        updateAccount({
+          accountId: account.accountId,
+          displayName: decoded.value.displayName.trim(),
+        })
+      );
+      if (result._tag === "failure") {
+        setSubmissionFailure(result.error);
+        return;
+      }
+      form.reset();
+      onSuccess();
+    },
+    validators: { onSubmit: AccountRenameFormValidator },
+  });
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
+
+  useEffect(() => {
+    form.reset({ displayName: account.displayName });
+    setSubmissionFailure(undefined);
+  }, [account.displayName, form]);
 
   return (
-    <renameForm.Initialize defaultValues={{ displayName: account.displayName }}>
-      <EffectForm
-        action={() => {
-          submit({
-            renameAccount: async (displayName) => {
-              const result = await updateAccount({
-                accountId: account.accountId,
-                displayName,
-              });
-              reset();
-              onSuccess();
-              return result;
-            },
-          });
-        }}
-        className="space-y-2"
-        submitResult={submitResult}
-      >
-        <renameForm.displayName
-          disabled={isSubmitting}
-          id={`rename-account-${account.accountId}`}
-          label="Nazwa konta"
-          maxLength={80}
-        />
-        <EffectFormFeedback result={submitResult} />
+    <form.AppForm>
+      <Form className="space-y-2" form={form}>
+        <form.AppField name="displayName">
+          {(field) => (
+            <field.TextField
+              disabled={isSubmitting}
+              id={`rename-account-${account.accountId}`}
+              label="Nazwa konta"
+              maxLength={80}
+            />
+          )}
+        </form.AppField>
+        <FormFeedback failure={submissionFailure} />
         <div className="flex flex-wrap gap-2">
           <Button disabled={isSubmitting} size="sm" type="submit">
             {isSubmitting ? (
@@ -235,8 +238,8 @@ const RenameAccountForm = ({
             Anuluj
           </Button>
         </div>
-      </EffectForm>
-    </renameForm.Initialize>
+      </Form>
+    </form.AppForm>
   );
 };
 

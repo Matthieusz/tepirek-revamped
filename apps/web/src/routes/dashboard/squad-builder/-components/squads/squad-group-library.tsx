@@ -1,8 +1,7 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import { useSelector } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import type { SharedSquadGroupSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
-import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
@@ -15,8 +14,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-import { EffectForm, EffectFormFeedback } from "@/components/forms/effect-form";
-import { EffectTextField } from "@/components/forms/effect-form-fields";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form } from "@/components/forms/form";
 import {
   Alert,
   AlertAction,
@@ -73,33 +72,19 @@ const PositiveLevelFromString = Schema.FiniteFromString.pipe(
 const decodeOptionalLevel = (value: string): number | null =>
   Option.getOrNull(Schema.decodeUnknownOption(PositiveLevelFromString)(value));
 
-const squadFilterFormBuilder = FormBuilder.empty
-  .addField("nameQuery", SquadFilterNameSchema)
-  .addField("minLevel", OptionalLevelSchema)
-  .addField("maxLevel", OptionalLevelSchema)
-  .refine(validateSquadFilterLevelOrder);
-
-const squadFilterForm = FormReact.make(squadFilterFormBuilder, {
-  fields: {
-    maxLevel: EffectTextField,
-    minLevel: EffectTextField,
-    nameQuery: EffectTextField,
-  },
-  mode: { validation: "onSubmit" },
-  onSubmit: (
-    {
-      onApply,
-    }: { readonly onApply: (value: SquadGroupListFilterFormState) => void },
-    { decoded }
-  ) =>
-    Effect.sync(() => {
-      onApply({
-        maxLevel: decoded.maxLevel.trim(),
-        minLevel: decoded.minLevel.trim(),
-        nameQuery: decoded.nameQuery.trim(),
-      });
-    }),
-});
+const SquadFilterFormSchema = Schema.Struct({
+  maxLevel: OptionalLevelSchema,
+  minLevel: OptionalLevelSchema,
+  nameQuery: SquadFilterNameSchema,
+}).check(
+  Schema.makeFilter((values) => {
+    const result = validateSquadFilterLevelOrder(values);
+    return result === true ? undefined : result;
+  })
+);
+const SquadFilterFormValidator = Schema.toStandardSchemaV1(
+  SquadFilterFormSchema
+);
 
 const hasActiveFilters = (filters: SquadGroupListFilterFormState): boolean =>
   filters.nameQuery.length > 0 ||
@@ -115,46 +100,58 @@ const SquadGroupListFilters = ({
   onApply,
   onClear,
 }: SquadGroupListFiltersProps) => {
-  const submit = useAtomSet(squadFilterForm.submit);
-  const reset = useAtomSet(squadFilterForm.reset);
-  const submitResult = useAtomValue(squadFilterForm.submit);
+  const form = useAppForm({
+    defaultValues: emptyFilterForm,
+    onSubmit: async ({ value }) => {
+      const decoded =
+        await SquadFilterFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
+      onApply({
+        maxLevel: decoded.value.maxLevel.trim(),
+        minLevel: decoded.value.minLevel.trim(),
+        nameQuery: decoded.value.nameQuery.trim(),
+      });
+    },
+    validators: { onSubmit: SquadFilterFormValidator },
+  });
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
-    <squadFilterForm.Initialize defaultValues={emptyFilterForm}>
-      <EffectForm
-        action={() => {
-          submit({ onApply });
-        }}
+    <form.AppForm>
+      <Form
         className="grid gap-3 border-b border-border px-4 py-4 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_auto] sm:items-end"
-        submitResult={submitResult}
+        form={form}
       >
-        <squadFilterForm.nameQuery
-          className="space-y-2"
-          label="Nazwa grupy"
-          maxLength={80}
-          placeholder="Szukaj po nazwie"
-        />
-        <squadFilterForm.minLevel
-          className="space-y-2"
-          label="Poziom od"
-          placeholder="Od"
-          type="number"
-        />
-        <squadFilterForm.maxLevel
-          className="space-y-2"
-          label="Poziom do"
-          placeholder="Do"
-          type="number"
-        />
+        <form.AppField name="nameQuery">
+          {(field) => (
+            <field.TextField
+              label="Nazwa grupy"
+              maxLength={80}
+              placeholder="Szukaj po nazwie"
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="minLevel">
+          {(field) => (
+            <field.TextField label="Poziom od" placeholder="Od" type="number" />
+          )}
+        </form.AppField>
+        <form.AppField name="maxLevel">
+          {(field) => (
+            <field.TextField label="Poziom do" placeholder="Do" type="number" />
+          )}
+        </form.AppField>
         <div className="flex gap-2">
-          <Button disabled={submitResult.waiting} type="submit">
+          <Button disabled={isSubmitting} type="submit">
             <Search className="size-3.5" />
             Filtruj
           </Button>
           <Button
-            disabled={submitResult.waiting}
+            disabled={isSubmitting}
             onClick={() => {
-              reset();
+              form.reset();
               onClear();
             }}
             type="button"
@@ -163,9 +160,8 @@ const SquadGroupListFilters = ({
             Wyczyść
           </Button>
         </div>
-        <EffectFormFeedback result={submitResult} />
-      </EffectForm>
-    </squadFilterForm.Initialize>
+      </Form>
+    </form.AppForm>
   );
 };
 

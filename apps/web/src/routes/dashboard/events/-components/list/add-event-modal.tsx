@@ -1,26 +1,22 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import { useAtomSet } from "@effect/atom-react";
+import { useSelector } from "@tanstack/react-form";
 import { EVENT_ICON_OPTIONS } from "@tepirek-revamped/config";
 import type { EventIconId } from "@tepirek-revamped/config";
 import { format } from "date-fns";
-import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { useAppForm } from "@/components/forms/app-form";
+import { Form, FormFeedback } from "@/components/forms/form";
 import {
-  EffectForm,
-  EffectFormFeedback,
-  useCanCloseForm,
-} from "@/components/forms/effect-form";
-import {
+  FormFieldError,
+  FormFieldFrame,
+  getFieldErrorMessage,
   getFieldErrorId,
   getFieldId,
-} from "@/components/forms/effect-form-field-helpers";
-import {
-  EffectFieldFrame,
-  EffectTextField,
-} from "@/components/forms/effect-form-fields";
+} from "@/components/forms/form-field-helpers";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -48,245 +44,90 @@ import {
 } from "@/features/events/core/form-schemas";
 import type { EventColor } from "@/features/events/core/form-schemas";
 import { EVENT_ICON_MAP } from "@/lib/constants";
-import { formSubmission } from "@/lib/form-submission";
+import type { FormSubmissionError } from "@/lib/form-submission";
+import { runFormSubmission } from "@/lib/form-submission";
 import { cn } from "@/lib/utils";
 
 interface AddEventModalProps {
   readonly trigger: React.ReactNode;
 }
 
-const eventFormBuilder = FormBuilder.empty
-  .addField("name", EventNameSchema)
-  .addField("icon", EventIconSchema)
-  .addField("color", EventColorSchema)
-  .addField("date", EventDateSchema);
+const EventFormSchema = Schema.Struct({
+  color: EventColorSchema,
+  date: EventDateSchema,
+  icon: EventIconSchema,
+  name: EventNameSchema,
+});
+const EventFormValidator = Schema.toStandardSchemaV1(EventFormSchema);
 
-interface IconFieldProps {
+interface EventFormValues {
   readonly color: EventColor;
-}
-
-const IconField: FormReact.FieldComponent<EventIconId, IconFieldProps> = ({
-  field,
-  props,
-}) => {
-  const fieldId = getFieldId(field.path);
-  const errorId = getFieldErrorId(fieldId);
-  const hasError = Option.isSome(field.error);
-
-  return (
-    <EffectFieldFrame error={field.error} fieldId={fieldId}>
-      <fieldset
-        aria-describedby={hasError ? errorId : undefined}
-        aria-invalid={hasError}
-        aria-labelledby={`${fieldId}-label`}
-        className="grid gap-2"
-        id={fieldId}
-      >
-        <legend className="text-sm font-medium" id={`${fieldId}-label`}>
-          Ikona eventu
-        </legend>
-        <div className="grid grid-cols-3 gap-2">
-          {EVENT_ICON_OPTIONS.map((item) => {
-            const IconComponent = EVENT_ICON_MAP[item.id];
-            return (
-              <button
-                aria-pressed={field.value === item.id}
-                className={cn(
-                  "flex flex-col items-center gap-1 rounded-lg border p-3 transition-all hover:bg-muted/50",
-                  field.value === item.id
-                    ? "border-primary bg-primary/5 ring-2 ring-primary"
-                    : "border-border"
-                )}
-                id={`${fieldId}-${item.id}`}
-                key={item.id}
-                name={field.path}
-                onBlur={field.onBlur}
-                onClick={() => {
-                  field.onChange(item.id);
-                }}
-                type="button"
-              >
-                <IconComponent
-                  className="size-5"
-                  style={{ color: props.color }}
-                />
-                <span className="text-xs">{item.name}</span>
-              </button>
-            );
-          })}
-        </div>
-      </fieldset>
-    </EffectFieldFrame>
-  );
-};
-
-const ColorField: FormReact.FieldComponent<
-  EventColor,
-  Record<never, never>
-> = ({ field }) => {
-  const fieldId = getFieldId(field.path);
-  const errorId = getFieldErrorId(fieldId);
-  const hasError = Option.isSome(field.error);
-
-  return (
-    <EffectFieldFrame error={field.error} fieldId={fieldId}>
-      <fieldset
-        aria-describedby={hasError ? errorId : undefined}
-        aria-invalid={hasError}
-        aria-labelledby={`${fieldId}-label`}
-        className="grid gap-2"
-        id={fieldId}
-      >
-        <legend className="text-sm font-medium" id={`${fieldId}-label`}>
-          Kolor przewodni
-        </legend>
-        <div className="flex flex-wrap gap-2">
-          {EventColors.map((color) => (
-            <button
-              aria-label={`Wybierz kolor ${color.name}`}
-              aria-pressed={field.value === color.id}
-              className={cn(
-                "size-8 rounded-full border-2 transition-all",
-                field.value === color.id
-                  ? "scale-110 border-foreground"
-                  : "border-transparent"
-              )}
-              id={`${fieldId}-${color.id.replaceAll("#", "")}`}
-              key={color.id}
-              name={field.path}
-              onBlur={field.onBlur}
-              onClick={() => {
-                field.onChange(color.id);
-              }}
-              style={{ backgroundColor: color.id }}
-              title={color.name}
-              type="button"
-            />
-          ))}
-        </div>
-      </fieldset>
-    </EffectFieldFrame>
-  );
-};
-
-const DateField: FormReact.FieldComponent<
-  Date | null,
-  Record<never, never>
-> = ({ field }) => {
-  const fieldId = getFieldId(field.path);
-  const errorId = getFieldErrorId(fieldId);
-  const hasError = Option.isSome(field.error);
-  return (
-    <EffectFieldFrame
-      error={field.error}
-      fieldId={fieldId}
-      label="Data końcowa"
-    >
-      <Popover>
-        <PopoverTrigger
-          render={
-            <Button
-              aria-describedby={hasError ? errorId : undefined}
-              aria-invalid={hasError}
-              className={cn(
-                "justify-start text-left font-normal",
-                !field.value && "text-muted-foreground"
-              )}
-              id={fieldId}
-              name={field.path}
-              onBlur={field.onBlur}
-              variant="outline"
-            >
-              <CalendarIcon className="mr-2 size-4" />
-              {field.value ? format(field.value, "PPP") : "Wybierz datę"}
-            </Button>
-          }
-        />
-        <PopoverContent className="w-auto p-0">
-          <Calendar
-            mode="single"
-            onSelect={(date) => {
-              field.onChange(date ?? null);
-            }}
-            selected={field.value ?? undefined}
-          />
-        </PopoverContent>
-      </Popover>
-    </EffectFieldFrame>
-  );
-};
-
-interface EventSubmission {
-  readonly color: EventColor;
-  readonly endTime: Date;
+  readonly date: Date | null;
   readonly icon: EventIconId;
   readonly name: string;
 }
 
-type CreateEvent = (payload: EventSubmission) => Promise<unknown>;
-
-const eventForm = FormReact.make(eventFormBuilder, {
-  fields: {
-    color: ColorField,
-    date: DateField,
-    icon: IconField,
-    name: EffectTextField,
-  },
-  mode: { validation: "onSubmit" },
-  onSubmit: (createEvent: CreateEvent, { decoded }) =>
-    formSubmission(
-      async () =>
-        await createEvent({
-          color: decoded.color,
-          endTime: decoded.date,
-          icon: decoded.icon,
-          name: decoded.name,
-        })
-    ),
-});
+const eventDefaultValues: EventFormValues = {
+  color: EventFormDefaults.color,
+  date: EventFormDefaults.date,
+  icon: EventFormDefaults.icon,
+  name: EventFormDefaults.name,
+};
 
 export const AddEventModal = ({ trigger }: AddEventModalProps) => {
   const [open, setOpen] = useState(false);
+  const [submissionFailure, setSubmissionFailure] =
+    useState<FormSubmissionError>();
   const createEvent = useAtomSet(createEventAtom, { mode: "promise" });
-  const submit = useAtomSet(eventForm.submit, { mode: "promise" });
-  const reset = useAtomSet(eventForm.reset);
-  const submitResult = useAtomValue(eventForm.submit);
-  const canDiscard = useCanCloseForm(submitResult.waiting);
-
-  const handleSubmit = async (): Promise<void> => {
-    try {
-      await submit(async (payload) => {
-        const result = await createEvent(payload);
-        toast.success("Event utworzony pomyślnie");
-        reset();
-        setOpen(false);
-        return result;
-      });
-    } catch {
-      // Effect Form owns the persistent failure message and keeps the draft.
-    }
-  };
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) {
-      if (!canDiscard()) {
+  const form = useAppForm({
+    defaultValues: eventDefaultValues,
+    onSubmit: async ({ value }) => {
+      setSubmissionFailure(undefined);
+      const decoded = await EventFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
         return;
       }
-      reset();
+
+      const result = await runFormSubmission(() =>
+        createEvent({
+          color: decoded.value.color,
+          endTime: decoded.value.date,
+          icon: decoded.value.icon,
+          name: decoded.value.name,
+        })
+      );
+      if (result._tag === "failure") {
+        setSubmissionFailure(result.error);
+        return;
+      }
+
+      toast.success("Event utworzony pomyślnie");
+      form.reset();
+      setOpen(false);
+    },
+    validators: { onSubmit: EventFormValidator },
+  });
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
+  const selectedColor = useSelector(form.store, (state) => state.values.color);
+  const canDiscard = !isSubmitting;
+
+  const handleOpenChange = (nextOpen: boolean): void => {
+    if (!nextOpen) {
+      if (!canDiscard) {
+        return;
+      }
+      form.reset();
+      setSubmissionFailure(undefined);
     }
     setOpen(nextOpen);
   };
-  const values = useAtomValue(eventForm.values);
-  const selectedColor = Option.match(values, {
-    onNone: () => "#6366f1" as const,
-    onSome: (formValues) => formValues.color,
-  });
 
   return (
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-106.25">
-        <eventForm.Initialize defaultValues={EventFormDefaults}>
-          <EffectForm action={handleSubmit} submitResult={submitResult}>
+        <form.AppForm>
+          <Form form={form}>
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>Dodaj nowy event</ResponsiveDialogTitle>
               <ResponsiveDialogDescription>
@@ -294,21 +135,193 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
               </ResponsiveDialogDescription>
             </ResponsiveDialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <eventForm.name
-                  label="Nazwa eventu"
-                  placeholder="Wpisz nazwę eventu"
-                />
-              </div>
+              <form.AppField name="name">
+                {(field) => (
+                  <field.TextField
+                    label="Nazwa eventu"
+                    placeholder="Wpisz nazwę eventu"
+                  />
+                )}
+              </form.AppField>
 
-              <eventForm.icon color={selectedColor} />
-              <eventForm.color />
-              <eventForm.date />
+              <form.Field name="icon">
+                {(field) => {
+                  const fieldId = getFieldId(field.name);
+                  const errorId = getFieldErrorId(fieldId);
+                  const error = getFieldErrorMessage(field.state.meta.errors);
+                  const showError =
+                    error !== undefined &&
+                    (field.state.meta.isTouched ||
+                      field.form.state.submissionAttempts > 0);
+                  return (
+                    <FormFieldFrame
+                      error={showError ? error : undefined}
+                      fieldId={fieldId}
+                    >
+                      <fieldset
+                        aria-describedby={showError ? errorId : undefined}
+                        aria-invalid={showError || undefined}
+                        aria-labelledby={`${fieldId}-label`}
+                        className="grid gap-2"
+                        id={fieldId}
+                      >
+                        <legend
+                          className="text-sm font-medium"
+                          id={`${fieldId}-label`}
+                        >
+                          Ikona eventu
+                        </legend>
+                        <div className="grid grid-cols-3 gap-2">
+                          {EVENT_ICON_OPTIONS.map((item) => {
+                            const IconComponent = EVENT_ICON_MAP[item.id];
+                            return (
+                              <button
+                                aria-pressed={field.state.value === item.id}
+                                className={cn(
+                                  "flex flex-col items-center gap-1 rounded-lg border p-3 transition-all hover:bg-muted/50",
+                                  field.state.value === item.id
+                                    ? "border-primary bg-primary/5 ring-2 ring-primary"
+                                    : "border-border"
+                                )}
+                                id={`${fieldId}-${item.id}`}
+                                key={item.id}
+                                name={field.name}
+                                onBlur={field.handleBlur}
+                                onClick={() => {
+                                  field.handleChange(item.id);
+                                }}
+                                type="button"
+                              >
+                                <IconComponent
+                                  className="size-5"
+                                  style={{ color: selectedColor }}
+                                />
+                                <span className="text-xs">{item.name}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </fieldset>
+                    </FormFieldFrame>
+                  );
+                }}
+              </form.Field>
+
+              <form.Field name="color">
+                {(field) => {
+                  const fieldId = getFieldId(field.name);
+                  const error = getFieldErrorMessage(field.state.meta.errors);
+                  const showError =
+                    error !== undefined &&
+                    (field.state.meta.isTouched ||
+                      field.form.state.submissionAttempts > 0);
+                  return (
+                    <FormFieldFrame
+                      error={showError ? error : undefined}
+                      fieldId={fieldId}
+                    >
+                      <fieldset
+                        aria-invalid={showError || undefined}
+                        aria-labelledby={`${fieldId}-label`}
+                        className="grid gap-2"
+                        id={fieldId}
+                      >
+                        <legend
+                          className="text-sm font-medium"
+                          id={`${fieldId}-label`}
+                        >
+                          Kolor przewodni
+                        </legend>
+                        <div className="flex flex-wrap gap-2">
+                          {EventColors.map((color) => (
+                            <button
+                              aria-label={`Wybierz kolor ${color.name}`}
+                              aria-pressed={field.state.value === color.id}
+                              className={cn(
+                                "size-8 rounded-full border-2 transition-all",
+                                field.state.value === color.id
+                                  ? "scale-110 border-foreground"
+                                  : "border-transparent"
+                              )}
+                              id={`${fieldId}-${color.id.replaceAll("#", "")}`}
+                              key={color.id}
+                              name={field.name}
+                              onBlur={field.handleBlur}
+                              onClick={() => {
+                                field.handleChange(color.id);
+                              }}
+                              style={{ backgroundColor: color.id }}
+                              title={color.name}
+                              type="button"
+                            />
+                          ))}
+                        </div>
+                      </fieldset>
+                    </FormFieldFrame>
+                  );
+                }}
+              </form.Field>
+
+              <form.Field name="date">
+                {(field) => {
+                  const fieldId = getFieldId(field.name);
+                  const errorId = getFieldErrorId(fieldId);
+                  const error = getFieldErrorMessage(field.state.meta.errors);
+                  const showError =
+                    error !== undefined &&
+                    (field.state.meta.isTouched ||
+                      field.form.state.submissionAttempts > 0);
+                  return (
+                    <FormFieldFrame
+                      error={showError ? error : undefined}
+                      fieldId={fieldId}
+                      label="Data końcowa"
+                    >
+                      <Popover>
+                        <PopoverTrigger
+                          render={
+                            <Button
+                              aria-describedby={showError ? errorId : undefined}
+                              aria-invalid={showError || undefined}
+                              className={cn(
+                                "justify-start text-left font-normal",
+                                !field.state.value && "text-muted-foreground"
+                              )}
+                              id={fieldId}
+                              name={field.name}
+                              onBlur={field.handleBlur}
+                              variant="outline"
+                            />
+                          }
+                        >
+                          <CalendarIcon className="mr-2 size-4" />
+                          {field.state.value
+                            ? format(field.state.value, "PPP")
+                            : "Wybierz datę"}
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            onSelect={(date) => {
+                              field.handleChange(date ?? null);
+                            }}
+                            selected={field.state.value ?? undefined}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormFieldError
+                        error={showError ? error : undefined}
+                        id={errorId}
+                      />
+                    </FormFieldFrame>
+                  );
+                }}
+              </form.Field>
             </div>
-            <EffectFormFeedback result={submitResult} />
+            <FormFeedback failure={submissionFailure} />
             <ResponsiveDialogFooter>
               <Button
-                disabled={submitResult.waiting}
+                disabled={isSubmitting}
                 onClick={() => {
                   handleOpenChange(false);
                 }}
@@ -317,12 +330,12 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
               >
                 Anuluj
               </Button>
-              <Button disabled={submitResult.waiting} type="submit">
-                {submitResult.waiting ? "Tworzenie..." : "Utwórz event"}
+              <Button disabled={isSubmitting} type="submit">
+                {isSubmitting ? "Tworzenie..." : "Utwórz event"}
               </Button>
             </ResponsiveDialogFooter>
-          </EffectForm>
-        </eventForm.Initialize>
+          </Form>
+        </form.AppForm>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

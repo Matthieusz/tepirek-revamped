@@ -1,20 +1,15 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
-import * as Effect from "effect/Effect";
-import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Calculator, Unlink } from "lucide-react";
+import { useState } from "react";
 
-import { EffectForm } from "@/components/forms/effect-form";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form } from "@/components/forms/form";
 import {
+  FormFieldFrame,
   getFieldErrorId,
+  getFieldErrorMessage,
   getFieldId,
-} from "@/components/forms/effect-form-field-helpers";
-import {
-  EffectFieldFrame,
-  EffectNumberField,
-} from "@/components/forms/effect-form-fields";
+} from "@/components/forms/form-field-helpers";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -33,7 +28,7 @@ import type { AuthSession } from "@/types/route";
 
 type Rarity = OdwRarity;
 
-const RARITY_ORDER: Rarity[] = [
+const RARITY_ORDER: readonly Rarity[] = [
   "heroiczny",
   "legendarny",
   "unikatowy",
@@ -67,96 +62,59 @@ const ItemRaritySchema = Schema.Literals([
   "heroiczny",
   "legendarny",
 ]);
-
-const odwFormBuilder = FormBuilder.empty
-  .addField("itemLevel", CalculatorItemLevelSchema)
-  .addField("itemRarity", ItemRaritySchema);
-
-interface OdwRaritySelectProps {
-  readonly label: string;
-}
-
-const OdwRaritySelect: FormReact.FieldComponent<
-  Rarity,
-  OdwRaritySelectProps
-> = ({ field, props }) => {
-  const fieldId = getFieldId(field.path);
-  const errorId = getFieldErrorId(fieldId);
-  const hasError = Option.isSome(field.error);
-  return (
-    <EffectFieldFrame error={field.error} fieldId={fieldId} label={props.label}>
-      <Select
-        name={field.path}
-        onValueChange={(val) => {
-          const rarity = RARITY_ORDER.find((item) => item === val);
-          if (rarity !== undefined) {
-            field.onChange(rarity);
-          }
-        }}
-        value={field.value}
-      >
-        <SelectTrigger
-          aria-describedby={hasError ? errorId : undefined}
-          aria-invalid={hasError}
-          id={fieldId}
-          onBlur={field.onBlur}
-        >
-          <SelectValue placeholder="Wybierz rzadkość" />
-        </SelectTrigger>
-        <SelectContent>
-          {RARITY_ORDER.map((rarity) => (
-            <SelectItem key={rarity} value={rarity}>
-              <span className={`font-medium ${rarityColors[rarity]}`}>
-                {rarity.charAt(0).toUpperCase() + rarity.slice(1)}
-              </span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </EffectFieldFrame>
-  );
-};
-
-const odwForm = FormReact.make(odwFormBuilder, {
-  fields: { itemLevel: EffectNumberField, itemRarity: OdwRaritySelect },
-  mode: { validation: "onChange" },
-  onSubmit: (_, { decoded }) =>
-    Effect.sync(() => {
-      const { baseValue, totalCost, isCapped } = calculateUnbindCost(
-        decoded.itemLevel,
-        decoded.itemRarity
-      );
-      const { maxCost, multiplier: rarityMultiplier } = getOdwRarityInfo(
-        decoded.itemRarity
-      );
-
-      return {
-        baseValue,
-        isCapped,
-        itemLevel: decoded.itemLevel,
-        itemRarity: decoded.itemRarity,
-        maxCost,
-        rarityMultiplier,
-        totalCost,
-      };
-    }),
+const OdwFormSchema = Schema.Struct({
+  itemLevel: CalculatorItemLevelSchema,
+  itemRarity: ItemRaritySchema,
 });
+const OdwFormValidator = Schema.toStandardSchemaV1(OdwFormSchema);
+
+interface OdwResult {
+  readonly baseValue: number;
+  readonly isCapped: boolean;
+  readonly itemLevel: number;
+  readonly itemRarity: Rarity;
+  readonly maxCost: number;
+  readonly rarityMultiplier: number;
+  readonly totalCost: number;
+}
 
 interface CalculatorOdwPageProps {
   session: AuthSession;
 }
 
 export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
-  const submit = useAtomSet(odwForm.submit);
-  const submitResult = useAtomValue(odwForm.submit);
-  const result = AsyncResult.isSuccess(submitResult)
-    ? submitResult.value
-    : null;
+  const [result, setResult] = useState<OdwResult | null>(null);
+  const form = useAppForm({
+    defaultValues: { itemLevel: 280, itemRarity: "legendarny" as Rarity },
+    onSubmit: async ({ value }) => {
+      const decoded = await OdwFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
+
+      const { baseValue, totalCost, isCapped } = calculateUnbindCost(
+        decoded.value.itemLevel,
+        decoded.value.itemRarity
+      );
+      const { maxCost, multiplier: rarityMultiplier } = getOdwRarityInfo(
+        decoded.value.itemRarity
+      );
+
+      setResult({
+        baseValue,
+        isCapped,
+        itemLevel: decoded.value.itemLevel,
+        itemRarity: decoded.value.itemRarity,
+        maxCost,
+        rarityMultiplier,
+        totalCost,
+      });
+    },
+    validators: { onChange: OdwFormValidator },
+  });
 
   return (
-    <odwForm.Initialize
-      defaultValues={{ itemLevel: 280, itemRarity: "legendarny" }}
-    >
+    <form.AppForm>
       <div className="mx-auto w-full max-w-4xl space-y-6">
         <div>
           <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
@@ -179,24 +137,75 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
               </p>
             </div>
             <div className="p-6">
-              {/* Calculator input is disposable and intentionally has no draft blocker. */}
-              <EffectForm
-                action={() => {
-                  submit();
-                }}
-                className="grid gap-4"
-                submitResult={submitResult}
-              >
-                <odwForm.itemLevel label="Poziom przedmiotu" />
-                <odwForm.itemRarity label="Rzadkość przedmiotu" />
-                <Button
-                  className="w-full"
-                  disabled={submitResult.waiting}
-                  type="submit"
-                >
-                  {submitResult.waiting ? "Obliczanie..." : "Oblicz koszt"}
-                </Button>
-              </EffectForm>
+              <Form className="grid gap-4" form={form}>
+                <form.AppField name="itemLevel">
+                  {(field) => <field.NumberField label="Poziom przedmiotu" />}
+                </form.AppField>
+                <form.Field name="itemRarity">
+                  {(field) => {
+                    const fieldId = getFieldId(field.name);
+                    const error = getFieldErrorMessage(field.state.meta.errors);
+                    const showError =
+                      error !== undefined &&
+                      (field.state.meta.isTouched ||
+                        field.form.state.submissionAttempts > 0);
+                    const errorId = getFieldErrorId(fieldId);
+
+                    return (
+                      <FormFieldFrame
+                        error={showError ? error : undefined}
+                        fieldId={fieldId}
+                        label="Rzadkość przedmiotu"
+                      >
+                        <Select
+                          name={field.name}
+                          onValueChange={(value) => {
+                            const rarity = RARITY_ORDER.find(
+                              (item) => item === value
+                            );
+                            if (rarity !== undefined) {
+                              field.handleChange(rarity);
+                            }
+                          }}
+                          value={field.state.value}
+                        >
+                          <SelectTrigger
+                            aria-describedby={showError ? errorId : undefined}
+                            aria-invalid={showError || undefined}
+                            id={fieldId}
+                            onBlur={field.handleBlur}
+                          >
+                            <SelectValue placeholder="Wybierz rzadkość" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {RARITY_ORDER.map((rarity) => (
+                              <SelectItem key={rarity} value={rarity}>
+                                <span
+                                  className={`font-medium ${rarityColors[rarity]}`}
+                                >
+                                  {rarity.charAt(0).toUpperCase() +
+                                    rarity.slice(1)}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormFieldFrame>
+                    );
+                  }}
+                </form.Field>
+                <form.Subscribe selector={(state) => state.isSubmitting}>
+                  {(isSubmitting) => (
+                    <Button
+                      className="w-full"
+                      disabled={isSubmitting}
+                      type="submit"
+                    >
+                      {isSubmitting ? "Obliczanie..." : "Oblicz koszt"}
+                    </Button>
+                  )}
+                </form.Subscribe>
+              </Form>
             </div>
           </div>
 
@@ -213,7 +222,7 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
                 </h2>
                 <p className="text-muted-foreground text-sm">
                   Przedmiot poziom{" "}
-                  <span className="font-semibold">{result.itemLevel}</span> (
+                  <span className="font-semibold">{result.itemLevel}</span> ({" "}
                   <span
                     className={`font-semibold ${rarityColors[result.itemRarity]}`}
                   >
@@ -302,6 +311,6 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
           </div>
         </div>
       </div>
-    </odwForm.Initialize>
+    </form.AppForm>
   );
 }

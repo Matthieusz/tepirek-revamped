@@ -1,16 +1,12 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import { useAtomSet } from "@effect/atom-react";
+import { useSelector } from "@tanstack/react-form";
 import { CreateProfessionPayload } from "@tepirek-revamped/api/protocol/skills/http-api-contract";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { useEffect, useState } from "react";
+import * as Schema from "effect/Schema";
+import { useState } from "react";
 import { toast } from "sonner";
 
-import {
-  EffectForm,
-  EffectFormFeedback,
-  useCanCloseForm,
-} from "@/components/forms/effect-form";
-import { EffectTextField } from "@/components/forms/effect-form-fields";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form, FormFeedback, useCanCloseForm } from "@/components/forms/form";
 import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
@@ -22,50 +18,59 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { createSkillProfessionAtom } from "@/features/skills/skill-atoms";
-import { formSubmission } from "@/lib/form-submission";
+import type { FormSubmissionError } from "@/lib/form-submission";
+import { runFormSubmission } from "@/lib/form-submission";
 
 interface AddProfessionModalProps {
   readonly trigger: React.ReactNode;
 }
 
-const professionFormBuilder = FormBuilder.empty.addField(
-  "name",
-  CreateProfessionPayload.fields.name
-);
-
-type CreateProfession = (payload: CreateProfessionPayload) => Promise<unknown>;
-
-const professionForm = FormReact.make(professionFormBuilder, {
-  fields: { name: EffectTextField },
-  mode: { validation: "onSubmit" },
-  onSubmit: (createProfession: CreateProfession, { decoded }) =>
-    formSubmission(async () => await createProfession(decoded)),
+const ProfessionFormSchema = Schema.Struct({
+  name: CreateProfessionPayload.fields.name,
 });
+const ProfessionFormValidator = Schema.toStandardSchemaV1(ProfessionFormSchema);
 
 export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
   const [open, setOpen] = useState(false);
+  const [submissionFailure, setSubmissionFailure] =
+    useState<FormSubmissionError>();
   const createSkillProfession = useAtomSet(createSkillProfessionAtom, {
     mode: "promise",
   });
-  const submit = useAtomSet(professionForm.submit);
-  const reset = useAtomSet(professionForm.reset);
-  const submitResult = useAtomValue(professionForm.submit);
-  const canDiscard = useCanCloseForm(submitResult.waiting);
+  const form = useAppForm({
+    defaultValues: { name: "" },
+    onSubmit: async ({ value }) => {
+      setSubmissionFailure(undefined);
+      const decoded =
+        await ProfessionFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
 
-  useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
+      const result = await runFormSubmission(() =>
+        createSkillProfession(decoded.value)
+      );
+      if (result._tag === "failure") {
+        setSubmissionFailure(result.error);
+        return;
+      }
+
       toast.success("Profesja utworzona");
-      reset();
+      form.reset();
       setOpen(false);
-    }
-  }, [reset, submitResult]);
+    },
+    validators: { onSubmit: ProfessionFormValidator },
+  });
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
+  const canDiscard = useCanCloseForm(isSubmitting);
 
-  const handleOpenChange = (nextOpen: boolean) => {
+  const handleOpenChange = (nextOpen: boolean): void => {
     if (!nextOpen) {
       if (!canDiscard()) {
         return;
       }
-      reset();
+      form.reset();
+      setSubmissionFailure(undefined);
     }
     setOpen(nextOpen);
   };
@@ -74,13 +79,8 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="sm:max-w-[425px]">
-        <professionForm.Initialize defaultValues={{ name: "" }}>
-          <EffectForm
-            action={() => {
-              submit(() => createSkillProfession);
-            }}
-            submitResult={submitResult}
-          >
+        <form.AppForm>
+          <Form form={form}>
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>Dodaj profesję</ResponsiveDialogTitle>
               <ResponsiveDialogDescription>
@@ -88,15 +88,19 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
               </ResponsiveDialogDescription>
             </ResponsiveDialogHeader>
             <div className="grid gap-4 py-4">
-              <professionForm.name
-                label="Nazwa"
-                placeholder="Wpisz nazwę profesji"
-              />
+              <form.AppField name="name">
+                {(field) => (
+                  <field.TextField
+                    label="Nazwa"
+                    placeholder="Wpisz nazwę profesji"
+                  />
+                )}
+              </form.AppField>
             </div>
-            <EffectFormFeedback result={submitResult} />
+            <FormFeedback failure={submissionFailure} />
             <ResponsiveDialogFooter>
               <Button
-                disabled={submitResult.waiting}
+                disabled={isSubmitting}
                 onClick={() => {
                   handleOpenChange(false);
                 }}
@@ -105,12 +109,12 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
               >
                 Anuluj
               </Button>
-              <Button disabled={submitResult.waiting} type="submit">
-                {submitResult.waiting ? "Tworzenie..." : "Utwórz profesję"}
+              <Button disabled={isSubmitting} type="submit">
+                {isSubmitting ? "Tworzenie..." : "Utwórz profesję"}
               </Button>
             </ResponsiveDialogFooter>
-          </EffectForm>
-        </professionForm.Initialize>
+          </Form>
+        </form.AppForm>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

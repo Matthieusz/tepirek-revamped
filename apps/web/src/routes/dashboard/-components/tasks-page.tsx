@@ -1,8 +1,8 @@
 /* oxlint-disable no-use-before-define */
 
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
-import type { CreateTodoPayload } from "@tepirek-revamped/api/protocol/todo/http-api-contract";
+import { useSelector } from "@tanstack/react-form";
+import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import {
   CheckCircle2,
@@ -12,11 +12,11 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
-import { EffectForm, EffectFormFeedback } from "@/components/forms/effect-form";
-import { EffectTextField } from "@/components/forms/effect-form-fields";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form, FormFeedback } from "@/components/forms/form";
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,23 +28,16 @@ import {
   todosAtom,
   toggleTodoAtom,
 } from "@/features/todos/todo-atoms";
-import { formSubmission } from "@/lib/form-submission";
+import type { FormSubmissionError } from "@/lib/form-submission";
+import { runFormSubmission } from "@/lib/form-submission";
 import type { AuthSession } from "@/types/route";
 
 interface TasksPageProps {
   session: AuthSession;
 }
 
-const todoFormBuilder = FormBuilder.empty.addField("text", TodoTextSchema);
-
-type CreateTodo = (payload: CreateTodoPayload) => Promise<unknown>;
-
-const todoForm = FormReact.make(todoFormBuilder, {
-  fields: { text: EffectTextField },
-  mode: { validation: "onSubmit" },
-  onSubmit: (createTodo: CreateTodo, { decoded }) =>
-    formSubmission(async () => await createTodo(decoded)),
-});
+const TodoFormSchema = Schema.Struct({ text: TodoTextSchema });
+const TodoFormValidator = Schema.toStandardSchemaV1(TodoFormSchema);
 
 const runMutation = (
   action: () => Promise<unknown>,
@@ -73,25 +66,30 @@ const TasksContent = ({ session }: TasksPageProps) => {
   const createTodo = useAtomSet(createTodoAtom, { mode: "promise" });
   const toggleTodo = useAtomSet(toggleTodoAtom, { mode: "promise" });
   const deleteTodo = useAtomSet(deleteTodoAtom, { mode: "promise" });
-  const submit = useAtomSet(todoForm.submit, { mode: "promise" });
-  const reset = useAtomSet(todoForm.reset);
-  const submitResult = useAtomValue(todoForm.submit);
+  const [submissionFailure, setSubmissionFailure] =
+    useState<FormSubmissionError>();
   const canCreateTodo = session.user.id.length > 0;
+  const form = useAppForm({
+    defaultValues: { text: "" },
+    onSubmit: async ({ value }) => {
+      setSubmissionFailure(undefined);
+      const decoded = await TodoFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
 
-  useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
+      const result = await runFormSubmission(() => createTodo(decoded.value));
+      if (result._tag === "failure") {
+        setSubmissionFailure(result.error);
+        return;
+      }
+
       toast.success("Zadanie zostało dodane");
-      reset();
-    }
-  }, [reset, submitResult]);
-
-  const handleCreateTodo = async (): Promise<void> => {
-    try {
-      await submit(createTodo);
-    } catch {
-      // Effect Form owns the persistent failure message and keeps the draft.
-    }
-  };
+      form.reset();
+    },
+    validators: { onSubmit: TodoFormValidator },
+  });
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   const toggleTodoMutation = (input: { id: number; completed: boolean }) => {
     runMutation(async () => await toggleTodo(input));
@@ -167,32 +165,29 @@ const TasksContent = ({ session }: TasksPageProps) => {
           <p className="mb-4 text-muted-foreground text-sm">
             Wpisz treść nowego zadania
           </p>
-          <todoForm.Initialize defaultValues={{ text: "" }}>
-            <EffectFormFeedback result={submitResult} />
-            <EffectForm
-              action={handleCreateTodo}
-              className="flex items-start gap-2"
-              submitResult={submitResult}
-            >
-              <todoForm.text
-                className="flex-1"
-                disabled={!canCreateTodo || submitResult.waiting}
-                label="Treść nowego zadania"
-                placeholder="np. zrobić porządek na postaciach (pozdro Wolan)"
-                required
-              />
-              <Button
-                disabled={!canCreateTodo || submitResult.waiting}
-                type="submit"
-              >
-                {submitResult.waiting ? (
+          <form.AppForm>
+            <FormFeedback failure={submissionFailure} />
+            <Form className="flex items-start gap-2" form={form}>
+              <form.AppField name="text">
+                {(field) => (
+                  <field.TextField
+                    className="flex-1"
+                    disabled={!canCreateTodo || isSubmitting}
+                    label="Treść nowego zadania"
+                    placeholder="np. zrobić porządek na postaciach (pozdro Wolan)"
+                    required
+                  />
+                )}
+              </form.AppField>
+              <Button disabled={!canCreateTodo || isSubmitting} type="submit">
+                {isSubmitting ? (
                   <Loader2 className="size-4 animate-spin" />
                 ) : (
                   "Dodaj"
                 )}
               </Button>
-            </EffectForm>
-          </todoForm.Initialize>
+            </Form>
+          </form.AppForm>
         </div>
 
         {/* Task List */}

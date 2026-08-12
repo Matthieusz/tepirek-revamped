@@ -1,16 +1,12 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
+import { useAtomSet } from "@effect/atom-react";
+import { useSelector } from "@tanstack/react-form";
 import { UpdateProfilePayload } from "@tepirek-revamped/api/protocol/user/http-api-contract";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as Schema from "effect/Schema";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import {
-  EffectForm,
-  EffectFormFeedback,
-  useCanCloseForm,
-} from "@/components/forms/effect-form";
-import { EffectTextField } from "@/components/forms/effect-form-fields";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form, FormFeedback, useCanCloseForm } from "@/components/forms/form";
 import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
@@ -22,52 +18,65 @@ import {
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { updateProfileAtom } from "@/features/users/user-atoms";
-import { formSubmission } from "@/lib/form-submission";
+import type { FormSubmissionError } from "@/lib/form-submission";
+import { runFormSubmission } from "@/lib/form-submission";
 
 interface EditProfileModalProps {
   readonly defaultName: string;
   readonly trigger: React.ReactNode;
 }
 
-const profileFormBuilder = FormBuilder.empty.addField(
-  "name",
-  UpdateProfilePayload.fields.name
-);
-
-type UpdateProfile = (payload: UpdateProfilePayload) => Promise<unknown>;
-
-const profileForm = FormReact.make(profileFormBuilder, {
-  fields: { name: EffectTextField },
-  mode: { validation: "onSubmit" },
-  onSubmit: (updateProfile: UpdateProfile, { decoded }) =>
-    formSubmission(async () => await updateProfile(decoded)),
+const ProfileFormSchema = Schema.Struct({
+  name: UpdateProfilePayload.fields.name,
 });
+const ProfileFormValidator = Schema.toStandardSchemaV1(ProfileFormSchema);
 
 export const EditProfileModal = ({
   trigger,
   defaultName,
 }: EditProfileModalProps) => {
   const [open, setOpen] = useState(false);
+  const [submissionFailure, setSubmissionFailure] =
+    useState<FormSubmissionError>();
   const updateProfile = useAtomSet(updateProfileAtom, { mode: "promise" });
-  const submit = useAtomSet(profileForm.submit);
-  const reset = useAtomSet(profileForm.reset);
-  const submitResult = useAtomValue(profileForm.submit);
-  const canDiscard = useCanCloseForm(submitResult.waiting);
+  const form = useAppForm({
+    defaultValues: { name: defaultName },
+    onSubmit: async ({ value }) => {
+      setSubmissionFailure(undefined);
+      const decoded = await ProfileFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
+
+      const result = await runFormSubmission(() =>
+        updateProfile(decoded.value)
+      );
+      if (result._tag === "failure") {
+        setSubmissionFailure(result.error);
+        return;
+      }
+
+      toast.success("Profil zaktualizowany");
+      form.reset();
+      setOpen(false);
+    },
+    validators: { onSubmit: ProfileFormValidator },
+  });
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
+  const canDiscard = useCanCloseForm(isSubmitting);
 
   useEffect(() => {
-    if (AsyncResult.isSuccess(submitResult) && !submitResult.waiting) {
-      toast.success("Profil zaktualizowany");
-      reset();
-      setOpen(false);
-    }
-  }, [reset, submitResult]);
+    form.reset({ name: defaultName });
+    setSubmissionFailure(undefined);
+  }, [defaultName, form]);
 
-  const handleOpenChange = (nextOpen: boolean) => {
+  const handleOpenChange = (nextOpen: boolean): void => {
     if (!nextOpen) {
       if (!canDiscard()) {
         return;
       }
-      reset();
+      form.reset();
+      setSubmissionFailure(undefined);
     }
     setOpen(nextOpen);
   };
@@ -77,16 +86,8 @@ export const EditProfileModal = ({
       <ResponsiveDialogTrigger
         render={
           <ResponsiveDialogContent className="sm:max-w-[425px]">
-            <profileForm.Initialize
-              defaultValues={{ name: defaultName }}
-              key={defaultName}
-            >
-              <EffectForm
-                action={() => {
-                  submit(() => updateProfile);
-                }}
-                submitResult={submitResult}
-              >
+            <form.AppForm>
+              <Form form={form}>
                 <ResponsiveDialogHeader>
                   <ResponsiveDialogTitle>Edytuj profil</ResponsiveDialogTitle>
                   <ResponsiveDialogDescription>
@@ -94,15 +95,19 @@ export const EditProfileModal = ({
                   </ResponsiveDialogDescription>
                 </ResponsiveDialogHeader>
                 <div className="grid gap-4 py-4">
-                  <profileForm.name
-                    label="Nazwa użytkownika"
-                    placeholder="Wpisz nazwę"
-                  />
+                  <form.AppField name="name">
+                    {(field) => (
+                      <field.TextField
+                        label="Nazwa użytkownika"
+                        placeholder="Wpisz nazwę"
+                      />
+                    )}
+                  </form.AppField>
                 </div>
-                <EffectFormFeedback result={submitResult} />
+                <FormFeedback failure={submissionFailure} />
                 <ResponsiveDialogFooter>
                   <Button
-                    disabled={submitResult.waiting}
+                    disabled={isSubmitting}
                     onClick={() => {
                       handleOpenChange(false);
                     }}
@@ -111,12 +116,12 @@ export const EditProfileModal = ({
                   >
                     Anuluj
                   </Button>
-                  <Button disabled={submitResult.waiting} type="submit">
-                    {submitResult.waiting ? "Zapisywanie..." : "Zapisz"}
+                  <Button disabled={isSubmitting} type="submit">
+                    {isSubmitting ? "Zapisywanie..." : "Zapisz"}
                   </Button>
                 </ResponsiveDialogFooter>
-              </EffectForm>
-            </profileForm.Initialize>
+              </Form>
+            </form.AppForm>
           </ResponsiveDialogContent>
         }
       >

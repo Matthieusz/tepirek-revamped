@@ -1,13 +1,6 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
-import type {
-  PreviewOwnedAccountImportsPayload,
-  PreviewOwnedAccountImportsSuccess,
-} from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
-import * as Arr from "effect/Array";
-import * as Option from "effect/Option";
-import * as Predicate from "effect/Predicate";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useAtomSet } from "@effect/atom-react";
+import { useSelector } from "@tanstack/react-form";
+import * as Schema from "effect/Schema";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -17,18 +10,12 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
-import { EffectForm, EffectFormFeedback } from "@/components/forms/effect-form";
-import {
-  getFieldErrorId,
-  getFieldId,
-} from "@/components/forms/effect-form-field-helpers";
-import {
-  EffectFieldFrame,
-  EffectTextField,
-} from "@/components/forms/effect-form-fields";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form, FormFeedback } from "@/components/forms/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert";
 import { Badge as ReuiBadge } from "@/components/reui/badge";
 import { Frame, FramePanel } from "@/components/reui/frame";
@@ -45,7 +32,6 @@ import {
 } from "@/components/reui/stepper";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Textarea } from "@/components/ui/textarea";
 import {
   AccountDisplayNameSchema,
   getProfileLines,
@@ -57,123 +43,30 @@ import {
   previewOwnedAccountImportsAtom,
 } from "@/features/squad-builder/account-import-atoms";
 import { getSquadBuilderLineErrorMessage } from "@/lib/errors";
-import { formSubmission } from "@/lib/form-submission";
+import type { FormSubmissionError } from "@/lib/form-submission";
+import { runFormSubmission } from "@/lib/form-submission";
 import { getProfessionPresentation } from "@/routes/dashboard/squad-builder/-components/profession-presenters";
 
-interface ProfileUrlsFieldProps {
-  readonly disabled?: boolean;
-}
-
-const ProfileUrlsField: FormReact.FieldComponent<
-  string,
-  ProfileUrlsFieldProps
-> = ({ field, props }) => {
-  const fieldId = getFieldId(field.path);
-  const errorId = getFieldErrorId(fieldId);
-  const helperId = `${fieldId}-helper`;
-  const hasError = Option.isSome(field.error);
-  const profileLineCount = getProfileLines(field.value).length;
-  const describedBy = Arr.filter(
-    [helperId, hasError ? errorId : undefined],
-    Predicate.isString
-  ).join(" ");
-
-  return (
-    <EffectFieldFrame
-      error={field.error}
-      fieldId={fieldId}
-      helperText={
-        <p className="text-muted-foreground text-xs" id={helperId}>
-          Wklej maksymalnie {MAX_PROFILE_URLS} linków, po jednym w wierszu.
-          {profileLineCount > MAX_PROFILE_URLS && (
-            <span className="text-destructive">
-              {" "}
-              Wykryto {profileLineCount} linków, ogranicz listę do{" "}
-              {MAX_PROFILE_URLS}.
-            </span>
-          )}
-        </p>
-      }
-      label="Linki do profili"
-    >
-      <Textarea
-        aria-describedby={describedBy}
-        aria-invalid={hasError}
-        className="min-h-32 font-mono text-xs"
-        disabled={props.disabled}
-        id={fieldId}
-        name={field.path}
-        onBlur={field.onBlur}
-        onChange={(event) => {
-          field.onChange(event.target.value);
-        }}
-        placeholder="https://www.margonem.pl/profile/view,7298897"
-        value={field.value}
-      />
-    </EffectFieldFrame>
-  );
-};
-
-type PreviewOwnedAccountImports = (
-  payload: PreviewOwnedAccountImportsPayload
-) => Promise<PreviewOwnedAccountImportsSuccess>;
-
-const accountPreviewFormBuilder = FormBuilder.empty.addField(
-  "profileUrls",
-  ProfileUrlsSchema
-);
-
-const accountPreviewForm = FormReact.make(accountPreviewFormBuilder, {
-  fields: { profileUrls: ProfileUrlsField },
-  mode: { validation: "onSubmit" },
-  onSubmit: (
-    previewOwnedAccountImports: PreviewOwnedAccountImports,
-    { decoded }
-  ) => formSubmission(async () => await previewOwnedAccountImports(decoded)),
+const AccountPreviewFormSchema = Schema.Struct({
+  profileUrls: ProfileUrlsSchema,
 });
-
-const DEFAULT_ACCOUNT_PREVIEW_VALUES = { profileUrls: "" } as const;
-
-const accountDisplayNameSchema = AccountDisplayNameSchema;
-
-const accountConfirmationFormBuilder = FormBuilder.empty.addField(
-  "displayName",
-  accountDisplayNameSchema
+const AccountPreviewFormValidator = Schema.toStandardSchemaV1(
+  AccountPreviewFormSchema
 );
+
+const AccountConfirmationFormSchema = Schema.Struct({
+  displayName: AccountDisplayNameSchema,
+});
+const AccountConfirmationFormValidator = Schema.toStandardSchemaV1(
+  AccountConfirmationFormSchema
+);
+
+const DEFAULT_ACCOUNT_PREVIEW_VALUES = { profileUrls: "" };
 
 interface AccountImportConfirmation {
   readonly displayName: string;
   readonly pendingImportId: number;
 }
-
-type ConfirmOwnedAccountImport = (
-  payload: AccountImportConfirmation
-) => Promise<unknown>;
-
-interface AccountConfirmationSubmitArgs {
-  readonly confirmOwnedAccountImport: ConfirmOwnedAccountImport;
-  readonly pendingImportId: number;
-}
-
-const makeAccountConfirmationForm = () =>
-  FormReact.make(accountConfirmationFormBuilder, {
-    fields: { displayName: EffectTextField },
-    mode: { validation: "onSubmit" },
-    onSubmit: (
-      {
-        confirmOwnedAccountImport,
-        pendingImportId,
-      }: AccountConfirmationSubmitArgs,
-      { decoded }
-    ) =>
-      formSubmission(
-        async () =>
-          await confirmOwnedAccountImport({
-            displayName: decoded.displayName.trim(),
-            pendingImportId,
-          })
-      ),
-  });
 
 type PreviewItem =
   | {
@@ -224,10 +117,35 @@ const PreviewRow = ({
   onConfirm,
   onConfirmed,
 }: PreviewRowProps) => {
-  const confirmationForm = useMemo(makeAccountConfirmationForm, []);
-  const submit = useAtomSet(confirmationForm.submit);
-  const reset = useAtomSet(confirmationForm.reset);
-  const submitResult = useAtomValue(confirmationForm.submit);
+  const [submissionFailure, setSubmissionFailure] =
+    useState<FormSubmissionError>();
+  const form = useAppForm({
+    defaultValues: {
+      displayName: item.status === "success" ? item.defaultDisplayName : "",
+    },
+    onSubmit: async ({ value }) => {
+      setSubmissionFailure(undefined);
+      const decoded =
+        await AccountConfirmationFormValidator["~standard"].validate(value);
+      if (!("value" in decoded) || item.status === "error") {
+        return;
+      }
+      const result = await runFormSubmission(() =>
+        onConfirm(item, {
+          displayName: decoded.value.displayName.trim(),
+          pendingImportId: item.pendingImportId,
+        })
+      );
+      if (result._tag === "failure") {
+        setSubmissionFailure(result.error);
+        return;
+      }
+      form.reset();
+      onConfirmed(item);
+    },
+    validators: { onSubmit: AccountConfirmationFormValidator },
+  });
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   if (item.status === "error") {
     return (
@@ -247,7 +165,7 @@ const PreviewRow = ({
   }
 
   const isConfirmingThis = confirmingId === item.pendingImportId;
-  const isDisabled = isConfirming || submitResult.waiting;
+  const isDisabled = isConfirming || isSubmitting;
 
   return (
     <li className="px-5 py-3">
@@ -316,33 +234,21 @@ const PreviewRow = ({
             )}
           </div>
 
-          <confirmationForm.Initialize
-            defaultValues={{ displayName: item.defaultDisplayName }}
-          >
-            <EffectFormFeedback result={submitResult} />
-            <EffectForm
-              action={() => {
-                submit({
-                  confirmOwnedAccountImport: async (payload) => {
-                    const result = await onConfirm(item, payload);
-                    reset();
-                    onConfirmed(item);
-                    return result;
-                  },
-                  pendingImportId: item.pendingImportId,
-                });
-              }}
-              className="flex flex-wrap items-end gap-2"
-              submitResult={submitResult}
-            >
-              <confirmationForm.displayName
-                className="min-w-40 flex-1"
-                disabled={isDisabled}
-                id={`displayName-${item.pendingImportId}`}
-                label="Nazwa konta"
-                maxLength={80}
-                placeholder="Nazwa konta"
-              />
+          <form.AppForm>
+            <Form className="flex flex-wrap items-end gap-2" form={form}>
+              <form.AppField name="displayName">
+                {(field) => (
+                  <field.TextField
+                    className="min-w-40 flex-1"
+                    disabled={isDisabled}
+                    id={`displayName-${item.pendingImportId}`}
+                    label="Nazwa konta"
+                    maxLength={80}
+                    placeholder="Nazwa konta"
+                  />
+                )}
+              </form.AppField>
+              <FormFeedback failure={submissionFailure} />
               <Button
                 aria-label={`Zapisz konto ${item.suggestedAccountName}`}
                 disabled={isDisabled}
@@ -355,8 +261,8 @@ const PreviewRow = ({
                 )}
                 Zapisz konto
               </Button>
-            </EffectForm>
-          </confirmationForm.Initialize>
+            </Form>
+          </form.AppForm>
         </div>
       </div>
     </li>
@@ -377,9 +283,8 @@ interface ImportPanelProps {
   readonly onConfirmed: (
     item: Extract<PreviewItem, { status: "success" }>
   ) => void;
-  readonly onSubmitPreview: () => void;
   readonly onStepChange: (step: 1 | 2) => void;
-  readonly submitResult: AsyncResult.AsyncResult<unknown, unknown>;
+  readonly previewForm: ReactNode;
 }
 
 const ImportPanel = ({
@@ -391,9 +296,8 @@ const ImportPanel = ({
   onClear,
   onConfirm,
   onConfirmed,
-  onSubmitPreview,
   onStepChange,
-  submitResult,
+  previewForm,
 }: ImportPanelProps) => (
   <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
     <FramePanel className="p-0 shadow-none">
@@ -433,38 +337,7 @@ const ImportPanel = ({
           </StepperItem>
         </StepperNav>
         <StepperPanel>
-          <StepperContent value={1}>
-            <EffectForm
-              action={onSubmitPreview}
-              className="space-y-4 border-b border-border px-5 py-4"
-              submitResult={submitResult}
-            >
-              <accountPreviewForm.profileUrls disabled={isPreviewPending} />
-              <EffectFormFeedback result={submitResult} />
-
-              <div className="flex items-center gap-2">
-                <Button disabled={isPreviewPending} type="submit">
-                  {isPreviewPending ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Search className="size-4" />
-                  )}
-                  Sprawdź konta
-                </Button>
-                {previewItems.length > 0 && (
-                  <Button
-                    disabled={isPreviewPending || isConfirming}
-                    onClick={onClear}
-                    type="button"
-                    variant="ghost"
-                  >
-                    <Trash2 className="size-4" />
-                    Wyczyść
-                  </Button>
-                )}
-              </div>
-            </EffectForm>
-          </StepperContent>
+          <StepperContent value={1}>{previewForm}</StepperContent>
 
           <StepperContent value={2}>
             <p className="sr-only" aria-live="polite">
@@ -524,88 +397,143 @@ export const AccountImportFrame = () => {
   const [activeStep, setActiveStep] = useState<1 | 2>(1);
   const [previewItems, setPreviewItems] = useState<readonly PreviewItem[]>([]);
   const [confirmingId, setConfirmingId] = useState<number | null>(null);
-  const isResettingRef = useRef(false);
+  const [submissionFailure, setSubmissionFailure] =
+    useState<FormSubmissionError>();
   const previewImports = useAtomSet(previewOwnedAccountImportsAtom, {
     mode: "promise",
   });
   const confirmImport = useAtomSet(confirmOwnedAccountImportAtom, {
     mode: "promise",
   });
-  const submitPreview = useAtomSet(accountPreviewForm.submit);
-  const resetPreview = useAtomSet(accountPreviewForm.reset);
-  const submitResult = useAtomValue(accountPreviewForm.submit);
-
-  useEffect(() => {
-    if (!AsyncResult.isSuccess(submitResult) || submitResult.waiting) {
-      isResettingRef.current = false;
-      return;
-    }
-
-    if (isResettingRef.current) {
-      return;
-    }
-
-    setPreviewItems(
-      submitResult.value.items.map((item) =>
-        item._tag === "PreviewSucceeded"
-          ? {
-              ...item,
-              characterCount: item.jarunaCharacters.length,
-              lastFetchedAt: item.lastFetchedAt.toISOString(),
-              status: "success" as const,
-            }
-          : {
-              errorTag: item.error._tag,
-              inputUrl: item.inputUrl,
-              lineNumber: item.lineNumber,
-              message: getSquadBuilderLineErrorMessage(item.error),
-              status: "error" as const,
-            }
-      )
-    );
-    setActiveStep(2);
-  }, [submitResult]);
-
-  const clearImport = () => {
-    isResettingRef.current = true;
-    resetPreview();
+  const form = useAppForm({
+    defaultValues: DEFAULT_ACCOUNT_PREVIEW_VALUES,
+    onSubmit: async ({ value }) => {
+      setSubmissionFailure(undefined);
+      const decoded =
+        await AccountPreviewFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
+      const result = await runFormSubmission(() =>
+        previewImports(decoded.value)
+      );
+      if (result._tag === "failure") {
+        setSubmissionFailure(result.error);
+        return;
+      }
+      setPreviewItems(
+        result.value.items.map((item) =>
+          item._tag === "PreviewSucceeded"
+            ? {
+                ...item,
+                characterCount: item.jarunaCharacters.length,
+                lastFetchedAt: item.lastFetchedAt.toISOString(),
+                status: "success" as const,
+              }
+            : {
+                errorTag: item.error._tag,
+                inputUrl: item.inputUrl,
+                lineNumber: item.lineNumber,
+                message: getSquadBuilderLineErrorMessage(item.error),
+                status: "error" as const,
+              }
+        )
+      );
+      setActiveStep(2);
+    },
+    validators: { onSubmit: AccountPreviewFormValidator },
+  });
+  const isPreviewPending = useSelector(
+    form.store,
+    (state) => state.isSubmitting
+  );
+  const clearImport = (): void => {
+    form.reset();
+    setSubmissionFailure(undefined);
     setPreviewItems([]);
     setActiveStep(1);
   };
+  const profileUrls = useSelector(
+    form.store,
+    (state) => state.values.profileUrls
+  );
+  const profileLineCount = getProfileLines(profileUrls).length;
+  const previewForm = (
+    <Form className="space-y-4 border-b border-border px-5 py-4" form={form}>
+      <form.AppField name="profileUrls">
+        {(field) => (
+          <field.TextareaField
+            disabled={isPreviewPending}
+            helperText={
+              <p className="text-muted-foreground text-xs">
+                Wklej maksymalnie {MAX_PROFILE_URLS} linków, po jednym w
+                wierszu.
+                {profileLineCount > MAX_PROFILE_URLS && (
+                  <span className="text-destructive">
+                    {" "}
+                    Wykryto {profileLineCount} linków, ogranicz listę do{" "}
+                    {MAX_PROFILE_URLS}.
+                  </span>
+                )}
+              </p>
+            }
+            label="Linki do profili"
+          />
+        )}
+      </form.AppField>
+      <FormFeedback failure={submissionFailure} />
+      <div className="flex items-center gap-2">
+        <Button disabled={isPreviewPending} type="submit">
+          {isPreviewPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Search className="size-4" />
+          )}
+          Sprawdź konta
+        </Button>
+        {previewItems.length > 0 && (
+          <Button
+            disabled={isPreviewPending || confirmingId !== null}
+            onClick={clearImport}
+            type="button"
+            variant="ghost"
+          >
+            <Trash2 className="size-4" />
+            Wyczyść
+          </Button>
+        )}
+      </div>
+    </Form>
+  );
 
   return (
-    <accountPreviewForm.Initialize
-      defaultValues={DEFAULT_ACCOUNT_PREVIEW_VALUES}
-    >
-      <ImportPanel
-        activeStep={activeStep}
-        confirmingId={confirmingId}
-        isConfirming={confirmingId !== null}
-        isPreviewPending={submitResult.waiting}
-        onClear={clearImport}
-        onConfirm={async (item, payload) => {
-          setConfirmingId(item.pendingImportId);
-          return await confirmImport(payload).finally(() => {
-            setConfirmingId(null);
-          });
-        }}
-        onConfirmed={(item) => {
-          setPreviewItems((current) =>
-            current.filter(
-              (currentItem) =>
-                currentItem.status === "error" ||
-                currentItem.pendingImportId !== item.pendingImportId
-            )
-          );
-          toast.success("Konto zostało zapisane");
-        }}
-        onStepChange={setActiveStep}
-        onSubmitPreview={() => {
-          submitPreview(() => previewImports);
-        }}
-        previewItems={previewItems}
-        submitResult={submitResult}
-      />
-    </accountPreviewForm.Initialize>
+    <ImportPanel
+      activeStep={activeStep}
+      confirmingId={confirmingId}
+      previewForm={previewForm}
+      isConfirming={confirmingId !== null}
+      isPreviewPending={isPreviewPending}
+      onClear={clearImport}
+      onConfirm={async (item, payload) => {
+        setConfirmingId(item.pendingImportId);
+        try {
+          return await confirmImport(payload);
+        } finally {
+          setConfirmingId(null);
+        }
+      }}
+      onConfirmed={(item) => {
+        setPreviewItems((current) =>
+          current.filter(
+            (currentItem) =>
+              currentItem.status === "error" ||
+              currentItem.pendingImportId !== item.pendingImportId
+          )
+        );
+        toast.success("Konto zostało zapisane");
+      }}
+      onStepChange={setActiveStep}
+      previewItems={previewItems}
+    />
   );
 };

@@ -1,15 +1,10 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
-import * as Effect from "effect/Effect";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import { useSelector } from "@tanstack/react-form";
+import * as Schema from "effect/Schema";
 import { AlertTriangle, Calculator, Shield, User, Users } from "lucide-react";
 import { useState } from "react";
 
-import { EffectForm } from "@/components/forms/effect-form";
-import {
-  EffectNumberField,
-  EffectTextField,
-} from "@/components/forms/effect-form-fields";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form } from "@/components/forms/form";
 import { Button } from "@/components/ui/button";
 import {
   calculateGroupAttackPenalty,
@@ -29,13 +24,17 @@ import {
 } from "@/features/calculators/form-schemas";
 import type { AuthSession } from "@/types/route";
 
-const singleFormBuilder = FormBuilder.empty
-  .addField("attackerLevel", CalculatorLevelSchema)
-  .addField("victimLevel", CalculatorLevelSchema);
+const SingleFormSchema = Schema.Struct({
+  attackerLevel: CalculatorLevelSchema,
+  victimLevel: CalculatorLevelSchema,
+});
+const SingleFormValidator = Schema.toStandardSchemaV1(SingleFormSchema);
 
-const groupFormBuilder = FormBuilder.empty
-  .addField("attackerLevels", CalculatorLevelsSchema)
-  .addField("defenderLevels", CalculatorLevelsSchema);
+const GroupFormSchema = Schema.Struct({
+  attackerLevels: CalculatorLevelsSchema,
+  defenderLevels: CalculatorLevelsSchema,
+});
+const GroupFormValidator = Schema.toStandardSchemaV1(GroupFormSchema);
 
 const SingleModeResult = ({ result }: { result: SinglePenaltyResult }) => (
   <div
@@ -200,70 +199,77 @@ const GroupModeResult = ({ result }: { result: GroupPenaltyResult }) => (
   </div>
 );
 
-const singleForm = FormReact.make(singleFormBuilder, {
-  fields: {
-    attackerLevel: EffectNumberField,
-    victimLevel: EffectNumberField,
-  },
-  mode: { validation: "onChange" },
-  onSubmit: (_, { decoded }) =>
-    Effect.sync(() => ({
-      actualDifference: decoded.attackerLevel - decoded.victimLevel,
-      attackerLevel: decoded.attackerLevel,
-      maxAttackerWithoutPenalty: calculateMaxAttackerLevelWithoutPenalty(
-        decoded.victimLevel
-      ),
-      minLevelDifference: calculateMinLevelDifference(decoded.attackerLevel),
-      minVictimLevelForPenalty: calculateMinVictimLevelForPenalty(
-        decoded.attackerLevel
-      ),
-      victimLevel: decoded.victimLevel,
-      wouldReceivePenalty: wouldReceivePenalty(
-        decoded.attackerLevel,
-        decoded.victimLevel
-      ),
-    })),
-});
-
-const groupForm = FormReact.make(groupFormBuilder, {
-  fields: {
-    attackerLevels: EffectTextField,
-    defenderLevels: EffectTextField,
-  },
-  mode: { validation: "onChange" },
-  onSubmit: (_, { decoded }) =>
-    Effect.sync(() => {
-      const attackerLevels = parseLevels(decoded.attackerLevels);
-      const defenderLevels = parseLevels(decoded.defenderLevels);
-      const groupCalculation = calculateGroupAttackPenalty(
-        attackerLevels,
-        defenderLevels
-      );
-
-      return {
-        attackerLevels,
-        defenderLevels,
-        ...groupCalculation,
-      };
-    }),
-});
-
 interface CalculatorListPageProps {
   session: AuthSession;
 }
 
 export default function CalculatorListPage(_props: CalculatorListPageProps) {
   const [mode, setMode] = useState<"single" | "group">("single");
-  const singleSubmit = useAtomSet(singleForm.submit);
-  const singleSubmitResult = useAtomValue(singleForm.submit);
-  const groupSubmit = useAtomSet(groupForm.submit);
-  const groupSubmitResult = useAtomValue(groupForm.submit);
-  const result = AsyncResult.isSuccess(singleSubmitResult)
-    ? singleSubmitResult.value
-    : null;
-  const groupResult = AsyncResult.isSuccess(groupSubmitResult)
-    ? groupSubmitResult.value
-    : null;
+  const [singleResult, setSingleResult] = useState<SinglePenaltyResult | null>(
+    null
+  );
+  const [groupResult, setGroupResult] = useState<GroupPenaltyResult | null>(
+    null
+  );
+  const singleForm = useAppForm({
+    defaultValues: { attackerLevel: 200, victimLevel: 150 },
+    onSubmit: async ({ value }) => {
+      const decoded = await SingleFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
+
+      setSingleResult({
+        actualDifference:
+          decoded.value.attackerLevel - decoded.value.victimLevel,
+        attackerLevel: decoded.value.attackerLevel,
+        maxAttackerWithoutPenalty: calculateMaxAttackerLevelWithoutPenalty(
+          decoded.value.victimLevel
+        ),
+        minLevelDifference: calculateMinLevelDifference(
+          decoded.value.attackerLevel
+        ),
+        minVictimLevelForPenalty: calculateMinVictimLevelForPenalty(
+          decoded.value.attackerLevel
+        ),
+        victimLevel: decoded.value.victimLevel,
+        wouldReceivePenalty: wouldReceivePenalty(
+          decoded.value.attackerLevel,
+          decoded.value.victimLevel
+        ),
+      });
+    },
+    validators: { onChange: SingleFormValidator },
+  });
+  const groupForm = useAppForm({
+    defaultValues: {
+      attackerLevels: "200, 180, 160",
+      defenderLevels: "150, 140",
+    },
+    onSubmit: async ({ value }) => {
+      const decoded = await GroupFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
+
+      const attackerLevels = parseLevels(decoded.value.attackerLevels);
+      const defenderLevels = parseLevels(decoded.value.defenderLevels);
+      setGroupResult({
+        attackerLevels,
+        defenderLevels,
+        ...calculateGroupAttackPenalty(attackerLevels, defenderLevels),
+      });
+    },
+    validators: { onChange: GroupFormValidator },
+  });
+  const singleIsSubmitting = useSelector(
+    singleForm.store,
+    (state) => state.isSubmitting
+  );
+  const groupIsSubmitting = useSelector(
+    groupForm.store,
+    (state) => state.isSubmitting
+  );
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -303,86 +309,79 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {mode === "single" && (
-          <singleForm.Initialize
-            defaultValues={{ attackerLevel: 200, victimLevel: 150 }}
-          >
-            <div className="rounded-xl border border-border bg-card">
-              <div className="border-b border-border p-6">
-                <h2 className="flex items-center gap-2 font-semibold text-base">
-                  <Calculator className="size-5" />
-                  Parametry walki
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Wprowadź poziomy atakującego i przeciwnika
-                </p>
-              </div>
-              <div className="p-6">
-                {/* Calculator input is disposable and intentionally has no draft blocker. */}
-                <EffectForm
-                  action={() => {
-                    singleSubmit();
-                  }}
-                  className="mt-2 grid gap-4"
-                  submitResult={singleSubmitResult}
-                >
-                  <singleForm.attackerLevel label="Poziom atakującego" />
-                  <singleForm.victimLevel label="Poziom ofiary" />
+          <div className="rounded-xl border border-border bg-card">
+            <div className="border-b border-border p-6">
+              <h2 className="flex items-center gap-2 font-semibold text-base">
+                <Calculator className="size-5" />
+                Parametry walki
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Wprowadź poziomy atakującego i przeciwnika
+              </p>
+            </div>
+            <div className="p-6">
+              <singleForm.AppForm>
+                <Form className="mt-2 grid gap-4" form={singleForm}>
+                  <singleForm.AppField name="attackerLevel">
+                    {(field) => (
+                      <field.NumberField label="Poziom atakującego" />
+                    )}
+                  </singleForm.AppField>
+                  <singleForm.AppField name="victimLevel">
+                    {(field) => <field.NumberField label="Poziom ofiary" />}
+                  </singleForm.AppField>
                   <Button
                     className="w-full"
-                    disabled={singleSubmitResult.waiting}
+                    disabled={singleIsSubmitting}
                     type="submit"
                   >
-                    {singleSubmitResult.waiting ? "Obliczanie..." : "Sprawdź"}
+                    {singleIsSubmitting ? "Obliczanie..." : "Sprawdź"}
                   </Button>
-                </EffectForm>
-              </div>
+                </Form>
+              </singleForm.AppForm>
             </div>
+          </div>
+        )}
 
-            {result && <SingleModeResult result={result} />}
-          </singleForm.Initialize>
+        {mode === "single" && singleResult && (
+          <SingleModeResult result={singleResult} />
         )}
 
         {mode === "group" && (
-          <groupForm.Initialize
-            defaultValues={{
-              attackerLevels: "200, 180, 160",
-              defenderLevels: "150, 140",
-            }}
-          >
-            <div className="rounded-xl border border-border bg-card">
-              <div className="border-b border-border p-6">
-                <h2 className="flex items-center gap-2 font-semibold text-base">
-                  <Calculator className="size-5" />
-                  Parametry walki grupowej
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Wprowadź poziomy członków drużyn (oddzielone przecinkami)
-                </p>
-              </div>
-              <div className="p-6">
-                {/* Calculator input is disposable and intentionally has no draft blocker. */}
-                <EffectForm
-                  action={() => {
-                    groupSubmit();
-                  }}
-                  className="mt-2 grid gap-4"
-                  submitResult={groupSubmitResult}
-                >
-                  <groupForm.attackerLevels label="Poziomy atakujących" />
-                  <groupForm.defenderLevels label="Poziomy obrońców" />
+          <div className="rounded-xl border border-border bg-card">
+            <div className="border-b border-border p-6">
+              <h2 className="flex items-center gap-2 font-semibold text-base">
+                <Calculator className="size-5" />
+                Parametry walki grupowej
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Wprowadź poziomy członków drużyn (oddzielone przecinkami)
+              </p>
+            </div>
+            <div className="p-6">
+              <groupForm.AppForm>
+                <Form className="mt-2 grid gap-4" form={groupForm}>
+                  <groupForm.AppField name="attackerLevels">
+                    {(field) => <field.TextField label="Poziomy atakujących" />}
+                  </groupForm.AppField>
+                  <groupForm.AppField name="defenderLevels">
+                    {(field) => <field.TextField label="Poziomy obrońców" />}
+                  </groupForm.AppField>
                   <Button
                     className="w-full"
-                    disabled={groupSubmitResult.waiting}
+                    disabled={groupIsSubmitting}
                     type="submit"
                   >
-                    {groupSubmitResult.waiting ? "Obliczanie..." : "Sprawdź"}
+                    {groupIsSubmitting ? "Obliczanie..." : "Sprawdź"}
                   </Button>
-                </EffectForm>
-              </div>
+                </Form>
+              </groupForm.AppForm>
             </div>
+          </div>
+        )}
 
-            {groupResult && <GroupModeResult result={groupResult} />}
-          </groupForm.Initialize>
+        {mode === "group" && groupResult && (
+          <GroupModeResult result={groupResult} />
         )}
       </div>
 

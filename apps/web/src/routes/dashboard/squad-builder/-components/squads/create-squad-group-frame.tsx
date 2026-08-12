@@ -1,92 +1,101 @@
 import { useAtomSet } from "@effect/atom-react";
+import { useSelector } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
+import * as Schema from "effect/Schema";
 import { Loader2, Plus, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
-import { EffectForm } from "@/components/forms/effect-form";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form, FormFeedback } from "@/components/forms/form";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { createSquadGroupAtom } from "@/features/squad-builder/squad-group-atoms";
-import { getErrorMessage } from "@/lib/errors";
+import type { FormSubmissionError } from "@/lib/form-submission";
+import { runFormSubmission } from "@/lib/form-submission";
 
 interface CreateSquadGroupFrameProps {
   readonly onClose: () => void;
 }
 
+const CreateSquadGroupFormSchema = Schema.Struct({
+  name: Schema.String.pipe(
+    Schema.refine((value): value is string => value.trim().length > 0, {
+      message: "Podaj nazwę grupy",
+    }),
+    Schema.refine((value): value is string => value.length <= 80, {
+      message: "Nazwa grupy może mieć maksymalnie 80 znaków",
+    })
+  ),
+});
+const CreateSquadGroupFormValidator = Schema.toStandardSchemaV1(
+  CreateSquadGroupFormSchema
+);
+
 export const CreateSquadGroupFrame = ({
   onClose,
 }: CreateSquadGroupFrameProps) => {
   const navigate = useNavigate();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [name, setName] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
+  const [submissionFailure, setSubmissionFailure] =
+    useState<FormSubmissionError>();
   const createSquadGroup = useAtomSet(createSquadGroupAtom, {
     mode: "promise",
   });
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  const submit = async () => {
-    const trimmedName = name.trim();
-    if (trimmedName.length === 0) {
-      toast.error("Podaj nazwę grupy");
-      inputRef.current?.focus();
-      return;
-    }
-
-    setIsCreating(true);
-    try {
-      const group = await createSquadGroup({ name: trimmedName });
+  const form = useAppForm({
+    defaultValues: { name: "" },
+    onSubmit: async ({ value }) => {
+      setSubmissionFailure(undefined);
+      const decoded =
+        await CreateSquadGroupFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
+      const result = await runFormSubmission(() =>
+        createSquadGroup({ name: decoded.value.name.trim() })
+      );
+      if (result._tag === "failure") {
+        setSubmissionFailure(result.error);
+        return;
+      }
       toast.success("Grupa składów została utworzona");
       await navigate({
-        params: { groupId: String(group.groupId) },
+        params: { groupId: String(result.value.groupId) },
         to: "/dashboard/squad-builder/squads/$groupId",
       });
-    } catch (error: unknown) {
-      toast.error(
-        getErrorMessage(error, "Nie udało się utworzyć grupy składów")
-      );
-    } finally {
-      setIsCreating(false);
-    }
-  };
+    },
+    validators: { onSubmit: CreateSquadGroupFormValidator },
+  });
+  const isCreating = useSelector(form.store, (state) => state.isSubmitting);
+  const name = useSelector(form.store, (state) => state.values.name);
 
   return (
     <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
       <FramePanel className="p-0 shadow-none">
-        <EffectForm action={submit} className="space-y-2 p-4">
-          <Label htmlFor="new-squad-group-name">
-            Nazwa nowej grupy składów
-          </Label>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <Input
-              ref={inputRef}
-              autoComplete="off"
-              className="min-w-0 flex-1"
-              disabled={isCreating}
-              id="new-squad-group-name"
-              maxLength={80}
-              onChange={(event) => {
-                setName(event.target.value);
-              }}
-              onKeyDown={(event) => {
-                if (
-                  event.key === "Escape" &&
-                  name.trim().length === 0 &&
-                  !isCreating
-                ) {
-                  onClose();
-                }
-              }}
-              placeholder="Np. Kolos tygodniowy"
-              value={name}
-            />
-            <div className="flex w-full shrink-0 gap-2 sm:w-auto">
+        <form.AppForm>
+          <Form className="space-y-2 p-4" form={form}>
+            <form.AppField name="name">
+              {(field) => (
+                <field.TextField
+                  autoComplete="off"
+                  autoFocus
+                  disabled={isCreating}
+                  id="new-squad-group-name"
+                  label="Nazwa nowej grupy składów"
+                  maxLength={80}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === "Escape" &&
+                      name.trim().length === 0 &&
+                      !isCreating
+                    ) {
+                      onClose();
+                    }
+                  }}
+                  placeholder="Np. Kolos tygodniowy"
+                />
+              )}
+            </form.AppField>
+            <div className="flex flex-wrap gap-2">
               <Button
                 className="flex-1 sm:flex-none"
                 disabled={isCreating}
@@ -110,11 +119,12 @@ export const CreateSquadGroupFrame = ({
                 <X className="size-4" />
               </Button>
             </div>
-          </div>
-          <p className="text-muted-foreground text-xs">
-            Maksymalnie 80 znaków. Nazwa będzie widoczna na liście grup.
-          </p>
-        </EffectForm>
+            <FormFeedback failure={submissionFailure} />
+            <p className="text-muted-foreground text-xs">
+              Maksymalnie 80 znaków. Nazwa będzie widoczna na liście grup.
+            </p>
+          </Form>
+        </form.AppForm>
       </FramePanel>
     </Frame>
   );

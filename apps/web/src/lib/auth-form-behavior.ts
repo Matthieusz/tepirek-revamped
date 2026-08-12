@@ -15,7 +15,7 @@ interface AuthResponse {
   readonly error: AuthProviderErrorDetails | null;
 }
 
-class AuthFormSubmissionError extends Schema.TaggedErrorClass<AuthFormSubmissionError>()(
+export class AuthFormSubmissionError extends Schema.TaggedErrorClass<AuthFormSubmissionError>()(
   "AuthFormSubmissionError",
   {
     cause: Schema.optional(Schema.Defect()),
@@ -35,17 +35,10 @@ export const getAuthProviderErrorMessage = (
   error.statusText?.trim() ||
   "Nie udało się uwierzytelnić";
 
-/** Prevents a form action from starting while its previous request is waiting. */
-export const submitWhenIdle = <A>(
-  waiting: boolean,
-  submit: () => A
-): A | undefined => {
-  if (waiting) {
-    return undefined;
-  }
-
-  return submit();
-};
+/** The result of an authentication mutation that is safe to render in a form. */
+export type AuthFormSubmissionResult =
+  | { readonly _tag: "success" }
+  | { readonly _tag: "failure"; readonly error: AuthFormSubmissionError };
 
 /**
  * Translates an auth client's response and rejected promise into one typed
@@ -57,13 +50,18 @@ export const authFormSubmission = <Response extends AuthResponse>(
   request: () => Promise<Response>
 ): Effect.Effect<void, AuthFormSubmissionError> =>
   Effect.tryPromise({
-    catch: (cause) =>
-      new AuthFormSubmissionError({
+    catch: (cause) => {
+      if (!(cause instanceof Error)) {
+        throw cause;
+      }
+
+      return new AuthFormSubmissionError({
         cause,
         kind: "request",
         message: "Nie udało się połączyć z usługą uwierzytelniania",
         operation,
-      }),
+      });
+    },
     try: request,
   }).pipe(
     Effect.flatMap((response) => {
@@ -82,6 +80,23 @@ export const authFormSubmission = <Response extends AuthResponse>(
       );
     })
   );
+
+/** Runs an authentication mutation and keeps expected failures out of component throws. */
+export const runAuthFormSubmission = async <Response extends AuthResponse>(
+  operation: AuthOperation,
+  request: () => Promise<Response>
+): Promise<AuthFormSubmissionResult> => {
+  try {
+    await Effect.runPromise(authFormSubmission(operation, request));
+    return { _tag: "success" };
+  } catch (error: unknown) {
+    if (Schema.is(AuthFormSubmissionError)(error)) {
+      return { _tag: "failure", error };
+    }
+
+    throw error;
+  }
+};
 
 /** Preserves the login success order: feedback, invalidate, then navigate. */
 export const handleLoginSuccess = async (actions: {

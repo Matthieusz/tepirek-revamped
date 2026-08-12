@@ -1,26 +1,28 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { FormBuilder, FormReact } from "@lucas-barake/effect-form-react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import * as Schema from "effect/Schema";
+import { useState } from "react";
 
 import {
   BackToHomeButton,
   DiscordLoginButton,
 } from "@/components/auth-buttons";
-import { EffectForm, EffectFormFeedback } from "@/components/forms/effect-form";
-import { EffectTextField } from "@/components/forms/effect-form-fields";
+import { useAppForm } from "@/components/forms/app-form";
+import { Form, FormFeedback } from "@/components/forms/form";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import {
-  authFormSubmission,
   handleLoginSuccess,
-  submitWhenIdle,
+  runAuthFormSubmission,
 } from "@/lib/auth-form-behavior";
+import type { AuthFormSubmissionError } from "@/lib/auth-form-behavior";
 import { EmailSchema, PasswordSchema } from "@/lib/form-schemas";
 import { cn } from "@/lib/utils";
 
-const loginFormBuilder = FormBuilder.empty
-  .addField("email", EmailSchema)
-  .addField("password", PasswordSchema);
+const LoginFormSchema = Schema.Struct({
+  email: EmailSchema,
+  password: PasswordSchema,
+});
+const LoginFormValidator = Schema.toStandardSchemaV1(LoginFormSchema);
 
 interface LoginCredentials {
   readonly email: string;
@@ -31,23 +33,15 @@ type Login = (
   credentials: LoginCredentials
 ) => ReturnType<typeof authClient.signIn.email>;
 
-const loginForm = FormReact.make(loginFormBuilder, {
-  fields: {
-    email: EffectTextField,
-    password: EffectTextField,
-  },
-  mode: { validation: "onSubmit" },
-  onSubmit: (login: Login, { decoded }) =>
-    authFormSubmission("login", () => login(decoded)),
-});
-
 export const LoginForm = ({
   className,
   ...props
 }: React.ComponentProps<"div">) => {
   const router = useRouter();
   const navigate = useNavigate({ from: "/" });
-  const login = (credentials: LoginCredentials) =>
+  const [submissionFailure, setSubmissionFailure] =
+    useState<AuthFormSubmissionError>();
+  const login: Login = (credentials) =>
     authClient.signIn.email(credentials, {
       onSuccess: () =>
         handleLoginSuccess({
@@ -55,80 +49,101 @@ export const LoginForm = ({
           navigate: () => navigate({ to: "/dashboard" }),
         }),
     });
-  const submit = useAtomSet(loginForm.submit);
-  const submitResult = useAtomValue(loginForm.submit);
+  const form = useAppForm({
+    defaultValues: { email: "", password: "" },
+    onSubmit: async ({ value }) => {
+      setSubmissionFailure(undefined);
+      const decoded = await LoginFormValidator["~standard"].validate(value);
+      if (!("value" in decoded)) {
+        return;
+      }
+
+      const result = await runAuthFormSubmission("login", () =>
+        login(decoded.value)
+      );
+      if (result._tag === "failure") {
+        setSubmissionFailure(result.error);
+      }
+    },
+    validators: { onSubmit: LoginFormValidator },
+  });
 
   return (
-    <loginForm.Initialize defaultValues={{ email: "", password: "" }}>
-      <div
-        className={cn("flex w-full max-w-sm flex-col gap-8", className)}
-        {...props}
-      >
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h1
-            className="font-serif font-bold tracking-tight text-foreground"
-            style={{ fontSize: "clamp(2rem, 6vw, 3rem)", lineHeight: 1.1 }}
-          >
-            Zaloguj się
-          </h1>
-        </div>
-
-        <div className="flex flex-col gap-6 rounded-xl border border-border bg-card p-8">
-          <DiscordLoginButton />
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">lub</span>
-            </div>
-          </div>
-
-          <EffectForm
-            action={() =>
-              submitWhenIdle(submitResult.waiting, () => submit(() => login))
-            }
-            submitResult={submitResult}
-          >
-            <div className="flex flex-col gap-5">
-              <loginForm.email
-                autoComplete="email"
-                label="E-mail"
-                placeholder="m@example.com"
-                required
-                type="email"
-              />
-              <loginForm.password
-                autoComplete="current-password"
-                label="Hasło"
-                required
-                type="password"
-              />
-              <EffectFormFeedback result={submitResult} />
-              <Button
-                className="h-11 w-full font-semibold"
-                disabled={submitResult.waiting}
-                type="submit"
-              >
-                {submitResult.waiting ? "Wysyłanie..." : "Zaloguj się"}
-              </Button>
-            </div>
-          </EffectForm>
-        </div>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Nie masz konta?{" "}
-          <Link
-            className="font-medium text-primary underline underline-offset-4 transition-colors hover:text-primary/80"
-            to="/signup"
-          >
-            Zarejestruj się
-          </Link>
-        </p>
-        <div className="flex justify-center">
-          <BackToHomeButton />
-        </div>
+    <div
+      className={cn("flex w-full max-w-sm flex-col gap-8", className)}
+      {...props}
+    >
+      <div className="flex flex-col items-center gap-2 text-center">
+        <h1
+          className="font-serif font-bold tracking-tight text-foreground"
+          style={{ fontSize: "clamp(2rem, 6vw, 3rem)", lineHeight: 1.1 }}
+        >
+          Zaloguj się
+        </h1>
       </div>
-    </loginForm.Initialize>
+
+      <div className="flex flex-col gap-6 rounded-xl border border-border bg-card p-8">
+        <DiscordLoginButton />
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">lub</span>
+          </div>
+        </div>
+
+        <Form form={form}>
+          <div className="flex flex-col gap-5">
+            <form.AppField name="email">
+              {(field) => (
+                <field.TextField
+                  autoComplete="email"
+                  label="E-mail"
+                  placeholder="m@example.com"
+                  required
+                  type="email"
+                />
+              )}
+            </form.AppField>
+            <form.AppField name="password">
+              {(field) => (
+                <field.TextField
+                  autoComplete="current-password"
+                  label="Hasło"
+                  required
+                  type="password"
+                />
+              )}
+            </form.AppField>
+            <FormFeedback failure={submissionFailure} />
+            <form.Subscribe selector={(state) => state.isSubmitting}>
+              {(isSubmitting) => (
+                <Button
+                  className="h-11 w-full font-semibold"
+                  disabled={isSubmitting}
+                  type="submit"
+                >
+                  {isSubmitting ? "Wysyłanie..." : "Zaloguj się"}
+                </Button>
+              )}
+            </form.Subscribe>
+          </div>
+        </Form>
+      </div>
+
+      <p className="text-center text-sm text-muted-foreground">
+        Nie masz konta?{" "}
+        <Link
+          className="font-medium text-primary underline underline-offset-4 transition-colors hover:text-primary/80"
+          to="/signup"
+        >
+          Zarejestruj się
+        </Link>
+      </p>
+      <div className="flex justify-center">
+        <BackToHomeButton />
+      </div>
+    </div>
   );
 };
