@@ -3,7 +3,10 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import type { BetterAuthInstance, BetterAuthSession } from "./index.ts";
+import type {
+  BetterAuthInstance,
+  BetterAuthSession,
+} from "./better-auth-types.ts";
 
 /** Expected failure when Better Auth cannot load a session. */
 export class BetterAuthUnavailable extends Schema.TaggedErrorClass<BetterAuthUnavailable>()(
