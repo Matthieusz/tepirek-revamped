@@ -60,7 +60,7 @@ export class ServerStartupError extends Schema.TaggedErrorClass<ServerStartupErr
   { cause: Schema.Defect() }
 ) {}
 
-const appHttpApiMountPath = "/**";
+const appHttpApiEvlogExcludePath = "/**";
 
 const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
   Layer.effect(
@@ -101,7 +101,7 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
       app.use(
         evlog({
           // Effect owns routine response logging for requests crossing this bridge.
-          exclude: ["/health", appHttpApiMountPath],
+          exclude: ["/health", appHttpApiEvlogExcludePath],
         })
       );
 
@@ -175,12 +175,12 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
         "/health",
         async (context) => await handleHttpApiRequest(context, healthHttpApi)
       );
+      app.get("/", (context) => context.text("OK"));
+
       app.use(
-        appHttpApiMountPath,
+        "*",
         async (context) => await handleHttpApiRequest(context, appHttpApi)
       );
-
-      app.get("/", (context) => context.text("OK"));
 
       // oxlint-disable-next-line promise/prefer-await-to-callbacks
       app.onError((error, context) => {

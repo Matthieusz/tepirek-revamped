@@ -57,6 +57,20 @@ it.effect("responds to the Effect HttpApi health endpoint", () =>
   )
 );
 
+it.effect("forwards application API routes to the Effect handler", () =>
+  withServerApplication(({ app }) =>
+    Effect.gen(function* applicationApiRequest() {
+      const response = yield* Effect.promise(
+        async () => await app.request("/announcements")
+      );
+      const body = yield* Effect.promise(async () => await response.text());
+
+      expect(body).toContain("AnnouncementUnauthorized");
+      expect(response.status).not.toBe(404);
+    })
+  )
+);
+
 it.effect("handles CORS preflight for the configured origin", () =>
   withServerApplication(({ app }) =>
     Effect.gen(function* corsRequest() {
