@@ -2,7 +2,7 @@ import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useSelector } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/app-form";
@@ -43,7 +43,7 @@ const SkillFormSchema = Schema.Struct({
 });
 const SkillFormValidator = Schema.toStandardSchemaV1(SkillFormSchema);
 
-export const AddSkillModal = ({
+const AddSkillModalContent = ({
   trigger,
   defaultRangeId,
   defaultProfessionId,
@@ -94,17 +94,6 @@ export const AddSkillModal = ({
   });
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
   const canDiscard = useCanCloseForm(isSubmitting);
-
-  useEffect(() => {
-    form.reset({
-      link: "",
-      mastery: false,
-      name: "",
-      professionId:
-        defaultProfessionId === undefined ? "" : String(defaultProfessionId),
-    });
-    setSubmissionFailure(undefined);
-  }, [defaultProfessionId, form]);
 
   let submitLabel = "Utwórz zestaw";
   if (professionsLoading) {
@@ -200,3 +189,7 @@ export const AddSkillModal = ({
     </ResponsiveDialog>
   );
 };
+
+export const AddSkillModal = (props: AddSkillModalProps) => (
+  <AddSkillModalContent key={props.defaultProfessionId ?? "none"} {...props} />
+);

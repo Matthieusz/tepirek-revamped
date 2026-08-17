@@ -2,7 +2,7 @@ import { useAtomSet } from "@effect/atom-react";
 import { useSelector } from "@tanstack/react-form";
 import { UpdateProfilePayload } from "@tepirek-revamped/api/protocol/user/http-api-contract";
 import * as Schema from "effect/Schema";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/app-form";
@@ -31,7 +31,7 @@ const ProfileFormSchema = Schema.Struct({
 });
 const ProfileFormValidator = Schema.toStandardSchemaV1(ProfileFormSchema);
 
-export const EditProfileModal = ({
+const EditProfileModalContent = ({
   trigger,
   defaultName,
 }: EditProfileModalProps) => {
@@ -64,11 +64,6 @@ export const EditProfileModal = ({
   });
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
   const canDiscard = useCanCloseForm(isSubmitting);
-
-  useEffect(() => {
-    form.reset({ name: defaultName });
-    setSubmissionFailure(undefined);
-  }, [defaultName, form]);
 
   const handleOpenChange = (nextOpen: boolean): void => {
     if (!nextOpen) {
@@ -130,3 +125,7 @@ export const EditProfileModal = ({
     </ResponsiveDialog>
   );
 };
+
+export const EditProfileModal = (props: EditProfileModalProps) => (
+  <EditProfileModalContent key={props.defaultName} {...props} />
+);

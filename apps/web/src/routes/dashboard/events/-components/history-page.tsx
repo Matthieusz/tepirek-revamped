@@ -72,7 +72,7 @@ const historyFilterKey = (input: {
 }) =>
   JSON.stringify([input.eventId ?? null, input.heroId ?? null, input.limit]);
 
-export default function HistoryPage({ session }: HistoryPageProps) {
+const HistoryPage = ({ session }: HistoryPageProps) => {
   const filter = useEventHeroFilter({
     routeId: "/dashboard/events/history",
   });
@@ -93,13 +93,16 @@ export default function HistoryPage({ session }: HistoryPageProps) {
   return (
     <HistoryContent
       betPageInput={betPageInput}
+      key={historyFilterKey(betPageInput)}
       betsResult={betsResult}
       filter={filter}
       onRetryBets={refreshBets}
       session={session}
     />
   );
-}
+};
+
+export default HistoryPage;
 
 interface HistoryContentProps extends HistoryPageProps {
   readonly betsResult: AsyncResult.AsyncResult<PaginatedBets, unknown>;
@@ -122,15 +125,9 @@ const HistoryContent = ({
     ? betsResult.value
     : undefined;
   const isAdminUser = isAdmin(session);
-  const filterKey = historyFilterKey(betPageInput);
-
   const allBets = betsData?.items ?? [];
   const totalBets = betsData?.pagination.totalItems ?? 0;
   const hasNextPage = betsData?.pagination.hasMore ?? false;
-
-  useEffect(() => {
-    setLoadedPages([1]);
-  }, [filterKey]);
 
   const loadPage = (page: number) => {
     setLoadedPages((pages) =>
@@ -220,13 +217,13 @@ const HistoryContent = ({
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+          <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
             Historia obstawień
           </h1>
           <div className="flex items-center gap-2">
             <p className="text-muted-foreground text-sm">Obstawienia: </p>
             {filter.state.eventId !== ALL_FILTER && (
-              <p className="font-bold text-sm">{totalBets}</p>
+              <p className="text-sm font-bold">{totalBets}</p>
             )}
           </div>
         </div>
@@ -419,7 +416,7 @@ const LoadMoreTrigger = ({ onVisible }: { readonly onVisible: () => void }) => {
 
   return (
     <div className="flex items-center justify-center py-4" ref={triggerRef}>
-      <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      <Loader2 className="text-muted-foreground size-6 animate-spin" />
     </div>
   );
 };

@@ -11,7 +11,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/app-form";
@@ -90,11 +90,6 @@ const RenameAccountForm = ({
     validators: { onSubmit: AccountRenameFormValidator },
   });
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
-
-  useEffect(() => {
-    form.reset({ displayName: account.displayName });
-    setSubmissionFailure(undefined);
-  }, [account.displayName, form]);
 
   return (
     <form.AppForm>
@@ -221,6 +216,7 @@ export const OwnedAccountManagementRow = ({
         {isEditing ? (
           <RenameAccountForm
             account={account}
+            key={account.displayName}
             onCancel={() => {
               setIsEditing(false);
             }}
@@ -231,7 +227,7 @@ export const OwnedAccountManagementRow = ({
           />
         ) : (
           <div className="flex items-center justify-between gap-2">
-            <span className="truncate font-medium text-sm">
+            <span className="truncate text-sm font-medium">
               {account.displayName}
             </span>
             <ReuiBadge variant="secondary">
@@ -242,7 +238,7 @@ export const OwnedAccountManagementRow = ({
         )}
         <div className="mt-1 flex items-center gap-2">
           <a
-            className="inline-flex items-center gap-1 text-primary text-xs underline-offset-4 hover:underline"
+            className="text-primary inline-flex items-center gap-1 text-xs underline-offset-4 hover:underline"
             href={account.generatedProfileUrl}
             rel="noopener noreferrer"
             target="_blank"
@@ -250,11 +246,11 @@ export const OwnedAccountManagementRow = ({
             <ExternalLink className="size-3" />
             Profil Margonem
           </a>
-          <span className="font-mono text-xs text-muted-foreground">
+          <span className="text-muted-foreground font-mono text-xs">
             #{account.profileId}
           </span>
         </div>
-        <p className="mt-1 font-mono text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-1 font-mono text-xs">
           Ostatnio pobrano: {formatDateTime(account.lastFetchedAt)}
         </p>
         <AccountRefetchWorkflow accountId={account.accountId}>
@@ -294,9 +290,9 @@ export const OwnedAccountManagementRow = ({
           open={isDeleteOpen}
         />
       </div>
-      <section className="min-w-0 border-border lg:border-l lg:pl-6">
-        <h3 className="mb-3 flex items-center gap-2 font-medium text-sm">
-          <Share2 aria-hidden="true" className="size-4 text-muted-foreground" />
+      <section className="border-border min-w-0 lg:border-l lg:pl-6">
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-medium">
+          <Share2 aria-hidden="true" className="text-muted-foreground size-4" />
           Udostępnianie konta
         </h3>
         <AccountSharingPanel

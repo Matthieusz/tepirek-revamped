@@ -3,17 +3,17 @@ import { useSelector } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Pencil } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form, FormFeedback, useCanCloseForm } from "@/components/forms/form";
+import { FormFieldError } from "@/components/forms/form-field-helpers";
 import {
-  FormFieldError,
   getFieldErrorMessage,
   getFieldErrorId,
   getFieldId,
-} from "@/components/forms/form-field-helpers";
+} from "@/components/forms/form-field-utils";
 import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
@@ -33,7 +33,7 @@ import { runFormSubmission } from "@/lib/form-submission";
 
 interface EditBetModalProps {
   readonly betId: number;
-  readonly currentMembers: {
+  readonly currentMembers: readonly {
     readonly userId: string;
     readonly userName: string;
     readonly userImage: string | null;
@@ -54,7 +54,7 @@ const EditBetFormSchema = Schema.Struct({
 });
 const EditBetFormValidator = Schema.toStandardSchemaV1(EditBetFormSchema);
 
-export const EditBetModal = ({
+const EditBetModalContent = ({
   betId,
   currentMembers,
   heroName,
@@ -66,7 +66,7 @@ export const EditBetModal = ({
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
   const editBet = useAtomSet(editBetAtom, { mode: "promise" });
-  const currentMemberIds = useMemo(
+  const currentMemberIds: readonly string[] = useMemo(
     () => currentMembers.map((member) => member.userId),
     [currentMembers]
   );
@@ -76,7 +76,7 @@ export const EditBetModal = ({
     : [];
   const usersLoading = !AsyncResult.isSuccess(verifiedUsersResult);
   const form = useAppForm({
-    defaultValues: { userIds: currentMemberIds as readonly string[] },
+    defaultValues: { userIds: currentMemberIds },
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
       const decoded = await EditBetFormValidator["~standard"].validate(value);
@@ -104,11 +104,6 @@ export const EditBetModal = ({
   });
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
   const canDiscard = useCanCloseForm(isSubmitting);
-
-  useEffect(() => {
-    form.reset({ userIds: currentMemberIds as readonly string[] });
-    setSubmissionFailure(undefined);
-  }, [currentMemberIds, form]);
 
   const handleOpenChange = (nextOpen: boolean): void => {
     if (!nextOpen) {
@@ -217,3 +212,10 @@ export const EditBetModal = ({
     </ResponsiveDialog>
   );
 };
+
+export const EditBetModal = (props: EditBetModalProps) => (
+  <EditBetModalContent
+    key={`${props.betId}-${props.currentMembers.map((member) => member.userId).join(",")}`}
+    {...props}
+  />
+);
