@@ -1,6 +1,3 @@
-import * as Arr from "effect/Array";
-import * as Schema from "effect/Schema";
-
 import type { AuctionProfession, AuctionType } from "./auction-vocabulary.ts";
 
 /**
@@ -11,9 +8,9 @@ import type { AuctionProfession, AuctionType } from "./auction-vocabulary.ts";
  * stay in web modules; only slot vocabulary lives here.
  */
 
-export const AUCTION_SLOT_LEVELS: readonly number[] = Arr.makeBy(
-  28,
-  (index) => 30 + index * 10
+export const AUCTION_SLOT_LEVELS: readonly number[] = Array.from(
+  { length: 28 },
+  (_, index) => 30 + index * 10
 );
 
 export const AUCTION_SLOT_ROUNDS = [
@@ -77,9 +74,8 @@ export interface AuctionSlotCoordinate {
   column: number;
 }
 
-const isPositiveInteger = Schema.is(
-  Schema.Int.pipe(Schema.check(Schema.isGreaterThan(0)))
-);
+const isPositiveInteger = (value: number): boolean =>
+  Number.isInteger(value) && value > 0;
 
 export const isLegalAuctionSlot = (
   coordinate: AuctionSlotCoordinate
@@ -92,11 +88,11 @@ export const isLegalAuctionSlot = (
     return false;
   }
 
-  if (!Arr.contains(AUCTION_SLOT_LEVELS, coordinate.level)) {
+  if (!AUCTION_SLOT_LEVELS.includes(coordinate.level)) {
     return false;
   }
 
-  if (!Arr.contains<number>(AUCTION_SLOT_ROUNDS, coordinate.round)) {
+  if (!AUCTION_SLOT_ROUNDS.some((round) => round === coordinate.round)) {
     return false;
   }
 

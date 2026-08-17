@@ -7,20 +7,8 @@
  * single source of truth for the penalty math.
  */
 
-import * as Arr from "effect/Array";
-import * as Num from "effect/Number";
-import * as Option from "effect/Option";
-import * as Schema from "effect/Schema";
-import * as Str from "effect/String";
-
 const MIN_LEVEL = 1;
 const MAX_LEVEL = 500;
-
-const LevelFromString = Schema.FiniteFromString.pipe(
-  Schema.check(Schema.isInt()),
-  Schema.check(Schema.isBetween({ maximum: MAX_LEVEL, minimum: MIN_LEVEL }))
-);
-const decodeLevel = Schema.decodeUnknownOption(LevelFromString);
 
 /**
  * Base level difference threshold before scaling
@@ -131,9 +119,13 @@ export const calculateGroupAttackPenalty = (
   attackerLevels: number[],
   defenderLevels: number[]
 ): GroupAttackPenaltyResult => {
-  const maxAttackerLevel = Num.ReducerMax.combineAll(attackerLevels);
-  const avgAttackerLevel = Num.sumAll(attackerLevels) / attackerLevels.length;
-  const avgDefenderLevel = Num.sumAll(defenderLevels) / defenderLevels.length;
+  const maxAttackerLevel = Math.max(...attackerLevels);
+  const avgAttackerLevel =
+    attackerLevels.reduce((sum, level) => sum + level, 0) /
+    attackerLevels.length;
+  const avgDefenderLevel =
+    defenderLevels.reduce((sum, level) => sum + level, 0) /
+    defenderLevels.length;
 
   // Left side of inequality: 0.5 * (max + avg_attackers) - avg_defenders
   const attackerStrength = maxAttackerLevel + avgAttackerLevel;
@@ -164,6 +156,9 @@ export const calculateGroupAttackPenalty = (
  * Parse comma-separated levels string into array of numbers
  */
 export const parseLevels = (input: string): number[] =>
-  Arr.flatMap(Str.split(input, ","), (value) =>
-    Option.toArray(decodeLevel(Str.trim(value)))
-  );
+  input.split(",").flatMap((value) => {
+    const level = Number(value.trim());
+    return Number.isInteger(level) && level >= MIN_LEVEL && level <= MAX_LEVEL
+      ? [level]
+      : [];
+  });

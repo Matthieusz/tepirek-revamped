@@ -1,12 +1,8 @@
-import * as Arr from "effect/Array";
-import * as Str from "effect/String";
-
 /** Derives at most two uppercase initials for an avatar fallback. */
 export const userInitials = (name: string): string =>
-  Arr.join(
-    Arr.map(
-      Arr.take(Arr.filter(Str.split(name, /\s+/u), Str.isNonEmpty), 2),
-      (part) => part[0]?.toUpperCase() ?? ""
-    ),
-    ""
-  );
+  name
+    .split(/\s+/u)
+    .filter((part) => part.length > 0)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");

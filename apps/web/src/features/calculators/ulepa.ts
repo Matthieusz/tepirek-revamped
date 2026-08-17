@@ -1,6 +1,3 @@
-import * as Arr from "effect/Array";
-import * as Num from "effect/Number";
-
 export type UlepaRarity =
   | "zwykły"
   | "unikatowy"
@@ -62,10 +59,10 @@ const EXTRACTION_GOLD_PER_POINT = 60;
 
 const clampLevel = (n: number): number => {
   const v = Math.trunc(n);
-  if (Num.Number.isNaN(v)) {
+  if (Number.isNaN(v)) {
     return MIN_LEVEL;
   }
-  return Num.clamp(v, { maximum: MAX_LEVEL, minimum: MIN_LEVEL });
+  return Math.min(Math.max(v, MIN_LEVEL), MAX_LEVEL);
 };
 
 /**
@@ -95,7 +92,7 @@ export const calculateUpgradePoints = (
     throw new Error("Nieznana rzadkość przedmiotu");
   }
 
-  return Arr.map((upgradeLevelFactor: number) => {
+  return UPGRADE_LEVEL_FACTORS.map((upgradeLevelFactor) => {
     const cost =
       rarity === "ulepszony"
         ? upgradeLevelFactor *
@@ -105,15 +102,11 @@ export const calculateUpgradePoints = (
           upgradeLevelFactor *
           (GAME_CONSTANTS.STANDARD_BASE_COST + level);
     return cost;
-  })(UPGRADE_LEVEL_FACTORS);
+  });
 };
 
 export const calculateDifferentialCosts = (upgradeCosts: number[]): number[] =>
-  Arr.zipWith(
-    upgradeCosts,
-    Arr.prepend(upgradeCosts, 0),
-    (cost, previousCost) => cost - previousCost
-  );
+  upgradeCosts.map((cost, index) => cost - (upgradeCosts[index - 1] ?? 0));
 
 /** Result of calculating upgrade and extraction costs for an item. */
 export interface UlepaUpgradeSummary {
@@ -131,7 +124,10 @@ export const calculateUpgradeSummary = (
 ): UlepaUpgradeSummary => {
   const cumulativeCosts = calculateUpgradePoints(level, rarity);
   const differentialCosts = calculateDifferentialCosts(cumulativeCosts);
-  const totalUpgradeCost = Num.sumAll(differentialCosts);
+  const totalUpgradeCost = differentialCosts.reduce(
+    (sum, cost) => sum + cost,
+    0
+  );
   const total75Percent = totalUpgradeCost * GAME_CONSTANTS.EXTRACTION_RATE;
   const upgradeGoldCost =
     (GOLD_COST_LEVEL_MULTIPLIER * level + GOLD_COST_LEVEL_ADDEND) *

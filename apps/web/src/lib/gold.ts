@@ -1,11 +1,3 @@
-import * as Option from "effect/Option";
-import * as Schema from "effect/Schema";
-
-const decodeGoldNumber = Schema.decodeUnknownOption(Schema.FiniteFromString);
-const decodeGoldInteger = Schema.decodeUnknownOption(
-  Schema.FiniteFromString.pipe(Schema.check(Schema.isInt()))
-);
-
 /**
  * Gold-value parsing and vault-earnings formatting.
  *
@@ -20,12 +12,14 @@ const decodeGoldInteger = Schema.decodeUnknownOption(
  * Formats a string earnings value by rounding down to whole millions,
  * using Polish locale grouping. Used by the Skarbiec (vault) workflow.
  */
-export const formatVaultEarnings = (totalEarnings: string): string =>
-  (
-    Math.floor(
-      Option.getOrElse(decodeGoldNumber(totalEarnings), () => 0) / 1_000_000
-    ) * 1_000_000
-  ).toLocaleString("pl-PL", { maximumFractionDigits: 0 });
+export const formatVaultEarnings = (totalEarnings: string): string => {
+  const parsedEarnings = Number(totalEarnings);
+  const earnings = Number.isFinite(parsedEarnings) ? parsedEarnings : 0;
+  return (Math.floor(earnings / 1_000_000) * 1_000_000).toLocaleString(
+    "pl-PL",
+    { maximumFractionDigits: 0 }
+  );
+};
 
 /**
  * Parses a gold-amount string into a number. An optional trailing "g"
@@ -37,17 +31,16 @@ export const parseGoldAmount = (value: string): number => {
   const hasBillionsSuffix = trimmed.endsWith("g");
   const numericText = hasBillionsSuffix ? trimmed.slice(0, -1) : trimmed;
 
-  const amount = hasBillionsSuffix
-    ? decodeGoldNumber(numericText)
-    : decodeGoldInteger(numericText);
+  const parsedAmount = Number(numericText);
+  if (
+    !Number.isFinite(parsedAmount) ||
+    (!hasBillionsSuffix && !Number.isInteger(parsedAmount))
+  ) {
+    return 0;
+  }
 
-  return Option.match(amount, {
-    onNone: () => 0,
-    onSome: (parsedAmount) => {
-      const normalizedAmount = hasBillionsSuffix
-        ? Math.floor(parsedAmount * 1_000_000_000)
-        : parsedAmount;
-      return Number.isFinite(normalizedAmount) ? normalizedAmount : 0;
-    },
-  });
+  const normalizedAmount = hasBillionsSuffix
+    ? Math.floor(parsedAmount * 1_000_000_000)
+    : parsedAmount;
+  return Number.isFinite(normalizedAmount) ? normalizedAmount : 0;
 };
