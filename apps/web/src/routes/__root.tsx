@@ -11,6 +11,7 @@ import { createMiddleware } from "@tanstack/react-start";
 import type * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry";
 import { evlogErrorHandler } from "evlog/nitro/v3";
 
+import { ThemeProvider } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import type { getUser as getUserDependency } from "@/functions/get-user";
@@ -27,20 +28,29 @@ const RootDocument = () => {
   const { atomRegistry } = useRouteContext({ from: "__root__" });
 
   return (
-    <html className="dark" lang="pl">
+    <html lang="pl" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        <RegistryContext.Provider value={atomRegistry}>
-          <div className="grid h-svh grid-rows-[auto_1fr]">
-            <Outlet />
-          </div>
-          <Toaster richColors />
-          {showDevtools ? (
-            <TanStackRouterDevtools position="bottom-right" />
-          ) : null}
-        </RegistryContext.Provider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          disableTransitionOnChange
+          storageKey="theme"
+          enableColorScheme
+          enableSystem
+        >
+          <RegistryContext.Provider value={atomRegistry}>
+            <div className="grid h-svh min-w-0 grid-rows-[auto_1fr]">
+              <Outlet />
+            </div>
+            <Toaster richColors />
+            {showDevtools ? (
+              <TanStackRouterDevtools position="bottom-right" />
+            ) : null}
+          </RegistryContext.Provider>
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>
@@ -54,7 +64,7 @@ export const RootErrorBoundary = ({
   error: Error;
   reset: () => void;
 }) => (
-  <html className="dark" lang="pl">
+  <html lang="pl" suppressHydrationWarning>
     <head>
       <HeadContent />
     </head>

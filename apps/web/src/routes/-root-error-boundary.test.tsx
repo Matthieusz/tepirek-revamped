@@ -10,6 +10,9 @@ describe("RootErrorBoundary", () => {
       reset,
     });
 
+    expect(boundary.props.className).toBeUndefined();
+    expect(boundary.props.suppressHydrationWarning).toBe(true);
+
     const [, body] = boundary.props.children;
     const [content] = body.props.children;
     const [, message, retryButton] = content.props.children;
