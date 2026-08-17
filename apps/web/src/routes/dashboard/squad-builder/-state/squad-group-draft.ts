@@ -140,27 +140,33 @@ const toPlacementSquads = (
   charactersById: HashMap.HashMap<number, CharacterAccountInfo>
 ) =>
   draft.squads.map((squad) => {
-    const characters = squad.characters
-      .filter((draftCharacter) => draftCharacter.characterId !== characterId)
-      .map((draftCharacter) => {
-        const accountInfo = HashMap.get(
-          charactersById,
-          draftCharacter.characterId
-        ).pipe(Option.getOrUndefined);
-        return accountInfo === undefined
+    const characters: {
+      readonly accountId?: string | number;
+      readonly characterId: number;
+    }[] = [];
+    for (const draftCharacter of squad.characters) {
+      if (draftCharacter.characterId === characterId) {
+        continue;
+      }
+      const accountInfo = HashMap.get(
+        charactersById,
+        draftCharacter.characterId
+      ).pipe(Option.getOrUndefined);
+      characters.push(
+        accountInfo === undefined
           ? { characterId: draftCharacter.characterId }
           : {
               accountId: accountInfo.accountId,
               characterId: draftCharacter.characterId,
-            };
-      });
-    const targetCharacter =
-      squad.clientKey === targetSquadKey
-        ? [{ accountId: character.accountId, characterId }]
-        : [];
+            }
+      );
+    }
+    if (squad.clientKey === targetSquadKey) {
+      characters.push({ accountId: character.accountId, characterId });
+    }
 
     return {
-      characters: [...characters, ...targetCharacter],
+      characters,
       squadClientKey: squad.clientKey,
     };
   });

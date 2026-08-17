@@ -1,5 +1,5 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { getRouteApi } from "@tanstack/react-router";
+import { getRouteApi, Link } from "@tanstack/react-router";
 import type { SquadGroupDetailSchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
 import * as HashMap from "effect/HashMap";
 import * as Predicate from "effect/Predicate";
@@ -358,7 +358,7 @@ const SquadBuilderEditorContent = ({
   );
 };
 
-export default function SquadBuilderEditorPage() {
+const SquadBuilderEditorPage = () => {
   const { groupId } = routeApi.useLoaderData();
 
   if (groupId === null) {
@@ -367,16 +367,18 @@ export default function SquadBuilderEditorPage() {
         <AlertTriangle aria-hidden="true" />
         <AlertTitle>Nieprawidłowy identyfikator grupy składów</AlertTitle>
         <AlertDescription>
-          <a
+          <Link
             className="underline underline-offset-4"
-            href="/dashboard/squad-builder/squads"
+            to="/dashboard/squad-builder/squads"
           >
             Wróć do listy grup.
-          </a>
+          </Link>
         </AlertDescription>
       </Alert>
     );
   }
 
   return <SquadBuilderEditorContent groupId={groupId} />;
-}
+};
+
+export default SquadBuilderEditorPage;

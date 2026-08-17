@@ -104,7 +104,7 @@ interface PreviewRowProps {
   readonly onConfirm: (
     item: Extract<PreviewItem, { status: "success" }>,
     payload: AccountImportConfirmation
-  ) => Promise<unknown>;
+  ) => Promise<void>;
   readonly onConfirmed: (
     item: Extract<PreviewItem, { status: "success" }>
   ) => void;
@@ -156,7 +156,7 @@ const PreviewRow = ({
             Wiersz {item.lineNumber}: nie udało się wczytać profilu
           </AlertTitle>
           <AlertDescription>
-            <span className="break-all font-mono text-xs">{item.inputUrl}</span>
+            <span className="font-mono text-xs break-all">{item.inputUrl}</span>
             <p>{item.message}</p>
           </AlertDescription>
         </Alert>
@@ -172,15 +172,15 @@ const PreviewRow = ({
       <div className="flex items-start gap-3">
         <CheckCircle2
           aria-hidden="true"
-          className="mt-0.5 size-4 shrink-0 text-primary"
+          className="text-primary mt-0.5 size-4 shrink-0"
         />
         <div className="min-w-0 flex-1 space-y-3">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-medium text-sm">
+              <span className="text-sm font-medium">
                 {item.suggestedAccountName}
               </span>
-              <span className="font-mono text-xs text-muted-foreground">
+              <span className="text-muted-foreground font-mono text-xs">
                 #{item.profileId}
               </span>
               <ReuiBadge variant="secondary">
@@ -206,16 +206,16 @@ const PreviewRow = ({
                     >
                       <ChevronRight
                         aria-hidden="true"
-                        className="mt-0.5 size-3 shrink-0 text-muted-foreground"
+                        className="text-muted-foreground mt-0.5 size-3 shrink-0"
                       />
                       <ProfessionIcon
                         aria-hidden="true"
                         className={`mt-0.5 size-3.5 shrink-0 ${profession.colorClass}`}
                       />
-                      <span className="min-w-0 break-words font-medium">
+                      <span className="min-w-0 font-medium break-words">
                         {character.name}
                       </span>
-                      <span className="shrink-0 font-mono text-muted-foreground">
+                      <span className="text-muted-foreground shrink-0 font-mono">
                         {character.level}
                       </span>
                       <span
@@ -228,7 +228,7 @@ const PreviewRow = ({
                 })}
               </ul>
             ) : (
-              <p className="pt-1 text-muted-foreground text-xs">
+              <p className="text-muted-foreground pt-1 text-xs">
                 Brak postaci z Jaruny.
               </p>
             )}
@@ -279,7 +279,7 @@ interface ImportPanelProps {
   readonly onConfirm: (
     item: Extract<PreviewItem, { status: "success" }>,
     payload: AccountImportConfirmation
-  ) => Promise<unknown>;
+  ) => Promise<void>;
   readonly onConfirmed: (
     item: Extract<PreviewItem, { status: "success" }>
   ) => void;
@@ -301,9 +301,9 @@ const ImportPanel = ({
 }: ImportPanelProps) => (
   <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
     <FramePanel className="p-0 shadow-none">
-      <div className="border-b border-border px-5 py-3">
-        <h2 className="flex items-center gap-2 font-semibold text-base">
-          <Link2 className="size-4 text-muted-foreground" />
+      <div className="border-border border-b px-5 py-3">
+        <h2 className="flex items-center gap-2 text-base font-semibold">
+          <Link2 className="text-muted-foreground size-4" />
           Import kont
         </h2>
         <p className="text-muted-foreground text-sm">
@@ -317,7 +317,7 @@ const ImportPanel = ({
           onStepChange(value === 2 ? 2 : 1);
         }}
       >
-        <StepperNav className="border-b border-border px-5 py-3">
+        <StepperNav className="border-border border-b px-5 py-3">
           <StepperItem
             completed={activeStep === 2}
             loading={isPreviewPending}
@@ -351,7 +351,7 @@ const ImportPanel = ({
               <div className="flex flex-col items-center gap-3 px-5 py-8 text-center">
                 <CheckCircle2
                   aria-hidden="true"
-                  className="size-7 text-success"
+                  className="text-success size-7"
                 />
                 <div>
                   <h3 className="font-medium">
@@ -372,7 +372,7 @@ const ImportPanel = ({
             )}
 
             {previewItems.length > 0 && (
-              <ul className="divide-y divide-border">
+              <ul className="divide-border divide-y">
                 {previewItems.map((item) => (
                   <PreviewRow
                     confirmingId={confirmingId}
@@ -459,7 +459,7 @@ export const AccountImportFrame = () => {
   );
   const profileLineCount = getProfileLines(profileUrls).length;
   const previewForm = (
-    <Form className="space-y-4 border-b border-border px-5 py-4" form={form}>
+    <Form className="border-border space-y-4 border-b px-5 py-4" form={form}>
       <form.AppField name="profileUrls">
         {(field) => (
           <field.TextareaField
@@ -517,7 +517,7 @@ export const AccountImportFrame = () => {
       onConfirm={async (item, payload) => {
         setConfirmingId(item.pendingImportId);
         try {
-          return await confirmImport(payload);
+          await confirmImport(payload);
         } finally {
           setConfirmingId(null);
         }

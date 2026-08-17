@@ -53,7 +53,7 @@ import { getErrorMessage } from "@/lib/errors";
 
 import { userInitials } from "../user-presenters";
 
-type InviteTarget = typeof SquadEditorInviteTargetSchema.Type;
+type InviteTarget = SquadEditorInviteTargetSchema;
 type EditorGrant = SquadGroupEditorGrantSummarySchema;
 
 interface SquadGroupSettingsProps {
@@ -144,10 +144,10 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
     <FramePanel className="p-0 shadow-none">
       <div className="space-y-4 px-4 py-4">
         <div>
-          <h2 className="flex items-center gap-2 font-semibold text-base">
+          <h2 className="flex items-center gap-2 text-base font-semibold">
             <UserPlus
               aria-hidden="true"
-              className="size-4 text-muted-foreground"
+              className="text-muted-foreground size-4"
             />
             Dostęp edytorów
             <Badge variant="secondary">{grants.length}</Badge>
@@ -272,7 +272,7 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
         )}
         {!AsyncResult.isSuccess(grantsResult) &&
           !AsyncResult.isFailure(grantsResult) && (
-            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+            <div className="text-muted-foreground flex items-center gap-2 text-xs">
               <Loader2 className="size-3 animate-spin" />
               Wczytywanie edytorów…
             </div>
@@ -325,7 +325,7 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
                   {revokingInvitationId === grant.invitationId ? (
                     <Loader2 className="size-3.5 animate-spin" />
                   ) : (
-                    <Trash2 className="size-3.5 text-destructive" />
+                    <Trash2 className="text-destructive size-3.5" />
                   )}
                 </Button>
               </li>
@@ -355,6 +355,7 @@ export const SquadGroupSettings = ({
       await navigate({ to: "/dashboard/squad-builder/squads" });
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Nie udało się usunąć grupy składów"));
+    } finally {
       setIsDeleting(false);
     }
   };
@@ -369,7 +370,7 @@ export const SquadGroupSettings = ({
         <FramePanel className="p-0 shadow-none">
           <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="font-semibold text-base">Usuń grupę</h2>
+              <h2 className="text-base font-semibold">Usuń grupę</h2>
               <p className="text-muted-foreground text-sm">
                 Trwale usuwa grupę, jej składy i wszystkie zaproszenia.
               </p>

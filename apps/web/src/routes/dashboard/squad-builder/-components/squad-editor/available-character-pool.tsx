@@ -1,4 +1,5 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import { Link } from "@tanstack/react-router";
 import { MAX_SQUAD_CHARACTERS } from "@tepirek-revamped/api/domain/squad-builder/squad-placement";
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
@@ -207,7 +208,7 @@ const CharacterImageTrigger = ({
     render={
       <button
         aria-label={`Dodaj postać ${character.name} do składu`}
-        className="group relative block aspect-[4/5] h-8 w-[1.6rem] shrink-0 overflow-hidden rounded-md bg-muted/50 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="group bg-muted/50 focus-visible:ring-ring focus-visible:ring-offset-background relative block aspect-[4/5] h-8 w-[1.6rem] shrink-0 overflow-hidden rounded-md focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
         type="button"
       >
         <Avatar
@@ -223,7 +224,7 @@ const CharacterImageTrigger = ({
         </Avatar>
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/75 text-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100 motion-reduce:transition-none"
+          className="bg-background/75 text-foreground pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none [@media(pointer:coarse)]:opacity-100"
         >
           <UserPlus className="size-3.5" />
         </span>
@@ -299,7 +300,7 @@ const DestinationMenu = ({
             >
               <span className="min-w-0 flex-1">
                 <span className="block break-words">{squad.name}</span>
-                <span className="block font-mono text-muted-foreground text-xs">
+                <span className="text-muted-foreground block font-mono text-xs">
                   {squad.characters.length}/{MAX_SQUAD_CHARACTERS}
                   {disabledReason ? ` · ${disabledReason}` : ""}
                 </span>
@@ -331,7 +332,7 @@ const CharacterPoolTile = ({
 
   return (
     <li className="min-w-0">
-      <article className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-card/40 p-1.5 transition-colors hover:border-primary/40 motion-reduce:transition-none">
+      <article className="border-border bg-card/40 hover:border-primary/40 flex min-w-0 items-center gap-2 rounded-md border p-1.5 transition-colors motion-reduce:transition-none">
         <DestinationMenu
           accountInfoByCharacterId={accountInfoByCharacterId}
           character={character}
@@ -339,12 +340,12 @@ const CharacterPoolTile = ({
           onDraftChange={onDraftChange}
         />
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <h3 className="min-w-0 flex-1 truncate font-medium text-sm leading-snug">
+          <h3 className="min-w-0 flex-1 truncate text-sm leading-snug font-medium">
             {character.name}
           </h3>
           <span
             aria-label={`Poziom ${character.level}`}
-            className="shrink-0 font-mono text-muted-foreground text-xs tabular-nums"
+            className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums"
           >
             {character.level}
           </span>
@@ -546,7 +547,7 @@ export const AvailableCharacterPool = ({
     >
       <fieldset className="contents" disabled={isSaving}>
         <Frame
-          className="flex min-h-0 flex-1 flex-col [--frame-radius:var(--radius-lg)] xl:max-h-[calc(100dvh-10rem)] xl:sticky xl:top-4"
+          className="flex min-h-0 flex-1 flex-col [--frame-radius:var(--radius-lg)] xl:sticky xl:top-4 xl:max-h-[calc(100dvh-10rem)]"
           spacing="sm"
         >
           <FramePanel className="flex min-h-0 flex-1 flex-col p-0 shadow-none">
@@ -604,16 +605,16 @@ export const AvailableCharacterPool = ({
                 <IconStack aria-hidden="true">
                   <UserPlus className="size-5" />
                 </IconStack>
-                <p className="max-w-sm text-muted-foreground text-sm">
+                <p className="text-muted-foreground max-w-sm text-sm">
                   Brak dostępnych postaci z Jaruny. Dodaj konto, aby zasilić
                   pulę.
                 </p>
-                <a
-                  className="inline-flex min-h-10 items-center justify-center rounded-lg border border-border px-3 font-medium text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  href="/dashboard/squad-builder/accounts"
+                <Link
+                  className="border-border hover:bg-muted focus-visible:ring-ring inline-flex min-h-10 items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  to="/dashboard/squad-builder/accounts"
                 >
                   Przejdź do kont
-                </a>
+                </Link>
               </div>
             )}
             {AsyncResult.isSuccess(result) &&
@@ -623,7 +624,7 @@ export const AvailableCharacterPool = ({
                   <IconStack aria-hidden="true">
                     <UserPlus className="size-5" />
                   </IconStack>
-                  <p className="max-w-sm text-muted-foreground text-sm">
+                  <p className="text-muted-foreground max-w-sm text-sm">
                     Wszystkie dostępne postacie są już przypisane do składów.
                   </p>
                 </div>
@@ -634,7 +635,7 @@ export const AvailableCharacterPool = ({
                 <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
                   <Search
                     aria-hidden="true"
-                    className="size-5 text-muted-foreground"
+                    className="text-muted-foreground size-5"
                   />
                   <p className="text-muted-foreground text-sm">
                     Brak postaci pasujących do filtrów.
@@ -662,13 +663,13 @@ export const AvailableCharacterPool = ({
                     return (
                       <li key={accountGroup.accountId}>
                         <div className="mb-2 flex min-w-0 items-center gap-2">
-                          <h3 className="min-w-0 break-words font-mono text-muted-foreground text-xs">
+                          <h3 className="text-muted-foreground min-w-0 font-mono text-xs break-words">
                             {accountGroup.accountDisplayName}
                           </h3>
                           {accountGroup.accountOwnerUserName.length > 0 &&
                             accountGroup.accountOwnerUserName !==
                               accountGroup.accountDisplayName && (
-                              <span className="min-w-0 break-words text-muted-foreground text-xs">
+                              <span className="text-muted-foreground min-w-0 text-xs break-words">
                                 ({accountGroup.accountOwnerUserName})
                               </span>
                             )}

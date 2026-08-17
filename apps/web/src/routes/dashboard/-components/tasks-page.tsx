@@ -39,17 +39,14 @@ interface TasksPageProps {
 const TodoFormSchema = Schema.Struct({ text: TodoTextSchema });
 const TodoFormValidator = Schema.toStandardSchemaV1(TodoFormSchema);
 
-const runMutation = (
-  action: () => Promise<unknown>,
-  onSuccess?: () => void
-) => {
+const runMutation = (action: () => Promise<void>, onSuccess?: () => void) => {
   void (async () => {
     await action();
     onSuccess?.();
   })();
 };
 
-export default function TasksPage({ session }: TasksPageProps) {
+const TasksPage = ({ session }: TasksPageProps) => {
   const todosResult = useAtomValue(todosAtom);
   const refreshTodos = useAtomRefresh(todosAtom);
 
@@ -58,7 +55,9 @@ export default function TasksPage({ session }: TasksPageProps) {
       {() => <TasksContent session={session} />}
     </AsyncResultBoundary>
   );
-}
+};
+
+export default TasksPage;
 
 const TasksContent = ({ session }: TasksPageProps) => {
   const optimisticTodosResult = useAtomValue(optimisticTodosAtom);
@@ -112,7 +111,7 @@ const TasksContent = ({ session }: TasksPageProps) => {
   return (
     <div className="w-full max-w-2xl space-y-6">
       <div>
-        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+        <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
           Lista zadań
         </h1>
         <p className="text-muted-foreground text-sm">
@@ -123,46 +122,46 @@ const TasksContent = ({ session }: TasksPageProps) => {
       <div className="space-y-4">
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div className="border-border bg-card rounded-xl border p-4">
             <div className="flex items-center justify-between">
-              <p className="font-medium text-muted-foreground text-xs">
+              <p className="text-muted-foreground text-xs font-medium">
                 Wszystkie
               </p>
-              <ListTodo className="size-4 text-muted-foreground" />
+              <ListTodo className="text-muted-foreground size-4" />
             </div>
-            <p className="mt-1 font-bold text-2xl">{totalCount}</p>
+            <p className="mt-1 text-2xl font-bold">{totalCount}</p>
           </div>
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div className="border-border bg-card rounded-xl border p-4">
             <div className="flex items-center justify-between">
-              <p className="font-medium text-muted-foreground text-xs">
+              <p className="text-muted-foreground text-xs font-medium">
                 Ukończone
               </p>
-              <CheckCircle2 className="size-4 text-primary" />
+              <CheckCircle2 className="text-primary size-4" />
             </div>
-            <p className="mt-1 font-bold text-2xl text-primary">
+            <p className="text-primary mt-1 text-2xl font-bold">
               {completedCount}
             </p>
           </div>
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div className="border-border bg-card rounded-xl border p-4">
             <div className="flex items-center justify-between">
-              <p className="font-medium text-muted-foreground text-xs">
+              <p className="text-muted-foreground text-xs font-medium">
                 Pozostałe
               </p>
-              <Circle className="size-4 text-muted-foreground" />
+              <Circle className="text-muted-foreground size-4" />
             </div>
-            <p className="mt-1 font-bold text-2xl text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-2xl font-bold">
               {totalCount - completedCount}
             </p>
           </div>
         </div>
 
         {/* Add Task */}
-        <div className="rounded-xl border border-border bg-card p-6">
-          <h2 className="mb-1 flex items-center gap-2 font-semibold text-base">
+        <div className="border-border bg-card rounded-xl border p-6">
+          <h2 className="mb-1 flex items-center gap-2 text-base font-semibold">
             <Plus className="size-4" />
             Dodaj zadanie
           </h2>
-          <p className="mb-4 text-muted-foreground text-sm">
+          <p className="text-muted-foreground mb-4 text-sm">
             Wpisz treść nowego zadania
           </p>
           <form.AppForm>
@@ -191,11 +190,11 @@ const TasksContent = ({ session }: TasksPageProps) => {
         </div>
 
         {/* Task List */}
-        <div className="rounded-xl border border-border bg-card">
-          <div className="flex items-center gap-2 border-b border-border p-4">
+        <div className="border-border bg-card rounded-xl border">
+          <div className="border-border flex items-center gap-2 border-b p-4">
             <ListTodo className="size-4" />
-            <h2 className="font-semibold text-base">Twoje zadania</h2>
-            <span className="ml-auto text-muted-foreground text-sm">
+            <h2 className="text-base font-semibold">Twoje zadania</h2>
+            <span className="text-muted-foreground ml-auto text-sm">
               {totalCount > 0
                 ? `${completedCount} z ${totalCount} ukończonych`
                 : "Brak zadań"}
@@ -204,8 +203,8 @@ const TasksContent = ({ session }: TasksPageProps) => {
           <div className="p-4">
             {todosData.length === 0 && (
               <div className="rounded-lg border border-dashed py-8 text-center">
-                <ListTodo className="mx-auto size-8 text-muted-foreground" />
-                <p className="mt-2 text-muted-foreground text-sm">
+                <ListTodo className="text-muted-foreground mx-auto size-8" />
+                <p className="text-muted-foreground mt-2 text-sm">
                   Brak zadań do wyświetlenia
                 </p>
                 <p className="text-muted-foreground text-xs">

@@ -17,6 +17,7 @@ const removeHeroById = (
   heroes: readonly Hero[],
   input: { readonly id: number }
 ) => heroes.filter((hero) => hero.id !== input.id);
+const emptyHeroes: readonly Hero[] = [];
 
 /** Resource atom for all heroes. */
 export const heroesAtom = appHttpApiAtom(
@@ -38,9 +39,7 @@ const heroesByEventIdAtom = Atom.family((eventId: number) =>
   )
 );
 
-const disabledHeroesByEventAtom = Atom.make(
-  AsyncResult.success([] as readonly Hero[])
-);
+const disabledHeroesByEventAtom = Atom.make(AsyncResult.success(emptyHeroes));
 
 export const heroesByEventAtom = (eventId: number | null) =>
   eventId === null || eventId <= 0

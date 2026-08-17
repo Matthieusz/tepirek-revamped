@@ -62,17 +62,25 @@ const UNKNOWN_PROFESSION_PRESENTATION: ProfessionPresentation = {
   label: "Nieznana profesja",
 };
 
+const isKnownProfession = (profession: string): profession is KnownProfession =>
+  Object.hasOwn(PROFESSION_PRESENTATIONS, profession);
+
 /** Returns shared icon, color, and localized label metadata for a profession. */
 export const getProfessionPresentation = (
   profession: string
-): ProfessionPresentation =>
-  PROFESSION_PRESENTATIONS[profession as KnownProfession] ?? {
+): ProfessionPresentation => {
+  if (isKnownProfession(profession)) {
+    return PROFESSION_PRESENTATIONS[profession];
+  }
+
+  return {
     ...UNKNOWN_PROFESSION_PRESENTATION,
     label:
       profession.length > 0
         ? profession
         : UNKNOWN_PROFESSION_PRESENTATION.label,
   };
+};
 
 /** Returns the localized label while preserving unknown API values. */
 export const formatProfession = (profession: string): string =>

@@ -40,7 +40,7 @@ interface SquadGroupEditorGrantsInput {
 
 class SquadEditorInviteTargetsKey extends Data.Class<SearchSquadEditorInviteTargetsInput> {}
 
-type SquadEditorInviteTarget = typeof SquadEditorInviteTargetSchema.Type;
+type SquadEditorInviteTarget = SquadEditorInviteTargetSchema;
 type SquadGroupEditorGrant = SquadGroupEditorGrantSummarySchema;
 
 const disabledSquadGroupEditorGrantsAtom = Atom.make<
