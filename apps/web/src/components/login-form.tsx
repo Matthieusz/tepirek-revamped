@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import {
   BackToHomeButton,
@@ -47,6 +48,7 @@ export const LoginForm = ({
         handleLoginSuccess({
           invalidate: () => router.invalidate(),
           navigate: () => navigate({ to: "/dashboard" }),
+          notifySuccess: toast.success,
         }),
     });
   const form = useAppForm({
@@ -75,21 +77,21 @@ export const LoginForm = ({
     >
       <div className="flex flex-col items-center gap-2 text-center">
         <h1
-          className="font-serif font-bold tracking-tight text-foreground"
+          className="text-foreground font-serif font-bold tracking-tight"
           style={{ fontSize: "clamp(2rem, 6vw, 3rem)", lineHeight: 1.1 }}
         >
           Zaloguj się
         </h1>
       </div>
 
-      <div className="flex flex-col gap-6 rounded-xl border border-border bg-card p-8">
+      <div className="border-border bg-card flex flex-col gap-6 rounded-xl border p-8">
         <DiscordLoginButton />
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
+            <span className="border-border w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">lub</span>
+            <span className="bg-card text-muted-foreground px-2">lub</span>
           </div>
         </div>
 
@@ -132,10 +134,10 @@ export const LoginForm = ({
         </Form>
       </div>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-center text-sm">
         Nie masz konta?{" "}
         <Link
-          className="font-medium text-primary underline underline-offset-4 transition-colors hover:text-primary/80"
+          className="text-primary hover:text-primary/80 font-medium underline underline-offset-4 transition-colors"
           to="/signup"
         >
           Zarejestruj się

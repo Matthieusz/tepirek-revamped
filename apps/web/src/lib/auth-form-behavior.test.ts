@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import { toast } from "sonner";
 import { beforeEach, vi } from "vitest";
 
 import {
@@ -11,16 +10,14 @@ import {
   handleSignupSuccess,
 } from "@/lib/auth-form-behavior";
 
-vi.mock("sonner", () => ({
-  toast: {
-    error: vi.fn(),
-    success: vi.fn(),
-  },
-}));
+const notifications: string[] = [];
+const notifySuccess = (message: string): void => {
+  notifications.push(message);
+};
 
 describe("auth form behavior", () => {
   beforeEach(() => {
-    vi.mocked(toast.success).mockReset();
+    notifications.length = 0;
   });
 
   it("prefers provider messages and falls back to status text", () => {
@@ -50,7 +47,7 @@ describe("auth form behavior", () => {
         });
         expect(error).not.toHaveProperty("url");
         expect(error).not.toHaveProperty("token");
-        expect(toast.success).not.toHaveBeenCalled();
+        expect(notifications).toEqual([]);
       })
   );
 
@@ -78,7 +75,7 @@ describe("auth form behavior", () => {
         operation: "signup",
         status: 400,
       });
-      expect(toast.success).not.toHaveBeenCalled();
+      expect(notifications).toEqual([]);
     })
   );
 
@@ -113,18 +110,19 @@ describe("auth form behavior", () => {
         calls.push("navigate");
         return Promise.resolve();
       },
+      notifySuccess,
     });
 
     expect(calls).toEqual(["invalidate", "navigate"]);
-    expect(toast.success).toHaveBeenCalledWith("Zalogowano pomyślnie");
+    expect(notifications).toEqual(["Zalogowano pomyślnie"]);
   });
 
   it("navigates before announcing successful signup", async () => {
     const navigate = vi.fn(() => Promise.resolve());
 
-    await handleSignupSuccess(navigate);
+    await handleSignupSuccess({ navigate, notifySuccess });
 
     expect(navigate).toHaveBeenCalledOnce();
-    expect(toast.success).toHaveBeenCalledWith("Zarejestrowano pomyślnie");
+    expect(notifications).toEqual(["Zarejestrowano pomyślnie"]);
   });
 });

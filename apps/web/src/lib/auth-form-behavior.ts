@@ -1,6 +1,5 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import { toast } from "sonner";
 
 type AuthOperation = "login" | "signup";
 
@@ -100,18 +99,20 @@ export const runAuthFormSubmission = async <Response extends AuthResponse>(
 
 /** Preserves the login success order: feedback, invalidate, then navigate. */
 export const handleLoginSuccess = async (actions: {
-  readonly invalidate: () => Promise<unknown>;
-  readonly navigate: () => Promise<unknown>;
+  readonly invalidate: () => Promise<void>;
+  readonly navigate: () => Promise<void>;
+  readonly notifySuccess: (message: string) => void;
 }): Promise<void> => {
-  toast.success("Zalogowano pomyślnie");
+  actions.notifySuccess("Zalogowano pomyślnie");
   await actions.invalidate();
   await actions.navigate();
 };
 
 /** Preserves the signup success order: navigate first, then announce success. */
-export const handleSignupSuccess = async (
-  navigate: () => Promise<unknown>
-): Promise<void> => {
-  await navigate();
-  toast.success("Zarejestrowano pomyślnie");
+export const handleSignupSuccess = async (actions: {
+  readonly navigate: () => Promise<void>;
+  readonly notifySuccess: (message: string) => void;
+}): Promise<void> => {
+  await actions.navigate();
+  actions.notifySuccess("Zarejestrowano pomyślnie");
 };
