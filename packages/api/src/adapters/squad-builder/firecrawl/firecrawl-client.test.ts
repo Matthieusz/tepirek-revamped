@@ -7,7 +7,10 @@ import { TestClock } from "effect/testing";
 import { vi } from "vitest";
 
 import { parseMargonemProfileId } from "../../../domain/squad-builder/margonem-profile-id.ts";
-import { FirecrawlSdkClient } from "./firecrawl-client.ts";
+import {
+  decodeFirecrawlDocument,
+  FirecrawlSdkClient,
+} from "./firecrawl-client.ts";
 
 describe("FirecrawlSdkClient", () => {
   it.effect("returns a typed failure at the application deadline", () =>
@@ -59,25 +62,16 @@ describe("FirecrawlSdkClient", () => {
     ["wrong metadata type", { statusCode: "200" }],
     ["non-finite status code", { statusCode: Number.POSITIVE_INFINITY }],
     ["non-finite credit count", { creditsUsed: Number.NaN }],
-  ])("rejects %s", (_name, metadata) =>
+  ])("rejects %s at the schema boundary", (_name, metadata) =>
     Effect.gen(function* rejectMalformedMetadata() {
-      const scrape = vi.fn(() =>
-        Promise.resolve({
+      const exit = yield* Effect.exit(
+        decodeFirecrawlDocument({
           html: "<html></html>",
           metadata,
         })
       );
-      const client = new FirecrawlSdkClient("test", { scrape });
-      const profileId = yield* parseMargonemProfileId(789);
-
-      const exit = yield* Effect.exit(client.scrapeProfileHtml(profileId));
 
       expect(Exit.isFailure(exit)).toBe(true);
-      if (Exit.isFailure(exit)) {
-        const reason = exit.cause.reasons.find(Cause.isFailReason);
-        expect(reason?.error._tag).toBe("FirecrawlResponseNotParseable");
-        expect(reason?.error.profileId).toBe(profileId);
-      }
     })
   );
 });

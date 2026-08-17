@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export interface RankingItem {
   userId: string;
-  userName: string;
+  userName: string | null;
   userImage: string | null;
   totalPoints: string | null;
   totalBets: number | null;
@@ -57,7 +57,7 @@ export const RankingList = ({ players }: RankingListProps) => (
 
       return (
         <Card
-          className="overflow-hidden transition-all hover:bg-accent/50"
+          className="hover:bg-accent/50 overflow-hidden transition-colors"
           key={player.userId}
         >
           <CardContent className="px-4 py-0">
@@ -66,16 +66,16 @@ export const RankingList = ({ players }: RankingListProps) => (
               {/* Rank Icon or Number */}
               <div className="flex w-8 shrink-0 items-center justify-center">
                 {rankIcon ?? (
-                  <span className="font-medium text-muted-foreground">
+                  <span className="text-muted-foreground font-medium">
                     {index + 1}
                   </span>
                 )}
               </div>
 
               {/* Avatar */}
-              <Avatar className="size-10 shrink-0 border border-border">
+              <Avatar className="border-border size-10 shrink-0 border">
                 <AvatarImage
-                  alt={player.userName}
+                  alt={player.userName ?? "Nieznany użytkownik"}
                   src={player.userImage ?? undefined}
                 />
                 <AvatarFallback>
@@ -93,7 +93,7 @@ export const RankingList = ({ players }: RankingListProps) => (
                 {/* Points */}
                 <div className="w-24 text-center">
                   <p className="text-muted-foreground text-xs">Punkty</p>
-                  <p className="font-bold font-mono text-sm">
+                  <p className="font-mono text-sm font-bold">
                     {points.toFixed(2)}
                   </p>
                 </div>
@@ -124,16 +124,16 @@ export const RankingList = ({ players }: RankingListProps) => (
                     {/* Rank Icon or Number */}
                     <div className="flex w-6 shrink-0 items-center justify-center">
                       {rankIcon ?? (
-                        <span className="font-medium text-muted-foreground">
+                        <span className="text-muted-foreground font-medium">
                           {index + 1}
                         </span>
                       )}
                     </div>
 
                     {/* Avatar */}
-                    <Avatar className="size-12 shrink-0 border border-border">
+                    <Avatar className="border-border size-12 shrink-0 border">
                       <AvatarImage
-                        alt={player.userName}
+                        alt={player.userName ?? "Nieznany użytkownik"}
                         src={player.userImage ?? undefined}
                       />
                       <AvatarFallback>
@@ -146,7 +146,7 @@ export const RankingList = ({ players }: RankingListProps) => (
                       <p className="truncate font-semibold">
                         {player.userName}
                       </p>
-                      <p className="ml-2 font-bold font-mono">
+                      <p className="ml-2 font-mono font-bold">
                         {points.toFixed(2)} pkt
                       </p>
                     </div>
@@ -154,19 +154,19 @@ export const RankingList = ({ players }: RankingListProps) => (
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="grid grid-cols-3 gap-2 pt-2">
-                    <div className="rounded-lg bg-muted/50 p-3 text-center">
+                    <div className="bg-muted/50 rounded-lg p-3 text-center">
                       <p className="text-muted-foreground">Punkty</p>
-                      <p className="font-bold font-mono">{points.toFixed(2)}</p>
+                      <p className="font-mono font-bold">{points.toFixed(2)}</p>
                     </div>
-                    <div className="rounded-lg bg-muted/50 p-3 text-center">
+                    <div className="bg-muted/50 rounded-lg p-3 text-center">
                       <p className="text-muted-foreground">Obstawienia</p>
-                      <p className="font-semibold text-sm">
+                      <p className="text-sm font-semibold">
                         {player.totalBets}
                       </p>
                     </div>
-                    <div className="rounded-lg bg-muted/50 p-3 text-center">
+                    <div className="bg-muted/50 rounded-lg p-3 text-center">
                       <p className="text-muted-foreground">Zarobek</p>
-                      <p className="font-mono font-semibold text-sm">
+                      <p className="font-mono text-sm font-semibold">
                         {earnings.toLocaleString("pl-PL", {
                           maximumFractionDigits: 0,
                         })}

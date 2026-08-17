@@ -14,7 +14,7 @@ interface UseRankingDataParams {
 }
 
 const sortRanking = (
-  ranking: RankingItem[] | undefined,
+  ranking: readonly RankingItem[] | undefined,
   sortBy: "points" | "bets" | "gold"
 ): RankingItem[] => {
   const descendingNumber = Order.flip(Order.Number);
@@ -51,10 +51,7 @@ export const useRankingData = ({
     : undefined;
   const rankingLoading = AsyncResult.isWaiting(rankingResult);
 
-  const sortedRanking = sortRanking(
-    rankingData?.ranking as RankingItem[] | undefined,
-    currentSortBy
-  );
+  const sortedRanking = sortRanking(rankingData?.ranking, currentSortBy);
 
   return {
     pointWorth: rankingData?.pointWorth ?? null,

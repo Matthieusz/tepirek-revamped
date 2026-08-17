@@ -193,30 +193,22 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
         .orderBy(desc(sql`SUM(${userStats.points})`))
     );
 
-    let totalBets = 0;
+    let totalBetsRows: readonly { count: number }[];
     if (input.heroId !== undefined) {
-      const betsRows = yield* persistenceQuery(
+      totalBetsRows = yield* persistenceQuery(
         "getRanking.totalHeroBets",
         database
           .select({ count: sql<number>`count(*)` })
           .from(heroBet)
           .where(eq(heroBet.heroId, input.heroId))
       );
-      totalBets = yield* decodePersisted(
-        PersistedAggregateNumber,
-        "getRanking.decode"
-      )(betsRows[0]?.count ?? 0);
     } else if (input.eventId === undefined) {
-      const betsRows = yield* persistenceQuery(
+      totalBetsRows = yield* persistenceQuery(
         "getRanking.totalBets",
         database.select({ count: sql<number>`count(*)` }).from(heroBet)
       );
-      totalBets = yield* decodePersisted(
-        PersistedAggregateNumber,
-        "getRanking.decode"
-      )(betsRows[0]?.count ?? 0);
     } else {
-      const betsRows = yield* persistenceQuery(
+      totalBetsRows = yield* persistenceQuery(
         "getRanking.totalEventBets",
         database
           .select({ count: sql<number>`count(*)` })
@@ -224,11 +216,11 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
           .innerJoin(hero, eq(heroBet.heroId, hero.id))
           .where(eq(hero.eventId, input.eventId))
       );
-      totalBets = yield* decodePersisted(
-        PersistedAggregateNumber,
-        "getRanking.decode"
-      )(betsRows[0]?.count ?? 0);
     }
+    const totalBets = yield* decodePersisted(
+      PersistedAggregateNumber,
+      "getRanking.decode"
+    )(totalBetsRows[0]?.count ?? 0);
 
     const pointWorthRows =
       input.heroId === undefined

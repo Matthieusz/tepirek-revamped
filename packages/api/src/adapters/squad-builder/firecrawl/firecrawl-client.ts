@@ -20,7 +20,7 @@ import {
 const FirecrawlScrapeDeadline = "30 seconds";
 const FirecrawlMetadataNumber = Schema.Finite;
 
-const FirecrawlDocument = Schema.Struct({
+const FirecrawlDocumentSchema = Schema.Struct({
   html: Schema.String.check(Schema.isMinLength(1)),
   metadata: Schema.optionalKey(
     Schema.Struct({
@@ -34,12 +34,12 @@ const FirecrawlDocument = Schema.Struct({
   ),
 });
 
-interface FirecrawlScraper {
-  readonly scrape: (
-    url: string,
-    options: { readonly formats: readonly ["html"] }
-  ) => Promise<unknown>;
-}
+/** Decodes the Firecrawl response fields required by profile imports. */
+export const decodeFirecrawlDocument = Schema.decodeUnknownEffect(
+  FirecrawlDocumentSchema
+);
+
+type FirecrawlScraper = Pick<Firecrawl, "scrape">;
 
 /** Firecrawl SDK-backed implementation of profile HTML scraping. */
 export class FirecrawlSdkClient implements FirecrawlClient {
@@ -81,9 +81,7 @@ export class FirecrawlSdkClient implements FirecrawlClient {
           })
         );
 
-        const document = yield* Schema.decodeUnknownEffect(FirecrawlDocument)(
-          rawDocument
-        ).pipe(
+        const document = yield* decodeFirecrawlDocument(rawDocument).pipe(
           Effect.mapError(
             (cause) =>
               new FirecrawlResponseNotParseable({
