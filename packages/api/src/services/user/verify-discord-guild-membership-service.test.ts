@@ -7,8 +7,8 @@ import { TestClock } from "effect/testing";
 
 import { parseAppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import { DiscordGuildVerifier } from "./discord-guild-verifier.ts";
+import { verifyDiscordGuildMembership } from "./user-service.ts";
 import { UserStore } from "./user-store.ts";
-import { verifyDiscordGuildMembership } from "./verify-discord-guild-membership-service.ts";
 
 const FIXED_TIME = new Date("2026-02-20T12:00:00.000Z");
 
