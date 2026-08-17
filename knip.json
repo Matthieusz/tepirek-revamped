@@ -5,8 +5,7 @@
   "ignore": [
     "apps/web/src/components/reui/**",
     "apps/web/src/components/ui/**",
-    "packages/db/drizzle.config.ts",
-    "tools/oxlint/anti-slop/**"
+    "packages/db/drizzle.config.ts"
   ],
   "ignoreDependencies": [
     "@effect/language-service",
