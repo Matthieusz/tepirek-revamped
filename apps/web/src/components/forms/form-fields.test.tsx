@@ -59,7 +59,18 @@ describe("TanStack form fields", () => {
     expect(markup).toContain('name="confirmed"');
     expect(markup).toContain('aria-checked="true"');
     expect(markup).toContain('name="profession"');
-    expect(markup).toContain('for="field-name"');
+
+    for (const fieldId of [
+      "field-name",
+      "field-level",
+      "field-description",
+      "field-confirmed",
+      "field-profession",
+    ]) {
+      expect(markup).toContain(`id="${fieldId}-label"`);
+      expect(markup).toContain(`aria-labelledby="${fieldId}-label"`);
+      expect(markup).toContain(`for="${fieldId}"`);
+    }
   });
 
   it("connects helper and error content to the labelled control", () => {
@@ -72,14 +83,19 @@ describe("TanStack form fields", () => {
       >
         <input
           aria-describedby="field-name-helper field-name-error"
+          aria-errormessage="field-name-error"
+          aria-labelledby="field-name-label"
           id="field-name"
         />
       </FormFieldFrame>
     );
 
     expect(markup).toContain('for="field-name"');
+    expect(markup).toContain('id="field-name-label"');
+    expect(markup).toContain('aria-labelledby="field-name-label"');
     expect(markup).toContain('id="field-name-helper"');
     expect(markup).toContain('id="field-name-error"');
+    expect(markup).toContain('aria-errormessage="field-name-error"');
     expect(markup).toContain("Wartość jest wymagana");
   });
 

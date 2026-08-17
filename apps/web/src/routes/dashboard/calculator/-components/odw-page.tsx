@@ -181,7 +181,9 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
                         >
                           <SelectTrigger
                             aria-describedby={showError ? errorId : undefined}
+                            aria-errormessage={showError ? errorId : undefined}
                             aria-invalid={showError || undefined}
+                            aria-labelledby={`${fieldId}-label`}
                             id={fieldId}
                             onBlur={field.handleBlur}
                           >

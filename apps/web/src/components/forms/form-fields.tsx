@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -92,24 +93,28 @@ export const StringSelectField = (props: StringSelectFieldProps): ReactNode => {
       >
         <SelectTrigger
           aria-describedby={error === undefined ? undefined : errorId}
+          aria-errormessage={error === undefined ? undefined : errorId}
           aria-invalid={error !== undefined || undefined}
+          aria-labelledby={`${fieldId}-label`}
           id={fieldId}
           onBlur={field.handleBlur}
         >
           <SelectValue placeholder={props.placeholder} />
         </SelectTrigger>
         <SelectContent>
-          {props.loading ? (
-            <SelectItem disabled value="loading">
-              Ładowanie...
-            </SelectItem>
-          ) : (
-            props.options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
+          <SelectGroup>
+            {props.loading ? (
+              <SelectItem disabled value="loading">
+                Ładowanie...
               </SelectItem>
-            ))
-          )}
+            ) : (
+              props.options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))
+            )}
+          </SelectGroup>
         </SelectContent>
       </Select>
     </FormFieldFrame>
@@ -126,7 +131,9 @@ export const CheckboxField = (props: CheckboxFieldProps): ReactNode => {
       <div className="flex items-center gap-2">
         <Checkbox
           aria-describedby={error === undefined ? undefined : errorId}
+          aria-errormessage={error === undefined ? undefined : errorId}
           aria-invalid={error !== undefined || undefined}
+          aria-labelledby={`${fieldId}-label`}
           checked={field.state.value}
           id={fieldId}
           name={field.name}
@@ -137,7 +144,11 @@ export const CheckboxField = (props: CheckboxFieldProps): ReactNode => {
             }
           }}
         />
-        <Label className="text-sm font-medium" htmlFor={fieldId}>
+        <Label
+          className="text-sm font-medium"
+          htmlFor={fieldId}
+          id={`${fieldId}-label`}
+        >
           {props.label}
         </Label>
       </div>
@@ -161,7 +172,9 @@ export const TextField = (props: TextFieldProps): ReactNode => {
     >
       <Input
         aria-describedby={error === undefined ? undefined : errorId}
+        aria-errormessage={error === undefined ? undefined : errorId}
         aria-invalid={error !== undefined || undefined}
+        aria-labelledby={`${resolvedFieldId}-label`}
         aria-required={props.required || undefined}
         autoComplete={props.autoComplete}
         autoFocus={props.autoFocus}
@@ -198,7 +211,9 @@ export const NumberField = (
     >
       <Input
         aria-describedby={error === undefined ? undefined : errorId}
+        aria-errormessage={error === undefined ? undefined : errorId}
         aria-invalid={error !== undefined || undefined}
+        aria-labelledby={`${resolvedFieldId}-label`}
         aria-required={props.required || undefined}
         disabled={props.disabled}
         id={resolvedFieldId}
@@ -234,7 +249,9 @@ export const TextareaField = (
     >
       <Textarea
         aria-describedby={error === undefined ? undefined : errorId}
+        aria-errormessage={error === undefined ? undefined : errorId}
         aria-invalid={error !== undefined || undefined}
+        aria-labelledby={`${resolvedFieldId}-label`}
         aria-required={props.required || undefined}
         disabled={props.disabled}
         id={resolvedFieldId}

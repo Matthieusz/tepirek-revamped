@@ -88,7 +88,9 @@ export const EventFormField = ({
       >
         <SelectTrigger
           aria-describedby={showError ? errorId : undefined}
+          aria-errormessage={showError ? errorId : undefined}
           aria-invalid={showError || undefined}
+          aria-labelledby={`${fieldId}-label`}
           className="w-full"
           id={fieldId}
           onBlur={field.handleBlur}
@@ -149,7 +151,9 @@ export const HeroFormField = ({
       >
         <SelectTrigger
           aria-describedby={showError ? errorId : undefined}
+          aria-errormessage={showError ? errorId : undefined}
           aria-invalid={showError || undefined}
+          aria-labelledby={`${fieldId}-label`}
           className="w-full"
           id={fieldId}
           onBlur={field.handleBlur}

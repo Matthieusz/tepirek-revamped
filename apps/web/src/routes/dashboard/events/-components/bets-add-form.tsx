@@ -184,7 +184,9 @@ export const BetsAddForm = ({
                     >
                       <SelectTrigger
                         aria-describedby={showError ? errorId : undefined}
+                        aria-errormessage={showError ? errorId : undefined}
                         aria-invalid={showError || undefined}
+                        aria-labelledby={`${fieldId}-label`}
                         id={fieldId}
                         onBlur={field.handleBlur}
                       >

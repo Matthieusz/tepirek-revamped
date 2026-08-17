@@ -39,7 +39,11 @@ export const FormFieldFrame = ({
 }: FormFieldFrameProps): ReactNode => (
   <div className={cn("grid gap-2", className)}>
     {label !== undefined && (
-      <label className="text-sm font-medium" htmlFor={fieldId}>
+      <label
+        className="text-sm font-medium"
+        htmlFor={fieldId}
+        id={`${fieldId}-label`}
+      >
         {label}
       </label>
     )}
