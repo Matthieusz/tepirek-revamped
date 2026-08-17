@@ -11,10 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
-  ResponsiveDialogDescription,
   ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import {
@@ -116,17 +113,13 @@ const AddSkillModalContent = ({
   return (
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-106.25">
+      <ResponsiveDialogContent
+        description="Utwórz nowy zestaw umiejętności w tym przedziale."
+        title="Dodaj zestaw umiejętności"
+        className="sm:max-w-106.25"
+      >
         <form.AppForm>
           <Form form={form}>
-            <ResponsiveDialogHeader>
-              <ResponsiveDialogTitle>
-                Dodaj zestaw umiejętności
-              </ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>
-                Utwórz nowy zestaw umiejętności w tym przedziale.
-              </ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
             <div className="grid gap-4 py-4">
               <form.AppField name="link">
                 {(field) => (

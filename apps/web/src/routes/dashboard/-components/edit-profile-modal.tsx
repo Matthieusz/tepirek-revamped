@@ -11,10 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
-  ResponsiveDialogDescription,
   ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { updateProfileAtom } from "@/features/users/user-atoms";
@@ -80,15 +77,13 @@ const EditProfileModalContent = ({
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger
         render={
-          <ResponsiveDialogContent className="sm:max-w-[425px]">
+          <ResponsiveDialogContent
+            description="Zmień wyświetlaną nazwę."
+            title="Edytuj profil"
+            className="sm:max-w-[425px]"
+          >
             <form.AppForm>
               <Form form={form}>
-                <ResponsiveDialogHeader>
-                  <ResponsiveDialogTitle>Edytuj profil</ResponsiveDialogTitle>
-                  <ResponsiveDialogDescription>
-                    Zmień wyświetlaną nazwę.
-                  </ResponsiveDialogDescription>
-                </ResponsiveDialogHeader>
                 <div className="grid gap-4 py-4">
                   <form.AppField name="name">
                     {(field) => (

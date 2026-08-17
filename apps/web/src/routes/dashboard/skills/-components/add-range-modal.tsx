@@ -11,10 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
-  ResponsiveDialogDescription,
   ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { createSkillRangeAtom } from "@/features/skills/skill-atoms";
@@ -79,17 +76,13 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
   return (
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-106.25">
+      <ResponsiveDialogContent
+        description="Utwórz nowy przedział z nazwą i poziomem."
+        title="Dodaj nowy przedział"
+        className="sm:max-w-106.25"
+      >
         <form.AppForm>
           <Form form={form}>
-            <ResponsiveDialogHeader>
-              <ResponsiveDialogTitle>
-                Dodaj nowy przedział
-              </ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>
-                Utwórz nowy przedział z nazwą i poziomem.
-              </ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
             <div className="grid gap-4 py-4">
               <form.AppField name="name">
                 {(field) => (

@@ -16,6 +16,7 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
@@ -108,18 +109,43 @@ const ResponsiveDialogTrigger = ({
   );
 };
 
+type ResponsiveDialogContentProps = Omit<
+  React.ComponentProps<typeof DialogContent>,
+  "aria-describedby" | "aria-label" | "children" | "title"
+> & {
+  "aria-describedby"?: string;
+  "aria-label"?: string;
+  children?: React.ReactNode;
+  description?: React.ReactNode;
+  title: React.ReactNode;
+};
+
 const ResponsiveDialogContent = ({
   children,
   className,
-  "aria-label": ariaLabel,
+  description,
+  title,
   "aria-describedby": ariaDescribedBy,
+  "aria-label": ariaLabel,
   ...props
-}: React.ComponentProps<typeof DialogContent>) => {
+}: ResponsiveDialogContentProps) => {
   const isMobile = useResponsiveDialog();
 
   if (isMobile) {
     return (
-      <DrawerContent aria-label={ariaLabel}>
+      <DrawerContent
+        aria-describedby={ariaDescribedBy}
+        aria-label={ariaLabel}
+        className={Predicate.isString(className) ? className : undefined}
+      >
+        <div className="mt-2 flex flex-col gap-1.5 px-4 pb-4 text-center">
+          <DrawerTitle className="text-lg leading-none font-semibold tracking-tight">
+            {title}
+          </DrawerTitle>
+          {description !== undefined ? (
+            <DrawerDescription>{description}</DrawerDescription>
+          ) : null}
+        </div>
         <div className="max-h-[85vh] overflow-y-auto px-4 pb-4">{children}</div>
       </DrawerContent>
     );
@@ -128,9 +154,16 @@ const ResponsiveDialogContent = ({
   return (
     <DialogContent
       aria-describedby={ariaDescribedBy}
+      aria-label={ariaLabel}
       className={className}
       {...props}
     >
+      <DialogHeader>
+        <DialogTitle>{title}</DialogTitle>
+        {description !== undefined ? (
+          <DialogDescription>{description}</DialogDescription>
+        ) : null}
+      </DialogHeader>
       {children}
     </DialogContent>
   );

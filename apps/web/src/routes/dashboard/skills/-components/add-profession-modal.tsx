@@ -11,10 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
-  ResponsiveDialogDescription,
   ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { createSkillProfessionAtom } from "@/features/skills/skill-atoms";
@@ -78,15 +75,13 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
   return (
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-[425px]">
+      <ResponsiveDialogContent
+        description="Utwórz nową profesję."
+        title="Dodaj profesję"
+        className="sm:max-w-[425px]"
+      >
         <form.AppForm>
           <Form form={form}>
-            <ResponsiveDialogHeader>
-              <ResponsiveDialogTitle>Dodaj profesję</ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>
-                Utwórz nową profesję.
-              </ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
             <div className="grid gap-4 py-4">
               <form.AppField name="name">
                 {(field) => (

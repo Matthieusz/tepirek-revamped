@@ -18,10 +18,7 @@ import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
-  ResponsiveDialogDescription,
   ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { editBetAtom } from "@/features/events/bets/bet-atoms";
@@ -136,17 +133,13 @@ const EditBetModalContent = ({
           </Button>
         )}
       </ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-[600px]">
+      <ResponsiveDialogContent
+        description={`Modyfikuj listę graczy obstawiających herosa "${heroName}".`}
+        title="Edytuj obstawienie"
+        className="sm:max-w-[600px]"
+      >
         <form.AppForm>
           <Form form={form}>
-            <ResponsiveDialogHeader>
-              <ResponsiveDialogTitle>Edytuj obstawienie</ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>
-                Modyfikuj listę graczy obstawiających herosa &quot;{heroName}
-                &quot;.
-              </ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
-
             <form.Field name="userIds">
               {(field) => {
                 const fieldId = getFieldId(field.name);

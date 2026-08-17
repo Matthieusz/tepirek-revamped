@@ -11,10 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
-  ResponsiveDialogDescription,
   ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { eventsAtom } from "@/features/events/core/event-atoms";
@@ -103,15 +100,13 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
   return (
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-106.25">
+      <ResponsiveDialogContent
+        description="Utwórz nowego herosa do wybranego eventu."
+        title="Dodaj nowego herosa"
+        className="sm:max-w-106.25"
+      >
         <form.AppForm>
           <Form form={form}>
-            <ResponsiveDialogHeader>
-              <ResponsiveDialogTitle>Dodaj nowego herosa</ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>
-                Utwórz nowego herosa do wybranego eventu.
-              </ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
             <div className="grid gap-4 py-4">
               <form.AppField name="name">
                 {(field) => (

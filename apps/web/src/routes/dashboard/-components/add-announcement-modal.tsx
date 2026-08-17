@@ -11,10 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
-  ResponsiveDialogDescription,
   ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { createAnnouncementAtom } from "@/features/announcements/announcement-atoms";
@@ -83,17 +80,13 @@ export const AddAnnouncementModal = ({
   return (
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-150">
+      <ResponsiveDialogContent
+        description="Utwórz nowe ogłoszenie z tytułem i opisem."
+        title="Dodaj nowe ogłoszenie"
+        className="sm:max-w-150"
+      >
         <form.AppForm>
           <Form form={form}>
-            <ResponsiveDialogHeader>
-              <ResponsiveDialogTitle>
-                Dodaj nowe ogłoszenie
-              </ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>
-                Utwórz nowe ogłoszenie z tytułem i opisem.
-              </ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
             <div className="grid gap-4 py-4">
               <form.AppField name="title">
                 {(field) => (

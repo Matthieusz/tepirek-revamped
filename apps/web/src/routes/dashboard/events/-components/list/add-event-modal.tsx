@@ -29,10 +29,7 @@ import {
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
-  ResponsiveDialogDescription,
   ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { createEventAtom } from "@/features/events/core/event-atoms";
@@ -127,15 +124,13 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
   return (
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-106.25">
+      <ResponsiveDialogContent
+        description="Utwórz nowy event z nazwą i datą końcową."
+        title="Dodaj nowy event"
+        className="sm:max-w-106.25"
+      >
         <form.AppForm>
           <Form form={form}>
-            <ResponsiveDialogHeader>
-              <ResponsiveDialogTitle>Dodaj nowy event</ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>
-                Utwórz nowy event z nazwą i datą końcową.
-              </ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
             <div className="grid gap-4 py-4">
               <form.AppField name="name">
                 {(field) => (

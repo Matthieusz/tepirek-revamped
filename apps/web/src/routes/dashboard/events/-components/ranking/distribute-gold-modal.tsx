@@ -14,10 +14,7 @@ import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
-  ResponsiveDialogDescription,
   ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { eventsAtom } from "@/features/events/core/event-atoms";
@@ -221,19 +218,18 @@ const DistributeGoldModalContent = ({
   return (
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
       <ResponsiveDialogTrigger asChild>{trigger}</ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-125">
+      <ResponsiveDialogContent
+        description="Ustaw kwotę złota do rozdzielenia dla herosa. Złoto zostanie podzielone proporcjonalnie do punktów każdego gracza."
+        title={
+          <span className="flex items-center gap-2">
+            <Coins className="size-5 text-yellow-500" />
+            Rozdziel złoto
+          </span>
+        }
+        className="sm:max-w-125"
+      >
         <form.AppForm>
           <Form form={form}>
-            <ResponsiveDialogHeader>
-              <ResponsiveDialogTitle className="flex items-center gap-2">
-                <Coins className="size-5 text-yellow-500" />
-                Rozdziel złoto
-              </ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>
-                Ustaw kwotę złota do rozdzielenia dla herosa. Złoto zostanie
-                podzielone proporcjonalnie do punktów każdego gracza.
-              </ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
             <div className="grid gap-4 py-4">
               <form.Field name="eventId">
                 {(field) => (
