@@ -79,4 +79,9 @@ onlyBuiltDependencies:
   - msgpackr-extract
 
 overrides:
+  "@effect/platform-node-shared": 4.0.0-beta.101
+  "@effect/sql-pg": 4.0.0-beta.101
+  "@types/pg": 8.20.0
   drizzle-orm: 1.0.0-rc.4
+  effect: 4.0.0-beta.101
+  pg: 8.22.0
