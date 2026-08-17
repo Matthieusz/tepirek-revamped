@@ -12,7 +12,7 @@ import type {
   SquadEditorInviteTargetNotVerified,
 } from "./squad-group-errors.ts";
 
-export type { AvailableSquadCharacter };
+export type { AvailableSquadCharacter } from "../../../domain/squad-builder/squad-group-snapshot.ts";
 
 /** Read model for a squad editor invite search result. */
 export interface SquadEditorInviteTarget {

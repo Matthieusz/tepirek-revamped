@@ -6,7 +6,7 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 import { BetId, EventId, HeroId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 
-export { BetId, EventId, HeroId };
+export { BetId, EventId, HeroId } from "../../domain/core-identifiers.ts";
 
 const PositiveInt = Schema.Finite.check(
   Schema.isInt(),

@@ -6,7 +6,7 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 import { TodoId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 
-export { TodoId };
+export { TodoId } from "../../domain/core-identifiers.ts";
 
 export const CreateTodoPayload = Schema.Struct({
   text: Schema.NonEmptyString,

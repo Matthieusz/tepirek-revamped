@@ -1,10 +1,5 @@
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import {
-  AUCTION_PROFESSIONS,
-  isAuctionProfession,
-  isAuctionType,
-} from "@tepirek-revamped/config";
-import {
   Axe,
   Crosshair,
   Flame,
@@ -16,8 +11,12 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export { AUCTION_PROFESSIONS, isAuctionProfession, isAuctionType };
-export type { AuctionProfession, AuctionType };
+export {
+  AUCTION_PROFESSIONS,
+  isAuctionProfession,
+  isAuctionType,
+} from "@tepirek-revamped/config";
+export type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 
 interface AuctionTypeMeta {
   crumb: string;

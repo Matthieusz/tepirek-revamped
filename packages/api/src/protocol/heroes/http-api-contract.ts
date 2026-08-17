@@ -10,7 +10,7 @@ const HeroLevel = Schema.Finite.check(
   Schema.isBetween({ maximum: 300, minimum: 1 })
 );
 
-export { EventId, HeroId };
+export { EventId, HeroId } from "../../domain/core-identifiers.ts";
 
 export const CreateHeroPayload = Schema.Struct({
   eventId: EventId,

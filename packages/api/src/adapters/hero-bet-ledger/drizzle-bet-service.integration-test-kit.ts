@@ -24,14 +24,15 @@ import type {
   VaultServiceInterface,
 } from "../../services/vault/vault-service.ts";
 import { VaultService } from "../../services/vault/vault-service.ts";
-import {
-  createHero,
-  createVerifiedMember,
-} from "../../test/integration/builders.ts";
 import { defaultTestDatabaseUrl } from "../../test/integration/database.ts";
 import { DrizzleBetServiceLayer } from "./drizzle-bet-service.ts";
 import { DrizzleRankingServiceLayer } from "./drizzle-ranking-service.ts";
 import { DrizzleVaultServiceLayer } from "./drizzle-vault-service.ts";
+
+export {
+  createHero,
+  createVerifiedMember,
+} from "../../test/integration/builders.ts";
 
 /** Shared live layers used by the hero-bet-ledger integration tests. */
 export const testLayer = (() => {
@@ -178,9 +179,4 @@ export const expectLedgerError = <R>(
 /** Sort read-model rows by their stable user identifier for deterministic assertions. */
 export const sortByUserId = <T extends { userId: string }>(
   rows: readonly T[]
-) =>
-  (rows as T[]).toSorted((left, right) =>
-    left.userId.localeCompare(right.userId)
-  );
-
-export { createHero, createVerifiedMember };
+) => rows.toSorted((left, right) => left.userId.localeCompare(right.userId));

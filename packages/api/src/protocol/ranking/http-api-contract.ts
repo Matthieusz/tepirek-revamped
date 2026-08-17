@@ -6,7 +6,7 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 import { EventId, HeroId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 
-export { EventId, HeroId };
+export { EventId, HeroId } from "../../domain/core-identifiers.ts";
 
 const RankingMetric = Schema.Finite;
 

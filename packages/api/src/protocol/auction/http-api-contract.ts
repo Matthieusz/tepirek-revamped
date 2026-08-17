@@ -11,7 +11,7 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 import { AuctionSignupId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 
-export { AuctionSignupId };
+export { AuctionSignupId } from "../../domain/core-identifiers.ts";
 
 const PositiveInt = Schema.Finite.check(
   Schema.isInt(),

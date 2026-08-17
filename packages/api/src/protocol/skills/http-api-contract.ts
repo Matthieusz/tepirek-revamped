@@ -9,7 +9,11 @@ import {
   SkillRangeId,
 } from "../../domain/core-identifiers.ts";
 
-export { ProfessionId, SkillId, SkillRangeId };
+export {
+  ProfessionId,
+  SkillId,
+  SkillRangeId,
+} from "../../domain/core-identifiers.ts";
 
 const SkillLevel = Schema.Finite.check(
   Schema.isInt(),

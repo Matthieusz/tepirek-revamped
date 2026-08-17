@@ -8,12 +8,9 @@ import {
   ActiveSquadGroupInvitationStatusSchema,
   SquadGroupInvitationStatusSchema,
 } from "../../../domain/squad-builder/squad-group-invitation-status.ts";
-import {
-  AccountInviteTargetSchema,
-  InviteResponseSchema,
-} from "../account-sharing/account-sharing-schema.ts";
+import { InviteResponseSchema } from "../account-sharing/account-sharing-schema.ts";
 
-export const SquadEditorInviteTargetSchema = AccountInviteTargetSchema;
+export { AccountInviteTargetSchema as SquadEditorInviteTargetSchema } from "../account-sharing/account-sharing-schema.ts";
 export const SearchSquadEditorInviteTargetsPayload = Schema.Struct({
   groupId: SquadGroupId,
   query: Schema.String,

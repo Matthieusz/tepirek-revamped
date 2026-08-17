@@ -6,7 +6,7 @@ import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 import { AnnouncementId } from "../../domain/core-identifiers.ts";
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 
-export { AnnouncementId };
+export { AnnouncementId } from "../../domain/core-identifiers.ts";
 
 const { NonEmptyString } = Schema;
 export const CreateAnnouncementPayload = Schema.Struct({
