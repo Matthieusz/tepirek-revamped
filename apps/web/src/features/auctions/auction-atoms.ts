@@ -19,7 +19,7 @@ const removeAuctionSignupById = (
   input: { readonly id: number }
 ) => signups.filter((signup) => signup.id !== input.id);
 
-interface AuctionGroupInput {
+export interface AuctionGroupInput {
   readonly profession: AuctionProfession;
   readonly type: AuctionType;
 }

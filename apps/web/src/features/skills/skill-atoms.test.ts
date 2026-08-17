@@ -1,3 +1,4 @@
+import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -13,6 +14,16 @@ import {
   makeTestLayer,
   waitForAtomResults,
 } from "@/lib/test-utils/atom-test-utils";
+
+const SkillRangePayloadSchema = Schema.Struct({ rangeId: Schema.Finite });
+
+const hasRangeId = (
+  call: { readonly args: unknown; readonly method: string },
+  rangeId: number
+): boolean =>
+  call.method === "listSkillsByRange" &&
+  Schema.decodeUnknownSync(SkillRangePayloadSchema)(call.args).rangeId ===
+    rangeId;
 
 describe("skill atoms", () => {
   describe("resource atoms produce distinct family members per key", () => {
@@ -95,18 +106,10 @@ describe("skill atoms", () => {
       registry.mount(skills);
       await waitForAtomResults(registry, [skills]);
 
-      const callsForRange5 = calls.filter(
-        (c) =>
-          c.method === "listSkillsByRange" &&
-          (c.args as { readonly rangeId?: number })?.rangeId === 5
-      );
+      const callsForRange5 = calls.filter((c) => hasRangeId(c, 5));
       expect(callsForRange5).toHaveLength(1);
 
-      const callsForRange0 = calls.filter(
-        (c) =>
-          c.method === "listSkillsByRange" &&
-          (c.args as { readonly rangeId?: number })?.rangeId === 0
-      );
+      const callsForRange0 = calls.filter((c) => hasRangeId(c, 0));
       expect(callsForRange0).toHaveLength(0);
     });
 
@@ -115,11 +118,7 @@ describe("skill atoms", () => {
       const registry = makeRegistry();
 
       registry.mount(skillsByRangeAtom(0));
-      const callsForRange0 = calls.filter(
-        (c) =>
-          c.method === "listSkillsByRange" &&
-          (c.args as { readonly rangeId?: number })?.rangeId === 0
-      );
+      const callsForRange0 = calls.filter((c) => hasRangeId(c, 0));
       expect(callsForRange0).toHaveLength(0);
     });
   });

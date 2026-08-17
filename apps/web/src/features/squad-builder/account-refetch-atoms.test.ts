@@ -1,3 +1,4 @@
+import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
 import { ownedAccountsAtom } from "@/features/squad-builder/account-import-atoms";
@@ -6,6 +7,10 @@ import {
   makeTestLayer,
   waitForAtomResults,
 } from "@/lib/test-utils/atom-test-utils";
+
+const AccountRefetchPayloadSchema = Schema.Struct({
+  refetchPreviewId: Schema.Finite,
+});
 
 describe("account refetch atoms", () => {
   it("applyAccountRefetchAtom refreshes ownedAccountsAtom", async () => {
@@ -37,8 +42,8 @@ describe("account refetch atoms", () => {
     const applyCalls = calls.filter((c) => c.method === "applyAccountRefetch");
     expect(applyCalls).toHaveLength(1);
     expect(
-      (applyCalls[0]?.args as { readonly refetchPreviewId?: unknown })
-        ?.refetchPreviewId
+      Schema.decodeUnknownSync(AccountRefetchPayloadSchema)(applyCalls[0]?.args)
+        .refetchPreviewId
     ).toBe(42);
   });
 });

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { SelectableUser } from "@/features/events/bets/user-select-list";
 
+import type { LastBetState } from "./member-selection";
 import {
   clearSelection,
   copyLastBet,
@@ -106,8 +107,8 @@ describe("restoreSelection", () => {
 
 describe("copyLastBet", () => {
   it("maps the last bet's members to selected user IDs", () => {
-    const lastBet = {
-      _tag: "available" as const,
+    const lastBet: LastBetState = {
+      _tag: "available",
       members: [{ userId: "u2" }, { userId: "u3" }],
     };
     expect(copyLastBet(lastBet)).toEqual(["u2", "u3"]);

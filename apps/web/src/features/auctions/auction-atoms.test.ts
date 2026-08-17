@@ -1,3 +1,5 @@
+import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
+import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -6,18 +8,37 @@ import {
   toggleAuctionSignupAtom,
   removeAuctionSignupFromGroupAtom,
 } from "@/features/auctions/auction-atoms";
+import type { AuctionGroupInput } from "@/features/auctions/auction-atoms";
 import {
   makeTestLayer,
   waitForAtomResults,
 } from "@/lib/test-utils/atom-test-utils";
+
+const AuctionGroupPayloadSchema = Schema.Struct({
+  profession: Schema.String,
+});
+
+const hasProfession = (
+  call: { readonly args: unknown; readonly method: string },
+  method: string,
+  profession: string
+): boolean => {
+  if (call.method !== method) {
+    return false;
+  }
+  return (
+    Schema.decodeUnknownSync(AuctionGroupPayloadSchema)(call.args)
+      .profession === profession
+  );
+};
 
 describe("auction atoms", () => {
   it("toggleAuctionSignupAtom triggers getAuctionSignups and getAuctionStats fetches for the toggled group", async () => {
     const { calls, makeRegistry } = makeTestLayer();
     const registry = makeRegistry();
 
-    const profession = "mage" as const;
-    const type = "main" as const;
+    const profession: AuctionProfession = "mage";
+    const type: AuctionType = "main";
 
     const signups = auctionSignupsAtom({ profession, type });
     const stats = auctionStatsAtom({ profession, type });
@@ -48,8 +69,11 @@ describe("auction atoms", () => {
     const { calls, makeRegistry } = makeTestLayer();
     const registry = makeRegistry();
 
-    const groupA = { profession: "mage" as const, type: "main" as const };
-    const groupB = { profession: "warrior" as const, type: "main" as const };
+    const groupA: AuctionGroupInput = { profession: "mage", type: "main" };
+    const groupB: AuctionGroupInput = {
+      profession: "warrior",
+      type: "main",
+    };
 
     const mountedAtoms = [
       auctionSignupsAtom(groupA),
@@ -63,15 +87,11 @@ describe("auction atoms", () => {
     registry.mount(mountedAtoms[3]);
     await waitForAtomResults(registry, mountedAtoms);
 
-    const groupBSignupsBefore = calls.filter(
-      (c) =>
-        c.method === "getAuctionSignups" &&
-        (c.args as { readonly profession?: string })?.profession === "warrior"
+    const groupBSignupsBefore = calls.filter((c) =>
+      hasProfession(c, "getAuctionSignups", "warrior")
     ).length;
-    const groupBStatsBefore = calls.filter(
-      (c) =>
-        c.method === "getAuctionStats" &&
-        (c.args as { readonly profession?: string })?.profession === "warrior"
+    const groupBStatsBefore = calls.filter((c) =>
+      hasProfession(c, "getAuctionStats", "warrior")
     ).length;
 
     registry.set(toggleAuctionSignupAtom, {
@@ -82,15 +102,11 @@ describe("auction atoms", () => {
     });
     await waitForAtomResults(registry, [toggleAuctionSignupAtom]);
 
-    const groupBSignupsAfter = calls.filter(
-      (c) =>
-        c.method === "getAuctionSignups" &&
-        (c.args as { readonly profession?: string })?.profession === "warrior"
+    const groupBSignupsAfter = calls.filter((c) =>
+      hasProfession(c, "getAuctionSignups", "warrior")
     ).length;
-    const groupBStatsAfter = calls.filter(
-      (c) =>
-        c.method === "getAuctionStats" &&
-        (c.args as { readonly profession?: string })?.profession === "warrior"
+    const groupBStatsAfter = calls.filter((c) =>
+      hasProfession(c, "getAuctionStats", "warrior")
     ).length;
 
     expect(groupBSignupsAfter).toBe(groupBSignupsBefore);
@@ -99,8 +115,8 @@ describe("auction atoms", () => {
 
   it("removeAuctionSignupFromGroupAtom constructs the correct group key from payload", () => {
     const atom = removeAuctionSignupFromGroupAtom({
-      profession: "mage" as const,
-      type: "main" as const,
+      profession: "mage",
+      type: "main",
     });
     expect(atom).toBeDefined();
   });
