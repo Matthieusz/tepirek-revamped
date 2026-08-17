@@ -84,7 +84,6 @@ export const Form = ({
   useEffect(() => {
     if (submissionAttempts === 0) {
       lastFocusedSubmissionAttempt.current = 0;
-      setInvalidControls([]);
       return;
     }
 
@@ -94,7 +93,6 @@ export const Form = ({
     }
 
     const controls = getInvalidControls(formElement);
-    setInvalidControls(controls.length >= 3 ? controls : []);
     if (lastFocusedSubmissionAttempt.current === submissionAttempts) {
       return;
     }
@@ -106,10 +104,20 @@ export const Form = ({
     }
   }, [submissionAttempts, validationErrorCount]);
 
+  const syncInvalidControls = (): void => {
+    const formElement = formRef.current;
+    if (formElement === null) {
+      return;
+    }
+    const controls = getInvalidControls(formElement);
+    setInvalidControls(controls.length >= 3 ? controls : []);
+  };
+
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>): void => {
     event.preventDefault();
+    setInvalidControls([]);
     onSubmit?.(event);
-    void form.handleSubmit();
+    void form.handleSubmit().then(syncInvalidControls, syncInvalidControls);
   };
 
   return (
@@ -117,14 +125,14 @@ export const Form = ({
       {invalidControls.length >= 3 && (
         <div
           aria-labelledby={errorSummaryId}
-          className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm"
+          className="border-destructive/30 bg-destructive/5 rounded-md border p-3 text-sm"
           role="region"
           tabIndex={-1}
         >
-          <p className="font-medium text-destructive" id={errorSummaryId}>
+          <p className="text-destructive font-medium" id={errorSummaryId}>
             Formularz zawiera błędy. Popraw zaznaczone pola.
           </p>
-          <ul className="mt-2 list-inside list-disc text-destructive">
+          <ul className="text-destructive mt-2 list-inside list-disc">
             {invalidControls.map((control) => (
               <li key={control.id}>
                 <button

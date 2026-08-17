@@ -55,7 +55,9 @@ const TestForm = ({
   useEffect(() => {
     form.reset({ name: defaultName });
   }, [defaultName, form]);
-  onForm?.(form);
+  useEffect(() => {
+    onForm?.(form);
+  }, [form, onForm]);
 
   return (
     <form.AppForm>
@@ -67,6 +69,16 @@ const TestForm = ({
       </Form>
     </form.AppForm>
   );
+};
+
+const renderTestForm = async (element: React.ReactNode) => {
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  await act(async () => {
+    root.render(element);
+  });
+  return { container, root };
 };
 
 describe("TanStack app form", () => {
@@ -136,7 +148,7 @@ describe("TanStack app form", () => {
   it("routes Effect Schema messages to fields and blocks submission", async () => {
     let form: AnyFormApi | undefined;
     const submit = vi.fn();
-    renderToStaticMarkup(
+    const { root } = await renderTestForm(
       <TestForm onForm={(value) => (form = value)} onSubmit={submit} />
     );
 
@@ -147,6 +159,7 @@ describe("TanStack app form", () => {
     expect(form?.state.fieldMeta.name?.errors).toEqual([
       expect.objectContaining({ message: "Podaj nazwę" }),
     ]);
+    root.unmount();
   });
 
   it("keeps draft values after a failed mutation and resets after success", async () => {
@@ -155,7 +168,7 @@ describe("TanStack app form", () => {
       .fn<(name: string) => Promise<void>>()
       .mockRejectedValueOnce(new Error("provider failed"))
       .mockResolvedValueOnce();
-    renderToStaticMarkup(
+    const { root } = await renderTestForm(
       <TestForm
         onForm={(value) => (form = value)}
         onSubmit={(name) => mutation(name)}
@@ -170,6 +183,7 @@ describe("TanStack app form", () => {
     form?.reset();
     expect(form?.state.values).toEqual({ name: "Ala" });
     expect(mutation).toHaveBeenCalledTimes(2);
+    root.unmount();
   });
 
   it("preserves transformed values in the application submit handler", async () => {
@@ -210,7 +224,7 @@ describe("TanStack app form", () => {
           resolveMutation = resolve;
         })
     );
-    renderToStaticMarkup(
+    const { root } = await renderTestForm(
       <TestForm
         onForm={(value) => (form = value)}
         onSubmit={() => mutation()}
@@ -231,5 +245,6 @@ describe("TanStack app form", () => {
 
     form?.reset();
     expect(form?.state.values).toEqual({ name: "Ala" });
+    root.unmount();
   });
 });
