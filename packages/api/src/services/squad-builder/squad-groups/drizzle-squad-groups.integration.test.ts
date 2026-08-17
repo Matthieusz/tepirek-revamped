@@ -36,7 +36,7 @@ const parseTestSquadGroupId = (value: number) =>
 const parseTestSquadId = (value: number) => Effect.runSync(parseSquadId(value));
 
 const parseTestCharacterPosition = (value: number) =>
-  Effect.runSync(Schema.decodeUnknownEffect(CharacterPosition)(value));
+  Effect.runSync(Schema.decodeEffect(CharacterPosition)(value));
 
 effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
   "Drizzle squad groups integration",

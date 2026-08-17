@@ -122,7 +122,7 @@ const parseNameQuery = Effect.fnUntraced(function* parseNameQuery(
   }
 
   return ParsedNameQuery.Present({
-    value: yield* Schema.decodeUnknownEffect(SquadGroupNameQuery)(value).pipe(
+    value: yield* Schema.decodeEffect(SquadGroupNameQuery)(value).pipe(
       Effect.catchTag(
         "SchemaError",
         () =>
@@ -152,7 +152,7 @@ const parseLevelBound = Effect.fnUntraced(function* parseLevelBound(
   }
 
   return ParsedLevelBound.Present({
-    value: yield* Schema.decodeUnknownEffect(SquadGroupLevelBound)(value).pipe(
+    value: yield* Schema.decodeEffect(SquadGroupLevelBound)(value).pipe(
       Effect.catchTag(
         "SchemaError",
         () =>

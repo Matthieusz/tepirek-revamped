@@ -31,7 +31,7 @@ describe("core identifiers", () => {
   it.effect("decode positive integer representations", () =>
     Effect.gen(function* decodePositiveIntegers() {
       for (const [_name, schema] of identifiers) {
-        expect(yield* Schema.decodeUnknownEffect(schema)(123)).toBe(123);
+        expect(yield* Schema.decodeEffect(schema)(123)).toBe(123);
       }
     })
   );
@@ -40,7 +40,7 @@ describe("core identifiers", () => {
     Effect.gen(function* rejectInvalidRepresentations() {
       for (const [_name, schema] of identifiers) {
         for (const value of [0, -1, 1.5, Number.NaN]) {
-          const failure = yield* Schema.decodeUnknownEffect(schema)(value).pipe(
+          const failure = yield* Schema.decodeEffect(schema)(value).pipe(
             Effect.flip
           );
           expect(failure._tag).toBe("SchemaError");

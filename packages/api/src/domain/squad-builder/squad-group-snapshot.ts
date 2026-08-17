@@ -110,7 +110,7 @@ export interface SaveSquadInput {
   }[];
 }
 
-export type { SquadGroupValidationError };
+export type { SquadGroupValidationError } from "./squad-group-validation-errors.ts";
 
 /** Input for parsing a full squad group snapshot before persistence. */
 export interface ParseSquadGroupSnapshotInput {
@@ -138,13 +138,13 @@ const invalidPosition = () =>
   });
 
 const parseSquadPosition = (input: number) =>
-  Schema.decodeUnknownEffect(SquadPosition)(input).pipe(
+  Schema.decodeEffect(SquadPosition)(input).pipe(
     Effect.mapError(invalidPosition)
   );
 
 /** Parse a character position and return a typed validation failure when invalid. */
 export const parseCharacterPosition = (input: number) =>
-  Schema.decodeUnknownEffect(CharacterPosition)(input).pipe(
+  Schema.decodeEffect(CharacterPosition)(input).pipe(
     Effect.mapError(invalidPosition)
   );
 

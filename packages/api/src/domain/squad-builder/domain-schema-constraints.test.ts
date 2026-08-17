@@ -12,14 +12,12 @@ import { SquadGroupName, SquadName } from "./squad-name.ts";
 
 describe("squad builder branded schema constraints", () => {
   it("normalizes names in schema constructors", () => {
-    expect(Schema.decodeUnknownSync(AccountDisplayName)("  Konto  ")).toBe(
-      "Konto"
+    expect(Schema.decodeSync(AccountDisplayName)("  Konto  ")).toBe("Konto");
+    expect(Schema.decodeSync(SquadGroupName)("  Grupa  ")).toBe("Grupa");
+    expect(Schema.decodeSync(SquadName)("  Skład  ")).toBe("Skład");
+    expect(Schema.decodeSync(SquadGroupNameQuery)("  Smoki   Jaruna  ")).toBe(
+      "Smoki Jaruna"
     );
-    expect(Schema.decodeUnknownSync(SquadGroupName)("  Grupa  ")).toBe("Grupa");
-    expect(Schema.decodeUnknownSync(SquadName)("  Skład  ")).toBe("Skład");
-    expect(
-      Schema.decodeUnknownSync(SquadGroupNameQuery)("  Smoki   Jaruna  ")
-    ).toBe("Smoki Jaruna");
   });
 
   it("rejects names outside their schema constraints", () => {

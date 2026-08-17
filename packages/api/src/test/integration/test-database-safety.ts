@@ -24,7 +24,7 @@ export const parseDatabaseUrl = (
   environmentKey: "DATABASE_URL" | "TEST_DATABASE_URL"
 ): DatabaseUrlMetadata => {
   try {
-    const url = Schema.decodeUnknownSync(Schema.URLFromString)(value);
+    const url = Schema.decodeSync(Schema.URLFromString)(value);
 
     if (
       !HashSet.has(postgresProtocols, url.protocol) ||

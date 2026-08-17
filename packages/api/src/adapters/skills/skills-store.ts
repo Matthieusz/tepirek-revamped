@@ -49,7 +49,7 @@ const decodePersisted = <A>(
   );
 
 const assertHttpUrl = (link: string) =>
-  Schema.decodeUnknownEffect(Schema.URLFromString)(link).pipe(
+  Schema.decodeEffect(Schema.URLFromString)(link).pipe(
     Effect.mapError(
       () => new ApplicationInvalidInput({ message: "Podaj poprawny URL" })
     ),

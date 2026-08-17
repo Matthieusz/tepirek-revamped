@@ -28,7 +28,7 @@ export interface StartupConfig {
 }
 
 const validateDatabaseUrl = (value: string) =>
-  Schema.decodeUnknownEffect(Schema.URLFromString)(value).pipe(
+  Schema.decodeEffect(Schema.URLFromString)(value).pipe(
     Effect.asVoid,
     Effect.mapError(
       () =>

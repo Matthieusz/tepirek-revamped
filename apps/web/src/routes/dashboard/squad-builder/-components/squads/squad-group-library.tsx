@@ -54,6 +54,9 @@ import {
 type SharedSquadGroupSummary = SharedSquadGroupSummarySchema;
 type SquadListTab = "mine" | "shared" | "public";
 
+const isSquadListTab = (value: string): value is SquadListTab =>
+  value === "mine" || value === "shared" || value === "public";
+
 interface SquadGroupListFilterFormState {
   readonly nameQuery: string;
   readonly minLevel: string;
@@ -70,7 +73,7 @@ const PositiveLevelFromString = Schema.FiniteFromString.pipe(
   Schema.check(Schema.isGreaterThan(0))
 );
 const decodeOptionalLevel = (value: string): number | null =>
-  Option.getOrNull(Schema.decodeUnknownOption(PositiveLevelFromString)(value));
+  Option.getOrNull(Schema.decodeOption(PositiveLevelFromString)(value));
 
 const SquadFilterFormSchema = Schema.Struct({
   maxLevel: OptionalLevelSchema,
@@ -121,7 +124,7 @@ const SquadGroupListFilters = ({
   return (
     <form.AppForm>
       <Form
-        className="grid gap-3 border-b border-border px-4 py-4 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_auto] sm:items-end"
+        className="border-border grid gap-3 border-b px-4 py-4 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_auto] sm:items-end"
         form={form}
       >
         <form.AppField name="nameQuery">
@@ -205,7 +208,7 @@ const CollectionEmpty = ({
   return (
     <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
       <IconStack aria-hidden="true">{icon}</IconStack>
-      <p className="max-w-md text-muted-foreground text-sm">{copy}</p>
+      <p className="text-muted-foreground max-w-md text-sm">{copy}</p>
       {kind === "mine" && onCreateGroup !== undefined && (
         <Button
           onClick={onCreateGroup}
@@ -220,23 +223,18 @@ const CollectionEmpty = ({
   );
 };
 
-interface GroupRowProps {
-  readonly group:
-    | SquadGroupSummary
-    | SharedSquadGroupSummary
-    | GlobalSquadGroupSummary;
-  readonly kind: SquadListTab;
-}
+type GroupRowProps =
+  | { readonly group: SquadGroupSummary; readonly kind: "mine" }
+  | { readonly group: SharedSquadGroupSummary; readonly kind: "shared" }
+  | { readonly group: GlobalSquadGroupSummary; readonly kind: "public" };
 
-const GroupRow = ({ group, kind }: GroupRowProps) => {
-  const owner =
-    kind === "mine"
-      ? undefined
-      : (group as SharedSquadGroupSummary | GlobalSquadGroupSummary);
+const GroupRow = (props: GroupRowProps) => {
+  const { group } = props;
+  const owner = props.kind === "mine" ? undefined : props.group;
   let status = "publiczny";
-  if (kind === "mine") {
+  if (props.kind === "mine") {
     status = "właściciel";
-  } else if (kind === "shared") {
+  } else if (props.kind === "shared") {
     status = "edytor";
   }
 
@@ -244,7 +242,7 @@ const GroupRow = ({ group, kind }: GroupRowProps) => {
     <li>
       <Link
         aria-label={`Otwórz grupę składów ${group.name}`}
-        className="group flex min-w-0 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:gap-4"
+        className="group hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:ring-ring flex min-w-0 items-center gap-3 px-4 py-3 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset sm:gap-4"
         params={{ groupId: String(group.groupId) }}
         to="/dashboard/squad-builder/squads/$groupId"
       >
@@ -261,15 +259,15 @@ const GroupRow = ({ group, kind }: GroupRowProps) => {
         )}
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium text-sm">{group.name}</span>
+            <span className="text-sm font-medium">{group.name}</span>
             <Badge
               size="sm"
-              variant={kind === "public" ? "info-light" : "secondary"}
+              variant={props.kind === "public" ? "info-light" : "secondary"}
             >
               {status}
             </Badge>
           </div>
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-muted-foreground text-xs">
+          <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 text-xs">
             {owner === undefined ? null : <span>{owner.ownerUserName}</span>}
             <span className="font-mono">
               {formatSquadCount(group.squadCount)}
@@ -286,58 +284,105 @@ const GroupRow = ({ group, kind }: GroupRowProps) => {
         </div>
         <ChevronRight
           aria-hidden="true"
-          className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+          className="text-muted-foreground size-4 shrink-0 transition-transform group-hover:translate-x-0.5"
         />
       </Link>
     </li>
   );
 };
 
-interface CollectionPanelProps {
-  readonly kind: SquadListTab;
-  readonly onCreateGroup?: () => void;
-  readonly onRetry: () => void;
-  readonly result: AsyncResult.AsyncResult<
-    readonly (
-      | SquadGroupSummary
-      | SharedSquadGroupSummary
-      | GlobalSquadGroupSummary
-    )[],
-    unknown
-  >;
-  readonly filtered: boolean;
-}
+const assertNever = (value: never): never => {
+  throw new Error(`Unhandled squad group list kind: ${String(value)}`);
+};
 
-const CollectionPanel = ({
-  filtered,
-  kind,
-  onCreateGroup,
-  onRetry,
-  result,
-}: CollectionPanelProps) => {
-  if (AsyncResult.isFailure(result)) {
-    return <CollectionFailure onRetry={onRetry} />;
+type CollectionPanelProps =
+  | {
+      readonly filtered: boolean;
+      readonly kind: "mine";
+      readonly onCreateGroup: () => void;
+      readonly onRetry: () => void;
+      readonly result: AsyncResult.AsyncResult<
+        readonly SquadGroupSummary[],
+        unknown
+      >;
+    }
+  | {
+      readonly filtered: boolean;
+      readonly kind: "shared";
+      readonly onRetry: () => void;
+      readonly result: AsyncResult.AsyncResult<
+        readonly SharedSquadGroupSummary[],
+        unknown
+      >;
+    }
+  | {
+      readonly filtered: boolean;
+      readonly kind: "public";
+      readonly onRetry: () => void;
+      readonly result: AsyncResult.AsyncResult<
+        readonly GlobalSquadGroupSummary[],
+        unknown
+      >;
+    };
+
+const CollectionPanel = (props: CollectionPanelProps) => {
+  if (AsyncResult.isFailure(props.result)) {
+    return <CollectionFailure onRetry={props.onRetry} />;
   }
-  if (!AsyncResult.isSuccess(result)) {
+  if (!AsyncResult.isSuccess(props.result)) {
     return <LoadingSpinner />;
   }
-  if (result.value.length === 0) {
+  if (props.result.value.length === 0) {
     return (
       <CollectionEmpty
-        filtered={filtered}
-        kind={kind}
-        onCreateGroup={onCreateGroup}
+        filtered={props.filtered}
+        kind={props.kind}
+        onCreateGroup={props.kind === "mine" ? props.onCreateGroup : undefined}
       />
     );
   }
 
-  return (
-    <ul className="divide-y divide-border" aria-label={`Lista: ${kind}`}>
-      {result.value.map((group) => (
-        <GroupRow group={group} key={group.groupId} kind={kind} />
-      ))}
-    </ul>
-  );
+  switch (props.kind) {
+    case "mine": {
+      return (
+        <ul
+          className="divide-border divide-y"
+          aria-label={`Lista: ${props.kind}`}
+        >
+          {props.result.value.map((group) => (
+            <GroupRow group={group} key={group.groupId} kind="mine" />
+          ))}
+        </ul>
+      );
+    }
+    case "shared": {
+      return (
+        <ul
+          className="divide-border divide-y"
+          aria-label={`Lista: ${props.kind}`}
+        >
+          {props.result.value.map((group) => (
+            <GroupRow group={group} key={group.groupId} kind="shared" />
+          ))}
+        </ul>
+      );
+    }
+    case "public": {
+      return (
+        <ul
+          className="divide-border divide-y"
+          aria-label={`Lista: ${props.kind}`}
+        >
+          {props.result.value.map((group) => (
+            <GroupRow group={group} key={group.groupId} kind="public" />
+          ))}
+        </ul>
+      );
+    }
+    default: {
+      return assertNever(props);
+    }
+  }
 };
 
 interface SquadGroupLibraryProps {
@@ -381,10 +426,12 @@ export const SquadGroupLibrary = ({
   return (
     <Tabs
       onValueChange={(value) => {
-        setActiveTab(value as SquadListTab);
+        if (isSquadListTab(value)) {
+          setActiveTab(value);
+        }
       }}
       value={activeTab}
-      className={"flex-col"}
+      className="flex-col"
     >
       <nav
         aria-label="Nawigacja kolekcji grup składów"

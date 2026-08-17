@@ -31,7 +31,7 @@ export const parseAccountDisplayName = Effect.fn("AccountDisplayName.parse")(
   function* parseAccountDisplayName(
     input: string
   ): Effect.fn.Return<AccountDisplayName, InvalidAccountDisplayName> {
-    return yield* Schema.decodeUnknownEffect(AccountDisplayName)(input).pipe(
+    return yield* Schema.decodeEffect(AccountDisplayName)(input).pipe(
       Effect.catchTag(
         "SchemaError",
         () =>

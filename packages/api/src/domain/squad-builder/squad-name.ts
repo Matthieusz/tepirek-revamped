@@ -45,7 +45,7 @@ export class InvalidSquadName extends Schema.TaggedErrorClass<InvalidSquadName>(
 /** Parse and normalize a squad group name. */
 export const parseSquadGroupName = Effect.fn("SquadGroupName.parse")(
   function* parseSquadGroupName(input: string) {
-    return yield* Schema.decodeUnknownEffect(SquadGroupName)(input).pipe(
+    return yield* Schema.decodeEffect(SquadGroupName)(input).pipe(
       Effect.catchTag(
         "SchemaError",
         () =>
@@ -63,7 +63,7 @@ export const parseSquadGroupName = Effect.fn("SquadGroupName.parse")(
 /** Parse and normalize a squad name. */
 export const parseSquadName = Effect.fn("SquadName.parse")(
   function* parseSquadName(input: string) {
-    return yield* Schema.decodeUnknownEffect(SquadName)(input).pipe(
+    return yield* Schema.decodeEffect(SquadName)(input).pipe(
       Effect.catchTag(
         "SchemaError",
         () =>

@@ -14,12 +14,12 @@ export const validateSquadFilterLevelOrder = (values: {
 }): true | { readonly issue: string; readonly path: readonly ["maxLevel"] } => {
   const minLevel = values.minLevel.trim();
   const maxLevel = values.maxLevel.trim();
-  const parsedMinLevel = Schema.decodeUnknownOption(
-    PositiveIntegerIdFromString
-  )(minLevel);
-  const parsedMaxLevel = Schema.decodeUnknownOption(
-    PositiveIntegerIdFromString
-  )(maxLevel);
+  const parsedMinLevel = Schema.decodeOption(PositiveIntegerIdFromString)(
+    minLevel
+  );
+  const parsedMaxLevel = Schema.decodeOption(PositiveIntegerIdFromString)(
+    maxLevel
+  );
 
   if (
     Option.isSome(parsedMinLevel) &&

@@ -19,7 +19,7 @@ export const makeBrandedPositiveInt = <const Brand extends string, Error>(
 ) => {
   const schema = brandedPositiveInt(brand);
   const parse = Effect.fn(parseName)(function* parsePositiveInt(input: number) {
-    return yield* Schema.decodeUnknownEffect(schema)(input).pipe(
+    return yield* Schema.decodeEffect(schema)(input).pipe(
       Effect.catchTag("SchemaError", () => Effect.fail(onError()))
     );
   });

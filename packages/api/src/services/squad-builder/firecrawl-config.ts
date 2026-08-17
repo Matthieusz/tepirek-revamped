@@ -36,7 +36,7 @@ export const parseFirecrawlCreditCount = EffectRuntime.fn(
   (
     input: number
   ): EffectRuntime.Effect<FirecrawlCreditCount, ParseFirecrawlConfigError> =>
-    Schema.decodeUnknownEffect(FirecrawlCreditCount)(input).pipe(
+    Schema.decodeEffect(FirecrawlCreditCount)(input).pipe(
       EffectRuntime.mapError(
         () =>
           new ParseFirecrawlConfigError({

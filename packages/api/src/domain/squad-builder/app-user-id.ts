@@ -18,7 +18,7 @@ export class InvalidAppUserId extends Schema.TaggedErrorClass<InvalidAppUserId>(
 /** Parse a BetterAuth user id into the squad-builder domain id. */
 export const parseAppUserId = Effect.fn("AppUserId.parse")(
   function* parseAppUserId(input: string) {
-    return yield* Schema.decodeUnknownEffect(AppUserId)(input).pipe(
+    return yield* Schema.decodeEffect(AppUserId)(input).pipe(
       Effect.catchTag("SchemaError", () => new InvalidAppUserId())
     );
   }
