@@ -213,6 +213,35 @@ const defaultDataGridProps: Partial<DataGridProps<object>> = {
   },
 };
 
+function getDataGridStatusMessage(
+  message: ReactNode | undefined,
+  fallback: string
+) {
+  return typeof message === "string" || typeof message === "number"
+    ? message
+    : fallback;
+}
+
+function DataGridStatus() {
+  const { isLoading, props, recordCount } = useDataGrid();
+  const statusMessage = isLoading
+    ? getDataGridStatusMessage(props.loadingMessage, "Loading...")
+    : recordCount === 0
+      ? getDataGridStatusMessage(props.emptyMessage, "No data available")
+      : getDataGridStatusMessage(props.allRowsLoadedMessage, "Data loaded");
+
+  return (
+    <div
+      aria-live="polite"
+      className="sr-only"
+      data-slot="data-grid-status"
+      role="status"
+    >
+      {statusMessage}
+    </div>
+  );
+}
+
 function DataGrid<TData extends object>({
   children,
   table,
@@ -240,6 +269,7 @@ function DataGrid<TData extends object>({
 
   return (
     <DataGridProvider table={table} {...mergedProps}>
+      <DataGridStatus />
       {children}
     </DataGridProvider>
   );

@@ -224,7 +224,7 @@ describe("TanStack app form", () => {
           resolveMutation = resolve;
         })
     );
-    const { root } = await renderTestForm(
+    const { container, root } = await renderTestForm(
       <TestForm
         onForm={(value) => (form = value)}
         onSubmit={() => mutation()}
@@ -235,6 +235,9 @@ describe("TanStack app form", () => {
     const submission = form?.handleSubmit();
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(form?.state.isSubmitting).toBe(true);
+    expect(container.querySelector("form")?.getAttribute("aria-busy")).toBe(
+      "true"
+    );
 
     void form?.handleSubmit();
     expect(mutation).toHaveBeenCalledOnce();
@@ -242,6 +245,9 @@ describe("TanStack app form", () => {
     resolveMutation?.();
     await submission;
     expect(form?.state.isSubmitting).toBe(false);
+    expect(container.querySelector("form")?.getAttribute("aria-busy")).toBe(
+      "false"
+    );
 
     form?.reset();
     expect(form?.state.values).toEqual({ name: "Ala" });

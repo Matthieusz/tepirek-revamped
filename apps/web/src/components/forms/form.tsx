@@ -76,6 +76,7 @@ export const Form = ({
         (meta) => (meta?.errors?.length ?? 0) > 0
       ).length
   );
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
   const [invalidControls, setInvalidControls] = useState<
     readonly InvalidControl[]
   >([]);
@@ -121,7 +122,13 @@ export const Form = ({
   };
 
   return (
-    <form {...props} noValidate onSubmit={handleSubmit} ref={formRef}>
+    <form
+      {...props}
+      aria-busy={isSubmitting}
+      noValidate
+      onSubmit={handleSubmit}
+      ref={formRef}
+    >
       {invalidControls.length >= 3 && (
         <div
           aria-labelledby={errorSummaryId}

@@ -1298,7 +1298,11 @@ function DataGridTableLoader() {
 
   return (
     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-      <div className="text-muted-foreground bg-card flex items-center gap-2 rounded-lg border px-4 py-2 text-sm leading-none font-medium">
+      <div
+        aria-live="polite"
+        className="text-muted-foreground bg-card flex items-center gap-2 rounded-lg border px-4 py-2 text-sm leading-none font-medium"
+        role="status"
+      >
         <Spinner className="size-5 opacity-60" />
         {props.loadingMessage || "Loading..."}
       </div>
@@ -1433,7 +1437,11 @@ function DataGridTableBodyRows<TData>({ table }: { table: Table<TData> }) {
     return (
       <tr>
         <td colSpan={table.getVisibleFlatColumns().length} className="p-8">
-          <div className="flex items-center justify-center">
+          <div
+            aria-live="polite"
+            className="flex items-center justify-center"
+            role="status"
+          >
             <svg
               className="text-muted-foreground mr-3 -ml-1 h-5 w-5 animate-spin"
               xmlns="http://www.w3.org/2000/svg"

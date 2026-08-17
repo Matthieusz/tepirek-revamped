@@ -17,19 +17,39 @@ const columns: ColumnDef<DataGridFeatures, TestRow>[] = [
   {
     accessorKey: "name",
     header: "Name",
+    meta: {
+      skeleton: "Skeleton",
+    },
   },
 ];
 
-const DataGridHarness = () => {
+type DataGridHarnessProps = {
+  data?: TestRow[];
+  isLoading?: boolean;
+  loadingMode?: "skeleton" | "spinner";
+  recordCount?: number;
+};
+
+const DataGridHarness = ({
+  data = [{ id: "1", name: "Ada" }],
+  isLoading = false,
+  loadingMode = "skeleton",
+  recordCount = data.length,
+}: DataGridHarnessProps) => {
   const table = useTable({
     columns,
-    data: [{ id: "1", name: "Ada" }],
+    data,
     features: dataGridFeatures,
     getRowId: (row) => row.id,
   });
 
   return (
-    <DataGrid recordCount={1} table={table}>
+    <DataGrid
+      isLoading={isLoading}
+      loadingMode={loadingMode}
+      recordCount={recordCount}
+      table={table}
+    >
       <DataGridTable />
     </DataGrid>
   );
@@ -40,5 +60,36 @@ describe("DataGridTable", () => {
     const markup = renderToStaticMarkup(<DataGridHarness />);
 
     expect(markup).toContain("Ada");
+  });
+
+  it("announces spinner loading while retaining the visible status", () => {
+    const markup = renderToStaticMarkup(
+      <DataGridHarness isLoading loadingMode="spinner" />
+    );
+
+    expect(markup).toContain('data-slot="data-grid-status"');
+    expect(markup).toContain("Loading...");
+    expect(markup).toContain("animate-spin");
+    expect(markup.match(/role=\"status\"/g)).toHaveLength(2);
+  });
+
+  it("announces skeleton loading through the mounted status region", () => {
+    const markup = renderToStaticMarkup(
+      <DataGridHarness isLoading loadingMode="skeleton" />
+    );
+
+    expect(markup).toContain('data-slot="data-grid-status"');
+    expect(markup).toContain("Loading...");
+    expect(markup).toContain('data-slot="data-grid-table-body"');
+    expect(markup).toContain("Skeleton");
+    expect(markup.match(/role=\"status\"/g)).toHaveLength(1);
+  });
+
+  it("announces completion and empty states", () => {
+    const loadedMarkup = renderToStaticMarkup(<DataGridHarness />);
+    const emptyMarkup = renderToStaticMarkup(<DataGridHarness data={[]} />);
+
+    expect(loadedMarkup).toContain("Data loaded");
+    expect(emptyMarkup).toContain("No data available");
   });
 });
