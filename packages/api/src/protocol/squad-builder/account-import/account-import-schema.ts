@@ -90,8 +90,9 @@ export const UpdateOwnedAccountDisplayNamePayload = Schema.Struct({
   accountId: MargonemAccountId,
   displayName: Schema.String,
 });
-export interface UpdateOwnedAccountDisplayNamePayload extends Schema.Schema
-  .Type<typeof UpdateOwnedAccountDisplayNamePayload> {}
+export interface UpdateOwnedAccountDisplayNamePayload extends Schema.Schema.Type<
+  typeof UpdateOwnedAccountDisplayNamePayload
+> {}
 export const DeleteOwnedAccountPayload = Schema.Struct({
   accountId: MargonemAccountId,
 });

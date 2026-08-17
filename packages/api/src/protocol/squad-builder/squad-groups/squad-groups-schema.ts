@@ -156,8 +156,9 @@ export const SaveSharedSquadGroupCharactersPayload = Schema.Struct({
   groupId: SquadGroupId,
   squads: Schema.Array(SaveSharedSquadCharactersPayload),
 });
-export interface SaveSharedSquadGroupCharactersPayload extends Schema.Schema
-  .Type<typeof SaveSharedSquadGroupCharactersPayload> {}
+export interface SaveSharedSquadGroupCharactersPayload extends Schema.Schema.Type<
+  typeof SaveSharedSquadGroupCharactersPayload
+> {}
 
 export const SetSquadGroupVisibilityPayload = Schema.Struct({
   groupId: SquadGroupId,

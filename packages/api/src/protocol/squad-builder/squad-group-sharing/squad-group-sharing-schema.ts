@@ -18,8 +18,9 @@ export const SearchSquadEditorInviteTargetsPayload = Schema.Struct({
   groupId: SquadGroupId,
   query: Schema.String,
 });
-export interface SearchSquadEditorInviteTargetsPayload extends Schema.Schema
-  .Type<typeof SearchSquadEditorInviteTargetsPayload> {}
+export interface SearchSquadEditorInviteTargetsPayload extends Schema.Schema.Type<
+  typeof SearchSquadEditorInviteTargetsPayload
+> {}
 export const SendSquadGroupEditorInvitePayload = Schema.Struct({
   groupId: SquadGroupId,
   invitedUserId: AppUserId,
