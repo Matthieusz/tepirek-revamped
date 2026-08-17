@@ -8,29 +8,31 @@ import { SquadId } from "@tepirek-revamped/api/domain/squad-builder/squad-id";
 import * as Schema from "effect/Schema";
 
 /** Build a `SquadGroupId` from a plain number. */
-export const asSquadGroupId = (value: number) =>
-  Schema.decodeUnknownEffect(SquadGroupId)(value);
+export const asSquadGroupId = Schema.decodeUnknownEffect(SquadGroupId);
 
 /** Build a `SquadId` from a plain number. */
-export const asSquadId = (value: number) =>
-  Schema.decodeUnknownEffect(SquadId)(value);
+export const asSquadId = Schema.decodeUnknownEffect(SquadId);
 
 /** Build a `MargonemAccountId` from a plain number. */
-export const asMargonemAccountId = (value: number) =>
-  Schema.decodeUnknownEffect(MargonemAccountId)(value);
+export const asMargonemAccountId =
+  Schema.decodeUnknownEffect(MargonemAccountId);
 
 /** Build a `MargonemAccountAccessId` from a plain number. */
-export const asMargonemAccountAccessId = (value: number) =>
-  Schema.decodeUnknownEffect(MargonemAccountAccessId)(value);
+export const asMargonemAccountAccessId = Schema.decodeUnknownEffect(
+  MargonemAccountAccessId
+);
 
 /** Build a `SquadGroupInvitationId` from a plain number. */
-export const asSquadGroupInvitationId = (value: number) =>
-  Schema.decodeUnknownEffect(SquadGroupInvitationId)(value);
+export const asSquadGroupInvitationId = Schema.decodeUnknownEffect(
+  SquadGroupInvitationId
+);
 
 /** Build a `PendingMargonemAccountImportId` from a plain number. */
-export const asPendingMargonemAccountImportId = (value: number) =>
-  Schema.decodeUnknownEffect(PendingMargonemAccountImportId)(value);
+export const asPendingMargonemAccountImportId = Schema.decodeUnknownEffect(
+  PendingMargonemAccountImportId
+);
 
 /** Build a `PendingMargonemAccountRefetchId` from a plain number. */
-export const asPendingMargonemAccountRefetchId = (value: number) =>
-  Schema.decodeUnknownEffect(PendingMargonemAccountRefetchId)(value);
+export const asPendingMargonemAccountRefetchId = Schema.decodeUnknownEffect(
+  PendingMargonemAccountRefetchId
+);
