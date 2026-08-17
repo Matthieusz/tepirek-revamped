@@ -1,8 +1,6 @@
 /* oxlint-disable no-use-before-define */
 
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import * as HashMap from "effect/HashMap";
-import * as Option from "effect/Option";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Plus, Sword, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -45,6 +43,10 @@ import {
 } from "@/features/events/heroes/hero-atoms";
 import { getErrorMessage } from "@/lib/errors";
 import { isAdmin } from "@/lib/route-helpers";
+import {
+  getEventNamesById,
+  getHeroEventName,
+} from "@/routes/dashboard/events/-components/hero-presenters";
 import { AddHeroModal } from "@/routes/dashboard/events/-components/heroes/add-hero-modal";
 import type { AuthSession } from "@/types/route";
 
@@ -57,22 +59,7 @@ interface EventsHeroesPageProps {
   session: AuthSession;
 }
 
-/** Builds the event-name lookup used while rendering hero rows. */
-export const getEventNamesById = (
-  events: readonly { readonly id: number; readonly name: string }[]
-): HashMap.HashMap<number, string> =>
-  HashMap.fromIterable(events.map((event) => [event.id, event.name] as const));
-
-/** Returns the event name for a hero, preserving the current missing-event fallback. */
-export const getHeroEventName = (
-  eventNamesById: HashMap.HashMap<number, string>,
-  eventId: number | null | undefined
-): string =>
-  eventId === null || eventId === undefined
-    ? "Brak"
-    : HashMap.get(eventNamesById, eventId).pipe(Option.getOrElse(() => "Brak"));
-
-export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
+const EventsHeroesPage = ({ session }: EventsHeroesPageProps) => {
   const heroesResult = useAtomValue(heroesAtom);
   const eventsResult = useAtomValue(eventsAtom);
   const refreshHeroes = useAtomRefresh(heroesAtom);
@@ -87,7 +74,9 @@ export default function EventsHeroesPage({ session }: EventsHeroesPageProps) {
       )}
     </AsyncResultBoundary>
   );
-}
+};
+
+export default EventsHeroesPage;
 
 const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
   const [heroToDelete, setHeroToDelete] = useState<HeroToDelete>(null);
@@ -129,7 +118,7 @@ const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+          <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
             Herosi
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -167,10 +156,10 @@ const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
-        <div className="flex items-center gap-2 border-b border-border p-4">
+      <div className="border-border bg-card rounded-xl border">
+        <div className="border-border flex items-center gap-2 border-b p-4">
           <Sword className="size-4" />
-          <h2 className="font-semibold text-base">Lista herosów</h2>
+          <h2 className="text-base font-semibold">Lista herosów</h2>
         </div>
         <div className="p-4">
           {!filteredHeroes || filteredHeroes.length === 0 ? (
@@ -208,8 +197,8 @@ const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
                             width={40}
                           />
                         ) : (
-                          <div className="flex h-12 w-10 items-center justify-center rounded bg-muted">
-                            <Sword className="size-4 text-muted-foreground" />
+                          <div className="bg-muted flex h-12 w-10 items-center justify-center rounded">
+                            <Sword className="text-muted-foreground size-4" />
                           </div>
                         )}
                       </TableCell>

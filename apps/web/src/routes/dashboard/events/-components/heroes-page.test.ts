@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   getEventNamesById,
   getHeroEventName,
-} from "@/routes/dashboard/events/-components/heroes-page";
+} from "@/routes/dashboard/events/-components/hero-presenters";
 
 describe("hero event names", () => {
   const eventNamesById = getEventNamesById([
