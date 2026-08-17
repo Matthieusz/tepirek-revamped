@@ -35,7 +35,7 @@ export const HeroSummary = Schema.Struct({
   id: HeroId,
   image: Schema.NullOr(Schema.String),
   level: HeroLevel,
-  name: Schema.String,
+  name: Schema.NonEmptyString,
   pointWorth: Schema.String,
 });
 export interface HeroSummary extends Schema.Schema.Type<typeof HeroSummary> {}

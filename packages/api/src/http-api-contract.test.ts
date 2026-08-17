@@ -1,8 +1,10 @@
 import * as Record from "effect/Record";
+import * as Schema from "effect/Schema";
 import { OpenApi } from "effect/unstable/httpapi";
 import { describe, expect, it } from "vitest";
 
 import { HealthHttpApi } from "./protocol/health/http-api-contract.ts";
+import { HeroSummary } from "./protocol/heroes/http-api-contract.ts";
 import { AppHttpApi } from "./protocol/http-api-contract.ts";
 
 type OpenApiDocument = ReturnType<typeof OpenApi.fromApi>;
@@ -26,6 +28,22 @@ const expectPostResponseStatuses = (
 };
 
 describe("AppHttpApi route contract", () => {
+  it("keeps hero names non-empty for image alternative text", () => {
+    const hero = {
+      eventId: 1,
+      id: 1,
+      image: null,
+      level: 1,
+      name: "",
+      pointWorth: "0",
+    };
+
+    expect(() => Schema.decodeSync(HeroSummary)(hero)).toThrow();
+    expect(
+      Schema.decodeSync(HeroSummary)({ ...hero, name: "Wojownik" })
+    ).toMatchObject({ name: "Wojownik" });
+  });
+
   it("keeps liveness in its dependency-light standalone API", () => {
     expect(appOpenApi.paths["/health"]).toBeUndefined();
     expect(healthOpenApi.paths["/health"]?.get).toBeDefined();
