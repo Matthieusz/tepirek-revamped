@@ -5,13 +5,12 @@ import {
   incomingAccountInvitesAtom,
   sharedAccountsAtom,
 } from "@/features/squad-builder/account-sharing-atoms";
-import { preloadAtomResults } from "@/lib/atom-preload";
 import SquadBuilderAccountsPage from "@/routes/dashboard/squad-builder/-components/accounts-page";
 
 export const Route = createFileRoute("/dashboard/squad-builder/accounts")({
   component: SquadBuilderAccountsPage,
   loader: async ({ context }) => {
-    await preloadAtomResults(context.atomRegistry, [
+    await context.preloadAtomResults(context.atomRegistry, [
       ownedAccountsAtom,
       incomingAccountInvitesAtom,
       sharedAccountsAtom,

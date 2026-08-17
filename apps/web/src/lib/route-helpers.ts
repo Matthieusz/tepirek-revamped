@@ -1,9 +1,10 @@
 import { redirect } from "@tanstack/react-router";
 
-import { getUser } from "@/functions/get-user";
-import type { AuthSession } from "@/types/route";
+import type { AuthSession, UserSession } from "@/types/route";
 
-const requireAuth = async (): Promise<AuthSession> => {
+type GetUser = () => Promise<UserSession>;
+
+const requireAuth = async (getUser: GetUser): Promise<AuthSession> => {
   const session = await getUser();
   if (!session?.user) {
     throw redirect({ to: "/login" });
@@ -16,8 +17,10 @@ const requireAuth = async (): Promise<AuthSession> => {
  * Redirects to /login if not authenticated.
  * Redirects to /waiting-room if not verified.
  */
-export const requireVerified = async (): Promise<AuthSession> => {
-  const session = await requireAuth();
+export const requireVerified = async (
+  getUser: GetUser
+): Promise<AuthSession> => {
+  const session = await requireAuth(getUser);
   if (!session.user.verified) {
     throw redirect({ to: "/waiting-room" });
   }
@@ -30,8 +33,10 @@ export const requireVerified = async (): Promise<AuthSession> => {
  * Redirects to /login if not authenticated.
  * Redirects to /dashboard if already verified.
  */
-export const requireUnverified = async (): Promise<AuthSession> => {
-  const session = await requireAuth();
+export const requireUnverified = async (
+  getUser: GetUser
+): Promise<AuthSession> => {
+  const session = await requireAuth(getUser);
   if (session.user.verified) {
     throw redirect({ to: "/dashboard" });
   }

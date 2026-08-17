@@ -7,7 +7,6 @@ import {
   availableSquadCharactersAtom,
   squadGroupDetailAtom,
 } from "@/features/squad-builder/squad-group-atoms";
-import { preloadAtomResults } from "@/lib/atom-preload";
 
 const decodeSquadGroupId = Schema.decodeUnknownOption(
   Schema.FiniteFromString.pipe(
@@ -26,14 +25,14 @@ export const Route = createFileRoute(
     }
 
     const detailAtom = squadGroupDetailAtom({ groupId });
-    await preloadAtomResults(context.atomRegistry, [detailAtom]);
+    await context.preloadAtomResults(context.atomRegistry, [detailAtom]);
 
     const detailResult = context.atomRegistry.get(detailAtom);
     if (
       AsyncResult.isSuccess(detailResult) &&
       detailResult.value.accessRole !== "viewer"
     ) {
-      await preloadAtomResults(context.atomRegistry, [
+      await context.preloadAtomResults(context.atomRegistry, [
         availableSquadCharactersAtom({ groupId }),
       ]);
     }

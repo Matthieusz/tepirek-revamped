@@ -13,6 +13,8 @@ import { evlogErrorHandler } from "evlog/nitro/v3";
 
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
+import type { getUser as getUserDependency } from "@/functions/get-user";
+import type { preloadAtomResults as preloadAtomResultsDependency } from "@/lib/atom-preload";
 import { getErrorMessage } from "@/lib/errors";
 
 import appCss from "@/index.css?url";
@@ -36,9 +38,7 @@ const RootDocument = () => {
           </div>
           <Toaster richColors />
           {showDevtools ? (
-            <>
-              <TanStackRouterDevtools position="bottom-right" />
-            </>
+            <TanStackRouterDevtools position="bottom-right" />
           ) : null}
         </RegistryContext.Provider>
         <Scripts />
@@ -60,7 +60,7 @@ export const RootErrorBoundary = ({
     </head>
     <body>
       <div className="flex h-svh flex-col items-center justify-center gap-4">
-        <h1 className="font-bold text-2xl">Coś poszło nie tak</h1>
+        <h1 className="text-2xl font-bold">Coś poszło nie tak</h1>
         <p className="text-muted-foreground">{getErrorMessage(error)}</p>
         <Button onClick={reset}>Spróbuj ponownie</Button>
       </div>
@@ -71,6 +71,8 @@ export const RootErrorBoundary = ({
 
 export interface RouterAppContext {
   readonly atomRegistry: AtomRegistry.AtomRegistry;
+  readonly getUser: typeof getUserDependency;
+  readonly preloadAtomResults: typeof preloadAtomResultsDependency;
 }
 
 const evlogMiddleware = createMiddleware().server(evlogErrorHandler);

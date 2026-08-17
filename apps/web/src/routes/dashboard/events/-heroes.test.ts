@@ -3,28 +3,17 @@
 import { createMemoryHistory } from "@tanstack/react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { preloadAtomResults as productionPreloadAtomResults } from "@/lib/atom-preload";
 import { getRouter } from "@/router";
+import type { RouterAppContext } from "@/routes/__root";
 import { Route as HistoryRoute } from "@/routes/dashboard/events/history";
 import { Route as RankingRoute } from "@/routes/dashboard/events/ranking";
 import { Route as VaultRoute } from "@/routes/dashboard/events/vault";
-import type { UserSession } from "@/types/route";
+import type { AuthSession } from "@/types/route";
 
-const { getUser, preloadAtomResults } = vi.hoisted(() => ({
-  getUser: vi.fn<() => Promise<UserSession>>(),
-  preloadAtomResults:
-    vi.fn<
-      (
-        registry: Parameters<typeof productionPreloadAtomResults>[0],
-        atoms: Parameters<typeof productionPreloadAtomResults>[1]
-      ) => Promise<void>
-    >(),
-}));
+const getUser = vi.fn<RouterAppContext["getUser"]>();
+const preloadAtomResults = vi.fn<RouterAppContext["preloadAtomResults"]>();
 
-vi.mock("@/functions/get-user", () => ({ getUser }));
-vi.mock("@/lib/atom-preload", () => ({ preloadAtomResults }));
-
-const verifiedSession = {
+const verifiedSession: AuthSession = {
   session: {
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
     expiresAt: new Date("2026-01-02T00:00:00.000Z"),
@@ -46,7 +35,7 @@ const verifiedSession = {
     updatedAt: new Date("2026-01-01T00:00:00.000Z"),
     verified: true,
   },
-} satisfies Exclude<UserSession, null>;
+};
 
 type EventRoutePath =
   | "/dashboard/events/bets/add"
@@ -59,7 +48,7 @@ type EventRoutePath =
 const loadEventRoute = async (to: EventRoutePath) => {
   const router = getRouter();
   router.update({
-    context: router.options.context,
+    context: { ...router.options.context, getUser, preloadAtomResults },
     history: createMemoryHistory({ initialEntries: ["/"] }),
     isServer: false,
   });

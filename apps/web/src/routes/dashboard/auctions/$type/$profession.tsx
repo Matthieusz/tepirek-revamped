@@ -9,7 +9,6 @@ import {
   isAuctionProfession,
   isAuctionType,
 } from "@/features/auctions/config";
-import { preloadAtomResults } from "@/lib/atom-preload";
 import AuctionsProfessionPage from "@/routes/dashboard/auctions/$type/-components/profession";
 
 const routeApi = getRouteApi("/dashboard/auctions/$type/$profession");
@@ -54,7 +53,7 @@ export const Route = createFileRoute("/dashboard/auctions/$type/$profession")({
         profession: params.profession,
         type: params.type,
       };
-      await preloadAtomResults(context.atomRegistry, [
+      await context.preloadAtomResults(context.atomRegistry, [
         auctionSignupsAtom(auctionGroup),
         auctionStatsAtom(auctionGroup),
       ]);

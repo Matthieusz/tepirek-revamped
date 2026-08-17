@@ -13,8 +13,8 @@ const WaitingRoomRoute = () => {
 };
 
 export const Route = createFileRoute("/waiting-room")({
-  beforeLoad: async () => {
-    const session = await requireUnverified();
+  beforeLoad: async ({ context }) => {
+    const session = await requireUnverified(context.getUser);
     return { session };
   },
   component: WaitingRoomRoute,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { invokeRouteHook } from "@/lib/test-utils/route-option-test-utils";
 import { Route as RootRoute } from "@/routes/__root";
 import { Route as DashboardRoute } from "@/routes/dashboard/route";
 import { Route as HomeRoute } from "@/routes/index";
@@ -9,7 +10,7 @@ import { Route as WaitingRoomRoute } from "@/routes/waiting-room";
 
 describe("route metadata", () => {
   it("provides root description and social defaults", async () => {
-    const head = await RootRoute.options.head?.({} as never);
+    const head = await invokeRouteHook(RootRoute.options.head);
 
     expect(head?.meta).toEqual(
       expect.arrayContaining([
@@ -24,10 +25,12 @@ describe("route metadata", () => {
   });
 
   it("gives public and authentication routes distinct titles", async () => {
-    const homeHead = await HomeRoute.options.head?.({} as never);
-    const loginHead = await LoginRoute.options.head?.({} as never);
-    const signupHead = await SignupRoute.options.head?.({} as never);
-    const waitingRoomHead = await WaitingRoomRoute.options.head?.({} as never);
+    const homeHead = await invokeRouteHook(HomeRoute.options.head);
+    const loginHead = await invokeRouteHook(LoginRoute.options.head);
+    const signupHead = await invokeRouteHook(SignupRoute.options.head);
+    const waitingRoomHead = await invokeRouteHook(
+      WaitingRoomRoute.options.head
+    );
 
     expect(homeHead?.meta).toContainEqual({
       title: "Strona główna | Tepirek Revamped",
@@ -44,7 +47,7 @@ describe("route metadata", () => {
   });
 
   it("prevents dashboard pages from being indexed", async () => {
-    const head = await DashboardRoute.options.head?.({} as never);
+    const head = await invokeRouteHook(DashboardRoute.options.head);
 
     expect(head?.meta).toEqual(
       expect.arrayContaining([{ content: "noindex, nofollow", name: "robots" }])
@@ -52,9 +55,11 @@ describe("route metadata", () => {
   });
 
   it("prevents auth-gated routes from being indexed", async () => {
-    const loginHead = await LoginRoute.options.head?.({} as never);
-    const signupHead = await SignupRoute.options.head?.({} as never);
-    const waitingRoomHead = await WaitingRoomRoute.options.head?.({} as never);
+    const loginHead = await invokeRouteHook(LoginRoute.options.head);
+    const signupHead = await invokeRouteHook(SignupRoute.options.head);
+    const waitingRoomHead = await invokeRouteHook(
+      WaitingRoomRoute.options.head
+    );
 
     expect(loginHead?.meta).toEqual(
       expect.arrayContaining([{ content: "noindex, nofollow", name: "robots" }])
