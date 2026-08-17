@@ -1,16 +1,6 @@
-import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { PositiveInt } from "./positive-int.ts";
-
-/** A validated pending Margonem account refetch preview id. */
-export const PendingMargonemAccountRefetchId = PositiveInt.pipe(
-  Schema.brand("PendingMargonemAccountRefetchId")
-).annotate({
-  identifier: "PendingMargonemAccountRefetchId",
-});
-export type PendingMargonemAccountRefetchId =
-  typeof PendingMargonemAccountRefetchId.Type;
+import { makeBrandedPositiveInt } from "./positive-int.ts";
 
 /** Expected failure when a pending refetch id is not a positive integer. */
 export class InvalidPendingMargonemAccountRefetchId extends Schema.TaggedErrorClass<InvalidPendingMargonemAccountRefetchId>()(
@@ -18,16 +8,18 @@ export class InvalidPendingMargonemAccountRefetchId extends Schema.TaggedErrorCl
   {}
 ) {}
 
+const brandedPendingMargonemAccountRefetchId = makeBrandedPositiveInt(
+  "PendingMargonemAccountRefetchId",
+  "PendingMargonemAccountRefetchId.parse",
+  () => new InvalidPendingMargonemAccountRefetchId()
+);
+
+/** A validated pending Margonem account refetch preview id. */
+export const PendingMargonemAccountRefetchId =
+  brandedPendingMargonemAccountRefetchId.schema;
+export type PendingMargonemAccountRefetchId =
+  typeof PendingMargonemAccountRefetchId.Type;
+
 /** Parse a positive integer as a pending Margonem account refetch id. */
-export const parsePendingMargonemAccountRefetchId = Effect.fn(
-  "PendingMargonemAccountRefetchId.parse"
-)(function* parsePendingMargonemAccountRefetchId(input: number) {
-  return yield* Schema.decodeUnknownEffect(PendingMargonemAccountRefetchId)(
-    input
-  ).pipe(
-    Effect.catchTag(
-      "SchemaError",
-      () => new InvalidPendingMargonemAccountRefetchId()
-    )
-  );
-});
+export const parsePendingMargonemAccountRefetchId =
+  brandedPendingMargonemAccountRefetchId.parse;

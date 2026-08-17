@@ -1,16 +1,6 @@
-import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { PositiveInt } from "./positive-int.ts";
-
-/** A validated pending Margonem account import id. */
-export const PendingMargonemAccountImportId = PositiveInt.pipe(
-  Schema.brand("PendingMargonemAccountImportId")
-).annotate({
-  identifier: "PendingMargonemAccountImportId",
-});
-export type PendingMargonemAccountImportId =
-  typeof PendingMargonemAccountImportId.Type;
+import { makeBrandedPositiveInt } from "./positive-int.ts";
 
 /** Expected failure when a pending import id is not a positive integer. */
 export class InvalidPendingMargonemAccountImportId extends Schema.TaggedErrorClass<InvalidPendingMargonemAccountImportId>()(
@@ -18,16 +8,18 @@ export class InvalidPendingMargonemAccountImportId extends Schema.TaggedErrorCla
   {}
 ) {}
 
+const brandedPendingMargonemAccountImportId = makeBrandedPositiveInt(
+  "PendingMargonemAccountImportId",
+  "PendingMargonemAccountImportId.parse",
+  () => new InvalidPendingMargonemAccountImportId()
+);
+
+/** A validated pending Margonem account import id. */
+export const PendingMargonemAccountImportId =
+  brandedPendingMargonemAccountImportId.schema;
+export type PendingMargonemAccountImportId =
+  typeof PendingMargonemAccountImportId.Type;
+
 /** Parse a positive integer as a pending Margonem account import id. */
-export const parsePendingMargonemAccountImportId = Effect.fn(
-  "PendingMargonemAccountImportId.parse"
-)(function* parsePendingMargonemAccountImportId(input: number) {
-  return yield* Schema.decodeUnknownEffect(PendingMargonemAccountImportId)(
-    input
-  ).pipe(
-    Effect.catchTag(
-      "SchemaError",
-      () => new InvalidPendingMargonemAccountImportId()
-    )
-  );
-});
+export const parsePendingMargonemAccountImportId =
+  brandedPendingMargonemAccountImportId.parse;

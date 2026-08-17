@@ -1,15 +1,6 @@
-import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { PositiveInt } from "./positive-int.ts";
-
-/** A persisted squad group id. */
-export const SquadGroupId = PositiveInt.pipe(
-  Schema.brand("SquadGroupId")
-).annotate({
-  identifier: "SquadGroupId",
-});
-export type SquadGroupId = typeof SquadGroupId.Type;
+import { makeBrandedPositiveInt } from "./positive-int.ts";
 
 /** Expected failure when a squad group id is invalid. */
 export class InvalidSquadGroupId extends Schema.TaggedErrorClass<InvalidSquadGroupId>()(
@@ -17,11 +8,15 @@ export class InvalidSquadGroupId extends Schema.TaggedErrorClass<InvalidSquadGro
   {}
 ) {}
 
-/** Parse a positive integer as a squad group id. */
-export const parseSquadGroupId = Effect.fn("SquadGroupId.parse")(
-  function* parseSquadGroupId(input: number) {
-    return yield* Schema.decodeUnknownEffect(SquadGroupId)(input).pipe(
-      Effect.catchTag("SchemaError", () => new InvalidSquadGroupId())
-    );
-  }
+const brandedSquadGroupId = makeBrandedPositiveInt(
+  "SquadGroupId",
+  "SquadGroupId.parse",
+  () => new InvalidSquadGroupId()
 );
+
+/** A persisted squad group id. */
+export const SquadGroupId = brandedSquadGroupId.schema;
+export type SquadGroupId = typeof SquadGroupId.Type;
+
+/** Parse a positive integer as a squad group id. */
+export const parseSquadGroupId = brandedSquadGroupId.parse;

@@ -1,14 +1,4 @@
-import * as Schema from "effect/Schema";
-
-const PositiveInt = Schema.Finite.check(
-  Schema.isInt(),
-  Schema.isBetween({ maximum: Number.MAX_SAFE_INTEGER, minimum: 1 })
-);
-
-const brandedPositiveInt = <const Brand extends string>(
-  brand: Brand,
-  identifier: Brand
-) => PositiveInt.pipe(Schema.brand(brand)).annotate({ identifier });
+import { brandedPositiveInt } from "./squad-builder/positive-int.ts";
 
 /** A persisted announcement row id. */
 export const AnnouncementId = brandedPositiveInt(

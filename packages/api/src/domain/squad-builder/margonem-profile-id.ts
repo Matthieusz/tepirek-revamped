@@ -1,31 +1,6 @@
-import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { PositiveInt } from "./positive-int.ts";
-
-/** A parsed Margonem profile id. */
-export const MargonemProfileId = PositiveInt.pipe(
-  Schema.brand("MargonemProfileId")
-).annotate({
-  identifier: "MargonemProfileId",
-});
-export type MargonemProfileId = typeof MargonemProfileId.Type;
-
-/** A parsed Margonem character id. */
-export const MargonemCharacterId = PositiveInt.pipe(
-  Schema.brand("MargonemCharacterId")
-).annotate({
-  identifier: "MargonemCharacterId",
-});
-export type MargonemCharacterId = typeof MargonemCharacterId.Type;
-
-/** A positive character level. */
-export const PositiveLevel = PositiveInt.pipe(
-  Schema.brand("PositiveLevel")
-).annotate({
-  identifier: "PositiveLevel",
-});
-export type PositiveLevel = typeof PositiveLevel.Type;
+import { makeBrandedPositiveInt } from "./positive-int.ts";
 
 /** Failure returned when a numeric id is not valid for the domain. */
 export class InvalidPositiveInteger extends Schema.TaggedErrorClass<InvalidPositiveInteger>()(
@@ -35,38 +10,39 @@ export class InvalidPositiveInteger extends Schema.TaggedErrorClass<InvalidPosit
   }
 ) {}
 
-/** Parse a positive integer as a Margonem profile id. */
-export const parseMargonemProfileId = Effect.fn("MargonemProfileId.parse")(
-  function* parseMargonemProfileId(value: number) {
-    return yield* Schema.decodeUnknownEffect(MargonemProfileId)(value).pipe(
-      Effect.catchTag(
-        "SchemaError",
-        () => new InvalidPositiveInteger({ field: "profileId" })
-      )
-    );
-  }
+const brandedMargonemProfileId = makeBrandedPositiveInt(
+  "MargonemProfileId",
+  "MargonemProfileId.parse",
+  () => new InvalidPositiveInteger({ field: "profileId" })
 );
+const brandedMargonemCharacterId = makeBrandedPositiveInt(
+  "MargonemCharacterId",
+  "MargonemCharacterId.parse",
+  () => new InvalidPositiveInteger({ field: "characterId" })
+);
+const brandedPositiveLevel = makeBrandedPositiveInt(
+  "PositiveLevel",
+  "PositiveLevel.parse",
+  () => new InvalidPositiveInteger({ field: "level" })
+);
+
+/** A parsed Margonem profile id. */
+export const MargonemProfileId = brandedMargonemProfileId.schema;
+export type MargonemProfileId = typeof MargonemProfileId.Type;
+
+/** A parsed Margonem character id. */
+export const MargonemCharacterId = brandedMargonemCharacterId.schema;
+export type MargonemCharacterId = typeof MargonemCharacterId.Type;
+
+/** A positive character level. */
+export const PositiveLevel = brandedPositiveLevel.schema;
+export type PositiveLevel = typeof PositiveLevel.Type;
+
+/** Parse a positive integer as a Margonem profile id. */
+export const parseMargonemProfileId = brandedMargonemProfileId.parse;
 
 /** Parse a positive integer as a Margonem character id. */
-export const parseMargonemCharacterId = Effect.fn("MargonemCharacterId.parse")(
-  function* parseMargonemCharacterId(value: number) {
-    return yield* Schema.decodeUnknownEffect(MargonemCharacterId)(value).pipe(
-      Effect.catchTag(
-        "SchemaError",
-        () => new InvalidPositiveInteger({ field: "characterId" })
-      )
-    );
-  }
-);
+export const parseMargonemCharacterId = brandedMargonemCharacterId.parse;
 
 /** Parse a positive integer as a character level. */
-export const parsePositiveLevel = Effect.fn("PositiveLevel.parse")(
-  function* parsePositiveLevel(value: number) {
-    return yield* Schema.decodeUnknownEffect(PositiveLevel)(value).pipe(
-      Effect.catchTag(
-        "SchemaError",
-        () => new InvalidPositiveInteger({ field: "level" })
-      )
-    );
-  }
-);
+export const parsePositiveLevel = brandedPositiveLevel.parse;

@@ -1,15 +1,6 @@
-import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { PositiveInt } from "./positive-int.ts";
-
-/** A persisted Margonem account access row id. */
-export const MargonemAccountAccessId = PositiveInt.pipe(
-  Schema.brand("MargonemAccountAccessId")
-).annotate({
-  identifier: "MargonemAccountAccessId",
-});
-export type MargonemAccountAccessId = typeof MargonemAccountAccessId.Type;
+import { makeBrandedPositiveInt } from "./positive-int.ts";
 
 /** Expected failure when an account access id is not a positive integer. */
 export class InvalidMargonemAccountAccessId extends Schema.TaggedErrorClass<InvalidMargonemAccountAccessId>()(
@@ -17,11 +8,16 @@ export class InvalidMargonemAccountAccessId extends Schema.TaggedErrorClass<Inva
   {}
 ) {}
 
+const brandedMargonemAccountAccessId = makeBrandedPositiveInt(
+  "MargonemAccountAccessId",
+  "MargonemAccountAccessId.parse",
+  () => new InvalidMargonemAccountAccessId()
+);
+
+/** A persisted Margonem account access row id. */
+export const MargonemAccountAccessId = brandedMargonemAccountAccessId.schema;
+export type MargonemAccountAccessId = typeof MargonemAccountAccessId.Type;
+
 /** Parse a positive integer as a Margonem account access id. */
-export const parseMargonemAccountAccessId = Effect.fn(
-  "MargonemAccountAccessId.parse"
-)(function* parseMargonemAccountAccessId(input: number) {
-  return yield* Schema.decodeUnknownEffect(MargonemAccountAccessId)(input).pipe(
-    Effect.catchTag("SchemaError", () => new InvalidMargonemAccountAccessId())
-  );
-});
+export const parseMargonemAccountAccessId =
+  brandedMargonemAccountAccessId.parse;
