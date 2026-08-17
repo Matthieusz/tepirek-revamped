@@ -3,10 +3,8 @@ import { describe, expect, it } from "vitest";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form } from "@/components/forms/form";
-import {
-  FormFieldFrame,
-  getFieldErrorMessage,
-} from "@/components/forms/form-field-helpers";
+import { FormFieldFrame } from "@/components/forms/form-field-helpers";
+import { getFieldErrorMessage } from "@/components/forms/form-field-utils";
 
 const FieldForm = () => {
   const form = useAppForm({

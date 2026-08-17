@@ -13,10 +13,12 @@ import { Form, FormFeedback } from "@/components/forms/form";
 import {
   FormFieldError,
   FormFieldFrame,
+} from "@/components/forms/form-field-helpers";
+import {
   getFieldErrorMessage,
   getFieldErrorId,
   getFieldId,
-} from "@/components/forms/form-field-helpers";
+} from "@/components/forms/form-field-utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -178,9 +180,9 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                               <button
                                 aria-pressed={field.state.value === item.id}
                                 className={cn(
-                                  "flex flex-col items-center gap-1 rounded-lg border p-3 transition-all hover:bg-muted/50",
+                                  "hover:bg-muted/50 flex flex-col items-center gap-1 rounded-lg border p-3 transition-all",
                                   field.state.value === item.id
-                                    ? "border-primary bg-primary/5 ring-2 ring-primary"
+                                    ? "border-primary bg-primary/5 ring-primary ring-2"
                                     : "border-border"
                                 )}
                                 id={`${fieldId}-${item.id}`}
@@ -240,7 +242,7 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
                               className={cn(
                                 "size-8 rounded-full border-2 transition-all",
                                 field.state.value === color.id
-                                  ? "scale-110 border-foreground"
+                                  ? "border-foreground scale-110"
                                   : "border-transparent"
                               )}
                               id={`${fieldId}-${color.id.replaceAll("#", "")}`}

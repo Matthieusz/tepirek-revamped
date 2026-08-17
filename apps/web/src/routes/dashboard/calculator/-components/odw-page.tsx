@@ -4,12 +4,12 @@ import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form } from "@/components/forms/form";
+import { FormFieldFrame } from "@/components/forms/form-field-helpers";
 import {
-  FormFieldFrame,
   getFieldErrorId,
   getFieldErrorMessage,
   getFieldId,
-} from "@/components/forms/form-field-helpers";
+} from "@/components/forms/form-field-utils";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -82,10 +82,20 @@ interface CalculatorOdwPageProps {
   session: AuthSession;
 }
 
-export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
+interface OdwFormValues {
+  readonly itemLevel: number;
+  readonly itemRarity: Rarity;
+}
+
+const ODW_DEFAULT_VALUES: OdwFormValues = {
+  itemLevel: 280,
+  itemRarity: "legendarny",
+};
+
+const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
   const [result, setResult] = useState<OdwResult | null>(null);
   const form = useAppForm({
-    defaultValues: { itemLevel: 280, itemRarity: "legendarny" as Rarity },
+    defaultValues: ODW_DEFAULT_VALUES,
     onSubmit: async ({ value }) => {
       const decoded = await OdwFormValidator["~standard"].validate(value);
       if (!("value" in decoded)) {
@@ -117,7 +127,7 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
     <form.AppForm>
       <div className="mx-auto w-full max-w-4xl space-y-6">
         <div>
-          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+          <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
             Kalkulator odwiązania
           </h1>
           <p className="text-muted-foreground">
@@ -126,9 +136,9 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-xl border border-border bg-card">
-            <div className="border-b border-border p-6">
-              <h2 className="flex items-center gap-2 font-semibold text-base">
+          <div className="border-border bg-card rounded-xl border">
+            <div className="border-border border-b p-6">
+              <h2 className="flex items-center gap-2 text-base font-semibold">
                 <Calculator className="size-5" />
                 Parametry przedmiotu
               </h2>
@@ -214,7 +224,7 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
               className={`rounded-xl border-2 ${rarityBgColors[result.itemRarity]} bg-card p-6`}
             >
               <div className="mb-4">
-                <h2 className="flex items-center gap-2 font-semibold text-base">
+                <h2 className="flex items-center gap-2 text-base font-semibold">
                   <Unlink
                     className={`size-5 ${rarityColors[result.itemRarity]}`}
                   />
@@ -233,20 +243,20 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
               </div>
               <div className="space-y-4">
                 <div className="grid gap-3">
-                  <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+                  <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
                     <span className="text-muted-foreground text-sm">
                       Wartość bazowa (10 + 0.1 × lvl)
                     </span>
-                    <span className="font-semibold text-lg">
+                    <span className="text-lg font-semibold">
                       {result.baseValue.toFixed(1)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+                  <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
                     <span className="text-muted-foreground text-sm">
                       Mnożnik rzadkości
                     </span>
                     <span
-                      className={`font-semibold text-lg ${rarityColors[result.itemRarity]}`}
+                      className={`text-lg font-semibold ${rarityColors[result.itemRarity]}`}
                     >
                       ×{result.rarityMultiplier} (
                       {rarityBonusText[result.itemRarity]})
@@ -254,12 +264,12 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
                   </div>
                 </div>
 
-                <div className="border-t border-border pt-4">
-                  <div className="flex items-center justify-between rounded-lg bg-primary/10 p-4">
-                    <span className="font-medium text-sm">
+                <div className="border-border border-t pt-4">
+                  <div className="bg-primary/10 flex items-center justify-between rounded-lg p-4">
+                    <span className="text-sm font-medium">
                       Całkowity koszt odwiązania
                     </span>
-                    <span className="font-bold text-xl text-primary">
+                    <span className="text-primary text-xl font-bold">
                       {result.totalCost.toLocaleString("pl-PL")} SŁ /{" "}
                       {Math.floor(result.totalCost / 80).toLocaleString(
                         "pl-PL"
@@ -273,22 +283,22 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
           )}
         </div>
 
-        <div className="rounded-xl border border-border bg-card">
-          <div className="border-b border-border p-6">
-            <h2 className="flex items-center gap-2 font-semibold text-base">
-              <Unlink className="size-5 text-muted-foreground" />
+        <div className="border-border bg-card rounded-xl border">
+          <div className="border-border border-b p-6">
+            <h2 className="flex items-center gap-2 text-base font-semibold">
+              <Unlink className="text-muted-foreground size-5" />
               Formuła obliczania
             </h2>
           </div>
-          <div className="space-y-3 p-6 text-muted-foreground text-sm">
+          <div className="text-muted-foreground space-y-3 p-6 text-sm">
             <p>
               <strong>Formuła:</strong>{" "}
-              <code className="rounded bg-muted px-1 py-0.5">
+              <code className="bg-muted rounded px-1 py-0.5">
                 75 × round((10 + 0.1 × lvl) × mnożnik_rzadkości)
               </code>
             </p>
             <div className="grid gap-2">
-              <p className="font-medium text-foreground">Mnożniki i limity:</p>
+              <p className="text-foreground font-medium">Mnożniki i limity:</p>
               <ul className="list-inside list-disc space-y-1">
                 <li>
                   <span className={rarityColors.zwykły}>Zwykły</span> — ×1.0,
@@ -313,4 +323,6 @@ export default function CalculatorOdwPage(_props: CalculatorOdwPageProps) {
       </div>
     </form.AppForm>
   );
-}
+};
+
+export default CalculatorOdwPage;

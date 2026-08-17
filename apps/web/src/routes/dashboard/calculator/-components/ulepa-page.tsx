@@ -5,12 +5,12 @@ import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form } from "@/components/forms/form";
+import { FormFieldFrame } from "@/components/forms/form-field-helpers";
 import {
-  FormFieldFrame,
   getFieldErrorId,
   getFieldErrorMessage,
   getFieldId,
-} from "@/components/forms/form-field-helpers";
+} from "@/components/forms/form-field-utils";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -72,6 +72,11 @@ interface CalculatorUlepaPageProps {
   session: AuthSession;
 }
 
+interface UlepaFormValues {
+  readonly itemLevel: number;
+  readonly itemRarity: Rarity;
+}
+
 interface UlepaResult {
   cumulativeCosts: number[];
   differentialCosts: number[];
@@ -83,12 +88,17 @@ interface UlepaResult {
   upgradeGoldCost: number;
 }
 
+const ULEPA_DEFAULT_VALUES: UlepaFormValues = {
+  itemLevel: ULEPA_DEFAULT_ITEM_LEVEL,
+  itemRarity: "legendarny",
+};
+
 const UlepaResults = ({ result }: { result: UlepaResult }) => (
   <div
     className={`rounded-xl border-2 ${rarityBgColors[result.itemRarity]} bg-card p-6`}
   >
     <div className="mb-4">
-      <h2 className="flex items-center gap-2 font-semibold text-base">
+      <h2 className="flex items-center gap-2 text-base font-semibold">
         <Sparkles className={`size-5 ${rarityColors[result.itemRarity]}`} />
         Ekstrakcja
       </h2>
@@ -98,35 +108,35 @@ const UlepaResults = ({ result }: { result: UlepaResult }) => (
     </div>
     <div className="space-y-4">
       <div className="grid gap-3">
-        <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+        <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
           <span className="text-muted-foreground text-sm">
             Normalna ekstrakcja (75%)
           </span>
-          <span className="font-semibold text-lg">
+          <span className="text-lg font-semibold">
             {Math.floor(result.total75Percent).toLocaleString("pl-PL")}
           </span>
         </div>
-        <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
-          <span className="font-medium text-sm">Pełna ekstrakcja (100%)</span>
-          <span className="font-bold text-lg text-primary">
+        <div className="bg-primary/10 flex items-center justify-between rounded-lg p-3">
+          <span className="text-sm font-medium">Pełna ekstrakcja (100%)</span>
+          <span className="text-primary text-lg font-bold">
             {Math.floor(result.totalUpgradeCost).toLocaleString("pl-PL")}
           </span>
         </div>
       </div>
-      <div className="grid gap-3 border-t border-border pt-4">
-        <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
+      <div className="border-border grid gap-3 border-t pt-4">
+        <div className="bg-primary/10 flex items-center justify-between rounded-lg p-3">
           <span className="text-muted-foreground text-sm">
             Koszt ulepszenia do +5
           </span>
-          <span className="font-semibold text-lg text-primary">
+          <span className="text-primary text-lg font-semibold">
             {formatGold(result.upgradeGoldCost)}
           </span>
         </div>
-        <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
+        <div className="bg-primary/10 flex items-center justify-between rounded-lg p-3">
           <span className="text-muted-foreground text-sm">
             Koszt ekstrakcji
           </span>
-          <span className="font-semibold text-lg text-primary">
+          <span className="text-primary text-lg font-semibold">
             {formatGold(result.extractionGoldCost)}
           </span>
         </div>
@@ -136,9 +146,9 @@ const UlepaResults = ({ result }: { result: UlepaResult }) => (
 );
 
 const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
-  <div className="rounded-xl border border-border bg-card">
-    <div className="border-b border-border p-6">
-      <h2 className="flex items-center gap-2 font-semibold text-base">
+  <div className="border-border bg-card rounded-xl border">
+    <div className="border-border border-b p-6">
+      <h2 className="flex items-center gap-2 text-base font-semibold">
         <TrendingUp className="size-5" />
         Koszty ulepszenia
       </h2>
@@ -168,7 +178,7 @@ const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
                 key={`upgrade-${cost}-${result.cumulativeCosts[idx] ?? 0}`}
               >
                 <TableCell>
-                  <span className="inline-flex size-7 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary text-sm">
+                  <span className="bg-primary/10 text-primary inline-flex size-7 items-center justify-center rounded-full text-sm font-semibold">
                     +{level}
                   </span>
                 </TableCell>
@@ -184,11 +194,11 @@ const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
               </TableRow>
             );
           })}
-          <TableRow className="border-t-2 bg-muted/30">
+          <TableRow className="bg-muted/30 border-t-2">
             <TableCell>
               <span className="font-semibold">Suma</span>
             </TableCell>
-            <TableCell className="font-bold text-primary">
+            <TableCell className="text-primary font-bold">
               {Math.floor(result.totalUpgradeCost).toLocaleString("pl-PL")} pkt
             </TableCell>
             <TableCell />
@@ -199,13 +209,10 @@ const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
   </div>
 );
 
-export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
+const CalculatorUlepaPage = (_props: CalculatorUlepaPageProps) => {
   const [result, setResult] = useState<UlepaResult | null>(null);
   const form = useAppForm({
-    defaultValues: {
-      itemLevel: ULEPA_DEFAULT_ITEM_LEVEL,
-      itemRarity: "legendarny" as Rarity,
-    },
+    defaultValues: ULEPA_DEFAULT_VALUES,
     onSubmit: async ({ value }) => {
       const decoded = await UlepaFormValidator["~standard"].validate(value);
       if (!("value" in decoded)) {
@@ -229,7 +236,7 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
     <form.AppForm>
       <div className="mx-auto w-full max-w-4xl space-y-6">
         <div>
-          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+          <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
             Kalkulator ulepy
           </h1>
           <p className="text-muted-foreground">
@@ -239,9 +246,9 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-xl border border-border bg-card">
-            <div className="border-b border-border p-6">
-              <h2 className="flex items-center gap-2 font-semibold text-base">
+          <div className="border-border bg-card rounded-xl border">
+            <div className="border-border border-b p-6">
+              <h2 className="flex items-center gap-2 text-base font-semibold">
                 <Calculator className="size-5" />
                 Parametry przedmiotu
               </h2>
@@ -325,4 +332,6 @@ export default function CalculatorUlepaPage(_props: CalculatorUlepaPageProps) {
       </div>
     </form.AppForm>
   );
-}
+};
+
+export default CalculatorUlepaPage;
