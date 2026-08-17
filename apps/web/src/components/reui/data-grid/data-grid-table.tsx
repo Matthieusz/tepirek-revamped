@@ -2,7 +2,14 @@
 "use client";
 
 import { flexRender } from "@tanstack/react-table";
-import type { Cell, Column, Header, Row, Table } from "@tanstack/react-table";
+import type {
+  Cell as TanStackCell,
+  Column as TanStackColumn,
+  Header as TanStackHeader,
+  ReactTable,
+  Row as TanStackRow,
+  RowData,
+} from "@tanstack/react-table";
 import { cva } from "class-variance-authority";
 import {
   Fragment,
@@ -22,14 +29,33 @@ import type {
 } from "react";
 
 import { useDataGrid } from "@/components/reui/data-grid/data-grid";
+import type { DataGridFeatures } from "@/components/reui/data-grid/data-grid-features";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
+type Cell<TData extends RowData, TValue> = TanStackCell<
+  DataGridFeatures,
+  TData,
+  TValue
+>;
+type Column<TData extends RowData> = TanStackColumn<
+  DataGridFeatures,
+  TData,
+  unknown
+>;
+type Header<TData extends RowData, TValue> = TanStackHeader<
+  DataGridFeatures,
+  TData,
+  TValue
+>;
+type Row<TData extends RowData> = TanStackRow<DataGridFeatures, TData>;
+type Table<TData extends RowData> = ReactTable<DataGridFeatures, TData>;
+
 const headerCellSpacingVariants = cva("", {
   variants: {
     size: {
-      dense: "px-2 h-8",
+      dense: "h-8 px-2",
       default: "px-3",
     },
   },
@@ -66,8 +92,8 @@ function getPinningStyles<TData>(column: Column<TData>): CSSProperties {
   const isPinned = column.getIsPinned();
 
   return {
-    left: isPinned === "left" ? `${column.getStart("left")}px` : undefined,
-    right: isPinned === "right" ? `${column.getAfter("right")}px` : undefined,
+    left: isPinned === "start" ? `${column.getStart("start")}px` : undefined,
+    right: isPinned === "end" ? `${column.getAfter("end")}px` : undefined,
     position: isPinned ? "sticky" : undefined,
     transform: isPinned ? "translateZ(0)" : undefined,
     contain: isPinned ? "paint" : undefined,
@@ -173,7 +199,7 @@ function startDataGridColumnResizeOnEnd<TData>(
         ) / 100;
     });
 
-    table.setColumnSizingInfo((old) => ({
+    table.setColumnResizing((old) => ({
       ...old,
       startOffset,
       startSize,
@@ -193,7 +219,7 @@ function startDataGridColumnResizeOnEnd<TData>(
 
   const endResize = (clientXPos?: number) => {
     updateOffset(clientXPos, true);
-    table.setColumnSizingInfo((old) => ({
+    table.setColumnResizing((old) => ({
       ...old,
       isResizingColumn: false,
       startOffset: null,
@@ -260,7 +286,7 @@ function startDataGridColumnResizeOnEnd<TData>(
     );
   }
 
-  table.setColumnSizingInfo((old) => ({
+  table.setColumnResizing((old) => ({
     ...old,
     startOffset,
     startSize,
@@ -335,23 +361,23 @@ function getDataGridTableResolvedRows<TData>(
 
 function getDataGridTableOrderedVisibleColumns<TData>(table: Table<TData>) {
   return [
-    ...table.getLeftVisibleLeafColumns(),
+    ...table.getStartVisibleLeafColumns(),
     ...table.getCenterVisibleLeafColumns(),
-    ...table.getRightVisibleLeafColumns(),
+    ...table.getEndVisibleLeafColumns(),
   ] as Column<TData>[];
 }
 
 function getDataGridTableOrderedVisibleCells<TData>(row: Row<TData>) {
   return [
-    ...row.getLeftVisibleCells(),
+    ...row.getStartVisibleCells(),
     ...row.getCenterVisibleCells(),
-    ...row.getRightVisibleCells(),
+    ...row.getEndVisibleCells(),
   ] as Cell<TData, unknown>[];
 }
 
 function getDataGridTableHeadersByPin<TData>(
   headers: readonly Header<TData, unknown>[],
-  pin: "left" | "right"
+  pin: "start" | "end"
 ) {
   const matchingHeaders: Header<TData, unknown>[] = [];
   for (const header of headers) {
@@ -363,9 +389,9 @@ function getDataGridTableHeadersByPin<TData>(
 }
 
 function getDataGridTableMergedHeaderGroups<TData>(table: Table<TData>) {
-  const leftHeaderGroups = table.getLeftHeaderGroups();
+  const leftHeaderGroups = table.getStartHeaderGroups();
   const centerHeaderGroups = table.getCenterHeaderGroups();
-  const rightHeaderGroups = table.getRightHeaderGroups();
+  const rightHeaderGroups = table.getEndHeaderGroups();
   const headerGroupCount = Math.max(
     leftHeaderGroups.length,
     centerHeaderGroups.length,
@@ -392,7 +418,7 @@ function getDataGridTableMergedHeaderGroups<TData>(table: Table<TData>) {
 }
 
 function hasDataGridTableRightPinnedColumns<TData>(table: Table<TData>) {
-  return (table.getState().columnPinning.right?.length ?? 0) > 0;
+  return (table.state.columnPinning.end?.length ?? 0) > 0;
 }
 
 function DataGridTableFillCol() {
@@ -455,9 +481,9 @@ function DataGridTableFillFootCell() {
 
 function DataGridTableBase({ children }: { children: ReactNode }) {
   const { props, table } = useDataGrid();
-  const leftVisibleColumns = table.getLeftVisibleLeafColumns();
+  const leftVisibleColumns = table.getStartVisibleLeafColumns();
   const centerVisibleColumns = table.getCenterVisibleLeafColumns();
-  const rightVisibleColumns = table.getRightVisibleLeafColumns();
+  const rightVisibleColumns = table.getEndVisibleLeafColumns();
   const hasRightPinnedColumns = hasDataGridTableRightPinnedColumns(table);
 
   /**
@@ -480,7 +506,7 @@ function DataGridTableBase({ children }: { children: ReactNode }) {
   }, [
     props.tableLayout?.columnsResizable,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    table.getState().columnSizing,
+    table.state.columnSizing,
   ]);
 
   return (
@@ -704,13 +730,12 @@ function DataGridTableHeadRowCell<TData>({
   const { column } = header;
   const isPinned = column.getIsPinned();
   const isFirstLeftPinned =
-    isPinned === "left" && column.getIsFirstColumn("left");
+    isPinned === "start" && column.getIsFirstColumn("start");
   const isLastLeftPinned =
-    isPinned === "left" && column.getIsLastColumn("left");
+    isPinned === "start" && column.getIsLastColumn("start");
   const isFirstRightPinned =
-    isPinned === "right" && column.getIsFirstColumn("right");
-  const isLastRightPinned =
-    isPinned === "right" && column.getIsLastColumn("right");
+    isPinned === "end" && column.getIsFirstColumn("end");
+  const isLastRightPinned = isPinned === "end" && column.getIsLastColumn("end");
   const isLastVisibleColumn =
     column.getIndex() ===
     header.getContext().table.getVisibleLeafColumns().length - 1;
@@ -757,7 +782,7 @@ function DataGridTableHeadRowCell<TData>({
           column.getCanPin() &&
           cn(
             "data-pinned:bg-muted data-outer-pinned-col:bg-clip-padding data-pinned:isolate",
-            "[&[data-pinned=left][data-last-col=left]]:shadow-[inset_-1px_0_0_0_var(--border)] [&[data-pinned=right]:last-child_div.cursor-col-resize:last-child]:opacity-0 [&[data-pinned=right][data-last-col=right]]:shadow-[inset_1px_0_0_0_var(--border)]",
+            "[&[data-pinned=end]:last-child_div.cursor-col-resize:last-child]:opacity-0 [&[data-pinned=end][data-last-col=right]]:shadow-[inset_1px_0_0_0_var(--border)] [&[data-pinned=start][data-last-col=left]]:shadow-[inset_-1px_0_0_0_var(--border)]",
             "[&:not([data-pinned]):has(+[data-pinned])_div.cursor-col-resize:last-child]:opacity-0 [&[data-last-col=left]_div.cursor-col-resize:last-child]:opacity-0"
           ),
         header.column.columnDef.meta?.headerClassName,
@@ -818,18 +843,18 @@ function DataGridTableHeadRowCellResize<TData>({
         onMouseDown: handleMouseDown,
         onTouchStart: handleTouchStart,
         className: cn(
-          "absolute top-0 h-full cursor-col-resize user-select-none touch-none z-10 flex",
+          "user-select-none absolute top-0 z-10 flex h-full cursor-col-resize touch-none",
           isLastVisibleColumn
             ? "end-0 w-5 justify-end before:hidden"
             : isPinned
               ? "end-0 w-5 justify-end before:hidden"
-              : "-end-2 w-5 justify-center before:absolute before:inset-y-0 before:w-px before:-translate-x-px before:bg-border",
+              : "before:bg-border -end-2 w-5 justify-center before:absolute before:inset-y-0 before:w-px before:-translate-x-px",
           column.getIsResizing() &&
             (isResizeModeOnEnd
               ? "opacity-100"
               : isLastVisibleColumn
-                ? "before:absolute before:end-0 before:block before:inset-y-0 before:w-0.5 before:bg-primary opacity-100"
-                : "before:block before:bg-primary before:w-0.5 opacity-100")
+                ? "before:bg-primary opacity-100 before:absolute before:inset-y-0 before:end-0 before:block before:w-0.5"
+                : "before:bg-primary opacity-100 before:block before:w-0.5")
         ),
       }}
     />
@@ -842,8 +867,8 @@ function DataGridTableResizeIndicator({
   viewportElement: HTMLDivElement | null;
 }) {
   const { props, table } = useDataGrid();
-  const columnSizingInfo = table.getState().columnSizingInfo;
-  const resizingColumnId = columnSizingInfo.isResizingColumn;
+  const columnResizing = table.state.columnResizing;
+  const resizingColumnId = columnResizing.isResizingColumn;
   const resizeMode =
     props.tableLayout?.columnsResizeMode ?? table.options.columnResizeMode;
 
@@ -864,14 +889,14 @@ function DataGridTableResizeIndicator({
 
   if (!resizingHeader) return null;
 
-  const deltaOffset = columnSizingInfo.deltaOffset ?? 0;
+  const deltaOffset = columnResizing.deltaOffset ?? 0;
   const headerHeight =
     viewportElement
       ?.querySelector('[data-slot="data-grid-table"] thead')
       ?.getBoundingClientRect().height ?? 0;
   const indicatorLeft =
-    typeof columnSizingInfo.startOffset === "number" && viewportElement
-      ? columnSizingInfo.startOffset -
+    typeof columnResizing.startOffset === "number" && viewportElement
+      ? columnResizing.startOffset -
         viewportElement.getBoundingClientRect().left
       : resizingHeader.getStart() + resizingHeader.getSize();
 
@@ -886,7 +911,7 @@ function DataGridTableResizeIndicator({
     >
       <div className="bg-primary/85 absolute inset-y-0 left-0 w-px -translate-x-1/2" />
       <div
-        className="bg-primary rounded-b-sm absolute top-0 left-0 -translate-x-1/2 shadow-xs"
+        className="bg-primary absolute top-0 left-0 -translate-x-1/2 rounded-b-sm shadow-xs"
         style={{
           width: 5,
           height: Math.max(headerHeight, 6),
@@ -1035,7 +1060,7 @@ function DataGridTableBodyRowSkeletonCell<TData>({
         column.columnDef.meta?.cellClassName,
         props.tableLayout?.columnsPinnable &&
           column.getCanPin() &&
-          "data-pinned:bg-background data-pinned:isolate [&[data-pinned=left][data-last-col=left]]:shadow-[inset_-1px_0_0_0_var(--border)] [&[data-pinned=right][data-last-col=right]]:shadow-[inset_1px_0_0_0_var(--border)]",
+          "data-pinned:bg-background data-pinned:isolate [&[data-pinned=end][data-last-col=right]]:shadow-[inset_1px_0_0_0_var(--border)] [&[data-pinned=start][data-last-col=left]]:shadow-[inset_-1px_0_0_0_var(--border)]",
         column.getIndex() === 0 ||
           column.getIndex() === table.getVisibleFlatColumns().length - 1
           ? props.tableClassNames?.edgeCell
@@ -1155,9 +1180,9 @@ function DataGridTableBodyRowCell<TData>({
   const { column, row } = cell;
   const isPinned = column.getIsPinned();
   const isLastLeftPinned =
-    isPinned === "left" && column.getIsLastColumn("left");
+    isPinned === "start" && column.getIsLastColumn("start");
   const isFirstRightPinned =
-    isPinned === "right" && column.getIsFirstColumn("right");
+    isPinned === "end" && column.getIsFirstColumn("end");
   const bodyCellSpacing = bodyCellSpacingVariants({
     size: props.tableLayout?.dense ? "dense" : "default",
   });
@@ -1190,8 +1215,8 @@ function DataGridTableBodyRowCell<TData>({
           column.getCanPin() &&
           cn(
             "data-pinned:bg-background data-pinned:isolate",
-            "[&[data-pinned=left][data-last-col=left]]:shadow-[inset_-1px_0_0_0_var(--border)]",
-            "[&[data-pinned=right][data-last-col=right]]:shadow-[inset_1px_0_0_0_var(--border)]"
+            "[&[data-pinned=start][data-last-col=left]]:shadow-[inset_-1px_0_0_0_var(--border)]",
+            "[&[data-pinned=end][data-last-col=right]]:shadow-[inset_1px_0_0_0_var(--border)]"
           ),
         column.getIndex() === 0 ||
           column.getIndex() === row.getVisibleCells().length - 1
@@ -1214,9 +1239,9 @@ function DataGridTableRenderedRow<TData>({
   rowRef?: React.Ref<HTMLTableRowElement>;
 }) {
   const { props, table } = useDataGrid();
-  const leftVisibleCells = row.getLeftVisibleCells();
+  const leftVisibleCells = row.getStartVisibleCells();
   const centerVisibleCells = row.getCenterVisibleCells();
-  const rightVisibleCells = row.getRightVisibleCells();
+  const rightVisibleCells = row.getEndVisibleCells();
   const hasRightPinnedColumns = hasDataGridTableRightPinnedColumns(table);
 
   return (
@@ -1273,7 +1298,7 @@ function DataGridTableLoader() {
 
   return (
     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-      <div className="text-muted-foreground bg-card rounded-lg flex items-center gap-2 border px-4 py-2 text-sm leading-none font-medium">
+      <div className="text-muted-foreground bg-card flex items-center gap-2 rounded-lg border px-4 py-2 text-sm leading-none font-medium">
         <Spinner className="size-5 opacity-60" />
         {props.loadingMessage || "Loading..."}
       </div>
@@ -1296,7 +1321,7 @@ function DataGridTableRowPin<TData>({ row }: { row: Row<TData> }) {
         }
       }}
       className={cn(
-        "text-muted-foreground hover:text-foreground rounded-lg inline-flex size-7 items-center justify-center transition-colors",
+        "text-muted-foreground hover:text-foreground inline-flex size-7 items-center justify-center rounded-lg transition-colors",
         isPinned && "text-primary hover:text-primary/80"
       )}
     >
@@ -1370,12 +1395,12 @@ function DataGridTableRowSelectAll() {
 
 function DataGridTableBodyRows<TData>({ table }: { table: Table<TData> }) {
   const { isLoading, props } = useDataGrid();
-  const pagination = table.getState().pagination;
+  const pagination = table.state.pagination;
 
   if (isLoading && props.loadingMode === "skeleton" && pagination?.pageSize) {
-    const leftVisibleColumns = table.getLeftVisibleLeafColumns();
+    const leftVisibleColumns = table.getStartVisibleLeafColumns();
     const centerVisibleColumns = table.getCenterVisibleLeafColumns();
-    const rightVisibleColumns = table.getRightVisibleLeafColumns();
+    const rightVisibleColumns = table.getEndVisibleLeafColumns();
     const hasRightPinnedColumns = hasDataGridTableRightPinnedColumns(table);
 
     return (
@@ -1463,7 +1488,7 @@ function DataGridTableBodyRows<TData>({ table }: { table: Table<TData> }) {
  */
 const MemoizedDataGridTableBodyRows = memo(
   DataGridTableBodyRows,
-  (_prev, next) => !!next.table.getState().columnSizingInfo.isResizingColumn
+  (_prev, next) => !!next.table.state.columnResizing.isResizingColumn
 ) as typeof DataGridTableBodyRows;
 
 function DataGridTableHeader<TData>() {
@@ -1478,7 +1503,7 @@ function DataGridTableHeader<TData>() {
           {mergedHeaderGroups.map((headerGroup) => {
             return (
               <DataGridTableHeadRow key={headerGroup.id} rowId={headerGroup.id}>
-                {getDataGridTableHeadersByPin(headerGroup.headers, "left").map(
+                {getDataGridTableHeadersByPin(headerGroup.headers, "start").map(
                   (header) => {
                     const { column } = header;
 
@@ -1502,7 +1527,7 @@ function DataGridTableHeader<TData>() {
                 hasRightPinnedColumns ? (
                   <DataGridTableFillHeadCell />
                 ) : null}
-                {getDataGridTableHeadersByPin(headerGroup.headers, "right").map(
+                {getDataGridTableHeadersByPin(headerGroup.headers, "end").map(
                   (header) => {
                     const { column } = header;
 
@@ -1559,7 +1584,7 @@ function DataGridTable<TData>({
                 >
                   {getDataGridTableHeadersByPin(
                     headerGroup.headers,
-                    "left"
+                    "start"
                   ).map((header) => {
                     const { column } = header;
 
@@ -1582,27 +1607,29 @@ function DataGridTable<TData>({
                   hasRightPinnedColumns ? (
                     <DataGridTableFillHeadCell />
                   ) : null}
-                  {getDataGridTableHeadersByPin(
-                    headerGroup.headers,
-                    "right"
-                  ).map((header) => {
-                    const { column } = header;
+                  {getDataGridTableHeadersByPin(headerGroup.headers, "end").map(
+                    (header) => {
+                      const { column } = header;
 
-                    return (
-                      <DataGridTableHeadRowCell header={header} key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
+                      return (
+                        <DataGridTableHeadRowCell
+                          header={header}
+                          key={header.id}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                          {props.tableLayout?.columnsResizable &&
+                            column.getCanResize() && (
+                              <DataGridTableHeadRowCellResize header={header} />
                             )}
-                        {props.tableLayout?.columnsResizable &&
-                          column.getCanResize() && (
-                            <DataGridTableHeadRowCellResize header={header} />
-                          )}
-                      </DataGridTableHeadRowCell>
-                    );
-                  })}
+                        </DataGridTableHeadRowCell>
+                      );
+                    }
+                  )}
                   {props.tableLayout?.columnsResizable &&
                   !hasRightPinnedColumns ? (
                     <DataGridTableFillHeadCell />

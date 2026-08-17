@@ -1,19 +1,27 @@
 // @ts-nocheck -- Generated ReUI registry component.
 import type {
-  Column,
+  CellData,
   ColumnFiltersState,
+  ReactTable,
   RowData,
   SortingState,
-  Table,
+  TableFeatures,
 } from "@tanstack/react-table";
 import { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 
+import type { DataGridFeatures } from "@/components/reui/data-grid/data-grid-features";
 import { cn } from "@/lib/utils";
+
+type Table<TData extends RowData> = ReactTable<DataGridFeatures, TData>;
 
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface ColumnMeta<TData extends RowData, TValue> {
+  interface ColumnMeta<
+    TFeatures extends TableFeatures,
+    TData extends RowData,
+    TValue extends CellData,
+  > {
     headerTitle?: string;
     headerClassName?: string;
     cellClassName?: string;
@@ -116,12 +124,12 @@ function DataGridProvider<TData extends object>({
   table,
   ...props
 }: DataGridProps<TData> & { table: Table<TData> }) {
-  const tableState = table.getState();
+  const tableState = table.state;
   const resolvedColumnsResizeMode =
     props.tableLayout?.columnsResizeMode ?? "onEnd";
 
   // Keep resize mode aligned with the DataGrid contract every render so
-  // consumer-level useReactTable options cannot flip it back between drags.
+  // Consumer-level table options cannot flip it back between drags.
   if (props.tableLayout?.columnsResizable) {
     table.options.columnResizeMode = resolvedColumnsResizeMode;
   }

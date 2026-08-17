@@ -1,9 +1,5 @@
+import { useTable } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  getCoreRowModel,
-  getExpandedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
 import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
 import { ExternalLink, Link2, Users } from "lucide-react";
 import { useMemo } from "react";
@@ -13,6 +9,8 @@ import {
   DataGrid,
   DataGridContainer,
 } from "@/components/reui/data-grid/data-grid";
+import { dataGridFeatures } from "@/components/reui/data-grid/data-grid-features";
+import type { DataGridFeatures } from "@/components/reui/data-grid/data-grid-features";
 import { DataGridTable } from "@/components/reui/data-grid/data-grid-table";
 import {
   Frame,
@@ -62,7 +60,7 @@ const OwnedAccountCharacterPreview = ({
   );
 };
 
-const OWNED_ACCOUNT_COLUMNS: ColumnDef<OwnedAccount>[] = [
+const OWNED_ACCOUNT_COLUMNS: ColumnDef<DataGridFeatures, OwnedAccount>[] = [
   {
     accessorKey: "displayName",
     cell: ({ row }) => (
@@ -70,7 +68,7 @@ const OWNED_ACCOUNT_COLUMNS: ColumnDef<OwnedAccount>[] = [
         <OwnedAccountCharacterPreview account={row.original} />
         <div className="min-w-0">
           <p className="truncate font-medium">{row.original.displayName}</p>
-          <p className="font-mono text-xs text-muted-foreground">
+          <p className="text-muted-foreground font-mono text-xs">
             #{row.original.profileId}
           </p>
         </div>
@@ -93,7 +91,7 @@ const OWNED_ACCOUNT_COLUMNS: ColumnDef<OwnedAccount>[] = [
   {
     accessorKey: "lastFetchedAt",
     cell: ({ row }) => (
-      <span className="whitespace-nowrap font-mono text-xs">
+      <span className="font-mono text-xs whitespace-nowrap">
         {formatDateTime(row.original.lastFetchedAt)}
       </span>
     ),
@@ -102,7 +100,7 @@ const OWNED_ACCOUNT_COLUMNS: ColumnDef<OwnedAccount>[] = [
   {
     cell: ({ row }) => (
       <a
-        className="inline-flex items-center gap-1 whitespace-nowrap text-primary hover:underline"
+        className="text-primary inline-flex items-center gap-1 whitespace-nowrap hover:underline"
         href={row.original.generatedProfileUrl}
         target="_blank"
         rel="noopener noreferrer"
@@ -147,23 +145,22 @@ export const OwnedAccountsGrid = ({
 }: OwnedAccountsPanelProps) => {
   const columns = OWNED_ACCOUNT_COLUMNS;
   const tableData = useMemo(() => [...accounts], [accounts]);
-  const table = useReactTable({
+  const table = useTable({
     columns,
     data: tableData,
-    getCoreRowModel: getCoreRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
+    features: dataGridFeatures,
     getRowId: (account) => String(account.accountId),
   });
 
   return (
     <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
       <FramePanel className="p-0 shadow-none">
-        <FrameHeader className="flex-row items-center justify-between border-b border-border px-5 py-3">
+        <FrameHeader className="border-border flex-row items-center justify-between border-b px-5 py-3">
           <FrameTitle className="flex items-center gap-2 text-base">
-            <Users className="size-4 text-muted-foreground" />
+            <Users className="text-muted-foreground size-4" />
             Twoje konta
           </FrameTitle>
-          <span className="font-mono text-xs text-muted-foreground">
+          <span className="text-muted-foreground font-mono text-xs">
             {accounts.length}
           </span>
         </FrameHeader>

@@ -1,6 +1,5 @@
 import { useAtomSet } from "@effect/atom-react";
 import { createColumnHelper } from "@tanstack/react-table";
-import type { ColumnDef } from "@tanstack/react-table";
 import type { Player as PlayerSchema } from "@tepirek-revamped/api/protocol/user/http-api-contract";
 import {
   CheckCircle2,
@@ -50,6 +49,7 @@ import {
   updateUserNameAtom,
 } from "@/features/users/user-atoms";
 import { formatDate } from "@/lib/utils";
+import type { PlayerTableFeatures } from "@/routes/dashboard/-components/players-table/player-table-features";
 
 type Player = PlayerSchema;
 
@@ -63,7 +63,7 @@ const ActionCell = ({ player }: { player: Player }) => {
   const updateUserName = useAtomSet(updateUserNameAtom, { mode: "promise" });
   const removeUser = useAtomSet(deleteUserAtom, { mode: "promise" });
 
-  const runAction = (name: string, action: () => Promise<unknown>) => {
+  const runAction = (name: string, action: () => Promise<void>) => {
     const run = async () => {
       setPendingAction(name);
       try {
@@ -97,14 +97,12 @@ const ActionCell = ({ player }: { player: Player }) => {
           <DropdownMenuItem
             disabled={pendingAction === "verified"}
             onClick={() => {
-              runAction(
-                "verified",
-                async () =>
-                  await setVerified({
-                    userId: player.id,
-                    verified: !player.verified,
-                  })
-              );
+              runAction("verified", async () => {
+                await setVerified({
+                  userId: player.id,
+                  verified: !player.verified,
+                });
+              });
             }}
           >
             {player.verified ? (
@@ -117,14 +115,12 @@ const ActionCell = ({ player }: { player: Player }) => {
           <DropdownMenuItem
             disabled={pendingAction === "role"}
             onClick={() => {
-              runAction(
-                "role",
-                async () =>
-                  await setRole({
-                    role: player.role === "admin" ? "user" : "admin",
-                    userId: player.id,
-                  })
-              );
+              runAction("role", async () => {
+                await setRole({
+                  role: player.role === "admin" ? "user" : "admin",
+                  userId: player.id,
+                });
+              });
             }}
           >
             <Shield className="mr-2 size-4" />
@@ -229,9 +225,9 @@ const ActionCell = ({ player }: { player: Player }) => {
   );
 };
 
-const columnHelper = createColumnHelper<Player>();
+const columnHelper = createColumnHelper<PlayerTableFeatures, Player>();
 
-const baseColumns = [
+const baseColumns = columnHelper.columns([
   columnHelper.accessor("id", {
     cell: (info) => info.row.index + 1,
     header: "ID",
@@ -266,14 +262,18 @@ const baseColumns = [
     cell: (info) => formatDate(info.getValue()),
     header: "Zaktualizowano",
   }),
-] as ColumnDef<Player>[];
+]);
 
-const actionsColumn = (): ColumnDef<Player> =>
+const actionsColumn = () =>
   columnHelper.display({
     cell: ({ row }) => <ActionCell player={row.original} />,
     header: "Akcje",
     id: "actions",
   });
 
-export const buildPlayerColumns = (isAdmin: boolean): ColumnDef<Player>[] =>
+export type PlayerColumnDef =
+  | (typeof baseColumns)[number]
+  | ReturnType<typeof actionsColumn>;
+
+export const buildPlayerColumns = (isAdmin: boolean): PlayerColumnDef[] =>
   isAdmin ? [...baseColumns, actionsColumn()] : baseColumns;
