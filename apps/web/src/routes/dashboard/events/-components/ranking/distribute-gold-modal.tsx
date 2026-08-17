@@ -5,12 +5,11 @@ import * as Order from "effect/Order";
 import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Coins } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form, FormFeedback, useCanCloseForm } from "@/components/forms/form";
-import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
@@ -40,6 +39,16 @@ import { distributeGoldAtom } from "@/features/events/vault/vault-atoms";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
 import { parseGoldAmount } from "@/lib/gold";
+import {
+  DistributionPreview,
+  GoldAmountPreview,
+} from "@/routes/dashboard/events/-components/ranking/gold-distribution-preview";
+import { HeroStatsPreviewSlot } from "@/routes/dashboard/events/-components/ranking/hero-stats-preview";
+import { getHeroStatsPreviewState } from "@/routes/dashboard/events/-components/ranking/hero-stats-preview-utils";
+import type {
+  HeroStats,
+  HeroStatsPreviewState,
+} from "@/routes/dashboard/events/-components/ranking/hero-stats-preview-utils";
 
 const GoldFormSchema = Schema.Struct({
   eventId: RequiredSelectionSchema("Wybierz event"),
@@ -47,99 +56,6 @@ const GoldFormSchema = Schema.Struct({
   heroId: RequiredSelectionSchema("Wybierz konkretnego herosa"),
 });
 const GoldFormValidator = Schema.toStandardSchemaV1(GoldFormSchema);
-
-interface HeroStats {
-  heroId: number;
-  heroName: string;
-  currentPointWorth: number;
-  totalBets: number;
-  totalPoints: number;
-}
-
-type HeroStatsPreviewState =
-  | { readonly _tag: "hidden" }
-  | { readonly _tag: "loading" }
-  | { readonly _tag: "failure"; readonly onRetry: () => void }
-  | { readonly _tag: "empty" }
-  | { readonly _tag: "success"; readonly heroStats: HeroStats };
-
-const getHeroStatsPreviewState = (params: {
-  readonly enabled: boolean;
-  readonly onRetry: () => void;
-  readonly result: AsyncResult.AsyncResult<HeroStats | undefined, unknown>;
-}): HeroStatsPreviewState => {
-  if (!params.enabled) {
-    return { _tag: "hidden" };
-  }
-  if (AsyncResult.isFailure(params.result)) {
-    return { _tag: "failure", onRetry: params.onRetry };
-  }
-  if (!AsyncResult.isSuccess(params.result)) {
-    return { _tag: "loading" };
-  }
-  if (params.result.value === undefined) {
-    return { _tag: "empty" };
-  }
-  return { _tag: "success", heroStats: params.result.value };
-};
-
-const HeroStatsPreview = ({
-  state,
-}: {
-  readonly state: Exclude<HeroStatsPreviewState, { readonly _tag: "hidden" }>;
-}) => {
-  if (state._tag === "failure") {
-    return (
-      <AsyncResultFailure
-        message="Nie udało się wczytać statystyk herosa."
-        onRetry={state.onRetry}
-      />
-    );
-  }
-
-  if (state._tag === "loading") {
-    return (
-      <div className="rounded-lg border bg-muted/30 p-4">
-        <p className="text-muted-foreground text-sm">Ładowanie statystyk...</p>
-      </div>
-    );
-  }
-
-  if (state._tag === "empty") {
-    return (
-      <div className="rounded-lg border bg-muted/30 p-4">
-        <p className="text-muted-foreground text-sm">
-          Brak danych dla tego herosa
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-lg border bg-muted/30 p-4">
-      <div className="space-y-2">
-        <h4 className="font-semibold">{state.heroStats.heroName}</h4>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-muted-foreground">Suma punktów</p>
-            <p className="font-mono font-semibold">
-              {state.heroStats.totalPoints.toFixed(2)}
-            </p>
-          </div>
-          {state.heroStats.currentPointWorth > 0 && (
-            <div>
-              <p className="text-muted-foreground">Aktualna wartość punktu</p>
-              <p className="font-mono font-semibold">
-                {state.heroStats.currentPointWorth.toLocaleString("pl-PL")}{" "}
-                złota
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const getEventsState = (
   result: AsyncResult.AsyncResult<
@@ -209,83 +125,13 @@ const getSubmitLabel = (params: {
   return "Rozdziel złoto";
 };
 
-const HeroStatsPreviewSlot = ({
-  state,
-}: {
-  readonly state: HeroStatsPreviewState;
-}) => {
-  if (state._tag === "hidden") {
-    return null;
-  }
-  return <HeroStatsPreview state={state} />;
-};
-
-const GoldAmountPreview = ({ goldAmount }: { readonly goldAmount: number }) => {
-  if (goldAmount <= 0) {
-    return null;
-  }
-  return (
-    <p className="font-mono text-muted-foreground text-xs">
-      = {goldAmount.toLocaleString("pl-PL")} złota
-    </p>
-  );
-};
-
-const DistributionPreview = ({
-  goldAmount,
-  heroId,
-  heroStats,
-  pointWorth,
-}: {
-  readonly goldAmount: number;
-  readonly heroId: string;
-  readonly heroStats: HeroStats | undefined;
-  readonly pointWorth: number;
-}) => {
-  if (
-    heroId === ALL_FILTER ||
-    goldAmount <= 0 ||
-    heroStats === undefined ||
-    heroStats.totalPoints <= 0
-  ) {
-    return null;
-  }
-  return (
-    <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-      <h4 className="mb-2 font-semibold text-primary text-sm">
-        Podgląd rozdziału
-      </h4>
-      <div className="grid grid-cols-2 gap-4 text-sm">
-        <div>
-          <p className="text-muted-foreground">Wartość jednego punktu</p>
-          <p className="font-mono font-semibold">
-            {pointWorth.toLocaleString("pl-PL", {
-              maximumFractionDigits: 2,
-            })}{" "}
-            złota
-          </p>
-        </div>
-        <div>
-          <p className="text-muted-foreground">Złoto do rozdzielenia</p>
-          <p className="font-mono font-semibold">
-            {goldAmount.toLocaleString("pl-PL")}
-          </p>
-        </div>
-      </div>
-      <p className="mt-2 text-muted-foreground text-xs">
-        Formuła: złoto gracza = punkty gracza × {pointWorth.toFixed(2)}
-      </p>
-    </div>
-  );
-};
-
 interface DistributeGoldModalProps {
   trigger: React.ReactNode;
   selectedEventId?: string;
   selectedHeroId?: string;
 }
 
-export const DistributeGoldModal = ({
+const DistributeGoldModalContent = ({
   trigger,
   selectedEventId = "all",
   selectedHeroId = "all",
@@ -294,15 +140,10 @@ export const DistributeGoldModal = ({
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
   const distributeGold = useAtomSet(distributeGoldAtom, { mode: "promise" });
-
   const eventsResult = useAtomValue(eventsAtom);
-  const eventsState = getEventsState(eventsResult);
-  const { events, loading: eventsLoading } = eventsState;
-
+  const { events, loading: eventsLoading } = getEventsState(eventsResult);
   const heroesResult = useAtomValue(heroesAtom);
-  const heroesState = getHeroesState(heroesResult);
-  const { heroes, loading: heroesLoading } = heroesState;
-
+  const { heroes, loading: heroesLoading } = getHeroesState(heroesResult);
   const form = useAppForm({
     defaultValues: {
       eventId: selectedEventId,
@@ -346,15 +187,6 @@ export const DistributeGoldModal = ({
   );
   const canDiscard = useCanCloseForm(isSubmitting);
 
-  useEffect(() => {
-    form.reset({
-      eventId: selectedEventId,
-      goldAmount: "",
-      heroId: selectedHeroId,
-    });
-    setSubmissionFailure(undefined);
-  }, [form, selectedEventId, selectedHeroId]);
-
   const handleOpenChange = (nextOpen: boolean): void => {
     if (!nextOpen) {
       if (!canDiscard()) {
@@ -384,10 +216,7 @@ export const DistributeGoldModal = ({
     heroStats && heroStats.totalPoints > 0
       ? goldAmount / heroStats.totalPoints
       : 0;
-  const submitLabel = getSubmitLabel({
-    dependentDataLoading,
-    isSubmitting,
-  });
+  const submitLabel = getSubmitLabel({ dependentDataLoading, isSubmitting });
 
   return (
     <ResponsiveDialog onOpenChange={handleOpenChange} open={open}>
@@ -419,7 +248,6 @@ export const DistributeGoldModal = ({
                   />
                 )}
               </form.Field>
-
               <form.Field name="heroId">
                 {(field) => (
                   <HeroFormField
@@ -430,9 +258,7 @@ export const DistributeGoldModal = ({
                   />
                 )}
               </form.Field>
-
               <HeroStatsPreviewSlot state={heroStatsPreviewState} />
-
               <form.AppField name="goldAmount">
                 {(field) => (
                   <field.TextField
@@ -452,7 +278,6 @@ export const DistributeGoldModal = ({
                 )}
               </form.AppField>
               <GoldAmountPreview goldAmount={goldAmount} />
-
               <DistributionPreview
                 goldAmount={goldAmount}
                 heroId={heroId}
@@ -491,3 +316,10 @@ export const DistributeGoldModal = ({
     </ResponsiveDialog>
   );
 };
+
+export const DistributeGoldModal = (props: DistributeGoldModalProps) => (
+  <DistributeGoldModalContent
+    key={`${props.selectedEventId ?? "all"}-${props.selectedHeroId ?? "all"}`}
+    {...props}
+  />
+);
