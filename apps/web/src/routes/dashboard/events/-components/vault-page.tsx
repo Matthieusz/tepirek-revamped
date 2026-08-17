@@ -197,7 +197,10 @@ const VaultContent = ({
           }}
           value={effectiveEventId}
         >
-          <SelectTrigger className="w-56">
+          <SelectTrigger
+            aria-label="Filtruj skarbiec według eventu"
+            className="w-56"
+          >
             <SelectValue>
               {getEventSelectDisplay({
                 events,

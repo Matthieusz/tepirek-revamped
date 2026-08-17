@@ -236,7 +236,10 @@ const HistoryContent = ({
             }}
             value={filter.state.eventId}
           >
-            <SelectTrigger className="w-full sm:w-44">
+            <SelectTrigger
+              aria-label="Filtruj historię według eventu"
+              className="w-full sm:w-44"
+            >
               <SelectValue>
                 {getEventSelectDisplay({
                   events: filter.events,
@@ -257,7 +260,10 @@ const HistoryContent = ({
             }}
             value={filter.heroQueryEnabled ? filter.state.heroId : ""}
           >
-            <SelectTrigger className="w-full sm:w-44">
+            <SelectTrigger
+              aria-label="Filtruj historię według herosa"
+              className="w-full sm:w-44"
+            >
               <SelectValue>
                 {getHeroSelectDisplay({
                   selectedEventId: filter.state.eventId,

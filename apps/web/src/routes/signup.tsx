@@ -4,7 +4,7 @@ import { SignUpForm } from "@/components/signup-form";
 import { createPageTitle } from "@/lib/metadata";
 
 const SignupPage = () => (
-  <div className="bg-background flex min-h-svh flex-col items-center justify-center px-4 py-12">
+  <div className="bg-background flex min-h-svh w-full min-w-0 flex-col items-center justify-center px-4 py-12">
     <SignUpForm />
   </div>
 );

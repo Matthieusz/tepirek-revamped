@@ -114,8 +114,8 @@ const HomeContent = () => {
             href="https://uptime.informati.dev/status/overview"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Status strony"
+            className="text-muted-foreground hover:text-foreground inline-flex min-h-6 min-w-6 items-center justify-center transition-colors"
           >
             <Link2 className="size-3.5" />
           </a>

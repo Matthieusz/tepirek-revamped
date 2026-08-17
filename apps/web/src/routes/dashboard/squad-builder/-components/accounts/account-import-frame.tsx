@@ -317,7 +317,10 @@ const ImportPanel = ({
           onStepChange(value === 2 ? 2 : 1);
         }}
       >
-        <StepperNav className="border-border border-b px-5 py-3">
+        <StepperNav
+          aria-label="Nawigacja etapów importu kont"
+          className="border-border border-b px-5 py-3"
+        >
           <StepperItem
             completed={activeStep === 2}
             loading={isPreviewPending}

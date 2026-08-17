@@ -545,7 +545,11 @@ export const AvailableCharacterPool = ({
       aria-labelledby="available-characters-heading"
       className="flex min-h-0 min-w-0 flex-col"
     >
-      <fieldset className="contents" disabled={isSaving}>
+      <fieldset
+        aria-labelledby="available-characters-heading"
+        className="contents"
+        disabled={isSaving}
+      >
         <Frame
           className="flex min-h-0 flex-1 flex-col [--frame-radius:var(--radius-lg)] xl:sticky xl:top-4 xl:max-h-[calc(100dvh-10rem)]"
           spacing="sm"

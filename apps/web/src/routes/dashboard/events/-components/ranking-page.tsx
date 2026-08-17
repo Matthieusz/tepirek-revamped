@@ -96,7 +96,10 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
             }}
             value={filter.state.eventId}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger
+              aria-label="Filtruj ranking według eventu"
+              className="w-full"
+            >
               <SelectValue>
                 {getEventSelectDisplay({
                   events: filter.events,
@@ -117,7 +120,10 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
             }}
             value={filter.heroQueryEnabled ? filter.state.heroId : ""}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger
+              aria-label="Filtruj ranking według herosa"
+              className="w-full"
+            >
               <SelectValue>
                 {getHeroSelectDisplay({
                   selectedEventId: filter.state.eventId,

@@ -102,7 +102,7 @@ const SelectionActions = (props: SelectionActionsWithModeProps) => {
         type="button"
         variant="outline"
       >
-        <CopyX className="size-4" />
+        <CopyX className="size-4" data-icon="inline-start" />
         {variant === "edit" ? (
           <span>Wyczyść</span>
         ) : (
@@ -122,7 +122,7 @@ const SelectionActions = (props: SelectionActionsWithModeProps) => {
           type="button"
           variant="outline"
         >
-          <Copy className="size-4" />
+          <Copy className="size-4" data-icon="inline-start" />
           <span>Przywróć</span>
         </Button>
       ) : (
@@ -136,7 +136,7 @@ const SelectionActions = (props: SelectionActionsWithModeProps) => {
           type="button"
           variant="outline"
         >
-          <Copy className="size-4" />
+          <Copy className="size-4" data-icon="inline-start" />
           <span className="hidden sm:inline">Kopiuj ostatnie</span>
           <span className="sm:hidden">Kopiuj</span>
         </Button>
@@ -291,7 +291,7 @@ const SelectedUsers = ({
             <span className="text-sm">{user.name}</span>
             <button
               aria-label={`Usuń gracza ${user.name}`}
-              className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground flex size-5 items-center justify-center rounded-full"
+              className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground flex size-6 items-center justify-center rounded-full"
               onClick={() => {
                 onChange(removeUser(user.id, selectedUserIds));
               }}

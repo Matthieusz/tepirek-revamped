@@ -121,7 +121,7 @@ const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-lg leading-snug font-semibold">
+                  <h2 className="text-lg leading-snug font-semibold break-words">
                     {announcement.title}
                   </h2>
                   <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
@@ -165,7 +165,7 @@ const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
                   </Button>
                 )}
               </div>
-              <p className="text-muted-foreground mt-4 text-sm leading-relaxed whitespace-pre-wrap">
+              <p className="text-muted-foreground mt-4 text-sm leading-relaxed break-words whitespace-pre-wrap">
                 {announcement.description}
               </p>
             </article>

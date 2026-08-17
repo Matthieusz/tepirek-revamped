@@ -137,7 +137,7 @@ export const LoginForm = ({
       <p className="text-muted-foreground text-center text-sm">
         Nie masz konta?{" "}
         <Link
-          className="text-primary hover:text-primary/80 font-medium underline underline-offset-4 transition-colors"
+          className="text-primary hover:text-primary/80 inline-flex min-h-6 items-center font-medium underline underline-offset-4 transition-colors"
           to="/signup"
         >
           Zarejestruj się

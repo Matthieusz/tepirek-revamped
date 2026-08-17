@@ -77,28 +77,30 @@ export const SquadEditorCommandHeader = ({
     <header className="space-y-3">
       <div className="flex flex-wrap items-start gap-3">
         <div className="min-w-0 flex-1 space-y-1">
-          {isViewer ? (
-            <h1 className="font-serif text-2xl font-bold tracking-tight break-words">
-              {draft.name}
-            </h1>
-          ) : (
-            <>
-              <Label htmlFor="group-name">Nazwa grupy</Label>
-              <h1>
-                <Input
-                  aria-label="Nazwa grupy"
-                  className="focus-visible:border-input h-10 max-w-xl border-transparent bg-transparent px-3 py-2 font-sans text-xl leading-6 font-semibold shadow-none"
-                  disabled={isSaving}
-                  id="group-name"
-                  maxLength={80}
-                  onChange={(event) => {
-                    onNameChange(event.target.value);
-                  }}
-                  value={draft.name}
-                />
-              </h1>
-            </>
-          )}
+          {!isViewer && <Label htmlFor="group-name">Nazwa grupy</Label>}
+          <h1
+            className={
+              isViewer
+                ? "font-serif text-2xl font-bold tracking-tight break-words"
+                : undefined
+            }
+          >
+            {isViewer ? (
+              draft.name
+            ) : (
+              <Input
+                aria-label="Nazwa grupy"
+                className="focus-visible:border-input h-10 max-w-xl border-transparent bg-transparent px-3 py-2 font-sans text-xl leading-6 font-semibold shadow-none"
+                disabled={isSaving}
+                id="group-name"
+                maxLength={80}
+                onChange={(event) => {
+                  onNameChange(event.target.value);
+                }}
+                value={draft.name}
+              />
+            )}
+          </h1>
         </div>
         <div className="flex w-full flex-wrap items-start justify-end gap-3 sm:w-auto">
           {role === "owner" && (

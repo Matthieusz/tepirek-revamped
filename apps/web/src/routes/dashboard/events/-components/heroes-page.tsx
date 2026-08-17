@@ -134,7 +134,10 @@ const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
             }}
             value={selectedEventId}
           >
-            <SelectTrigger className="w-56">
+            <SelectTrigger
+              aria-label="Filtruj herosów według eventu"
+              className="w-56"
+            >
               <SelectValue>
                 {getEventSelectDisplay({ events, selectedEventId })}
               </SelectValue>

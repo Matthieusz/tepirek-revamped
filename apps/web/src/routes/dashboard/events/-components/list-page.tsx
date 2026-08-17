@@ -227,6 +227,7 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
                                 </span>
                               </Button>
                               <Button
+                                aria-label={`Usuń event ${event.name}`}
                                 onClick={() => {
                                   setEventAction({
                                     id: event.id,
