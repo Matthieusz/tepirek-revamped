@@ -1,6 +1,7 @@
 import { Outlet } from "@tanstack/react-router";
 
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
+import { DashboardCommandMenu } from "@/components/dashboard-command-menu";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -27,6 +28,7 @@ const DashboardLayout = ({ session }: DashboardLayoutProps) => (
           />
           <BreadcrumbNav />
         </div>
+        <DashboardCommandMenu />
       </header>
       <div className="flex min-h-0 w-full flex-1 px-6 py-6">
         <Outlet />

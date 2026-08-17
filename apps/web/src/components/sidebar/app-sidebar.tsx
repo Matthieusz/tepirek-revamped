@@ -1,18 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
-import {
-  Brain,
-  Calculator,
-  CalendarCheck,
-  Gavel,
-  ListChecks,
-  LogOut,
-  Swords,
-  User,
-  Users,
-} from "lucide-react";
+import { LogOut } from "lucide-react";
 import type * as React from "react";
 import { toast } from "sonner";
 
+import {
+  dashboardNavigationGroups,
+  dashboardOtherNavigationItems,
+} from "@/components/dashboard-navigation";
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavOther } from "@/components/sidebar/nav-other";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,110 +20,6 @@ import {
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 import type { AuthSession } from "@/types/route";
-
-const data = {
-  navMain: [
-    {
-      icon: CalendarCheck,
-      items: [
-        {
-          title: "Lista eventów",
-          url: "/dashboard/events/list",
-        },
-        {
-          title: "Lista herosów",
-          url: "/dashboard/events/heroes",
-        },
-        {
-          title: "Dodaj obstawienie",
-          url: "/dashboard/events/bets/add",
-        },
-        {
-          title: "Historia",
-          url: "/dashboard/events/history",
-        },
-        {
-          title: "Ranking",
-          url: "/dashboard/events/ranking",
-        },
-        {
-          title: "Skarbiec",
-          url: "/dashboard/events/vault",
-        },
-      ],
-      title: "Eventy",
-      url: "#",
-    },
-    {
-      icon: Gavel,
-      items: [
-        {
-          title: "Broni głównych",
-          url: "/dashboard/auctions/main",
-        },
-        {
-          title: "Broni pomocniczych",
-          url: "/dashboard/auctions/support",
-        },
-      ],
-      title: "Licytacje",
-      url: "#",
-    },
-    {
-      icon: Swords,
-      items: [
-        {
-          title: "Konta",
-          url: "/dashboard/squad-builder/accounts",
-        },
-        {
-          title: "Składy",
-          url: "/dashboard/squad-builder/squads",
-        },
-      ],
-      title: "Składy",
-      url: "#",
-    },
-    {
-      icon: Calculator,
-      items: [
-        {
-          title: "Ulepy",
-          url: "/dashboard/calculator/ulepa",
-        },
-        {
-          title: "Odwiązania",
-          url: "/dashboard/calculator/odw",
-        },
-        { title: "Lista", url: "/dashboard/calculator/list" },
-      ],
-      title: "Kalkulatory",
-      url: "#",
-    },
-  ],
-  projects: [
-    {
-      icon: ListChecks,
-      name: "Lista zadań",
-      url: "/dashboard/tasks",
-    },
-    {
-      icon: Brain,
-      name: "Umiejętności",
-      url: "/dashboard/skills",
-    },
-    {
-      icon: Users,
-      name: "Lista graczy",
-      url: "/dashboard/player-list",
-    },
-    {
-      icon: User,
-      name: "Profil",
-      url: "/dashboard/profile",
-    },
-  ],
-};
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   session: AuthSession;
@@ -162,8 +52,8 @@ export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
         </div>
       </SidebarHeader>
       <SidebarContent className="px-2 group-data-[state=collapsed]:px-0">
-        <NavMain items={data.navMain} />
-        <NavOther projects={data.projects} />
+        <NavMain items={dashboardNavigationGroups} />
+        <NavOther items={dashboardOtherNavigationItems} />
       </SidebarContent>
       <SidebarFooter className="border-sidebar-border border-t">
         <div className="flex items-center gap-3 px-1 py-1.5 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-3 group-data-[state=collapsed]:py-2">
@@ -202,8 +92,9 @@ export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
                 },
               });
             }}
+            aria-label="Wyloguj"
             size="icon"
-            variant="destructive"
+            variant="ghost"
           >
             <LogOut className="size-4" />
           </Button>

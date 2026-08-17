@@ -1,8 +1,11 @@
 import { Link, useMatchRoute } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 
+import type {
+  DashboardNavigationGroup,
+  DashboardNavigationItem,
+} from "@/components/dashboard-navigation";
 import {
   Collapsible,
   CollapsibleContent,
@@ -23,18 +26,7 @@ import { cn } from "@/lib/utils";
 export const NavMain = ({
   items,
 }: {
-  items: {
-    title: string;
-    url: string;
-    icon?: LucideIcon;
-    isActive?: boolean;
-    disabled?: boolean;
-    items?: {
-      title: string;
-      url: string;
-      disabled?: boolean;
-    }[];
-  }[];
+  items: readonly DashboardNavigationGroup[];
 }) => {
   const matchRoute = useMatchRoute();
 
@@ -72,18 +64,7 @@ const NavItemCollapsible = ({
   matchRoute,
 }: {
   isGroupActive: boolean;
-  item: {
-    title: string;
-    url: string;
-    icon?: LucideIcon;
-    isActive?: boolean;
-    disabled?: boolean;
-    items?: {
-      title: string;
-      url: string;
-      disabled?: boolean;
-    }[];
-  };
+  item: DashboardNavigationGroup;
   matchRoute: ReturnType<typeof useMatchRoute>;
 }) => {
   const [open, setOpen] = useState(item.isActive ?? isGroupActive);
@@ -112,7 +93,7 @@ const NavItemCollapsible = ({
           />
           <CollapsibleContent>
             <SidebarMenuSub>
-              {item.items?.map((subItem) => {
+              {item.items.map((subItem: DashboardNavigationItem) => {
                 const isActive = matchRoute({
                   fuzzy: true,
                   to: subItem.url,

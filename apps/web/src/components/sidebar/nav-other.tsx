@@ -1,6 +1,6 @@
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import type { LucideIcon } from "lucide-react";
 
+import type { DashboardNavigationItem } from "@/components/dashboard-navigation";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -11,16 +11,15 @@ import {
 import { cn } from "@/lib/utils";
 
 export const NavOther = ({
-  projects,
+  items,
 }: {
-  projects: {
-    name: string;
-    url: string;
-    icon: LucideIcon;
-    disabled?: boolean;
-  }[];
+  items: readonly DashboardNavigationItem[];
 }) => {
   const matchRoute = useMatchRoute();
+
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
     <SidebarGroup>
@@ -28,25 +27,26 @@ export const NavOther = ({
         Inne
       </SidebarGroupLabel>
       <SidebarMenu>
-        {projects.map((item) => {
+        {items.map((item) => {
           const isActive = matchRoute({ fuzzy: true, to: item.url });
+          const ItemIcon = item.icon;
 
           return (
-            <SidebarMenuItem key={item.name}>
+            <SidebarMenuItem key={item.title}>
               {item.disabled === true ? (
                 <SidebarMenuButton
                   className="cursor-not-allowed opacity-50"
-                  tooltip={item.name}
+                  tooltip={item.title}
                 >
-                  <item.icon className="size-4" />
-                  <span>{item.name}</span>
+                  {ItemIcon ? <ItemIcon className="size-4" /> : null}
+                  <span>{item.title}</span>
                 </SidebarMenuButton>
               ) : (
                 <SidebarMenuButton
                   render={
                     <Link to={item.url}>
-                      <item.icon className="size-4" />
-                      <span>{item.name}</span>
+                      {ItemIcon ? <ItemIcon className="size-4" /> : null}
+                      <span>{item.title}</span>
                     </Link>
                   }
                   className={cn(
@@ -54,7 +54,7 @@ export const NavOther = ({
                     isActive !== false && "bg-accent font-medium"
                   )}
                   isActive={isActive !== false}
-                  tooltip={item.name}
+                  tooltip={item.title}
                 />
               )}
             </SidebarMenuItem>
