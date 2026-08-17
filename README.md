@@ -20,14 +20,14 @@ Tepirek Revamped is guild operations software for [Margonem](https://www.margone
 
 ## What it does
 
-| Workflow             | What you can do                                                                                         |
-| -------------------- | ------------------------------------------------------------------------------------------------------- |
-| **Guild operations** | Coordinate events, hero records, bets, rankings, and guild vault payouts (`Skarbiec`).                  |
-| **Auctions**         | Run main- and auxiliary-character auctions with profession-aware views.                                 |
-| **Skills**           | Track skill ranges across the guild.                                                                    |
-| **People & access**  | Verify players, publish announcements, assign tasks, and manage sign-in with email/password or Discord. |
-| **Squads**           | Import Margonem accounts and plan squads with shared squad groups.                                      |
-| **Calculators**      | Calculate ODW, item upgrades (`ulepa`), and bounties.                                                   |
+| Workflow | What you can do |
+| --- | --- |
+| **Guild operations** | Coordinate events, hero records, bets, rankings, and guild vault payouts (`Skarbiec`). |
+| **Auctions** | Run main- and auxiliary-character auctions with profession-aware views. |
+| **Skills** | Track skill ranges across the guild. |
+| **People & access** | Verify players, publish announcements, assign tasks, and manage sign-in with email/password or Discord. |
+| **Squads** | Import Margonem accounts and plan squads with shared squad groups. |
+| **Calculators** | Calculate ODW, item upgrades (`ulepa`), and bounties. |
 
 ## At a glance
 

@@ -62,7 +62,7 @@ export const HeroSelectItems = ({
     return (
       <SelectItem disabled value="loading">
         <div className="flex items-center gap-2">
-          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+          <Loader2 className="text-muted-foreground size-4 animate-spin" />
           <span>{loadingLabel}</span>
         </div>
       </SelectItem>

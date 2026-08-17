@@ -183,7 +183,7 @@ const AvailableUsers = ({
     <div className="grid grid-cols-1 gap-2">
       {users.map((user) => (
         <label
-          className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50"
+          className="border-border hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors"
           htmlFor={`${idPrefix}-${user.id}`}
           key={user.id}
         >
@@ -236,12 +236,12 @@ const SelectedUsers = ({
     return (
       <div>
         <Label className="mb-2">{label}</Label>
-        <div className="rounded-md border border-muted bg-muted/30">
+        <div className="border-muted bg-muted/30 rounded-md border">
           <div className="p-4">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
               {selectedUsers.map((user) => (
                 <label
-                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-primary bg-primary/5 p-3 transition-colors hover:bg-muted/50"
+                  className="border-primary bg-primary/5 hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors"
                   htmlFor={`selected-${idPrefix}-${user.id}`}
                   key={user.id}
                 >
@@ -279,7 +279,7 @@ const SelectedUsers = ({
       <div className="flex flex-wrap gap-2">
         {selectedUsers.map((user) => (
           <div
-            className="flex items-center gap-2 rounded-full border bg-muted/30 py-1 pr-3 pl-1"
+            className="bg-muted/30 flex items-center gap-2 rounded-full border py-1 pr-3 pl-1"
             key={user.id}
           >
             <Avatar className="size-6">
@@ -291,7 +291,7 @@ const SelectedUsers = ({
             <span className="text-sm">{user.name}</span>
             <button
               aria-label={`Usuń gracza ${user.name}`}
-              className="flex size-5 items-center justify-center rounded-full bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground flex size-5 items-center justify-center rounded-full"
               onClick={() => {
                 onChange(removeUser(user.id, selectedUserIds));
               }}
@@ -317,11 +317,11 @@ const PointsPreview = ({ preview }: PointsPreviewProps): ReactNode => {
   }
 
   return (
-    <div className="flex items-center justify-between rounded-lg border bg-muted/30 p-3">
+    <div className="bg-muted/30 flex items-center justify-between rounded-lg border p-3">
       <div className="flex items-center gap-4">
         <div className="text-center">
           <p className="text-muted-foreground text-xs">Obecnie</p>
-          <p className="font-semibold text-lg">
+          <p className="text-lg font-semibold">
             {preview.currentMemberCount} os.
           </p>
           <p className="text-muted-foreground text-xs">
@@ -331,7 +331,7 @@ const PointsPreview = ({ preview }: PointsPreviewProps): ReactNode => {
         <div className="text-muted-foreground">→</div>
         <div className="text-center">
           <p className="text-muted-foreground text-xs">Po zmianie</p>
-          <p className="font-semibold text-lg">{preview.newMemberCount} os.</p>
+          <p className="text-lg font-semibold">{preview.newMemberCount} os.</p>
           <Badge variant={preview.variant}>
             {preview.newPointsPerMember} pkt/os
           </Badge>
@@ -394,7 +394,7 @@ export const HeroBetMemberPicker = (props: HeroBetMemberPickerProps) => {
       </div>
 
       <div className="relative">
-        <Search className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground" />
+        <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
         <Input
           aria-label="Szukaj gracza"
           className="pl-9"
@@ -416,7 +416,7 @@ export const HeroBetMemberPicker = (props: HeroBetMemberPickerProps) => {
         }
       >
         {props.variant === "edit" && (
-          <p className="mb-2 text-muted-foreground text-sm">Dostępni gracze:</p>
+          <p className="text-muted-foreground mb-2 text-sm">Dostępni gracze:</p>
         )}
         {listState === "has-users" ? (
           <AvailableUsers

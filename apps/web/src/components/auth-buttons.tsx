@@ -34,7 +34,7 @@ export const DiscordLoginButton = ({
   label?: string;
 }) => (
   <Button
-    className="h-12 w-full gap-2.5 font-semibold text-base"
+    className="h-12 w-full gap-2.5 text-base font-semibold"
     // oxlint-disable-next-line @typescript-eslint/no-misused-promises
     onClick={async () => {
       await authClient.signIn.social({

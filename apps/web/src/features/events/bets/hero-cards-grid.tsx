@@ -26,9 +26,9 @@ export const HeroCardsGrid = ({
     {heroes.map((hero) => (
       <button
         aria-pressed={selectedHeroId === hero.id.toString()}
-        className={`group relative flex flex-col items-center rounded-lg border p-3 transition-all hover:bg-muted/50 ${
+        className={`group hover:bg-muted/50 relative flex flex-col items-center rounded-lg border p-3 transition-all ${
           selectedHeroId === hero.id.toString()
-            ? "border-primary bg-primary/5 ring-2 ring-primary"
+            ? "border-primary bg-primary/5 ring-primary ring-2"
             : "border-border"
         }`}
         key={hero.id}
@@ -50,16 +50,16 @@ export const HeroCardsGrid = ({
             width={56}
           />
         ) : (
-          <div className="mb-2 flex h-16 w-14 items-center justify-center rounded bg-muted">
-            <Sword className="size-6 text-muted-foreground" />
+          <div className="bg-muted mb-2 flex h-16 w-14 items-center justify-center rounded">
+            <Sword className="text-muted-foreground size-6" />
           </div>
         )}
-        <span className="line-clamp-2 text-center font-medium text-xs">
+        <span className="line-clamp-2 text-center text-xs font-medium">
           {hero.name}
         </span>
         <span className="text-muted-foreground text-sm">Lvl {hero.level}</span>
         {selectedHeroId === hero.id.toString() && (
-          <div className="-top-1 -right-1 absolute flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
+          <div className="bg-primary text-primary-foreground absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full text-xs">
             ✓
           </div>
         )}

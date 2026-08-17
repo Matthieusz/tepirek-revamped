@@ -96,7 +96,7 @@ const CellContent: React.FC<CellContentProps> = ({
     const formattedDate = formatSignupDate(signup.createdAt);
     return (
       <button
-        className="group/signup flex w-full min-w-0 items-center gap-2 rounded-full bg-primary/10 px-2 py-1 transition-colors hover:bg-destructive/10"
+        className="group/signup bg-primary/10 hover:bg-destructive/10 flex w-full min-w-0 items-center gap-2 rounded-full px-2 py-1 transition-colors"
         onClick={onRemove}
         type="button"
       >
@@ -109,17 +109,17 @@ const CellContent: React.FC<CellContentProps> = ({
             {signup.userName?.charAt(0)?.toUpperCase() ?? "?"}
           </AvatarFallback>
         </Avatar>
-        <span className="relative min-w-0 flex-1 font-medium text-sm">
+        <span className="relative min-w-0 flex-1 text-sm font-medium">
           {/* Keep username width to prevent layout shift */}
           <span className="block truncate group-hover/signup:invisible">
             {signup.userName}
           </span>
-          <span className="absolute inset-0 hidden items-center justify-center text-destructive group-hover/signup:inline-flex">
+          <span className="text-destructive absolute inset-0 hidden items-center justify-center group-hover/signup:inline-flex">
             <Trash2 className="size-4" />
           </span>
         </span>
         {formattedDate ? (
-          <span className="shrink-0 whitespace-nowrap text-muted-foreground text-xs">
+          <span className="text-muted-foreground shrink-0 text-xs whitespace-nowrap">
             {formattedDate}
           </span>
         ) : null}
@@ -129,7 +129,7 @@ const CellContent: React.FC<CellContentProps> = ({
 
   const formattedDate = formatSignupDate(signup.createdAt);
   return (
-    <div className="flex w-full min-w-0 items-center gap-2 rounded-full bg-muted/50 px-2 py-1">
+    <div className="bg-muted/50 flex w-full min-w-0 items-center gap-2 rounded-full px-2 py-1">
       <Avatar className="size-6">
         <AvatarImage
           alt={signup.userName ?? "User"}
@@ -141,7 +141,7 @@ const CellContent: React.FC<CellContentProps> = ({
       </Avatar>
       <span className="min-w-0 flex-1 truncate text-sm">{signup.userName}</span>
       {formattedDate ? (
-        <span className="shrink-0 whitespace-nowrap text-muted-foreground text-xs">
+        <span className="text-muted-foreground shrink-0 text-xs whitespace-nowrap">
           {formattedDate}
         </span>
       ) : null}
@@ -265,18 +265,18 @@ const AuctionTableContent: React.FC<AuctionTableProps> = ({
           <TableBody className="group border-t" key={value}>
             {rounds.map((round, roundIdx) => (
               <TableRow
-                className="text-center transition-colors hover:bg-muted/70"
+                className="hover:bg-muted/70 text-center transition-colors"
                 key={`${value}-${round}`}
               >
                 {roundIdx === 0 ? (
                   <TableCell
-                    className="w-20 border-r bg-card font-semibold text-xl transition-colors group-hover:bg-accent/60"
+                    className="bg-card group-hover:bg-accent/60 w-20 border-r text-xl font-semibold transition-colors"
                     rowSpan={4}
                   >
                     {value}
                   </TableCell>
                 ) : null}
-                <TableCell className="whitespace-nowrap border px-4 py-2 text-center">
+                <TableCell className="border px-4 py-2 text-center whitespace-nowrap">
                   {AUCTION_SLOT_ROUND_LABELS[round]}
                 </TableCell>
                 {columns.map((col: string, colIdx: number) => {

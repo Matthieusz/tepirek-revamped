@@ -46,9 +46,9 @@ const InviteInboxPanel = () => {
 
   return (
     <section className="overflow-hidden">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3">
-        <h2 className="flex items-center gap-2 font-semibold text-base">
-          <Inbox className="size-4 text-muted-foreground" />
+      <div className="border-border flex items-center justify-between border-b px-5 py-3">
+        <h2 className="flex items-center gap-2 text-base font-semibold">
+          <Inbox className="text-muted-foreground size-4" />
           Zaproszenia do kont
         </h2>
         <ReuiBadge variant={invites.length > 0 ? "warning-light" : "secondary"}>
@@ -63,14 +63,14 @@ const InviteInboxPanel = () => {
           <IconStack aria-hidden="true">
             <Inbox className="size-5" />
           </IconStack>
-          <p className="mx-auto mt-2 max-w-sm text-muted-foreground text-sm">
+          <p className="text-muted-foreground mx-auto mt-2 max-w-sm text-sm">
             Nie masz oczekujących zaproszeń do kont Margonem.
           </p>
         </div>
       )}
 
       {invites.length > 0 && (
-        <ul className="divide-y divide-border">
+        <ul className="divide-border divide-y">
           {invites.map((invite) => (
             <li
               className="flex flex-wrap items-center justify-between gap-3 px-5 py-3"
@@ -90,12 +90,12 @@ const InviteInboxPanel = () => {
                 </Avatar>
                 <div className="min-w-0 space-y-0.5">
                   <div className="flex items-center gap-2">
-                    <span className="truncate font-medium text-sm">
+                    <span className="truncate text-sm font-medium">
                       {invite.accountDisplayName}
                     </span>
                     <ReuiBadge variant="secondary">oczekuje</ReuiBadge>
                   </div>
-                  <p className="font-mono text-xs text-muted-foreground">
+                  <p className="text-muted-foreground font-mono text-xs">
                     Zaproszenie od {invite.ownerUserName}
                   </p>
                 </div>
@@ -187,12 +187,12 @@ const SharedAccountsPanel = () => {
 
   return (
     <section className="overflow-hidden">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3">
-        <h2 className="flex items-center gap-2 font-semibold text-base">
-          <Users className="size-4 text-muted-foreground" />
+      <div className="border-border flex items-center justify-between border-b px-5 py-3">
+        <h2 className="flex items-center gap-2 text-base font-semibold">
+          <Users className="text-muted-foreground size-4" />
           Udostępnione mi
         </h2>
-        <span className="font-mono text-xs text-muted-foreground">
+        <span className="text-muted-foreground font-mono text-xs">
           {accounts.length}
         </span>
       </div>
@@ -204,18 +204,18 @@ const SharedAccountsPanel = () => {
           <IconStack aria-hidden="true">
             <Users className="size-5" />
           </IconStack>
-          <p className="mx-auto mt-2 max-w-sm text-muted-foreground text-sm">
+          <p className="text-muted-foreground mx-auto mt-2 max-w-sm text-sm">
             Gdy właściciel konta przyzna Ci dostęp, konto pojawi się tutaj.
           </p>
         </div>
       )}
 
       {accounts.length > 0 && (
-        <ul className="divide-y divide-border">
+        <ul className="divide-border divide-y">
           {accounts.map((account) => (
             <li className="space-y-1.5 px-5 py-3" key={account.accountId}>
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate font-medium text-sm">
+                <span className="truncate text-sm font-medium">
                   {account.displayName}
                 </span>
                 <ReuiBadge variant="secondary">
@@ -241,7 +241,7 @@ const SharedAccountsPanel = () => {
               </div>
               <div className="flex items-center gap-2">
                 <a
-                  className="inline-flex items-center gap-1 text-primary text-xs underline-offset-4 hover:underline"
+                  className="text-primary inline-flex items-center gap-1 text-xs underline-offset-4 hover:underline"
                   href={account.generatedProfileUrl}
                   rel="noopener noreferrer"
                   target="_blank"
@@ -249,11 +249,11 @@ const SharedAccountsPanel = () => {
                   <ExternalLink className="size-3" />
                   Profil Margonem
                 </a>
-                <span className="font-mono text-xs text-muted-foreground">
+                <span className="text-muted-foreground font-mono text-xs">
                   #{account.profileId}
                 </span>
               </div>
-              <p className="flex items-center gap-1 font-mono text-xs text-muted-foreground">
+              <p className="text-muted-foreground flex items-center gap-1 font-mono text-xs">
                 <Clock className="size-3" />
                 Ostatnio pobrano: {formatDateTime(account.lastFetchedAt)}
               </p>

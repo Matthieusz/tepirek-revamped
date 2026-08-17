@@ -20,7 +20,7 @@ interface WaitingRoomPageProps {
   session: AuthSession;
 }
 
-export default function WaitingRoomPage({ session }: WaitingRoomPageProps) {
+const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
   const router = useRouter();
   const verifyDiscordGuildMembership = useAtomSet(
     verifyDiscordGuildMembershipAtom,
@@ -75,10 +75,10 @@ export default function WaitingRoomPage({ session }: WaitingRoomPageProps) {
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-md space-y-6">
         {/* Waiting Card */}
-        <Card className="border-none bg-linear-to-br from-primary/15 via-primary/5 to-transparent text-center">
+        <Card className="from-primary/15 via-primary/5 border-none bg-linear-to-br to-transparent text-center">
           <CardHeader>
-            <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10 ring-4 ring-primary/5">
-              <Loader2 className="size-8 animate-spin text-primary" />
+            <div className="bg-primary/10 ring-primary/5 mx-auto mb-4 flex size-16 items-center justify-center rounded-full ring-4">
+              <Loader2 className="text-primary size-8 animate-spin" />
             </div>
             <CardTitle className="text-2xl">
               Oczekiwanie na weryfikację
@@ -106,7 +106,7 @@ export default function WaitingRoomPage({ session }: WaitingRoomPageProps) {
           <CardContent className="flex items-center justify-between">
             <p className="text-muted-foreground text-sm">
               Zalogowano jako:{" "}
-              <span className="font-medium text-foreground">
+              <span className="text-foreground font-medium">
                 {session.user.name}
               </span>
             </p>
@@ -124,4 +124,6 @@ export default function WaitingRoomPage({ session }: WaitingRoomPageProps) {
       </div>
     </div>
   );
-}
+};
+
+export default WaitingRoomPage;

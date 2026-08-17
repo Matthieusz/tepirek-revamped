@@ -22,7 +22,7 @@ export const VaultUserCard = ({
   <Card className={className}>
     <CardContent className="px-4">
       <div className="flex items-center gap-4">
-        <Avatar className="size-10 shrink-0 border border-border">
+        <Avatar className="border-border size-10 shrink-0 border">
           <AvatarImage alt={userName} src={userImage ?? undefined} />
           <AvatarFallback>
             <User className="size-5" />

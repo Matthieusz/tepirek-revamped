@@ -111,15 +111,15 @@ export const BetCard = ({
             width={64}
           />
         ) : (
-          <div className="mx-auto flex h-20 w-16 shrink-0 items-center justify-center rounded-lg bg-muted sm:mx-0 sm:h-16 sm:w-14">
-            <Sword className="size-6 text-muted-foreground" />
+          <div className="bg-muted mx-auto flex h-20 w-16 shrink-0 items-center justify-center rounded-lg sm:mx-0 sm:h-16 sm:w-14">
+            <Sword className="text-muted-foreground size-6" />
           </div>
         )}
 
         <div className="flex flex-1 flex-wrap items-center justify-center gap-2 sm:justify-start">
           {bet.members.map((member) => (
             <div
-              className="flex items-center gap-1.5 rounded-full border bg-muted/30 py-1 pr-2.5 pl-1 sm:gap-2 sm:pr-3"
+              className="bg-muted/30 flex items-center gap-1.5 rounded-full border py-1 pr-2.5 pl-1 sm:gap-2 sm:pr-3"
               key={member.userId}
             >
               <Avatar className="size-5 sm:h-6 sm:w-6">
@@ -137,7 +137,7 @@ export const BetCard = ({
         </div>
       </div>
 
-      <div className="mt-3 flex flex-col gap-2 border-t pt-3 text-muted-foreground text-xs sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-muted-foreground mt-3 flex flex-col gap-2 border-t pt-3 text-xs sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <span>Dodane przez:</span>
           <div className="flex items-center gap-1.5">
@@ -150,7 +150,7 @@ export const BetCard = ({
                 <User className="h-2.5 w-2.5" />
               </AvatarFallback>
             </Avatar>
-            <span className="font-medium text-foreground">
+            <span className="text-foreground font-medium">
               {bet.createdByName}
             </span>
           </div>

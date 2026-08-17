@@ -17,7 +17,7 @@ interface PlayerListPageProps {
   session: AuthSession;
 }
 
-export default function PlayerListPage({ session }: PlayerListPageProps) {
+const PlayerListPage = ({ session }: PlayerListPageProps) => {
   const playersResult = useAtomValue(usersAtom);
   const refreshPlayers = useAtomRefresh(usersAtom);
 
@@ -26,7 +26,9 @@ export default function PlayerListPage({ session }: PlayerListPageProps) {
       {() => <PlayerListContent session={session} />}
     </AsyncResultBoundary>
   );
-}
+};
+
+export default PlayerListPage;
 
 const PlayerListContent = ({ session }: PlayerListPageProps) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,7 +60,7 @@ const PlayerListContent = ({ session }: PlayerListPageProps) => {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <div>
-        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+        <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
           Lista graczy
         </h1>
         <p className="text-muted-foreground text-sm">
@@ -68,28 +70,28 @@ const PlayerListContent = ({ session }: PlayerListPageProps) => {
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="border-border bg-card rounded-xl border p-4">
           <div className="flex items-center justify-between">
-            <p className="font-medium text-sm">Wszyscy gracze</p>
-            <Users className="size-4 text-muted-foreground" />
+            <p className="text-sm font-medium">Wszyscy gracze</p>
+            <Users className="text-muted-foreground size-4" />
           </div>
-          <p className="mt-1 font-bold text-2xl">{playersData.length}</p>
+          <p className="mt-1 text-2xl font-bold">{playersData.length}</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="border-border bg-card rounded-xl border p-4">
           <div className="flex items-center justify-between">
-            <p className="font-medium text-sm">Zweryfikowani</p>
-            <CheckCircle2 className="size-4 text-primary" />
+            <p className="text-sm font-medium">Zweryfikowani</p>
+            <CheckCircle2 className="text-primary size-4" />
           </div>
-          <p className="mt-1 font-bold text-2xl text-primary">
+          <p className="text-primary mt-1 text-2xl font-bold">
             {totalVerified}
           </p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="border-border bg-card rounded-xl border p-4">
           <div className="flex items-center justify-between">
-            <p className="font-medium text-sm">Oczekujący</p>
-            <Clock className="size-4 text-muted-foreground" />
+            <p className="text-sm font-medium">Oczekujący</p>
+            <Clock className="text-muted-foreground size-4" />
           </div>
-          <p className="mt-1 font-bold text-2xl text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-2xl font-bold">
             {totalNotVerified}
           </p>
         </div>
@@ -97,7 +99,7 @@ const PlayerListContent = ({ session }: PlayerListPageProps) => {
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground" />
+        <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
         <Input
           aria-label="Szukaj gracza po nazwie"
           className="pl-9"
@@ -112,27 +114,27 @@ const PlayerListContent = ({ session }: PlayerListPageProps) => {
 
       {/* Tables */}
       <div className="grid gap-6 xl:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card">
-          <div className="flex items-center gap-2 border-b border-border p-4">
-            <CheckCircle2 className="size-4 text-primary" />
-            <h2 className="font-semibold text-base">Zweryfikowani</h2>
+        <div className="border-border bg-card rounded-xl border">
+          <div className="border-border flex items-center gap-2 border-b p-4">
+            <CheckCircle2 className="text-primary size-4" />
+            <h2 className="text-base font-semibold">Zweryfikowani</h2>
           </div>
           <div className="p-4">
             {verifiedPlayers.length > 0 && (
               <PlayerTable columns={cols} data={verifiedPlayers} />
             )}
             {verifiedPlayers.length === 0 && (
-              <p className="py-8 text-center text-muted-foreground text-sm">
+              <p className="text-muted-foreground py-8 text-center text-sm">
                 Brak zweryfikowanych graczy
               </p>
             )}
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card">
-          <div className="flex items-center gap-2 border-b border-border p-4">
-            <Clock className="size-4 text-muted-foreground" />
-            <h2 className="font-semibold text-base">
+        <div className="border-border bg-card rounded-xl border">
+          <div className="border-border flex items-center gap-2 border-b p-4">
+            <Clock className="text-muted-foreground size-4" />
+            <h2 className="text-base font-semibold">
               Oczekujący na weryfikację
             </h2>
           </div>
@@ -141,7 +143,7 @@ const PlayerListContent = ({ session }: PlayerListPageProps) => {
               <PlayerTable columns={cols} data={notVerifiedPlayers} />
             )}
             {notVerifiedPlayers.length === 0 && (
-              <p className="py-8 text-center text-muted-foreground text-sm">
+              <p className="text-muted-foreground py-8 text-center text-sm">
                 Brak oczekujących graczy
               </p>
             )}

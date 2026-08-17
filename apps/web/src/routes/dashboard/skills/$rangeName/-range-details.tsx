@@ -106,7 +106,7 @@ const RangeSkillsContent = ({
         return (
           <Card key={profession.id}>
             <CardHeader className="pb-3">
-              <CardTitle className="font-medium text-sm">
+              <CardTitle className="text-sm font-medium">
                 {profession.name}
               </CardTitle>
             </CardHeader>
@@ -186,7 +186,7 @@ const RangeSkillsContent = ({
                   </Table>
                 </div>
               ) : (
-                <p className="py-4 text-center text-muted-foreground text-sm">
+                <p className="text-muted-foreground py-4 text-center text-sm">
                   Brak zestawów
                 </p>
               )}
@@ -247,7 +247,7 @@ const RangeDetailsContent = ({
   <div className="mx-auto w-full max-w-6xl space-y-6">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="mb-1 font-bold text-2xl tracking-tight">
+        <h1 className="mb-1 text-2xl font-bold tracking-tight">
           {rangeData.name}
         </h1>
         <p className="text-muted-foreground text-sm">

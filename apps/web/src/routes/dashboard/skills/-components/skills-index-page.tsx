@@ -17,7 +17,7 @@ interface SkillsIndexPageProps {
   session: AuthSession;
 }
 
-export default function SkillsIndexPage({ session }: SkillsIndexPageProps) {
+const SkillsIndexPage = ({ session }: SkillsIndexPageProps) => {
   const rangesResult = useAtomValue(skillRangesAtom);
   const refreshRanges = useAtomRefresh(skillRangesAtom);
 
@@ -26,7 +26,9 @@ export default function SkillsIndexPage({ session }: SkillsIndexPageProps) {
       {() => <SkillsIndexContent session={session} />}
     </AsyncResultBoundary>
   );
-}
+};
+
+export default SkillsIndexPage;
 
 const SkillsIndexContent = ({ session }: SkillsIndexPageProps) => {
   const rangesResult = useAtomValue(skillRangesAtom);
@@ -37,7 +39,7 @@ const SkillsIndexContent = ({ session }: SkillsIndexPageProps) => {
     <div className="mx-auto w-full max-w-6xl space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+          <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
             Lista przedziałów
           </h1>
           <p className="text-muted-foreground text-sm">

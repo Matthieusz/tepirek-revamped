@@ -9,7 +9,7 @@ export const EventsRoutePending = () => <LoadingSpinner />;
 export const EventsRouteError = ({ error, reset }: ErrorComponentProps) => (
   <div
     aria-live="assertive"
-    className="flex flex-col items-center justify-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center"
+    className="border-destructive/30 bg-destructive/5 flex flex-col items-center justify-center gap-3 rounded-xl border p-6 text-center"
     role="alert"
   >
     <p className="text-destructive text-sm">

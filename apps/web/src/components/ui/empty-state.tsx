@@ -16,8 +16,8 @@ export const EmptyState = ({
   <Card className={className}>
     <CardContent className="py-8">
       <div className="text-center">
-        <Icon className="mx-auto size-8 text-muted-foreground" />
-        <p className="mt-2 text-muted-foreground text-sm">{message}</p>
+        <Icon className="text-muted-foreground mx-auto size-8" />
+        <p className="text-muted-foreground mt-2 text-sm">{message}</p>
       </div>
     </CardContent>
   </Card>

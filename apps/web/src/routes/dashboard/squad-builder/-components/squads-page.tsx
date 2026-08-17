@@ -6,14 +6,14 @@ import { CreateSquadGroupFrame } from "@/routes/dashboard/squad-builder/-compone
 import { SquadGroupInvitations } from "@/routes/dashboard/squad-builder/-components/squads/squad-group-invitations";
 import { SquadGroupLibrary } from "@/routes/dashboard/squad-builder/-components/squads/squad-group-library";
 
-export default function SquadBuilderSquadsPage() {
+const SquadBuilderSquadsPage = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-serif font-bold text-foreground text-2xl tracking-tight">
+          <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
             Składy
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -47,4 +47,6 @@ export default function SquadBuilderSquadsPage() {
       />
     </div>
   );
-}
+};
+
+export default SquadBuilderSquadsPage;

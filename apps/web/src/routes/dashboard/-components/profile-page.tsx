@@ -11,13 +11,13 @@ interface ProfilePageProps {
   session: AuthSession;
 }
 
-export default function ProfilePage({ session }: ProfilePageProps) {
+const ProfilePage = ({ session }: ProfilePageProps) => {
   const isAdminUser = isAdmin(session);
 
   return (
     <div className="w-full max-w-lg space-y-6">
       <div>
-        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+        <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
           Profil
         </h1>
         <p className="text-muted-foreground text-sm">
@@ -25,7 +25,7 @@ export default function ProfilePage({ session }: ProfilePageProps) {
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="border-border bg-card rounded-xl border p-6">
         <div className="flex flex-col items-center pb-6">
           <Avatar className="size-24">
             <AvatarImage alt="Avatar" src={session.user.image ?? undefined} />
@@ -33,34 +33,34 @@ export default function ProfilePage({ session }: ProfilePageProps) {
               {session.user.name?.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <h2 className="mt-4 font-semibold text-xl">{session.user.name}</h2>
+          <h2 className="mt-4 text-xl font-semibold">{session.user.name}</h2>
           <p className="text-muted-foreground text-sm">{session.user.email}</p>
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center gap-3 border-b border-border pb-4">
-            <Mail className="size-4 text-muted-foreground" />
+          <div className="border-border flex items-center gap-3 border-b pb-4">
+            <Mail className="text-muted-foreground size-4" />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Email</p>
-              <p className="font-medium text-sm">{session.user.email}</p>
+              <p className="text-sm font-medium">{session.user.email}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 border-b border-border pb-4">
-            <Shield className="size-4 text-muted-foreground" />
+          <div className="border-border flex items-center gap-3 border-b pb-4">
+            <Shield className="text-muted-foreground size-4" />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Rola</p>
-              <p className="font-medium text-sm capitalize">
+              <p className="text-sm font-medium capitalize">
                 {isAdminUser ? "admin" : "user"}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 border-b border-border pb-4">
-            <UserCheck className="size-4 text-muted-foreground" />
+          <div className="border-border flex items-center gap-3 border-b pb-4">
+            <UserCheck className="text-muted-foreground size-4" />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Status</p>
-              <p className="font-medium text-sm">
+              <p className="text-sm font-medium">
                 <span
                   className={
                     session.user.verified
@@ -75,10 +75,10 @@ export default function ProfilePage({ session }: ProfilePageProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            <Calendar className="size-4 text-muted-foreground" />
+            <Calendar className="text-muted-foreground size-4" />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Dołączono</p>
-              <p className="font-medium text-sm">
+              <p className="text-sm font-medium">
                 {formatDate(session.user.createdAt)}
               </p>
             </div>
@@ -97,4 +97,6 @@ export default function ProfilePage({ session }: ProfilePageProps) {
       </div>
     </div>
   );
-}
+};
+
+export default ProfilePage;

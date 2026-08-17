@@ -16,11 +16,11 @@ interface AuctionsProfessionPageProps {
   type: AuctionType;
 }
 
-export default function AuctionsProfessionPage({
+const AuctionsProfessionPage = ({
   profession,
   session,
   type,
-}: AuctionsProfessionPageProps) {
+}: AuctionsProfessionPageProps) => {
   const professionMeta = AUCTION_PROFESSION_META[profession];
 
   return (
@@ -33,7 +33,7 @@ export default function AuctionsProfessionPage({
         type={type}
       />
 
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="border-border bg-card rounded-xl border p-6">
         <AuctionTable
           currentUserId={session.user.id}
           profession={profession}
@@ -42,4 +42,6 @@ export default function AuctionsProfessionPage({
       </div>
     </div>
   );
-}
+};
+
+export default AuctionsProfessionPage;

@@ -52,7 +52,7 @@ interface EventsListPageProps {
   session: AuthSession;
 }
 
-export default function EventsListPage({ session }: EventsListPageProps) {
+const EventsListPage = ({ session }: EventsListPageProps) => {
   const eventsResult = useAtomValue(eventsAtom);
   const refreshEvents = useAtomRefresh(eventsAtom);
 
@@ -61,7 +61,9 @@ export default function EventsListPage({ session }: EventsListPageProps) {
       {() => <EventsListContent session={session} />}
     </AsyncResultBoundary>
   );
-}
+};
+
+export default EventsListPage;
 
 const EventsListContent = ({ session }: EventsListPageProps) => {
   const [eventAction, setEventAction] = useState<EventAction>(null);
@@ -122,7 +124,7 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+          <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
             Lista eventów
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -142,10 +144,10 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-border bg-card">
-        <div className="flex items-center gap-2 border-b border-border p-4">
+      <div className="border-border bg-card rounded-xl border">
+        <div className="border-border flex items-center gap-2 border-b p-4">
           <Calendar className="size-4" />
-          <h2 className="font-semibold text-base">Eventy</h2>
+          <h2 className="text-base font-semibold">Eventy</h2>
         </div>
         <div className="p-4">
           {!events || events.length === 0 ? (

@@ -81,7 +81,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
-      <h1 className="font-serif font-bold tracking-tight text-center text-foreground text-2xl">
+      <h1 className="text-foreground text-center font-serif text-2xl font-bold tracking-tight">
         Ranking graczy
       </h1>
 
@@ -160,7 +160,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
             Obstawienia
           </Button>
           <Button
-            className={currentSortBy === "gold" ? "border border-primary" : ""}
+            className={currentSortBy === "gold" ? "border-primary border" : ""}
             onClick={() => {
               navigateSort({ sortBy: "gold" });
             }}
@@ -182,7 +182,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
                   size="icon"
                   variant="outline"
                 >
-                  <Coins className="size-4 text-muted-foreground" />
+                  <Coins className="text-muted-foreground size-4" />
                 </Button>
               }
             />

@@ -170,9 +170,9 @@ export const AccountRefetchWorkflow = ({
       </div>
 
       {preview !== null && (
-        <div className="mt-3 space-y-3 rounded-lg bg-muted/50 p-3">
+        <div className="bg-muted/50 mt-3 space-y-3 rounded-lg p-3">
           <div className="space-y-1">
-            <h3 className="font-medium text-sm">Podgląd odświeżenia</h3>
+            <h3 className="text-sm font-medium">Podgląd odświeżenia</h3>
             <div className="flex flex-wrap gap-1.5" aria-live="polite">
               <ReuiBadge variant="success-light">
                 Dodane: {preview.diff.added.length}
@@ -206,7 +206,7 @@ export const AccountRefetchWorkflow = ({
 
           {preview.diff.added.length > 0 && (
             <div className="space-y-1">
-              <h4 className="font-medium text-xs">Dodane postacie</h4>
+              <h4 className="text-xs font-medium">Dodane postacie</h4>
               <ul className="space-y-1 text-xs">
                 {preview.diff.added.map((character) => (
                   <li key={character.characterId}>
@@ -220,7 +220,7 @@ export const AccountRefetchWorkflow = ({
 
           {preview.diff.removed.length > 0 && (
             <div className="space-y-1">
-              <h4 className="font-medium text-xs">
+              <h4 className="text-xs font-medium">
                 Usunięte z Jaruny / profilu
               </h4>
               <ul className="space-y-1 text-xs">
@@ -236,12 +236,12 @@ export const AccountRefetchWorkflow = ({
 
           {preview.diff.changed.length > 0 && (
             <div className="space-y-1">
-              <h4 className="font-medium text-xs">Zmienione postacie</h4>
+              <h4 className="text-xs font-medium">Zmienione postacie</h4>
               <ul className="space-y-2 text-xs">
                 {preview.diff.changed.map((character) => (
                   <li key={character.databaseCharacterId}>
                     <span className="font-medium">{character.name}</span>
-                    <ul className="ml-4 list-disc text-muted-foreground">
+                    <ul className="text-muted-foreground ml-4 list-disc">
                       {character.changes.map((change) => (
                         <li
                           key={`${character.databaseCharacterId}-${change.field}`}

@@ -9,7 +9,7 @@ import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { healthAtom } from "@/features/health/health-atoms";
 
-export default function HomePage() {
+const HomePage = () => {
   const healthResult = useAtomValue(healthAtom);
   const refreshHealth = useAtomRefresh(healthAtom);
 
@@ -18,7 +18,9 @@ export default function HomePage() {
       {() => <HomeContent />}
     </AsyncResultBoundary>
   );
-}
+};
+
+export default HomePage;
 
 const HomeContent = () => {
   const healthResult = useAtomValue(healthAtom);
@@ -43,21 +45,21 @@ const HomeContent = () => {
   }
 
   return (
-    <div className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background">
+    <div className="bg-background relative flex min-h-svh flex-col items-center justify-center overflow-hidden">
       <main className="relative z-10 flex flex-col items-center gap-10 px-6 text-center">
         {/* Title */}
         <div className="flex flex-col items-center gap-3">
           <h1
-            className="font-serif font-bold tracking-tight text-foreground"
+            className="text-foreground font-serif font-bold tracking-tight"
             style={{
               fontSize: "clamp(3.5rem, 10vw, 7rem)",
               lineHeight: 1.05,
             }}
           >
             Tepirek{" "}
-            <span className="font-light text-muted-foreground">Revamped</span>
+            <span className="text-muted-foreground font-light">Revamped</span>
           </h1>
-          <p className="max-w-[28ch] text-muted-foreground text-lg leading-relaxed">
+          <p className="text-muted-foreground max-w-[28ch] text-lg leading-relaxed">
             Strona klanowa Gildii Złodziei.
           </p>
         </div>
@@ -74,7 +76,7 @@ const HomeContent = () => {
                 Zaloguj się
               </Link>
             }
-            className="h-12 w-full font-semibold text-base tracking-wide"
+            className="h-12 w-full text-base font-semibold tracking-wide"
             size="lg"
           />
           <Button
@@ -87,7 +89,7 @@ const HomeContent = () => {
                 Utwórz konto
               </Link>
             }
-            className="h-12 w-full font-semibold text-base tracking-wide"
+            className="h-12 w-full text-base font-semibold tracking-wide"
             size="lg"
             variant="outline"
           />
@@ -104,7 +106,7 @@ const HomeContent = () => {
             />
           </span>
           <span
-            className={`font-mono text-xs uppercase tracking-widest ${statusColor}`}
+            className={`font-mono text-xs tracking-widest uppercase ${statusColor}`}
           >
             {statusText}
           </span>
@@ -112,7 +114,7 @@ const HomeContent = () => {
             href="https://uptime.informati.dev/status/overview"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground transition-colors hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Status strony"
           >
             <Link2 className="size-3.5" />

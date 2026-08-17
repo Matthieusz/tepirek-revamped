@@ -241,7 +241,7 @@ export const AccountSharingPanel = ({
           Udostępnieni użytkownicy
         </h3>
         {!AsyncResult.isSuccess(grantsResult) && (
-          <div className="flex items-center gap-2 text-muted-foreground text-xs">
+          <div className="text-muted-foreground flex items-center gap-2 text-xs">
             <Loader2 className="size-3 animate-spin" />
             Wczytywanie…
           </div>
@@ -312,7 +312,7 @@ export const AccountSharingPanel = ({
                   size="icon-sm"
                   variant="ghost"
                 >
-                  <Trash2 className="size-3.5 text-destructive" />
+                  <Trash2 className="text-destructive size-3.5" />
                 </Button>
               </li>
             ))}

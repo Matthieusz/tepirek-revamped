@@ -49,9 +49,9 @@ export const AvailableCharacterPoolHeader = ({
   onLevelToChange,
   onProfessionToggle,
 }: AvailableCharacterPoolHeaderProps) => (
-  <header className="shrink-0 space-y-3 border-b border-border px-4 py-3">
+  <header className="border-border shrink-0 space-y-3 border-b px-4 py-3">
     <div className="flex items-center justify-between gap-2">
-      <h2 className="font-semibold text-base" id="available-characters-heading">
+      <h2 className="text-base font-semibold" id="available-characters-heading">
         Dostępne postacie
       </h2>
       {characterCount > 0 && (
@@ -84,7 +84,7 @@ export const AvailableCharacterPoolHeader = ({
                 className={cn(
                   "h-6 min-h-0 gap-0.5 px-1 text-[10px]",
                   selected &&
-                    "border-primary bg-primary/25 font-medium text-primary hover:bg-primary/30"
+                    "border-primary bg-primary/25 text-primary hover:bg-primary/30 font-medium"
                 )}
                 key={profession}
                 onClick={() => {
@@ -108,7 +108,7 @@ export const AvailableCharacterPoolHeader = ({
           <div className="relative min-w-0 flex-1">
             <Search
               aria-hidden="true"
-              className="pointer-events-none absolute top-2 left-2 size-3.5 text-muted-foreground"
+              className="text-muted-foreground pointer-events-none absolute top-2 left-2 size-3.5"
             />
             <Input
               aria-label="Szukaj po nazwie postaci"

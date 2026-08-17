@@ -36,7 +36,7 @@ export const StatsPopover = ({ pointWorth, totalBets }: StatsPopoverProps) => (
             <span className="text-muted-foreground text-sm">
               Wartość punktu
             </span>
-            <span className="font-semibold font-mono">{pointWorth} zł/pkt</span>
+            <span className="font-mono font-semibold">{pointWorth} zł/pkt</span>
           </div>
         )}
       </div>

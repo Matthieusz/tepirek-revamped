@@ -127,9 +127,7 @@ Never guess at Effect patterns - check the guide first.
 
 ## Local Effect Source
 
-The Effect v4 repository is cloned to `~/.local/share/effect-solutions/effect` for reference.
-Use this to explore APIs, find usage examples, and understand implementation
-details when the documentation isn't enough.
+The Effect v4 repository is cloned to `~/.local/share/effect-solutions/effect` for reference. Use this to explore APIs, find usage examples, and understand implementation details when the documentation isn't enough.
 
 ---
 

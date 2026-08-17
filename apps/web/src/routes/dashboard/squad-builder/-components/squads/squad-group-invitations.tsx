@@ -89,9 +89,9 @@ export const SquadGroupInvitations = () => {
   return (
     <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
       <FramePanel className="p-0 shadow-none">
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
+        <header className="border-border flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
           <div>
-            <h2 className="font-semibold text-base">Zaproszenia do składów</h2>
+            <h2 className="text-base font-semibold">Zaproszenia do składów</h2>
             <p className="text-muted-foreground text-sm">
               Grupy, do których możesz dołączyć jako edytor.
             </p>
@@ -100,7 +100,7 @@ export const SquadGroupInvitations = () => {
             {result.value.length} oczekujące
           </Badge>
         </header>
-        <ul className="divide-y divide-border">
+        <ul className="divide-border divide-y">
           {result.value.map((invite) => {
             const isResponding = respondingInvitationId === invite.invitationId;
             return (
@@ -122,14 +122,14 @@ export const SquadGroupInvitations = () => {
                   </Avatar>
                   <div className="min-w-0 space-y-0.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-sm">
+                      <span className="text-sm font-medium">
                         {invite.squadGroupName}
                       </span>
                       <Badge size="sm" variant="warning-light">
                         oczekuje
                       </Badge>
                     </div>
-                    <p className="font-mono text-muted-foreground text-xs">
+                    <p className="text-muted-foreground font-mono text-xs">
                       Od {invite.ownerUserName} ·{" "}
                       {formatDateTime(invite.createdAt)}
                     </p>

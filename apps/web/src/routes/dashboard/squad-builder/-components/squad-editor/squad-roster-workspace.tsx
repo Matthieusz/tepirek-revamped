@@ -78,11 +78,11 @@ const SquadRosterRow = ({
     return (
       <li
         aria-label={`Wolne miejsce ${position + 1}`}
-        className="flex min-h-16 items-center gap-2 rounded-md border border-dashed border-border/80 px-2 text-muted-foreground"
+        className="border-border/80 text-muted-foreground flex min-h-16 items-center gap-2 rounded-md border border-dashed px-2"
       >
         <span
           aria-hidden="true"
-          className="flex size-6 shrink-0 items-center justify-center rounded border border-border font-mono text-xs"
+          className="border-border flex size-6 shrink-0 items-center justify-center rounded border font-mono text-xs"
         >
           {position + 1}
         </span>
@@ -97,14 +97,14 @@ const SquadRosterRow = ({
 
   if (character === undefined) {
     return (
-      <li className="flex min-h-16 items-center justify-between gap-2 rounded-md border border-border px-2">
+      <li className="border-border flex min-h-16 items-center justify-between gap-2 rounded-md border px-2">
         <div className="flex min-w-0 items-center gap-2">
           <Avatar size="sm">
             <AvatarFallback>?</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="font-medium text-sm">Niedostępna postać</p>
-            <p className="font-mono text-muted-foreground text-xs">
+            <p className="text-sm font-medium">Niedostępna postać</p>
+            <p className="text-muted-foreground font-mono text-xs">
               ID: {characterId}
             </p>
           </div>
@@ -129,7 +129,7 @@ const SquadRosterRow = ({
   const ProfessionIcon = profession.icon;
 
   return (
-    <li className="flex min-h-16 items-center justify-between gap-2 rounded-md border border-border bg-card/40 px-2">
+    <li className="border-border bg-card/40 flex min-h-16 items-center justify-between gap-2 rounded-md border px-2">
       <div className="flex min-w-0 items-center gap-2">
         <Avatar className="h-10 w-8 overflow-hidden rounded-none after:hidden">
           {character.avatarUrl ? (
@@ -143,9 +143,9 @@ const SquadRosterRow = ({
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0">
-          <p className="break-words font-medium text-sm">
+          <p className="text-sm font-medium break-words">
             {character.name}{" "}
-            <span className="font-mono text-muted-foreground">
+            <span className="text-muted-foreground font-mono">
               {character.level}
             </span>
           </p>
@@ -157,7 +157,7 @@ const SquadRosterRow = ({
               {profession.label}
             </span>
             <span className="text-muted-foreground">·</span>
-            <span className="break-words text-muted-foreground">
+            <span className="text-muted-foreground break-words">
               {character.accountDisplayName}
             </span>
           </p>
@@ -271,7 +271,7 @@ const SquadPanel = ({
     <>
       <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
         <FramePanel className="p-0 shadow-none">
-          <header className="flex items-start gap-2 border-b border-border px-4 py-3">
+          <header className="border-border flex items-start gap-2 border-b px-4 py-3">
             <div className="min-w-0 flex-1">
               {isOwner ? (
                 <div className="min-w-0">
@@ -293,11 +293,11 @@ const SquadPanel = ({
                   />
                 </div>
               ) : (
-                <h3 className="break-words font-semibold text-sm">
+                <h3 className="text-sm font-semibold break-words">
                   {squad.name}
                 </h3>
               )}
-              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground text-xs">
+              <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                 <span className="font-mono tabular-nums">
                   {formatSquadLevelRange(levelRange)}
                 </span>
@@ -335,7 +335,7 @@ const SquadPanel = ({
               </div>
             </div>
             <Badge
-              className="shrink-0 font-mono tabular-nums mt-1"
+              className="mt-1 shrink-0 font-mono tabular-nums"
               variant={
                 squad.characters.length === MAX_SQUAD_CHARACTERS
                   ? "warning-light"
@@ -355,7 +355,7 @@ const SquadPanel = ({
                 type="button"
                 variant="ghost"
               >
-                <Trash2 className="size-3.5 text-destructive" />
+                <Trash2 className="text-destructive size-3.5" />
               </Button>
             )}
             <Button
@@ -454,7 +454,7 @@ export const SquadRosterWorkspace = ({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-semibold text-base" id="squad-roster-heading">
+          <h2 className="text-base font-semibold" id="squad-roster-heading">
             Składy w grupie
           </h2>
           <p className="text-muted-foreground text-sm">
@@ -481,7 +481,7 @@ export const SquadRosterWorkspace = ({
             <IconStack aria-hidden="true">
               <UserRound className="size-5" />
             </IconStack>
-            <p className="max-w-sm text-muted-foreground text-sm">
+            <p className="text-muted-foreground max-w-sm text-sm">
               {isOwner
                 ? "Dodaj pierwszy skład, a potem wybierz postacie z puli obok."
                 : "W tej grupie nie ma jeszcze zapisanych składów."}

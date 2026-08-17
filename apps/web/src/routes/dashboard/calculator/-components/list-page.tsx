@@ -45,15 +45,15 @@ const SingleModeResult = ({ result }: { result: SinglePenaltyResult }) => (
     } bg-card p-6`}
   >
     <div className="mb-4">
-      <h2 className="flex items-center gap-2 font-semibold text-base">
+      <h2 className="flex items-center gap-2 text-base font-semibold">
         {result.wouldReceivePenalty ? (
           <>
-            <AlertTriangle className="size-5 text-destructive" />
+            <AlertTriangle className="text-destructive size-5" />
             <span className="text-destructive">Otrzymasz punkt karny!</span>
           </>
         ) : (
           <>
-            <Shield className="size-5 text-primary" />
+            <Shield className="text-primary size-5" />
             <span className="text-primary">Brak punktu karnego</span>
           </>
         )}
@@ -61,38 +61,38 @@ const SingleModeResult = ({ result }: { result: SinglePenaltyResult }) => (
     </div>
     <div className="space-y-4">
       <div className="grid gap-3">
-        <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+        <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
           <span className="text-muted-foreground text-sm">
             Różnica poziomów
           </span>
-          <span className="font-semibold text-lg">
+          <span className="text-lg font-semibold">
             {result.actualDifference} lvl
           </span>
         </div>
-        <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+        <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
           <span className="text-muted-foreground text-sm">
             Wymagana różnica (min)
           </span>
-          <span className="font-semibold text-lg">
+          <span className="text-lg font-semibold">
             {result.minLevelDifference.toFixed(1)} lvl
           </span>
         </div>
       </div>
 
-      <div className="grid gap-3 border-t border-border pt-4">
+      <div className="border-border grid gap-3 border-t pt-4">
         <div className="text-muted-foreground text-sm">
           <Users className="mr-1 mb-1 inline size-4" />
           Przydatne informacje:
         </div>
-        <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
+        <div className="bg-primary/10 flex items-center justify-between rounded-lg p-3">
           <span className="text-muted-foreground text-sm">
             Min. poziom ofiary dla kary (lvl {result.attackerLevel})
           </span>
-          <span className="font-semibold text-primary">
+          <span className="text-primary font-semibold">
             ≤ {result.minVictimLevelForPenalty} lvl
           </span>
         </div>
-        <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+        <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
           <span className="text-muted-foreground text-sm">
             Max. atakujący bez kary (lvl {result.victimLevel})
           </span>
@@ -114,17 +114,17 @@ const GroupModeResult = ({ result }: { result: GroupPenaltyResult }) => (
     } bg-card p-6`}
   >
     <div className="mb-4">
-      <h2 className="flex items-center gap-2 font-semibold text-base">
+      <h2 className="flex items-center gap-2 text-base font-semibold">
         {result.wouldReceivePenalty ? (
           <>
-            <AlertTriangle className="size-5 text-destructive" />
+            <AlertTriangle className="text-destructive size-5" />
             <span className="text-destructive">
               Drużyna otrzyma punkty karne!
             </span>
           </>
         ) : (
           <>
-            <Shield className="size-5 text-primary" />
+            <Shield className="text-primary size-5" />
             <span className="text-primary">Brak punktów karnych</span>
           </>
         )}
@@ -136,42 +136,42 @@ const GroupModeResult = ({ result }: { result: GroupPenaltyResult }) => (
     </div>
     <div className="space-y-4">
       <div className="grid gap-3">
-        <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+        <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
           <span className="text-muted-foreground text-sm">
             Max lvl atakujących
           </span>
-          <span className="font-semibold text-lg">
+          <span className="text-lg font-semibold">
             {result.maxAttackerLevel}
           </span>
         </div>
-        <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+        <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
           <span className="text-muted-foreground text-sm">
             Średnia lvl atakujących
           </span>
-          <span className="font-semibold text-lg">
+          <span className="text-lg font-semibold">
             {result.avgAttackerLevel.toFixed(1)}
           </span>
         </div>
-        <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+        <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
           <span className="text-muted-foreground text-sm">
             Średnia lvl obrońców
           </span>
-          <span className="font-semibold text-lg">
+          <span className="text-lg font-semibold">
             {result.avgDefenderLevel.toFixed(1)}
           </span>
         </div>
       </div>
 
-      <div className="grid gap-3 border-t border-border pt-4">
-        <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
+      <div className="border-border grid gap-3 border-t pt-4">
+        <div className="bg-primary/10 flex items-center justify-between rounded-lg p-3">
           <span className="text-muted-foreground text-sm">
             Różnica (lewa strona)
           </span>
-          <span className="font-semibold text-primary">
+          <span className="text-primary font-semibold">
             {result.difference.toFixed(1)}
           </span>
         </div>
-        <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+        <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
           <span className="text-muted-foreground text-sm">
             Próg (prawa strona)
           </span>
@@ -203,7 +203,7 @@ interface CalculatorListPageProps {
   session: AuthSession;
 }
 
-export default function CalculatorListPage(_props: CalculatorListPageProps) {
+const CalculatorListPage = (_props: CalculatorListPageProps) => {
   const [mode, setMode] = useState<"single" | "group">("single");
   const [singleResult, setSingleResult] = useState<SinglePenaltyResult | null>(
     null
@@ -274,7 +274,7 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <div>
-        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+        <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
           Kalkulator listów gończych
         </h1>
         <p className="text-muted-foreground">
@@ -282,7 +282,7 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
         </p>
       </div>
 
-      <div className="flex gap-2 rounded-lg bg-muted p-1">
+      <div className="bg-muted flex gap-2 rounded-lg p-1">
         <Button
           className="flex-1"
           onClick={() => {
@@ -309,9 +309,9 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {mode === "single" && (
-          <div className="rounded-xl border border-border bg-card">
-            <div className="border-b border-border p-6">
-              <h2 className="flex items-center gap-2 font-semibold text-base">
+          <div className="border-border bg-card rounded-xl border">
+            <div className="border-border border-b p-6">
+              <h2 className="flex items-center gap-2 text-base font-semibold">
                 <Calculator className="size-5" />
                 Parametry walki
               </h2>
@@ -348,9 +348,9 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
         )}
 
         {mode === "group" && (
-          <div className="rounded-xl border border-border bg-card">
-            <div className="border-b border-border p-6">
-              <h2 className="flex items-center gap-2 font-semibold text-base">
+          <div className="border-border bg-card rounded-xl border">
+            <div className="border-border border-b p-6">
+              <h2 className="flex items-center gap-2 text-base font-semibold">
                 <Calculator className="size-5" />
                 Parametry walki grupowej
               </h2>
@@ -385,25 +385,25 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
         )}
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
-        <div className="border-b border-border p-6">
-          <h2 className="flex items-center gap-2 font-semibold text-base">
-            <AlertTriangle className="size-5 text-muted-foreground" />
+      <div className="border-border bg-card rounded-xl border">
+        <div className="border-border border-b p-6">
+          <h2 className="flex items-center gap-2 text-base font-semibold">
+            <AlertTriangle className="text-muted-foreground size-5" />
             Zasady listów gończych
           </h2>
         </div>
-        <div className="space-y-3 p-6 text-muted-foreground text-sm">
+        <div className="text-muted-foreground space-y-3 p-6 text-sm">
           {mode === "single" ? (
             <p>
               <strong>Formuła (1v1):</strong>{" "}
-              <code className="rounded bg-muted px-1 py-0.5">
+              <code className="bg-muted rounded px-1 py-0.5">
                 min_lvl_difference = 16 + max(0, (lvl_player - 100) / 5)
               </code>
             </p>
           ) : (
             <p>
               <strong>Formuła (grupa):</strong>{" "}
-              <code className="rounded bg-muted px-1 py-0.5 text-xs">
+              <code className="bg-muted rounded px-1 py-0.5 text-xs">
                 0.5 × (max_atk + śrd_atk) - śrd_def {">"} 15 + max(0, 0.1 ×
                 (max_atk + śrd_atk) - 20)
               </code>
@@ -445,4 +445,6 @@ export default function CalculatorListPage(_props: CalculatorListPageProps) {
       </div>
     </div>
   );
-}
+};
+
+export default CalculatorListPage;

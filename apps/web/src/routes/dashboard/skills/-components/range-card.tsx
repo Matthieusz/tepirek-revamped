@@ -77,7 +77,7 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
           </CardHeader>
           <CardContent className="flex flex-1 items-center justify-center">
             {range.image === null ? (
-              <div className="flex size-40 items-center justify-center rounded-md bg-muted">
+              <div className="bg-muted flex size-40 items-center justify-center rounded-md">
                 <span className="text-muted-foreground text-sm">
                   Brak obrazu
                 </span>

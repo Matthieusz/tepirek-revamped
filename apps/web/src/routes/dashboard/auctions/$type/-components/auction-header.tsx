@@ -27,13 +27,13 @@ const AuctionHeaderContent: React.FC<AuctionHeaderProps> = ({
   const stats = AsyncResult.getOrThrow(statsResult);
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between">
+    <div className="border-border bg-card flex flex-col gap-4 rounded-xl border p-6 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-          <Icon className="size-5 text-primary" />
+        <div className="bg-primary/10 flex size-10 items-center justify-center rounded-lg">
+          <Icon className="text-primary size-5" />
         </div>
         <div>
-          <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+          <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
             {title}
           </h1>
           <p className="text-muted-foreground text-sm">{description}</p>
@@ -42,16 +42,16 @@ const AuctionHeaderContent: React.FC<AuctionHeaderProps> = ({
 
       {/* Stats */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 rounded-lg bg-background/50 px-3 py-2">
-          <Users className="size-4 text-muted-foreground" />
+        <div className="bg-background/50 flex items-center gap-2 rounded-lg px-3 py-2">
+          <Users className="text-muted-foreground size-4" />
           <div className="flex items-baseline gap-1.5">
-            <span className="font-semibold text-lg">{stats.uniqueUsers}</span>
+            <span className="text-lg font-semibold">{stats.uniqueUsers}</span>
             <span className="text-muted-foreground text-sm">graczy</span>
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-lg bg-background/50 px-3 py-2">
+        <div className="bg-background/50 flex items-center gap-2 rounded-lg px-3 py-2">
           <div className="flex items-baseline gap-1.5">
-            <span className="font-semibold text-lg">{stats.totalSignups}</span>
+            <span className="text-lg font-semibold">{stats.totalSignups}</span>
             <span className="text-muted-foreground text-sm">zapisów</span>
           </div>
         </div>

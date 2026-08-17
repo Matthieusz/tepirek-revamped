@@ -23,7 +23,7 @@ export const AsyncResultFailure = ({
 }) => (
   <div
     aria-live="assertive"
-    className="flex flex-col items-center justify-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center"
+    className="border-destructive/30 bg-destructive/5 flex flex-col items-center justify-center gap-3 rounded-xl border p-6 text-center"
     role="alert"
   >
     <p className="text-destructive text-sm">{message}</p>
@@ -46,7 +46,7 @@ export const AsyncResultBoundary = <A, E>({
           {children(result.value)}
           <p
             aria-live="polite"
-            className="absolute top-full w-full pt-2 text-center text-muted-foreground text-xs"
+            className="text-muted-foreground absolute top-full w-full pt-2 text-center text-xs"
           >
             Odświeżanie…
           </p>

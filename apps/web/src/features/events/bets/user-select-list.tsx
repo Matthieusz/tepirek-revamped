@@ -33,7 +33,7 @@ export const UserSelectList = ({
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
       {users.map((user) => (
         <label
-          className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 ${
+          className={`hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
             HashSet.has(selectedUserIdSet, user.id)
               ? "border-primary bg-primary/5"
               : "border-border"

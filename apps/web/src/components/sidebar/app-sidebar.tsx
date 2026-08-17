@@ -142,7 +142,7 @@ export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="border-sidebar-border border-b">
         <div className="flex items-center gap-3 py-1.5">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary/10">
+          <div className="bg-primary/10 flex aspect-square size-8 items-center justify-center rounded-lg">
             <img
               alt="Tepirek Revamped"
               className="size-6"
@@ -152,10 +152,10 @@ export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
             />
           </div>
           <div className="grid flex-1 text-left leading-tight group-data-[state=collapsed]:hidden">
-            <span className="truncate font-semibold text-sm">
+            <span className="truncate text-sm font-semibold">
               Gildia Złodziei
             </span>
-            <span className="truncate text-muted-foreground text-xs">
+            <span className="text-muted-foreground truncate text-xs">
               Panel klanowy
             </span>
           </div>
@@ -177,10 +177,10 @@ export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
             </AvatarFallback>
           </Avatar>
           <div className="grid flex-1 text-left leading-tight group-data-[state=collapsed]:hidden">
-            <span className="truncate font-medium text-sm">
+            <span className="truncate text-sm font-medium">
               {session?.user.name}
             </span>
-            <span className="truncate text-muted-foreground text-xs">
+            <span className="text-muted-foreground truncate text-xs">
               {session?.user.email}
             </span>
           </div>

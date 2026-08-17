@@ -78,7 +78,7 @@ export const SquadEditorCommandHeader = ({
       <div className="flex flex-wrap items-start gap-3">
         <div className="min-w-0 flex-1 space-y-1">
           {isViewer ? (
-            <h1 className="break-words font-serif font-bold text-2xl tracking-tight">
+            <h1 className="font-serif text-2xl font-bold tracking-tight break-words">
               {draft.name}
             </h1>
           ) : (
@@ -87,7 +87,7 @@ export const SquadEditorCommandHeader = ({
               <h1>
                 <Input
                   aria-label="Nazwa grupy"
-                  className="h-10 max-w-xl border-transparent bg-transparent px-3 py-2 font-sans font-semibold text-xl leading-6 shadow-none focus-visible:border-input"
+                  className="focus-visible:border-input h-10 max-w-xl border-transparent bg-transparent px-3 py-2 font-sans text-xl leading-6 font-semibold shadow-none"
                   disabled={isSaving}
                   id="group-name"
                   maxLength={80}

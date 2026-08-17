@@ -41,7 +41,7 @@ interface DashboardHomePageProps {
   session: AuthSession;
 }
 
-export default function DashboardHomePage({ session }: DashboardHomePageProps) {
+const DashboardHomePage = ({ session }: DashboardHomePageProps) => {
   const announcementsResult = useAtomValue(announcementsAtom);
   const refreshAnnouncements = useAtomRefresh(announcementsAtom);
 
@@ -53,7 +53,9 @@ export default function DashboardHomePage({ session }: DashboardHomePageProps) {
       {() => <DashboardHomeContent session={session} />}
     </AsyncResultBoundary>
   );
-}
+};
+
+export default DashboardHomePage;
 
 const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
   const [announcementToDelete, setAnnouncementToDelete] =
@@ -91,7 +93,7 @@ const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
     <div className="mx-auto w-full max-w-3xl space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+        <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
           Ogłoszenia
         </h1>
         {isAdminUser && (
@@ -114,15 +116,15 @@ const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
         <div className="space-y-4">
           {announcements.map((announcement) => (
             <article
-              className="rounded-xl border border-border bg-card p-6"
+              className="border-border bg-card rounded-xl border p-6"
               key={announcement.id}
             >
               <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <h2 className="font-semibold text-lg leading-snug">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg leading-snug font-semibold">
                     {announcement.title}
                   </h2>
-                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-sm">
+                  <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                     <div className="flex items-center gap-1.5">
                       <Avatar className="size-5">
                         <AvatarImage
@@ -163,7 +165,7 @@ const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
                   </Button>
                 )}
               </div>
-              <p className="mt-4 whitespace-pre-wrap text-muted-foreground text-sm leading-relaxed">
+              <p className="text-muted-foreground mt-4 text-sm leading-relaxed whitespace-pre-wrap">
                 {announcement.description}
               </p>
             </article>

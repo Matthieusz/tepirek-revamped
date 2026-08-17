@@ -183,7 +183,7 @@ const VaultContent = ({
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
-      <h1 className="font-serif font-bold tracking-tight text-center text-foreground text-2xl">
+      <h1 className="text-foreground text-center font-serif text-2xl font-bold tracking-tight">
         Skarbiec
       </h1>
 
@@ -221,22 +221,22 @@ const VaultContent = ({
       ) : (
         <>
           {isAdminUser && !hasSpecificEvent && (
-            <p className="text-center text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-center text-sm">
               Wybierz konkretny event, aby oznaczać wypłaty.
             </p>
           )}
 
           {/* Next to receive payment - highlighted */}
           {Option.isSome(nextToPay) && (
-            <div className="rounded-xl border-2 border-primary/50 bg-primary/5 p-6">
+            <div className="border-primary/50 bg-primary/5 rounded-xl border-2 p-6">
               <div className="mb-2 flex items-center justify-center gap-2">
-                <span className="font-semibold text-primary text-sm">
+                <span className="text-primary text-sm font-semibold">
                   Następny do wypłaty
                 </span>
               </div>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
-                  <Avatar className="size-12 border-2 border-primary">
+                  <Avatar className="border-primary size-12 border-2">
                     <AvatarImage
                       alt={nextToPay.value.userName ?? ""}
                       src={nextToPay.value.userImage ?? undefined}
@@ -246,10 +246,10 @@ const VaultContent = ({
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-bold text-lg">
+                    <p className="text-lg font-bold">
                       {nextToPay.value.userName}
                     </p>
-                    <p className="font-mono text-muted-foreground">
+                    <p className="text-muted-foreground font-mono">
                       {formatVaultEarnings(nextToPay.value.totalEarnings)} złota
                     </p>
                   </div>
@@ -287,23 +287,23 @@ const VaultContent = ({
           {/* Unpaid users list */}
           {unpaidUsers.length > 1 && (
             <div className="space-y-2">
-              <h2 className="font-semibold text-lg">
+              <h2 className="text-lg font-semibold">
                 Do wypłaty ({unpaidUsers.length})
               </h2>
               {unpaidUsers.slice(1).map((player, index) => (
                 <div
-                  className="rounded-xl border border-border bg-card transition-colors hover:bg-accent/50"
+                  className="border-border bg-card hover:bg-accent/50 rounded-xl border transition-colors"
                   key={player.userId}
                 >
                   <div className="flex items-center gap-4 px-4 py-3">
                     {/* Position */}
                     <div className="flex w-8 shrink-0 items-center justify-center">
-                      <span className="font-medium text-muted-foreground">
+                      <span className="text-muted-foreground font-medium">
                         {index + 2}
                       </span>
                     </div>
                     {/* Avatar */}
-                    <Avatar className="size-10 shrink-0 border border-border">
+                    <Avatar className="border-border size-10 shrink-0 border">
                       <AvatarImage
                         alt={player.userName ?? ""}
                         src={player.userImage ?? undefined}
@@ -320,7 +320,7 @@ const VaultContent = ({
                     </div>
                     {/* Earnings */}
                     <div className="flex items-center gap-2">
-                      <Coins className="size-4 text-muted-foreground" />
+                      <Coins className="text-muted-foreground size-4" />
                       <p className="font-mono font-semibold">
                         {formatVaultEarnings(player.totalEarnings)}
                       </p>
@@ -352,12 +352,12 @@ const VaultContent = ({
           {/* Paid users list */}
           {paidUsers.length > 0 && (
             <div className="space-y-2">
-              <h2 className="font-semibold text-lg">
+              <h2 className="text-lg font-semibold">
                 Wypłacone ({paidUsers.length})
               </h2>
               {paidUsers.map((player) => (
                 <VaultUserCard
-                  className="opacity-60 transition-colors hover:bg-accent/50"
+                  className="hover:bg-accent/50 opacity-60 transition-colors"
                   key={player.userId}
                   rightSlot={
                     isAdminUser &&

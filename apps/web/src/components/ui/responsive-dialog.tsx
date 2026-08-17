@@ -191,7 +191,7 @@ const ResponsiveDialogTitle = ({
     return (
       <DrawerTitle
         className={cn(
-          "font-semibold text-lg leading-none tracking-tight",
+          "text-lg leading-none font-semibold tracking-tight",
           className
         )}
       >

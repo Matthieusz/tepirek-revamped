@@ -7,7 +7,7 @@ import { AccountImportFrame } from "@/routes/dashboard/squad-builder/-components
 import { OwnedAccountsGrid } from "@/routes/dashboard/squad-builder/-components/accounts/owned-accounts-grid";
 import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
 
-export default function SquadBuilderAccountsPage() {
+const SquadBuilderAccountsPage = () => {
   const ownedAccountsResult = useAtomValue(ownedAccountsAtom);
   const refreshOwnedAccounts = useAtomRefresh(ownedAccountsAtom);
   const ownedAccounts = AsyncResult.isSuccess(ownedAccountsResult)
@@ -17,7 +17,7 @@ export default function SquadBuilderAccountsPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <div>
-        <h1 className="font-serif font-bold tracking-tight text-foreground text-2xl">
+        <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
           Konta Margonem
         </h1>
         <p className="text-muted-foreground text-sm">
@@ -60,4 +60,6 @@ export default function SquadBuilderAccountsPage() {
       </div>
     </div>
   );
-}
+};
+
+export default SquadBuilderAccountsPage;
