@@ -5,9 +5,8 @@ import type { PaginatedBets } from "@tepirek-revamped/api/protocol/bet/http-api-
 import { calculatePointsPerMember } from "@tepirek-revamped/config";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { History, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
 
 import {
@@ -389,24 +388,37 @@ const LoadedHistoryPageChunk = ({
 };
 
 const LoadMoreTrigger = ({ onVisible }: { readonly onVisible: () => void }) => {
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const hasRequestedNextPageRef = useRef(false);
   const [hasRequestedNextPage, setHasRequestedNextPage] = useState(false);
-  const handleVisibilityChange = (inView: boolean) => {
-    if (inView && !hasRequestedNextPage) {
-      setHasRequestedNextPage(true);
-      onVisible();
+
+  useEffect(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) {
+      return;
     }
-  };
-  const { ref } = useInView({
-    onChange: handleVisibilityChange,
-    threshold: 0.1,
-  });
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting && !hasRequestedNextPageRef.current) {
+          hasRequestedNextPageRef.current = true;
+          setHasRequestedNextPage(true);
+          onVisible();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(trigger);
+
+    return () => observer.disconnect();
+  }, [onVisible]);
 
   if (hasRequestedNextPage) {
     return null;
   }
 
   return (
-    <div className="flex items-center justify-center py-4" ref={ref}>
+    <div className="flex items-center justify-center py-4" ref={triggerRef}>
       <Loader2 className="size-6 animate-spin text-muted-foreground" />
     </div>
   );
