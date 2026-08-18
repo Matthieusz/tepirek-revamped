@@ -84,7 +84,9 @@ const makeApiStableLayer = <DatabaseError>(
 
   const firecrawlLayer = Layer.mergeAll(
     firecrawlConfigLayer,
-    FirecrawlClientServiceLiveLayer.pipe(Layer.provide(firecrawlConfigLayer))
+    FirecrawlClientServiceLiveLayer.pipe(
+      Layer.provide(Layer.merge(firecrawlConfigLayer, FetchHttpClient.layer))
+    )
   );
 
   const stableServices = Layer.mergeAll(
