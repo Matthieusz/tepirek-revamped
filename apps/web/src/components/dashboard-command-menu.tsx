@@ -4,6 +4,7 @@ import { useTheme } from "next-themes";
 import type { ChangeEvent, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 
+import { isCommandMenuHotkey } from "@/components/dashboard-command-menu-hotkey";
 import {
   dashboardNavigationGroups,
   dashboardOtherNavigationItems,
@@ -96,14 +97,6 @@ const getNextCommandKey = (
     (currentIndex + direction + commandKeys.length) % commandKeys.length;
   return commandKeys[nextIndex] ?? null;
 };
-
-/** Returns whether an event represents the dashboard command-menu shortcut. */
-export const isCommandMenuHotkey = (event: KeyboardEvent): boolean =>
-  event.key.toLowerCase() === "k" &&
-  (event.ctrlKey || event.metaKey) &&
-  !event.altKey &&
-  !event.shiftKey &&
-  !event.repeat;
 
 const RouteCommand = ({
   active,
@@ -260,7 +253,7 @@ export const DashboardCommandMenu = () => {
           <DialogDescription className="sr-only">
             Wyszukaj stronę panelu lub wybierz szybką akcję.
           </DialogDescription>
-          <div className="focus-within:border-ring focus-within:ring-ring/50 flex items-center gap-2 border-b px-4 focus-within:ring-2">
+          <div className="flex items-center gap-2 px-4">
             <Search
               aria-hidden="true"
               className="text-muted-foreground size-4 shrink-0"
@@ -273,7 +266,6 @@ export const DashboardCommandMenu = () => {
               aria-expanded="true"
               aria-label="Wyszukaj polecenie"
               autoComplete="off"
-              autoFocus
               className="placeholder:text-muted-foreground h-12 w-full bg-transparent text-sm outline-none"
               onChange={handleQueryChange}
               onKeyDown={handleInputKeyDown}

@@ -12,10 +12,8 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import {
-  DashboardCommandMenu,
-  isCommandMenuHotkey,
-} from "@/components/dashboard-command-menu";
+import { DashboardCommandMenu } from "@/components/dashboard-command-menu";
+import { isCommandMenuHotkey } from "@/components/dashboard-command-menu-hotkey";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const RootRouteComponent = () => <Outlet />;

@@ -94,7 +94,7 @@ export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
             }}
             aria-label="Wyloguj"
             size="icon"
-            variant="ghost"
+            variant="destructive"
           >
             <LogOut className="size-4" />
           </Button>
