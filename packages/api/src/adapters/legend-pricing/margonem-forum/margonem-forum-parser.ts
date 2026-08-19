@@ -34,6 +34,8 @@ const postStartPattern =
 const imagePattern = /<img\b(?:[^"'<>]|"[^"]*"|'[^']*')*>/giu;
 const itemTemplatePattern =
   /<b\b[^>]*>\s*Szablon zdobyczy\s*:?\s*<\/b\s*>\s*:?/iu;
+const indirectLootPattern =
+  /Za\s+pośrednictwem\s+przedmiotu\s+pozyskanego\s+z\s+(?<source>[\s\S]*?),\s*wchodząc\s+w\s+interakcję\s+z\s+[\s\S]*?\s+można\s+zdobyć\s*:/iu;
 const postContentPattern =
   /<td\s+class=["']?pcont["']?[^>]*>(?<content>[\s\S]*?)(?=<tr\s*>\s*<td\s+class=(?:["']?postid\b))/iu;
 const editedAtPattern =
@@ -130,6 +132,20 @@ interface EnemyMarker {
   readonly iconUrl: MargonemCdnIconUrl;
   readonly sourceIconKey: LegendaryEnemySourceKey;
   readonly start: number;
+}
+
+interface IndirectLoot {
+  readonly items: readonly MargonemForumLegendaryItem[];
+  readonly sourceEnemyName: string;
+}
+
+interface CatalogAccumulator {
+  readonly dropKeys: Set<string>;
+  readonly drops: MargonemForumDrop[];
+  readonly itemBySourceKey: Map<
+    LegendaryItemSourceKey,
+    MargonemForumLegendaryItem
+  >;
 }
 
 const professionByPolishName = new Map<string, LegendaryProfession>([
@@ -482,20 +498,15 @@ const parseItemImage = Effect.fnUntraced(function* parseItemImage(
   };
 });
 
-const parseLootTemplate = Effect.fnUntraced(function* parseLootTemplate(
-  blockHtml: string,
+const parseItemSequence = Effect.fnUntraced(function* parseItemSequence(
+  section: string,
   category: LegendaryEnemyCategory,
-  postId: MargonemForumPostId
+  postId: MargonemForumPostId,
+  emptyReason: string
 ): Effect.fn.Return<
   readonly MargonemForumLegendaryItem[],
   MargonemForumGuideNotParseable
 > {
-  const template = itemTemplatePattern.exec(blockHtml);
-  if (template?.index === undefined) {
-    return yield* parseError(category, "enemy has no loot template", postId);
-  }
-
-  const section = blockHtml.slice(template.index + template[0].length);
   let cursor = 0;
   let parsedItemCount = 0;
   const legendaryItems: MargonemForumLegendaryItem[] = [];
@@ -526,14 +537,60 @@ const parseLootTemplate = Effect.fnUntraced(function* parseLootTemplate(
   }
 
   if (parsedItemCount === 0) {
+    return yield* parseError(category, emptyReason, postId);
+  }
+
+  return legendaryItems;
+});
+
+const parseLootTemplate = Effect.fnUntraced(function* parseLootTemplate(
+  blockHtml: string,
+  category: LegendaryEnemyCategory,
+  postId: MargonemForumPostId
+): Effect.fn.Return<
+  readonly MargonemForumLegendaryItem[],
+  MargonemForumGuideNotParseable
+> {
+  const template = itemTemplatePattern.exec(blockHtml);
+  if (template?.index === undefined) {
+    return yield* parseError(category, "enemy has no loot template", postId);
+  }
+
+  return yield* parseItemSequence(
+    blockHtml.slice(template.index + template[0].length),
+    category,
+    postId,
+    "loot template contains no valid item images"
+  );
+});
+
+const parseIndirectLoot = Effect.fnUntraced(function* parseIndirectLoot(
+  blockHtml: string,
+  category: LegendaryEnemyCategory,
+  postId: MargonemForumPostId
+): Effect.fn.Return<IndirectLoot | null, MargonemForumGuideNotParseable> {
+  const sectionMatch = indirectLootPattern.exec(blockHtml);
+  const sourceHtml = sectionMatch?.groups?.source;
+  if (sectionMatch?.index === undefined || sourceHtml === undefined) {
+    return null;
+  }
+
+  const sourceEnemyName = extractMargonemForumText(sourceHtml);
+  if (sourceEnemyName.length === 0) {
     return yield* parseError(
       category,
-      "loot template contains no valid item images",
+      "indirect reward has no source enemy name",
       postId
     );
   }
 
-  return legendaryItems;
+  const items = yield* parseItemSequence(
+    blockHtml.slice(sectionMatch.index + sectionMatch[0].length),
+    category,
+    postId,
+    "indirect reward contains no valid item images"
+  );
+  return { items, sourceEnemyName };
 });
 
 const sameItemMetadata = (
@@ -543,6 +600,37 @@ const sameItemMetadata = (
   left.name === right.name &&
   left.level === right.level &&
   left.equipmentType === right.equipmentType;
+
+const recordEnemyItems = Effect.fnUntraced(function* recordEnemyItems(
+  accumulator: CatalogAccumulator,
+  category: LegendaryEnemyCategory,
+  enemySourceIconKey: LegendaryEnemySourceKey,
+  items: readonly MargonemForumLegendaryItem[],
+  postId: MargonemForumPostId
+): Effect.fn.Return<void, MargonemForumGuideNotParseable> {
+  const enemyKey = `${category}:${enemySourceIconKey}`;
+  for (const item of items) {
+    const existing = accumulator.itemBySourceKey.get(item.sourceIconKey);
+    if (existing !== undefined && !sameItemMetadata(existing, item)) {
+      return yield* parseError(
+        category,
+        `item source drift within snapshot for ${item.sourceIconKey}`,
+        postId
+      );
+    }
+    accumulator.itemBySourceKey.set(item.sourceIconKey, existing ?? item);
+
+    const dropKey = `${item.sourceIconKey}:${enemyKey}`;
+    if (!accumulator.dropKeys.has(dropKey)) {
+      accumulator.dropKeys.add(dropKey);
+      accumulator.drops.push({
+        enemyCategory: category,
+        enemySourceIconKey,
+        itemSourceIconKey: item.sourceIconKey,
+      });
+    }
+  }
+});
 
 /** Parse one complete forum topic into current official enemies and legendary equipment. */
 export const parseMargonemForumTopic = Effect.fn("MargonemForumTopic.parse")(
@@ -583,6 +671,11 @@ export const parseMargonemForumTopic = Effect.fn("MargonemForumTopic.parse")(
     >();
     const drops: MargonemForumDrop[] = [];
     const dropKeys = new Set<string>();
+    const accumulator: CatalogAccumulator = {
+      dropKeys,
+      drops,
+      itemBySourceKey,
+    };
     const enemyKeys = new Set<string>();
     const sourcePosts: MargonemForumSourcePost[] = [];
 
@@ -593,57 +686,76 @@ export const parseMargonemForumTopic = Effect.fn("MargonemForumTopic.parse")(
       }
 
       const markers = findEnemyMarkers(content);
+      const directMarkersByName = new Map<string, EnemyMarker[]>();
       let parsedEnemyCount = 0;
       for (const [index, marker] of markers.entries()) {
         const end = markers[index + 1]?.start ?? content.length;
         const block = content.slice(marker.start, end);
-        if (!itemTemplatePattern.test(block)) {
-          continue;
-        }
-
-        const items = yield* parseLootTemplate(block, category, post.postId);
-        const enemyKey = `${category}:${marker.sourceIconKey}`;
-        if (enemyKeys.has(enemyKey)) {
-          return yield* parseError(
-            category,
-            `duplicate enemy source key ${marker.sourceIconKey}`,
-            post.postId
-          );
-        }
-        enemyKeys.add(enemyKey);
-        parsedEnemyCount += 1;
-        enemies.push({
-          category,
-          iconUrl: marker.iconUrl,
-          level: marker.heading.level,
-          name: marker.heading.name,
-          profession: marker.heading.profession,
-          sourceIconKey: marker.sourceIconKey,
-          sourcePostId: post.postId,
-          sourceUrl: url,
-        });
-
-        for (const item of items) {
-          const existing = itemBySourceKey.get(item.sourceIconKey);
-          if (existing !== undefined && !sameItemMetadata(existing, item)) {
+        if (itemTemplatePattern.test(block)) {
+          const items = yield* parseLootTemplate(block, category, post.postId);
+          const enemyKey = `${category}:${marker.sourceIconKey}`;
+          if (enemyKeys.has(enemyKey)) {
             return yield* parseError(
               category,
-              `item source drift within snapshot for ${item.sourceIconKey}`,
+              `duplicate enemy source key ${marker.sourceIconKey}`,
               post.postId
             );
           }
-          itemBySourceKey.set(item.sourceIconKey, existing ?? item);
-
-          const dropKey = `${item.sourceIconKey}:${enemyKey}`;
-          if (!dropKeys.has(dropKey)) {
-            dropKeys.add(dropKey);
-            drops.push({
-              enemyCategory: category,
-              enemySourceIconKey: marker.sourceIconKey,
-              itemSourceIconKey: item.sourceIconKey,
-            });
+          enemyKeys.add(enemyKey);
+          parsedEnemyCount += 1;
+          enemies.push({
+            category,
+            iconUrl: marker.iconUrl,
+            level: marker.heading.level,
+            name: marker.heading.name,
+            profession: marker.heading.profession,
+            sourceIconKey: marker.sourceIconKey,
+            sourcePostId: post.postId,
+            sourceUrl: url,
+          });
+          const markersWithName = directMarkersByName.get(marker.heading.name);
+          if (markersWithName === undefined) {
+            directMarkersByName.set(marker.heading.name, [marker]);
+          } else {
+            markersWithName.push(marker);
           }
+          yield* recordEnemyItems(
+            accumulator,
+            category,
+            marker.sourceIconKey,
+            items,
+            post.postId
+          );
+          continue;
         }
+
+        const indirectLoot = yield* parseIndirectLoot(
+          block,
+          category,
+          post.postId
+        );
+        if (indirectLoot === null) {
+          continue;
+        }
+
+        const sourceMarkers = directMarkersByName.get(
+          indirectLoot.sourceEnemyName
+        );
+        const sourceMarker = sourceMarkers?.[0];
+        if (sourceMarker === undefined || sourceMarkers?.length !== 1) {
+          return yield* parseError(
+            category,
+            `indirect reward source ${indirectLoot.sourceEnemyName} is not unique in its post`,
+            post.postId
+          );
+        }
+        yield* recordEnemyItems(
+          accumulator,
+          category,
+          sourceMarker.sourceIconKey,
+          indirectLoot.items,
+          post.postId
+        );
       }
 
       if (parsedEnemyCount > 0) {

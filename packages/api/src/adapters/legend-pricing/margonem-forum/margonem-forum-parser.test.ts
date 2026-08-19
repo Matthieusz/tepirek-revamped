@@ -163,6 +163,60 @@ describe("Margonem forum topic parser", () => {
     })
   );
 
+  it.effect("assigns interaction rewards to the enemy supplying the key", () =>
+    Effect.gen(function* parseIndirectDropSource() {
+      const key = item({
+        itemClass: 28,
+        name: "Błogosławiony przebijak demonów",
+        path: "mie/key.gif",
+        stats:
+          "lvl=160;opis=Można przy jego użyciu wygnać Shakkru.;rarity=unique",
+      });
+      const legendaryReward = item({
+        itemClass: 13,
+        name: "Miniaturowy portal",
+        path: "nas/portal.gif",
+        stats: "legbon=curse,160;lvl=160;rarity=legendary;reqp=m",
+      });
+      const sheba = enemy({
+        icon: "e2/r_orc_sheba.gif",
+        items: key,
+        level: 160,
+        name: "Sheba Orcza Szamanka",
+        profession: "Mag",
+      });
+      const interaction = `
+        <BR>${"Opis źródła klucza. ".repeat(20)}<BR>
+        <b>Shakkru 160 lvl</b><BR>
+        <img src='//micc.garmory-cdn.cloud/obrazki/npc/e2/r_orc_shakkru.gif'><BR>
+        <b>Za pośrednictwem przedmiotu pozyskanego z Sheba Orcza Szamanka, wchodząc w interakcję z Shakkru można zdobyć:</b><BR>
+        ${item({ stats: "lvl=160;rarity=common" })}${legendaryReward}
+      `;
+
+      const snapshot = yield* parseMargonemForumTopic(
+        page(
+          "elite2",
+          `${headingPost("elite2")}${officialPost(105, `${sheba}${interaction}`)}`
+        )
+      );
+
+      expect(snapshot.enemies).toHaveLength(1);
+      expect(snapshot.enemies[0]).toMatchObject({
+        name: "Sheba Orcza Szamanka",
+        sourceIconKey: "/obrazki/npc/e2/r_orc_sheba.gif",
+      });
+      expect(snapshot.items).toHaveLength(1);
+      expect(snapshot.items[0]?.name).toBe("Miniaturowy portal");
+      expect(snapshot.drops).toEqual([
+        {
+          enemyCategory: "elite2",
+          enemySourceIconKey: "/obrazki/npc/e2/r_orc_sheba.gif",
+          itemSourceIconKey: "/obrazki/itemy/nas/portal.gif",
+        },
+      ]);
+    })
+  );
+
   it.effect(
     "splits two Elite II enemies in one post and shares item identity",
     () =>
