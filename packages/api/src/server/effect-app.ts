@@ -10,6 +10,9 @@ import { DrizzleBetServiceLayer } from "../adapters/hero-bet-ledger/drizzle-bet-
 import { DrizzleRankingServiceLayer } from "../adapters/hero-bet-ledger/drizzle-ranking-service.ts";
 import { DrizzleVaultServiceLayer } from "../adapters/hero-bet-ledger/drizzle-vault-service.ts";
 import { HeroesStoreLayer } from "../adapters/heroes/heroes-store.ts";
+import { DrizzleLegendCatalogStoreServiceLayer } from "../adapters/legend-pricing/drizzle-legend-catalog-store.ts";
+import { DrizzleLegendPricingStoreLayer } from "../adapters/legend-pricing/drizzle-legend-pricing-store.ts";
+import { MargonemForumClientLiveLayer } from "../adapters/legend-pricing/margonem-forum/margonem-forum-client.ts";
 import { SkillsStoreLayer } from "../adapters/skills/skills-store.ts";
 import { FirecrawlClientServiceLiveLayer } from "../adapters/squad-builder/firecrawl/firecrawl-client.ts";
 import { makeFirecrawlConfigLayer } from "../adapters/squad-builder/firecrawl/firecrawl-config.ts";
@@ -30,6 +33,8 @@ import type { AuctionStore } from "../services/auction/auction-store.ts";
 import type { BetService } from "../services/bet/bet-service.ts";
 import type { EventStore } from "../services/event/event-store.ts";
 import type { HeroesStore } from "../services/heroes/heroes-store.ts";
+import { LegendCatalogSyncLiveLayer } from "../services/legend-pricing/legend-catalog-sync.ts";
+import type { LegendPricingStore } from "../services/legend-pricing/legend-pricing-store.ts";
 import type { RankingService } from "../services/ranking/ranking-service.ts";
 import type { SkillsStore } from "../services/skills/skills-store.ts";
 import type { AccountImportStoreService } from "../services/squad-builder/account-import/account-import-store.ts";
@@ -65,6 +70,7 @@ const makeApiStableLayer = <DatabaseError>(
     DrizzleBetServiceLayer.pipe(Layer.provide(databaseLayer)),
     DrizzleRankingServiceLayer.pipe(Layer.provide(databaseLayer)),
     DrizzleVaultServiceLayer.pipe(Layer.provide(databaseLayer)),
+    DrizzleLegendPricingStoreLayer.pipe(Layer.provide(databaseLayer)),
     EventStoreLayer.pipe(Layer.provide(databaseLayer)),
     SkillsStoreLayer.pipe(Layer.provide(databaseLayer)),
     AuctionStoreLayer.pipe(Layer.provide(databaseLayer)),
@@ -112,6 +118,21 @@ export const makeApiLiveLayerFromDatabase = <DatabaseError>(
     makeFirecrawlConfigLayer(config.firecrawl)
   );
 
+/** Build the explicitly invoked forum-catalog synchronization graph. */
+export const makeLegendCatalogSyncLayer = <DatabaseError>(
+  databaseLayer: Layer.Layer<EffectDatabase, DatabaseError>
+) =>
+  LegendCatalogSyncLiveLayer.pipe(
+    Layer.provide(
+      MargonemForumClientLiveLayer.pipe(Layer.provide(FetchHttpClient.layer))
+    ),
+    Layer.provide(
+      DrizzleLegendCatalogStoreServiceLayer.pipe(Layer.provide(databaseLayer))
+    )
+  );
+
+export { LegendCatalogSyncService } from "../services/legend-pricing/legend-catalog-sync.ts";
+
 /** Build API services from configuration parsed by an executable boundary. */
 export const makeApiLiveLayerFromValues = (config: {
   readonly databaseUrl: string;
@@ -130,6 +151,7 @@ type SquadBuilderServices =
   | BetService
   | RankingService
   | VaultService
+  | LegendPricingStore
   | EventStore
   | SkillsStore
   | AuctionStore

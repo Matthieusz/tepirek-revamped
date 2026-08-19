@@ -33,6 +33,10 @@
       "browser": null,
       "default": "./src/server/http-api-handlers.ts"
     },
+    "./services/legend-pricing/legend-catalog-sync": {
+      "browser": null,
+      "default": "./src/services/legend-pricing/legend-catalog-sync.ts"
+    },
     "./services/squad-builder/firecrawl-config": {
       "browser": null,
       "default": "./src/services/squad-builder/firecrawl-config.ts"

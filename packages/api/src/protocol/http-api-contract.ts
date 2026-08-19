@@ -6,6 +6,7 @@ import { SessionMiddleware } from "./auth/http-api-middleware.ts";
 import { BetHttpApiGroup } from "./bet/http-api-contract.ts";
 import { EventHttpApiGroup } from "./event/http-api-contract.ts";
 import { HeroesHttpApiGroup } from "./heroes/http-api-contract.ts";
+import { LegendPricingHttpApiGroup } from "./legend-pricing/http-api-contract.ts";
 import { RankingHttpApiGroup } from "./ranking/http-api-contract.ts";
 import { SkillsHttpApiGroup } from "./skills/http-api-contract.ts";
 import { SquadBuilderAccountImportGroup } from "./squad-builder/account-import/http-api-contract.ts";
@@ -27,6 +28,7 @@ export const AppHttpApi = HttpApi.make("tepirekApi")
   .add(AuctionHttpApiGroup)
   .add(BetHttpApiGroup)
   .add(RankingHttpApiGroup)
+  .add(LegendPricingHttpApiGroup)
   .add(UserHttpApiGroup)
   .add(VaultHttpApiGroup)
   .add(SquadBuilderAccountImportGroup)

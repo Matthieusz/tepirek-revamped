@@ -13,6 +13,13 @@ import {
   userStats,
 } from "@tepirek-revamped/db/schema/bet";
 import { event } from "@tepirek-revamped/db/schema/event";
+import {
+  legendaryCatalogSyncRun,
+  legendaryEnemy,
+  legendaryItem,
+  legendaryItemCost,
+  legendaryItemDrop,
+} from "@tepirek-revamped/db/schema/legend-pricing";
 import { professions, range, skills } from "@tepirek-revamped/db/schema/skills";
 import {
   firecrawlProfileScrapeRequest,
@@ -48,6 +55,11 @@ const applicationTables = [
   heroBet,
   heroBetMember,
   firecrawlProfileScrapeRequest,
+  legendaryCatalogSyncRun,
+  legendaryEnemy,
+  legendaryItem,
+  legendaryItemCost,
+  legendaryItemDrop,
   margonemAccount,
   margonemAccountAccess,
   margonemAccountImportPreview,

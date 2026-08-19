@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { HealthHttpApi } from "./protocol/health/http-api-contract.ts";
 import { HeroSummary } from "./protocol/heroes/http-api-contract.ts";
 import { AppHttpApi } from "./protocol/http-api-contract.ts";
+import { LegendPriceSummary } from "./protocol/legend-pricing/http-api-contract.ts";
 
 type OpenApiDocument = ReturnType<typeof OpenApi.fromApi>;
 type OpenApiPath = keyof OpenApiDocument["paths"];
@@ -28,6 +29,34 @@ const expectPostResponseStatuses = (
 };
 
 describe("AppHttpApi route contract", () => {
+  it("exposes verified legend pricing routes", () => {
+    expectRoute("get", "/legend-pricing");
+    expectRoute("post", "/legend-pricing/cost");
+  });
+
+  it("requires a non-empty name for legend item accessibility", () => {
+    const item = {
+      enemies: [],
+      equipmentType: "ring" as const,
+      iconUrl: "https://micc.garmory-cdn.cloud/obrazki/itemy/pie/ring.gif",
+      itemId: 1,
+      lastSyncedAt: new Date().toISOString(),
+      legendaryBonus: null,
+      level: 23,
+      name: "",
+      priceGold: null,
+      priceUpdatedAt: null,
+      professions: [],
+      sourceIconKey: "/obrazki/itemy/pie/ring.gif",
+      version: 0,
+    };
+
+    expect(() => Schema.decodeSync(LegendPriceSummary)(item)).toThrow();
+    expect(
+      Schema.decodeSync(LegendPriceSummary)({ ...item, name: "Ring" })
+    ).toMatchObject({ name: "Ring" });
+  });
+
   it("keeps hero names non-empty for image alternative text", () => {
     const hero = {
       eventId: 1,

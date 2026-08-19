@@ -39,6 +39,17 @@ const validateDatabaseUrl = (value: string) =>
     )
   );
 
+const databaseUrlConfig = Config.redacted("DATABASE_URL");
+
+/** Minimal configuration required by the explicit legend-catalog sync command. */
+export const readLegendCatalogSyncConfig = databaseUrlConfig.pipe(
+  Effect.flatMap((databaseUrl) =>
+    validateDatabaseUrl(Redacted.value(databaseUrl)).pipe(
+      Effect.as({ databaseUrl })
+    )
+  )
+);
+
 const readObservabilityConfig = Config.all({
   minimumLogLevel: Config.logLevel("TEPIREK_LOG_LEVEL").pipe(
     Config.withDefault("Info")
@@ -73,7 +84,7 @@ export const readStartupConfig: Effect.Effect<
   const [auth, databaseUrl, discord, firecrawl, observability] =
     yield* Effect.all([
       AuthConfig,
-      Config.redacted("DATABASE_URL"),
+      databaseUrlConfig,
       readDiscordVerificationConfig,
       readFirecrawlConfig,
       readObservabilityConfig,

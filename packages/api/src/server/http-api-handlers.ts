@@ -8,6 +8,7 @@ import { SessionMiddlewareLayer } from "./auth/session-middleware.ts";
 import { BetHttpApiHandlers } from "./bet/http-api-handlers.ts";
 import { EventHttpApiHandlers } from "./event/http-api-handlers.ts";
 import { HeroesHttpApiHandlers } from "./heroes/http-api-handlers.ts";
+import { LegendPricingHttpApiHandlers } from "./legend-pricing/http-api-handlers.ts";
 import { RankingHttpApiHandlers } from "./ranking/http-api-handlers.ts";
 import { SkillsHttpApiHandlers } from "./skills/http-api-handlers.ts";
 import { SquadBuilderAccountImportHttpApiHandlers } from "./squad-builder/account-import/http-api-handlers.ts";
@@ -28,6 +29,7 @@ const AppEndpointHandlers = Layer.mergeAll(
   SkillsHttpApiHandlers,
   AuctionHttpApiHandlers,
   BetHttpApiHandlers,
+  LegendPricingHttpApiHandlers,
   RankingHttpApiHandlers,
   UserHttpApiHandlers,
   VaultHttpApiHandlers,

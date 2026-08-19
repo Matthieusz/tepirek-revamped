@@ -1,0 +1,53 @@
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+import * as BunRuntime from "@effect/platform-bun/BunRuntime";
+import {
+  LegendCatalogSyncService,
+  makeLegendCatalogSyncLayer,
+} from "@tepirek-revamped/api/server/effect-app";
+import { makeLiveDatabaseLayer } from "@tepirek-revamped/db/effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
+
+import { readLegendCatalogSyncConfig } from "./startup-config.js";
+
+const dotEnvProvider = ConfigProvider.fromDotEnv().pipe(
+  Effect.catchIf(
+    (error) => error.reason._tag === "NotFound",
+    () => Effect.succeed(ConfigProvider.fromUnknown({}))
+  ),
+  Effect.provide(BunFileSystem.layer)
+);
+
+const syncConfigProvider = dotEnvProvider.pipe(
+  Effect.map((provider) =>
+    ConfigProvider.orElse(ConfigProvider.fromEnv(), provider)
+  )
+);
+
+const runSynchronization = (databaseUrl: string) =>
+  Effect.scoped(
+    Effect.gen(function* runLegendCatalogSynchronization() {
+      const synchronizer = yield* LegendCatalogSyncService;
+      const result = yield* synchronizer.synchronize();
+      yield* Effect.logInfo("Legend catalog synchronization succeeded", {
+        ...result.reconciliation,
+        synchronizedAt: result.synchronizedAt.toISOString(),
+      });
+    }).pipe(
+      Effect.provide(
+        makeLegendCatalogSyncLayer(makeLiveDatabaseLayer(databaseUrl))
+      )
+    )
+  );
+
+const main = readLegendCatalogSyncConfig.pipe(
+  Effect.provide(ConfigProvider.layer(syncConfigProvider)),
+  Effect.flatMap(({ databaseUrl }) =>
+    runSynchronization(Redacted.value(databaseUrl))
+  )
+);
+
+if (import.meta.main) {
+  BunRuntime.runMain(main);
+}
