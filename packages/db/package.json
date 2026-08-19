@@ -21,6 +21,9 @@
     "./schema/event": {
       "default": "./src/schema/event.ts"
     },
+    "./schema/legend-pricing": {
+      "default": "./src/schema/legend-pricing.ts"
+    },
     "./schema/skills": {
       "default": "./src/schema/skills.ts"
     },
