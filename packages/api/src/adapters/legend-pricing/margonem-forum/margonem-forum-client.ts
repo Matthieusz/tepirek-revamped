@@ -19,7 +19,7 @@ const MARGONEM_FORUM_TOPIC_URLS = {
   elite2: "https://forum.margonem.pl/?task=forum&show=posts&id=514805&ps=0",
   hero: "https://forum.margonem.pl/?task=forum&show=posts&id=514740&ps=0",
 } satisfies Record<LegendaryEnemyCategory, string>;
-const MARGONEM_FORUM_MAXIMUM_RESPONSE_BYTES = 2_000_000;
+const MARGONEM_FORUM_MAXIMUM_RESPONSE_BYTES = 20_000_000;
 const loginPagePattern = /(?:task=login|name=["']?login|zaloguj\s+się)/iu;
 const postContainerPattern =
   /<table\s+id=["']?posts["']?[^>]*>[\s\S]*?name=["']post\d+/iu;

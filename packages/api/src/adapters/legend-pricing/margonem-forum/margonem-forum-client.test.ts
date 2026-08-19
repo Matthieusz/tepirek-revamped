@@ -153,6 +153,23 @@ describe("Margonem forum client", () => {
     })
   );
 
+  it.effect("accepts a complete Firecrawl document larger than 2 MB", () =>
+    Effect.gen(function* acceptLargeCompleteDocument() {
+      const validHtml = readFixture("valid-topic.html");
+      const largeValidHtml = validHtml.replace(
+        "</body>",
+        `${" ".repeat(2_000_000)}</body>`
+      );
+
+      const page = yield* fetchTopic(
+        () => scrapedDocument(largeValidHtml),
+        "hero"
+      );
+
+      expect(page.html).toBe(largeValidHtml);
+    })
+  );
+
   it.effect.each([
     ["block-page.html", "waiting or block page"],
     ["empty-page.html", "response is empty"],
