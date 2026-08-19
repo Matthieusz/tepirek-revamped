@@ -5,8 +5,8 @@ import * as Schema from "effect/Schema";
 
 import type { MargonemProfileId } from "../../domain/squad-builder/margonem-profile-id.ts";
 
-/** Successful Firecrawl scrape output used by squad-builder. */
-interface FirecrawlScrapeSuccess {
+/** Successful Firecrawl HTML scrape output. */
+export interface FirecrawlScrapeSuccess {
   readonly html: string;
   readonly metadata: {
     readonly sourceURL?: string | undefined;
@@ -18,11 +18,14 @@ interface FirecrawlScrapeSuccess {
   };
 }
 
-/** Firecrawl capability consumed by the profile import preview service. */
+/** Firecrawl capability shared by profile and fixed-URL scraping workflows. */
 export interface FirecrawlClient {
   readonly scrapeProfileHtml: (
     profileId: MargonemProfileId
   ) => Effect<FirecrawlScrapeSuccess, FirecrawlScrapeError>;
+  readonly scrapeUrlHtml: (
+    url: string
+  ) => Effect<FirecrawlScrapeSuccess, FirecrawlUrlScrapeError>;
 }
 
 export class FirecrawlRequestFailed extends Schema.TaggedErrorClass<FirecrawlRequestFailed>()(
@@ -43,12 +46,31 @@ export class FirecrawlResponseNotParseable extends Schema.TaggedErrorClass<Firec
   {}
 ) {}
 
-/** Expected failure returned by the Firecrawl adapter. */
+/** Firecrawl failed while scraping an arbitrary URL. */
+export class FirecrawlUrlRequestFailed extends Schema.TaggedErrorClass<FirecrawlUrlRequestFailed>()(
+  "FirecrawlUrlRequestFailed",
+  { cause: Schema.Defect() },
+  {}
+) {}
+
+/** Firecrawl returned an invalid response for an arbitrary URL. */
+export class FirecrawlUrlResponseNotParseable extends Schema.TaggedErrorClass<FirecrawlUrlResponseNotParseable>()(
+  "FirecrawlUrlResponseNotParseable",
+  { cause: Schema.Defect() },
+  {}
+) {}
+
+/** Expected failure returned for profile scraping. */
 export type FirecrawlScrapeError =
   | FirecrawlRequestFailed
   | FirecrawlResponseNotParseable;
 
-/** Service tag for the Firecrawl profile-scraping capability. */
+/** Expected failure returned for arbitrary URL scraping. */
+export type FirecrawlUrlScrapeError =
+  | FirecrawlUrlRequestFailed
+  | FirecrawlUrlResponseNotParseable;
+
+/** Service tag for Firecrawl-backed HTML scraping. */
 export class FirecrawlClientService extends Context.Service<
   FirecrawlClientService,
   FirecrawlClient

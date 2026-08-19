@@ -43,6 +43,8 @@ it.effect(
             statusCode: 200,
           },
         }),
+      scrapeUrlHtml: () =>
+        Effect.die(new Error("URL scraping is not used by this test")),
     };
     const store = makeAccountImportStoreServiceTestService({
       createPendingImport: (input) =>

@@ -12,6 +12,8 @@ import {
   FirecrawlClientService,
   FirecrawlRequestFailed,
   FirecrawlResponseNotParseable,
+  FirecrawlUrlRequestFailed,
+  FirecrawlUrlResponseNotParseable,
 } from "../../../services/squad-builder/firecrawl-client.ts";
 import {
   FirecrawlConfigService,
@@ -41,6 +43,7 @@ const FirecrawlDocumentSchema = Schema.Struct({
 
 const FirecrawlScrapeRequestSchema = Schema.Struct({
   formats: Schema.Tuple([Schema.Literal("html")]),
+  onlyMainContent: Schema.optionalKey(Schema.Boolean),
   url: Schema.String,
 });
 
@@ -74,8 +77,7 @@ const makeProviderFailureCause = (
 });
 
 const decodeFirecrawlResponse = (
-  response: HttpClientResponse.HttpClientResponse,
-  profileId: MargonemProfileId
+  response: HttpClientResponse.HttpClientResponse
 ) =>
   Effect.gen(function* decodeResponse() {
     if (response.status !== 200) {
@@ -86,21 +88,19 @@ const decodeFirecrawlResponse = (
       );
 
       if (Exit.isSuccess(decodedFailure)) {
-        return yield* new FirecrawlRequestFailed({
+        return yield* new FirecrawlUrlRequestFailed({
           cause: makeProviderFailureCause(
             response.status,
             decodedFailure.value
           ),
-          profileId,
         });
       }
 
-      return yield* new FirecrawlRequestFailed({
+      return yield* new FirecrawlUrlRequestFailed({
         cause: {
           cause: decodedFailure.cause,
           status: response.status,
         },
-        profileId,
       });
     }
 
@@ -108,18 +108,13 @@ const decodeFirecrawlResponse = (
       FirecrawlResponseEnvelopeSchema
     )(response).pipe(
       Effect.mapError(
-        (cause) =>
-          new FirecrawlResponseNotParseable({
-            cause,
-            profileId,
-          })
+        (cause) => new FirecrawlUrlResponseNotParseable({ cause })
       )
     );
 
     if (!envelope.success) {
-      return yield* new FirecrawlRequestFailed({
+      return yield* new FirecrawlUrlRequestFailed({
         cause: makeProviderFailureCause(response.status, envelope),
-        profileId,
       });
     }
 
@@ -133,7 +128,7 @@ const makeFirecrawlClient = (
     HttpClient.mapRequest(HttpClientRequest.prependUrl(FIRECRAWL_API_BASE_URL))
   );
 
-/** Firecrawl API/HTTP-backed implementation of profile HTML scraping. */
+/** Firecrawl API/HTTP-backed implementation of HTML scraping. */
 export const FirecrawlClientServiceLiveLayer: Layer.Layer<
   FirecrawlClientService,
   never,
@@ -144,94 +139,92 @@ export const FirecrawlClientServiceLiveLayer: Layer.Layer<
     const config = yield* FirecrawlConfigService;
     const client = makeFirecrawlClient(yield* HttpClient.HttpClient);
 
+    const scrapeHtml = Effect.fn("FirecrawlClient.scrapeHtml")(
+      function* scrapeHtmlEffect(url: string, onlyMainContent?: boolean) {
+        return yield* Effect.gen(function* scrapeOperation() {
+          const requestBody =
+            onlyMainContent === undefined
+              ? { formats: ["html"] as const, url }
+              : { formats: ["html"] as const, onlyMainContent, url };
+          const request = yield* HttpClientRequest.post(
+            FIRECRAWL_SCRAPE_PATH
+          ).pipe(
+            HttpClientRequest.acceptJson,
+            HttpClientRequest.bearerToken(config.apiKey),
+            HttpClientRequest.schemaBodyJson(FirecrawlScrapeRequestSchema)(
+              requestBody
+            ),
+            Effect.mapError((cause) => new FirecrawlUrlRequestFailed({ cause }))
+          );
+
+          const response = yield* client
+            .execute(request)
+            .pipe(
+              Effect.mapError(
+                (cause) => new FirecrawlUrlRequestFailed({ cause })
+              )
+            );
+
+          const document = yield* decodeFirecrawlResponse(response);
+          const rawCredits = document.metadata?.creditsUsed;
+          const creditsUsed =
+            rawCredits === undefined
+              ? 1
+              : yield* parseFirecrawlCreditCount(rawCredits).pipe(
+                  Effect.mapError(
+                    () =>
+                      new FirecrawlUrlResponseNotParseable({
+                        cause: new Error("Invalid Firecrawl creditsUsed"),
+                      })
+                  )
+                );
+
+          return {
+            html: document.html,
+            metadata: {
+              cacheState: document.metadata?.cacheState,
+              contentType: document.metadata?.contentType,
+              creditsUsed,
+              sourceURL: document.metadata?.sourceURL,
+              statusCode: document.metadata?.statusCode,
+              url: document.metadata?.url,
+            },
+          };
+        }).pipe(
+          Effect.timeoutOrElse({
+            duration: FIRECRAWL_SCRAPE_DEADLINE,
+            orElse: () =>
+              Effect.fail(
+                new FirecrawlUrlRequestFailed({
+                  cause: new Error("Firecrawl scrape timed out"),
+                })
+              ),
+          })
+        );
+      }
+    );
+
     return FirecrawlClientService.of({
-      /** Scrape canonical Margonem profile HTML through the Firecrawl API. */
       scrapeProfileHtml: Effect.fn("FirecrawlClient.scrapeProfileHtml")(
         function* scrapeProfileHtml(profileId: MargonemProfileId) {
-          return yield* Effect.gen(function* scrapeOperation() {
-            const request = yield* HttpClientRequest.post(
-              FIRECRAWL_SCRAPE_PATH
-            ).pipe(
-              HttpClientRequest.acceptJson,
-              HttpClientRequest.bearerToken(config.apiKey),
-              HttpClientRequest.schemaBodyJson(FirecrawlScrapeRequestSchema)({
-                formats: ["html"],
-                url: toMargonemProfileUrl(profileId),
-              }),
-              Effect.mapError(
-                (cause) =>
-                  new FirecrawlRequestFailed({
-                    cause,
+          return yield* scrapeHtml(toMargonemProfileUrl(profileId)).pipe(
+            Effect.mapError((error) =>
+              error._tag === "FirecrawlUrlRequestFailed"
+                ? new FirecrawlRequestFailed({
+                    cause: error.cause,
                     profileId,
                   })
-              )
-            );
-
-            const response = yield* client.execute(request).pipe(
-              Effect.mapError(
-                (cause) =>
-                  new FirecrawlRequestFailed({
-                    cause,
+                : new FirecrawlResponseNotParseable({
+                    cause: error.cause,
                     profileId,
                   })
-              )
-            );
-
-            const document = yield* decodeFirecrawlResponse(
-              response,
-              profileId
-            );
-            const rawCredits = document.metadata?.creditsUsed;
-
-            if (rawCredits !== undefined) {
-              const parsedCredits = yield* parseFirecrawlCreditCount(
-                rawCredits
-              ).pipe(
-                Effect.mapError(
-                  () =>
-                    new FirecrawlResponseNotParseable({
-                      cause: new Error("Invalid Firecrawl creditsUsed"),
-                      profileId,
-                    })
-                )
-              );
-
-              return {
-                html: document.html,
-                metadata: {
-                  cacheState: document.metadata?.cacheState,
-                  contentType: document.metadata?.contentType,
-                  creditsUsed: parsedCredits,
-                  sourceURL: document.metadata?.sourceURL,
-                  statusCode: document.metadata?.statusCode,
-                  url: document.metadata?.url,
-                },
-              };
-            }
-
-            return {
-              html: document.html,
-              metadata: {
-                cacheState: document.metadata?.cacheState,
-                contentType: document.metadata?.contentType,
-                creditsUsed: 1,
-                sourceURL: document.metadata?.sourceURL,
-                statusCode: document.metadata?.statusCode,
-                url: document.metadata?.url,
-              },
-            };
-          }).pipe(
-            Effect.timeoutOrElse({
-              duration: FIRECRAWL_SCRAPE_DEADLINE,
-              orElse: () =>
-                Effect.fail(
-                  new FirecrawlRequestFailed({
-                    cause: new Error("Firecrawl scrape timed out"),
-                    profileId,
-                  })
-                ),
-            })
+            )
           );
+        }
+      ),
+      scrapeUrlHtml: Effect.fn("FirecrawlClient.scrapeUrlHtml")(
+        function* scrapeUrlHtml(url: string) {
+          return yield* scrapeHtml(url, false);
         }
       ),
     });

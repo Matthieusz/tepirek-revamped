@@ -64,6 +64,8 @@ it.effect("previews account refetch and stores the pending diff", () => {
           statusCode: 200,
         },
       }),
+    scrapeUrlHtml: () =>
+      Effect.die(new Error("URL scraping is not used by this test")),
   };
   const store = makeAccountRefetchStoreServiceTestService({
     createPendingRefetch: (input) => {
@@ -146,6 +148,8 @@ it.effect("marks a reserved refetch request failed when interrupted", () =>
         Deferred.succeed(scrapeStarted, true).pipe(
           Effect.andThen(Deferred.await(pendingScrape))
         ),
+      scrapeUrlHtml: () =>
+        Effect.die(new Error("URL scraping is not used by this test")),
     };
     const store = makeAccountRefetchStoreServiceTestService({
       getAccountForRefetch: () =>

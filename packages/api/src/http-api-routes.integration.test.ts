@@ -95,6 +95,8 @@ const failingProfilePreviewLayer = Layer.succeed(
           profileId,
         })
       ),
+    scrapeUrlHtml: () =>
+      Effect.die(new Error("URL scraping is not used by this test")),
   })
 );
 const failingAnnouncementHttpApiLayer = AppHttpApiLayer.pipe(

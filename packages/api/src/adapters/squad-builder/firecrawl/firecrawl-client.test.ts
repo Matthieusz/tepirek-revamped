@@ -68,23 +68,29 @@ const makeSequenceClient = (
   );
 };
 
+const provideFirecrawlClient = (client: HttpClient.HttpClient) =>
+  Effect.provide(
+    FirecrawlClientServiceLiveLayer.pipe(
+      Layer.provide(
+        Layer.merge(
+          makeFirecrawlConfigLayer(TEST_CONFIG),
+          Layer.succeed(HttpClient.HttpClient, client)
+        )
+      )
+    )
+  );
+
 const scrapeWith = (client: HttpClient.HttpClient, profileId: number) =>
   Effect.gen(function* scrapeProfile() {
     const parsedProfileId = yield* parseMargonemProfileId(profileId);
     return yield* FirecrawlClientService.use((service) =>
       service.scrapeProfileHtml(parsedProfileId)
     );
-  }).pipe(
-    Effect.provide(
-      FirecrawlClientServiceLiveLayer.pipe(
-        Layer.provide(
-          Layer.merge(
-            makeFirecrawlConfigLayer(TEST_CONFIG),
-            Layer.succeed(HttpClient.HttpClient, client)
-          )
-        )
-      )
-    )
+  }).pipe(provideFirecrawlClient(client));
+
+const scrapeUrlWith = (client: HttpClient.HttpClient, url: string) =>
+  FirecrawlClientService.use((service) => service.scrapeUrlHtml(url)).pipe(
+    provideFirecrawlClient(client)
   );
 
 const readRequestBody = (request: HttpClientRequest.HttpClientRequest) =>
@@ -155,6 +161,30 @@ describe("FirecrawlClientServiceLiveLayer", () => {
         formats: ["html"],
         url: "https://www.margonem.pl/profile/view,123",
       });
+    })
+  );
+
+  it.effect("requests complete HTML when scraping an arbitrary URL", () =>
+    Effect.gen(function* requestUrl() {
+      const requests: HttpClientRequest.HttpClientRequest[] = [];
+      const client = makeSequenceClient(
+        [jsonResponse(successEnvelope())],
+        requests
+      );
+      const url =
+        "https://forum.margonem.pl/?task=forum&show=posts&id=514740&ps=0";
+
+      yield* scrapeUrlWith(client, url);
+
+      const [request] = requests;
+      expect(request).toBeDefined();
+      if (request !== undefined) {
+        expect(yield* readRequestBody(request)).toEqual({
+          formats: ["html"],
+          onlyMainContent: false,
+          url,
+        });
+      }
     })
   );
 

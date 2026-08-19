@@ -42,6 +42,8 @@ it.effect("previews an available Margonem profile through services", () => {
           statusCode: 200,
         },
       }),
+    scrapeUrlHtml: () =>
+      Effect.die(new Error("URL scraping is not used by this test")),
   };
   const store = makeAccountImportStoreServiceTestService({
     findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),
@@ -100,6 +102,8 @@ it.effect("marks a reserved import request failed when interrupted", () =>
         Deferred.succeed(scrapeStarted, true).pipe(
           Effect.andThen(Deferred.await(pendingScrape))
         ),
+      scrapeUrlHtml: () =>
+        Effect.die(new Error("URL scraping is not used by this test")),
     };
     const store = makeAccountImportStoreServiceTestService({
       findProfileAccessState: () => Effect.succeed({ _tag: "Available" }),
