@@ -25,8 +25,8 @@ export type FirecrawlBudgetError =
 
 /** Input for reserving one Firecrawl request. */
 export interface ReserveFirecrawlRequestInput {
-  readonly profileId: MargonemProfileId;
-  readonly requestedByUserId: AppUserId;
+  readonly profileId?: MargonemProfileId;
+  readonly requestedByUserId?: AppUserId;
   readonly yearMonth: FirecrawlYearMonth;
   readonly monthlyRequestBudget: number;
 }

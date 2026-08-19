@@ -1,0 +1,1 @@
+ALTER TABLE "firecrawl_profile_scrape_requests" ALTER COLUMN "profile_id" DROP NOT NULL;

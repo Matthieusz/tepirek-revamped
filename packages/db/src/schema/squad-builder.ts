@@ -301,7 +301,7 @@ export const firecrawlProfileScrapeRequest = pgTable(
     errorTag: text("error_tag"),
     firecrawlStatusCode: integer("firecrawl_status_code"),
     id: serial("id").primaryKey(),
-    profileId: integer("profile_id").notNull(),
+    profileId: integer("profile_id"),
     requestedByUserId: text("requested_by_user_id").references(() => user.id, {
       onDelete: "set null",
     }),
