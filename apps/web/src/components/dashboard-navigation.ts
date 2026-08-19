@@ -2,6 +2,7 @@ import {
   Brain,
   Calculator,
   CalendarCheck,
+  Coins,
   Gavel,
   ListChecks,
   Swords,
@@ -109,6 +110,11 @@ export const dashboardNavigationGroups = [
 
 /** Standalone dashboard routes shared by the sidebar and command menu. */
 export const dashboardOtherNavigationItems = [
+  {
+    icon: Coins,
+    title: "Cennik legend",
+    url: "/dashboard/cennik",
+  },
   {
     icon: ListChecks,
     title: "Lista zadań",

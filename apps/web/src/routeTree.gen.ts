@@ -16,6 +16,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as WaitingRoomRouteImport } from './routes/waiting-room'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardAuctionsRouteRouteImport } from './routes/dashboard/auctions/route'
+import { Route as DashboardCennikRouteImport } from './routes/dashboard/cennik'
 import { Route as DashboardPlayerListRouteImport } from './routes/dashboard/player-list'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
 import { Route as DashboardSkillsRouteRouteImport } from './routes/dashboard/skills/route'
@@ -73,6 +74,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
 const DashboardAuctionsRouteRoute = DashboardAuctionsRouteRouteImport.update({
   id: '/auctions',
   path: '/auctions',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardCennikRoute = DashboardCennikRouteImport.update({
+  id: '/cennik',
+  path: '/cennik',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardPlayerListRoute = DashboardPlayerListRouteImport.update({
@@ -216,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/auctions': typeof DashboardAuctionsRouteRouteWithChildren
   '/dashboard/skills': typeof DashboardSkillsRouteRouteWithChildren
   '/dashboard/squad-builder': typeof DashboardSquadBuilderRouteRouteWithChildren
+  '/dashboard/cennik': typeof DashboardCennikRoute
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
@@ -245,6 +252,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/waiting-room': typeof WaitingRoomRoute
   '/dashboard/auctions': typeof DashboardAuctionsRouteRouteWithChildren
+  '/dashboard/cennik': typeof DashboardCennikRoute
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
@@ -277,6 +285,7 @@ export interface FileRoutesById {
   '/dashboard/auctions': typeof DashboardAuctionsRouteRouteWithChildren
   '/dashboard/skills': typeof DashboardSkillsRouteRouteWithChildren
   '/dashboard/squad-builder': typeof DashboardSquadBuilderRouteRouteWithChildren
+  '/dashboard/cennik': typeof DashboardCennikRoute
   '/dashboard/player-list': typeof DashboardPlayerListRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/tasks': typeof DashboardTasksRoute
@@ -311,6 +320,7 @@ export interface FileRouteTypes {
     | '/dashboard/auctions'
     | '/dashboard/skills'
     | '/dashboard/squad-builder'
+    | '/dashboard/cennik'
     | '/dashboard/player-list'
     | '/dashboard/profile'
     | '/dashboard/tasks'
@@ -340,6 +350,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/waiting-room'
     | '/dashboard/auctions'
+    | '/dashboard/cennik'
     | '/dashboard/player-list'
     | '/dashboard/profile'
     | '/dashboard/tasks'
@@ -371,6 +382,7 @@ export interface FileRouteTypes {
     | '/dashboard/auctions'
     | '/dashboard/skills'
     | '/dashboard/squad-builder'
+    | '/dashboard/cennik'
     | '/dashboard/player-list'
     | '/dashboard/profile'
     | '/dashboard/tasks'
@@ -452,6 +464,13 @@ declare module '@tanstack/react-router' {
       path: '/auctions'
       fullPath: '/dashboard/auctions'
       preLoaderRoute: typeof DashboardAuctionsRouteRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/cennik': {
+      id: '/dashboard/cennik'
+      path: '/cennik'
+      fullPath: '/dashboard/cennik'
+      preLoaderRoute: typeof DashboardCennikRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/player-list': {
@@ -687,6 +706,7 @@ interface DashboardRouteRouteChildren {
   DashboardAuctionsRouteRoute: typeof DashboardAuctionsRouteRouteWithChildren
   DashboardSkillsRouteRoute: typeof DashboardSkillsRouteRouteWithChildren
   DashboardSquadBuilderRouteRoute: typeof DashboardSquadBuilderRouteRouteWithChildren
+  DashboardCennikRoute: typeof DashboardCennikRoute
   DashboardPlayerListRoute: typeof DashboardPlayerListRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardTasksRoute: typeof DashboardTasksRoute
@@ -706,6 +726,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardAuctionsRouteRoute: DashboardAuctionsRouteRouteWithChildren,
   DashboardSkillsRouteRoute: DashboardSkillsRouteRouteWithChildren,
   DashboardSquadBuilderRouteRoute: DashboardSquadBuilderRouteRouteWithChildren,
+  DashboardCennikRoute: DashboardCennikRoute,
   DashboardPlayerListRoute: DashboardPlayerListRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardTasksRoute: DashboardTasksRoute,
