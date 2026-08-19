@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { formatVaultEarnings, parseGoldAmount } from "./gold";
+import {
+  formatGoldAmountInput,
+  formatVaultEarnings,
+  parseGoldAmount,
+  tryParseGoldAmount,
+} from "./gold";
 
 const pl = (n: number) =>
   n.toLocaleString("pl-PL", { maximumFractionDigits: 0 });
@@ -29,17 +34,34 @@ describe("formatVaultEarnings", () => {
   });
 });
 
+describe("formatGoldAmountInput", () => {
+  it("keeps saved million and billion amounts in shorthand", () => {
+    expect(formatGoldAmountInput(700_000_000)).toBe("700m");
+    expect(formatGoldAmountInput(1_200_000_000)).toBe("1.2g");
+  });
+
+  it("keeps the plain value when shorthand would not be shorter", () => {
+    expect(formatGoldAmountInput(900_000)).toBe("900000");
+    expect(formatGoldAmountInput(1_000_001)).toBe("1000001");
+  });
+});
+
 describe("parseGoldAmount", () => {
   it("parses a plain integer amount", () => {
     expect(parseGoldAmount("50000000")).toBe(50_000_000);
+  });
+
+  it("treats a trailing m as millions", () => {
+    expect(parseGoldAmount("700m")).toBe(700_000_000);
   });
 
   it("treats a trailing g as billions", () => {
     expect(parseGoldAmount("2g")).toBe(2_000_000_000);
   });
 
-  it("floors a fractional g amount to whole gold", () => {
-    expect(parseGoldAmount("1.5g")).toBe(1_500_000_000);
+  it("floors fractional shorthand amounts to whole gold", () => {
+    expect(parseGoldAmount("1.5m")).toBe(1_500_000);
+    expect(parseGoldAmount("1.2g")).toBe(1_200_000_000);
   });
 
   it("is case-insensitive and trims surrounding whitespace", () => {
@@ -51,5 +73,12 @@ describe("parseGoldAmount", () => {
     expect(parseGoldAmount("abc")).toBe(0);
     expect(parseGoldAmount("g")).toBe(0);
     expect(parseGoldAmount("")).toBe(0);
+  });
+});
+
+describe("tryParseGoldAmount", () => {
+  it("distinguishes a valid zero from invalid input", () => {
+    expect(tryParseGoldAmount("0")).toBe(0);
+    expect(tryParseGoldAmount("invalid")).toBeUndefined();
   });
 });
