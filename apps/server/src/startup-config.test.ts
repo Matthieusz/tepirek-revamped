@@ -5,7 +5,10 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 
-import { readStartupConfig } from "./startup-config.js";
+import {
+  readLegendCatalogSyncConfig,
+  readStartupConfig,
+} from "./startup-config.js";
 
 const validEnvironment = {
   BETTER_AUTH_SECRET: "a".repeat(32),
@@ -23,14 +26,20 @@ const validEnvironment = {
   TEPIREK_PRINT_LOGS: "yes",
 };
 
+const provideEnvironment = (environment: Record<string, string>) =>
+  Effect.provideService(
+    ConfigProvider.ConfigProvider,
+    ConfigProvider.fromUnknown(environment)
+  );
+
 const configuredStartup = (environment: Record<string, string>) =>
   readStartupConfig.pipe(
     Effect.provide(AuthConfigLiveLayer),
-    Effect.provideService(
-      ConfigProvider.ConfigProvider,
-      ConfigProvider.fromUnknown(environment)
-    )
+    provideEnvironment(environment)
   );
+
+const configuredLegendCatalogSync = (environment: Record<string, string>) =>
+  readLegendCatalogSyncConfig.pipe(provideEnvironment(environment));
 
 const malformedConfigurations = [
   ["BETTER_AUTH_SECRET", ""],
@@ -47,6 +56,23 @@ const malformedConfigurations = [
 ] as const;
 
 describe("startup config", () => {
+  it.effect("parses Firecrawl configuration for catalog synchronization", () =>
+    Effect.gen(function* parseSyncConfig() {
+      const config = yield* configuredLegendCatalogSync(validEnvironment);
+
+      expect(config.firecrawl.monthlyRequestBudget).toBe(900);
+    })
+  );
+
+  it.effect("requires a Firecrawl API key for catalog synchronization", () =>
+    Effect.gen(function* rejectMissingFirecrawlKey() {
+      const { FIRECRAWL_API_KEY: _, ...environment } = validEnvironment;
+      const exit = yield* Effect.exit(configuredLegendCatalogSync(environment));
+
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
+
   it.effect("parses application configuration before startup", () =>
     Effect.gen(function* parseStartupConfig() {
       const config = yield* configuredStartup(validEnvironment);

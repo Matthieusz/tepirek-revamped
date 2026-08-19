@@ -1,24 +1,25 @@
 /* eslint-disable max-classes-per-file -- Margonem forum boundary errors form one adapter boundary. */
+// oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then -- Effect.catch uses a callback, not a Promise chain.
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import type * as HttpClientError from "effect/unstable/http/HttpClientError";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 
 import { LegendaryEnemyCategory } from "../../../domain/legend-pricing/legend-catalog.ts";
+import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.ts";
+import { FirecrawlClientService } from "../../../services/squad-builder/firecrawl-client.ts";
+import {
+  FirecrawlConfigService,
+  parseFirecrawlCreditCount,
+} from "../../../services/squad-builder/firecrawl-config.ts";
+import { FirecrawlRequestAccountingStoreService } from "../../../services/squad-builder/firecrawl-request-accounting-store.ts";
 
-const MARGONEM_FORUM_USER_AGENT =
-  "tepirek-revamped legend pricing sync/0.1 (+https://tepirek.pl)";
 const MARGONEM_FORUM_TOPIC_URLS = {
   elite2: "https://forum.margonem.pl/?task=forum&show=posts&id=514805&ps=0",
   hero: "https://forum.margonem.pl/?task=forum&show=posts&id=514740&ps=0",
 } satisfies Record<LegendaryEnemyCategory, string>;
-const MARGONEM_FORUM_REQUEST_TIMEOUT = "20 seconds";
 const MARGONEM_FORUM_MAXIMUM_RESPONSE_BYTES = 2_000_000;
-const MARGONEM_FORUM_RETRY_LIMIT = 2;
 const loginPagePattern = /(?:task=login|name=["']?login|zaloguj\s+się)/iu;
 const postContainerPattern =
   /<table\s+id=["']?posts["']?[^>]*>[\s\S]*?name=["']post\d+/iu;
@@ -67,26 +68,14 @@ export class MargonemForumClientService extends Context.Service<
   MargonemForumClient
 >()("@tepirek-revamped/api/legend-pricing/MargonemForumClientService") {}
 
-const retrySchedule = Schedule.exponential(200).pipe(
-  Schedule.jittered,
-  Schedule.upTo({ times: MARGONEM_FORUM_RETRY_LIMIT })
-);
-
-const makeForumClient = (client: HttpClient.HttpClient) =>
-  client.pipe(
-    HttpClient.filterStatusOk,
-    HttpClient.retryTransient({
-      retryOn: "errors-only",
-      schedule: retrySchedule,
-    })
-  );
-
-const statusFromHttpError = (
-  error: HttpClientError.HttpClientError
-): number | undefined =>
-  error.reason._tag === "StatusCodeError"
-    ? error.reason.response.status
-    : undefined;
+const requestFailed = (
+  category: LegendaryEnemyCategory,
+  cause: unknown,
+  status?: number
+): MargonemForumRequestFailed =>
+  status === undefined
+    ? new MargonemForumRequestFailed({ category, cause })
+    : new MargonemForumRequestFailed({ category, cause, status });
 
 const rejectDocument = (
   category: LegendaryEnemyCategory,
@@ -124,41 +113,101 @@ const validateDocument = (
   return Effect.succeed(html);
 };
 
-/** Live Margonem forum downloader using the Effect HTTP client. */
+/** Live Margonem forum downloader using the shared Firecrawl service. */
 export const MargonemForumClientLiveLayer: Layer.Layer<
   MargonemForumClientService,
   never,
-  HttpClient.HttpClient
+  | FirecrawlClientService
+  | FirecrawlConfigService
+  | FirecrawlRequestAccountingStoreService
 > = Layer.effect(
   MargonemForumClientService,
   Effect.gen(function* MargonemForumClientLiveLayer() {
-    const client = makeForumClient(yield* HttpClient.HttpClient);
+    const accounting = yield* FirecrawlRequestAccountingStoreService;
+    const config = yield* FirecrawlConfigService;
+    const firecrawl = yield* FirecrawlClientService;
+
+    const scrapeTopic = Effect.fn("MargonemForumClient.scrapeTopic")(
+      function* scrapeTopicEffect(
+        category: LegendaryEnemyCategory,
+        url: string
+      ) {
+        const requestedAt = yield* DateTime.nowAsDate;
+        const reserved = yield* accounting
+          .reserveRequest({
+            monthlyRequestBudget: config.monthlyRequestBudget,
+            yearMonth: firecrawlYearMonthFromDate(requestedAt),
+          })
+          .pipe(Effect.mapError((cause) => requestFailed(category, cause)));
+
+        const scrape = firecrawl.scrapeUrlHtml(url).pipe(
+          Effect.catch((error) =>
+            Effect.gen(function* recordFailedScrape() {
+              const completedAt = yield* DateTime.nowAsDate;
+              yield* accounting
+                .markRequestFailed({
+                  completedAt,
+                  errorTag: error._tag,
+                  requestId: reserved.requestId,
+                })
+                .pipe(
+                  Effect.mapError((cause) => requestFailed(category, cause))
+                );
+              return yield* requestFailed(category, error);
+            })
+          ),
+          Effect.onInterrupt(() =>
+            Effect.gen(function* recordInterruptedScrape() {
+              const completedAt = yield* DateTime.nowAsDate;
+              yield* accounting
+                .markRequestFailed({
+                  completedAt,
+                  errorTag: "Interrupted",
+                  requestId: reserved.requestId,
+                })
+                .pipe(
+                  Effect.mapError((cause) => requestFailed(category, cause))
+                );
+            })
+          )
+        );
+        const document = yield* scrape;
+        const creditsUsed = yield* parseFirecrawlCreditCount(
+          document.metadata.creditsUsed ?? 1
+        ).pipe(Effect.mapError((cause) => requestFailed(category, cause)));
+        const completedAt = yield* DateTime.nowAsDate;
+
+        yield* accounting
+          .markRequestSucceeded({
+            cacheState: document.metadata.cacheState ?? null,
+            completedAt,
+            creditsUsed,
+            firecrawlStatusCode: document.metadata.statusCode ?? null,
+            requestId: reserved.requestId,
+          })
+          .pipe(Effect.mapError((cause) => requestFailed(category, cause)));
+
+        return document;
+      }
+    );
 
     return MargonemForumClientService.of({
       fetchTopic: Effect.fn("MargonemForumClient.fetchTopic")(
         function* fetchTopic(category) {
           const url = MARGONEM_FORUM_TOPIC_URLS[category];
-          const request = HttpClientRequest.get(url).pipe(
-            HttpClientRequest.setHeaders({
-              accept: "text/html",
-              "user-agent": MARGONEM_FORUM_USER_AGENT,
-            })
-          );
-          const response = yield* client.execute(request).pipe(
-            Effect.timeout(MARGONEM_FORUM_REQUEST_TIMEOUT),
-            Effect.mapError((cause) => {
-              const status =
-                cause._tag === "HttpClientError"
-                  ? statusFromHttpError(cause)
-                  : undefined;
-              return status === undefined
-                ? new MargonemForumRequestFailed({ category, cause })
-                : new MargonemForumRequestFailed({ category, cause, status });
-            })
-          );
-          const contentType = response.headers["content-type"];
+          const document = yield* scrapeTopic(category, url);
+          const status = document.metadata.statusCode;
+          if (status !== undefined && (status < 200 || status >= 300)) {
+            return yield* requestFailed(
+              category,
+              new Error(`Firecrawl returned origin status ${status}`),
+              status
+            );
+          }
+
+          const { contentType } = document.metadata;
           if (
-            contentType === undefined ||
+            contentType !== undefined &&
             !contentType.toLowerCase().startsWith("text/html")
           ) {
             return yield* rejectDocument(
@@ -167,29 +216,8 @@ export const MargonemForumClientLiveLayer: Layer.Layer<
             );
           }
 
-          const declaredLength = Number(response.headers["content-length"]);
-          if (
-            Number.isFinite(declaredLength) &&
-            declaredLength > MARGONEM_FORUM_MAXIMUM_RESPONSE_BYTES
-          ) {
-            return yield* rejectDocument(
-              category,
-              "response exceeds size limit"
-            );
-          }
-
-          const html = yield* response.text.pipe(
-            Effect.mapError(
-              (cause) =>
-                new MargonemForumDocumentRejected({
-                  category,
-                  reason: `could not read HTML response: ${cause._tag}`,
-                })
-            )
-          );
-          yield* validateDocument(category, html);
-
-          return { category, html, url };
+          yield* validateDocument(category, document.html);
+          return { category, html: document.html, url };
         }
       ),
     });

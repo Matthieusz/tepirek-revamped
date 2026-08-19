@@ -42,12 +42,15 @@ const validateDatabaseUrl = (value: string) =>
 const databaseUrlConfig = Config.redacted("DATABASE_URL");
 
 /** Minimal configuration required by the explicit legend-catalog sync command. */
-export const readLegendCatalogSyncConfig = databaseUrlConfig.pipe(
-  Effect.flatMap((databaseUrl) =>
-    validateDatabaseUrl(Redacted.value(databaseUrl)).pipe(
-      Effect.as({ databaseUrl })
-    )
-  )
+export const readLegendCatalogSyncConfig = Effect.gen(
+  function* readLegendCatalogSyncConfigEffect() {
+    const [databaseUrl, firecrawl] = yield* Effect.all([
+      databaseUrlConfig,
+      readFirecrawlConfig,
+    ] as const);
+    yield* validateDatabaseUrl(Redacted.value(databaseUrl));
+    return { databaseUrl, firecrawl };
+  }
 );
 
 const readObservabilityConfig = Config.all({

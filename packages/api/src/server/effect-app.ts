@@ -120,16 +120,35 @@ export const makeApiLiveLayerFromDatabase = <DatabaseError>(
 
 /** Build the explicitly invoked forum-catalog synchronization graph. */
 export const makeLegendCatalogSyncLayer = <DatabaseError>(
-  databaseLayer: Layer.Layer<EffectDatabase, DatabaseError>
-) =>
-  LegendCatalogSyncLiveLayer.pipe(
+  databaseLayer: Layer.Layer<EffectDatabase, DatabaseError>,
+  firecrawlConfig: FirecrawlConfig
+) => {
+  const firecrawlConfigLayer = makeFirecrawlConfigLayer(firecrawlConfig);
+  const firecrawlClientLayer = FirecrawlClientServiceLiveLayer.pipe(
+    Layer.provide(Layer.merge(firecrawlConfigLayer, FetchHttpClient.layer))
+  );
+  const accountingLayer =
+    DrizzleFirecrawlRequestAccountingStoreServiceLayer.pipe(
+      Layer.provide(databaseLayer)
+    );
+
+  return LegendCatalogSyncLiveLayer.pipe(
     Layer.provide(
-      MargonemForumClientLiveLayer.pipe(Layer.provide(FetchHttpClient.layer))
+      MargonemForumClientLiveLayer.pipe(
+        Layer.provide(
+          Layer.mergeAll(
+            firecrawlClientLayer,
+            firecrawlConfigLayer,
+            accountingLayer
+          )
+        )
+      )
     ),
     Layer.provide(
       DrizzleLegendCatalogStoreServiceLayer.pipe(Layer.provide(databaseLayer))
     )
   );
+};
 
 export { LegendCatalogSyncService } from "../services/legend-pricing/legend-catalog-sync.ts";
 

@@ -25,7 +25,10 @@ const syncConfigProvider = dotEnvProvider.pipe(
   )
 );
 
-const runSynchronization = (databaseUrl: string) =>
+const runSynchronization = (
+  databaseUrl: string,
+  firecrawl: Parameters<typeof makeLegendCatalogSyncLayer>[1]
+) =>
   Effect.scoped(
     Effect.gen(function* runLegendCatalogSynchronization() {
       const synchronizer = yield* LegendCatalogSyncService;
@@ -36,15 +39,18 @@ const runSynchronization = (databaseUrl: string) =>
       });
     }).pipe(
       Effect.provide(
-        makeLegendCatalogSyncLayer(makeLiveDatabaseLayer(databaseUrl))
+        makeLegendCatalogSyncLayer(
+          makeLiveDatabaseLayer(databaseUrl),
+          firecrawl
+        )
       )
     )
   );
 
 const main = readLegendCatalogSyncConfig.pipe(
   Effect.provide(ConfigProvider.layer(syncConfigProvider)),
-  Effect.flatMap(({ databaseUrl }) =>
-    runSynchronization(Redacted.value(databaseUrl))
+  Effect.flatMap(({ databaseUrl, firecrawl }) =>
+    runSynchronization(Redacted.value(databaseUrl), firecrawl)
   )
 );
 

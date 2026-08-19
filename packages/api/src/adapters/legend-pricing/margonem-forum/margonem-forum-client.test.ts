@@ -3,12 +3,15 @@ import { readFileSync } from "node:fs";
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import type * as HttpClientError from "effect/unstable/http/HttpClientError";
-import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
+import * as Redacted from "effect/Redacted";
 import { describe } from "vitest";
 
+import {
+  FirecrawlClientService,
+  FirecrawlUrlRequestFailed,
+} from "../../../services/squad-builder/firecrawl-client.ts";
+import { FirecrawlConfigService } from "../../../services/squad-builder/firecrawl-config.ts";
+import { FirecrawlRequestAccountingStoreService } from "../../../services/squad-builder/firecrawl-request-accounting-store.ts";
 import {
   MargonemForumClientLiveLayer,
   MargonemForumClientService,
@@ -17,67 +20,136 @@ import {
 const readFixture = (name: string): string =>
   readFileSync(new URL(`fixtures/${name}`, import.meta.url), "utf-8");
 
-const htmlResponse =
-  (body: string, status = 200, contentType = "text/html; charset=UTF-8") =>
-  (request: HttpClientRequest.HttpClientRequest) =>
-    Effect.succeed(
-      HttpClientResponse.fromWeb(
-        request,
-        new Response(body, { headers: { "Content-Type": contentType }, status })
-      )
-    );
+interface AccountingEvents {
+  readonly failed: number[];
+  readonly reserved: number[];
+  readonly succeeded: number[];
+}
 
-const makeClient = (
-  response: (
-    request: HttpClientRequest.HttpClientRequest
-  ) => Effect.Effect<
-    HttpClientResponse.HttpClientResponse,
-    HttpClientError.HttpClientError
+const makeDependencies = (
+  scrapeUrlHtml: (url: string) => Effect.Effect<
+    {
+      readonly html: string;
+      readonly metadata: {
+        readonly cacheState?: string | undefined;
+        readonly contentType?: string | undefined;
+        readonly creditsUsed?: number | undefined;
+        readonly sourceURL?: string | undefined;
+        readonly statusCode?: number | undefined;
+        readonly url?: string | undefined;
+      };
+    },
+    FirecrawlUrlRequestFailed
   >,
-  requests: HttpClientRequest.HttpClientRequest[]
-): HttpClient.HttpClient =>
-  HttpClient.make((request) => {
-    requests.push(request);
-    return response(request);
+  events: AccountingEvents
+) => {
+  const accounting = FirecrawlRequestAccountingStoreService.of({
+    markRequestFailed: ({ requestId }) =>
+      Effect.sync(() => {
+        events.failed.push(requestId);
+      }),
+    markRequestSucceeded: ({ requestId }) =>
+      Effect.sync(() => {
+        events.succeeded.push(requestId);
+      }),
+    reserveRequest: ({ monthlyRequestBudget, yearMonth }) =>
+      Effect.sync(() => {
+        const requestId = events.reserved.length + 1;
+        events.reserved.push(requestId);
+        return {
+          budgetState: {
+            monthlyRequestBudget,
+            remainingRequests: monthlyRequestBudget - events.reserved.length,
+            usedRequests: events.reserved.length,
+            yearMonth,
+          },
+          requestId,
+        };
+      }),
   });
 
+  return Layer.mergeAll(
+    Layer.succeed(
+      FirecrawlClientService,
+      FirecrawlClientService.of({
+        scrapeProfileHtml: () =>
+          Effect.die(new Error("Profile scraping is not used by this test")),
+        scrapeUrlHtml,
+      })
+    ),
+    Layer.succeed(FirecrawlConfigService, {
+      apiKey: Redacted.make("test-firecrawl-key"),
+      monthlyRequestBudget: 900,
+    }),
+    Layer.succeed(FirecrawlRequestAccountingStoreService, accounting)
+  );
+};
+
 const fetchTopic = (
-  client: HttpClient.HttpClient,
-  category: "hero" | "elite2"
-) =>
-  MargonemForumClientService.use((forum) => forum.fetchTopic(category)).pipe(
+  scrapeUrlHtml: Parameters<typeof makeDependencies>[0],
+  category: "hero" | "elite2",
+  events?: AccountingEvents
+) => {
+  const accountingEvents = events ?? {
+    failed: [],
+    reserved: [],
+    succeeded: [],
+  };
+
+  return MargonemForumClientService.use((forum) =>
+    forum.fetchTopic(category)
+  ).pipe(
     Effect.provide(
       MargonemForumClientLiveLayer.pipe(
-        Layer.provide(Layer.succeed(HttpClient.HttpClient, client))
+        Layer.provide(makeDependencies(scrapeUrlHtml, accountingEvents))
       )
     )
   );
+};
+
+const scrapedDocument = (
+  html: string,
+  metadata?: {
+    readonly contentType?: string;
+    readonly creditsUsed?: number;
+    readonly statusCode?: number;
+  }
+) =>
+  Effect.succeed({
+    html,
+    metadata: metadata ?? {
+      contentType: "text/html; charset=UTF-8",
+      creditsUsed: 1,
+      statusCode: 200,
+    },
+  });
 
 describe("Margonem forum client", () => {
-  it.effect("fetches both fixed ps=0 topics with descriptive headers", () =>
+  it.effect("fetches both fixed ps=0 topics through budgeted Firecrawl", () =>
     Effect.gen(function* fetchBothTopics() {
-      const requests: HttpClientRequest.HttpClientRequest[] = [];
-      const client = makeClient(
-        htmlResponse(readFixture("valid-topic.html")),
-        requests
-      );
+      const urls: string[] = [];
+      const events: AccountingEvents = {
+        failed: [],
+        reserved: [],
+        succeeded: [],
+      };
+      const scrape = (url: string) => {
+        urls.push(url);
+        return scrapedDocument(readFixture("valid-topic.html"));
+      };
 
-      yield* fetchTopic(client, "hero");
-      yield* fetchTopic(client, "elite2");
+      yield* fetchTopic(scrape, "hero", events);
+      yield* fetchTopic(scrape, "elite2", events);
 
-      expect(requests).toHaveLength(2);
-      expect(requests[0]).toMatchObject({
-        headers: {
-          accept: "text/html",
-          "user-agent":
-            "tepirek-revamped legend pricing sync/0.1 (+https://tepirek.pl)",
-        },
-        method: "GET",
-        url: "https://forum.margonem.pl/?task=forum&show=posts&id=514740&ps=0",
+      expect(urls).toEqual([
+        "https://forum.margonem.pl/?task=forum&show=posts&id=514740&ps=0",
+        "https://forum.margonem.pl/?task=forum&show=posts&id=514805&ps=0",
+      ]);
+      expect(events).toEqual({
+        failed: [],
+        reserved: [1, 2],
+        succeeded: [1, 2],
       });
-      expect(requests[1]?.url).toBe(
-        "https://forum.margonem.pl/?task=forum&show=posts&id=514805&ps=0"
-      );
     })
   );
 
@@ -87,9 +159,10 @@ describe("Margonem forum client", () => {
     ["changed-format.html", "incomplete or unsupported HTML"],
   ] as const)("rejects unsafe fixture %s", ([fixture, expectedReason]) =>
     Effect.gen(function* rejectUnsafeFixture() {
-      const requests: HttpClientRequest.HttpClientRequest[] = [];
-      const client = makeClient(htmlResponse(readFixture(fixture)), requests);
-      const error = yield* fetchTopic(client, "hero").pipe(Effect.flip);
+      const error = yield* fetchTopic(
+        () => scrapedDocument(readFixture(fixture)),
+        "hero"
+      ).pipe(Effect.flip);
 
       expect(error).toMatchObject({
         _tag: "MargonemForumDocumentRejected",
@@ -103,12 +176,15 @@ describe("Margonem forum client", () => {
 
   it.effect("rejects a non-HTML response before parsing", () =>
     Effect.gen(function* rejectContentType() {
-      const requests: HttpClientRequest.HttpClientRequest[] = [];
-      const client = makeClient(
-        htmlResponse(readFixture("valid-topic.html"), 200, "text/plain"),
-        requests
-      );
-      const error = yield* fetchTopic(client, "elite2").pipe(Effect.flip);
+      const error = yield* fetchTopic(
+        () =>
+          scrapedDocument(readFixture("valid-topic.html"), {
+            contentType: "text/plain",
+            creditsUsed: 1,
+            statusCode: 200,
+          }),
+        "elite2"
+      ).pipe(Effect.flip);
 
       expect(error).toMatchObject({
         _tag: "MargonemForumDocumentRejected",
@@ -118,17 +194,49 @@ describe("Margonem forum client", () => {
     })
   );
 
-  it.effect("returns a typed request error for a permanent status", () =>
+  it.effect("returns a typed request error for an origin failure status", () =>
     Effect.gen(function* rejectStatus() {
-      const requests: HttpClientRequest.HttpClientRequest[] = [];
-      const client = makeClient(htmlResponse("not found", 404), requests);
-      const error = yield* fetchTopic(client, "hero").pipe(Effect.flip);
+      const error = yield* fetchTopic(
+        () =>
+          scrapedDocument(readFixture("valid-topic.html"), {
+            contentType: "text/html",
+            creditsUsed: 1,
+            statusCode: 502,
+          }),
+        "hero"
+      ).pipe(Effect.flip);
 
-      expect(requests).toHaveLength(1);
       expect(error).toMatchObject({
         _tag: "MargonemForumRequestFailed",
         category: "hero",
-        status: 404,
+        status: 502,
+      });
+    })
+  );
+
+  it.effect("records a failed Firecrawl request", () =>
+    Effect.gen(function* recordFailure() {
+      const events: AccountingEvents = {
+        failed: [],
+        reserved: [],
+        succeeded: [],
+      };
+      const error = yield* fetchTopic(
+        () =>
+          Effect.fail(
+            new FirecrawlUrlRequestFailed({
+              cause: new Error("provider unavailable"),
+            })
+          ),
+        "hero",
+        events
+      ).pipe(Effect.flip);
+
+      expect(error._tag).toBe("MargonemForumRequestFailed");
+      expect(events).toEqual({
+        failed: [1],
+        reserved: [1],
+        succeeded: [],
       });
     })
   );
