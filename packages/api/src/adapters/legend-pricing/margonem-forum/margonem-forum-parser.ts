@@ -31,7 +31,7 @@ const OFFICIAL_PROFILE_ID = 7_798_898;
 const OFFICIAL_AUTHOR = "Ekipa Garmory";
 const postStartPattern =
   /<tr\s*>\s*<td\s+class=(?:"[^"]*\bpuser\b[^"]*"|'[^']*\bpuser\b[^']*'|[^\s>]*\bpuser\b[^\s>]*)[^>]*>\s*<a\s+name=["']?post(?<id>\d+)["']?/giu;
-const imagePattern = /<img\b[^>]*>/giu;
+const imagePattern = /<img\b(?:[^"'<>]|"[^"]*"|'[^']*')*>/giu;
 const itemTemplatePattern =
   /<b\b[^>]*>\s*Szablon zdobyczy\s*:?\s*<\/b\s*>\s*:?/iu;
 const postContentPattern =
@@ -41,7 +41,7 @@ const editedAtPattern =
 const profilePattern =
   /https:\/\/www\.margonem\.pl\/profile\/view,(?<id>\d+)/iu;
 const officialBadgePattern =
-  /<img\b[^>]*src=["']?\/img\/forum-mg-new\.png["']?[^>]*>/iu;
+  /<img\b[^>]*src=["']?(?:https:\/\/forum\.margonem\.pl)?\/img\/forum-mg-new\.png["']?[^>]*>/iu;
 const officialAuthorPattern =
   /<div\s+class=["']?nickwood["']?[^>]*>[\s\S]*?<h3\b[^>]*>(?<author>[\s\S]*?)<\/h3\s*>/iu;
 const staffPostPattern =

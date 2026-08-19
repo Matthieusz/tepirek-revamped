@@ -125,6 +125,44 @@ describe("Margonem forum topic parser", () => {
       })
   );
 
+  it.effect("accepts Firecrawl-normalized staff badge URLs", () =>
+    Effect.gen(function* parseNormalizedBadgeUrl() {
+      const normalizedPosts =
+        `${headingPost("hero")}${officialPost(103, enemy())}`.replaceAll(
+          "src='/img/forum-mg-new.png'",
+          'src="https://forum.margonem.pl/img/forum-mg-new.png"'
+        );
+
+      const snapshot = yield* parseMargonemForumTopic(
+        page("hero", normalizedPosts)
+      );
+
+      expect(snapshot.enemies).toHaveLength(1);
+      expect(snapshot.sourcePosts).toHaveLength(1);
+    })
+  );
+
+  it.effect("accepts Firecrawl tooltip attributes containing HTML", () =>
+    Effect.gen(function* parseQuotedHtmlAttribute() {
+      const items = [item({ stats: "lvl=23;rarity=common" }), item()]
+        .join("")
+        .replaceAll(
+          "ctip=item>",
+          'ctip="item" tip="<div class=&quot;item-head&quot;><b>Tooltip</b></div>">'
+        );
+
+      const snapshot = yield* parseMargonemForumTopic(
+        page(
+          "hero",
+          `${headingPost("hero")}${officialPost(104, enemy({ items }))}`
+        )
+      );
+
+      expect(snapshot.items).toHaveLength(1);
+      expect(snapshot.items[0]?.name).toBe("Pierścień Strażnika");
+    })
+  );
+
   it.effect(
     "splits two Elite II enemies in one post and shares item identity",
     () =>
