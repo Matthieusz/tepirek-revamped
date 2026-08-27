@@ -8,14 +8,14 @@ allowBuilds:
   msgpackr-extract: true
 
 catalog:
-  better-auth: ^1.6.29
+  better-auth: ^1.7.1
   dotenv: ^17.4.2
   "@effect/sql-pg": 4.0.0-beta.101
   "@effect/vitest": 4.0.0-beta.101
   drizzle-kit: 1.0.0-rc.4
   drizzle-orm: 1.0.0-rc.4
   effect: 4.0.0-beta.101
-  hono: ^4.13.2
+  hono: ^4.13.5
   typescript: 7.0.2
   zod: ^4.4.3
 
