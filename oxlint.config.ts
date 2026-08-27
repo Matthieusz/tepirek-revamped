@@ -17,4 +17,7 @@ export default defineConfig({
       },
     },
   ],
+  rules: {
+    complexity: ["warn", { max: 20 }],
+  },
 });
