@@ -123,20 +123,6 @@ PostgreSQL access is defined in `packages/db`; authentication is kept in `packag
 | `pnpm db:studio`        | Open Drizzle Studio                          |
 | `pnpm db:stop`          | Stop local PostgreSQL                        |
 
-### Web bundle tooling
-
-Inspect a production bundle with:
-
-```bash
-ANALYZE=true pnpm --filter web build
-```
-
-This writes `apps/web/bundle-analysis.html`. For self-hosted deployments, generate pre-compressed assets with `PRECOMPRESS=true`; Cloudflare and Vercel handle edge compression automatically:
-
-```bash
-PRECOMPRESS=true pnpm --filter web build
-```
-
 ## Testing safely
 
 Integration tests create a dedicated PostgreSQL container on port `5433`:
