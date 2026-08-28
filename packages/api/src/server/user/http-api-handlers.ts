@@ -68,7 +68,7 @@ const mapUserError = (
 
 type ProjectedSession = Omit<
   RequestSession["session"],
-  "ipAddress" | "userAgent"
+  "ipAddress" | "token" | "userAgent"
 > & {
   ipAddress?: Exclude<RequestSession["session"]["ipAddress"], undefined>;
   userAgent?: Exclude<RequestSession["session"]["userAgent"], undefined>;
@@ -81,7 +81,12 @@ type ProjectedUser = Omit<RequestSession["user"], "image" | "role"> & {
 
 /** Projects an authenticated vendor session without manufacturing optional fields. */
 export const projectAuthenticatedSession = (requestSession: RequestSession) => {
-  const { ipAddress, userAgent, ...session } = requestSession.session;
+  const {
+    ipAddress,
+    token: _token,
+    userAgent,
+    ...session
+  } = requestSession.session;
   const { image, role, ...user } = requestSession.user;
   const projectedSession: ProjectedSession = { ...session };
   const projectedUser: ProjectedUser = { ...user };

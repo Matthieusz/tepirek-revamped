@@ -67,7 +67,6 @@ export const Session = Schema.Struct({
   expiresAt: Schema.DateFromString,
   id: Schema.NonEmptyString,
   ipAddress: Schema.optionalKey(Schema.NullOr(Schema.String)),
-  token: Schema.NonEmptyString,
   updatedAt: Schema.DateFromString,
   userAgent: Schema.optionalKey(Schema.NullOr(Schema.String)),
   userId: AppUserId,

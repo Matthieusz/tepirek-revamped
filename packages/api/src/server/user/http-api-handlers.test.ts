@@ -11,7 +11,7 @@ const requestSession: RequestSession = {
     createdAt: new Date(0),
     expiresAt: new Date(1),
     id: "session-id",
-    token: "session-token",
+    token: "fake-session-token-sentinel",
     updatedAt: new Date(0),
     userId,
   },
@@ -33,9 +33,20 @@ describe("projectAuthenticatedSession", () => {
     const projected = projectAuthenticatedSession(requestSession);
 
     expect(Object.hasOwn(projected.session, "ipAddress")).toBe(false);
+    expect(Object.hasOwn(projected.session, "token")).toBe(false);
     expect(Object.hasOwn(projected.session, "userAgent")).toBe(false);
+    expect(projected.session).toMatchObject({
+      createdAt: new Date(0),
+      expiresAt: new Date(1),
+      id: "session-id",
+      updatedAt: new Date(0),
+      userId,
+    });
     expect(projected.user).toHaveProperty("image", null);
     expect(projected.user).toHaveProperty("role", "user");
     expect(JSON.stringify(projected)).toContain('"image":null');
+    expect(JSON.stringify(projected)).not.toContain(
+      "fake-session-token-sentinel"
+    );
   });
 });
