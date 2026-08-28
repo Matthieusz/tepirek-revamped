@@ -6,7 +6,7 @@ import * as Schema from "effect/Schema";
 import type { MargonemProfileId } from "../../domain/squad-builder/margonem-profile-id.ts";
 
 /** Successful Firecrawl HTML scrape output. */
-export interface FirecrawlScrapeSuccess {
+interface FirecrawlScrapeSuccess {
   readonly html: string;
   readonly metadata: {
     readonly sourceURL?: string | undefined;
@@ -66,7 +66,7 @@ export type FirecrawlScrapeError =
   | FirecrawlResponseNotParseable;
 
 /** Expected failure returned for arbitrary URL scraping. */
-export type FirecrawlUrlScrapeError =
+type FirecrawlUrlScrapeError =
   | FirecrawlUrlRequestFailed
   | FirecrawlUrlResponseNotParseable;
 
