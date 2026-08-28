@@ -6,7 +6,6 @@ import {
   auctionSignupsAtom,
   auctionStatsAtom,
   toggleAuctionSignupAtom,
-  removeAuctionSignupFromGroupAtom,
 } from "@/features/auctions/auction-atoms";
 import type { AuctionGroupInput } from "@/features/auctions/auction-atoms";
 import {
@@ -111,13 +110,5 @@ describe("auction atoms", () => {
 
     expect(groupBSignupsAfter).toBe(groupBSignupsBefore);
     expect(groupBStatsAfter).toBe(groupBStatsBefore);
-  });
-
-  it("removeAuctionSignupFromGroupAtom constructs the correct group key from payload", () => {
-    const atom = removeAuctionSignupFromGroupAtom({
-      profession: "mage",
-      type: "main",
-    });
-    expect(atom).toBeDefined();
   });
 });

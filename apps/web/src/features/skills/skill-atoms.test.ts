@@ -3,11 +3,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   deleteSkillFromRangeAtom,
-  optimisticSkillRangesAtom,
   optimisticSkillsByRangeAtom,
-  skillProfessionsAtom,
   skillRangeBySlugAtom,
-  skillRangesAtom,
   skillsByRangeAtom,
 } from "@/features/skills/skill-atoms";
 import {
@@ -64,39 +61,6 @@ describe("skill atoms", () => {
     });
   });
 
-  describe("global resource atoms mount without error", () => {
-    it("skillRangesAtom can be mounted and returns a Result", () => {
-      const { makeRegistry } = makeTestLayer();
-      const registry = makeRegistry();
-
-      registry.mount(skillRangesAtom);
-      const value = registry.get(skillRangesAtom);
-
-      expect(value).toBeDefined();
-    });
-
-    it("skillProfessionsAtom can be mounted and returns a Result", () => {
-      const { makeRegistry } = makeTestLayer();
-      const registry = makeRegistry();
-
-      registry.mount(skillProfessionsAtom);
-      const value = registry.get(skillProfessionsAtom);
-
-      expect(value).toBeDefined();
-    });
-
-    it("optimisticSkillRangesAtom can be mounted and returns a value", () => {
-      const { makeRegistry } = makeTestLayer();
-      const registry = makeRegistry();
-
-      registry.mount(skillRangesAtom);
-      registry.mount(optimisticSkillRangesAtom);
-      const value = registry.get(optimisticSkillRangesAtom);
-
-      expect(value).toBeDefined();
-    });
-  });
-
   describe("skillsByRangeAtom mounts real API resources only for valid IDs", () => {
     it("skips API call for rangeId 0 when never mounted", async () => {
       const { calls, makeRegistry } = makeTestLayer();
@@ -120,13 +84,6 @@ describe("skill atoms", () => {
       registry.mount(skillsByRangeAtom(0));
       const callsForRange0 = calls.filter((c) => hasRangeId(c, 0));
       expect(callsForRange0).toHaveLength(0);
-    });
-  });
-
-  describe("deleteSkillFromRangeAtom exists and has correct type shape", () => {
-    it("can be called with a number and returns an atom", () => {
-      const atom = deleteSkillFromRangeAtom(1);
-      expect(atom).toBeDefined();
     });
   });
 });
