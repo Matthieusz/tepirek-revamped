@@ -6,7 +6,7 @@ import { user } from "@tepirek-revamped/db/schema/auth";
 import { hero, heroBet, userStats } from "@tepirek-revamped/db/schema/bet";
 import { event } from "@tepirek-revamped/db/schema/event";
 import type { SQL } from "drizzle-orm";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
@@ -151,16 +151,22 @@ const getHeroStatsWithDatabase = (database: EffectPgDatabase) =>
 
 const getOldestUnpaidEventWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* getOldestUnpaidEvent() {
+    const eligibleUsers = database
+      .select({ eventId: userStats.eventId })
+      .from(userStats)
+      .groupBy(userStats.eventId, userStats.userId)
+      .having(
+        sql`SUM(${userStats.earnings}) >= ${MIN_EARNINGS} AND NOT BOOL_AND(${userStats.paidOut})`
+      )
+      .as("eligible_users");
     const result = yield* persistenceQuery(
       "getOldestUnpaidEvent",
       database
-        .select({ eventId: userStats.eventId })
-        .from(userStats)
-        .innerJoin(event, eq(userStats.eventId, event.id))
-        .where(eq(userStats.paidOut, false))
-        .groupBy(userStats.eventId, event.endTime)
-        .having(sql`SUM(${userStats.earnings}) >= ${MIN_EARNINGS}`)
-        .orderBy(sql`${event.endTime} ASC`)
+        .select({ eventId: event.id })
+        .from(eligibleUsers)
+        .innerJoin(event, eq(eligibleUsers.eventId, event.id))
+        .groupBy(event.id, event.endTime)
+        .orderBy(asc(event.endTime), asc(event.id))
         .limit(1)
     );
     const eventId = result[0]?.eventId;
