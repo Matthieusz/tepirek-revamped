@@ -30,6 +30,7 @@ const apiLiveLayer = makeApiLiveLayerFromValues({
   firecrawl: {
     apiKey: Redacted.make("test-firecrawl-api-key"),
     monthlyRequestBudget: 900,
+    perUserMonthlyRequestBudget: 100,
   },
 });
 
@@ -107,6 +108,31 @@ const failingAnnouncementHttpApiLayer = AppHttpApiLayer.pipe(
   Layer.provideMerge(makeBetterAuthServiceLayer(testAuth)),
   Layer.provide(HttpServer.layerServices)
 );
+
+const perUserBudgetApiLiveLayer = makeApiLiveLayerFromValues({
+  databaseUrl: testDatabaseUrl,
+  discordGuildId: "test-discord-server-id",
+  firecrawl: {
+    apiKey: Redacted.make("test-firecrawl-api-key"),
+    monthlyRequestBudget: 900,
+    perUserMonthlyRequestBudget: 1,
+  },
+});
+const perUserBudgetHttpApiLayer = AppHttpApiLayer.pipe(
+  Layer.provideMerge(
+    Layer.merge(perUserBudgetApiLiveLayer, failingProfilePreviewLayer)
+  ),
+  Layer.provideMerge(makeBetterAuthServiceLayer(testAuth)),
+  Layer.provide(HttpServer.layerServices)
+);
+
+const withPerUserBudgetHttpApi = <A>(
+  use: (appHttpApi: IntegrationHandler) => Promise<A>
+) =>
+  Effect.gen(function* acquirePerUserBudgetHttpApi() {
+    const appHttpApi = yield* integrationHandler(perUserBudgetHttpApiLayer);
+    return yield* Effect.promise(async () => await use(appHttpApi));
+  });
 
 const withFailingAnnouncementHttpApi = <A>(
   use: (appHttpApi: IntegrationHandler) => Promise<A>
@@ -212,6 +238,35 @@ describe("Effect HttpApi routes", () => {
       expect(responseBody).not.toContain("provider.example");
       expect(responseBody).not.toContain("token");
       expect(responseBody).not.toContain("secret");
+    })
+  );
+
+  effectIt.effect("maps per-user Firecrawl exhaustion to HTTP 429", () =>
+    withPerUserBudgetHttpApi(async (appHttpApi) => {
+      const { cookie, id } = await createSignedInAdmin(
+        "per-user-budget-redaction-admin"
+      );
+      const request = () =>
+        appHttpApi.handler(
+          new Request(
+            "http://localhost:3000/squad-builder/account-imports/preview-profile",
+            jsonPost(
+              { profileUrl: "https://www.margonem.pl/profile/view,123" },
+              cookie
+            )
+          )
+        );
+
+      const firstResponse = await request();
+      expect(firstResponse.status).toBe(502);
+      const secondResponse = await request();
+
+      expect(secondResponse.status).toBe(429);
+      const responseBody = await secondResponse.text();
+      expect(responseBody).toContain("SquadBuilderRateLimited");
+      expect(responseBody).not.toContain("cause");
+      expect(responseBody).not.toContain("postgres");
+      expect(responseBody).not.toContain(id);
     })
   );
 

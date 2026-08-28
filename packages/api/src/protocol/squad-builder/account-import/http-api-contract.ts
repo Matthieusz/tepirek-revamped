@@ -7,6 +7,7 @@ import {
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
+  SquadBuilderRateLimited,
   SquadBuilderUnauthorized,
   SquadBuilderUpstreamUnavailable,
 } from "../errors.ts";
@@ -27,6 +28,7 @@ export const PreviewMargonemProfileImportErrors = [
   SquadBuilderForbidden,
   SquadBuilderConflict,
   SquadBuilderInvalidInput,
+  SquadBuilderRateLimited,
   SquadBuilderUpstreamUnavailable,
   SquadBuilderPersistenceUnavailable,
 ] as const;

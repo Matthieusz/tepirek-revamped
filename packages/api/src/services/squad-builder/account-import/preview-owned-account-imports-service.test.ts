@@ -89,6 +89,7 @@ it.effect(
       Effect.provideService(FirecrawlConfigService)({
         apiKey: Redacted.make("test-key"),
         monthlyRequestBudget: 900,
+        perUserMonthlyRequestBudget: 100,
       }),
       Effect.provideService(FirecrawlClientService)(firecrawl),
       Effect.provideService(AccountImportStoreService)(store),

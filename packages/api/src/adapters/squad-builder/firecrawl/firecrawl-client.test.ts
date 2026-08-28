@@ -21,6 +21,7 @@ const TEST_API_KEY = "test-firecrawl-key";
 const TEST_CONFIG = {
   apiKey: Redacted.make(TEST_API_KEY),
   monthlyRequestBudget: 900,
+  perUserMonthlyRequestBudget: 100,
 };
 
 type ClientStep = (

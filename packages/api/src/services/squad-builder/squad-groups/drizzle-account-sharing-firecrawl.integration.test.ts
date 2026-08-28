@@ -10,6 +10,7 @@ import {
 } from "@tepirek-revamped/db/schema/squad-builder";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 
 import { firecrawlYearMonthFromDate } from "../../../domain/squad-builder/firecrawl-year-month.ts";
 import { createVerifiedMember } from "../../../test/integration/builders.ts";
@@ -51,6 +52,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             (store) =>
               store.reserveRequest({
                 monthlyRequestBudget: 10,
+                perUserMonthlyRequestBudget: 10,
                 profileId,
                 requestedByUserId: parseTestUserId(member.id),
                 yearMonth,
@@ -88,6 +90,166 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             status: "succeeded",
           });
         })
+    );
+
+    it.effect("enforces the per-user Firecrawl budget", () =>
+      Effect.gen(function* testEffect() {
+        const member = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({ id: "effect-firecrawl-budget-user" })
+        );
+        const store = yield* FirecrawlRequestAccountingStoreService;
+        const input = {
+          monthlyRequestBudget: 10,
+          perUserMonthlyRequestBudget: 2,
+          requestedByUserId: parseTestUserId(member.id),
+          yearMonth: firecrawlYearMonthFromDate(
+            new Date("2026-07-01T12:00:00.000Z")
+          ),
+        } as const;
+
+        yield* store.reserveRequest(input);
+        yield* store.reserveRequest(input);
+        const failure = yield* Effect.flip(store.reserveRequest(input));
+
+        expect(failure).toMatchObject({
+          _tag: "FirecrawlUserMonthlyBudgetExhausted",
+          monthlyRequestBudget: 2,
+          usedRequests: 2,
+          yearMonth: "2026-07",
+        });
+      })
+    );
+
+    it.effect("isolates per-user Firecrawl budgets", () =>
+      Effect.gen(function* testEffect() {
+        const firstMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({ id: "effect-firecrawl-budget-first" })
+        );
+        const secondMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({ id: "effect-firecrawl-budget-second" })
+        );
+        const store = yield* FirecrawlRequestAccountingStoreService;
+        const yearMonth = firecrawlYearMonthFromDate(
+          new Date("2026-08-01T12:00:00.000Z")
+        );
+        const reserve = (userId: string, profileId: number) =>
+          store.reserveRequest({
+            monthlyRequestBudget: 10,
+            perUserMonthlyRequestBudget: 1,
+            profileId: parseTestProfileId(profileId),
+            requestedByUserId: parseTestUserId(userId),
+            yearMonth,
+          });
+
+        yield* reserve(firstMember.id, 8_100_210);
+        const firstUserFailure = yield* Effect.flip(
+          reserve(firstMember.id, 8_100_211)
+        );
+        const secondUserReservation = yield* reserve(
+          secondMember.id,
+          8_100_212
+        );
+
+        expect(firstUserFailure._tag).toBe(
+          "FirecrawlUserMonthlyBudgetExhausted"
+        );
+        expect(secondUserReservation.budgetState.usedRequests).toBe(2);
+      })
+    );
+
+    it.effect("keeps global exhaustion ahead of per-user exhaustion", () =>
+      Effect.gen(function* testEffect() {
+        const firstMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({ id: "effect-firecrawl-global-first" })
+        );
+        const secondMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({ id: "effect-firecrawl-global-second" })
+        );
+        const store = yield* FirecrawlRequestAccountingStoreService;
+        const yearMonth = firecrawlYearMonthFromDate(
+          new Date("2026-09-01T12:00:00.000Z")
+        );
+        const reserve = (userId: string, profileId: number) =>
+          store.reserveRequest({
+            monthlyRequestBudget: 1,
+            perUserMonthlyRequestBudget: 10,
+            profileId: parseTestProfileId(profileId),
+            requestedByUserId: parseTestUserId(userId),
+            yearMonth,
+          });
+
+        yield* reserve(firstMember.id, 8_100_220);
+        const secondUserFailure = yield* Effect.flip(
+          reserve(secondMember.id, 8_100_221)
+        );
+        const firstUserFailure = yield* Effect.flip(
+          reserve(firstMember.id, 8_100_222)
+        );
+
+        expect(secondUserFailure).toMatchObject({
+          _tag: "FirecrawlMonthlyBudgetExhausted",
+          monthlyRequestBudget: 1,
+          usedRequests: 1,
+        });
+        expect(firstUserFailure._tag).toBe("FirecrawlMonthlyBudgetExhausted");
+      })
+    );
+
+    it.effect("does not overshoot a concurrent per-user budget", () =>
+      Effect.gen(function* testEffect() {
+        const member = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({
+              id: "effect-firecrawl-concurrent-user",
+            })
+        );
+        const store = yield* FirecrawlRequestAccountingStoreService;
+        const yearMonth = firecrawlYearMonthFromDate(
+          new Date("2026-10-01T12:00:00.000Z")
+        );
+        const outcomes = yield* Effect.all(
+          Array.from({ length: 6 }, (_, index) =>
+            Effect.exit(
+              store.reserveRequest({
+                monthlyRequestBudget: 10,
+                perUserMonthlyRequestBudget: 3,
+                profileId: parseTestProfileId(8_100_230 + index),
+                requestedByUserId: parseTestUserId(member.id),
+                yearMonth,
+              })
+            )
+          ),
+          { concurrency: "unbounded" }
+        );
+
+        expect(outcomes.filter(Exit.isSuccess)).toHaveLength(3);
+        expect(outcomes.filter(Exit.isFailure)).toHaveLength(3);
+      })
+    );
+
+    it.effect("applies only the global budget to requests without a user", () =>
+      Effect.gen(function* testEffect() {
+        const store = yield* FirecrawlRequestAccountingStoreService;
+        const yearMonth = firecrawlYearMonthFromDate(
+          new Date("2026-11-01T12:00:00.000Z")
+        );
+        const input = {
+          monthlyRequestBudget: 2,
+          perUserMonthlyRequestBudget: 1,
+          yearMonth,
+        } as const;
+
+        yield* store.reserveRequest(input);
+        yield* store.reserveRequest(input);
+        const failure = yield* Effect.flip(store.reserveRequest(input));
+
+        expect(failure._tag).toBe("FirecrawlMonthlyBudgetExhausted");
+      })
     );
 
     it.effect("searches account invite targets", () =>

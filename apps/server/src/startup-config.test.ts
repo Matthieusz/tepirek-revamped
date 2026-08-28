@@ -61,6 +61,7 @@ describe("startup config", () => {
       const config = yield* configuredLegendCatalogSync(validEnvironment);
 
       expect(config.firecrawl.monthlyRequestBudget).toBe(900);
+      expect(config.firecrawl.perUserMonthlyRequestBudget).toBe(100);
     })
   );
 
@@ -80,6 +81,7 @@ describe("startup config", () => {
       expect(config.corsOrigin).toBe("http://localhost:3001");
       expect(config.discordGuildId).toBe("discord-server");
       expect(config.firecrawl.monthlyRequestBudget).toBe(900);
+      expect(config.firecrawl.perUserMonthlyRequestBudget).toBe(100);
       expect(config.observability.deploymentEnvironmentName).toBe(
         "development"
       );

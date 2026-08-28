@@ -6,8 +6,9 @@ import type { FirecrawlYearMonth } from "../../domain/squad-builder/firecrawl-ye
 import type { MargonemProfileId } from "../../domain/squad-builder/margonem-profile-id.ts";
 import type { FirecrawlCreditCount } from "./firecrawl-config.ts";
 import type {
-  SquadBuilderPersistenceUnavailable,
   FirecrawlMonthlyBudgetExhausted,
+  FirecrawlUserMonthlyBudgetExhausted,
+  SquadBuilderPersistenceUnavailable,
 } from "./squad-groups/squad-group-errors.ts";
 
 /** Current state of Firecrawl monthly budget usage. */
@@ -21,6 +22,7 @@ interface FirecrawlBudgetState {
 /** Expected failure while reserving Firecrawl request budget. */
 export type FirecrawlBudgetError =
   | FirecrawlMonthlyBudgetExhausted
+  | FirecrawlUserMonthlyBudgetExhausted
   | SquadBuilderPersistenceUnavailable;
 
 /** Input for reserving one Firecrawl request. */
@@ -29,6 +31,7 @@ export interface ReserveFirecrawlRequestInput {
   readonly requestedByUserId?: AppUserId;
   readonly yearMonth: FirecrawlYearMonth;
   readonly monthlyRequestBudget: number;
+  readonly perUserMonthlyRequestBudget: number;
 }
 
 /** Reserved Firecrawl request row and budget summary. */

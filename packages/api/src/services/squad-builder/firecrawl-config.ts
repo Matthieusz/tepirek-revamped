@@ -21,6 +21,7 @@ export type FirecrawlCreditCount = typeof FirecrawlCreditCount.Type;
 export interface FirecrawlConfig {
   readonly apiKey: Redacted;
   readonly monthlyRequestBudget: number;
+  readonly perUserMonthlyRequestBudget: number;
 }
 
 /** Service tag for Firecrawl-backed scraping configuration. */

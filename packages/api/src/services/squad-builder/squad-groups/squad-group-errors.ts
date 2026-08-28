@@ -137,6 +137,15 @@ export class FirecrawlMonthlyBudgetExhausted extends Schema.TaggedErrorClass<Fir
   }
 ) {}
 
+export class FirecrawlUserMonthlyBudgetExhausted extends Schema.TaggedErrorClass<FirecrawlUserMonthlyBudgetExhausted>()(
+  "FirecrawlUserMonthlyBudgetExhausted",
+  {
+    monthlyRequestBudget: Schema.Finite,
+    usedRequests: Schema.Finite,
+    yearMonth: FirecrawlYearMonth,
+  }
+) {}
+
 export class MargonemAccountAlreadyOwnedByActor extends Schema.TaggedErrorClass<MargonemAccountAlreadyOwnedByActor>()(
   "MargonemAccountAlreadyOwnedByActor",
   {}

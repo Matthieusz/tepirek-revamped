@@ -5,6 +5,7 @@ import {
   HttpApiForbiddenError,
   HttpApiNotFoundError,
   HttpApiPersistenceUnavailableError,
+  HttpApiRateLimitedError,
   HttpApiUnauthorizedError,
   HttpApiUpstreamUnavailableError,
 } from "@tepirek-revamped/api/protocol/http-api-errors";
@@ -33,6 +34,7 @@ const isBadRequestApiError = Schema.is(HttpApiBadRequestError);
 const isConflictApiError = Schema.is(HttpApiConflictError);
 const isNotFoundApiError = Schema.is(HttpApiNotFoundError);
 const isPersistenceApiError = Schema.is(HttpApiPersistenceUnavailableError);
+const isRateLimitedApiError = Schema.is(HttpApiRateLimitedError);
 const isUpstreamUnavailableApiError = Schema.is(
   HttpApiUpstreamUnavailableError
 );
@@ -74,6 +76,10 @@ export const getApiErrorMessage = (error: HttpApiErrorType): string => {
     return fallbackErrorMessage;
   }
 
+  if (isRateLimitedApiError(error)) {
+    return "Limit pobierania profili został wyczerpany. Spróbuj ponownie później.";
+  }
+
   return fallbackErrorMessage;
 };
 
@@ -85,7 +91,8 @@ export const getSquadBuilderLineErrorMessage = (
     case "DuplicateProfileInBatch": {
       return "Ten profil występuje na liście więcej niż raz.";
     }
-    case "FirecrawlMonthlyBudgetExhausted": {
+    case "FirecrawlMonthlyBudgetExhausted":
+    case "FirecrawlUserMonthlyBudgetExhausted": {
       return "Limit pobierania profili został wyczerpany. Spróbuj ponownie później.";
     }
     case "FirecrawlRequestFailed": {

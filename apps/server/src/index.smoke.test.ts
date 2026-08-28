@@ -24,6 +24,7 @@ const serverApplicationLayer = makeServerApplicationLayer({
   firecrawl: {
     apiKey: Redacted.make("test-firecrawl-api-key"),
     monthlyRequestBudget: 900,
+    perUserMonthlyRequestBudget: 100,
   },
   observability: {
     deploymentEnvironmentName: "test",

@@ -82,6 +82,7 @@ it.effect("previews an available Margonem profile through services", () => {
     Effect.provideService(FirecrawlConfigService)({
       apiKey: Redacted.make("test-key"),
       monthlyRequestBudget: 900,
+      perUserMonthlyRequestBudget: 100,
     }),
     Effect.provideService(FirecrawlClientService)(firecrawl),
     Effect.provideService(AccountImportStoreService)(store),
@@ -132,6 +133,7 @@ it.effect("marks a reserved import request failed when interrupted", () =>
       Effect.provideService(FirecrawlConfigService)({
         apiKey: Redacted.make("test-key"),
         monthlyRequestBudget: 900,
+        perUserMonthlyRequestBudget: 100,
       }),
       Effect.provideService(FirecrawlClientService)(firecrawl),
       Effect.provideService(AccountImportStoreService)(store),

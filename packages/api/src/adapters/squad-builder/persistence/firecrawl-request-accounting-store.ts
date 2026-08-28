@@ -15,7 +15,10 @@ import type {
   ReserveFirecrawlRequestInput,
 } from "../../../services/squad-builder/firecrawl-request-accounting-store.ts";
 import type { SquadBuilderPersistenceUnavailable } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
-import { FirecrawlMonthlyBudgetExhausted } from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
+import {
+  FirecrawlMonthlyBudgetExhausted,
+  FirecrawlUserMonthlyBudgetExhausted,
+} from "../../../services/squad-builder/squad-groups/squad-group-errors.ts";
 import {
   failPersistence,
   persistenceQuery,
@@ -25,6 +28,7 @@ import {
 const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
   Effect.fnUntraced(function* reserveRequestEffect({
     monthlyRequestBudget,
+    perUserMonthlyRequestBudget,
     profileId,
     requestedByUserId,
     yearMonth,
@@ -58,6 +62,34 @@ const reserveRequestWithDatabase = (database: EffectPgDatabase) =>
             usedRequests,
             yearMonth,
           });
+        }
+
+        if (requestedByUserId !== undefined) {
+          const userUsageRows = yield* tx
+            .select({ usedRequests: count() })
+            .from(firecrawlProfileScrapeRequest)
+            .where(
+              and(
+                eq(firecrawlProfileScrapeRequest.yearMonth, yearMonthText),
+                eq(
+                  firecrawlProfileScrapeRequest.requestedByUserId,
+                  requestedByUserId
+                ),
+                inArray(
+                  firecrawlProfileScrapeRequest.status,
+                  usedFirecrawlRequestStatuses
+                )
+              )
+            );
+          const usedRequestsByUser = userUsageRows[0]?.usedRequests ?? 0;
+
+          if (usedRequestsByUser >= perUserMonthlyRequestBudget) {
+            return yield* new FirecrawlUserMonthlyBudgetExhausted({
+              monthlyRequestBudget: perUserMonthlyRequestBudget,
+              usedRequests: usedRequestsByUser,
+              yearMonth,
+            });
+          }
         }
 
         const insertedRows = yield* tx

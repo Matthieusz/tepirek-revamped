@@ -80,6 +80,7 @@ const makeDependencies = (
     Layer.succeed(FirecrawlConfigService, {
       apiKey: Redacted.make("test-firecrawl-key"),
       monthlyRequestBudget: 900,
+      perUserMonthlyRequestBudget: 100,
     }),
     Layer.succeed(FirecrawlRequestAccountingStoreService, accounting)
   );

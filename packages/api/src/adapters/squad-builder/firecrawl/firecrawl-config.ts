@@ -22,6 +22,10 @@ export const readFirecrawlConfig = Config.all({
     MonthlyRequestBudget,
     "FIRECRAWL_MONTHLY_REQUEST_BUDGET"
   ).pipe(Config.withDefault(900)),
+  perUserMonthlyRequestBudget: Config.schema(
+    MonthlyRequestBudget,
+    "FIRECRAWL_PER_USER_MONTHLY_REQUEST_BUDGET"
+  ).pipe(Config.withDefault(100)),
 });
 
 /** Provide an already-parsed Firecrawl configuration. */

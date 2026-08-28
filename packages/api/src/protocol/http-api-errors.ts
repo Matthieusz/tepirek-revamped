@@ -38,6 +38,9 @@ export const HttpApiPersistenceUnavailableError = taggedOperationError(
 export const HttpApiUpstreamUnavailableError =
   taggedMessageError(/UpstreamUnavailable$/u);
 
+/** HTTP API errors representing an exhausted request budget. */
+export const HttpApiRateLimitedError = taggedMessageError(/RateLimited$/u);
+
 /** All semantic error categories exposed by the HTTP API protocol. */
 export const HttpApiError = Schema.Union([
   HttpApiUnauthorizedError,
@@ -46,6 +49,7 @@ export const HttpApiError = Schema.Union([
   HttpApiConflictError,
   HttpApiNotFoundError,
   HttpApiPersistenceUnavailableError,
+  HttpApiRateLimitedError,
   HttpApiUpstreamUnavailableError,
 ]);
 

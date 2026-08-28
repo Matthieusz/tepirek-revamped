@@ -108,6 +108,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewProfile")(
     const yearMonth = firecrawlYearMonthFromDate(requestTime);
     const reservedRequest = yield* requestAccounting.reserveRequest({
       monthlyRequestBudget: config.monthlyRequestBudget,
+      perUserMonthlyRequestBudget: config.perUserMonthlyRequestBudget,
       profileId,
       requestedByUserId: input.actorUserId,
       yearMonth,

@@ -40,6 +40,11 @@ const PreviewOwnedAccountImportLineError = Schema.TaggedUnion({
   },
   FirecrawlRequestFailed: { profileId: PositiveInt },
   FirecrawlResponseNotParseable: { profileId: PositiveInt },
+  FirecrawlUserMonthlyBudgetExhausted: {
+    monthlyRequestBudget: Schema.Finite,
+    usedRequests: Schema.Finite,
+    yearMonth: Schema.String,
+  },
   InvalidMargonemProfileUrl: { message: Schema.String },
   MargonemAccountAlreadyOwnedByActor: {},
   MargonemAccountAlreadySharedWithActor: {},

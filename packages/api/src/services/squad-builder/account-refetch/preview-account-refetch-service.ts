@@ -55,6 +55,7 @@ export const preview = EffectRuntime.fn("AccountRefetch.preview")(
     const yearMonth = firecrawlYearMonthFromDate(requestTime);
     const reservedRequest = yield* requestAccounting.reserveRequest({
       monthlyRequestBudget: config.monthlyRequestBudget,
+      perUserMonthlyRequestBudget: config.perUserMonthlyRequestBudget,
       profileId: account.profileId,
       requestedByUserId: input.actorUserId,
       yearMonth,

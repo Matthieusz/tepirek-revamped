@@ -9,6 +9,7 @@ import {
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
+  SquadBuilderRateLimited,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/errors.ts";
 import { apply as applyAccountRefetchWorkflow } from "../../../services/squad-builder/account-refetch/apply-account-refetch-service.ts";
@@ -29,6 +30,7 @@ type PreviewAccountRefetchProtocolError =
   | SquadBuilderNotFound
   | SquadBuilderForbidden
   | SquadBuilderInvalidInput
+  | SquadBuilderRateLimited
   | SquadBuilderUpstreamUnavailable
   | SquadBuilderPersistenceUnavailable;
 type ApplyAccountRefetchProtocolError =
@@ -59,6 +61,9 @@ function mapAccountRefetchError(
     case "MargonemCharacterRowsNotFound":
     case "MargonemCharacterRowInvalid": {
       return new SquadBuilderInvalidInput({ message: error._tag });
+    }
+    case "FirecrawlUserMonthlyBudgetExhausted": {
+      return new SquadBuilderRateLimited({ message: error._tag });
     }
     case "FirecrawlMonthlyBudgetExhausted":
     case "FirecrawlRequestFailed":

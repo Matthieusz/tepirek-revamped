@@ -10,6 +10,7 @@ import {
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
+  SquadBuilderRateLimited,
   SquadBuilderUpstreamUnavailable,
 } from "../../../protocol/squad-builder/errors.ts";
 import {
@@ -48,6 +49,7 @@ type AccountImportHandlerError =
 type PreviewMargonemProfileImportProtocolError =
   | SquadBuilderConflict
   | SquadBuilderInvalidInput
+  | SquadBuilderRateLimited
   | SquadBuilderUpstreamUnavailable
   | SquadBuilderPersistenceUnavailable;
 type PreviewOwnedAccountImportsProtocolError =
@@ -114,6 +116,9 @@ function mapAccountImportError(
     case "MargonemAccountAlreadySharedWithActor":
     case "MargonemAccountOwnedByAnotherUser": {
       return new SquadBuilderConflict({ message: error._tag });
+    }
+    case "FirecrawlUserMonthlyBudgetExhausted": {
+      return new SquadBuilderRateLimited({ message: error._tag });
     }
     case "FirecrawlMonthlyBudgetExhausted":
     case "FirecrawlRequestFailed":

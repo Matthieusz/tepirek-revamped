@@ -15,6 +15,7 @@ export const squadBuilderIntegrationTestLayer = makeApiLiveLayerFromValues({
   firecrawl: {
     apiKey: Redacted.make("test-firecrawl-api-key"),
     monthlyRequestBudget: 900,
+    perUserMonthlyRequestBudget: 100,
   },
 });
 

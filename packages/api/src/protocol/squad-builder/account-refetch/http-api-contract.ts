@@ -5,6 +5,7 @@ import {
   SquadBuilderInvalidInput,
   SquadBuilderNotFound,
   SquadBuilderPersistenceUnavailable,
+  SquadBuilderRateLimited,
   SquadBuilderUnauthorized,
   SquadBuilderUpstreamUnavailable,
 } from "../errors.ts";
@@ -20,6 +21,7 @@ export const PreviewAccountRefetchErrors = [
   SquadBuilderForbidden,
   SquadBuilderNotFound,
   SquadBuilderInvalidInput,
+  SquadBuilderRateLimited,
   SquadBuilderUpstreamUnavailable,
   SquadBuilderPersistenceUnavailable,
 ] as const;

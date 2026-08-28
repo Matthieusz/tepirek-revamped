@@ -136,6 +136,7 @@ export const MargonemForumClientLiveLayer: Layer.Layer<
         const reserved = yield* accounting
           .reserveRequest({
             monthlyRequestBudget: config.monthlyRequestBudget,
+            perUserMonthlyRequestBudget: config.perUserMonthlyRequestBudget,
             yearMonth: firecrawlYearMonthFromDate(requestedAt),
           })
           .pipe(Effect.mapError((cause) => requestFailed(category, cause)));

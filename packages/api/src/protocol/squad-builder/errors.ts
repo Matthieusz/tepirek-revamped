@@ -37,6 +37,12 @@ export class SquadBuilderUpstreamUnavailable extends Schema.TaggedErrorClass<Squ
   { httpApiStatus: 502 }
 ) {}
 
+export class SquadBuilderRateLimited extends Schema.TaggedErrorClass<SquadBuilderRateLimited>()(
+  "SquadBuilderRateLimited",
+  { message: Schema.String },
+  { httpApiStatus: 429 }
+) {}
+
 export class SquadBuilderPersistenceUnavailable extends Schema.TaggedErrorClass<SquadBuilderPersistenceUnavailable>()(
   "SquadBuilderPersistenceUnavailable",
   { operation: Schema.String },

@@ -11,6 +11,7 @@ it.effect("loads Firecrawl config from Effect Config with default budget", () =>
 
     expect(Redacted.value(config.apiKey)).toBe("test-key");
     expect(config.monthlyRequestBudget).toBe(900);
+    expect(config.perUserMonthlyRequestBudget).toBe(100);
   }).pipe(
     Effect.provideService(
       ConfigProvider.ConfigProvider,
@@ -34,7 +35,7 @@ it.effect("fails for an empty Firecrawl API key", () => {
   });
 });
 
-it.effect("fails for invalid Firecrawl budget", () => {
+it.effect("fails for an invalid global Firecrawl budget", () => {
   const program = readFirecrawlConfig.pipe(
     Effect.provideService(
       ConfigProvider.ConfigProvider,
@@ -51,3 +52,41 @@ it.effect("fails for invalid Firecrawl budget", () => {
     expect(error._tag).toBe("ConfigError");
   });
 });
+
+it.effect("parses an explicit per-user Firecrawl budget", () =>
+  Effect.gen(function* firecrawlConfigEffect() {
+    const config = yield* readFirecrawlConfig;
+
+    expect(config.perUserMonthlyRequestBudget).toBe(250);
+  }).pipe(
+    Effect.provideService(
+      ConfigProvider.ConfigProvider,
+      ConfigProvider.fromUnknown({
+        FIRECRAWL_API_KEY: "test-key",
+        FIRECRAWL_PER_USER_MONTHLY_REQUEST_BUDGET: "250",
+      })
+    )
+  )
+);
+
+it.effect.each(["0", "-1", "1.5", "1001"] as const)(
+  "fails for invalid per-user Firecrawl budget %s",
+  (value) => {
+    const program = readFirecrawlConfig.pipe(
+      Effect.provideService(
+        ConfigProvider.ConfigProvider,
+        ConfigProvider.fromUnknown({
+          FIRECRAWL_API_KEY: "test-key",
+          FIRECRAWL_PER_USER_MONTHLY_REQUEST_BUDGET: value,
+        })
+      )
+    );
+
+    return Effect.gen(function* firecrawlConfigFailureEffect() {
+      const error = yield* Effect.flip(program);
+
+      expect(error._tag).toBe("ConfigError");
+      expect(String(error)).not.toContain("test-key");
+    });
+  }
+);

@@ -125,6 +125,7 @@ it.effect("previews account refetch and stores the pending diff", () => {
     Effect.provideService(FirecrawlConfigService)({
       apiKey: Redacted.make("test-key"),
       monthlyRequestBudget: 900,
+      perUserMonthlyRequestBudget: 100,
     }),
     Effect.provideService(FirecrawlClientService)(firecrawl),
     Effect.provideService(AccountRefetchStoreService)(store),
@@ -181,6 +182,7 @@ it.effect("marks a reserved refetch request failed when interrupted", () =>
       Effect.provideService(FirecrawlConfigService)({
         apiKey: Redacted.make("test-key"),
         monthlyRequestBudget: 900,
+        perUserMonthlyRequestBudget: 100,
       }),
       Effect.provideService(FirecrawlClientService)(firecrawl),
       Effect.provideService(AccountRefetchStoreService)(store),

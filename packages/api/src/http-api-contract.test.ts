@@ -96,6 +96,18 @@ describe("AppHttpApi route contract", () => {
     expectRoute("post", "/ranking");
   });
 
+  it("does not expose the session token in OpenAPI", () => {
+    const sessionResponseSchema =
+      appOpenApi.paths["/user/session"]?.get?.responses["200"]?.content?.[
+        "application/json"
+      ]?.schema;
+
+    expect(sessionResponseSchema).toBeDefined();
+    expect(sessionResponseSchema).not.toHaveProperty(
+      "properties.session.properties.token"
+    );
+  });
+
   it("exposes the user routes", () => {
     expectRoute("post", "/user/delete");
     expectRoute("get", "/user/session");
@@ -148,7 +160,7 @@ describe("AppHttpApi route contract", () => {
       ],
       [
         "/squad-builder/account-imports/preview-profile",
-        ["200", "400", "401", "403", "409", "502", "503"],
+        ["200", "400", "401", "403", "409", "429", "502", "503"],
       ],
       [
         "/squad-builder/account-imports/preview-owned",
@@ -169,7 +181,7 @@ describe("AppHttpApi route contract", () => {
       ["/squad-builder/account-imports/owned", ["200", "401", "403", "503"]],
       [
         "/squad-builder/account-refetches/preview",
-        ["200", "400", "401", "403", "404", "502", "503"],
+        ["200", "400", "401", "403", "404", "429", "502", "503"],
       ],
       [
         "/squad-builder/account-refetches/apply",
