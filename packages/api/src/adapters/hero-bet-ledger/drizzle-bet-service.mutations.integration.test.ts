@@ -4,6 +4,7 @@ import {
   heroBetMember,
   userStats,
 } from "@tepirek-revamped/db/schema/bet";
+import { event } from "@tepirek-revamped/db/schema/event";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 
@@ -17,7 +18,277 @@ import {
   withServices,
 } from "./drizzle-bet-service.integration-test-kit.ts";
 
+const createTestEvent = async (endTime: Date) => {
+  const [createdEvent] = await testDb
+    .insert(event)
+    .values({
+      color: "#22c55e",
+      endTime,
+      icon: "calendar",
+      name: "Oldest Unpaid Event Test",
+    })
+    .returning();
+
+  if (!createdEvent) {
+    throw new Error("Failed to create test event");
+  }
+
+  return createdEvent;
+};
+
 effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
+  it.effect(
+    "does not combine different users' earnings when selecting an unpaid event",
+    () =>
+      Effect.gen(function* testEffect() {
+        const creator = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({ id: "ledger-oldest-split-admin" })
+        );
+        const firstMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({ id: "ledger-oldest-split-first" })
+        );
+        const secondMember = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({ id: "ledger-oldest-split-second" })
+        );
+        const createdHero = yield* Effect.promise(
+          async () => await createHero({ name: "Ledger Oldest Split Hero" })
+        );
+
+        yield* withServices((ledger) =>
+          ledger.createBet({
+            createdAt: new Date(0),
+            createdBy: creator.id,
+            heroId: createdHero.id,
+            userIds: [firstMember.id, secondMember.id],
+          })
+        );
+        yield* withServices((ledger) =>
+          ledger.distributeGold({
+            goldAmount: 120_000_000,
+            heroId: createdHero.id,
+          })
+        );
+
+        const vault = yield* withServices((ledger) =>
+          ledger.getVault(createdHero.eventId)
+        );
+        const oldestUnpaidEvent = yield* withServices((ledger) =>
+          ledger.getOldestUnpaidEvent()
+        );
+
+        expect(vault).toEqual([]);
+        expect(oldestUnpaidEvent).toBeNull();
+      })
+  );
+
+  it.effect(
+    "combines paid and unpaid hero rows for one user when selecting an event",
+    () =>
+      Effect.gen(function* testEffect() {
+        const creator = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({ id: "ledger-oldest-combined-admin" })
+        );
+        const member = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({ id: "ledger-oldest-combined-member" })
+        );
+        const firstHero = yield* Effect.promise(
+          async () => await createHero({ name: "Ledger Oldest Combined First" })
+        );
+        const secondHero = yield* Effect.promise(
+          async () =>
+            await createHero({
+              eventId: firstHero.eventId,
+              name: "Ledger Oldest Combined Second",
+            })
+        );
+
+        yield* withServices((ledger) =>
+          ledger.createBet({
+            createdAt: new Date(0),
+            createdBy: creator.id,
+            heroId: firstHero.id,
+            userIds: [member.id],
+          })
+        );
+        yield* withServices((ledger) =>
+          ledger.distributeGold({
+            goldAmount: 80_000_000,
+            heroId: firstHero.id,
+          })
+        );
+        yield* withServices((ledger) =>
+          ledger.togglePaidOut({
+            eventId: firstHero.eventId,
+            paidOut: true,
+            userId: member.id,
+          })
+        );
+        yield* withServices((ledger) =>
+          ledger.createBet({
+            createdAt: new Date(0),
+            createdBy: creator.id,
+            heroId: secondHero.id,
+            userIds: [member.id],
+          })
+        );
+        yield* withServices((ledger) =>
+          ledger.distributeGold({
+            goldAmount: 30_000_000,
+            heroId: secondHero.id,
+          })
+        );
+
+        const vault = yield* withServices((ledger) =>
+          ledger.getVault(firstHero.eventId)
+        );
+        const oldestUnpaidEvent = yield* withServices((ledger) =>
+          ledger.getOldestUnpaidEvent()
+        );
+
+        expect(vault).toEqual([
+          {
+            paidOut: false,
+            totalEarnings: "110000000.00",
+            userId: member.id,
+            userImage: null,
+            userName: "Test User",
+          },
+        ]);
+        expect(oldestUnpaidEvent).toBe(firstHero.eventId);
+      })
+  );
+
+  it.effect(
+    "selects the oldest eligible event and breaks end-time ties by event ID",
+    () =>
+      Effect.gen(function* testEffect() {
+        const creator = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({ id: "ledger-oldest-order-admin" })
+        );
+        const member = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({ id: "ledger-oldest-order-member" })
+        );
+        const olderEvent = yield* Effect.promise(
+          async () =>
+            await createTestEvent(new Date("2030-01-01T00:00:00.000Z"))
+        );
+        const newerEvent = yield* Effect.promise(
+          async () =>
+            await createTestEvent(new Date("2030-01-02T00:00:00.000Z"))
+        );
+        const olderHero = yield* Effect.promise(
+          async () => await createHero({ eventId: olderEvent.id })
+        );
+        const newerHero = yield* Effect.promise(
+          async () => await createHero({ eventId: newerEvent.id })
+        );
+
+        yield* withServices((ledger) =>
+          ledger.createBet({
+            createdAt: new Date(0),
+            createdBy: creator.id,
+            heroId: olderHero.id,
+            userIds: [member.id],
+          })
+        );
+        yield* withServices((ledger) =>
+          ledger.distributeGold({
+            goldAmount: 100_000_000,
+            heroId: olderHero.id,
+          })
+        );
+        yield* withServices((ledger) =>
+          ledger.createBet({
+            createdAt: new Date(0),
+            createdBy: creator.id,
+            heroId: newerHero.id,
+            userIds: [member.id],
+          })
+        );
+        yield* withServices((ledger) =>
+          ledger.distributeGold({
+            goldAmount: 100_000_000,
+            heroId: newerHero.id,
+          })
+        );
+
+        const oldestUnpaidEvent = yield* withServices((ledger) =>
+          ledger.getOldestUnpaidEvent()
+        );
+        expect(oldestUnpaidEvent).toBe(olderEvent.id);
+
+        yield* withServices((ledger) =>
+          ledger.togglePaidOut({
+            eventId: olderEvent.id,
+            paidOut: true,
+            userId: member.id,
+          })
+        );
+        yield* withServices((ledger) =>
+          ledger.togglePaidOut({
+            eventId: newerEvent.id,
+            paidOut: true,
+            userId: member.id,
+          })
+        );
+
+        const tiedEndTime = new Date("2030-01-03T00:00:00.000Z");
+        const firstTiedEvent = yield* Effect.promise(
+          async () => await createTestEvent(tiedEndTime)
+        );
+        const secondTiedEvent = yield* Effect.promise(
+          async () => await createTestEvent(tiedEndTime)
+        );
+        const firstTiedHero = yield* Effect.promise(
+          async () => await createHero({ eventId: firstTiedEvent.id })
+        );
+        const secondTiedHero = yield* Effect.promise(
+          async () => await createHero({ eventId: secondTiedEvent.id })
+        );
+
+        yield* withServices((ledger) =>
+          ledger.createBet({
+            createdAt: new Date(0),
+            createdBy: creator.id,
+            heroId: firstTiedHero.id,
+            userIds: [member.id],
+          })
+        );
+        yield* withServices((ledger) =>
+          ledger.distributeGold({
+            goldAmount: 100_000_000,
+            heroId: firstTiedHero.id,
+          })
+        );
+        yield* withServices((ledger) =>
+          ledger.createBet({
+            createdAt: new Date(0),
+            createdBy: creator.id,
+            heroId: secondTiedHero.id,
+            userIds: [member.id],
+          })
+        );
+        yield* withServices((ledger) =>
+          ledger.distributeGold({
+            goldAmount: 100_000_000,
+            heroId: secondTiedHero.id,
+          })
+        );
+
+        const tiedOldestUnpaidEvent = yield* withServices((ledger) =>
+          ledger.getOldestUnpaidEvent()
+        );
+        expect(tiedOldestUnpaidEvent).toBe(firstTiedEvent.id);
+      })
+  );
+
   it.effect(
     "creates a bet with internally timestamped raw bet rows and per-member stats",
     () =>
