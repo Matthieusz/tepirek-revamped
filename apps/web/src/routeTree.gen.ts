@@ -117,18 +117,24 @@ const DashboardCalculatorListRoute = DashboardCalculatorListRouteImport.update({
   id: '/calculator/list',
   path: '/calculator/list',
   getParentRoute: () => DashboardRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/dashboard/calculator/list.lazy').then((d) => d.Route),
+)
 const DashboardCalculatorOdwRoute = DashboardCalculatorOdwRouteImport.update({
   id: '/calculator/odw',
   path: '/calculator/odw',
   getParentRoute: () => DashboardRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/dashboard/calculator/odw.lazy').then((d) => d.Route),
+)
 const DashboardCalculatorUlepaRoute =
   DashboardCalculatorUlepaRouteImport.update({
     id: '/calculator/ulepa',
     path: '/calculator/ulepa',
     getParentRoute: () => DashboardRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/dashboard/calculator/ulepa.lazy').then((d) => d.Route),
+  )
 const DashboardEventsHeroesRoute = DashboardEventsHeroesRouteImport.update({
   id: '/events/heroes',
   path: '/events/heroes',
@@ -178,25 +184,37 @@ const DashboardSquadBuilderAccountsRoute =
     id: '/accounts',
     path: '/accounts',
     getParentRoute: () => DashboardSquadBuilderRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/dashboard/squad-builder/accounts.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const DashboardSquadBuilderSquadsRoute =
   DashboardSquadBuilderSquadsRouteImport.update({
     id: '/squads',
     path: '/squads',
     getParentRoute: () => DashboardSquadBuilderRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/dashboard/squad-builder/squads.lazy').then((d) => d.Route),
+  )
 const DashboardAuctionsTypeIndexRoute =
   DashboardAuctionsTypeIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => DashboardAuctionsTypeRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/dashboard/auctions/$type/index.lazy').then((d) => d.Route),
+  )
 const DashboardAuctionsTypeProfessionRoute =
   DashboardAuctionsTypeProfessionRouteImport.update({
     id: '/$profession',
     path: '/$profession',
     getParentRoute: () => DashboardAuctionsTypeRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/dashboard/auctions/$type/$profession.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const DashboardEventsBetsAddRoute = DashboardEventsBetsAddRouteImport.update({
   id: '/events/bets/add',
   path: '/events/bets/add',

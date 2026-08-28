@@ -1,4 +1,4 @@
-import { createFileRoute, getRouteApi, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import {
   auctionSignupsAtom,
@@ -9,26 +9,6 @@ import {
   isAuctionProfession,
   isAuctionType,
 } from "@/features/auctions/config";
-import AuctionsProfessionPage from "@/routes/dashboard/auctions/$type/-components/profession";
-
-const routeApi = getRouteApi("/dashboard/auctions/$type/$profession");
-
-const AuctionsProfessionRoute = () => {
-  const { session } = routeApi.useRouteContext();
-  const { profession, type } = routeApi.useParams();
-
-  if (!isAuctionType(type) || !isAuctionProfession(profession)) {
-    return null;
-  }
-
-  return (
-    <AuctionsProfessionPage
-      profession={profession}
-      session={session}
-      type={type}
-    />
-  );
-};
 
 export const Route = createFileRoute("/dashboard/auctions/$type/$profession")({
   beforeLoad: ({ params }) => {
@@ -46,7 +26,6 @@ export const Route = createFileRoute("/dashboard/auctions/$type/$profession")({
       });
     }
   },
-  component: AuctionsProfessionRoute,
   loader: async ({ context, params }) => {
     if (isAuctionType(params.type) && isAuctionProfession(params.profession)) {
       const auctionGroup = {

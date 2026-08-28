@@ -8,10 +8,8 @@ import {
   incomingSquadGroupInvitesAtom,
   sharedSquadGroupsAtom,
 } from "@/features/squad-builder/squad-group-sharing-atoms";
-import SquadBuilderSquadsPage from "@/routes/dashboard/squad-builder/-components/squads-page";
 
 export const Route = createFileRoute("/dashboard/squad-builder/squads")({
-  component: SquadBuilderSquadsPage,
   loader: async ({ context }) => {
     await context.preloadAtomResults(context.atomRegistry, [
       incomingSquadGroupInvitesAtom,
