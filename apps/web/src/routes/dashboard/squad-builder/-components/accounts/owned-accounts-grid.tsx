@@ -149,6 +149,8 @@ export const OwnedAccountsGrid = ({
     columns,
     data: tableData,
     features: dataGridFeatures,
+    // Management controls are custom expanded content, not nested sub-rows.
+    getRowCanExpand: () => true,
     getRowId: (account) => String(account.accountId),
   });
 
