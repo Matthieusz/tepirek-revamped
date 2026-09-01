@@ -6,6 +6,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import * as Redacted from "effect/Redacted";
 
 import type { AuthEnv } from "./auth-config.ts";
+import { syncDiscordAvatar } from "./discord-avatar-sync.ts";
 
 /**
  * Pure Better Auth construction seam.
@@ -33,6 +34,13 @@ export const createAuth = (env: AuthEnv, database: BetterAuthDatabase) =>
       provider: "pg",
       schema,
     }),
+    databaseHooks: {
+      user: {
+        update: {
+          before: syncDiscordAvatar,
+        },
+      },
+    },
     emailAndPassword: {
       enabled: true,
     },
@@ -52,6 +60,7 @@ export const createAuth = (env: AuthEnv, database: BetterAuthDatabase) =>
       discord: {
         clientId: env.discordClientId,
         clientSecret: Redacted.value(env.discordClientSecret),
+        overrideUserInfoOnSignIn: true,
       },
     },
     trustedOrigins: [env.corsOrigin.origin],
