@@ -289,7 +289,7 @@ export const CennikContent = ({
 }) => {
   const navigate = useNavigate({ from: "/dashboard/cennik" });
   const pendingSearch = useRef(search);
-  const syncTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const syncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const deferredSearch = useDeferredValue(search);
 
   useEffect(() => {
@@ -297,7 +297,7 @@ export const CennikContent = ({
   }, [search]);
   useEffect(
     () => () => {
-      if (syncTimeout.current !== undefined) {
+      if (syncTimeout.current !== null) {
         clearTimeout(syncTimeout.current);
       }
     },
@@ -308,11 +308,11 @@ export const CennikContent = ({
     (update: Partial<CennikSearch>) => {
       const nextSearch = { ...pendingSearch.current, ...update };
       pendingSearch.current = nextSearch;
-      if (syncTimeout.current !== undefined) {
+      if (syncTimeout.current !== null) {
         clearTimeout(syncTimeout.current);
       }
       syncTimeout.current = setTimeout(() => {
-        syncTimeout.current = undefined;
+        syncTimeout.current = null;
         void navigate({ replace: true, search: nextSearch });
       }, SEARCH_URL_SYNC_DELAY_MS);
     },
