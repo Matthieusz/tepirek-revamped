@@ -7,7 +7,14 @@ import type {
   LegendaryProfession,
 } from "@tepirek-revamped/api/protocol/legend-pricing/http-api-contract";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
 
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
@@ -74,6 +81,8 @@ const parseEnemyCategory = (
 
   return undefined;
 };
+
+const SEARCH_URL_SYNC_DELAY_MS = 200;
 
 const legendPriceDateFormatter = new Intl.DateTimeFormat("pl-PL", {
   dateStyle: "medium",
@@ -268,7 +277,8 @@ const CennikPage = ({ search, session }: CennikPageProps) => {
   );
 };
 
-const CennikContent = ({
+/** Render the filter controls and grouped legendary price catalog. */
+export const CennikContent = ({
   isAdmin,
   prices,
   search,
@@ -278,12 +288,40 @@ const CennikContent = ({
   readonly search: CennikSearch;
 }) => {
   const navigate = useNavigate({ from: "/dashboard/cennik" });
-  const updateSearch = (update: Partial<CennikSearch>) => {
-    void navigate({
-      search: (previous) => ({ ...previous, ...update }),
-    });
-  };
-  const groups = groupLegendPricesByEnemy(prices, search);
+  const pendingSearch = useRef(search);
+  const syncTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const deferredSearch = useDeferredValue(search);
+
+  useEffect(() => {
+    pendingSearch.current = search;
+  }, [search]);
+  useEffect(
+    () => () => {
+      if (syncTimeout.current !== undefined) {
+        clearTimeout(syncTimeout.current);
+      }
+    },
+    []
+  );
+
+  const updateSearch = useCallback(
+    (update: Partial<CennikSearch>) => {
+      const nextSearch = { ...pendingSearch.current, ...update };
+      pendingSearch.current = nextSearch;
+      if (syncTimeout.current !== undefined) {
+        clearTimeout(syncTimeout.current);
+      }
+      syncTimeout.current = setTimeout(() => {
+        syncTimeout.current = undefined;
+        void navigate({ replace: true, search: nextSearch });
+      }, SEARCH_URL_SYNC_DELAY_MS);
+    },
+    [navigate]
+  );
+  const groups = useMemo(
+    () => groupLegendPricesByEnemy(prices, deferredSearch),
+    [deferredSearch, prices]
+  );
   const itemCount = groups.reduce(
     (count, group) => count + group.items.length,
     0
@@ -316,21 +354,10 @@ const CennikContent = ({
           placeholder="Szukaj potwora…"
           value={search.monsterName}
         />
-        <div className="space-y-2">
-          <Label htmlFor="legend-item-level">Lvl przedmiotu</Label>
-          <Input
-            id="legend-item-level"
-            min={1}
-            onChange={(event) => {
-              updateSearch({
-                itemLevel: event.currentTarget.value || undefined,
-              });
-            }}
-            placeholder="Np. 100"
-            type="number"
-            value={search.itemLevel ?? ""}
-          />
-        </div>
+        <ItemLevelFilter
+          onChange={(value) => updateSearch({ itemLevel: value })}
+          value={search.itemLevel}
+        />
         <div className="space-y-2">
           <Label htmlFor="legend-monster-type">Typ potwora</Label>
           <Select
@@ -383,6 +410,43 @@ const CennikContent = ({
   );
 };
 
+const ItemLevelFilter = ({
+  onChange,
+  value,
+}: {
+  readonly onChange: (value: string | undefined) => void;
+  readonly value: string | undefined;
+}) => {
+  const [localValue, setLocalValue] = useState(value ?? "");
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setLocalValue(value ?? "");
+    }, 0);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [value]);
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="legend-item-level">Lvl przedmiotu</Label>
+      <Input
+        id="legend-item-level"
+        min={1}
+        onChange={(event) => {
+          const nextValue = event.currentTarget.value;
+          setLocalValue(nextValue);
+          onChange(nextValue || undefined);
+        }}
+        placeholder="Np. 100"
+        type="number"
+        value={localValue}
+      />
+    </div>
+  );
+};
+
 const SearchFilter = ({
   id,
   label,
@@ -395,23 +459,40 @@ const SearchFilter = ({
   readonly onChange: (value: string | undefined) => void;
   readonly placeholder: string;
   readonly value: string | undefined;
-}) => (
-  <div className="space-y-2">
-    <Label htmlFor={id}>{label}</Label>
-    <div className="relative">
-      <Search
-        aria-hidden="true"
-        className="text-muted-foreground absolute top-2.5 left-2.5 size-4"
-      />
-      <Input
-        className="pl-8"
-        id={id}
-        onChange={(event) => onChange(event.currentTarget.value || undefined)}
-        placeholder={placeholder}
-        value={value ?? ""}
-      />
+}) => {
+  const [localValue, setLocalValue] = useState(value ?? "");
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setLocalValue(value ?? "");
+    }, 0);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [value]);
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="relative">
+        <Search
+          aria-hidden="true"
+          className="text-muted-foreground absolute top-2.5 left-2.5 size-4"
+        />
+        <Input
+          className="pl-8"
+          id={id}
+          onChange={(event) => {
+            const nextValue = event.currentTarget.value;
+            setLocalValue(nextValue);
+            onChange(nextValue || undefined);
+          }}
+          placeholder={placeholder}
+          value={localValue}
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default CennikPage;
