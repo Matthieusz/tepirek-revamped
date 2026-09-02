@@ -119,7 +119,7 @@ export const copyLastBet = (lastBet: LastBetState): string[] => {
   if (lastBet._tag === "unavailable") {
     return [];
   }
-  return Arr.map((member) => member.userId)(lastBet.members);
+  return lastBet.members.map((member) => member.userId);
 };
 
 type PickerEmptyState =

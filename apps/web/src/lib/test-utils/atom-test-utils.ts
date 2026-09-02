@@ -14,8 +14,6 @@ import {
   appHttpApiRuntime,
 } from "@/lib/http-api-client-runtime";
 
-type HttpJsonBody = Parameters<typeof Response.json>[0];
-
 type FixtureResponseValue =
   | boolean
   | null
@@ -23,6 +21,17 @@ type FixtureResponseValue =
   | string
   | readonly FixtureResponseValue[]
   | { readonly [key: string]: FixtureResponseValue };
+
+const HttpJsonBodySchema = Schema.Tree(
+  Schema.Union([
+    Schema.Boolean,
+    Schema.Date,
+    Schema.Finite,
+    Schema.Null,
+    Schema.String,
+  ])
+);
+type HttpJsonBody = typeof HttpJsonBodySchema.Type;
 
 interface ApiCall {
   readonly args: HttpJsonBody;
@@ -149,6 +158,9 @@ const makeEndpointLookup = (): ReadonlyMap<string, EndpointIdentity> => {
 
   for (const [groupName, group] of Object.entries(AppHttpApi.groups)) {
     for (const [method, endpoint] of Object.entries(group.endpoints)) {
+      // SAFETY: Effect HttpApi exposes its runtime group and endpoint objects
+      // through an untyped reflection API. The contract supplies string paths.
+      // oxlint-disable-next-line typescript/no-unsafe-argument, typescript/no-unsafe-member-access
       endpoints.set(endpoint.path, { group: groupName, method });
     }
   }
@@ -156,15 +168,14 @@ const makeEndpointLookup = (): ReadonlyMap<string, EndpointIdentity> => {
   return endpoints;
 };
 
-type JsonReviver = NonNullable<Parameters<typeof JSON.parse>[1]>;
 const JsonDateSchema = Schema.DateFromString.pipe(
   Schema.check(Schema.isDateValid())
 );
 const decodeJsonDate = Schema.decodeUnknownOption(JsonDateSchema);
-const decodeJsonValue = (_key: string, value: Parameters<JsonReviver>[1]) =>
+const decodeJsonValue = (_key: string, value: HttpJsonBody): HttpJsonBody =>
   Option.getOrElse(decodeJsonDate(value), () => value);
 const decodePayload = (body: Uint8Array): HttpJsonBody =>
-  Schema.decodeUnknownSync(Schema.Unknown)(
+  Schema.decodeUnknownSync(HttpJsonBodySchema)(
     JSON.parse(new TextDecoder().decode(body), decodeJsonValue)
   );
 

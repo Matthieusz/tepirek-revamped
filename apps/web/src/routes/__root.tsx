@@ -10,6 +10,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createMiddleware } from "@tanstack/react-start";
 import type * as AtomRegistry from "effect/unstable/reactivity/AtomRegistry";
 import { evlogErrorHandler } from "evlog/nitro/v3";
+import type { ReactElement } from "react";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
@@ -63,7 +64,7 @@ export const RootErrorBoundary = ({
 }: {
   error: Error;
   reset: () => void;
-}) => (
+}): ReactElement => (
   <html lang="pl" suppressHydrationWarning>
     <head>
       <HeadContent />

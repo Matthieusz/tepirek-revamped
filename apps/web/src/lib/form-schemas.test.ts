@@ -62,8 +62,8 @@ const succeeds = <S extends Schema.ConstraintDecoder<unknown>>(
   return result.value;
 };
 
-const fails = <S extends Schema.ConstraintDecoder<unknown>>(
-  schema: S,
+const fails = (
+  schema: Schema.ConstraintDecoder<unknown>,
   value: StandardSchemaInput
 ): void => {
   expect(Exit.isFailure(Schema.decodeUnknownExit(schema)(value))).toBe(true);

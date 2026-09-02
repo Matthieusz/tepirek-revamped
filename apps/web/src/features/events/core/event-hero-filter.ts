@@ -20,7 +20,7 @@ import type {
  */
 
 export const ALL_FILTER = "all" as const;
-export type FilterSelection = typeof ALL_FILTER | string;
+export type FilterSelection = string;
 
 const PositiveIntegerIdFromString = Schema.FiniteFromString.pipe(
   Schema.check(Schema.isInt()),

@@ -88,9 +88,6 @@ export const calculateUpgradePoints = (
 ): number[] => {
   const level = clampLevel(lvl);
   const factors = rarityFactors[rarity];
-  if (!factors) {
-    throw new Error("Nieznana rzadkość przedmiotu");
-  }
 
   return UPGRADE_LEVEL_FACTORS.map((upgradeLevelFactor) => {
     const cost =

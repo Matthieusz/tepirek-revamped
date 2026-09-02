@@ -174,7 +174,7 @@ export const AccountSharingPanel = ({
                 <AutocompleteItem key={target.userId} value={target}>
                   <div className="flex min-w-0 flex-1 items-center gap-2">
                     <Avatar size="sm">
-                      {target.image ? (
+                      {target.image !== null && target.image.length > 0 ? (
                         <AvatarImage alt={target.name} src={target.image} />
                       ) : null}
                       <AvatarFallback>
@@ -260,7 +260,8 @@ export const AccountSharingPanel = ({
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <Avatar size="sm">
-                    {grant.invitedUserImage ? (
+                    {grant.invitedUserImage !== null &&
+                    grant.invitedUserImage.length > 0 ? (
                       <AvatarImage
                         alt={grant.invitedUserName}
                         src={grant.invitedUserImage}

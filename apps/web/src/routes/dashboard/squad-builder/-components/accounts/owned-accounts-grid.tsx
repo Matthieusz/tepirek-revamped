@@ -46,7 +46,7 @@ const OwnedAccountCharacterPreview = ({
     <div className="flex shrink-0 items-center">
       <span className="sr-only">Postać konta: {character.name}</span>
       <Avatar className="h-10 w-8 overflow-hidden rounded-none after:hidden">
-        {character.avatarUrl ? (
+        {character.avatarUrl !== null && character.avatarUrl.length > 0 ? (
           <MargonemCharacterAvatarImage alt="" src={character.avatarUrl} />
         ) : null}
         <AvatarFallback className="rounded-none">

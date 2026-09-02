@@ -52,6 +52,16 @@ type HydratedSquadEditorState = Exclude<
   { readonly phase: "loading" }
 >;
 
+type SquadEditorVisibilityEvent = Extract<
+  SquadEditorEvent,
+  {
+    readonly type:
+      | "visibilityChangeStarted"
+      | "visibilityChanged"
+      | "visibilityChangeFailed";
+  }
+>;
+
 export type SquadEditorEvent =
   | { readonly type: "detailLoaded"; readonly detail: SquadGroupDetail }
   | { readonly type: "draftChanged"; readonly draft: SquadGroupDraft }
@@ -149,7 +159,7 @@ const handleSaveResult = (
 
 const handleVisibilityEvent = (
   state: SquadEditorState,
-  event: SquadEditorEvent
+  event: SquadEditorVisibilityEvent
 ): SquadEditorState => {
   if (state.phase === "loading" || state.phase === "saving") {
     return state;
@@ -165,8 +175,11 @@ const handleVisibilityEvent = (
         visibilityRequest: "idle",
       };
     }
-    default: {
+    case "visibilityChangeFailed": {
       return { ...state, visibilityRequest: "idle" };
+    }
+    default: {
+      return state;
     }
   }
 };

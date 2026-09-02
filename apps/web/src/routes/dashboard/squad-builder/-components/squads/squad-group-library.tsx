@@ -54,8 +54,8 @@ import {
 type SharedSquadGroupSummary = SharedSquadGroupSummarySchema;
 type SquadListTab = "mine" | "shared" | "public";
 
-const isSquadListTab = (value: string): value is SquadListTab =>
-  value === "mine" || value === "shared" || value === "public";
+const SquadListTabSchema = Schema.Literals(["mine", "shared", "public"]);
+const decodeSquadListTab = Schema.decodeUnknownOption(SquadListTabSchema);
 
 interface SquadGroupListFilterFormState {
   readonly nameQuery: string;
@@ -248,7 +248,8 @@ const GroupRow = (props: GroupRowProps) => {
       >
         {owner === undefined ? null : (
           <Avatar className="mt-0.5" size="sm">
-            {owner.ownerUserImage ? (
+            {owner.ownerUserImage !== null &&
+            owner.ownerUserImage.length > 0 ? (
               <AvatarImage
                 alt={owner.ownerUserName}
                 src={owner.ownerUserImage}
@@ -426,8 +427,9 @@ export const SquadGroupLibrary = ({
   return (
     <Tabs
       onValueChange={(value) => {
-        if (isSquadListTab(value)) {
-          setActiveTab(value);
+        const tab = Option.getOrUndefined(decodeSquadListTab(value));
+        if (tab !== undefined) {
+          setActiveTab(tab);
         }
       }}
       value={activeTab}

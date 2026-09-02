@@ -77,6 +77,18 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+const setNativeInputValue = (input: HTMLInputElement, value: string): void => {
+  const descriptor = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    "value"
+  );
+  if (descriptor?.set === undefined) {
+    return;
+  }
+  // oxlint-disable-next-line typescript/unbound-method -- The native setter receives the input as its explicit receiver.
+  descriptor.set.call(input, value);
+};
+
 const renderCennik = async () => {
   const container = document.createElement("div");
   document.body.append(container);
@@ -112,11 +124,7 @@ describe("Cennik search", () => {
 
     act(() => {
       input.focus();
-      const setInputValue = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        "value"
-      )?.set;
-      setInputValue?.call(input, "miecz");
+      setNativeInputValue(input, "miecz");
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
     });

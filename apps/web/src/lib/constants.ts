@@ -18,7 +18,7 @@ export const EVENT_ICON_MAP = {
 const getNormalizedEventIconId = (
   iconName: string | null | undefined
 ): EventIconId => {
-  if (iconName && isEventIconId(iconName)) {
+  if (iconName !== undefined && iconName !== null && isEventIconId(iconName)) {
     return iconName;
   }
 

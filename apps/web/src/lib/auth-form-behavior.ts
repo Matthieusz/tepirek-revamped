@@ -29,10 +29,19 @@ export class AuthFormSubmissionError extends Schema.TaggedErrorClass<AuthFormSub
 /** Returns the provider's safest available message for an auth failure. */
 export const getAuthProviderErrorMessage = (
   error: AuthProviderErrorDetails
-): string =>
-  error.message?.trim() ||
-  error.statusText?.trim() ||
-  "Nie udało się uwierzytelnić";
+): string => {
+  const message = error.message?.trim();
+  if (message !== undefined && message.length > 0) {
+    return message;
+  }
+
+  const statusText = error.statusText?.trim();
+  if (statusText !== undefined && statusText.length > 0) {
+    return statusText;
+  }
+
+  return "Nie udało się uwierzytelnić";
+};
 
 /** The result of an authentication mutation that is safe to render in a form. */
 export type AuthFormSubmissionResult =
@@ -70,7 +79,7 @@ export const authFormSubmission = <Response extends AuthResponse>(
 
       return Effect.fail(
         new AuthFormSubmissionError({
-          code: response.error.code || undefined,
+          code: response.error.code ?? undefined,
           kind: "provider",
           message: getAuthProviderErrorMessage(response.error),
           operation,

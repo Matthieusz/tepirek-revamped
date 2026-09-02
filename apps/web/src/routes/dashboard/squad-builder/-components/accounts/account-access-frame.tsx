@@ -78,7 +78,8 @@ const InviteInboxPanel = () => {
             >
               <div className="flex min-w-0 items-center gap-3">
                 <Avatar size="sm">
-                  {invite.ownerUserImage ? (
+                  {invite.ownerUserImage !== null &&
+                  invite.ownerUserImage.length > 0 ? (
                     <AvatarImage
                       alt={invite.ownerUserName}
                       src={invite.ownerUserImage}
@@ -225,7 +226,8 @@ const SharedAccountsPanel = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Avatar size="sm">
-                  {account.ownerUserImage ? (
+                  {account.ownerUserImage !== null &&
+                  account.ownerUserImage.length > 0 ? (
                     <AvatarImage
                       alt={account.ownerUserName}
                       src={account.ownerUserImage}

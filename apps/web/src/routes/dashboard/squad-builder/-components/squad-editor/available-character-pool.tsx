@@ -215,7 +215,7 @@ const CharacterImageTrigger = ({
           aria-hidden="true"
           className="absolute inset-0 size-full overflow-hidden rounded-md after:hidden"
         >
-          {character.avatarUrl ? (
+          {character.avatarUrl !== null && character.avatarUrl.length > 0 ? (
             <MargonemCharacterAvatarImage alt="" src={character.avatarUrl} />
           ) : null}
           <AvatarFallback className="rounded-md">
@@ -302,7 +302,9 @@ const DestinationMenu = ({
                 <span className="block break-words">{squad.name}</span>
                 <span className="text-muted-foreground block font-mono text-xs">
                   {squad.characters.length}/{MAX_SQUAD_CHARACTERS}
-                  {disabledReason ? ` · ${disabledReason}` : ""}
+                  {disabledReason !== undefined && disabledReason.length > 0
+                    ? ` · ${disabledReason}`
+                    : ""}
                 </span>
               </span>
             </DropdownMenuItem>

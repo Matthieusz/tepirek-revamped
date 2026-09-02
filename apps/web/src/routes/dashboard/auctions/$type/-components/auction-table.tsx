@@ -239,7 +239,7 @@ const AuctionTableContent: React.FC<AuctionTableProps> = ({
   ): SignupData | undefined => {
     const cellSignups = signupMap[`${level}-${round}-${column}`];
     if (!cellSignups || cellSignups.length === 0) {
-      return;
+      return undefined;
     }
 
     // If duplicates exist (historical data), prefer showing current user's signup

@@ -93,7 +93,7 @@ export const useEventHeroFilter = (
 
   const navigateWithSearch = useCallback(
     (updates: EventHeroFilterSearch) => {
-      navigate({
+      void navigate({
         search: (prev) => ({ ...prev, ...updates }),
       });
     },

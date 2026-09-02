@@ -110,7 +110,8 @@ export const SquadGroupInvitations = () => {
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <Avatar size="sm">
-                    {invite.ownerUserImage ? (
+                    {invite.ownerUserImage !== null &&
+                    invite.ownerUserImage.length > 0 ? (
                       <AvatarImage
                         alt={invite.ownerUserName}
                         src={invite.ownerUserImage}

@@ -132,7 +132,7 @@ const SquadRosterRow = ({
     <li className="border-border bg-card/40 flex min-h-16 items-center justify-between gap-2 rounded-md border px-2">
       <div className="flex min-w-0 items-center gap-2">
         <Avatar className="h-10 w-8 overflow-hidden rounded-none after:hidden">
-          {character.avatarUrl ? (
+          {character.avatarUrl !== null && character.avatarUrl.length > 0 ? (
             <MargonemCharacterAvatarImage
               alt={character.name}
               src={character.avatarUrl}
