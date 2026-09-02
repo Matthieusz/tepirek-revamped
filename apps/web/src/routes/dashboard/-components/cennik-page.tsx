@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useNavigate } from "@tanstack/react-router";
 import type {
@@ -275,6 +273,7 @@ const CennikPage = ({ search, session }: CennikPageProps) => {
   return (
     <AsyncResultBoundary onRetry={refreshPrices} result={pricesResult}>
       {(prices) => (
+        // oxlint-disable-next-line no-use-before-define
         <CennikContent
           isAdmin={session.user.role === "admin"}
           prices={prices}
@@ -348,6 +347,7 @@ export const CennikContent = ({
       </div>
 
       <div className="border-border bg-card grid gap-3 rounded-xl border p-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* oxlint-disable-next-line no-use-before-define */}
         <SearchFilter
           id="legend-item-name"
           label="Nazwa przedmiotu"
@@ -357,6 +357,7 @@ export const CennikContent = ({
           placeholder="Szukaj przedmiotu…"
           value={search.itemName}
         />
+        {/* oxlint-disable-next-line no-use-before-define */}
         <SearchFilter
           id="legend-monster-name"
           label="Nazwa potwora"
@@ -366,6 +367,7 @@ export const CennikContent = ({
           placeholder="Szukaj potwora…"
           value={search.monsterName}
         />
+        {/* oxlint-disable-next-line no-use-before-define */}
         <ItemLevelFilter
           onChange={(value) => {
             updateSearch({ itemLevel: value });

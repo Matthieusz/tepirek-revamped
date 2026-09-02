@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { CheckCircle2, Clock, Search, Users } from "lucide-react";
@@ -23,7 +21,10 @@ const PlayerListPage = ({ session }: PlayerListPageProps) => {
 
   return (
     <AsyncResultBoundary onRetry={refreshPlayers} result={playersResult}>
-      {() => <PlayerListContent session={session} />}
+      {() => (
+        // oxlint-disable-next-line no-use-before-define
+        <PlayerListContent session={session} />
+      )}
     </AsyncResultBoundary>
   );
 };

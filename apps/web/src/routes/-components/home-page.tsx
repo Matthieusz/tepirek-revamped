@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import { Link } from "@tanstack/react-router";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
@@ -15,7 +13,10 @@ const HomePage = () => {
 
   return (
     <AsyncResultBoundary onRetry={refreshHealth} result={healthResult}>
-      {() => <HomeContent />}
+      {() => (
+        // oxlint-disable-next-line no-use-before-define
+        <HomeContent />
+      )}
     </AsyncResultBoundary>
   );
 };

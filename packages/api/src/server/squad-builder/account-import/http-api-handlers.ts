@@ -1,5 +1,4 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror handler names for traces. */
-// oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then, promise/valid-params -- Effect.catch uses callback pattern
 import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 

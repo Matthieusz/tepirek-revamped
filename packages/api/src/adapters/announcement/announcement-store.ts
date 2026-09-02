@@ -1,5 +1,4 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
-// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
 import { announcement } from "@tepirek-revamped/db/schema/announcement";
@@ -29,6 +28,7 @@ const decodePersisted = <A>(schema: Schema.ConstraintDecoder<A>) =>
   decodePersistedValue(
     schema,
     "listAnnouncements.decode",
+    // oxlint-disable-next-line promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
     (error) => new ApplicationDependencyUnavailable(error)
   );
 

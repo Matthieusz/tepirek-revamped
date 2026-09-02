@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Plus, Sword, Trash2 } from "lucide-react";
@@ -69,7 +67,10 @@ const EventsHeroesPage = ({ session }: EventsHeroesPageProps) => {
     <AsyncResultBoundary onRetry={refreshHeroes} result={heroesResult}>
       {() => (
         <AsyncResultBoundary onRetry={refreshEvents} result={eventsResult}>
-          {() => <EventsHeroesContent session={session} />}
+          {() => (
+            // oxlint-disable-next-line no-use-before-define
+            <EventsHeroesContent session={session} />
+          )}
         </AsyncResultBoundary>
       )}
     </AsyncResultBoundary>

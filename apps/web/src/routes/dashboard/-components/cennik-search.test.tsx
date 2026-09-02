@@ -85,7 +85,6 @@ const setNativeInputValue = (input: HTMLInputElement, value: string): void => {
   if (descriptor?.set === undefined) {
     return;
   }
-  // oxlint-disable-next-line typescript/unbound-method -- The native setter receives the input as its explicit receiver.
   descriptor.set.call(input, value);
 };
 

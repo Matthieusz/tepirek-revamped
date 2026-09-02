@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import * as Arr from "effect/Array";
@@ -47,7 +45,6 @@ interface EventsVaultPageProps {
   session: AuthSession;
 }
 
-// oxlint-disable-next-line complexity
 const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
   const { eventId: urlEventId } = routeApi.useSearch();
   const navigate = useNavigate({ from: "/dashboard/events/vault" });
@@ -92,6 +89,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
         >
           {() =>
             hasInitialized ? (
+              // oxlint-disable-next-line no-use-before-define
               <VaultContent
                 effectiveEventId={effectiveEventId}
                 events={[...events]}

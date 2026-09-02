@@ -1,5 +1,4 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
-// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import { slugifySkillRangeName } from "@tepirek-revamped/config";
 import type { EffectPgDatabase } from "@tepirek-revamped/db/effect";
 import { EffectDatabase } from "@tepirek-revamped/db/effect";
@@ -45,6 +44,7 @@ const decodePersisted = <A>(
   decodePersistedValue(
     schema,
     operation,
+    // oxlint-disable-next-line promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
     (error) => new ApplicationDependencyUnavailable(error)
   );
 

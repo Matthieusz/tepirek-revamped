@@ -85,7 +85,6 @@ class TooManyProfileUrlsInBatch extends Schema.TaggedErrorClass<TooManyProfileUr
   {}
 ) {}
 
-// oxlint-disable-next-line max-classes-per-file -- Batch policy errors live with the use case.
 class EmptyProfileUrlBatch extends Schema.TaggedErrorClass<EmptyProfileUrlBatch>()(
   "EmptyProfileUrlBatch",
   {},

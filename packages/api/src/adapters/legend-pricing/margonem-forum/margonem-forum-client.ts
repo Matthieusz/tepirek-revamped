@@ -1,5 +1,4 @@
 /* eslint-disable max-classes-per-file -- Margonem forum boundary errors form one adapter boundary. */
-// oxlint-disable promise/prefer-await-to-callbacks, promise/prefer-await-to-then -- Effect.catch uses a callback, not a Promise chain.
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -142,6 +141,7 @@ export const MargonemForumClientLiveLayer: Layer.Layer<
           .pipe(Effect.mapError((cause) => requestFailed(category, cause)));
 
         const scrape = firecrawl.scrapeUrlHtml(url).pipe(
+          // oxlint-disable-next-line promise/prefer-await-to-callbacks, promise/prefer-await-to-then -- Effect.catch uses a callback, not a Promise chain.
           Effect.catch((error) =>
             Effect.gen(function* recordFailedScrape() {
               const completedAt = yield* DateTime.nowAsDate;

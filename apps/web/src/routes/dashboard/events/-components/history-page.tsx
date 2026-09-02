@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import type { PaginatedBets } from "@tepirek-revamped/api/protocol/bet/http-api-contract";
 import { calculatePointsPerMember } from "@tepirek-revamped/config";
@@ -91,6 +89,7 @@ const HistoryPage = ({ session }: HistoryPageProps) => {
   const refreshBets = useAtomRefresh(paginatedBetsAtom(betPageInput));
 
   return (
+    // oxlint-disable-next-line no-use-before-define
     <HistoryContent
       betPageInput={betPageInput}
       key={historyFilterKey(betPageInput)}
@@ -193,6 +192,7 @@ const HistoryContent = ({
         ))}
 
         {hasNextPage && (
+          // oxlint-disable-next-line no-use-before-define
           <LoadMoreTrigger
             onVisible={() => {
               loadPage(2);
@@ -200,6 +200,7 @@ const HistoryContent = ({
           />
         )}
         {loadedPages.slice(1).map((page) => (
+          // oxlint-disable-next-line no-use-before-define
           <HistoryPageChunk
             baseInput={betPageInput}
             isAdminUser={isAdminUser}
@@ -339,7 +340,10 @@ const HistoryPageChunk = (props: HistoryPageChunkProps) => {
 
   return (
     <AsyncResultBoundary onRetry={refresh} result={result}>
-      {() => <LoadedHistoryPageChunk {...props} input={input} />}
+      {() => (
+        // oxlint-disable-next-line no-use-before-define
+        <LoadedHistoryPageChunk {...props} input={input} />
+      )}
     </AsyncResultBoundary>
   );
 };
@@ -380,6 +384,7 @@ const LoadedHistoryPageChunk = ({
         />
       ))}
       {data.pagination.hasMore && (
+        // oxlint-disable-next-line no-use-before-define
         <LoadMoreTrigger
           onVisible={() => {
             onLoadPage(page + 1);

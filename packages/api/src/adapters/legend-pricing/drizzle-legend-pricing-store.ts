@@ -1,5 +1,4 @@
 /* eslint-disable no-shadow -- Named generators mirror persistence operation names for traces. */
-// oxlint-disable promise/prefer-await-to-callbacks -- Persistence decoders use the shared Effect adapter callback.
 import type {
   EffectPgDatabase,
   TransactionDatabase,
@@ -58,6 +57,7 @@ const decodePersisted = <A>(
   decodePersistedValue(
     schema,
     operation,
+    // oxlint-disable-next-line promise/prefer-await-to-callbacks -- Persistence decoders use the shared Effect adapter callback.
     (error) => new ApplicationDependencyUnavailable(error)
   );
 

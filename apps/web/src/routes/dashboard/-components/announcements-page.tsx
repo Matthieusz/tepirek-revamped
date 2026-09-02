@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Calendar, Megaphone, Plus, Trash2 } from "lucide-react";
@@ -50,7 +48,10 @@ const DashboardHomePage = ({ session }: DashboardHomePageProps) => {
       onRetry={refreshAnnouncements}
       result={announcementsResult}
     >
-      {() => <DashboardHomeContent session={session} />}
+      {() => (
+        // oxlint-disable-next-line no-use-before-define
+        <DashboardHomeContent session={session} />
+      )}
     </AsyncResultBoundary>
   );
 };

@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Plus } from "lucide-react";
@@ -23,7 +21,10 @@ const SkillsIndexPage = ({ session }: SkillsIndexPageProps) => {
 
   return (
     <AsyncResultBoundary onRetry={refreshRanges} result={rangesResult}>
-      {() => <SkillsIndexContent session={session} />}
+      {() => (
+        // oxlint-disable-next-line no-use-before-define
+        <SkillsIndexContent session={session} />
+      )}
     </AsyncResultBoundary>
   );
 };

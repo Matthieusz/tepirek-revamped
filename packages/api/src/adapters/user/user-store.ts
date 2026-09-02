@@ -1,5 +1,4 @@
 /* eslint-disable no-shadow -- Named Effect generators mirror service names for traces. */
-// oxlint-disable promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
 import type {
   EffectPgDatabase,
   TransactionDatabase,
@@ -59,6 +58,7 @@ const decodeAppUserId = (operation: string) =>
   decodePersistedValue(
     AppUserId,
     operation,
+    // oxlint-disable-next-line promise/prefer-await-to-callbacks -- Effect combinators use callbacks for typed error mapping.
     (error) => new ApplicationDependencyUnavailable(error)
   );
 

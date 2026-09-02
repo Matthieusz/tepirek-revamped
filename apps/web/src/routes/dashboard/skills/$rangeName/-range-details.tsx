@@ -3,7 +3,6 @@ import { getRouteApi } from "@tanstack/react-router";
 import * as Arr from "effect/Array";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { Plus } from "lucide-react";
-/* oxlint-disable no-use-before-define */
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -58,7 +57,10 @@ const RangeSkillsView = ({
 
   return (
     <AsyncResultBoundary onRetry={refreshSkills} result={skillsResult}>
-      {() => <RangeSkillsContent professions={professions} rangeId={rangeId} />}
+      {() => (
+        // oxlint-disable-next-line no-use-before-define
+        <RangeSkillsContent professions={professions} rangeId={rangeId} />
+      )}
     </AsyncResultBoundary>
   );
 };

@@ -11,8 +11,6 @@ import {
   parsePositiveLevel,
 } from "./margonem-profile-id.ts";
 
-// oxlint-disable max-classes-per-file -- closely related parser error variants share one boundary.
-
 /** Parsed Jaruna-only Margonem profile data from Firecrawl HTML. */
 export interface ParsedMargonemProfile {
   readonly profileId: MargonemProfileId;
@@ -33,6 +31,7 @@ export class MargonemProfileNameNotFound extends Schema.TaggedErrorClass<Margone
 ) {}
 
 /** Expected failure when the profile has no character rows. */
+// oxlint-disable-next-line max-classes-per-file -- Closely related parser error variants share one boundary.
 export class MargonemCharacterRowsNotFound extends Schema.TaggedErrorClass<MargonemCharacterRowsNotFound>()(
   "MargonemCharacterRowsNotFound",
   { profileId: MargonemProfileId }

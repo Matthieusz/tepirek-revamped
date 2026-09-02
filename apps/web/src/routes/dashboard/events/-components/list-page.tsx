@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { format } from "date-fns/format";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
@@ -58,7 +56,10 @@ const EventsListPage = ({ session }: EventsListPageProps) => {
 
   return (
     <AsyncResultBoundary onRetry={refreshEvents} result={eventsResult}>
-      {() => <EventsListContent session={session} />}
+      {() => (
+        // oxlint-disable-next-line no-use-before-define
+        <EventsListContent session={session} />
+      )}
     </AsyncResultBoundary>
   );
 };

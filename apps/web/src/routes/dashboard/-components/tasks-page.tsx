@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useSelector } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
@@ -52,7 +50,10 @@ const TasksPage = ({ session }: TasksPageProps) => {
 
   return (
     <AsyncResultBoundary onRetry={refreshTodos} result={todosResult}>
-      {() => <TasksContent session={session} />}
+      {() => (
+        // oxlint-disable-next-line no-use-before-define
+        <TasksContent session={session} />
+      )}
     </AsyncResultBoundary>
   );
 };
