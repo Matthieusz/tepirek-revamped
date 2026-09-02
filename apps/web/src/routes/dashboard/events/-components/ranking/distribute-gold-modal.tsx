@@ -155,12 +155,13 @@ const DistributeGoldModalContent = ({
       }
 
       const goldAmount = parseGoldAmount(decoded.value.goldAmount);
-      const result = await runFormSubmission(() =>
-        distributeGold({
-          eventId: decoded.value.eventId,
-          goldAmount,
-          heroId: decoded.value.heroId,
-        })
+      const result = await runFormSubmission(
+        async () =>
+          await distributeGold({
+            eventId: decoded.value.eventId,
+            goldAmount,
+            heroId: decoded.value.heroId,
+          })
       );
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);

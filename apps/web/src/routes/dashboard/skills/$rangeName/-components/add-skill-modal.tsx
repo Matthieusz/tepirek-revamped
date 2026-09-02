@@ -69,15 +69,15 @@ const AddSkillModalContent = ({
         return;
       }
 
-      const result = await runFormSubmission(() =>
-        createSkill({
+      const result = await runFormSubmission(async () => {
+        await createSkill({
           link: decoded.value.link,
           mastery: decoded.value.mastery,
           name: decoded.value.name,
           professionId: decoded.value.professionId,
           rangeId: defaultRangeId,
-        })
-      );
+        });
+      });
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);
         return;

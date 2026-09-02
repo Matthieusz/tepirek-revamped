@@ -130,12 +130,12 @@ const PreviewRow = ({
       if (!("value" in decoded) || item.status === "error") {
         return;
       }
-      const result = await runFormSubmission(() =>
-        onConfirm(item, {
+      const result = await runFormSubmission(async () => {
+        await onConfirm(item, {
           displayName: decoded.value.displayName.trim(),
           pendingImportId: item.pendingImportId,
-        })
-      );
+        });
+      });
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);
         return;
@@ -417,8 +417,8 @@ export const AccountImportFrame = () => {
       if (!("value" in decoded)) {
         return;
       }
-      const result = await runFormSubmission(() =>
-        previewImports(decoded.value)
+      const result = await runFormSubmission(
+        async () => await previewImports(decoded.value)
       );
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);

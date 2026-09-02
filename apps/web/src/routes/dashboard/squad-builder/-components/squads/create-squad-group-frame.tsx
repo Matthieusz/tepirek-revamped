@@ -50,8 +50,8 @@ export const CreateSquadGroupFrame = ({
       if (!("value" in decoded)) {
         return;
       }
-      const result = await runFormSubmission(() =>
-        createSquadGroup({ name: decoded.value.name.trim() })
+      const result = await runFormSubmission(
+        async () => await createSquadGroup({ name: decoded.value.name.trim() })
       );
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);

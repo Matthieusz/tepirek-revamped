@@ -87,14 +87,14 @@ export const AddEventModal = ({ trigger }: AddEventModalProps) => {
         return;
       }
 
-      const result = await runFormSubmission(() =>
-        createEvent({
+      const result = await runFormSubmission(async () => {
+        await createEvent({
           color: decoded.value.color,
           endTime: decoded.value.date,
           icon: decoded.value.icon,
           name: decoded.value.name,
-        })
-      );
+        });
+      });
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);
         return;

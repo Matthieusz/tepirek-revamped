@@ -45,8 +45,8 @@ const EditProfileModalContent = ({
         return;
       }
 
-      const result = await runFormSubmission(() =>
-        updateProfile(decoded.value)
+      const result = await runFormSubmission(
+        async () => await updateProfile(decoded.value)
       );
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);

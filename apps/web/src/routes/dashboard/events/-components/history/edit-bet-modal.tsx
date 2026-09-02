@@ -81,12 +81,13 @@ const EditBetModalContent = ({
         return;
       }
 
-      const result = await runFormSubmission(() =>
-        editBet({
-          betId,
-          newUserIds: decoded.value.userIds,
-          refreshInput,
-        })
+      const result = await runFormSubmission(
+        async () =>
+          await editBet({
+            betId,
+            newUserIds: decoded.value.userIds,
+            refreshInput,
+          })
       );
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);

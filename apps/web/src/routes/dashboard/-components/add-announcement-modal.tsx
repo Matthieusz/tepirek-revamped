@@ -49,9 +49,9 @@ export const AddAnnouncementModal = ({
         return;
       }
 
-      const result = await runFormSubmission(() =>
-        createAnnouncement(decoded.value)
-      );
+      const result = await runFormSubmission(async () => {
+        await createAnnouncement(decoded.value);
+      });
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);
         return;

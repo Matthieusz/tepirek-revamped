@@ -108,11 +108,12 @@ export const BetsAddForm = ({
         return;
       }
 
-      const result = await runFormSubmission(() =>
-        createBet({
-          heroId: decoded.value.heroId,
-          userIds: decoded.value.userIds,
-        })
+      const result = await runFormSubmission(
+        async () =>
+          await createBet({
+            heroId: decoded.value.heroId,
+            userIds: decoded.value.userIds,
+          })
       );
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);

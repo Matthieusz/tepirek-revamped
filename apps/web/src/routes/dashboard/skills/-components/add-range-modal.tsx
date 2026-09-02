@@ -45,9 +45,9 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
         return;
       }
 
-      const result = await runFormSubmission(() =>
-        createSkillRange(decoded.value)
-      );
+      const result = await runFormSubmission(async () => {
+        await createSkillRange(decoded.value);
+      });
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);
         return;

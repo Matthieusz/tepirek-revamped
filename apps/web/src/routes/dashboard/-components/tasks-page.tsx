@@ -77,7 +77,9 @@ const TasksContent = ({ session }: TasksPageProps) => {
         return;
       }
 
-      const result = await runFormSubmission(() => createTodo(decoded.value));
+      const result = await runFormSubmission(async () => {
+        await createTodo(decoded.value);
+      });
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);
         return;
@@ -91,10 +93,14 @@ const TasksContent = ({ session }: TasksPageProps) => {
   const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   const toggleTodoMutation = (input: { id: number; completed: boolean }) => {
-    runMutation(async () => await toggleTodo(input));
+    runMutation(async () => {
+      await toggleTodo(input);
+    });
   };
   const deleteTodoMutation = (input: { id: number }) => {
-    runMutation(async () => await deleteTodo(input));
+    runMutation(async () => {
+      await deleteTodo(input);
+    });
   };
 
   const handleToggleTodo = (id: number, completed: boolean) => {

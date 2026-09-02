@@ -44,9 +44,9 @@ export const AddProfessionModal = ({ trigger }: AddProfessionModalProps) => {
         return;
       }
 
-      const result = await runFormSubmission(() =>
-        createSkillProfession(decoded.value)
-      );
+      const result = await runFormSubmission(async () => {
+        await createSkillProfession(decoded.value);
+      });
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);
         return;
