@@ -1,4 +1,3 @@
-/* oxlint-disable sort-keys -- TanStack Router route property order is type-sensitive. */
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -22,17 +21,17 @@ export const loadDashboardSession = async (
 };
 
 export const Route = createFileRoute("/dashboard")({
-  ssr: false,
   beforeLoad: async ({ context }) =>
     await loadDashboardSession(context.getUser),
   component: DashboardRoute,
-  pendingComponent: () => <LoadingSpinner />,
   head: () => ({
     meta: [
       { title: createPageTitle("Dashboard") },
       { content: "noindex, nofollow", name: "robots" },
     ],
   }),
+  pendingComponent: () => <LoadingSpinner />,
+  ssr: false,
   staticData: {
     crumb: "Dashboard",
   },

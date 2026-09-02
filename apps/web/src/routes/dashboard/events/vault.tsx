@@ -1,4 +1,3 @@
-/* oxlint-disable sort-keys -- TanStack Router route property order is type-sensitive. */
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 
@@ -29,15 +28,15 @@ const validateVaultSearch = decodeVaultSearch;
 export const Route = createFileRoute("/dashboard/events/vault")({
   component: EventsVaultRoute,
   errorComponent: EventsRouteError,
-  pendingComponent: EventsRoutePending,
-  staticData: {
-    crumb: "Skarbiec",
-  },
-  validateSearch: validateVaultSearch,
   loader: async ({ context }) => {
     await context.preloadAtomResults(context.atomRegistry, [
       eventsAtom,
       oldestUnpaidEventAtom,
     ]);
   },
+  pendingComponent: EventsRoutePending,
+  staticData: {
+    crumb: "Skarbiec",
+  },
+  validateSearch: validateVaultSearch,
 });

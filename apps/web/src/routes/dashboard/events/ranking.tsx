@@ -1,4 +1,3 @@
-/* oxlint-disable sort-keys -- TanStack Router route property order is type-sensitive. */
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 
@@ -21,6 +20,9 @@ const RankingRoute = () => {
 export const Route = createFileRoute("/dashboard/events/ranking")({
   component: RankingRoute,
   errorComponent: EventsRouteError,
+  loader: async ({ context }) => {
+    await context.preloadAtomResults(context.atomRegistry, [eventsAtom]);
+  },
   pendingComponent: EventsRoutePending,
   staticData: {
     crumb: "Ranking",
@@ -31,7 +33,4 @@ export const Route = createFileRoute("/dashboard/events/ranking")({
       sortBy: Schema.optional(RankingSortSchema),
     })
   ),
-  loader: async ({ context }) => {
-    await context.preloadAtomResults(context.atomRegistry, [eventsAtom]);
-  },
 });

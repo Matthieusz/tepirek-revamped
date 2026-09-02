@@ -1,4 +1,3 @@
-/* oxlint-disable sort-keys -- TanStack Router route property order is type-sensitive. */
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 
@@ -24,11 +23,11 @@ export type CennikSearch = typeof CennikSearchSchema.Type;
 
 export const Route = createFileRoute("/dashboard/cennik")({
   component: CennikRoute,
-  validateSearch: Schema.decodeUnknownSync(CennikSearchSchema),
   loader: async ({ context }) => {
     await context.preloadAtomResults(context.atomRegistry, [legendPricesAtom]);
   },
   staticData: {
     crumb: "Cennik legend",
   },
+  validateSearch: Schema.decodeUnknownSync(CennikSearchSchema),
 });
