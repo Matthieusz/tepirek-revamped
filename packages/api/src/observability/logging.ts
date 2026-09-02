@@ -23,7 +23,7 @@ const isPlainObject = (input: LogValue): input is LogObject => {
     return false;
   }
 
-  const prototype = Object.getPrototypeOf(input);
+  const prototype = Reflect.getPrototypeOf(input);
   return prototype === Object.prototype || prototype === null;
 };
 
@@ -86,7 +86,10 @@ const formatter = (runId: string) =>
 export const makeStderrLogger = (
   runId: string,
   write: (output: string) => void = (output) => process.stderr.write(output)
-) => Logger.make((options) => write(`${formatter(runId).log(options)}\n`));
+) =>
+  Logger.make((options) => {
+    write(`${formatter(runId).log(options)}\n`);
+  });
 
 const isLogLevelName = (value: string): value is keyof typeof LOG_LEVELS =>
   Object.hasOwn(LOG_LEVELS_BY_NAME, value);

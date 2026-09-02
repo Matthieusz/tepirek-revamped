@@ -17,7 +17,10 @@ import {
   makeBetterAuthDatabase,
 } from "./better-auth-database.ts";
 
-export { BetterAuthDatabaseService } from "./better-auth-database.ts";
+export {
+  BetterAuthDatabaseService,
+  makeBetterAuthDatabase,
+} from "./better-auth-database.ts";
 export type { BetterAuthDatabase } from "./better-auth-database.ts";
 
 /** Scoped node-postgres pool shared by both Drizzle adapters. */
@@ -42,16 +45,30 @@ const DATE_TIME_TYPE_IDS = HashSet.fromIterable([
   1114, 1184, 1082, 1186, 1231, 1115, 1185, 1187, 1182,
 ]);
 
-type PostgresTypeParserInput = Parameters<
-  ReturnType<typeof types.getTypeParser>
->[0];
+type PostgresParsedValue =
+  | boolean
+  | Buffer
+  | Date
+  | null
+  | number
+  | object
+  | string;
+type PostgresTypeParser = (value: string | Buffer) => PostgresParsedValue;
 
 const postgresTypes = {
-  getTypeParser: (typeId: number, format?: "text" | "binary") => {
+  getTypeParser: (
+    typeId: number,
+    format?: "text" | "binary"
+  ): PostgresTypeParser => {
     if (HashSet.has(DATE_TIME_TYPE_IDS, typeId)) {
-      return (value: PostgresTypeParserInput) => value;
+      return (value: string | Buffer) => value;
     }
-    return types.getTypeParser(typeId, format);
+
+    // SAFETY: node-postgres documents this as a parser function for text or
+    // binary values. Its declaration is untyped, so this adapter narrows the
+    // boundary to the values Drizzle passes to the parser.
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- The node-postgres declaration omits the parser function type.
+    return types.getTypeParser(typeId, format) as PostgresTypeParser;
   },
 };
 
@@ -90,7 +107,9 @@ export const makeSharedPostgresPoolLayer = (
           max: DATABASE_POOL_MAX_CONNECTIONS,
           types: postgresTypes,
         });
-        pool.on("error", (_error) => null);
+        pool.on("error", () => {
+          // The listener prevents pg from treating idle connection errors as uncaught.
+        });
 
         yield* Effect.tryPromise({
           catch: (cause) =>

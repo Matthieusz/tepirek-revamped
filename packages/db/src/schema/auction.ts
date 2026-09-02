@@ -20,17 +20,14 @@ export const auction = pgTable(
     type: text("type").notNull(),
     userId: text("user_id").notNull(),
   },
-  (table) => ({
-    auctionSlotUniqueIdx: uniqueIndex("auction_slot_unique_idx").on(
+  (table) => [
+    uniqueIndex("auction_slot_unique_idx").on(
       table.profession,
       table.type,
       table.level,
       table.round,
       table.column
     ),
-    professionTypeIdx: index("profession_type_idx").on(
-      table.profession,
-      table.type
-    ),
-  })
+    index("profession_type_idx").on(table.profession, table.type),
+  ]
 );

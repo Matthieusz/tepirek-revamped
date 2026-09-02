@@ -89,9 +89,12 @@ export const testDatabaseUrl =
   process.env.TEST_DATABASE_URL ?? defaultTestDatabaseUrl;
 const testDatabase = parseDatabaseUrl(testDatabaseUrl, "TEST_DATABASE_URL");
 const isVitestWorker = process.env.VITEST_POOL_ID !== undefined;
+const developmentDatabaseUrl = process.env.DATABASE_URL;
 const developmentDatabase =
-  !isVitestWorker && process.env.DATABASE_URL
-    ? parseDatabaseUrl(process.env.DATABASE_URL, "DATABASE_URL")
+  !isVitestWorker &&
+  developmentDatabaseUrl !== undefined &&
+  developmentDatabaseUrl.length > 0
+    ? parseDatabaseUrl(developmentDatabaseUrl, "DATABASE_URL")
     : undefined;
 
 export const isManagedTestDatabase =
