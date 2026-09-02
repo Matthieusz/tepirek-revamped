@@ -17,11 +17,11 @@ interface ProjectedError {
   readonly operation: string;
 }
 
-const testProjection = <Error extends ProjectedError>(
+const testProjection = (
   makeError: (input: {
     readonly cause: EffectDrizzleQueryError | SqlErrorType;
     readonly operation: string;
-  }) => Error
+  }) => ProjectedError
 ): void => {
   const persistenceQuery = makeDirectPersistenceQuery(makeError);
 

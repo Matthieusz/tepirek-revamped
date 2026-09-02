@@ -170,8 +170,9 @@ effectIt.layer(integrationLayer, { excludeTestServices: true })(
           deactivatedItemCount: 0,
         });
 
-        const actor = yield* Effect.promise(() =>
-          createVerifiedMember({ id: "legend-catalog-price-admin" })
+        const actor = yield* Effect.promise(
+          async () =>
+            await createVerifiedMember({ id: "legend-catalog-price-admin" })
         );
         const [pricedItem] = yield* Effect.promise(() =>
           testDb

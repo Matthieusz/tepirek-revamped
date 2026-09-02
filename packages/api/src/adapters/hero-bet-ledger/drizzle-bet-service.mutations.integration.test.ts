@@ -342,10 +342,13 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const members = yield* withServices((ledger) =>
           ledger.getBetMembers(bet.id)
         );
-        expect(sortByUserId(members)).toEqual([
-          { id: expect.any(Number), points: "6.66", userId: firstMember.id },
-          { id: expect.any(Number), points: "6.66", userId: secondMember.id },
-          { id: expect.any(Number), points: "6.66", userId: thirdMember.id },
+        expect(members.every((member) => Number.isInteger(member.id))).toBe(
+          true
+        );
+        expect(sortByUserId(members)).toMatchObject([
+          { points: "6.66", userId: firstMember.id },
+          { points: "6.66", userId: secondMember.id },
+          { points: "6.66", userId: thirdMember.id },
         ]);
 
         const stats = yield* Effect.promise(() =>
@@ -512,9 +515,10 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const ranking = yield* withServices((ledger) =>
           ledger.getRanking({ heroId: createdHero.id })
         );
-        expect(ranking).toEqual({
-          pointWorth: 100_000_000,
-          ranking: expect.arrayContaining([
+        expect(ranking.pointWorth).toBe(100_000_000);
+        expect(ranking.totalBets).toBe(1);
+        expect(ranking.ranking).toEqual(
+          expect.arrayContaining([
             {
               totalBets: 1,
               totalEarnings: "1000000000.00",
@@ -531,9 +535,8 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
               userImage: "https://example.com/second.png",
               userName: "Second Ledger Member",
             },
-          ]),
-          totalBets: 1,
-        });
+          ])
+        );
 
         const vaultBeforeToggle = yield* withServices((ledger) =>
           ledger.getVault(createdHero.eventId)
@@ -624,9 +627,12 @@ effectIt.layer(testLayer)("HeroBetLedger mutation behavior", (it) => {
         const editedMembers = yield* withServices((ledger) =>
           ledger.getBetMembers(bet.id)
         );
-        expect(sortByUserId(editedMembers)).toEqual([
-          { id: expect.any(Number), points: "10.00", userId: secondMember.id },
-          { id: expect.any(Number), points: "10.00", userId: thirdMember.id },
+        expect(
+          editedMembers.every((member) => Number.isInteger(member.id))
+        ).toBe(true);
+        expect(sortByUserId(editedMembers)).toMatchObject([
+          { points: "10.00", userId: secondMember.id },
+          { points: "10.00", userId: thirdMember.id },
         ]);
 
         const editedStats = yield* Effect.promise(() =>

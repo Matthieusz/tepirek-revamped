@@ -36,8 +36,9 @@ effectIt.layer(integrationLayer, { excludeTestServices: true })(
       () =>
         Effect.gen(function* verifyLegendPricingStore() {
           const store = yield* LegendPricingStore;
-          const actor = yield* Effect.promise(() =>
-            createVerifiedMember({ id: "legend-pricing-store-admin" })
+          const actor = yield* Effect.promise(
+            async () =>
+              await createVerifiedMember({ id: "legend-pricing-store-admin" })
           );
           const [enemy] = yield* Effect.promise(() =>
             testDb
@@ -135,11 +136,11 @@ effectIt.layer(integrationLayer, { excludeTestServices: true })(
           expect(repriced).toMatchObject({
             equipmentType: "ring",
             itemId: LegendaryItemId.make(item.id),
-            lastSyncedAt: expect.any(Date),
             level: 100,
             professions: ["warrior"],
             sourceIconKey: "/obrazki/itemy/pie/store.gif",
           });
+          expect(repriced.lastSyncedAt).toBeInstanceOf(Date);
           expect(repriced.priceUpdatedAt).toBeInstanceOf(Date);
         })
     );

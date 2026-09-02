@@ -15,10 +15,10 @@ type EffectSuccess<T> =
 it("keeps service query results aligned with HttpApi response schemas", () => {
   expectTypeOf<
     EffectSuccess<ReturnType<BetServiceInterface["getPaginatedBets"]>>
-  >().toMatchTypeOf<PaginatedBets>();
+  >().toExtend<PaginatedBets>();
   expectTypeOf<
     EffectSuccess<ReturnType<BetServiceInterface["getLatestBetForCopy"]>>
-  >().toMatchTypeOf<typeof LatestBetForCopy.Type>();
+  >().toExtend<typeof LatestBetForCopy.Type>();
   expectTypeOf<
     EffectSuccess<ReturnType<RankingServiceInterface["getRanking"]>>
   >().toEqualTypeOf<RankingResult>();
