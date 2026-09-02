@@ -46,6 +46,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "effect-owned-owner" })
         );
+        const accountImportStore = yield* AccountImportStoreService;
         const other = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "effect-owned-other" })
         );
@@ -86,11 +87,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           })
         );
 
-        const accounts = yield* AccountImportStoreService.use((store) =>
-          store.listOwnedAccounts({
-            actorUserId: parseTestUserId(member.id),
-          })
-        );
+        const accounts = yield* accountImportStore.listOwnedAccounts({
+          actorUserId: parseTestUserId(member.id),
+        });
 
         expect(accounts).toHaveLength(1);
         expect(accounts[0]).toMatchObject({
@@ -108,24 +107,23 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
         const member = yield* Effect.promise(
           async () => await createVerifiedMember({ id: "effect-pending-user" })
         );
-        const pending = yield* AccountImportStoreService.use((store) =>
-          store.createPendingImport({
-            actorUserId: parseTestUserId(member.id),
-            expiresAt: new Date("2026-06-29T12:30:00.000Z"),
-            fetchedAt: new Date("2026-06-29T12:00:00.000Z"),
-            jarunaCharacters: [
-              {
-                avatarUrl: null,
-                characterId: parseTestCharacterId(1_296_628),
-                level: parseTestLevel(301),
-                name: "pendingchar",
-                profession: "tracker",
-                world: "jaruna",
-              },
-            ],
-            profileId: parseTestProfileId(8_100_150),
-          })
-        );
+        const accountImportStore = yield* AccountImportStoreService;
+        const pending = yield* accountImportStore.createPendingImport({
+          actorUserId: parseTestUserId(member.id),
+          expiresAt: new Date("2026-06-29T12:30:00.000Z"),
+          fetchedAt: new Date("2026-06-29T12:00:00.000Z"),
+          jarunaCharacters: [
+            {
+              avatarUrl: null,
+              characterId: parseTestCharacterId(1_296_628),
+              level: parseTestLevel(301),
+              name: "pendingchar",
+              profession: "tracker",
+              world: "jaruna",
+            },
+          ],
+          profileId: parseTestProfileId(8_100_150),
+        });
 
         const [stored] = yield* Effect.promise(() =>
           testDb
@@ -166,6 +164,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             async () =>
               await createVerifiedMember({ id: "effect-refetch-owner" })
           );
+          const accountRefetchStore = yield* AccountRefetchStoreService;
           const [account] = yield* Effect.promise(() =>
             testDb
               .insert(margonemAccount)
@@ -193,12 +192,10 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             })
           );
 
-          const loaded = yield* AccountRefetchStoreService.use((store) =>
-            store.getAccountForRefetch({
-              accountId: parseTestAccountId(account.id),
-              actorUserId: parseTestUserId(member.id),
-            })
-          );
+          const loaded = yield* accountRefetchStore.getAccountForRefetch({
+            accountId: parseTestAccountId(account.id),
+            actorUserId: parseTestUserId(member.id),
+          });
 
           const fetchedAt = new Date("2026-06-29T12:00:00.000Z");
           const latestCharacters = [
@@ -211,16 +208,14 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               world: "jaruna" as const,
             },
           ];
-          const pending = yield* AccountRefetchStoreService.use((store) =>
-            store.createPendingRefetch({
-              accountId: loaded.accountId,
-              actorUserId: parseTestUserId(member.id),
-              expiresAt: new Date("2026-06-29T12:30:00.000Z"),
-              fetchedAt,
-              latestCharacters,
-              profileId: loaded.profileId,
-            })
-          );
+          const pending = yield* accountRefetchStore.createPendingRefetch({
+            accountId: loaded.accountId,
+            actorUserId: parseTestUserId(member.id),
+            expiresAt: new Date("2026-06-29T12:30:00.000Z"),
+            fetchedAt,
+            latestCharacters,
+            profileId: loaded.profileId,
+          });
 
           const [stored] = yield* Effect.promise(() =>
             testDb

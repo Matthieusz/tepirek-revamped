@@ -41,11 +41,11 @@ const appHttpApiLayer = AppHttpApiLayer.pipe(
 );
 
 const withAppHttpApi = <A>(
-  use: (appHttpApi: IntegrationHandler) => Promise<A>
+  runWith: (appHttpApi: IntegrationHandler) => Promise<A>
 ) =>
   Effect.gen(function* acquireAppHttpApi() {
     const appHttpApi = yield* integrationHandler(appHttpApiLayer);
-    return yield* Effect.promise(async () => await use(appHttpApi));
+    return yield* Effect.promise(async () => await runWith(appHttpApi));
   });
 
 const requestHttpApi = async (
@@ -127,21 +127,21 @@ const perUserBudgetHttpApiLayer = AppHttpApiLayer.pipe(
 );
 
 const withPerUserBudgetHttpApi = <A>(
-  use: (appHttpApi: IntegrationHandler) => Promise<A>
+  runWith: (appHttpApi: IntegrationHandler) => Promise<A>
 ) =>
   Effect.gen(function* acquirePerUserBudgetHttpApi() {
     const appHttpApi = yield* integrationHandler(perUserBudgetHttpApiLayer);
-    return yield* Effect.promise(async () => await use(appHttpApi));
+    return yield* Effect.promise(async () => await runWith(appHttpApi));
   });
 
 const withFailingAnnouncementHttpApi = <A>(
-  use: (appHttpApi: IntegrationHandler) => Promise<A>
+  runWith: (appHttpApi: IntegrationHandler) => Promise<A>
 ) =>
   Effect.gen(function* acquireFailingAnnouncementHttpApi() {
     const appHttpApi = yield* integrationHandler(
       failingAnnouncementHttpApiLayer
     );
-    return yield* Effect.promise(async () => await use(appHttpApi));
+    return yield* Effect.promise(async () => await runWith(appHttpApi));
   });
 
 const createSignedInAdmin = async (name: string) => {
@@ -173,7 +173,7 @@ const createSignedInAdmin = async (name: string) => {
   }
 
   const cookie = response.headers.get("set-cookie");
-  if (!cookie) {
+  if (cookie === null || cookie.length === 0) {
     throw new Error("Expected sign up to create a session cookie");
   }
 
@@ -246,8 +246,8 @@ describe("Effect HttpApi routes", () => {
       const { cookie, id } = await createSignedInAdmin(
         "per-user-budget-redaction-admin"
       );
-      const request = () =>
-        appHttpApi.handler(
+      const request = async () =>
+        await appHttpApi.handler(
           new Request(
             "http://localhost:3000/squad-builder/account-imports/preview-profile",
             jsonPost(

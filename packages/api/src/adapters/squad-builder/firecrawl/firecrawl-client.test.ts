@@ -84,20 +84,20 @@ const provideFirecrawlClient = (client: HttpClient.HttpClient) =>
 const scrapeWith = (client: HttpClient.HttpClient, profileId: number) =>
   Effect.gen(function* scrapeProfile() {
     const parsedProfileId = yield* parseMargonemProfileId(profileId);
-    return yield* FirecrawlClientService.use((service) =>
-      service.scrapeProfileHtml(parsedProfileId)
-    );
+    const service = yield* FirecrawlClientService;
+    return yield* service.scrapeProfileHtml(parsedProfileId);
   }).pipe(provideFirecrawlClient(client));
 
 const scrapeUrlWith = (client: HttpClient.HttpClient, url: string) =>
-  FirecrawlClientService.use((service) => service.scrapeUrlHtml(url)).pipe(
-    provideFirecrawlClient(client)
-  );
+  Effect.gen(function* scrapeUrl() {
+    const service = yield* FirecrawlClientService;
+    return yield* service.scrapeUrlHtml(url);
+  }).pipe(provideFirecrawlClient(client));
 
 const readRequestBody = (request: HttpClientRequest.HttpClientRequest) =>
   Effect.gen(function* readBody() {
     const webRequest = yield* HttpClientRequest.toWeb(request);
-    const body = yield* Effect.tryPromise(() => webRequest.text());
+    const body = yield* Effect.tryPromise(async () => await webRequest.text());
     const parsedBody: unknown = JSON.parse(body);
     return parsedBody;
   });

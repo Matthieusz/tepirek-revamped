@@ -34,8 +34,10 @@ describe("auth form behavior", () => {
     () =>
       Effect.gen(function* translateRequestFailure() {
         const error = yield* Effect.flip(
-          authFormSubmission("login", () =>
-            Promise.reject(new Error("provider URL and token"))
+          authFormSubmission(
+            "login",
+            async () =>
+              await Promise.reject(new Error("provider URL and token"))
           )
         );
 
@@ -54,16 +56,18 @@ describe("auth form behavior", () => {
   it.effect("translates provider-declared failures and reports them once", () =>
     Effect.gen(function* translateProviderFailure() {
       const error = yield* Effect.flip(
-        authFormSubmission("signup", () =>
-          Promise.resolve({
-            data: null,
-            error: {
-              code: "INVALID_EMAIL",
-              message: "Niepoprawny e-mail",
-              status: 400,
-              statusText: "Bad Request",
-            },
-          })
+        authFormSubmission(
+          "signup",
+          async () =>
+            await Promise.resolve({
+              data: null,
+              error: {
+                code: "INVALID_EMAIL",
+                message: "Niepoprawny e-mail",
+                status: 400,
+                statusText: "Bad Request",
+              },
+            })
         )
       );
 
@@ -81,16 +85,19 @@ describe("auth form behavior", () => {
 
   it("returns auth success and typed provider failure as values", async () => {
     await expect(
-      runAuthFormSubmission("login", () =>
-        Promise.resolve({ data: null, error: null })
+      runAuthFormSubmission(
+        "login",
+        async () => await Promise.resolve({ data: null, error: null })
       )
     ).resolves.toEqual({ _tag: "success" });
 
-    const result = await runAuthFormSubmission("login", () =>
-      Promise.resolve({
-        data: null,
-        error: { message: "Niepoprawne dane", status: 401 },
-      })
+    const result = await runAuthFormSubmission(
+      "login",
+      async () =>
+        await Promise.resolve({
+          data: null,
+          error: { message: "Niepoprawne dane", status: 401 },
+        })
     );
     expect(result._tag).toBe("failure");
     if (result._tag === "failure") {
@@ -102,13 +109,13 @@ describe("auth form behavior", () => {
     const calls: string[] = [];
 
     await handleLoginSuccess({
-      invalidate: () => {
+      invalidate: async () => {
         calls.push("invalidate");
-        return Promise.resolve();
+        await Promise.resolve();
       },
-      navigate: () => {
+      navigate: async () => {
         calls.push("navigate");
-        return Promise.resolve();
+        await Promise.resolve();
       },
       notifySuccess,
     });
@@ -118,7 +125,9 @@ describe("auth form behavior", () => {
   });
 
   it("navigates before announcing successful signup", async () => {
-    const navigate = vi.fn(() => Promise.resolve());
+    const navigate = vi.fn(async () => {
+      await Promise.resolve();
+    });
 
     await handleSignupSuccess({ navigate, notifySuccess });
 

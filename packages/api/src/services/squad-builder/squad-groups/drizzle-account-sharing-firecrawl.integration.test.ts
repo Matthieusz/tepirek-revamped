@@ -43,31 +43,27 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             async () =>
               await createVerifiedMember({ id: "effect-firecrawl-user" })
           );
+          const accountingStore = yield* FirecrawlRequestAccountingStoreService;
           const profileId = parseTestProfileId(8_100_201);
           const yearMonth = firecrawlYearMonthFromDate(
             new Date("2026-06-29T12:00:00.000Z")
           );
 
-          const reserved = yield* FirecrawlRequestAccountingStoreService.use(
-            (store) =>
-              store.reserveRequest({
-                monthlyRequestBudget: 10,
-                perUserMonthlyRequestBudget: 10,
-                profileId,
-                requestedByUserId: parseTestUserId(member.id),
-                yearMonth,
-              })
-          );
+          const reserved = yield* accountingStore.reserveRequest({
+            monthlyRequestBudget: 10,
+            perUserMonthlyRequestBudget: 10,
+            profileId,
+            requestedByUserId: parseTestUserId(member.id),
+            yearMonth,
+          });
 
-          yield* FirecrawlRequestAccountingStoreService.use((store) =>
-            store.markRequestSucceeded({
-              cacheState: "hit",
-              completedAt: new Date("2026-06-29T12:00:00.000Z"),
-              creditsUsed: parseTestCredits(1),
-              firecrawlStatusCode: 200,
-              requestId: reserved.requestId,
-            })
-          );
+          yield* accountingStore.markRequestSucceeded({
+            cacheState: "hit",
+            completedAt: new Date("2026-06-29T12:00:00.000Z"),
+            creditsUsed: parseTestCredits(1),
+            firecrawlStatusCode: 200,
+            requestId: reserved.requestId,
+          });
 
           const [stored] = yield* Effect.promise(() =>
             testDb
@@ -432,6 +428,7 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
               name: "Effect Store Shared Owner",
             })
         );
+        const accountSharingStore = yield* AccountSharingStoreService;
         const target = yield* Effect.promise(
           async () =>
             await createVerifiedMember({
@@ -475,11 +472,9 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           })
         );
 
-        const accounts = yield* AccountSharingStoreService.use((store) =>
-          store.listSharedAccounts({
-            actorUserId: parseTestUserId(target.id),
-          })
-        );
+        const accounts = yield* accountSharingStore.listSharedAccounts({
+          actorUserId: parseTestUserId(target.id),
+        });
 
         expect(accounts).toHaveLength(1);
         expect(accounts[0]).toMatchObject({

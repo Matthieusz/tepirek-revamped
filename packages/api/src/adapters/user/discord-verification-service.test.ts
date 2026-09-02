@@ -77,9 +77,10 @@ const verify = (
   client: HttpClient.HttpClient,
   accessToken = TEST_ACCESS_TOKEN
 ) =>
-  DiscordGuildVerifier.use((verifier) =>
-    verifier.verifyMembership(accessToken)
-  ).pipe(Effect.provide(verifierLayer(client)));
+  Effect.gen(function* verifyMembership() {
+    const verifier = yield* DiscordGuildVerifier;
+    return yield* verifier.verifyMembership(accessToken);
+  }).pipe(Effect.provide(verifierLayer(client)));
 
 const awaitAfter = <A, E>(
   fiber: Fiber.Fiber<A, E>,

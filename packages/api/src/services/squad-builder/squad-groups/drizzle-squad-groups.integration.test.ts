@@ -100,11 +100,10 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           name: "Other listed group",
         });
 
-        const groups = yield* SquadGroupAggregateStoreService.use((store) =>
-          store.listMySquadGroups({
-            actorUserId: parseTestUserId(member.id),
-          })
-        );
+        const squadGroupStore = yield* SquadGroupAggregateStoreService;
+        const groups = yield* squadGroupStore.listMySquadGroups({
+          actorUserId: parseTestUserId(member.id),
+        });
 
         const groupNames = groups.map((group) => group.name);
 
@@ -125,12 +124,11 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           name: "Effect detail group",
         });
 
-        const detail = yield* SquadGroupAggregateStoreService.use((store) =>
-          store.getSquadGroupDetail({
-            actorUserId: parseTestUserId(member.id),
-            groupId: created.groupId,
-          })
-        );
+        const squadGroupStore = yield* SquadGroupAggregateStoreService;
+        const detail = yield* squadGroupStore.getSquadGroupDetail({
+          actorUserId: parseTestUserId(member.id),
+          groupId: created.groupId,
+        });
 
         expect(detail).toMatchObject({
           accessRole: "owner",
@@ -379,29 +377,28 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
             throw new Error("Failed to load rollback group");
           }
 
+          const squadGroupSharingStore = yield* SquadGroupSharingStoreService;
           const failure = yield* Effect.flip(
-            SquadGroupSharingStoreService.use((store) =>
-              store.saveSharedSquadGroupCharacters({
-                actorUserId: parseTestUserId(member.id),
-                expectedUpdatedAt: beforeGroup.updatedAt,
+            squadGroupSharingStore.saveSharedSquadGroupCharacters({
+              actorUserId: parseTestUserId(member.id),
+              expectedUpdatedAt: beforeGroup.updatedAt,
+              groupId,
+              now: new Date(beforeGroup.updatedAt.getTime() + 1000),
+              snapshot: {
                 groupId,
-                now: new Date(beforeGroup.updatedAt.getTime() + 1000),
-                snapshot: {
-                  groupId,
-                  squads: [
-                    {
-                      characters: [
-                        {
-                          characterId: 2_000_000_000,
-                          position: parseTestCharacterPosition(0),
-                        },
-                      ],
-                      squadId,
-                    },
-                  ],
-                },
-              })
-            )
+                squads: [
+                  {
+                    characters: [
+                      {
+                        characterId: 2_000_000_000,
+                        position: parseTestCharacterPosition(0),
+                      },
+                    ],
+                    squadId,
+                  },
+                ],
+              },
+            })
           );
 
           expect(failure._tag).toBe("SquadCharacterNotAccessible");

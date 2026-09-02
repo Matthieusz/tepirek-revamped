@@ -97,9 +97,10 @@ const fetchTopic = (
     succeeded: [],
   };
 
-  return MargonemForumClientService.use((forum) =>
-    forum.fetchTopic(category)
-  ).pipe(
+  return Effect.gen(function* fetchForumTopic() {
+    const forum = yield* MargonemForumClientService;
+    return yield* forum.fetchTopic(category);
+  }).pipe(
     Effect.provide(
       MargonemForumClientLiveLayer.pipe(
         Layer.provide(makeDependencies(scrapeUrlHtml, accountingEvents))

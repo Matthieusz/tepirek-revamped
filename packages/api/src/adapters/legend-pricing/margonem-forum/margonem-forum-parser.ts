@@ -49,6 +49,13 @@ const officialAuthorPattern =
 const staffPostPattern =
   /<td\s+class=(?:"[^"]*\bpuser\b[^"]*\bmod\b[^"]*"|'[^']*\bpuser\b[^']*\bmod\b[^']*'|[^\s>]*\bpuser\b[^\s>]*\bmod\b)[^>]*>/iu;
 const itemClassPattern = /^\d+$/u;
+const getNonEmptyMatchGroup = (
+  match: RegExpExecArray | null,
+  group: string
+): string | undefined => {
+  const value = match?.groups?.[group];
+  return value === undefined || value.length === 0 ? undefined : value;
+};
 const headingWithProfessionPattern =
   /^(?<name>.+?)(?:\s*-\s*|\s+)(?<profession>Tancerz\s+Ostrzy|Wojownik|Paladyn|Mag|Łowca|Tropiciel)\s*,\s*(?<level>\d+)\s*lvl(?:\s*\|.*)?$/iu;
 const headingWithoutProfessionPattern =
@@ -223,17 +230,19 @@ const isOfficialPost = (postHtml: string): boolean => {
 const parseEnemyHeading = (value: string): EnemyHeading | undefined => {
   const normalized = value.replaceAll(/\s+/gu, " ").trim();
   const withProfession = headingWithProfessionPattern.exec(normalized);
-  if (withProfession?.groups?.name && withProfession.groups.level) {
-    const professionName = withProfession.groups.profession?.toLowerCase();
+  const withProfessionName = getNonEmptyMatchGroup(withProfession, "name");
+  const withProfessionLevel = getNonEmptyMatchGroup(withProfession, "level");
+  if (withProfessionName !== undefined && withProfessionLevel !== undefined) {
+    const professionName = withProfession?.groups?.profession?.toLowerCase();
     const profession =
       professionName === undefined
         ? undefined
         : professionByPolishName.get(professionName);
-    const level = Number(withProfession.groups.level);
+    const level = Number(withProfessionLevel);
     if (profession !== undefined && Number.isSafeInteger(level) && level > 0) {
       return {
         level: LegendaryEnemyLevel.make(level),
-        name: withProfession.groups.name.trim(),
+        name: withProfessionName.trim(),
         profession,
       };
     }
@@ -630,6 +639,8 @@ const recordEnemyItems = Effect.fnUntraced(function* recordEnemyItems(
       });
     }
   }
+
+  return yield* Effect.void;
 });
 
 /** Parse one complete forum topic into current official enemies and legendary equipment. */

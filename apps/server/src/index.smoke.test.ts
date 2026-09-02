@@ -35,12 +35,12 @@ const serverApplicationLayer = makeServerApplicationLayer({
 });
 
 const withServerApplication = <A>(
-  use: (application: ServerApplicationService) => Effect.Effect<A>
+  runWith: (application: ServerApplicationService) => Effect.Effect<A>
 ) =>
   Effect.scoped(
     Effect.gen(function* scopedServerApplication() {
       const context = yield* Layer.build(serverApplicationLayer);
-      return yield* use(Context.get(context, ServerApplication));
+      return yield* runWith(Context.get(context, ServerApplication));
     })
   );
 

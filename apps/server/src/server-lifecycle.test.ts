@@ -33,9 +33,9 @@ it.effect("releases the server, handlers, and pool in dependency order", () => {
   );
   const serverLayer = makeServerHostLayer(applicationLayer, () =>
     Effect.succeed({
-      stop: () => {
+      stop: async () => {
         calls.push("server");
-        return Promise.resolve();
+        await Promise.resolve();
       },
     })
   );
@@ -59,7 +59,11 @@ it.effect("does not serve when handler-layer acquisition fails", () => {
   let serveCalled = false;
   const serverLayer = makeServerHostLayer(applicationLayer, () => {
     serveCalled = true;
-    return Effect.succeed({ stop: () => Promise.resolve() });
+    return Effect.succeed({
+      stop: async () => {
+        await Promise.resolve();
+      },
+    });
   });
 
   return Effect.gen(function* verifyHandlerAcquisitionPrecedesServe() {
@@ -122,5 +126,6 @@ it.effect("hot reload interrupts the root and awaits finalization", () => {
     yield* Fiber.join(fiber);
 
     expect(calls).toEqual(["finalized"]);
+    return yield* Effect.void;
   });
 });

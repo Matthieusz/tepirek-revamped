@@ -36,7 +36,7 @@ import { createAuthMiddleware } from "evlog/better-auth";
 import { evlog } from "evlog/hono";
 import type { EvlogVariables } from "evlog/hono";
 import { Hono } from "hono";
-import type { Context as HonoContext } from "hono";
+import type { Context as HonoContext, Input as HonoInput } from "hono";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
@@ -124,6 +124,7 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
         if (log !== undefined) {
           await identifyUser(log, context.req.raw.headers, context.req.path);
         }
+        // oxlint-disable-next-line typescript/no-confusing-void-expression -- Hono middleware must return its awaited next callback.
         return await next();
       });
 
@@ -160,8 +161,11 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
       });
 
       // oxlint-disable-next-line unicorn/consistent-function-scoping
-      const handleHttpApiRequest = async (
-        context: HonoContext<EvlogVariables>,
+      const handleHttpApiRequest = async <
+        Path extends string,
+        Input extends HonoInput,
+      >(
+        context: HonoContext<EvlogVariables, Path, Input>,
         handler: typeof appHttpApi
       ) => {
         const requestLog = context.get("log");
@@ -251,7 +255,9 @@ export const makeServerHostLayer = <ApplicationError, HostError>(
     Effect.gen(function* acquireServerHost() {
       const application = yield* ServerApplication;
       yield* Effect.acquireRelease(serve(application), (server) =>
-        Effect.promise(() => server.stop())
+        Effect.promise(async () => {
+          await server.stop();
+        })
       );
     })
   ).pipe(Layer.provide(applicationLayer));

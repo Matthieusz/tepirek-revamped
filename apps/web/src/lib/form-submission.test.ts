@@ -6,7 +6,9 @@ import { formSubmission, runFormSubmission } from "@/lib/form-submission";
 describe("formSubmission", () => {
   it.effect("returns the mutation value on success", () =>
     Effect.gen(function* submitForm() {
-      const result = yield* formSubmission(() => Promise.resolve("created"));
+      const result = yield* formSubmission(
+        async () => await Promise.resolve("created")
+      );
 
       expect(result).toBe("created");
     })
@@ -15,7 +17,9 @@ describe("formSubmission", () => {
   it.effect("keeps provider failures in the typed error channel", () =>
     Effect.gen(function* translateProviderFailure() {
       const error = yield* Effect.flip(
-        formSubmission(() => Promise.reject(new Error("provider failed")))
+        formSubmission(
+          async () => await Promise.reject(new Error("provider failed"))
+        )
       );
 
       expect(error).toMatchObject({
@@ -27,14 +31,14 @@ describe("formSubmission", () => {
 
   it("returns success and expected failure as values for TanStack handlers", async () => {
     await expect(
-      runFormSubmission(() => Promise.resolve("created"))
+      runFormSubmission(async () => await Promise.resolve("created"))
     ).resolves.toEqual({
       _tag: "success",
       value: "created",
     });
 
-    const result = await runFormSubmission(() =>
-      Promise.reject(new Error("provider failed"))
+    const result = await runFormSubmission(
+      async () => await Promise.reject(new Error("provider failed"))
     );
     expect(result._tag).toBe("failure");
     if (result._tag === "failure") {
@@ -45,7 +49,7 @@ describe("formSubmission", () => {
   it("does not turn non-Error defects into user-facing failures", async () => {
     await expect(
       // oxlint-disable-next-line prefer-promise-reject-errors
-      runFormSubmission(() => Promise.reject("unexpected defect"))
+      runFormSubmission(async () => await Promise.reject("unexpected defect"))
     ).rejects.toBe("unexpected defect");
   });
 });

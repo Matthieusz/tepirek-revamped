@@ -33,11 +33,11 @@ const appHttpApiLayer = AppHttpApiLayer.pipe(
 );
 
 const withAppHttpApi = <A>(
-  use: (appHttpApi: IntegrationHandler) => Promise<A>
+  runWith: (appHttpApi: IntegrationHandler) => Promise<A>
 ) =>
   Effect.gen(function* acquireAppHttpApi() {
     const appHttpApi = yield* integrationHandler(appHttpApiLayer);
-    return yield* Effect.promise(async () => await use(appHttpApi));
+    return yield* Effect.promise(async () => await runWith(appHttpApi));
   });
 
 const requestHttpApi = async (
@@ -76,7 +76,7 @@ const createSignedInUser = async (name: string, verified = true) => {
   }
 
   const cookie = response.headers.get("set-cookie");
-  if (!cookie) {
+  if (cookie === null || cookie.length === 0) {
     throw new Error("Expected sign up to create a session cookie");
   }
 

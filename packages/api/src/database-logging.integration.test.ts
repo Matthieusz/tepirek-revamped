@@ -41,20 +41,19 @@ describe("Effect database query logging", () => {
       });
 
       return Effect.gen(function* installedLoggerTest() {
-        yield* EffectDatabase.use((database) =>
-          database.execute<{ readonly value: string }>(
-            sql`select ${secretParameter}::text as value`
-          )
-        ).pipe(
-          Effect.provide(
-            Layer.merge(databaseLayer, Logger.layer([capturingLogger]))
-          )
+        const database = yield* EffectDatabase;
+        yield* database.execute<{ readonly value: string }>(
+          sql`select ${secretParameter}::text as value`
         );
 
         const serializedEntries = JSON.stringify(capturedEntries);
         expect(serializedEntries).not.toContain(secretParameter);
         expect(serializedEntries).not.toContain("params");
-      });
+      }).pipe(
+        Effect.provide(
+          Layer.merge(databaseLayer, Logger.layer([capturingLogger]))
+        )
+      );
     }
   );
 
@@ -71,7 +70,9 @@ describe("Effect database query logging", () => {
           Effect.callback<ReturnType<typeof createServer>, Error>((resume) => {
             const server = createServer((request, response) => {
               const chunks: Buffer[] = [];
-              request.on("data", (chunk: Buffer) => chunks.push(chunk));
+              request.on("data", (chunk: Buffer) => {
+                chunks.push(chunk);
+              });
               request.on("end", () => {
                 otlpRequests.push(Buffer.concat(chunks).toString("utf-8"));
                 response.writeHead(200).end();
@@ -100,7 +101,9 @@ describe("Effect database query logging", () => {
         )(collector.address());
 
         const applicationLoggerLayer = makeLoggerLayer([
-          makeStderrLogger("test-run", (output) => stderrEntries.push(output)),
+          makeStderrLogger("test-run", (output) => {
+            stderrEntries.push(output);
+          }),
         ]);
         const loggerLayer = Otlp.loggerLayer(
           {
@@ -121,14 +124,13 @@ describe("Effect database query logging", () => {
           )
         );
 
-        yield* EffectDatabase.use((database) =>
-          Effect.gen(function* combinedObservabilityTest() {
-            yield* database.execute(
-              sql`select ${secretParameter}::text as value`
-            );
-            yield* Effect.log(sentinel);
-          })
-        ).pipe(Effect.provide(Layer.merge(databaseLayer, loggerLayer)));
+        yield* Effect.gen(function* combinedObservabilityTest() {
+          const database = yield* EffectDatabase;
+          yield* database.execute(
+            sql`select ${secretParameter}::text as value`
+          );
+          yield* Effect.log(sentinel);
+        }).pipe(Effect.provide(Layer.merge(databaseLayer, loggerLayer)));
 
         const stderrOutput = stderrEntries.join("\n");
         const otlpOutput = otlpRequests.join("\n");
@@ -164,8 +166,9 @@ describe("Effect database query logging", () => {
             })
         );
         const error = yield* Effect.flip(
-          EffectDatabase.use((database) =>
-            userPersistenceQuery(
+          Effect.gen(function* transactionWithDatabase() {
+            const database = yield* EffectDatabase;
+            return yield* userPersistenceQuery(
               "transactionRollbackTest",
               database.transaction((tx) =>
                 Effect.gen(function* transactionRollbackTest() {
@@ -176,8 +179,10 @@ describe("Effect database query logging", () => {
                   yield* tx.execute(sql`select ${secretParameter}::integer`);
                 })
               )
-            )
-          ).pipe(Effect.provide(Layer.merge(databaseLayer, observabilityLayer)))
+            );
+          }).pipe(
+            Effect.provide(Layer.merge(databaseLayer, observabilityLayer))
+          )
         );
 
         expect(error).toMatchObject({
