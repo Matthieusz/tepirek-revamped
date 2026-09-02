@@ -27,7 +27,7 @@
     "@tepirek-revamped/config": "workspace:*",
     "better-auth": "catalog:",
     "class-variance-authority": "^0.7.1",
-    "cnfast": "^0.1.0",
+    "cn": "^0.2.4",
     "date-fns": "^4.4.0",
     "effect": "catalog:",
     "evlog": "^2.26.0",
