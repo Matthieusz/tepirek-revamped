@@ -9,15 +9,8 @@ export default defineConfig({
     "apps/web/src/routeTree.gen.ts",
     "apps/web/src/components/*",
   ],
-  overrides: [
-    {
-      files: ["packages/**", "apps/server/**"],
-      rules: {
-        "react/rules-of-hooks": "off",
-      },
-    },
-  ],
-  rules: {
-    complexity: ["warn", { max: 20 }],
+  options: {
+    typeAware: true,
+    typeCheck: true,
   },
 });
