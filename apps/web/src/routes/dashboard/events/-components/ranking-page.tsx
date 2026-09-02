@@ -2,7 +2,7 @@ import { useAtomRefresh } from "@effect/atom-react";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { Coins, Trophy } from "lucide-react";
 import { useCallback } from "react";
-import type { ReactNode } from "react";
+import type { ReactElement } from "react";
 
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ const routeApi = getRouteApi("/dashboard/events/ranking");
 
 const buildRankingContent = (params: {
   sortedRanking: RankingItem[];
-}): ReactNode => {
+}): ReactElement => {
   if (params.sortedRanking.length === 0) {
     return (
       <EmptyState
@@ -72,7 +72,7 @@ export const RankingPage = ({ session }: { session: AuthSession }) => {
 
   const navigateSort = useCallback(
     (updates: { sortBy: RankingSort | undefined }) => {
-      navigate({
+      void navigate({
         search: (prev) => ({ ...prev, ...updates }),
       });
     },

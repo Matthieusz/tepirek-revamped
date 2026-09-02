@@ -280,7 +280,7 @@ const VaultContent = ({
           )}
 
           {/* Empty state */}
-          {(!vault || vault.length === 0) && (
+          {vault.length === 0 && (
             <EmptyState
               icon={VaultIcon}
               message="Brak graczy z zarobkami powyżej 100 000 000 złota"

@@ -165,7 +165,7 @@ const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
           <h2 className="text-base font-semibold">Lista herosów</h2>
         </div>
         <div className="p-4">
-          {!filteredHeroes || filteredHeroes.length === 0 ? (
+          {filteredHeroes.length === 0 ? (
             <EmptyState icon={Sword} message="Brak herosów do wyświetlenia" />
           ) : (
             <div className="overflow-x-auto">

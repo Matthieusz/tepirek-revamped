@@ -310,7 +310,7 @@ const HistoryContent = ({
             <AlertDialogAction
               disabled={deleteMutation.isPending}
               onClick={() => {
-                if (betToDelete) {
+                if (betToDelete !== null) {
                   deleteMutation.mutate(betToDelete.id);
                 }
               }}
@@ -397,23 +397,27 @@ const LoadMoreTrigger = ({ onVisible }: { readonly onVisible: () => void }) => {
 
   useEffect(() => {
     const trigger = triggerRef.current;
-    if (!trigger) {
-      return;
+    let observer: IntersectionObserver | undefined;
+    if (trigger) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (
+            entry?.isIntersecting === true &&
+            !hasRequestedNextPageRef.current
+          ) {
+            hasRequestedNextPageRef.current = true;
+            setHasRequestedNextPage(true);
+            onVisible();
+          }
+        },
+        { threshold: 0.1 }
+      );
+      observer.observe(trigger);
     }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting && !hasRequestedNextPageRef.current) {
-          hasRequestedNextPageRef.current = true;
-          setHasRequestedNextPage(true);
-          onVisible();
-        }
-      },
-      { threshold: 0.1 }
-    );
-    observer.observe(trigger);
-
-    return () => observer.disconnect();
+    return () => {
+      observer?.disconnect();
+    };
   }, [onVisible]);
 
   if (hasRequestedNextPage) {

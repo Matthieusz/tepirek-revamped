@@ -52,8 +52,7 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
       }
     };
 
-    // oxlint-disable-next-line @typescript-eslint/no-floating-promises
-    validateAndRedirect();
+    void validateAndRedirect();
   }, [router, verifyDiscordGuildMembership]);
 
   const handleSignOut = async () => {
@@ -64,8 +63,7 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
         },
         onSuccess: () => {
           toast.success("Wylogowano pomyślnie");
-          // oxlint-disable-next-line @typescript-eslint/no-floating-promises
-          router.navigate({ to: "/" });
+          void router.navigate({ to: "/" });
         },
       },
     });
@@ -111,7 +109,9 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
               </span>
             </p>
             <Button
-              onClick={handleSignOut}
+              onClick={() => {
+                void handleSignOut();
+              }}
               size="sm"
               type="button"
               variant="destructive"

@@ -192,7 +192,7 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
                   <AutocompleteItem key={target.userId} value={target}>
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                       <Avatar size="sm">
-                        {target.image ? (
+                        {target.image !== null && target.image.length > 0 ? (
                           <AvatarImage alt={target.name} src={target.image} />
                         ) : null}
                         <AvatarFallback>
@@ -292,7 +292,7 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <Avatar size="sm">
-                    {grant.userImage ? (
+                    {grant.userImage !== null && grant.userImage.length > 0 ? (
                       <AvatarImage alt={grant.userName} src={grant.userImage} />
                     ) : null}
                     <AvatarFallback>
@@ -399,7 +399,9 @@ export const SquadGroupSettings = ({
                   </AlertDialogCancel>
                   <AlertDialogAction
                     disabled={isDeleting}
-                    onClick={remove}
+                    onClick={() => {
+                      void remove();
+                    }}
                     variant="destructive"
                   >
                     {isDeleting ? (

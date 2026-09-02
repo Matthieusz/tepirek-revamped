@@ -54,16 +54,17 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
         return;
       }
 
-      const result = await runFormSubmission(() => {
+      const result = await runFormSubmission(async () => {
         const heroPayload = {
           eventId: decoded.value.eventId,
           level: decoded.value.level,
           name: decoded.value.name,
         };
-        if (decoded.value.image) {
-          return createHero({ ...heroPayload, image: decoded.value.image });
-        }
-        return createHero(heroPayload);
+        await createHero(
+          decoded.value.image
+            ? { ...heroPayload, image: decoded.value.image }
+            : heroPayload
+        );
       });
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);

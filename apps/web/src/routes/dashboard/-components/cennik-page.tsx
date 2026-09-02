@@ -172,12 +172,20 @@ const LegendPriceCard = ({
               className="min-w-0 flex-1"
               disabled={saving}
               id={priceInputId}
-              onChange={(event) => setPrice(event.currentTarget.value)}
+              onChange={(event) => {
+                setPrice(event.currentTarget.value);
+              }}
               placeholder="Cena, np. 700m / 1.2g"
               type="text"
               value={price}
             />
-            <Button disabled={saving} onClick={savePrice} size="sm">
+            <Button
+              disabled={saving}
+              onClick={() => {
+                void savePrice();
+              }}
+              size="sm"
+            >
               {saving ? "Zapisywanie…" : "Zapisz"}
             </Button>
           </div>
@@ -343,19 +351,25 @@ export const CennikContent = ({
         <SearchFilter
           id="legend-item-name"
           label="Nazwa przedmiotu"
-          onChange={(value) => updateSearch({ itemName: value })}
+          onChange={(value) => {
+            updateSearch({ itemName: value });
+          }}
           placeholder="Szukaj przedmiotu…"
           value={search.itemName}
         />
         <SearchFilter
           id="legend-monster-name"
           label="Nazwa potwora"
-          onChange={(value) => updateSearch({ monsterName: value })}
+          onChange={(value) => {
+            updateSearch({ monsterName: value });
+          }}
           placeholder="Szukaj potwora…"
           value={search.monsterName}
         />
         <ItemLevelFilter
-          onChange={(value) => updateSearch({ itemLevel: value })}
+          onChange={(value) => {
+            updateSearch({ itemLevel: value });
+          }}
           value={search.itemLevel}
         />
         <div className="space-y-2">

@@ -74,11 +74,12 @@ const RenameAccountForm = ({
       if (!("value" in decoded)) {
         return;
       }
-      const result = await runFormSubmission(() =>
-        updateAccount({
-          accountId: account.accountId,
-          displayName: decoded.value.displayName.trim(),
-        })
+      const result = await runFormSubmission(
+        async () =>
+          await updateAccount({
+            accountId: account.accountId,
+            displayName: decoded.value.displayName.trim(),
+          })
       );
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);
@@ -183,7 +184,9 @@ const DeleteAccountDialog = ({
           <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
           <AlertDialogAction
             disabled={isDeleting}
-            onClick={handleDelete}
+            onClick={() => {
+              void handleDelete();
+            }}
             variant="destructive"
           >
             {isDeleting ? (

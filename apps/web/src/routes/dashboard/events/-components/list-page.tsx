@@ -150,7 +150,7 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
           <h2 className="text-base font-semibold">Eventy</h2>
         </div>
         <div className="p-4">
-          {!events || events.length === 0 ? (
+          {events.length === 0 ? (
             <EmptyState
               icon={Calendar}
               message="Brak eventów do wyświetlenia"
