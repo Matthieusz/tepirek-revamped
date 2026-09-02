@@ -13,15 +13,17 @@ import {
 export const Route = createFileRoute("/dashboard/auctions/$type/$profession")({
   beforeLoad: ({ params }) => {
     if (!isAuctionType(params.type)) {
-      throw redirect({
+      redirect({
         params: { type: "main" },
+        throw: true,
         to: "/dashboard/auctions/$type",
       });
     }
 
     if (!isAuctionProfession(params.profession)) {
-      throw redirect({
+      redirect({
         params: { type: params.type },
+        throw: true,
         to: "/dashboard/auctions/$type",
       });
     }

@@ -13,7 +13,7 @@ export const Route = createFileRoute("/login")({
   beforeLoad: async ({ context }) => {
     const session = await context.getUser();
     if (session?.user) {
-      throw redirect({ to: "/dashboard" });
+      redirect({ throw: true, to: "/dashboard" });
     }
   },
   component: LoginPage,

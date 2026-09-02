@@ -1,13 +1,11 @@
 // @vitest-environment happy-dom
 
-import { createMemoryHistory, isRedirect } from "@tanstack/react-router";
+import { isRedirect } from "@tanstack/react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CaughtError } from "@/lib/errors";
-import { invokeRouteHook } from "@/lib/test-utils/route-option-test-utils";
-import { getRouter } from "@/router";
 import type { RouterAppContext } from "@/routes/__root";
-import { Route } from "@/routes/dashboard/route";
+import { loadDashboardSession, Route } from "@/routes/dashboard/route";
 import type { UserSession } from "@/types/route";
 
 const getUser = vi.fn<RouterAppContext["getUser"]>();
@@ -36,24 +34,7 @@ const makeSession = (verified: boolean): Exclude<UserSession, null> => ({
   },
 });
 
-const runDashboardGuard = async () => {
-  const router = getRouter();
-  router.update({
-    context: { ...router.options.context, getUser },
-    history: createMemoryHistory({ initialEntries: ["/"] }),
-    isServer: false,
-  });
-
-  const { beforeLoad } = Route.options;
-  if (!beforeLoad) {
-    throw new Error("Dashboard route must define beforeLoad");
-  }
-
-  // SAFETY: this callback only reads the supplied router context.
-  return await invokeRouteHook(beforeLoad, {
-    context: router.options.context,
-  } as Parameters<typeof beforeLoad>[0]);
-};
+const runDashboardGuard = async () => await loadDashboardSession(getUser);
 
 describe("dashboard authentication", () => {
   beforeEach(() => {

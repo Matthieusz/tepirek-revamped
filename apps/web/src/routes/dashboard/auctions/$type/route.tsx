@@ -7,8 +7,9 @@ const RouteComponent = () => <Outlet />;
 export const Route = createFileRoute("/dashboard/auctions/$type")({
   beforeLoad: ({ params }) => {
     if (!isAuctionType(params.type)) {
-      throw redirect({
+      redirect({
         params: { type: "main" },
+        throw: true,
         to: "/dashboard/auctions/$type",
       });
     }

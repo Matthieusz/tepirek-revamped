@@ -7,6 +7,7 @@ type GetUser = () => Promise<UserSession>;
 const requireAuth = async (getUser: GetUser): Promise<AuthSession> => {
   const session = await getUser();
   if (!session?.user) {
+    // oxlint-disable-next-line typescript/only-throw-error -- TanStack Router handles redirects as thrown response-like values.
     throw redirect({ to: "/login" });
   }
   return session;
@@ -22,6 +23,7 @@ export const requireVerified = async (
 ): Promise<AuthSession> => {
   const session = await requireAuth(getUser);
   if (!session.user.verified) {
+    // oxlint-disable-next-line typescript/only-throw-error -- TanStack Router handles redirects as thrown response-like values.
     throw redirect({ to: "/waiting-room" });
   }
   return session;
@@ -38,6 +40,7 @@ export const requireUnverified = async (
 ): Promise<AuthSession> => {
   const session = await requireAuth(getUser);
   if (session.user.verified) {
+    // oxlint-disable-next-line typescript/only-throw-error -- TanStack Router handles redirects as thrown response-like values.
     throw redirect({ to: "/dashboard" });
   }
   return session;
