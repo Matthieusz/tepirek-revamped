@@ -26,33 +26,31 @@ const parseRetryAfterMilliseconds = (
   error: HttpClientError.HttpClientError
 ): Effect.Effect<number | undefined> =>
   Effect.gen(function* parseRetryAfter() {
+    let retryAfterMilliseconds: number | undefined;
+
     if (
-      error.reason._tag !== "StatusCodeError" ||
-      error.reason.response.status !== 429
+      error.reason._tag === "StatusCodeError" &&
+      error.reason.response.status === 429
     ) {
-      return;
+      const retryAfter = error.reason.response.headers["retry-after"];
+      if (retryAfter !== undefined) {
+        const seconds = Number(retryAfter);
+        if (Number.isNaN(seconds)) {
+          const retryAt = Date.parse(retryAfter);
+          if (Number.isFinite(retryAt)) {
+            const currentTime = yield* Clock.currentTimeMillis;
+            const delay = retryAt - currentTime;
+            if (delay >= 0) {
+              retryAfterMilliseconds = delay;
+            }
+          }
+        } else if (Number.isFinite(seconds) && seconds >= 0) {
+          retryAfterMilliseconds = seconds * MILLISECONDS_PER_SECOND;
+        }
+      }
     }
 
-    const retryAfter = error.reason.response.headers["retry-after"];
-    if (retryAfter === undefined) {
-      return;
-    }
-
-    const seconds = Number(retryAfter);
-    if (!Number.isNaN(seconds)) {
-      return Number.isFinite(seconds) && seconds >= 0
-        ? seconds * MILLISECONDS_PER_SECOND
-        : undefined;
-    }
-
-    const retryAt = Date.parse(retryAfter);
-    if (!Number.isFinite(retryAt)) {
-      return;
-    }
-
-    const currentTime = yield* Clock.currentTimeMillis;
-    const delay = retryAt - currentTime;
-    return delay >= 0 ? delay : undefined;
+    return retryAfterMilliseconds;
   });
 
 const discordRetrySchedule: Schedule.Schedule<

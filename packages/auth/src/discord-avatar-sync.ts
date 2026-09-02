@@ -29,7 +29,7 @@ type UserUpdateResultData = UserUpdateResult["data"];
  * explicitly masked with `undefined`; the database adapter ignores those
  * fields while retaining the avatar update.
  */
-export const syncDiscordAvatar = (
+export const syncDiscordAvatar = async (
   user: UserUpdate,
   context: UserUpdateContext | null
 ): ReturnType<UserUpdateHook> => {
@@ -38,7 +38,8 @@ export const syncDiscordAvatar = (
     context.params?.id !== DISCORD_PROVIDER_ID ||
     user.image === undefined
   ) {
-    return Promise.resolve();
+    await Promise.resolve();
+    return;
   }
 
   const data: UserUpdateResultData = { image: user.image };
@@ -48,5 +49,5 @@ export const syncDiscordAvatar = (
     }
   }
 
-  return Promise.resolve({ data });
+  return await Promise.resolve({ data });
 };

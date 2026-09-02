@@ -2,11 +2,15 @@ import { expect, it } from "@effect/vitest";
 import {
   BetterAuthService,
   BetterAuthUnavailable,
+  createAuth,
 } from "@tepirek-revamped/auth";
-import type { BetterAuthInstance } from "@tepirek-revamped/auth";
+import { makeBetterAuthDatabase } from "@tepirek-revamped/db/effect";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
+import { Pool } from "pg";
+import { afterAll } from "vitest";
 
 import { AppUserId } from "../../domain/squad-builder/app-user-id.ts";
 import {
@@ -15,8 +19,24 @@ import {
 } from "../../protocol/auth/http-api-middleware.ts";
 import { loadCurrentSession } from "./session-middleware.ts";
 
-// SAFETY: Session middleware tests only consume the service's getSession method.
-const testBetterAuthInstance = {} as BetterAuthInstance;
+const testPool = new Pool({
+  connectionString: "postgresql://postgres:password@localhost:5433/test",
+});
+const testBetterAuthInstance = createAuth(
+  {
+    betterAuthSecret: Redacted.make("test-secret-at-least-32-characters"),
+    betterAuthUrl: new URL("http://localhost:3000"),
+    corsOrigin: new URL("http://localhost:3001"),
+    discordClientId: "test-discord-client-id",
+    discordClientSecret: Redacted.make("test-discord-client-secret"),
+    isProduction: false,
+  },
+  makeBetterAuthDatabase(testPool)
+);
+
+afterAll(async () => {
+  await testPool.end();
+});
 
 const authenticatedSession = (userId: string) => ({
   session: {
