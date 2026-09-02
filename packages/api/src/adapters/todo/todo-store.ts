@@ -82,10 +82,12 @@ const toggleWithDatabase =
         .where(and(eq(todo.id, id), eq(todo.userId, userId)))
     );
 
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const TodoStoreLayer: Layer.Layer<TodoStore, never, EffectDatabase> =
   Layer.effect(
     TodoStore,
-    EffectDatabase.useSync((database) =>
+    getDatabaseSync((database) =>
       TodoStore.of({
         create: Effect.fn("TodoStore.create")(createWithDatabase(database)),
         delete: Effect.fn("TodoStore.delete")(deleteWithDatabase(database)),

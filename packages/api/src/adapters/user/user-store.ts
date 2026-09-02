@@ -142,7 +142,7 @@ const assertAdminMutationAllowed = Effect.fnUntraced(
       targetUser.role === "admin" && targetUser.verified;
 
     if (!isCurrentlyVerifiedAdmin || willBeVerifiedAdmin) {
-      return;
+      return yield* Effect.void;
     }
 
     if (targetUser.id === actorId) {
@@ -154,6 +154,8 @@ const assertAdminMutationAllowed = Effect.fnUntraced(
     if (verifiedAdminCount <= 1) {
       return yield* new ApplicationForbidden({ message: LAST_ADMIN_MESSAGE });
     }
+
+    return yield* Effect.void;
   }
 );
 
@@ -298,7 +300,11 @@ const getDiscordAccessTokenWithDatabase = (database: EffectPgDatabase) =>
     );
     const accessToken = rows[0]?.accessToken;
 
-    if (!accessToken) {
+    if (
+      accessToken === undefined ||
+      accessToken === null ||
+      accessToken.length === 0
+    ) {
       return yield* new ApplicationInvalidInput({
         message: "Połącz konto Discord, aby zweryfikować członkostwo",
       });
@@ -321,10 +327,12 @@ const markUserVerifiedWithDatabase =
         .where(eq(user.id, input.userId))
     ).pipe(Effect.asVoid);
 
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const UserStoreLayer: Layer.Layer<UserStore, never, EffectDatabase> =
   Layer.effect(
     UserStore,
-    EffectDatabase.useSync((database) =>
+    getDatabaseSync((database) =>
       UserStore.of({
         deleteUser: Effect.fn("UserStore.deleteUser")(
           deleteUserWithDatabase(database)

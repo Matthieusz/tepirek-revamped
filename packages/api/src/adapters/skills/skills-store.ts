@@ -101,6 +101,7 @@ const createRangeWithDatabase = (database: EffectPgDatabase) =>
       "createRange",
       database.insert(range).values({ image, level, name, slug })
     );
+    return yield* Effect.void;
   });
 
 const createSkillWithDatabase = (database: EffectPgDatabase) =>
@@ -210,10 +211,12 @@ const listSkillsByRangeWithDatabase =
       )
     );
 
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const SkillsStoreLayer: Layer.Layer<SkillsStore, never, EffectDatabase> =
   Layer.effect(
     SkillsStore,
-    EffectDatabase.useSync((database) =>
+    getDatabaseSync((database) =>
       SkillsStore.of({
         createProfession: Effect.fn("SkillsStore.createProfession")(
           createProfessionWithDatabase(database)

@@ -135,6 +135,7 @@ const deleteSquadGroupWithDatabase = (database: EffectPgDatabase) =>
           )
         )
     );
+    return yield* Effect.void;
   });
 
 const listMySquadGroupsWithDatabase = (database: EffectPgDatabase) =>
@@ -663,13 +664,15 @@ const setSquadGroupVisibilityWithDatabase = (database: EffectPgDatabase) =>
   });
 
 /** Provide the squad-group aggregate store with its Drizzle implementation. */
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const DrizzleSquadGroupAggregateStoreServiceLayer: Layer.Layer<
   SquadGroupAggregateStoreService,
   never,
   EffectDatabase
 > = Layer.effect(
   SquadGroupAggregateStoreService,
-  EffectDatabase.useSync((database) =>
+  getDatabaseSync((database) =>
     SquadGroupAggregateStoreService.of({
       createSquadGroup: Effect.fn("SquadGroupAggregateStore.createSquadGroup")(
         createSquadGroupWithDatabase(database)

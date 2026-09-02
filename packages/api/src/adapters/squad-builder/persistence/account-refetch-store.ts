@@ -494,13 +494,15 @@ const applyPendingRefetchWithDatabase = (database: EffectPgDatabase) =>
     return yield* persistenceQuery(operation, transaction);
   });
 
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const DrizzleAccountRefetchStoreServiceLayer: Layer.Layer<
   AccountRefetchStoreService,
   never,
   EffectDatabase
 > = Layer.effect(
   AccountRefetchStoreService,
-  EffectDatabase.useSync((database) =>
+  getDatabaseSync((database) =>
     AccountRefetchStoreService.of({
       applyPendingRefetch: Effect.fn("AccountRefetchStore.applyPendingRefetch")(
         applyPendingRefetchWithDatabase(database)

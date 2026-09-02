@@ -303,13 +303,15 @@ const updateWithDatabase =
     );
 
 /** Provide PostgreSQL-backed legendary price reads and optimistic writes. */
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const DrizzleLegendPricingStoreLayer: Layer.Layer<
   LegendPricingStore,
   never,
   EffectDatabase
 > = Layer.effect(
   LegendPricingStore,
-  EffectDatabase.useSync((database) =>
+  getDatabaseSync((database) =>
     LegendPricingStore.of({
       list: Effect.fn("LegendPricingStore.list")(listWithDatabase(database)),
       updateCost: Effect.fn("LegendPricingStore.updateCost")(

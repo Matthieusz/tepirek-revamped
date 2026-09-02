@@ -221,11 +221,13 @@ const makeService = (database: EffectPgDatabase): VaultServiceInterface => ({
   ),
 });
 
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const DrizzleVaultServiceLayer: Layer.Layer<
   VaultService,
   never,
   EffectDatabase
 > = Layer.effect(
   VaultService,
-  EffectDatabase.useSync((database) => VaultService.of(makeService(database)))
+  getDatabaseSync((database) => VaultService.of(makeService(database)))
 );

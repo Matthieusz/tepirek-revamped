@@ -264,11 +264,13 @@ const makeService = (database: EffectPgDatabase): RankingServiceInterface => ({
   ),
 });
 
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const DrizzleRankingServiceLayer: Layer.Layer<
   RankingService,
   never,
   EffectDatabase
 > = Layer.effect(
   RankingService,
-  EffectDatabase.useSync((database) => RankingService.of(makeService(database)))
+  getDatabaseSync((database) => RankingService.of(makeService(database)))
 );

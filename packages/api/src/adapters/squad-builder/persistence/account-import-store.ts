@@ -661,13 +661,15 @@ const listOwnedAccountsWithDatabase = (database: EffectPgDatabase) =>
     return accounts;
   });
 
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const DrizzleAccountImportStoreServiceLayer: Layer.Layer<
   AccountImportStoreService,
   never,
   EffectDatabase
 > = Layer.effect(
   AccountImportStoreService,
-  EffectDatabase.useSync((database) =>
+  getDatabaseSync((database) =>
     AccountImportStoreService.of({
       confirmPendingImport: Effect.fn(
         "AccountImportStore.confirmPendingImport"

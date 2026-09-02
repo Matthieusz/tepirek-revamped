@@ -24,6 +24,7 @@ import {
 
 const defaultEventColor = "#6366f1";
 const defaultEventIcon = DEFAULT_EVENT_ICON_ID;
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
 
 const persistenceQuery = makeDirectPersistenceQuery(
   (input) => new ApplicationDependencyUnavailable(input)
@@ -80,7 +81,7 @@ const toggleActiveWithDatabase =
 export const EventStoreLayer: Layer.Layer<EventStore, never, EffectDatabase> =
   Layer.effect(
     EventStore,
-    EffectDatabase.useSync((database) =>
+    getDatabaseSync((database) =>
       EventStore.of({
         create: Effect.fn("EventStore.create")(createWithDatabase(database)),
         delete: Effect.fn("EventStore.delete")(deleteWithDatabase(database)),

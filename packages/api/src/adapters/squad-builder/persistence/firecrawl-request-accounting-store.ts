@@ -172,13 +172,15 @@ const markRequestFailedWithDatabase =
     ).pipe(Effect.asVoid);
 
 /** Drizzle implementation of transactional Firecrawl request accounting. */
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const DrizzleFirecrawlRequestAccountingStoreServiceLayer: Layer.Layer<
   FirecrawlRequestAccountingStoreService,
   never,
   EffectDatabase
 > = Layer.effect(
   FirecrawlRequestAccountingStoreService,
-  EffectDatabase.useSync((database) =>
+  getDatabaseSync((database) =>
     FirecrawlRequestAccountingStoreService.of({
       markRequestFailed: Effect.fn(
         "FirecrawlRequestAccountingStore.markRequestFailed"

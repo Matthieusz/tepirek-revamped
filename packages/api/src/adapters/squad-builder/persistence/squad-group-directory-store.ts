@@ -393,13 +393,15 @@ const listGlobalSquadGroupsWithDatabase = (database: EffectPgDatabase) =>
   });
 
 /** Provide the squad-group directory store with its Drizzle implementation. */
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const DrizzleSquadGroupDirectoryStoreServiceLayer: Layer.Layer<
   SquadGroupDirectoryStoreService,
   never,
   EffectDatabase
 > = Layer.effect(
   SquadGroupDirectoryStoreService,
-  EffectDatabase.useSync((database) =>
+  getDatabaseSync((database) =>
     SquadGroupDirectoryStoreService.of({
       findVerifiedSquadEditorInviteTarget: Effect.fn(
         "SquadGroupDirectoryStore.findVerifiedSquadEditorInviteTarget"

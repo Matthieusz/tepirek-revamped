@@ -375,6 +375,7 @@ const deleteBetWithDatabase = (database: EffectPgDatabase) =>
           }
           yield* tx.delete(heroBet).where(eq(heroBet.id, id));
           yield* refreshEarningsForHero(tx, currentBet.heroId);
+          return yield* Effect.void;
         })
       )
     );
@@ -541,6 +542,7 @@ const editBetWithDatabase = (database: EffectPgDatabase) =>
             .set({ memberCount: newMemberCount })
             .where(eq(heroBet.id, betId));
           yield* refreshEarningsForHero(tx, currentBet.heroId);
+          return yield* Effect.void;
         })
       )
     );
@@ -766,11 +768,13 @@ const makeService = (database: EffectPgDatabase): BetServiceInterface => ({
   ),
 });
 
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const DrizzleBetServiceLayer: Layer.Layer<
   BetService,
   never,
   EffectDatabase
 > = Layer.effect(
   BetService,
-  EffectDatabase.useSync((database) => BetService.of(makeService(database)))
+  getDatabaseSync((database) => BetService.of(makeService(database)))
 );

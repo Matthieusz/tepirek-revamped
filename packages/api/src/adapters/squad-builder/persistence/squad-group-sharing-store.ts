@@ -18,9 +18,11 @@ import {
 } from "./squad-group-sharing-queries.ts";
 
 /** Provide the squad-group sharing store with its Drizzle implementation. */
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const DrizzleSquadGroupSharingStoreServiceLayer = Layer.effect(
   SquadGroupSharingStoreService,
-  EffectDatabase.useSync((database) =>
+  getDatabaseSync((database) =>
     SquadGroupSharingStoreService.of({
       authorizeSquadGroupOwner: Effect.fn(
         "SquadGroupSharingStore.authorizeSquadGroupOwner"

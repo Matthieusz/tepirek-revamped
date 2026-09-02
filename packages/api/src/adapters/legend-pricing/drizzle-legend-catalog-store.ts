@@ -468,13 +468,15 @@ const recordFailureWithDatabase = (database: EffectPgDatabase) =>
   });
 
 /** Provide atomic legend-catalog reconciliation with its Drizzle implementation. */
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const DrizzleLegendCatalogStoreServiceLayer: Layer.Layer<
   LegendCatalogStoreService,
   never,
   EffectDatabase
 > = Layer.effect(
   LegendCatalogStoreService,
-  EffectDatabase.useSync((database) =>
+  getDatabaseSync((database) =>
     LegendCatalogStoreService.of({
       reconcile: Effect.fn("LegendCatalogStore.reconcile")(
         reconcileWithDatabase(database)

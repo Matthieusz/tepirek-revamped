@@ -18,9 +18,11 @@ import {
 } from "./account-sharing-queries.ts";
 
 /** Provide account sharing persistence through the Drizzle database adapter. */
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const DrizzleAccountSharingStoreServiceLayer = Layer.effect(
   AccountSharingStoreService,
-  EffectDatabase.useSync((database) =>
+  getDatabaseSync((database) =>
     AccountSharingStoreService.of({
       findAccountOwnerUserId: Effect.fn(
         "AccountSharingStore.findAccountOwnerUserId"

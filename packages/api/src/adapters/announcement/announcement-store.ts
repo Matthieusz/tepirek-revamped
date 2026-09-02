@@ -92,13 +92,15 @@ const listWithDatabase = (database: EffectPgDatabase) => () =>
     )
   );
 
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const AnnouncementStoreLayer: Layer.Layer<
   AnnouncementStore,
   never,
   EffectDatabase
 > = Layer.effect(
   AnnouncementStore,
-  EffectDatabase.useSync((database) =>
+  getDatabaseSync((database) =>
     AnnouncementStore.of({
       create: Effect.fn("AnnouncementStore.create")(
         createWithDatabase(database)

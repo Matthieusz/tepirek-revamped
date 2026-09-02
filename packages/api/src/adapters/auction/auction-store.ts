@@ -184,13 +184,15 @@ const toggleSignupWithDatabase = (database: EffectPgDatabase) =>
     return { action: "added" as const };
   });
 
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const AuctionStoreLayer: Layer.Layer<
   AuctionStore,
   never,
   EffectDatabase
 > = Layer.effect(
   AuctionStore,
-  EffectDatabase.useSync((database) =>
+  getDatabaseSync((database) =>
     AuctionStore.of({
       getSignups: Effect.fn("AuctionStore.getSignups")(
         getSignupsWithDatabase(database)

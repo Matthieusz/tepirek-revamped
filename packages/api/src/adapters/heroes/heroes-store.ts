@@ -73,10 +73,12 @@ const listByEventWithDatabase =
       database.select().from(hero).where(eq(hero.eventId, eventId))
     ).pipe(Effect.flatMap((rows) => Effect.all(rows.map(decodeHeroRow))));
 
+const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
+
 export const HeroesStoreLayer: Layer.Layer<HeroesStore, never, EffectDatabase> =
   Layer.effect(
     HeroesStore,
-    EffectDatabase.useSync((database) =>
+    getDatabaseSync((database) =>
       HeroesStore.of({
         create: Effect.fn("HeroesStore.create")(createWithDatabase(database)),
         delete: Effect.fn("HeroesStore.delete")(deleteWithDatabase(database)),
