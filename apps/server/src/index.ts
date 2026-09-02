@@ -71,6 +71,29 @@ const isContentfulStatusCode = (
   status: number
 ): status is ContentfulStatusCode => contentfulStatusCodes.has(status);
 
+const handleHttpApiRequest = async <
+  Path extends string,
+  Input extends HonoInput,
+>(
+  context: HonoContext<EvlogVariables, Path, Input>,
+  handler: (request: Request) => Promise<Response>
+) => {
+  const requestLog = context.get("log");
+  const headers = new Headers(context.req.raw.headers);
+
+  if (requestLog !== undefined) {
+    const { requestId } = requestLog.getContext();
+
+    if (Predicate.isString(requestId) && requestId.length > 0) {
+      headers.set("x-request-id", requestId);
+    }
+
+    requestLog.set({ httpApi: { path: context.req.path } });
+  }
+
+  return await handler(new Request(context.req.raw, { headers }));
+};
+
 const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
   Layer.effect(
     ServerApplication,
@@ -159,30 +182,6 @@ const makeHonoApplicationLayer = (startupConfig: StartupConfig) =>
         }
         return context.json(OpenApi.fromApi(AppHttpApi));
       });
-
-      // oxlint-disable-next-line unicorn/consistent-function-scoping
-      const handleHttpApiRequest = async <
-        Path extends string,
-        Input extends HonoInput,
-      >(
-        context: HonoContext<EvlogVariables, Path, Input>,
-        handler: typeof appHttpApi
-      ) => {
-        const requestLog = context.get("log");
-        const headers = new Headers(context.req.raw.headers);
-
-        if (requestLog !== undefined) {
-          const { requestId } = requestLog.getContext();
-
-          if (Predicate.isString(requestId) && requestId.length > 0) {
-            headers.set("x-request-id", requestId);
-          }
-
-          requestLog.set({ httpApi: { path: context.req.path } });
-        }
-
-        return await handler(new Request(context.req.raw, { headers }));
-      };
 
       app.use(
         "/health",
