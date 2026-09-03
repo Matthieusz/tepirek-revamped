@@ -11,16 +11,14 @@ const GhostIcon: EventIcon = (props) => <Ghost {...props} />;
 const SnowflakeIcon: EventIcon = (props) => <Snowflake {...props} />;
 const SunIcon: EventIcon = (props) => <Sun {...props} />;
 
-const getCalendarIcon = (): EventIcon =>
-  // oxlint-disable-next-line typescript/no-unsafe-return -- lucide-react's peer React type is unresolved by tsgolint, but Calendar is a valid icon component at runtime.
-  Calendar;
+const CalendarIcon: EventIcon = (props) => <Calendar {...props} />;
 
 /**
  * Map of event icon names to their Lucide icon components
  */
 export const EVENT_ICON_MAP = {
   cake: CakeIcon,
-  calendar: getCalendarIcon(),
+  calendar: CalendarIcon,
   egg: EggIcon,
   ghost: GhostIcon,
   snowflake: SnowflakeIcon,
