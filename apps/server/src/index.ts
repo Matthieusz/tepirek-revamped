@@ -1,7 +1,10 @@
 /* eslint-disable max-classes-per-file -- Collocated server service and startup error. */
-import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import * as BunRuntime from "@effect/platform-bun/BunRuntime";
+import { once } from "node:events";
+
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
+import { createAdaptorServer } from "@hono/node-server";
 import * as Observability from "@tepirek-revamped/api/observability";
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
 import { makeApiLiveLayerFromDatabase } from "@tepirek-revamped/api/server/effect-app";
@@ -19,7 +22,6 @@ import {
 } from "@tepirek-revamped/db/effect";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
-import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Predicate from "effect/Predicate";
@@ -43,7 +45,7 @@ import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { readStartupConfig } from "./startup-config.js";
 import type { StartupConfig } from "./startup-config.js";
 
-/** Scoped Hono application value used by tests and the Bun host. */
+/** Scoped Hono application value used by tests and the Node.js host. */
 export interface ServerApplicationService {
   readonly app: Hono<EvlogVariables>;
 }
@@ -54,7 +56,7 @@ export class ServerApplication extends Context.Service<
   ServerApplicationService
 >()("@tepirek-revamped/server/ServerApplication") {}
 
-/** Expected failure while binding the Bun HTTP server. */
+/** Expected failure while binding the Node.js HTTP server. */
 export class ServerStartupError extends Schema.TaggedErrorClass<ServerStartupError>()(
   "ServerStartupError",
   { cause: Schema.Defect() }
@@ -261,58 +263,43 @@ export const makeServerHostLayer = <ApplicationError, HostError>(
     })
   ).pipe(Layer.provide(applicationLayer));
 
+const startNodeServer = (
+  application: ServerApplicationService
+): Effect.Effect<ServerControl, ServerStartupError> =>
+  Effect.tryPromise({
+    catch: (cause) => new ServerStartupError({ cause }),
+    try: async (signal) => {
+      const server = createAdaptorServer({ fetch: application.app.fetch });
+      server.listen(3000);
+
+      try {
+        await once(server, "listening", { signal });
+      } catch (error) {
+        server.close();
+        throw error;
+      }
+
+      return {
+        stop: async () => {
+          await server[Symbol.asyncDispose]();
+        },
+      };
+    },
+  });
+
 /** Build the complete long-lived server ownership graph. */
 export const makeServerLayer = (startupConfig: StartupConfig) =>
-  makeServerHostLayer(makeServerApplicationLayer(startupConfig), ({ app }) =>
-    Effect.try({
-      catch: (cause) => new ServerStartupError({ cause }),
-      try: () =>
-        Bun.serve({
-          fetch: app.fetch,
-          id: "tepirek-server",
-        }),
-    })
+  makeServerHostLayer(
+    makeServerApplicationLayer(startupConfig),
+    startNodeServer
   );
-
-interface HotModule {
-  readonly dispose: (finalizer: () => Promise<void>) => void;
-}
-
-/** Interrupt a root Effect and await scope finalization during Bun hot reload. */
-export const withHotReload = <A, E>(
-  application: Effect.Effect<A, E>,
-  hot: HotModule | undefined
-): Effect.Effect<A | undefined, E> => {
-  if (hot === undefined) {
-    return application;
-  }
-
-  return Effect.gen(function* hotReloadBridge() {
-    const reloadRequested = yield* Deferred.make<undefined>();
-    const finalized = yield* Deferred.make<undefined>();
-    const context = yield* Effect.context();
-    const runPromise = Effect.runPromiseWith(context);
-
-    hot.dispose(async () => {
-      await runPromise(
-        Deferred.completeWith(reloadRequested, Effect.undefined)
-      );
-      await runPromise(Deferred.await(finalized));
-    });
-
-    return yield* application.pipe(
-      Effect.raceFirst(Deferred.await(reloadRequested)),
-      Effect.ensuring(Deferred.completeWith(finalized, Effect.undefined))
-    );
-  });
-};
 
 const dotEnvProvider = ConfigProvider.fromDotEnv().pipe(
   Effect.catchIf(
     (error) => error.reason._tag === "NotFound",
     () => Effect.succeed(ConfigProvider.fromUnknown({}))
   ),
-  Effect.provide(BunFileSystem.layer)
+  Effect.provide(NodeFileSystem.layer)
 );
 
 const startupConfigProvider = dotEnvProvider.pipe(
@@ -332,14 +319,13 @@ const main = readStartupConfig.pipe(
     Layer.launch(makeServerLayer(startupConfig)).pipe(
       Effect.provide(
         Observability.makeLayer(startupConfig.observability).pipe(
-          Layer.provide(BunCrypto.layer)
+          Layer.provide(NodeCrypto.layer)
         )
       )
     )
-  ),
-  (application) => withHotReload(application, import.meta.hot)
+  )
 );
 
 if (import.meta.main) {
-  BunRuntime.runMain(main);
+  NodeRuntime.runMain(main);
 }

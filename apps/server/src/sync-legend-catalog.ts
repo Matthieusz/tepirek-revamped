@@ -1,5 +1,5 @@
-import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import * as BunRuntime from "@effect/platform-bun/BunRuntime";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import {
   LegendCatalogSyncService,
   makeLegendCatalogSyncLayer,
@@ -16,7 +16,7 @@ const dotEnvProvider = ConfigProvider.fromDotEnv().pipe(
     (error) => error.reason._tag === "NotFound",
     () => Effect.succeed(ConfigProvider.fromUnknown({}))
   ),
-  Effect.provide(BunFileSystem.layer)
+  Effect.provide(NodeFileSystem.layer)
 );
 
 const syncConfigProvider = dotEnvProvider.pipe(
@@ -55,5 +55,5 @@ const main = readLegendCatalogSyncConfig.pipe(
 );
 
 if (import.meta.main) {
-  BunRuntime.runMain(main);
+  NodeRuntime.runMain(main);
 }
