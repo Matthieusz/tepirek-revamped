@@ -13,4 +13,13 @@ export default defineConfig({
     typeAware: true,
     typeCheck: true,
   },
+  overrides: [
+    {
+      files: ["**/*.{cts,mts,ts,tsx}"],
+      rules: {
+        // TypeScript has separate type and value namespaces. Its compiler still rejects invalid redeclarations.
+        "no-redeclare": "off",
+      },
+    },
+  ],
 });
