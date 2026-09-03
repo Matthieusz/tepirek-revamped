@@ -1,5 +1,6 @@
+import { ChevronRightIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 import type {
@@ -85,9 +86,19 @@ const NavItemCollapsible = ({
                 )}
                 tooltip={item.title}
               >
-                {item.icon && <item.icon className="size-4" />}
+                {item.icon ? (
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={item.icon}
+                    className="size-4"
+                  />
+                ) : null}
                 <span>{item.title}</span>
-                <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={ChevronRightIcon}
+                  className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+                />
               </SidebarMenuButton>
             }
           />
