@@ -33,17 +33,17 @@
     "prepare": "effect-tsgo patch"
   },
   "devDependencies": {
-    "@effect/tsgo": "^0.39.0",
+    "@effect/tsgo": "^0.39.1",
     "@tepirek-revamped/config": "workspace:*",
     "@types/bun": "^1.4.0",
     "knip": "^6.34.0",
     "lefthook": "latest",
     "oxfmt": "^0.66.0",
-    "oxlint": "1.78.0",
+    "oxlint": "1.81.0",
     "oxlint-tsgolint": "^7.0.2001",
     "turbo": "^2.10.12",
     "typescript": "catalog:",
-    "ultracite": "7.10.5",
+    "ultracite": "7.10.7",
     "vitest": "^4.1.11"
   },
   "engines": {
