@@ -1,6 +1,12 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import {
+  Cancel01Icon,
+  CheckIcon,
+  Rotate01Icon,
+  TriangleAlertIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { AlertTriangle, Check, RotateCw, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -37,7 +43,7 @@ export const SquadGroupInvitations = () => {
   if (AsyncResult.isFailure(result)) {
     return (
       <Alert variant="destructive">
-        <AlertTriangle aria-hidden="true" />
+        <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
         <AlertTitle>Nie udało się wczytać zaproszeń</AlertTitle>
         <AlertDescription>
           Sprawdź połączenie i spróbuj ponownie. Biblioteka grup pozostaje
@@ -45,7 +51,11 @@ export const SquadGroupInvitations = () => {
         </AlertDescription>
         <AlertAction>
           <Button onClick={refresh} size="sm" type="button" variant="outline">
-            <RotateCw className="size-3.5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Rotate01Icon}
+              className="size-3.5"
+            />
             Spróbuj ponownie
           </Button>
         </AlertAction>
@@ -144,7 +154,11 @@ export const SquadGroupInvitations = () => {
                     size="sm"
                     type="button"
                   >
-                    <Check className="size-3.5" />
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={CheckIcon}
+                      className="size-3.5"
+                    />
                     Przyjmij
                   </Button>
                   <Button
@@ -156,7 +170,11 @@ export const SquadGroupInvitations = () => {
                     type="button"
                     variant="ghost"
                   >
-                    <X className="size-3.5" />
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={Cancel01Icon}
+                      className="size-3.5"
+                    />
                     Odrzuć
                   </Button>
                 </div>

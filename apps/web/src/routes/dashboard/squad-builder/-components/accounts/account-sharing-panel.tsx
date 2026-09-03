@@ -1,10 +1,15 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import {
+  Delete01Icon,
+  LoaderCircleIcon,
+  UserAdd01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type {
   AccountAccessGrantSummarySchema,
   AccountInviteTargetSchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/account-sharing/account-sharing-schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Loader2, Trash2, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -216,7 +221,11 @@ export const AccountSharingPanel = ({
                     type="button"
                     variant="outline"
                   >
-                    <UserPlus className="size-3.5" />
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={UserAdd01Icon}
+                      className="size-3.5"
+                    />
                     Zaproś
                   </Button>
                 </AutocompleteItem>
@@ -241,7 +250,11 @@ export const AccountSharingPanel = ({
         </h3>
         {!AsyncResult.isSuccess(grantsResult) && (
           <div className="text-muted-foreground flex items-center gap-2 text-xs">
-            <Loader2 className="size-3 animate-spin" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={LoaderCircleIcon}
+              className="size-3 animate-spin"
+            />
             Wczytywanie…
           </div>
         )}
@@ -311,7 +324,11 @@ export const AccountSharingPanel = ({
                   size="icon-sm"
                   variant="ghost"
                 >
-                  <Trash2 className="text-destructive size-3.5" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={Delete01Icon}
+                    className="text-destructive size-3.5"
+                  />
                 </Button>
               </li>
             ))}

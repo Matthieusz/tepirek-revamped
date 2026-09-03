@@ -1,6 +1,12 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import {
+  Add01Icon,
+  Calendar04Icon,
+  Delete01Icon,
+  Megaphone02Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Calendar, Megaphone, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -100,7 +106,11 @@ const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
           <AddAnnouncementModal
             trigger={
               <Button>
-                <Plus className="size-4" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={Add01Icon}
+                  className="size-4"
+                />
                 Dodaj ogłoszenie
               </Button>
             }
@@ -110,7 +120,7 @@ const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
 
       {announcements.length === 0 && (
         <EmptyState
-          icon={<Megaphone />}
+          icon={<HugeiconsIcon aria-hidden="true" icon={Megaphone02Icon} />}
           message="Brak ogłoszeń do wyświetlenia"
         />
       )}
@@ -147,7 +157,11 @@ const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
                       orientation="vertical"
                     />
                     <div className="flex items-center gap-1">
-                      <Calendar className="size-3.5" />
+                      <HugeiconsIcon
+                        aria-hidden="true"
+                        icon={Calendar04Icon}
+                        className="size-3.5"
+                      />
                       <span>{formatDateTime(announcement.createdAt)}</span>
                     </div>
                   </div>
@@ -164,7 +178,11 @@ const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
                     size="sm"
                     variant="ghost"
                   >
-                    <Trash2 className="size-4" />
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={Delete01Icon}
+                      className="size-4"
+                    />
                   </Button>
                 )}
               </div>

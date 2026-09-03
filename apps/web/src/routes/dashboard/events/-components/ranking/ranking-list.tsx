@@ -1,6 +1,7 @@
+import { Medal06Icon, UserIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import * as Num from "effect/Number";
 import * as Option from "effect/Option";
-import { Trophy, User } from "lucide-react";
 import type { ReactElement } from "react";
 
 import {
@@ -27,13 +28,31 @@ const BRONZE_MEDAL = 3;
 
 const getRankIcon = (position: number): ReactElement | null => {
   if (position === GOLD_MEDAL) {
-    return <Trophy className="size-5 text-yellow-500" />;
+    return (
+      <HugeiconsIcon
+        aria-hidden="true"
+        icon={Medal06Icon}
+        className="size-5 text-yellow-500"
+      />
+    );
   }
   if (position === SILVER_MEDAL) {
-    return <Trophy className="size-5 text-gray-400" />;
+    return (
+      <HugeiconsIcon
+        aria-hidden="true"
+        icon={Medal06Icon}
+        className="size-5 text-gray-400"
+      />
+    );
   }
   if (position === BRONZE_MEDAL) {
-    return <Trophy className="size-5 text-amber-600" />;
+    return (
+      <HugeiconsIcon
+        aria-hidden="true"
+        icon={Medal06Icon}
+        className="size-5 text-amber-600"
+      />
+    );
   }
   return null;
 };
@@ -79,7 +98,11 @@ export const RankingList = ({ players }: RankingListProps) => (
                   src={player.userImage ?? undefined}
                 />
                 <AvatarFallback>
-                  <User className="size-5" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={UserIcon}
+                    className="size-5"
+                  />
                 </AvatarFallback>
               </Avatar>
 
@@ -137,7 +160,11 @@ export const RankingList = ({ players }: RankingListProps) => (
                         src={player.userImage ?? undefined}
                       />
                       <AvatarFallback>
-                        <User className="size-8" />
+                        <HugeiconsIcon
+                          aria-hidden="true"
+                          icon={UserIcon}
+                          className="size-8"
+                        />
                       </AvatarFallback>
                     </Avatar>
 

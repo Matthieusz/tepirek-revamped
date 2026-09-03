@@ -1,10 +1,11 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { Coins02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Coins } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -223,7 +224,11 @@ const DistributeGoldModalContent = ({
         description="Ustaw kwotę złota do rozdzielenia dla herosa. Złoto zostanie podzielone proporcjonalnie do punktów każdego gracza."
         title={
           <span className="flex items-center gap-2">
-            <Coins className="size-5 text-yellow-500" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Coins02Icon}
+              className="size-5 text-yellow-500"
+            />
             Rozdziel złoto
           </span>
         }

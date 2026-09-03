@@ -1,10 +1,11 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { Rotate01Icon, TriangleAlertIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { getRouteApi, Link } from "@tanstack/react-router";
 import type { SquadGroupDetailSchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
 import * as HashMap from "effect/HashMap";
 import * as Predicate from "effect/Predicate";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { AlertTriangle, RotateCw } from "lucide-react";
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
 
@@ -298,7 +299,7 @@ const SquadBuilderEditorContent = ({
     return (
       <div className="space-y-3">
         <Alert variant="destructive">
-          <AlertTriangle aria-hidden="true" />
+          <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
           <AlertTitle>Nie udało się wczytać grupy składów</AlertTitle>
           <AlertDescription>
             Grupa może być niedostępna albo nie masz do niej dostępu.
@@ -310,7 +311,11 @@ const SquadBuilderEditorContent = ({
               type="button"
               variant="outline"
             >
-              <RotateCw className="size-3.5" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={Rotate01Icon}
+                className="size-3.5"
+              />
               Spróbuj ponownie
             </Button>
           </AlertAction>
@@ -364,7 +369,7 @@ const SquadBuilderEditorPage = () => {
   if (groupId === null) {
     return (
       <Alert variant="destructive">
-        <AlertTriangle aria-hidden="true" />
+        <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
         <AlertTitle>Nieprawidłowy identyfikator grupy składów</AlertTitle>
         <AlertDescription>
           <Link

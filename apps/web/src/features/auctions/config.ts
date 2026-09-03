@@ -1,26 +1,15 @@
-import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import {
-  Axe,
-  Crosshair,
-  Flame,
-  Footprints,
-  Shield,
-  Swords,
-  Target,
-  Wand2,
-} from "lucide-react";
-import type { ReactElement, SVGProps } from "react";
-
-type AuctionIcon = (props: SVGProps<SVGSVGElement>) => ReactElement;
-
-const AxeIcon: AuctionIcon = (props) => <Axe {...props} />;
-const CrosshairIcon: AuctionIcon = (props) => <Crosshair {...props} />;
-const FlameIcon: AuctionIcon = (props) => <Flame {...props} />;
-const FootprintsIcon: AuctionIcon = (props) => <Footprints {...props} />;
-const ShieldIcon: AuctionIcon = (props) => <Shield {...props} />;
-const SwordsIcon: AuctionIcon = (props) => <Swords {...props} />;
-const TargetIcon: AuctionIcon = (props) => <Target {...props} />;
-const Wand2Icon: AuctionIcon = (props) => <Wand2 {...props} />;
+  AxeIcon,
+  CrosshairIcon,
+  FlameIcon,
+  FootprintsIcon,
+  MagicWand02Icon,
+  Shield01Icon,
+  Sword01Icon,
+  Target01Icon,
+} from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
+import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 
 export {
   AUCTION_PROFESSIONS,
@@ -49,18 +38,18 @@ export const AUCTION_TYPE_META = {
 } satisfies Record<AuctionType, AuctionTypeMeta>;
 
 interface AuctionProfessionMeta {
-  cardIcon: Record<AuctionType, AuctionIcon>;
-  headerIcon: AuctionIcon;
+  cardIcon: Record<AuctionType, IconSvgElement>;
+  headerIcon: IconSvgElement;
   name: string;
 }
 
 export const AUCTION_PROFESSION_META = {
   "blade-dancer": {
     cardIcon: {
-      main: SwordsIcon,
-      support: SwordsIcon,
+      main: Sword01Icon,
+      support: Sword01Icon,
     },
-    headerIcon: SwordsIcon,
+    headerIcon: Sword01Icon,
     name: "Tancerz Ostrzy",
   },
   hunter: {
@@ -68,23 +57,23 @@ export const AUCTION_PROFESSION_META = {
       main: CrosshairIcon,
       support: CrosshairIcon,
     },
-    headerIcon: TargetIcon,
+    headerIcon: Target01Icon,
     name: "Łowca",
   },
   mage: {
     cardIcon: {
-      main: Wand2Icon,
-      support: Wand2Icon,
+      main: MagicWand02Icon,
+      support: MagicWand02Icon,
     },
     headerIcon: FlameIcon,
     name: "Mag",
   },
   paladin: {
     cardIcon: {
-      main: ShieldIcon,
-      support: ShieldIcon,
+      main: Shield01Icon,
+      support: Shield01Icon,
     },
-    headerIcon: ShieldIcon,
+    headerIcon: Shield01Icon,
     name: "Paladyn",
   },
   tracker: {

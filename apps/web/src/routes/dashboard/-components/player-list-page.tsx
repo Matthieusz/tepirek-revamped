@@ -1,6 +1,12 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import {
+  CheckmarkCircle02Icon,
+  Clock01Icon,
+  Search01Icon,
+  UsersIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { CheckCircle2, Clock, Search, Users } from "lucide-react";
 import { useState } from "react";
 
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
@@ -74,14 +80,22 @@ const PlayerListContent = ({ session }: PlayerListPageProps) => {
         <div className="border-border bg-card rounded-xl border p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">Wszyscy gracze</p>
-            <Users className="text-muted-foreground size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={UsersIcon}
+              className="text-muted-foreground size-4"
+            />
           </div>
           <p className="mt-1 text-2xl font-bold">{playersData.length}</p>
         </div>
         <div className="border-border bg-card rounded-xl border p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">Zweryfikowani</p>
-            <CheckCircle2 className="text-primary size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={CheckmarkCircle02Icon}
+              className="text-primary size-4"
+            />
           </div>
           <p className="text-primary mt-1 text-2xl font-bold">
             {totalVerified}
@@ -90,7 +104,11 @@ const PlayerListContent = ({ session }: PlayerListPageProps) => {
         <div className="border-border bg-card rounded-xl border p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">Oczekujący</p>
-            <Clock className="text-muted-foreground size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Clock01Icon}
+              className="text-muted-foreground size-4"
+            />
           </div>
           <p className="text-muted-foreground mt-1 text-2xl font-bold">
             {totalNotVerified}
@@ -100,7 +118,11 @@ const PlayerListContent = ({ session }: PlayerListPageProps) => {
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+        <HugeiconsIcon
+          aria-hidden="true"
+          icon={Search01Icon}
+          className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2"
+        />
         <Input
           aria-label="Szukaj gracza po nazwie"
           className="pl-9"
@@ -117,7 +139,11 @@ const PlayerListContent = ({ session }: PlayerListPageProps) => {
       <div className="grid gap-6 xl:grid-cols-2">
         <div className="border-border bg-card rounded-xl border">
           <div className="border-border flex items-center gap-2 border-b p-4">
-            <CheckCircle2 className="text-primary size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={CheckmarkCircle02Icon}
+              className="text-primary size-4"
+            />
             <h2 className="text-base font-semibold">Zweryfikowani</h2>
           </div>
           <div className="p-4">
@@ -134,7 +160,11 @@ const PlayerListContent = ({ session }: PlayerListPageProps) => {
 
         <div className="border-border bg-card rounded-xl border">
           <div className="border-border flex items-center gap-2 border-b p-4">
-            <Clock className="text-muted-foreground size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Clock01Icon}
+              className="text-muted-foreground size-4"
+            />
             <h2 className="text-base font-semibold">
               Oczekujący na weryfikację
             </h2>

@@ -1,6 +1,7 @@
+import { CalculatorIcon, Unlink05Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
-import { Calculator, Unlink } from "lucide-react";
 import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
@@ -141,7 +142,11 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
           <div className="border-border bg-card rounded-xl border">
             <div className="border-border border-b p-6">
               <h2 className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="size-5" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={CalculatorIcon}
+                  className="size-5"
+                />
                 Parametry przedmiotu
               </h2>
               <p className="text-muted-foreground text-sm">
@@ -225,7 +230,9 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
             >
               <div className="mb-4">
                 <h2 className="flex items-center gap-2 text-base font-semibold">
-                  <Unlink
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={Unlink05Icon}
                     className={`size-5 ${rarityColors[result.itemRarity]}`}
                   />
                   Koszt odwiązania
@@ -286,7 +293,11 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
         <div className="border-border bg-card rounded-xl border">
           <div className="border-border border-b p-6">
             <h2 className="flex items-center gap-2 text-base font-semibold">
-              <Unlink className="text-muted-foreground size-5" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={Unlink05Icon}
+                className="text-muted-foreground size-5"
+              />
               Formuła obliczania
             </h2>
           </div>

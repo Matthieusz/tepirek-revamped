@@ -1,5 +1,6 @@
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,11 @@ export const BackToHomeButton = () => (
   <Button
     render={
       <Link className="flex items-center gap-2" to="/">
-        <ArrowLeft className="size-4" />
+        <HugeiconsIcon
+          aria-hidden="true"
+          icon={ArrowLeft01Icon}
+          className="size-4"
+        />
         Powrót do strony głównej
       </Link>
     }

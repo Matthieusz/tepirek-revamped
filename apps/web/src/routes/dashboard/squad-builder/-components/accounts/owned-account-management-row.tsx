@@ -1,16 +1,17 @@
 import { useAtomSet } from "@effect/atom-react";
+import {
+  Cancel01Icon,
+  Delete01Icon,
+  ExternalLinkIcon,
+  LoaderCircleIcon,
+  PencilEdit01Icon,
+  SaveIcon,
+  Share06Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
 import * as Schema from "effect/Schema";
-import {
-  ExternalLink,
-  Loader2,
-  Pencil,
-  Save,
-  Share2,
-  Trash2,
-  X,
-} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -109,9 +110,17 @@ const RenameAccountForm = ({
         <div className="flex flex-wrap gap-2">
           <Button disabled={isSubmitting} size="sm" type="submit">
             {isSubmitting ? (
-              <Loader2 className="size-3.5 animate-spin" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={LoaderCircleIcon}
+                className="size-3.5 animate-spin"
+              />
             ) : (
-              <Save className="size-3.5" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={SaveIcon}
+                className="size-3.5"
+              />
             )}
             Zapisz
           </Button>
@@ -122,7 +131,11 @@ const RenameAccountForm = ({
             type="button"
             variant="ghost"
           >
-            <X className="size-3.5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Cancel01Icon}
+              className="size-3.5"
+            />
             Anuluj
           </Button>
         </div>
@@ -189,9 +202,17 @@ const DeleteAccountDialog = ({
             variant="destructive"
           >
             {isDeleting ? (
-              <Loader2 className="size-4 animate-spin" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={LoaderCircleIcon}
+                className="size-4 animate-spin"
+              />
             ) : (
-              <Trash2 className="size-4" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={Delete01Icon}
+                className="size-4"
+              />
             )}
             Usuń konto
           </AlertDialogAction>
@@ -245,7 +266,11 @@ export const OwnedAccountManagementRow = ({
             rel="noopener noreferrer"
             target="_blank"
           >
-            <ExternalLink className="size-3" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={ExternalLinkIcon}
+              className="size-3"
+            />
             Profil Margonem
           </a>
           <span className="text-muted-foreground font-mono text-xs">
@@ -265,7 +290,11 @@ export const OwnedAccountManagementRow = ({
               type="button"
               variant="ghost"
             >
-              <Pencil className="size-3.5" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={PencilEdit01Icon}
+                className="size-3.5"
+              />
               Edytuj nazwę
             </Button>
           )}
@@ -278,7 +307,11 @@ export const OwnedAccountManagementRow = ({
             type="button"
             variant="ghost"
           >
-            <Trash2 className="size-3.5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Delete01Icon}
+              className="size-3.5"
+            />
             Usuń konto
           </Button>
         </AccountRefetchWorkflow>
@@ -294,7 +327,11 @@ export const OwnedAccountManagementRow = ({
       </div>
       <section className="border-border min-w-0 lg:border-l lg:pl-6">
         <h3 className="mb-3 flex items-center gap-2 text-sm font-medium">
-          <Share2 aria-hidden="true" className="text-muted-foreground size-4" />
+          <HugeiconsIcon
+            icon={Share06Icon}
+            aria-hidden="true"
+            className="text-muted-foreground size-4"
+          />
           Udostępnianie konta
         </h3>
         <AccountSharingPanel

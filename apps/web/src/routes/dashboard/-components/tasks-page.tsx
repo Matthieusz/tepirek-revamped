@@ -1,15 +1,16 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import {
+  Add01Icon,
+  CheckmarkCircle02Icon,
+  CircleIcon,
+  Delete01Icon,
+  ListChecksIcon,
+  LoaderCircleIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import {
-  CheckCircle2,
-  Circle,
-  ListTodo,
-  Loader2,
-  Plus,
-  Trash2,
-} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -134,7 +135,11 @@ const TasksContent = ({ session }: TasksPageProps) => {
               <p className="text-muted-foreground text-xs font-medium">
                 Wszystkie
               </p>
-              <ListTodo className="text-muted-foreground size-4" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={ListChecksIcon}
+                className="text-muted-foreground size-4"
+              />
             </div>
             <p className="mt-1 text-2xl font-bold">{totalCount}</p>
           </div>
@@ -143,7 +148,11 @@ const TasksContent = ({ session }: TasksPageProps) => {
               <p className="text-muted-foreground text-xs font-medium">
                 Ukończone
               </p>
-              <CheckCircle2 className="text-primary size-4" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={CheckmarkCircle02Icon}
+                className="text-primary size-4"
+              />
             </div>
             <p className="text-primary mt-1 text-2xl font-bold">
               {completedCount}
@@ -154,7 +163,11 @@ const TasksContent = ({ session }: TasksPageProps) => {
               <p className="text-muted-foreground text-xs font-medium">
                 Pozostałe
               </p>
-              <Circle className="text-muted-foreground size-4" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={CircleIcon}
+                className="text-muted-foreground size-4"
+              />
             </div>
             <p className="text-muted-foreground mt-1 text-2xl font-bold">
               {totalCount - completedCount}
@@ -165,7 +178,11 @@ const TasksContent = ({ session }: TasksPageProps) => {
         {/* Add Task */}
         <div className="border-border bg-card rounded-xl border p-6">
           <h2 className="mb-1 flex items-center gap-2 text-base font-semibold">
-            <Plus className="size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Add01Icon}
+              className="size-4"
+            />
             Dodaj zadanie
           </h2>
           <p className="text-muted-foreground mb-4 text-sm">
@@ -187,7 +204,11 @@ const TasksContent = ({ session }: TasksPageProps) => {
               </form.AppField>
               <Button disabled={!canCreateTodo || isSubmitting} type="submit">
                 {isSubmitting ? (
-                  <Loader2 className="size-4 animate-spin" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={LoaderCircleIcon}
+                    className="size-4 animate-spin"
+                  />
                 ) : (
                   "Dodaj"
                 )}
@@ -199,7 +220,11 @@ const TasksContent = ({ session }: TasksPageProps) => {
         {/* Task List */}
         <div className="border-border bg-card rounded-xl border">
           <div className="border-border flex items-center gap-2 border-b p-4">
-            <ListTodo className="size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={ListChecksIcon}
+              className="size-4"
+            />
             <h2 className="text-base font-semibold">Twoje zadania</h2>
             <span className="text-muted-foreground ml-auto text-sm">
               {totalCount > 0
@@ -210,7 +235,11 @@ const TasksContent = ({ session }: TasksPageProps) => {
           <div className="p-4">
             {todosData.length === 0 && (
               <div className="rounded-lg border border-dashed py-8 text-center">
-                <ListTodo className="text-muted-foreground mx-auto size-8" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={ListChecksIcon}
+                  className="text-muted-foreground mx-auto size-8"
+                />
                 <p className="text-muted-foreground mt-2 text-sm">
                   Brak zadań do wyświetlenia
                 </p>
@@ -257,7 +286,11 @@ const TasksContent = ({ session }: TasksPageProps) => {
                       size="icon"
                       variant="ghost"
                     >
-                      <Trash2 className="size-4" />
+                      <HugeiconsIcon
+                        aria-hidden="true"
+                        icon={Delete01Icon}
+                        className="size-4"
+                      />
                     </Button>
                   </li>
                 ))}

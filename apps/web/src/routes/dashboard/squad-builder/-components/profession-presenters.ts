@@ -1,23 +1,13 @@
 import {
-  Axe,
-  CircleHelp,
-  Crosshair,
-  Footprints,
-  Shield,
-  Swords,
-  Wand2,
-} from "lucide-react";
-import type { ReactElement, SVGProps } from "react";
-
-type ProfessionIcon = (props: SVGProps<SVGSVGElement>) => ReactElement;
-
-const AxeIcon: ProfessionIcon = (props) => <Axe {...props} />;
-const CircleHelpIcon: ProfessionIcon = (props) => <CircleHelp {...props} />;
-const CrosshairIcon: ProfessionIcon = (props) => <Crosshair {...props} />;
-const FootprintsIcon: ProfessionIcon = (props) => <Footprints {...props} />;
-const ShieldIcon: ProfessionIcon = (props) => <Shield {...props} />;
-const SwordsIcon: ProfessionIcon = (props) => <Swords {...props} />;
-const Wand2Icon: ProfessionIcon = (props) => <Wand2 {...props} />;
+  AxeIcon,
+  CrosshairIcon,
+  FootprintsIcon,
+  HelpCircleIcon,
+  MagicWand02Icon,
+  Shield01Icon,
+  Sword01Icon,
+} from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
 
 type KnownProfession =
   | "bladeDancer"
@@ -29,20 +19,20 @@ type KnownProfession =
 
 interface ProfessionPresentation {
   readonly colorClass: string;
-  readonly icon: ProfessionIcon;
+  readonly icon: IconSvgElement;
   readonly label: string;
 }
 
 const UNKNOWN_PROFESSION_PRESENTATION: ProfessionPresentation = {
   colorClass: "text-muted-foreground",
-  icon: CircleHelpIcon,
+  icon: HelpCircleIcon,
   label: "Nieznana profesja",
 };
 
 const PROFESSION_PRESENTATIONS = {
   bladeDancer: {
     colorClass: "text-chart-1",
-    icon: SwordsIcon,
+    icon: Sword01Icon,
     label: "Tancerz ostrzy",
   },
   hunter: {
@@ -52,12 +42,12 @@ const PROFESSION_PRESENTATIONS = {
   },
   mage: {
     colorClass: "text-warning",
-    icon: Wand2Icon,
+    icon: MagicWand02Icon,
     label: "Mag",
   },
   paladin: {
     colorClass: "text-success",
-    icon: ShieldIcon,
+    icon: Shield01Icon,
     label: "Paladyn",
   },
   tracker: {

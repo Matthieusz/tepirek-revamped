@@ -1,6 +1,7 @@
 import { useAtomSet } from "@effect/atom-react";
+import { Delete01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
-import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -103,7 +104,11 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
               type="button"
               variant="destructive"
             >
-              <Trash2 className="size-4" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={Delete01Icon}
+                className="size-4"
+              />
               Usuń
             </Button>
           </div>

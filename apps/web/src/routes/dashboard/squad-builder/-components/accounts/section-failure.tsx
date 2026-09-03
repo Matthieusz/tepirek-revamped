@@ -1,4 +1,5 @@
-import { AlertTriangle, RotateCw } from "lucide-react";
+import { Rotate01Icon, TriangleAlertIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import {
   Alert,
@@ -16,12 +17,16 @@ interface SectionFailureProps {
 /** Renders an inline section-level failure with a retry action. */
 export const SectionFailure = ({ message, onRetry }: SectionFailureProps) => (
   <Alert className="m-4 w-auto" variant="destructive">
-    <AlertTriangle aria-hidden="true" />
+    <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
     <AlertTitle>Nie udało się wczytać danych</AlertTitle>
     <AlertDescription>{message}</AlertDescription>
     <AlertAction>
       <Button onClick={onRetry} size="sm" type="button" variant="outline">
-        <RotateCw className="size-3.5" />
+        <HugeiconsIcon
+          aria-hidden="true"
+          icon={Rotate01Icon}
+          className="size-3.5"
+        />
         Spróbuj ponownie
       </Button>
     </AlertAction>

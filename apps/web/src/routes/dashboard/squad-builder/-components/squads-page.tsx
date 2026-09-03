@@ -1,4 +1,5 @@
-import { Plus } from "lucide-react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,11 @@ const SquadBuilderSquadsPage = () => {
           }}
           type="button"
         >
-          <Plus className="size-4" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={Add01Icon}
+            className="size-4"
+          />
           Nowa grupa
         </Button>
       </header>

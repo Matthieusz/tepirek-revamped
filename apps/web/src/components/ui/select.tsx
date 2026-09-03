@@ -1,7 +1,12 @@
 "use client";
 
 import { Select as SelectPrimitive } from "@base-ui/react/select";
-import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -44,7 +49,11 @@ const SelectTrigger = ({
     {children}
     <SelectPrimitive.Icon
       render={
-        <ChevronDownIcon className="text-muted-foreground pointer-events-none size-4" />
+        <HugeiconsIcon
+          aria-hidden="true"
+          icon={ChevronDownIcon}
+          className="text-muted-foreground pointer-events-none size-4"
+        />
       }
     />
   </SelectPrimitive.Trigger>
@@ -62,7 +71,7 @@ const SelectScrollUpButton = ({
     )}
     {...props}
   >
-    <ChevronUpIcon />
+    <HugeiconsIcon aria-hidden="true" icon={ChevronUpIcon} />
   </SelectPrimitive.ScrollUpArrow>
 );
 
@@ -78,7 +87,7 @@ const SelectScrollDownButton = ({
     )}
     {...props}
   >
-    <ChevronDownIcon />
+    <HugeiconsIcon aria-hidden="true" icon={ChevronDownIcon} />
   </SelectPrimitive.ScrollDownArrow>
 );
 
@@ -154,7 +163,11 @@ const SelectItem = ({
         <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center" />
       }
     >
-      <CheckIcon className="pointer-events-none" />
+      <HugeiconsIcon
+        aria-hidden="true"
+        icon={CheckIcon}
+        className="pointer-events-none"
+      />
     </SelectPrimitive.ItemIndicator>
   </SelectPrimitive.Item>
 );

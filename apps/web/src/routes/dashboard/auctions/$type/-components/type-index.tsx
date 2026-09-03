@@ -1,5 +1,6 @@
+import { ChevronRightIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight } from "lucide-react";
 
 import {
   AUCTION_PROFESSION_META,
@@ -36,9 +37,17 @@ const AuctionsTypeIndexPage = ({ type }: AuctionsTypeIndexPageProps) => (
             <div className="group border-border bg-card hover:border-primary/50 hover:bg-accent/50 h-full rounded-xl border p-5 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="bg-primary/10 group-hover:bg-primary/20 flex size-10 items-center justify-center rounded-lg transition-colors">
-                  <Icon className="text-primary size-5" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    className="text-primary size-5"
+                    icon={Icon}
+                  />
                 </div>
-                <ChevronRight className="text-muted-foreground size-5 transition-transform group-hover:translate-x-1" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  className="text-muted-foreground size-5 transition-transform group-hover:translate-x-1"
+                  icon={ChevronRightIcon}
+                />
               </div>
               <h2 className="mt-4 text-lg font-semibold">
                 {professionMeta.name}

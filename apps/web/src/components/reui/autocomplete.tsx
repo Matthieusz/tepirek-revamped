@@ -1,8 +1,9 @@
 "use client";
 
 import { Autocomplete as AutocompletePrimitive } from "@base-ui/react/autocomplete";
+import { Cancel01Icon, UnfoldMoreIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { XIcon, ChevronsUpDownIcon } from "lucide-react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -276,7 +277,11 @@ function AutocompleteClear({
       )}
       {...props}
     >
-      <XIcon className="size-4" />
+      <HugeiconsIcon
+        aria-hidden="true"
+        icon={Cancel01Icon}
+        className="size-4"
+      />
     </AutocompletePrimitive.Clear>
   );
 }
@@ -294,7 +299,11 @@ function AutocompleteTrigger({
       )}
       {...props}
     >
-      <ChevronsUpDownIcon className="size-4 opacity-70" />
+      <HugeiconsIcon
+        aria-hidden="true"
+        icon={UnfoldMoreIcon}
+        className="size-4 opacity-70"
+      />
     </AutocompletePrimitive.Trigger>
   );
 }

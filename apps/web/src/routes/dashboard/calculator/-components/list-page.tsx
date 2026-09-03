@@ -1,6 +1,13 @@
+import {
+  CalculatorIcon,
+  Shield01Icon,
+  TriangleAlertIcon,
+  UserIcon,
+  UsersIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
-import { AlertTriangle, Calculator, Shield, User, Users } from "lucide-react";
 import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
@@ -48,12 +55,20 @@ const SingleModeResult = ({ result }: { result: SinglePenaltyResult }) => (
       <h2 className="flex items-center gap-2 text-base font-semibold">
         {result.wouldReceivePenalty ? (
           <>
-            <AlertTriangle className="text-destructive size-5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={TriangleAlertIcon}
+              className="text-destructive size-5"
+            />
             <span className="text-destructive">Otrzymasz punkt karny!</span>
           </>
         ) : (
           <>
-            <Shield className="text-primary size-5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Shield01Icon}
+              className="text-primary size-5"
+            />
             <span className="text-primary">Brak punktu karnego</span>
           </>
         )}
@@ -81,7 +96,11 @@ const SingleModeResult = ({ result }: { result: SinglePenaltyResult }) => (
 
       <div className="border-border grid gap-3 border-t pt-4">
         <div className="text-muted-foreground text-sm">
-          <Users className="mr-1 mb-1 inline size-4" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={UsersIcon}
+            className="mr-1 mb-1 inline size-4"
+          />
           Przydatne informacje:
         </div>
         <div className="bg-primary/10 flex items-center justify-between rounded-lg p-3">
@@ -117,14 +136,22 @@ const GroupModeResult = ({ result }: { result: GroupPenaltyResult }) => (
       <h2 className="flex items-center gap-2 text-base font-semibold">
         {result.wouldReceivePenalty ? (
           <>
-            <AlertTriangle className="text-destructive size-5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={TriangleAlertIcon}
+              className="text-destructive size-5"
+            />
             <span className="text-destructive">
               Drużyna otrzyma punkty karne!
             </span>
           </>
         ) : (
           <>
-            <Shield className="text-primary size-5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Shield01Icon}
+              className="text-primary size-5"
+            />
             <span className="text-primary">Brak punktów karnych</span>
           </>
         )}
@@ -291,7 +318,11 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
           size="sm"
           variant={mode === "single" ? "default" : "ghost"}
         >
-          <User className="mr-2 size-4" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={UserIcon}
+            className="mr-2 size-4"
+          />
           Walka 1v1
         </Button>
         <Button
@@ -302,7 +333,11 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
           size="sm"
           variant={mode === "group" ? "default" : "ghost"}
         >
-          <Users className="mr-2 size-4" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={UsersIcon}
+            className="mr-2 size-4"
+          />
           Walka grupowa
         </Button>
       </div>
@@ -312,7 +347,11 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
           <div className="border-border bg-card rounded-xl border">
             <div className="border-border border-b p-6">
               <h2 className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="size-5" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={CalculatorIcon}
+                  className="size-5"
+                />
                 Parametry walki
               </h2>
               <p className="text-muted-foreground text-sm">
@@ -351,7 +390,11 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
           <div className="border-border bg-card rounded-xl border">
             <div className="border-border border-b p-6">
               <h2 className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="size-5" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={CalculatorIcon}
+                  className="size-5"
+                />
                 Parametry walki grupowej
               </h2>
               <p className="text-muted-foreground text-sm">
@@ -388,7 +431,11 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
       <div className="border-border bg-card rounded-xl border">
         <div className="border-border border-b p-6">
           <h2 className="flex items-center gap-2 text-base font-semibold">
-            <AlertTriangle className="text-muted-foreground size-5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={TriangleAlertIcon}
+              className="text-muted-foreground size-5"
+            />
             Zasady listów gończych
           </h2>
         </div>

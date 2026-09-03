@@ -1,5 +1,6 @@
+import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import * as HashSet from "effect/HashSet";
-import { Search, X } from "lucide-react";
 
 import { Badge } from "@/components/reui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,7 +77,6 @@ export const AvailableCharacterPoolHeader = ({
             "warrior",
           ].map((profession) => {
             const presentation = getProfessionPresentation(profession);
-            const ProfessionIcon = presentation.icon;
             const selected = HashSet.has(selectedProfessions, profession);
             return (
               <Button
@@ -94,9 +94,10 @@ export const AvailableCharacterPoolHeader = ({
                 type="button"
                 variant="outline"
               >
-                <ProfessionIcon
+                <HugeiconsIcon
                   aria-hidden="true"
                   className={`size-2.5 ${presentation.colorClass}`}
+                  icon={presentation.icon}
                 />
                 {presentation.label}
               </Button>
@@ -106,7 +107,8 @@ export const AvailableCharacterPoolHeader = ({
 
         <div className="flex min-w-0 items-center gap-2">
           <div className="relative min-w-0 flex-1">
-            <Search
+            <HugeiconsIcon
+              icon={Search01Icon}
               aria-hidden="true"
               className="text-muted-foreground pointer-events-none absolute top-2 left-2 size-3.5"
             />
@@ -128,7 +130,11 @@ export const AvailableCharacterPoolHeader = ({
             type="button"
             variant="ghost"
           >
-            <X aria-hidden="true" className="size-3.5" />
+            <HugeiconsIcon
+              icon={Cancel01Icon}
+              aria-hidden="true"
+              className="size-3.5"
+            />
             Wyczyść filtry
           </Button>
         </div>

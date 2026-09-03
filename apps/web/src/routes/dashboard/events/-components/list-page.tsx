@@ -1,7 +1,13 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import {
+  Add01Icon,
+  Calendar04Icon,
+  Delete01Icon,
+  PowerIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { format } from "date-fns/format";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Calendar, Plus, Power, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -134,7 +140,11 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
           <AddEventModal
             trigger={
               <Button>
-                <Plus className="size-4" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={Add01Icon}
+                  className="size-4"
+                />
                 Dodaj event
               </Button>
             }
@@ -145,13 +155,17 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
       {/* Table */}
       <div className="border-border bg-card rounded-xl border">
         <div className="border-border flex items-center gap-2 border-b p-4">
-          <Calendar className="size-4" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={Calendar04Icon}
+            className="size-4"
+          />
           <h2 className="text-base font-semibold">Eventy</h2>
         </div>
         <div className="p-4">
           {events.length === 0 ? (
             <EmptyState
-              icon={<Calendar />}
+              icon={<HugeiconsIcon aria-hidden="true" icon={Calendar04Icon} />}
               message="Brak eventów do wyświetlenia"
             />
           ) : (
@@ -183,8 +197,10 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
                             className="flex size-8 items-center justify-center rounded-lg"
                             style={{ backgroundColor: `${event.color}20` }}
                           >
-                            <IconComponent
+                            <HugeiconsIcon
+                              aria-hidden="true"
                               className="size-4"
+                              icon={IconComponent}
                               style={{ color: event.color }}
                             />
                           </div>
@@ -218,7 +234,11 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
                                 size="sm"
                                 variant="ghost"
                               >
-                                <Power className="size-4" />
+                                <HugeiconsIcon
+                                  aria-hidden="true"
+                                  className="size-4"
+                                  icon={PowerIcon}
+                                />
                                 <span className="sr-only">
                                   {isEventActive
                                     ? "Dezaktywuj event"
@@ -237,7 +257,11 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
                                 size="sm"
                                 variant="ghost"
                               >
-                                <Trash2 className="size-4" />
+                                <HugeiconsIcon
+                                  aria-hidden="true"
+                                  className="size-4"
+                                  icon={Delete01Icon}
+                                />
                               </Button>
                             </div>
                           </TableCell>

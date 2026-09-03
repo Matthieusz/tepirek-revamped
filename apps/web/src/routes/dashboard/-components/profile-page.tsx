@@ -1,4 +1,11 @@
-import { Calendar, Edit, Mail, Shield, UserCheck } from "lucide-react";
+import {
+  Calendar04Icon,
+  PencilEdit01Icon,
+  Mail01Icon,
+  Shield01Icon,
+  UserCheck02Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -39,7 +46,11 @@ const ProfilePage = ({ session }: ProfilePageProps) => {
 
         <div className="space-y-4">
           <div className="border-border flex items-center gap-3 border-b pb-4">
-            <Mail className="text-muted-foreground size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Mail01Icon}
+              className="text-muted-foreground size-4"
+            />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Email</p>
               <p className="text-sm font-medium">{session.user.email}</p>
@@ -47,7 +58,11 @@ const ProfilePage = ({ session }: ProfilePageProps) => {
           </div>
 
           <div className="border-border flex items-center gap-3 border-b pb-4">
-            <Shield className="text-muted-foreground size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Shield01Icon}
+              className="text-muted-foreground size-4"
+            />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Rola</p>
               <p className="text-sm font-medium capitalize">
@@ -57,7 +72,11 @@ const ProfilePage = ({ session }: ProfilePageProps) => {
           </div>
 
           <div className="border-border flex items-center gap-3 border-b pb-4">
-            <UserCheck className="text-muted-foreground size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={UserCheck02Icon}
+              className="text-muted-foreground size-4"
+            />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Status</p>
               <p className="text-sm font-medium">
@@ -75,7 +94,11 @@ const ProfilePage = ({ session }: ProfilePageProps) => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Calendar className="text-muted-foreground size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Calendar04Icon}
+              className="text-muted-foreground size-4"
+            />
             <div className="flex-1">
               <p className="text-muted-foreground text-xs">Dołączono</p>
               <p className="text-sm font-medium">
@@ -89,7 +112,11 @@ const ProfilePage = ({ session }: ProfilePageProps) => {
           defaultName={session.user.name}
           trigger={
             <Button className="mt-6 w-full" variant="outline">
-              <Edit className="size-4" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={PencilEdit01Icon}
+                className="size-4"
+              />
               Edytuj profil
             </Button>
           }

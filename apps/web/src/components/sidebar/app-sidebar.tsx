@@ -1,5 +1,6 @@
+import { LogOutIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useNavigate } from "@tanstack/react-router";
-import { LogOut } from "lucide-react";
 import type * as React from "react";
 import { toast } from "sonner";
 
@@ -96,7 +97,11 @@ export const AppSidebar = ({ session, ...props }: AppSidebarProps) => {
             size="icon"
             variant="destructive"
           >
-            <LogOut className="size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={LogOutIcon}
+              className="size-4"
+            />
           </Button>
         </div>
       </SidebarFooter>

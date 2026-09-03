@@ -1,8 +1,13 @@
 import { useAtomSet } from "@effect/atom-react";
+import {
+  Add01Icon,
+  Cancel01Icon,
+  LoaderCircleIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
-import { Loader2, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -102,9 +107,17 @@ export const CreateSquadGroupFrame = ({
                 type="submit"
               >
                 {isCreating ? (
-                  <Loader2 className="size-4 animate-spin" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={LoaderCircleIcon}
+                    className="size-4 animate-spin"
+                  />
                 ) : (
-                  <Plus className="size-4" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={Add01Icon}
+                    className="size-4"
+                  />
                 )}
                 Utwórz grupę
               </Button>
@@ -116,7 +129,11 @@ export const CreateSquadGroupFrame = ({
                 type="button"
                 variant="ghost"
               >
-                <X className="size-4" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={Cancel01Icon}
+                  className="size-4"
+                />
               </Button>
             </div>
             <FormFeedback failure={submissionFailure} />
