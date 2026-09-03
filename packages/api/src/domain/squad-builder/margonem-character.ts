@@ -1,4 +1,5 @@
 /* eslint-disable import/namespace, typescript/no-empty-interface, typescript/no-empty-object-type -- Schema record interfaces intentionally merge runtime schemas with their inferred types. */
+/* eslint-disable max-classes-per-file -- Character parsing errors belong to one domain module. */
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -53,7 +54,6 @@ export interface MargonemCharacterPreviewSchema extends Schema.Schema.Type<
 export type MargonemCharacterPreview = MargonemCharacterPreviewSchema;
 
 /** Expected failure when a profession label cannot be normalized. */
-// oxlint-disable-next-line max-classes-per-file -- closely related domain errors
 export class UnknownMargonemProfession extends Schema.TaggedErrorClass<UnknownMargonemProfession>()(
   "UnknownMargonemProfession",
   {

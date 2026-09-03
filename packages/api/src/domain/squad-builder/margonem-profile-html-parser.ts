@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file -- Profile parser errors form one closed error algebra. */
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Predicate from "effect/Predicate";
@@ -31,7 +32,6 @@ export class MargonemProfileNameNotFound extends Schema.TaggedErrorClass<Margone
 ) {}
 
 /** Expected failure when the profile has no character rows. */
-// oxlint-disable-next-line max-classes-per-file -- Closely related parser error variants share one boundary.
 export class MargonemCharacterRowsNotFound extends Schema.TaggedErrorClass<MargonemCharacterRowsNotFound>()(
   "MargonemCharacterRowsNotFound",
   { profileId: MargonemProfileId }

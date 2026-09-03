@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file -- Profile URL parsing errors form one closed error algebra. */
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -13,7 +14,6 @@ export class InvalidMargonemProfileUrl extends Schema.TaggedErrorClass<InvalidMa
 ) {}
 
 /** Expected failure when a Margonem profile id is missing from a profile URL. */
-// oxlint-disable-next-line max-classes-per-file -- closely related domain errors
 export class MissingMargonemProfileId extends Schema.TaggedErrorClass<MissingMargonemProfileId>()(
   "MissingMargonemProfileId",
   {

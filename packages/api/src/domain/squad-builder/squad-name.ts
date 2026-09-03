@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file -- Squad naming errors form one closed error algebra. */
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -34,7 +35,6 @@ export class InvalidSquadGroupName extends Schema.TaggedErrorClass<InvalidSquadG
 ) {}
 
 /** Expected failure when a squad name is invalid. */
-// oxlint-disable-next-line max-classes-per-file -- closely related domain errors
 export class InvalidSquadName extends Schema.TaggedErrorClass<InvalidSquadName>()(
   "InvalidSquadName",
   {

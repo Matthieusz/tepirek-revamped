@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file -- Filter parsing errors form one closed error algebra. */
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -83,7 +84,6 @@ export class InvalidSquadGroupNameQuery extends Schema.TaggedErrorClass<InvalidS
 ) {}
 
 /** Failure returned when a squad group character-level range is invalid. */
-// oxlint-disable-next-line max-classes-per-file -- closely related domain errors
 export class InvalidSquadGroupLevelRange extends Schema.TaggedErrorClass<InvalidSquadGroupLevelRange>()(
   "InvalidSquadGroupLevelRange",
   {
