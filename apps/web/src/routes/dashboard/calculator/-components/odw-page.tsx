@@ -1,3 +1,4 @@
+import { useSelector } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
 import { Calculator, Unlink } from "lucide-react";
 import { useState } from "react";
@@ -122,6 +123,7 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
     },
     validators: { onChange: OdwFormValidator },
   });
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
     <form.AppForm>
@@ -206,17 +208,13 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
                     );
                   }}
                 </form.Field>
-                <form.Subscribe selector={(state) => state.isSubmitting}>
-                  {(isSubmitting: boolean) => (
-                    <Button
-                      className="w-full"
-                      disabled={isSubmitting}
-                      type="submit"
-                    >
-                      {isSubmitting ? "Obliczanie..." : "Oblicz koszt"}
-                    </Button>
-                  )}
-                </form.Subscribe>
+                <Button
+                  className="w-full"
+                  disabled={isSubmitting}
+                  type="submit"
+                >
+                  {isSubmitting ? "Obliczanie..." : "Oblicz koszt"}
+                </Button>
               </Form>
             </div>
           </div>
