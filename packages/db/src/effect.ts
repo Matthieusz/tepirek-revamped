@@ -6,11 +6,10 @@ import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import type { Success } from "effect/Effect";
-import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import { ConnectionError, SqlError } from "effect/unstable/sql/SqlError";
-import { Pool, types } from "pg";
+import { Pool } from "pg";
 
 import {
   BetterAuthDatabaseService,
@@ -35,43 +34,6 @@ export const DATABASE_POOL_MAX_CONNECTIONS = 10;
 const POSTGRES_CONNECTION_TIMEOUT = Duration.seconds(5);
 const POSTGRES_POOL_CLOSE_TIMEOUT = Duration.seconds(1);
 
-/**
- * PostgreSQL type OIDs for date/time types. `pg` parses these into JS `Date`
- * values by default (UTC-normalized); Drizzle's Effect PostgreSQL driver
- * expects to parse the raw values itself. Returning raw values here lets
- * Drizzle handle parsing and avoids double-parsing / timezone bugs.
- */
-const DATE_TIME_TYPE_IDS = HashSet.fromIterable([
-  1114, 1184, 1082, 1186, 1231, 1115, 1185, 1187, 1182,
-]);
-
-type PostgresParsedValue =
-  | boolean
-  | Buffer
-  | Date
-  | null
-  | number
-  | object
-  | string;
-type PostgresTypeParser = (value: string | Buffer) => PostgresParsedValue;
-
-const postgresTypes = {
-  getTypeParser: (
-    typeId: number,
-    format?: "text" | "binary"
-  ): PostgresTypeParser => {
-    if (HashSet.has(DATE_TIME_TYPE_IDS, typeId)) {
-      return (value: string | Buffer) => value;
-    }
-
-    // SAFETY: node-postgres documents this as a parser function for text or
-    // binary values. Its declaration is untyped, so this adapter narrows the
-    // boundary to the values Drizzle passes to the parser.
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- The node-postgres declaration omits the parser function type.
-    return types.getTypeParser(typeId, format) as PostgresTypeParser;
-  },
-};
-
 const DrizzleServicesLayer = Layer.merge(
   EffectCache.Default,
   PgDrizzle.EffectLogger.Default
@@ -94,7 +56,12 @@ export class EffectDatabase extends Context.Service<
   EffectPgDatabase
 >()("@tepirek-revamped/db/EffectDatabase") {}
 
-/** Acquire one validated, scoped PostgreSQL pool with intentional capacity. */
+/**
+ * Acquire one validated, scoped PostgreSQL pool with intentional capacity.
+ * Both Drizzle adapters use node-postgres's native temporal parsers so date
+ * columns have the same `Date` representation; the Effect driver applies its
+ * own column codecs to the values it selects.
+ */
 export const makeSharedPostgresPoolLayer = (
   databaseUrl: Redacted.Redacted
 ): Layer.Layer<SharedPostgresPool, SqlError> =>
@@ -105,7 +72,6 @@ export const makeSharedPostgresPoolLayer = (
         const pool = new Pool({
           connectionString: Redacted.value(databaseUrl),
           max: DATABASE_POOL_MAX_CONNECTIONS,
-          types: postgresTypes,
         });
         pool.on("error", () => {
           // The listener prevents pg from treating idle connection errors as uncaught.
@@ -156,10 +122,7 @@ export const makeSharedPostgresPoolLayer = (
 export const PgClientFromSharedPoolLayer = Pg.layerFrom(
   Effect.gen(function* makePgClientFromSharedPool() {
     const pool = yield* SharedPostgresPool;
-    return yield* Pg.fromPool({
-      acquire: Effect.succeed(pool),
-      types: postgresTypes,
-    });
+    return yield* Pg.fromPool({ acquire: Effect.succeed(pool) });
   })
 );
 
@@ -199,10 +162,7 @@ export const makeSharedDatabaseLayer = (
 
 /** Create a managed PostgreSQL client layer from a redacted database URL. */
 export const makePgClientLayer = (databaseUrl: Redacted.Redacted) =>
-  Pg.layer({
-    types: postgresTypes,
-    url: databaseUrl,
-  });
+  Pg.layer({ url: databaseUrl });
 
 /** Create a managed PostgreSQL client layer from a raw boundary database URL. */
 export const makePgClientLayerFromUrl = (databaseUrl: string) =>
