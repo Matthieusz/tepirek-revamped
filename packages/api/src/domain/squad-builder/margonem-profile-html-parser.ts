@@ -3,6 +3,7 @@ import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import { parseHTML } from "linkedom";
 
 import { parseMargonemProfession } from "./margonem-character.ts";
 import type { MargonemCharacterPreview } from "./margonem-character.ts";
@@ -52,186 +53,189 @@ export type ParseMargonemProfileHtmlError =
   | MargonemCharacterRowsNotFound
   | MargonemCharacterRowInvalid;
 
-const profileNamePattern =
-  /profile-header__name[\s\S]*?<span>\s*(?<name>[^<]+?)\s*<\/span>/u;
-const characterRowPattern =
-  /<li\b[^>]*class="[^"]*\bchar-row\b[^"]*"[^>]*>[\s\S]*?<\/li>/gu;
-const backgroundImagePattern =
-  /background-image:\s*url\(\s*(?<avatarUrl>[^)]*?)\s*\)/u;
+/**
+ * Values read from the DOM are untrusted even though the DOM implementation
+ * gives them string types. Keep missing attributes explicit until validation
+ * decides whether a row is supported.
+ */
+const RawMargonemCharacterRow = Schema.Struct({
+  avatarUrl: Schema.NullOr(Schema.String),
+  characterId: Schema.NullOr(Schema.String),
+  level: Schema.NullOr(Schema.String),
+  name: Schema.NullOr(Schema.String),
+  profession: Schema.NullOr(Schema.String),
+  world: Schema.NullOr(Schema.String),
+});
+type RawMargonemCharacterRow = typeof RawMargonemCharacterRow.Type;
 
+const decodeRawCharacterRow = Schema.decodeUnknownEffect(
+  RawMargonemCharacterRow
+);
+const decodeText = Schema.decodeUnknownEffect(Schema.String);
 const decodeNumber = Schema.decodeUnknownEffect(Schema.FiniteFromString);
-const numericHtmlEntityPattern = /&#(?<codePoint>[^;]*);/gu;
-const maximumUnicodeCodePoint = 0x10_ff_ff;
 
-const decodeHtmlEntities = <Error>(
+// linkedom turns invalid/out-of-range numeric entities into either literal text
+// or U+FFFD. They must not be accepted as character data by the import flow.
+const numericHtmlEntityPattern = /&#(?:[^;]*);/u;
+const isMalformedHtmlText = (value: string): boolean =>
+  value.includes("\uFFFD") || numericHtmlEntityPattern.test(value);
+
+const decodeHtmlText = <Error>(
   value: string,
-  onInvalidEntity: () => Error
+  onInvalidText: () => Error
 ): Effect.Effect<string, Error> =>
-  Effect.gen(function* decodeEntities() {
-    const withNamedEntitiesDecoded = value
-      .replaceAll("&amp;", "&")
-      .replaceAll("&quot;", '"')
-      .replaceAll("&#039;", "'")
-      .replaceAll("&lt;", "<")
-      .replaceAll("&gt;", ">");
-    const decodedParts: string[] = [];
-    let previousEnd = 0;
-
-    for (const match of withNamedEntitiesDecoded.matchAll(
-      numericHtmlEntityPattern
-    )) {
-      const codePointText = match.groups?.codePoint;
-      const matchIndex = match.index;
-
-      if (codePointText === undefined) {
-        return yield* Effect.fail(onInvalidEntity());
-      }
-
-      const codePoint = yield* decodeNumber(codePointText).pipe(
-        Effect.filterOrFail(
-          (number) =>
-            Number.isInteger(number) &&
-            number >= 0 &&
-            number <= maximumUnicodeCodePoint,
-          onInvalidEntity
-        ),
-        Effect.mapError(onInvalidEntity)
-      );
-
-      decodedParts.push(
-        withNamedEntitiesDecoded.slice(previousEnd, matchIndex),
-        String.fromCodePoint(codePoint)
-      );
-      previousEnd = matchIndex + match[0].length;
+  Effect.gen(function* decodeTextValue() {
+    const text = yield* decodeText(value).pipe(Effect.mapError(onInvalidText));
+    if (isMalformedHtmlText(text)) {
+      return yield* Effect.fail(onInvalidText());
     }
-
-    decodedParts.push(withNamedEntitiesDecoded.slice(previousEnd));
-    return decodedParts.join("");
+    return text;
   });
 
-const stripTags = (value: string): string => value.replaceAll(/<[^>]*>/gu, "");
+interface HtmlStyle {
+  readonly getPropertyValue: (property: string) => string;
+}
 
-const extractAttribute = (
-  html: string,
-  attribute: string
-): string | undefined => {
-  const pattern = new RegExp(`${attribute}="(?<value>[^"]*)"`, "u");
-  return pattern.exec(html)?.groups?.value;
+interface HtmlElement {
+  readonly dataset?: Readonly<Record<string, string | undefined>>;
+  readonly getAttribute: (name: string) => string | null;
+  readonly querySelector: (selectors: string) => HtmlElement | null;
+  readonly setAttribute: (name: string, value: string) => void;
+  readonly style?: HtmlStyle;
+  readonly textContent: string | null;
+}
+
+type ParsedDocument = ReturnType<typeof parseHTML>["document"];
+
+const decodeCssTextWithHtmlParser = (value: string): string => {
+  let decoded = value;
+  // Firecrawl sometimes returns entities encoded twice in inline styles.
+  // Parsing a text node, rather than replacing entity names, handles both
+  // that input and the full entity set supported by the HTML parser.
+  for (let pass = 0; pass < 2; pass += 1) {
+    const parsed = parseHTML(`<span>${decoded}</span>`).document;
+    const next = parsed.querySelector("span")?.textContent;
+    if (next === undefined || next === decoded) {
+      break;
+    }
+    decoded = next;
+  }
+  return decoded;
 };
 
-const extractProfileName = (
-  html: string,
-  profileId: MargonemProfileId
-): Effect.Effect<string | null, MargonemProfileNameNotFound> => {
-  const name = profileNamePattern.exec(html)?.groups?.name?.trim();
-  return name === undefined || name.length === 0
-    ? Effect.succeed(null)
-    : decodeHtmlEntities(
-        name,
-        () => new MargonemProfileNameNotFound({ profileId })
-      );
-};
-
-const extractProfessionLabel = (
-  rowHtml: string,
-  onInvalidEntity: () => MargonemCharacterRowInvalid
-): Effect.Effect<string | null, MargonemCharacterRowInvalid> => {
-  const match =
-    /<span\b[^>]*class="[^"]*\bcharacter-prof\b[^"]*"[^>]*>(?<profession>[\s\S]*?)<\/span>/u.exec(
-      rowHtml
-    );
-  const text = match?.groups?.profession;
-
-  if (text === undefined) {
-    return Effect.succeed(null);
+const extractBackgroundImageUrl = (row: HtmlElement): string | null => {
+  const image = row.querySelector(".cimg");
+  const style = image?.getAttribute("style");
+  if (
+    image === null ||
+    image === undefined ||
+    style === null ||
+    style === undefined
+  ) {
+    return null;
   }
 
-  const stripped = stripTags(text).trim();
-  return stripped.length === 0
-    ? Effect.succeed(null)
-    : decodeHtmlEntities(stripped, onInvalidEntity);
+  // Let the DOM implementation parse the CSS declaration as well as the HTML.
+  image.setAttribute("style", decodeCssTextWithHtmlParser(style));
+  const backgroundImage = image.style?.getPropertyValue("background-image");
+  if (
+    backgroundImage === undefined ||
+    !backgroundImage.startsWith("url(") ||
+    !backgroundImage.endsWith(")")
+  ) {
+    return null;
+  }
+
+  const value = backgroundImage.slice(4, -1).trim();
+  const hasWrappingQuotes =
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"));
+  const url = hasWrappingQuotes ? value.slice(1, -1).trim() : value;
+  return url.length === 0 ? null : url;
 };
 
-const extractAvatarUrl = (
-  rowHtml: string,
-  onInvalidEntity: () => MargonemCharacterRowInvalid
-): Effect.Effect<string | null, MargonemCharacterRowInvalid> =>
-  Effect.gen(function* decodeAvatarUrl() {
-    const match = backgroundImagePattern.exec(rowHtml);
-    const rawAvatarUrl = match?.groups?.avatarUrl;
+const readRawCharacterRow = (row: HtmlElement): RawMargonemCharacterRow => ({
+  avatarUrl: extractBackgroundImageUrl(row),
+  characterId: row.dataset?.id ?? null,
+  level: row.dataset?.lvl ?? null,
+  name: row.dataset?.nick ?? null,
+  profession: row.querySelector(".character-prof")?.textContent?.trim() ?? null,
+  world: row.dataset?.world ?? null,
+});
 
-    if (rawAvatarUrl === undefined) {
+const extractProfileName = (
+  document: ParsedDocument,
+  profileId: MargonemProfileId
+): Effect.Effect<string | null, MargonemProfileNameNotFound> =>
+  Effect.gen(function* findProfileName() {
+    const name = document
+      .querySelector(".profile-header__name span")
+      ?.textContent?.trim();
+    if (name === undefined || name.length === 0) {
       return null;
     }
 
-    const decodedAvatarUrl = (yield* decodeHtmlEntities(
-      rawAvatarUrl,
-      onInvalidEntity
-    )).trim();
-    const hasWrappingQuotes =
-      (decodedAvatarUrl.startsWith('"') && decodedAvatarUrl.endsWith('"')) ||
-      (decodedAvatarUrl.startsWith("'") && decodedAvatarUrl.endsWith("'"));
-    const avatarUrl = hasWrappingQuotes
-      ? decodedAvatarUrl.slice(1, -1).trim()
-      : decodedAvatarUrl;
-
-    return avatarUrl.length === 0 ? null : avatarUrl;
+    return yield* decodeHtmlText(
+      name,
+      () => new MargonemProfileNameNotFound({ profileId })
+    );
   });
 
 const parseJarunaCharacterRow = Effect.fnUntraced(
   function* parseJarunaCharacterRow(
     profileId: MargonemProfileId,
-    rowHtml: string
+    row: HtmlElement
   ): Effect.fn.Return<
     MargonemCharacterPreview | null,
     ParseMargonemProfileHtmlError
   > {
-    const world = extractAttribute(rowHtml, "data-world");
+    const raw = yield* decodeRawCharacterRow(readRawCharacterRow(row)).pipe(
+      Effect.mapError(
+        () =>
+          new MargonemCharacterRowInvalid({
+            profileId,
+            safeReason: "malformed character row",
+          })
+      )
+    );
 
-    if (world !== "#jaruna") {
+    // Other worlds are valid records, but are intentionally not part of the
+    // Jaruna-only import. Keeping this branch after schema decoding prevents
+    // malformed/unknown records from being mistaken for valid characters.
+    if (raw.world !== "#jaruna") {
       return null;
     }
 
-    const characterIdText = extractAttribute(rowHtml, "data-id");
-    const name = extractAttribute(rowHtml, "data-nick");
-    const levelText = extractAttribute(rowHtml, "data-lvl");
     const invalidEntity = () =>
       new MargonemCharacterRowInvalid({
         profileId,
         safeReason: "invalid numeric HTML entity",
       });
-    const professionLabel = yield* extractProfessionLabel(
-      rowHtml,
-      invalidEntity
-    );
+    const invalidCharacter = () =>
+      new MargonemCharacterRowInvalid({
+        profileId,
+        safeReason: "invalid character attributes",
+      });
 
-    if (
-      characterIdText === undefined ||
-      name === undefined ||
-      levelText === undefined
-    ) {
+    if (raw.characterId === null || raw.name === null || raw.level === null) {
       return yield* new MargonemCharacterRowInvalid({
         profileId,
         safeReason: "missing required character row attributes",
       });
     }
 
-    if (professionLabel === null) {
+    const professionLabel = raw.profession;
+    if (professionLabel === null || professionLabel.length === 0) {
       return yield* new MargonemCharacterRowInvalid({
         profileId,
         safeReason: "missing profession label",
       });
     }
 
-    const invalidCharacter = () =>
-      new MargonemCharacterRowInvalid({
-        profileId,
-        safeReason: "invalid character attributes",
-      });
-    const characterId = yield* decodeNumber(characterIdText).pipe(
+    const characterId = yield* decodeNumber(raw.characterId).pipe(
       Effect.mapError(invalidCharacter)
     );
-    const level = yield* decodeNumber(levelText).pipe(
+    const level = yield* decodeNumber(raw.level).pipe(
       Effect.mapError(invalidCharacter)
     );
     const parsedCharacterId = yield* parseMargonemCharacterId(characterId).pipe(
@@ -241,14 +245,21 @@ const parseJarunaCharacterRow = Effect.fnUntraced(
       Effect.mapError(invalidCharacter)
     );
     const parsedProfession = yield* parseMargonemProfession(
-      professionLabel
+      yield* decodeHtmlText(professionLabel, invalidEntity)
     ).pipe(Effect.mapError(invalidCharacter));
 
     return {
-      avatarUrl: yield* extractAvatarUrl(rowHtml, invalidEntity),
+      avatarUrl:
+        raw.avatarUrl === null
+          ? null
+          : yield* decodeHtmlText(raw.avatarUrl, invalidEntity).pipe(
+              Effect.map((value) =>
+                value.trim().length === 0 ? null : value.trim()
+              )
+            ),
       characterId: parsedCharacterId,
       level: parsedLevel,
-      name: yield* decodeHtmlEntities(name.trim(), invalidEntity),
+      name: yield* decodeHtmlText(raw.name.trim(), invalidEntity),
       profession: parsedProfession,
       world: "jaruna" as const,
     };
@@ -264,24 +275,23 @@ export const parseMargonemProfileHtml = Effect.fn("MargonemProfileHtml.parse")(
     ParsedMargonemProfile,
     ParseMargonemProfileHtmlError
   > {
-    const suggestedAccountName = yield* extractProfileName(html, profileId);
+    const { document } = parseHTML(html);
+    const suggestedAccountName = yield* extractProfileName(document, profileId);
 
     if (suggestedAccountName === null) {
       return yield* new MargonemProfileNameNotFound({ profileId });
     }
 
-    const rowMatches = Arr.map(
-      Arr.fromIterable(html.matchAll(characterRowPattern)),
-      (match) => match[0]
+    const rowElements: readonly HtmlElement[] = Arr.fromIterable(
+      document.querySelectorAll(".char-row")
     );
-
-    if (rowMatches.length === 0) {
+    if (rowElements.length === 0) {
       return yield* new MargonemCharacterRowsNotFound({ profileId });
     }
 
     // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
-    const parsedCharacters = yield* Effect.forEach(rowMatches, (rowHtml) =>
-      parseJarunaCharacterRow(profileId, rowHtml)
+    const parsedCharacters = yield* Effect.forEach(rowElements, (row) =>
+      parseJarunaCharacterRow(profileId, row)
     );
     // oxlint-disable-next-line unicorn/no-array-method-this-argument -- Effect Array.filter uses a data-first overload; the second argument is a predicate, not thisArg.
     const jarunaCharacters = Arr.filter(parsedCharacters, Predicate.isNotNull);
