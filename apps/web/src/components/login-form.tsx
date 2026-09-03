@@ -1,3 +1,4 @@
+import { useSelector } from "@tanstack/react-form";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
@@ -69,6 +70,7 @@ export const LoginForm = ({
     },
     validators: { onSubmit: LoginFormValidator },
   });
+  const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
 
   return (
     <div
@@ -119,17 +121,13 @@ export const LoginForm = ({
               )}
             </form.AppField>
             <FormFeedback failure={submissionFailure} />
-            <form.Subscribe selector={(state) => state.isSubmitting}>
-              {(isSubmitting: boolean) => (
-                <Button
-                  className="h-11 w-full font-semibold"
-                  disabled={isSubmitting}
-                  type="submit"
-                >
-                  {isSubmitting ? "Wysyłanie..." : "Zaloguj się"}
-                </Button>
-              )}
-            </form.Subscribe>
+            <Button
+              className="h-11 w-full font-semibold"
+              disabled={isSubmitting}
+              type="submit"
+            >
+              {isSubmitting ? "Wysyłanie..." : "Zaloguj się"}
+            </Button>
           </div>
         </Form>
       </div>
