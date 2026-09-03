@@ -1,3 +1,4 @@
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { ReactNode } from "react";
 
 import type {
@@ -35,8 +36,10 @@ const getEventSelectDisplay = ({
 
   return (
     <span className="flex items-center gap-2">
-      <IconComponent
+      <HugeiconsIcon
+        aria-hidden="true"
         className="size-4"
+        icon={IconComponent}
         style={{ color: selectedEvent.color ?? undefined }}
       />
       {selectedEvent.name}

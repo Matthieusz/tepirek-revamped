@@ -1,10 +1,16 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import {
+  CheckIcon,
+  Coins02Icon,
+  UserIcon,
+  VaultIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Check, Coins, User, Vault as VaultIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -243,7 +249,11 @@ const VaultContent = ({
                       src={nextToPay.value.userImage ?? undefined}
                     />
                     <AvatarFallback>
-                      <User className="size-6" />
+                      <HugeiconsIcon
+                        aria-hidden="true"
+                        icon={UserIcon}
+                        className="size-6"
+                      />
                     </AvatarFallback>
                   </Avatar>
                   <div>
@@ -267,7 +277,11 @@ const VaultContent = ({
                     size="sm"
                     variant="default"
                   >
-                    <Check className="size-4 sm:mr-2" />
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={CheckIcon}
+                      className="size-4 sm:mr-2"
+                    />
                     <span className="hidden sm:inline">
                       Oznacz jako wypłacone
                     </span>
@@ -280,7 +294,7 @@ const VaultContent = ({
           {/* Empty state */}
           {vault.length === 0 && (
             <EmptyState
-              icon={<VaultIcon />}
+              icon={<HugeiconsIcon aria-hidden="true" icon={VaultIcon} />}
               message="Brak graczy z zarobkami powyżej 100 000 000 złota"
             />
           )}
@@ -310,7 +324,11 @@ const VaultContent = ({
                         src={player.userImage ?? undefined}
                       />
                       <AvatarFallback>
-                        <User className="size-5" />
+                        <HugeiconsIcon
+                          aria-hidden="true"
+                          icon={UserIcon}
+                          className="size-5"
+                        />
                       </AvatarFallback>
                     </Avatar>
                     {/* Name */}
@@ -321,7 +339,11 @@ const VaultContent = ({
                     </div>
                     {/* Earnings */}
                     <div className="flex items-center gap-2">
-                      <Coins className="text-muted-foreground size-4" />
+                      <HugeiconsIcon
+                        aria-hidden="true"
+                        icon={Coins02Icon}
+                        className="text-muted-foreground size-4"
+                      />
                       <p className="font-mono font-semibold">
                         {formatVaultEarnings(player.totalEarnings)}
                       </p>

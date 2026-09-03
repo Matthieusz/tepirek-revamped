@@ -1,7 +1,8 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import { UsersIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Users } from "lucide-react";
 import type { ReactElement } from "react";
 import type React from "react";
 
@@ -43,7 +44,11 @@ const AuctionHeaderContent: React.FC<AuctionHeaderProps> = ({
       {/* Stats */}
       <div className="flex items-center gap-4">
         <div className="bg-background/50 flex items-center gap-2 rounded-lg px-3 py-2">
-          <Users className="text-muted-foreground size-4" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={UsersIcon}
+            className="text-muted-foreground size-4"
+          />
           <div className="flex items-baseline gap-1.5">
             <span className="text-lg font-semibold">{stats.uniqueUsers}</span>
             <span className="text-muted-foreground text-sm">graczy</span>

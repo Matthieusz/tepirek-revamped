@@ -1,6 +1,11 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import {
+  Add01Icon,
+  Delete01Icon,
+  Sword01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Plus, Sword, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -150,7 +155,11 @@ const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
             <AddHeroModal
               trigger={
                 <Button>
-                  <Plus className="size-4" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={Add01Icon}
+                    className="size-4"
+                  />
                   Dodaj herosa
                 </Button>
               }
@@ -161,13 +170,17 @@ const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
 
       <div className="border-border bg-card rounded-xl border">
         <div className="border-border flex items-center gap-2 border-b p-4">
-          <Sword className="size-4" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={Sword01Icon}
+            className="size-4"
+          />
           <h2 className="text-base font-semibold">Lista herosów</h2>
         </div>
         <div className="p-4">
           {filteredHeroes.length === 0 ? (
             <EmptyState
-              icon={<Sword />}
+              icon={<HugeiconsIcon aria-hidden="true" icon={Sword01Icon} />}
               message="Brak herosów do wyświetlenia"
             />
           ) : (
@@ -204,7 +217,11 @@ const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
                           />
                         ) : (
                           <div className="bg-muted flex h-12 w-10 items-center justify-center rounded">
-                            <Sword className="text-muted-foreground size-4" />
+                            <HugeiconsIcon
+                              aria-hidden="true"
+                              icon={Sword01Icon}
+                              className="text-muted-foreground size-4"
+                            />
                           </div>
                         )}
                       </TableCell>
@@ -228,7 +245,11 @@ const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
                             type="button"
                             variant="ghost"
                           >
-                            <Trash2 className="size-4" />
+                            <HugeiconsIcon
+                              aria-hidden="true"
+                              icon={Delete01Icon}
+                              className="size-4"
+                            />
                           </Button>
                         </TableCell>
                       )}

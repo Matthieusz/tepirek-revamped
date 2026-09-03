@@ -1,6 +1,12 @@
 import { useAtomSet } from "@effect/atom-react";
+import {
+  CheckIcon,
+  LoaderCircleIcon,
+  Rotate01Icon,
+  TriangleAlertIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-refetch/account-refetch-schema";
-import { AlertTriangle, Check, Loader2, RotateCw } from "lucide-react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
@@ -160,9 +166,17 @@ export const AccountRefetchWorkflow = ({
           variant="outline"
         >
           {isPreviewing ? (
-            <Loader2 className="size-3.5 animate-spin" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={LoaderCircleIcon}
+              className="size-3.5 animate-spin"
+            />
           ) : (
-            <RotateCw className="size-3.5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Rotate01Icon}
+              className="size-3.5"
+            />
           )}
           Odśwież
         </Button>
@@ -189,7 +203,7 @@ export const AccountRefetchWorkflow = ({
             </div>
             {preview.diff.removed.length > 0 && (
               <Alert variant="warning">
-                <AlertTriangle aria-hidden="true" />
+                <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
                 <AlertTitle>Zmiana wpłynie na zapisane składy</AlertTitle>
                 <AlertDescription>
                   Usunięte postacie zostaną również usunięte z zapisanych
@@ -267,9 +281,17 @@ export const AccountRefetchWorkflow = ({
               size="sm"
             >
               {isApplying ? (
-                <Loader2 className="size-3.5 animate-spin" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={LoaderCircleIcon}
+                  className="size-3.5 animate-spin"
+                />
               ) : (
-                <Check className="size-3.5" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={CheckIcon}
+                  className="size-3.5"
+                />
               )}
               Zastosuj zmiany
             </Button>

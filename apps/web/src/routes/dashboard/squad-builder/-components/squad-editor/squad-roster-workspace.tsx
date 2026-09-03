@@ -1,9 +1,16 @@
+import {
+  Add01Icon,
+  Cancel01Icon,
+  ChevronDownIcon,
+  Delete01Icon,
+  UserRoundIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { MAX_SQUAD_CHARACTERS } from "@tepirek-revamped/api/domain/squad-builder/squad-placement";
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
 import * as Record from "effect/Record";
-import { ChevronDown, Plus, Trash2, UserRound, X } from "lucide-react";
 import { useState } from "react";
 
 import { Badge } from "@/components/reui/badge";
@@ -118,7 +125,11 @@ const SquadRosterRow = ({
             type="button"
             variant="ghost"
           >
-            <X className="size-3.5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Cancel01Icon}
+              className="size-3.5"
+            />
           </Button>
         )}
       </li>
@@ -126,8 +137,6 @@ const SquadRosterRow = ({
   }
 
   const profession = getProfessionPresentation(character.profession);
-  const ProfessionIcon = profession.icon;
-
   return (
     <li className="border-border bg-card/40 flex min-h-16 items-center justify-between gap-2 rounded-md border px-2">
       <div className="flex min-w-0 items-center gap-2">
@@ -153,7 +162,11 @@ const SquadRosterRow = ({
             <span
               className={`inline-flex items-center gap-1 ${profession.colorClass}`}
             >
-              <ProfessionIcon aria-hidden="true" className="size-3" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                className="size-3"
+                icon={profession.icon}
+              />
               {profession.label}
             </span>
             <span className="text-muted-foreground">·</span>
@@ -172,7 +185,11 @@ const SquadRosterRow = ({
           type="button"
           variant="ghost"
         >
-          <X className="size-3.5" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={Cancel01Icon}
+            className="size-3.5"
+          />
         </Button>
       )}
     </li>
@@ -310,7 +327,6 @@ const SquadPanel = ({
                     {professionCounts.map(({ count, profession }) => {
                       const presentation =
                         getProfessionPresentation(profession);
-                      const ProfessionIcon = presentation.icon;
                       return (
                         <li
                           aria-label={`${presentation.label}: ${count}`}
@@ -318,9 +334,10 @@ const SquadPanel = ({
                           key={profession}
                           title={`${presentation.label}: ${count}`}
                         >
-                          <ProfessionIcon
+                          <HugeiconsIcon
                             aria-hidden="true"
                             className="size-3"
+                            icon={presentation.icon}
                           />
                           <span className="font-mono tabular-nums">
                             {count}
@@ -355,7 +372,11 @@ const SquadPanel = ({
                 type="button"
                 variant="ghost"
               >
-                <Trash2 className="text-destructive size-3.5" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={Delete01Icon}
+                  className="text-destructive size-3.5"
+                />
               </Button>
             )}
             <Button
@@ -370,7 +391,8 @@ const SquadPanel = ({
               type="button"
               variant="ghost"
             >
-              <ChevronDown
+              <HugeiconsIcon
+                icon={ChevronDownIcon}
                 aria-hidden="true"
                 className={`size-4 transition-transform duration-150 motion-reduce:transition-none ${isExpanded ? "" : "-rotate-90"}`}
               />
@@ -469,7 +491,11 @@ export const SquadRosterWorkspace = ({
             type="button"
             variant="outline"
           >
-            <Plus className="size-3.5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Add01Icon}
+              className="size-3.5"
+            />
             Dodaj skład
           </Button>
         )}
@@ -479,7 +505,11 @@ export const SquadRosterWorkspace = ({
         <Frame className="[--frame-radius:var(--radius-lg)]" spacing="sm">
           <FramePanel className="flex flex-col items-center gap-3 py-10 text-center shadow-none">
             <IconStack aria-hidden="true">
-              <UserRound className="size-5" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={UserRoundIcon}
+                className="size-5"
+              />
             </IconStack>
             <p className="text-muted-foreground max-w-sm text-sm">
               {isOwner
@@ -494,7 +524,11 @@ export const SquadRosterWorkspace = ({
                 type="button"
                 variant="outline"
               >
-                <Plus className="size-3.5" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={Add01Icon}
+                  className="size-3.5"
+                />
                 Dodaj pierwszy skład
               </Button>
             )}

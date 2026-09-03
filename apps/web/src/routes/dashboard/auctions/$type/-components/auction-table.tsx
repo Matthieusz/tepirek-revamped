@@ -1,4 +1,6 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { Delete01Icon, LoaderCircleIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   AUCTION_SLOT_LEVELS,
   AUCTION_SLOT_ROUND_LABELS,
@@ -10,7 +12,6 @@ import * as Arr from "effect/Array";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Loader2, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
@@ -84,7 +85,11 @@ const CellContent: React.FC<CellContentProps> = ({
         variant="outline"
       >
         {isMutating ? (
-          <Loader2 className="size-4 animate-spin" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={LoaderCircleIcon}
+            className="size-4 animate-spin"
+          />
         ) : (
           "Zapisz się"
         )}
@@ -115,7 +120,11 @@ const CellContent: React.FC<CellContentProps> = ({
             {signup.userName}
           </span>
           <span className="text-destructive absolute inset-0 hidden items-center justify-center group-hover/signup:inline-flex">
-            <Trash2 className="size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Delete01Icon}
+              className="size-4"
+            />
           </span>
         </span>
         {formattedDate ? (

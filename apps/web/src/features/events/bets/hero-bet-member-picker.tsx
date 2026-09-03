@@ -1,5 +1,12 @@
+import {
+  Cancel01Icon,
+  CopyIcon,
+  CopyXIcon,
+  Search01Icon,
+  UserIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import * as HashSet from "effect/HashSet";
-import { Copy, CopyX, Search, User, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -102,7 +109,12 @@ const SelectionActions = (props: SelectionActionsWithModeProps) => {
         type="button"
         variant="outline"
       >
-        <CopyX className="size-4" data-icon="inline-start" />
+        <HugeiconsIcon
+          aria-hidden="true"
+          icon={CopyXIcon}
+          className="size-4"
+          data-icon="inline-start"
+        />
         {variant === "edit" ? (
           <span>Wyczyść</span>
         ) : (
@@ -122,7 +134,12 @@ const SelectionActions = (props: SelectionActionsWithModeProps) => {
           type="button"
           variant="outline"
         >
-          <Copy className="size-4" data-icon="inline-start" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={CopyIcon}
+            className="size-4"
+            data-icon="inline-start"
+          />
           <span>Przywróć</span>
         </Button>
       ) : (
@@ -136,7 +153,12 @@ const SelectionActions = (props: SelectionActionsWithModeProps) => {
           type="button"
           variant="outline"
         >
-          <Copy className="size-4" data-icon="inline-start" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={CopyIcon}
+            className="size-4"
+            data-icon="inline-start"
+          />
           <span className="hidden sm:inline">Kopiuj ostatnie</span>
           <span className="sm:hidden">Kopiuj</span>
         </Button>
@@ -198,7 +220,11 @@ const AvailableUsers = ({
           <Avatar className="size-8">
             <AvatarImage alt={user.name} src={user.image ?? undefined} />
             <AvatarFallback>
-              <User className="size-4" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={UserIcon}
+                className="size-4"
+              />
             </AvatarFallback>
           </Avatar>
           <span className="truncate font-normal">{user.name}</span>
@@ -260,7 +286,11 @@ const SelectedUsers = ({
                       src={user.image ?? undefined}
                     />
                     <AvatarFallback>
-                      <User className="size-4" />
+                      <HugeiconsIcon
+                        aria-hidden="true"
+                        icon={UserIcon}
+                        className="size-4"
+                      />
                     </AvatarFallback>
                   </Avatar>
                   <span className="truncate font-normal">{user.name}</span>
@@ -285,7 +315,11 @@ const SelectedUsers = ({
             <Avatar className="size-6">
               <AvatarImage alt={user.name} src={user.image ?? undefined} />
               <AvatarFallback className="text-xs">
-                <User className="size-3" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={UserIcon}
+                  className="size-3"
+                />
               </AvatarFallback>
             </Avatar>
             <span className="text-sm">{user.name}</span>
@@ -298,7 +332,11 @@ const SelectedUsers = ({
               onBlur={onBlur}
               type="button"
             >
-              <X className="size-3" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={Cancel01Icon}
+                className="size-3"
+              />
             </button>
           </div>
         ))}
@@ -394,7 +432,11 @@ export const HeroBetMemberPicker = (props: HeroBetMemberPickerProps) => {
       </div>
 
       <div className="relative">
-        <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+        <HugeiconsIcon
+          aria-hidden="true"
+          icon={Search01Icon}
+          className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2"
+        />
         <Input
           aria-label="Szukaj gracza"
           className="pl-9"

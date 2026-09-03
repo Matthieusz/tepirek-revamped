@@ -1,4 +1,5 @@
-import { Loader2 } from "lucide-react";
+import { LoaderCircleIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import { SelectItem } from "@/components/ui/select";
 import { sortEventsByEndTimeDesc } from "@/features/events/core/event-hero-filter";
@@ -30,8 +31,10 @@ export const EventSelectItems = ({
         return (
           <SelectItem key={event.id} value={event.id.toString()}>
             <div className="flex items-center gap-2">
-              <IconComponent
+              <HugeiconsIcon
+                aria-hidden="true"
                 className="size-4"
+                icon={IconComponent}
                 style={{ color: event.color ?? undefined }}
               />
               <span>{event.name}</span>
@@ -62,7 +65,11 @@ export const HeroSelectItems = ({
     return (
       <SelectItem disabled value="loading">
         <div className="flex items-center gap-2">
-          <Loader2 className="text-muted-foreground size-4 animate-spin" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            className="text-muted-foreground size-4 animate-spin"
+            icon={LoaderCircleIcon}
+          />
           <span>{loadingLabel}</span>
         </div>
       </SelectItem>

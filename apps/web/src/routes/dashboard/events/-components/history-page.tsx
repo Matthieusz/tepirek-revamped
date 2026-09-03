@@ -1,8 +1,9 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { HistoryIcon, LoaderCircleIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { PaginatedBets } from "@tepirek-revamped/api/protocol/bet/http-api-contract";
 import { calculatePointsPerMember } from "@tepirek-revamped/config";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { History, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
@@ -165,7 +166,10 @@ const HistoryContent = ({
     );
   } else if (allBets.length === 0) {
     betsContent = (
-      <EmptyState icon={<History />} message="Brak obstawień do wyświetlenia" />
+      <EmptyState
+        icon={<HugeiconsIcon aria-hidden="true" icon={HistoryIcon} />}
+        message="Brak obstawień do wyświetlenia"
+      />
     );
   } else {
     betsContent = (
@@ -430,7 +434,11 @@ const LoadMoreTrigger = ({ onVisible }: { readonly onVisible: () => void }) => {
 
   return (
     <div className="flex items-center justify-center py-4" ref={triggerRef}>
-      <Loader2 className="text-muted-foreground size-6 animate-spin" />
+      <HugeiconsIcon
+        aria-hidden="true"
+        icon={LoaderCircleIcon}
+        className="text-muted-foreground size-6 animate-spin"
+      />
     </div>
   );
 };

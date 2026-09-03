@@ -1,11 +1,17 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import {
+  Delete01Icon,
+  LoaderCircleIcon,
+  Rotate01Icon,
+  UserAdd01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useNavigate } from "@tanstack/react-router";
 import type {
   SquadEditorInviteTargetSchema,
   SquadGroupEditorGrantSummarySchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Loader2, RotateCw, Trash2, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -143,7 +149,8 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
       <div className="space-y-4 px-4 py-4">
         <div>
           <h2 className="flex items-center gap-2 text-base font-semibold">
-            <UserPlus
+            <HugeiconsIcon
+              icon={UserAdd01Icon}
               aria-hidden="true"
               className="text-muted-foreground size-4"
             />
@@ -211,9 +218,17 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
                       variant="outline"
                     >
                       {sendingUserId === target.userId ? (
-                        <Loader2 className="size-3.5 animate-spin" />
+                        <HugeiconsIcon
+                          aria-hidden="true"
+                          icon={LoaderCircleIcon}
+                          className="size-3.5 animate-spin"
+                        />
                       ) : (
-                        <UserPlus className="size-3.5" />
+                        <HugeiconsIcon
+                          aria-hidden="true"
+                          icon={UserAdd01Icon}
+                          className="size-3.5"
+                        />
                       )}
                       Zaproś
                     </Button>
@@ -234,7 +249,11 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
                     type="button"
                     variant="outline"
                   >
-                    <RotateCw className="size-3.5" />
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={Rotate01Icon}
+                      className="size-3.5"
+                    />
                     Ponów
                   </Button>
                 </AlertAction>
@@ -262,7 +281,11 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
                 type="button"
                 variant="outline"
               >
-                <RotateCw className="size-3.5" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={Rotate01Icon}
+                  className="size-3.5"
+                />
                 Ponów
               </Button>
             </AlertAction>
@@ -271,7 +294,11 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
         {!AsyncResult.isSuccess(grantsResult) &&
           !AsyncResult.isFailure(grantsResult) && (
             <div className="text-muted-foreground flex items-center gap-2 text-xs">
-              <Loader2 className="size-3 animate-spin" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={LoaderCircleIcon}
+                className="size-3 animate-spin"
+              />
               Wczytywanie edytorów…
             </div>
           )}
@@ -321,9 +348,17 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
                   variant="ghost"
                 >
                   {revokingInvitationId === grant.invitationId ? (
-                    <Loader2 className="size-3.5 animate-spin" />
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={LoaderCircleIcon}
+                      className="size-3.5 animate-spin"
+                    />
                   ) : (
-                    <Trash2 className="text-destructive size-3.5" />
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={Delete01Icon}
+                      className="text-destructive size-3.5"
+                    />
                   )}
                 </Button>
               </li>
@@ -374,13 +409,17 @@ export const SquadGroupSettings = ({
             </div>
             <AlertDialog>
               <AlertDialogTrigger render={<Button variant="destructive" />}>
-                <Trash2 className="size-4" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={Delete01Icon}
+                  className="size-4"
+                />
                 Usuń grupę
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogMedia className="text-destructive">
-                    <Trash2 aria-hidden="true" />
+                    <HugeiconsIcon icon={Delete01Icon} aria-hidden="true" />
                   </AlertDialogMedia>
                   <AlertDialogTitle>
                     Usunąć grupę „{groupName}”?
@@ -402,9 +441,17 @@ export const SquadGroupSettings = ({
                     variant="destructive"
                   >
                     {isDeleting ? (
-                      <Loader2 className="size-4 animate-spin" />
+                      <HugeiconsIcon
+                        aria-hidden="true"
+                        icon={LoaderCircleIcon}
+                        className="size-4 animate-spin"
+                      />
                     ) : (
-                      <Trash2 className="size-4" />
+                      <HugeiconsIcon
+                        aria-hidden="true"
+                        icon={Delete01Icon}
+                        className="size-4"
+                      />
                     )}
                     Usuń trwale
                   </AlertDialogAction>

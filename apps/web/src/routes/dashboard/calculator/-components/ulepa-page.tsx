@@ -1,6 +1,11 @@
+import {
+  CalculatorIcon,
+  SparklesIcon,
+  TrendingUpIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
-import { Calculator, Sparkles, TrendingUp } from "lucide-react";
 import { useState } from "react";
 
 import { useAppForm } from "@/components/forms/app-form";
@@ -99,7 +104,11 @@ const UlepaResults = ({ result }: { result: UlepaResult }) => (
   >
     <div className="mb-4">
       <h2 className="flex items-center gap-2 text-base font-semibold">
-        <Sparkles className={`size-5 ${rarityColors[result.itemRarity]}`} />
+        <HugeiconsIcon
+          aria-hidden="true"
+          icon={SparklesIcon}
+          className={`size-5 ${rarityColors[result.itemRarity]}`}
+        />
         Ekstrakcja
       </h2>
       <p className="text-muted-foreground text-sm">
@@ -149,7 +158,11 @@ const UlepaCostsTable = ({ result }: { result: UlepaResult }) => (
   <div className="border-border bg-card rounded-xl border">
     <div className="border-border border-b p-6">
       <h2 className="flex items-center gap-2 text-base font-semibold">
-        <TrendingUp className="size-5" />
+        <HugeiconsIcon
+          aria-hidden="true"
+          icon={TrendingUpIcon}
+          className="size-5"
+        />
         Koszty ulepszenia
       </h2>
       <p className="text-muted-foreground text-sm">
@@ -249,7 +262,11 @@ const CalculatorUlepaPage = (_props: CalculatorUlepaPageProps) => {
           <div className="border-border bg-card rounded-xl border">
             <div className="border-border border-b p-6">
               <h2 className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="size-5" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={CalculatorIcon}
+                  className="size-5"
+                />
                 Parametry przedmiotu
               </h2>
               <p className="text-muted-foreground text-sm">

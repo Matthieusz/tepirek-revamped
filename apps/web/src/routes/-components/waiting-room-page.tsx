@@ -1,6 +1,11 @@
 import { useAtomSet } from "@effect/atom-react";
+import {
+  LoaderCircleIcon,
+  LogOutIcon,
+  RefreshIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useRouter } from "@tanstack/react-router";
-import { Loader2, LogOut, RefreshCw } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
@@ -75,7 +80,11 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
         <Card className="from-primary/15 via-primary/5 border-none bg-linear-to-br to-transparent text-center">
           <CardHeader>
             <div className="bg-primary/10 ring-primary/5 mx-auto mb-4 flex size-16 items-center justify-center rounded-full ring-4">
-              <Loader2 className="text-primary size-8 animate-spin" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={LoaderCircleIcon}
+                className="text-primary size-8 animate-spin"
+              />
             </div>
             <CardTitle className="text-2xl">
               Oczekiwanie na weryfikację
@@ -92,7 +101,11 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
               }}
               variant="outline"
             >
-              <RefreshCw className="size-4" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={RefreshIcon}
+                className="size-4"
+              />
               Odśwież stronę
             </Button>
           </CardContent>
@@ -115,7 +128,11 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
               type="button"
               variant="destructive"
             >
-              <LogOut className="size-4" />
+              <HugeiconsIcon
+                aria-hidden="true"
+                icon={LogOutIcon}
+                className="size-4"
+              />
               Wyloguj się
             </Button>
           </CardContent>

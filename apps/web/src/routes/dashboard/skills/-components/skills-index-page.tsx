@@ -1,6 +1,7 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Plus } from "lucide-react";
 
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,11 @@ const SkillsIndexContent = ({ session }: SkillsIndexPageProps) => {
             <AddProfessionModal
               trigger={
                 <Button>
-                  <Plus className="size-4" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={Add01Icon}
+                    className="size-4"
+                  />
                   <span className="hidden sm:inline">Dodaj profesję</span>
                   <span className="sm:hidden">Profesja</span>
                 </Button>
@@ -61,7 +66,11 @@ const SkillsIndexContent = ({ session }: SkillsIndexPageProps) => {
             <AddRangeModal
               trigger={
                 <Button>
-                  <Plus className="size-4" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={Add01Icon}
+                    className="size-4"
+                  />
                   <span className="hidden sm:inline">Dodaj przedział</span>
                   <span className="sm:hidden">Przedział</span>
                 </Button>

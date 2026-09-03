@@ -1,8 +1,9 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { getRouteApi } from "@tanstack/react-router";
 import * as Arr from "effect/Array";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -259,7 +260,11 @@ const RangeDetailsContent = ({
         defaultRangeId={rangeData.id}
         trigger={
           <Button size="sm" type="button">
-            <Plus className="size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={Add01Icon}
+              className="size-4"
+            />
             Dodaj zestaw
           </Button>
         }

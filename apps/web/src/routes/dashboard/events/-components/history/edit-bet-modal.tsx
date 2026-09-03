@@ -1,8 +1,9 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { PencilEdit01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import * as Schema from "effect/Schema";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Pencil } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -130,7 +131,11 @@ const EditBetModalContent = ({
             type="button"
             variant="ghost"
           >
-            <Pencil className="size-4" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={PencilEdit01Icon}
+              className="size-4"
+            />
           </Button>
         )}
       </ResponsiveDialogTrigger>

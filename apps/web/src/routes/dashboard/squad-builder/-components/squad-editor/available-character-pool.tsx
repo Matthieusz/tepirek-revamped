@@ -1,17 +1,18 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import {
+  ChevronDownIcon,
+  Rotate01Icon,
+  Search01Icon,
+  TriangleAlertIcon,
+  UserAdd01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
 import { MAX_SQUAD_CHARACTERS } from "@tepirek-revamped/api/domain/squad-builder/squad-placement";
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import {
-  AlertTriangle,
-  ChevronDown,
-  RotateCw,
-  Search,
-  UserPlus,
-} from "lucide-react";
 import { useMemo, useReducer } from "react";
 
 import {
@@ -226,7 +227,11 @@ const CharacterImageTrigger = ({
           aria-hidden="true"
           className="bg-background/75 text-foreground pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none [@media(pointer:coarse)]:opacity-100"
         >
-          <UserPlus className="size-3.5" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={UserAdd01Icon}
+            className="size-3.5"
+          />
         </span>
       </button>
     }
@@ -330,8 +335,6 @@ const CharacterPoolTile = ({
   readonly onDraftChange: (draft: SquadGroupDraft) => void;
 }) => {
   const profession = getProfessionPresentation(character.profession);
-  const ProfessionIcon = profession.icon;
-
   return (
     <li className="min-w-0">
       <article className="border-border bg-card/40 hover:border-primary/40 flex min-w-0 items-center gap-2 rounded-md border p-1.5 transition-colors motion-reduce:transition-none">
@@ -354,7 +357,11 @@ const CharacterPoolTile = ({
           <span
             className={`flex max-w-24 shrink-0 items-center gap-1 truncate text-xs ${profession.colorClass}`}
           >
-            <ProfessionIcon aria-hidden="true" className="size-3 shrink-0" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              className="size-3 shrink-0"
+              icon={profession.icon}
+            />
             <span className="truncate">{profession.label}</span>
           </span>
         </div>
@@ -585,7 +592,7 @@ export const AvailableCharacterPool = ({
 
             {AsyncResult.isFailure(result) && (
               <Alert className="m-4" variant="destructive">
-                <AlertTriangle aria-hidden="true" />
+                <HugeiconsIcon icon={TriangleAlertIcon} aria-hidden="true" />
                 <AlertTitle>Nie udało się wczytać puli postaci</AlertTitle>
                 <AlertDescription>
                   Zapisane składy są nadal widoczne. Spróbuj ponownie, aby
@@ -598,7 +605,11 @@ export const AvailableCharacterPool = ({
                     type="button"
                     variant="outline"
                   >
-                    <RotateCw className="size-3.5" />
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={Rotate01Icon}
+                      className="size-3.5"
+                    />
                     Spróbuj ponownie
                   </Button>
                 </AlertAction>
@@ -609,7 +620,11 @@ export const AvailableCharacterPool = ({
             {AsyncResult.isSuccess(result) && characters.length === 0 && (
               <div className="flex flex-col items-center gap-3 px-4 py-9 text-center">
                 <IconStack aria-hidden="true">
-                  <UserPlus className="size-5" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={UserAdd01Icon}
+                    className="size-5"
+                  />
                 </IconStack>
                 <p className="text-muted-foreground max-w-sm text-sm">
                   Brak dostępnych postaci z Jaruny. Dodaj konto, aby zasilić
@@ -628,7 +643,11 @@ export const AvailableCharacterPool = ({
               unassignedCharacters.length === 0 && (
                 <div className="flex flex-col items-center gap-2 px-4 py-9 text-center">
                   <IconStack aria-hidden="true">
-                    <UserPlus className="size-5" />
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={UserAdd01Icon}
+                      className="size-5"
+                    />
                   </IconStack>
                   <p className="text-muted-foreground max-w-sm text-sm">
                     Wszystkie dostępne postacie są już przypisane do składów.
@@ -639,7 +658,8 @@ export const AvailableCharacterPool = ({
               unassignedCharacters.length > 0 &&
               filteredCharacters.length === 0 && (
                 <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-                  <Search
+                  <HugeiconsIcon
+                    icon={Search01Icon}
                     aria-hidden="true"
                     className="text-muted-foreground size-5"
                   />
@@ -691,7 +711,8 @@ export const AvailableCharacterPool = ({
                             type="button"
                             variant="ghost"
                           >
-                            <ChevronDown
+                            <HugeiconsIcon
+                              icon={ChevronDownIcon}
                               aria-hidden="true"
                               className={cn(
                                 "size-4 transition-transform duration-150 motion-reduce:transition-none",

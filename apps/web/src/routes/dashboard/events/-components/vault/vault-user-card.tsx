@@ -1,4 +1,5 @@
-import { Coins, User } from "lucide-react";
+import { Coins02Icon, UserIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,14 +26,22 @@ export const VaultUserCard = ({
         <Avatar className="border-border size-10 shrink-0 border">
           <AvatarImage alt={userName} src={userImage ?? undefined} />
           <AvatarFallback>
-            <User className="size-5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={UserIcon}
+              className="size-5"
+            />
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold">{userName}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Coins className="size-4 text-yellow-500" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={Coins02Icon}
+            className="size-4 text-yellow-500"
+          />
           <p className="font-mono font-semibold">
             {formatVaultEarnings(totalEarnings)}
           </p>

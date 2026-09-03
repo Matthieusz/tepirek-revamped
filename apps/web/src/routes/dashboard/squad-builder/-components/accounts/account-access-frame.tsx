@@ -1,6 +1,14 @@
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import {
+  Cancel01Icon,
+  CheckIcon,
+  Clock01Icon,
+  ExternalLinkIcon,
+  InboxIcon,
+  UsersIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import { Check, Clock, ExternalLink, Inbox, Users, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -48,7 +56,11 @@ const InviteInboxPanel = () => {
     <section className="overflow-hidden">
       <div className="border-border flex items-center justify-between border-b px-5 py-3">
         <h2 className="flex items-center gap-2 text-base font-semibold">
-          <Inbox className="text-muted-foreground size-4" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={InboxIcon}
+            className="text-muted-foreground size-4"
+          />
           Zaproszenia do kont
         </h2>
         <ReuiBadge variant={invites.length > 0 ? "warning-light" : "secondary"}>
@@ -61,7 +73,11 @@ const InviteInboxPanel = () => {
       {AsyncResult.isSuccess(invitesResult) && invites.length === 0 && (
         <div className="flex flex-col items-center px-5 py-8 text-center">
           <IconStack aria-hidden="true">
-            <Inbox className="size-5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={InboxIcon}
+              className="size-5"
+            />
           </IconStack>
           <p className="text-muted-foreground mx-auto mt-2 max-w-sm text-sm">
             Nie masz oczekujących zaproszeń do kont Margonem.
@@ -127,7 +143,11 @@ const InviteInboxPanel = () => {
                   }}
                   size="sm"
                 >
-                  <Check className="size-3.5" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={CheckIcon}
+                    className="size-3.5"
+                  />
                   Akceptuj
                 </Button>
                 <Button
@@ -156,7 +176,11 @@ const InviteInboxPanel = () => {
                   size="sm"
                   variant="ghost"
                 >
-                  <X className="size-3.5" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={Cancel01Icon}
+                    className="size-3.5"
+                  />
                   Odrzuć
                 </Button>
               </div>
@@ -188,7 +212,11 @@ const SharedAccountsPanel = () => {
     <section className="overflow-hidden">
       <div className="border-border flex items-center justify-between border-b px-5 py-3">
         <h2 className="flex items-center gap-2 text-base font-semibold">
-          <Users className="text-muted-foreground size-4" />
+          <HugeiconsIcon
+            aria-hidden="true"
+            icon={UsersIcon}
+            className="text-muted-foreground size-4"
+          />
           Udostępnione mi
         </h2>
         <span className="text-muted-foreground font-mono text-xs">
@@ -201,7 +229,11 @@ const SharedAccountsPanel = () => {
       {AsyncResult.isSuccess(sharedResult) && accounts.length === 0 && (
         <div className="flex flex-col items-center px-5 py-8 text-center">
           <IconStack aria-hidden="true">
-            <Users className="size-5" />
+            <HugeiconsIcon
+              aria-hidden="true"
+              icon={UsersIcon}
+              className="size-5"
+            />
           </IconStack>
           <p className="text-muted-foreground mx-auto mt-2 max-w-sm text-sm">
             Gdy właściciel konta przyzna Ci dostęp, konto pojawi się tutaj.
@@ -246,7 +278,11 @@ const SharedAccountsPanel = () => {
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  <ExternalLink className="size-3" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={ExternalLinkIcon}
+                    className="size-3"
+                  />
                   Profil Margonem
                 </a>
                 <span className="text-muted-foreground font-mono text-xs">
@@ -254,7 +290,11 @@ const SharedAccountsPanel = () => {
                 </span>
               </div>
               <p className="text-muted-foreground flex items-center gap-1 font-mono text-xs">
-                <Clock className="size-3" />
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  icon={Clock01Icon}
+                  className="size-3"
+                />
                 Ostatnio pobrano: {formatDateTime(account.lastFetchedAt)}
               </p>
             </li>

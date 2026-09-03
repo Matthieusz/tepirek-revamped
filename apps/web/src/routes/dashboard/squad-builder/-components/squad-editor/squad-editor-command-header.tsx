@@ -1,4 +1,9 @@
-import { Loader2, Save, Settings } from "lucide-react";
+import {
+  LoaderCircleIcon,
+  SaveIcon,
+  Settings03Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import {
   Alert,
@@ -139,7 +144,11 @@ export const SquadEditorCommandHeader = ({
                   type="button"
                   variant={isSettingsOpen ? "secondary" : "outline"}
                 >
-                  <Settings className="size-4" />
+                  <HugeiconsIcon
+                    aria-hidden="true"
+                    icon={Settings03Icon}
+                    className="size-4"
+                  />
                   Ustawienia
                 </Button>
               )}
@@ -152,9 +161,17 @@ export const SquadEditorCommandHeader = ({
                   type="button"
                 >
                   {isSaving ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={LoaderCircleIcon}
+                      className="size-4 animate-spin"
+                    />
                   ) : (
-                    <Save className="size-4" />
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      icon={SaveIcon}
+                      className="size-4"
+                    />
                   )}
                   Zapisz
                 </Button>
