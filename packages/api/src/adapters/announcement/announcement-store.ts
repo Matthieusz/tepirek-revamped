@@ -73,21 +73,20 @@ const listWithDatabase = (database: EffectPgDatabase) => () =>
       .orderBy(desc(announcement.createdAt))
   ).pipe(
     Effect.flatMap((rows) =>
-      Effect.all(
-        rows.map((row) =>
-          Effect.gen(function* decodeAnnouncementRow() {
-            const id = yield* decodePersisted(AnnouncementId)(row.id);
-            if (row.user === null) {
-              return { ...row, id, user: null };
-            }
-            const userId = yield* decodePersisted(AppUserId)(row.user.id);
-            return {
-              ...row,
-              id,
-              user: { ...row.user, id: userId },
-            };
-          })
-        )
+      // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+      Effect.forEach(rows, (row) =>
+        Effect.gen(function* decodeAnnouncementRow() {
+          const id = yield* decodePersisted(AnnouncementId)(row.id);
+          if (row.user === null) {
+            return { ...row, id, user: null };
+          }
+          const userId = yield* decodePersisted(AppUserId)(row.user.id);
+          return {
+            ...row,
+            id,
+            user: { ...row.user, id: userId },
+          };
+        })
       )
     )
   );

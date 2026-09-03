@@ -60,11 +60,10 @@ const deleteWithDatabase =
 const listWithDatabase = (database: EffectPgDatabase) => () =>
   persistenceQuery("listEvents", database.select().from(event)).pipe(
     Effect.flatMap((rows) =>
-      Effect.all(
-        rows.map((row) =>
-          decodePersisted(EventId)(row.id).pipe(
-            Effect.map((id) => ({ ...row, id }))
-          )
+      // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+      Effect.forEach(rows, (row) =>
+        decodePersisted(EventId)(row.id).pipe(
+          Effect.map((id) => ({ ...row, id }))
         )
       )
     )

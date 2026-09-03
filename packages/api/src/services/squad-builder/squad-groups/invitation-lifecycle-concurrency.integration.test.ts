@@ -61,14 +61,15 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           throw new Error("Failed to seed account");
         }
 
-        const outcomes = yield* Effect.all(
-          [1, 2].map(() =>
+        // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+        const outcomes = yield* Effect.forEach(
+          [1, 2],
+          () =>
             sendAccountAccessInvite({
               accountId: parseTestAccountId(account.id),
               actorUserId: parseTestUserId(owner.id),
               invitedUserId: parseTestUserId(target.id),
-            }).pipe(Effect.result)
-          ),
+            }).pipe(Effect.result),
           { concurrency: "unbounded" }
         );
 
@@ -260,14 +261,15 @@ effectIt.layer(squadBuilderIntegrationTestLayer, { excludeTestServices: true })(
           throw new Error("Failed to seed squad group");
         }
 
-        const outcomes = yield* Effect.all(
-          [1, 2].map(() =>
+        // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+        const outcomes = yield* Effect.forEach(
+          [1, 2],
+          () =>
             sendSquadGroupEditorInvite({
               actorUserId: parseTestUserId(owner.id),
               groupId: parseTestGroupId(group.id),
               invitedUserId: parseTestUserId(target.id),
-            }).pipe(Effect.result)
-          ),
+            }).pipe(Effect.result),
           { concurrency: "unbounded" }
         );
 

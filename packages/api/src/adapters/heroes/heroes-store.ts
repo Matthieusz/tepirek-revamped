@@ -62,7 +62,10 @@ const deleteWithDatabase =
 
 const listWithDatabase = (database: EffectPgDatabase) => () =>
   persistenceQuery("listHeroes", database.select().from(hero)).pipe(
-    Effect.flatMap((rows) => Effect.all(rows.map(decodeHeroRow)))
+    Effect.flatMap((rows) =>
+      // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+      Effect.forEach(rows, decodeHeroRow)
+    )
   );
 
 const listByEventWithDatabase =
@@ -71,7 +74,12 @@ const listByEventWithDatabase =
     persistenceQuery(
       "listHeroesByEvent",
       database.select().from(hero).where(eq(hero.eventId, eventId))
-    ).pipe(Effect.flatMap((rows) => Effect.all(rows.map(decodeHeroRow))));
+    ).pipe(
+      Effect.flatMap((rows) =>
+        // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+        Effect.forEach(rows, decodeHeroRow)
+      )
+    );
 
 const getDatabaseSync = EffectDatabase.useSync.bind(EffectDatabase);
 

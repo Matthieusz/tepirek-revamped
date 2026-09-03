@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file -- Batch policy errors belong to this account-import use case. */
 import * as Arr from "effect/Array";
 import * as Data from "effect/Data";
 import * as DateTime from "effect/DateTime";
@@ -78,7 +79,6 @@ type PreviewOwnedAccountImportLineError =
   | ParseMargonemProfileHtmlError
   | SquadBuilderPersistenceUnavailable;
 
-// oxlint-disable-next-line max-classes-per-file -- Batch policy errors live with the use case.
 class TooManyProfileUrlsInBatch extends Schema.TaggedErrorClass<TooManyProfileUrlsInBatch>()(
   "TooManyProfileUrlsInBatch",
   { maxUrls: Schema.Finite },
@@ -294,33 +294,32 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
       });
     }
 
-    const accessResults = yield* EffectRuntime.all(
-      parsedLines.map((line) =>
-        store
-          .findProfileAccessState({
-            actorUserId: input.actorUserId,
-            profileId: line.profileId,
+    // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+    const accessResults = yield* EffectRuntime.forEach(parsedLines, (line) =>
+      store
+        .findProfileAccessState({
+          actorUserId: input.actorUserId,
+          profileId: line.profileId,
+        })
+        .pipe(
+          EffectRuntime.matchEffect({
+            onFailure: (error) =>
+              EffectRuntime.succeed({
+                _tag: "LineFailure" as const,
+                error,
+                inputUrl: line.inputUrl,
+                lineNumber: line.lineNumber,
+              }),
+            onSuccess: (state) =>
+              EffectRuntime.succeed({
+                _tag: "AccessState" as const,
+                inputUrl: line.inputUrl,
+                lineNumber: line.lineNumber,
+                profileId: line.profileId,
+                state,
+              }),
           })
-          .pipe(
-            EffectRuntime.matchEffect({
-              onFailure: (error) =>
-                EffectRuntime.succeed({
-                  _tag: "LineFailure" as const,
-                  error,
-                  inputUrl: line.inputUrl,
-                  lineNumber: line.lineNumber,
-                }),
-              onSuccess: (state) =>
-                EffectRuntime.succeed({
-                  _tag: "AccessState" as const,
-                  inputUrl: line.inputUrl,
-                  lineNumber: line.lineNumber,
-                  profileId: line.profileId,
-                  state,
-                }),
-            })
-          )
-      )
+        )
     );
 
     const availableLines: ParsedLine[] = [];
@@ -353,8 +352,10 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
       });
     }
 
-    const fetchedItems = yield* EffectRuntime.all(
-      availableLines.map((line) =>
+    // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+    const fetchedItems = yield* EffectRuntime.forEach(
+      availableLines,
+      (line) =>
         previewMargonemProfileImport({
           actorUserId: input.actorUserId,
           profileUrl: line.inputUrl,
@@ -379,8 +380,7 @@ export const preview = EffectRuntime.fn("AccountImport.previewBatch")(
                 store,
               }),
           })
-        )
-      ),
+        ),
       { concurrency: batchImportPolicy.fetchConcurrency }
     );
 

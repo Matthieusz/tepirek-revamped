@@ -130,26 +130,24 @@ const deleteSkillWithDatabase =
 const listProfessionsWithDatabase = (database: EffectPgDatabase) => () =>
   persistenceQuery("listProfessions", database.select().from(professions)).pipe(
     Effect.flatMap((rows) =>
-      Effect.all(
-        rows.map((row) =>
-          decodePersisted(
-            ProfessionId,
-            "listProfessions.decode"
-          )(row.id).pipe(Effect.map((id) => ({ ...row, id })))
-        )
+      // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+      Effect.forEach(rows, (row) =>
+        decodePersisted(
+          ProfessionId,
+          "listProfessions.decode"
+        )(row.id).pipe(Effect.map((id) => ({ ...row, id })))
       )
     )
   );
 const listRangesWithDatabase = (database: EffectPgDatabase) => () =>
   persistenceQuery("listRanges", database.select().from(range)).pipe(
     Effect.flatMap((rows) =>
-      Effect.all(
-        rows.map((row) =>
-          decodePersisted(
-            SkillRangeId,
-            "listRanges.decode"
-          )(row.id).pipe(Effect.map((id) => ({ ...row, id })))
-        )
+      // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+      Effect.forEach(rows, (row) =>
+        decodePersisted(
+          SkillRangeId,
+          "listRanges.decode"
+        )(row.id).pipe(Effect.map((id) => ({ ...row, id })))
       )
     )
   );
@@ -193,20 +191,19 @@ const listSkillsByRangeWithDatabase =
         .where(eq(skills.rangeId, rangeId))
     ).pipe(
       Effect.flatMap((rows) =>
-        Effect.all(
-          rows.map((row) =>
-            Effect.gen(function* decodeSkillRow() {
-              const id = yield* decodePersisted(
-                SkillId,
-                "listSkillsByRange.decode"
-              )(row.id);
-              const professionId = yield* decodePersisted(
-                ProfessionId,
-                "listSkillsByRange.decode"
-              )(row.professionId);
-              return { ...row, id, professionId };
-            })
-          )
+        // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+        Effect.forEach(rows, (row) =>
+          Effect.gen(function* decodeSkillRow() {
+            const id = yield* decodePersisted(
+              SkillId,
+              "listSkillsByRange.decode"
+            )(row.id);
+            const professionId = yield* decodePersisted(
+              ProfessionId,
+              "listSkillsByRange.decode"
+            )(row.professionId);
+            return { ...row, id, professionId };
+          })
         )
       )
     );

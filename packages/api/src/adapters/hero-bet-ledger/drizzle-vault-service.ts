@@ -99,13 +99,12 @@ const distributeGoldWithDatabase = (database: EffectPgDatabase) =>
               message: "Brak obstawień dla tego herosa",
             });
           }
-          const decodedPoints = yield* Effect.all(
-            heroUserStats.map((stat) =>
-              decodePersisted(
-                Schema.FiniteFromString,
-                "distributeGold.decode"
-              )(stat.points)
-            )
+          // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+          const decodedPoints = yield* Effect.forEach(heroUserStats, (stat) =>
+            decodePersisted(
+              Schema.FiniteFromString,
+              "distributeGold.decode"
+            )(stat.points)
           );
           const totalPoints = Num.sumAll(decodedPoints);
           if (totalPoints <= 0) {
@@ -180,13 +179,12 @@ const getVaultWithDatabase =
         .orderBy(desc(sql`SUM(${userStats.earnings})`))
     ).pipe(
       Effect.flatMap((rows) =>
-        Effect.all(
-          rows.map((row) =>
-            decodePersisted(
-              AppUserId,
-              "getVault.decode"
-            )(row.userId).pipe(Effect.map((userId) => ({ ...row, userId })))
-          )
+        // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+        Effect.forEach(rows, (row) =>
+          decodePersisted(
+            AppUserId,
+            "getVault.decode"
+          )(row.userId).pipe(Effect.map((userId) => ({ ...row, userId })))
         )
       )
     );

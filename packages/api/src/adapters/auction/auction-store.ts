@@ -64,14 +64,13 @@ const getSignupsWithDatabase =
         .orderBy(auction.createdAt)
     ).pipe(
       Effect.flatMap((rows) =>
-        Effect.all(
-          rows.map((row) =>
-            Effect.gen(function* decodeAuctionSignup() {
-              const id = yield* decodePersisted(AuctionSignupId)(row.id);
-              const userId = yield* decodePersisted(AppUserId)(row.userId);
-              return { ...row, id, userId };
-            })
-          )
+        // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+        Effect.forEach(rows, (row) =>
+          Effect.gen(function* decodeAuctionSignup() {
+            const id = yield* decodePersisted(AuctionSignupId)(row.id);
+            const userId = yield* decodePersisted(AppUserId)(row.userId);
+            return { ...row, id, userId };
+          })
         )
       )
     );

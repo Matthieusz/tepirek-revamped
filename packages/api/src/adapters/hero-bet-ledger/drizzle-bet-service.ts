@@ -120,7 +120,8 @@ const toBetSummary = <
       "decodeBetSummary"
     )(bet.heroId);
     const id = yield* decodePersisted(BetId, "decodeBetSummary")(bet.id);
-    const members = yield* Effect.all(bet.members.map(toBetMember));
+    // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+    const members = yield* Effect.forEach(bet.members, toBetMember);
     return { ...bet, createdBy, eventId, heroId, id, members };
   });
 
@@ -571,8 +572,11 @@ const getAllBetsWithDatabase = (database: EffectPgDatabase) =>
         .innerJoin(user, eq(heroBet.createdBy, user.id))
         .orderBy(desc(heroBet.createdAt), desc(heroBet.id))
     );
-    return yield* Effect.all(
-      (yield* attachMembersToBetsWithDatabase(database)(bets)).map(toBetSummary)
+    // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+    return yield* Effect.forEach(
+      // oxlint-disable-next-line unicorn/no-array-method-this-argument -- Effect.forEach receives an effectful mapper, not an Array#forEach thisArg.
+      yield* attachMembersToBetsWithDatabase(database)(bets),
+      toBetSummary
     );
   });
 
@@ -590,13 +594,12 @@ const getBetMembersWithDatabase =
         .where(eq(heroBetMember.heroBetId, betId))
     ).pipe(
       Effect.flatMap((rows) =>
-        Effect.all(
-          rows.map((row) =>
-            decodePersisted(
-              AppUserId,
-              "getBetMembers.decode"
-            )(row.userId).pipe(Effect.map((userId) => ({ ...row, userId })))
-          )
+        // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+        Effect.forEach(rows, (row) =>
+          decodePersisted(
+            AppUserId,
+            "getBetMembers.decode"
+          )(row.userId).pipe(Effect.map((userId) => ({ ...row, userId })))
         )
       )
     );
@@ -621,28 +624,27 @@ const getBetsByEventWithDatabase =
         .orderBy(desc(heroBet.createdAt), desc(heroBet.id))
     ).pipe(
       Effect.flatMap((rows) =>
-        Effect.all(
-          rows.map((row) =>
-            Effect.gen(function* decodeBetByEvent() {
-              const createdBy = yield* decodePersisted(
-                AppUserId,
-                "getBetsByEvent.decode"
-              )(row.createdBy);
-              const decodedEventId = yield* decodePersisted(
-                EventId,
-                "getBetsByEvent.decode"
-              )(row.eventId);
-              const heroId = yield* decodePersisted(
-                HeroId,
-                "getBetsByEvent.decode"
-              )(row.heroId);
-              const id = yield* decodePersisted(
-                BetId,
-                "getBetsByEvent.decode"
-              )(row.id);
-              return { ...row, createdBy, eventId: decodedEventId, heroId, id };
-            })
-          )
+        // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+        Effect.forEach(rows, (row) =>
+          Effect.gen(function* decodeBetByEvent() {
+            const createdBy = yield* decodePersisted(
+              AppUserId,
+              "getBetsByEvent.decode"
+            )(row.createdBy);
+            const decodedEventId = yield* decodePersisted(
+              EventId,
+              "getBetsByEvent.decode"
+            )(row.eventId);
+            const heroId = yield* decodePersisted(
+              HeroId,
+              "getBetsByEvent.decode"
+            )(row.heroId);
+            const id = yield* decodePersisted(
+              BetId,
+              "getBetsByEvent.decode"
+            )(row.id);
+            return { ...row, createdBy, eventId: decodedEventId, heroId, id };
+          })
         )
       )
     );
@@ -671,7 +673,8 @@ const getLatestBetForCopyWithDatabase = (database: EffectPgDatabase) =>
       BetId,
       "getLatestBetForCopy.decode"
     )(withMembers.id);
-    const members = yield* Effect.all(withMembers.members.map(toBetMember));
+    // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+    const members = yield* Effect.forEach(withMembers.members, toBetMember);
     return { id, members };
   });
 
@@ -731,10 +734,11 @@ const getPaginatedBetsWithDatabase = (database: EffectPgDatabase) =>
     const totalPages = Math.ceil(totalItems / limit);
 
     return {
-      items: yield* Effect.all(
-        (yield* attachMembersToBetsWithDatabase(database)(bets)).map(
-          toBetSummary
-        )
+      // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+      items: yield* Effect.forEach(
+        // oxlint-disable-next-line unicorn/no-array-method-this-argument -- Effect.forEach receives an effectful mapper, not an Array#forEach thisArg.
+        yield* attachMembersToBetsWithDatabase(database)(bets),
+        toBetSummary
       ),
       pagination: {
         hasMore: page < totalPages,

@@ -247,7 +247,8 @@ const getRankingWithDatabase = (database: EffectPgDatabase) =>
 
     return {
       pointWorth,
-      ranking: yield* Effect.all(ranking.map(normalizeRankingRow)),
+      // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+      ranking: yield* Effect.forEach(ranking, normalizeRankingRow),
       totalBets,
     };
   });

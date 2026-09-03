@@ -57,16 +57,13 @@ const listWithDatabase =
       database.select().from(todo).where(eq(todo.userId, userId))
     ).pipe(
       Effect.flatMap((rows) =>
-        Effect.all(
-          rows.map((row) =>
-            Effect.gen(function* decodeTodoRow() {
-              const id = yield* decodePersisted(TodoId)(row.id);
-              const decodedUserId = yield* decodePersisted(AppUserId)(
-                row.userId
-              );
-              return { ...row, id, userId: decodedUserId };
-            })
-          )
+        // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+        Effect.forEach(rows, (row) =>
+          Effect.gen(function* decodeTodoRow() {
+            const id = yield* decodePersisted(TodoId)(row.id);
+            const decodedUserId = yield* decodePersisted(AppUserId)(row.userId);
+            return { ...row, id, userId: decodedUserId };
+          })
         )
       )
     );

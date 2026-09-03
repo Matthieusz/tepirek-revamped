@@ -24,14 +24,12 @@ export const preloadAtomResults = async (
   }
 
   const preload = Effect.gen(function* preloadAtomResultsEffect() {
-    yield* Effect.all(
-      atoms.map((atom) => mount(registry, atom)),
-      { discard: true }
-    );
-    yield* Effect.all(
-      atoms.map((atom) =>
-        getResult(registry, atom, { suspendOnWaiting: true })
-      ),
+    yield* Effect.forEach(atoms, (atom) => mount(registry, atom), {
+      discard: true,
+    });
+    yield* Effect.forEach(
+      atoms,
+      (atom) => getResult(registry, atom, { suspendOnWaiting: true }),
       { concurrency: "unbounded", discard: true }
     );
   });

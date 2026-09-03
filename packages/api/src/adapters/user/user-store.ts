@@ -248,13 +248,19 @@ const getVerifiedWithDatabase = (database: EffectPgDatabase) => () =>
       .select(verifiedMemberSelect)
       .from(user)
       .where(eq(user.verified, true))
-  ).pipe(Effect.flatMap((rows) => Effect.all(rows.map(toVerifiedMember))));
+  ).pipe(
+    // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+    Effect.flatMap((rows) => Effect.forEach(rows, toVerifiedMember))
+  );
 
 const listWithDatabase = (database: EffectPgDatabase) => () =>
   userPersistenceQuery(
     "listUsers",
     database.select(playerListSelect).from(user)
-  ).pipe(Effect.flatMap((rows) => Effect.all(rows.map(toPlayer))));
+  ).pipe(
+    // oxlint-disable-next-line unicorn/no-array-for-each unicorn/no-array-method-this-argument -- Effect.forEach sequences typed effects; this is not Array#forEach.
+    Effect.flatMap((rows) => Effect.forEach(rows, toPlayer))
+  );
 
 const setRoleWithDatabase =
   (database: EffectPgDatabase) =>
