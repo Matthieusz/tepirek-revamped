@@ -36,14 +36,35 @@ type CSSPropertiesWithVars = React.CSSProperties &
   Partial<Record<`--${string}`, string>>;
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
-const SIDEBAR_COOKIE_MAX_AGE_MS = 60 * 60 * 24 * 7 * 1000;
+const SIDEBAR_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+const SIDEBAR_COOKIE_MAX_AGE_MS = SIDEBAR_COOKIE_MAX_AGE_SECONDS * 1000;
 const SIDEBAR_WIDTH = "16rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
+const getSidebarCookie = (): boolean | undefined => {
+  if (typeof document === "undefined") {
+    return undefined;
+  }
+
+  const cookie = document.cookie
+    .split(";")
+    .find((entry) => entry.trimStart().startsWith(`${SIDEBAR_COOKIE_NAME}=`));
+  const value = cookie?.trimStart().slice(SIDEBAR_COOKIE_NAME.length + 1);
+
+  if (value === "true") {
+    return true;
+  }
+  if (value === "false") {
+    return false;
+  }
+
+  return undefined;
+};
+
 const setSidebarCookie = async (value: boolean) => {
-  if ("cookieStore" in window) {
+  if (typeof window !== "undefined" && "cookieStore" in window) {
     const store = window.cookieStore;
     if (store) {
       try {
@@ -53,10 +74,15 @@ const setSidebarCookie = async (value: boolean) => {
           path: "/",
           value: String(value),
         });
+        return;
       } catch {
-        // Silently ignore cookie store errors
+        // Fall back to document.cookie when Cookie Store is unavailable.
       }
     }
+  }
+
+  if (typeof document !== "undefined") {
+    document.cookie = `${SIDEBAR_COOKIE_NAME}=${String(value)}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE_SECONDS}`;
   }
 };
 
@@ -99,7 +125,9 @@ const SidebarProvider = ({
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
-  const [_open, _setOpen] = React.useState(defaultOpen);
+  const [_open, _setOpen] = React.useState(
+    () => getSidebarCookie() ?? defaultOpen
+  );
   const open = openProp ?? _open;
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {

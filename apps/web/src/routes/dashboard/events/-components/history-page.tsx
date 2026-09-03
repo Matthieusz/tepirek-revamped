@@ -165,7 +165,7 @@ const HistoryContent = ({
     );
   } else if (allBets.length === 0) {
     betsContent = (
-      <EmptyState icon={History} message="Brak obstawień do wyświetlenia" />
+      <EmptyState icon={<History />} message="Brak obstawień do wyświetlenia" />
     );
   } else {
     betsContent = (

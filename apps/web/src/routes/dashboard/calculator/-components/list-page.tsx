@@ -19,14 +19,14 @@ import type {
   SinglePenaltyResult,
 } from "@/features/calculators/bounty";
 import {
-  CalculatorLevelSchema,
+  CalculatorLevelFromStringSchema,
   CalculatorLevelsSchema,
 } from "@/features/calculators/form-schemas";
 import type { AuthSession } from "@/types/route";
 
 const SingleFormSchema = Schema.Struct({
-  attackerLevel: CalculatorLevelSchema,
-  victimLevel: CalculatorLevelSchema,
+  attackerLevel: CalculatorLevelFromStringSchema,
+  victimLevel: CalculatorLevelFromStringSchema,
 });
 const SingleFormValidator = Schema.toStandardSchemaV1(SingleFormSchema);
 
@@ -212,7 +212,7 @@ const CalculatorListPage = (_props: CalculatorListPageProps) => {
     null
   );
   const singleForm = useAppForm({
-    defaultValues: { attackerLevel: 200, victimLevel: 150 },
+    defaultValues: { attackerLevel: "200", victimLevel: "150" },
     onSubmit: async ({ value }) => {
       const decoded = await SingleFormValidator["~standard"].validate(value);
       if (!("value" in decoded)) {

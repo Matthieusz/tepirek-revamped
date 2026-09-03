@@ -4,7 +4,9 @@ import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
 import {
+  CalculatorItemLevelFromStringSchema,
   CalculatorItemLevelSchema,
+  CalculatorLevelFromStringSchema,
   CalculatorLevelSchema,
   CalculatorLevelsSchema,
 } from "@/features/calculators/form-schemas";
@@ -180,6 +182,10 @@ describe("form schemas", () => {
       fails(CalculatorLevelSchema, 500.5);
       expect(succeeds(CalculatorItemLevelSchema, 300)).toBe(300);
       fails(CalculatorItemLevelSchema, 301);
+      expect(succeeds(CalculatorLevelFromStringSchema, "500")).toBe(500);
+      expect(succeeds(CalculatorItemLevelFromStringSchema, "300")).toBe(300);
+      fails(CalculatorItemLevelFromStringSchema, "");
+      fails(CalculatorItemLevelFromStringSchema, "301");
       fails(CalculatorLevelsSchema, "abc, -1");
       expect(succeeds(CalculatorLevelsSchema, "200, malformed, 150")).toContain(
         "200"

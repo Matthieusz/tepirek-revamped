@@ -27,7 +27,7 @@ const AuctionsProfessionPage = ({
     <div className="mx-auto w-full max-w-6xl space-y-8">
       <AuctionHeader
         description={AUCTION_TYPE_META[type].professionDescription}
-        icon={professionMeta.headerIcon}
+        icon={<professionMeta.headerIcon />}
         profession={profession}
         title={professionMeta.name}
         type={type}

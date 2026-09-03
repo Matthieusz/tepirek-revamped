@@ -24,7 +24,10 @@ interface AddRangeModalProps {
 
 const RangeFormSchema = Schema.Struct({
   image: CreateRangePayload.fields.image,
-  level: CreateRangePayload.fields.level,
+  level: Schema.FiniteFromString.check(
+    Schema.isInt(),
+    Schema.isBetween({ maximum: 300, minimum: 1 })
+  ),
   name: CreateRangePayload.fields.name,
 });
 const RangeFormValidator = Schema.toStandardSchemaV1(RangeFormSchema);
@@ -37,7 +40,7 @@ export const AddRangeModal = ({ trigger }: AddRangeModalProps) => {
     mode: "promise",
   });
   const form = useAppForm({
-    defaultValues: { image: "", level: 1, name: "" },
+    defaultValues: { image: "", level: "1", name: "" },
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
       const decoded = await RangeFormValidator["~standard"].validate(value);

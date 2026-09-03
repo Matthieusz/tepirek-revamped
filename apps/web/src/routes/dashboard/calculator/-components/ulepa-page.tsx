@@ -27,7 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalculatorItemLevelSchema } from "@/features/calculators/form-schemas";
+import { CalculatorItemLevelFromStringSchema } from "@/features/calculators/form-schemas";
 import {
   ULEPA_DEFAULT_ITEM_LEVEL,
   ULEPA_RARITIES,
@@ -63,7 +63,7 @@ const ItemRaritySchema = Schema.Literals([
   "legendarny",
 ]);
 const UlepaFormSchema = Schema.Struct({
-  itemLevel: CalculatorItemLevelSchema,
+  itemLevel: CalculatorItemLevelFromStringSchema,
   itemRarity: ItemRaritySchema,
 });
 const UlepaFormValidator = Schema.toStandardSchemaV1(UlepaFormSchema);
@@ -73,7 +73,7 @@ interface CalculatorUlepaPageProps {
 }
 
 interface UlepaFormValues {
-  readonly itemLevel: number;
+  readonly itemLevel: string;
   readonly itemRarity: Rarity;
 }
 
@@ -89,7 +89,7 @@ interface UlepaResult {
 }
 
 const ULEPA_DEFAULT_VALUES: UlepaFormValues = {
-  itemLevel: ULEPA_DEFAULT_ITEM_LEVEL,
+  itemLevel: String(ULEPA_DEFAULT_ITEM_LEVEL),
   itemRarity: "legendarny",
 };
 

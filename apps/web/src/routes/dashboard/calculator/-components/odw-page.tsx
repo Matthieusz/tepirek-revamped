@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CalculatorItemLevelSchema } from "@/features/calculators/form-schemas";
+import { CalculatorItemLevelFromStringSchema } from "@/features/calculators/form-schemas";
 import {
   calculateUnbindCost,
   getOdwRarityInfo,
@@ -63,7 +63,7 @@ const ItemRaritySchema = Schema.Literals([
   "legendarny",
 ]);
 const OdwFormSchema = Schema.Struct({
-  itemLevel: CalculatorItemLevelSchema,
+  itemLevel: CalculatorItemLevelFromStringSchema,
   itemRarity: ItemRaritySchema,
 });
 const OdwFormValidator = Schema.toStandardSchemaV1(OdwFormSchema);
@@ -83,12 +83,12 @@ interface CalculatorOdwPageProps {
 }
 
 interface OdwFormValues {
-  readonly itemLevel: number;
+  readonly itemLevel: string;
   readonly itemRarity: Rarity;
 }
 
 const ODW_DEFAULT_VALUES: OdwFormValues = {
-  itemLevel: 280,
+  itemLevel: "280",
   itemRarity: "legendarny",
 };
 
@@ -207,7 +207,7 @@ const CalculatorOdwPage = (_props: CalculatorOdwPageProps) => {
                   }}
                 </form.Field>
                 <form.Subscribe selector={(state) => state.isSubmitting}>
-                  {(isSubmitting) => (
+                  {(isSubmitting: boolean) => (
                     <Button
                       className="w-full"
                       disabled={isSubmitting}

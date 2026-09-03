@@ -41,7 +41,7 @@ const buildRankingContent = (params: {
   if (params.sortedRanking.length === 0) {
     return (
       <EmptyState
-        icon={Trophy}
+        icon={<Trophy />}
         message="Brak danych do wyświetlenia rankingu"
       />
     );

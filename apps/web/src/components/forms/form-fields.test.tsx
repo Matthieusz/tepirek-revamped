@@ -11,7 +11,7 @@ const FieldForm = () => {
     defaultValues: {
       confirmed: true,
       description: "Opis",
-      level: 1.5,
+      level: "1.5",
       name: "Ala",
       profession: "mage",
     },

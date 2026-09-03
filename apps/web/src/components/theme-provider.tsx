@@ -1,10 +1,12 @@
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
-import type { ComponentProps } from "react";
+import type { ComponentProps, PropsWithChildren } from "react";
 import { useEffect } from "react";
 
 import { shouldIgnoreThemeShortcutTarget } from "@/components/theme-shortcut";
 
-type ThemeProviderProps = ComponentProps<typeof NextThemesProvider>;
+type ThemeProviderProps = PropsWithChildren<
+  ComponentProps<typeof NextThemesProvider>
+>;
 
 const isThemeShortcut = (event: KeyboardEvent): boolean =>
   event.key.toLowerCase() === "d" &&

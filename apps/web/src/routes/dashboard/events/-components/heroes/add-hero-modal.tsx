@@ -30,7 +30,7 @@ interface AddHeroModalProps {
 const HeroFormSchema = Schema.Struct({
   eventId: HeroEventIdSchema,
   image: Schema.String,
-  level: Schema.Finite,
+  level: Schema.FiniteFromString,
   name: HeroNameSchema,
 });
 const HeroFormValidator = Schema.toStandardSchemaV1(HeroFormSchema);
@@ -46,7 +46,7 @@ export const AddHeroModal = ({ trigger }: AddHeroModalProps) => {
     : [];
   const eventsLoading = !AsyncResult.isSuccess(eventsResult);
   const form = useAppForm({
-    defaultValues: { eventId: "", image: "", level: 1, name: "" },
+    defaultValues: { eventId: "", image: "", level: "1", name: "" },
     onSubmit: async ({ value }) => {
       setSubmissionFailure(undefined);
       const decoded = await HeroFormValidator["~standard"].validate(value);

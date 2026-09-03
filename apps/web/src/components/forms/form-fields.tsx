@@ -193,11 +193,11 @@ export const TextField = (props: TextFieldProps): ReactNode => {
   );
 };
 
-/** Renders a controlled number field that preserves decimal input. */
+/** Renders a controlled number input whose string value is parsed by form validation. */
 export const NumberField = (
   props: Omit<TextFieldProps, "autoComplete" | "type">
 ): ReactNode => {
-  const { error, field } = useFieldPresentation<number>();
+  const { error, field } = useFieldPresentation<string>();
   const resolvedFieldId = getFieldId(field.name, props.id);
   const errorId = getFieldErrorId(resolvedFieldId);
 
@@ -219,10 +219,7 @@ export const NumberField = (
         id={resolvedFieldId}
         name={field.name}
         onBlur={field.handleBlur}
-        onChange={(event) => {
-          const value = Number.parseFloat(event.target.value);
-          field.handleChange(Number.isFinite(value) ? value : 0);
-        }}
+        onChange={(event) => field.handleChange(event.target.value)}
         placeholder={props.placeholder}
         type="number"
         value={field.state.value}

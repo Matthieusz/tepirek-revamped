@@ -1,8 +1,8 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import type { AuctionProfession, AuctionType } from "@tepirek-revamped/config";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import type { LucideIcon } from "lucide-react";
 import { Users } from "lucide-react";
+import type { ReactElement } from "react";
 import type React from "react";
 
 import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
@@ -11,14 +11,14 @@ import { auctionStatsAtom } from "@/features/auctions/auction-atoms";
 interface AuctionHeaderProps {
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: ReactElement;
   profession: AuctionProfession;
   type: AuctionType;
 }
 
 const AuctionHeaderContent: React.FC<AuctionHeaderProps> = ({
   description,
-  icon: Icon,
+  icon,
   profession,
   title,
   type,
@@ -30,7 +30,7 @@ const AuctionHeaderContent: React.FC<AuctionHeaderProps> = ({
     <div className="border-border bg-card flex flex-col gap-4 rounded-xl border p-6 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
         <div className="bg-primary/10 flex size-10 items-center justify-center rounded-lg">
-          <Icon className="text-primary size-5" />
+          <div className="[&>svg]:text-primary [&>svg]:size-5">{icon}</div>
         </div>
         <div>
           <h1 className="text-foreground font-serif text-2xl font-bold tracking-tight">
@@ -63,7 +63,7 @@ const AuctionHeaderContent: React.FC<AuctionHeaderProps> = ({
 export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
   title,
   description,
-  icon: Icon,
+  icon,
   profession,
   type,
 }) => {
@@ -75,7 +75,7 @@ export const AuctionHeader: React.FC<AuctionHeaderProps> = ({
       {() => (
         <AuctionHeaderContent
           description={description}
-          icon={Icon}
+          icon={icon}
           profession={profession}
           title={title}
           type={type}

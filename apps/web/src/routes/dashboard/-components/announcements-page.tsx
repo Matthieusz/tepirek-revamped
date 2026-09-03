@@ -109,7 +109,10 @@ const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
       </div>
 
       {announcements.length === 0 && (
-        <EmptyState icon={Megaphone} message="Brak ogłoszeń do wyświetlenia" />
+        <EmptyState
+          icon={<Megaphone />}
+          message="Brak ogłoszeń do wyświetlenia"
+        />
       )}
 
       {announcements.length > 0 && (

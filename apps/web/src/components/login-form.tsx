@@ -120,7 +120,7 @@ export const LoginForm = ({
             </form.AppField>
             <FormFeedback failure={submissionFailure} />
             <form.Subscribe selector={(state) => state.isSubmitting}>
-              {(isSubmitting) => (
+              {(isSubmitting: boolean) => (
                 <Button
                   className="h-11 w-full font-semibold"
                   disabled={isSubmitting}

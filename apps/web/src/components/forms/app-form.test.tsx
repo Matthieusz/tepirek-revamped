@@ -71,6 +71,41 @@ const TestForm = ({
   );
 };
 
+const setNativeInputValue = (input: HTMLInputElement, value: string): void => {
+  const descriptor = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    "value"
+  );
+  if (descriptor?.set === undefined) {
+    return;
+  }
+  descriptor.set.call(input, value);
+};
+
+const NumberFieldTestForm = ({
+  onForm,
+}: {
+  readonly onForm: (form: AnyFormApi) => void;
+}) => {
+  const form = useAppForm({
+    defaultValues: { level: "1" },
+    onSubmit: async () => undefined,
+  });
+  useEffect(() => {
+    onForm(form);
+  }, [form, onForm]);
+
+  return (
+    <form.AppForm>
+      <Form form={form}>
+        <form.AppField name="level">
+          {(field) => <field.NumberField label="Poziom" />}
+        </form.AppField>
+      </Form>
+    </form.AppForm>
+  );
+};
+
 const renderTestForm = async (element: React.ReactNode) => {
   const container = document.createElement("div");
   document.body.append(container);
@@ -89,6 +124,29 @@ describe("TanStack app form", () => {
     expect(markup).toContain('name="name"');
     expect(markup).toContain('value="Ala"');
     expect(markup).toContain('for="field-name"');
+  });
+
+  it("preserves an empty number draft instead of coercing it to zero", async () => {
+    let form: AnyFormApi | undefined;
+    const { container, root } = await renderTestForm(
+      <NumberFieldTestForm onForm={(value) => (form = value)} />
+    );
+    const input = container.querySelector<HTMLInputElement>(
+      'input[type="number"]'
+    );
+
+    await act(async () => {
+      if (input === null) {
+        throw new Error("Number field input was not rendered");
+      }
+      setNativeInputValue(input, "");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    expect(input?.value).toBe("");
+    expect(form?.state.values.level).toBe("");
+    root.unmount();
   });
 
   it("focuses the first invalid control after submission", async () => {
