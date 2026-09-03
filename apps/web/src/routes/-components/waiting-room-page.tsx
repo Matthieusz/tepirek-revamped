@@ -47,9 +47,8 @@ const WaitingRoomPage = ({ session }: WaitingRoomPageProps) => {
         toast.error(
           "Nie udało się zweryfikować przynależności do gildii Discord"
         );
-      } finally {
-        isValidatingRef.current = false;
       }
+      isValidatingRef.current = false;
     };
 
     void validateAndRedirect();

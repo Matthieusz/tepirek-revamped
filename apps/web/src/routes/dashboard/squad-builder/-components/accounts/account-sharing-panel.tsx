@@ -207,9 +207,8 @@ export const AccountSharingPanel = ({
                               "Nie udało się wysłać zaproszenia"
                             )
                           );
-                        } finally {
-                          setSendingUserId(null);
                         }
+                        setSendingUserId(null);
                       };
                       void send();
                     }}
@@ -303,9 +302,8 @@ export const AccountSharingPanel = ({
                         toast.error(
                           getErrorMessage(error, "Nie udało się cofnąć dostępu")
                         );
-                      } finally {
-                        setRevokingAccessId(null);
                       }
+                      setRevokingAccessId(null);
                     };
 
                     void revoke();

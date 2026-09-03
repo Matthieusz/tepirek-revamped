@@ -81,9 +81,8 @@ export const SquadGroupInvitations = () => {
       );
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Nie udało się zapisać odpowiedzi"));
-    } finally {
-      setRespondingInvitationId(null);
     }
+    setRespondingInvitationId(null);
   };
 
   return (

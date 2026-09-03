@@ -200,10 +200,9 @@ const AuctionTableContent: React.FC<AuctionTableProps> = ({
           );
         } catch {
           toast.error("Wystąpił błąd");
-        } finally {
-          setIsMutating(false);
-          setMutatingCell(null);
         }
+        setIsMutating(false);
+        setMutatingCell(null);
       })();
     },
     variables: mutatingCell,
@@ -218,9 +217,8 @@ const AuctionTableContent: React.FC<AuctionTableProps> = ({
           toast.success("Wypisano z licytacji");
         } catch (error: unknown) {
           toast.error(getErrorMessage(error));
-        } finally {
-          setIsMutating(false);
         }
+        setIsMutating(false);
       })();
     },
   };

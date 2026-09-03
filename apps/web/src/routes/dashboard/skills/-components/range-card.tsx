@@ -56,9 +56,8 @@ export const RangeCard = ({ range, session, className }: RangeCardProps) => {
           setShowDeleteDialog(false);
         } catch (error: unknown) {
           toast.error(getErrorMessage(error));
-        } finally {
-          setIsDeleting(false);
         }
+        setIsDeleting(false);
       })();
     },
   };

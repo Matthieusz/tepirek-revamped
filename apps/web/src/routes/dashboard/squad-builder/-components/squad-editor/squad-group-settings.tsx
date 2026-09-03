@@ -123,9 +123,8 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
       setQuery("");
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Nie udało się wysłać zaproszenia"));
-    } finally {
-      setSendingUserId(null);
     }
+    setSendingUserId(null);
   };
 
   const revoke = async (grant: EditorGrant) => {
@@ -135,9 +134,8 @@ const EditorAccessPanel = ({ groupId }: { readonly groupId: number }) => {
       toast.success("Dostęp został cofnięty");
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Nie udało się cofnąć dostępu"));
-    } finally {
-      setRevokingInvitationId(null);
     }
+    setRevokingInvitationId(null);
   };
 
   return (
@@ -355,9 +353,8 @@ export const SquadGroupSettings = ({
       await navigate({ to: "/dashboard/squad-builder/squads" });
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Nie udało się usunąć grupy składów"));
-    } finally {
-      setIsDeleting(false);
     }
+    setIsDeleting(false);
   };
 
   return (

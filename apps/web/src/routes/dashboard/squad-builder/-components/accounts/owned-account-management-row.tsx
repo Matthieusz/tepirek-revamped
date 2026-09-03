@@ -162,9 +162,8 @@ const DeleteAccountDialog = ({
       );
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Nie udało się usunąć konta"));
-    } finally {
-      setIsDeleting(false);
     }
+    setIsDeleting(false);
   };
 
   return (

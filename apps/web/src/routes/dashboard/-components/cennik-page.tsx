@@ -124,9 +124,8 @@ const LegendPriceCard = ({
       toast.success("Cena została zapisana");
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Nie udało się zapisać ceny."));
-    } finally {
-      setSaving(false);
     }
+    setSaving(false);
   };
 
   return (

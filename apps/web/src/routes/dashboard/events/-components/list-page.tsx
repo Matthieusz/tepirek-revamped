@@ -97,9 +97,8 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
           setEventAction(null);
         } catch (error: unknown) {
           toast.error(getErrorMessage(error));
-        } finally {
-          setActionPending(false);
         }
+        setActionPending(false);
       })();
     },
   };
@@ -114,9 +113,8 @@ const EventsListContent = ({ session }: EventsListPageProps) => {
           setEventAction(null);
         } catch (error: unknown) {
           toast.error(getErrorMessage(error));
-        } finally {
-          setActionPending(false);
         }
+        setActionPending(false);
       })();
     },
   };

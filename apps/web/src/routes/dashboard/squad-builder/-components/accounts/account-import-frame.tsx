@@ -521,9 +521,11 @@ export const AccountImportFrame = () => {
         setConfirmingId(item.pendingImportId);
         try {
           await confirmImport(payload);
-        } finally {
+        } catch (error: unknown) {
           setConfirmingId(null);
+          throw error;
         }
+        setConfirmingId(null);
       }}
       onConfirmed={(item) => {
         setPreviewItems((current) =>

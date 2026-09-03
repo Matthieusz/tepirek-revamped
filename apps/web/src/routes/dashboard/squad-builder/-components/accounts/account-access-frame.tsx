@@ -121,9 +121,8 @@ const InviteInboxPanel = () => {
                             "Nie udało się odpowiedzieć na zaproszenie"
                           )
                         );
-                      } finally {
-                        setRespondingAccessId(null);
                       }
+                      setRespondingAccessId(null);
                     })();
                   }}
                   size="sm"
@@ -150,9 +149,8 @@ const InviteInboxPanel = () => {
                             "Nie udało się odpowiedzieć na zaproszenie"
                           )
                         );
-                      } finally {
-                        setRespondingAccessId(null);
                       }
+                      setRespondingAccessId(null);
                     })();
                   }}
                   size="sm"

@@ -83,9 +83,8 @@ const DashboardHomeContent = ({ session }: DashboardHomePageProps) => {
           setAnnouncementToDelete(null);
         } catch (error: unknown) {
           toast.error(getErrorMessage(error));
-        } finally {
-          setIsDeleting(false);
         }
+        setIsDeleting(false);
       })();
     },
   };

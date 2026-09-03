@@ -95,9 +95,8 @@ const RangeSkillsContent = ({
         setSkillToDelete(null);
       } catch {
         toast.error("Błąd podczas usuwania");
-      } finally {
-        setIsDeleting(false);
       }
+      setIsDeleting(false);
     })();
   };
 

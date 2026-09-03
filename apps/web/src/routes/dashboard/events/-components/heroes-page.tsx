@@ -108,9 +108,8 @@ const EventsHeroesContent = ({ session }: EventsHeroesPageProps) => {
           setHeroToDelete(null);
         } catch (error: unknown) {
           toast.error(getErrorMessage(error));
-        } finally {
-          setIsDeleting(false);
         }
+        setIsDeleting(false);
       })();
     },
   };

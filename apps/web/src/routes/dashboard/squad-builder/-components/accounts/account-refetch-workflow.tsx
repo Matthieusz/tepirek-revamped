@@ -120,9 +120,8 @@ export const AccountRefetchWorkflow = ({
       toast.error(
         getErrorMessage(error, "Nie udało się przygotować odświeżenia")
       );
-    } finally {
-      setIsPreviewing(false);
     }
+    setIsPreviewing(false);
   };
 
   const handleApply = async () => {
@@ -145,9 +144,8 @@ export const AccountRefetchWorkflow = ({
       toast.error(
         getErrorMessage(error, "Nie udało się zastosować odświeżenia")
       );
-    } finally {
-      setIsApplying(false);
     }
+    setIsApplying(false);
   };
 
   return (

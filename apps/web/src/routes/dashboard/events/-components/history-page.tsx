@@ -150,9 +150,8 @@ const HistoryContent = ({
           setBetToDelete(null);
         } catch (error: unknown) {
           toast.error(getErrorMessage(error));
-        } finally {
-          setIsDeleting(false);
         }
+        setIsDeleting(false);
       })();
     },
   };

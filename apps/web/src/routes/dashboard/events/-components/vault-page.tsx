@@ -78,7 +78,7 @@ const useEventsVaultPageContent = ({ session }: EventsVaultPageProps) => {
         search: { eventId: oldestUnpaidEventId.toString() },
       });
     }
-  }, [hasInitialized, oldestUnpaidResult, urlEventId, navigate]);
+  }, [oldestUnpaidResult, urlEventId, navigate]);
 
   return (
     <AsyncResultBoundary onRetry={refreshEvents} result={eventsResult}>

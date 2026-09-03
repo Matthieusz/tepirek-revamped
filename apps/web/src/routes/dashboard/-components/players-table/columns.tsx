@@ -73,9 +73,8 @@ const ActionCell = ({ player }: { player: Player }) => {
         toast.error(
           error instanceof Error ? error.message : "Nie udało się zapisać zmian"
         );
-      } finally {
-        setPendingAction(null);
       }
+      setPendingAction(null);
     };
 
     void run();
