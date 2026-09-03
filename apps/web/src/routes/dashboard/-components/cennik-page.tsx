@@ -294,13 +294,10 @@ export const CennikContent = ({
   readonly search: CennikSearch;
 }) => {
   const navigate = useNavigate({ from: "/dashboard/cennik" });
-  const pendingSearch = useRef(search);
+  const pendingSearchUpdates = useRef<Partial<CennikSearch>>({});
   const syncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const deferredSearch = useDeferredValue(search);
 
-  useEffect(() => {
-    pendingSearch.current = search;
-  }, [search]);
   useEffect(
     () => () => {
       if (syncTimeout.current !== null) {
@@ -312,14 +309,21 @@ export const CennikContent = ({
 
   const updateSearch = useCallback(
     (update: Partial<CennikSearch>) => {
-      const nextSearch = { ...pendingSearch.current, ...update };
-      pendingSearch.current = nextSearch;
+      pendingSearchUpdates.current = {
+        ...pendingSearchUpdates.current,
+        ...update,
+      };
       if (syncTimeout.current !== null) {
         clearTimeout(syncTimeout.current);
       }
       syncTimeout.current = setTimeout(() => {
         syncTimeout.current = null;
-        void navigate({ replace: true, search: nextSearch });
+        const nextUpdates = pendingSearchUpdates.current;
+        pendingSearchUpdates.current = {};
+        void navigate({
+          replace: true,
+          search: (previous) => ({ ...previous, ...nextUpdates }),
+        });
       }, SEARCH_URL_SYNC_DELAY_MS);
     },
     [navigate]

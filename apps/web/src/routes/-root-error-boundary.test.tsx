@@ -31,11 +31,11 @@ const getChildren = (element: ReactElement<ElementProps>): ReactNode[] => {
 };
 
 describe("RootErrorBoundary", () => {
-  it("shows the normalized error and invokes reset", () => {
+  it("shows a safe fallback and invokes reset", () => {
     const reset = vi.fn<() => void>();
     const boundary = asElement(
       RootErrorBoundary({
-        error: new Error("Nie udało się załadować danych."),
+        error: new Error("internal database details"),
         reset,
       })
     );
@@ -51,7 +51,9 @@ describe("RootErrorBoundary", () => {
     const message = asElement(messageNode);
     const retryButton = asElement(retryButtonNode);
 
-    expect(message.props.children).toBe("Nie udało się załadować danych.");
+    expect(message.props.children).toBe(
+      "Wystąpił błąd. Spróbuj ponownie później."
+    );
     if (retryButton.props.onClick === undefined) {
       throw new Error("Expected retry button to have an onClick handler");
     }

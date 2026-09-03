@@ -138,6 +138,7 @@ export const getSquadBuilderLineErrorMessage = (
 /**
  * Converts errors at JavaScript and Promise boundaries into safe UI copy.
  * HTTP API errors are matched by their stable protocol tags and schemas.
+ * Defects and unrecognised errors always use the supplied fallback.
  */
 export const getErrorMessage = (
   error: CaughtError,
@@ -145,10 +146,6 @@ export const getErrorMessage = (
 ): string => {
   if (isApiError(error)) {
     return getApiErrorMessage(error);
-  }
-
-  if (error instanceof Error && error.name !== "RuntimeException") {
-    return error.message;
   }
 
   return fallback;

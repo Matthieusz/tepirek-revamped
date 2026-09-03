@@ -42,7 +42,7 @@ const RootDocument = () => {
           enableColorScheme
           enableSystem
         >
-          <RegistryContext.Provider value={atomRegistry}>
+          <RegistryContext value={atomRegistry}>
             <div className="grid h-svh min-w-0 grid-rows-[auto_1fr]">
               <Outlet />
             </div>
@@ -50,7 +50,7 @@ const RootDocument = () => {
             {showDevtools ? (
               <TanStackRouterDevtools position="bottom-right" />
             ) : null}
-          </RegistryContext.Provider>
+          </RegistryContext>
         </ThemeProvider>
         <Scripts />
       </body>

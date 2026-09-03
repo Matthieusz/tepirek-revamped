@@ -48,6 +48,7 @@ import {
   setVerifiedAtom,
   updateUserNameAtom,
 } from "@/features/users/user-atoms";
+import { getErrorMessage } from "@/lib/errors";
 import { formatDate } from "@/lib/utils";
 import type { PlayerTableFeatures } from "@/routes/dashboard/-components/players-table/player-table-features";
 
@@ -70,9 +71,7 @@ const ActionCell = ({ player }: { player: Player }) => {
         await action();
         toast.success("Zapisano zmiany");
       } catch (error: unknown) {
-        toast.error(
-          error instanceof Error ? error.message : "Nie udało się zapisać zmian"
-        );
+        toast.error(getErrorMessage(error, "Nie udało się zapisać zmian"));
       }
       setPendingAction(null);
     };

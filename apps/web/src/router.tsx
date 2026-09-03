@@ -23,7 +23,6 @@ export const getRouter = () => {
 };
 
 declare module "@tanstack/react-router" {
-  // biome-ignore lint/style/useConsistentTypeDefinitions: <consistency with tanstack>
   interface Register {
     router: ReturnType<typeof getRouter>;
   }

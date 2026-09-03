@@ -37,9 +37,9 @@ import {
 const fallback = "Wystąpił błąd. Spróbuj ponownie później.";
 
 describe("getErrorMessage", () => {
-  it("returns the message from ordinary Error objects", () => {
-    expect(getErrorMessage(new Error("Nie udało się zapisać"))).toBe(
-      "Nie udało się zapisać"
+  it("uses the fallback for ordinary Error objects", () => {
+    expect(getErrorMessage(new Error("internal database details"))).toBe(
+      fallback
     );
   });
 
@@ -114,7 +114,10 @@ describe("getErrorMessage", () => {
     ).toBe("Nie udało się pobrać profilu Margonem.");
   });
 
-  it("uses the caller fallback for non-error unknown values", () => {
+  it("uses the caller fallback for unrecognised errors", () => {
+    expect(
+      getErrorMessage(new Error("internal database details"), "Nie udało się")
+    ).toBe("Nie udało się");
     expect(getErrorMessage("błąd", "Nie udało się sprawdzić kont")).toBe(
       "Nie udało się sprawdzić kont"
     );

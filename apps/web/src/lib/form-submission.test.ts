@@ -24,7 +24,7 @@ describe("formSubmission", () => {
 
       expect(error).toMatchObject({
         _tag: "FormSubmissionError",
-        message: "provider failed",
+        message: "Nie udało się wykonać operacji. Spróbuj ponownie.",
       });
     })
   );
@@ -42,7 +42,9 @@ describe("formSubmission", () => {
     );
     expect(result._tag).toBe("failure");
     if (result._tag === "failure") {
-      expect(result.error.message).toBe("provider failed");
+      expect(result.error.message).toBe(
+        "Nie udało się wykonać operacji. Spróbuj ponownie."
+      );
     }
   });
 
