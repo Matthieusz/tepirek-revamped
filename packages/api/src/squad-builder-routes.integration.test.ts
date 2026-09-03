@@ -184,7 +184,9 @@ describe("squad-builder squad-group route auth", () => {
           jsonPost({}, user2.cookie)
         );
         expect(user2OwnedResponse.status).toBe(200);
-        const user2Owned = await user2OwnedResponse.json();
+        const user2Owned = Schema.decodeUnknownSync(
+          Schema.Array(SquadGroupSummarySchema)
+        )(await user2OwnedResponse.json());
         expect(user2Owned).toHaveLength(0);
       })
   );

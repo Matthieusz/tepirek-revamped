@@ -19,7 +19,8 @@
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@tepirek-revamped/config": "workspace:*",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "typescript": "^5 || ^6 || ^7.0.0-0"

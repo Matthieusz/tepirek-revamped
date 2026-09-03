@@ -6,9 +6,9 @@ pre-commit:
   jobs:
     - name: oxlint
       glob: "*.{ts,tsx,js,jsx,mjs,cjs}"
-      run: pnpm oxlint --no-error-on-unmatched-pattern --fix {staged_files}
+      run: nub exec oxlint --no-error-on-unmatched-pattern --fix {staged_files}
       stage_fixed: true
     - name: oxfmt
       glob: "*.{ts,tsx,js,jsx,mjs,cjs,css,scss,less,html,json,jsonc,yml,yaml,md,mdx}"
-      run: pnpm oxfmt --no-error-on-unmatched-pattern --write {staged_files}
+      run: nub exec oxfmt --no-error-on-unmatched-pattern --write {staged_files}
       stage_fixed: true

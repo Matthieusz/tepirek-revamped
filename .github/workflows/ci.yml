@@ -30,45 +30,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+      - name: Setup Node.js and Nub
+        uses: nubjs/setup-nub@v0
         with:
-          version: 12.2.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
+          nub-version: 0.8.3
           node-version: 24
-          cache: pnpm
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.14
+          cache: true
+          cache-dependency-path: nub.lock
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: nub ci
 
       - name: Check formatting and lint
-        run: pnpm check
+        run: nub run check
 
       - name: Unused-code check
-        run: pnpm check:unused
+        run: nub run check:unused
 
       - name: Typecheck
-        run: pnpm check-types
+        run: nub run check-types
 
       - name: Test
-        run: pnpm test
+        run: nub run test
 
       - name: Smoke tests
-        run: pnpm test:smoke
+        run: nub run test:smoke
 
       - name: API integration tests
-        run: pnpm test:integration
+        run: nub run test:integration
         env:
           API_INTEGRATION_ALLOW_DATABASE_RESET: "1"
           TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/tepirek_revamped_test
 
       - name: Build
-        run: pnpm build
+        run: nub run build

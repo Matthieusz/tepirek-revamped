@@ -33,8 +33,7 @@ Tepirek Revamped is guild operations software for [Margonem](https://www.margone
 
 <div align="center">
   <img alt="Node.js 24 or newer" src="https://shieldcn.dev/badge/node.js-24%2B-79ad98.svg?variant=secondary" />
-  <img alt="pnpm 11" src="https://shieldcn.dev/badge/pnpm-11-79ad98.svg?variant=secondary" />
-  <img alt="Bun runtime" src="https://shieldcn.dev/badge/bun-1.3-79ad98.svg?variant=secondary" />
+  <img alt="Nub 0.8" src="https://shieldcn.dev/badge/nub-0.8-79ad98.svg?variant=secondary" />
   <img alt="PostgreSQL 16" src="https://shieldcn.dev/badge/postgresql-16-79ad98.svg?variant=secondary" />
 </div>
 
@@ -49,8 +48,7 @@ Tepirek Revamped is guild operations software for [Margonem](https://www.margone
 You need:
 
 - Node.js 24 or newer
-- pnpm 11
-- Bun
+- Nub 0.8.3
 - Docker
 
 ### Install
@@ -58,8 +56,8 @@ You need:
 ```bash
 git clone https://github.com/Matthieusz/tepirek-revamped.git
 cd tepirek-revamped
-corepack enable
-pnpm install
+npm install --global @nubjs/nub@0.8.3
+nub install
 cp apps/server/.env.example apps/server/.env
 ```
 
@@ -77,20 +75,20 @@ Discord credentials, a Discord server ID, and a Firecrawl API key are also requi
 Start PostgreSQL, apply the schema, and run both applications:
 
 ```bash
-pnpm db:start
-pnpm db:push
-pnpm dev
+nub run db:start
+nub run db:push
+nub run dev
 ```
 
 Then open [http://localhost:3001](http://localhost:3001). The API runs at [http://localhost:3000](http://localhost:3000), with its OpenAPI document at [http://localhost:3000/api/openapi.json](http://localhost:3000/api/openapi.json).
 
 ## Architecture
 
-The repository is a pnpm monorepo. The web and server applications share the same Effect HTTP contracts from `packages/api`.
+The repository is a Nub monorepo. The web and server applications share the same Effect HTTP contracts from `packages/api`.
 
 ```text
 apps/web       TanStack Start + React frontend (port 3001)
-apps/server    Bun/Hono HTTP server (port 3000)
+apps/server    Node.js/Hono HTTP server (port 3000)
 packages/api   Effect HTTP contracts, domain logic, and handlers
 packages/auth  Better Auth configuration
 packages/db    Drizzle schemas, migrations, and local PostgreSQL
@@ -107,21 +105,21 @@ PostgreSQL access is defined in `packages/db`; authentication is kept in `packag
 
 ## Commands
 
-| Command                 | Purpose                                      |
-| ----------------------- | -------------------------------------------- |
-| `pnpm dev`              | Run web and server development processes     |
-| `pnpm build`            | Build all workspaces                         |
-| `pnpm check-types`      | Type-check all workspaces                    |
-| `pnpm test`             | Run unit tests                               |
-| `pnpm test:smoke`       | Check server startup and health              |
-| `pnpm test:integration` | Run API tests against dedicated PostgreSQL   |
-| `pnpm check`            | Check formatting and lint rules              |
-| `pnpm fix`              | Apply formatting and safe lint fixes         |
-| `pnpm check:unused`     | Find unused files, exports, and dependencies |
-| `pnpm db:generate`      | Generate a migration after a schema change   |
-| `pnpm db:migrate`       | Apply committed migrations                   |
-| `pnpm db:studio`        | Open Drizzle Studio                          |
-| `pnpm db:stop`          | Stop local PostgreSQL                        |
+| Command                    | Purpose                                      |
+| -------------------------- | -------------------------------------------- |
+| `nub run dev`              | Run web and server development processes     |
+| `nub run build`            | Build all workspaces                         |
+| `nub run check-types`      | Type-check all workspaces                    |
+| `nub run test`             | Run unit tests                               |
+| `nub run test:smoke`       | Check server startup and health              |
+| `nub run test:integration` | Run API tests against dedicated PostgreSQL   |
+| `nub run check`            | Check formatting and lint rules              |
+| `nub run fix`              | Apply formatting and safe lint fixes         |
+| `nub run check:unused`     | Find unused files, exports, and dependencies |
+| `nub run db:generate`      | Generate a migration after a schema change   |
+| `nub run db:migrate`       | Apply committed migrations                   |
+| `nub run db:studio`        | Open Drizzle Studio                          |
+| `nub run db:stop`          | Stop local PostgreSQL                        |
 
 ## Testing safely
 
@@ -131,24 +129,24 @@ Integration tests create a dedicated PostgreSQL container on port `5433`:
 postgresql://postgres:password@localhost:5433/tepirek-revamped-test
 ```
 
-To use an existing test database, set `TEST_DATABASE_URL` and `API_INTEGRATION_ALLOW_DATABASE_RESET=1`. The suite migrates and truncates that database, so **never point it at development or production data**.
+To use an existing test database, set `TEST_DATABASE_URL` and `API_INTEGRATION_ALLOW_DATABASE_RESET=1`. The suite applies the application schema and truncates that database, so **never point it at development or production data**.
 
 ## Effect TypeScript tooling
 
 <details>
 <summary>Editor and compiler setup</summary>
 
-This repository uses `@effect/tsgo` as both its patched TypeScript compiler and its TypeScript language server. `pnpm install` runs `effect-tsgo patch` through the `prepare` script. Confirm the patched compiler with:
+This repository uses `@effect/tsgo` as both its patched TypeScript compiler and its TypeScript language server. `nub install` runs `effect-tsgo patch` through the `prepare` script. Confirm the patched compiler with:
 
 ```bash
-pnpm tsc --version
+nub exec tsc --version
 ```
 
 The version must include an `effect-tsgo` suffix. In VS Code, use the workspace TypeScript version when prompted. Do not run another TypeScript language server alongside the native TypeScript-Go server, because that duplicates diagnostics and degrades editor performance.
 
-Other editors must launch the patched workspace `tsgo` binary as their sole TypeScript language server. Run `pnpm effect-tsgo get-exe-path` to locate it for the current platform, and consult the [`@effect/tsgo` editor guidance](https://github.com/Effect-TS/tsgo#best-practices) when configuring the client.
+Other editors must launch the patched workspace `tsgo` binary as their sole TypeScript language server. Run `nub exec effect-tsgo get-exe-path` to locate it for the current platform, and consult the [`@effect/tsgo` editor guidance](https://github.com/Effect-TS/tsgo#best-practices) when configuring the client.
 
-Effect diagnostics use their defaults throughout the repository. The API and server TypeScript projects additionally warn about direct global fetch, environment, timer, and randomness access, plus unsafe Effect type assertions. These checks are intentionally not enabled for the React web project.
+Effect diagnostics use their defaults throughout the repository. The API and server TypeScript projects additionally treat direct global fetch, environment, timer, and randomness access, plus unsafe Effect type assertions, as errors. These checks are intentionally not enabled for the React web project.
 
 </details>
 
@@ -157,19 +155,19 @@ Effect diagnostics use their defaults throughout the repository. The API and ser
 - [Margonem](https://www.margonem.com/) — the game this project supports
 - [TanStack Start](https://tanstack.com/start/latest) and [React](https://react.dev/) — web application
 - [Effect](https://effect.website/) — schemas, services, and HTTP contracts
-- [Hono](https://hono.dev/) and [Bun](https://bun.sh/docs) — server host and runtime
+- [Hono](https://hono.dev/) and [Node.js](https://nodejs.org/docs/latest-v24.x/api/) — server host and runtime
 - [Better Auth](https://www.better-auth.com/docs) — sessions and Discord OAuth
 - [Drizzle ORM](https://orm.drizzle.team/docs/overview) and [PostgreSQL](https://www.postgresql.org/docs/) — persistence
-- [Turborepo](https://turborepo.com/docs) and [pnpm workspaces](https://pnpm.io/workspaces) — monorepo tooling
+- [Turborepo](https://turborepo.com/docs) and [Nub workspaces](https://nubjs.com/docs/install) — monorepo tooling
 
 ## Contributing
 
 Keep changes scoped and follow the existing workspace boundaries. Before opening a pull request, run:
 
 ```bash
-pnpm check
-pnpm check-types
-pnpm test
+nub run check
+nub run check-types
+nub run test
 ```
 
 Schema changes should include generated migrations. API behavior should include unit or integration coverage as appropriate.

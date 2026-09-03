@@ -1,10 +1,28 @@
 {
   "name": "tepirek-revamped",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "catalog": {
+      "better-auth": "^1.7.2",
+      "dotenv": "^17.4.2",
+      "@effect/sql-pg": "4.0.0-beta.101",
+      "@effect/vitest": "4.0.0-beta.101",
+      "@types/pg": "8.20.0",
+      "drizzle-kit": "1.0.0-rc.4",
+      "drizzle-orm": "1.0.0-rc.4",
+      "effect": "4.0.0-beta.101",
+      "hono": "^4.13.5",
+      "pg": "8.22.0",
+      "typescript": "7.0.2",
+      "vitest": "^4.1.11",
+      "zod": "^4.4.3",
+      "linkedom": "^0.18.13"
+    }
+  },
   "type": "module",
   "scripts": {
     "fmt": "oxfmt",
@@ -35,7 +53,7 @@
   "devDependencies": {
     "@effect/tsgo": "^0.39.1",
     "@tepirek-revamped/config": "workspace:*",
-    "@types/bun": "^1.4.0",
+    "@types/node": "^24.10.13",
     "knip": "^6.34.0",
     "lefthook": "latest",
     "oxfmt": "^0.66.0",
@@ -43,11 +61,22 @@
     "oxlint-tsgolint": "^7.0.2001",
     "turbo": "^2.10.12",
     "typescript": "catalog:",
-    "ultracite": "7.10.7",
-    "vitest": "^4.1.11"
+    "ultracite": "7.10.7"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "nub",
+      "version": "^0.8.3",
+      "onFail": "error"
+    }
   },
   "engines": {
     "node": ">=24"
   },
-  "packageManager": "pnpm@12.2.1"
+  "packageManager": "nub@0.8.3",
+  "allowBuilds": {
+    "esbuild": true,
+    "msgpackr-extract": true,
+    "lefthook": true
+  }
 }

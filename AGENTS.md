@@ -1,6 +1,6 @@
 # Agent instructions
 
-Use `pnpm check` to validate formatting and linting. Use `pnpm fix` when fixes are needed.
+Use `nub run check` to validate formatting and linting. Use `nub run fix` when fixes are needed.
 
 Linters do not validate business logic, naming, architecture, edge cases, accessibility, user experience, or documentation. Review those explicitly. Keep functions focused, name complex conditions, prefer early returns, separate unrelated concerns, and hoist reusable regular expressions.
 

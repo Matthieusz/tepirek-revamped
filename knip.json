@@ -7,11 +7,7 @@
     "apps/web/src/components/ui/**",
     "packages/db/drizzle.config.ts"
   ],
-  "ignoreDependencies": [
-    "@effect/language-service",
-    "@opentelemetry/api",
-    "dotenv"
-  ],
+  "ignoreDependencies": ["@effect/language-service", "dotenv"],
   "workspaces": {
     "apps/server": {
       "vitest": {

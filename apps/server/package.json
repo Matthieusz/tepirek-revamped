@@ -6,16 +6,16 @@
   "scripts": {
     "build": "tsdown",
     "check-types": "tsc -b",
-    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
-    "dev": "bun run --hot src/index.ts",
-    "start": "bun run dist/index.mjs",
-    "sync:legend-catalog": "bun run src/sync-legend-catalog.ts",
+    "dev": "nub watch src/index.ts",
+    "start": "node dist/index.mjs",
+    "sync:legend-catalog": "nub src/sync-legend-catalog.ts",
     "test": "vitest run src/server-lifecycle.test.ts src/startup-config.test.ts",
     "test:smoke": "vitest run --config vitest.smoke.config.ts",
-    "db:push": "pnpm --filter @tepirek-revamped/db run db:push"
+    "db:push": "nub run --filter @tepirek-revamped/db db:push"
   },
   "dependencies": {
-    "@effect/platform-bun": "4.0.0-beta.101",
+    "@effect/platform-node": "4.0.0-beta.101",
+    "@hono/node-server": "^2.1.1",
     "@opentelemetry/api": "^1.9.1",
     "@tepirek-revamped/api": "workspace:*",
     "@tepirek-revamped/auth": "workspace:*",
@@ -28,8 +28,8 @@
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@tepirek-revamped/config": "workspace:*",
-    "@types/bun": "^1.3.14",
     "tsdown": "^0.22.14",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

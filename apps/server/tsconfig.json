@@ -15,22 +15,21 @@
         "diagnosticSeverity": {
           "lazyEffect": "off"
         },
-        "ignoreEffectWarningsInTscExitCode": true,
         "overrides": [
           {
             "include": ["src/**/*.ts"],
             "exclude": ["src/**/*.test.ts"],
             "options": {
               "diagnosticSeverity": {
-                "globalFetch": "warning",
-                "globalFetchInEffect": "warning",
-                "globalRandom": "warning",
-                "globalRandomInEffect": "warning",
-                "globalTimers": "warning",
-                "globalTimersInEffect": "warning",
-                "processEnv": "warning",
-                "processEnvInEffect": "warning",
-                "unsafeEffectTypeAssertion": "warning"
+                "globalFetch": "error",
+                "globalFetchInEffect": "error",
+                "globalRandom": "error",
+                "globalRandomInEffect": "error",
+                "globalTimers": "error",
+                "globalTimersInEffect": "error",
+                "processEnv": "error",
+                "processEnvInEffect": "error",
+                "unsafeEffectTypeAssertion": "error"
               }
             }
           }

@@ -5,40 +5,52 @@
   "exports": {
     "./adapters/squad-builder/firecrawl/firecrawl-config": {
       "browser": null,
+      "node": "./src/adapters/squad-builder/firecrawl/firecrawl-config.ts",
       "default": "./src/adapters/squad-builder/firecrawl/firecrawl-config.ts"
     },
     "./adapters/user/discord-verification-config": {
       "browser": null,
+      "node": "./src/adapters/user/discord-verification-config.ts",
       "default": "./src/adapters/user/discord-verification-config.ts"
     },
     "./domain/squad-builder/*": {
+      "browser": "./src/domain/squad-builder/*.ts",
+      "node": "./src/domain/squad-builder/*.ts",
       "default": "./src/domain/squad-builder/*.ts"
     },
     "./observability": {
       "browser": null,
+      "node": "./src/observability.ts",
       "default": "./src/observability.ts"
     },
     "./protocol/*": {
+      "browser": "./src/protocol/*.ts",
+      "node": "./src/protocol/*.ts",
       "default": "./src/protocol/*.ts"
     },
     "./server/effect-app": {
       "browser": null,
+      "node": "./src/server/effect-app.ts",
       "default": "./src/server/effect-app.ts"
     },
     "./server/health/http-api-handlers": {
       "browser": null,
+      "node": "./src/server/health/http-api-handlers.ts",
       "default": "./src/server/health/http-api-handlers.ts"
     },
     "./server/http-api-handlers": {
       "browser": null,
+      "node": "./src/server/http-api-handlers.ts",
       "default": "./src/server/http-api-handlers.ts"
     },
     "./services/legend-pricing/legend-catalog-sync": {
       "browser": null,
+      "node": "./src/services/legend-pricing/legend-catalog-sync.ts",
       "default": "./src/services/legend-pricing/legend-catalog-sync.ts"
     },
     "./services/squad-builder/firecrawl-config": {
       "browser": null,
+      "node": "./src/services/squad-builder/firecrawl-config.ts",
       "default": "./src/services/squad-builder/firecrawl-config.ts"
     }
   },
@@ -53,12 +65,14 @@
     "@tepirek-revamped/db": "workspace:*",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
+    "linkedom": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
-    "@types/pg": "^8.20.0",
-    "pg": "^8.22.0",
-    "typescript": "catalog:"
+    "@types/pg": "catalog:",
+    "pg": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

@@ -49,7 +49,7 @@ const assertTestDatabaseIsReachable = async () => {
 };
 
 const applySchema = () => {
-  execFileSync("pnpm", ["--filter", "@tepirek-revamped/db", "db:push"], {
+  execFileSync("nub", ["run", "--filter", "@tepirek-revamped/db", "db:push"], {
     env: {
       ...process.env,
       DATABASE_URL: testDatabaseUrl,
@@ -58,14 +58,24 @@ const applySchema = () => {
   });
 };
 
-export const setup = async () => {
-  startManagedTestDatabase();
-  await assertTestDatabaseIsReachable();
-  applySchema();
-  await truncateApplicationTables();
-
-  return async () => {
+const closeTestDatabase = async () => {
+  try {
     await testPool.end();
+  } finally {
     stopManagedTestDatabase();
-  };
+  }
+};
+
+export const setup = async () => {
+  try {
+    startManagedTestDatabase();
+    await assertTestDatabaseIsReachable();
+    applySchema();
+    await truncateApplicationTables();
+  } catch (error) {
+    await closeTestDatabase();
+    throw error;
+  }
+
+  return closeTestDatabase;
 };

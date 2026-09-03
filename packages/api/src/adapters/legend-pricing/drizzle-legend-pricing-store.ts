@@ -11,6 +11,7 @@ import {
   legendaryItemDrop,
 } from "@tepirek-revamped/db/schema/legend-pricing";
 import { and, asc, eq, sql } from "drizzle-orm";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import type * as Schema from "effect/Schema";
@@ -262,11 +263,12 @@ const updateWithTransaction = (
         });
       }
     } else {
+      const updatedAt = new Date(yield* Clock.currentTimeMillis);
       const updated = yield* tx
         .update(legendaryItemCost)
         .set({
           priceGold: input.priceGold,
-          updatedAt: new Date(),
+          updatedAt,
           updatedBy: input.updatedBy,
           version: sql`${legendaryItemCost.version} + 1`,
         })

@@ -1,5 +1,4 @@
 import type { BetterAuthDatabase } from "@tepirek-revamped/db/effect";
-// biome-ignore lint/performance/noNamespaceImport: <one time use>
 import * as schema from "@tepirek-revamped/db/schema/auth";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";

@@ -1,13 +1,13 @@
 # Server
 
-The Bun entry point for Tepirek Revamped. Hono hosts Better Auth and two Effect HTTP handlers: the application API and a dependency-light health API.
+The Node.js entry point for Tepirek Revamped. Hono hosts Better Auth and two Effect HTTP handlers: the application API and a dependency-light health API.
 
 ## Run locally
 
 Complete the [repository setup](../../README.md#get-started), then run:
 
 ```bash
-pnpm dev:server
+nub run dev:server
 ```
 
 The server listens on <http://localhost:3000> by default.
@@ -29,9 +29,9 @@ Do not commit `.env`. Rotate credentials if they appear in logs, screenshots, is
 
 ## Runtime ownership
 
-[`src/index.ts`](src/index.ts) parses startup configuration and launches one Effect server layer through `BunRuntime.runMain`. The layer owns a single 10-connection PostgreSQL pool shared by the application and Better Auth Drizzle adapters, the Better Auth service, both Effect HTTP handlers, and the Bun server.
+[`src/index.ts`](src/index.ts) parses startup configuration and launches one Effect server layer through `NodeRuntime.runMain`. The layer owns a single 10-connection PostgreSQL pool shared by the application and Better Auth Drizzle adapters, the Better Auth service, both Effect HTTP handlers, and the Node.js server.
 
-`SIGINT` and `SIGTERM` interrupt the root Effect through the Bun runtime. Hot-module disposal interrupts the same root lifecycle. Scope closure then:
+`SIGINT` and `SIGTERM` interrupt the root Effect through the Node.js runtime. Scope closure then:
 
 1. stops accepting requests and lets ordinary in-flight requests finish;
 2. disposes both Effect handlers;
@@ -42,11 +42,10 @@ If a later startup stage fails, the scope releases every resource already acquir
 ## Commands
 
 ```bash
-pnpm --filter server test        # lifecycle and configuration tests
-pnpm --filter server test:smoke  # startup and health checks
-pnpm --filter server build       # output dist/index.mjs
-pnpm --filter server start       # run the built server
-pnpm --filter server compile     # produce a standalone Bun executable
+nub run --filter server test        # lifecycle and configuration tests
+nub run --filter server test:smoke  # startup and health checks
+nub run --filter server build       # output dist/index.mjs
+nub run --filter server start       # run the built server on Node.js
 ```
 
-See the [Hono](https://hono.dev/docs/) and [Bun server](https://bun.sh/docs/api/http) documentation for the host runtime, and the [Effect HTTP API](https://effect.website/docs/unstable/httpapi/) documentation for the application handlers.
+See the [Hono Node.js adapter](https://github.com/honojs/node-server) documentation for the host runtime and the [Effect HTTP API](https://effect.website/docs/unstable/httpapi/) documentation for the application handlers.

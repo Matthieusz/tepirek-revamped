@@ -1,6 +1,7 @@
 {
   "extends": "@tepirek-revamped/config/tsconfig.base.json",
   "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -13,7 +14,6 @@
         "diagnosticSeverity": {
           "lazyEffect": "off"
         },
-        "ignoreEffectWarningsInTscExitCode": true,
         "overrides": [
           {
             "include": ["src/**/*.ts"],
@@ -24,15 +24,15 @@
             ],
             "options": {
               "diagnosticSeverity": {
-                "globalFetch": "warning",
-                "globalFetchInEffect": "warning",
-                "globalRandom": "warning",
-                "globalRandomInEffect": "warning",
-                "globalTimers": "warning",
-                "globalTimersInEffect": "warning",
-                "processEnv": "warning",
-                "processEnvInEffect": "warning",
-                "unsafeEffectTypeAssertion": "warning"
+                "globalFetch": "error",
+                "globalFetchInEffect": "error",
+                "globalRandom": "error",
+                "globalRandomInEffect": "error",
+                "globalTimers": "error",
+                "globalTimersInEffect": "error",
+                "processEnv": "error",
+                "processEnvInEffect": "error",
+                "unsafeEffectTypeAssertion": "error"
               }
             }
           }
