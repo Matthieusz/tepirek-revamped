@@ -49,7 +49,7 @@ const assertTestDatabaseIsReachable = async () => {
 };
 
 const applySchema = () => {
-  execFileSync("nub", ["run", "--filter", "@tepirek-revamped/db", "db:push"], {
+  execFileSync("pnpm", ["--filter", "@tepirek-revamped/db", "db:push"], {
     env: {
       ...process.env,
       DATABASE_URL: testDatabaseUrl,

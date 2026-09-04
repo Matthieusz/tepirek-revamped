@@ -6,12 +6,12 @@
   "scripts": {
     "build": "tsdown",
     "check-types": "tsc -b",
-    "dev": "nub watch src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "start": "node dist/index.mjs",
-    "sync:legend-catalog": "nub src/sync-legend-catalog.ts",
+    "sync:legend-catalog": "tsx src/sync-legend-catalog.ts",
     "test": "vitest run src/server-lifecycle.test.ts src/startup-config.test.ts",
     "test:smoke": "vitest run --config vitest.smoke.config.ts",
-    "db:push": "nub run --filter @tepirek-revamped/db db:push"
+    "db:push": "pnpm --filter @tepirek-revamped/db db:push"
   },
   "dependencies": {
     "@effect/platform-node": "4.0.0-beta.101",
@@ -29,6 +29,7 @@
     "@effect/vitest": "catalog:",
     "@tepirek-revamped/config": "workspace:*",
     "tsdown": "^0.22.14",
+    "tsx": "^4.23.13",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
