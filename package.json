@@ -1,28 +1,10 @@
 {
   "name": "tepirek-revamped",
   "private": true,
-  "workspaces": {
-    "packages": [
-      "apps/*",
-      "packages/*"
-    ],
-    "catalog": {
-      "better-auth": "^1.7.2",
-      "dotenv": "^17.4.2",
-      "@effect/sql-pg": "4.0.0-beta.101",
-      "@effect/vitest": "4.0.0-beta.101",
-      "@types/pg": "8.20.0",
-      "drizzle-kit": "1.0.0-rc.4",
-      "drizzle-orm": "1.0.0-rc.4",
-      "effect": "4.0.0-beta.101",
-      "hono": "^4.13.5",
-      "pg": "8.22.0",
-      "typescript": "7.0.2",
-      "vitest": "^4.1.11",
-      "zod": "^4.4.3",
-      "linkedom": "^0.18.13"
-    }
-  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "type": "module",
   "scripts": {
     "fmt": "oxfmt",
@@ -65,18 +47,13 @@
   },
   "devEngines": {
     "packageManager": {
-      "name": "nub",
-      "version": "^0.8.3",
+      "name": "pnpm",
+      "version": "^12.2.1",
       "onFail": "error"
     }
   },
   "engines": {
     "node": ">=24"
   },
-  "packageManager": "nub@0.8.3",
-  "allowBuilds": {
-    "esbuild": true,
-    "msgpackr-extract": true,
-    "lefthook": true
-  }
+  "packageManager": "pnpm@12.2.1"
 }

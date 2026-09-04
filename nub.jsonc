@@ -1,5 +1,0 @@
-{
-  "$schema": "https://nubjs.com/schema/nub.json",
-  // Use a self-contained config before workspace links exist during install.
-  "tsconfig": "./packages/config/tsconfig.base.json",
-}

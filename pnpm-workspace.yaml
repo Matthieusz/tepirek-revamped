@@ -1,0 +1,39 @@
+packages:
+  - apps/*
+  - packages/*
+
+allowBuilds:
+  esbuild: true
+  lefthook: true
+  msgpackr-extract: true
+
+catalog:
+  better-auth: ^1.7.2
+  dotenv: ^17.4.2
+  "@effect/sql-pg": 4.0.0-beta.101
+  "@effect/vitest": 4.0.0-beta.101
+  "@types/pg": 8.20.0
+  drizzle-kit: 1.0.0-rc.4
+  drizzle-orm: 1.0.0-rc.4
+  effect: 4.0.0-beta.101
+  hono: ^4.13.5
+  pg: 8.22.0
+  typescript: 7.0.2
+  vitest: ^4.1.11
+  zod: ^4.4.3
+  linkedom: ^0.18.13
+
+minimumReleaseAgeExclude:
+  - cn@0.2.4
+
+onlyBuiltDependencies:
+  - esbuild
+  - msgpackr-extract
+
+overrides:
+  "@effect/platform-node-shared": 4.0.0-beta.101
+  "@effect/sql-pg": 4.0.0-beta.101
+  "@types/pg": 8.20.0
+  drizzle-orm: 1.0.0-rc.4
+  effect: 4.0.0-beta.101
+  pg: 8.22.0
