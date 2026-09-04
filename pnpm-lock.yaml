@@ -7,96 +7,96 @@ importers:
     configDependencies: {}
     packageManagerDependencies:
       pnpm:
-        specifier: 12.2.1
-        version: 12.2.1
+        specifier: 12.3.1
+        version: 12.3.1
 
 packages:
 
-  '@pnpm/exe.darwin-arm64@12.2.1':
-    resolution: {integrity: sha512-efC1yfz2xbyHiMLrQAYtnoo5XP20LeAiYYcyL1962qQagZrMXIB0BoQYeZoPTLggLh0Q4MD7jpZUInU5fWxCgQ==}
+  '@pnpm/exe.darwin-arm64@12.3.1':
+    resolution: {integrity: sha512-Yer+aZnQtgE+OOLKwbRHaAEt74WBJdH8eXpLrSWf+5vj7DkkDvhSR45HVxN3a5d430fMUyF0lmQai02T650r4g==}
     cpu: [arm64]
     os: [darwin]
 
-  '@pnpm/exe.darwin-x64@12.2.1':
-    resolution: {integrity: sha512-0bloFmxrvYY5LYex5V6SZySwg+egBk0pOW+YUeOm9fiG2U1wv+qRVLBOUvIzLAeJE7vBlAzxUwXkQAYtr12n+Q==}
+  '@pnpm/exe.darwin-x64@12.3.1':
+    resolution: {integrity: sha512-XPZYf+XpxufwZS8tpQQdftsv6eUtPDA0uU5NlfXA1uMVPvXJesw5PLGWmmJZHcI4rIscn2H6FngkIcvkuZaaKQ==}
     cpu: [x64]
     os: [darwin]
 
-  '@pnpm/exe.linux-arm64-musl@12.2.1':
-    resolution: {integrity: sha512-AZl7apVZC4TV1/vTp/bS16XUsHeqx9AHsU4V55joiGR+iR6vl+WF0WlGvGCTjqjICS4q/kThpgNrtG8aqQ9seQ==}
+  '@pnpm/exe.linux-arm64-musl@12.3.1':
+    resolution: {integrity: sha512-WjKcLeuierWGSQHjb0QeDl8avQTel8rN5jDMCI55tBJTrTBXNQsdlpgzP9uCD0GSzjPH+hjWKb+GjeMNvv5Ruw==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@pnpm/exe.linux-arm64@12.2.1':
-    resolution: {integrity: sha512-S36+tMEGrPz3nwtfFU9kYxbHoi8sV7WJfMO9njEL4jRaShTNaLRERMAqyI2DUCiA5QCr6/a50lt4+pKCV2mCvw==}
+  '@pnpm/exe.linux-arm64@12.3.1':
+    resolution: {integrity: sha512-X0HxHlEYubFRuMPBOy+ytKsv6c11v4em/ovVVCy5KCdJVBtVGF7vF5ywlGqw7EjpGdqM39pdLTWFwH9Q77lUzQ==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/exe.linux-x64-musl@12.2.1':
-    resolution: {integrity: sha512-4MQClkAk1em55LFZJpeIqb7j+gEqCgX8yC42j9DFWL42q1uMX1e1tvTy2Dtd4NoWQqgdkLxOStZ+D9CYC+28ow==}
+  '@pnpm/exe.linux-x64-musl@12.3.1':
+    resolution: {integrity: sha512-ZvzQI2+Ek0v+V6m30XV3ShIx5sm+ZIZoM669Z0F/RvMSpHgklqv3CBdEwAsQCZ7XBNZLMQIE7RPR2yIwxt3mnw==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@pnpm/exe.linux-x64@12.2.1':
-    resolution: {integrity: sha512-A/AlR71Leph7qgB3ThSU9yU/vLfre4HmP6nbt3/qt51fzAjQ0xuq7j+cw0f1yDskzOsGzmo5uD6ruefCwLK5uQ==}
+  '@pnpm/exe.linux-x64@12.3.1':
+    resolution: {integrity: sha512-ubvbQ2OSt7fR3kSnhtknx5xnm2H7uRi0kC32ADmzKJ1vZz337kmL30rTHoUzTG7ZcIyEhODg7R+zI1cW1ZdVDw==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/exe.win32-arm64@12.2.1':
-    resolution: {integrity: sha512-TEGUmroT6NGfo2O2+tHK9Zr1lhP1zLzpwx+QAQV19l8V4ljUoMfz8Os5V9zzNCtIpzyKcK7SuG7fkVbxFgRMzg==}
+  '@pnpm/exe.win32-arm64@12.3.1':
+    resolution: {integrity: sha512-e+5CjFBGWP7U7RfFlH/EQnlFaP9Uyo/Y0BDCEbitsC4if28WBur3ajAkc25rRwiEwmmEpipTSzqNsKIs9Mq72Q==}
     cpu: [arm64]
     os: [win32]
 
-  '@pnpm/exe.win32-x64@12.2.1':
-    resolution: {integrity: sha512-V2Q+AF8fCsw8/CC3bWF8kopOmH0aAjgk9m7H7uAQNulOYIJs9YJBiAlgByswmt+igV9axc4dBI//ZlK2NKpDcw==}
+  '@pnpm/exe.win32-x64@12.3.1':
+    resolution: {integrity: sha512-5pW8NQuVF3dkNdaUCm03PeoDiC5I9h4y9Fz717KLWi5jxDKmgARmD1zDdm60F5ohRZHPrRv/jAg94a/5+VXxow==}
     cpu: [x64]
     os: [win32]
 
-  pnpm@12.2.1:
-    resolution: {integrity: sha512-9Vymiqy561q2nGb4KKmK+JoyKGcDrvH42hMcp+q01nfzS/qF4YZGepGcB5nfi29KokD33CkZszsycxkBBBYmFg==}
+  pnpm@12.3.1:
+    resolution: {integrity: sha512-PBTBVAjRSJ01D47X+TNh0mzHBwVPaEmk7qO7dAf/T+RWS0E6HEIadzoXarEWio3xx9VI8s0Nx9NE9YxOaApbGA==}
     engines: {node: '>=18.*'}
     hasBin: true
 
 snapshots:
 
-  '@pnpm/exe.darwin-arm64@12.2.1':
+  '@pnpm/exe.darwin-arm64@12.3.1':
     optional: true
 
-  '@pnpm/exe.darwin-x64@12.2.1':
+  '@pnpm/exe.darwin-x64@12.3.1':
     optional: true
 
-  '@pnpm/exe.linux-arm64-musl@12.2.1':
+  '@pnpm/exe.linux-arm64-musl@12.3.1':
     optional: true
 
-  '@pnpm/exe.linux-arm64@12.2.1':
+  '@pnpm/exe.linux-arm64@12.3.1':
     optional: true
 
-  '@pnpm/exe.linux-x64-musl@12.2.1':
+  '@pnpm/exe.linux-x64-musl@12.3.1':
     optional: true
 
-  '@pnpm/exe.linux-x64@12.2.1':
+  '@pnpm/exe.linux-x64@12.3.1':
     optional: true
 
-  '@pnpm/exe.win32-arm64@12.2.1':
+  '@pnpm/exe.win32-arm64@12.3.1':
     optional: true
 
-  '@pnpm/exe.win32-x64@12.2.1':
+  '@pnpm/exe.win32-x64@12.3.1':
     optional: true
 
-  pnpm@12.2.1:
+  pnpm@12.3.1:
     optionalDependencies:
-      '@pnpm/exe.darwin-arm64': 12.2.1
-      '@pnpm/exe.darwin-x64': 12.2.1
-      '@pnpm/exe.linux-arm64': 12.2.1
-      '@pnpm/exe.linux-arm64-musl': 12.2.1
-      '@pnpm/exe.linux-x64': 12.2.1
-      '@pnpm/exe.linux-x64-musl': 12.2.1
-      '@pnpm/exe.win32-arm64': 12.2.1
-      '@pnpm/exe.win32-x64': 12.2.1
+      '@pnpm/exe.darwin-arm64': 12.3.1
+      '@pnpm/exe.darwin-x64': 12.3.1
+      '@pnpm/exe.linux-arm64': 12.3.1
+      '@pnpm/exe.linux-arm64-musl': 12.3.1
+      '@pnpm/exe.linux-x64': 12.3.1
+      '@pnpm/exe.linux-x64-musl': 12.3.1
+      '@pnpm/exe.win32-arm64': 12.3.1
+      '@pnpm/exe.win32-x64': 12.3.1
 
 ---
 lockfileVersion: '9.0'
@@ -107,9 +107,15 @@ settings:
 
 catalogs:
   default:
+    '@effect/sql-pg':
+      specifier: 4.0.0-beta.101
+      version: 4.0.0-beta.101
     '@effect/vitest':
       specifier: 4.0.0-beta.101
       version: 4.0.0-beta.101
+    '@types/pg':
+      specifier: 8.20.0
+      version: 8.20.0
     better-auth:
       specifier: ^1.7.2
       version: 1.7.2
@@ -119,12 +125,21 @@ catalogs:
     drizzle-kit:
       specifier: 1.0.0-rc.4
       version: 1.0.0-rc.4
+    drizzle-orm:
+      specifier: 1.0.0-rc.4
+      version: 1.0.0-rc.4
+    effect:
+      specifier: 4.0.0-beta.101
+      version: 4.0.0-beta.101
     hono:
       specifier: ^4.13.5
       version: 4.13.5
     linkedom:
       specifier: ^0.18.13
       version: 0.18.13
+    pg:
+      specifier: 8.22.0
+      version: 8.22.0
     typescript:
       specifier: 7.0.2
       version: 7.0.2
@@ -137,11 +152,6 @@ catalogs:
 
 overrides:
   '@effect/platform-node-shared': 4.0.0-beta.101
-  '@effect/sql-pg': 4.0.0-beta.101
-  '@types/pg': 8.20.0
-  drizzle-orm: 1.0.0-rc.4
-  effect: 4.0.0-beta.101
-  pg: 8.22.0
 
 importers:
 
@@ -202,11 +212,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/db
       effect:
-        specifier: 4.0.0-beta.101
+        specifier: 'catalog:'
         version: 4.0.0-beta.101
       evlog:
         specifier: ^2.26.0
-        version: 2.28.0(hono@4.13.5)(nitro@3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(drizzle-orm@1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4))(jiti@2.7.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)))(ofetch@1.5.1)(react@19.2.8)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
+        version: 2.28.0(@tanstack/start-client-core@1.170.27)(hono@4.13.5)(nitro@3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(ioredis@5.11.1)(jiti@2.7.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)))(ofetch@1.5.1)(react@19.2.8)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))
       hono:
         specifier: 'catalog:'
         version: 4.13.5
@@ -258,10 +268,10 @@ importers:
         version: 1.1.10(react@19.2.8)
       '@tailwindcss/vite':
         specifier: ^4.3.3
-        version: 4.3.3(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
+        version: 4.3.3(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))
       '@tanstack/react-form':
         specifier: ^1.33.5
-        version: 1.33.5(@tanstack/react-start@1.168.49(crossws@0.4.12(srvx@0.11.22))(esbuild@0.28.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.7)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 1.33.5(@tanstack/react-start@1.168.49(crossws@0.4.12(srvx@0.11.22))(esbuild@0.28.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.7)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tanstack/react-hotkeys':
         specifier: ^0.10.0
         version: 0.10.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -296,17 +306,17 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0
       effect:
-        specifier: 4.0.0-beta.101
+        specifier: 'catalog:'
         version: 4.0.0-beta.101
       evlog:
         specifier: ^2.26.0
-        version: 2.28.0(hono@4.13.5)(nitro@3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(drizzle-orm@1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4))(jiti@2.7.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)))(ofetch@1.5.1)(react@19.2.8)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
+        version: 2.28.0(@tanstack/start-client-core@1.170.27)(hono@4.13.5)(nitro@3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(ioredis@5.11.1)(jiti@2.7.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)))(ofetch@1.5.1)(react@19.2.8)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       nitro:
         specifier: 3.0.260610-beta
-        version: 3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(drizzle-orm@1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4))(jiti@2.7.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
+        version: 3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(ioredis@5.11.1)(jiti@2.7.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))
       ofetch:
         specifier: ^1.5.1
         version: 1.5.1
@@ -346,7 +356,7 @@ importers:
         version: 19.2.5(@types/react@19.2.18)
       '@vitejs/plugin-react':
         specifier: ^6.0.5
-        version: 6.1.1(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
+        version: 6.1.1(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
@@ -375,10 +385,10 @@ importers:
         specifier: workspace:*
         version: link:../db
       drizzle-orm:
-        specifier: 1.0.0-rc.4
+        specifier: 'catalog:'
         version: 1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4)
       effect:
-        specifier: 4.0.0-beta.101
+        specifier: 'catalog:'
         version: 4.0.0-beta.101
       linkedom:
         specifier: 'catalog:'
@@ -391,10 +401,10 @@ importers:
         specifier: 'catalog:'
         version: 4.0.0-beta.101(effect@4.0.0-beta.101)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(happy-dom@20.13.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)))
       '@types/pg':
-        specifier: 8.20.0
+        specifier: 'catalog:'
         version: 8.20.0
       pg:
-        specifier: 8.22.0
+        specifier: 'catalog:'
         version: 8.22.0
       typescript:
         specifier: 'catalog:'
@@ -412,7 +422,7 @@ importers:
         specifier: 'catalog:'
         version: 1.7.2(@opentelemetry/api@1.9.1)(@tanstack/react-start@1.168.49(crossws@0.4.12(srvx@0.11.22))(esbuild@0.28.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.7)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)))(drizzle-kit@1.0.0-rc.4)(drizzle-orm@1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4))(pg@8.22.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(happy-dom@20.13.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)))
       effect:
-        specifier: 4.0.0-beta.101
+        specifier: 'catalog:'
         version: 4.0.0-beta.101
     devDependencies:
       '@effect/vitest':
@@ -431,7 +441,7 @@ importers:
   packages/config:
     dependencies:
       effect:
-        specifier: 4.0.0-beta.101
+        specifier: 'catalog:'
         version: 4.0.0-beta.101
     devDependencies:
       vitest:
@@ -441,19 +451,19 @@ importers:
   packages/db:
     dependencies:
       '@effect/sql-pg':
-        specifier: 4.0.0-beta.101
+        specifier: 'catalog:'
         version: 4.0.0-beta.101(effect@4.0.0-beta.101)
       dotenv:
         specifier: 'catalog:'
         version: 17.4.2
       drizzle-orm:
-        specifier: 1.0.0-rc.4
+        specifier: 'catalog:'
         version: 1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4)
       effect:
-        specifier: 4.0.0-beta.101
+        specifier: 'catalog:'
         version: 4.0.0-beta.101
       pg:
-        specifier: 8.22.0
+        specifier: 'catalog:'
         version: 8.22.0
     devDependencies:
       '@effect/vitest':
@@ -463,7 +473,7 @@ importers:
         specifier: workspace:*
         version: link:../config
       '@types/pg':
-        specifier: 8.20.0
+        specifier: 'catalog:'
         version: 8.20.0
       drizzle-kit:
         specifier: 'catalog:'
@@ -601,7 +611,7 @@ packages:
     peerDependencies:
       '@better-auth/core': ^1.7.2
       '@better-auth/utils': 0.4.2
-      drizzle-orm: 1.0.0-rc.4
+      drizzle-orm: ^0.45.2 || >=1.0.0-rc.1 <2.0.0
     peerDependenciesMeta:
       drizzle-orm:
         optional: true
@@ -698,7 +708,7 @@ packages:
   '@effect/sql-pg@4.0.0-beta.101':
     resolution: {integrity: sha512-Ur8SZFqVefviQzMyM/utVjPvKvYO139NLMrJlS1ZaNWfdT0HbwCsfEhY/cn0OolxbzJ2UX/dx24gqOe/NDuu4w==}
     peerDependencies:
-      effect: 4.0.0-beta.101
+      effect: ^4.0.0-beta.101
 
   '@effect/tsgo-darwin-arm64@0.39.1':
     resolution: {integrity: sha512-X8IqD/IdmKp4o1UeQdGjn1CBm2/U79vmgkIOIUjebR0c+MlwjJi0pYhz5cP+HfCvfpmPHodmsynbm+u/n6S9Zw==}
@@ -2702,11 +2712,11 @@ packages:
       '@tanstack/solid-start': ^1.0.0
       better-sqlite3: ^12.0.0
       drizzle-kit: '>=0.31.4 || >=1.0.0-beta.1'
-      drizzle-orm: 1.0.0-rc.4
+      drizzle-orm: ^0.45.2 || >=1.0.0-rc.1 <2.0.0
       mongodb: ^6.0.0 || ^7.0.0
       mysql2: ^3.0.0
       next: ^14.0.0 || ^15.0.0 || ^16.0.0
-      pg: 8.22.0
+      pg: ^8.0.0
       prisma: ^5.0.0 || ^6.0.0 || ^7.0.0
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
@@ -2872,7 +2882,7 @@ packages:
       '@electric-sql/pglite': '*'
       '@libsql/client': '*'
       better-sqlite3: '*'
-      drizzle-orm: 1.0.0-rc.4
+      drizzle-orm: '*'
       mysql2: '*'
       sqlite3: '*'
     peerDependenciesMeta:
@@ -2968,7 +2978,7 @@ packages:
       '@effect/sql-d1': '>=4.0.0-beta.83 || >=4.0.0'
       '@effect/sql-libsql': '>=4.0.0-beta.83 || >=4.0.0'
       '@effect/sql-mysql2': '>=4.0.0-beta.83 || >=4.0.0'
-      '@effect/sql-pg': 4.0.0-beta.101
+      '@effect/sql-pg': '>=4.0.0-beta.83 || >=4.0.0'
       '@effect/sql-pglite': '>=4.0.0-beta.83 || >=4.0.0'
       '@effect/sql-sqlite-bun': '>=4.0.0-beta.83 || >=4.0.0'
       '@effect/sql-sqlite-do': '>=4.0.0-beta.83 || >=4.0.0'
@@ -2991,7 +3001,7 @@ packages:
       '@tursodatabase/sync': '>=0.6.0-pre.28 || >=0.6.0'
       '@types/better-sqlite3': '*'
       '@types/mssql': ^9.1.4
-      '@types/pg': 8.20.0
+      '@types/pg': '*'
       '@types/sql.js': '*'
       '@upstash/redis': '>=1.34.7'
       '@vercel/postgres': '>=0.8.0'
@@ -2999,11 +3009,11 @@ packages:
       arktype: '>=2.0.0'
       better-sqlite3: '>=9.3.0'
       bun-types: '*'
-      effect: 4.0.0-beta.101
+      effect: '>=4.0.0-beta.83 || >=4.0.0'
       expo-sqlite: '>=14.0.0'
       mssql: ^11.0.1
       mysql2: '>=2'
-      pg: 8.22.0
+      pg: '>=8'
       postgres: '>=3'
       sql.js: '>=1'
       sqlite3: '>=5'
@@ -3891,7 +3901,7 @@ packages:
   pg-cursor@2.22.0:
     resolution: {integrity: sha512-knzXLKqarTjOvb3qDSW0JiGsazmxwEKXrqHfWRte7XUsOYccQRafn3BLnQobWwInkzFJSyOej8y8cQRh2z3kGw==}
     peerDependencies:
-      pg: 8.22.0
+      pg: ^8
 
   pg-int8@1.0.1:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
@@ -3904,7 +3914,7 @@ packages:
   pg-pool@3.14.0:
     resolution: {integrity: sha512-gKtPkFdQPU3DksooVLi9LsjZxrsBUZIpa+7aVx+LV5pNh0KzP4Zleud2po+ConrxbuXGBJ6Hfer6hdgpIBpBaw==}
     peerDependencies:
-      pg: 8.22.0
+      pg: '>=8.0'
 
   pg-protocol@1.16.0:
     resolution: {integrity: sha512-sILXutLVjCLjcDuOmvhX5e2Z4cS5qG/6Bu3VkpFwdf/633ElGLpEh9bgmuI5I4sqKqkifQiGyiCcx1HdtrK7tg==}
@@ -5733,7 +5743,7 @@ snapshots:
       '@tailwindcss/oxide-win32-arm64-msvc': 4.3.3
       '@tailwindcss/oxide-win32-x64-msvc': 4.3.3
 
-  '@tailwindcss/vite@4.3.3(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))':
+  '@tailwindcss/vite@4.3.3(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))':
     dependencies:
       '@tailwindcss/node': 4.3.3
       '@tailwindcss/oxide': 4.3.3
@@ -5756,7 +5766,7 @@ snapshots:
 
   '@tanstack/pacer-lite@0.1.1': {}
 
-  '@tanstack/react-form@1.33.5(@tanstack/react-start@1.168.49(crossws@0.4.12(srvx@0.11.22))(esbuild@0.28.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.7)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@tanstack/react-form@1.33.5(@tanstack/react-start@1.168.49(crossws@0.4.12(srvx@0.11.22))(esbuild@0.28.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.7)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@tanstack/form-core': 1.33.5
       '@tanstack/react-store': 0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -6146,7 +6156,7 @@ snapshots:
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
 
-  '@vitejs/plugin-react@6.1.1(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))':
+  '@vitejs/plugin-react@6.1.1(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
       vite: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)
@@ -6421,9 +6431,7 @@ snapshots:
 
   date-fns@4.4.0: {}
 
-  db0@0.3.4(drizzle-orm@1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4)):
-    optionalDependencies:
-      drizzle-orm: 1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4)
+  db0@0.3.4: {}
 
   debug@4.4.3:
     dependencies:
@@ -6606,10 +6614,11 @@ snapshots:
     dependencies:
       '@types/estree': 1.0.9
 
-  evlog@2.28.0(hono@4.13.5)(nitro@3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(drizzle-orm@1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4))(jiti@2.7.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)))(ofetch@1.5.1)(react@19.2.8)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)):
+  evlog@2.28.0(@tanstack/start-client-core@1.170.27)(hono@4.13.5)(nitro@3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(ioredis@5.11.1)(jiti@2.7.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)))(ofetch@1.5.1)(react@19.2.8)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)):
     optionalDependencies:
+      '@tanstack/start-client-core': 1.170.27
       hono: 4.13.5
-      nitro: 3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(drizzle-orm@1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4))(jiti@2.7.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
+      nitro: 3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(ioredis@5.11.1)(jiti@2.7.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))
       ofetch: 1.5.1
       react: 19.2.8
       vite: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)
@@ -7061,11 +7070,11 @@ snapshots:
 
   nf3@0.3.24: {}
 
-  nitro@3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(drizzle-orm@1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4))(jiti@2.7.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)):
+  nitro@3.0.260610-beta(chokidar@5.0.0)(dotenv@17.4.2)(ioredis@5.11.1)(jiti@2.7.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)):
     dependencies:
       consola: 3.4.2
       crossws: 0.4.12(srvx@0.11.22)
-      db0: 0.3.4(drizzle-orm@1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4))
+      db0: 0.3.4
       env-runner: 0.1.16
       h3: 2.0.1-rc.22(crossws@0.4.12(srvx@0.11.22))
       hookable: 6.1.1
@@ -7076,7 +7085,7 @@ snapshots:
       rolldown: 1.2.7
       srvx: 0.11.22
       unenv: 2.0.0-rc.24
-      unstorage: 2.0.0-alpha.7(chokidar@5.0.0)(db0@0.3.4(drizzle-orm@1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4)))(ofetch@2.0.0-alpha.3)
+      unstorage: 2.0.0-alpha.7(chokidar@5.0.0)(db0@0.3.4)(ioredis@5.11.1)(ofetch@2.0.0-alpha.3)
     optionalDependencies:
       dotenv: 17.4.2
       jiti: 2.7.0
@@ -7685,10 +7694,11 @@ snapshots:
       rolldown: 1.2.7
       vite: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0)
 
-  unstorage@2.0.0-alpha.7(chokidar@5.0.0)(db0@0.3.4(drizzle-orm@1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4)))(ofetch@2.0.0-alpha.3):
+  unstorage@2.0.0-alpha.7(chokidar@5.0.0)(db0@0.3.4)(ioredis@5.11.1)(ofetch@2.0.0-alpha.3):
     optionalDependencies:
       chokidar: 5.0.0
-      db0: 0.3.4(drizzle-orm@1.0.0-rc.4(@effect/sql-pg@4.0.0-beta.101(effect@4.0.0-beta.101))(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(bun-types@1.4.0)(effect@4.0.0-beta.101)(pg@8.22.0)(zod@4.5.4))
+      db0: 0.3.4
+      ioredis: 5.11.1
       ofetch: 2.0.0-alpha.3
 
   update-browserslist-db@1.3.2(browserslist@4.28.8):

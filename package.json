@@ -48,12 +48,12 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "12.2.1",
+      "version": "12.3.1",
       "onFail": "error"
     }
   },
   "engines": {
     "node": ">=24"
   },
-  "packageManager": "pnpm@12.2.1"
+  "packageManager": "pnpm@12.3.1"
 }
