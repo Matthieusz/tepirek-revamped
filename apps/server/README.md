@@ -7,7 +7,7 @@ The Node.js entry point for Tepirek Revamped. Hono hosts Better Auth and two Eff
 Complete the [repository setup](../../README.md#get-started), then run:
 
 ```bash
-nub run dev:server
+pnpm dev:server
 ```
 
 The server listens on <http://localhost:3000> by default.
@@ -42,10 +42,10 @@ If a later startup stage fails, the scope releases every resource already acquir
 ## Commands
 
 ```bash
-nub run --filter server test        # lifecycle and configuration tests
-nub run --filter server test:smoke  # startup and health checks
-nub run --filter server build       # output dist/index.mjs
-nub run --filter server start       # run the built server on Node.js
+pnpm --filter server test        # lifecycle and configuration tests
+pnpm --filter server test:smoke  # startup and health checks
+pnpm --filter server build       # output dist/index.mjs
+pnpm --filter server start       # run the built server on Node.js
 ```
 
 See the [Hono Node.js adapter](https://github.com/honojs/node-server) documentation for the host runtime and the [Effect HTTP API](https://effect.website/docs/unstable/httpapi/) documentation for the application handlers.
