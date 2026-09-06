@@ -16,15 +16,18 @@ catalog:
   drizzle-kit: 1.0.0-rc.4
   drizzle-orm: 1.0.0-rc.4
   effect: 4.0.0-beta.101
-  hono: ^4.13.5
+  hono: ^4.13.7
   pg: 8.22.0
   typescript: 7.0.2
-  vitest: ^4.1.11
+  vitest: ^5.0.0
   zod: ^4.4.3
   linkedom: ^0.18.13
 
 minimumReleaseAgeExclude:
   - cn@0.2.4
+  - "@vitest/mocker@5.0.0"
+  - "@vitest/spy@5.0.0"
+  - vitest@5.0.0
 
 onlyBuiltDependencies:
   - esbuild
@@ -32,3 +35,6 @@ onlyBuiltDependencies:
 
 overrides:
   "@effect/platform-node-shared": 4.0.0-beta.101
+
+patchedDependencies:
+  "@effect/vitest@4.0.0-beta.101": patches/@effect__vitest@4.0.0-beta.101.patch

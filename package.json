@@ -33,9 +33,9 @@
     "prepare": "effect-tsgo patch"
   },
   "devDependencies": {
-    "@effect/tsgo": "^0.39.1",
+    "@effect/tsgo": "^0.41.0",
     "@tepirek-revamped/config": "workspace:*",
-    "@types/node": "^24.10.13",
+    "@types/node": "^26.4.1",
     "knip": "^6.34.0",
     "lefthook": "latest",
     "oxfmt": "^0.66.0",
@@ -48,12 +48,12 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "12.3.1",
-      "onFail": "error"
+      "version": "12.3.4",
+      "onFail": "warn"
     }
   },
   "engines": {
     "node": ">=24"
   },
-  "packageManager": "pnpm@12.3.1"
+  "packageManager": "pnpm@12.3.4"
 }

@@ -1,0 +1,33 @@
+diff --git a/dist/internal/internal.js b/dist/internal/internal.js
+index 9cf70f34be2932f2434d3e4e11da2fe04b2aafff..67bab2285b89f9d7696e7710859c164653e5882a 100644
+--- a/dist/internal/internal.js
++++ b/dist/internal/internal.js
+@@ -1,7 +1,6 @@
+ /**
+  * @since 4.0.0
+  */
+-import { getCurrentSuite } from "@vitest/runner";
+ import * as Cause from "effect/Cause";
+ import * as Duration from "effect/Duration";
+ import * as Effect from "effect/Effect";
+@@ -16,6 +15,7 @@ import * as fc from "effect/testing/FastCheck";
+ import * as TestClock from "effect/testing/TestClock";
+ import * as TestConsole from "effect/testing/TestConsole";
+ import * as V from "vitest";
++const getCurrentSuite = V.TestRunner.getCurrentSuite;
+ const runPromise = /*#__PURE__*/Effect.fnUntraced(function* (effect, _ctx) {
+   const exit = yield* Effect.exit(effect);
+   if (Exit.isFailure(exit)) {
+diff --git a/package.json b/package.json
+index fa7e5e383211d1236190fdfe797d06772c4fd5bd..c32ab5b6cc57044159764c2671883f2c37473d88 100644
+--- a/package.json
++++ b/package.json
+@@ -33,7 +33,7 @@
+     "provenance": true
+   },
+   "peerDependencies": {
+-    "vitest": "^3.0.0 || ^4.0.0",
++    "vitest": "^3.0.0 || ^4.0.0 || ^5.0.0",
+     "effect": "^4.0.0-beta.101"
+   },
+   "devDependencies": {
