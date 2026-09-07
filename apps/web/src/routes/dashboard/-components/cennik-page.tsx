@@ -1,6 +1,6 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Search01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import type {
   LegendaryEquipmentType,
@@ -16,10 +16,11 @@ import {
 } from "react";
 import { toast } from "sonner";
 
-import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
+import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Select,
   SelectContent,
@@ -27,13 +28,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type {
+  LegendPrice,
+  UpdateLegendCostInput,
+} from "@/features/legend-pricing/legend-pricing-api";
 import {
-  legendPricesAtom,
-  updateLegendCostAtom,
-} from "@/features/legend-pricing/legend-pricing-atoms";
-import type { LegendPrice } from "@/features/legend-pricing/legend-pricing-atoms";
+  legendPricesQueryOptions,
+  updateLegendCostMutationOptions,
+} from "@/features/legend-pricing/legend-pricing-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { formatGoldAmountInput, tryParseGoldAmount } from "@/lib/gold";
+import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 import { groupLegendPricesByEnemy } from "@/routes/dashboard/-components/cennik-groups";
 import type { LegendPriceGroup } from "@/routes/dashboard/-components/cennik-groups";
 import { formatLegendaryBonus } from "@/routes/dashboard/-components/legendary-bonus";
@@ -93,15 +98,18 @@ const formatDate = (value: Date): string =>
   legendPriceDateFormatter.format(value);
 
 const LegendPriceCard = ({
+  handleUpdateCost,
   isAdmin,
   item,
   priceInputId,
 }: {
   readonly isAdmin: boolean;
   readonly item: LegendPrice;
+  readonly handleUpdateCost: (
+    input: UpdateLegendCostInput
+  ) => Promise<LegendPrice>;
   readonly priceInputId: string;
 }) => {
-  const updateCost = useAtomSet(updateLegendCostAtom, { mode: "promise" });
   const [price, setPrice] = useState(
     item.priceGold === null ? "" : formatGoldAmountInput(item.priceGold)
   );
@@ -116,7 +124,7 @@ const LegendPriceCard = ({
 
     setSaving(true);
     try {
-      await updateCost({
+      await handleUpdateCost({
         expectedVersion: item.version,
         itemId: item.itemId,
         priceGold: parsedPrice,
@@ -215,9 +223,13 @@ const LegendPriceCard = ({
 
 const LegendPriceMonsterGroup = ({
   group,
+  handleUpdateCost,
   isAdmin,
 }: {
   readonly group: LegendPriceGroup;
+  readonly handleUpdateCost: (
+    input: UpdateLegendCostInput
+  ) => Promise<LegendPrice>;
   readonly isAdmin: boolean;
 }) => (
   <article
@@ -252,7 +264,8 @@ const LegendPriceMonsterGroup = ({
           <LegendPriceCard
             isAdmin={isAdmin}
             item={item}
-            key={`${item.itemId}:${item.version}`}
+            key={item.itemId}
+            handleUpdateCost={handleUpdateCost}
             priceInputId={`legend-price-${group.enemy.id}-${item.itemId}`}
           />
         ))}
@@ -267,33 +280,69 @@ interface CennikPageProps {
 }
 
 const CennikPage = ({ search, session }: CennikPageProps) => {
-  const pricesResult = useAtomValue(legendPricesAtom);
-  const refreshPrices = useAtomRefresh(legendPricesAtom);
+  const pricesQuery = useQuery(legendPricesQueryOptions());
+
+  if (pricesQuery.isPending) {
+    return <LoadingSpinner />;
+  }
+
+  if (pricesQuery.isError && pricesQuery.data === undefined) {
+    return (
+      <AsyncResultFailure
+        message={getErrorMessage(
+          pricesQuery.error,
+          "Nie udało się wczytać cennika. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void pricesQuery.refetch();
+        }}
+      />
+    );
+  }
 
   return (
-    <AsyncResultBoundary onRetry={refreshPrices} result={pricesResult}>
-      {(prices) => (
-        // oxlint-disable-next-line no-use-before-define
-        <CennikContent
-          isAdmin={session.user.role === "admin"}
-          prices={prices}
-          search={search}
-        />
-      )}
-    </AsyncResultBoundary>
+    // oxlint-disable-next-line no-use-before-define
+    <CennikContent
+      isAdmin={session.user.role === "admin"}
+      isRefreshing={pricesQuery.isFetching}
+      onRetry={() => {
+        void pricesQuery.refetch();
+      }}
+      prices={pricesQuery.data ?? []}
+      refreshError={pricesQuery.isError ? pricesQuery.error : undefined}
+      search={search}
+    />
   );
 };
 
 /** Render the filter controls and grouped legendary price catalog. */
 export const CennikContent = ({
   isAdmin,
+  isRefreshing,
+  onRetry,
   prices,
+  refreshError,
   search,
 }: {
   readonly isAdmin: boolean;
+  readonly isRefreshing: boolean;
+  readonly onRetry: () => void;
   readonly prices: readonly LegendPrice[];
+  readonly refreshError: unknown;
   readonly search: CennikSearch;
 }) => {
+  const queryClient = useQueryClient();
+  const updateCostMutation = useMutation(
+    updateLegendCostMutationOptions(queryClient, runAppHttpApi, {
+      onRefreshError: () => {
+        toast.error(
+          "Cena została zapisana, ale nie udało się odświeżyć cennika."
+        );
+      },
+    })
+  );
+  const handleUpdateCost = async (input: UpdateLegendCostInput) =>
+    await updateCostMutation.mutateAsync(input);
   const navigate = useNavigate({ from: "/dashboard/cennik" });
   const pendingSearchUpdates = useRef<Partial<CennikSearch>>({});
   const syncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -349,6 +398,29 @@ export const CennikContent = ({
           zdobyć.
         </p>
       </div>
+
+      {isRefreshing ? (
+        <p
+          aria-live="polite"
+          className="text-muted-foreground text-center text-xs"
+        >
+          Odświeżanie…
+        </p>
+      ) : null}
+      {refreshError === undefined ? null : (
+        <div
+          aria-live="assertive"
+          className="border-destructive/30 bg-destructive/5 flex items-center justify-between gap-3 rounded-xl border p-3"
+          role="alert"
+        >
+          <p className="text-destructive text-sm">
+            {getErrorMessage(refreshError, "Nie udało się odświeżyć cennika.")}
+          </p>
+          <Button onClick={onRetry} size="sm" variant="outline">
+            Spróbuj ponownie
+          </Button>
+        </div>
+      )}
 
       <div className="border-border bg-card grid gap-3 rounded-xl border p-4 md:grid-cols-2 lg:grid-cols-4">
         {/* oxlint-disable-next-line no-use-before-define */}
@@ -421,6 +493,7 @@ export const CennikContent = ({
             <LegendPriceMonsterGroup
               group={group}
               isAdmin={isAdmin}
+              handleUpdateCost={handleUpdateCost}
               key={group.enemy.id}
             />
           ))}

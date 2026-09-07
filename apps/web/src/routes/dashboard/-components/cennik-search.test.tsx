@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { QueryClientProvider } from "@tanstack/react-query";
 import {
   createMemoryHistory,
   createRootRoute,
@@ -14,7 +15,8 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { LegendPrice } from "@/features/legend-pricing/legend-pricing-atoms";
+import type { LegendPrice } from "@/features/legend-pricing/legend-pricing-api";
+import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
 import { CennikContent } from "@/routes/dashboard/-components/cennik-page";
 
 const makeLegendPrice = (index: number): LegendPrice =>
@@ -55,7 +57,10 @@ const CennikTestRoute = () => {
   return (
     <CennikContent
       isAdmin={false}
+      isRefreshing={false}
+      onRetry={vi.fn<() => void>()}
       prices={[makeLegendPrice(1)]}
+      refreshError={undefined}
       search={search}
     />
   );
@@ -98,19 +103,24 @@ const renderCennik = async () => {
     }),
     routeTree: cennikRouteTree,
   });
+  const testClient = makeTestQueryClient();
 
   await router.load();
   act(() => {
-    reactRoot.render(<RouterProvider router={router} />);
+    reactRoot.render(
+      <QueryClientProvider client={testClient.queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    );
   });
 
-  return { reactRoot, router };
+  return { reactRoot, router, testClient };
 };
 
 describe("Cennik search", () => {
   it("keeps typing local before synchronizing the URL", async () => {
     vi.useFakeTimers();
-    const { reactRoot, router } = await renderCennik();
+    const { reactRoot, router, testClient } = await renderCennik();
     const input = document.querySelector<HTMLInputElement>("#legend-item-name");
     if (input === null) {
       throw new Error("The item search input was not rendered");
@@ -144,5 +154,6 @@ describe("Cennik search", () => {
     ).toHaveLength(3);
     expect(document.activeElement).toBe(input);
     reactRoot.unmount();
+    testClient.cleanup();
   });
 });

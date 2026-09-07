@@ -1,4 +1,4 @@
-import type { LegendPrice } from "@/features/legend-pricing/legend-pricing-atoms";
+import type { LegendPrice } from "@/features/legend-pricing/legend-pricing-api";
 
 /** URL-backed filters supported by the legend price list. */
 export interface CennikFilters {

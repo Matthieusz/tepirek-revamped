@@ -2,7 +2,7 @@ import { LegendPriceSummary } from "@tepirek-revamped/api/protocol/legend-pricin
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
-import type { LegendPrice } from "@/features/legend-pricing/legend-pricing-atoms";
+import type { LegendPrice } from "@/features/legend-pricing/legend-pricing-api";
 import { groupLegendPricesByEnemy } from "@/routes/dashboard/-components/cennik-groups";
 
 interface EnemyFixture {
