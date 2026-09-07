@@ -1,8 +1,8 @@
-import { useAtomSet } from "@effect/atom-react";
 import { LoaderCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
 import { useHotkey } from "@tanstack/react-hotkeys";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { VerifiedMember } from "@tepirek-revamped/api/protocol/user/http-api-contract";
 import * as Schema from "effect/Schema";
 import type { ReactNode } from "react";
@@ -29,7 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createBetAtom } from "@/features/events/bets/bet-atoms";
+import type { BetDerivedDataInput } from "@/features/events/bets/bet-queries";
+import { createBetMutationOptions } from "@/features/events/bets/bet-queries";
 import { NonEmptyUserIdsSchema } from "@/features/events/bets/form-schemas";
 import { HeroBetMemberPicker } from "@/features/events/bets/hero-bet-member-picker";
 import { HeroCardsGrid } from "@/features/events/bets/hero-cards-grid";
@@ -37,6 +38,7 @@ import type { LastBetState } from "@/features/events/bets/member-selection";
 import { getEventIcon } from "@/lib/constants";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
+import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 interface EventOption {
   readonly color: string;
@@ -80,6 +82,7 @@ interface BetsAddFormProps {
   readonly lastBet: LastBetState;
   readonly users: readonly VerifiedMember[];
   readonly usersLoading: boolean;
+  readonly onDerivedDataChanged: (input: BetDerivedDataInput) => void;
 }
 
 const BETS_ADD_DEFAULT_VALUES: BetsAddFormValues = {
@@ -96,10 +99,16 @@ export const BetsAddForm = ({
   lastBet,
   users,
   usersLoading,
+  onDerivedDataChanged,
 }: BetsAddFormProps) => {
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
-  const createBet = useAtomSet(createBetAtom, { mode: "promise" });
+  const queryClient = useQueryClient();
+  const createBet = useMutation(
+    createBetMutationOptions(queryClient, runAppHttpApi, {
+      onDerivedDataChanged,
+    })
+  );
   const form = useAppForm({
     defaultValues: BETS_ADD_DEFAULT_VALUES,
     onSubmit: async ({ value }) => {
@@ -111,7 +120,8 @@ export const BetsAddForm = ({
 
       const result = await runFormSubmission(
         async () =>
-          await createBet({
+          await createBet.mutateAsync({
+            eventId: decoded.value.eventId,
             heroId: decoded.value.heroId,
             userIds: decoded.value.userIds,
           })

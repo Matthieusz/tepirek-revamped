@@ -33,6 +33,13 @@ const responseBodies = {
   "auction/getAuctionStats": { totalSignups: 0, uniqueUsers: 0 },
   "auction/removeAuctionSignup": { success: true },
   "auction/toggleAuctionSignup": { action: "added" },
+  "bet/create": {
+    createdAt: "2026-01-01T00:00:00.000Z",
+    createdBy: "user-1",
+    heroId: 2,
+    id: 3,
+    memberCount: 1,
+  },
   "bet/delete": { success: true },
   "bet/edit": { success: true },
   "bet/getAllPaginated": {

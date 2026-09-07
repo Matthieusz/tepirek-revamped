@@ -1,11 +1,10 @@
-import { useAtomValue } from "@effect/atom-react";
+import { useAtomSet } from "@effect/atom-react";
 import { useQuery } from "@tanstack/react-query";
-import * as Option from "effect/Option";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 
 import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { latestBetForCopyAtom } from "@/features/events/bets/bet-atoms";
+import { refreshBetDerivedDataAtom } from "@/features/events/bets/bet-derived-data-atoms";
+import { latestBetForCopyQueryOptions } from "@/features/events/bets/bet-queries";
 import type { LastBetState } from "@/features/events/bets/member-selection";
 import { eventsQueryOptions } from "@/features/events/core/event-queries";
 import { heroesQueryOptions } from "@/features/events/heroes/hero-queries";
@@ -25,7 +24,8 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
   const eventsQuery = useQuery(eventsQueryOptions());
   const heroesQuery = useQuery(heroesQueryOptions());
   const verifiedUsersQuery = useQuery(verifiedUsersQueryOptions());
-  const latestBetResult = useAtomValue(latestBetForCopyAtom);
+  const latestBetQuery = useQuery(latestBetForCopyQueryOptions());
+  const refreshDerivedData = useAtomSet(refreshBetDerivedDataAtom);
 
   const events = isAdminUser ? [...(eventsQuery.data ?? [])] : [];
   const heroes = isAdminUser ? [...(heroesQuery.data ?? [])] : [];
@@ -33,9 +33,7 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
     isAdminUser && verifiedUsersQuery.data !== undefined
       ? [...verifiedUsersQuery.data]
       : [];
-  const latestBetRaw = isAdminUser
-    ? Option.getOrNull(AsyncResult.value(latestBetResult))
-    : null;
+  const latestBetRaw = isAdminUser ? (latestBetQuery.data ?? null) : null;
   const lastBet: LastBetState =
     latestBetRaw === null
       ? { _tag: "unavailable" }
@@ -124,6 +122,7 @@ export const BetsAddPage = ({ session }: BetsAddPageProps) => {
         lastBet={lastBet}
         users={users}
         usersLoading={verifiedUsersQuery.isFetching}
+        onDerivedDataChanged={refreshDerivedData}
       />
     </div>
   );

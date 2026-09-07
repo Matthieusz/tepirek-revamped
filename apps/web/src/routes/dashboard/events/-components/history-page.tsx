@@ -1,9 +1,9 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useAtomSet } from "@effect/atom-react";
 import { HistoryIcon, LoaderCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PaginatedBets } from "@tepirek-revamped/api/protocol/bet/http-api-contract";
 import { calculatePointsPerMember } from "@tepirek-revamped/config";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
@@ -18,18 +18,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AsyncResultBoundary } from "@/components/ui/async-result-boundary";
+import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Select,
   SelectContent,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { refreshBetDerivedDataAtom } from "@/features/events/bets/bet-derived-data-atoms";
+import type { BetDerivedDataInput } from "@/features/events/bets/bet-queries";
 import {
-  deleteBetAtom,
-  paginatedBetsAtom,
-} from "@/features/events/bets/bet-atoms";
+  deleteBetMutationOptions,
+  paginatedBetsQueryOptions,
+} from "@/features/events/bets/bet-queries";
 import { ALL_FILTER } from "@/features/events/core/event-hero-filter";
 import {
   getEventSelectDisplay,
@@ -41,14 +44,17 @@ import {
 } from "@/features/events/core/select-utils";
 import { useEventHeroFilter } from "@/features/events/core/use-event-hero-filter";
 import { getErrorMessage } from "@/lib/errors";
+import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 import { isAdmin } from "@/lib/route-helpers";
 import { formatDateTime } from "@/lib/utils";
 import { BetCard } from "@/routes/dashboard/events/-components/history/bet-card";
 import type { AuthSession } from "@/types/route";
 
 type BetToDelete = {
-  id: number;
+  eventId: number | undefined;
+  heroId: number;
   heroName: string;
+  id: number;
 } | null;
 
 const ITEMS_PER_PAGE = 10;
@@ -86,17 +92,15 @@ const HistoryPage = ({ session }: HistoryPageProps) => {
   if (filter.queryInputs.heroId !== undefined) {
     betPageInput.heroId = filter.queryInputs.heroId;
   }
-  const betsResult = useAtomValue(paginatedBetsAtom(betPageInput));
-  const refreshBets = useAtomRefresh(paginatedBetsAtom(betPageInput));
+  const betsQuery = useQuery(paginatedBetsQueryOptions(betPageInput));
 
   return (
     // oxlint-disable-next-line no-use-before-define
     <HistoryContent
       betPageInput={betPageInput}
-      key={historyFilterKey(betPageInput)}
-      betsResult={betsResult}
+      betsQuery={betsQuery}
       filter={filter}
-      onRetryBets={refreshBets}
+      key={historyFilterKey(betPageInput)}
       session={session}
     />
   );
@@ -105,25 +109,30 @@ const HistoryPage = ({ session }: HistoryPageProps) => {
 export default HistoryPage;
 
 interface HistoryContentProps extends HistoryPageProps {
-  readonly betsResult: AsyncResult.AsyncResult<PaginatedBets, unknown>;
+  readonly betsQuery: ReturnType<typeof useQuery<PaginatedBets, Error>>;
   readonly betPageInput: BetPageInput;
   readonly filter: ReturnType<typeof useEventHeroFilter>;
-  readonly onRetryBets: () => void;
 }
 
 const HistoryContent = ({
   betPageInput,
-  betsResult,
+  betsQuery,
   filter,
-  onRetryBets,
   session,
 }: HistoryContentProps) => {
   const [betToDelete, setBetToDelete] = useState<BetToDelete>(null);
   const [loadedPages, setLoadedPages] = useState<readonly number[]>([1]);
-  const deleteBet = useAtomSet(deleteBetAtom, { mode: "promise" });
-  const betsData = AsyncResult.isSuccess(betsResult)
-    ? betsResult.value
-    : undefined;
+  const queryClient = useQueryClient();
+  const refreshDerivedDataAtom = useAtomSet(refreshBetDerivedDataAtom);
+  const refreshDerivedData = (input: BetDerivedDataInput): void => {
+    refreshDerivedDataAtom(input);
+  };
+  const deleteBet = useMutation(
+    deleteBetMutationOptions(queryClient, runAppHttpApi, {
+      onDerivedDataChanged: refreshDerivedData,
+    })
+  );
+  const betsData = betsQuery.data;
   const isAdminUser = isAdmin(session);
   const allBets = betsData?.items ?? [];
   const totalBets = betsData?.pagination.totalItems ?? 0;
@@ -135,34 +144,36 @@ const HistoryContent = ({
     );
   };
 
-  const [isDeleting, setIsDeleting] = useState(false);
   const deleteMutation = {
-    isPending: isDeleting,
-    mutate: (betId: number) => {
-      if (isDeleting) {
-        return;
-      }
+    isPending: deleteBet.isPending,
+    mutate: (bet: Exclude<BetToDelete, null>) => {
       void (async () => {
-        setIsDeleting(true);
         try {
-          await deleteBet({ id: betId, refreshInput: betPageInput });
+          await deleteBet.mutateAsync(bet);
           setLoadedPages([1]);
           toast.success("Obstawienie zostało usunięte");
           setBetToDelete(null);
         } catch (error: unknown) {
           toast.error(getErrorMessage(error));
         }
-        setIsDeleting(false);
       })();
     },
   };
 
   let betsContent: ReactNode;
-  if (!AsyncResult.isSuccess(betsResult)) {
+  if (betsQuery.isPending && betsData === undefined) {
+    betsContent = <LoadingSpinner />;
+  } else if (betsQuery.isError && betsData === undefined) {
     betsContent = (
-      <AsyncResultBoundary onRetry={onRetryBets} result={betsResult}>
-        {() => null}
-      </AsyncResultBoundary>
+      <AsyncResultFailure
+        message={getErrorMessage(
+          betsQuery.error,
+          "Nie udało się wczytać historii obstawień. Spróbuj ponownie."
+        )}
+        onRetry={() => {
+          void betsQuery.refetch();
+        }}
+      />
     );
   } else if (allBets.length === 0) {
     betsContent = (
@@ -188,9 +199,17 @@ const HistoryContent = ({
             formattedCreatedAt={formatDateTime(bet.createdAt)}
             isAdminUser={isAdminUser}
             key={bet.id}
-            onDeleteClick={setBetToDelete}
+            onDeleteClick={(input) => {
+              setBetToDelete({
+                eventId: betPageInput.eventId,
+                heroId: bet.heroId,
+                heroName: input.heroName,
+                id: input.id,
+              });
+            }}
+            onDerivedDataChanged={refreshDerivedData}
             pointsPerMember={calculatePointsPerMember(bet.memberCount)}
-            refreshInput={betPageInput}
+            eventId={betPageInput.eventId}
           />
         ))}
 
@@ -209,6 +228,7 @@ const HistoryContent = ({
             isAdminUser={isAdminUser}
             key={page}
             onDelete={setBetToDelete}
+            onDerivedDataChanged={refreshDerivedData}
             onLoadPage={loadPage}
             page={page}
           />
@@ -315,7 +335,7 @@ const HistoryContent = ({
               disabled={deleteMutation.isPending}
               onClick={() => {
                 if (betToDelete !== null) {
-                  deleteMutation.mutate(betToDelete.id);
+                  deleteMutation.mutate(betToDelete);
                 }
               }}
             >
@@ -332,71 +352,86 @@ interface HistoryPageChunkProps {
   readonly baseInput: HistoryContentProps["betPageInput"];
   readonly isAdminUser: boolean;
   readonly onDelete: (bet: Exclude<BetToDelete, null>) => void;
+  readonly onDerivedDataChanged: (input: {
+    readonly eventId: number | undefined;
+    readonly heroId: number;
+  }) => void;
   readonly onLoadPage: (page: number) => void;
   readonly page: number;
 }
 
 const HistoryPageChunk = (props: HistoryPageChunkProps) => {
   const input = { ...props.baseInput, page: props.page };
-  const result = useAtomValue(paginatedBetsAtom(input));
-  const refresh = useAtomRefresh(paginatedBetsAtom(input));
+  const query = useQuery(paginatedBetsQueryOptions(input));
+
+  if (query.isPending && query.data === undefined) {
+    return <LoadingSpinner />;
+  }
+  if (query.isError && query.data === undefined) {
+    return (
+      <AsyncResultFailure
+        message={getErrorMessage(
+          query.error,
+          "Nie udało się wczytać kolejnej strony obstawień."
+        )}
+        onRetry={() => {
+          void query.refetch();
+        }}
+      />
+    );
+  }
 
   return (
-    <AsyncResultBoundary onRetry={refresh} result={result}>
-      {() => (
-        // oxlint-disable-next-line no-use-before-define
-        <LoadedHistoryPageChunk {...props} input={input} />
-      )}
-    </AsyncResultBoundary>
+    // oxlint-disable-next-line no-use-before-define
+    <LoadedHistoryPageChunk {...props} data={query.data} input={input} />
   );
 };
 
 interface LoadedHistoryPageChunkProps extends HistoryPageChunkProps {
+  readonly data: PaginatedBets;
   readonly input: HistoryContentProps["betPageInput"];
 }
 
 const LoadedHistoryPageChunk = ({
+  data,
   input,
   isAdminUser,
   onDelete,
+  onDerivedDataChanged,
   onLoadPage,
   page,
-}: LoadedHistoryPageChunkProps) => {
-  const result = useAtomValue(paginatedBetsAtom(input));
-  const data = AsyncResult.getOrThrow(result);
-
-  return (
-    <>
-      {data.items.map((bet) => (
-        <BetCard
-          bet={{
-            ...bet,
-            createdByName: bet.createdByName ?? "",
-            heroLevel: bet.heroLevel ?? 0,
-            members: bet.members.map((member) => ({
-              ...member,
-              userName: member.userName ?? "",
-            })),
-          }}
-          formattedCreatedAt={formatDateTime(bet.createdAt)}
-          isAdminUser={isAdminUser}
-          key={bet.id}
-          onDeleteClick={onDelete}
-          pointsPerMember={calculatePointsPerMember(bet.memberCount)}
-          refreshInput={input}
-        />
-      ))}
-      {data.pagination.hasMore && (
-        // oxlint-disable-next-line no-use-before-define
-        <LoadMoreTrigger
-          onVisible={() => {
-            onLoadPage(page + 1);
-          }}
-        />
-      )}
-    </>
-  );
-};
+}: LoadedHistoryPageChunkProps) => (
+  <>
+    {data.items.map((bet) => (
+      <BetCard
+        bet={{
+          ...bet,
+          createdByName: bet.createdByName ?? "",
+          heroLevel: bet.heroLevel ?? 0,
+          members: bet.members.map((member) => ({
+            ...member,
+            userName: member.userName ?? "",
+          })),
+        }}
+        formattedCreatedAt={formatDateTime(bet.createdAt)}
+        isAdminUser={isAdminUser}
+        key={bet.id}
+        onDeleteClick={onDelete}
+        onDerivedDataChanged={onDerivedDataChanged}
+        pointsPerMember={calculatePointsPerMember(bet.memberCount)}
+        eventId={input.eventId}
+      />
+    ))}
+    {data.pagination.hasMore && (
+      // oxlint-disable-next-line no-use-before-define
+      <LoadMoreTrigger
+        onVisible={() => {
+          onLoadPage(page + 1);
+        }}
+      />
+    )}
+  </>
+);
 
 const LoadMoreTrigger = ({ onVisible }: { readonly onVisible: () => void }) => {
   const triggerRef = useRef<HTMLDivElement>(null);
