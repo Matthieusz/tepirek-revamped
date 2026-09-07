@@ -1,12 +1,12 @@
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useSelector } from "@tanstack/react-form";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/app-form";
 import { Form, FormFeedback, useCanCloseForm } from "@/components/forms/form";
+import { AsyncResultFailure } from "@/components/ui/async-result-boundary";
 import { Button } from "@/components/ui/button";
 import {
   ResponsiveDialog,
@@ -20,9 +20,10 @@ import {
   SkillProfessionIdSchema,
 } from "@/features/skills/form-schemas";
 import {
-  createSkillAtom,
-  skillProfessionsAtom,
-} from "@/features/skills/skill-atoms";
+  createSkillMutationOptions,
+  skillProfessionsQueryOptions,
+} from "@/features/skills/skill-queries";
+import { getErrorMessage } from "@/lib/errors";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
 
@@ -48,12 +49,19 @@ const AddSkillModalContent = ({
   const [open, setOpen] = useState(false);
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
-  const createSkill = useAtomSet(createSkillAtom, { mode: "promise" });
-  const professionsResult = useAtomValue(skillProfessionsAtom);
-  const professionsData = AsyncResult.isSuccess(professionsResult)
-    ? professionsResult.value
-    : [];
-  const professionsLoading = !AsyncResult.isSuccess(professionsResult);
+  const queryClient = useQueryClient();
+  const createSkill = useMutation(
+    createSkillMutationOptions(queryClient, undefined, {
+      onRefreshError: () => {
+        toast.error(
+          "Zestaw został utworzony, ale lista nie została odświeżona."
+        );
+      },
+    })
+  );
+  const professionsQuery = useQuery(skillProfessionsQueryOptions());
+  const professionsData = professionsQuery.data ?? [];
+  const professionsLoading = professionsQuery.isPending;
   const form = useAppForm({
     defaultValues: {
       link: "",
@@ -70,7 +78,7 @@ const AddSkillModalContent = ({
       }
 
       const result = await runFormSubmission(async () => {
-        await createSkill({
+        await createSkill.mutateAsync({
           link: decoded.value.link,
           mastery: decoded.value.mastery,
           name: decoded.value.name,
@@ -95,6 +103,8 @@ const AddSkillModalContent = ({
   let submitLabel = "Utwórz zestaw";
   if (professionsLoading) {
     submitLabel = "Ładowanie...";
+  } else if (professionsQuery.isError) {
+    submitLabel = "Niedostępne";
   } else if (isSubmitting) {
     submitLabel = "Tworzenie...";
   }
@@ -120,6 +130,17 @@ const AddSkillModalContent = ({
       >
         <form.AppForm>
           <Form form={form}>
+            {professionsQuery.isError && (
+              <AsyncResultFailure
+                message={getErrorMessage(
+                  professionsQuery.error,
+                  "Nie udało się wczytać profesji."
+                )}
+                onRetry={() => {
+                  void professionsQuery.refetch();
+                }}
+              />
+            )}
             <div className="grid gap-4 py-4">
               <form.AppField name="link">
                 {(field) => (
@@ -170,7 +191,9 @@ const AddSkillModalContent = ({
                 Anuluj
               </Button>
               <Button
-                disabled={isSubmitting || professionsLoading}
+                disabled={
+                  isSubmitting || professionsLoading || professionsQuery.isError
+                }
                 type="submit"
               >
                 {submitLabel}

@@ -17,10 +17,6 @@ import {
   optimisticVaultAtom,
   vaultAtom,
 } from "@/features/events/vault/vault-atoms";
-import {
-  optimisticSkillRangesAtom,
-  skillRangesAtom,
-} from "@/features/skills/skill-atoms";
 
 const failedResource = () => AsyncResult.fail("resource unavailable");
 
@@ -61,10 +57,6 @@ describe("optimistic resource failure states", () => {
     expectOptimisticFailureToRemainFailure(
       vaultAtom({ eventId: 1 }),
       optimisticVaultAtom({ eventId: 1 })
-    );
-    expectOptimisticFailureToRemainFailure(
-      skillRangesAtom,
-      optimisticSkillRangesAtom
     );
     expectResourceFailureToRemainFailure(rankingAtom({ eventId: 1 }));
   });
