@@ -10,6 +10,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
 import * as Schema from "effect/Schema";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -43,6 +44,7 @@ import {
   confirmOwnedAccountImportAtom,
   previewOwnedAccountImportsAtom,
 } from "@/features/squad-builder/account-import-atoms";
+import { invalidateSquadGroupQueries } from "@/features/squad-builder/squad-group-queries";
 import { getSquadBuilderLineErrorMessage } from "@/lib/errors";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
@@ -412,6 +414,7 @@ const ImportPanel = ({
 
 /** Renders and owns the complete two-stage account import workflow. */
 export const AccountImportFrame = () => {
+  const queryClient = useQueryClient();
   const [activeStep, setActiveStep] = useState<1 | 2>(1);
   const [previewItems, setPreviewItems] = useState<readonly PreviewItem[]>([]);
   const [confirmingId, setConfirmingId] = useState<number | null>(null);
@@ -548,6 +551,7 @@ export const AccountImportFrame = () => {
         setConfirmingId(item.pendingImportId);
         try {
           await confirmImport(payload);
+          await invalidateSquadGroupQueries(queryClient);
         } catch (error: unknown) {
           setConfirmingId(null);
           throw error;

@@ -6,6 +6,7 @@ import {
   TriangleAlertIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { PreviewAccountRefetchSuccess } from "@tepirek-revamped/api/protocol/squad-builder/account-refetch/account-refetch-schema";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -18,6 +19,7 @@ import {
   applyAccountRefetchAtom,
   previewAccountRefetchAtom,
 } from "@/features/squad-builder/account-refetch-atoms";
+import { invalidateSquadGroupQueries } from "@/features/squad-builder/squad-group-queries";
 import { getErrorMessage } from "@/lib/errors";
 import {
   changeFieldLabel,
@@ -101,6 +103,7 @@ export const AccountRefetchWorkflow = ({
   accountId,
   children,
 }: AccountRefetchWorkflowProps) => {
+  const queryClient = useQueryClient();
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [preview, setPreview] = useState<AccountRefetchPreview | null>(null);
@@ -140,6 +143,7 @@ export const AccountRefetchWorkflow = ({
       const response = await applyRefetch({
         refetchPreviewId: preview.refetchPreviewId,
       });
+      await invalidateSquadGroupQueries(queryClient);
       toast.success(
         response.removedSquadCharacterCount > 0
           ? `Postacie odświeżone. Usunięto ${response.removedSquadCharacterCount} wpisów ze składów.`

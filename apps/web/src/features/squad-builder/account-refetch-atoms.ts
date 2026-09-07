@@ -6,7 +6,6 @@ import {
   asMargonemAccountId,
   asPendingMargonemAccountRefetchId,
 } from "@/features/squad-builder/branded-ids";
-import { refreshVisibleSquadGroupAtoms } from "@/features/squad-builder/squad-group-atoms";
 import { AppHttpApiClient, appHttpApiFn } from "@/lib/atom-http-api-runtime";
 
 interface ApplyAccountRefetchInput {
@@ -47,7 +46,6 @@ export const applyAccountRefetchAtom = appHttpApiFn(
           },
         });
       get.refresh(ownedAccountsAtom);
-      refreshVisibleSquadGroupAtoms(get);
       return result;
     }
   )

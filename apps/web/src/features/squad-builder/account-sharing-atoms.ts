@@ -11,7 +11,6 @@ import {
   asMargonemAccountAccessId,
   asMargonemAccountId,
 } from "@/features/squad-builder/branded-ids";
-import { refreshVisibleSquadGroupAtoms } from "@/features/squad-builder/squad-group-atoms";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
@@ -126,8 +125,6 @@ const refreshVisibleAccountSharingAtoms = (
       )
     );
   }
-
-  refreshVisibleSquadGroupAtoms(get);
 };
 
 /** Mutation atom for sending account access invite. */

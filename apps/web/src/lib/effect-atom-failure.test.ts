@@ -29,7 +29,6 @@ import {
   optimisticSkillRangesAtom,
   skillRangesAtom,
 } from "@/features/skills/skill-atoms";
-import { ownedSquadGroupsAtom } from "@/features/squad-builder/squad-group-atoms";
 
 const failedResource = () => AsyncResult.fail("resource unavailable");
 
@@ -84,6 +83,5 @@ describe("optimistic resource failure states", () => {
       optimisticAuctionSignupsAtom({ profession: "mage", type: "main" })
     );
     expectResourceFailureToRemainFailure(rankingAtom({ eventId: 1 }));
-    expectResourceFailureToRemainFailure(ownedSquadGroupsAtom);
   });
 });

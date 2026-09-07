@@ -10,6 +10,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
 import type { OwnedMargonemAccountSummarySchema } from "@tepirek-revamped/api/protocol/squad-builder/account-import/account-import-schema";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
@@ -34,6 +35,7 @@ import {
   deleteOwnedAccountAtom,
   updateOwnedAccountDisplayNameAtom,
 } from "@/features/squad-builder/account-import-atoms";
+import { invalidateSquadGroupQueries } from "@/features/squad-builder/squad-group-queries";
 import { getErrorMessage } from "@/lib/errors";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
@@ -157,6 +159,7 @@ const DeleteAccountDialog = ({
   onOpenChange,
   open,
 }: DeleteAccountDialogProps) => {
+  const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState(false);
   const deleteAccount = useAtomSet(deleteOwnedAccountAtom, {
     mode: "promise",
@@ -166,6 +169,7 @@ const DeleteAccountDialog = ({
     setIsDeleting(true);
     try {
       const result = await deleteAccount({ accountId: account.accountId });
+      await invalidateSquadGroupQueries(queryClient);
       onOpenChange(false);
       onDeleted();
       toast.success(

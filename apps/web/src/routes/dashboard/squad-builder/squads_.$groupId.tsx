@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 
 import {
-  availableSquadCharactersAtom,
-  squadGroupDetailAtom,
-} from "@/features/squad-builder/squad-group-atoms";
+  availableSquadCharactersQueryOptions,
+  squadGroupDetailQueryOptions,
+} from "@/features/squad-builder/squad-group-queries";
 
 const decodeSquadGroupId = Schema.decodeUnknownOption(
   Schema.FiniteFromString.pipe(
@@ -24,17 +23,15 @@ export const Route = createFileRoute(
       return { groupId };
     }
 
-    const detailAtom = squadGroupDetailAtom({ groupId });
-    await context.preloadAtomResults(context.atomRegistry, [detailAtom]);
-
-    const detailResult = context.atomRegistry.get(detailAtom);
-    if (
-      AsyncResult.isSuccess(detailResult) &&
-      detailResult.value.accessRole !== "viewer"
-    ) {
-      await context.preloadAtomResults(context.atomRegistry, [
-        availableSquadCharactersAtom({ groupId }),
-      ]);
+    const detail = await context.queryClient.query({
+      ...squadGroupDetailQueryOptions(groupId),
+      staleTime: 0,
+    });
+    if (detail.accessRole !== "viewer") {
+      await context.queryClient.query({
+        ...availableSquadCharactersQueryOptions(groupId),
+        staleTime: 0,
+      });
     }
 
     return { groupId };

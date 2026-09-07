@@ -1,4 +1,3 @@
-import { useAtomSet } from "@effect/atom-react";
 import {
   Add01Icon,
   Cancel01Icon,
@@ -6,6 +5,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useSelector } from "@tanstack/react-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
@@ -15,7 +15,7 @@ import { useAppForm } from "@/components/forms/app-form";
 import { Form, FormFeedback } from "@/components/forms/form";
 import { Frame, FramePanel } from "@/components/reui/frame";
 import { Button } from "@/components/ui/button";
-import { createSquadGroupAtom } from "@/features/squad-builder/squad-group-atoms";
+import { createSquadGroupMutationOptions } from "@/features/squad-builder/squad-group-queries";
 import type { FormSubmissionError } from "@/lib/form-submission";
 import { runFormSubmission } from "@/lib/form-submission";
 
@@ -43,9 +43,10 @@ export const CreateSquadGroupFrame = ({
   const navigate = useNavigate();
   const [submissionFailure, setSubmissionFailure] =
     useState<FormSubmissionError>();
-  const createSquadGroup = useAtomSet(createSquadGroupAtom, {
-    mode: "promise",
-  });
+  const queryClient = useQueryClient();
+  const createSquadGroup = useMutation(
+    createSquadGroupMutationOptions(queryClient)
+  );
   const form = useAppForm({
     defaultValues: { name: "" },
     onSubmit: async ({ value }) => {
@@ -56,7 +57,10 @@ export const CreateSquadGroupFrame = ({
         return;
       }
       const result = await runFormSubmission(
-        async () => await createSquadGroup({ name: decoded.value.name.trim() })
+        async () =>
+          await createSquadGroup.mutateAsync({
+            name: decoded.value.name.trim(),
+          })
       );
       if (result._tag === "failure") {
         setSubmissionFailure(result.error);

@@ -1,11 +1,10 @@
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Rotate01Icon, TriangleAlertIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, Link } from "@tanstack/react-router";
 import type { SquadGroupDetailSchema } from "@tepirek-revamped/api/protocol/squad-builder/squad-groups/squad-groups-schema";
 import * as HashMap from "effect/HashMap";
 import * as Predicate from "effect/Predicate";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
 
@@ -17,14 +16,14 @@ import {
 } from "@/components/reui/alert";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import type { AvailableSquadCharacter } from "@/features/squad-builder/squad-group-api";
 import {
-  availableSquadCharactersAtom,
-  saveSharedSquadGroupCharactersAtom,
-  saveSquadGroupAtom,
-  setSquadGroupVisibilityAtom,
-  squadGroupDetailAtom,
-} from "@/features/squad-builder/squad-group-atoms";
-import type { AvailableSquadCharacter } from "@/features/squad-builder/squad-group-atoms";
+  availableSquadCharactersQueryOptions,
+  saveSharedSquadGroupCharactersMutationOptions,
+  saveSquadGroupMutationOptions,
+  setSquadGroupVisibilityMutationOptions,
+  squadGroupDetailQueryOptions,
+} from "@/features/squad-builder/squad-group-queries";
 import { getErrorMessage } from "@/lib/errors";
 import type { CaughtError } from "@/lib/errors";
 import { SquadEditorLayout } from "@/routes/dashboard/squad-builder/-components/squad-editor/squad-editor-layout";
@@ -96,20 +95,17 @@ const isSquadBuilderConflict = (error: CaughtError): boolean =>
 const SquadBuilderEditorContent = ({
   groupId,
 }: SquadBuilderEditorContentProps) => {
-  const detailAtom = squadGroupDetailAtom({ groupId });
-  const detailResult = useAtomValue(detailAtom);
-  const refreshDetail = useAtomRefresh(detailAtom);
-  const detail = AsyncResult.isSuccess(detailResult)
-    ? detailResult.value
-    : undefined;
+  const queryClient = useQueryClient();
+  const detailQuery = useQuery(squadGroupDetailQueryOptions(groupId));
+  const detail = detailQuery.data;
   const role = detail?.accessRole ?? "viewer";
   const isOwner = role === "owner";
   const isViewer = role === "viewer";
   const canEditPlacements = isOwner || role === "editor";
-  const availableCharactersAtom = availableSquadCharactersAtom({
-    groupId: canEditPlacements ? groupId : 0,
+  const availableCharactersQuery = useQuery({
+    ...availableSquadCharactersQueryOptions(groupId),
+    enabled: canEditPlacements,
   });
-  const availableCharactersResult = useAtomValue(availableCharactersAtom);
   const [editorState, dispatchEditor] = useReducer(
     squadEditorReducer,
     initialSquadEditorState
@@ -130,14 +126,15 @@ const SquadBuilderEditorContent = ({
       ? editorState.saveError
       : null;
   const isSaveConflict = editorState.phase === "conflict";
-  const saveSquadGroup = useAtomSet(saveSquadGroupAtom, { mode: "promise" });
-  const saveSharedSquadGroupCharacters = useAtomSet(
-    saveSharedSquadGroupCharactersAtom,
-    { mode: "promise" }
+  const saveSquadGroup = useMutation(
+    saveSquadGroupMutationOptions(queryClient)
   );
-  const setSquadGroupVisibility = useAtomSet(setSquadGroupVisibilityAtom, {
-    mode: "promise",
-  });
+  const saveSharedSquadGroupCharacters = useMutation(
+    saveSharedSquadGroupCharactersMutationOptions(queryClient)
+  );
+  const setSquadGroupVisibility = useMutation(
+    setSquadGroupVisibilityMutationOptions(queryClient)
+  );
 
   useEffect(() => {
     if (detail === undefined) {
@@ -153,8 +150,8 @@ const SquadBuilderEditorContent = ({
         ? HashMap.empty<number, SquadCharacterMetadata>()
         : detailCharacters(detail);
 
-    if (AsyncResult.isSuccess(availableCharactersResult)) {
-      for (const character of availableCharactersResult.value) {
+    if (availableCharactersQuery.data !== undefined) {
+      for (const character of availableCharactersQuery.data) {
         characters = HashMap.set(
           characters,
           character.characterId,
@@ -164,7 +161,7 @@ const SquadBuilderEditorContent = ({
     }
 
     return characters;
-  }, [availableCharactersResult, detail]);
+  }, [availableCharactersQuery.data, detail]);
 
   const updateDraft = (nextDraft: SquadGroupDraft) => {
     dispatchEditor({ draft: nextDraft, type: "draftChanged" });
@@ -239,11 +236,11 @@ const SquadBuilderEditorContent = ({
       : draft;
     try {
       const savedDetail = await (role === "editor"
-        ? saveSharedSquadGroupCharacters({
+        ? saveSharedSquadGroupCharacters.mutateAsync({
             ...projectEditorPayload(normalizedDraft),
             expectedUpdatedAt: updatedAt,
           })
-        : saveSquadGroup({
+        : saveSquadGroup.mutateAsync({
             ...projectOwnerPayload(normalizedDraft),
             expectedUpdatedAt: updatedAt,
           }));
@@ -264,7 +261,7 @@ const SquadBuilderEditorContent = ({
 
   const reloadLatest = () => {
     dispatchEditor({ type: "reloadLatest" });
-    refreshDetail();
+    void detailQuery.refetch();
   };
 
   const updateVisibility = async (nextVisibility: "private" | "global") => {
@@ -279,7 +276,10 @@ const SquadBuilderEditorContent = ({
 
     dispatchEditor({ type: "visibilityChangeStarted" });
     try {
-      await setSquadGroupVisibility({ groupId, visibility: nextVisibility });
+      await setSquadGroupVisibility.mutateAsync({
+        groupId,
+        visibility: nextVisibility,
+      });
       dispatchEditor({
         type: "visibilityChanged",
         visibility: nextVisibility,
@@ -291,11 +291,11 @@ const SquadBuilderEditorContent = ({
     }
   };
 
-  if (AsyncResult.isInitial(detailResult)) {
+  if (detailQuery.isPending) {
     return <LoadingSpinner />;
   }
 
-  if (AsyncResult.isFailure(detailResult)) {
+  if (detailQuery.isError) {
     return (
       <div className="space-y-3">
         <Alert variant="destructive">
@@ -306,7 +306,9 @@ const SquadBuilderEditorContent = ({
           </AlertDescription>
           <AlertAction>
             <Button
-              onClick={refreshDetail}
+              onClick={() => {
+                void detailQuery.refetch();
+              }}
               size="sm"
               type="button"
               variant="outline"

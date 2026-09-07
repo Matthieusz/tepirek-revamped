@@ -9,7 +9,6 @@ import {
   asMargonemAccountId,
   asPendingMargonemAccountImportId,
 } from "@/features/squad-builder/branded-ids";
-import { refreshVisibleSquadGroupAtoms } from "@/features/squad-builder/squad-group-atoms";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
@@ -119,7 +118,6 @@ export const deleteOwnedAccountAtom = appHttpApiFn(
     get.refresh(ownedAccountsAtom);
     get.refresh(sharedAccountsAtom);
     get.refresh(incomingAccountInvitesAtom);
-    refreshVisibleSquadGroupAtoms(get);
     return result;
   })
 );

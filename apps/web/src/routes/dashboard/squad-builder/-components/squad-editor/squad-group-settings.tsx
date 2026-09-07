@@ -6,6 +6,7 @@ import {
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import type {
   SquadEditorInviteTargetSchema,
@@ -48,7 +49,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { deleteSquadGroupAtom } from "@/features/squad-builder/squad-group-atoms";
+import { deleteSquadGroupMutationOptions } from "@/features/squad-builder/squad-group-queries";
 import {
   revokeSquadGroupEditorAtom,
   sendSquadGroupEditorInviteAtom,
@@ -376,14 +377,15 @@ export const SquadGroupSettings = ({
 }: SquadGroupSettingsProps) => {
   const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
-  const deleteSquadGroup = useAtomSet(deleteSquadGroupAtom, {
-    mode: "promise",
-  });
+  const queryClient = useQueryClient();
+  const deleteSquadGroup = useMutation(
+    deleteSquadGroupMutationOptions(queryClient)
+  );
 
   const remove = async () => {
     setIsDeleting(true);
     try {
-      await deleteSquadGroup({ groupId });
+      await deleteSquadGroup.mutateAsync({ groupId });
       toast.success("Grupa składów została usunięta");
       await navigate({ to: "/dashboard/squad-builder/squads" });
     } catch (error: unknown) {

@@ -8,6 +8,7 @@ import {
   UsersIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useQueryClient } from "@tanstack/react-query";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -23,12 +24,14 @@ import {
   respondToAccountAccessInviteAtom,
   sharedAccountsAtom,
 } from "@/features/squad-builder/account-sharing-atoms";
+import { invalidateSquadGroupQueries } from "@/features/squad-builder/squad-group-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { formatDateTime } from "@/lib/utils";
 import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
 import { userInitials } from "@/routes/dashboard/squad-builder/-components/user-presenters";
 
 const InviteInboxPanel = () => {
+  const queryClient = useQueryClient();
   const [respondingAccessId, setRespondingAccessId] = useState<number | null>(
     null
   );
@@ -129,6 +132,7 @@ const InviteInboxPanel = () => {
                           accessId: invite.accessId,
                           response: "accept",
                         });
+                        await invalidateSquadGroupQueries(queryClient);
                         toast.success("Konto zostało zaakceptowane.");
                       } catch (error: unknown) {
                         toast.error(
@@ -161,6 +165,7 @@ const InviteInboxPanel = () => {
                           accessId: invite.accessId,
                           response: "decline",
                         });
+                        await invalidateSquadGroupQueries(queryClient);
                         toast.success("Zaproszenie odrzucone.");
                       } catch (error: unknown) {
                         toast.error(

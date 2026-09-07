@@ -5,7 +5,7 @@ import {
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   AccountAccessGrantSummarySchema,
   AccountInviteTargetSchema,
@@ -34,6 +34,7 @@ import {
   revokeAccountAccessAtom,
   sendAccountAccessInviteAtom,
 } from "@/features/squad-builder/account-sharing-atoms";
+import { invalidateSquadGroupQueries } from "@/features/squad-builder/squad-group-queries";
 import { sessionQueryOptions } from "@/features/users/user-queries";
 import { getErrorMessage } from "@/lib/errors";
 import { SectionFailure } from "@/routes/dashboard/squad-builder/-components/accounts/section-failure";
@@ -94,6 +95,7 @@ export const AccountSharingPanel = ({
   accountId,
   accountDisplayName,
 }: AccountSharingPanelProps) => {
+  const queryClient = useQueryClient();
   const actorUserId = useActorUserId();
   const [query, setQuery] = useState("");
   const [sendingUserId, setSendingUserId] = useState<string | null>(null);
@@ -202,6 +204,7 @@ export const AccountSharingPanel = ({
                             actorUserId,
                             invitedUserId: target.userId,
                           });
+                          await invalidateSquadGroupQueries(queryClient);
                           toast.success(
                             `Zaproszenie wysłane do ${target.name}`
                           );
@@ -307,6 +310,7 @@ export const AccountSharingPanel = ({
                           accountId,
                           actorUserId,
                         });
+                        await invalidateSquadGroupQueries(queryClient);
                         toast.success(
                           response.removedSquadCharacterCount > 0
                             ? `Dostęp cofnięty. Usunięto ${response.removedSquadCharacterCount} postaci ze składów.`

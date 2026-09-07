@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import {
-  globalSquadGroupsAtom,
-  ownedSquadGroupsAtom,
-} from "@/features/squad-builder/squad-group-atoms";
+  globalSquadGroupsQueryOptions,
+  ownedSquadGroupsQueryOptions,
+} from "@/features/squad-builder/squad-group-queries";
 import {
   incomingSquadGroupInvitesAtom,
   sharedSquadGroupsAtom,
@@ -11,11 +11,19 @@ import {
 
 export const Route = createFileRoute("/dashboard/squad-builder/squads")({
   loader: async ({ context }) => {
-    await context.preloadAtomResults(context.atomRegistry, [
-      incomingSquadGroupInvitesAtom,
-      ownedSquadGroupsAtom,
-      sharedSquadGroupsAtom,
-      globalSquadGroupsAtom({}),
+    await Promise.all([
+      context.queryClient.query({
+        ...ownedSquadGroupsQueryOptions(),
+        staleTime: 0,
+      }),
+      context.queryClient.query({
+        ...globalSquadGroupsQueryOptions(),
+        staleTime: 0,
+      }),
+      context.preloadAtomResults(context.atomRegistry, [
+        incomingSquadGroupInvitesAtom,
+        sharedSquadGroupsAtom,
+      ]),
     ]);
   },
   staticData: {
