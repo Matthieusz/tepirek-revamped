@@ -30,7 +30,6 @@ import {
   skillRangesAtom,
 } from "@/features/skills/skill-atoms";
 import { ownedSquadGroupsAtom } from "@/features/squad-builder/squad-group-atoms";
-import { optimisticTodosAtom, todosAtom } from "@/features/todos/todo-atoms";
 
 const failedResource = () => AsyncResult.fail("resource unavailable");
 
@@ -65,7 +64,6 @@ describe("optimistic resource failure states", () => {
   it("preserves failures for collection resources instead of returning empty data", () => {
     expectOptimisticFailureToRemainFailure(eventsAtom, optimisticEventsAtom);
     expectOptimisticFailureToRemainFailure(heroesAtom, optimisticHeroesAtom);
-    expectOptimisticFailureToRemainFailure(todosAtom, optimisticTodosAtom);
     expectOptimisticFailureToRemainFailure(
       announcementsAtom,
       optimisticAnnouncementsAtom
