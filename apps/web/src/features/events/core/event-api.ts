@@ -12,7 +12,7 @@ import type { runAppHttpApi } from "@/lib/http-api-client-runtime";
 export type Event = EventSummary;
 
 /** Input for creating an event. */
-export type CreateEventInput = typeof CreateEventPayload.Type;
+export type CreateEventInput = CreateEventPayload;
 
 /** Input for deleting an event. */
 export interface DeleteEventInput {

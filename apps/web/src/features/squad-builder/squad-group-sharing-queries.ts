@@ -15,7 +15,7 @@ import type { SquadGroupSharingApiRunner } from "@/features/squad-builder/squad-
 import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Prefix for all squad-group sharing query data. */
-export const squadGroupSharingQueryKey = ["squad-group-sharing"] as const;
+const squadGroupSharingQueryKey = ["squad-group-sharing"] as const;
 
 /** Cache key for pending invitations addressed to the authenticated user. */
 export const incomingSquadGroupInvitesQueryKey = [

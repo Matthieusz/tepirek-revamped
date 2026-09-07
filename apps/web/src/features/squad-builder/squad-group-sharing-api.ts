@@ -1,8 +1,6 @@
 import type {
   SquadEditorInviteTargetSchema,
-  SharedSquadGroupSummarySchema,
   SquadGroupEditorGrantSummarySchema,
-  SquadGroupInvitationSummarySchema,
 } from "@tepirek-revamped/api/protocol/squad-builder/squad-group-sharing/squad-group-sharing-schema";
 import { Effect } from "effect";
 
@@ -32,12 +30,6 @@ export interface RespondToSquadGroupInviteInput {
 export interface RevokeSquadGroupEditorInput {
   readonly invitationId: number;
 }
-
-/** An authenticated user's pending squad-group invitation. */
-export type SquadGroupInvitation = SquadGroupInvitationSummarySchema;
-
-/** A squad group shared with the authenticated user. */
-export type SharedSquadGroupSummary = SharedSquadGroupSummarySchema;
 
 /** An editor grant belonging to a squad group. */
 export type SquadGroupEditorGrant = SquadGroupEditorGrantSummarySchema;

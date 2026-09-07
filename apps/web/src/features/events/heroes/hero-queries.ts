@@ -15,16 +15,13 @@ import type {
 import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Cache key prefix for all hero queries. */
-export const heroesQueryKey = ["heroes"] as const;
+const heroesQueryKey = ["heroes"] as const;
 
 /** Cache key for all heroes. */
 export const heroesListQueryKey = [...heroesQueryKey, "list"] as const;
 
 /** Cache key prefix for event-specific hero lists. */
-export const heroesByEventQueryKeyPrefix = [
-  ...heroesQueryKey,
-  "by-event",
-] as const;
+const heroesByEventQueryKeyPrefix = [...heroesQueryKey, "by-event"] as const;
 
 /** Cache key for heroes assigned to one event. */
 export const heroesByEventQueryKey = (eventId: number) =>

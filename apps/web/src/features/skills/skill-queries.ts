@@ -23,16 +23,13 @@ import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 const skillsQueryKey = ["skills"] as const;
 
 /** Cache key for the complete skill-range list. */
-export const skillRangesQueryKey = [...skillsQueryKey, "ranges"] as const;
+const skillRangesQueryKey = [...skillsQueryKey, "ranges"] as const;
 
 /** Cache key for the complete skill-profession list. */
-export const skillProfessionsQueryKey = [
-  ...skillsQueryKey,
-  "professions",
-] as const;
+const skillProfessionsQueryKey = [...skillsQueryKey, "professions"] as const;
 
 /** Cache key prefix for skill-range detail queries. */
-export const skillRangeBySlugQueryKeyPrefix = [
+const skillRangeBySlugQueryKeyPrefix = [
   ...skillsQueryKey,
   "range-by-slug",
 ] as const;
@@ -42,10 +39,7 @@ export const skillRangeBySlugQueryKey = (slug: string) =>
   [...skillRangeBySlugQueryKeyPrefix, slug] as const;
 
 /** Cache key prefix for skill lists grouped by range. */
-export const skillsByRangeQueryKeyPrefix = [
-  ...skillsQueryKey,
-  "by-range",
-] as const;
+const skillsByRangeQueryKeyPrefix = [...skillsQueryKey, "by-range"] as const;
 
 /** Cache key for skills belonging to one range. */
 export const skillsByRangeQueryKey = (rangeId: number) =>
