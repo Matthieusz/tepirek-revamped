@@ -6,14 +6,23 @@ import {
   accountAccessGrantsQueryOptions,
   accountInviteTargetsQueryKey,
   accountInviteTargetsQueryOptions,
+  applyAccountRefetchMutationOptions,
   incomingAccountInvitesQueryKey,
   incomingAccountInvitesQueryOptions,
   ownedAccountsQueryKey,
   ownedAccountsQueryOptions,
+  previewAccountRefetchMutationOptions,
   sharedAccountsQueryKey,
   sharedAccountsQueryOptions,
   sendAccountAccessInviteMutationOptions,
 } from "@/features/squad-builder/account-queries";
+import {
+  availableSquadCharactersQueryKey,
+  globalSquadGroupsQueryOptions,
+  ownedSquadGroupsQueryOptions,
+  squadGroupDetailQueryKey,
+} from "@/features/squad-builder/squad-group-queries";
+import { sharedSquadGroupsQueryKey } from "@/features/squad-builder/squad-group-sharing-queries";
 import { makeAppHttpApiRunner } from "@/lib/http-api-client-runtime";
 import { makeHttpApiTestLayer } from "@/lib/test-utils/http-api-test-utils";
 import { makeTestQueryClient } from "@/lib/test-utils/query-test-utils";
@@ -130,6 +139,82 @@ describe("account queries", () => {
       ]) {
         expect(queryClient.getQueryState(queryKey)?.isInvalidated).toBe(true);
       }
+    } finally {
+      testClient.cleanup();
+    }
+  });
+
+  it("does not retry refetches and invalidates every affected account view", async () => {
+    const { layer } = makeHttpApiTestLayer();
+    const runner = makeAppHttpApiRunner(layer);
+    const testClient = makeTestQueryClient();
+    const { queryClient } = testClient;
+    const ownedGroups = ownedSquadGroupsQueryOptions(runner);
+    const globalGroups = globalSquadGroupsQueryOptions({}, runner);
+    const affectedQueryKeys = [
+      ownedAccountsQueryKey,
+      sharedAccountsQueryKey,
+      ownedGroups.queryKey,
+      globalGroups.queryKey,
+      sharedSquadGroupsQueryKey,
+      squadGroupDetailQueryKey(1),
+      availableSquadCharactersQueryKey(1),
+    ];
+
+    for (const queryKey of affectedQueryKeys) {
+      queryClient.setQueryData(queryKey, []);
+    }
+
+    try {
+      expect(previewAccountRefetchMutationOptions(runner).retry).toBe(false);
+      expect(
+        applyAccountRefetchMutationOptions(queryClient, runner).retry
+      ).toBe(false);
+
+      const apply = new MutationObserver(
+        queryClient,
+        applyAccountRefetchMutationOptions(queryClient, runner)
+      );
+      await apply.mutate({ refetchPreviewId: 7 });
+
+      for (const queryKey of affectedQueryKeys) {
+        expect(queryClient.getQueryState(queryKey)?.isInvalidated).toBe(true);
+      }
+    } finally {
+      testClient.cleanup();
+    }
+  });
+
+  it("does not deliver refetch callbacks after its observer is removed", async () => {
+    const { layer } = makeHttpApiTestLayer();
+    const runner = makeAppHttpApiRunner(layer);
+    const testClient = makeTestQueryClient();
+    const { queryClient } = testClient;
+    let callbackCalled = false;
+    queryClient.setQueryData(ownedAccountsQueryKey, []);
+
+    try {
+      const apply = new MutationObserver(
+        queryClient,
+        applyAccountRefetchMutationOptions(queryClient, runner)
+      );
+      const unsubscribe = apply.subscribe(() => {});
+      const request = apply.mutate(
+        { refetchPreviewId: 7 },
+        {
+          onSuccess: () => {
+            callbackCalled = true;
+          },
+        }
+      );
+      unsubscribe();
+
+      await request;
+
+      expect(callbackCalled).toBe(false);
+      expect(
+        queryClient.getQueryState(ownedAccountsQueryKey)?.isInvalidated
+      ).toBe(true);
     } finally {
       testClient.cleanup();
     }

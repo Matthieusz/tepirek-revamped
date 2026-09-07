@@ -102,8 +102,6 @@ export const AccountRefetchWorkflow = ({
   children,
 }: AccountRefetchWorkflowProps) => {
   const queryClient = useQueryClient();
-  const [isPreviewing, setIsPreviewing] = useState(false);
-  const [isApplying, setIsApplying] = useState(false);
   const [preview, setPreview] = useState<AccountRefetchPreview | null>(null);
   const previewRefetch = useMutation(previewAccountRefetchMutationOptions());
   const applyRefetch = useMutation(
@@ -116,55 +114,57 @@ export const AccountRefetchWorkflow = ({
       preview.diff.removed.length > 0 ||
       preview.diff.changed.length > 0);
 
-  const handlePreview = async () => {
-    setIsPreviewing(true);
-    try {
-      const response = await previewRefetch.mutateAsync({ accountId });
-      setPreview(toAccountRefetchPreview(response));
-    } catch (error: unknown) {
-      toast.error(
-        getErrorMessage(error, "Nie udało się przygotować odświeżenia")
-      );
-    }
-    setIsPreviewing(false);
+  const handlePreview = () => {
+    previewRefetch.mutate(
+      { accountId },
+      {
+        onError: (error) => {
+          toast.error(
+            getErrorMessage(error, "Nie udało się przygotować odświeżenia")
+          );
+        },
+        onSuccess: (response) => {
+          setPreview(toAccountRefetchPreview(response));
+        },
+      }
+    );
   };
 
-  const handleApply = async () => {
+  const handleApply = () => {
     if (preview === null) {
       return;
     }
 
-    setIsApplying(true);
-    try {
-      const response = await applyRefetch.mutateAsync({
-        refetchPreviewId: preview.refetchPreviewId,
-      });
-      toast.success(
-        response.removedSquadCharacterCount > 0
-          ? `Postacie odświeżone. Usunięto ${response.removedSquadCharacterCount} wpisów ze składów.`
-          : "Postacie zostały odświeżone."
-      );
-      setPreview(null);
-    } catch (error: unknown) {
-      toast.error(
-        getErrorMessage(error, "Nie udało się zastosować odświeżenia")
-      );
-    }
-    setIsApplying(false);
+    applyRefetch.mutate(
+      { refetchPreviewId: preview.refetchPreviewId },
+      {
+        onError: (error) => {
+          toast.error(
+            getErrorMessage(error, "Nie udało się zastosować odświeżenia")
+          );
+        },
+        onSuccess: (response) => {
+          toast.success(
+            response.removedSquadCharacterCount > 0
+              ? `Postacie odświeżone. Usunięto ${response.removedSquadCharacterCount} wpisów ze składów.`
+              : "Postacie zostały odświeżone."
+          );
+          setPreview(null);
+        },
+      }
+    );
   };
 
   return (
     <>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <Button
-          disabled={isPreviewing}
-          onClick={() => {
-            void handlePreview();
-          }}
+          disabled={previewRefetch.isPending}
+          onClick={handlePreview}
           size="sm"
           variant="outline"
         >
-          {isPreviewing ? (
+          {previewRefetch.isPending ? (
             <HugeiconsIcon
               aria-hidden="true"
               icon={LoaderCircleIcon}
@@ -273,13 +273,11 @@ export const AccountRefetchWorkflow = ({
 
           <div className="flex flex-wrap gap-2">
             <Button
-              disabled={isApplying}
-              onClick={() => {
-                void handleApply();
-              }}
+              disabled={applyRefetch.isPending}
+              onClick={handleApply}
               size="sm"
             >
-              {isApplying ? (
+              {applyRefetch.isPending ? (
                 <HugeiconsIcon
                   aria-hidden="true"
                   icon={LoaderCircleIcon}
@@ -295,7 +293,7 @@ export const AccountRefetchWorkflow = ({
               Zastosuj zmiany
             </Button>
             <Button
-              disabled={isApplying}
+              disabled={applyRefetch.isPending}
               onClick={() => {
                 setPreview(null);
               }}

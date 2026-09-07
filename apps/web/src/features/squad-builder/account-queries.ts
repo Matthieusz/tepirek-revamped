@@ -24,7 +24,8 @@ import {
   sendAccountAccessInvite,
 } from "@/features/squad-builder/account-sharing-api";
 import type { AccountSharingApiRunner } from "@/features/squad-builder/account-sharing-api";
-import { invalidateSquadGroupQueries } from "@/features/squad-builder/squad-group-queries";
+import { squadGroupsQueryKey } from "@/features/squad-builder/squad-group-queries";
+import { sharedSquadGroupsQueryKey } from "@/features/squad-builder/squad-group-sharing-queries";
 import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
 /** Prefix for all account-import and account-sharing data. */
@@ -138,7 +139,8 @@ const invalidateAccountResources = async (
 ): Promise<void> => {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: accountQueryKey }),
-    invalidateSquadGroupQueries(queryClient),
+    queryClient.invalidateQueries({ queryKey: sharedSquadGroupsQueryKey }),
+    queryClient.invalidateQueries({ queryKey: squadGroupsQueryKey }),
   ]);
 };
 

@@ -18,8 +18,8 @@ import type {
 } from "@/features/squad-builder/squad-group-api";
 import { runAppHttpApi } from "@/lib/http-api-client-runtime";
 
-/** Prefix for all squad-group data, including details and character pools. */
-const squadGroupsQueryKey = ["squad-groups"] as const;
+/** Prefix for all squad-group queries, including details and character pools. */
+export const squadGroupsQueryKey = ["squad-groups"] as const;
 const ownedSquadGroupsQueryKey = [...squadGroupsQueryKey, "owned"] as const;
 const globalSquadGroupsQueryPrefix = [
   ...squadGroupsQueryKey,
@@ -104,13 +104,6 @@ export const invalidateSquadGroupResources = async (
       queryKey: availableSquadCharactersQueryKey(groupId),
     }),
   ]);
-};
-
-/** Invalidates all squad-group data after an account or access change. */
-export const invalidateSquadGroupQueries = async (
-  queryClient: QueryClient
-): Promise<void> => {
-  await queryClient.invalidateQueries({ queryKey: squadGroupsQueryKey });
 };
 
 export const createSquadGroupMutationOptions = (
