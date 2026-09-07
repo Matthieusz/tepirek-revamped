@@ -4,13 +4,13 @@ import * as Data from "effect/Data";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
 import { oldestUnpaidEventAtom } from "@/features/events/ranking/ranking-atoms";
-import { asAppUserId, asEventId, asHeroId } from "@/lib/branded-ids";
-import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
-} from "@/lib/http-api-client-runtime";
+} from "@/lib/atom-http-api-runtime";
+import { asAppUserId, asEventId, asHeroId } from "@/lib/branded-ids";
+import { updateResultSuccess } from "@/lib/effect-atom-result";
 
 type VaultEntry = VaultRow;
 

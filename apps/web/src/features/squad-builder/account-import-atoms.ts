@@ -14,7 +14,7 @@ import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
-} from "@/lib/http-api-client-runtime";
+} from "@/lib/atom-http-api-runtime";
 
 interface ConfirmOwnedAccountImportInput {
   readonly displayName: string;

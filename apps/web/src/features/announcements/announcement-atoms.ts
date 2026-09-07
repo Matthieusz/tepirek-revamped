@@ -2,13 +2,13 @@ import type { AnnouncementSummary } from "@tepirek-revamped/api/protocol/announc
 import { Effect } from "effect";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
-import { asAnnouncementId } from "@/lib/branded-ids";
-import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
-} from "@/lib/http-api-client-runtime";
+} from "@/lib/atom-http-api-runtime";
+import { asAnnouncementId } from "@/lib/branded-ids";
+import { updateResultSuccess } from "@/lib/effect-atom-result";
 
 type Announcement = AnnouncementSummary;
 

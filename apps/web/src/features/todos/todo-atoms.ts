@@ -2,13 +2,13 @@ import type { TodoSummary } from "@tepirek-revamped/api/protocol/todo/http-api-c
 import { Effect } from "effect";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
-import { asTodoId } from "@/lib/branded-ids";
-import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
-} from "@/lib/http-api-client-runtime";
+} from "@/lib/atom-http-api-runtime";
+import { asTodoId } from "@/lib/branded-ids";
+import { updateResultSuccess } from "@/lib/effect-atom-result";
 
 type Todo = TodoSummary;
 

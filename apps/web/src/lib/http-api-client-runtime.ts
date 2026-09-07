@@ -1,10 +1,14 @@
 import { AppHttpApi } from "@tepirek-revamped/api/protocol/http-api-contract";
+import { HttpApiError } from "@tepirek-revamped/api/protocol/http-api-errors";
 import { Layer } from "effect";
 import * as Context from "effect/Context";
-import { FetchHttpClient } from "effect/unstable/http";
+import * as Effect from "effect/Effect";
+import type * as LayerType from "effect/Layer";
+import { FetchHttpClient, HttpClientResponse } from "effect/unstable/http";
+import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import { HttpApiClient } from "effect/unstable/httpapi";
-import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { makeEffectPromiseRunner } from "@/lib/effect-promise";
 import { serverUrl } from "@/lib/env";
 
 const fetchRequestInitLayer = Layer.succeed(FetchHttpClient.RequestInit, {
@@ -15,6 +19,33 @@ const fetchHttpClientLayer = FetchHttpClient.layer.pipe(
   Layer.provide(fetchRequestInitLayer)
 );
 
+type UnexpectedApiError = HttpClientError.HttpClientError & {
+  readonly reason: HttpClientError.DecodeError;
+};
+
+const isUnexpectedApiError = (
+  error: Parameters<typeof HttpClientError.isHttpClientError>[0]
+): error is UnexpectedApiError =>
+  HttpClientError.isHttpClientError(error) &&
+  error.reason._tag === "DecodeError" &&
+  error.reason.response.status >= 400;
+
+const decodeUnexpectedApiError = (
+  response: Effect.Effect<unknown, unknown, unknown>
+): Effect.Effect<unknown, unknown, unknown> =>
+  response.pipe(
+    // Effect.catchIf receives an Effect handler, not a Promise callback.
+    // oxlint-disable-next-line promise/prefer-await-to-callbacks -- required by Effect's recovery API
+    Effect.catchIf(isUnexpectedApiError, (error) =>
+      HttpClientResponse.schemaBodyJson(HttpApiError)(
+        error.reason.response
+      ).pipe(
+        Effect.mapError(() => error),
+        Effect.flatMap(Effect.fail)
+      )
+    )
+  );
+
 /** Effect HttpApi client service for the shared application API contract. */
 export class AppHttpApiClient extends Context.Service<
   AppHttpApiClient,
@@ -23,17 +54,20 @@ export class AppHttpApiClient extends Context.Service<
   /** Live browser client layer that preserves better-auth cookies. */
   static readonly layer = Layer.effect(
     AppHttpApiClient,
-    HttpApiClient.make(AppHttpApi, { baseUrl: serverUrl })
+    HttpApiClient.make(AppHttpApi, {
+      baseUrl: serverUrl,
+      transformResponse: decodeUnexpectedApiError,
+    })
   ).pipe(Layer.provide(fetchHttpClientLayer));
 }
 
-/** Atom runtime backed by the live Effect HttpApi client layer. */
-export const appHttpApiRuntime = Atom.runtime(AppHttpApiClient.layer);
+/**
+ * Runs application API effects as Promises while preserving typed protocol
+ * failures for framework-level error handling.
+ */
+export const runAppHttpApi = makeEffectPromiseRunner(AppHttpApiClient.layer);
 
-/** Convenience helper for creating runtime-backed API atoms. */
-export const appHttpApiAtom: typeof appHttpApiRuntime.atom =
-  appHttpApiRuntime.atom.bind(appHttpApiRuntime);
-
-/** Convenience helper for creating runtime-backed API mutation atoms. */
-export const appHttpApiFn: typeof appHttpApiRuntime.fn =
-  appHttpApiRuntime.fn.bind(appHttpApiRuntime);
+/** Creates an application API Promise runner backed by a supplied layer. */
+export const makeAppHttpApiRunner = (
+  layer: LayerType.Layer<AppHttpApiClient>
+) => makeEffectPromiseRunner(layer);

@@ -1,12 +1,12 @@
 import { Effect } from "effect";
 import type * as Atom from "effect/unstable/reactivity/Atom";
 
-import { asAppUserId } from "@/lib/branded-ids";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
-} from "@/lib/http-api-client-runtime";
+} from "@/lib/atom-http-api-runtime";
+import { asAppUserId } from "@/lib/branded-ids";
 
 /** Resource atom for the authenticated better-auth session. */
 export const sessionAtom = appHttpApiAtom(

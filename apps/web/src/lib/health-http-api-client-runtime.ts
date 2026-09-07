@@ -1,10 +1,11 @@
 import { HealthHttpApi } from "@tepirek-revamped/api/protocol/health/http-api-contract";
 import { Layer } from "effect";
 import * as Context from "effect/Context";
+import type * as LayerType from "effect/Layer";
 import { FetchHttpClient } from "effect/unstable/http";
 import { HttpApiClient } from "effect/unstable/httpapi";
-import * as Atom from "effect/unstable/reactivity/Atom";
 
+import { makeEffectPromiseRunner } from "@/lib/effect-promise";
 import { serverUrl } from "@/lib/env";
 
 const fetchRequestInitLayer = Layer.succeed(FetchHttpClient.RequestInit, {
@@ -27,5 +28,15 @@ export class HealthHttpApiClient extends Context.Service<
   ).pipe(Layer.provide(fetchHttpClientLayer));
 }
 
-/** Atom runtime backed only by the standalone liveness API client. */
-export const healthHttpApiRuntime = Atom.runtime(HealthHttpApiClient.layer);
+/**
+ * Runs health API effects as Promises without depending on the application
+ * client or its authentication groups.
+ */
+export const runHealthHttpApi = makeEffectPromiseRunner(
+  HealthHttpApiClient.layer
+);
+
+/** Creates a health API Promise runner backed by a supplied layer. */
+export const makeHealthHttpApiRunner = (
+  layer: LayerType.Layer<HealthHttpApiClient>
+) => makeEffectPromiseRunner(layer);

@@ -4,13 +4,13 @@ import { Effect } from "effect";
 import * as Data from "effect/Data";
 import * as Atom from "effect/unstable/reactivity/Atom";
 
-import { asAuctionSignupId } from "@/lib/branded-ids";
-import { updateResultSuccess } from "@/lib/effect-atom-result";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
-} from "@/lib/http-api-client-runtime";
+} from "@/lib/atom-http-api-runtime";
+import { asAuctionSignupId } from "@/lib/branded-ids";
+import { updateResultSuccess } from "@/lib/effect-atom-result";
 
 type AuctionSignup = AuctionSignupSummary;
 

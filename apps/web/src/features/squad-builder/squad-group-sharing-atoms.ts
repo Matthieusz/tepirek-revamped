@@ -11,12 +11,12 @@ import {
   asSquadGroupId,
   asSquadGroupInvitationId,
 } from "@/features/squad-builder/branded-ids";
-import { asAppUserId } from "@/lib/branded-ids";
 import {
   AppHttpApiClient,
   appHttpApiAtom,
   appHttpApiFn,
-} from "@/lib/http-api-client-runtime";
+} from "@/lib/atom-http-api-runtime";
+import { asAppUserId } from "@/lib/branded-ids";
 
 interface RespondToSquadGroupInviteInput {
   readonly invitationId: number;
